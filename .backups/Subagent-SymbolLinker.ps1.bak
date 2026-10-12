@@ -1,0 +1,307 @@
+# ============================================================================
+# RawrXD Production Subagent: SymbolLinker
+# Version: 1.0.0 | License: MIT
+# Part of the RawrXD Autonomous Build System
+# ============================================================================
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Subagent: Symbol Linker - Resolves undefined symbols and unresolved externals.
+
+.DESCRIPTION
+    Production-hardened subagent that parses MSVC linker error logs, identifies
+    unresolved external symbols (both decorated and undecorated), generates
+    properly-typed stub implementations, and tracks duplicates.
+
+.PARAMETER LogPath
+    Path to the linker error log file. Required.
+
+.PARAMETER OutputPath
+    Path to the generated stubs file. Default: "$PSScriptRoot\src\universal_stubs.cpp".
+
+.PARAMETER AutoFix
+    Automatically generate and write stub implementations.
+
+.EXAMPLE
+    .\Subagent-SymbolLinker.ps1 -LogPath .\linker_errors.txt -AutoFix -Verbose
+    .\Subagent-SymbolLinker.ps1 -LogPath .\build.log -OutputPath .\stubs.cpp -WhatIf
+#>
+
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+param(
+    [Parameter(Mandatory)]
+    [ValidateScript({ Test-Path $_ -PathType Leaf })]
+    [string]$LogPath,
+
+    [string]$OutputPath,
+
+    [switch]$AutoFix,
+
+    [ValidateSet('Text', 'JSON')]
+    [string]$OutputFormat = 'Text',
+
+    [string]$ReportPath
+)
+
+# ── Bootstrap ────────────────────────────────────────────────────────────────
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+if (-not $OutputPath) { $OutputPath = Join-Path $PSScriptRoot 'src\universal_stubs.cpp' }
+
+# ── Parsing ───────────────────────────────────────────────────────────────────
+function Parse-UnresolvedSymbols {
+    [CmdletBinding()]
+    param([string]$Path)
+
+    $content = Get-Content $Path -Raw -ErrorAction Stop
+    $symbols = [System.Collections.Generic.List[hashtable]]::new()
+    $seen    = [System.Collections.Generic.HashSet[string]]::new()
+
+    # Pattern 1: unresolved external symbol "ReturnType __cdecl FuncName(params)"
+    $pattern1 = 'unresolved external symbol\s+"([^"]+)"'
+    foreach ($m in [regex]::Matches($content, $pattern1)) {
+        $full = $m.Groups[1].Value
+        if ($seen.Contains($full)) { continue }
+        [void]$seen.Add($full)
+
+        $parsed = $null
+        # Try: ReturnType __calling_conv Name(Params)
+        if ($full -match '^(\S+)\s+(__cdecl|__stdcall|__fastcall|__vectorcall)\s+(\w[\w:]*)\(([^)]*)\)') {
+            $parsed = @{
+                ReturnType    = $Matches[1]
+                CallingConv   = $Matches[2]
+                Name          = $Matches[3]
+                Parameters    = $Matches[4]
+                FullSignature = $full
+            }
+        }
+        # Try: ReturnType Name(Params)  (no calling convention)
+        elseif ($full -match '^(\S+)\s+(\w[\w:]*)\(([^)]*)\)') {
+            $parsed = @{
+                ReturnType    = $Matches[1]
+                CallingConv   = ''
+                Name          = $Matches[2]
+                Parameters    = $Matches[3]
+                FullSignature = $full
+            }
+        }
+        if ($parsed) { $symbols.Add($parsed) }
+    }
+
+    # Pattern 2: unresolved external symbol _DecoratedName  (C-style decorated)
+    $pattern2 = 'unresolved external symbol\s+_(\w+)(?:\s|$)'
+    foreach ($m in [regex]::Matches($content, $pattern2)) {
+        $name = $m.Groups[1].Value
+        if ($seen.Contains($name)) { continue }
+        [void]$seen.Add($name)
+        $symbols.Add(@{
+            ReturnType    = 'int'
+            CallingConv   = '__cdecl'
+            Name          = $name
+            Parameters    = 'void'
+            FullSignature = $name
+        })
+    }
+
+    # Pattern 3: unresolved external symbol __imp_FuncName (dllimport)
+    $pattern3 = 'unresolved external symbol\s+__imp_(\w+)'
+    foreach ($m in [regex]::Matches($content, $pattern3)) {
+        $name = $m.Groups[1].Value
+        if ($seen.Contains("__imp_$name")) { continue }
+        [void]$seen.Add("__imp_$name")
+        $symbols.Add(@{
+            ReturnType    = 'int'
+            CallingConv   = '__stdcall'
+            Name          = $name
+            Parameters    = 'void'
+            FullSignature = "__imp_$name"
+        })
+    }
+
+    return $symbols
+}
+
+function Get-DefaultReturn {
+    param([string]$Type)
+    switch -Regex ($Type) {
+        '^void$'          { return '' }
+        '^bool$'          { return '    return false;' }
+        '^int$|^long$|^DWORD$|^UINT$|^size_t$|^LRESULT$|^WPARAM$|^LPARAM$' {
+            return '    return 0;'
+        }
+        '^HRESULT$'       { return '    return S_OK;' }
+        '^float$|^double$' { return '    return 0.0;' }
+        'std::string'     { return '    return "";' }
+        '\*$'             { return '    return nullptr;' }
+        default           { return '    return {};' }
+    }
+}
+
+function Generate-StubImplementation {
+    [CmdletBinding()]
+    param([hashtable]$Symbol)
+
+    $params = if ([string]::IsNullOrWhiteSpace($Symbol.Parameters)) { 'void' } else { $Symbol.Parameters }
+    $cc     = if ($Symbol.CallingConv) { "$($Symbol.CallingConv) " } else { '' }
+
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $lines.Add("// Auto-generated stub — RawrXD SymbolLinker v1.0.0")
+    $lines.Add("$($Symbol.ReturnType) ${cc}$($Symbol.Name)($params) {")
+    $lines.Add("    // TODO: Implement $($Symbol.Name)")
+    $ret = Get-DefaultReturn $Symbol.ReturnType
+    if ($ret) { $lines.Add($ret) }
+    $lines.Add('}')
+    $lines.Add('')
+
+    return ($lines -join "`n")
+}
+
+function Find-SymbolDefinition {
+    [CmdletBinding()]
+    param([string]$SymbolName)
+
+    $srcRoot = Join-Path $PSScriptRoot 'src'
+    if (-not (Test-Path $srcRoot)) { return $null }
+
+    $found = Get-ChildItem -Path $srcRoot -Recurse -Include *.cpp, *.asm -File |
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin)[\\/]' } |
+        Select-String -Pattern "(?:^|\s)(?:void|int|bool|HRESULT|DWORD|LRESULT|float|double|std::\w+)\s+(?:__cdecl\s+|__stdcall\s+)?${SymbolName}\s*\(" |
+        Select-Object -First 1
+
+    return $found
+}
+
+# ── Detect already-stubbed symbols ───────────────────────────────────────────
+$alreadyDefined = [System.Collections.Generic.HashSet[string]]::new()
+if (Test-Path $OutputPath) {
+    try {
+        $existingContent = Get-Content $OutputPath -Raw
+        foreach ($m in [regex]::Matches($existingContent, '(?m)^\w[\w\s:*&]+?\s+(?:__\w+\s+)?(\w[\w:]*)\s*\(')) {
+            [void]$alreadyDefined.Add($m.Groups[1].Value)
+        }
+        Write-Verbose "Existing stubs file has $($alreadyDefined.Count) defined symbols"
+    }
+    catch {
+        Write-Warning "Could not parse existing stubs file: $_"
+    }
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+Write-Verbose "[SymbolLinker] Log  : $LogPath"
+Write-Verbose "[SymbolLinker] Output: $OutputPath"
+
+$symbols = Parse-UnresolvedSymbols -Path $LogPath
+
+# Report
+$report = [PSCustomObject]@{
+    SymbolsFound   = $symbols.Count
+    StubsGenerated = 0
+    AlreadyDefined = 0
+    DefinitionsFound = 0
+    Errors         = [System.Collections.Generic.List[string]]::new()
+}
+
+Write-Verbose "Found $($symbols.Count) unresolved symbols"
+
+$idx = 0
+foreach ($sym in $symbols) {
+    $idx++
+    $pct = [math]::Floor(($idx / [math]::Max(1, $symbols.Count)) * 100)
+    Write-Progress -Activity 'SymbolLinker — Resolving' `
+        -Status "$idx / $($symbols.Count)  $($sym.Name)" `
+        -PercentComplete $pct
+
+    # Already in stubs file?
+    if ($alreadyDefined.Contains($sym.Name)) {
+        Write-Verbose "  Skip (already stubbed): $($sym.Name)"
+        $report.AlreadyDefined++
+        continue
+    }
+
+    # Search source tree
+    try {
+        $definition = Find-SymbolDefinition -SymbolName $sym.Name
+        if ($definition) {
+            Write-Verbose "  Found definition: $($definition.Path):$($definition.LineNumber)"
+            $report.DefinitionsFound++
+            continue
+        }
+    }
+    catch {
+        $msg = "Error searching for $($sym.Name): $_"
+        Write-Warning $msg
+        $report.Errors.Add($msg)
+    }
+
+    # Generate stub
+    if ($AutoFix) {
+        try {
+            $stub = Generate-StubImplementation -Symbol $sym
+
+            if ($PSCmdlet.ShouldProcess($OutputPath, "Append stub for $($sym.Name)")) {
+                # Backup before first write
+                if ($report.StubsGenerated -eq 0 -and (Test-Path $OutputPath)) {
+                    $bakPath = "$OutputPath.bak"
+                    Copy-Item $OutputPath $bakPath -Force -ErrorAction Stop
+                    Write-Verbose "  Backup → $bakPath"
+                }
+
+                # Ensure directory exists
+                $dir = Split-Path $OutputPath -Parent
+                if (-not (Test-Path $dir)) { New-Item $dir -ItemType Directory -Force | Out-Null }
+
+                Add-Content $OutputPath $stub -ErrorAction Stop
+                [void]$alreadyDefined.Add($sym.Name)
+                $report.StubsGenerated++
+                Write-Verbose "  Stubbed: $($sym.Name)"
+            }
+        }
+        catch {
+            $msg = "Failed to generate stub for $($sym.Name): $_"
+            Write-Warning $msg
+            $report.Errors.Add($msg)
+        }
+    }
+    else {
+        Write-Verbose "  No definition found (dry run): $($sym.Name)"
+    }
+}
+
+Write-Progress -Activity 'SymbolLinker — Resolving' -Completed
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+Write-Host ''
+Write-Host '╔══════════════════════════════════════════════╗' -ForegroundColor Cyan
+Write-Host '║  SymbolLinker — Summary                      ║' -ForegroundColor Cyan
+Write-Host '╠══════════════════════════════════════════════╣' -ForegroundColor Cyan
+Write-Host "║  Symbols found      : $($report.SymbolsFound)" -ForegroundColor Cyan
+Write-Host "║  Definitions found  : $($report.DefinitionsFound)" -ForegroundColor Green
+Write-Host "║  Already defined    : $($report.AlreadyDefined)" -ForegroundColor Cyan
+Write-Host "║  Stubs generated    : $($report.StubsGenerated)" -ForegroundColor $(if ($report.StubsGenerated) { 'Green' } else { 'Cyan' })
+Write-Host "║  Errors             : $($report.Errors.Count)" -ForegroundColor $(if ($report.Errors.Count) { 'Red' } else { 'Cyan' })
+Write-Host '╚══════════════════════════════════════════════╝' -ForegroundColor Cyan
+
+if ($report.Errors.Count -gt 0) {
+    Write-Host "`nErrors:" -ForegroundColor Red
+    $report.Errors | ForEach-Object { Write-Host "  • $_" -ForegroundColor Red }
+}
+
+# ── JSON report ───────────────────────────────────────────────────────────────
+if ($ReportPath) {
+    try {
+        $report | ConvertTo-Json -Depth 4 | Set-Content $ReportPath -Encoding utf8
+        Write-Verbose "Report written → $ReportPath"
+    }
+    catch { Write-Warning "Could not write report: $_" }
+}
+
+if ($OutputFormat -eq 'JSON') {
+    $report | ConvertTo-Json -Depth 4
+}
+else {
+    Write-Output $report
+}
+
+if ($report.Errors.Count -gt 0) { exit 1 }
+exit 0

@@ -1,0 +1,13 @@
+$content = [IO.File]::ReadAllText("F:\rawrxd\tools\rawrxd_modelgenie_token0_execution.cpp")
+
+$old = "        // GGUF v3 header: magic(4), version(4), tensor_count(8), metadata_kv_count(8)" + [Environment]::NewLine + "        uint32_t magic = *reinterpret_cast<const uint32_t*>(base);" + [Environment]::NewLine + "        if (magic != 0x46554747) // \"GGUF\"" + [Environment]::NewLine + "        {" + [Environment]::NewLine + "            printf(\"[PARSE] Invalid GGUF magic: 0x%08x\n\", magic);" + [Environment]::NewLine + "            return false;" + [Environment]::NewLine + "        }" + [Environment]::NewLine + [Environment]::NewLine + "        uint32_t version = *reinterpret_cast<const uint32_t*>(base + 4);" + [Environment]::NewLine + "        if (version != 3)" + [Environment]::NewLine + "        {" + [Environment]::NewLine + "            printf(\"[PARSE] Unsupported GGUF version: %u\n\", version);" + [Environment]::NewLine + "            return false;" + [Environment]::NewLine + "        }"
+
+$new = "        // GGUF v3 header: magic(4), version(4), tensor_count(8), metadata_kv_count(8)" + [Environment]::NewLine + "        uint32_t magic = *reinterpret_cast<const uint32_t*>(base);" + [Environment]::NewLine + "        printf(\"[PARSE] Magic: 0x%08x\n\", magic);" + [Environment]::NewLine + "        fflush(stdout);" + [Environment]::NewLine + "        if (magic != 0x46554747) // \"GGUF\"" + [Environment]::NewLine + "        {" + [Environment]::NewLine + "            printf(\"[PARSE] Invalid GGUF magic: 0x%08x\n\", magic);" + [Environment]::NewLine + "            return false;" + [Environment]::NewLine + "        }" + [Environment]::NewLine + [Environment]::NewLine + "        uint32_t version = *reinterpret_cast<const uint32_t*>(base + 4);" + [Environment]::NewLine + "        printf(\"[PARSE] Version: %u\n\", version);" + [Environment]::NewLine + "        fflush(stdout);" + [Environment]::NewLine + "        if (version != 3)" + [Environment]::NewLine + "        {" + [Environment]::NewLine + "            printf(\"[PARSE] Unsupported GGUF version: %u\n\", version);" + [Environment]::NewLine + "            return false;" + [Environment]::NewLine + "        }"
+
+if ($content.Contains($old)) {
+    $content = $content.Replace($old, $new)
+    [IO.File]::WriteAllText("F:\rawrxd\tools\rawrxd_modelgenie_token0_execution.cpp", $content)
+    Write-Host "Added debug prints for magic and version"
+} else {
+    Write-Host "Pattern not found"
+}

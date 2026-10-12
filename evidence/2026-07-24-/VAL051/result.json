@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "gate": "VAL-051",
+  "binary_size": 48094720,
+  "name": "Win32IDE Build Verification",
+  "timestamp": "2026-07-24T12:44:16.9349379-04:00",
+  "message": "Binary exists and hash captured",
+  "binary_hash": "1F26126BB017939B6826697E7BD40C55867F4961BE8B03161D605507FB310B26",
+  "binary_path": "D:\\rawrxd\\build-ninja\\bin\\RawrXD-Win32IDE.exe"
+}

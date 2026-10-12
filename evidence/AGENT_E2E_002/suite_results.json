@@ -1,0 +1,92 @@
+﻿[
+    {
+        "id":  "01_compile_error",
+        "autofix":  0,
+        "pre":  0,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e01",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":0,\"totalDiagnosticsGenerated\":0,\"totalDiagnosticsHandled\":\"0\",\"totalFixesStaged\":\"0\",\"finalStatus\":\"success\",\"durationMs\":992}"
+    },
+    {
+        "id":  "02_linker_error",
+        "autofix":  0,
+        "pre":  2,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e02",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":1,\"totalDiagnosticsGenerated\":1,\"totalDiagnosticsHandled\":\"1\",\"totalFixesStaged\":\"1\",\"finalStatus\":\"success\",\"durationMs\":2037}"
+    },
+    {
+        "id":  "03_missing_include",
+        "autofix":  0,
+        "pre":  2,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e03",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":1,\"totalDiagnosticsGenerated\":1,\"totalDiagnosticsHandled\":\"1\",\"totalFixesStaged\":\"1\",\"finalStatus\":\"success\",\"durationMs\":1984}"
+    },
+    {
+        "id":  "04_multifile_bug",
+        "autofix":  0,
+        "pre":  2,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e04 42",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":1,\"totalDiagnosticsGenerated\":1,\"totalDiagnosticsHandled\":\"1\",\"totalFixesStaged\":\"1\",\"finalStatus\":\"success\",\"durationMs\":2005}"
+    },
+    {
+        "id":  "05_missing_symbol",
+        "autofix":  0,
+        "pre":  2,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e05 42",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":1,\"totalDiagnosticsGenerated\":1,\"totalDiagnosticsHandled\":\"1\",\"totalFixesStaged\":\"1\",\"finalStatus\":\"success\",\"durationMs\":2036}"
+    },
+    {
+        "id":  "06_failing_unit_test",
+        "autofix":  0,
+        "pre":  2,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e06",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":1,\"totalDiagnosticsGenerated\":1,\"totalDiagnosticsHandled\":\"1\",\"totalFixesStaged\":\"1\",\"finalStatus\":\"success\",\"durationMs\":1982}"
+    },
+    {
+        "id":  "07_second_iteration",
+        "autofix":  0,
+        "pre":  0,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e07",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":0,\"totalDiagnosticsGenerated\":0,\"totalDiagnosticsHandled\":\"0\",\"totalFixesStaged\":\"0\",\"finalStatus\":\"success\",\"durationMs\":959}"
+    },
+    {
+        "id":  "08_compile_typo",
+        "autofix":  0,
+        "pre":  2,
+        "post":  0,
+        "run":  0,
+        "out":  "hello from e2e08",
+        "gate":  "PASS",
+        "telemetry":  "{\"attemptCount\":1,\"totalDiagnosticsGenerated\":1,\"totalDiagnosticsHandled\":\"1\",\"totalFixesStaged\":\"1\",\"finalStatus\":\"success\",\"durationMs\":2003}"
+    },
+    {
+        "id":  "09_logic_bug_model",
+        "autofix":  1,
+        "pre":  1,
+        "post":  1,
+        "run":  -1,
+        "out":  "",
+        "gate":  "PASS_AS_EXPECTED_MODEL_GAP",
+        "telemetry":  "{\"attemptCount\":0,\"totalDiagnosticsGenerated\":0,\"totalDiagnosticsHandled\":\"0\",\"totalFixesStaged\":\"0\",\"finalStatus\":\"failure\",\"durationMs\":955}"
+    }
+]

@@ -1,0 +1,13 @@
+family,path_count,canonical_candidate,alternates,status,notes
+autonomousagent.cpp,2,src/sovereign/agent/AutonomousAgent.cpp,src/win32app/AutonomousAgent.cpp,parallel-in-use,Review wrapper-vs-core split and ownership
+deep2bridge.cpp,2,src/deep2/Deep2Bridge.cpp,src/ide/Deep2Bridge.cpp,unresolved,Check if ide variant is thin shim
+deep2engine.cpp,2,src/deep2/Deep2Engine.cpp,src/inference/Deep2Engine.cpp,parallel-in-use,Likely separate layer boundaries
+diskrecoveryagent.cpp,2,src/agent/DiskRecoveryAgent.cpp,src/agentic/DiskRecoveryAgent.cpp,parallel-in-use,Both wired in product path
+feature_registry_panel.cpp,2,src/feature_registry_panel.cpp,src/win32app/feature_registry_panel.cpp,unresolved,Possible UI duplication
+flash_attention.cpp,2,src/core/flash_attention.cpp,src/kernels/flash_attention.cpp,parallel-in-use,Likely wrapper plus specialized kernels
+hotpatcher.cpp,2,src/deep2/HotPatcher.cpp,src/sovereign/patcher/HotPatcher.cpp,parallel-in-use,Distinct subsystem contexts
+logger.cpp,2,src/logging/Logger.cpp,src/agentic/observability/Logger.cpp,parallel-in-use,High fan-out; resolve canonical logger API
+missing_handler_stubs.cpp,2,src/core/missing_handler_stubs.cpp,/src/core/missing_handler_stubs.cpp,unresolved,Path normalization duplicate; verify physical uniqueness
+omegapowershellbridge.cpp,2,src/omega1_modules/OmegaPowerShellBridge.cpp,/OmegaPowerShellBridge.cpp,unresolved,Path normalization duplicate; verify physical uniqueness
+toolregistry.cpp,2,src/agentic/ToolRegistry.cpp,src/sovereign/tool/ToolRegistry.cpp,parallel-in-use,Likely subsystem-specific registries
+ai_model_caller_real.cpp,3,src/inference/ai_model_caller_real.cpp,src/ai/ai_model_caller_real.cpp;src/ai_model_caller_real.cpp,unresolved,Root CMake currently favors inference variant

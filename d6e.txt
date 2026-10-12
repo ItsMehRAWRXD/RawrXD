@@ -1,0 +1,1 @@
+[linear-short-legacy] w=blk.0.ssm_in.weight type=6 dims=[2688,10304] bytes=19041792 need=609337344 (row_bytes=59136 n_out=10304 blk=1 ts=22)

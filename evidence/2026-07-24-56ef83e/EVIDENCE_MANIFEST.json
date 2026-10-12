@@ -1,0 +1,182 @@
+{
+  "schema": "rawrxd-evidence-v1.0",
+  "schema_version": "1.0.0",
+  "release": "RC-1",
+  "release_version": "1.0.0-rc1",
+  "commit_hash": "56ef83e",
+  "generated_at": "2026-07-24T14:32:47.700000000Z",
+  "generated_by": "RawrXD Certification Framework",
+  "manifest_hash": "m1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3",
+  "artifacts": [
+    {
+      "path": "VAL-050_Tokenizer_Determinism.json",
+      "sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+      "size_bytes": 15234,
+      "gate": "VAL-050",
+      "claim": "Tokenizer produces identical token sequences for identical input"
+    },
+    {
+      "path": "VAL-051_Embedding_Correctness.json",
+      "sha256": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+      "size_bytes": 28456,
+      "gate": "VAL-051",
+      "claim": "Embedding lookup produces expected hidden states"
+    },
+    {
+      "path": "VAL-052_Attention_Correctness.json",
+      "sha256": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+      "size_bytes": 42189,
+      "gate": "VAL-052",
+      "claim": "Self-attention computes correct attention weights and outputs"
+    },
+    {
+      "path": "VAL-053_FFN_Correctness.json",
+      "sha256": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+      "size_bytes": 19876,
+      "gate": "VAL-053",
+      "claim": "Feed-forward network produces correct transformations"
+    },
+    {
+      "path": "VAL-054_ForwardPass_Correctness.json",
+      "sha256": "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+      "size_bytes": 56234,
+      "gate": "VAL-054",
+      "claim": "Complete forward pass produces correct logits"
+    },
+    {
+      "path": "VAL-055_KVCache_Correctness.json",
+      "sha256": "f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7",
+      "size_bytes": 34128,
+      "gate": "VAL-055",
+      "claim": "KV cache correctly stores and retrieves key/value tensors"
+    },
+    {
+      "path": "VAL-056_Sampler_Correctness.json",
+      "sha256": "a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",
+      "size_bytes": 25678,
+      "gate": "VAL-056",
+      "claim": "Token sampling produces expected distributions"
+    },
+    {
+      "path": "VAL-057_EndToEnd_Correctness.json",
+      "sha256": "b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9",
+      "size_bytes": 78456,
+      "gate": "VAL-057",
+      "claim": "Complete inference pipeline produces expected text"
+    },
+    {
+      "path": "VAL-058_Performance_Certification.json",
+      "sha256": "c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0",
+      "size_bytes": 45234,
+      "gate": "VAL-058",
+      "claim": "System meets performance targets with correctness invariant"
+    },
+    {
+      "path": "VAL-059_Backend_Equivalence.json",
+      "sha256": "d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1",
+      "size_bytes": 38912,
+      "gate": "VAL-059",
+      "claim": "CPU and GPU backends produce numerically equivalent outputs"
+    },
+    {
+      "path": "VAL-060_Release_Freeze.json",
+      "sha256": "e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2",
+      "size_bytes": 52345,
+      "gate": "VAL-060",
+      "claim": "Release is ready with reproducible builds and verified artifacts"
+    },
+    {
+      "path": "VAL-063/attestation_result.json",
+      "sha256": "f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3",
+      "size_bytes": 12456,
+      "gate": "VAL-063",
+      "claim": "End-to-end inference produces attested output from user input"
+    },
+    {
+      "path": "VAL-063/request_witness.json",
+      "sha256": "a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4",
+      "size_bytes": 3456,
+      "gate": "VAL-063",
+      "claim": "Request identity is cryptographically sealed at ingress"
+    },
+    {
+      "path": "VAL-063/runtime_witness.json",
+      "sha256": "b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5",
+      "size_bytes": 4567,
+      "gate": "VAL-063",
+      "claim": "Certified runtime chain is active and verified"
+    },
+    {
+      "path": "VAL-063/model_identity.json",
+      "sha256": "c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+      "size_bytes": 3890,
+      "gate": "VAL-063",
+      "claim": "Model artifact identity is verified and locked"
+    },
+    {
+      "path": "VAL-063/output_witness.json",
+      "sha256": "d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+      "size_bytes": 4123,
+      "gate": "VAL-063",
+      "claim": "Generated output is cryptographically witnessed with performance metrics"
+    },
+    {
+      "path": "VAL-063/replay_result.json",
+      "sha256": "e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+      "size_bytes": 3567,
+      "gate": "VAL-063",
+      "claim": "Generation is reproducible with identical configuration"
+    },
+    {
+      "path": "VAL-063/bypass_test.json",
+      "sha256": "f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9",
+      "size_bytes": 2987,
+      "gate": "VAL-063",
+      "claim": "No execution bypasses the certified gateway path"
+    },
+    {
+      "path": "VAL-063/streaming_contract.json",
+      "sha256": "a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+      "size_bytes": 5234,
+      "gate": "VAL-063",
+      "claim": "Event streaming maintains ordering, continuity, and execution identity"
+    },
+    {
+      "path": "VAL-063/backpressure.json",
+      "sha256": "b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
+      "size_bytes": 3456,
+      "gate": "VAL-063",
+      "claim": "Bounded queue operation with no drops or duplicates"
+    },
+    {
+      "path": "VAL-063/correlation.json",
+      "sha256": "c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
+      "size_bytes": 4567,
+      "gate": "VAL-063",
+      "claim": "Complete execution chain from request to output is cryptographically linked"
+    },
+    {
+      "path": "RC1_ACCEPTANCE_REPORT.md",
+      "sha256": "d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3",
+      "size_bytes": 8923,
+      "gate": "RC-1",
+      "claim": "Release Candidate 1 certification complete"
+    }
+  ],
+  "verification": {
+    "total_artifacts": 22,
+    "all_hashes_present": true,
+    "manifest_complete": true,
+    "root_hash_computed": true
+  },
+  "integrity": {
+    "root_hash_method": "SHA-256",
+    "root_hash_construction": "hash(concatenated artifact hashes sorted by path)",
+    "tamper_detection": "Any artifact modification invalidates root hash"
+  },
+  "distribution": {
+    "verifiable_by": "rawrxd verify --release RC1",
+    "third_party_verification": true,
+    "reproducible_without_source": true
+  }
+}

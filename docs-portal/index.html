@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Documentation Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">◈</span>
+            <span class="brand-text">RawrXD</span>
+        </div>
+        <div class="nav-links">
+            <a href="#docs" class="active">Docs</a>
+            <a href="#api">API</a>
+            <a href="#benchmarks">Benchmarks</a>
+            <a href="#blog">Blog</a>
+            <a href="https://github.com/itsmehrawrxd/rawrxd" target="_blank">GitHub</a>
+        </div>
+        <div class="nav-search">
+            <input type="text" placeholder="Search documentation..." id="searchInput">
+            <span class="search-shortcut">⌘K</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#quickstart">Quick Start</a></li>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#configuration">Configuration</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>Core Concepts</h3>
+                <ul>
+                    <li><a href="#sovereign-runtime">Sovereign Runtime</a></li>
+                    <li><a href="#hotpatch-system">Hotpatch System</a></li>
+                    <li><a href="#governance">Governance</a></li>
+                    <li><a href="#benchmarks">Benchmarks</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>API Reference</h3>
+                <ul>
+                    <li><a href="#api-overview">Overview</a></li>
+                    <li><a href="#inference-api">Inference API</a></li>
+                    <li><a href="#streaming-api">Streaming API</a></li>
+                    <li><a href="#management-api">Management API</a></li>
+                </ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>Deployment</h3>
+                <ul>
+                    <li><a href="#docker">Docker</a></li>
+                    <li><a href="#kubernetes">Kubernetes</a></li>
+                    <li><a href="#bare-metal">Bare Metal</a></li>
+                    <li><a href="#cloud">Cloud Providers</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="hero">
+                <h1>RawrXD Documentation</h1>
+                <p class="subtitle">The Sovereign AI Runtime. Native x64 MASM. Hotpatch-capable. Autonomous.</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-value">85+</span>
+                        <span class="stat-label">SIS Score</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">1.4x</span>
+                        <span class="stat-label">SAI Index</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">&lt;50ms</span>
+                        <span class="stat-label">TTFT</span>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <a href="#quickstart" class="btn btn-primary">Get Started</a>
+                    <a href="#api" class="btn btn-secondary">API Reference</a>
+                </div>
+            </div>
+
+            <section id="introduction" class="doc-section">
+                <h2>Introduction</h2>
+                <p>RawrXD is a sovereign AI runtime built for production inference at scale. It combines native x64 MASM performance with hotpatch-capable architecture, enabling zero-downtime updates and autonomous operation.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Native Performance</h3>
+                        <p>Hand-optimized x64 MASM kernels with AES-NI SIMD acceleration</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Hotpatch Capable</h3>
+                        <p>Deploy updates in 2-5ms without stopping inference</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>Sovereign Governance</h3>
+                        <p>Welford-Adaptive 3-Sigma EMA with dual-SLA integrity</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Benchmark Proven</h3>
+                        <p>Grade A SIS scores with statistical significance</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quickstart" class="doc-section">
+                <h2>Quick Start</h2>
+                <div class="code-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="windows">Windows</button>
+                        <button class="tab-btn" data-tab="macos">macOS</button>
+                        <button class="tab-btn" data-tab="linux">Linux</button>
+                        <button class="tab-btn" data-tab="docker">Docker</button>
+                    </div>
+                    <div class="tab-content active" id="windows">
+                        <pre><code># Install via Chocolatey
+choco install rawrxd
+
+# Or download MSI installer
+# https://github.com/itsmehrawrxd/rawrxd/releases/latest
+
+# Verify installation
+rawrxd --version
+
+# Run quick benchmark
+rawrxd benchmark --quick</code></pre>
+                    </div>
+                    <div class="tab-content" id="macos">
+                        <pre><code># Install via Homebrew
+brew install rawrxd
+
+# Or download DMG
+# https://github.com/itsmehrawrxd/rawrxd/releases/latest
+
+# Verify installation
+rawrxd --version
+
+# Run quick benchmark
+rawrxd benchmark --quick</code></pre>
+                    </div>
+                    <div class="tab-content" id="linux">
+                        <pre><code># Download AppImage
+wget https://github.com/itsmehrawrxd/rawrxd/releases/latest/download/RawrXD-x86_64.AppImage
+chmod +x RawrXD-x86_64.AppImage
+
+# Or install via package manager
+sudo dpkg -i rawrxd_*.deb
+
+# Verify installation
+rawrxd --version
+
+# Run quick benchmark
+rawrxd benchmark --quick</code></pre>
+                    </div>
+                    <div class="tab-content" id="docker">
+                        <pre><code># Pull the image
+docker pull ghcr.io/itsmehrawrxd/sovereign-runtime:latest
+
+# Run inference
+docker run -p 8080:8080 \
+  -v $(pwd)/models:/models \
+  ghcr.io/itsmehrawrxd/sovereign-runtime:latest
+
+# Or use docker-compose
+docker-compose up -d</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="benchmarks" class="doc-section">
+                <h2>Benchmark Results</h2>
+                <p>RawrXD achieves Grade A performance across all benchmark categories. Results are statistically validated with 99% confidence intervals.</p>
+                
+                <div class="benchmark-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>RawrXD</th>
+                                <th>Baseline</th>
+                                <th>Improvement</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SIS Score</td>
+                                <td class="highlight">87.5</td>
+                                <td>62.0</td>
+                                <td class="positive">+41%</td>
+                                <td><span class="badge grade-a">A</span></td>
+                            </tr>
+                            <tr>
+                                <td>SAI Index</td>
+                                <td class="highlight">1.45</td>
+                                <td>1.00</td>
+                                <td class="positive">+45%</td>
+                                <td><span class="badge grade-a">A</span></td>
+                            </tr>
+                            <tr>
+                                <td>TTFT (3B)</td>
+                                <td class="highlight">42ms</td>
+                                <td>85ms</td>
+                                <td class="positive">-51%</td>
+                                <td><span class="badge grade-a">A</span></td>
+                            </tr>
+                            <tr>
+                                <td>Throughput</td>
+                                <td class="highlight">47 tok/s</td>
+                                <td>32 tok/s</td>
+                                <td class="positive">+47%</td>
+                                <td><span class="badge grade-a">A</span></td>
+                            </tr>
+                            <tr>
+                                <td>Hotpatch Deploy</td>
+                                <td class="highlight">3ms</td>
+                                <td>5min</td>
+                                <td class="positive">-99.99%</td>
+                                <td><span class="badge grade-a">A</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="benchmark-note">
+                    <p><strong>Note:</strong> Benchmarks conducted on AMD RX 7800 XT with 3B parameter models. See <a href="#methodology">methodology</a> for full details.</p>
+                </div>
+            </section>
+
+            <section id="api-overview" class="doc-section">
+                <h2>API Overview</h2>
+                <p>RawrXD provides a RESTful API for inference, streaming, and management. All endpoints return JSON and support standard HTTP methods.</p>
+                
+                <div class="api-endpoints">
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <span class="path">/v1/inference</span>
+                        <span class="description">Generate completion</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <span class="path">/v1/inference/stream</span>
+                        <span class="description">Stream tokens</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <span class="path">/v1/models</span>
+                        <span class="description">List loaded models</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <span class="path">/v1/models/load</span>
+                        <span class="description">Load a model</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <span class="path">/v1/metrics</span>
+                        <span class="description">Get runtime metrics</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <span class="path">/v1/hotpatch</span>
+                        <span class="description">Apply hotpatch</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo">◈</span>
+                <span>RawrXD</span>
+            </div>
+            <div class="footer-links">
+                <a href="#docs">Documentation</a>
+                <a href="#api">API</a>
+                <a href="https://github.com/itsmehrawrxd/rawrxd">GitHub</a>
+                <a href="https://discord.gg/rawrxd">Discord</a>
+            </div>
+            <div class="footer-copy">
+                © 2026 RawrXD. Released under MIT License.
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

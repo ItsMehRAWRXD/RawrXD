@@ -1,0 +1,48 @@
+source,decision,bucket,reasoning,targets
+src/deep2/AntiPatcher.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/BottleTTL.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/CPUFrequency.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/DualGPUHook.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/HotPatcher.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/HotPatcherSafety.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/PatchCache.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/ReverseTensorRecovery.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/ShardRouterIntegration.cpp,retain,retain-production,Directly included in Win32IDE path,RawrXD-Win32IDE
+src/deep2/StreamEngine.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/TrailBrake.cpp,retain,retain-production,Win32IDE and production-bench path,Deep2_Production_Bench;RawrXD-Win32IDE
+src/deep2/Deep2Engine.cpp,retain,retain-auxiliary,Referenced by production bench and test_generation,Deep2_Production_Bench;test_generation
+src/deep2/Deep2IDEIntegration.cpp,retain,retain-auxiliary,Referenced by Win32IDE and test_generation,RawrXD-Win32IDE;test_generation
+src/deep2/FabricTensorTable.cpp,retain,retain-auxiliary,Referenced by Win32IDE and test_generation,RawrXD-Win32IDE;test_generation
+src/deep2/QuantKernelRegistry.cpp,retain,retain-auxiliary,Referenced by production bench path,Deep2_Production_Bench
+src/deep2/Deep2Benchmark.cpp,promote,promote-candidate,Orphaned benchmark harness with likely product validation value,
+src/deep2/Deep2InferenceEndpoint.cpp,promote,promote-candidate,Orphaned inference endpoint surface,
+src/deep2/Deep2InferenceGateway.cpp,promote,promote-candidate,Orphaned inference gateway surface,
+src/deep2/Deep2LocalServer.cpp,promote,promote-candidate,Orphaned local server surface,
+src/deep2/Deep2Integration.cpp,promote,promote-candidate,Orphaned integration layer,
+src/deep2/Deep2APIServer.cpp,promote,promote-candidate,Orphaned API server layer,
+src/deep2/Deep2Discovery.cpp,promote,promote-candidate,Orphaned discovery layer,
+src/deep2/deep2_end_to_end_bench.cpp,retain,retain-auxiliary,Explicit production-bench source,Deep2_Production_Bench
+src/deep2/Deep2_Phase0_SmokeTest.cpp,retain,retain-auxiliary,Validation/smoke test style source,
+src/deep2/Deep2_Phase1_Smoketest.cpp,retain,retain-auxiliary,Validation/smoke test style source,
+src/deep2/Deep2_Phase2_MultiGPU_Smoketest.cpp,retain,retain-auxiliary,Validation/smoke test style source,
+src/deep2/Deep2_Phase3_Smoketest.cpp,retain,retain-auxiliary,Validation/smoke test style source,
+src/deep2/Deep2Engine_SmokeTest.cpp,retain,retain-auxiliary,Validation/smoke test style source,
+src/deep2/Deep2Engine_FullSmoketest.cpp,retain,retain-auxiliary,Validation/smoke test style source,
+src/deep2/HotPatcherExample.cpp,deprecate,deprecate-candidate,Example-only source not target-wired,
+src/deep2/TrailBrakeExample.cpp,deprecate,deprecate-candidate,Example-only source not target-wired,
+src/deep2/TheDualityExample.cpp,deprecate,deprecate-candidate,Example-only source not target-wired,
+src/deep2/IntelligentPatchingExample.cpp,deprecate,deprecate-candidate,Example-only source not target-wired,
+src/deep2/deep2_server_main.cpp,deprecate,deprecate-candidate,Standalone/orphan server main,
+src/deep2/deep2_http_gateway.cpp,deprecate,deprecate-candidate,Standalone/orphan gateway main,
+src/deep2/deep2_link_stubs.cpp,investigate,requires-investigation,Link-stub intent conflicts with current root-CMake coverage,
+src/deep2/ModelLoader.cpp,investigate,requires-investigation,Potential architecture-level loader not root-targeted,
+src/deep2/ModelRegistry.cpp,investigate,requires-investigation,Potential architecture-level registry not root-targeted,
+src/deep2/RuntimePlanner.cpp,investigate,requires-investigation,Potential runtime planning component not root-targeted,
+src/deep2/UniversalModelLoader.cpp,investigate,requires-investigation,Potential loader variant not root-targeted,
+src/deep2/StreamRouter.cpp,investigate,requires-investigation,Potential router component not root-targeted,
+src/deep2/RawrXDInferenceAdapter.cpp,investigate,requires-investigation,Adapter-layer component not root-targeted,
+src/deep2/mcp_bridge.cpp,investigate,requires-investigation,Bridge component not root-targeted,
+src/deep2/GGUFLoader_Fixed.cpp,investigate,requires-investigation,Parallel/fix variant requiring canonicalization,
+src/deep2/GGUFDiagnostics.cpp,investigate,requires-investigation,Diagnostics component with unclear ownership,
+src/deep2/IQQuantKernels.cpp,investigate,requires-investigation,Kernel variant with unclear production ownership,
+src/deep2/FusedInferenceKernel.cpp,investigate,requires-investigation,Kernel path with unclear build ownership

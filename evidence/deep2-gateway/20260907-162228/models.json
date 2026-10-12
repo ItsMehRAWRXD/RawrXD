@@ -1,0 +1,6 @@
+{
+  "test": "models_endpoint",
+  "endpoint": "http://127.0.0.1:11435/v1/models",
+  "reachable": true,
+  "response_preview": "{"object":"list","data":[{"id":"Deep2","object":"model"}]}"
+}

@@ -1,0 +1,74 @@
+﻿[
+    {
+        "Name":  "Sovereign Engine Exists",
+        "Passed":  true,
+        "Details":  "Found at: .\\sovereign.exe",
+        "Timestamp":  "2026-07-08 02:09:46"
+    },
+    {
+        "Name":  "Model Loading",
+        "Passed":  false,
+        "Details":  "Exit code: -1073741819, Output: ",
+        "Timestamp":  "2026-07-08 02:09:48"
+    },
+    {
+        "Name":  "Inference: \u0027What is 2+2?\u0027",
+        "Passed":  false,
+        "Details":  "Exception: You cannot call a method on a null-valued expression.",
+        "Timestamp":  "2026-07-08 02:09:49"
+    },
+    {
+        "Name":  "Inference: \u0027Explain quantum computing in one sentence.\u0027",
+        "Passed":  false,
+        "Details":  "Exception: You cannot call a method on a null-valued expression.",
+        "Timestamp":  "2026-07-08 02:09:50"
+    },
+    {
+        "Name":  "Inference: \u0027Write a hello world program in Python.\u0027",
+        "Passed":  false,
+        "Details":  "Exception: You cannot call a method on a null-valued expression.",
+        "Timestamp":  "2026-07-08 02:09:52"
+    },
+    {
+        "Name":  "File Open Action",
+        "Passed":  false,
+        "Details":  "Response may not trigger actions",
+        "Timestamp":  "2026-07-08 02:09:54"
+    },
+    {
+        "Name":  "Search Action",
+        "Passed":  false,
+        "Details":  "Response may not trigger actions",
+        "Timestamp":  "2026-07-08 02:09:59"
+    },
+    {
+        "Name":  "Compile Action",
+        "Passed":  false,
+        "Details":  "Response may not trigger actions",
+        "Timestamp":  "2026-07-08 02:10:06"
+    },
+    {
+        "Name":  "Git Action",
+        "Passed":  false,
+        "Details":  "Response may not trigger actions",
+        "Timestamp":  "2026-07-08 02:10:11"
+    },
+    {
+        "Name":  "Capability Probe Source",
+        "Passed":  true,
+        "Details":  "Found: capability_probe.asm",
+        "Timestamp":  "2026-07-08 02:10:11"
+    },
+    {
+        "Name":  "Assemble Capability Probe",
+        "Passed":  true,
+        "Details":  "Created: capability_probe.obj",
+        "Timestamp":  "2026-07-08 02:10:11"
+    },
+    {
+        "Name":  "Link Capability Probe",
+        "Passed":  false,
+        "Details":  "Link failed",
+        "Timestamp":  "2026-07-08 02:10:11"
+    }
+]

@@ -1,0 +1,10 @@
+^F:\RAWRXD\BUILD_DET1\CMAKEFILES\503A8177100DE30F096A7C2CD6055505\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_det1 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/rawrxd/build_det1/RawrXD-ModelLoader.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

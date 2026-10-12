@@ -1,0 +1,206 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:19
+F:/rawrxd/src/validation/kernels/masm/abi_integrity_simple.asm  Page 1 - 1
+
+
+				; ============================================================================
+				; abi_integrity_simple.asm - Simplified ABI Compliance Test
+				; ============================================================================
+				; 
+				; PURPOSE: Check if MASM kernel preserves non-volatile registers
+				; 
+				; This is a simplified version that:
+				; 1. Saves non-volatile registers (RBX, RSI, RDI, R12-R15)
+				; 2. Calls the MASM kernel
+				; 3. Checks if non-volatile registers are preserved
+				; 4. Returns 0 if compliant, 1 if violations detected
+				; 
+				; CRITICAL: This is for development/debugging ONLY.
+				; 
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+				; External MASM kernel to test
+				extern MASM_SiLU_Clamped : proc
+
+ 00000000			.code
+
+				; ============================================================================
+				; TestABIIntegrity_Simple - Tests MASM_SiLU_Clamped for ABI compliance
+				; ============================================================================
+				; Parameters:
+				;   RCX = void* data       (pointer to float array)
+				;   RDX = size_t data_size (number of bytes)
+				; Returns:
+				;   RAX = 0 if ABI compliant, 1 if violations detected
+				; ============================================================================
+
+ 00000000			TestABIIntegrity_Simple PROC FRAME
+
+				    ; Prologue - save non-volatile registers
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+				    
+				    ; Save non-volatile registers on stack
+ 00000004  53			    push rbx
+				    .pushreg rbx
+ 00000005  56			    push rsi
+				    .pushreg rsi
+ 00000006  57			    push rdi
+				    .pushreg rdi
+ 00000007  41/ 54		    push r12
+				    .pushreg r12
+ 00000009  41/ 55		    push r13
+				    .pushreg r13
+ 0000000B  41/ 56		    push r14
+				    .pushreg r14
+ 0000000D  41/ 57		    push r15
+				    .pushreg r15
+				    
+ 0000000F  48/ 83 EC 20		    sub rsp, 32
+				    .allocstack 32
+				    .endprolog
+				    
+				    ; Save parameters (RCX, RDX are volatile, but we need them after call)
+ 00000013  4C/ 8B E1		    mov r12, rcx          ; r12 = data pointer (non-volatile)
+ 00000016  4C/ 8B EA		    mov r13, rdx          ; r13 = data_size (non-volatile)
+				    
+				    ; Save original values of non-volatile registers
+ 00000019  48/ 89 5D F8		    mov [rbp-8], rbx      ; Save RBX
+ 0000001D  48/ 89 75 F0		    mov [rbp-16], rsi     ; Save RSI
+ 00000021  48/ 89 7D E8		    mov [rbp-24], rdi     ; Save RDI
+ 00000025  4C/ 89 65 E0		    mov [rbp-32], r12     ; Save R12 (original data pointer)
+ 00000029  4C/ 89 6D D8		    mov [rbp-40], r13     ; Save R13 (original data_size)
+ 0000002D  4C/ 89 75 D0		    mov [rbp-48], r14     ; Save R14
+ 00000031  4C/ 89 7D C8		    mov [rbp-56], r15     ; Save R15
+				    
+				    ; ========================================
+				    ; Call the MASM kernel
+				    ; ========================================
+				    
+ 00000035  49/ 8B CC		    mov rcx, r12          ; Restore data pointer
+ 00000038  49/ 8B D5		    mov rdx, r13          ; Restore data_size
+				    
+ 0000003B  E8 00000000 E	    call MASM_SiLU_Clamped
+				    
+				    ; Save return value
+ 00000040  4C/ 8B F8		    mov r15, rax          ; r15 = kernel return value
+				    
+				    ; ========================================
+				    ; Check non-volatile registers
+				    ; ========================================
+				    
+ 00000043  48/ 33 C0		    xor rax, rax          ; rax = 0 (assume pass)
+				    
+				    ; Check RBX
+ 00000046  48/ 3B 5D F8		    cmp rbx, [rbp-8]
+ 0000004A  74 07		    je check_rsi
+ 0000004C  48/ C7 C0		    mov rax, 1            ; Mark as failed
+	   00000001
+				    
+ 00000053			check_rsi:
+				    ; Check RSI
+ 00000053  48/ 3B 75 F0		    cmp rsi, [rbp-16]
+ 00000057  74 07		    je check_rdi
+ 00000059  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000060			check_rdi:
+				    ; Check RDI
+ 00000060  48/ 3B 7D E8		    cmp rdi, [rbp-24]
+ 00000064  74 07		    je check_r12
+ 00000066  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 0000006D			check_r12:
+				    ; Check R12 (should still have our saved data pointer)
+ 0000006D  4C/ 3B 65 E0		    cmp r12, [rbp-32]
+ 00000071  74 07		    je check_r13
+ 00000073  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 0000007A			check_r13:
+				    ; Check R13 (should still have our saved data_size)
+ 0000007A  4C/ 3B 6D D8		    cmp r13, [rbp-40]
+ 0000007E  74 07		    je check_r14
+ 00000080  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000087			check_r14:
+				    ; Check R14
+ 00000087  4C/ 3B 75 D0		    cmp r14, [rbp-48]
+ 0000008B  74 07		    je check_r15
+ 0000008D  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000094			check_r15:
+				    ; Check R15
+ 00000094  4C/ 3B 7D C8		    cmp r15, [rbp-56]
+ 00000098  74 07		    je done_checking
+ 0000009A  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 000000A1			done_checking:
+				    ; RAX now contains 0 (pass) or 1 (fail)
+				    ; Also return the kernel's return value in R15
+ 000000A1  48/ 85 C0		    test rax, rax
+ 000000A4  75 05		    jnz abi_failed
+				    
+				    ; ABI compliant - return kernel's result
+ 000000A6  49/ 8B C7		    mov rax, r15
+ 000000A9  EB 07		    jmp cleanup
+				    
+ 000000AB			abi_failed:
+				    ; ABI violation detected - return error code 100
+ 000000AB  48/ C7 C0		    mov rax, 100
+	   00000064
+				    
+ 000000B2			cleanup:
+				    ; Epilogue - restore stack
+ 000000B2  48/ 83 C4 20		    add rsp, 32           ; Deallocate shadow space
+ 000000B6  41/ 5F		    pop r15
+ 000000B8  41/ 5E		    pop r14
+ 000000BA  41/ 5D		    pop r13
+ 000000BC  41/ 5C		    pop r12
+ 000000BE  5F			    pop rdi
+ 000000BF  5E			    pop rsi
+ 000000C0  5B			    pop rbx
+ 000000C1  5D			    pop rbp
+ 000000C2  C3			    ret
+
+ 000000C3			TestABIIntegrity_Simple ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:19
+F:/rawrxd/src/validation/kernels/masm/abi_integrity_simple.asm  Symbols 2 - 1
+
+
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+TestABIIntegrity_Simple  . . . .	P 	 00000000 _TEXT	Length= 000000C3 Public
+  check_rsi  . . . . . . . . . .	L 	 00000053 _TEXT	
+  check_rdi  . . . . . . . . . .	L 	 00000060 _TEXT	
+  check_r12  . . . . . . . . . .	L 	 0000006D _TEXT	
+  check_r13  . . . . . . . . . .	L 	 0000007A _TEXT	
+  check_r14  . . . . . . . . . .	L 	 00000087 _TEXT	
+  check_r15  . . . . . . . . . .	L 	 00000094 _TEXT	
+  done_checking  . . . . . . . .	L 	 000000A1 _TEXT	
+  abi_failed . . . . . . . . . .	L 	 000000AB _TEXT	
+  cleanup  . . . . . . . . . . .	L 	 000000B2 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+MASM_SiLU_Clamped  . . . . . . .	L 	 00000000 External
+
+	   0 Warnings
+	   0 Errors

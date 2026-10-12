@@ -1,0 +1,33 @@
+hexmag_orig_check.cpp
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C2059: syntax error: ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C2059: syntax error: ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C2015: too many characters in constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C2143: syntax error: missing ';' before 'constant'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): error C2059: syntax error: 'constant'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(2): error C2059: syntax error: 'constant'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(2): error C2059: syntax error: 'constant'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(3): error C2017: illegal escape sequence
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(3): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(3): error C2146: syntax error: missing ';' before identifier 'show'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(3): error C2143: syntax error: missing ';' before '/'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(3): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(3): error C2059: syntax error: '/'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2059: syntax error: ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2143: syntax error: missing ')' before ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2086: 'int fatal': redefinition
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): note: see declaration of 'fatal'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2059: syntax error: ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2015: too many characters in constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2143: syntax error: missing ';' before 'user-defined literal'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2086: 'int path': redefinition
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(1): note: see declaration of 'path'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2059: syntax error: 'user-defined literal'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2001: newline in constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(5): error C2015: too many characters in constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_orig_check.cpp(8): fatal error C1004: unexpected end-of-file found

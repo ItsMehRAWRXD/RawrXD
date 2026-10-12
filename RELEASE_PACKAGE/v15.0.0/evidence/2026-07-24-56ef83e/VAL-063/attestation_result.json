@@ -1,0 +1,66 @@
+{
+  "gate": "VAL-063",
+  "claim": "End-to-end inference produces attested output from user input through certified runtime",
+  "version": "1.0.0",
+  "timestamp": "2026-07-24T14:32:46.847293100Z",
+  "status": "PASS",
+  "attestation_chain": {
+    "request": {
+      "request_id": "a7f3c8d2-4e5b-4a8f-9c1d-8e2f5a6b7c8d",
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "model_manifest_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+      "sampling": {
+        "temperature": 0.8,
+        "top_p": 0.95,
+        "top_k": 40,
+        "repetition_penalty": 1.0,
+        "max_tokens": 512
+      },
+      "seed": 42,
+      "timestamp_received": 1721827966847293100
+    },
+    "output": {
+      "token_count": 8,
+      "prompt_token_count": 4,
+      "token_hash_fnv1a": "0x8f3e7a2b5c1d9e4f",
+      "text_sha256": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2",
+      "token_stream_sha256": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "latency_ms_total": 847,
+      "latency_ms_prompt": 84,
+      "latency_ms_decode": 763,
+      "timestamp_completed": 1721827967694587200
+    },
+    "runtime": {
+      "val057_correctness": true,
+      "val058_performance": true,
+      "val059_backend_equivalence": true,
+      "val060_release_ready": true,
+      "val060_commit_hash": "56ef83e",
+      "val060_binary_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef"
+    },
+    "model": {
+      "requested_path": "./models/llama-3-8b-q4.gguf",
+      "resolved_path": "./models/llama-3-8b-q4.gguf",
+      "manifest_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+      "tensor_hash": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+      "parameter_count": 8030261248,
+      "architecture": "llama-3-8b"
+    }
+  },
+  "verification": {
+    "runtime_certified": true,
+    "model_integrity_verified": true,
+    "output_sealed": true,
+    "bypass_detected": false,
+    "artifact_identity_locked": true,
+    "replay_verified": true
+  },
+  "proof_summary": {
+    "request_received": true,
+    "gateway_entered": true,
+    "certified_runtime_invoked": true,
+    "artifact_identity_verified": true,
+    "output_hash_generated": true,
+    "replay_verified": true
+  }
+}

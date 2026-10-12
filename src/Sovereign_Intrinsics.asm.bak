@@ -1,0 +1,865 @@
+; D:\rawrxd\src\Sovereign_Intrinsics.asm
+.code
+
+PUBLIC memset
+PUBLIC memcpy
+PUBLIC memmove
+PUBLIC malloc
+PUBLIC free
+
+; C++ Memory Management (Mangled)
+PUBLIC ??2@YAPEAX_K@Z          ; operator new(size_t)
+PUBLIC ??3@YAXPEAX@Z           ; operator delete(void*)
+PUBLIC ??3@YAXPEAX_K@Z         ; operator delete(void*, size_t)
+
+; STL / CRT Stubs
+PUBLIC _CrtDbgReport
+PUBLIC ??0_Lockit@std@@QEAA@H@Z ; std::_Lockit::_Lockit(int)
+PUBLIC ??1_Lockit@std@@QEAA@XZ  ; std::_Lockit::~_Lockit()
+PUBLIC ?_Xlength_error@std@@YAXPEBD@Z ; std::_Xlength_error(char const *)
+PUBLIC ?_Xout_of_range@std@@YAXPEBD@Z   ; std::_Xout_of_range(char const *)
+PUBLIC terminate
+PUBLIC __std_exception_copy
+PUBLIC __std_exception_destroy
+PUBLIC _Query_perf_counter
+PUBLIC _Query_perf_frequency
+PUBLIC __std_terminate
+PUBLIC _Thrd_detach
+PUBLIC _Thrd_sleep_for
+PUBLIC _Cnd_do_broadcast_at_thread_exit
+PUBLIC ?_Throw_Cpp_error@std@@YAXH@Z ; std::_Throw_Cpp_error(int)
+PUBLIC _CxxThrowException
+PUBLIC _beginthreadex
+PUBLIC _RTC_CheckStackVars
+PUBLIC _RTC_InitBase
+PUBLIC _RTC_Shutdown
+PUBLIC __CxxFrameHandler4
+PUBLIC __GSHandlerCheck
+PUBLIC __report_gsfailure
+PUBLIC strlen
+PUBLIC strcmp
+PUBLIC strcpy
+PUBLIC strncpy
+PUBLIC strncmp
+PUBLIC strchr
+
+EXTERN HeapAlloc: PROC
+EXTERN HeapFree: PROC
+EXTERN GetProcessHeap: PROC
+EXTERN QueryPerformanceCounter: PROC
+EXTERN QueryPerformanceFrequency: PROC
+EXTERN Sleep: PROC
+EXTERN CreateThread: PROC
+EXTERN IsProcessorFeaturePresent: PROC
+EXTERN TerminateProcess: PROC
+EXTERN GetCurrentProcess: PROC
+
+strlen PROC
+    xor rax, rax
+@@:
+    cmp byte ptr [rcx + rax], 0
+    je @f
+    inc rax
+    jmp @b
+@@:
+    ret
+strlen ENDP
+
+strcmp PROC
+@@:
+    mov al, [rcx]
+    cmp al, [rdx]
+    jne @f
+    test al, al
+    je @f
+    inc rcx
+    inc rdx
+    jmp @b
+@@:
+    sub al, [rdx]
+    movsx rax, al
+    ret
+strcmp ENDP
+
+strcpy PROC
+    mov rax, rcx
+@@:
+    mov dl, [rdx]
+    mov [rcx], dl
+    test dl, dl
+    je @f
+    inc rcx
+    inc rdx
+    jmp @b
+@@:
+    ret
+strcpy ENDP
+
+strncpy PROC
+    mov rax, rcx
+    test r8, r8
+    je @f
+@@:
+    mov dl, [rdx]
+    mov [rcx], dl
+    test dl, dl
+    je pad
+    inc rcx
+    inc rdx
+    dec r8
+    jne @b
+    jmp @f
+pad:
+    inc rcx
+    dec r8
+    je @f
+    mov byte ptr [rcx], 0
+    jmp pad
+@@:
+    ret
+strncpy ENDP
+
+strncmp PROC
+    xor rax, rax
+    test r8, r8
+    je @f
+@@:
+    mov al, [rcx]
+    cmp al, [rdx]
+    jne diff
+    test al, al
+    je @f
+    inc rcx
+    inc rdx
+    dec r8
+    jne @b
+    jmp @f
+diff:
+    sub al, [rdx]
+    movsx rax, al
+@@:
+    ret
+strncmp ENDP
+
+strchr PROC
+@@:
+    mov al, [rcx]
+    cmp al, dl
+    je found
+    test al, al
+    je notfound
+    inc rcx
+    jmp @b
+found:
+    mov rax, rcx
+    ret
+notfound:
+    xor rax, rax
+    ret
+strchr ENDP
+
+__CxxFrameHandler4 PROC
+    xor eax, eax
+    ret
+__CxxFrameHandler4 ENDP
+
+__GSHandlerCheck PROC
+    xor eax, eax
+    ret
+__GSHandlerCheck ENDP
+
+__report_gsfailure PROC
+    sub rsp, 40
+    call GetCurrentProcess
+    mov rcx, rax
+    mov rdx, 0C0000409h ; STATUS_STACK_BUFFER_OVERRUN
+    call TerminateProcess
+    add rsp, 40
+    ret
+__report_gsfailure ENDP
+
+_beginthreadex PROC
+    ; This is a bit complex as beginthreadex has different signature than CreateThread,
+    ; but for a stub we might just try to make it work or fail.
+    ; uintptr_t _beginthreadex(void *security, unsigned stack_size, unsigned (*start_address)(void *), void *arglist, unsigned initflag, unsigned *thrdaddr);
+    ; CreateThread(LPSECURITY_ATTRIBUTES, SIZE_T, LPTHREAD_START_ROUTINE, LPVOID, DWORD, LPDWORD)
+    ; The signatures are compatible enough for a simple proxy.
+    jmp CreateThread
+_beginthreadex ENDP
+
+_RTC_CheckStackVars PROC
+    ret
+_RTC_CheckStackVars ENDP
+
+_RTC_InitBase PROC
+    ret
+_RTC_InitBase ENDP
+
+_RTC_Shutdown PROC
+    ret
+_RTC_Shutdown ENDP
+
+PUBLIC _purecall
+PUBLIC ??_7type_info@@6B@
+PUBLIC wcslen
+PUBLIC wcscpy
+PUBLIC wcscat
+PUBLIC _wcsicmp
+
+_purecall PROC
+    hlt
+    ret
+_purecall ENDP
+
+wcslen PROC
+    xor rax, rax
+@@:
+    cmp word ptr [rcx + rax*2], 0
+    je @f
+    inc rax
+    jmp @b
+@@:
+    ret
+wcslen ENDP
+
+wcscpy PROC
+    mov rax, rcx
+@@:
+    mov dx, [rdx]
+    mov [rcx], dx
+    test dx, dx
+    je @f
+    add rcx, 2
+    add rdx, 2
+    jmp @b
+@@:
+    ret
+wcscpy ENDP
+
+wcscat PROC
+    mov rax, rcx
+@@:
+    cmp word ptr [rcx], 0
+    je copy
+    add rcx, 2
+    jmp @b
+copy:
+@@:
+    mov dx, [rdx]
+    mov [rcx], dx
+    test dx, dx
+    je @f
+    add rcx, 2
+    add rdx, 2
+    jmp @b
+@@:
+    ret
+wcscat ENDP
+
+_wcsicmp PROC
+    ; case-insensitive wide string compare
+@@:
+    mov ax, [rcx]
+    mov dx, [rdx]
+    
+    ; Convert AX to lowercase
+    cmp ax, 'A'
+    jl @f
+    cmp ax, 'Z'
+    jg @f
+    add ax, 32
+@@:
+    ; Convert DX to lowercase
+    cmp dx, 'A'
+    jl @f
+    cmp dx, 'Z'
+    jg @f
+    add dx, 32
+@@:
+    cmp ax, dx
+    jne diff
+    test ax, ax
+    je @f
+    add rcx, 2
+    add rdx, 2
+    jmp @b
+diff:
+    sub ax, dx
+    movsx rax, ax
+@@:
+    ret
+_wcsicmp ENDP
+
+.data
+??_7type_info@@6B@ DQ 0, 0, 0 ; dummy vftable
+
+_Thrd_detach PROC
+    xor eax, eax
+    ret
+_Thrd_detach ENDP
+
+_Thrd_sleep_for PROC
+    ; arg is pointer to duration, we'll just ignore and sleep 1ms for now or stub it
+    mov rcx, 1
+    jmp Sleep
+_Thrd_sleep_for ENDP
+
+_Cnd_do_broadcast_at_thread_exit PROC
+    ret
+_Cnd_do_broadcast_at_thread_exit ENDP
+
+?_Throw_Cpp_error@std@@YAXH@Z PROC
+    hlt
+    ret
+?_Throw_Cpp_error@std@@YAXH@Z ENDP
+
+_CxxThrowException PROC
+    hlt
+    ret
+_CxxThrowException ENDP
+
+_Query_perf_counter PROC
+    jmp QueryPerformanceCounter
+_Query_perf_counter ENDP
+
+_Query_perf_frequency PROC
+    jmp QueryPerformanceFrequency
+_Query_perf_frequency ENDP
+
+__std_terminate PROC
+    jmp terminate
+__std_terminate ENDP
+
+; void ?_Xlength_error@std@@YAXPEBD@Z(char const *)
+?_Xlength_error@std@@YAXPEBD@Z PROC
+    ; Just hang or exit
+    hlt
+    ret
+?_Xlength_error@std@@YAXPEBD@Z ENDP
+
+; void ?_Xout_of_range@std@@YAXPEBD@Z(char const *)
+?_Xout_of_range@std@@YAXPEBD@Z PROC
+    hlt
+    ret
+?_Xout_of_range@std@@YAXPEBD@Z ENDP
+
+terminate PROC
+    hlt
+    ret
+terminate ENDP
+
+__std_exception_copy PROC
+    xor eax, eax
+    ret
+__std_exception_copy ENDP
+
+__std_exception_destroy PROC
+    xor eax, eax
+    ret
+__std_exception_destroy ENDP
+
+; void* operator new(size_t size)
+??2@YAPEAX_K@Z PROC
+    sub rsp, 40
+    mov r8, rcx       ; size
+    call GetProcessHeap
+    mov rcx, rax      ; heap handle
+    mov rdx, 8        ; HEAP_ZERO_MEMORY
+    call HeapAlloc
+    add rsp, 40
+    ret
+??2@YAPEAX_K@Z ENDP
+
+; void operator delete(void* p)
+??3@YAXPEAX@Z PROC
+    test rcx, rcx
+    jz @exit
+    sub rsp, 40
+    mov r8, rcx       ; ptr
+    call GetProcessHeap
+    mov rcx, rax      ; heap handle
+    mov rdx, 0        ; flags
+    call HeapFree
+    add rsp, 40
+@exit:
+    ret
+??3@YAXPEAX@Z ENDP
+
+; void operator delete(void* p, size_t)
+??3@YAXPEAX_K@Z PROC
+    jmp ??3@YAXPEAX@Z
+??3@YAXPEAX_K@Z ENDP
+
+PUBLIC ??_V@YAXPEAX@Z ; operator delete[](void*)
+??_V@YAXPEAX@Z PROC
+    jmp ??3@YAXPEAX@Z
+??_V@YAXPEAX@Z ENDP
+
+PUBLIC ??_U@YAPEAX_K@Z ; operator new[](size_t)
+PUBLIC _Init_thread_header
+PUBLIC _Init_thread_footer
+PUBLIC _Init_thread_abort
+PUBLIC _malloc_dbg
+PUBLIC _free_dbg
+PUBLIC _calloc_dbg
+
+_Init_thread_header PROC
+    ret
+_Init_thread_header ENDP
+
+_Init_thread_footer PROC
+    ret
+_Init_thread_footer ENDP
+
+_Init_thread_abort PROC
+    ret
+_Init_thread_abort ENDP
+
+_malloc_dbg PROC
+    ; arg1: size, arg2: blockType, arg3: filename, arg4: line
+    jmp malloc
+_malloc_dbg ENDP
+
+_free_dbg PROC
+    ; arg1: userData, arg2: blockType
+    jmp free
+_free_dbg ENDP
+
+_calloc_dbg PROC
+    ; arg1: count, arg2: size, arg3: blockType, arg4: filename, arg5: line
+    push rbp
+    mov rbp, rsp
+    sub rsp, 40
+    
+    mov rax, rcx
+    mul rdx
+    mov rcx, rax
+    call malloc ; malloc(count * size)
+    
+    leave
+    ret
+_calloc_dbg ENDP
+
+PUBLIC __stdio_common_vsprintf_s
+PUBLIC __stdio_common_vsnprintf_s
+PUBLIC __stdio_common_vsscanf
+
+EXTERN wvsprintfA: PROC
+
+__stdio_common_vsprintf_s PROC
+    push rbp
+    mov rbp, rsp
+    sub rsp, 48
+    mov rcx, rdx      ; buffer
+    mov rdx, r9      ; format
+    mov r8, [rbp+56]  ; argptr (original rsp+48 before push rbp and sub rsp 48)
+    ; Actually, let's just stub it for safety.
+    xor eax, eax
+    add rsp, 48
+    pop rbp
+    ret
+__stdio_common_vsprintf_s ENDP
+
+__stdio_common_vsnprintf_s PROC
+    xor eax, eax
+    ret
+__stdio_common_vsnprintf_s ENDP
+
+__stdio_common_vsscanf PROC
+    xor eax, eax
+    ret
+__stdio_common_vsscanf ENDP
+
+PUBLIC strstr
+PUBLIC strcspn
+PUBLIC strspn
+
+strstr PROC
+    xor rax, rax
+    ret
+strstr ENDP
+
+strcspn PROC
+    xor rax, rax
+    ret
+strcspn ENDP
+
+strspn PROC
+    xor rax, rax
+    ret
+strspn ENDP
+
+PUBLIC _dtest
+PUBLIC _fdtest
+PUBLIC _ldtest
+
+_dtest PROC
+    xor eax, eax
+    ret
+_dtest ENDP
+
+_fdtest PROC
+    xor eax, eax
+    ret
+_fdtest ENDP
+
+_ldtest PROC
+    xor eax, eax
+    ret
+_ldtest ENDP
+
+PUBLIC abs
+PUBLIC labs
+PUBLIC llabs
+
+abs PROC
+    mov eax, ecx
+    cdq
+    xor eax, edx
+    sub eax, edx
+    ret
+abs ENDP
+
+labs PROC
+    jmp abs
+labs ENDP
+
+llabs PROC
+    mov rax, rcx
+    cqo
+    xor rax, rdx
+    sub rax, rdx
+    ret
+llabs ENDP
+
+PUBLIC _fabs
+PUBLIC _sqrt
+PUBLIC _pow
+PUBLIC _log
+PUBLIC _floor
+PUBLIC memcmp
+PUBLIC _fltused
+PUBLIC __std_search_1
+PUBLIC ?_Syserror_map@std@@YAPEBDH@Z
+PUBLIC _Tolower
+PUBLIC _Toupper
+PUBLIC ?_Locimp_ctor@_Locimp@locale@std@@CAXPEAV123@@Z
+PUBLIC ?_Id_cnt@id@locale@std@@2HA
+PUBLIC ?id@?$ctype@D@std@@2V0locale@2@A
+PUBLIC ??0_Locinfo@std@@QEAA@PEBD@Z
+PUBLIC ??1_Locinfo@std@@QEAA@XZ
+
+.DATA
+    _fltused DD 1
+    ?_Id_cnt@id@locale@std@@2HA DD 0
+    ?id@?$ctype@D@std@@2V0locale@2@A DQ 0
+
+.CODE
+
+; memcmp(const void* s1, const void* s2, size_t n)
+memcmp PROC
+    test r8, r8
+    jz memcmp_equal
+    mov r9, rcx
+    mov r10, rdx
+memcmp_loop:
+    mov al, [r9]
+    mov bl, [r10]
+    cmp al, bl
+    jne memcmp_not_equal
+    inc r9
+    inc r10
+    dec r8
+    jnz memcmp_loop
+memcmp_equal:
+    xor rax, rax
+    ret
+memcmp_not_equal:
+    movzx rax, al
+    movzx rbx, bl
+    sub rax, rbx
+    ret
+memcmp ENDP
+
+__std_search_1 PROC
+    ret
+__std_search_1 ENDP
+
+?_Syserror_map@std@@YAPEBDH@Z PROC
+    xor rax, rax
+    ret
+?_Syserror_map@std@@YAPEBDH@Z ENDP
+
+_Tolower PROC
+    mov rax, rcx
+    cmp cl, 'A'
+    jl @f
+    cmp cl, 'Z'
+    jg @f
+    add al, 20h
+@@:
+    ret
+_Tolower ENDP
+
+_Toupper PROC
+    mov rax, rcx
+    cmp cl, 'a'
+    jl @f
+    cmp cl, 'z'
+    jg @f
+    sub al, 20h
+@@:
+    ret
+_Toupper ENDP
+
+?_Locimp_ctor@_Locimp@locale@std@@CAXPEAV123@@Z PROC
+    ret
+?_Locimp_ctor@_Locimp@locale@std@@CAXPEAV123@@Z ENDP
+
+??0_Locinfo@std@@QEAA@PEBD@Z PROC
+    ret
+??0_Locinfo@std@@QEAA@PEBD@Z ENDP
+
+??1_Locinfo@std@@QEAA@XZ PROC
+    ret
+??1_Locinfo@std@@QEAA@XZ ENDP
+
+PUBLIC ?nothrow@std@@3Unothrow_t@1@B
+PUBLIC ?_Xbad_alloc@std@@YAXXZ
+PUBLIC ?_Xruntime_error@std@@YAXPEBD@Z
+PUBLIC memchr
+PUBLIC fflush
+PUBLIC localeconv
+PUBLIC _tls_index
+PUBLIC atexit
+PUBLIC ?uncaught_exceptions@std@@YAHXZ
+PUBLIC ?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z
+PUBLIC _Mtx_lock
+PUBLIC _Mtx_unlock
+PUBLIC _Mtx_init
+PUBLIC _Mtx_destroy
+
+.DATA
+    ?nothrow@std@@3Unothrow_t@1@B DB 0
+    _tls_index DD 0
+
+.CODE
+
+memchr PROC
+    test r8, r8
+    jz memchr_null
+memchr_loop:
+    mov al, [rcx]
+    cmp al, dl
+    je memchr_found
+    inc rcx
+    dec r8
+    jnz memchr_loop
+memchr_null:
+    xor rax, rax
+    ret
+memchr_found:
+    mov rax, rcx
+    ret
+memchr ENDP
+
+fflush PROC
+    xor rax, rax
+    ret
+fflush ENDP
+
+localeconv PROC
+    xor rax, rax
+    ret
+localeconv ENDP
+
+atexit PROC
+    xor rax, rax
+    ret
+atexit ENDP
+
+?_Xbad_alloc@std@@YAXXZ PROC
+    jmp terminate
+?_Xbad_alloc@std@@YAXXZ ENDP
+
+?_Xruntime_error@std@@YAXPEBD@Z PROC
+    jmp terminate
+?_Xruntime_error@std@@YAXPEBD@Z ENDP
+
+?uncaught_exceptions@std@@YAHXZ PROC
+    xor rax, rax
+    ret
+?uncaught_exceptions@std@@YAHXZ ENDP
+
+?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z PROC
+    ret
+?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z ENDP
+
+_Mtx_lock PROC
+    ret
+_Mtx_lock ENDP
+
+_Mtx_unlock PROC
+    ret
+_Mtx_unlock ENDP
+
+_Mtx_init PROC
+    ret
+_Mtx_init ENDP
+
+_Mtx_destroy PROC
+    ret
+_Mtx_destroy ENDP
+
+_fabs PROC
+    pcmpeqd xmm1, xmm1
+    psrlq xmm1, 1
+    andpd xmm0, xmm1
+    ret
+_fabs ENDP
+
+_sqrt PROC
+    sqrtsd xmm0, xmm0
+    ret
+_sqrt ENDP
+
+_pow PROC
+    ret
+_pow ENDP
+
+_log PROC
+    ret
+_log ENDP
+
+_floor PROC
+    roundsd xmm0, xmm0, 1
+    ret
+_floor ENDP
+
+_ceil PROC
+    roundsd xmm0, xmm0, 2
+    ret
+_ceil ENDP
+
+_frexp PROC
+    ; rcx: double x (actually in xmm0)
+    ; rdx: int* exp
+    movq rax, xmm0
+    mov r8, rax
+    shr r8, 52
+    and r8, 7FFh ; exponent bits
+    
+    test r8, r8
+    jz load_zero
+    cmp r8, 7FFh
+    je load_inf_nan
+    
+    sub r8, 1022 ; convert bias to return 0.5 to 1.0 range
+    mov [rdx], r8d
+    
+    ; Setup masks
+    mov r8, 000FFFFFFFFFFFFFh ; Mantissa mask
+    and rax, r8
+    mov r8, 3FE0000000000000h ; 0.5 bias
+    or rax, r8
+    
+    ; preserve sign
+    movq r9, xmm0
+    mov r8, 8000000000000000h
+    and r9, r8
+    or rax, r9
+    
+    movq xmm0, rax
+    ret
+
+load_zero:
+    mov dword ptr [rdx], 0
+    ; xmm0 is already zero or subnormal (handled as zero for now)
+    ret
+
+load_inf_nan:
+    ; For inf/nan, exp is usually set to 0 or unchanged by some impls, 
+    ; but let's just leave xmm0 as is.
+    ret
+_frexp ENDP
+??_U@YAPEAX_K@Z PROC
+    jmp ??2@YAPEAX_K@Z
+??_U@YAPEAX_K@Z ENDP
+
+; int _CrtDbgReport(...)
+_CrtDbgReport PROC
+    xor eax, eax
+    ret
+_CrtDbgReport ENDP
+
+; std::_Lockit stubs
+??0_Lockit@std@@QEAA@H@Z PROC
+    ret
+??0_Lockit@std@@QEAA@H@Z ENDP
+
+??1_Lockit@std@@QEAA@XZ PROC
+    ret
+??1_Lockit@std@@QEAA@XZ ENDP
+
+; Minimal implementation for compiler intrinsics
+memset PROC
+    ; RCX = dest, RDX = value (byte), R8 = count
+    mov rax, rcx
+@@loop:
+    test r8, r8
+    jz @@done
+    mov [rcx], dl
+    inc rcx
+    dec r8
+    jmp @@loop
+@@done:
+    ret
+memset ENDP
+
+memcpy PROC
+    ; RCX = dest, RDX = src, R8 = count
+    mov rax, rcx
+@@loop:
+    test r8, r8
+    jz @@done
+    mov r9b, [rdx]
+    mov [rcx], r9b
+    inc rcx
+    inc rdx
+    dec r8
+    jmp @@loop
+@@done:
+    ret
+memcpy ENDP
+
+memmove PROC
+    ; Simplified memmove (same as memcpy for now)
+    jmp memcpy
+memmove ENDP
+
+malloc PROC
+    sub rsp, 40
+    mov r8, rcx       ; size
+    call GetProcessHeap
+    mov rcx, rax      ; heap handle
+    mov rdx, 0        ; flags
+    call HeapAlloc
+    add rsp, 40
+    ret
+malloc ENDP
+
+free PROC
+    test rcx, rcx
+    jz @exit
+    sub rsp, 40
+    mov r8, rcx       ; ptr
+    call GetProcessHeap
+    mov rcx, rax      ; heap handle
+    mov rdx, 0        ; flags
+    call HeapFree
+    add rsp, 40
+@exit:
+    ret
+free ENDP
+
+END

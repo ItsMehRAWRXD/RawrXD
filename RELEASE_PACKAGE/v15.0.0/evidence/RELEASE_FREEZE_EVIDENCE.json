@@ -1,0 +1,18 @@
+{
+  "build_id": "v15.0.0-RC1",
+  "timestamp": "2026-07-30T17:56:59.923342",
+  "clean_release_build": true,
+  "no_qt_dependency": true,
+  "no_placeholder_providers": true,
+  "no_stub_tool_handlers": true,
+  "deep2_path_verified": true,
+  "gpu_backend_verified": true,
+  "agent_recovery_verified": true,
+  "val_suite_green": true,
+  "evidence_package_generated": true,
+  "checks_passed": 9,
+  "checks_total": 9,
+  "release_ready": true,
+  "warnings": [],
+  "errors": []
+}

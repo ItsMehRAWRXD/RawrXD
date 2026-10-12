@@ -1,0 +1,67 @@
+[
+  {
+    "id": "crypto-performance",
+    "title": "Cryptocurrency Analytics Engine",
+    "icon": "trending-up",
+    "scripts": ["/src/panels/crypto/analytics.js"],
+    "css": ["/src/panels/crypto/layout.css"],
+    "dependencies": ["RawrRuntime", "DataVisualizerCore"],
+    "permissions": ["ipc:telemetry"],
+    "routes": ["/crypto", "/analytics"],
+    "events": ["panel:crypto:update", "panel:crypto:refresh"],
+    "menu": { "group": "analytics", "order": 1 },
+    "health": { "checkInterval": 5000, "timeout": 10000 }
+  },
+  {
+    "id": "system-diagnostics",
+    "title": "Core System Monitor",
+    "icon": "activity",
+    "scripts": ["/src/panels/diag/monitor.js"],
+    "css": ["/src/panels/diag/style.css"],
+    "dependencies": ["RawrRuntime"],
+    "permissions": ["ipc:telemetry", "ipc:engine"],
+    "routes": ["/system", "/diagnostics"],
+    "events": ["panel:diag:update", "panel:diag:alert"],
+    "menu": { "group": "monitoring", "order": 0 },
+    "health": { "checkInterval": 3000, "timeout": 5000 }
+  },
+  {
+    "id": "engine-manager",
+    "title": "Engine Manager",
+    "icon": "cpu",
+    "scripts": ["/src/panels/engine/manager.js"],
+    "css": ["/src/panels/engine/style.css"],
+    "dependencies": ["RawrRuntime", "RawrIpcSynchronizer"],
+    "permissions": ["ipc:engine", "ipc:telemetry"],
+    "routes": ["/engine", "/inference"],
+    "events": ["engine:start", "engine:stop", "engine:status"],
+    "menu": { "group": "control", "order": 0 },
+    "health": { "checkInterval": 2000, "timeout": 3000 }
+  },
+  {
+    "id": "telemetry-dashboard",
+    "title": "Telemetry Dashboard",
+    "icon": "bar-chart",
+    "scripts": ["/src/panels/telemetry/dashboard.js"],
+    "css": ["/src/panels/telemetry/style.css"],
+    "dependencies": ["RawrRuntime", "DataVisualizerCore"],
+    "permissions": ["ipc:telemetry"],
+    "routes": ["/telemetry", "/metrics"],
+    "events": ["telemetry:update", "telemetry:alert"],
+    "menu": { "group": "monitoring", "order": 1 },
+    "health": { "checkInterval": 5000, "timeout": 10000 }
+  },
+  {
+    "id": "session-manager-panel",
+    "title": "Session Manager",
+    "icon": "lock",
+    "scripts": ["/src/panels/session/manager.js"],
+    "css": ["/src/panels/session/style.css"],
+    "dependencies": ["RawrRuntime", "RawrSessionManager"],
+    "permissions": ["ipc:telemetry"],
+    "routes": ["/session", "/security"],
+    "events": ["session:authorized", "session:terminated"],
+    "menu": { "group": "admin", "order": 0 },
+    "health": { "checkInterval": 10000, "timeout": 15000 }
+  }
+]

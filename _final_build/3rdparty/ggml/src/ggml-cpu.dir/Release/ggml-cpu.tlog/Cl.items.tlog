@@ -1,0 +1,14 @@
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ggml-cpu\ggml-cpu.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ggml-cpu\ggml-cpu.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\repack.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ggml-cpu\repack.cpp.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\hbm.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\hbm.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\quants.c;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ggml-cpu\quants.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\traits.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\traits.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\amx\amx.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\amx.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\amx\mmq.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\mmq.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\binary-ops.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\binary-ops.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\unary-ops.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\unary-ops.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\vec.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\vec.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\ops.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ops.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\quants.c;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ggml-cpu\arch\x86\quants.c.obj
+F:\rawrxd\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp;F:\rawrxd\_final_build\3rdparty\ggml\src\ggml-cpu.dir\Release\ggml-cpu\arch\x86\repack.cpp.obj

@@ -1,0 +1,87 @@
+{
+  "id": "VAL-059",
+  "name": "Backend Equivalence",
+  "timestamp": "2026-07-24T13:20:00Z",
+  "status": "IN_PROGRESS",
+  "claim": "CPU and GPU backends produce numerically equivalent outputs within tolerance",
+  "prerequisites": ["VAL-058"],
+  "observation_target": {
+    "backends": ["CPU", "Vulkan", "ROCm"],
+    "comparison_mode": "bitwise_hash",
+    "tolerance": "1e-5"
+  },
+  "equivalence_tests": {
+    "embedding_lookup": {
+      "description": "Token embedding produces identical values",
+      "cpu_hash": null,
+      "gpu_hash": null,
+      "match": null,
+      "status": "PENDING"
+    },
+    "rms_norm": {
+      "description": "RMS normalization produces identical values",
+      "cpu_hash": null,
+      "gpu_hash": null,
+      "match": null,
+      "status": "PENDING"
+    },
+    "qkv_projection": {
+      "description": "QKV matrix multiplication produces identical values",
+      "cpu_hash": null,
+      "gpu_hash": null,
+      "match": null,
+      "status": "PENDING"
+    },
+    "attention": {
+      "description": "Attention mechanism produces identical values",
+      "cpu_hash": null,
+      "gpu_hash": null,
+      "match": null,
+      "status": "PENDING"
+    },
+    "ffn": {
+      "description": "Feed-forward network produces identical values",
+      "cpu_hash": null,
+      "gpu_hash": null,
+      "match": null,
+      "status": "PENDING"
+    },
+    "final_logits": {
+      "description": "Output logits produce identical values",
+      "cpu_hash": null,
+      "gpu_hash": null,
+      "match": null,
+      "status": "PENDING"
+    }
+  },
+  "numerical_tolerance": {
+    "absolute_error": 1e-5,
+    "relative_error": 1e-4,
+    "max_diff_samples": 10
+  },
+  "execution_results": {
+    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "backends_tested": [],
+    "equivalence_verified": false,
+    "max_observed_error": null,
+    "status": "PENDING"
+  },
+  "evidence_path": "evidence/2026-07-24-56ef83e/backend_equivalence.json",
+  "verification_method": "Layer-by-layer hash comparison across backends",
+  "success_criteria": [
+    "All backends produce identical embedding lookups",
+    "All backends produce identical RMSNorm outputs",
+    "All backends produce identical QKV projections",
+    "All backends produce identical attention outputs",
+    "All backends produce identical FFN outputs",
+    "All backends produce identical final logits",
+    "Numerical error within tolerance (1e-5)"
+  ],
+  "notes": [
+    "VAL-059 ensures GPU acceleration does not introduce correctness regressions",
+    "Hash-based comparison catches any divergence immediately",
+    "Tolerance accounts for floating-point non-associativity",
+    "Validated on VAL-057 deterministic substrate"
+  ],
+  "next_step": "VAL-060: Release Freeze"
+}

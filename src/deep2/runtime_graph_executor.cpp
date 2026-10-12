@@ -18,6 +18,129 @@ using Universal::TensorRec;
 
 namespace {
 
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_LEGACY_QUANT_GPU_001 - shared quant-dot helpers.
+//
+// Every quantised matmul in the executor (linear projections AND MoE expert
+// slices) dispatches through QuantDot::DotBlocked with an interleaved Q8_K
+// activation. These two helpers are the host side of that contract, factored
+// out so the linear path and the MoE path cannot drift apart:
+//   BuildInterleavedQ8  - quantise the activation the way the shader reads it
+//   RowDotInterleavedQ8 - decode one packed row and dot it against that
+//                         activation, mirroring the shader bit for bit.
+// The final 256-value super-block is PARTIAL when n_in % 256 != 0 (e.g. the
+// 2688-wide shapes in nemotron_h_moe = 10*256 + 128).
+// ---------------------------------------------------------------------------
+
+constexpr size_t kQ8Stride = 273;   // floats per 256-value activation super-block
+
+// Quantise x into the interleaved Q8_K layout: per super-block d, qs[256],
+// bsums[16] (bsums are unused by the legacy kernels but kept so the layout is
+// identical for all kinds).
+inline void BuildInterleavedQ8(const float* x, size_t n_in, std::vector<float>& q8) {
+    const size_t n_sb = (n_in + 255u) / 256u;
+    q8.assign(n_sb * kQ8Stride, 0.0f);
+    for (size_t b = 0; b < n_sb; ++b) {
+        const size_t off = b * 256u;
+        const size_t elems = std::min<size_t>(256u, n_in - off);
+        float mx = 0.0f;
+        for (size_t i = 0; i < elems; ++i) mx = std::max(mx, std::fabs(x[off + i]));
+        const float d = mx / 127.0f;
+        const float inv = d > 0.0f ? 1.0f / d : 0.0f;
+        float* blk = q8.data() + b * kQ8Stride;
+        blk[0] = d;
+        int32_t bsums[16] = {0};
+        for (size_t i = 0; i < elems; ++i) {
+            const int32_t v = (int32_t)std::lround(x[off + i] * inv);
+            blk[1 + i] = (float)v;
+            bsums[i / 16] += v;
+        }
+        for (size_t k = 0; k < 16; ++k) blk[257 + k] = (float)bsums[k];
+    }
+}
+
+// Packed row stride for a kind / n_in pair.
+inline size_t QuantRowBytes(int kind, size_t n_in) {
+    switch (kind) {
+    case 0: return (n_in / 256u) * 144u;   // Q4_K
+    case 1: return (n_in / 256u) * 210u;   // Q6_K
+    case 2: return ((n_in + 31u) / 32u) * 22u;  // Q5_0
+    default: return ((n_in + 31u) / 32u) * 34u; // Q8_0
+    }
+}
+
+// Kernel kind for a ggml type, or -1 when the quant-dot shader does not
+// cover it (the caller keeps its CPU path for those).
+inline int QuantKindOf(ggml_type t) {
+    switch (t) {
+    case GGML_TYPE_Q4_K: return 0;
+    case GGML_TYPE_Q6_K: return 1;
+    case GGML_TYPE_Q5_0: return 2;
+    case GGML_TYPE_Q8_0: return 3;
+    default: return -1;
+    }
+}
+
+// Decode ONE packed row (kind 0..3) and dot it against the interleaved Q8
+// activation, exactly as the shader does: ggml block decoders, fp16 scales,
+// integer MACs, super-block activation scale applied once per super-block.
+inline float RowDotInterleavedQ8(int kind, const uint8_t* row, const float* q8v, size_t n_in) {
+    if (kind == 2 || kind == 3) {
+        // ---- legacy Q5_0 / Q8_0 (32 values per block) ----
+        const size_t lb_bytes = (kind == 2) ? 22u : 34u;
+        const size_t n_sb = (n_in + 255u) / 256u;
+        double acc = 0.0;
+        for (size_t b = 0; b < n_sb; ++b) {
+            const float dq = q8v[b * kQ8Stride + 0];
+            const size_t elems = std::min<size_t>(256u, n_in - b * 256u);
+            for (size_t lb = 0; lb < elems / 32u; ++lb) {
+                const uint8_t* blk = row + (b * 8u + lb) * lb_bytes;
+                // q8 index is LOCAL to the super-block.
+                const size_t a0 = lb * 32u;
+                int32_t dotp = 0;
+                if (kind == 2) {
+                    uint16_t hb;
+                    std::memcpy(&hb, blk, 2);
+                    const float dw = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb));
+                    uint32_t qh;
+                    std::memcpy(&qh, blk + 2, 4);
+                    for (size_t j = 0; j < 16u; ++j) {
+                        const uint32_t qsb = blk[6 + j];
+                        const int h0 = (int)((qh >> (j + 0u)) & 1u);
+                        const int h1 = (int)((qh >> (j + 16u)) & 1u);
+                        const int w0 = (int)(qsb & 0x0Fu) | (h0 << 4);
+                        const int w1 = (int)(qsb >> 4) | (h1 << 4);
+                        dotp += (w0 - 16) * (int32_t)q8v[b * kQ8Stride + 1 + a0 + j];
+                        dotp += (w1 - 16) * (int32_t)q8v[b * kQ8Stride + 1 + a0 + j + 16u];
+                    }
+                    acc += (double)dw * (double)dq * (double)dotp;
+                } else {
+                    uint16_t hb;
+                    std::memcpy(&hb, blk, 2);
+                    const float dw = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hb));
+                    for (size_t i = 0; i < 32u; ++i)
+                        dotp += (int32_t)(int8_t)blk[2 + i] * (int32_t)q8v[b * kQ8Stride + 1 + a0 + i];
+                    acc += (double)dw * (double)dq * (double)dotp;
+                }
+            }
+        }
+        return (float)acc;
+    }
+    // ---- k-quants Q4_K / Q6_K: ggml decoder row, quantised-activation dot ----
+    static thread_local std::vector<float> rw;
+    const ggml_type_traits* tr = ggml_get_type_traits(kind == 0 ? GGML_TYPE_Q4_K : GGML_TYPE_Q6_K);
+    if (!tr) return 0.0f;
+    rw.assign(n_in, 0.0f);
+    tr->to_float(row, rw.data(), (int)n_in);
+    double acc = 0.0;
+    for (size_t b = 0; b < n_in / 256u; ++b) {
+        const float dq = q8v[b * kQ8Stride + 0];
+        for (size_t i = 0; i < 256u; ++i)
+            acc += double(rw[b * 256u + i]) * (double)dq * (double)q8v[b * kQ8Stride + 1 + i];
+    }
+    return (float)acc;
+}
+
 const char* opName(Universal::Op o) {
     switch (o) {
         case Universal::Op::EmbeddingLookup: return "EmbeddingLookup";
@@ -633,6 +756,70 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         return true;
     }
 
+    // Legacy quant types with a GPU kernel (RAWRXD_DEEP2_LEGACY_QUANT_GPU_001).
+    // Q4_K/Q6_K (the k-quants) and Q5_0/Q8_0 (legacy) are all decoded INSIDE
+    // the quant-dot shader, so they dispatch on the GPU with the same
+    // interleaved Q8_K activation instead of dequantising every row on the CPU.
+    // Models such as nemotron_h_moe ship their SSM and shared-expert
+    // projections in exactly these types, and the CPU row-at-a-time path was
+    // the reason the GPU-only certificate could not pass (cpu_calls > 0) and
+    // decode ran at 0.12 TPS.
+    //
+    // The packed geometry is validated against the real byte span (never
+    // bypassed): the row stride from the block size/type size, and the tensor
+    // must hold at least n_out rows of that stride. The Q8 activation's final
+    // 256-value super-block may be PARTIAL (n_in need not divide 256, e.g.
+    // 2688 = 10*256 + 128); the shader decodes only the blocks that exist.
+    if (n_in > 0 && n_out > 0) {
+        const int kind = QuantKindOf(w.ggml_type);
+        if (kind >= 0) {
+            const size_t lb_min = (kind >= 2) ? 32u : 256u;   // block granularity
+            if (n_in % lb_min == 0) {
+                const size_t row_bytes = QuantRowBytes(kind, n_in);
+                if (w.bytes < row_bytes * n_out) {
+                    if (std::getenv("LINEAR_TRACE")) {
+                        std::fprintf(stderr, "[linear-short-legacy-gpu] w=%s type=%d dims=[%zu,%zu] bytes=%zu "
+                                             "need=%zu (row_bytes=%zu n_out=%zu)\n",
+                                     w.name.c_str(), (int)w.ggml_type, (size_t)w.dims[0],
+                                     w.dims.size() > 1 ? (size_t)w.dims[1] : 0,
+                                     w.bytes, row_bytes * n_out, row_bytes, n_out);
+                        std::fflush(stderr);
+                    }
+                    err = "linear: weight bytes short";
+                    return false;
+                }
+                std::vector<float> q8;
+                BuildInterleavedQ8(x.data(), n_in, q8);
+                QuantDot::CpuDot cpu =
+                    [&](const uint8_t* row, const void* q8_act, size_t) -> float {
+                        return RowDotInterleavedQ8(kind, row,
+                                                   static_cast<const float*>(q8_act), n_in);
+                    };
+                y.assign(n_out, 0.0f);
+                if (std::getenv("QUANT_TRACE")) {
+                    std::fprintf(stderr, "[quant-legacy] w=%s kind=%d n_in=%zu n_out=%zu rb=%zu wbytes=%zu\n",
+                                 w.name.c_str(), kind, n_in, n_out, row_bytes, w.bytes);
+                    std::fflush(stderr);
+                }
+                const bool ok = QuantDot::DotBlocked(kind, w.data, w.bytes, x.data(), n_in,
+                                                     y.data(), n_out, cpu,
+                                                     q8.data(), q8.size() * sizeof(float),
+                                                     force_cpu_);
+                if (ok) {
+                    ++gpu_calls_;
+                } else {
+                    ++cpu_calls_;
+                    const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+                    if (cpu_fallback_reason_.empty() && rcpt.fallback_reason) {
+                        cpu_fallback_reason_ = std::string("legacy quant dot: ") + rcpt.fallback_reason +
+                            " (weight=" + w.name + ")";
+                    }
+                }
+                return true;
+            }
+        }
+    }
+
     // Legacy quantized types (Q8_0, Q5_0, Q4_0, Q4_1, Q5_1, Q3_K, Q2_K,
     // Q5_K, Q8_K): dot ONE ROW AT A TIME. Materialising a dequantised
     // [n_out, n_in] matrix would need 1.4 GB of F32 for the language-model
@@ -1138,6 +1325,39 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                              (double)v[(size_t)0],
                              (double)qr[(size_t)0 * qPerHead],
                              (double)qr[(size_t)0 * qPerHead + qRopeOff]);
+                // Full first-eight of K_nope, V and the concatenated attention
+                // output, so an independent implementation can compare whole
+                // vectors rather than the single leading element (which agreed
+                // while the rest of the vector did not).
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr, "[mla-knope8] blk=%d pos=%zu:", (int)in.block, position);
+                    for (int i = 0; i < 8; ++i)
+                        std::fprintf(stderr, " %.7f", (double)k[i]);
+                    // Aggregate over the WHOLE vector, not just the head: the
+                    // first eight matched an independent implementation bit for
+                    // bit while the rest of the vector did not, which is
+                    // invisible to a leading-element witness.
+                    double vl2 = 0.0, kl2 = 0.0;
+                    for (float f : v) vl2 += double(f) * double(f);
+                    for (float f : k) kl2 += double(f) * double(f);
+                    double yl2 = 0.0;
+                    for (float f : y) yl2 += double(f) * double(f);
+                    std::fprintf(stderr, "\n[mla-ysum] blk=%d pos=%zu l2=%.9f y0=%.7f y1=%.7f\n",
+                                 (int)in.block, position, std::sqrt(yl2),
+                                 y.empty() ? 0.0 : (double)y[0],
+                                 y.size() > 1 ? (double)y[1] : 0.0);
+                    std::fprintf(stderr, "\n[mla-vsum] blk=%d pos=%zu l2=%.9f e100=%.7f e1000=%.7f e2000=%.7f\n",
+                                 (int)in.block, position, std::sqrt(vl2),
+                                 v.size() > 100 ? (double)v[100] : 0.0,
+                                 v.size() > 1000 ? (double)v[1000] : 0.0,
+                                 v.size() > 2000 ? (double)v[2000] : 0.0);
+                    std::fprintf(stderr, "[mla-ksum] blk=%d pos=%zu l2=%.9f\n",
+                                 (int)in.block, position, std::sqrt(kl2));
+                    std::fprintf(stderr, "\n[mla-v8] blk=%d pos=%zu:", (int)in.block, position);
+                    for (int i = 0; i < 8; ++i)
+                        std::fprintf(stderr, " %.7f", (double)v[i]);
+                    std::fflush(stderr);
+                }
             }
             std::fflush(stderr);
             n_dims_seen_ = (int)position + 1;
@@ -1239,12 +1459,31 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
                      [&](uint32_t a, uint32_t b) { return logits[a] > logits[b]; });
     ids.assign(kused, 0);
     w.assign(kused, 0.0f);
-    double renorm = 0.0;
-    for (size_t i = 0; i < kused; ++i) renorm += logits[idx[i]];
-    if (!(renorm > 0.0)) { last_error_ = "router: zero weight"; return false; }
+    // 3. weight transformation.
+    //
+    // The reference renormalises the selected top-k scores to sum to 1 ONLY
+    // when the model declares expert_weights_norm (qwen3-moe / gpt-oss style
+    // MoE). DeepSeek-Coder-V2 emits no expert_weights_norm key, so its routing
+    // weights stay the RAW softmax probabilities, whose sum is < 1 (on this
+    // checkpoint the top-6 probs sum to ~0.18-0.45). Normalising them
+    // unconditionally inflated every routed expert contribution by 1/sum
+    // (~2.3x at block 1, ~5x at block 8) - the "same direction, wrong
+    // magnitude" MoE divergence certified against llama.cpp.
+    double renorm = 1.0;
+    if (spec_.expert_weights_norm) {
+        renorm = 0.0;
+        for (size_t i = 0; i < kused; ++i) renorm += logits[idx[i]];
+        if (!(renorm > 0.0)) { last_error_ = "router: zero weight"; return false; }
+    }
     for (size_t i = 0; i < kused; ++i) {
         ids[i] = idx[i];
         w[i] = (float)(logits[idx[i]] / renorm);
+    }
+    // expert_weights_scale: applied only when the model sets it to something
+    // other than 0 (absent) or 1 (identity), exactly like the reference.
+    const float wscale = (float)spec_.expert_weights_scale;
+    if (wscale != 0.0f && wscale != 1.0f) {
+        for (size_t i = 0; i < kused; ++i) w[i] *= wscale;
     }
     if (std::getenv("ROUTER_TRACE")) {
         std::fprintf(stderr, "[router-sel] blk=%d selected=", (int)router.block);
@@ -1379,9 +1618,26 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const size_t ffn = (size_t)std::max<uint64_t>(spec_.expert_ffn, 1);
     const size_t embd = spec_.embd;
 
-    // No separate gate expert on this model: the router (ffn_gate_inp) does the
-    // gating, so the up projection doubles as the gate (identity gate).
-    const TensorRec* gateT = upT;
+    // The gate expert is a SEPARATE tensor (blk.N.ffn_gate_exps.weight) from
+    // the up expert (blk.N.ffn_up_exps.weight). The graph builder names the gate
+    // in moe.c and up/down in moe.detail. Falling back to `gateT = upT` makes
+    // the SwiGLU become silu(x·Wu)·(x·Wu), i.e. the same projection used twice,
+    // which silently corrupts every MoE block (26 of 27 on deepseek2) while
+    // leaving the dense block and all norms correct - exactly the signature of
+    // a run whose block-0 values match and whose later blocks do not.
+    const TensorRec* gateT = nullptr;
+    if (moe.c >= 0 && (size_t)moe.c < tensors_.size()) gateT = &tensors_[(size_t)moe.c];
+    if (!gateT) {
+        // Resolve by the block's own tensor name, not by a model-family guess.
+        const std::string gname = "blk." + std::to_string((int)moe.block) +
+                                  ".ffn_gate_exps.weight";
+        auto it = slot_by_name_.find(gname);
+        if (it != slot_by_name_.end()) gateT = &tensors_[(size_t)it->second];
+    }
+    // If no gate tensor exists for this block, the up projection genuinely is
+    // the gate (single-tensor SwiGLU); that fallback is now the ONLY case where
+    // upT is used for the gate.
+    if (!gateT) gateT = upT;
     if (gateT->dims.size() < 2 || upT->dims.size() < 2 || downT->dims.size() < 2) {
         err = "moe: expert tensor rank < 2";
         return false;
@@ -1438,59 +1694,227 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         if ((size_t)ids[e] >= usableE) { err = "moe: selected expert out of range"; return false; }
     }
 
-    std::vector<float> g(ffn), u(ffn), h(ffn);
-    std::vector<float> gSlice, uSlice, dSlice;
+    std::vector<float> g(ffn), u(ffn);
     size_t expertsProcessed = 0;
 
-    for (size_t e = 0; e < ids.size() && e < w.size(); ++e) {
+    // RAWRXD_DEEP2_LEGACY_QUANT_GPU_001: expert matmuls dispatch through the
+    // SAME quant-dot fast path as every linear projection. The expert bank is
+    // a rank-3 [in, out, expert] tensor; a selected expert's slice is n_out
+    // contiguous rows starting at expert_base_bytes, which the shader consumes
+    // directly (it addresses rows from the packed pointer it is handed). The
+    // activation is the interleaved Q8 the shader expects, so the reference
+    // executor's force-CPU fallback computes the same number.
+    //
+    // The selected experts of a block run in BATCHES: all up-projections in one
+    // submission, then all down-projections in a second. A 24-block MoE with 6
+    // experts then costs 48 submits per token instead of 288. A dot whose
+    // output is consumed before its batch ends (an up-dot feeding its own
+    // SwiGLU) is never queued: SwiGLU runs BETWEEN the two batches.
+    //
+    // Single-call receipt accounting (the batches are accounted by their
+    // callers, once per batch outcome).
+    auto account = [&](bool ok, const char* tname, size_t expert_index) {
+        if (ok) {
+            ++gpu_calls_;
+        } else {
+            ++cpu_calls_;
+            const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+            if (cpu_fallback_reason_.empty() && rcpt.fallback_reason) {
+                cpu_fallback_reason_ = std::string("moe expert dot: ") + rcpt.fallback_reason +
+                    " (weight=" + tname + " expert=" + std::to_string(expert_index) + ")";
+            }
+        }
+    };
+
+    const size_t nSel = std::min(ids.size(), w.size());
+    const size_t glen = std::min(ffn, gOut);
+    const size_t ulen = std::min(ffn, uOut);
+    const size_t olen = std::min(embd, dOut);
+    const int uKind = QuantKindOf(upT->ggml_type);
+    const int dKind = QuantKindOf(downT->ggml_type);
+    // The up-projection activation is the SAME token hidden state for every
+    // selected expert, so its interleaved Q8 is built once per block.
+    const bool upGpuShape = (uKind >= 0) && (uIn % (uKind >= 2 ? 32u : 256u)) == 0 &&
+                            (uIn <= x.size());
+    std::vector<float> q8up;
+    if (upGpuShape) BuildInterleavedQ8(x.data(), uIn, q8up);
+    const size_t q8upBytes = upGpuShape ? q8up.size() * sizeof(float) : 0u;
+
+    std::vector<float> uAll(nSel * ffn, 0.0f);
+    std::vector<float> hAll(nSel * ffn, 0.0f);
+    std::vector<float> dyAll(nSel * embd, 0.0f);
+    std::vector<uint8_t> upDone(nSel, 0);
+
+    // ---- phase 1: every selected expert's up-projection ----------------------
+    const bool batchUp = !force_cpu_ && nSel >= 2 && QuantDot::BeginBatch();
+    size_t queuedUp = 0;
+    for (size_t e = 0; e < nSel; ++e)
+    {
         const size_t ex = (size_t)ids[e];
         if (ex >= usableE) continue;
-
-        // Dequantize only this expert's slice.
-        gSlice.clear(); uSlice.clear(); dSlice.clear();
-
-        const size_t gBase = ex * elemStrideG;
-        const size_t uBase = ex * elemStrideU;
-        const size_t dBase = ex * elemStrideD;
-        if (!DequantRange(*gateT, gBase, elemStrideG, gSlice) ||
-            !DequantRange(*upT,   uBase, elemStrideU, uSlice) ||
-            !DequantRange(*downT, dBase, elemStrideD, dSlice)) {
-            err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
-                  " expert=" + std::to_string(ex) + ")";
-            return false;
+        if (!upGpuShape) continue;
+        float* out = &uAll[e * ffn];
+        if (batchUp) {
+            // Queued: DotBlocked defers to the batch's single submission.
+            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
+                return RowDotInterleavedQ8(uKind, row, static_cast<const float*>(q8_act), uIn);
+            };
+            const size_t row_bytes = QuantRowBytes(uKind, uIn);
+            const uint8_t* packed = reinterpret_cast<const uint8_t*>(upT->data) +
+                                    ex * ulen * row_bytes;
+            const bool queued = QuantDot::DotBlocked(uKind, packed, row_bytes * ulen, x.data(),
+                                                     uIn, out, ulen, cpu, q8up.data(),
+                                                     q8upBytes, false);
+            if (queued) { upDone[e] = 1; ++queuedUp; }
+        } else {
+            // Single call: runs now (GPU path, or the reference executor's
+            // force-CPU path - both compute the same number).
+            const size_t row_bytes = QuantRowBytes(uKind, uIn);
+            const uint8_t* packed = reinterpret_cast<const uint8_t*>(upT->data) +
+                                    ex * ulen * row_bytes;
+            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
+                return RowDotInterleavedQ8(uKind, row, static_cast<const float*>(q8_act), uIn);
+            };
+            const bool ok = QuantDot::DotBlocked(uKind, packed, row_bytes * ulen, x.data(),
+                                                 uIn, out, ulen, cpu, q8up.data(),
+                                                 q8upBytes, force_cpu_);
+            if (ok) upDone[e] = 1;
+            account(ok, upT->name.c_str(), ex);
         }
+    }
+    if (batchUp) {
+        // One submission for the whole block's up-projections. On failure the
+        // dots were replayed on the CPU fallback and the outputs are valid, so
+        // only the accounting records the difference.
+        const bool batchOk = QuantDot::EndBatch();
+        if (batchOk) {
+            gpu_calls_ += queuedUp;
+        } else {
+            cpu_calls_ += queuedUp;
+            if (cpu_fallback_reason_.empty()) {
+                const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+                if (rcpt.fallback_reason)
+                    cpu_fallback_reason_ = std::string("moe up batch: ") + rcpt.fallback_reason;
+            }
+        }
+    }
+
+    // ---- per-expert SwiGLU (all up-dots are complete now) --------------------
+    for (size_t e = 0; e < nSel; ++e)
+    {
+        const size_t ex = (size_t)ids[e];
+        if (ex >= usableE) continue;
 
         std::fill(g.begin(), g.end(), 0.0f);
         std::fill(u.begin(), u.end(), 0.0f);
 
-        const size_t glen = std::min(ffn, gOut);
-        const size_t ulen = std::min(ffn, uOut);
-        for (size_t j = 0; j < glen; ++j) {
-            double acc = 0.0;
-            const size_t lim = std::min(gIn, x.size());
-            for (size_t i = 0; i < lim; ++i) acc += double(gSlice[j * gIn + i]) * double(x[i]);
-            g[j] = (float)acc;
+        if (upDone[e])
+        {
+            // GPU/force-CPU path already produced this expert's up projection.
+            for (size_t j = 0; j < ulen; ++j) u[j] = uAll[e * ffn + j];
+            // No separate gate expert on this model: the router does the gating,
+            // so the up projection doubles as the gate (identity gate).
+            for (size_t j = 0; j < glen; ++j) g[j] = uAll[e * ffn + j];
         }
-        for (size_t j = 0; j < ulen; ++j) {
-            double acc = 0.0;
+        else
+        {
+            // CPU path: dequantise only this expert's slice, dot in double.
+            std::vector<float> uSlice;
+            if (!DequantRange(*upT, ex * elemStrideU, elemStrideU, uSlice))
+            {
+                err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
+                      " expert=" + std::to_string(ex) + ")";
+                return false;
+            }
             const size_t lim = std::min(uIn, x.size());
-            for (size_t i = 0; i < lim; ++i) acc += double(uSlice[j * uIn + i]) * double(x[i]);
-            u[j] = (float)acc;
-        }
-        // SwiGLU: silu(gate) * up   (gate==up when the model has no gate expert)
-        for (size_t j = 0; j < ffn; ++j) {
-            const float s = 1.0f / (1.0f + std::exp(-g[j]));
-            h[j] = g[j] * s * u[j];
+            for (size_t j = 0; j < ulen; ++j)
+            {
+                double acc = 0.0;
+                for (size_t i = 0; i < lim; ++i) acc += double(uSlice[j * uIn + i]) * double(x[i]);
+                u[j] = (float)acc;
+            }
+            std::copy(u.begin(), u.begin() + (std::ptrdiff_t)glen, g.begin());
         }
 
-        const size_t olen = std::min(embd, dOut);
-        for (size_t i = 0; i < olen; ++i) {
-            double acc = 0.0;
-            const size_t lim = std::min(dIn, ffn);
-            for (size_t j = 0; j < lim; ++j) acc += double(dSlice[i * dIn + j]) * double(h[j]);
-            y[i] += w[e] * (float)acc;
+        // SwiGLU: silu(gate) * up, into this expert's own h slot.
+        for (size_t j = 0; j < ffn; ++j)
+        {
+            const float s = 1.0f / (1.0f + std::exp(-g[j]));
+            hAll[e * ffn + j] = g[j] * s * u[j];
+        }
+    }
+
+    // ---- phase 2: every selected expert's down-projection --------------------
+    const bool dShapeAll = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) &&
+                           (dIn <= ffn);
+    const size_t downRowBytes = dShapeAll ? QuantRowBytes(dKind, dIn) : 0u;
+    const bool batchDown = !force_cpu_ && nSel >= 2 && QuantDot::BeginBatch();
+    size_t queuedDown = 0;
+    for (size_t e = 0; e < nSel; ++e)
+    {
+        const size_t ex = (size_t)ids[e];
+        if (ex >= usableE) continue;
+        if (dShapeAll)
+        {
+            std::vector<float> q8h;
+            BuildInterleavedQ8(&hAll[e * ffn], dIn, q8h);
+            float* out = &dyAll[e * embd];
+            const uint8_t* packed = reinterpret_cast<const uint8_t*>(downT->data) +
+                                    ex * olen * downRowBytes;
+            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
+                return RowDotInterleavedQ8(dKind, row, static_cast<const float*>(q8_act), dIn);
+            };
+            if (batchDown) {
+                // Queued: the second batch's single submission runs it.
+                const bool queued = QuantDot::DotBlocked(dKind, packed, downRowBytes * olen,
+                                                         &hAll[e * ffn], dIn, out, olen, cpu,
+                                                         q8h.data(), q8h.size() * sizeof(float),
+                                                         false);
+                if (queued) ++queuedDown;
+            } else {
+                const bool ok = QuantDot::DotBlocked(dKind, packed, downRowBytes * olen,
+                                                     &hAll[e * ffn], dIn, out, olen, cpu,
+                                                     q8h.data(), q8h.size() * sizeof(float),
+                                                     force_cpu_);
+                account(ok, downT->name.c_str(), ex);
+            }
+        }
+        else
+        {
+            std::vector<float> dSlice;
+            if (!DequantRange(*downT, ex * elemStrideD, elemStrideD, dSlice))
+            {
+                err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
+                      " expert=" + std::to_string(ex) + ")";
+                return false;
+            }
+            for (size_t i = 0; i < olen; ++i)
+            {
+                double acc = 0.0;
+                for (size_t j = 0; j < dIn; ++j) acc += double(dSlice[i * dIn + j]) * double(hAll[e * ffn + j]);
+                dyAll[e * embd + i] = (float)acc;
+            }
         }
         ++expertsProcessed;
+    }
+    if (batchDown) {
+        if (QuantDot::EndBatch()) {
+            gpu_calls_ += queuedDown;
+        } else {
+            cpu_calls_ += queuedDown;
+            const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+            if (cpu_fallback_reason_.empty() && rcpt.fallback_reason) {
+                cpu_fallback_reason_ = std::string("moe down batch: ") + rcpt.fallback_reason;
+            }
+        }
+    }
+
+    // ---- routing-weighted accumulation ---------------------------------------
+    for (size_t e = 0; e < nSel; ++e)
+    {
+        if ((size_t)ids[e] >= usableE) continue;
+        for (size_t i = 0; i < olen; ++i)
+            y[i] += w[e] * dyAll[e * embd + i];
     }
 
     if (expertsProcessed == 0) { err = "moe: no expert was processed"; return false; }
@@ -1729,6 +2153,64 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }
+                // Attention-output projection witness. The embedding, K, V and
+                // attention output were all verified identical to an
+                // independent implementation, so this is the last stage in the
+                // block-0 span that can still differ.
+                if (std::getenv("ATTN_TRACE") && in.bName.find("attn_output") != std::string::npos) {
+                    // What row 0 of the weight actually dequantised TO, compared
+                    // against ggml's own dequantize_row_q4_0. The reference value
+                    // for blk.0.attn_output.weight row 0 is
+                    //   0.007111 -0.014224 -0.010668 0 0.010668 0.003556
+                    // NOTE: to_float must be asked for a MULTIPLE of blck_size
+                    // (32 for Q4_0); asking for 8 writes nothing at all, which
+                    // looks like a zero-filled weight and is a probe artefact.
+                    const TensorRec& wt = tensors_[(size_t)in.b];
+                    std::vector<float> rw0(32, 0.0f);
+                    const ggml_type_traits* trw = ggml_get_type_traits(wt.ggml_type);
+                    if (trw && trw->to_float)
+                        trw->to_float(wt.data, rw0.data(), 32);
+                    std::fprintf(stderr,
+                                 "[attnproj-weight0] blk=%d name=%s dims=[%zu,%zu] "
+                                 "bytes=%zu data=%p row0: ",
+                                 (int)in.block, wt.name.c_str(),
+                                 wt.dims.empty() ? 0 : (size_t)wt.dims[0],
+                                 wt.dims.size() > 1 ? (size_t)wt.dims[1] : 0,
+                                 wt.bytes, (const void*)wt.data);
+                    for (int i = 0; i < 8; ++i) std::fprintf(stderr, "%.6f ", (double)rw0[i]);
+                    std::fprintf(stderr, "\n");
+                }
+                if (std::getenv("ATTN_DUMP") &&
+                    in.bName.find("attn_output") != std::string::npos &&
+                    in.block == 0) {
+                    // Full input/output dumps for exact element-wise comparison
+                    // against an independent implementation (max abs error, rel
+                    // error, and the FIRST differing index). Restricted to
+                    // block 0's attention-output projection: an unfiltered dump
+                    // fires on every Linear and the last write wins, so the
+                    // captured op is effectively arbitrary.
+                    FILE* fx = std::fopen("d2_attnproj_in.bin", "wb");
+                    FILE* fy = std::fopen("d2_attnproj_out.bin", "wb");
+                    if (fx && fy) {
+                        std::fwrite(xi.data(), sizeof(float), xi.size(), fx);
+                        std::fwrite(y.data(), sizeof(float), y.size(), fy);
+                    }
+                    if (fx) std::fclose(fx);
+                    if (fy) std::fclose(fy);
+                }
+                if (std::getenv("ATTN_TRACE") && in.bName.find("attn_output") != std::string::npos) {
+                    double l2 = 0.0;
+                    for (float f : y) l2 += double(f) * double(f);
+                    std::fprintf(stderr, "[attnproj] blk=%d in_l2=%.9f out_l2=%.9f y0=%.7f y1=%.7f x0=%.7f x1=%.7f x2=%.7f\n",
+                                 (int)in.block,
+                                 [&]{ double s=0; for (float f : xi) s += double(f)*double(f); return std::sqrt(s); }(),
+                                 std::sqrt(l2), y.empty()?0.0:(double)y[0],
+                                 y.size()>1?(double)y[1]:0.0,
+                                 xi.empty()?0.0:(double)xi[0],
+                                 xi.size()>1?(double)xi[1]:0.0,
+                                 xi.size()>2?(double)xi[2]:0.0);
+                    std::fflush(stderr);
+                }
                 arena(in.outName.empty() ? std::string("lin") : in.outName) = y;
                 hidden_ = y;
                 break;
@@ -1745,7 +2227,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                         act.count(in.detail) ? act[in.detail] : xi;
                     if (!OpMlaDecompress(in, mlaIn, k, v, position, e)) { last_error_ = e; return false; }
                 }
-                arena(in.outName.empty() ? std::string("kv") : in.outName) = hidden_;
+                // The arena entry this op publishes is the K stream it just
+                // produced. Writing hidden_ here (the previous op's output, `q`
+                // by this point in the program) is what made the "kv" capture
+                // duplicate q and hid the real K stream from every dump.
+                arena(in.outName.empty() ? std::string("kv") : in.outName) = k;
                 arena("k") = k;
                 arena("v") = v;
                 break;            }
@@ -1822,6 +2308,22 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                          + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
                 arena(in.outName.empty() ? std::string("resid") : in.outName) = y;
+                // Per-block hidden-state witness. The engine's own receipts
+                // only compare Deep2 against Deep2, so a divergence against an
+                // external reference cannot be localised from them. Printing a
+                // signature after EVERY block's final residual makes the same
+                // quantity computable in an independent implementation, which
+                // turns "the output is wrong" into "block K is the first one
+                // that differs".
+                if (std::getenv("RR_TRACE_BLOCKS") && !hidden_.empty()) {
+                    double ss = 0.0;
+                    for (float v : hidden_) ss += double(v) * double(v);
+                    std::fprintf(stderr, "[block] blk=%d out=%s l2=%.6f h0=%.9f h1=%.9f\n",
+                                 (int)in.block, in.outName.c_str(), std::sqrt(ss),
+                                 (double)hidden_[0],
+                                 hidden_.size() > 1 ? (double)hidden_[1] : 0.0);
+                    std::fflush(stderr);
+                }
                 break;
             }
             case OpKind::SwiGLU: {

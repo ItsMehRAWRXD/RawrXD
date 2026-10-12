@@ -1,0 +1,161 @@
+hexmag_nobridge.cpp
+src/deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+src/deep2\CycloneScheduler.hpp(36): warning C4099: 'Deep2::ElasticResidentTensor': type name first seen using 'struct' now seen using 'class'
+src/deep2\ElasticResidencyManager.hpp(169): note: see declaration of 'Deep2::ElasticResidentTensor'
+F:\rawrxd\src\agentic\vulkan_compute.h(4): warning C4094: untagged 'class' declared no symbols
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(449): error C3083: 'HexMagResilience': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(449): error C2039: 'toEngineEdit': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(449): error C2873: 'toEngineEdit': symbol cannot be used in a using-declaration
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2039: 'Edit': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2275: 'RawrXD::HexMag::ConflictResolver::Edit': expected an expression instead of a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): note: prefix the qualified-id with 'typename' to indicate a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2923: 'std::vector': 'RawrXD::HexMag::ConflictResolver::Edit' is not a valid template type argument for parameter '_Ty'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): note: see declaration of 'RawrXD::HexMag::ConflictResolver::Edit'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2641: cannot deduce template arguments for 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(451): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(452): error C2662: 'void std::vector<_Ty,_Alloc>::reserve(allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(452): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(452): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1723): note: see declaration of 'std::vector<_Ty,_Alloc>::reserve'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(452): note: while trying to match the argument list '(unsigned __int64)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): error C3861: 'toEngineEdit': identifier not found
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): error C2663: 'std::vector<_Ty,_Alloc>::push_back': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(936): note: could be 'void std::vector<_Ty,_Alloc>::push_back(_Ty &&)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: 'void std::vector<_Ty,_Alloc>::push_back(_Ty &&)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(932): note: or       'void std::vector<_Ty,_Alloc>::push_back(const _Ty &)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: 'void std::vector<_Ty,_Alloc>::push_back(const _Ty &)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(457): note: while trying to match the argument list '(<error type>)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(461): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(461): error C2039: 'ConflictDetector': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(461): error C2065: 'ConflictDetector': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(461): error C2146: syntax error: missing ';' before identifier 'detector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(461): error C2065: 'detector': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(462): error C2065: 'detector': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(465): error C3536: 'engineConflicts': cannot be used before it is initialized
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(466): error C3312: no callable 'begin' function found for type '<error type>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(466): error C3312: no callable 'end' function found for type '<error type>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(466): error C2530: 'ec': references must be initialized
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(466): error C3531: 'ec': a symbol whose type contains 'auto' must have an initializer
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(466): error C2143: syntax error: missing ';' before ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(466): error C2143: syntax error: missing ';' before ')'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(470): error C2530: 'ee': references must be initialized
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(470): error C3531: 'ee': a symbol whose type contains 'auto' must have an initializer
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(470): error C2143: syntax error: missing ';' before ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(470): error C2143: syntax error: missing ';' before ')'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): error C3083: 'Conflict': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): error C3083: 'ConflictType': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): error C2039: 'TextOverlap': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): error C2065: 'TextOverlap': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): error C2131: expression did not evaluate to a constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(483): note: a non-constant (sub-)expression was encountered
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): error C3083: 'Conflict': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): error C3083: 'ConflictType': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): error C2039: 'SemanticOverlap': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): error C2065: 'SemanticOverlap': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): error C2131: expression did not evaluate to a constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(484): note: a non-constant (sub-)expression was encountered
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): error C3083: 'Conflict': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): error C3083: 'ConflictType': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): error C2039: 'DependencyConflict': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): error C2065: 'DependencyConflict': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): error C2131: expression did not evaluate to a constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(485): note: a non-constant (sub-)expression was encountered
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): error C3083: 'Conflict': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): error C3083: 'ConflictType': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): error C2039: 'LogicConflict': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): error C2065: 'LogicConflict': undeclared identifier
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): error C2131: expression did not evaluate to a constant
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(486): note: a non-constant (sub-)expression was encountered
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(491): error C3083: 'HexMagResilience': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(491): error C2039: 'status': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(491): error C3861: 'status': identifier not found
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(499): error C3083: 'HexMagResilience': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(499): error C2039: 'toEngineEdit': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(499): error C2873: 'toEngineEdit': symbol cannot be used in a using-declaration
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2039: 'Edit': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2275: 'RawrXD::HexMag::ConflictResolver::Edit': expected an expression instead of a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): note: prefix the qualified-id with 'typename' to indicate a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2923: 'std::vector': 'RawrXD::HexMag::ConflictResolver::Edit' is not a valid template type argument for parameter '_Ty'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): note: see declaration of 'RawrXD::HexMag::ConflictResolver::Edit'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2641: cannot deduce template arguments for 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(501): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(502): error C2662: 'void std::vector<_Ty,_Alloc>::reserve(allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(502): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(502): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1723): note: see declaration of 'std::vector<_Ty,_Alloc>::reserve'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(502): note: while trying to match the argument list '(unsigned __int64)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): error C3861: 'toEngineEdit': identifier not found
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): error C2663: 'std::vector<_Ty,_Alloc>::push_back': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(936): note: could be 'void std::vector<_Ty,_Alloc>::push_back(_Ty &&)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: 'void std::vector<_Ty,_Alloc>::push_back(_Ty &&)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(932): note: or       'void std::vector<_Ty,_Alloc>::push_back(const _Ty &)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: 'void std::vector<_Ty,_Alloc>::push_back(const _Ty &)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(507): note: while trying to match the argument list '(<error type>)'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(511): error C3083: 'HexMagResilience': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(511): error C2039: 'resolveSwarmEdits': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(511): error C3861: 'resolveSwarmEdits': identifier not found
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(513): error C3312: no callable 'begin' function found for type '<error type>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(513): error C3312: no callable 'end' function found for type '<error type>'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(513): error C2530: 'r': references must be initialized
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(513): error C3531: 'r': a symbol whose type contains 'auto' must have an initializer
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(513): error C2143: syntax error: missing ';' before ':'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(513): error C2143: syntax error: missing ';' before ')'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(523): error C3083: 'HexMagResilience': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(523): error C2039: 'ensureConflictPolicy': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(523): error C3861: 'ensureConflictPolicy': identifier not found
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(527): error C3083: 'HexMagResilience': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(527): error C2039: 'toEngineEdit': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(527): error C2873: 'toEngineEdit': symbol cannot be used in a using-declaration
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C3083: 'ConflictEngine': the symbol to the left of a '::' must be a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2039: 'Edit': is not a member of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(44): note: see declaration of 'RawrXD'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2275: 'RawrXD::HexMag::ConflictResolver::Edit': expected an expression instead of a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): note: prefix the qualified-id with 'typename' to indicate a type
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2923: 'std::vector': 'RawrXD::HexMag::ConflictResolver::Edit' is not a valid template type argument for parameter '_Ty'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): note: see declaration of 'RawrXD::HexMag::ConflictResolver::Edit'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2641: cannot deduce template arguments for 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+C:\Users\Garrett\AppData\Local\Temp\hexmag_nobridge.cpp(528): fatal error C1003: error count exceeds 100; stopping compilation

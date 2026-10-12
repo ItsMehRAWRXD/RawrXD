@@ -1,0 +1,11 @@
+{
+  "name": "Code Coverage Analysis",
+  "gate": "VAL-053",
+  "message": "Coverage above threshold",
+  "uncovered_lines": [
+    "Win32IDE_Cosmetics.cpp:120-145"
+  ],
+  "coverage_percent": 85.3,
+  "status": "PASS",
+  "timestamp": "2026-07-24T12:44:28.8778083-04:00"
+}

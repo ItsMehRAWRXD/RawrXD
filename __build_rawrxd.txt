@@ -1,0 +1,267 @@
+﻿ninja : ninja: warning: premature end of file; recovering
+At line:1 char:51
++ ... on -Path "d:\rawrxd\build-fresh-aug22"; ninja rawrxd.exe 2>&1 | Out-F ...
++                                             ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ninja: warning:...ile; recovering 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[1/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\compression_interface.cpp.obj
+[2/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_sampler.cpp.obj
+[3/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\feature_flags_runtime.cpp.obj
+[4/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\license_enforcement.cpp.obj
+[5/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_tokenizer.cpp.obj
+[6/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\enterprise_licensev2_impl.cpp.obj
+[7/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_vocab_resolver.cpp.obj
+[8/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\memory_core.cpp.obj
+[9/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\tools\license_validator_manifest.cpp.obj
+[10/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_loader.cpp.obj
+[11/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ollama_blob_parser.cpp.obj
+[12/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\license_anti_tampering.cpp.obj
+[13/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ultra_fast_inference.cpp.obj
+[14/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ignite_800b.cpp.obj
+[15/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\inference_kernels.cpp.obj
+[16/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\gguf_core.cpp.obj
+[17/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_inference.cpp.obj
+[18/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\transformer.cpp.obj
+[19/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_model_loader.cpp.obj
+[20/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\polymorphic_loader.cpp.obj
+[21/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ConfigurationValidator.cpp.obj
+[22/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer_forwardbatch.cpp.obj
+[23/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\streaming_gguf_loader.cpp.obj
+[24/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\bpe_tokenizer.cpp.obj
+[25/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\engine_registry.cpp.obj
+[26/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\NegativeSpaceProfiler.cpp.obj
+[27/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\pyre_compute.cpp.obj
+[28/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\cpu_inference_engine.cpp.obj
+[29/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sampler.cpp.obj
+[30/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\MemoryPressureGuard.cpp.obj
+[31/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\TitanLoaderDiagnostics.cpp.obj
+[32/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer.cpp.obj
+[33/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\rawr_engine.cpp.obj
+[34/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\utils\Diagnostics.cpp.obj
+[35/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sovereign_engines.cpp.obj
+[36/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\memory_stubs.cpp.obj
+[37/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PlacementPolicy.cpp.obj
+[38/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\link_stubs.cpp.obj
+[39/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\layer_offload_manager.cpp.obj
+[40/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+[41/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+[42/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\backend\VulkanGemmDispatcher.cpp.obj
+[43/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\kernels\VulkanComputeKernels.cpp.obj
+[44/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_compute.cpp.obj
+[45/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj
+[46/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\CapacityManager.cpp.obj
+[47/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TransferScheduler.cpp.obj
+[48/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\TensorExecutionRouter.cpp.obj
+[49/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\gguf_swarm_plan_builder.cpp.obj
+[50/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\core_generator.cpp.obj
+[51/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj
+[52/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Sovereign_KernelBridge_CPP.cpp.obj
+[53/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\swarm_scheduler.cpp.obj
+[54/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj
+[55/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj
+[56/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\StreamRouterAdapter.cpp.obj
+[57/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareGovernor.cpp.obj
+[58/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj
+[59/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TensorPlacementManager.cpp.obj
+[60/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\ResidencyTracker.cpp.obj
+[61/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\logging\Logger.cpp.obj
+[62/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\PressedStateEngine.cpp.obj
+[63/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\Ensemble58Governor.cpp.obj
+[64/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\TLSInstructionGate.cpp.obj
+[65/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\GenerationBouncer.cpp.obj
+[66/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticDecoder.cpp.obj
+[67/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\sampling\advanced_sampler.cpp.obj
+[68/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj
+[69/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj
+[70/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2TimeLimitedServing.cpp.obj
+[71/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj
+[72/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\RawrRuntime.cpp.obj
+[73/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticArchitectureDetector.cpp.obj
+[74/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj
+[75/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj
+[76/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\gguf_tensor_loader.cpp.obj
+[77/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KVCache.cpp.obj
+[78/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\IQQuantKernels.cpp.obj
+[79/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[80/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoERouter.cpp.obj
+[81/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ThreadPool.cpp.obj
+[82/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticEngine.cpp.obj
+[83/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\InferenceSession.cpp.obj
+[84/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightProxy.cpp.obj
+[85/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GGUFLoader.cpp.obj
+[86/193] Building CXX object CMakeFiles\InferenceEngine.dir\B014\build\b014_profiler.cpp.obj
+[87/193] Building CXX object CMakeFiles\InferenceEngine.dir\tests\b009\b009b_batched_gemm.cpp.obj
+[88/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RuntimePlanner.cpp.obj
+[89/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelRegistry.cpp.obj
+[90/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelLoader.cpp.obj
+[91/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TensorHop.cpp.obj
+[92/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedInferenceKernel.cpp.obj
+[93/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CompressedKVCache.cpp.obj
+[94/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightsLoader.cpp.obj
+[95/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEArchitectureParser.cpp.obj
+[96/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NUFusedPacker.cpp.obj
+[97/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamRouter.cpp.obj
+[98/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SlidingWindowEngine.cpp.obj
+[99/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\UniversalModelLoader.cpp.obj
+[100/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MedusaDecoder.cpp.obj
+[101/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\WarmupScheduler.cpp.obj
+[102/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NVMeStream.cpp.obj
+[103/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KimiK2Config.cpp.obj
+[104/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RawrXDInferenceAdapter.cpp.obj
+[105/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+[106/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+[107/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[108/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ProductionProfiler.cpp.obj
+[109/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MoEWeights.cpp.obj
+[110/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLAWeights.cpp.obj
+[111/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2GlobalTensorIndex.cpp.obj
+[112/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TrailBrake.cpp.obj
+[113/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HotPatcher.cpp.obj
+[114/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HotPatcherSafety.cpp.obj
+[115/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\AntiPatcher.cpp.obj
+[116/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\PatchCache.cpp.obj
+[117/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Bridge.cpp.obj
+[118/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DualGPUHook.cpp.obj
+[119/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseTensorRecovery.cpp.obj
+[120/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CPUFrequency.cpp.obj
+[121/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GoalSystem.cpp.obj
+[122/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\BottleTTL.cpp.obj
+[123/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ToroidalKVCache.cpp.obj
+[124/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Chamber.cpp.obj
+[125/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\reverse\ReverseEngine.cpp.obj
+[126/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\OutOfCoreRuntime.cpp.obj
+[127/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\BP16Streamer.cpp.obj
+[128/193] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q4_1_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q4_1_gemv.asm
+[129/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamEngine.cpp.obj
+[130/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\reverse\ReverseModelLoader.cpp.obj
+[131/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\PlasmaGovernor.cpp.obj
+[132/193] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q8_0_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q8_0_gemv.asm
+[133/193] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q5_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q5_k_gemv.asm
+[134/193] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q6_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q6_k_gemv.asm
+[135/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FabricTensorTable.cpp.obj
+[136/193] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_fp16_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_fp16_gemv.asm
+[137/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseHotpatchEngine.cpp.obj
+[138/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\TensorHotpatch.cpp.obj
+[139/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseIntegration.cpp.obj
+[140/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SovereignOutOfCoreRuntime.cpp.obj
+[141/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ShardRouterIntegration.cpp.obj
+[142/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\VRAMManager.cpp.obj
+[143/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ResidencyManager.cpp.obj
+[144/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+[145/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\deep2_link_stubs.cpp.obj
+[146/193] Building CXX object CMakeFiles\rawrxd.dir\src\core\memory_stubs.cpp.obj
+[147/193] Building CXX object CMakeFiles\rawrxd.dir\src\rawrxd_tokenizer.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream(685): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream(685): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\rawrxd_tokenizer.cpp(23): note: see reference to class template instantiation 'std::basic_ifstream<char,std::char_traits<char>>' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\fstream(23): note: see reference to class template instantiation 'std::basic_istream<char,std::char_traits<char>>' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream(677): note: while compiling class template member function 'std::basic_istream<char,std::char_traits<char>> &std::basic_istream<char,std::char_traits<char>>::seekg(__int64,std::ios_base::seekdir)'
+D:\rawrxd\src\rawrxd_tokenizer.cpp(35): note: see the first reference to 'std::basic_istream<char,std::char_traits<char>>::seekg' in 'RawrXDTokenizer::Load'
+[148/193] Building CXX object CMakeFiles\rawrxd.dir\src\rawrxd_sampler.cpp.obj
+[149/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\MARSController.cpp.obj
+[150/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\DualGPUBackend.cpp.obj
+[151/193] Building CXX object CMakeFiles\rawrxd.dir\src\core\link_stubs.cpp.obj
+[152/193] Building CXX object CMakeFiles\rawrxd.dir\src\gguf_vocab_resolver.cpp.obj
+D:\rawrxd\src\gguf_vocab_resolver.cpp(339): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[153/193] Building CXX object CMakeFiles\rawrxd.dir\src\rawrxd_inference.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[154/193] Building CXX object CMakeFiles\rawrxd.dir\src\core\inference_witness.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[155/193] Building CXX object CMakeFiles\rawrxd.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[156/193] Building CXX object CMakeFiles\rawrxd.dir\src\gguf_loader.cpp.obj
+D:\rawrxd\src\gguf_loader.cpp(123): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[157/193] Building CXX object CMakeFiles\rawrxd.dir\src\sovereign\rawrxd.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[158/193] Building CXX object CMakeFiles\rawrxd.dir\src\rawrxd_model_loader.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[159/193] Building CXX object CMakeFiles\rawrxd.dir\src\logging\Logger.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[160/193] Building CXX object CMakeFiles\rawrxd.dir\src\core\swarm_scheduler.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[161/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj
+[162/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\gguf_tensor_loader.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1224): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1224): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\runtime\gguf_tensor_loader.cpp(854): note: see reference to function template instantiation 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>> std::vector<_Ty,std::allocator<_Ty>>::insert<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,0>(std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,_Iter,_Iter)' being compiled
+        with
+        [
+            _Ty=std::string,
+            _Iter=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<std::string>>>
+        ]
+D:\rawrxd\src\runtime\gguf_tensor_loader.cpp(854): note: see the first reference to 'std::vector<std::string,std::allocator<std::string>>::insert' in 'rawrxd::runtime::GetAllTransformerWeightNames'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1282): note: see reference to function template instantiation 'void std::vector<std::string,std::allocator<std::string>>::_Insert_counted_range<std::basic_string<char,std::char_traits<char>,std::allocator<char>>*>(std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,_Iter,const unsigned __int64)' being compiled
+        with
+        [
+            _Ty=std::string,
+            _Iter=std::basic_string<char,std::char_traits<char>,std::allocator<char>> *
+        ]
+[163/193] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[164/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticDecoder.cpp.obj
+[165/193] Building CXX object CMakeFiles\rawrxd.dir\src\sovereign\ExecutionContract.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[166/193] Building CXX object CMakeFiles\rawrxd.dir\B014\build\b014_profiler.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[167/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj
+[168/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj
+[169/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj
+[170/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\StreamRouterAdapter.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[171/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[172/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\HardwareGovernor.cpp.obj
+[173/193] Building CXX object CMakeFiles\rawrxd.dir\src\cpu_inference_engine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[174/193] Building CXX object CMakeFiles\rawrxd.dir\src\inference\NegativeSpaceProfiler.cpp.obj
+[175/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\PlacementPolicy.cpp.obj
+[176/193] Building CXX object CMakeFiles\rawrxd.dir\src\core\gguf_swarm_plan_builder.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[177/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticEngine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[178/193] Building CXX object CMakeFiles\rawrxd.dir\src\rawrxd_transformer.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[179/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\PressedStateEngine.cpp.obj
+[180/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\TLSInstructionGate.cpp.obj
+[181/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[182/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[183/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj
+[184/193] Linking CXX static library InferenceEngine.lib
+[185/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\governance\Ensemble58Governor.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[186/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj
+[187/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\CapacityManager.cpp.obj
+[188/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\ResidencyTracker.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[189/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\TensorExecutionRouter.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[190/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\TransferScheduler.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[191/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\TensorPlacementManager.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[192/193] Building CXX object CMakeFiles\rawrxd.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[193/193] Linking CXX executable bin\rawrxd.exe

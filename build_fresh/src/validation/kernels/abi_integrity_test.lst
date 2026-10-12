@@ -1,0 +1,460 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:19
+F:/rawrxd/src/validation/kernels/masm/abi_integrity_test.asm  Page 1 - 1
+
+
+				; ============================================================================
+				; abi_integrity_test.asm - Complete Register State Capture for ABI Testing
+				; ============================================================================
+				; 
+				; PURPOSE: Save ALL registers before/after calling MASM kernels to detect ABI violations
+				; 
+				; This function:
+				; 1. Saves ALL general purpose registers (RAX-R15)
+				; 2. Saves ALL YMM registers (YMM0-YMM15)
+				; 3. Calls the MASM kernel
+				; 4. Compares register states to detect corruption
+				; 5. Reports any ABI violations
+				; 
+				; CRITICAL: This is for development/debugging ONLY. Remove before production.
+				; 
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+				; External C function to print results
+				extern printf : proc
+
+				; External MASM kernel to test (using the clamped version which we know works)
+				extern MASM_SiLU_Clamped : proc
+
+ 00000000			.data
+
+				; Format strings for reporting
+ 00000000 3D 3D 3D 20 41	fmt_header       db '=== ABI Integrity Test ===', 13, 10, 0
+	   42 49 20 49 6E
+	   74 65 67 72 69
+	   74 79 20 54 65
+	   73 74 20 3D 3D
+	   3D 0D 0A 00
+ 0000001D E2 9C 85 20 50	fmt_pass         db '✅ PASS: All registers preserved', 13, 10, 0
+	   41 53 53 3A 20
+	   41 6C 6C 20 72
+	   65 67 69 73 74
+	   65 72 73 20 70
+	   72 65 73 65 72
+	   76 65 64 0D 0A
+	   00
+ 00000041 E2 9D 8C 20 46	fmt_fail_reg     db '❌ FAIL: Register %s corrupted: 0x%016llX -> 0x%016llX', 13, 10, 0
+	   41 49 4C 3A 20
+	   52 65 67 69 73
+	   74 65 72 20 25
+	   73 20 63 6F 72
+	   72 75 70 74 65
+	   64 3A 20 30 78
+	   25 30 31 36 6C
+	   6C 58 20 2D 3E
+	   20 30 78 25 30
+	   31 36 6C 6C 58
+	   0D 0A 00
+ 0000007B E2 9D 8C 20 46	fmt_fail_ymm     db '❌ FAIL: YMM%d corrupted', 13, 10, 0
+	   41 49 4C 3A 20
+	   59 4D 4D 25 64
+	   20 63 6F 72 72
+	   75 70 74 65 64
+	   0D 0A 00
+ 00000097 41 53 4D 20 66	fmt_result       db 'ASM function return: %d', 13, 10, 0
+	   75 6E 63 74 69
+	   6F 6E 20 72 65
+	   74 75 72 6E 3A
+	   20 25 64 0D 0A
+	   00
+ 000000B1 3D 3D 3D 3D 3D	fmt_footer       db '=========================', 13, 10, 0
+	   3D 3D 3D 3D 3D
+	   3D 3D 3D 3D 3D
+	   3D 3D 3D 3D 3D
+	   3D 3D 3D 3D 3D
+	   0D 0A 00
+
+				; Register names for error reporting
+ 000000CD			reg_names label qword
+ 000000CD  52 41 58 00 00	    db 'RAX', 0, 0, 0, 0, 0   ; 0
+	   00 00 00
+ 000000D5  52 42 58 00 00	    db 'RBX', 0, 0, 0, 0, 0   ; 1
+	   00 00 00
+ 000000DD  52 43 58 00 00	    db 'RCX', 0, 0, 0, 0, 0   ; 2
+	   00 00 00
+ 000000E5  52 44 58 00 00	    db 'RDX', 0, 0, 0, 0, 0   ; 3
+	   00 00 00
+ 000000ED  52 53 49 00 00	    db 'RSI', 0, 0, 0, 0, 0   ; 4
+	   00 00 00
+ 000000F5  52 44 49 00 00	    db 'RDI', 0, 0, 0, 0, 0   ; 5
+	   00 00 00
+ 000000FD  52 42 50 00 00	    db 'RBP', 0, 0, 0, 0, 0   ; 6
+	   00 00 00
+ 00000105  52 53 50 00 00	    db 'RSP', 0, 0, 0, 0, 0   ; 7
+	   00 00 00
+ 0000010D  52 38 20 00 00	    db 'R8 ', 0, 0, 0, 0, 0   ; 8
+	   00 00 00
+ 00000115  52 39 20 00 00	    db 'R9 ', 0, 0, 0, 0, 0   ; 9
+	   00 00 00
+ 0000011D  52 31 30 00 00	    db 'R10', 0, 0, 0, 0, 0   ; 10
+	   00 00 00
+ 00000125  52 31 31 00 00	    db 'R11', 0, 0, 0, 0, 0   ; 11
+	   00 00 00
+ 0000012D  52 31 32 00 00	    db 'R12', 0, 0, 0, 0, 0   ; 12
+	   00 00 00
+ 00000135  52 31 33 00 00	    db 'R13', 0, 0, 0, 0, 0   ; 13
+	   00 00 00
+ 0000013D  52 31 34 00 00	    db 'R14', 0, 0, 0, 0, 0   ; 14
+	   00 00 00
+ 00000145  52 31 35 00 00	    db 'R15', 0, 0, 0, 0, 0   ; 15
+	   00 00 00
+
+ 00000000			.code
+
+				; ============================================================================
+				; TestABIIntegrity_Silu_Clamped - Tests MASM_SiLU_Clamped for ABI compliance
+				; ============================================================================
+				; Parameters:
+				;   RCX = void* data       (pointer to float array)
+				;   RDX = size_t data_size (number of bytes)
+				; Returns:
+				;   RAX = 0 if ABI compliant, non-zero if violations detected
+				; ============================================================================
+
+ 00000000			TestABIIntegrity_Silu_Clamped PROC FRAME
+
+				    ; Prologue - save non-volatile registers
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+				    
+				    ; Allocate stack space for:
+				    ;   - 16 general purpose registers (8 bytes each) = 128 bytes
+				    ;   - 16 YMM registers (32 bytes each) = 512 bytes
+				    ;   - Shadow space for C calls (32 bytes)
+				    ;   - Alignment padding
+				    ; Total = 128 + 512 + 32 = 672, round up to 704 for 16-byte alignment
+ 00000004  48/ 81 EC		    sub rsp, 704
+	   000002C0
+				    .allocstack 704
+				    .endprolog
+				    
+				    ; Save parameters (after prologue, RSP is at RBP-704)
+ 0000000B  48/ 89 4D F8		    mov [rbp-8], rcx          ; Save data pointer
+ 0000000F  48/ 89 55 F0		    mov [rbp-16], rdx         ; Save data_size
+				    
+				    ; Print header (allocate shadow space first)
+ 00000013  48/ 83 EC 20		    sub rsp, 32               ; Shadow space for printf
+ 00000017  48/ 8D 0D		    lea rcx, fmt_header
+	   00000000 R
+ 0000001E  E8 00000000 E	    call printf
+ 00000023  48/ 83 C4 20		    add rsp, 32               ; Deallocate shadow space
+				    
+				    ; ========================================
+				    ; STEP 1: Save ALL registers BEFORE call
+				    ; ========================================
+				    
+				    ; Save general purpose registers
+ 00000027  48/ 89 04 24		    mov [rsp+0], rax           ; RAX
+ 0000002B  48/ 89 5C 24		    mov [rsp+8], rbx           ; RBX (non-volatile)
+	   08
+ 00000030  48/ 89 4C 24		    mov [rsp+16], rcx          ; RCX
+	   10
+ 00000035  48/ 89 54 24		    mov [rsp+24], rdx          ; RDX
+	   18
+ 0000003A  48/ 89 74 24		    mov [rsp+32], rsi          ; RSI (non-volatile)
+	   20
+ 0000003F  48/ 89 7C 24		    mov [rsp+40], rdi          ; RDI (non-volatile)
+	   28
+ 00000044  48/ 89 6C 24		    mov [rsp+48], rbp          ; RBP (non-volatile)
+	   30
+ 00000049  48/ 89 64 24		    mov [rsp+56], rsp          ; RSP (non-volatile)
+	   38
+ 0000004E  4C/ 89 44 24		    mov [rsp+64], r8           ; R8
+	   40
+ 00000053  4C/ 89 4C 24		    mov [rsp+72], r9           ; R9
+	   48
+ 00000058  4C/ 89 54 24		    mov [rsp+80], r10          ; R10
+	   50
+ 0000005D  4C/ 89 5C 24		    mov [rsp+88], r11          ; R11
+	   58
+ 00000062  4C/ 89 64 24		    mov [rsp+96], r12          ; R12 (non-volatile)
+	   60
+ 00000067  4C/ 89 6C 24		    mov [rsp+104], r13         ; R13 (non-volatile)
+	   68
+ 0000006C  4C/ 89 74 24		    mov [rsp+112], r14         ; R14 (non-volatile)
+	   70
+ 00000071  4C/ 89 7C 24		    mov [rsp+120], r15         ; R15 (non-volatile)
+	   78
+				    
+				    ; Save YMM registers (volatile, but we check anyway)
+ 00000076  C5 FC/ 29 84 24	    vmovaps ymmword ptr [rsp+128], ymm0
+	   00000080
+ 0000007F  C5 FC/ 29 8C 24	    vmovaps ymmword ptr [rsp+160], ymm1
+	   000000A0
+ 00000088  C5 FC/ 29 94 24	    vmovaps ymmword ptr [rsp+192], ymm2
+	   000000C0
+ 00000091  C5 FC/ 29 9C 24	    vmovaps ymmword ptr [rsp+224], ymm3
+	   000000E0
+ 0000009A  C5 FC/ 29 A4 24	    vmovaps ymmword ptr [rsp+256], ymm4
+	   00000100
+ 000000A3  C5 FC/ 29 AC 24	    vmovaps ymmword ptr [rsp+288], ymm5
+	   00000120
+ 000000AC  C5 FC/ 29 B4 24	    vmovaps ymmword ptr [rsp+320], ymm6
+	   00000140
+ 000000B5  C5 FC/ 29 BC 24	    vmovaps ymmword ptr [rsp+352], ymm7
+	   00000160
+ 000000BE  C5 7C/ 29 84 24	    vmovaps ymmword ptr [rsp+384], ymm8
+	   00000180
+ 000000C7  C5 7C/ 29 8C 24	    vmovaps ymmword ptr [rsp+416], ymm9
+	   000001A0
+ 000000D0  C5 7C/ 29 94 24	    vmovaps ymmword ptr [rsp+448], ymm10
+	   000001C0
+ 000000D9  C5 7C/ 29 9C 24	    vmovaps ymmword ptr [rsp+480], ymm11
+	   000001E0
+ 000000E2  C5 7C/ 29 A4 24	    vmovaps ymmword ptr [rsp+512], ymm12
+	   00000200
+ 000000EB  C5 7C/ 29 AC 24	    vmovaps ymmword ptr [rsp+544], ymm13
+	   00000220
+ 000000F4  C5 7C/ 29 B4 24	    vmovaps ymmword ptr [rsp+576], ymm14
+	   00000240
+ 000000FD  C5 7C/ 29 BC 24	    vmovaps ymmword ptr [rsp+608], ymm15
+	   00000260
+				    
+				    ; ========================================
+				    ; STEP 2: Call the MASM kernel
+				    ; ========================================
+				    
+				    ; Restore parameters
+ 00000106  48/ 8B 4D F8		    mov rcx, [rbp-8]          ; data pointer
+ 0000010A  48/ 8B 55 F0		    mov rdx, [rbp-16]         ; data_size
+				    
+				    ; Call the MASM kernel
+ 0000010E  E8 00000000 E	    call MASM_SiLU_Clamped
+				    
+				    ; Save return value
+ 00000113  48/ 89 45 E8		    mov [rbp-24], rax          ; Save ASM function return value
+				    
+				    ; ========================================
+				    ; STEP 3: Check ALL registers AFTER call
+				    ; ========================================
+				    
+				    ; Check non-volatile registers (RBX, RBP, RDI, RSI, R12-R15)
+				    ; These MUST be preserved by the called function
+				    
+ 00000117  48/ 33 C0		    xor rax, rax              ; rax = 0 (assume pass)
+				    
+				    ; Check RBX (non-volatile)
+ 0000011A  48/ 3B 5C 24		    cmp rbx, [rsp+8]
+	   08
+ 0000011F  74 22		    je check_rbp
+ 00000121  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 00000128  48/ 8D 15		    lea rdx, reg_names+8      ; "RBX"
+	   000000D5 R
+ 0000012F  4C/ 8B 44 24		    mov r8, [rsp+8]           ; Expected value
+	   08
+ 00000134  4C/ 8B CB		    mov r9, rbx               ; Actual value
+ 00000137  E8 00000000 E	    call printf
+ 0000013C  48/ C7 C0		    mov rax, 1                ; Mark as failed
+	   00000001
+				    
+ 00000143			check_rbp:
+				    ; Check RBP (non-volatile)
+ 00000143  48/ 3B 6C 24		    cmp rbp, [rsp+48]
+	   30
+ 00000148  74 22		    je check_rdi
+ 0000014A  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 00000151  48/ 8D 15		    lea rdx, reg_names+24     ; "RBP"
+	   000000E5 R
+ 00000158  4C/ 8B 44 24		    mov r8, [rsp+48]         ; Expected value
+	   30
+ 0000015D  4C/ 8B CD		    mov r9, rbp               ; Actual value
+ 00000160  E8 00000000 E	    call printf
+ 00000165  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 0000016C			check_rdi:
+				    ; Check RDI (non-volatile)
+ 0000016C  48/ 3B 7C 24		    cmp rdi, [rsp+40]
+	   28
+ 00000171  74 22		    je check_rsi
+ 00000173  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 0000017A  48/ 8D 15		    lea rdx, reg_names+20     ; "RDI"
+	   000000E1 R
+ 00000181  4C/ 8B 44 24		    mov r8, [rsp+40]         ; Expected value
+	   28
+ 00000186  4C/ 8B CF		    mov r9, rdi               ; Actual value
+ 00000189  E8 00000000 E	    call printf
+ 0000018E  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000195			check_rsi:
+				    ; Check RSI (non-volatile)
+ 00000195  48/ 3B 74 24		    cmp rsi, [rsp+32]
+	   20
+ 0000019A  74 22		    je check_r12
+ 0000019C  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 000001A3  48/ 8D 15		    lea rdx, reg_names+16     ; "RSI"
+	   000000DD R
+ 000001AA  4C/ 8B 44 24		    mov r8, [rsp+32]         ; Expected value
+	   20
+ 000001AF  4C/ 8B CE		    mov r9, rsi               ; Actual value
+ 000001B2  E8 00000000 E	    call printf
+ 000001B7  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 000001BE			check_r12:
+				    ; Check R12 (non-volatile)
+ 000001BE  4C/ 3B 64 24		    cmp r12, [rsp+96]
+	   60
+ 000001C3  74 22		    je check_r13
+ 000001C5  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 000001CC  48/ 8D 15		    lea rdx, reg_names+48     ; "R12"
+	   000000FD R
+ 000001D3  4C/ 8B 44 24		    mov r8, [rsp+96]         ; Expected value
+	   60
+ 000001D8  4D/ 8B CC		    mov r9, r12               ; Actual value
+ 000001DB  E8 00000000 E	    call printf
+ 000001E0  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 000001E7			check_r13:
+				    ; Check R13 (non-volatile)
+ 000001E7  4C/ 3B 6C 24		    cmp r13, [rsp+104]
+	   68
+ 000001EC  74 22		    je check_r14
+ 000001EE  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 000001F5  48/ 8D 15		    lea rdx, reg_names+52     ; "R13"
+	   00000101 R
+ 000001FC  4C/ 8B 44 24		    mov r8, [rsp+104]        ; Expected value
+	   68
+ 00000201  4D/ 8B CD		    mov r9, r13               ; Actual value
+ 00000204  E8 00000000 E	    call printf
+ 00000209  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000210			check_r14:
+				    ; Check R14 (non-volatile)
+ 00000210  4C/ 3B 74 24		    cmp r14, [rsp+112]
+	   70
+ 00000215  74 22		    je check_r15
+ 00000217  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 0000021E  48/ 8D 15		    lea rdx, reg_names+56     ; "R14"
+	   00000105 R
+ 00000225  4C/ 8B 44 24		    mov r8, [rsp+112]        ; Expected value
+	   70
+ 0000022A  4D/ 8B CE		    mov r9, r14               ; Actual value
+ 0000022D  E8 00000000 E	    call printf
+ 00000232  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000239			check_r15:
+				    ; Check R15 (non-volatile)
+ 00000239  4C/ 3B 7C 24		    cmp r15, [rsp+120]
+	   78
+ 0000023E  74 22		    je check_volatile
+ 00000240  48/ 8D 0D		    lea rcx, fmt_fail_reg
+	   00000041 R
+ 00000247  48/ 8D 15		    lea rdx, reg_names+60     ; "R15"
+	   00000109 R
+ 0000024E  4C/ 8B 44 24		    mov r8, [rsp+120]        ; Expected value
+	   78
+ 00000253  4D/ 8B CF		    mov r9, r15               ; Actual value
+ 00000256  E8 00000000 E	    call printf
+ 0000025B  48/ C7 C0		    mov rax, 1
+	   00000001
+				    
+ 00000262			check_volatile:
+				    ; Note: Volatile registers (RAX, RCX, RDX, R8-R11, YMM0-YMM15) are
+				    ; allowed to be modified, so we don't check them for ABI compliance.
+				    ; However, we could check them if we want to detect unexpected modifications.
+				    
+				    ; ========================================
+				    ; STEP 4: Report results
+				    ; ========================================
+				    
+ 00000262  48/ 85 C0		    test rax, rax
+ 00000265  75 0E		    jnz failed
+				    
+				    ; All checks passed
+ 00000267  48/ 8D 0D		    lea rcx, fmt_pass
+	   0000001D R
+ 0000026E  E8 00000000 E	    call printf
+ 00000273  EB 00		    jmp print_result
+				    
+ 00000275			failed:
+				    ; Some checks failed (already printed error messages)
+				    
+ 00000275			print_result:
+				    ; Print ASM function return value
+ 00000275  48/ 8D 0D		    lea rcx, fmt_result
+	   00000097 R
+ 0000027C  48/ 8B 55 E8		    mov rdx, [rbp-24]
+ 00000280  E8 00000000 E	    call printf
+				    
+				    ; Print footer
+ 00000285  48/ 8D 0D		    lea rcx, fmt_footer
+	   000000B1 R
+ 0000028C  E8 00000000 E	    call printf
+				    
+				    ; Return 0 if ABI compliant, non-zero if violations detected
+ 00000291  48/ 8B 45 E8		    mov rax, [rbp-24]          ; Return the ASM function's return value
+				    
+				    ; Epilogue
+ 00000295  48/ 81 C4		    add rsp, 800
+	   00000320
+ 0000029C  5D			    pop rbp
+ 0000029D  C3			    ret
+
+ 0000029E			TestABIIntegrity_Silu_Clamped ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:19
+F:/rawrxd/src/validation/kernels/masm/abi_integrity_test.asm  Symbols 2 - 1
+
+
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+TestABIIntegrity_Silu_Clamped  .	P 	 00000000 _TEXT	Length= 0000029E Public
+  check_rbp  . . . . . . . . . .	L 	 00000143 _TEXT	
+  check_rdi  . . . . . . . . . .	L 	 0000016C _TEXT	
+  check_rsi  . . . . . . . . . .	L 	 00000195 _TEXT	
+  check_r12  . . . . . . . . . .	L 	 000001BE _TEXT	
+  check_r13  . . . . . . . . . .	L 	 000001E7 _TEXT	
+  check_r14  . . . . . . . . . .	L 	 00000210 _TEXT	
+  check_r15  . . . . . . . . . .	L 	 00000239 _TEXT	
+  check_volatile . . . . . . . .	L 	 00000262 _TEXT	
+  failed . . . . . . . . . . . .	L 	 00000275 _TEXT	
+  print_result . . . . . . . . .	L 	 00000275 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+MASM_SiLU_Clamped  . . . . . . .	L 	 00000000 External
+fmt_fail_reg . . . . . . . . . .	Byte	 00000041 _DATA	
+fmt_fail_ymm . . . . . . . . . .	Byte	 0000007B _DATA	
+fmt_footer . . . . . . . . . . .	Byte	 000000B1 _DATA	
+fmt_header . . . . . . . . . . .	Byte	 00000000 _DATA	
+fmt_pass . . . . . . . . . . . .	Byte	 0000001D _DATA	
+fmt_result . . . . . . . . . . .	Byte	 00000097 _DATA	
+printf . . . . . . . . . . . . .	L 	 00000000 External
+reg_names  . . . . . . . . . . .	QWord	 000000CD _DATA	
+
+	   0 Warnings
+	   0 Errors

@@ -1,0 +1,3 @@
+[1/3] Building CXX object CMakeFiles\sovereign_super_node.dir\src\core\sovereign_thread_pool.cpp.obj
+[2/3] Building CXX object CMakeFiles\sovereign_super_node.dir\src\core\sovereign_super_node.cpp.obj
+[3/3] Linking CXX executable bin\sovereign_super_node.exe

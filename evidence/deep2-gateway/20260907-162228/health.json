@@ -1,0 +1,7 @@
+{
+  "test": "health_endpoint",
+  "endpoint": "http://127.0.0.1:11435/health",
+  "reachable": true,
+  "response_preview": "{"status":"ok","runtime":"deep2-mock"}",
+  "status_ok": true
+}

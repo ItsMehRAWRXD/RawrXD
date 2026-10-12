@@ -1,0 +1,285 @@
+# ============================================================================
+# RawrXD Production Subagent: IncludeResolver
+# Version: 1.0.0 | License: MIT
+# Part of the RawrXD Autonomous Build System
+# ============================================================================
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Subagent: Include Resolver - Fixes missing header includes in C/C++ source files.
+
+.DESCRIPTION
+    Production-hardened subagent that analyzes C/C++ source files for missing
+    #include directives and automatically inserts them. Supports custom include
+    maps, backup creation, dry-run mode, and structured reporting.
+
+.PARAMETER ScanPath
+    Root directory to scan for source files. Defaults to "$PSScriptRoot\src".
+
+.PARAMETER AutoFix
+    Automatically apply fixes. Without this switch, only reports are generated.
+
+.PARAMETER CustomMapPath
+    Path to a JSON file with additional include mappings. Format:
+    { "SYMBOL_REGEX": "header_file.h", ... }
+
+.PARAMETER MaxFileSizeMB
+    Maximum file size in MB to process. Files larger than this are skipped.
+    Default: 1.
+
+.EXAMPLE
+    .\Subagent-IncludeResolver.ps1 -ScanPath .\src -AutoFix -Verbose
+    .\Subagent-IncludeResolver.ps1 -CustomMapPath .\my_includes.json -WhatIf
+#>
+
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+param(
+    [Parameter(Position = 0)]
+    [ValidateScript({ Test-Path $_ -PathType Container })]
+    [string]$ScanPath,
+
+    [switch]$AutoFix,
+
+    [ValidateScript({ Test-Path $_ -PathType Leaf })]
+    [string]$CustomMapPath,
+
+    [ValidateRange(0.01, 100)]
+    [double]$MaxFileSizeMB = 1,
+
+    [ValidateSet('Text', 'JSON')]
+    [string]$OutputFormat = 'Text',
+
+    [string]$ReportPath
+)
+
+# ── Bootstrap ────────────────────────────────────────────────────────────────
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+if (-not $ScanPath) { $ScanPath = Join-Path $PSScriptRoot 'src' }
+$MaxFileBytes = [long]($MaxFileSizeMB * 1MB)
+
+# ── Built-in include map ─────────────────────────────────────────────────────
+$script:IncludeMap = [ordered]@{
+    # Windows API
+    'HWND|HINSTANCE|WPARAM|LPARAM|MSG|WNDCLASS'  = 'windows.h'
+    'CreateFile|ReadFile|WriteFile|CloseHandle'   = 'windows.h'
+    'GetLastError|FormatMessage'                  = 'windows.h'
+    # Standard C++
+    'std::string|std::wstring'                    = 'string'
+    'std::vector'                                 = 'vector'
+    'std::map|std::unordered_map'                 = 'map'
+    'std::set|std::unordered_set'                 = 'set'
+    'std::cout|std::cerr|std::endl'               = 'iostream'
+    'std::ifstream|std::ofstream|std::fstream'    = 'fstream'
+    'std::shared_ptr|std::unique_ptr|std::weak_ptr' = 'memory'
+    'std::thread|std::mutex|std::lock_guard'      = 'thread'
+    'std::function|std::bind'                     = 'functional'
+    'std::move|std::forward'                      = 'utility'
+    # C runtime
+    'printf|sprintf|snprintf'                     = 'cstdio'
+    'malloc|free|calloc|realloc'                  = 'cstdlib'
+    'memcpy|memset|memmove|strcmp|strlen'          = 'cstring'
+    'time|clock|time_t'                           = 'ctime'
+    'assert'                                      = 'cassert'
+    # Project-specific
+    'SubsystemResult|SubsystemRegistry'           = 'rawrxd_subsystem_api.hpp'
+    'PatchResult|CLI_CONTRACT'                    = 'CLI_CONTRACT_v1.0.md'
+    'ModelHandle|InferenceEngine'                 = 'model_inference.hpp'
+}
+
+# ── Merge custom map ─────────────────────────────────────────────────────────
+if ($CustomMapPath) {
+    try {
+        Write-Verbose "Loading custom include map from $CustomMapPath"
+        $custom = Get-Content $CustomMapPath -Raw | ConvertFrom-Json -AsHashtable
+        foreach ($key in $custom.Keys) {
+            $script:IncludeMap[$key] = $custom[$key]
+        }
+        Write-Verbose "Merged $($custom.Count) custom mappings"
+    }
+    catch {
+        Write-Error "Failed to load custom include map: $_"
+        exit 1
+    }
+}
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+function Test-BinaryFile {
+    param([string]$Path)
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($Path) | Select-Object -First 512
+        $null_count = ($bytes | Where-Object { $_ -eq 0 }).Count
+        return ($null_count -gt 10)   # heuristic: >10 NUL bytes in first 512 = binary
+    }
+    catch { return $true }
+}
+
+function Get-MissingIncludes {
+    [CmdletBinding()]
+    param([string]$FilePath)
+
+    $content = Get-Content $FilePath -Raw -ErrorAction Stop
+    $missing = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($pattern in $script:IncludeMap.Keys) {
+        if ($content -match $pattern) {
+            $header = $script:IncludeMap[$pattern]
+            $escapedHeader = [regex]::Escape($header)
+            $includeCheck = "#include\s*[<`""]$escapedHeader[>`""]"
+            if ($content -notmatch $includeCheck) {
+                if ($header -notin $missing) { $missing.Add($header) }
+            }
+        }
+    }
+    return $missing
+}
+
+function Add-IncludeDirective {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string]$FilePath,
+        [string]$Header
+    )
+
+    $content = Get-Content $FilePath -Raw -ErrorAction Stop
+    $isSystemHeader = $Header -match '\.h$|^[a-z]+$'
+
+    $includeDirective = if ($isSystemHeader) { "#include <$Header>" } else { "#include `"$Header`"" }
+
+    # Find insertion point (after last #include or at top)
+    $lastIncludeMatch = [regex]::Matches($content, '(?m)^#include.*$') | Select-Object -Last 1
+
+    if ($lastIncludeMatch) {
+        $insertPos = $lastIncludeMatch.Index + $lastIncludeMatch.Length
+        $newContent = $content.Insert($insertPos, "`n$includeDirective")
+    }
+    else {
+        $newContent = "$includeDirective`n$content"
+    }
+
+    if ($PSCmdlet.ShouldProcess($FilePath, "Add #include $Header")) {
+        Set-Content $FilePath $newContent -NoNewline -ErrorAction Stop
+        Write-Verbose "  [+] Added $Header to $FilePath"
+    }
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+Write-Verbose "[IncludeResolver] Scan path : $ScanPath"
+Write-Verbose "[IncludeResolver] Max file  : $MaxFileSizeMB MB"
+
+if (-not (Test-Path $ScanPath)) {
+    Write-Error "Scan path not found: $ScanPath"
+    exit 2
+}
+
+$srcFiles = @(Get-ChildItem -Path $ScanPath -Recurse -Include *.cpp, *.h, *.hpp -File |
+    Where-Object { $_.FullName -notmatch '[\\/](obj|bin|\.git)[\\/]' })
+
+if ($srcFiles.Count -eq 0) {
+    Write-Warning "No source files found under $ScanPath"
+    exit 2
+}
+
+# Report accumulators
+$report = [PSCustomObject]@{
+    FilesScanned  = 0
+    FilesSkipped  = 0
+    IncludesAdded = 0
+    Errors        = [System.Collections.Generic.List[string]]::new()
+}
+
+$fileIndex = 0
+foreach ($file in $srcFiles) {
+    $fileIndex++
+    $pct = [math]::Floor(($fileIndex / $srcFiles.Count) * 100)
+    Write-Progress -Activity 'IncludeResolver — Scanning' `
+        -Status "$fileIndex / $($srcFiles.Count)  $($file.Name)" `
+        -PercentComplete $pct
+
+    # Skip oversized files
+    if ($file.Length -gt $MaxFileBytes) {
+        Write-Verbose "Skipping (too large): $($file.FullName) ($([math]::Round($file.Length/1MB,2)) MB)"
+        $report.FilesSkipped++
+        continue
+    }
+
+    # Skip binary files
+    if (Test-BinaryFile $file.FullName) {
+        Write-Verbose "Skipping (binary): $($file.FullName)"
+        $report.FilesSkipped++
+        continue
+    }
+
+    try {
+        $missing = Get-MissingIncludes -FilePath $file.FullName
+        $report.FilesScanned++
+
+        if ($missing.Count -gt 0) {
+            Write-Verbose "File: $($file.FullName) — missing: $($missing -join ', ')"
+
+            if ($AutoFix) {
+                # Backup before first modification
+                $bakPath = "$($file.FullName).bak"
+                if (-not (Test-Path $bakPath)) {
+                    Copy-Item $file.FullName $bakPath -ErrorAction Stop
+                    Write-Verbose "  Backup → $bakPath"
+                }
+
+                foreach ($header in $missing) {
+                    try {
+                        Add-IncludeDirective -FilePath $file.FullName -Header $header
+                        $report.IncludesAdded++
+                    }
+                    catch {
+                        $msg = "Failed to add $header to $($file.FullName): $_"
+                        Write-Warning $msg
+                        $report.Errors.Add($msg)
+                    }
+                }
+            }
+        }
+    }
+    catch {
+        $msg = "Error processing $($file.FullName): $_"
+        Write-Warning $msg
+        $report.Errors.Add($msg)
+    }
+}
+
+Write-Progress -Activity 'IncludeResolver — Scanning' -Completed
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+Write-Host ''
+Write-Host '╔══════════════════════════════════════════════╗' -ForegroundColor Cyan
+Write-Host '║  IncludeResolver — Summary                   ║' -ForegroundColor Cyan
+Write-Host '╠══════════════════════════════════════════════╣' -ForegroundColor Cyan
+Write-Host "║  Files scanned  : $($report.FilesScanned)" -ForegroundColor Cyan
+Write-Host "║  Files skipped  : $($report.FilesSkipped)" -ForegroundColor Cyan
+Write-Host "║  Includes added : $($report.IncludesAdded)" -ForegroundColor $(if ($report.IncludesAdded) { 'Green' } else { 'Cyan' })
+Write-Host "║  Errors         : $($report.Errors.Count)" -ForegroundColor $(if ($report.Errors.Count) { 'Red' } else { 'Cyan' })
+Write-Host '╚══════════════════════════════════════════════╝' -ForegroundColor Cyan
+
+if ($report.Errors.Count -gt 0) {
+    Write-Host "`nErrors:" -ForegroundColor Red
+    $report.Errors | ForEach-Object { Write-Host "  • $_" -ForegroundColor Red }
+}
+
+# ── JSON report ───────────────────────────────────────────────────────────────
+if ($ReportPath) {
+    try {
+        $report | ConvertTo-Json -Depth 4 | Set-Content $ReportPath -Encoding utf8
+        Write-Verbose "Report written → $ReportPath"
+    }
+    catch { Write-Warning "Could not write report: $_" }
+}
+
+if ($OutputFormat -eq 'JSON') {
+    $report | ConvertTo-Json -Depth 4
+}
+else {
+    Write-Output $report
+}
+
+if ($report.Errors.Count -gt 0) { exit 1 }
+exit 0

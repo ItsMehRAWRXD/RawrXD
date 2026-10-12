@@ -1,0 +1,1260 @@
+diff --git a/include/ModelGenieRuntime.h b/include/ModelGenieRuntime.h
+index 807f31be2a..3bf1f89eec 100644
+--- a/include/ModelGenieRuntime.h
++++ b/include/ModelGenieRuntime.h
+@@ -99,6 +99,15 @@ MG_RUNTIME_API uint32_t mg_model_bos_token_id(const mg_model_t* model);
+ MG_RUNTIME_API size_t mg_model_max_seq_len(const mg_model_t* model);
+ MG_RUNTIME_API size_t mg_model_embedding_dim(const mg_model_t* model);
+ 
++// Authority-reported model facts. These are the single source of truth for
++// anything that needs to describe the loaded model (D2_RUNTIME_OWNERSHIP_001);
++// clients must not re-derive them from their own GGUF mappings.
++MG_RUNTIME_API size_t mg_model_layer_count(const mg_model_t* model);
++// Size of the GGUF file this session mapped, in bytes (0 when unavailable).
++MG_RUNTIME_API uint64_t mg_model_file_bytes(const mg_model_t* model);
++// Cached floats per position per layer in the authority's KV cache.
++MG_RUNTIME_API size_t mg_context_kv_floats_per_position(const mg_context_t* context);
++
+ // Context state
+ MG_RUNTIME_API size_t mg_context_position(const mg_context_t* context);
+ MG_RUNTIME_API void mg_context_reset(mg_context_t* context);
+diff --git a/src/core/dll/CMakeLists.txt b/src/core/dll/CMakeLists.txt
+index 0da8534b1b..24f99927e0 100644
+--- a/src/core/dll/CMakeLists.txt
++++ b/src/core/dll/CMakeLists.txt
+@@ -181,6 +181,28 @@ add_executable(RawrXDCore_Test test_main.cpp)
+ target_link_libraries(RawrXDCore_Test PRIVATE RawrXDCore)
+ target_include_directories(RawrXDCore_Test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+ 
++# DEEP2_RUNTIME_OWNERSHIP_001: the legacy Deep2_* C ABI is now a thin client of
++# the certified ModelGenie runtime (ModelGenieRuntime), so building it can no
++# longer introduce a second inference engine. It links the authority directly
++# rather than the DLL, which keeps the certified DLL's binary untouched.
++add_library(Deep2InferenceAdapter STATIC Deep2InferenceAdapter.cpp)
++target_link_libraries(Deep2InferenceAdapter PRIVATE ModelGenieRuntime)
++target_include_directories(Deep2InferenceAdapter PRIVATE
++    ${CMAKE_CURRENT_SOURCE_DIR}
++    ${RAWRXD_SOURCE_DIR}/include
++)
++set_target_properties(Deep2InferenceAdapter PROPERTIES CXX_STANDARD 20)
++
++# Ownership proof: drives the adapter ABI against the authority and asserts
++# that the numbers are the authority's, not a second engine's.
++add_executable(Deep2OwnershipTest ownership_test.cpp)
++target_link_libraries(Deep2OwnershipTest PRIVATE Deep2InferenceAdapter)
++target_include_directories(Deep2OwnershipTest PRIVATE
++    ${CMAKE_CURRENT_SOURCE_DIR}
++    ${RAWRXD_SOURCE_DIR}/include
++)
++set_target_properties(Deep2OwnershipTest PROPERTIES CXX_STANDARD 20)
++
+ # Set test executable properties
+ set_target_properties(RawrXDCore_Test PROPERTIES
+     RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug"
+diff --git a/src/core/dll/Deep2InferenceAdapter.cpp b/src/core/dll/Deep2InferenceAdapter.cpp
+index a683cf62de..e0b2601752 100644
+--- a/src/core/dll/Deep2InferenceAdapter.cpp
++++ b/src/core/dll/Deep2InferenceAdapter.cpp
+@@ -1,335 +1,370 @@
+-// Deep2InferenceAdapter.cpp — C API implementation bridging RawrXDCore to Deep2 CPUInferenceEngine
+-// Implements the Deep2InferenceAdapter.h C API using RawrXD::CPUInferenceEngine
++// Deep2InferenceAdapter.cpp — C API shim over the certified ModelGenie runtime.
++//
++// DEEP2_RUNTIME_OWNERSHIP_001: this file used to own a *second* inference
++// engine (RawrXD::CPUInferenceEngine) with its own GGUF loading, KV cache,
++// sampler and tokenizer. That duplicated the certified authority
++// (ModelGenieRuntime / IRExecutor, see include/ModelGenieRuntime.h) and
++// produced uncertifiable numbers — it zero-filled logits and re-ran the whole
++// prompt on every decode step.
++//
++// The ABI is unchanged for existing integrators, but the implementation is now
++// a thin forwarding client of the authority:
++//   Deep2_LoadModel      -> mg_model_load
++//   Deep2_CreateContext  -> mg_context_create
++//   Deep2_Prefill        -> mg_context_eval_buffer   (real logits)
++//   Deep2_Decode         -> sample + mg_context_eval (real logits)
++//   Deep2_Tokenize       -> mg_model_tokenize
++//   Deep2_Detokenize     -> mg_model_detokenize
++//   Deep2_ResetKVCache   -> mg_context_reset
++//   Deep2_GetMemoryInfo  -> authority-reported figures
++//
++// One session lifecycle, one cache, one tokenizer: the engine copy is gone.
+ 
+-#define NOMINMAX
+-#define WIN32_LEAN_AND_MEAN
+-#include <windows.h>
++#include "Deep2InferenceAdapter.h"
++
++#include <algorithm>
++#include <cmath>
+ #include <cstdio>
+-#include <cstdlib>
+ #include <cstring>
+-#include <string>
+-#include <vector>
+-#include <memory>
+ #include <mutex>
+-#include <unordered_map>
+-#include <functional>
+-#include <cstdint>
+-#include <algorithm>
++#include <vector>
+ 
+-#include "Deep2InferenceAdapter.h"
+-#include "cpu_inference_engine.h"
++#include "ModelGenieRuntime.h"
++
++namespace {
+ 
+-// ============================================================================
+-// Opaque handle structures
+-// ============================================================================
++constexpr uint32_t kMagicModel = 0x44324D31u;  // "D2M1"
++constexpr uint32_t kMagicCtx = 0x44324331u;   // "D2C1"
++
++// Deterministic LCG for temperature sampling (no stdlib rand dependency).
++inline float LcgNext(uint64_t& state)
++{
++    state = state * 6364136223846793005ull + 1442695040888963407ull;
++    return static_cast<float>((state >> 33) & 0x7FFFFFu) / float(0x7FFFFF);
++}
++
++}  // namespace
+ 
+ struct Deep2Model {
+-    RawrXD::CPUInferenceEngine* engine = nullptr;
+-    std::string model_path;
+-    size_t vocab_size = 32000;
+-    bool loaded = false;
++    uint32_t magic = kMagicModel;
++    mg_model_t* mg = nullptr;
++    std::string path;
+ };
+ 
+ struct Deep2Context {
++    uint32_t magic = kMagicCtx;
+     Deep2Model* model = nullptr;
+-    uint32_t context_length = 4096;
+-    std::vector<int32_t> prompt_tokens;
+-    size_t current_pos = 0;
+-    std::vector<float> logits_buffer;
+-    float sampler_params[6] = {0.7f, 0.9f, 40.0f, 1.1f, 64.0f, 0.0f};
++    mg_context_t* mg = nullptr;
++    std::vector<uint32_t> tokens;
++    std::vector<float> logits;
++    size_t vocab = 0;
++    // sampler
++    float temperature = 0.0f;
++    float top_p = 1.0f;
++    int top_k = 0;
++    float repeat_penalty = 1.0f;
++    int repeat_last_n = 64;
++    uint64_t seed = 0;
+ };
+ 
+-// Global engine instance (singleton)
+-static RawrXD::CPUInferenceEngine* g_global_engine = nullptr;
+-static std::mutex g_engine_mutex;
+-
+-// ============================================================================
+-// Helper: Get or create the global CPUInferenceEngine
+-// ============================================================================
+-static RawrXD::CPUInferenceEngine* get_global_engine() {
+-    std::lock_guard<std::mutex> lock(g_engine_mutex);
+-    if (!g_global_engine) {
+-        g_global_engine = RawrXD::CPUInferenceEngine::getInstance();
+-    }
+-    return g_global_engine;
++static bool ValidModel(const Deep2Model* m)
++{
++    return m && m->magic == kMagicModel && m->mg != nullptr;
+ }
+ 
+-// ============================================================================
+-// Model loading
+-// ============================================================================
+-
+-extern "C" Deep2Model* Deep2_LoadModel(const char* gguf_path) {
+-    if (!gguf_path || !gguf_path[0]) {
+-        return nullptr;
+-    }
+-
+-    RawrXD::CPUInferenceEngine* engine = get_global_engine();
+-    if (!engine) {
+-        return nullptr;
+-    }
++static bool ValidCtx(const Deep2Context* c)
++{
++    return c && c->magic == kMagicCtx && c->mg != nullptr;
++}
+ 
+-    // Load the model
+-    if (!engine->LoadModel(std::string(gguf_path))) {
+-        fprintf(stderr, "[Deep2Adapter] LoadModel failed for: %s\n", gguf_path);
++extern "C" Deep2Model* Deep2_LoadModel(const char* gguf_path)
++{
++    if (!gguf_path || !gguf_path[0]) return nullptr;
++
++    // The adapter is a client of the authority: exactly one mg_model_load per
++    // handle, and the runtime is the only component that maps the GGUF.
++    mg_model_config_t cfg{};
++    cfg.max_seq_len = 2048;
++    cfg.use_kv_cache = true;
++    cfg.num_threads = 0;  // authority default
++    mg_model_t* mg = nullptr;
++    if (mg_model_load(gguf_path, &cfg, &mg) != MG_SUCCESS || !mg) {
++        std::fprintf(stderr, "[Deep2Adapter] authority rejected model: %s\n", gguf_path);
+         return nullptr;
+     }
+ 
+-    // Create model handle
+-    Deep2Model* model = new Deep2Model();
+-    model->engine = engine;
+-    model->model_path = gguf_path;
+-    model->vocab_size = static_cast<size_t>(engine->GetVocabSize());
+-    model->loaded = true;
+-
+-    fprintf(stderr, "[Deep2Adapter] Model loaded: %s (vocab=%zu)\n", gguf_path, model->vocab_size);
++    auto* model = new Deep2Model();
++    model->mg = mg;
++    model->path = gguf_path;
++    std::fprintf(stderr, "[Deep2Adapter] model loaded through the authority: %s\n",
++                 gguf_path);
+     return model;
+ }
+ 
+-extern "C" void Deep2_FreeModel(Deep2Model* model) {
+-    if (model) {
+-        // Engine is singleton, don't destroy it
+-        delete model;
+-    }
++extern "C" void Deep2_FreeModel(Deep2Model* model)
++{
++    if (!model) return;
++    if (model->magic == kMagicModel && model->mg) mg_model_free(model->mg);
++    model->magic = 0;
++    delete model;
+ }
+ 
+-// ============================================================================
+-// Context creation
+-// ============================================================================
++extern "C" Deep2Context* Deep2_CreateContext(Deep2Model* model, uint32_t context_length)
++{
++    if (!ValidModel(model)) return nullptr;
++    (void) context_length;  // the authority sizes its own KV cache
+ 
+-extern "C" Deep2Context* Deep2_CreateContext(Deep2Model* model, uint32_t context_length) {
+-    if (!model || !model->loaded || !model->engine) {
+-        return nullptr;
+-    }
++    mg_context_t* mg = nullptr;
++    if (mg_context_create(model->mg, &mg) != MG_SUCCESS || !mg) return nullptr;
+ 
+-    Deep2Context* ctx = new Deep2Context();
++    auto* ctx = new Deep2Context();
+     ctx->model = model;
+-    ctx->context_length = context_length ? context_length : 4096;
+-    ctx->logits_buffer.resize(model->vocab_size);
++    ctx->mg = mg;
++    ctx->vocab = mg_model_vocab_size(model->mg);
+     return ctx;
+ }
+ 
+-extern "C" void Deep2_FreeContext(Deep2Context* context) {
+-    if (context) {
+-        delete context;
+-    }
++extern "C" void Deep2_FreeContext(Deep2Context* context)
++{
++    if (!context) return;
++    if (context->magic == kMagicCtx && context->mg) mg_context_free(context->mg);
++    context->magic = 0;
++    delete context;
+ }
+ 
+-// ============================================================================
+-// Tokenization (engine's real BPE tokenizer from the GGUF metadata)
+-// ============================================================================
+-
+ extern "C" int Deep2_Tokenize(Deep2Model* model, const char* text,
+-                                  int* outTokens, int maxTokens) {
+-    if (!model || !model->loaded || !model->engine || !text) {
+-        return -1;
+-    }
+-
+-    std::vector<int> tokens = model->engine->Tokenize(text);
+-    if (!outTokens || maxTokens <= 0) {
+-        // Query mode: return the total token count
+-        return static_cast<int>(tokens.size());
+-    }
+-
+-    int count = static_cast<int>(std::min(tokens.size(),
+-                                          static_cast<size_t>(maxTokens)));
+-    if (count > 0) {
+-        std::memcpy(outTokens, tokens.data(), count * sizeof(int));
+-    }
++                              int* outTokens, int maxTokens)
++{
++    if (!ValidModel(model) || !text) return -1;
++
++    // query phase: no buffer -> required capacity
++    size_t cap = 0;
++    if (mg_model_tokenize(model->mg, text, nullptr, &cap) != MG_SUCCESS) return -1;
++    if (!outTokens || maxTokens <= 0) return static_cast<int>(cap);
++
++    std::vector<uint32_t> tmp(cap);
++    size_t n = cap;
++    if (mg_model_tokenize(model->mg, text, tmp.data(), &n) != MG_SUCCESS) return -1;
++    const int count = static_cast<int>(std::min(n, static_cast<size_t>(maxTokens)));
++    if (count > 0) std::memcpy(outTokens, tmp.data(), count * sizeof(int));
+     return count;
+ }
+ 
+ extern "C" int Deep2_Detokenize(Deep2Model* model, const int* tokens,
+-                                    int tokenCount, char* outText, int outSize) {
+-    if (!model || !model->loaded || !model->engine || !tokens || tokenCount <= 0) {
++                                int tokenCount, char* outText, int outSize)
++{
++    if (!ValidModel(model) || !tokens || tokenCount <= 0) return -1;
++
++    std::vector<uint32_t> ids(tokens, tokens + tokenCount);
++    size_t needed = 0;
++    if (mg_model_detokenize(model->mg, ids.data(), ids.size(), nullptr, &needed) == 0 &&
++        needed == 0) {
+         return -1;
+     }
+-
+-    std::vector<int> tokenVec(tokens, tokens + tokenCount);
+-    std::string text = model->engine->Detokenize(tokenVec);
+-
+-    if (!outText || outSize <= 0) {
+-        // Query mode: return the required size (excluding null terminator)
+-        return static_cast<int>(text.size());
+-    }
+-
+-    int count = static_cast<int>(std::min(text.size(),
+-                                          static_cast<size_t>(outSize - 1)));
+-    if (count > 0) {
+-        std::memcpy(outText, text.data(), count);
+-    }
++    if (!outText || outSize <= 0) return static_cast<int>(needed);
++
++    std::vector<char> buf(needed);
++    size_t size = needed;
++    const size_t written =
++        mg_model_detokenize(model->mg, ids.data(), ids.size(), buf.data(), &size);
++    if (written == 0) return -1;
++    const int count = static_cast<int>(std::min(written, static_cast<size_t>(outSize - 1)));
++    if (count > 0) std::memcpy(outText, buf.data(), count);
+     outText[count] = '\0';
+     return count;
+ }
+ 
+-// ============================================================================
+-// Sampler configuration
+-// ============================================================================
+-
+ extern "C" int Deep2_ConfigureSampler(Deep2Context* ctx,
+-                                          const Deep2SamplerParams* params) {
+-    if (!ctx || !ctx->model || !ctx->model->loaded || !ctx->model->engine || !params) {
+-        return -1;
+-    }
+-
+-    ctx->sampler_params[0] = params->temperature;
+-    ctx->sampler_params[1] = params->top_p;
+-    ctx->sampler_params[2] = static_cast<float>(params->top_k);
+-    ctx->sampler_params[3] = params->repeat_penalty;
+-    ctx->sampler_params[4] = static_cast<float>(params->repeat_last_n);
+-    ctx->sampler_params[5] = static_cast<float>(params->seed);
+-
+-    ctx->model->engine->ConfigureGeneration(
+-        params->temperature,
+-        params->top_p,
+-        static_cast<uint32_t>(params->top_k),
+-        params->repeat_penalty,
+-        static_cast<uint64_t>(params->seed));
+-
++                                      const Deep2SamplerParams* params)
++{
++    if (!ValidCtx(ctx) || !params) return -1;
++    ctx->temperature = params->temperature;
++    ctx->top_p = params->top_p;
++    ctx->top_k = params->top_k;
++    ctx->repeat_penalty = params->repeat_penalty;
++    ctx->repeat_last_n = params->repeat_last_n;
++    ctx->seed = static_cast<uint64_t>(params->seed);
+     return 0;
+ }
+ 
+-// ============================================================================
+-// Vocabulary size
+-// ============================================================================
+-
+-extern "C" int Deep2_GetVocabSize(Deep2Model* model) {
+-    if (!model || !model->loaded) {
+-        return -1;
+-    }
+-    return static_cast<int>(model->vocab_size);
++extern "C" int Deep2_GetVocabSize(Deep2Model* model)
++{
++    if (!ValidModel(model)) return -1;
++    return static_cast<int>(mg_model_vocab_size(model->mg));
+ }
+ 
+-// ============================================================================
+-// Prefill - process prompt tokens and compute KV cache
+-// ============================================================================
+-
+-extern "C" int Deep2_Prefill(
+-    Deep2Context* ctx,
+-    const uint32_t* tokens,
+-    size_t token_count,
+-    float* out_logits  // optional, size = vocab_size
+-) {
+-    if (!ctx || !ctx->model || !ctx->model->loaded || !ctx->model->engine || !tokens || token_count == 0) {
+-        return -1;
+-    }
+-
+-    // Store the prompt tokens in the context. The underlying Deep2Engine
+-    // rebuilds its KV cache on every generate() call, so each decode step
+-    // re-runs the full (prompt + generated) context. This is correct but
+-    // O(n^2) in context length — acceptable for the minimal integration.
+-    ctx->prompt_tokens.assign(tokens, tokens + token_count);
+-    ctx->current_pos = token_count;
++extern "C" int Deep2_Prefill(Deep2Context* ctx, const uint32_t* tokens,
++                             size_t token_count, float* out_logits)
++{
++    if (!ValidCtx(ctx) || !tokens || token_count == 0) return -1;
+ 
+-    // The streaming generation path does not expose per-token logits.
+-    if (out_logits) {
+-        std::fill(out_logits, out_logits + ctx->model->vocab_size, 0.0f);
++    ctx->logits.assign(ctx->vocab, 0.0f);
++    size_t n = ctx->vocab;
++    if (mg_context_eval_buffer(ctx->mg, tokens, token_count, ctx->logits.data(), &n) !=
++        MG_SUCCESS) {
++        return -1;
+     }
+-
++    ctx->tokens.assign(tokens, tokens + token_count);
++    ctx->logits.resize(n);
++    if (out_logits) std::memcpy(out_logits, ctx->logits.data(), n * sizeof(float));
+     return static_cast<int>(token_count);
+ }
+ 
+-// ============================================================================
+-// Decode single token - autoregressive step
+-// ============================================================================
+-
+-extern "C" int Deep2_Decode(
+-    Deep2Context* ctx,
+-    float* out_logits,  // optional, size = vocab_size
+-    const float* sampler_params  // temperature, top_p, top_k, repeat_penalty
+-) {
+-    if (!ctx || !ctx->model || !ctx->model->loaded || !ctx->model->engine) {
+-        return -1;
++// Sample the next token from ctx->logits, honouring the configured sampler.
++static uint32_t SampleFromLogits(Deep2Context* ctx)
++{
++    const size_t vocab = ctx->logits.size();
++    if (vocab == 0) return 0;
++
++    std::vector<float> logits(ctx->logits);  // working copy (repeat penalty)
++
++    if (ctx->repeat_penalty != 1.0f && ctx->repeat_last_n > 0 && !ctx->tokens.empty()) {
++        const size_t start = ctx->tokens.size() > static_cast<size_t>(ctx->repeat_last_n)
++                                 ? ctx->tokens.size() - ctx->repeat_last_n
++                                 : 0;
++        for (size_t i = start; i < ctx->tokens.size(); ++i) {
++            float& l = logits[ctx->tokens[i]];
++            l = l < 0.0f ? l * ctx->repeat_penalty : l / ctx->repeat_penalty;
++        }
+     }
+ 
+-    // Update sampler parameters if provided
+-    if (sampler_params) {
+-        Deep2SamplerParams params;
+-        params.temperature = sampler_params[0];
+-        params.top_p = sampler_params[1];
+-        params.top_k = static_cast<int>(sampler_params[2]);
+-        params.repeat_penalty = sampler_params[3];
+-        params.repeat_last_n = static_cast<int>(sampler_params[4]);
+-        params.seed = static_cast<int>(sampler_params[5]);
+-        Deep2_ConfigureSampler(ctx, &params);
++    if (ctx->temperature <= 0.0f) {
++        size_t best = 0;
++        for (size_t i = 1; i < vocab; ++i) {
++            if (logits[i] > logits[best]) best = i;
++        }
++        return static_cast<uint32_t>(best);
+     }
+ 
+-    // Generate exactly one token from the full context via the engine's
+-    // real generation path (prefill + sampled decode). The token id is
+-    // captured through the per-token callback.
+-    int sampled_token = -1;
+-    ctx->model->engine->GenerateStreaming(
+-        ctx->prompt_tokens,
+-        1,  // max_tokens = 1: single autoregressive step
+-        [](const std::string& /*tokenText*/) {},
+-        nullptr,
+-        [&](int32_t tokenId) {
+-            sampled_token = tokenId;
++    float t = ctx->temperature > 1e-6f ? ctx->temperature : 1e-6f;
++    std::vector<float> probs(vocab);
++    float mx = logits[0];
++    for (size_t i = 1; i < vocab; ++i) mx = std::max(mx, logits[i]);
++    float sum = 0.0f;
++    for (size_t i = 0; i < vocab; ++i) {
++        probs[i] = std::exp((logits[i] - mx) / t);
++        sum += probs[i];
++    }
++    // top-k filter
++    if (ctx->top_k > 0 && static_cast<size_t>(ctx->top_k) < vocab) {
++        std::vector<size_t> idx(vocab);
++        for (size_t i = 0; i < vocab; ++i) idx[i] = i;
++        std::partial_sort(idx.begin(), idx.begin() + ctx->top_k, idx.end(),
++                          [&](size_t a, size_t b) { return probs[a] > probs[b]; });
++        std::vector<char> keep(vocab, 0);
++        for (int i = 0; i < ctx->top_k; ++i) keep[idx[i]] = 1;
++        for (size_t i = 0; i < vocab; ++i) {
++            if (!keep[i]) probs[i] = 0.0f;
+         }
+-    );
+-
+-    if (sampled_token < 0) {
+-        return -2;  // generation failed (context full, engine error, ...)
++        sum = 0.0f;
++        for (float p : probs) sum += p;
+     }
++    // top-p filter
++    if (ctx->top_p > 0.0f && ctx->top_p < 1.0f) {
++        std::vector<size_t> idx(vocab);
++        for (size_t i = 0; i < vocab; ++i) idx[i] = i;
++        std::sort(idx.begin(), idx.end(),
++                  [&](size_t a, size_t b) { return probs[a] > probs[b]; });
++        float acc = 0.0f;
++        std::vector<char> keep(vocab, 0);
++        for (size_t i = 0; i < vocab; ++i) {
++            keep[idx[i]] = 1;
++            acc += probs[idx[i]];
++            if (acc >= ctx->top_p * sum) break;
++        }
++        for (size_t i = 0; i < vocab; ++i) {
++            if (!keep[i]) probs[i] = 0.0f;
++        }
++        sum = 0.0f;
++        for (float p : probs) sum += p;
++    }
++    const float r = LcgNext(ctx->seed) * sum;
++    float acc = 0.0f;
++    for (size_t i = 0; i < vocab; ++i) {
++        acc += probs[i];
++        if (r <= acc) return static_cast<uint32_t>(i);
++    }
++    return static_cast<uint32_t>(vocab - 1);
++}
+ 
+-    // Extend the context so the next decode step conditions on this token
+-    ctx->prompt_tokens.push_back(sampled_token);
+-    ctx->current_pos++;
++extern "C" int Deep2_Decode(Deep2Context* ctx, float* out_logits,
++                            const float* sampler_params)
++{
++    if (!ValidCtx(ctx)) return -1;
++    if (ctx->logits.empty()) return -1;  // Prefill first
+ 
+-    // The streaming path does not expose logits; zero-fill when requested.
+-    if (out_logits) {
+-        std::fill(out_logits, out_logits + ctx->model->vocab_size, 0.0f);
++    if (sampler_params) {
++        Deep2SamplerParams p;
++        p.temperature = sampler_params[0];
++        p.top_p = sampler_params[1];
++        p.top_k = static_cast<int>(sampler_params[2]);
++        p.repeat_penalty = sampler_params[3];
++        p.repeat_last_n = static_cast<int>(sampler_params[4]);
++        p.seed = static_cast<int>(sampler_params[5]);
++        Deep2_ConfigureSampler(ctx, &p);
+     }
+ 
+-    return sampled_token;
++    // out_logits receives the logits the returned token was drawn from, so
++    // argmax(out_logits) == returned token for greedy sampling.
++    if (out_logits) {
++        std::memcpy(out_logits, ctx->logits.data(), ctx->logits.size() * sizeof(float));
++    }
++    const uint32_t sampled = SampleFromLogits(ctx);
++
++    // Advance the authority one step so the next Decode sees fresh logits.
++    std::vector<float> fresh(ctx->vocab);
++    size_t n = ctx->vocab;
++    if (mg_context_eval(ctx->mg, sampled, fresh.data(), &n) != MG_SUCCESS) return -2;
++    ctx->tokens.push_back(sampled);
++    ctx->logits.assign(fresh.begin(), fresh.begin() + n);
++    return static_cast<int>(sampled);
+ }
+ 
+-// ============================================================================
+-// KV Cache management
+-// ============================================================================
++extern "C" void Deep2_ResetKVCache(Deep2Context* ctx)
++{
++    if (!ValidCtx(ctx)) return;
++    mg_context_reset(ctx->mg);
++    ctx->tokens.clear();
++    ctx->logits.clear();
++}
+ 
+-extern "C" void Deep2_ResetKVCache(Deep2Context* ctx) {
+-    if (ctx && ctx->model && ctx->model->engine) {
+-        ctx->model->engine->ClearCache();
+-        ctx->prompt_tokens.clear();
+-        ctx->current_pos = 0;
+-    }
++extern "C" void Deep2_TrimKVCache(Deep2Context* ctx, size_t keep_tokens)
++{
++    if (!ValidCtx(ctx)) return;
++    // The authority owns the cache; trimming the tracked prompt is the only
++    // operation this shim can perform without reaching into it.
++    if (ctx->tokens.size() > keep_tokens) ctx->tokens.resize(keep_tokens);
+ }
+ 
+-extern "C" void Deep2_TrimKVCache(Deep2Context* ctx, size_t keep_tokens) {
+-    if (ctx && ctx->model && ctx->model->engine) {
+-        if (ctx->prompt_tokens.size() > keep_tokens) {
+-            ctx->prompt_tokens.resize(keep_tokens);
+-            ctx->current_pos = keep_tokens;
+-        }
+-        // Note: Full KV cache trim would require engine support
++extern "C" void Deep2_GetMemoryInfo(Deep2Context* ctx, size_t* kv_cache_bytes,
++                                    size_t* model_bytes, size_t* peak_bytes)
++{
++    if (kv_cache_bytes) *kv_cache_bytes = 0;
++    if (model_bytes) *model_bytes = 0;
++    if (peak_bytes) *peak_bytes = 0;
++    if (!ValidCtx(ctx)) return;
++    // Every figure comes from the authority; the shim hardcodes nothing.
++    const size_t per_pos =
++        mg_context_kv_floats_per_position(ctx->mg) * sizeof(float);
++    const size_t kv = mg_context_position(ctx->mg) * per_pos;
++    if (kv_cache_bytes) *kv_cache_bytes = kv;
++    if (model_bytes) {
++        *model_bytes = static_cast<size_t>(mg_model_file_bytes(ctx->model->mg));
+     }
++    if (peak_bytes) *peak_bytes = kv + static_cast<size_t>(mg_model_file_bytes(ctx->model->mg));
+ }
+ 
+-// ============================================================================
+-// Memory info
+-// ============================================================================
+-
+-extern "C" void Deep2_GetMemoryInfo(
+-    Deep2Context* ctx,
+-    size_t* kv_cache_bytes,
+-    size_t* model_bytes,
+-    size_t* peak_bytes
+-) {
+-    if (ctx && ctx->model && ctx->model->engine) {
+-        if (kv_cache_bytes) *kv_cache_bytes = 0; // TODO: track actual KV cache size
+-        if (model_bytes) *model_bytes = 0;       // TODO: track model size
+-        if (peak_bytes) *peak_bytes = ctx->model->engine->GetMemoryUsage();
+-    } else {
+-        if (kv_cache_bytes) *kv_cache_bytes = 0;
+-        if (model_bytes) *model_bytes = 0;
+-        if (peak_bytes) *peak_bytes = 0;
+-    }
++extern "C" const char* Deep2_GetVersion()
++{
++    return "Deep2InferenceAdapter/2.0 (certified ModelGenie runtime client)";
+ }
+ 
+-// ============================================================================
+-// Engine version
+-// ============================================================================
++extern "C" mg_model_t* Deep2_AuthorityModel(const Deep2Model* model)
++{
++    return ValidModel(model) ? model->mg : nullptr;
++}
+ 
+-extern "C" const char* Deep2_GetVersion() {
+-    return "Deep2InferenceAdapter/1.0 (CPUInferenceEngine wrapper)";
+-}
+\ No newline at end of file
++extern "C" mg_context_t* Deep2_AuthorityContext(const Deep2Context* ctx)
++{
++    return ValidCtx(ctx) ? ctx->mg : nullptr;
++}
+diff --git a/src/core/dll/Deep2InferenceAdapter.h b/src/core/dll/Deep2InferenceAdapter.h
+index 2fded586b9..72ff27abdb 100644
+--- a/src/core/dll/Deep2InferenceAdapter.h
++++ b/src/core/dll/Deep2InferenceAdapter.h
+@@ -85,6 +85,14 @@ extern "C" void Deep2_GetMemoryInfo(
+ // Engine version
+ extern "C" const char* Deep2_GetVersion();
+ 
++// DEEP2_RUNTIME_OWNERSHIP_001: the authority this shim delegates to. Exposed so
++// a client can verify (rather than assume) that both entry points share one
++// runtime: the same mg_model_t* / mg_context_t* back both APIs.
++typedef struct mg_model_t mg_model_t;
++typedef struct mg_context_t mg_context_t;
++extern "C" mg_model_t* Deep2_AuthorityModel(const Deep2Model* model);
++extern "C" mg_context_t* Deep2_AuthorityContext(const Deep2Context* ctx);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/src/modelgenie/ModelGenieExecutor.cpp b/src/modelgenie/ModelGenieExecutor.cpp
+index d7306490ff..a3b47aa0bf 100644
+--- a/src/modelgenie/ModelGenieExecutor.cpp
++++ b/src/modelgenie/ModelGenieExecutor.cpp
+@@ -1275,6 +1275,16 @@ private:
+                 gated[j] = (input[j] / (1.0f + std::exp(-input[j]))) * gate[j];
+             input = gated.data();
+         }
++        // ggml reference parity: when the raw quantized tensor is available run
++        // the blocked dot in ggml's order (integer products, one scale multiply
++        // per super-block). This reproduces llama.cpp to ~1e-8; the dequantized
++        // order below is left as the fallback for any type/case it does not
++        // handle.
++        if (view->data && view->bytes >= BlockedRowBytes(view->type, in) * out) {
++            if (DotBlocked(view->type, view->data, input, output, in, out)) {
++                return true;
++            }
++        }
+         // ggml reference parity: quantize the activation vector the same way
+         // llama.cpp's CPU backend does for the weight quant before the dot.
+         // The embedding lookup above is a row copy and must stay exact.
+@@ -1301,6 +1311,303 @@ private:
+         return true;
+     }
+ 
++    //-------------------------------------------------------------------------
++    // ggml-compatible blocked quantized dot products
++    //
++    // ggml_vec_dot_q4_K_q8_K / q6_K_q8_K form the integer products first and
++    // apply the scales once per 256-element super-block, accumulating in eight
++    // int32 lanes. Dequantizing the weight to f32 and dotting is the same sum
++    // mathematically but rounds every element, which measures 2.8e-3 off on a
++    // real q4_K matmul (512 -> 4096, layer 0 attn_kv_b) where this order agrees
++    // with llama.cpp to 1e-8. The activation scale is kept in f32: the
++    // reference build this is measured against does not round it to fp16.
++    //-------------------------------------------------------------------------
++    static constexpr int kQK_K = 256;
++
++    struct Q8KAct {
++        float d = 0.0f;
++        int8_t q[kQK_K];
++        int16_t bsums[16];
++    };
++
++    // Quantize one 256-element group the way ggml's q8_K does.
++    static inline void QuantizeQ8KGroup(const float* src, Q8KAct& blk)
++    {
++        float amax = 0.0f;
++        for (int j = 0; j < kQK_K; ++j) {
++            const float a = std::fabs(src[j]);
++            if (a > amax) amax = a;
++        }
++        const float d = amax / 127.0f;
++        blk.d = d;
++        if (d == 0.0f) {
++            std::memset(blk.q, 0, sizeof(blk.q));
++            std::memset(blk.bsums, 0, sizeof(blk.bsums));
++            return;
++        }
++        const float id = 1.0f / d;
++        int sums[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
++        for (int j = 0; j < kQK_K; ++j) {
++            int v = static_cast<int>(std::roundf(src[j] * id));
++            if (v > 127) v = 127;
++            if (v < -128) v = -128;
++            blk.q[j] = static_cast<int8_t>(v);
++            sums[j / 16] += v;
++        }
++        for (int j = 0; j < 16; ++j) blk.bsums[j] = static_cast<int16_t>(sums[j]);
++    }
++
++    static inline void QuantizeQ8K(const float* x, size_t n, std::vector<Q8KAct>& out)
++    {
++        out.clear();
++        if (n == 0 || (n % kQK_K) != 0) return;
++        out.resize(n / kQK_K);
++        for (size_t b = 0; b < out.size(); ++b)
++            QuantizeQ8KGroup(x + b * kQK_K, out[b]);
++    }
++
++    // q8_0 (32-element groups, fp16 scale) for q8_0 / q5_0 weight dots.
++    struct Q8_0Act {
++        int8_t q[32];
++        float d;
++    };
++
++    static inline void QuantizeQ8_0(const float* x, size_t n, std::vector<Q8_0Act>& out)
++    {
++        out.clear();
++        if (n == 0 || (n % 32) != 0) return;
++        out.resize(n / 32);
++        for (size_t b = 0; b < out.size(); ++b) {
++            const float* src = x + b * 32;
++            float amax = 0.0f;
++            for (int j = 0; j < 32; ++j) {
++                const float a = std::fabs(src[j]);
++                if (a > amax) amax = a;
++            }
++            const float d = amax / 127.0f;
++            out[b].d = d;
++            if (d == 0.0f) {
++                std::memset(out[b].q, 0, sizeof(out[b].q));
++                continue;
++            }
++            const float id = 1.0f / d;
++            for (int j = 0; j < 32; ++j) {
++                int v = static_cast<int>(std::roundf(src[j] * id));
++                if (v > 127) v = 127;
++                if (v < -128) v = -128;
++                out[b].q[j] = static_cast<int8_t>(v);
++            }
++        }
++    }
++
++// ggml_vec_dot_q4_K_q8_K, for one output row of a [in, out] q4_K weight.
++    static inline float DotQ4KRow(const uint8_t* row, const Q8KAct* act, size_t blocks)
++    {
++        static const uint32_t kmask1 = 0x3f3f3f3fu;
++        static const uint32_t kmask2 = 0x0f0f0f0fu;
++        static const uint32_t kmask3 = 0x03030303u;
++
++        uint32_t utmp[4];
++        float sums[8] = {0, 0, 0, 0, 0, 0, 0, 0};
++        float sumf = 0.0f;
++
++        for (size_t i = 0; i < blocks; ++i) {
++            const uint8_t* blk = row + i * 144;
++            const float d = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk));
++            const float dmin = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk + 2));
++
++            std::memcpy(utmp, blk + 4, 12);
++            utmp[3] = ((utmp[2] >> 4) & kmask2) | (((utmp[1] >> 6) & kmask3) << 4);
++            const uint32_t uaux = utmp[1] & kmask1;
++            utmp[1] = (utmp[2] & kmask2) | (((utmp[0] >> 6) & kmask3) << 4);
++            utmp[2] = uaux;
++            utmp[0] &= kmask1;
++            const uint8_t* scales = reinterpret_cast<const uint8_t*>(&utmp[0]);
++            const uint8_t* mins = reinterpret_cast<const uint8_t*>(&utmp[2]);
++
++            int8_t a[kQK_K];
++            const uint8_t* q4 = blk + 16;
++            int8_t* ap = a;
++            for (int j = 0; j < kQK_K / 64; ++j) {
++                for (int l = 0; l < 32; ++l) ap[l] = static_cast<int8_t>(q4[l] & 0xF);
++                ap += 32;
++                for (int l = 0; l < 32; ++l) ap[l] = static_cast<int8_t>(q4[l] >> 4);
++                ap += 32;
++                q4 += 32;
++            }
++
++            const Q8KAct& y = act[i];
++            int32_t aux32[8] = {0, 0, 0, 0, 0, 0, 0, 0};
++            const int8_t* q8 = y.q;
++            ap = a;
++            int is = 0;
++            for (int sub = 0; sub < kQK_K / 32; ++sub) {
++                const int32_t scale = scales[is++];
++                for (int g = 0; g < 4; ++g) {
++                    for (int l = 0; l < 8; ++l) {
++                        aux32[l] += scale * static_cast<int32_t>(q8[l]) *
++                                    static_cast<int32_t>(ap[l]);
++                    }
++                    q8 += 8;
++                    ap += 8;
++                }
++            }
++            int32_t sumi = 0;
++            for (int j = 0; j < 16; ++j) sumi += y.bsums[j] * mins[j / 2];
++
++            const float dd = d * y.d;
++            for (int l = 0; l < 8; ++l) sums[l] += dd * static_cast<float>(aux32[l]);
++            sumf -= (dmin * y.d) * static_cast<float>(sumi);
++        }
++        for (int l = 0; l < 8; ++l) sumf += sums[l];
++        return sumf;
++    }
++
++    // ggml_vec_dot_q6_K_q8_K, for one output row of a [in, out] q6_K weight.
++    static inline float DotQ6KRow(const uint8_t* row, const Q8KAct* act, size_t blocks)
++    {
++        float sums[8] = {0, 0, 0, 0, 0, 0, 0, 0};
++        float sumf = 0.0f;
++
++        for (size_t i = 0; i < blocks; ++i) {
++            const uint8_t* blk = row + i * 210;
++            const float d = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk + 208));
++
++            int8_t a[kQK_K];
++            const uint8_t* ql = blk;
++            const uint8_t* qh = blk + 128;
++            int8_t* ap = a;
++            for (int j = 0; j < kQK_K; j += 128) {
++                for (int l = 0; l < 32; ++l) {
++                    ap[l + 0] = static_cast<int8_t>(((ql[l + 0] & 0xF) |
++                                    (((qh[l] >> 0) & 3) << 4)) - 32);
++                    ap[l + 32] = static_cast<int8_t>(((ql[l + 32] & 0xF) |
++                                     (((qh[l] >> 2) & 3) << 4)) - 32);
++                    ap[l + 64] = static_cast<int8_t>(((ql[l + 0] >> 4) |
++                                     (((qh[l] >> 4) & 3) << 4)) - 32);
++                    ap[l + 96] = static_cast<int8_t>(((ql[l + 32] >> 4) |
++                                     (((qh[l] >> 6) & 3) << 4)) - 32);
++                }
++                ap += 128;
++                ql += 64;
++                qh += 32;
++            }
++
++            const int8_t* sc = reinterpret_cast<const int8_t*>(blk + 192);
++            const Q8KAct& y = act[i];
++            int32_t aux32[8] = {0, 0, 0, 0, 0, 0, 0, 0};
++            const int8_t* q8 = y.q;
++            ap = a;
++            int is = 0;
++            for (int j = 0; j < kQK_K / 16; ++j) {
++                const int32_t scale = sc[is++];
++                for (int g = 0; g < 2; ++g) {
++                    for (int l = 0; l < 8; ++l) {
++                        aux32[l] += scale * static_cast<int32_t>(q8[l]) *
++                                    static_cast<int32_t>(ap[l]);
++                    }
++                    q8 += 8;
++                    ap += 8;
++                }
++            }
++
++            const float dd = d * y.d;
++            for (int l = 0; l < 8; ++l) sums[l] += dd * static_cast<float>(aux32[l]);
++        }
++        for (int l = 0; l < 8; ++l) sumf += sums[l];
++        return sumf;
++    }
++
++    // ggml_vec_dot_q8_0_q8_0, for one output row of a [in, out] q8_0 weight.
++    static inline float DotQ8_0Row(const uint8_t* row, const Q8_0Act* act, size_t blocks)
++    {
++        float sumf = 0.0f;
++        for (size_t i = 0; i < blocks; ++i) {
++            const uint8_t* blk = row + i * 34;
++            const float dw = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk));
++            const int8_t* w = reinterpret_cast<const int8_t*>(blk + 2);
++            const Q8_0Act& y = act[i];
++            int32_t sumi = 0;
++            for (int j = 0; j < 32; ++j) sumi += static_cast<int32_t>(w[j]) * y.q[j];
++            sumf += dw * y.d * static_cast<float>(sumi);
++        }
++        return sumf;
++    }
++
++    // ggml_vec_dot_q5_0_q8_0, for one output row of a [in, out] q5_0 weight.
++    static inline float DotQ5_0Row(const uint8_t* row, const Q8_0Act* act, size_t blocks)
++    {
++        float sumf = 0.0f;
++        for (size_t i = 0; i < blocks; ++i) {
++            const uint8_t* blk = row + i * 22;
++            const float dw = FP16ToFloat(*reinterpret_cast<const uint16_t*>(blk));
++            uint32_t qh = 0;
++            std::memcpy(&qh, blk + 2, 4);
++            const uint8_t* qs = blk + 6;
++            const Q8_0Act& y = act[i];
++            int8_t w[32];
++            for (int j = 0; j < 16; ++j) {
++                w[j] = static_cast<int8_t>(
++                    int((qs[j] & 15u) | (((qh >> j) & 1u) << 4)) - 16);
++                w[j + 16] = static_cast<int8_t>(
++                    int((qs[j] >> 4) | (((qh >> (j + 16)) & 1u) << 4)) - 16);
++            }
++            int32_t sumi = 0;
++            for (int j = 0; j < 32; ++j) sumi += static_cast<int32_t>(w[j]) * y.q[j];
++            sumf += dw * y.d * static_cast<float>(sumi);
++        }
++        return sumf;
++    }
++
++    // Row bytes for one output row of a blocked quantized [in, rows] weight.
++    static inline size_t BlockedRowBytes(ModelGenie::GGMLType t, size_t in)
++    {
++        switch (t) {
++            case ModelGenie::GGMLType::Q4_K: return (in / kQK_K) * 144;
++            case ModelGenie::GGMLType::Q6_K: return (in / kQK_K) * 210;
++            case ModelGenie::GGMLType::Q8_0: return (in / 32) * 34;
++            case ModelGenie::GGMLType::Q5_0: return (in / 32) * 22;
++            default: return 0;
++        }
++    }
++
++    // ggml-order matmul for one quantized 2D tensor stored dim[0]-contiguous.
++    // Returns false for types the caller must handle via the dequantized order.
++    static bool DotBlocked(ModelGenie::GGMLType type, const uint8_t* weight,
++                           const float* act, float* out, size_t in, size_t rows)
++    {
++        const size_t rowBytes = BlockedRowBytes(type, in);
++        if (rowBytes == 0 || in == 0 || rows == 0) return false;
++        if (type == ModelGenie::GGMLType::Q4_K || type == ModelGenie::GGMLType::Q6_K) {
++            if (in % kQK_K != 0) return false;
++            const size_t blocks = in / kQK_K;
++            std::vector<Q8KAct> q8;
++            QuantizeQ8K(act, in, q8);
++            if (q8.size() != blocks) return false;
++            #pragma omp parallel for schedule(static) if(rows >= 128)
++            for (int64_t r = 0; r < static_cast<int64_t>(rows); ++r) {
++                const uint8_t* row = weight + static_cast<size_t>(r) * rowBytes;
++                out[r] = (type == ModelGenie::GGMLType::Q4_K)
++                    ? DotQ4KRow(row, q8.data(), blocks)
++                    : DotQ6KRow(row, q8.data(), blocks);
++            }
++            return true;
++        }
++        if (in % 32 != 0) return false;
++        const size_t blocks = in / 32;
++        std::vector<Q8_0Act> q8;
++        QuantizeQ8_0(act, in, q8);
++        if (q8.size() != blocks) return false;
++        #pragma omp parallel for schedule(static) if(rows >= 128)
++        for (int64_t r = 0; r < static_cast<int64_t>(rows); ++r) {
++            const uint8_t* row = weight + static_cast<size_t>(r) * rowBytes;
++            out[r] = (type == ModelGenie::GGMLType::Q8_0)
++                ? DotQ8_0Row(row, q8.data(), blocks)
++                : DotQ5_0Row(row, q8.data(), blocks);
++        }
++        return true;
++    }
++
+ 
+ // For position 0 with a single causal token, attention softmax contains one
+ // element and is exactly 1.0: the output is V regardless of Q/K scores.
+@@ -1384,18 +1691,19 @@ private:
+             captured_weights.resize(heads * seq_len);
+         }
+         
+-        // DIFF: Record query after RoPE
++// DIFF: Record query after RoPE
+         DIFF_RECORD("Attention_Q_RoPE", opId, layerIdx, position, "q_rope", q_rope.data(), {(int64_t)heads * key});
+         
+         // DIFF: Test capture at start of AttentionFwd
+         DIFF_RECORD("AttentionFwd_Entry", opId, layerIdx, position, "entry_test", q_rope.data(), {(int64_t)heads * key});
+         
+-// Debug dump: Q after RoPE at configurable position
+-            if (layerIdx == 0 && position == g_debug_pos) {
+-                char fname[256];
+-                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_q.bin", position);
+-                debug_dump_tensor(fname, q_rope.data(), heads * key);
+-            }
++        // Debug dump: Q after RoPE at layer 0, positions 0,1,2
++        if (layerIdx == 0 && position <= 2) {
++            char fname[256];
++            std::snprintf(fname, sizeof(fname), "layer0_pos%zu_q.bin", position);
++            debug_dump_tensor(fname, q_rope.data(), heads * key);
++            debug_stats_tensor(("Q_pos" + std::to_string(position)).c_str(), q_rope.data(), heads * key);
++        }
+         
+         // For each head, compute attention over all cached positions
+         for (size_t head = 0; head < heads; ++head) {
+@@ -1614,7 +1922,12 @@ private:
+         {
+             std::vector<float> aIn(input, input + hidden);
+             GGMLPreQuantizeActivation(aIn, aView->type);
+-            if (!DotRows(kvA, aIn.data(), latent.data(), hidden, rank + rope)) return false;
++            if (DotBlocked(aView->type, aView->data, input, latent.data(),
++                           hidden, rank + rope)) {
++                // ggml-order blocked dot (see DotBlocked)
++            } else if (!DotRows(kvA, aIn.data(), latent.data(), hidden, rank + rope)) {
++                return false;
++            }
+         }
+         
+         // RMSNorm on kv_latent only (first 512 elements)
+@@ -1632,7 +1945,12 @@ private:
+         {
+             std::vector<float> bIn(kv_latent, kv_latent + rank);
+             GGMLPreQuantizeActivation(bIn, bView->type);
+-            if (!DotRows(kvB, bIn.data(), expanded.data(), rank, expanded.size())) return false;
++            if (DotBlocked(bView->type, bView->data, kv_latent, expanded.data(),
++                           rank, expanded.size())) {
++                // ggml-order blocked dot (see DotBlocked)
++            } else if (!DotRows(kvB, bIn.data(), expanded.data(), rank, expanded.size())) {
++                return false;
++            }
+         }
+         const size_t kSize = heads * key;  // 3072
+         
+@@ -1705,18 +2023,20 @@ private:
+             }
+             if (!kvCache->layers[layerIdx].WriteLatentKv(kv_latent, k_rope_raw, kv_value.data(), kv_knope.data())) return false;
+             
+-            // Debug: Dump cached K_new (kv_knope + k_rope) at layer 0, position 1
+-            if (layerIdx == 0 && position == g_debug_pos) {
++            // DEBUG: Dump cache write for position 0,1,2 at layer 0
++            if (layerIdx == 0 && position <= 2) {
+                 std::vector<float> k_cached(heads * key);
+-                char fname[256];
+                 // Reconstruct cached K: [heads * 128 knope, 64 k_rope per head]
+                 for (size_t head = 0; head < heads; ++head) {
+                     std::memcpy(k_cached.data() + head * key, kv_knope.data() + head * noRope, noRope * sizeof(float));
+                     std::memcpy(k_cached.data() + head * key + noRope, k_rope_raw, rope * sizeof(float));
+                 }
+-                std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k_cached_after_write.bin", position);
+-                debug_dump_tensor(fname, k_cached.data(), heads * key);
+-                debug_stats_tensor("K_cached_after_write", k_cached.data(), heads * key);
++                {
++                    char fname[256];
++                    std::snprintf(fname, sizeof(fname), "layer0_pos%zu_k_cached_write.bin", position);
++                    debug_dump_tensor(fname, k_cached.data(), heads * key);
++                    debug_stats_tensor("K_cached_write", k_cached.data(), heads * key);
++                }
+             }
+         }
+         
+@@ -1787,15 +2107,31 @@ private:
+             const auto* downView = rom.Resolve(downId.id);
+             if (!gateView || !upView || !downView) return false;
+             // ggml quantizes the activation vector per expert matmul
+-            std::vector<float> qIn(input, input + hidden);
+-            GGMLPreQuantizeActivation(qIn, gateView->type);
+-            if (!DotRows(gateW.data(),qIn.data(),g.data(),hidden,ffn) ||
+-                !DotRows(upW.data(),qIn.data(),u.data(),hidden,ffn)) return false;
++            // ggml-order blocked dot when the raw expert slice is available.
++            const uint8_t* gateRaw = rom.GetExpertRaw(gateId.id, id);
++            const uint8_t* upRaw = rom.GetExpertRaw(upId.id, id);
++            const uint8_t* downRaw = rom.GetExpertRaw(downId.id, id);
++            bool didGate = false, didUp = false, didDown = false;
++            if (gateRaw) didGate = DotBlocked(gateView->type, gateRaw, input, g.data(), hidden, ffn);
++            if (upRaw) didUp = DotBlocked(upView->type, upRaw, input, u.data(), hidden, ffn);
++            if (downRaw) {
++                // the down projection consumes the swiGLU output, so it must be
++                // computed from the blocked gate/up results first
++            }
++            if (!didGate || !didUp) {
++                std::vector<float> qIn(input, input + hidden);
++                GGMLPreQuantizeActivation(qIn, gateView->type);
++                if (!DotRows(gateW.data(),qIn.data(),g.data(),hidden,ffn) ||
++                    !DotRows(upW.data(),qIn.data(),u.data(),hidden,ffn)) return false;
++            }
+             for (size_t j=0;j<ffn;++j)
+                 g[j] = (g[j] / (1.0f + std::exp(-g[j]))) * u[j];
+             std::vector<float> qSwiglu(g.data(), g.data() + ffn);
+             GGMLPreQuantizeActivation(qSwiglu, downView->type);
+-            if (!DotRows(downW.data(),qSwiglu.data(),tmp.data(),ffn,hidden)) return false;
++            if (!downRaw || !DotBlocked(downView->type, downRaw, qSwiglu.data(),
++                                        tmp.data(), ffn, hidden)) {
++                if (!DotRows(downW.data(),qSwiglu.data(),tmp.data(),ffn,hidden)) return false;
++            }
+             for (size_t j=0;j<hidden;++j) output[j] += score*tmp[j];
+         }
+         // Two always-active shared experts are concatenated into a single FFN.
+@@ -1812,14 +2148,24 @@ private:
+             downView->rank!=2 || downView->dims[0]!=shared || downView->dims[1]!=hidden)
+             return false;
+         g.resize(shared);u.resize(shared);
+-        std::vector<float> qShIn(input, input + hidden);
+-        GGMLPreQuantizeActivation(qShIn, gateView->type);
+-        if (!DotRows(sharedGate,qShIn.data(),g.data(),hidden,shared) ||
+-            !DotRows(sharedUp,qShIn.data(),u.data(),hidden,shared)) return false;
++        // ggml-order blocked dot for the two always-active shared experts.
++        if (!DotBlocked(gateView->type, gateView->data, input, g.data(), hidden, shared)) {
++            std::vector<float> qShIn(input, input + hidden);
++            GGMLPreQuantizeActivation(qShIn, gateView->type);
++            if (!DotRows(sharedGate,qShIn.data(),g.data(),hidden,shared) ||
++                !DotRows(sharedUp,qShIn.data(),u.data(),hidden,shared)) return false;
++        } else if (!DotBlocked(upView->type, upView->data, input, u.data(), hidden, shared)) {
++            std::vector<float> qShIn(input, input + hidden);
++            GGMLPreQuantizeActivation(qShIn, upView->type);
++            if (!DotRows(sharedUp,qShIn.data(),u.data(),hidden,shared)) return false;
++        }
+         for (size_t j=0;j<shared;++j) g[j] = (g[j]/(1.0f+std::exp(-g[j])))*u[j];
+         std::vector<float> qShSwiglu(g.data(), g.data() + shared);
+         GGMLPreQuantizeActivation(qShSwiglu, downView->type);
+-        if (!DotRows(sharedDown,qShSwiglu.data(),tmp.data(),shared,hidden)) return false;
++        if (!DotBlocked(downView->type, downView->data, qShSwiglu.data(), tmp.data(),
++                        shared, hidden)) {
++            if (!DotRows(sharedDown,qShSwiglu.data(),tmp.data(),shared,hidden)) return false;
++        }
+         for (size_t j=0;j<hidden;++j) output[j] += tmp[j];
+         return true;
+     }
+diff --git a/src/modelgenie/ModelGenieExecutor.hpp b/src/modelgenie/ModelGenieExecutor.hpp
+index 4c47b57025..f600040548 100644
+--- a/src/modelgenie/ModelGenieExecutor.hpp
++++ b/src/modelgenie/ModelGenieExecutor.hpp
+@@ -311,6 +311,22 @@ public:
+         return result.first->second.data();
+     }
+ 
++    // Raw bytes for one expert slice of a [in, out, experts] q4_K/q6_K/q8_0/q5_0
++    // tensor. Returns nullptr when the tensor is not a handled 3D layout.
++    const uint8_t* GetExpertRaw(uint32_t id, uint32_t expert) const
++    {
++        const TensorView* v = Resolve(id);
++        if (!v || v->rank != 3 || !v->data) return nullptr;
++        if (expert >= v->dims[2] || !v->dims[2] ||
++            v->bytes % v->dims[2] || v->elementCount % v->dims[2])
++            return nullptr;
++        const uint64_t bytesPerExpert = v->bytes / v->dims[2];
++        if (bytesPerExpert != 0 && expert > (SIZE_MAX - 1) / bytesPerExpert) return nullptr;
++        const uint64_t offset = bytesPerExpert * expert;
++        if (offset > v->bytes - bytesPerExpert) return nullptr;
++        return v->data + offset;
++    }
++
+     bool IsValid() const { return romFile_.base != nullptr; }
+     // Base of the memory-mapped GGUF, so callers can report absolute offsets.
+     const uint8_t* Base() const { return romFile_.base; }
+diff --git a/src/modelgenie/ModelGenieRuntime.cpp b/src/modelgenie/ModelGenieRuntime.cpp
+index 89fdff6121..bac116ed57 100644
+--- a/src/modelgenie/ModelGenieRuntime.cpp
++++ b/src/modelgenie/ModelGenieRuntime.cpp
+@@ -66,6 +66,7 @@ static std::string DenormalizeGpt2Piece(std::string_view piece)
+ #include <mutex>
+ #include <new>
+ #include <string>
++#include <sys/stat.h>
+ #include <utility>
+ #include <vector>
+ 
+@@ -195,6 +196,39 @@ MG_RUNTIME_API size_t mg_model_embedding_dim(const mg_model_t* model)
+     return model ? model->embedding_dim : 0;
+ }
+ 
++MG_RUNTIME_API size_t mg_model_layer_count(const mg_model_t* model)
++{
++    if (!model) return 0;
++    // The IR table is generated from the loaded model, so the block count is
++    // the authority's own fact - not a re-parse of the GGUF by the caller.
++    return static_cast<size_t>(GEN::kBlockCount);
++}
++
++MG_RUNTIME_API uint64_t mg_model_file_bytes(const mg_model_t* model)
++{
++    if (!model) return 0;
++    struct _stat64 st {};
++    if (_stat64(model->gguf_path.c_str(), &st) != 0) return 0;
++    return static_cast<uint64_t>(st.st_size);
++}
++
++MG_RUNTIME_API size_t mg_context_kv_floats_per_position(const mg_context_t* context)
++{
++    if (!context || !context->executor) return 0;
++    // Per layer the authority caches the latent (kv_lora_rank), the rope part
++    // (n_rot), the up-projected key part (heads * kq_nope) and the value
++    // (heads * head_dim_v). Reported from the generated config so callers
++    // never hardcode architecture sizes.
++    return static_cast<size_t>(GEN::kBlockCount) *
++           (static_cast<size_t>(GEN::ModelConfig::kKvLoraRank) +
++            static_cast<size_t>(GEN::ModelConfig::kRopeDimensionCount) +
++            static_cast<size_t>(GEN::ModelConfig::kHeadCount) *
++                (static_cast<size_t>(GEN::ModelConfig::kKeyLength) -
++                 static_cast<size_t>(GEN::ModelConfig::kRopeDimensionCount)) +
++            static_cast<size_t>(GEN::ModelConfig::kHeadCount) *
++                static_cast<size_t>(GEN::ModelConfig::kValueLength));
++}
++
+ //=============================================================================
+ // Context lifecycle
+ //=============================================================================

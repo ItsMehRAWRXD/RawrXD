@@ -1,0 +1,53 @@
+RawrXD GGUF Baseline Capture (TPS blueprint step 01)
+=====================================================
+
+file      : F:\OLLamaModels\gguf\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+sha256    : 5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+bytes     : 25430738944 (23.68 GB)
+gguf      : magic OK, version 3
+tensors   : 417
+
+--- metadata (44 keys parsed) ---
+architecture            : nemotron_h_moe
+general.name              : Ga_Nvidia_Nemotron_3_5_Nano_Bf16_07292026_Vv0.1
+tokenizer.ggml.model      : gpt2
+context_length            : 1048576
+embedding_length          : 2688
+block_count (layers)      : 53
+attention.head_count      : 32
+vocab_size                : 131072
+rope_dim                  : 84
+expert_count              : 128
+expert_used_count         : 6
+
+--- tensor directory ---
+entries parsed           : 417
+alignment / data start   : 32 / 7896320 (0x787d00)
+payload bytes            : 25422842624 (23.68 GB, 100.0% of file)
+covered by offsets       : 25422842624 bytes (100.0% of payload)
+
+dtype       tensors           elements          bytes
+Q5_0            116        25070739456    17236133376
+Q8_0             26         7488552960     7956587520
+Q4_K             31          344752128      193923072
+F32             243            8877632       35510528
+?                 1             344064         688128
+TOTAL             -        32913266240    25422842624
+
+--- expert tensors (auto-detected) ---
+declared expert_count    : 128
+by shape (dim0==count)    : 96 tensors, 23739740160 bytes (22.11 GB)
+by name (token pattern)   : 48 tensors, 370427904 bytes (0.34 GB)
+expert share of payload   : 94.8%
+NOTE: shape and name sets disagree (96 vs 48). Neither is assumed
+      correct; the larger set is used above because under-counting
+      experts would plan for less VRAM than the router can reach.
+      Token 'shexp' was auto-detected, not hardcoded.
+
+file_type (declared)    : 15 (MOSTLY_Q6_K/Q5_K_M)
+dominant actual dtype    : Q5_0 (17236133376 bytes)
+MISMATCH: declared file_type does not match the dominant tensor dtype.
+          Optimising for the declared type would target the wrong kernel.
+inventory exported         : tensor_inventory.tsv (417 rows)
+
+baseline frozen. Re-run to confirm the digest is stable.

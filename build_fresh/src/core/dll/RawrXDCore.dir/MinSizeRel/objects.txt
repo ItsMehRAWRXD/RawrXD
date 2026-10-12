@@ -1,0 +1,2 @@
+F:/rawrxd/build_fresh/src/core/dll/RawrXDCore.dir/MinSizeRel/RawrXDCore.obj
+F:/rawrxd/build_fresh/src/core/dll/RawrXDCore.dir/MinSizeRel/GGUFLoader.obj

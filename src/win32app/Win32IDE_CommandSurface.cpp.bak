@@ -1,0 +1,520 @@
+// Win32IDE_CommandSurface.cpp — RawrXD ScreenPilot command-home (Desktop Preview)
+#include "Win32IDE.h"
+#include "resource.h"
+#include "../command/CommandBroker.h"
+#include "../command/CommandEventJournal.h"
+#include "../command/IControlChannel.h"
+#include "../command/SessionBinder.h"
+#include "ScreenPilotModelHub.h"
+#include "Win32Utf8.hpp"
+#include <commctrl.h>
+#include <commdlg.h>
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+
+namespace fs = std::filesystem;
+using RawrXD::Command::CommandBroker;
+using RawrXD::Command::CommandEventJournal;
+using RawrXD::Command::JournalEventType;
+using RawrXD::Command::SessionBinder;
+using RawrXD::Command::SessionSnapshot;
+
+static constexpr COLORREF kSpBg = RGB(9, 9, 11);
+static constexpr COLORREF kSpPanel = RGB(24, 24, 27);
+static constexpr COLORREF kSpBorder = RGB(39, 39, 42);
+static constexpr COLORREF kSpText = RGB(244, 244, 245);
+static constexpr COLORREF kSpMuted = RGB(113, 113, 122);
+static constexpr COLORREF kSpAccent = RGB(56, 189, 248);
+static constexpr COLORREF kSpWarn = RGB(251, 191, 36);
+static constexpr COLORREF kSpOk = RGB(34, 197, 94);
+
+static std::wstring utf8w(const std::string& s) {
+    if (s.empty()) return L"";
+    int n = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+    if (n <= 0) return L"";
+    std::wstring w(static_cast<size_t>(n - 1), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, w.data(), n);
+    return w;
+}
+
+static std::string readGitBranch(const std::string& repoRoot) {
+    std::ifstream head(fs::path(repoRoot) / ".git" / "HEAD");
+    if (!head) return "main";
+    std::string line;
+    std::getline(head, line);
+    const std::string prefix = "ref: refs/heads/";
+    if (line.rfind(prefix, 0) == 0) return line.substr(prefix.size());
+    if (line.size() >= 7) return line.substr(0, 7);
+    return "detached";
+}
+
+static std::string leafName(const std::string& path) {
+    if (path.empty()) return "workspace";
+    fs::path p(path);
+    return p.filename().string().empty() ? path : p.filename().string();
+}
+
+static void styleChildFont(HWND h, HFONT font) {
+    if (h && font) SendMessageW(h, WM_SETFONT, (WPARAM)font, TRUE);
+}
+
+LRESULT CALLBACK Win32IDE::CommandHostProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    auto* ide = reinterpret_cast<Win32IDE*>(GetPropW(hwnd, L"IDE_PTR"));
+    switch (msg) {
+    case WM_CTLCOLORSTATIC:
+    case WM_CTLCOLOREDIT:
+    case WM_CTLCOLORLISTBOX: {
+        HDC hdc = reinterpret_cast<HDC>(wp);
+        SetBkColor(hdc, kSpPanel);
+        SetTextColor(hdc, kSpText);
+        if (ide && ide->m_cmdPanelBrush) return (LRESULT)ide->m_cmdPanelBrush;
+        return (LRESULT)GetStockObject(BLACK_BRUSH);
+    }
+    case WM_COMMAND:
+        if (ide && ide->m_hwndMain)
+            return SendMessageW(ide->m_hwndMain, WM_COMMAND, wp, lp);
+        break;
+    default:
+        break;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+void Win32IDE::appendCommandConversation(const std::string& line, bool ensureNewline) {
+    if (!m_hwndCommandConversation || !IsWindow(m_hwndCommandConversation)) return;
+    std::string text = line;
+    if (ensureNewline && !text.empty() && text.back() != '\n') text += "\n";
+    const int len = GetWindowTextLengthW(m_hwndCommandConversation);
+    SendMessageW(m_hwndCommandConversation, EM_SETSEL, len, len);
+    SendMessageW(m_hwndCommandConversation, EM_REPLACESEL, FALSE,
+                 (LPARAM)utf8w(text).c_str());
+    SendMessageW(m_hwndCommandConversation, WM_VSCROLL, SB_BOTTOM, 0);
+}
+
+void Win32IDE::appendCommandConversationStream(const std::string& chunk) {
+    appendCommandConversation(chunk, false);
+}
+
+void Win32IDE::bindCommandSessionFromWorkspace() {
+    SessionSnapshot snap;
+    snap.workspaceRoot = m_gitRepoPath.empty() ? fs::current_path().string() : m_gitRepoPath;
+    snap.repository = leafName(snap.workspaceRoot);
+    snap.branch = m_gitStatus.branch.empty() ? readGitBranch(snap.workspaceRoot)
+                                             : m_gitStatus.branch;
+    snap.model = "Deep2 Local";
+    char machine[MAX_COMPUTERNAME_LENGTH + 1] = {};
+    DWORD sz = MAX_COMPUTERNAME_LENGTH + 1;
+    if (GetComputerNameA(machine, &sz)) snap.machine = machine;
+    else snap.machine = "This PC";
+    SessionBinder::instance().bind(snap);
+    CommandEventJournal::instance().setWorkspaceRoot(snap.workspaceRoot);
+    CommandEventJournal::instance().append(JournalEventType::SessionBound,
+        "\"" + snap.machine + "/" + snap.repository + "\"");
+}
+
+void Win32IDE::refreshCommandContextBar() {
+    if (!m_hwndTopContextBar) return;
+    const auto& s = SessionBinder::instance().snapshot();
+    std::wostringstream w;
+    w << L"RawrXD ScreenPilot  |  " << utf8w(s.machine) << L"  |  "
+      << utf8w(s.workspaceRoot) << L"  |  " << utf8w(s.repository) << L"  |  "
+      << utf8w(s.branch);
+    SetWindowTextW(m_hwndTopContextBar, w.str().c_str());
+}
+
+void Win32IDE::refreshCommandLeftRail() {
+    if (!m_hwndCmdWorkspaceList) return;
+    SendMessageW(m_hwndCmdWorkspaceList, LB_RESETCONTENT, 0, 0);
+    const auto& s = SessionBinder::instance().snapshot();
+    SendMessageW(m_hwndCmdWorkspaceList, LB_ADDSTRING, 0, (LPARAM)L"Machines");
+    SendMessageW(m_hwndCmdWorkspaceList, LB_ADDSTRING, 0,
+                 (LPARAM)(L"  " + utf8w(s.machine)).c_str());
+    SendMessageW(m_hwndCmdWorkspaceList, LB_ADDSTRING, 0, (LPARAM)L"Workspaces");
+    SendMessageW(m_hwndCmdWorkspaceList, LB_ADDSTRING, 0,
+                 (LPARAM)(L"  " + utf8w(s.repository)).c_str());
+    const size_t pending = CommandBroker::instance().pendingApprovalCount();
+    if (pending > 0) {
+        SendMessageW(m_hwndCmdWorkspaceList, LB_ADDSTRING, 0, (LPARAM)L"Approvals");
+        std::wstring badge = L"  waiting: " + std::to_wstring(pending);
+        SendMessageW(m_hwndCmdWorkspaceList, LB_ADDSTRING, 0, (LPARAM)badge.c_str());
+    }
+}
+
+void Win32IDE::refreshCommandFooter() {
+    if (!m_hwndCommandFooter) return;
+    SetWindowTextW(m_hwndCommandFooter,
+                   L"Desktop Preview · LOCAL_ONLY_001 · Deep2/GGUF local lane · "
+                   L"local authority retained · EGRESS_001 open");
+}
+
+
+static std::string formatBytes(uint64_t n) {
+    if (n >= (1ull << 30)) return std::to_string(n / (1ull << 30)) + " GB";
+    if (n >= (1ull << 20)) return std::to_string(n / (1ull << 20)) + " MB";
+    return std::to_string(n) + " B";
+}
+
+static bool nameMatchesRecommend(const std::string& fileName, const char* id) {
+    std::string lower = fileName;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return (char)std::tolower(c); });
+    std::string key = id;
+    std::transform(key.begin(), key.end(), key.begin(),
+                   [](unsigned char c) { return (char)std::tolower(c); });
+    return lower.find(key) != std::string::npos ||
+           (lower.find("deepseek") != std::string::npos &&
+            key.find("deepseek") != std::string::npos) ||
+           (lower.find("qwen") != std::string::npos && key.find("qwen") != std::string::npos);
+}
+
+void Win32IDE::refreshCommandModelHub() {
+    if (!m_hwndModelLocalList || !m_hwndModelRecList) return;
+    using RawrXD::ScreenPilot::ModelHub;
+    const auto inv = ModelHub::scanLocalInventory(128);
+    m_cmdModelInventoryPaths.clear();
+    SendMessageW(m_hwndModelLocalList, LB_RESETCONTENT, 0, 0);
+    for (const auto& e : inv) {
+        m_cmdModelInventoryPaths.push_back(e.fullPath);
+        const std::string line = e.fileName + "  (" + formatBytes(e.bytes) + ")";
+        SendMessageW(m_hwndModelLocalList, LB_ADDSTRING, 0, (LPARAM)utf8w(line).c_str());
+    }
+    SendMessageW(m_hwndModelRecList, LB_RESETCONTENT, 0, 0);
+    for (const auto& rec : ModelHub::topRecommendations()) {
+        bool onDisk = false;
+        for (const auto& e : inv) {
+            if (nameMatchesRecommend(e.fileName, rec.id)) {
+                onDisk = true;
+                break;
+            }
+        }
+        std::string line = std::string(rec.label) + "  [" + rec.sizeHint + "]  " +
+                           (onDisk ? "READY" : "not on disk");
+        SendMessageW(m_hwndModelRecList, LB_ADDSTRING, 0, (LPARAM)utf8w(line).c_str());
+    }
+    if (m_hwndModelHubStatus) {
+        const auto roots = ModelHub::storageRoots();
+        std::string root = roots.empty() ? "F:\\OllamaModels" : roots.front();
+        std::wstring msg = L"LOCAL_ONLY_001 · " + utf8w(root) + L" · " +
+                           std::to_wstring(inv.size()) + L" weights · loopback only (127.0.0.1)";
+        SetWindowTextW(m_hwndModelHubStatus, msg.c_str());
+    }
+    if (m_hwndModelHubHdr) {
+        SetWindowTextW(m_hwndModelHubHdr,
+                       L"Engine control · Deep2/GGUF · no cloud pull · no 0.0.0.0 listen");
+    }
+}
+
+void Win32IDE::handleCommandModelLoad() {
+    if (!m_hwndModelLocalList) return;
+    const int sel = (int)SendMessageW(m_hwndModelLocalList, LB_GETCURSEL, 0, 0);
+    if (sel < 0 || sel >= (int)m_cmdModelInventoryPaths.size()) {
+        appendCommandConversation("[System] Select a local .gguf weight from the inventory list.");
+        return;
+    }
+    const std::string& path = m_cmdModelInventoryPaths[static_cast<size_t>(sel)];
+    appendCommandConversation("[System] Loading model: " + path);
+    CommandBroker::instance().setActivityStatus("Loading local GGUF...");
+    refreshCommandActivityStrip();
+    if (loadModelForInference(path)) {
+        appendCommandConversation("[System] Model loaded into Deep2 local engine.");
+        CommandBroker::instance().setActivityStatus("Deep2 local engine ready");
+    } else {
+        appendCommandConversation("[System] Model load failed — check Output panel.");
+        CommandBroker::instance().setActivityStatus("Model load failed");
+    }
+    refreshCommandActivityStrip();
+    refreshCommandModelHub();
+}
+
+void Win32IDE::handleCommandModelBrowse() {
+    wchar_t pathBuf[MAX_PATH] = {};
+    OPENFILENAMEW ofn = {};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hwndMain;
+    ofn.lpstrFilter = L"GGUF Models\0*.gguf\0All Files\0*.*\0";
+    ofn.lpstrFile = pathBuf;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    ofn.lpstrTitle = L"Select local GGUF weight (LOCAL_ONLY_001)";
+    ofn.lpstrInitialDir = L"F:\\OllamaModels";
+    if (!GetOpenFileNameW(&ofn)) return;
+    const std::string path = RawrXD::WideToUtf8(pathBuf);
+    appendCommandConversation("[System] Loading browsed model: " + path);
+    if (loadModelForInference(path)) {
+        appendCommandConversation("[System] Model loaded.");
+        CommandBroker::instance().setActivityStatus("Deep2 local engine ready");
+    }
+    refreshCommandActivityStrip();
+    refreshCommandModelHub();
+}
+
+void Win32IDE::refreshCommandActivityStrip() {
+    if (!m_hwndActivityStripText) return;
+    const std::string status = CommandBroker::instance().activityStatus();
+    SetWindowTextW(m_hwndActivityStripText,
+                   utf8w(status.empty() ? "RawrXD Agent idle" : status).c_str());
+    const size_t n = CommandBroker::instance().pendingApprovalCount();
+    if (m_hwndCmdApprovalBadge) {
+        if (n > 0) {
+            SetWindowTextW(m_hwndCmdApprovalBadge,
+                           (L"Approvals: " + std::to_wstring(n)).c_str());
+            ShowWindow(m_hwndCmdApprovalBadge, SW_SHOW);
+        } else {
+            ShowWindow(m_hwndCmdApprovalBadge, SW_HIDE);
+        }
+    }
+}
+
+void Win32IDE::layoutCommandSurface(int cw, int ch) {
+    if (!m_hwndCommandHost || cw <= 0 || ch <= 0) return;
+    const int pad = 12;
+    const int railW = 220;
+    const int ctxH = 36;
+    const int steerH = 72;
+    const int hubH = 132;
+    const int actH = 40;
+    const int footH = 28;
+    const int compH = 88;
+    const int comboW = 140;
+    const int btnW = 96;
+    int y = pad;
+    if (m_hwndTopContextBar)
+        MoveWindow(m_hwndTopContextBar, pad, y, cw - 2 * pad, ctxH, TRUE);
+    y += ctxH + pad;
+    const int bodyTop = y;
+    const int bodyH = ch - bodyTop - footH - pad;
+    if (m_hwndCommandLeftRail)
+        MoveWindow(m_hwndCommandLeftRail, pad, bodyTop, railW, bodyH, TRUE);
+    const int mainX = pad + railW + pad;
+    const int mainW = cw - mainX - pad;
+    int mainY = bodyTop;
+    const int convH = bodyH - steerH - hubH - actH - compH - 4 * pad;
+    if (m_hwndCommandConversation)
+        MoveWindow(m_hwndCommandConversation, mainX, mainY, mainW,
+                   convH > 80 ? convH : 80, TRUE);
+    mainY += (convH > 80 ? convH : 80) + pad;
+    if (m_hwndSteeringBelt)
+        MoveWindow(m_hwndSteeringBelt, mainX, mainY, mainW, steerH, TRUE);
+    mainY += steerH + pad;
+    if (m_hwndModelHubHdr)
+        MoveWindow(m_hwndModelHubHdr, mainX, mainY, mainW, 18, TRUE);
+    mainY += 20;
+    const int halfW = (mainW - 8) / 2;
+    if (m_hwndModelRecList)
+        MoveWindow(m_hwndModelRecList, mainX, mainY, halfW, hubH - 24, TRUE);
+    if (m_hwndModelLocalList)
+        MoveWindow(m_hwndModelLocalList, mainX + halfW + 8, mainY, halfW, hubH - 24, TRUE);
+    mainY += hubH - 20;
+    HWND loadBtn = GetDlgItem(m_hwndCommandHost, IDC_CMD_MODEL_LOAD_BTN);
+    if (loadBtn) MoveWindow(loadBtn, mainX, mainY, 100, 24, TRUE);
+    HWND browseBtn = GetDlgItem(m_hwndCommandHost, IDC_CMD_MODEL_BROWSE_BTN);
+    if (browseBtn) MoveWindow(browseBtn, mainX + 108, mainY, 120, 24, TRUE);
+    if (m_hwndModelHubStatus)
+        MoveWindow(m_hwndModelHubStatus, mainX + 236, mainY, mainW - 236, 24, TRUE);
+    mainY += 28;
+    if (m_hwndActivityStrip)
+        MoveWindow(m_hwndActivityStrip, mainX, mainY, mainW, actH, TRUE);
+    if (m_hwndActivityStripText)
+        MoveWindow(m_hwndActivityStripText, 8, 8, mainW - btnW - 24, 24, TRUE);
+    HWND stopBtn = GetDlgItem(m_hwndActivityStrip, IDC_CMD_STOP_BTN);
+    if (stopBtn) MoveWindow(stopBtn, mainW - btnW - 8, 6, btnW, 28, TRUE);
+    mainY += actH + pad;
+    if (m_hwndCommandComposer)
+        MoveWindow(m_hwndCommandComposer, mainX, mainY, mainW - 2 * comboW - btnW - 24,
+                   compH, TRUE);
+    int cx = mainX + mainW - 2 * comboW - btnW - 16;
+    if (m_hwndCmdModelCombo) MoveWindow(m_hwndCmdModelCombo, cx, mainY + 8, comboW, 200, TRUE);
+    cx += comboW + 8;
+    if (m_hwndCmdModeCombo) MoveWindow(m_hwndCmdModeCombo, cx, mainY + 8, comboW, 200, TRUE);
+    cx += comboW + 8;
+    HWND sendBtn = GetDlgItem(m_hwndCommandHost, IDC_CMD_SEND_BTN);
+    if (sendBtn) MoveWindow(sendBtn, cx, mainY + 8, btnW, 32, TRUE);
+    HWND workBtn = GetDlgItem(m_hwndCommandHost, IDC_CMD_WORK_MODE_BTN);
+    if (workBtn) MoveWindow(workBtn, mainX, mainY + compH - 28, 160, 28, TRUE);
+    if (m_hwndCommandFooter)
+        MoveWindow(m_hwndCommandFooter, pad, ch - footH - pad / 2, cw - 2 * pad, footH, TRUE);
+}
+
+static void setChromeVisible(HWND h, int cmd) {
+    if (h && IsWindow(h)) ShowWindow(h, cmd);
+}
+
+void Win32IDE::enterCommandMode() {
+    m_shellMode = AppShellMode::Command;
+    bindCommandSessionFromWorkspace();
+    refreshCommandContextBar();
+    refreshCommandLeftRail();
+    refreshCommandFooter();
+    refreshCommandModelHub();
+    refreshCommandActivityStrip();
+    setChromeVisible(m_hwndCommandHost, SW_SHOW);
+    setChromeVisible(m_hwndToolbar, SW_HIDE);
+    setChromeVisible(m_hwndActivityBar, SW_HIDE);
+    setChromeVisible(m_hwndSidebar, SW_HIDE);
+    setChromeVisible(m_hwndSecondarySidebar, SW_HIDE);
+    setChromeVisible(m_hwndTabBar, SW_HIDE);
+    setChromeVisible(m_hwndEditor, SW_HIDE);
+    setChromeVisible(m_hwndStatusBar, SW_HIDE);
+    if (m_hwndMain) {
+        SetWindowTextW(m_hwndMain, L"RawrXD ScreenPilot — Desktop Preview");
+        RECT rc{};
+        GetClientRect(m_hwndMain, &rc);
+        MoveWindow(m_hwndCommandHost, 0, 0, rc.right, rc.bottom, TRUE);
+        layoutCommandSurface(rc.right, rc.bottom);
+    }
+    CommandEventJournal::instance().append(JournalEventType::ModeSwitch, "\"command_home\"");
+}
+
+void Win32IDE::enterWorkMode() {
+    m_shellMode = AppShellMode::Work;
+    setChromeVisible(m_hwndCommandHost, SW_HIDE);
+    setChromeVisible(m_hwndToolbar, SW_SHOW);
+    setChromeVisible(m_hwndActivityBar, SW_SHOW);
+    if (m_sidebarVisible) setChromeVisible(m_hwndSidebar, SW_SHOW);
+    if (m_secondarySidebarVisible) setChromeVisible(m_hwndSecondarySidebar, SW_SHOW);
+    setChromeVisible(m_hwndTabBar, SW_SHOW);
+    setChromeVisible(m_hwndEditor, SW_SHOW);
+    setChromeVisible(m_hwndStatusBar, SW_SHOW);
+    if (m_hwndMain) {
+        SetWindowTextW(m_hwndMain, L"RawrXD IDE — Work Mode");
+        RECT rc{};
+        GetClientRect(m_hwndMain, &rc);
+        onSize(rc.right, rc.bottom);
+    }
+    CommandEventJournal::instance().append(JournalEventType::ModeSwitch, "\"work_mode\"");
+}
+
+void Win32IDE::handleCommandStop() {
+    CommandBroker::instance().stopAgent();
+    refreshCommandActivityStrip();
+    appendCommandConversation("[System] Agent stop requested.");
+}
+
+void Win32IDE::handleCommandSend() {
+    if (!m_hwndCommandComposer) return;
+    wchar_t buf[8192] = {};
+    GetWindowTextW(m_hwndCommandComposer, buf, 8191);
+    const std::string msg = RawrXD::WideToUtf8(std::wstring(buf));
+    if (msg.empty()) return;
+    appendCommandConversation("[You] " + msg);
+    SetWindowTextW(m_hwndCommandComposer, L"");
+    const auto r = CommandBroker::instance().steer(msg);
+    if (!r.ok && !r.text.empty()) appendCommandConversation(r.text);
+    refreshCommandActivityStrip();
+}
+
+void Win32IDE::createCommandSurface(HWND parent) {
+    if (m_hwndCommandHost && IsWindow(m_hwndCommandHost)) return;
+    if (!m_cmdBgBrush) m_cmdBgBrush = CreateSolidBrush(kSpBg);
+    if (!m_cmdPanelBrush) m_cmdPanelBrush = CreateSolidBrush(kSpPanel);
+    if (!m_cmdUIFont) {
+        m_cmdUIFont = CreateFontW(-14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
+    }
+    m_hwndCommandHost = CreateWindowExW(0, L"STATIC", nullptr, WS_CHILD | WS_VISIBLE,
+                                        0, 0, 100, 100, parent, nullptr, m_hInstance, nullptr);
+    SetPropW(m_hwndCommandHost, L"IDE_PTR", (HANDLE)this);
+    SetWindowLongPtrW(m_hwndCommandHost, GWLP_WNDPROC, (LONG_PTR)CommandHostProc);
+    auto mk = [&](DWORD style, LPCWSTR cls, LPCWSTR text, int id, HWND par) {
+        return CreateWindowExW(0, cls, text, style, 0, 0, 10, 10, par,
+                               (HMENU)(INT_PTR)id, m_hInstance, nullptr);
+    };
+    m_hwndCommandLeftRail = mk(WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+                               L"LISTBOX", L"", IDC_CMD_WORKSPACE_LIST, m_hwndCommandHost);
+    m_hwndTopContextBar = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC",
+                             L"RawrXD ScreenPilot  |  This PC  |  workspace  |  main",
+                             0, m_hwndCommandHost);
+    m_hwndCommandConversation = mk(WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE |
+                                     ES_READONLY | ES_AUTOVSCROLL | WS_BORDER,
+                                 L"EDIT", L"", IDC_CMD_CONVERSATION, m_hwndCommandHost);
+    m_hwndSteeringBelt = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC",
+                            L"Remote phone / web steering — Coming next (EGRESS_001 open)  |  "
+                            L"LOCAL_ONLY_001 certified  |  STREAMER_CERT_001 certified",
+                            IDC_CMD_STEERING_BELT, m_hwndCommandHost);
+    m_hwndModelHubHdr = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC",
+                           L"Engine control surface", IDC_CMD_MODEL_HUB_HDR, m_hwndCommandHost);
+    m_hwndModelRecList = mk(WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, L"LISTBOX", L"",
+                            IDC_CMD_MODEL_REC_LIST, m_hwndCommandHost);
+    m_hwndModelLocalList = mk(WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, L"LISTBOX", L"",
+                              IDC_CMD_MODEL_LOCAL_LIST, m_hwndCommandHost);
+    mk(WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, L"BUTTON", L"Load selected",
+       IDC_CMD_MODEL_LOAD_BTN, m_hwndCommandHost);
+    mk(WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, L"BUTTON", L"Browse .gguf",
+       IDC_CMD_MODEL_BROWSE_BTN, m_hwndCommandHost);
+    m_hwndModelHubStatus = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC", L"",
+                              IDC_CMD_MODEL_HUB_STATUS, m_hwndCommandHost);
+    m_hwndActivityStrip = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC", L"",
+                             0, m_hwndCommandHost);
+    m_hwndActivityStripText = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC",
+                                 L"RawrXD Agent idle", IDC_CMD_ACTIVITY_TEXT, m_hwndActivityStrip);
+    mk(WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, L"BUTTON", L"Stop agent", IDC_CMD_STOP_BTN,
+       m_hwndActivityStrip);
+    m_hwndCmdApprovalBadge = mk(WS_CHILD | SS_LEFT, L"STATIC", L"", IDC_CMD_APPROVAL_BADGE,
+                                m_hwndActivityStrip);
+    m_hwndCommandComposer = mk(WS_CHILD | WS_VISIBLE | ES_MULTILINE | WS_BORDER | ES_AUTOVSCROLL,
+                               L"EDIT", L"", IDC_CMD_COMPOSER_INPUT, m_hwndCommandHost);
+    m_hwndCmdModelCombo = mk(WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, L"COMBOBOX", L"",
+                             IDC_CMD_MODEL_COMBO, m_hwndCommandHost);
+    m_hwndCmdModeCombo = mk(WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, L"COMBOBOX", L"",
+                            IDC_CMD_MODE_COMBO, m_hwndCommandHost);
+    mk(WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, L"BUTTON", L"Send", IDC_CMD_SEND_BTN,
+       m_hwndCommandHost);
+    mk(WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, L"BUTTON", L"Open workspace editor",
+       IDC_CMD_WORK_MODE_BTN, m_hwndCommandHost);
+    m_hwndCommandFooter = mk(WS_CHILD | WS_VISIBLE | SS_LEFT, L"STATIC",
+                             L"Desktop Preview · local authority retained", 0, m_hwndCommandHost);
+    SendMessageW(m_hwndCmdModelCombo, CB_ADDSTRING, 0, (LPARAM)L"Deep2 Local");
+    SendMessageW(m_hwndCmdModelCombo, CB_SETCURSEL, 0, 0);
+    SendMessageW(m_hwndCmdModeCombo, CB_ADDSTRING, 0, (LPARAM)L"Plan");
+    SendMessageW(m_hwndCmdModeCombo, CB_ADDSTRING, 0, (LPARAM)L"Build");
+    SendMessageW(m_hwndCmdModeCombo, CB_ADDSTRING, 0, (LPARAM)L"Agent");
+    SendMessageW(m_hwndCmdModeCombo, CB_SETCURSEL, 2, 0);
+    for (HWND h : {m_hwndCommandLeftRail, m_hwndTopContextBar, m_hwndCommandConversation,
+                   m_hwndSteeringBelt, m_hwndModelHubHdr, m_hwndModelRecList,
+                   m_hwndModelLocalList, m_hwndModelHubStatus, m_hwndActivityStrip,
+                   m_hwndActivityStripText, m_hwndCommandComposer, m_hwndCommandFooter,
+                   m_hwndCmdModelCombo, m_hwndCmdModeCombo, m_hwndCmdApprovalBadge}) {
+        styleChildFont(h, m_cmdUIFont);
+    }
+    appendCommandConversation(
+        "RawrXD ScreenPilot — Desktop Preview\n"
+        "Your machine. Your models. Your agents. Any screen.\n"
+        "Local Deep2/GGUF lane active. Remote steering ships after EGRESS_001.\n");
+    bindCommandSessionFromWorkspace();
+    refreshCommandLeftRail();
+    refreshCommandContextBar();
+    refreshCommandFooter();
+    refreshCommandModelHub();
+    CommandBroker::instance().setSteerHandler([this](const std::string& msg) {
+        appendCommandConversation("[ScreenPilot] ", false);
+        m_lastCopilotUserPrompt = msg;
+        m_chatHistory.push_back({"user", msg});
+        if (m_nativeEngineLoaded && m_nativeEngine) {
+            generateResponseAsync(msg, [this](const std::string& token, bool complete) {
+                if (!token.empty()) appendCommandConversationStream(token);
+                if (complete) {
+                    appendCommandConversationStream("\n\n");
+                    CommandBroker::instance().setAgentActive(false);
+                    CommandBroker::instance().setActivityStatus("RawrXD Agent idle");
+                    refreshCommandActivityStrip();
+                }
+            });
+        } else {
+            appendCommandConversation(
+                "LOCAL_ONLY_001: Load a local GGUF model for Deep2 inference.\n");
+            CommandBroker::instance().setAgentActive(false);
+            CommandBroker::instance().setActivityStatus("Awaiting local model");
+            refreshCommandActivityStrip();
+        }
+    });
+    CommandBroker::instance().setStopHandler([this]() {
+        m_inferenceStopRequested = true;
+        shutdownInference();
+        CommandBroker::instance().setAgentActive(false);
+    });
+    (void)RawrXD::Command::controlChannel();
+    enterCommandMode();
+}

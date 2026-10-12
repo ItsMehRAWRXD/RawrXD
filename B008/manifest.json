@@ -1,0 +1,85 @@
+{
+  "b008_version": "1.0.0",
+  "timestamp": "2026-08-09T23:43:00Z",
+  "project": "RawrXD Inference Engine",
+  "baseline_commit": "HEAD",
+  "toolchain": {
+    "cmake": "4.2.0",
+    "ninja": "1.13.2",
+    "msvc": "14.51.36231 (VS2022 Enterprise)",
+    "generator": "Ninja",
+    "build_type": "Release"
+  },
+  "gates": {
+    "b005_lifecycle": {
+      "status": "PASS",
+      "description": "Model load, resource allocation, and teardown"
+    },
+    "b004_streaming": {
+      "status": "PASS",
+      "description": "End-to-end token generation loop",
+      "metrics": {
+        "generated_tokens": 2,
+        "callback_count": 2,
+        "predict_calls": 140,
+        "prefetch_calls": 140,
+        "matmul_calls": 983
+      }
+    },
+    "b006_kv_reuse": {
+      "status": "PASS",
+      "description": "KV-cache append and read without recomputation",
+      "evidence": "Monotonic window growth [0,0] -> [0,1] -> [0,2] -> ... -> [0,10]"
+    },
+    "b007_performance_baseline": {
+      "status": "BASELINE",
+      "description": "Token-sequential prefill documented as structural bottleneck",
+      "metrics": {
+        "prefill_tokens": 3,
+        "layers": 28,
+        "layer_executions": 84,
+        "prefill_elapsed_ms": 12000,
+        "decode_elapsed_ms": 4400,
+        "ms_per_layer_exec": 158.5
+      }
+    },
+    "b008_build_validation": {
+      "status": "PASS",
+      "description": "Clean configure, full build, incremental rebuild, test execution",
+      "metrics": {
+        "configure_ms": 15000,
+        "build_objects": 25,
+        "incremental_noop": true,
+        "test_exit_code": 0,
+        "test_generated_tokens": 2,
+        "test_callback_count": 2
+      }
+    }
+  },
+  "artifacts": {
+    "test_executable": "artifacts/b004_transformer_router_streaming_integration_cpu.exe",
+    "configure_log": "logs/configure.log",
+    "build_log": "logs/build.log",
+    "incremental_log": "logs/incremental.log",
+    "test_log": "logs/test_run.log",
+    "performance_baseline": "performance/b007_baseline.json"
+  },
+  "dependencies": {
+    "required": [
+      "CMake >= 3.20",
+      "Ninja >= 1.10",
+      "MSVC >= 14.50 (VS2022)",
+      "Windows SDK >= 10.0.22621"
+    ],
+    "optional": [
+      "Vulkan SDK (for GPU path)",
+      "OpenMP (for parallel matmul)"
+    ]
+  },
+  "notes": [
+    "B008 does NOT include batched prefill optimization (reserved for B009)",
+    "Performance baseline captures current token-sequential architecture",
+    "OpenMP was tested and reverted — outer loop M=24 too small for parallelism benefit",
+    "MatrixMultiply_AVX512 loop indices fixed to signed int64_t for MSVC compatibility"
+  ]
+}

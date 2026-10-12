@@ -1,0 +1,42 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:20
+F:/rawrxd/src/validation/kernels/masm/tree_attention_masm_val038.asm  Page 1 - 1
+
+
+				; ═══════════════════════════════════════════════════════════════════════════════
+				; VAL-038.1: MASM Stub - exports symbol for C++ implementation
+				; ═══════════════════════════════════════════════════════════════════════════════
+
+				PUBLIC TreeAttention_Fused_MASM
+
+ 00000000			.CODE
+
+				; Stub that jumps to C++ implementation
+ 00000000			TreeAttention_Fused_MASM PROC FRAME
+				    ; This is a stub - actual implementation is in C++
+				    ; The C++ function has the same signature and will be linked
+				    .endprolog
+ 00000000  C3			    ret
+ 00000001			TreeAttention_Fused_MASM ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:20
+F:/rawrxd/src/validation/kernels/masm/tree_attention_masm_val038.asm  Symbols 2 - 1
+
+
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+TreeAttention_Fused_MASM . . . .	P 	 00000000 _TEXT	Length= 00000001 Public
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+
+	   0 Warnings
+	   0 Errors

@@ -1,0 +1,45 @@
+{
+  "b010_version": "0.1.0",
+  "timestamp": "2026-08-10T00:45:00Z",
+  "project": "RawrXD Inference Engine",
+  "parent_baseline": "B008",
+  "parent_manifest": "B008/manifest.json",
+  "sibling_experiment": "B009",
+  "sibling_manifest": "B009/manifest.json",
+  "scope": "Weight Residency Profiling",
+  "description": "Instrument StreamingMatMul to measure weight-load count, bytes read, mapping/unmapping count, and resident-weight hit rate. This quantifies how much of the prefill cost is attributable to tensor acquisition versus computation.",
+  "hypothesis": "The dominant cost in prefill is repeated tensor acquisition (GGUF mapping/reading), not computation. If confirmed, caching layer weights in memory after first load should yield significant speedup.",
+  "metrics_to_capture": {
+    "weight_load_count": "Number of times each tensor is loaded from GGUF per forward pass",
+    "bytes_read": "Total bytes read from GGUF per forward pass",
+    "map_unmap_count": "Number of MapViewOfFile/UnmapViewOfFile calls per forward pass",
+    "resident_weight_hit_rate": "Cache hits vs misses for weight tensors",
+    "tensor_acquisition_ms": "Time spent acquiring tensors vs computing"
+  },
+  "gates": {
+    "b010_profiling_instrumentation": {
+      "status": "PASS",
+      "description": "Added counters to StreamingMatMul for weight-load tracking"
+    },
+    "b010_baseline_measurement": {
+      "status": "PASS",
+      "description": "Measured current weight access patterns without caching"
+    },
+    "b010_cost_attribution": {
+      "status": "PASS",
+      "description": "Quantified: 8971 MB read (4.4x model), 73728 incidental maps, 0% hit rate"
+    }
+  },
+  "artifacts": {
+    "manifest": "B010/manifest.json",
+    "report": "B010/B010-REPORT.md",
+    "profiling_log": "B010/logs/profiling.log",
+    "metrics": "B010/performance/b010_weight_access_metrics.json"
+  },
+  "notes": [
+    "B010 is a profiling milestone, not an optimization",
+    "B009 proved loop restructuring alone doesn't help",
+    "B010 will identify whether weight caching is worth implementing",
+    "The benchmark should measure weight-load count, bytes read, mapping/unmapping count, and resident-weight hit rate"
+  ]
+}

@@ -1,0 +1,11 @@
+[Deep2Adapter] model loaded through the authority: F:/rawrxd/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+vocab=102400
+A: tokenize (query)
+  needed=-1
+B: tokenize (write)
+  got=-1:
+C: detokenize
+  len=-1 text=[]
+D: create ctx
+  ctx=000002398121E870
+E: prefill

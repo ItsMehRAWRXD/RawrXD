@@ -1,0 +1,295 @@
+[0/1] Re-running CMake...
+-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- Using the multi-header code from D:/rawrxd/build_ninja/_deps/nlohmann_json-src/include/
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- Batch 15B Q4_0 GEMV Certification configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- ✓ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found — Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [MASM] Using prebuilt RDNA3_Full_Test.obj (RX 7800 XT kernels)
+-- [NanoQuant] DISABLED — enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix — Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] ✅ Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Sovereign] Test suite: SovereignTest_Suite (beaconism pattern)
+-- [Sovereign] VAL-038 E2E test: SovereignTest_VAL038_E2E
+-- [Sovereign] Deep2 batch test: Deep2_Batch_Test
+-- [Deep2] One-token validation gate: test_generate_one_token
+-- [Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token
+-- [Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token
+-- [Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token
+-- [Deep2] BP16 → Deep2 integration test: val_bp16_int_1_token
+-- [Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic
+-- [Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer
+-- [Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e
+-- [Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare
+-- [Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights
+-- [Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify
+-- [Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits
+-- [Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf
+-- [Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile
+-- [Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile
+-- [Deep2] Minimal 1-token profiler: minimal_1token_profiler
+-- [Deep2] Quick 1-layer profiler: quick_1layer_profiler
+-- [Deep2] Q4_K GEMV bench: q4k_gemv_bench
+-- [Deep2] Q5_K GEMV bench: q5k_gemv_bench
+-- [Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag
+-- [Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench
+-- [Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench
+-- [Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify
+-- [Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench
+-- [Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify
+-- [Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench
+-- [Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify
+-- [Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench
+-- [Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench
+-- [Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling
+-- [Deep2] Layer profiler: val_051_8_layer_profile
+-- [Deep2] Q2_K profile: val_051_5_q2k_profile
+-- [Sovereign] PatchRegistry test: SovereignTest_PatchRegistry
+-- [Sovereign] HotPatcher test: SovereignTest_HotPatcher
+-- [Sovereign] AutonomousAgent test: SovereignTest_AutonomousAgent
+-- [Sovereign] AntiHallucination test: SovereignTest_AntiHallucination
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [Phase C] GPU Benchmark target: RawrXD-Benchmark
+-- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
+-- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
+-- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
+-- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
+-- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
+-- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
+-- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
+-- [VAL-033] Profiling instrumentation: tree_attention_profiled
+-- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
+-- [VAL-035] Tiled Q@K^T: tree_attention_tiled
+-- [VAL-036] Vectorized softmax: tree_attention_vectorized
+-- [VAL-037] Tree sparsity: tree_attention_sparse
+-- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
+-- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
+-- [VAL-038] Validation benchmark (B→C→A): VAL038_Validation_Benchmark
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.357.0
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled
+-- [Tools] Native address resolver target enabled: address_resolver_native (smoke targets: address_resolver_native_smoke, address_resolver_native_smoke_soft, address_resolver_native_smoke_minimal)
+-- [LSP] RawrXD-Script Language Server target enabled: RawrXD_LSPServer
+-- [DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter
+--   ✓ Using prebuilt gtest from build-master
+-- ========================================
+-- Registering Tests with CTest
+-- ========================================
+--   ✓ Added test_ai_completions
+--   ✓ Added test_llm_connectivity
+--   ✓ Added test_tool_registry
+--   ✓ Added test_voice_processor
+--   ✓ Added test_zero_retention_manager
+--   ✓ Added test_gui_components
+--   ✓ Added test_semantic_diff_analyzer
+--   ✓ Added test_ai_merge_resolver
+--   ✓ Added test_sandboxed_terminal
+--   ✓ Added test_agentic_file_operations
+--   ✓ Added model_registry_test
+--   ✓ Added test_gguf_integration
+--   ✓ Added test_swarm_scheduler_pin
+--   ✓ Added deterministic_replay_gate
+--   ✓ Added VAL063_InferenceGatewayHarness
+--   ✓ Added test_swarm_expert_heatmap_stress
+--   ✓ Added test_moe_mixture_reference
+--   ✓ Added test_moe_down_project_policy
+--   ✓ Added test_moe_plan_row_mixture_pack_cache
+--   ✓ Added moe_grouped_gemm_bench (manual / CI microbench; not registered in CTest)
+--   ✓ Added test_basic_profiler
+--   ✓ Added test_batch3_profiler_smoke
+--   ✓ Added test_production_regression (Qt-free regression suite)
+--   ✓ Added test_instructions_provider
+-- ========================================
+-- Registering Measurement Framework Tests
+-- ========================================
+-- ========================================
+-- Test Suite Registration Complete
+-- ========================================
+-- Run all tests:      ctest --output-on-failure -C Release
+-- Run measurement:    ctest -L measurement -V -C Release
+-- Run specific:       ctest -R <name> -V -C Release
+-- ========================================
+--   ✓ Added test_model_loader_streamer_smoke
+--   ✓ Added test_predictive_memory_subsystem
+--   ✓ Added smoke_core (minimal validation)
+--   ✓ Added test_rmsnorm_avx2 (AVX2 kernel validation)
+--   ✓ Added test_softmax_avx2 (AVX2 kernel validation)
+--   ✓ Using RawrXD_Compression for checkpoint compression
+--   ✓ Added sovereign_integrated_test (Sovereign Burn-in)
+--   ✓ Added test_agentic_supervisor (Agentic Supervisor)
+-- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
+-- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [Test] Debugger stress tests: stress_target, stress_memory
+-- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
+-- [VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline
+-- [VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment
+-- [VAL-Q4.0] ASM debug test: test_q4_asm_debug
+-- [VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512
+-- [VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd
+CMake Warning at src/validation/CMakeLists.txt:343 (message):
+  RawrXD libraries not found at
+  D:/rawrxd/src/validation/../../build-fresh-aug22
+
+
+CMake Warning at src/validation/CMakeLists.txt:344 (message):
+  Building only minimal validation (simulation mode)
+
+
+-- Standalone kernel benchmark: kernel_differential_benchmark
+-- SiLU accuracy comparison test: silu_accuracy_test
+-- Q4_0 differential test: q4_0_differential_test
+-- Q4_0 optimized benchmark: q4_0_optimized_bench
+-- A/B test runner target: ab_test_runner
+-- RE Framework: Capstone NOT found - disassembly disabled
+-- RE Framework: Keystone NOT found - assembly disabled
+-- RE Framework: Unicorn NOT found - emulation disabled
+-- RE Framework library: rawr_re_framework
+-- RE Framework test: SKIPPED (requires Capstone + Keystone + Unicorn)
+-- [MASM] Found ml64.exe: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- [MASM] Configuration:
+--   Assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+--   Output: masm_kernels.lib
+--   Sources:
+--     - silu_activation_avx512.asm
+--   Targets:
+--     - masm_kernels (static library)
+--     - masm_kernels_test (test executable)
+-- Token Estimator Swarm library: TokenEstimatorSwarm
+-- Token Estimator Swarm demo: TokenEstimatorDemo
+-- Validation Gate Runner: ValidationRunner
+-- Swarm Integration Test: test_swarm_integration
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+--   [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency
+--   [MEASURE] benchmark_planner_amortization - Break-even analysis
+--   [MEASURE] validate_end_to_end - Four independent gates
+--   [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing
+--   [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring
+--   [MEASURE] pmc_profiler - Performance Monitoring Counters
+--   [MEASURE] flame_graph_profiler - Flame graph generation
+--   [MEASURE] benchmark_dispatch_pmc - PMC profiling
+-- ========================================
+-- [Native] Separate native toolchain build available
+-- Could NOT find Qt6 (missing: Qt6_DIR)
+CMake Warning at CMakeLists.txt:10980 (message):
+  [SoloIDE] Qt6 not found — SoloIDE target skipped.  Install Qt6 or set
+  CMAKE_PREFIX_PATH.
+
+
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- Configuring done (1.0s)
+-- Generating done (1.0s)
+-- Build files have been written to: D:/rawrxd/build_ninja
+[1/4] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GhostCache.cpp.obj
+[2/4] Linking CXX static library InferenceEngine.lib
+SovereignOutOfCoreRuntime.cpp.obj : warning LNK4006: "public: __cdecl rawrxd::SovereignOutOfCoreRuntime::SovereignOutOfCoreRuntime(struct rawrxd::SovereignOutOfCoreRuntime::Config const &)" (??0SovereignOutOfCoreRuntime@rawrxd@@QEAA@AEBUConfig@01@@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+SovereignOutOfCoreRuntime.cpp.obj : warning LNK4006: "public: __cdecl rawrxd::SovereignOutOfCoreRuntime::~SovereignOutOfCoreRuntime(void)" (??1SovereignOutOfCoreRuntime@rawrxd@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+SovereignOutOfCoreRuntime.cpp.obj : warning LNK4006: "public: enum rawrxd::ChamberResult __cdecl rawrxd::SovereignOutOfCoreRuntime::evaluateChamber(float const *,unsigned __int64)" (?evaluateChamber@SovereignOutOfCoreRuntime@rawrxd@@QEAA?AW4ChamberResult@2@PEBM_K@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+SovereignOutOfCoreRuntime.cpp.obj : warning LNK4006: "public: struct rawrxd::FormulaRoute __cdecl rawrxd::SovereignOutOfCoreRuntime::routePrimitive(unsigned __int64)" (?routePrimitive@SovereignOutOfCoreRuntime@rawrxd@@QEAA?AUFormulaRoute@2@_K@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+SovereignOutOfCoreRuntime.cpp.obj : warning LNK4006: "public: void __cdecl rawrxd::SovereignOutOfCoreRuntime::updateThermalState(struct rawrxd::ThermalState const &)" (?updateThermalState@SovereignOutOfCoreRuntime@rawrxd@@QEAAXAEBUThermalState@2@@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+SovereignOutOfCoreRuntime.cpp.obj : warning LNK4006: "public: float __cdecl rawrxd::SovereignOutOfCoreRuntime::currentThrottle(void)const " (?currentThrottle@SovereignOutOfCoreRuntime@rawrxd@@QEBAMXZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+PlasmaGovernor.cpp.obj : warning LNK4006: "public: unsigned int __cdecl rawrxd::PlasmaGovernor::coolingPauseMicros(void)const " (?coolingPauseMicros@PlasmaGovernor@rawrxd@@QEBAIXZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: __cdecl Deep2::ReverseHotpatchEngine::ReverseHotpatchEngine(void)" (??0ReverseHotpatchEngine@Deep2@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: __cdecl Deep2::ReverseHotpatchEngine::~ReverseHotpatchEngine(void)" (??1ReverseHotpatchEngine@Deep2@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: bool __cdecl Deep2::ReverseHotpatchEngine::ProcessFiles(class std::vector<class std::filesystem::path,class std::allocator<class std::filesystem::path> > const &)" (?ProcessFiles@ReverseHotpatchEngine@Deep2@@QEAA_NAEBV?$vector@Vpath@filesystem@std@@V?$allocator@Vpath@filesystem@std@@@3@@std@@@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: class std::vector<struct Deep2::TensorRepair,class std::allocator<struct Deep2::TensorRepair> > const & __cdecl Deep2::ReverseHotpatchEngine::GetRepairs(void)const " (?GetRepairs@ReverseHotpatchEngine@Deep2@@QEBAAEBV?$vector@UTensorRepair@Deep2@@V?$allocator@UTensorRepair@Deep2@@@std@@@std@@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: class std::vector<struct Deep2::TensorCorruption,class std::allocator<struct Deep2::TensorCorruption> > const & __cdecl Deep2::ReverseHotpatchEngine::GetCorruptions(void)const " (?GetCorruptions@ReverseHotpatchEngine@Deep2@@QEBAAEBV?$vector@UTensorCorruption@Deep2@@V?$allocator@UTensorCorruption@Deep2@@@std@@@std@@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: void __cdecl Deep2::ReverseHotpatchEngine::SetVerbose(bool)" (?SetVerbose@ReverseHotpatchEngine@Deep2@@QEAAX_N@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: void __cdecl Deep2::ReverseHotpatchEngine::SetAlignment(unsigned int)" (?SetAlignment@ReverseHotpatchEngine@Deep2@@QEAAXI@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseHotpatchEngine.cpp.obj : warning LNK4006: "public: void __cdecl Deep2::ReverseHotpatchEngine::SetAllowTruncationRepair(bool)" (?SetAllowTruncationRepair@ReverseHotpatchEngine@Deep2@@QEAAX_N@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseIntegration.cpp.obj : warning LNK4006: "public: __cdecl Deep2::ReverseIntegration::ReverseIntegration(void)" (??0ReverseIntegration@Deep2@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+ReverseIntegration.cpp.obj : warning LNK4006: "public: __cdecl Deep2::ReverseIntegration::~ReverseIntegration(void)" (??1ReverseIntegration@Deep2@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+vulkan_compute.cpp.obj : warning LNK4006: "public: __cdecl CPUInference::VulkanCompute::VulkanCompute(void)" (??0VulkanCompute@CPUInference@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+vulkan_compute.cpp.obj : warning LNK4006: "public: __cdecl CPUInference::VulkanCompute::~VulkanCompute(void)" (??1VulkanCompute@CPUInference@@QEAA@XZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+vulkan_compute.cpp.obj : warning LNK4006: "public: bool __cdecl CPUInference::VulkanCompute::Initialize(void)" (?Initialize@VulkanCompute@CPUInference@@QEAA_NXZ) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+vulkan_compute.cpp.obj : warning LNK4006: "public: bool __cdecl CPUInference::VulkanCompute::DispatchGEMV(float const *,float const *,float *,unsigned int,unsigned int)" (?DispatchGEMV@VulkanCompute@CPUInference@@QEAA_NPEBM0PEAMII@Z) already defined in deep2_link_stubs.cpp.obj; second definition ignored
+[3/4] Linking CXX executable bin\rawrxd.exe
+FAILED: [code=4294967295] bin/rawrxd.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\rawrxd.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo CMakeFiles\rawrxd.dir\src\sovereign\rawrxd.cpp.obj CMakeFiles\rawrxd.dir\src\sovereign\SovereignRuntime.cpp.obj CMakeFiles\rawrxd.dir\src\sovereign\ExecutionContract.cpp.obj CMakeFiles\rawrxd.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj CMakeFiles\rawrxd.dir\src\cpu_inference_engine.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_inference.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_model_loader.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_tokenizer.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_transformer.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_sampler.cpp.obj CMakeFiles\rawrxd.dir\src\gguf_loader.cpp.obj CMakeFiles\rawrxd.dir\src\gguf_vocab_resolver.cpp.obj CMakeFiles\rawrxd.dir\src\core\inference_witness.cpp.obj CMakeFiles\rawrxd.dir\src\core\swarm_scheduler.cpp.obj CMakeFiles\rawrxd.dir\src\core\memory_stubs.cpp.obj CMakeFiles\rawrxd.dir\src\core\link_stubs.cpp.obj CMakeFiles\rawrxd.dir\src\core\gguf_swarm_plan_builder.cpp.obj CMakeFiles\rawrxd.dir\src\logging\Logger.cpp.obj CMakeFiles\rawrxd.dir\B014\build\b014_profiler.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\StreamRouterAdapter.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\gguf_tensor_loader.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticEngine.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticDecoder.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\HardwareGovernor.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\PressedStateEngine.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\Ensemble58Governor.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\TLSInstructionGate.cpp.obj CMakeFiles\rawrxd.dir\src\inference\NegativeSpaceProfiler.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\TensorExecutionRouter.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\PlacementPolicy.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\ResidencyTracker.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\CapacityManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\TransferScheduler.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\TensorPlacementManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj  /out:bin\rawrxd.exe /implib:rawrxd.lib /pdb:bin\rawrxd.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console /LTCG -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64   -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64   -LIBPATH:C:\VulkanSDK\1.4.357.0\Lib deflate_brutal_masm.obj  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  dxgi.lib  InferenceEngine.lib  D:\rawrxd\src\deep2\ResidencyTrace.obj  D:\rawrxd\src\deep2\QuantKB.obj  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  dxgi.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK Pass 1: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo CMakeFiles\rawrxd.dir\src\sovereign\rawrxd.cpp.obj CMakeFiles\rawrxd.dir\src\sovereign\SovereignRuntime.cpp.obj CMakeFiles\rawrxd.dir\src\sovereign\ExecutionContract.cpp.obj CMakeFiles\rawrxd.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj CMakeFiles\rawrxd.dir\src\cpu_inference_engine.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_inference.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_model_loader.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_tokenizer.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_transformer.cpp.obj CMakeFiles\rawrxd.dir\src\rawrxd_sampler.cpp.obj CMakeFiles\rawrxd.dir\src\gguf_loader.cpp.obj CMakeFiles\rawrxd.dir\src\gguf_vocab_resolver.cpp.obj CMakeFiles\rawrxd.dir\src\core\inference_witness.cpp.obj CMakeFiles\rawrxd.dir\src\core\swarm_scheduler.cpp.obj CMakeFiles\rawrxd.dir\src\core\memory_stubs.cpp.obj CMakeFiles\rawrxd.dir\src\core\link_stubs.cpp.obj CMakeFiles\rawrxd.dir\src\core\gguf_swarm_plan_builder.cpp.obj CMakeFiles\rawrxd.dir\src\logging\Logger.cpp.obj CMakeFiles\rawrxd.dir\B014\build\b014_profiler.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\StreamRouterAdapter.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\gguf_tensor_loader.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticEngine.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\elastic\ElasticDecoder.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\HardwareGovernor.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\PressedStateEngine.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\Ensemble58Governor.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\governance\TLSInstructionGate.cpp.obj CMakeFiles\rawrxd.dir\src\inference\NegativeSpaceProfiler.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\TensorExecutionRouter.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\PlacementPolicy.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\ResidencyTracker.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\CapacityManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\TransferScheduler.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\TensorPlacementManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj CMakeFiles\rawrxd.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj /out:bin\rawrxd.exe /implib:rawrxd.lib /pdb:bin\rawrxd.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console /LTCG -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64 -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64 -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 -LIBPATH:C:\VulkanSDK\1.4.357.0\Lib deflate_brutal_masm.obj C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib dxgi.lib InferenceEngine.lib D:\rawrxd\src\deep2\ResidencyTrace.obj D:\rawrxd\src\deep2\QuantKB.obj shlwapi.lib psapi.lib dbghelp.lib winhttp.lib bcrypt.lib advapi32.lib crypt32.lib C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib dxgi.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\rawrxd.dir/intermediate.manifest CMakeFiles\rawrxd.dir/manifest.res" failed (exit code 1169) with the following output:
+LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
+LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+InferenceEngine.lib(ReverseIntegration.cpp.obj) : error LNK2005: "public: __cdecl Deep2::ReverseIntegration::ReverseIntegration(void)" (??0ReverseIntegration@Deep2@@QEAA@XZ) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+InferenceEngine.lib(ReverseIntegration.cpp.obj) : error LNK2005: "public: __cdecl Deep2::ReverseIntegration::~ReverseIntegration(void)" (??1ReverseIntegration@Deep2@@QEAA@XZ) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+InferenceEngine.lib(PlasmaGovernor.cpp.obj) : error LNK2005: "public: unsigned int __cdecl rawrxd::PlasmaGovernor::coolingPauseMicros(void)const " (?coolingPauseMicros@PlasmaGovernor@rawrxd@@QEBAIXZ) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+InferenceEngine.lib(vulkan_compute.cpp.obj) : error LNK2005: "public: __cdecl CPUInference::VulkanCompute::VulkanCompute(void)" (??0VulkanCompute@CPUInference@@QEAA@XZ) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+InferenceEngine.lib(vulkan_compute.cpp.obj) : error LNK2005: "public: __cdecl CPUInference::VulkanCompute::~VulkanCompute(void)" (??1VulkanCompute@CPUInference@@QEAA@XZ) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+InferenceEngine.lib(vulkan_compute.cpp.obj) : error LNK2005: "public: bool __cdecl CPUInference::VulkanCompute::DispatchGEMV(float const *,float const *,float *,unsigned int,unsigned int)" (?DispatchGEMV@VulkanCompute@CPUInference@@QEAA_NPEBM0PEAMII@Z) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+InferenceEngine.lib(vulkan_compute.cpp.obj) : error LNK2005: "public: bool __cdecl CPUInference::VulkanCompute::Initialize(void)" (?Initialize@VulkanCompute@CPUInference@@QEAA_NXZ) already defined in InferenceEngine.lib(deep2_link_stubs.cpp.obj)
+bin\rawrxd.exe : fatal error LNK1169: one or more multiply defined symbols found
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,11 @@
+{
+  "test": "certification_summary",
+  "timestamp": "20260907-162033",
+  "total_tests": 5,
+  "passed": 3,
+  "failed": 2,
+  "duration_ms": 54.00,
+  "certified": false,
+  "mode": "selftest",
+  "evidence_path": "G:\~dev\rawrxd\evidence\deep2-gateway\20260907-162033"
+}

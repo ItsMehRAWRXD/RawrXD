@@ -1,0 +1,21 @@
+{
+  "HEXMAG_ANTI_HALLUCINATION_INVARIANT": true,
+  "arith": {
+    "resolution": "Proven",
+    "answer": "143.31",
+    "self_build_PASS": true,
+    "finalize_ok": true
+  },
+  "open_world": {
+    "resolution": "NeedUserInput",
+    "suspended": true,
+    "invented": false,
+    "ASK_USER_PASS": true
+  },
+  "se_no_evidence": {
+    "resolution": "NeedUserInput",
+    "finalize_allowed": null,
+    "NO_FABRICATE_PASS": true
+  },
+  "PASS": true
+}

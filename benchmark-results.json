@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "day8.safety-benchmark.v1",
+  "generatedAtEpochMs": 1780345697793,
+  "loops": 2,
+  "rows": [
+    {
+      "mode": "BASELINE",
+      "elapsedMs": 4.087600013008341,
+      "processedTokens": 43200,
+      "tokensPerSec": 10568548.74804793,
+      "violationCount": 0,
+      "blockedCount": 0,
+      "overheadPct": 0.0
+    },
+    {
+      "mode": "PASSTHROUGH",
+      "elapsedMs": 17.403500009095296,
+      "processedTokens": 43200,
+      "tokensPerSec": 2482259.314357636,
+      "violationCount": 43194,
+      "blockedCount": 0,
+      "overheadPct": 325.76328294624125
+    },
+    {
+      "mode": "REDACT",
+      "elapsedMs": 17.148900020401925,
+      "processedTokens": 43200,
+      "tokensPerSec": 2519112.0100184423,
+      "violationCount": 12000,
+      "blockedCount": 0,
+      "overheadPct": 319.5346894468006
+    },
+    {
+      "mode": "BLOCK",
+      "elapsedMs": 0.005799985956400633,
+      "processedTokens": 5,
+      "tokensPerSec": 862071.0528587056,
+      "violationCount": 1,
+      "blockedCount": 1,
+      "overheadPct": 1125.9486863642694
+    }
+  ]
+}

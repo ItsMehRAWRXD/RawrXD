@@ -1,0 +1,280 @@
+# ============================================================================
+# RawrXD Production Subagent: SyntaxHealer
+# Version: 1.0.0 | License: MIT
+# Part of the RawrXD Autonomous Build System
+# ============================================================================
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Subagent: Syntax Healer - Fixes syntax errors and malformed C++ code.
+
+.DESCRIPTION
+    Production-hardened subagent that performs multi-pass healing of common C++
+    syntax issues: missing semicolons, constructor declarations that should be
+    definitions, and missing return statements. Supports dry-run mode, backup
+    creation, and structured reporting.
+
+.PARAMETER ScanPath
+    Root directory to scan. Default: "$PSScriptRoot\src".
+
+.PARAMETER AutoFix
+    Automatically apply fixes. Without this, only a dry-run report is generated.
+
+.PARAMETER DryRun
+    Report issues without modifying any files. Overrides -AutoFix.
+
+.EXAMPLE
+    .\Subagent-SyntaxHealer.ps1 -ScanPath .\src -AutoFix -Verbose
+    .\Subagent-SyntaxHealer.ps1 -DryRun
+#>
+
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+param(
+    [Parameter(Position = 0)]
+    [string]$ScanPath,
+
+    [switch]$AutoFix,
+
+    [switch]$DryRun,
+
+    [ValidateSet('Text', 'JSON')]
+    [string]$OutputFormat = 'Text',
+
+    [string]$ReportPath
+)
+
+# ── Bootstrap ────────────────────────────────────────────────────────────────
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+if (-not $ScanPath) { $ScanPath = Join-Path $PSScriptRoot 'src' }
+if ($DryRun) { $AutoFix = $false }
+
+# ── Patterns ──────────────────────────────────────────────────────────────────
+# Each pattern is tried in pass order: semicolons → constructors → returns
+$script:SyntaxPatterns = @(
+    # ── Pass 1: Semicolons ────────────────────────────────────────────────────
+    @{
+        Pass      = 'Semicolons'
+        Name      = 'Missing semicolon after class/struct definition'
+        # Anchored: class/struct with braces then newline but no semicolon
+        Pattern   = '(?ms)^(\s*(?:class|struct)\s+\w+(?:\s*:\s*[^{]+)?\s*\{[^}]+\})\s*\r?\n(?!\s*;)'
+        Fix       = {
+            param([string]$file)
+            $content = Get-Content $file -Raw
+            $fixed   = $content -replace '(?ms)^(\s*(?:class|struct)\s+\w+(?:\s*:\s*[^{]+)?\s*\{[^}]+\})\s*\r?\n', "`$1;`n"
+            if ($fixed -ne $content) { Set-Content $file $fixed -NoNewline; return $true }
+            return $false
+        }
+    }
+    @{
+        Pass      = 'Semicolons'
+        Name      = 'Missing semicolon before return/break/continue'
+        # Line ends without ; { } and next line starts with return/break/continue
+        Pattern   = '(?m)^(\s+\w[^;{}\r\n]+)\r?\n(\s+(?:return|break|continue)\b)'
+        Fix       = {
+            param([string]$file)
+            $content = Get-Content $file -Raw
+            $fixed   = $content -replace '(?m)^(\s+\w[^;{}\r\n]+)\r?\n(\s+(?:return|break|continue)\b)', "`$1;`n`$2"
+            if ($fixed -ne $content) { Set-Content $file $fixed -NoNewline; return $true }
+            return $false
+        }
+    }
+
+    # ── Pass 2: Constructors ──────────────────────────────────────────────────
+    @{
+        Pass        = 'Constructors'
+        Name        = 'Constructor/destructor declaration instead of definition in .cpp'
+        FilePattern = '*.cpp'
+        # In .cpp files: ~?ClassName() ;  →  ~?ClassName() {}
+        Pattern     = '(?m)^(\s*)(~?\w+)\s*\(\s*\)\s*;'
+        Fix         = {
+            param([string]$file)
+            $content = Get-Content $file -Raw
+            $fixed   = $content -replace '(?m)^(\s*)(~?\w+)\s*\(\s*\)\s*;', '$1$2() {}'
+            if ($fixed -ne $content) { Set-Content $file $fixed -NoNewline; return $true }
+            return $false
+        }
+    }
+
+    # ── Pass 3: Returns ──────────────────────────────────────────────────────
+    @{
+        Pass    = 'Returns'
+        Name    = 'Missing return statement in non-void function'
+        Pattern = '(?ms)^(\s*(?:std::string|bool|int|HRESULT|DWORD|LRESULT|float|double)\s+\w+\s*\([^)]*\)\s*\{)(?:(?!\breturn\b).)*?(\})\s*$'
+        Fix     = {
+            param([string]$file)
+            $lines      = Get-Content $file
+            $changed    = $false
+            $inFunction = $false
+            $braceCount = 0
+            $funcStart  = -1
+            $returnType = ''
+            $funcName   = ''
+
+            for ($i = 0; $i -lt $lines.Count; $i++) {
+                if (-not $inFunction -and
+                    $lines[$i] -match '^\s*(std::string|bool|int|HRESULT|DWORD|LRESULT|float|double)\s+(\w+)\s*\(') {
+                    $inFunction = $true
+                    $funcStart  = $i
+                    $returnType = $Matches[1]
+                    $funcName   = $Matches[2]
+                    $braceCount = 0
+                }
+
+                if ($inFunction) {
+                    $braceCount += ($lines[$i].ToCharArray() | Where-Object { $_ -eq '{' }).Count
+                    $braceCount -= ($lines[$i].ToCharArray() | Where-Object { $_ -eq '}' }).Count
+
+                    if ($braceCount -eq 0 -and $funcStart -ge 0) {
+                        $funcBody = ($lines[$funcStart..$i]) -join "`n"
+                        if ($funcBody -notmatch '\breturn\b') {
+                            $indent = '    '
+                            $returnStmt = switch ($returnType) {
+                                'bool'        { "${indent}return false;" }
+                                'int'         { "${indent}return 0;" }
+                                'DWORD'       { "${indent}return 0;" }
+                                'LRESULT'     { "${indent}return 0;" }
+                                'float'       { "${indent}return 0.0f;" }
+                                'double'      { "${indent}return 0.0;" }
+                                'std::string' { "${indent}return `"`";" }
+                                'HRESULT'     { "${indent}return S_OK;" }
+                                default       { "${indent}return {};" }
+                            }
+                            $lines[$i] = "$returnStmt`n$($lines[$i])"
+                            $changed = $true
+                        }
+                        $inFunction = $false
+                        $braceCount = 0
+                        $funcStart  = -1
+                    }
+                }
+            }
+
+            if ($changed) { Set-Content $file $lines; return $true }
+            return $false
+        }
+    }
+)
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+Write-Verbose "[SyntaxHealer] Scan path: $ScanPath"
+
+if (-not (Test-Path $ScanPath)) {
+    Write-Error "Scan path not found: $ScanPath"
+    exit 2
+}
+
+$srcFiles = @(Get-ChildItem -Path $ScanPath -Recurse -Include *.cpp, *.h, *.hpp -File |
+    Where-Object {
+        $_.FullName -notmatch '[\\/](obj|bin|\.git)[\\/]' -and
+        $_.Name -notmatch '\.(bak|orig)$' -and
+        $_.Name -notmatch '_backup'
+    })
+
+if ($srcFiles.Count -eq 0) {
+    Write-Warning "No source files found under $ScanPath"
+    exit 2
+}
+
+# Counters per pass
+$report = [PSCustomObject]@{
+    FilesScanned   = $srcFiles.Count
+    FixesApplied   = [ordered]@{
+        Semicolons   = 0
+        Constructors = 0
+        Returns      = 0
+    }
+    TotalFixes     = 0
+    Errors         = [System.Collections.Generic.List[string]]::new()
+}
+
+$backedUp = [System.Collections.Generic.HashSet[string]]::new()
+
+$fileIdx = 0
+foreach ($file in $srcFiles) {
+    $fileIdx++
+    $pct = [math]::Floor(($fileIdx / $srcFiles.Count) * 100)
+    Write-Progress -Activity 'SyntaxHealer — Healing' `
+        -Status "$fileIdx / $($srcFiles.Count)  $($file.Name)" `
+        -PercentComplete $pct
+
+    foreach ($pattern in $script:SyntaxPatterns) {
+        # Honour FilePattern filter
+        if ($pattern.ContainsKey('FilePattern') -and $file.Name -notlike $pattern.FilePattern) { continue }
+
+        try {
+            $content = Get-Content $file.FullName -Raw -ErrorAction Stop
+
+            if ($content -match $pattern.Pattern) {
+                if ($DryRun) {
+                    Write-Host "[DRY] $($pattern.Name) in $($file.FullName)" -ForegroundColor Yellow
+                    $report.FixesApplied[$pattern.Pass]++
+                    $report.TotalFixes++
+                    continue
+                }
+
+                if ($AutoFix -and $PSCmdlet.ShouldProcess($file.FullName, $pattern.Name)) {
+                    # Backup once per file
+                    if (-not $backedUp.Contains($file.FullName)) {
+                        $bakPath = "$($file.FullName).bak"
+                        Copy-Item $file.FullName $bakPath -Force -ErrorAction Stop
+                        [void]$backedUp.Add($file.FullName)
+                        Write-Verbose "  Backup → $bakPath"
+                    }
+
+                    $result = & $pattern.Fix $file.FullName
+                    if ($result) {
+                        $report.FixesApplied[$pattern.Pass]++
+                        $report.TotalFixes++
+                        Write-Verbose "  Fixed: $($pattern.Name) in $($file.Name)"
+                    }
+                }
+            }
+        }
+        catch {
+            $msg = "Error in $($pattern.Name) for $($file.FullName): $_"
+            Write-Warning $msg
+            $report.Errors.Add($msg)
+        }
+    }
+}
+
+Write-Progress -Activity 'SyntaxHealer — Healing' -Completed
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+Write-Host ''
+Write-Host '╔══════════════════════════════════════════════╗' -ForegroundColor Cyan
+Write-Host '║  SyntaxHealer — Summary                      ║' -ForegroundColor Cyan
+Write-Host '╠══════════════════════════════════════════════╣' -ForegroundColor Cyan
+Write-Host "║  Files scanned   : $($report.FilesScanned)" -ForegroundColor Cyan
+Write-Host "║  Semicolon fixes : $($report.FixesApplied['Semicolons'])" -ForegroundColor $(if ($report.FixesApplied['Semicolons']) { 'Green' } else { 'Cyan' })
+Write-Host "║  Constructor fixes: $($report.FixesApplied['Constructors'])" -ForegroundColor $(if ($report.FixesApplied['Constructors']) { 'Green' } else { 'Cyan' })
+Write-Host "║  Return fixes    : $($report.FixesApplied['Returns'])" -ForegroundColor $(if ($report.FixesApplied['Returns']) { 'Green' } else { 'Cyan' })
+Write-Host "║  Total fixes     : $($report.TotalFixes)" -ForegroundColor $(if ($report.TotalFixes) { 'Green' } else { 'Cyan' })
+Write-Host "║  Errors          : $($report.Errors.Count)" -ForegroundColor $(if ($report.Errors.Count) { 'Red' } else { 'Cyan' })
+Write-Host '╚══════════════════════════════════════════════╝' -ForegroundColor Cyan
+
+if ($report.Errors.Count -gt 0) {
+    Write-Host "`nErrors:" -ForegroundColor Red
+    $report.Errors | ForEach-Object { Write-Host "  • $_" -ForegroundColor Red }
+}
+
+# ── JSON report ───────────────────────────────────────────────────────────────
+if ($ReportPath) {
+    try {
+        $report | ConvertTo-Json -Depth 4 | Set-Content $ReportPath -Encoding utf8
+        Write-Verbose "Report written → $ReportPath"
+    }
+    catch { Write-Warning "Could not write report: $_" }
+}
+
+if ($OutputFormat -eq 'JSON') {
+    $report | ConvertTo-Json -Depth 4
+}
+else {
+    Write-Output $report
+}
+
+if ($report.Errors.Count -gt 0) { exit 1 }
+exit 0

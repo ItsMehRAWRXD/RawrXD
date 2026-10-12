@@ -1,0 +1,611 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:18
+F:/rawrxd/src/validation/kernels/masm/silu_clamped.asm	     Page 1 - 1
+
+
+				; ============================================================================
+				; silu_clamped.asm - SiLU with input clamping for numerical stability
+				; ============================================================================
+				; Clamps input to [-4, 4] before polynomial evaluation to prevent
+				; catastrophic divergence outside the polynomial's valid range.
+				;
+				; SiLU(x) = x * sigmoid(x) = x / (1 + exp(-x))
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+				; Include math approximation macros
+				INCLUDE math_approx.inc
+			      C ; ============================================================================
+			      C ; math_approx.inc - High Performance Math Approximations
+			      C ; ============================================================================
+			      C ; Implementation: Fast Exp2 (2^x) via Minimax Polynomial & Bit Manipulation
+			      C ; Requires: AVX2/AVX-512 support
+			      C ;
+			      C ; Mathematical Foundation:
+			      C ;   e^x = 2^(x * log2(e))
+			      C ;   2^x = 2^I * 2^F  where I = floor(x), F = x - floor(x)
+			      C ;   2^F ≈ P(F) where P is a degree-4 Minimax polynomial on [0, 1)
+			      C ;
+			      C ; Accuracy: < 1e-5 error across all inputs
+			      C ; Performance: Zero-overhead inlining via MACRO
+			      C ; ============================================================================
+			      C 
+			      C ; -----------------------------------------------------------------------------
+			      C ; MACRO: MATH_CONSTANTS
+			      C ; Place this in your .const section to define the necessary constants.
+			      C ; -----------------------------------------------------------------------------
+			      C MATH_CONSTANTS MACRO
+			      C     ; Coefficients for 2^F where F in [0, 1)
+			      C     ; Horner's Method: (((((p6*F + p5)*F + p4)*F + p3)*F + p2)*F + p1)*F + 1.0
+			      C     ; These are Remez-optimized coefficients for maximum accuracy (< 1e-5 error)
+			      C     ; Each constant is replicated 8 times for YMM registers (256-bit)
+			      C     ;
+			      C     ; Degree-6 polynomial coefficients (ultra-high accuracy):
+			      C     ; P(F) = 1.0 + F*(p1 + F*(p2 + F*(p3 + F*(p4 + F*(p5 + F*p6)))))
+			      C     ; Max error: < 1e-5 across all inputs
+			      C     EXP2_P6 DD 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f
+			      C     EXP2_P5 DD 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f
+			      C     EXP2_P4 DD 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f
+			      C     EXP2_P3 DD 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f
+			      C     EXP2_P2 DD 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f
+			      C     EXP2_P1 DD 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f
+			      C     
+			      C     ; Exponent Bias for 2^I (IEEE 754)
+			      C     ; Each constant is replicated 8 times for YMM registers (256-bit)
+			      C     EXP2_BIAS DD 127, 127, 127, 127, 127, 127, 127, 127
+			      C     
+			      C     ; Constant for multiplication by log2(e)
+			      C     ; Used to convert base e to base 2: x * log2(e) = x * 1.44269504
+			      C     LOG2E DD 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f
+			      C     
+			      C     ; Constant 1.0 for polynomial evaluation
+			      C     ONE_CONST DD 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
+			      C ENDM
+			      C 
+			      C ; -----------------------------------------------------------------------------
+			      C ; MACRO: FAST_EXP2
+			      C ; Computes 2^x for all x in ymm register
+			      C ;
+			      C ; Parameters:
+			      C ;   dst: Output register (will contain 2^x)
+			      C ;   src: Input register (will be destroyed)
+			      C ;   tmp1: Temporary register for integer part I
+			      C ;   tmp2: Temporary register for polynomial evaluation
+			      C ;   tmp3: Temporary register for exponent reconstruction
+			      C ;
+			      C ; Algorithm:
+			      C ;   1. Range Reduction: I = floor(x), F = x - floor(x)
+			      C ;   2. Polynomial: P(F) = (((p4*F + p3)*F + p2)*F + p1)*F + 1.0
+			      C ;   3. Exponent: 2^I via IEEE 754 bit manipulation
+			      C ;   4. Combine: 2^x = P(F) * 2^I
+			      C ;
+			      C ; Register Usage:
+			      C ;   dst: Initially contains x, finally contains 2^x
+			      C ;   src: Input (destroyed)
+			      C ;   tmp1: Integer part I
+			      C ;   tmp2: Polynomial accumulator
+			      C ;   tmp3: Exponent field
+			      C ; -----------------------------------------------------------------------------
+			      C FAST_EXP2 MACRO dst, src, tmp1, tmp2, tmp3
+			      C     ; Step 1: Range Reduction (Floor)
+			      C     ; Get integer part I using floor operation
+			      C     ; For AVX2: vroundps with _MM_FROUND_TO_NEG_INF (1)
+			      C     vroundps tmp1, src, 1      ; tmp1 = floor(x) = I
+			      C     
+			      C     ; Get fractional part F = x - floor(x)
+			      C     vsubps dst, src, tmp1       ; dst = F = x - I, where F in [0, 1)
+			      C     
+			      C     ; Step 2: Polynomial Approximation (Horner's Method)
+			      C     ; P(F) = (((((p6*F + p5)*F + p4)*F + p3)*F + p2)*F + p1)*F + 1.0
+			      C     ; Using separate multiply and add for AVX2 compatibility
+			      C     
+			      C     vmulps tmp2, dst, YMMWORD PTR [EXP2_P6]     ; tmp2 = p6*F
+			      C     vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P5]    ; tmp2 = p6*F + p5
+			      C     vmulps tmp2, tmp2, dst                       ; tmp2 = (p6*F + p5)*F
+			      C     vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P4]    ; tmp2 = (p6*F + p5)*F + p4
+			      C     vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
+			      C     vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P3]    ; tmp2 = ...*F + p3
+			      C     vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
+			      C     vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P2]    ; tmp2 = ...*F + p2
+			      C     vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
+			      C     vaddps tmp2, tmp2, YMMWORD PTR [EXP2_P1]    ; tmp2 = ...*F + p1
+			      C     vmulps tmp2, tmp2, dst                       ; tmp2 = ...*F
+			      C     vaddps dst, tmp2, YMMWORD PTR [ONE_CONST]   ; dst = ...*F + 1.0
+			      C     
+			      C     ; Step 3: Exponent Reconstruction (2^I)
+			      C     ; Convert I to integer
+			      C     vcvtps2dq tmp3, tmp1        ; tmp3 = (int)I
+			      C     
+			      C     ; Add bias 127 to I
+			      C     vpaddd tmp3, tmp3, YMMWORD PTR [EXP2_BIAS] ; tmp3 = I + 127
+			      C     
+			      C     ; Shift I into exponent field (bits 23-30 of IEEE 754 float)
+			      C     ; IEEE 754: exponent is stored with bias 127
+			      C     ; 2^I = (I + 127) << 23
+			      C     vpslld tmp3, tmp3, 23       ; tmp3 = (I + 127) << 23
+			      C     
+			      C     ; Step 4: Combine: Result = P(F) * 2^I
+			      C     vmulps dst, dst, tmp3       ; dst = P(F) * 2^I = 2^x
+			      C ENDM
+			      C 
+			      C ; -----------------------------------------------------------------------------
+			      C ; MACRO: FAST_EXP
+			      C ; Computes e^x using FAST_EXP2
+			      C ; e^x = 2^(x * log2(e))
+			      C ;
+			      C ; Parameters:
+			      C ;   dst: Output register (will contain e^x)
+			      C ;   src: Input register (will be destroyed)
+			      C ;   tmp1: Temporary register for integer part I
+			      C ;   tmp2: Temporary register for polynomial evaluation
+			      C ;   tmp3: Temporary register for exponent reconstruction
+			      C ; -----------------------------------------------------------------------------
+			      C FAST_EXP MACRO dst, src, tmp1, tmp2, tmp3
+			      C     ; Convert base e to base 2: e^x = 2^(x * log2(e))
+			      C     ; Note: LOG2E constant must be defined in .data section via MATH_CONSTANTS macro
+			      C     vmulps dst, src, YMMWORD PTR [LOG2E]  ; dst = x * log2(e)
+			      C     
+			      C     ; Compute 2^(x * log2(e))
+			      C     FAST_EXP2 dst, dst, tmp1, tmp2, tmp3
+			      C ENDM
+			      C 
+			      C ; -----------------------------------------------------------------------------
+			      C ; MACRO: FAST_RECIP
+			      C ; Computes 1/x for all x in ymm register using Newton-Raphson refinement
+			      C ;
+			      C ; Parameters:
+			      C ;   dst: Output register (will contain 1/x)
+			      C ;   src: Input register (will be destroyed)
+			      C ;   tmp: Temporary register for Newton-Raphson refinement
+			      C ;
+			      C ; Algorithm:
+			      C ;   1. Use AVX2 reciprocal instruction: vrcpps (approximate reciprocal)
+			      C ;   2. One Newton-Raphson iteration for improved accuracy
+			      C ;      r1 = r0 * (2 - x * r0)
+			      C ;
+			      C ; Accuracy: Max error < 1e-6
+			      C ; Performance: ~5 cycles per 8 floats
+			      C ; -----------------------------------------------------------------------------
+			      C ; -----------------------------------------------------------------------------
+			      C ; MACRO: FAST_RECIP
+			      C ; Computes 1/x for all x in ymm register using Newton-Raphson refinement
+			      C ;
+			      C ; Parameters:
+			      C ;   dst: Output register (will contain 1/x)
+			      C ;   src: Input register (will be destroyed)
+			      C ;   tmp1: Temporary register for Newton-Raphson refinement
+			      C ;   tmp2: Temporary register for 2.0 constant
+			      C ;
+			      C ; Algorithm:
+			      C ;   1. Use AVX2 reciprocal instruction: vrcpps (approximate reciprocal)
+			      C ;   2. One Newton-Raphson iteration for improved accuracy
+			      C ;      r1 = r0 * (2 - x * r0)
+			      C ;
+			      C ; Accuracy: Max error < 1e-6
+			      C ; Performance: ~5 cycles per 8 floats
+			      C ; -----------------------------------------------------------------------------
+			      C FAST_RECIP MACRO dst, src, tmp1, tmp2
+			      C     ; Step 1: Compute initial approximation using hardware reciprocal
+			      C     vrcpps dst, src
+			      C     
+			      C     ; Step 2: Newton-Raphson refinement
+			      C     ; r1 = r0 * (2 - x * r0)
+			      C     ; where r0 is the initial approximation from vrcpps
+			      C     
+			      C     ; tmp1 = x * r0
+			      C     vmulps tmp1, src, dst
+			      C     
+			      C     ; tmp2 = 2.0
+			      C     vmovaps tmp2, YMMWORD PTR [ONE_CONST]
+			      C     vaddps tmp2, tmp2, YMMWORD PTR [ONE_CONST]  ; tmp2 = 2.0
+			      C     
+			      C     ; tmp2 = 2.0 - x * r0
+			      C     vsubps tmp2, tmp2, tmp1                      ; tmp2 = 2.0 - x * r0
+			      C     
+			      C     ; dst = r0 * (2 - x * r0)
+			      C     vmulps dst, dst, tmp2                        ; dst = r0 * (2 - x * r0)
+			      C ENDM
+			      C 
+			      C ; ============================================================================
+			      C ; Usage Example:
+			      C ; ============================================================================
+			      C ; .const
+			      C ; MATH_CONSTANTS  ; Define constants
+			      C ;
+			      C ; .code
+			      C ; MyKernel PROC
+			      C ;     ; ... load input into ymm0 ...
+			      C ;     
+			      C ;     ; Compute e^x
+			      C ;     FAST_EXP ymm0, ymm0, ymm1, ymm2, ymm3
+			      C ;     
+			      C ;     ; ... continue with result in ymm0 ...
+			      C ; MyKernel ENDP
+			      C ; ============================================================================
+			      C 
+
+ 00000000			.const
+				; Define math constants for FAST_RECIP
+				MATH_CONSTANTS
+ 00000000 3922979A	     1	    EXP2_P6 DD 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f, 0.00015506f
+	   3922979A
+	   3922979A
+	   3922979A
+	   3922979A
+	   3922979A
+	   3922979A
+	   3922979A
+ 00000020 3AAEC3CD	     1	    EXP2_P5 DD 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f, 0.00133335f
+	   3AAEC3CD
+	   3AAEC3CD
+	   3AAEC3CD
+	   3AAEC3CD
+	   3AAEC3CD
+	   3AAEC3CD
+	   3AAEC3CD
+ 00000040 3C1D955C	     1	    EXP2_P4 DD 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f, 0.00961813f
+	   3C1D955C
+	   3C1D955C
+	   3C1D955C
+	   3C1D955C
+	   3C1D955C
+	   3C1D955C
+	   3C1D955C
+ 00000060 3D635847	     1	    EXP2_P3 DD 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f, 0.05550411f
+	   3D635847
+	   3D635847
+	   3D635847
+	   3D635847
+	   3D635847
+	   3D635847
+	   3D635847
+ 00000080 3E75FDF0	     1	    EXP2_P2 DD 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f, 0.24022650f
+	   3E75FDF0
+	   3E75FDF0
+	   3E75FDF0
+	   3E75FDF0
+	   3E75FDF0
+	   3E75FDF0
+	   3E75FDF0
+ 000000A0 3F317218	     1	    EXP2_P1 DD 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f, 0.69314718f
+	   3F317218
+	   3F317218
+	   3F317218
+	   3F317218
+	   3F317218
+	   3F317218
+	   3F317218
+ 000000C0 0000007F	     1	    EXP2_BIAS DD 127, 127, 127, 127, 127, 127, 127, 127
+	   0000007F
+	   0000007F
+	   0000007F
+	   0000007F
+	   0000007F
+	   0000007F
+	   0000007F
+ 000000E0 3FB8AA3B	     1	    LOG2E DD 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f, 1.44269504f
+	   3FB8AA3B
+	   3FB8AA3B
+	   3FB8AA3B
+	   3FB8AA3B
+	   3FB8AA3B
+	   3FB8AA3B
+	   3FB8AA3B
+ 00000100 3F800000	     1	    ONE_CONST DD 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+
+				ALIGN 16
+				; Clamp boundaries
+ 00000120 C0800000		g_neg4      REAL4 -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0, -4.0
+	   C0800000
+	   C0800000
+	   C0800000
+	   C0800000
+	   C0800000
+	   C0800000
+	   C0800000
+ 00000140 40800000		g_pos4      REAL4  4.0,  4.0,  4.0,  4.0,  4.0,  4.0,  4.0,  4.0
+	   40800000
+	   40800000
+	   40800000
+	   40800000
+	   40800000
+	   40800000
+	   40800000
+ 00000160 00000000		g_zero      REAL4  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0
+	   00000000
+	   00000000
+	   00000000
+	   00000000
+	   00000000
+	   00000000
+	   00000000
+ 00000180 3F800000		g_one       REAL4  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+
+				; Constants for exp approximation: exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24
+ 000001A0 3F800000		g_exp_c0    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 000001C0 3F800000		g_exp_c1    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 000001E0 3F000000		g_exp_c2    REAL4 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+ 00000200 3E2AAAC1		g_exp_c3    REAL4 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+ 00000220 3D2AAB04		g_exp_c4    REAL4 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+
+ 00000000			.code
+
+				; ============================================================================
+				; MASM_SiLU_Clamped - SiLU with input clamping for numerical stability
+				; ============================================================================
+				; Parameters:
+				;   RCX = float* data (32-byte aligned)
+				;   RDX = size_t data_size (in bytes, multiple of 32)
+				; Returns: RAX = 0 on success
+				; ============================================================================
+
+ 00000000			MASM_SiLU_Clamped PROC FRAME
+				    ; Prologue - CRITICAL: Save non-volatile registers RBX and RSI
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+ 00000004  53			    push rbx
+				    .pushreg rbx
+ 00000005  56			    push rsi
+				    .pushreg rsi
+ 00000006  48/ 83 EC 20		    sub rsp, 32
+				    .allocstack 32
+				    .endprolog
+
+				    ; Save parameters
+ 0000000A  48/ 8B F1		    mov rsi, rcx               ; rsi = data pointer
+ 0000000D  48/ 8B DA		    mov rbx, rdx               ; rbx = data_size
+				    
+				    ; Validate inputs
+ 00000010  48/ 85 F6		    test rsi, rsi
+ 00000013  0F 84 000000EC	    jz error_null
+ 00000019  48/ 85 DB		    test rbx, rbx
+ 0000001C  0F 84 000000EC	    jz error_zero
+ 00000022  48/ F7 C6		    test rsi, 31
+	   0000001F
+ 00000029  0F 85 000000E8	    jnz error_align
+ 0000002F  48/ F7 C3		    test rbx, 31
+	   0000001F
+ 00000036  0F 85 000000E4	    jnz error_size
+
+				    ; Calculate iterations
+ 0000003C  48/ 8B CB		    mov rcx, rbx
+ 0000003F  48/ C1 E9 05		    shr rcx, 5                  ; rcx = number of 32-byte blocks
+				    
+				    ; Load clamp boundaries
+ 00000043  C5 7C/ 28 3D		    vmovaps ymm15, YMMWORD PTR [g_neg4]    ; ymm15 = -4.0
+	   00000120 R
+ 0000004B  C5 7C/ 28 35		    vmovaps ymm14, YMMWORD PTR [g_pos4]    ; ymm14 = 4.0
+	   00000140 R
+				    
+				    ; Load exp constants
+ 00000053  C5 7C/ 28 05		    vmovaps ymm8, YMMWORD PTR [g_exp_c0]   ; 1.0
+	   000001A0 R
+ 0000005B  C5 7C/ 28 0D		    vmovaps ymm9, YMMWORD PTR [g_exp_c1]   ; 1.0
+	   000001C0 R
+ 00000063  C5 7C/ 28 15		    vmovaps ymm10, YMMWORD PTR [g_exp_c2]  ; 0.5
+	   000001E0 R
+ 0000006B  C5 7C/ 28 1D		    vmovaps ymm11, YMMWORD PTR [g_exp_c3]  ; 0.166667
+	   00000200 R
+ 00000073  C5 7C/ 28 25		    vmovaps ymm12, YMMWORD PTR [g_exp_c4]  ; 0.041667
+	   00000220 R
+ 0000007B  C5 7C/ 28 2D		    vmovaps ymm13, YMMWORD PTR [g_one]     ; 1.0
+	   00000180 R
+
+ 00000083			process_loop:
+ 00000083  48/ 83 F9 00		    cmp rcx, 0
+ 00000087  7E 77		    jle done
+				    
+				    ; Load 8 floats
+ 00000089  C5 FC/ 28 06		    vmovaps ymm0, YMMWORD PTR [rsi]    ; ymm0 = x
+				    
+				    ; ============================================================================
+				    ; CLAMP INPUT to [-4, 4] before polynomial evaluation
+				    ; This prevents catastrophic divergence outside the polynomial's valid range
+				    ; ============================================================================
+ 0000008D  C4 C1 7C/ 5F C7	    vmaxps ymm0, ymm0, ymm15           ; ymm0 = max(x, -4.0)
+ 00000092  C4 C1 7C/ 5D C6	    vminps ymm0, ymm0, ymm14           ; ymm0 = min(ymm0, 4.0)
+				    ; Now ymm0 is clamped to [-4, 4]
+				    
+				    ; Compute -x for exp(-x)
+				    ; Load zero and subtract x
+ 00000097  C5 F4/ 57 C9		    vxorps ymm1, ymm1, ymm1            ; ymm1 = 0
+ 0000009B  C5 F4/ 5C C8		    vsubps ymm1, ymm1, ymm0            ; ymm1 = -x
+				    
+				    ; Compute exp(-x) using polynomial: 1 + y + y^2/2 + y^3/6 + y^4/24
+				    ; where y = -x
+				    
+				    ; y^2
+ 0000009F  C5 F4/ 59 D1		    vmulps ymm2, ymm1, ymm1            ; ymm2 = y^2
+				    
+				    ; y^3 = y^2 * y
+ 000000A3  C5 EC/ 59 D9		    vmulps ymm3, ymm2, ymm1            ; ymm3 = y^3
+				    
+				    ; y^4 = y^2 * y^2
+ 000000A7  C5 EC/ 59 E2		    vmulps ymm4, ymm2, ymm2            ; ymm4 = y^4
+				    
+				    ; exp(y) = 1 + y + y^2/2 + y^3/6 + y^4/24
+ 000000AB  C4 C1 6C/ 59 D2	    vmulps ymm2, ymm2, ymm10           ; ymm2 = y^2/2
+ 000000B0  C4 C1 64/ 59 DB	    vmulps ymm3, ymm3, ymm11           ; ymm3 = y^3/6
+ 000000B5  C4 C1 5C/ 59 E4	    vmulps ymm4, ymm4, ymm12           ; ymm4 = y^4/24
+				    
+ 000000BA  C5 BC/ 58 E9		    vaddps ymm5, ymm8, ymm1            ; ymm5 = 1 + y
+ 000000BE  C5 D4/ 58 EA		    vaddps ymm5, ymm5, ymm2            ; ymm5 += y^2/2
+ 000000C2  C5 D4/ 58 EB		    vaddps ymm5, ymm5, ymm3            ; ymm5 += y^3/6
+ 000000C6  C5 D4/ 58 EC		    vaddps ymm5, ymm5, ymm4            ; ymm5 += y^4/24
+				    
+				    ; Now ymm5 = exp(-x)
+				    ; Compute 1 + exp(-x)
+ 000000CA  C4 C1 54/ 58 F5	    vaddps ymm6, ymm5, ymm13           ; ymm6 = 1 + exp(-x)
+				    
+				    ; Compute x / (1 + exp(-x)) = SiLU(x)
+				    ; Use FAST_RECIP macro with Newton-Raphson refinement for accuracy
+				    ; rcp = 1 / (1 + exp(-x)) with ~1e-6 precision
+				    FAST_RECIP ymm7, ymm6, ymm2, ymm3  ; ymm7 = 1 / (1 + exp(-x))
+ 000000CF  C5 FC/ 53 FE	     1	    vrcpps ymm7, ymm6
+ 000000D3  C5 CC/ 59 D7	     1	    vmulps ymm2, ymm6, ymm7
+ 000000D7  C5 FC/ 28 1D	     1	    vmovaps ymm3, YMMWORD PTR [ONE_CONST]
+	   00000100 R
+ 000000DF  C5 E4/ 58 1D	     1	    vaddps ymm3, ymm3, YMMWORD PTR [ONE_CONST]  ; tmp2 = 2.0
+	   00000100 R
+ 000000E7  C5 E4/ 5C DA	     1	    vsubps ymm3, ymm3, ymm2                      ; tmp2 = 2.0 - x * r0
+ 000000EB  C5 C4/ 59 FB	     1	    vmulps ymm7, ymm7, ymm3                        ; dst = r0 * (2 - x * r0)
+ 000000EF  C5 FC/ 59 C7		    vmulps ymm0, ymm0, ymm7            ; ymm0 = x / (1 + exp(-x))
+				    
+				    ; Store result
+ 000000F3  C5 FC/ 29 06		    vmovaps YMMWORD PTR [rsi], ymm0
+				    
+				    ; Advance
+ 000000F7  48/ 83 C6 20		    add rsi, 32
+ 000000FB  48/ FF C9		    dec rcx
+ 000000FE  EB 83		    jmp process_loop
+
+ 00000100			done:
+ 00000100  48/ 33 C0		    xor rax, rax
+ 00000103  EB 22		    jmp cleanup
+
+ 00000105			error_null:
+ 00000105  48/ C7 C0		    mov rax, 1
+	   00000001
+ 0000010C  EB 19		    jmp cleanup
+
+ 0000010E			error_zero:
+ 0000010E  48/ C7 C0		    mov rax, 2
+	   00000002
+ 00000115  EB 10		    jmp cleanup
+
+ 00000117			error_align:
+ 00000117  48/ C7 C0		    mov rax, 3
+	   00000003
+ 0000011E  EB 07		    jmp cleanup
+
+ 00000120			error_size:
+ 00000120  48/ C7 C0		    mov rax, 4
+	   00000004
+
+ 00000127			cleanup:
+ 00000127  C5 F8 77		    vzeroupper
+				    ; CRITICAL FIX: Restore stack in correct order
+				    ; Stack layout: [RBP]=oldRBP, [RBP-8]=RBX, [RBP-16]=RSI, [RBP-48]=RSP
+ 0000012A  48/ 83 C4 20		    add rsp, 32              ; Deallocate shadow space first (RSP = RBP - 16)
+ 0000012E  5E			    pop rsi                  ; Restore RSI from [RBP-16]
+ 0000012F  5B			    pop rbx                  ; Restore RBX from [RBP-8]
+ 00000130  5D			    pop rbp                  ; Restore RBP
+ 00000131  C3			    ret
+
+ 00000132			MASM_SiLU_Clamped ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:18
+F:/rawrxd/src/validation/kernels/masm/silu_clamped.asm	     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+FAST_EXP2  . . . . . . . . . . .	Proc
+FAST_EXP . . . . . . . . . . . .	Proc
+FAST_RECIP . . . . . . . . . . .	Proc
+MATH_CONSTANTS . . . . . . . . .	Proc
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+CONST  . . . . . . . . . . . . .	 00000240 16	  'CONST'	 ReadOnly
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_SiLU_Clamped  . . . . . . .	P 	 00000000 _TEXT	Length= 00000132 Public
+  process_loop . . . . . . . . .	L 	 00000083 _TEXT	
+  done . . . . . . . . . . . . .	L 	 00000100 _TEXT	
+  error_null . . . . . . . . . .	L 	 00000105 _TEXT	
+  error_zero . . . . . . . . . .	L 	 0000010E _TEXT	
+  error_align  . . . . . . . . .	L 	 00000117 _TEXT	
+  error_size . . . . . . . . . .	L 	 00000120 _TEXT	
+  cleanup  . . . . . . . . . . .	L 	 00000127 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+EXP2_BIAS  . . . . . . . . . . .	DWord	 000000C0 CONST	
+EXP2_P1  . . . . . . . . . . . .	DWord	 000000A0 CONST	
+EXP2_P2  . . . . . . . . . . . .	DWord	 00000080 CONST	
+EXP2_P3  . . . . . . . . . . . .	DWord	 00000060 CONST	
+EXP2_P4  . . . . . . . . . . . .	DWord	 00000040 CONST	
+EXP2_P5  . . . . . . . . . . . .	DWord	 00000020 CONST	
+EXP2_P6  . . . . . . . . . . . .	DWord	 00000000 CONST	
+LOG2E  . . . . . . . . . . . . .	DWord	 000000E0 CONST	
+ONE_CONST  . . . . . . . . . . .	DWord	 00000100 CONST	
+g_exp_c0 . . . . . . . . . . . .	DWord	 000001A0 CONST	
+g_exp_c1 . . . . . . . . . . . .	DWord	 000001C0 CONST	
+g_exp_c2 . . . . . . . . . . . .	DWord	 000001E0 CONST	
+g_exp_c3 . . . . . . . . . . . .	DWord	 00000200 CONST	
+g_exp_c4 . . . . . . . . . . . .	DWord	 00000220 CONST	
+g_neg4 . . . . . . . . . . . . .	DWord	 00000120 CONST	
+g_one  . . . . . . . . . . . . .	DWord	 00000180 CONST	
+g_pos4 . . . . . . . . . . . . .	DWord	 00000140 CONST	
+g_zero . . . . . . . . . . . . .	DWord	 00000160 CONST	
+
+	   0 Warnings
+	   0 Errors

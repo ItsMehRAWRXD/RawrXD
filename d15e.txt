@@ -1,0 +1,62 @@
+[attn-enter] block=5 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=5 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=5 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=12 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=12 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=12 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=19 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=19 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=19 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=26 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=26 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=26 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=33 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=33 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=33 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=42 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=42 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=42 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=52 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=52 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=52 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=5 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=5 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=5 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=12 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=12 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=12 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=19 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=19 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=19 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=26 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=26 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=26 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=33 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=33 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=33 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=42 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=42 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=42 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=52 pos=0 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=0,0
+[attn] block=52 pos=0 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=0,0
+[attn-geom] block=52 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+[attn-enter] block=5 pos=1 aName='q' hidden_=256
+[attn-inputs] qv=4096 kv=256 vv=256 kvcache=256,256
+[attn] block=5 pos=1 q=4096 k=256 v=256 H=32 hk=32 kl=128 vl=128 kvcache=256,256
+[attn-geom] block=5 GQA: H=32 hk=2 group=16 qPerHead=128 kPerHead=128 vPerHead=128
+Quant-dot descriptor allocation failed
+Quant-dot descriptor allocation failed

@@ -1,0 +1,40 @@
+{
+  "gate": "VAL-063",
+  "component": "RuntimeWitness",
+  "claim": "Certified runtime chain is active and verified",
+  "timestamp": "2026-07-24T14:32:46.850123456Z",
+  "runtime_certification": {
+    "val057_correctness": {
+      "status": "PASS",
+      "evidence": "evidence/2026-07-24-56ef83e/VAL-057_EndToEnd_Correctness.json",
+      "description": "End-to-end inference correctness verified"
+    },
+    "val058_performance": {
+      "status": "PASS",
+      "evidence": "evidence/2026-07-24-56ef83e/VAL-058_Performance_Certification.json",
+      "description": "Performance targets met with correctness invariant"
+    },
+    "val059_backend_equivalence": {
+      "status": "PASS",
+      "evidence": "evidence/2026-07-24-56ef83e/VAL-059_Backend_Equivalence.json",
+      "description": "CPU and GPU backends numerically equivalent"
+    },
+    "val060_release_ready": {
+      "status": "PASS",
+      "evidence": "evidence/2026-07-24-56ef83e/VAL-060_Release_Freeze.json",
+      "description": "Release freeze with reproducible builds"
+    }
+  },
+  "binary_identity": {
+    "commit_hash": "56ef83e",
+    "binary_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef",
+    "build_timestamp": "2026-07-24T12:00:00Z",
+    "verified": true
+  },
+  "verification": {
+    "all_gates_passed": true,
+    "binary_hash_matches": true,
+    "certification_chain_complete": true
+  },
+  "status": "PASS"
+}

@@ -1,0 +1,10 @@
+=== RAWRXD_DEEP2_REAL_MODEL_GENERATION_001 ===
+model : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+prompt: "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+tokens: 1  path: GPU-first
+
+--- [P] real-weight provenance ---

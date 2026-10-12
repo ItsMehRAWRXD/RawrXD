@@ -1,0 +1,717 @@
+[0/1] Re-running CMake...
+-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231
+-- [SDK Fix] INCLUDE = C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um
+-- [SDK Fix] LIB     = C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64;C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.328.1
+-- Using the multi-header code from D:/rawrxd/build-ninja/_deps/nlohmann_json-src/include/
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- ✓ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] Omega v3 MASM32 target registered
+-- [RE] Reverser compiler NASM targets registered
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [MASM] Using prebuilt RDNA3_Full_Test.obj (RX 7800 XT kernels)
+-- [NanoQuant] DISABLED — enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix — Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.328.1/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.328.1/Lib/vulkan-1.lib
+-- [RawrXD] ✅ Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.328.1/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.328.1/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.328.1/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Sovereign] Test suite: SovereignTest_Suite (beaconism pattern)
+-- [Sovereign] VAL-038 E2E test: SovereignTest_VAL038_E2E
+-- [Sovereign] Deep2 batch test: Deep2_Batch_Test
+-- [Deep2] Production TPS benchmark: Deep2_Production_Bench (+ quantization kernels)
+-- [Sovereign] PatchRegistry test: SovereignTest_PatchRegistry
+-- [Sovereign] HotPatcher test: SovereignTest_HotPatcher
+-- [Sovereign] AutonomousAgent test: SovereignTest_AutonomousAgent
+-- [Sovereign] AntiHallucination test: SovereignTest_AntiHallucination
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)
+-- [Phase C] GPU Benchmark target: RawrXD-Benchmark
+-- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
+-- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
+-- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
+-- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
+-- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
+-- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
+-- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
+-- [VAL-033] Profiling instrumentation: tree_attention_profiled
+-- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
+-- [VAL-035] Tiled Q@K^T: tree_attention_tiled
+-- [VAL-036] Vectorized softmax: tree_attention_vectorized
+-- [VAL-037] Tree sparsity: tree_attention_sparse
+-- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
+-- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
+-- [VAL-038] Validation benchmark (B→C→A): VAL038_Validation_Benchmark
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.328.1
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Validation] RAWRXD_ENABLE_VALIDATION=OFF — runtime tensor dumping disabled
+-- [Tools] Native address resolver target enabled: address_resolver_native (smoke targets: address_resolver_native_smoke, address_resolver_native_smoke_soft, address_resolver_native_smoke_minimal)
+-- [LSP] RawrXD-Script Language Server target enabled: RawrXD_LSPServer
+-- [DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter
+--   ✓ Using prebuilt gtest from build-master
+-- ========================================
+-- Registering Tests with CTest
+-- ========================================
+--   ✓ Added test_ai_completions
+--   ✓ Added test_llm_connectivity
+--   ✓ Added test_tool_registry
+--   ✓ Added test_voice_processor
+--   ✓ Added test_zero_retention_manager
+--   ✓ Added test_gui_components
+--   ✓ Added test_semantic_diff_analyzer
+--   ✓ Added test_ai_merge_resolver
+--   ✓ Added test_sandboxed_terminal
+--   ✓ Added test_agentic_file_operations
+--   ✓ Added model_registry_test
+--   ✓ Added test_gguf_integration
+--   ✓ Added test_swarm_scheduler_pin
+--   ✓ Added deterministic_replay_gate
+--   ✓ Added VAL063_InferenceGatewayHarness
+--   ✓ Added test_swarm_expert_heatmap_stress
+--   ✓ Added test_moe_mixture_reference
+--   ✓ Added test_moe_down_project_policy
+--   ✓ Added test_moe_plan_row_mixture_pack_cache
+--   ✓ Added moe_grouped_gemm_bench (manual / CI microbench; not registered in CTest)
+--   ✓ Added test_basic_profiler
+--   ✓ Added test_batch3_profiler_smoke
+--   ✓ Added test_production_regression (Qt-free regression suite)
+--   ✓ Added test_instructions_provider
+-- ========================================
+-- Registering Measurement Framework Tests
+-- ========================================
+-- ========================================
+-- Test Suite Registration Complete
+-- ========================================
+-- Run all tests:      ctest --output-on-failure -C Release
+-- Run measurement:    ctest -L measurement -V -C Release
+-- Run specific:       ctest -R <name> -V -C Release
+-- ========================================
+--   ✓ Added test_model_loader_streamer_smoke
+--   ✓ Added test_predictive_memory_subsystem
+--   ✓ Added smoke_core (minimal validation)
+--   ✓ Added test_rmsnorm_avx2 (AVX2 kernel validation)
+--   ✓ Added test_softmax_avx2 (AVX2 kernel validation)
+--   ✓ Using RawrXD_Compression for checkpoint compression
+--   ✓ Added sovereign_integrated_test (Sovereign Burn-in)
+--   ✓ Added test_agentic_supervisor (Agentic Supervisor)
+-- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
+-- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [Test] Debugger stress tests: stress_target, stress_memory
+-- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
+-- [VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline
+-- [VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment
+-- [VAL-Q4.0] ASM debug test: test_q4_asm_debug
+-- [VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512
+-- [VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd
+-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231
+-- [SDK Fix] RC = C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/rc.exe
+-- [SDK Fix] MT = C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/mt.exe
+-- [SDK Fix] INCLUDE = C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um
+-- [SDK Fix] LIB     = C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64
+-- Found RawrXD libraries at: D:/rawrxd/src/validation/../../build-ninja
+-- Real model validation target: model_stack_validation_real
+-- Standalone kernel benchmark: kernel_differential_benchmark
+-- SiLU accuracy comparison test: silu_accuracy_test
+-- Q4_0 differential test: q4_0_differential_test
+-- Q4_0 optimized benchmark: q4_0_optimized_bench
+-- A/B test runner target: ab_test_runner
+-- RE Framework: Capstone NOT found - disassembly disabled
+-- RE Framework: Keystone NOT found - assembly disabled
+-- RE Framework: Unicorn NOT found - emulation disabled
+-- RE Framework library: rawr_re_framework
+-- RE Framework test: SKIPPED (requires Capstone + Keystone + Unicorn)
+-- [MASM] Found ml64.exe: C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe
+-- [MASM] Configuration:
+--   Assembler: C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe
+--   Output: masm_kernels.lib
+--   Sources:
+--     - silu_activation_avx512.asm
+--   Targets:
+--     - masm_kernels (static library)
+--     - masm_kernels_test (test executable)
+-- Token Estimator Swarm library: TokenEstimatorSwarm
+-- Token Estimator Swarm demo: TokenEstimatorDemo
+-- Validation Gate Runner: ValidationRunner
+-- Swarm Integration Test: test_swarm_integration
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+--   [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency
+--   [MEASURE] benchmark_planner_amortization - Break-even analysis
+--   [MEASURE] validate_end_to_end - Four independent gates
+--   [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing
+--   [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring
+--   [MEASURE] pmc_profiler - Performance Monitoring Counters
+--   [MEASURE] flame_graph_profiler - Flame graph generation
+--   [MEASURE] benchmark_dispatch_pmc - PMC profiling
+-- ========================================
+-- [Native] Separate native toolchain build available
+-- Could NOT find Qt6 (missing: Qt6_DIR)
+-- Configuring done (0.8s)
+-- Generating done (0.4s)
+-- Build files have been written to: D:/rawrxd/build-ninja
+[1/2] All primary targets available:
+enforce_no_scaffold: phony
+rawrxd-test-spv: phony
+rawrxd-matmul-spv: phony
+audit-registry: phony
+audit-registry-ci: phony
+self_test_gate: phony
+validate_registry: phony
+validate_registry_strict: phony
+address_resolver_native_smoke: phony
+address_resolver_native_smoke_soft: phony
+address_resolver_native_smoke_minimal: phony
+test: phony
+edit_cache: phony
+rebuild_cache: phony
+list_install_components: phony
+install: phony
+install/local: phony
+install/strip: phony
+D:/rawrxd/build-ninja/CMakeFiles/enforce_no_scaffold: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/rawrxd-test-spv: phony
+D:/rawrxd/build-ninja/shaders/test_vec_add.spv: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/rawrxd-matmul-spv: phony
+D:/rawrxd/build-ninja/shaders/shader_matmul.spv: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/audit-registry: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/audit-registry-ci: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/regen-ssot-beacons: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/verify-ssot-ext-ownership: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/RawrXD_Compression_MASM: phony
+D:/rawrxd/build-ninja/RawrXD_Compression_MASM.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/masm_kernels: phony
+D:/rawrxd/build-ninja/RawrCodex.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_AgenticOrchestrator.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Camellia256.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Camellia256_Auth.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_CopilotGapCloser.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Debug_Engine.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_EnterpriseLicense.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_GGUF_Vulkan_Loader.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_GSIHash.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_HardwareSynthesizer.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Hotpatch_Kernel.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_KQuant_Kernel.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_LSP_AI_Bridge.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_LSP_SymbolIndex.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_License_Shield.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_MeshBrain.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_MonacoCore.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_NeuralBridge.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_OmegaOrchestrator.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_PDBKernel.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_PerfCounters.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Pyre_Compute.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_QuadBuffer_Streamer.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_RefProvider.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_RouterBridge.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_SelfHost_Engine.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_SelfPatch_Engine.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Snapshot.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_SocketResponder.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Speciator.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Streaming_QuadBuffer.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_StubDetector.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Swarm_Network.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_TridentBeacon.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_TridentBeacon_GPU.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_VulkanBridge.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/RawrXD_Watchdog.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/deflate_brutal_masm.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/gpu_requantize_rocm.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/native_speed_kernels.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/rawrxd_cot_dll_entry.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/rawrxd_cot_engine.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/rawrxd_cot_phase39.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/requantize_q4km_to_q2k_avx512.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/swarm_tensor_stream.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/self_test_gate: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/AntiHallucinationASM: phony
+D:/rawrxd/build-ninja/AntiHallucinationHotPatcher.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/validate_registry: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/validate_registry_strict: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/address_resolver_native_smoke: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/address_resolver_native_smoke_soft: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/CMakeFiles/address_resolver_native_smoke_minimal: CUSTOM_COMMAND
+_deps/nlohmann_json-build/test: phony
+_deps/nlohmann_json-build/edit_cache: phony
+_deps/nlohmann_json-build/rebuild_cache: phony
+_deps/nlohmann_json-build/list_install_components: phony
+_deps/nlohmann_json-build/install: phony
+_deps/nlohmann_json-build/install/local: phony
+_deps/nlohmann_json-build/install/strip: phony
+src/reverse_engineering/test: phony
+src/reverse_engineering/edit_cache: phony
+src/reverse_engineering/rebuild_cache: phony
+src/reverse_engineering/list_install_components: phony
+src/reverse_engineering/install: phony
+src/reverse_engineering/install/local: phony
+src/reverse_engineering/install/strip: phony
+D:/rawrxd/build-ninja/src/reverse_engineering/CMakeFiles/re_deobfuscator: phony
+D:/rawrxd/build-ninja/src/reverse_engineering/RawrXD_MetaReverse.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/reverse_engineering/RawrXD_OmegaDeobfuscator.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/reverse_engineering/CMakeFiles/re_model_reverse: phony
+D:/rawrxd/build-ninja/src/reverse_engineering/model_llm_harvester.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/reverse_engineering/CMakeFiles/re_omega_v3: phony
+D:/rawrxd/build-ninja/src/reverse_engineering/omega_pro_v3.exe: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/reverse_engineering/CMakeFiles/re_reverser_compiler: phony
+D:/rawrxd/build-ninja/src/reverse_engineering/reverser_ast.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/reverse_engineering/reverser_lexer.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/reverse_engineering/reverser_parser.obj: CUSTOM_COMMAND
+src/ceo/test: phony
+src/ceo/edit_cache: phony
+src/ceo/rebuild_cache: phony
+src/ceo/list_install_components: phony
+src/ceo/install: phony
+src/ceo/install/local: phony
+src/ceo/install/strip: phony
+src/repository/test: phony
+src/repository/edit_cache: phony
+src/repository/rebuild_cache: phony
+src/repository/list_install_components: phony
+src/repository/install: phony
+src/repository/install/local: phony
+src/repository/install/strip: phony
+src/generation/test: phony
+src/generation/edit_cache: phony
+src/generation/rebuild_cache: phony
+src/generation/list_install_components: phony
+src/generation/install: phony
+src/generation/install/local: phony
+src/generation/install/strip: phony
+src/runtime/test: phony
+src/runtime/edit_cache: phony
+src/runtime/rebuild_cache: phony
+src/runtime/list_install_components: phony
+src/runtime/install: phony
+src/runtime/install/local: phony
+src/runtime/install/strip: phony
+tests/test: phony
+tests/edit_cache: phony
+tests/rebuild_cache: phony
+tests/list_install_components: phony
+tests/install: phony
+tests/install/local: phony
+tests/install/strip: phony
+src/tools/test: phony
+src/tools/edit_cache: phony
+src/tools/rebuild_cache: phony
+src/tools/list_install_components: phony
+src/tools/install: phony
+src/tools/install/local: phony
+src/tools/install/strip: phony
+src/validation/test: phony
+src/validation/edit_cache: phony
+src/validation/rebuild_cache: phony
+src/validation/list_install_components: phony
+src/validation/install: phony
+src/validation/install/local: phony
+src/validation/install/strip: phony
+src/validation/kernels/test: phony
+src/validation/kernels/edit_cache: phony
+src/validation/kernels/rebuild_cache: phony
+src/validation/kernels/list_install_components: phony
+src/validation/kernels/install: phony
+src/validation/kernels/install/local: phony
+src/validation/kernels/install/strip: phony
+D:/rawrxd/build-ninja/src/validation/kernels/silu_activation_avx512_fixed_v2.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/rmsnorm_forward_avx2.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/test_minimal.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/silu_correct.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/rmsnorm_fixed.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/rmsnorm_tiled.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/softmax_fixed.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/silu_clamped.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/abi_integrity_test.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/abi_integrity_simple.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/q4_0_dequant.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/q4_0_dequant_optimized.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/RawrXD_TreeAttention_Kernel.obj: CUSTOM_COMMAND
+D:/rawrxd/build-ninja/src/validation/kernels/tree_attention_masm_val038.obj: CUSTOM_COMMAND
+BackendOrchestratorShardSmoke: phony
+BackendOrchestratorShardSmoke.exe: phony
+Deep2_Batch_Test: phony
+Deep2_Batch_Test.exe: phony
+Deep2_Production_Bench: phony
+Deep2_Production_Bench.exe: phony
+Fix4_FlashAttention_Benchmark: phony
+Fix4_FlashAttention_Benchmark.exe: phony
+Fix5_FusedQuantized_Benchmark: phony
+Fix5_FusedQuantized_Benchmark.exe: phony
+InferenceEngine: phony
+Omega1Engine: phony
+RawrEngine: phony
+RawrEngine.exe: phony
+RawrXD-Benchmark: phony
+RawrXD-Benchmark.exe: phony
+RawrXD-FusedBenchmark: phony
+RawrXD-FusedBenchmark.exe: phony
+RawrXD-Generate: phony
+RawrXD-Generate.exe: phony
+RawrXD-GoldenRecoveryTests: phony
+RawrXD-GoldenRecoveryTests.exe: phony
+RawrXD-InferenceEngine: phony
+RawrXD-InferenceEngine.exe: phony
+RawrXD-InferenceRoutingTest: phony
+RawrXD-InferenceRoutingTest.exe: phony
+RawrXD-KVBenchmark: phony
+RawrXD-KVBenchmark.exe: phony
+RawrXD-ModelAnalysis: phony
+RawrXD-ModelAnalysis.exe: phony
+RawrXD-ModelAnalysisLib: phony
+RawrXD-RE-Library: phony
+RawrXD-RE-Library.lib: phony
+RawrXD-TpsSmoke: phony
+RawrXD-TpsSmoke.exe: phony
+RawrXDScriptDAPAdapter: phony
+RawrXDScriptDAPAdapter.exe: phony
+RawrXD_Compression: phony
+RawrXD_Gold: phony
+RawrXD_Gold.exe: phony
+RawrXD_KeyGen: phony
+RawrXD_KeyGen.exe: phony
+RawrXD_LSPServer: phony
+RawrXD_LSPServer.exe: phony
+SovereignTest_AntiHallucination: phony
+SovereignTest_AntiHallucination.exe: phony
+SovereignTest_AutonomousAgent: phony
+SovereignTest_AutonomousAgent.exe: phony
+SovereignTest_HotPatcher: phony
+SovereignTest_HotPatcher.exe: phony
+SovereignTest_PatchRegistry: phony
+SovereignTest_PatchRegistry.exe: phony
+SovereignTest_Suite: phony
+SovereignTest_Suite.exe: phony
+SovereignTest_VAL038_E2E: phony
+SovereignTest_VAL038_E2E.exe: phony
+SwarmSmokeTest: phony
+SwarmSmokeTest.exe: phony
+TestDebugBridgeTelemetry: phony
+TestDebugBridgeTelemetry.exe: phony
+TestMASMInference: phony
+TestMASMInference.exe: phony
+TestSovereignBridge: phony
+TestSovereignBridge.exe: phony
+TokenEstimatorDemo: phony
+TokenEstimatorDemo.exe: phony
+TokenEstimatorSwarm: phony
+TokenEstimatorSwarm.lib: phony
+VAL032_AVX512_Benchmark: phony
+VAL032_AVX512_Benchmark.exe: phony
+VAL032_SpeculativeDecoding_Benchmark: phony
+VAL032_SpeculativeDecoding_Benchmark.exe: phony
+VAL038_FusedAttention_Benchmark: phony
+VAL038_FusedAttention_Benchmark.exe: phony
+VAL038_Validation_Benchmark: phony
+VAL038_Validation_Benchmark.exe: phony
+VAL063_InferenceGatewayHarness: phony
+VAL063_InferenceGatewayHarness.exe: phony
+ValidationRunner: phony
+ValidationRunner.exe: phony
+ab_test_runner: phony
+ab_test_runner.exe: phony
+abi_integrity_test: phony
+abi_integrity_test.exe: phony
+address_resolver_native: phony
+address_resolver_native.exe: phony
+agentic_orchestrator_smoke_test: phony
+agentic_orchestrator_smoke_test.exe: phony
+b004_transformer_router_streaming_integration: phony
+b004_transformer_router_streaming_integration.exe: phony
+b004_transformer_router_streaming_integration_cpu: phony
+b004_transformer_router_streaming_integration_cpu.exe: phony
+b005_canonical_model_certification: phony
+b005_canonical_model_certification.exe: phony
+b006_kv_cache_verification: phony
+b006_kv_cache_verification.exe: phony
+b007_performance_baseline: phony
+b007_performance_baseline.exe: phony
+b008_ci_integration: phony
+b008_ci_integration.exe: phony
+b009_batched_prefill_certification: phony
+b009_batched_prefill_certification.exe: phony
+b009_t128_certification: phony
+b009_t128_certification.exe: phony
+b009_t128_instrumented: phony
+b009_t128_instrumented.exe: phony
+b009a_fast_validation: phony
+b009a_fast_validation.exe: phony
+b010_b011_fast_experiment: phony
+b010_b011_fast_experiment.exe: phony
+b010_weight_residency_profile: phony
+b010_weight_residency_profile.exe: phony
+b011_weight_residency_optimization: phony
+b011_weight_residency_optimization.exe: phony
+b012_amortization_test: phony
+b012_amortization_test.exe: phony
+b013_stability_test: phony
+b013_stability_test.exe: phony
+b014_boundary_probe: phony
+b014_boundary_probe.exe: phony
+b014_compute_decomposition: phony
+b014_compute_decomposition.exe: phony
+b014_lifetime_probe: phony
+b014_lifetime_probe.exe: phony
+b014_single_boundary: phony
+b014_single_boundary.exe: phony
+b015_dequant_certification: phony
+b015_dequant_certification.exe: phony
+b015_pool_direct_test: phony
+b015_pool_direct_test.exe: phony
+b015_pool_microbench: phony
+b015_pool_microbench.exe: phony
+b015_residency_validation: phony
+b015_residency_validation.exe: phony
+b016_gemm_efficiency_probe: phony
+b016_gemm_efficiency_probe.exe: phony
+bench_cpu: phony
+bench_cpu.exe: phony
+benchmark_dispatch_overhead: phony
+benchmark_dispatch_overhead.exe: phony
+benchmark_dispatch_pmc: phony
+benchmark_dispatch_pmc.exe: phony
+benchmark_planner_amortization: phony
+benchmark_planner_amortization.exe: phony
+comprehensive_benchmark: phony
+comprehensive_benchmark.exe: phony
+comprehensive_dual_gpu_test: phony
+comprehensive_dual_gpu_test.exe: phony
+deterministic_replay_gate: phony
+deterministic_replay_gate.exe: phony
+dual_gpu_smoke_test: phony
+dual_gpu_smoke_test.exe: phony
+engine_factory: phony
+engine_factory.lib: phony
+flame_graph_profiler: phony
+gguf_api_server: phony
+gguf_api_server.exe: phony
+gguf_inspector: phony
+gguf_inspector.exe: phony
+kernel_differential_benchmark: phony
+kernel_differential_benchmark.exe: phony
+masm_kernels_test: phony
+masm_kernels_test.exe: phony
+model_registry_test: phony
+model_registry_test.exe: phony
+model_stack_validation: phony
+model_stack_validation.exe: phony
+model_stack_validation_real: phony
+model_stack_validation_real.exe: phony
+moe_grouped_gemm_bench: phony
+moe_grouped_gemm_bench.exe: phony
+nevm_determinism_validation: phony
+nevm_determinism_validation.exe: phony
+nevm_stress_test: phony
+nevm_stress_test.exe: phony
+pmc_profiler: phony
+q4_0_differential_test: phony
+q4_0_differential_test.exe: phony
+q4_0_optimized_bench: phony
+q4_0_optimized_bench.exe: phony
+q4_preprocessed_avx512: phony
+q4_preprocessed_avx512.lib: phony
+rawr_re_framework: phony
+rawr_re_framework.lib: phony
+rawrxd: phony
+rawrxd-ceo.exe: phony
+rawrxd-monaco-gen: phony
+rawrxd-monaco-gen.exe: phony
+rawrxd.exe: phony
+rawrxd_ceo: phony
+rawrxd_ceo.lib: phony
+rawrxd_ceo_cli: phony
+rawrxd_repository: phony
+rawrxd_repository.lib: phony
+rawrxd_runtime: phony
+rawrxd_runtime.lib: phony
+re_deobfuscator: phony
+re_model_reverse: phony
+re_omega_v3: phony
+re_reverser_compiler: phony
+real_multi_model_benchmark: phony
+real_multi_model_benchmark.exe: phony
+silu_accuracy_test: phony
+silu_accuracy_test.exe: phony
+simple_gpu_test: phony
+simple_gpu_test.exe: phony
+smoke_core: phony
+smoke_core.exe: phony
+sovereign_integrated_test: phony
+sovereign_integrated_test.exe: phony
+stress_memory: phony
+stress_memory.exe: phony
+stress_target: phony
+stress_target.exe: phony
+telemetry_masm_kernels: phony
+telemetry_masm_kernels.lib: phony
+telemetry_validation: phony
+telemetry_validation.exe: phony
+test_agentic_file_operations: phony
+test_agentic_file_operations.exe: phony
+test_agentic_supervisor: phony
+test_agentic_supervisor.exe: phony
+test_ai_completions: phony
+test_ai_completions.exe: phony
+test_ai_merge_resolver: phony
+test_ai_merge_resolver.exe: phony
+test_autonomous_pipeline: phony
+test_autonomous_pipeline.exe: phony
+test_basic_profiler: phony
+test_basic_profiler.exe: phony
+test_batch3_profiler_smoke: phony
+test_batch3_profiler_smoke.exe: phony
+test_generation: phony
+test_generation.exe: phony
+test_gguf_integration: phony
+test_gguf_integration.exe: phony
+test_gui_components: phony
+test_gui_components.exe: phony
+test_instructions_provider: phony
+test_instructions_provider.exe: phony
+test_llm_connectivity: phony
+test_llm_connectivity.exe: phony
+test_masm_linkage: phony
+test_masm_linkage.exe: phony
+test_model_loader_streamer_smoke: phony
+test_model_loader_streamer_smoke.exe: phony
+test_moe_down_project_policy: phony
+test_moe_down_project_policy.exe: phony
+test_moe_mixture_reference: phony
+test_moe_mixture_reference.exe: phony
+test_moe_plan_row_mixture_pack_cache: phony
+test_moe_plan_row_mixture_pack_cache.exe: phony
+test_omega1_bridge: phony
+test_omega1_bridge.exe: phony
+test_predictive_memory_subsystem: phony
+test_predictive_memory_subsystem.exe: phony
+test_production_regression: phony
+test_production_regression.exe: phony
+test_q4_asm_debug: phony
+test_q4_asm_debug.exe: phony
+test_q4_cache_alignment: phony
+test_q4_cache_alignment.exe: phony
+test_q4_fused_pipeline: phony
+test_q4_fused_pipeline.exe: phony
+test_q4_scalar_simd: phony
+test_q4_scalar_simd.exe: phony
+test_rmsnorm_avx2: phony
+test_rmsnorm_avx2.exe: phony
+test_sandboxed_terminal: phony
+test_sandboxed_terminal.exe: phony
+test_semantic_diff_analyzer: phony
+test_semantic_diff_analyzer.exe: phony
+test_simulator: phony
+test_simulator.exe: phony
+test_softmax_avx2: phony
+test_softmax_avx2.exe: phony
+test_swarm_expert_heatmap_stress: phony
+test_swarm_expert_heatmap_stress.exe: phony
+test_swarm_integration: phony
+test_swarm_integration.exe: phony
+test_swarm_scheduler_pin: phony
+test_swarm_scheduler_pin.exe: phony
+test_tool_registry: phony
+test_tool_registry.exe: phony
+test_voice_processor: phony
+test_voice_processor.exe: phony
+test_zero_retention_manager: phony
+test_zero_retention_manager.exe: phony
+tree_attention_aligned: phony
+tree_attention_aligned.exe: phony
+tree_attention_bench_simple: phony
+tree_attention_bench_simple.exe: phony
+tree_attention_fused_sparse: phony
+tree_attention_fused_sparse.exe: phony
+tree_attention_masm_val038: phony
+tree_attention_masm_val038.exe: phony
+tree_attention_profiled: phony
+tree_attention_profiled.exe: phony
+tree_attention_sparse: phony
+tree_attention_sparse.exe: phony
+tree_attention_tiled: phony
+tree_attention_tiled.exe: phony
+tree_attention_tree_specialized: phony
+tree_attention_tree_specialized.exe: phony
+tree_attention_vectorized: phony
+tree_attention_vectorized.exe: phony
+val_051_2_a_real_token: phony
+val_051_2_a_real_token.exe: phony
+validate_end_to_end: phony
+validate_end_to_end.exe: phony
+witness_system_test: phony
+witness_system_test.exe: phony
+zero_assembly_test: phony
+zero_assembly_test.exe: phony
+build.ninja: RERUN_CMAKE
+D:/rawrxd/build-ninja/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/_deps/nlohmann_json-build/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/reverse_engineering/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/ceo/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/repository/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/generation/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/runtime/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/tests/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/tools/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/validation/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/validation/kernels/cmake_install.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/CTestTestfile.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/tests/CTestTestfile.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/tools/CTestTestfile.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/validation/CTestTestfile.cmake: RERUN_CMAKE
+D:/rawrxd/build-ninja/src/validation/kernels/CTestTestfile.cmake: RERUN_CMAKE
+clean: CLEAN
+help: HELP

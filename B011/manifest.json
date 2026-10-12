@@ -1,0 +1,84 @@
+{
+  "b011_version": "0.1.0",
+  "timestamp": "2026-08-10T01:15:00Z",
+  "project": "RawrXD Inference Engine",
+  "parent_baseline": "B008",
+  "parent_manifest": "B008/manifest.json",
+  "sibling_profiling": "B010",
+  "sibling_profiling_manifest": "B010/manifest.json",
+  "sibling_loop_experiment": "B009",
+  "scope": "Weight Residency Cache (controlled optimization experiment)",
+  "description": "Implement a weight residency cache in StreamingMatMul to eliminate repeated tensor acquisition. B010 counters are preserved to prove the cache changed behavior.",
+  "hypothesis": "Caching dequantized weight tensors in memory after first load will reduce bytes read from 8,971 MB toward ~2,019 MB (model size), reduce map calls from 74,693 toward ~197, and reduce prefill wall time. The ~2,019 MB target is a hypothesis, not a certification criterion.",
+  "success_criteria": {
+    "correctness": {
+      "numerical_equivalence_vs_b008_b009": "PASS required",
+      "t1_decode_preserved": "PASS required"
+    },
+    "residency": {
+      "hit_rate_materially_gt_0": "PASS required",
+      "repeated_acquisitions_reduced": "PASS required",
+      "mapping_activity_reduced": "PASS required"
+    },
+    "performance": {
+      "prefill_wall_time_measured": "required",
+      "acquisition_time_measured": "required",
+      "compute_time_measured": "required",
+      "regression_or_improvement_reported": "required"
+    },
+    "no_regression": {
+      "t1_decode_behavior_preserved": "PASS required"
+    }
+  },
+  "b010_counters_preserved": true,
+  "b010_counters_purpose": "B010 counters prove the cache actually changed behavior. They must NOT be removed.",
+  "design_constraints": [
+    "Cache must not break B008/B009 numerical equivalence",
+    "Cache must not increase memory beyond available RAM",
+    "Cache invalidation strategy needed for multi-model scenarios",
+    "Cache should be opt-in (env var or config flag) for A/B testing",
+    "B010 profiling counters must remain active"
+  ],
+  "certification": {
+    "correctness": "CERTIFIED",
+    "residency_effectiveness": "CERTIFIED",
+    "io_reduction": "CERTIFIED",
+    "mapping_reduction": "CERTIFIED",
+    "cache_mechanism": "CERTIFIED",
+    "performance_improvement": "NOT_YET_DEMONSTRATED"
+  },
+  "gates": {
+    "b011_cache_implementation": {
+      "status": "PASS",
+      "description": "Weight residency cache implemented in StreamingMatMul"
+    },
+    "b011_numerical_equivalence": {
+      "status": "PASS",
+      "description": "Generated token 108 matches B008/B009"
+    },
+    "b011_residency_improvement": {
+      "status": "PASS",
+      "description": "Hit rate 79.96%, 786 hits, maps reduced from 74693 to 197"
+    },
+    "b011_performance_measurement": {
+      "status": "PASS",
+      "description": "Prefill 15501ms, acquisition 0ms, compute 14522ms — regression reported (+25.2% prefill). Performance benefit NOT YET DEMONSTRATED for this benchmark."
+    },
+    "b011_decode_preservation": {
+      "status": "PASS",
+      "description": "T==1 decode produces token 108, same as B008"
+    }
+  },
+  "artifacts": {
+    "manifest": "B011/manifest.json",
+    "report": "B011/B011-REPORT.md",
+    "test_log": "B011/logs/test_run.log",
+    "metrics": "B011/performance/b011_vs_b010.json"
+  },
+  "notes": [
+    "B011 is a controlled experiment, not a guaranteed optimization",
+    "B010 establishes the acquisition pathology; B011 tests whether residency reuse eliminates it",
+    "The ~2,019 MB bytes-read target is a hypothesis, not a pass/fail threshold",
+    "Actual results depend on cache granularity, mapping alignment, and view sharing"
+  ]
+}

@@ -1,0 +1,18 @@
+LIBRARY lockstep_probe
+EXPORTS
+  LockstepNet_Init
+  LockstepNet_Shutdown
+  LockstepNet_SetRemote
+  LockstepNet_SendTickCRC
+  LockstepNet_PollRecv
+  LockstepNet_TryGetRemoteCRC
+  LockstepNet_CheckDesync
+  LockstepNet_CanAdvance
+  LockstepNet_GetLatestRemoteTick
+  Net_PreparePacket
+  Net_VerifySync
+  Net_AdoptRemoteTick
+  Net_GetLocalTick
+  Net_GetLatestRemoteTick
+  Net_GetLocalCRC
+  Net_GetPeerCRC

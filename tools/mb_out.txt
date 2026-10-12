@@ -1,0 +1,27 @@
+=== RAWRXD_NEMOTRON_H_MAMBA2_NUMERIC_PARITY_001 ===
+geometry: d_inner=4096 heads=64 head_dim=64 d_state=128 groups=8 conv_dim=6144 conv_k=4
+ssm_in : z[0,4096) x[4096,8192) B[8192,9216) C[9216,10240) dt[10240,10304) rows=1024
+conv   : x[0,4096) B[4096,5120) C[5120,6144) width=6144
+tokens : 8
+
+--- conv  [6144 x 8] ---
+  cosine=+1.000000000000 rmse=0.000e+00 max_abs=0.000e+00 rel=0.000e+00
+  ref.conv[0..4]  = 0.00140072 0.00149253 0.00156513 0.00161945 0.00165625
+  mine.conv[0..4] = 0.00140072 0.00149253 0.00156513 0.00161945 0.00165625
+  ref.conv[ch1,:]  = 0.00165389 0.00162340 0.00158415
+  mine.conv[ch1,:] = 0.00165389 0.00162340 0.00158415
+--- scan y [4096 x 8] ---
+  cosine=+1.000000000000 rmse=4.174e-11 max_abs=4.948e-10 rel=2.496e-07
+  ref.y[0..5]  = -0.00028086 0.00051487 0.00043748 -0.00040083 -0.00055556 0.00025205
+  mine.y[0..5] = -0.00028086 0.00051487 0.00043748 -0.00040083 -0.00055556 0.00025205
+  ref.st[0..5]  = 0.00033305 0.00033415 0.00033507 0.00033585 0.00033648 0.00033699
+  mine.st[0..5] = 0.00033305 0.00033415 0.00033507 0.00033585 0.00033648 0.00033699
+--- state [128 x 64 x 64] ---
+  cosine=+1.000000000000 rmse=3.253e-11 max_abs=2.328e-10 rel=1.097e-07
+--- state carry, 4 + 4 tokens ---
+  chunk1 y cosine=+1.000000000000 rel=2.485e-07
+  chunk2 y cosine=+1.000000000000 rel=2.668e-07 (continuing from each path's state)
+  chunk2 state cosine=+1.000000000000 rel=1.459e-07
+
+VERDICT=PASS
+Tolerances declared before inspection: cosine >= 0.999999, rel_rmse <= 1e-04

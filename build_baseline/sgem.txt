@@ -1,0 +1,45 @@
+RawrXD GGUF Baseline Capture (TPS blueprint step 01)
+=====================================================
+
+file      : F:\OLLamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf
+sha256    : 2d550cec247578b941e397f4bd4a0d51296eceb6d28b9c6290cd4105b0da5368
+bytes     : 18687061664 (17.40 GB)
+gguf      : magic OK, version 3
+tensors   : 833
+
+--- metadata (37 keys parsed) ---
+architecture            : gemma4
+general.name              : Gemma 4 31B
+tokenizer.ggml.model      : gemma4
+context_length            : 262144
+embedding_length          : 5376
+block_count (layers)      : 60
+attention.head_count      : 32
+feed_forward_length       : 21504
+rope_dim                  : 512
+observer_count            : 1024
+
+--- tensor directory ---
+entries parsed           : 833
+alignment / data start   : 32 / 15830816 (0xf18f20)
+payload bytes            : 18671230848 (17.39 GB, 99.9% of file)
+covered by offsets       : 18671230848 bytes (100.0% of payload)
+
+dtype       tensors           elements          bytes
+Q4_K            355        25268060160    14213283840
+Q6_K             56         5427953664     4452618240
+F32             422            1331772        5328768
+TOTAL             -        30697345596    18671230848
+
+--- expert tensors (auto-detected) ---
+by shape (dim0==count)    : 0 tensors, 0 bytes (0.00 GB)
+by name (token pattern)   : 0 tensors, 0 bytes (0.00 GB)
+expert share of payload   : 0.0%
+
+file_type (declared)    : 15 (MOSTLY_Q6_K/Q5_K_M)
+dominant actual dtype    : Q4_K (14213283840 bytes)
+MISMATCH: declared file_type does not match the dominant tensor dtype.
+          Optimising for the declared type would target the wrong kernel.
+inventory exported         : tensor_inventory.tsv (833 rows)
+
+baseline frozen. Re-run to confirm the digest is stable.

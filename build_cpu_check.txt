@@ -1,0 +1,126 @@
+cpu_inference_engine.cpp
+include\gguf_loader.h(141): error C2065: 'VulkanTensor': undeclared identifier
+include\gguf_loader.h(141): error C2923: 'std::unordered_map': 'VulkanTensor' is not a valid template type argument for parameter '_Ty'
+include\gguf_loader.h(141): note: see declaration of 'VulkanTensor'
+include\gguf_loader.h(141): error C2976: 'std::unordered_map': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\unordered_map(61): note: see declaration of 'std::unordered_map'
+include\gguf_loader.h(141): error C2955: 'std::unordered_map': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\unordered_map(61): note: see declaration of 'std::unordered_map'
+include\gguf_loader.h(177): error C2065: 'VulkanTensor': undeclared identifier
+include\gguf_loader.h(177): error C2923: 'std::unordered_map': 'VulkanTensor' is not a valid template type argument for parameter '_Ty'
+include\gguf_loader.h(177): note: see declaration of 'VulkanTensor'
+include\gguf_loader.h(177): error C2976: 'std::unordered_map': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\unordered_map(61): note: see declaration of 'std::unordered_map'
+include\gguf_loader.h(177): error C2955: 'std::unordered_map': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\unordered_map(61): note: see declaration of 'std::unordered_map'
+src\cpu_inference_engine.cpp(202): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(204): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(220): error C2679: binary '=': no operator found which takes a right-hand operand of type 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' (or there is no acceptable conversion)
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3476): note: could be 'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(const std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &)'
+src\cpu_inference_engine.cpp(220): note: 'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(const std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &)': cannot convert argument 2 from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'const std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &'
+src\cpu_inference_engine.cpp(220): note: Reason: cannot convert from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'const std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>'
+src\cpu_inference_engine.cpp(220): note: No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3362): note: or       'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(std::nullptr_t) noexcept'
+src\cpu_inference_engine.cpp(220): note: 'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(std::nullptr_t) noexcept': cannot convert argument 2 from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'std::nullptr_t'
+src\cpu_inference_engine.cpp(220): note: No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3413): note: or       'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &&) noexcept'
+src\cpu_inference_engine.cpp(220): note: 'initializing': cannot convert from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &&'
+src\cpu_inference_engine.cpp(220): note: Reason: cannot convert from 'std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>' to 'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>'
+src\cpu_inference_engine.cpp(220): note: No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3406): note: or       'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept'
+src\cpu_inference_engine.cpp(220): note: 'std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>> &std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept': could not deduce template argument for '__formal'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3403): note: 'std::enable_if_t<false,int>' : Failed to specialize alias template
+src\cpu_inference_engine.cpp(220): note: while trying to match the argument list '(std::unique_ptr<RawrXD::IGGUFLoader,std::default_delete<RawrXD::IGGUFLoader>>, std::unique_ptr<StreamingGGUFLoader,std::default_delete<StreamingGGUFLoader>>)'
+src\cpu_inference_engine.cpp(299): error C2039: 'loadModel': is not a member of 'RawrXD::CPUInferenceEngine'
+F:\rawrxd\src\cpu_inference_engine.h(79): note: see declaration of 'RawrXD::CPUInferenceEngine'
+src\cpu_inference_engine.cpp(299): error C3861: 'LoadModel': identifier not found
+src\cpu_inference_engine.cpp(315): error C2065: 'm_maxSeqLen': undeclared identifier
+src\cpu_inference_engine.cpp(332): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(349): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(349): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(350): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(354): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(354): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(355): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(358): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(358): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(371): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(427): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(436): error C2511: 'void RawrXD::CPUInferenceEngine::TransformerLayer(const float *,float *,int,int)': overloaded member function not found in 'RawrXD::CPUInferenceEngine'
+F:\rawrxd\src\cpu_inference_engine.h(79): note: see declaration of 'RawrXD::CPUInferenceEngine'
+src\cpu_inference_engine.cpp(439): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(440): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(440): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(440): error C3867: 'RawrXD::CPUInferenceEngine::m_embeddingDim': non-standard syntax; use '&' to create a pointer to member
+src\cpu_inference_engine.cpp(440): error C2568: '*': unable to resolve function overload
+src\cpu_inference_engine.cpp(440): error C2660: 'memcpy': function does not take 2 arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_string.h(43): note: see declaration of 'memcpy'
+src\cpu_inference_engine.cpp(440): note: while trying to match the argument list '(_Ty *, const float *)'
+        with
+        [
+            _Ty=float
+        ]
+src\cpu_inference_engine.cpp(445): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(452): error C2671: 'RawrXD::CPUInferenceEngine::TransformerLayer': static member functions do not have 'this' pointers
+src\cpu_inference_engine.cpp(452): error C2440: '<function-style-cast>': cannot convert from 'initializer list' to 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>'
+src\cpu_inference_engine.cpp(452): note: 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>::<lambda_1>': no overloaded function could convert all the argument types
+src\cpu_inference_engine.cpp(452): note: could be 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>::<lambda_1>(RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1> &&)'
+src\cpu_inference_engine.cpp(452): note: 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>::<lambda_1>(RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1> &&)': cannot convert argument 1 from 'std::string' to 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1> &&'
+src\cpu_inference_engine.cpp(452): note: Reason: cannot convert from 'std::string' to 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>'
+src\cpu_inference_engine.cpp(452): note: No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+src\cpu_inference_engine.cpp(452): note: or       'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>::<lambda_1>(const RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1> &)'
+src\cpu_inference_engine.cpp(452): note: 'RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>::<lambda_1>(const RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1> &)': cannot convert argument 1 from 'std::string' to 'const RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1> &'
+src\cpu_inference_engine.cpp(452): note: Reason: cannot convert from 'std::string' to 'const RawrXD::CPUInferenceEngine::TransformerLayer::<lambda_1>'
+src\cpu_inference_engine.cpp(452): note: No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+src\cpu_inference_engine.cpp(452): note: while trying to match the argument list '(std::string)'
+src\cpu_inference_engine.cpp(454): error C3536: 'ApplyNorm': cannot be used before it is initialized
+src\cpu_inference_engine.cpp(456): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(458): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(458): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_numHeads'
+F:\rawrxd\src\cpu_inference_engine.h(215): note: see declaration of 'RawrXD::CPUInferenceEngine::m_numHeads'
+src\cpu_inference_engine.cpp(460): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(461): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(466): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(467): error C2352: 'RawrXD::CPUInferenceEngine::FeedForward': a call of a non-static member function requires an object
+src\cpu_inference_engine.cpp(325): note: see declaration of 'RawrXD::CPUInferenceEngine::FeedForward'
+src\cpu_inference_engine.cpp(469): error C2597: illegal reference to non-static member 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+F:\rawrxd\src\cpu_inference_engine.h(213): note: see declaration of 'RawrXD::CPUInferenceEngine::m_embeddingDim'
+src\cpu_inference_engine.cpp(483): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(486): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(523): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(527): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(537): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(590): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(635): error C2084: function 'std::vector<int32_t,std::allocator<int>> RawrXD::CPUInferenceEngine::Generate(const std::vector<int32_t,std::allocator<int>> &,int)' already has a body
+F:\rawrxd\src\cpu_inference_engine.h(158): note: see previous definition of 'RawrXD::CPUInferenceEngine::Generate'
+src\cpu_inference_engine.cpp(674): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+src\cpu_inference_engine.cpp(679): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(708): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(735): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(807): error C2039: 'GetTensorData': is not a member of 'RawrXD::IGGUFLoader'
+F:\rawrxd\src\RawrXD_Interfaces.h(157): note: see declaration of 'RawrXD::IGGUFLoader'
+src\cpu_inference_engine.cpp(855): error C2039: 'infer': is not a member of 'RawrXD::CPUInferenceEngine'
+F:\rawrxd\src\cpu_inference_engine.h(79): note: see declaration of 'RawrXD::CPUInferenceEngine'
+src\cpu_inference_engine.cpp(856): error C3861: 'Tokenize': identifier not found
+src\cpu_inference_engine.cpp(860): error C3861: 'GenerateStreaming': identifier not found
+src\cpu_inference_engine.cpp(865): error C2039: 'infer': is not a member of 'RawrXD::CPUInferenceEngine'
+F:\rawrxd\src\cpu_inference_engine.h(79): note: see declaration of 'RawrXD::CPUInferenceEngine'
+src\cpu_inference_engine.cpp(867): error C3861: 'Tokenize': identifier not found
+src\cpu_inference_engine.cpp(871): error C3861: 'GenerateStreaming': identifier not found

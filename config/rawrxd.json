@@ -1,0 +1,25 @@
+{
+  "model_path": "models/",
+  "default_backend": "vulkan",
+  "context_size": 32768,
+  "gpu_device": 0,
+  "log_level": "info",
+  "enable_agent": true,
+  "enable_telemetry": true,
+  "agent": {
+    "max_steps": 10,
+    "auto_recover": true,
+    "require_review": true
+  },
+  "completion": {
+    "debounce_ms": 120,
+    "max_tokens": 64,
+    "temperature": 0.2,
+    "fim_enabled": true
+  },
+  "models": {
+    "scan_on_startup": true,
+    "prefer_vulkan": true,
+    "prefer_hip": false
+  }
+}

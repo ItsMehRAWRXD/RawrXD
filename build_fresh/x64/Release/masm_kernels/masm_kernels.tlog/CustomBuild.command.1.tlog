@@ -1,0 +1,468 @@
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRCODEX.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrCodex.obj F:/rawrxd/src/asm/RawrCodex.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_AGENTICORCHESTRATOR.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_AgenticOrchestrator.obj F:/rawrxd/src/asm/RawrXD_AgenticOrchestrator.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_CAMELLIA256.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Camellia256.obj F:/rawrxd/src/asm/RawrXD_Camellia256.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_CAMELLIA256_AUTH.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Camellia256_Auth.obj F:/rawrxd/src/asm/RawrXD_Camellia256_Auth.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_COPILOTGAPCLOSER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_CopilotGapCloser.obj F:/rawrxd/src/asm/RawrXD_CopilotGapCloser.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_DEBUG_ENGINE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_Debug_Engine.obj F:/rawrxd/src/asm/RawrXD_Debug_Engine.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_ENTERPRISELICENSE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_EnterpriseLicense.obj F:/rawrxd/src/asm/RawrXD_EnterpriseLicense.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_GGUF_VULKAN_LOADER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_GGUF_Vulkan_Loader.obj F:/rawrxd/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_GSIHASH.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_GSIHash.obj F:/rawrxd/src/asm/RawrXD_GSIHash.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_HARDWARESYNTHESIZER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_HardwareSynthesizer.obj F:/rawrxd/src/asm/RawrXD_HardwareSynthesizer.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_HOTPATCH_KERNEL.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Hotpatch_Kernel.obj F:/rawrxd/src/asm/RawrXD_Hotpatch_Kernel.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_KQUANT_KERNEL.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_KQuant_Kernel.obj F:/rawrxd/src/asm/RawrXD_KQuant_Kernel.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_LSP_AI_BRIDGE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_LSP_AI_Bridge.obj F:/rawrxd/src/asm/RawrXD_LSP_AI_Bridge.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_LSP_SYMBOLINDEX.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_LSP_SymbolIndex.obj F:/rawrxd/src/asm/RawrXD_LSP_SymbolIndex.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_LICENSE_SHIELD.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_License_Shield.obj F:/rawrxd/src/asm/RawrXD_License_Shield.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_MESHBRAIN.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_MeshBrain.obj F:/rawrxd/src/asm/RawrXD_MeshBrain.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_MONACOCORE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_MonacoCore.obj F:/rawrxd/src/asm/RawrXD_MonacoCore.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_NEURALBRIDGE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_NeuralBridge.obj F:/rawrxd/src/asm/RawrXD_NeuralBridge.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_OMEGAORCHESTRATOR.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_OmegaOrchestrator.obj F:/rawrxd/src/asm/RawrXD_OmegaOrchestrator.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_PDBKERNEL.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_PDBKernel.obj F:/rawrxd/src/asm/RawrXD_PDBKernel.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_PERFCOUNTERS.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_PerfCounters.obj F:/rawrxd/src/asm/RawrXD_PerfCounters.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_PYRE_COMPUTE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Pyre_Compute.obj F:/rawrxd/src/asm/RawrXD_Pyre_Compute.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_QUADBUFFER_STREAMER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_QuadBuffer_Streamer.obj F:/rawrxd/src/asm/RawrXD_QuadBuffer_Streamer.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_REFPROVIDER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_RefProvider.obj F:/rawrxd/src/asm/RawrXD_RefProvider.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_ROUTERBRIDGE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_RouterBridge.obj F:/rawrxd/src/asm/RawrXD_RouterBridge.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_SELFHOST_ENGINE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_SelfHost_Engine.obj F:/rawrxd/src/asm/RawrXD_SelfHost_Engine.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_SELFPATCH_ENGINE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_SelfPatch_Engine.obj F:/rawrxd/src/asm/RawrXD_SelfPatch_Engine.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_SNAPSHOT.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Snapshot.obj F:/rawrxd/src/asm/RawrXD_Snapshot.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_SOCKETRESPONDER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_SocketResponder.obj F:/rawrxd/src/asm/RawrXD_SocketResponder.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_SPECIATOR.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Speciator.obj F:/rawrxd/src/asm/RawrXD_Speciator.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_STREAMING_QUADBUFFER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Streaming_QuadBuffer.obj F:/rawrxd/src/asm/RawrXD_Streaming_QuadBuffer.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_STUBDETECTOR.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_StubDetector.obj F:/rawrxd/src/asm/RawrXD_StubDetector.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_SWARM_NETWORK.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_Swarm_Network.obj F:/rawrxd/src/asm/RawrXD_Swarm_Network.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_TRIDENTBEACON.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_TridentBeacon.obj F:/rawrxd/src/asm/RawrXD_TridentBeacon.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_TRIDENTBEACON_GPU.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_TridentBeacon_GPU.obj F:/rawrxd/src/asm/RawrXD_TridentBeacon_GPU.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_VULKANBRIDGE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/RawrXD_VulkanBridge.obj F:/rawrxd/src/asm/RawrXD_VulkanBridge.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_WATCHDOG.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/RawrXD_Watchdog.obj F:/rawrxd/src/asm/RawrXD_Watchdog.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\DEFLATE_BRUTAL_MASM.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /I F:/rawrxd/include /FoF:/rawrxd/build_fresh/deflate_brutal_masm.obj F:/rawrxd/src/gpu_masm/deflate_brutal_masm.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\GPU_REQUANTIZE_ROCM.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/gpu_requantize_rocm.obj F:/rawrxd/src/asm/gpu_requantize_rocm.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\NATIVE_SPEED_KERNELS.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /I F:/rawrxd/src/asm /FoF:/rawrxd/build_fresh/native_speed_kernels.obj F:/rawrxd/src/asm/native_speed_kernels.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_COT_DLL_ENTRY.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/rawrxd_cot_dll_entry.obj F:/rawrxd/src/asm/rawrxd_cot_dll_entry.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_COT_ENGINE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/rawrxd_cot_engine.obj F:/rawrxd/src/asm/rawrxd_cot_engine.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\RAWRXD_COT_PHASE39.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/rawrxd_cot_phase39.obj F:/rawrxd/src/asm/rawrxd_cot_phase39.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\REQUANTIZE_Q4KM_TO_Q2K_AVX512.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/requantize_q4km_to_q2k_avx512.obj F:/rawrxd/src/asm/requantize_q4km_to_q2k_avx512.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\SWARM_TENSOR_STREAM.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Zi /Zd /FoF:/rawrxd/build_fresh/swarm_tensor_stream.obj F:/rawrxd/src/asm/swarm_tensor_stream.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\90402EBC75F7F566328F9CC147B637F6\MASM_KERNELS.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_fresh --check-stamp-file F:/rawrxd/build_fresh/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

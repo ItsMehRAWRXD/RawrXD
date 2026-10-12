@@ -1,0 +1,186 @@
+{
+  "positions": 20,
+  "all_match": false,
+  "rows": [
+    {
+      "pos": 0,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "rmse": 0.05256490409374237,
+      "cosine": 0.9999743700027466,
+      "max_abs_diff": 0.25921106338500977
+    },
+    {
+      "pos": 1,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "rmse": 0.21063663065433502,
+      "cosine": 0.9996122121810913,
+      "max_abs_diff": 0.9621467590332031
+    },
+    {
+      "pos": 2,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "rmse": 0.18309248983860016,
+      "cosine": 0.9997280240058899,
+      "max_abs_diff": 0.892054557800293
+    },
+    {
+      "pos": 3,
+      "native_argmax": 13,
+      "ref_argmax": 13,
+      "argmax_match": true,
+      "rmse": 0.1711561530828476,
+      "cosine": 0.9997506737709045,
+      "max_abs_diff": 0.9640598297119141
+    },
+    {
+      "pos": 4,
+      "native_argmax": 4,
+      "ref_argmax": 4,
+      "argmax_match": true,
+      "rmse": 0.1366809457540512,
+      "cosine": 0.9998668432235718,
+      "max_abs_diff": 0.7367935180664062
+    },
+    {
+      "pos": 5,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.18163320422172546,
+      "cosine": 0.9997055530548096,
+      "max_abs_diff": 0.8633279800415039
+    },
+    {
+      "pos": 6,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.2764368951320648,
+      "cosine": 0.9994574189186096,
+      "max_abs_diff": 1.1991548538208008
+    },
+    {
+      "pos": 7,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.25214338302612305,
+      "cosine": 0.9994293451309204,
+      "max_abs_diff": 1.1693692207336426
+    },
+    {
+      "pos": 8,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.18276624381542206,
+      "cosine": 0.9997050762176514,
+      "max_abs_diff": 0.8363723754882812
+    },
+    {
+      "pos": 9,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.30255675315856934,
+      "cosine": 0.9995288252830505,
+      "max_abs_diff": 1.2446613311767578
+    },
+    {
+      "pos": 10,
+      "native_argmax": 24,
+      "ref_argmax": 24,
+      "argmax_match": true,
+      "rmse": 0.2519720792770386,
+      "cosine": 0.9993709921836853,
+      "max_abs_diff": 1.367904543876648
+    },
+    {
+      "pos": 11,
+      "native_argmax": 12,
+      "ref_argmax": 12,
+      "argmax_match": true,
+      "rmse": 0.39271482825279236,
+      "cosine": 0.9947700500488281,
+      "max_abs_diff": 1.251139521598816
+    },
+    {
+      "pos": 12,
+      "native_argmax": 16,
+      "ref_argmax": 16,
+      "argmax_match": true,
+      "rmse": 0.4095908999443054,
+      "cosine": 0.9978525638580322,
+      "max_abs_diff": 1.3886420726776123
+    },
+    {
+      "pos": 13,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.7211436629295349,
+      "cosine": 0.994030237197876,
+      "max_abs_diff": 2.0161526203155518
+    },
+    {
+      "pos": 14,
+      "native_argmax": 15,
+      "ref_argmax": 15,
+      "argmax_match": true,
+      "rmse": 0.4046774208545685,
+      "cosine": 0.9975476861000061,
+      "max_abs_diff": 1.5190296173095703
+    },
+    {
+      "pos": 15,
+      "native_argmax": 15,
+      "ref_argmax": 16,
+      "argmax_match": false,
+      "rmse": 0.24916794896125793,
+      "cosine": 0.9993802905082703,
+      "max_abs_diff": 1.060887336730957
+    },
+    {
+      "pos": 16,
+      "native_argmax": 26644,
+      "ref_argmax": 26644,
+      "argmax_match": true,
+      "rmse": 0.2611636519432068,
+      "cosine": 0.9989544749259949,
+      "max_abs_diff": 1.3020248413085938
+    },
+    {
+      "pos": 17,
+      "native_argmax": 12,
+      "ref_argmax": 12,
+      "argmax_match": true,
+      "rmse": 0.28781968355178833,
+      "cosine": 0.9972356557846069,
+      "max_abs_diff": 1.3700265884399414
+    },
+    {
+      "pos": 18,
+      "native_argmax": 185,
+      "ref_argmax": 185,
+      "argmax_match": true,
+      "rmse": 0.3198590874671936,
+      "cosine": 0.996748685836792,
+      "max_abs_diff": 1.3114113807678223
+    },
+    {
+      "pos": 19,
+      "native_argmax": 317,
+      "ref_argmax": 317,
+      "argmax_match": true,
+      "rmse": 0.26306357979774475,
+      "cosine": 0.9994350671768188,
+      "max_abs_diff": 1.020721197128296
+    }
+  ]
+}

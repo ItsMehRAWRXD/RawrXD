@@ -1,0 +1,20 @@
+authority_bisect.cpp
+ModelGenieExecutor.cpp
+ModelGenieExecutor.cpp(111): warning C4477: 'fprintf' : format string '%zu' requires an argument of type 'unsigned __int64', but variadic argument 1 has type 'int'
+ModelGenieExecutor.cpp(111): note: consider using '%u' in the format string
+ModelGenieExecutor.cpp(111): note: consider using '%I32u' in the format string
+ModelGenieExecutor.cpp(112): warning C4477: 'snprintf' : format string '%zu' requires an argument of type 'unsigned __int64', but variadic argument 1 has type 'int'
+ModelGenieExecutor.cpp(112): note: consider using '%u' in the format string
+ModelGenieExecutor.cpp(112): note: consider using '%I32u' in the format string
+ModelGenieExecutor.cpp(114): warning C4477: 'snprintf' : format string '%zu' requires an argument of type 'unsigned __int64', but variadic argument 1 has type 'int'
+ModelGenieExecutor.cpp(114): note: consider using '%u' in the format string
+ModelGenieExecutor.cpp(114): note: consider using '%I32u' in the format string
+ModelGenieExecutor.cpp(117): warning C4477: 'snprintf' : format string '%zu' requires an argument of type 'unsigned __int64', but variadic argument 1 has type 'int'
+ModelGenieExecutor.cpp(117): note: consider using '%u' in the format string
+ModelGenieExecutor.cpp(117): note: consider using '%I32u' in the format string
+ModelGenieRuntime.cpp
+ModelGenome.cpp
+ModelGenomeReader.cpp
+gguf_embedded_tokenizer.cpp
+Generating Code...
+   Creating library auth_bisect.lib and object auth_bisect.exp

@@ -1,0 +1,13 @@
+﻿{
+    "id":  "AGENT-E2E-002",
+    "WIN32IDE_EXE_SHA256":  "377A6DE7FA3A5FB2F1EC69C760578956F7C7F781B26581979B5A808AEC9F41A4",
+    "authority":  "NOT_CERTIFIED",
+    "next":  "AGENT-E2E-002b GGUF-directed diverse repairs",
+    "modelGapFixture":  "09_logic_bug_model",
+    "repairMechanism":  "deterministic_demo_break_prepass",
+    "spinePass":  "8/8",
+    "modelGapResult":  "PASS_AS_EXPECTED_MODEL_GAP",
+    "evidenceRoot":  "evidence/AGENT_E2E_002",
+    "status":  "CANDIDATE_PASS",
+    "agentPath":  "--autofix / QuantumOrchestrator::executeAutoFix"
+}

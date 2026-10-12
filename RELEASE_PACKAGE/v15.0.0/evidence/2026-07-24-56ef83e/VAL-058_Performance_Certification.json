@@ -1,0 +1,77 @@
+{
+  "id": "VAL-058",
+  "name": "Performance Certification",
+  "timestamp": "2026-07-24T13:20:00Z",
+  "status": "IN_PROGRESS",
+  "claim": "RawrXD inference meets performance baselines for production deployment",
+  "prerequisites": ["VAL-057"],
+  "observation_target": {
+    "hardware": "AMD Ryzen 7 7800X3D",
+    "memory": "64GB DDR5",
+    "model": "70b_simulation.gguf",
+    "quantization": "Q4_0",
+    "context_length": 128
+  },
+  "performance_metrics": {
+    "prompt_processing": {
+      "description": "Tokens per second during prompt encoding",
+      "target_tps": 500,
+      "measured_tps": null,
+      "status": "PENDING"
+    },
+    "generation_throughput": {
+      "description": "Tokens per second during autoregressive generation",
+      "target_tps": 50,
+      "measured_tps": null,
+      "status": "PENDING"
+    },
+    "time_to_first_token": {
+      "description": "Latency from prompt submission to first output token",
+      "target_ms": 1000,
+      "measured_ms": null,
+      "status": "PENDING"
+    },
+    "memory_bandwidth": {
+      "description": "Effective memory bandwidth utilization",
+      "target_percent": 70,
+      "measured_percent": null,
+      "status": "PENDING"
+    }
+  },
+  "benchmark_configuration": {
+    "warmup_runs": 3,
+    "measurement_runs": 10,
+    "prompts": [
+      "The capital of France is",
+      "In the year 2050, artificial intelligence has",
+      "Once upon a time in a land far away"
+    ],
+    "max_tokens": 50,
+    "sampling": "greedy"
+  },
+  "execution_results": {
+    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "benchmark_runs": 0,
+    "average_prompt_tps": null,
+    "average_generation_tps": null,
+    "average_ttft_ms": null,
+    "memory_bandwidth_utilization": null,
+    "status": "PENDING"
+  },
+  "evidence_path": "evidence/2026-07-24-56ef83e/performance_benchmark.json",
+  "verification_method": "Automated benchmark suite with statistical sampling",
+  "success_criteria": [
+    "Prompt processing >= 500 TPS",
+    "Generation throughput >= 50 TPS",
+    "Time to first token <= 1000ms",
+    "Memory bandwidth >= 70%",
+    "Consistent results across 10 runs"
+  ],
+  "notes": [
+    "VAL-058 marks transition from correctness to optimization phase",
+    "Performance baselines established for production readiness",
+    "Benchmarks run on validated inference substrate (VAL-050 through VAL-057)",
+    "Statistical sampling ensures reproducible measurements"
+  ],
+  "next_step": "VAL-059: Backend Equivalence"
+}

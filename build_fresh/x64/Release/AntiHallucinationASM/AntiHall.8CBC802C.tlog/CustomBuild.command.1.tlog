@@ -1,0 +1,28 @@
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\87C46B64C7E8AAC2F70D9E5C2905CABF\ANTIHALLUCINATIONHOTPATCHER.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /Fo F:/rawrxd/build_fresh/AntiHallucinationHotPatcher.obj F:/rawrxd/src/sovereign/patcher/AntiHallucinationHotPatcher.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\90402EBC75F7F566328F9CC147B637F6\ANTIHALLUCINATIONASM.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_fresh --check-stamp-file F:/rawrxd/build_fresh/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

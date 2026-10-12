@@ -1,0 +1,84 @@
+{
+  "id": "VAL-060",
+  "name": "Release Freeze",
+  "timestamp": "2026-07-24T13:20:00Z",
+  "status": "IN_PROGRESS",
+  "claim": "RawrXD inference runtime is production-ready with reproducible builds and regression suite",
+  "prerequisites": ["VAL-059"],
+  "observation_target": {
+    "release_candidate": "v1.0.0-rc1",
+    "target_date": "2026-07-31",
+    "platforms": ["Windows", "Linux"],
+    "architectures": ["x64", "ARM64"]
+  },
+  "release_criteria": {
+    "reproducible_builds": {
+      "description": "Same source produces bit-identical binaries",
+      "requirement": "SHA256 match across clean builds",
+      "status": "PENDING"
+    },
+    "artifact_manifest": {
+      "description": "Complete manifest of all release artifacts",
+      "artifacts": [
+        "RawrXD-Win32IDE.exe",
+        "RawrXD-CLI.exe",
+        "libRawrXD.so",
+        "include/*.h",
+        "docs/API.md"
+      ],
+      "status": "PENDING"
+    },
+    "regression_suite": {
+      "description": "Automated tests covering VAL-050 through VAL-059",
+      "tests": [
+        "startup_smoke",
+        "launch_witness",
+        "component_lifecycle",
+        "gguf_identity",
+        "tokenizer_execution",
+        "forward_execution",
+        "kv_cache_correctness",
+        "sampling_determinism",
+        "performance_benchmark",
+        "backend_equivalence"
+      ],
+      "status": "PENDING"
+    },
+    "production_contract": {
+      "description": "API and behavior guarantees for production use",
+      "guarantees": [
+        "No breaking API changes in v1.x",
+        "Deterministic output for fixed seeds",
+        "KV cache isolation between sessions",
+        "Memory limits respected",
+        "Timeout handling on all operations"
+      ],
+      "status": "PENDING"
+    }
+  },
+  "execution_results": {
+    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "build_reproducible": false,
+    "manifest_complete": false,
+    "regression_pass_rate": 0,
+    "production_ready": false,
+    "status": "PENDING"
+  },
+  "evidence_path": "evidence/2026-07-24-56ef83e/release_freeze.json",
+  "verification_method": "Complete validation chain execution + release checklist",
+  "success_criteria": [
+    "Reproducible builds verified (SHA256 match)",
+    "Artifact manifest complete and signed",
+    "Regression suite 100% pass rate",
+    "Production contract documented",
+    "Release notes published",
+    "Git tag created (v1.0.0-rc1)"
+  ],
+  "notes": [
+    "VAL-060 is the final gate before production release",
+    "All previous gates (VAL-050 through VAL-059) must pass",
+    "Release freeze means no feature changes, only critical fixes",
+    "Production contract establishes long-term API stability"
+  ],
+  "next_step": "Production Release v1.0.0"
+}

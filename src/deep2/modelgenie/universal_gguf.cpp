@@ -597,6 +597,10 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
     pick("expert_used_count", s.expert_used);
     pick("expert_shared_count", s.expert_shared);
     pick("expert_feed_forward_length", s.expert_ffn);
+    s.expert_weights_norm =
+        GetU(m, p + "expert_weights_norm", GetU(m, "expert_weights_norm", 0)) != 0;
+    s.expert_weights_scale =
+        GetD(m, p + "expert_weights_scale", GetD(m, "expert_weights_scale", 0.0));
     pick("attention.kv_lora_rank", s.kv_lora_rank);
     pick("attention.key_length", s.key_length);
     pick("attention.value_length", s.value_length);

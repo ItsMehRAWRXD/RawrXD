@@ -1,0 +1,40 @@
+=== RAWRXD_VULKAN_ROPE_CORRECTNESS_001 ===
+
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+VULKAN_DEVICE=AMD Radeon AI PRO R9700
+RoPE pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 256 bytes
+Allocated buffer 1 with 256 bytes
+deep2_k_pe_pos0            dim=64  pos=0  rot=64  cos=+1.0000000000 rel=0.00e+00 max=0.00e+00 finite=1 PASS
+Allocated buffer 2 with 256 bytes
+Allocated buffer 3 with 256 bytes
+deep2_k_pe_pos1            dim=64  pos=1  rot=64  cos=+1.0000000000 rel=6.49e-08 max=1.19e-07 finite=1 PASS
+Allocated buffer 4 with 256 bytes
+Allocated buffer 5 with 256 bytes
+deep2_k_pe_pos7            dim=64  pos=7  rot=64  cos=+1.0000000000 rel=2.17e-07 max=6.85e-07 finite=1 PASS
+Allocated buffer 6 with 512 bytes
+Allocated buffer 7 with 512 bytes
+deep2_partial_rot          dim=128 pos=3  rot=64  cos=+1.0000000000 rel=5.97e-08 max=1.79e-07 finite=1 PASS
+Allocated buffer 8 with 768 bytes
+Allocated buffer 9 with 768 bytes
+deep2_full_k_no_tail_touch dim=192 pos=5  rot=64  cos=+1.0000000000 rel=5.57e-08 max=2.61e-07 finite=1 PASS
+Allocated buffer 10 with 256 bytes
+Allocated buffer 11 with 256 bytes
+deep2_late_pos             dim=64  pos=63 rot=64  cos=+1.0000000000 rel=1.04e-06 max=2.29e-06 finite=1 PASS
+Allocated buffer 12 with 264 bytes
+Allocated buffer 13 with 264 bytes
+odd_dim_tail               dim=66  pos=2  rot=64  cos=+1.0000000000 rel=4.40e-08 max=5.96e-08 finite=1 PASS
+
+SHAPES_PASSED=7/7
+VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

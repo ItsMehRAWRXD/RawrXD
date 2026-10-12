@@ -1,0 +1,4 @@
+{
+  "certification_target_count": 3,
+  "certification_targets": "VAL038_Validation_Benchmark;witness_system_test;nevm_determinism_validation"
+}

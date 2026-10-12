@@ -1,0 +1,1496 @@
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GGML-VULKAN-SHADERS.HPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ABS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/abs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/abs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/abs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7f36d32a4c892cee937217dbce88012f37478e8b20b40f1a2f04944aac4347fd.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ACC.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/acc.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/acc.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/acc.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/38fdf8beefa887bc21c88e40a1295ac10bcfd9f14f5433c9ac718f6a3a5b1cd2.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ADD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/add.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/add.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/add.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7acea45d0cbed32009c53f39b386d3650ec67458329f9b1a19a3ac7afcbe5c1f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ADD_ID.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/add_id.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/add_id.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/add_id.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/2561680d5f2495540c4639cefde4b5e562f6c3afe8d42f097d1085a1b9d8d272.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ARGMAX.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/argmax.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/argmax.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/argmax.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/8e9f998421f1396f971988776bb62512a5b9edc511df302db2dde5b0798856a3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ARGSORT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/argsort.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/argsort.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/argsort.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/3784dbde872bb0f0d139a98cb124bbdc2892245285a242020e2942a1d49eee83.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\CLAMP.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/clamp.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/clamp.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/clamp.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7c64b128e245cb88b7ef78142f4aa99a8e4201bd476be4d45163293e261bfd25.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\CONCAT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/concat.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/concat.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/concat.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/4a22f269a3f004a0951d340a23b5e0fca84164770d7f9a531ca5a3db732ccd8d.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\CONTIG_COPY.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/contig_copy.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/contig_copy.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/contig_copy.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/bf7c7141508a7c42d89430b4a4ac5fc8a338101f623352f72d69ee3847cc60d3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\CONV2D_DW.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/conv2d_dw.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/conv2d_dw.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/conv2d_dw.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/97663e4121fc26fc988743d9be0ece65d3461c356c1fe7215e30a03dc62e2aad.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\CONV2D_MM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/conv2d_mm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/conv2d_mm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/conv2d_mm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/df8dfa0285ee5324f7de6a2aa77b49ef124c0c66e352624dead59629074f0b1c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\CONV_TRANSPOSE_1D.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/conv_transpose_1d.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/conv_transpose_1d.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/conv_transpose_1d.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c8c0959e5ffe496fbe8cde334affc6ae8075d6e306c46564c8296bbabf7e4d38.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\COPY.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/copy.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/copy.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/copy.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/ff12d0b568bcd05273a086a21b2ebb41ab470d0e17a296d29f07eb903b3a63d7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\COPY_FROM_QUANT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/copy_from_quant.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/copy_from_quant.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/copy_from_quant.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/80d77b85aaf97f7366343f0409ec0400431e8a1251282967d12baa105598b0ec.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\COPY_TO_QUANT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/copy_to_quant.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/copy_to_quant.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/copy_to_quant.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/639669767a2fd285177c0df32b1f064c20af219279ec431f1b7808352818e9c1.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\COS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/cos.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/cos.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/cos.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/4ade16a947c10451be7018bd4fef707e8ef500cb0a6f859ca0f07411a980f723.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\COUNT_EQUAL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/count_equal.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/count_equal.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/count_equal.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/ae9a06fe73ef39c5c08c43a55c0d0264e3626029777e9b9343ede86ce1f5baec.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_F32.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_f32.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_f32.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_f32.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/79c0a0f16fde0607b69ff7c091e607e55d49569d8964dd9f37e3fbb1cfe45e48.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ1_M.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq1_m.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_m.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_m.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/d5cee3006eb12d19d4bc88c1bfc9e750db80d4a6095820e665f4249f6b359f2c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ1_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq1_s.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_s.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a1e0dcc741acb32dea496b68d4cc091d616dd626b6efc42650079f6895818f49.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ2_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq2_s.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_s.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/eb83015fd096749a73c431c0406b136929765b8ee1558c0bf89e1278d5344f04.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ2_XS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq2_xs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/db1fcb803a5ed6858f9057bcbeaedda6fe5f1b6674e110dc5fbaf53b2002fec3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ2_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq2_xxs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xxs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/5e75396f849c8935177dbb9c9823594dc77787542d2bf6b6009a553a40a82cc1.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ3_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq3_s.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_s.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/e143005c717cf5879e66f3178007ea4c8275d131ac000ba2556692d567e569cf.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ3_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq3_xxs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_xxs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c9d109b1993e146455e96710d3cb066473cc5ea07c0375c8d50609387e4783ca.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ4_NL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq4_nl.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_nl.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_nl.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/87c3da47bdfb367c92728f3c70279fbb09cdec7452178b8ecbcf009dd6ac0cad.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_IQ4_XS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq4_xs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_xs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_xs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/b35278a715b904021229f0dce6404fa776928adb959c6f9c6a451f8af6eb4907.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_MXFP4.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_mxfp4.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_mxfp4.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_mxfp4.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/59d00ff43ac63be6da622ae33da5af58a95f7dce63cfb80df6551f534fa41219.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q2_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q2_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q2_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q2_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/26c206b8e14f2cd978545818365000488427ca7b88ffc0a8e31040944eb0b091.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q3_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q3_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q3_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q3_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/fca73a8ce6e865a2a34694ec3d31f30f0fdc79e8216eda348f905175d10084c5.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q4_0.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q4_0.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q4_0.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q4_0.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/8b3f131833b4a4d089804654b58f7f3456ba90501e4e5e486189463c1f47a243.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q4_1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q4_1.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q4_1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q4_1.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7bb01d17328de3ff420e5396acea38dbd11ccbcd5e906167c207834b9944f7b2.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q4_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q4_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q4_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q4_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/b57d01c5589ed991f356bd745ae1ccbd20957e5df49e5683283a44b5280f1be7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q5_0.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q5_0.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q5_0.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q5_0.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/b78b3e4c2826f478e5cb24524a5ea592d183a4036dfecf825b1f082e2053ed28.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q5_1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q5_1.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q5_1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q5_1.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c21b28e94890f4554d67a0bf31abbe4e5ac8e19cd5f31c0112b3df4fc02a5cef.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q5_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q5_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q5_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q5_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/fc7234fe03d148de8345bcdc03f53a975cccd6db61bbb5b0b6c5f7628d88dc96.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q6_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q6_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q6_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q6_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/807b2cce7ec7acd3b11143a90791fc33a8947ac23d0ea90094a092c0bcde72f7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DEQUANT_Q8_0.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q8_0.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/dequant_q8_0.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/947de061f887f8911554cbb3b6e60ea4dc28d7a888f751e797452ada7d80232c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DIAG_MASK_INF.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/diag_mask_inf.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/diag_mask_inf.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/diag_mask_inf.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/79987477543fbe1f3a03d884c1774e9e10cecd6d9a458916be0c0014c406ba96.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\DIV.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/div.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/div.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/div.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/629787e88ba8d3e3fa8a6ca8765c9d6dc0d84589e6a69fe22bf2ce0bee97f98c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\EXP.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/exp.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/exp.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/exp.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/d5c61aeb80f452468b5bd386b51ef5ec7e8e41c95a74d903b6595533b7fe8eb6.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\FLASH_ATTN.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7accf8eb85fc681c22ccf2a0f3ce292cb659192a84387d5902933b892454fb04.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\FLASH_ATTN_CM1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm1.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/b9955068494bb1176637ebf34873cc43eb0e45a5855466060786f130edd23b18.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\FLASH_ATTN_CM2.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm2.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm2.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm2.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/375188cf59eeb2c8d746abe366eb1d25cc83300d04fb20ff342f3d849f804b6e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\FLASH_ATTN_SPLIT_K_REDUCE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_split_k_reduce.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn_split_k_reduce.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/flash_attn_split_k_reduce.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/389e2d30395b91df1a568de3bc037bb1caa7fdc4d4a9b86f66c6f935f2c192d7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GEGLU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/geglu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/geglu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/geglu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/fdc7720b042673d332190919f11aff856adf0d546888ef8333ba0aeccd86678a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GEGLU_ERF.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/geglu_erf.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/geglu_erf.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/geglu_erf.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/b9e11e7398ee21f5cd227f3a8b334f977fc021a92b9f6e896b38d2823c2982b7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GEGLU_QUICK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/geglu_quick.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/geglu_quick.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/geglu_quick.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/f11744cbd6b00b91cba532db3d79ba544688dda51e8a97dfa703dcf6cdc0c996.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GELU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/gelu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/gelu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/gelu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/2376fda756c3146b53925b77c214303339b354ad5bd63b5b471d522e240e09db.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GELU_ERF.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/gelu_erf.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/gelu_erf.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/gelu_erf.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/b349bdf831e99b80e0b62a9568c6be0cb27647262e4de05553607d188b03f4ff.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GELU_QUICK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/gelu_quick.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/gelu_quick.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/gelu_quick.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/5648b972181b61a757f9c118db0aaa794a82d632e38b070ff71d56b838e11828.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GET_ROWS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/get_rows.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/get_rows.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/get_rows.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/6e8e6cbca3df07f1f8d4434ac646cf94afc5b80535d943e4330a72ac55a07df8.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GET_ROWS_QUANT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/get_rows_quant.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/get_rows_quant.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/get_rows_quant.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7870deb7b297d1ce008f3427f668dd1f365809fca1cb5e095351663c3fbd49b7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\GROUP_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/group_norm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/group_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/group_norm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/6e8890d69955f31fef3c3f045f0ae95767e0fa317ff33c5a25e05da53c4a9c37.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\HARDSIGMOID.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/hardsigmoid.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/hardsigmoid.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/hardsigmoid.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/125f0f49b00f5cacb8baa7d916cf9a53b02098ca4d3bab0a9a8106d1fb231a64.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\HARDSWISH.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/hardswish.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/hardswish.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/hardswish.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/3b953d3cd9c753b4f0b7c8a80ee953c54cec800e7f6cbda5add664a4893463b4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\IM2COL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/im2col.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/im2col.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/im2col.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/170fb06a0d5d76033f537377b89ef0f101129d89bd28825f7c0b10a5871a7a94.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\IM2COL_3D.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/im2col_3d.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/im2col_3d.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/im2col_3d.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a9fa7affe8c03d28356d7de1bfccdab263664cb8dbb328984206771b47eba095.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\L2_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/l2_norm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/l2_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/l2_norm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c632d49c40a8fa9048d62b58e4f1f86f86d0f81cbbeba02a23670a05c8f35624.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\LEAKY_RELU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/leaky_relu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/leaky_relu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/leaky_relu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/0b02d7a007566f8e892bfdcfebc8d733f4e3b69babf6f8a6b7ae1c5eb764f5b5.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\LOG.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/log.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/log.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/log.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/4bf010f482f18323c8a9e6d88c07a04e01080a88191a34ca5bed75999a5ff75f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/fd7b5b868c9ac178e7d32f59d47fa035a553d62970f43aa4952f5603f966e797.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_SPLIT_K_REDUCE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_split_k_reduce.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_split_k_reduce.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_split_k_reduce.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/f96e0fa5f3bb151a18ac7bf82a690abe306d8275c1ea3eb353e0984aeb68dffa.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c0832f228a4840548b69ec661916b5bf240563f980b96ab01fcd2a7d61724708.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ1_M.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq1_m.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_m.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_m.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/93c7772c73274dcd9748f9a7dcd32b1ac7944443f1a3813aa600faabaa8417e8.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ1_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq1_s.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_s.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c30995efc729ce5f7dd1490d037d7fcbceeb20ad7c561cfd4221299f377fd83e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ2_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq2_s.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_s.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/77241749375f4668611398a936acef39e9a99d95483129f1aa044a31d49f9e5c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ2_XS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq2_xs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/11275c31b3dfebef3abd8d76caf0262c727d4ca1f99ad9d5d3d0eb76f0b27a43.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ2_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq2_xxs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xxs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/5c2db8bddc0ccd22997b04c6e7bf3814159bacab3fbd40a5fb594b33ca93cfb4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ3_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq3_s.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_s.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/32f4dfa2d2fbf503bbedaccbe86edac8ff451515ef9a43d258be29d4badbe023.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_IQ3_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq3_xxs.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_xxs.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/9f958e2b17314e6a2c736a3b22a87b1825d95cab70b7c4458ff83283219ab2ed.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_NC.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_nc.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_nc.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_nc.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/9a90204377fa2f1f486011b4e6def7e1095d9e7b42fb124f9719fd21539cc62d.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_P021.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_p021.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_p021.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_p021.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/04572e200481fa1ea1b9edbb879c8f962b1bf0f27a677e9016fcb06b19f1333c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_Q2_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q2_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q2_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q2_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c23a962d21e6c8ecceb35556fe034c7393f6b68af5b9296d549e84bdf6278536.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_Q3_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q3_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q3_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q3_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/50d332670728a746deaf2bc7c61ce3d9dceca3ede4890e5b6d6f26223f16d9bf.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_Q4_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q4_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q4_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q4_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/4df83afae59d5bac34ee11fa46faa9b1d629d4e7446437267b937aa7ba1b9e4e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_Q5_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q5_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q5_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q5_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/3b083ad2fb711ce460984c6aa17b097dc354781ac224304c166bcd0be5795413.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VEC_Q6_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q6_k.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q6_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q6_k.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/dcb7f671e8ab2c843ec10bd3bf7beeb1240d38a5e2a50cbfeb434edd81e3bb08.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MAT_VECQ.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vecq.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vecq.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mat_vecq.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/35d9449c199e50130ce69a18f19958c0517fb78c5d0460259db266b8eb9f3bca.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a18c8cc1abacbba993b4e68f446525ddeb3e0705a9fb74f0357ada1b68a3d9aa.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MM_CM2.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mm_cm2.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mm_cm2.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mm_cm2.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/abc4960d9e889cb8300a6d41d2800be7f5bd31d29f3916aaaf2134a19771ab57.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MUL_MMQ.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mmq.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/mul_mmq.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/1a2e82490de808fdce7cd53af581d006cdb340f1a37f7c74ee64030133cdfbf8.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\MULTI_ADD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/multi_add.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/multi_add.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/multi_add.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/dfac2e4d016720ec36d1f1762283a8f75afac023db45f2694acfd5c97d2fc61c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\NEG.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/neg.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/neg.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/neg.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/d4e247cc3aa12e34906d1f05debdd852a2dcbb64f8e4e128ba9283d2afac21ca.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/norm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/norm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/3ddb0657bfe359e36d8c0b89f826689431d570da34060c1707fd15a7b490e4d1.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\OPT_STEP_ADAMW.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/opt_step_adamw.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/opt_step_adamw.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/opt_step_adamw.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7a4c6771e90a69f8ac75af48cce5d8b55cecf12b27828e235eaa9d20b48cde0b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\OPT_STEP_SGD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/opt_step_sgd.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/opt_step_sgd.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/opt_step_sgd.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/2e32b899b7029adf8e7a44de89a036b228de9132bac6eab90a938ccd5502e64b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\PAD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/pad.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/pad.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/pad.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a082e115b297e21860d5ab01e0b2f2d18b707ccce0afd482c54e117443400569.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\POOL2D.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/pool2d.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/pool2d.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/pool2d.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/1dcf9d07250b567b7cf59a3056cc941090fc8f7ffbed13dd7352a05ff816731e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\QUANTIZE_Q8_1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/quantize_q8_1.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/quantize_q8_1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/quantize_q8_1.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/d00d3682396d371b18815a5e2dabce0ec5fb81e09cdaba7257badf019f4224b4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\REGLU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/reglu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/reglu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/reglu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/ca9e6c854cc0090181aa3e67ecc83c02d8f211dac122a694716e7704c93445a9.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\RELU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/relu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/relu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/relu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/335962f90deb09e39a9d1d0d405a0dfdb03b64c161773e6f8b7b97bb8f7508e7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\REPEAT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/repeat.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/repeat.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/repeat.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/8fc19dfd7c19bbbf2223c145d6e1bedd6a13d554dd1ba5e8a87aef984caa5cbc.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\REPEAT_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/repeat_back.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/repeat_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/repeat_back.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/86b230579c9195da3ede7e1545cfe548c17c74437f780dfaf4370e880a893859.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\RMS_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rms_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rms_norm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/0e8279c42a16f48c6eaf1bbb4e86169d2763dfe7ff1d794211b43446174c0c5b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\RMS_NORM_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm_back.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rms_norm_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rms_norm_back.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/c8a1ab00fcd4ed5e177c1d7db00693ce9a945a096c8ecd8dd417679eb7bc7391.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\RMS_NORM_PARTIALS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm_partials.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rms_norm_partials.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rms_norm_partials.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a379dc55ee141d3b04ad03d73dc825bd9da2ebd909f43e99261ebffe860eddaf.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ROLL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/roll.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/roll.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/roll.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/20930fbc6165f958d5ee4585ce5f4084871ab9fa513aef2ad3d83d15e70b6be5.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ROPE_MULTI.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_multi.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_multi.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_multi.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/d80c343d4addb613c6904449df58afd116465ab99bb10c5f1591ac5f2b9f9fbf.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ROPE_NEOX.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_neox.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_neox.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_neox.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/039aa7665e0f15ee1965754b00f2987292be12db090a42f5594e59e27b7fd646.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ROPE_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_norm.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_norm.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a4f4d0c2698e702c76c72daabb2a0803c3def42997d28ff7f0dd0f1a74e1c89a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\ROPE_VISION.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_vision.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_vision.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/rope_vision.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/304d16299ecde050737221f090cdc85489c42cc4bbefa360a1b5b5f1e2e3b2f0.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SCALE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/scale.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/scale.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/scale.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/99ed1164dcd616f12ac223db86f58fd206c4b49d85a0f1b576f07a2e736e8ed5.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SIGMOID.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sigmoid.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sigmoid.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sigmoid.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/489184d9303161ce047e17588372960b4989d256e3fec3de4fb42ffa43a0f4d7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SILU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/silu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/silu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/silu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/458153eb228819f3a4cb57c5b2921c896c5ced6b9b60fc3081cd9b6bd7ddf072.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SILU_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/silu_back.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/silu_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/silu_back.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/57bc24e528182e40624a8a490cd67c29141448fd95a99514a0e76e3a8ea18ca9.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SIN.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sin.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sin.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sin.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/e6ed97533f20064947d3efb60ff0f35e27add198a1fc6ff46aab8c5b1c55042f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SOFT_MAX.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/soft_max.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/soft_max.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/soft_max.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/99c91e30d1ab4cd18bb4306ce1cba95f57b2c3a65e9101cb70d972331440ba53.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SOFT_MAX_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/soft_max_back.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/soft_max_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/soft_max_back.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/7e865e736ca82059ccda823859f29778e5d4f6a2483ce2564da867ddb9f2ce8f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SQRT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sqrt.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sqrt.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sqrt.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/117ffd6d007476a3373bb2c14849e5c0492c3baef2e80c3a3b4ec205da54d86b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SQUARE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/square.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/square.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/square.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/8e4a6001e176995448cc7b7edde99b6097211b445e73778fc9d1409410585aeb.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SSM_CONV.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/ssm_conv.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ssm_conv.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ssm_conv.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/680e347393747bd13077b4296555a213be2efd9670e07f6da2e090a290112745.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SSM_SCAN.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/ssm_scan.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ssm_scan.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ssm_scan.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/34f92fa1b70202e5695ba5c616aa541cb27160044593d1b4d7f917f49a6747cc.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SUB.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sub.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sub.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sub.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/a689ed21fd4b380e0a3979db46328b89ef4ac420f5bff52299e0a842cd028e1a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SUM_ROWS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sum_rows.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sum_rows.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/sum_rows.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/423f2e2e31fb0da70d4e85d418a54f606064b224f907254d7c1356f575d47c9c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SWIGLU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/swiglu.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/swiglu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/swiglu.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/abf162b1571378ffafd689f7f5d2135878b6dcf468ad43ab36aeafcb1f1e675c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\SWIGLU_OAI.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/swiglu_oai.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/swiglu_oai.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/swiglu_oai.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/5ffed84aa0f179d713ca06c3b2e4402ba109329285d2780909995873601b2e5b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\TANH.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/tanh.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/tanh.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/tanh.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/e375c8fd85bceab485263e8c74d5d8b36baee053d01f3653d194681f122ba04b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\TIMESTEP_EMBEDDING.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/timestep_embedding.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/timestep_embedding.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/timestep_embedding.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/2a0fb8afc0082c85472f5415bc5732465bc47ad479abec35284f8a652e658a77.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\TOPK_MOE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/topk_moe.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/topk_moe.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/topk_moe.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/011c0a79dddc1cef6ae986bbf11a259e2d8e2fa59b581a840276abf81e457e15.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\UPSCALE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/upscale.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/upscale.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/upscale.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/e8a2d3fc65f8d07fcbce2ee315a9c2f1addeb15ae0b4ff72f15ff2720ef52b5d.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\WKV6.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/wkv6.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/wkv6.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/wkv6.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/1deca84f6104f872d089d04c6417d907912902e2738a5b1e0fd097551684c4fe.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_VS\CMAKEFILES\615341A7E7E910719EDAC66430EAB4BA\WKV7.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.357.0/Bin/glslc.exe --source F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/wkv7.comp --output-dir F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/wkv7.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs F:/rawrxd F:/rawrxd/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/wkv7.comp.cpp.d F:/rawrxd/build_vs/CMakeFiles/d/029c5a88749f15e78f7d88aafa8ffbbfe3f107a3852b1b94706fd929e93e409a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\3RDPARTY\GGML\SRC\GGML-VULKAN\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_vs --check-stamp-file F:/rawrxd/build_vs/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

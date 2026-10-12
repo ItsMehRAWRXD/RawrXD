@@ -1,0 +1,2 @@
+F:/rawrxd/build_vs/src/core/dll/RawrXDCore.dir/Debug/RawrXDCore.obj
+F:/rawrxd/build_vs/src/core/dll/RawrXDCore.dir/Debug/GGUFLoader.obj

@@ -1,0 +1,22 @@
+{
+  "services/hexmag/core/repeat_tuner.py": {
+    "sha256": "de7ca20993aeb6f84357a9b6ee48fcfb30ec5e5aa12d834039a4530a46a2691f",
+    "bytes": 7338
+  },
+  "services/hexmag/run_loop.py": {
+    "sha256": "7e2210c581e3bd9617dc6580a52ae5d38f3f55c9ded0dab34714a5f0d6f9d3ab",
+    "bytes": 18306
+  },
+  "services/hexmag/hexmag_engine.py": {
+    "sha256": "25e476f02f3d5c880c7f60dfb72edc70ec4a7bdcb7a64198a8191cf3d676f278",
+    "bytes": 6266
+  },
+  "services/hexmag/tests/test_repeat_tuner.py": {
+    "sha256": "b7c91db6345df97b4b706ec864ff5b88e04cebafccf56a4a7b7417a8e58a7a57",
+    "bytes": 2300
+  },
+  "HEXMAG_POLYMORPHIC_REPEAT_TUNER_001.md": {
+    "sha256": "7f2f0f5db449d7e9b61995ddee146b7ea9bc5ca46b81519d1fb55ad5f16066ee",
+    "bytes": 2158
+  }
+}

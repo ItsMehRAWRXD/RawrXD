@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Measurement Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            color: #58a6ff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header .subtitle {
+            color: #8b949e;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: border-color 0.2s;
+        }
+        
+        .metric-card:hover {
+            border-color: #58a6ff;
+        }
+        
+        .metric-card.pass {
+            border-left: 4px solid #238636;
+        }
+        
+        .metric-card.fail {
+            border-left: 4px solid #da3633;
+        }
+        
+        .metric-card.warning {
+            border-left: 4px solid #d29922;
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-name {
+            font-size: 0.875rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .metric-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .metric-status.pass {
+            background: rgba(35, 134, 54, 0.2);
+            color: #3fb950;
+        }
+        
+        .metric-status.fail {
+            background: rgba(218, 54, 51, 0.2);
+            color: #f85149;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f0f6fc;
+            margin: 0.5rem 0;
+        }
+        
+        .metric-target {
+            font-size: 0.875rem;
+            color: #8b949e;
+        }
+        
+        .metric-trend {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .trend-up { color: #3fb950; }
+        .trend-down { color: #f85149; }
+        .trend-neutral { color: #8b949e; }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+        
+        .chart-canvas {
+            position: relative;
+            height: 300px;
+        }
+        
+        .runs-table {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: #21262d;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 0.75rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        
+        th {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        td {
+            font-size: 0.875rem;
+        }
+        
+        tr:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: rgba(35, 134, 54, 0.2);
+            color: #3fb950;
+        }
+        
+        .badge-fail {
+            background: rgba(218, 54, 51, 0.2);
+            color: #f85149;
+        }
+        
+        .badge-pending {
+            background: rgba(210, 153, 34, 0.2);
+            color: #d29922;
+        }
+        
+        .refresh-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .refresh-btn:hover {
+            background: #2ea043;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #8b949e;
+        }
+        
+        .spinner {
+            border: 2px solid #30363d;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #8b949e;
+            font-size: 0.875rem;
+            border-top: 1px solid #30363d;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"/>
+                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+            </svg>
+            RawrXD Measurement Dashboard
+        </h1>
+        <div class="subtitle">Continuous validation of architectural claims</div>
+    </header>
+    
+    <div class="container">
+        <!-- Summary Cards -->
+        <div class="summary-grid" id="summaryCards">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading metrics...
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">Dispatch Overhead Over Time</span>
+                    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+                </div>
+                <div class="chart-canvas">
+                    <canvas id="dispatchChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">Cache Hit Rate Trend</span>
+                </div>
+                <div class="chart-canvas">
+                    <canvas id="cacheChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">Planner Amortization</span>
+                </div>
+                <div class="chart-canvas">
+                    <canvas id="plannerChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">Four Gates Status</span>
+                </div>
+                <div class="chart-canvas">
+                    <canvas id="gatesChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Runs Table -->
+        <div class="runs-table">
+            <div class="table-header">Recent Test Runs</div>
+            <table id="runsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Commit</th>
+                        <th>Dispatch</th>
+                        <th>Planner</th>
+                        <th>Gates</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="runsTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        RawrXD Measurement Framework • Generated <span id="generatedTime"></span>
+    </footer>
+    
+    <script>
+        // Chart.js default configuration
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        
+        let charts = {};
+        
+        // Sample data - in production, this would come from an API
+        const sampleData = {
+            metrics: {
+                dispatch: { value: 47.3, target: 50, unit: 'x', status: 'pass', trend: +2.1 },
+                cache: { value: 96.5, target: 95, unit: '%', status: 'pass', trend: +0.3 },
+                planner: { value: 0.8, target: 1.0, unit: 'µs', status: 'pass', trend: -0.1 },
+                breakeven: { value: 85, target: 128, unit: 'tokens', status: 'pass', trend: -12 },
+                numerical: { value: 0.4, target: 1.0, unit: '%', status: 'pass', trend: -0.1 },
+                determinism: { value: 100, target: 100, unit: '%', status: 'pass', trend: 0 }
+            },
+            history: {
+                dates: ['2026-07-14', '2026-07-15', '2026-07-16', '2026-07-17', '2026-07-18', '2026-07-19', '2026-07-20'],
+                dispatch: [42.1, 43.5, 45.2, 44.8, 46.1, 45.9, 47.3],
+                cache: [94.2, 94.8, 95.1, 95.5, 95.8, 96.2, 96.5],
+                planner: [1.2, 1.1, 1.0, 0.9, 0.85, 0.82, 0.8],
+                breakeven: [120, 115, 105, 98, 92, 88, 85]
+            },
+            runs: [
+                { date: '2026-07-20 14:32', commit: 'a1b2c3d', dispatch: '47.3x', planner: '0.8µs', gates: '4/4', status: 'pass' },
+                { date: '2026-07-19 09:15', commit: 'e5f6g7h', dispatch: '45.9x', planner: '0.82µs', gates: '4/4', status: 'pass' },
+                { date: '2026-07-18 16:45', commit: 'i8j9k0l', dispatch: '46.1x', planner: '0.85µs', gates: '4/4', status: 'pass' },
+                { date: '2026-07-17 11:20', commit: 'm1n2o3p', dispatch: '44.8x', planner: '0.9µs', gates: '3/4', status: 'warning' },
+                { date: '2026-07-16 08:00', commit: 'q4r5s6t', dispatch: '45.2x', planner: '1.0µs', gates: '4/4', status: 'pass' }
+            ]
+        };
+        
+        function createSummaryCards(metrics) {
+            const container = document.getElementById('summaryCards');
+            container.innerHTML = '';
+            
+            const cards = [
+                { key: 'dispatch', name: 'Dispatch Speedup', icon: '⚡' },
+                { key: 'cache', name: 'Cache Hit Rate', icon: '💾' },
+                { key: 'planner', name: 'Planner Overhead', icon: '📊' },
+                { key: 'breakeven', name: 'Break-Even', icon: '⚖️' },
+                { key: 'numerical', name: 'Numerical Error', icon: '🎯' },
+                { key: 'determinism', name: 'Determinism', icon: '🔒' }
+            ];
+            
+            cards.forEach(card => {
+                const metric = metrics[card.key];
+                const trendClass = metric.trend > 0 ? 'trend-up' : metric.trend < 0 ? 'trend-down' : 'trend-neutral';
+                const trendIcon = metric.trend > 0 ? '↑' : metric.trend < 0 ? '↓' : '→';
+                const trendText = metric.trend !== 0 ? `${Math.abs(metric.trend)}%` : 'stable';
+                
+                const div = document.createElement('div');
+                div.className = `metric-card ${metric.status}`;
+                div.innerHTML = `
+                    <div class="metric-header">
+                        <span class="metric-name">${card.icon} ${card.name}</span>
+                        <span class="metric-status ${metric.status}">${metric.status.toUpperCase()}</span>
+                    </div>
+                    <div class="metric-value">${metric.value}${metric.unit}</div>
+                    <div class="metric-target">Target: ${metric.target}${metric.unit}</div>
+                    <div class="metric-trend ${trendClass}">
+                        ${trendIcon} ${trendText} vs last run
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function createDispatchChart(history) {
+            const ctx = document.getElementById('dispatchChart').getContext('2d');
+            
+            if (charts.dispatch) charts.dispatch.destroy();
+            
+            charts.dispatch = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.dates,
+                    datasets: [{
+                        label: 'Measured Speedup',
+                        data: history.dispatch,
+                        borderColor: '#58a6ff',
+                        backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Target (50x)',
+                        data: history.dates.map(() => 50),
+                        borderColor: '#238636',
+                        borderDash: [5, 5],
+                        fill: false
+                    }, {
+                        label: 'Minimum (40x)',
+                        data: history.dates.map(() => 40),
+                        borderColor: '#d29922',
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Speedup (x)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createCacheChart(history) {
+            const ctx = document.getElementById('cacheChart').getContext('2d');
+            
+            if (charts.cache) charts.cache.destroy();
+            
+            charts.cache = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.dates,
+                    datasets: [{
+                        label: 'Hit Rate',
+                        data: history.cache,
+                        borderColor: '#3fb950',
+                        backgroundColor: 'rgba(63, 185, 80, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Target (95%)',
+                        data: history.dates.map(() => 95),
+                        borderColor: '#d29922',
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 90,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Hit Rate (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createPlannerChart(history) {
+            const ctx = document.getElementById('plannerChart').getContext('2d');
+            
+            if (charts.planner) charts.planner.destroy();
+            
+            charts.planner = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: history.dates,
+                    datasets: [{
+                        label: 'Overhead per Token (µs)',
+                        data: history.planner,
+                        backgroundColor: '#a371f7',
+                        borderColor: '#a371f7',
+                        borderWidth: 1
+                    }, {
+                        label: 'Target (1µs)',
+                        data: history.dates.map(() => 1.0),
+                        type: 'line',
+                        borderColor: '#d29922',
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Overhead (µs)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createGatesChart() {
+            const ctx = document.getElementById('gatesChart').getContext('2d');
+            
+            if (charts.gates) charts.gates.destroy();
+            
+            charts.gates = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Functional', 'Numerical', 'Performance', 'Stability'],
+                    datasets: [{
+                        data: [1, 1, 1, 1],
+                        backgroundColor: [
+                            '#238636',
+                            '#238636',
+                            '#238636',
+                            '#238636'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: '4/4 Gates Passing'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function populateRunsTable(runs) {
+            const tbody = document.getElementById('runsTableBody');
+            tbody.innerHTML = '';
+            
+            runs.forEach(run => {
+                const row = document.createElement('tr');
+                const statusClass = run.status === 'pass' ? 'badge-success' : 
+                                   run.status === 'fail' ? 'badge-fail' : 'badge-pending';
+                row.innerHTML = `
+                    <td>${run.date}</td>
+                    <td><code>${run.commit}</code></td>
+                    <td>${run.dispatch}</td>
+                    <td>${run.planner}</td>
+                    <td>${run.gates}</td>
+                    <td><span class="badge ${statusClass}">${run.status.toUpperCase()}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function loadData() {
+            // In production, this would fetch from an API
+            // fetch('/api/measurements')
+            //     .then(r => r.json())
+            //     .then(data => render(data));
+            
+            // Using sample data for now
+            createSummaryCards(sampleData.metrics);
+            createDispatchChart(sampleData.history);
+            createCacheChart(sampleData.history);
+            createPlannerChart(sampleData.history);
+            createGatesChart();
+            populateRunsTable(sampleData.runs);
+            
+            document.getElementById('generatedTime').textContent = new Date().toLocaleString();
+        }
+        
+        // Load data on page load
+        loadData();
+        
+        // Auto-refresh every 5 minutes
+        setInterval(loadData, 300000);
+    </script>
+</body>
+</html>

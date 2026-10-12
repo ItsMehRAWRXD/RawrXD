@@ -1,0 +1,10 @@
+model,loaded,load_time_ms,tokens_per_sec,avg_latency_ms,p95_latency_ms,p99_latency_ms,peak_vram_gb,peak_ram_gb,migrations,temperature,status,notes
+TinyLlama-1.1B,true,110,60.3023,16.5831,19.8997,24.8747,0.683594,0,0,0.75,PASS,Fits in VRAM
+Phi-2-2.7B,true,109,21.875,45.7143,54.8571,68.5714,1.5625,0,0,0.75,PASS,Fits in VRAM
+Llama-2-7B,true,109,8.53659,117.143,140.571,175.714,4.00391,0,0,0.75,PASS,Fits in VRAM
+Mistral-7B,true,110,8.13953,122.857,147.429,184.286,4.19922,0,0,0.75,PASS,Fits in VRAM
+Phi-3-3.8B,true,109,15.2174,65.7143,78.8571,98.5714,2.24609,0,0,0.75,PASS,Fits in VRAM
+Llama-2-13B,true,109,3.86481,258.745,310.494,388.118,7.91016,0,0,0.75,PASS,Fits in VRAM
+Qwen-14B,true,110,3.68294,271.523,325.827,407.284,8.30078,0,0,0.75,PASS,Fits in VRAM
+Llama-2-70B,true,125,0.539901,1852.19,2222.63,2778.29,16,24.0391,20,0.75,PASS_TIERED,Uses tiered memory
+Mixtral-8x7B,true,109,1.25,800,960,1200,16,11.3438,8,0.75,PASS_TIERED,Uses tiered memory

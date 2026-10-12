@@ -1,0 +1,35 @@
+{
+  "gate": "C",
+  "name": "Streaming Adapter",
+  "status": "PASS",
+  "guarantees": {
+    "ordering": true,
+    "bounded_memory": true,
+    "backpressure": true,
+    "cancellation": true
+  },
+  "queue_capacity": 1024,
+  "high_watermark": 768,
+  "low_watermark": 256,
+  "captured_at": "2026-07-24T00:00:00.000Z",
+  "artifacts": {
+    "streaming_event.hpp/cpp": "Event types and sequence validation",
+    "bounded_event_queue.hpp/cpp": "Bounded queue with backpressure",
+    "streaming_adapter.hpp/cpp": "Streaming adapter implementation",
+    "streaming_adapter_test.cpp": "11 test assertions"
+  },
+  "event_model": {
+    "sequence_id": "Strictly monotonic per execution",
+    "execution_id": "Correlation from Gate A",
+    "event_type": "Lifecycle, token, state, telemetry",
+    "timestamp": "Monotonic + wall-clock",
+    "event_hash": "Integrity verification"
+  },
+  "guarantees_proven": {
+    "ordering": "FIFO sequence, no gaps, monotonic timestamps",
+    "bounded_memory": "Capacity limit, high/low watermarks",
+    "backpressure": "Block/Drop policy, consumer lag detection",
+    "cancellation": "Immediate stop, no new events"
+  },
+  "status": "COMPLETE"
+}

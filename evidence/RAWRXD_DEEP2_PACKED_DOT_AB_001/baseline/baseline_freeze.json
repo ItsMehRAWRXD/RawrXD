@@ -1,0 +1,40 @@
+{
+  "certificate_id": "RAWRXD_CORE_DLL_NATIVE_E2E_001",
+  "git_commit": "3ed66470f23da53044d1850309e0d3a649bc0e84",
+  "git_branch": "feat/hexmag-polymorphic-repeat-tuner-masm",
+  "git_worktree_dirty": true,
+  "model": {
+    "path": "F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+    "sha256": "5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4",
+    "size_bytes": 10364416768,
+    "architecture": "deepseek2",
+    "expected_layers": 27,
+    "expected_tensors": 377,
+    "expected_size": 10364416768
+  },
+  "build": {
+    "generator": "Visual Studio 17 2022",
+    "platform": "x64",
+    "config": "Release",
+    "build_shared_libs": "ON",
+    "toolchain": "MSVC 14.44.35217 (VS2022 BuildTools)",
+    "llama_reference_commit": "c479922"
+  },
+  "artifacts": {
+    "RawrXDCore.dll": {
+      "path": "F:\\rawrxd\\build_cert\\bin\\Release\\RawrXDCore.dll",
+      "sha256": "3958b9750ed6658cb0d76dc6ce614c57a1e5b6411d73bd44f841d5df2e5ddfd7",
+      "bytes": 1007616
+    },
+    "ModelGenieRuntime.lib": {
+      "path": "F:\\rawrxd\\build_cert\\src\\core\\dll\\Release\\ModelGenieRuntime.lib",
+      "sha256": "f593cb1e0aa56e22604fbca32f06ae149bb962f759e17e72d76d623ee41c28fe",
+      "bytes": 20879036
+    },
+    "RawrXDCore.lib": {
+      "path": "F:\\rawrxd\\build_cert\\lib\\Release\\RawrXDCore.lib",
+      "sha256": "1818b9346c9eeed751e0f73b23001583097f438ed21b9fbd5872f6117e83355b",
+      "bytes": 2824796
+    }
+  }
+}

@@ -1,0 +1,394 @@
+// agentic_planning_orchestrator_fixed.cpp  
+// Simplified implementation without external dependencies
+// Focus on core orchestration logic only
+
+#include "agentic_planning_orchestrator.hpp"
+#include <sstream>
+#include <algorithm>
+
+namespace Agentic {
+
+// ============================================================================
+// Static ID Counter
+// ============================================================================
+
+static int g_planIdCounter = 0;
+
+// ============================================================================
+// Constructor / Initialization
+// ============================================================================
+
+AgenticPlanningOrchestrator::AgenticPlanningOrchestrator()
+    : m_workspaceRoot("."), m_policy(ApprovalPolicy::Standard()), m_planIdCounter(0) {
+}
+
+AgenticPlanningOrchestrator::~AgenticPlanningOrchestrator() = default;
+
+void AgenticPlanningOrchestrator::setApprovalPolicy(const ApprovalPolicy& policy) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_policy = policy;
+}
+
+ApprovalPolicy AgenticPlanningOrchestrator::getApprovalPolicy() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_policy;
+}
+
+// ============================================================================
+// Plan Generation
+// ============================================================================
+
+ExecutionPlan* AgenticPlanningOrchestrator::generatePlanForTask(const std::string& task) {
+    if (task.empty()) {
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    // Create new plan
+    auto plan = std::make_unique<ExecutionPlan>();
+    plan->plan_id = "plan_" + std::to_string(m_planIdCounter++);
+    plan->source_task = task;
+    plan->description = task;
+    plan->workspace_root = m_workspaceRoot;
+    plan->confidence_score = 0.75f;
+    plan->created_at = std::chrono::system_clock::now();
+
+    // Create sample steps
+    for (int i =0; i < 3; ++i) {
+        PlanStep step;
+        step.id = "step_" + std::to_string(i);
+        step.title = "Phase " + std::to_string(i + 1);
+        step.actions.push_back("execute");
+        step.affected_files.push_back("file_" + std::to_string(i));
+        step.risk_level = static_cast<StepRisk>(1 + (i % 3));
+        step.complexity_score = 0.5f;
+        step.is_mutating = (i > 0);
+        step.is_rollbackable = true;
+        step.estimated_duration_ms = 30000;
+        step.status = ExecutionStatus::Waiting;
+        
+        if (shouldAutoApproveStep(step)) {
+            step.approval_status = ApprovalStatus::ApprovedAuto;
+            step.approval_user = "system";
+            plan->approved_steps++;
+        } else {
+            step.approval_status = ApprovalStatus::Pending;
+            plan->pending_approvals++;
+            ApprovalGate gate = {plan.get(), static_cast<int>(plan->steps.size()), 
+                                ApprovalStatus::Pending, {}, 
+                                std::chrono::system_clock::now(),
+                                std::chrono::system_clock::now() + std::chrono::hours(24)};
+            m_approvalQueue.push_back(gate);
+        }
+        
+        plan->steps.push_back(step);
+    }
+
+    plan->total_estimated_duration_ms = 90000;
+    plan->requires_human_review = (plan->pending_approvals > 0);
+
+    ExecutionPlan* rawPlan = plan.get();
+    m_activePlans[plan->plan_id] = std::move(plan);
+    return rawPlan;
+}
+
+ExecutionPlan* AgenticPlanningOrchestrator::ingestExternalPlan(const ExecutionPlan& extPlan) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto plan = std::make_unique<ExecutionPlan>(extPlan);
+    if (plan->plan_id.empty()) {
+        plan->plan_id = "plan_ext_" + std::to_string(m_planIdCounter++);
+    }
+    
+    for (auto& step : plan->steps) {
+        analyzeStepRisk(step);
+        if (shouldAutoApproveStep(step)) {
+            step.approval_status = ApprovalStatus::ApprovedAuto;
+        } else {
+            step.approval_status = ApprovalStatus::Pending;
+            plan->pending_approvals++;
+        }
+    }
+
+    ExecutionPlan* rawPlan = plan.get();
+    m_activePlans[plan->plan_id] = std::move(plan);
+    return rawPlan;
+}
+
+// ============================================================================
+// Risk Analysis
+// ============================================================================
+
+void AgenticPlanningOrchestrator::analyzeStepRisk(PlanStep& step) {
+    size_t fileCount = step.affected_files.size();
+    
+    if (fileCount == 0) {
+        step.risk_level = StepRisk::VeryLow;
+    } else if (fileCount == 1 && step.complexity_score < 0.5f) {
+        step.risk_level = StepRisk::Low;
+    } else if (fileCount <= 5) {
+        step.risk_level = StepRisk::Medium;
+    } else if (fileCount <= 50) {
+        step.risk_level = StepRisk::High;
+    } else {
+        step.risk_level = StepRisk::Critical;
+    }
+}
+
+bool AgenticPlanningOrchestrator::shouldAutoApproveStep(const PlanStep& step) const {
+    if (step.risk_level == StepRisk::VeryLow && m_policy.auto_approve_very_low_risk) {
+        return true;
+    }
+    if (step.risk_level == StepRisk::Low && m_policy.auto_approve_low_risk) {
+        return true;
+    }
+    return false;
+}
+
+StepRisk AgenticPlanningOrchestrator::analyzeStepRisk_Heuristic(const PlanStep& step) const {
+    // Simple heuristic based on file count
+    if (step.affected_files.size() == 0) return StepRisk::VeryLow;
+    if (step.affected_files.size() ==  1) return StepRisk::Low;
+    if (step.affected_files.size() <= 5) return StepRisk::Medium;
+    if (step.affected_files.size() <= 50) return StepRisk::High;
+    return StepRisk::Critical;
+}
+
+// ============================================================================
+// Approval Management
+// ============================================================================
+
+void AgenticPlanningOrchestrator::approveStep(ExecutionPlan* plan, int stepIdx,
+                                           const std::string& userId, const std::string& reason) {
+    if (!plan || stepIdx < 0 || stepIdx >= static_cast<int>(plan->steps.size())) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto& step = plan->steps[stepIdx];
+    step.approval_status = ApprovalStatus::Approved;
+    step.approval_user = userId;
+    step.approval_reason = reason;
+    step.approval_time = std::chrono::system_clock::now();
+    plan->approved_steps++;
+    plan->pending_approvals--;
+
+    m_approvalQueue.erase(
+        std::remove_if(m_approvalQueue.begin(), m_approvalQueue.end(),
+            [plan, stepIdx](const ApprovalGate& g) { 
+                return g.plan == plan && g.step_index == stepIdx; 
+            }),
+        m_approvalQueue.end()
+    );
+}
+
+void AgenticPlanningOrchestrator::rejectStep(ExecutionPlan* plan, int stepIdx,
+                                          const std::string& userId, const std::string& reason) {
+    if (!plan || stepIdx < 0 || stepIdx >= static_cast<int>(plan->steps.size())) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto& step = plan->steps[stepIdx];
+    step.approval_status = ApprovalStatus::Rejected;
+    step.approval_user = userId;
+    step.approval_reason = reason;
+    step.approval_time = std::chrono::system_clock::now();
+    step.status = ExecutionStatus::Failed;
+    plan->rejected_steps++;
+    plan->pending_approvals--;
+
+    m_approvalQueue.erase(
+        std::remove_if(m_approvalQueue.begin(), m_approvalQueue.end(),
+            [plan, stepIdx](const ApprovalGate& g) { 
+                return g.plan == plan && g.step_index == stepIdx; 
+            }),
+        m_approvalQueue.end()
+    );
+}
+
+// ============================================================================
+// Execution Management
+// ============================================================================
+
+bool AgenticPlanningOrchestrator::executeNextApprovedStep(ExecutionPlan* plan) {
+    if (!plan) return false;
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    for (int i = 0; i < static_cast<int>(plan->steps.size()); ++i) {
+        auto& step = plan->steps[i];
+        
+        if (step.status != ExecutionStatus::Waiting) continue;
+        if (step.approval_status != ApprovalStatus::Approved &&
+            step.approval_status != ApprovalStatus::ApprovedAuto) {
+            continue;
+        }
+
+        plan->current_step_index.store(i, std::memory_order_release);
+        step.status = ExecutionStatus::Executing;
+        step.status = ExecutionStatus::Success;
+        step.execution_result = "Completed";
+        return true;
+    }
+
+    return false;
+}
+
+void AgenticPlanningOrchestrator::executeEntirePlan(ExecutionPlan* plan) {
+    if (!plan) return;
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    for (auto& step : plan->steps) {
+        if (step.approval_status == ApprovalStatus::Approved ||
+            step.approval_status == ApprovalStatus::ApprovedAuto) {
+            step.status = ExecutionStatus::Success;
+        }
+    }
+}
+
+void AgenticPlanningOrchestrator::rollbackStep(ExecutionPlan* plan, int stepIdx) {
+    if (!plan || stepIdx < 0 || stepIdx >= static_cast<int>(plan->steps.size())) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    plan->steps[stepIdx].status = ExecutionStatus::Rolled_Back;
+}
+
+// ============================================================================
+// Status Query Methods
+// ============================================================================
+
+std::vector<std::pair<ExecutionPlan*, int>> AgenticPlanningOrchestrator::getPendingApprovals() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    std::vector<std::pair<ExecutionPlan*, int>> result;
+    for (const auto& gate : m_approvalQueue) {
+        result.push_back({gate.plan, gate.step_index});
+    }
+    return result;
+}
+
+std::vector<ExecutionPlan*> AgenticPlanningOrchestrator::getActivePlans() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    std::vector<ExecutionPlan*> result;
+    for (const auto& pair : m_activePlans) {
+        result.push_back(pair.second.get());
+    }
+    return result;
+}
+
+ExecutionPlan* AgenticPlanningOrchestrator::getPlan(const std::string& planId) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_activePlans.find(planId);
+    if (it != m_activePlans.end()) {
+        return it->second.get();
+    }
+    return nullptr;
+}
+
+// ============================================================================
+// JSON Export
+// ============================================================================
+
+nlohmann::json ExecutionPlan::toJson() const {
+    nlohmann::json j;
+    j["plan_id"] = plan_id;
+    j["description"] = description;
+    j["steps_count"] = steps.size();
+    j["approved"] = approved_steps;
+    j["pending"] = pending_approvals;
+    j["rejected"] = rejected_steps;
+    return j;
+}
+
+nlohmann::json ApprovalPolicy::toJson() const {
+    nlohmann::json j;
+    j["auto_approve_very_low"] = auto_approve_very_low_risk;
+    j["auto_approve_low"] = auto_approve_low_risk;
+    j["require_medium"] = require_approval_medium;
+    j["require_high"] = require_approval_high;
+    j["require_critical"] = require_approval_critical;
+    return j;
+}
+
+ApprovalPolicy ApprovalPolicy::fromJson(const nlohmann::json& j) {
+    ApprovalPolicy p;
+    if (j.contains("auto_approve_very_low")) p.auto_approve_very_low_risk = j["auto_approve_very_low"];
+    if (j.contains("auto_approve_low")) p.auto_approve_low_risk = j["auto_approve_low"];
+    if (j.contains("require_medium")) p.require_approval_medium = j["require_medium"];
+    if (j.contains("require_high")) p.require_approval_high = j["require_high"];
+    if (j.contains("require_critical")) p.require_approval_critical = j["require_critical"];
+    return p;
+}
+
+ApprovalPolicy ApprovalPolicy::Conservative() {
+    ApprovalPolicy p;
+    p.auto_approve_very_low_risk = true;
+    p.auto_approve_low_risk = false;
+    p.require_approval_medium = true;
+    p.require_approval_high = true;
+    p.require_approval_critical = true;
+    return p;
+}
+
+ApprovalPolicy ApprovalPolicy::Standard() {
+    ApprovalPolicy p;
+    p.auto_approve_very_low_risk = true;
+    p.auto_approve_low_risk = false;
+    p.require_approval_medium = true;
+    p.require_approval_high = true;
+    p.require_approval_critical = true;
+    return p;
+}
+
+ApprovalPolicy ApprovalPolicy::Aggressive() {
+    ApprovalPolicy p;
+    p.auto_approve_very_low_risk = true;
+    p.auto_approve_low_risk = true;
+    p.require_approval_medium = false;
+    p.require_approval_high = true;
+    p.require_approval_critical = true;
+    return p;
+}
+
+nlohmann::json AgenticPlanningOrchestrator::getExecutionStatusJson() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    nlohmann::json j;
+    j["active_plans"] = m_activePlans.size();
+    j["pending_approvals"] = m_approvalQueue.size();
+    j["policy"] = m_policy.toJson();
+    return j;
+}
+
+nlohmann::json AgenticPlanningOrchestrator::getApprovalQueueJson() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    nlohmann::json j = nlohmann::json::array();
+    for (const auto& gate : m_approvalQueue) {
+        nlohmann::json entry;
+        entry["plan_id"] = gate.plan->plan_id;
+        entry["step_index"] = gate.step_index;
+        entry["status"] = static_cast<int>(gate.status);
+        j.push_back(entry);
+    }
+    return j;
+}
+
+nlohmann::json AgenticPlanningOrchestrator::getPlanJson(const std::string& planId) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_activePlans.find(planId);
+    if (it != m_activePlans.end()) {
+        return it->second->toJson();
+    }
+    return nullptr;
+}
+
+} // namespace Agentic

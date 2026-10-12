@@ -1,0 +1,14 @@
+bu Sovereign_SDK!Simulation_Thread_Entry ".echo === ENTRY HIT ===; r rsp; ba w 8 @rsp; .echo === HW WATCH SET ===; r rsp; g"
+g
+.echo === HARDWARE BREAKPOINT TRIGGERED ===
+.exr -1
+.echo === REGISTERS ===
+r
+.echo === STACK ===
+k 10
+.echo === DISASM BEFORE/AFTER RIP ===
+ub @rip L8
+u @rip L8
+.echo === STACK VALUES ===
+dps @rsp L20
+qd

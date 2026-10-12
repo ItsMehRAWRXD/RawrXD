@@ -1,0 +1,7 @@
+'import' is not recognized as an internal or external command,
+operable program or batch file.
+'snap' is not recognized as an internal or external command,
+operable program or batch file.
+'os.makedirs' is not recognized as an internal or external command,
+operable program or batch file.
+rel was unexpected at this time.

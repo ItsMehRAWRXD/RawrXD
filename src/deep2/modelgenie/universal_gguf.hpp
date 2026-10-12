@@ -122,6 +122,15 @@ struct ModelSpec {
     uint64_t expert_used = 0;
     uint64_t expert_shared = 0;
     uint64_t expert_ffn = 0;
+
+    // Router weight post-processing, exactly as the GGUF declares it. The
+    // reference renormalises the top-k weights to sum to 1 ONLY when
+    // expert_weights_norm is set (qwen3-moe / gpt-oss style); DeepSeek-Coder-V2
+    // omits the key, so its routing weights are the raw softmax probabilities
+    // whose sum is < 1. expert_weights_scale is applied only when set to
+    // something other than 0 (absent) or 1 (identity), matching the reference.
+    bool expert_weights_norm = false;
+    double expert_weights_scale = 0.0;
     // MLA
     uint64_t kv_lora_rank = 0;
     uint64_t key_length = 0;

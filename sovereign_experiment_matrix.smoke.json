@@ -1,0 +1,19 @@
+{
+  "global_overrides": {
+    "request_count": 20,
+    "cancel_percent": 15,
+    "seed": 42,
+    "cooldown_sec": 1,
+    "saturation_threshold": 48,
+    "include_slot_metadata": true,
+    "sidecar_interval_ms": 25
+  },
+  "matrix": [
+    {
+      "name": "smoke_baseline",
+      "request_count": 20,
+      "cancel_percent": 15,
+      "seed": 42
+    }
+  ]
+}

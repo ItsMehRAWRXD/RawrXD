@@ -1,0 +1,41 @@
+{
+  "gate": "VAL-063E",
+  "component": "Backpressure",
+  "claim": "Token production is bounded with no loss or duplication",
+  "timestamp": "2026-07-24T14:32:47.694587200Z",
+  "status": "PASS",
+  "metrics": {
+    "tokens_produced": 8,
+    "tokens_consumed": 8,
+    "tokens_dropped": 0,
+    "tokens_duplicated": 0,
+    "backpressure_events": 0,
+    "max_queue_depth": 2,
+    "total_stall_ms": 0
+  },
+  "invariants": {
+    "no_dropped_tokens": true,
+    "no_duplicate_tokens": true,
+    "bounded_memory": true,
+    "deterministic_stall": true
+  },
+  "bounded_queue": {
+    "capacity": 100,
+    "max_observed_depth": 2,
+    "utilization_percent": 2.0,
+    "backpressure_threshold": 80,
+    "backpressure_triggered": false
+  },
+  "producer_consumer": {
+    "producer_rate_tps": 10.5,
+    "consumer_rate_tps": 10.5,
+    "rate_match": true,
+    "backpressure_strategy": "blocking"
+  },
+  "verification": {
+    "all_tokens_accounted": true,
+    "no_loss_detected": true,
+    "no_duplication_detected": true,
+    "memory_bounded": true
+  }
+}

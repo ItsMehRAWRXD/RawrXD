@@ -1,0 +1,52 @@
+[DEBUG Reader] Opening files...
+[DEBUG Reader] genomePath: F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001/genie_out/model.genome.txt
+[DEBUG Reader] physicalPath: F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001/genie_out/model.physical.txt
+[DEBUG Reader] executionPath: F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001/genie_out/model.execution.txt
+[DEBUG Reader] OPEN_BEGIN=model.genome.txt
+[DEBUG Reader] OPEN_END=model.genome.txt
+[DEBUG Reader] CLOSE_END=model.genome.txt
+[DEBUG Reader] OPEN_BEGIN=model.physical.txt
+[DEBUG Reader] OPEN_END=model.physical.txt
+[DEBUG Reader] CLOSE_END=model.physical.txt
+[DEBUG Reader] OPEN_BEGIN=model.execution.txt
+[DEBUG Reader] OPEN_END=model.execution.txt
+[DEBUG Reader] CLOSE_END=model.execution.txt
+[DEBUG Reader] All files exist
+[DEBUG Reader] Parsing genome file...
+[DEBUG Reader] Parsing genome line 10
+[DEBUG Reader] Parsing genome line 20
+[DEBUG Reader] Parsing genome line 30
+[DEBUG Reader] Parsing genome line 40
+[DEBUG Reader] Parsing genome line 50
+[DEBUG Reader] Parsing genome line 60
+[DEBUG Reader] Parsing genome line 70
+[DEBUG Reader] Genome file parsed
+[DEBUG Reader] Parsing physical file...
+[DEBUG Reader] PHYSICAL_BEGIN
+[DEBUG Reader] PHYSICAL_OPEN_BEGIN
+[DEBUG Reader] PHYSICAL_OPEN_END
+[DEBUG Reader] RAW_LINE1=[# PHYSICAL: literal GGUF tensor directory. No interpretation.]
+[DEBUG Reader] RAW_LINE2=[# source: G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf]
+[DEBUG Reader] RAW_LINE3=[file_bytes      10364416768]
+[DEBUG Reader] META key=[file_bytes] value=[10364416768]
+[DEBUG Reader] RAW_LINE4=[gguf_version    3]
+[DEBUG Reader] META key=[gguf_version] value=[3]
+[DEBUG Reader] RAW_LINE5=[tensor_count    377]
+[DEBUG Reader] RAW_LINE6=[alignment       32]
+[DEBUG Reader] META key=[alignment] value=[32]
+[DEBUG Reader] RAW_LINE7=[data_start      3996416]
+[DEBUG Reader] META key=[data_start] value=[3996416]
+[DEBUG Reader] PARSED data_start=3996416
+[DEBUG Reader] RAW_LINE8=[]
+[DEBUG Reader] RAW_LINE9=[tensor	ggml_type	dims	encoded_bytes	file_offset]
+[DEBUG Reader] RAW_LINE10=[output.weight	q6_K	[2048,102400]	172032000	0]
+[DEBUG Reader] META key=[output.weight] value=[q6_K]
+[DEBUG Reader] PHYSICAL_LINE=50
+[DEBUG Reader] PHYSICAL_LINE=100
+[DEBUG Reader] PHYSICAL_LINE=150
+[DEBUG Reader] PHYSICAL_LINE=200
+[DEBUG Reader] PHYSICAL_LINE=250
+[DEBUG Reader] PHYSICAL_LINE=300
+[DEBUG Reader] PHYSICAL_LINE=350
+[DEBUG Reader] Physical file parsed, tensor count: 377
+[DEBUG Reader] LoadModelGenomeFromEvidence returning true

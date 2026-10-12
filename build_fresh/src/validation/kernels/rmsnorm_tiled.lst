@@ -1,0 +1,462 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:17
+F:/rawrxd/src/validation/kernels/masm/rmsnorm_tiled.asm	     Page 1 - 1
+
+
+				; ============================================================================
+				; rmsnorm_tiled.asm - Cache-optimized Tiled RMSNorm implementation
+				; ============================================================================
+				; Overcomes memory bandwidth wall at 32K+ elements by processing in L1-sized tiles
+				;
+				; Algorithm:
+				;   1. Divide input into tiles that fit in L1 cache (16KB = 4096 floats)
+				;   2. For each tile:
+				;      a. Load tile into L1 (streaming load)
+				;      b. Compute local sum of squares
+				;      c. Accumulate to global sum
+				;   3. Compute global RMS from total sum of squares
+				;   4. For each tile:
+				;      a. Load tile, weights
+				;      b. Normalize using global RMS
+				;      c. Store result
+				;
+				; Tile size: 4096 floats (16KB) - fits in L1 cache with room for weights
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+ 00000000			.const
+				ALIGN 16
+ 00000000 3727C5AC		epsilon_const     REAL4 1.0e-5
+ 00000004 39800000		one_over_tile     REAL4 0.000244140625  ; 1/4096 for tile mean calculation
+
+				; Tile configuration
+ = 00001000			TILE_SIZE_FLOATS  EQU 4096
+ = 00004000			TILE_SIZE_BYTES   EQU 16384  ; 4096 * 4
+
+ 00000000			.code
+
+				; ============================================================================
+				; MASM_RMSNorm_Tiled - Cache-optimized RMSNorm with tiling
+				; ============================================================================
+				; Parameters:
+				;   RCX = float* input (64-byte aligned)
+				;   RDX = float* output (64-byte aligned)
+				;   R8  = float* weights (64-byte aligned)
+				;   R9  = size_t size (multiple of 64 for AVX-512, or 32 for AVX2)
+				; Returns: RAX = 0 on success
+				; ============================================================================
+
+ 00000000			MASM_RMSNorm_Tiled PROC FRAME
+				    ; Prologue - CRITICAL: Save non-volatile registers BEFORE .endprolog
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+ 00000004  53			    push rbx
+				    .pushreg rbx
+ 00000005  56			    push rsi
+				    .pushreg rsi
+ 00000006  57			    push rdi
+				    .pushreg rdi
+ 00000007  41/ 54		    push r12
+				    .pushreg r12
+ 00000009  41/ 55		    push r13
+				    .pushreg r13
+ 0000000B  41/ 56		    push r14
+				    .pushreg r14
+ 0000000D  41/ 57		    push r15
+				    .pushreg r15
+ 0000000F  48/ 83 EC 40		    sub rsp, 64
+				    .allocstack 64
+				    .endprolog
+
+				    ; Validate parameters
+ 00000013  48/ 85 C9		    test rcx, rcx
+ 00000016  0F 84 0000029B	    jz error_null
+ 0000001C  48/ 85 D2		    test rdx, rdx
+ 0000001F  0F 84 00000292	    jz error_null
+ 00000025  4D/ 85 C0		    test r8, r8
+ 00000028  0F 84 00000289	    jz error_null
+ 0000002E  4D/ 85 C9		    test r9, r9
+ 00000031  0F 84 00000289	    jz error_zero
+
+				    ; Check alignment (64-byte for AVX-512)
+ 00000037  48/ F7 C1		    test rcx, 63
+	   0000003F
+ 0000003E  0F 85 00000285	    jnz error_align
+ 00000044  48/ F7 C2		    test rdx, 63
+	   0000003F
+ 0000004B  0F 85 00000278	    jnz error_align
+ 00000051  49/ F7 C0		    test r8, 63
+	   0000003F
+ 00000058  0F 85 0000026B	    jnz error_align
+
+				    ; Save parameters
+ 0000005E  48/ 8B F1		    mov rsi, rcx          ; rsi = input base
+ 00000061  48/ 8B FA		    mov rdi, rdx          ; rdi = output base
+ 00000064  4D/ 8B E0		    mov r12, r8           ; r12 = weights base
+ 00000067  49/ 8B D9		    mov rbx, r9           ; rbx = total size
+ 0000006A  4D/ 8B E9		    mov r13, r9           ; r13 = total size (preserve)
+ 0000006D  4C/ 8B F1		    mov r14, rcx          ; r14 = input base (preserve)
+ 00000070  4D/ 8B F8		    mov r15, r8           ; r15 = weights base (preserve)
+
+				    ; ============================================================================
+				    ; Phase 1: Compute global sum of squares using tiles
+				    ; ============================================================================
+
+ 00000073  C5 F8/ 57 C0		    vxorps xmm0, xmm0, xmm0    ; xmm0 = global sum accumulator (scalar)
+
+ 00000077			phase1_tile_loop:
+ 00000077  48/ 83 FB 00		    cmp rbx, 0
+ 0000007B  0F 8E 00000104	    jle phase1_done
+
+				    ; Determine current tile size (min of remaining, TILE_SIZE)
+ 00000081  4C/ 8B C3		    mov r8, rbx
+ 00000084  49/ 81 F8		    cmp r8, TILE_SIZE_FLOATS
+	   00001000
+ 0000008B  7E 07		    jle tile_size_ok
+ 0000008D  49/ C7 C0		    mov r8, TILE_SIZE_FLOATS
+	   00001000
+ 00000094			tile_size_ok:
+
+				    ; Save tile size
+ 00000094  41/ 50		    push r8
+
+				    ; Compute sum of squares for this tile
+ 00000096  62 F1 74 48/ 57	    vxorps zmm1, zmm1, zmm1    ; zmm1 = tile sum accumulator
+	   C9
+ 0000009C  C5 DC/ 57 E4		    vxorps ymm4, ymm4, ymm4    ; ymm4 = 16/8-element remainder accumulator
+ 000000A0  C5 D0/ 57 ED		    vxorps xmm5, xmm5, xmm5    ; xmm5 = 4-element remainder accumulator
+ 000000A4  C5 C8/ 57 F6		    vxorps xmm6, xmm6, xmm6    ; xmm6 = scalar remainder accumulator
+
+				    ; Process tile in 16-float (64-byte) chunks using AVX-512
+ 000000A8  4D/ 8B C8		    mov r9, r8                 ; r9 = remaining in tile
+
+ 000000AB			tile_sum_loop:
+ 000000AB  49/ 83 F9 10		    cmp r9, 16
+ 000000AF  7C 1C		    jl tile_sum_remainder
+
+				    ; Load 16 floats (full AVX-512 register)
+ 000000B1  62 F1 7C 48/ 28	    vmovaps zmm2, ZMMWORD PTR [rsi]
+	   16
+
+				    ; Compute x^2 and accumulate
+ 000000B7  62 F1 6C 48/ 59	    vmulps zmm3, zmm2, zmm2
+	   DA
+ 000000BD  62 F1 74 48/ 58	    vaddps zmm1, zmm1, zmm3
+	   CB
+
+ 000000C3  48/ 83 C6 40		    add rsi, 64                ; 16 floats * 4 bytes
+ 000000C7  49/ 83 E9 10		    sub r9, 16
+ 000000CB  EB DE		    jmp tile_sum_loop
+
+ 000000CD			tile_sum_remainder:
+				    ; Handle remaining elements (less than 16)
+ 000000CD  49/ 83 F9 00		    cmp r9, 0
+ 000000D1  7E 59		    jle tile_sum_done
+
+				    ; Process 8 at a time using AVX
+ 000000D3  49/ 83 F9 08		    cmp r9, 8
+ 000000D7  7C 16		    jl tile_sum_remainder_4
+
+ 000000D9  C5 FC/ 28 16		    vmovaps ymm2, YMMWORD PTR [rsi]
+ 000000DD  C5 EC/ 59 DA		    vmulps ymm3, ymm2, ymm2
+ 000000E1  C5 DC/ 58 E3		    vaddps ymm4, ymm4, ymm3    ; Use ymm4 for remainder accumulation
+
+ 000000E5  48/ 83 C6 20		    add rsi, 32
+ 000000E9  49/ 83 E9 08		    sub r9, 8
+ 000000ED  EB DE		    jmp tile_sum_remainder
+
+ 000000EF			tile_sum_remainder_4:
+				    ; Process remaining 4 or less
+ 000000EF  49/ 83 F9 04		    cmp r9, 4
+ 000000F3  7C 1C		    jl tile_sum_remainder_1
+				    ; Process remaining 4 or less
+ 000000F5  49/ 83 F9 04		    cmp r9, 4
+ 000000F9  7C 16		    jl tile_sum_remainder_1
+
+ 000000FB  C5 F8/ 28 16		    vmovaps xmm2, XMMWORD PTR [rsi]
+ 000000FF  C5 E8/ 59 DA		    vmulps xmm3, xmm2, xmm2
+ 00000103  C5 D0/ 58 EB		    vaddps xmm5, xmm5, xmm3    ; Use xmm5 for small remainder
+
+ 00000107  48/ 83 C6 10		    add rsi, 16
+ 0000010B  49/ 83 E9 04		    sub r9, 4
+ 0000010F  EB BC		    jmp tile_sum_remainder
+
+ 00000111			tile_sum_remainder_1:
+				    ; Process remaining 1-3 elements
+ 00000111  49/ 83 F9 00		    cmp r9, 0
+ 00000115  7E 15		    jle tile_sum_done
+
+				    ; Scalar fallback for last few elements
+ 00000117  F3/ 0F 10 16		    movss xmm2, DWORD PTR [rsi]
+ 0000011B  F3/ 0F 59 D2		    mulss xmm2, xmm2
+ 0000011F  F3/ 0F 58 F2		    addss xmm6, xmm2           ; Use xmm6 for scalar remainder
+
+ 00000123  48/ 83 C6 04		    add rsi, 4
+ 00000127  49/ FF C9		    dec r9
+ 0000012A  EB E5		    jmp tile_sum_remainder_1
+
+ 0000012C			tile_sum_done:
+				    ; Horizontal reduce zmm1 (tile sum) to scalar in xmm1
+ 0000012C  62 F3 FD 48/ 1B	    vextractf64x4 ymm2, zmm1, 1      ; ymm2 = upper 256 bits
+	   CA 01
+ 00000133  C5 F4/ 58 CA		    vaddps ymm1, ymm1, ymm2          ; ymm1 = sum of both halves
+ 00000137  C4 E3 7D/ 19 CA	    vextractf128 xmm2, ymm1, 1       ; xmm2 = upper 128 bits
+	   01
+ 0000013D  C5 F0/ 58 CA		    vaddps xmm1, xmm1, xmm2          ; xmm1 = sum of both 128-bit halves
+ 00000141  C5 FA/ 16 D1		    vmovshdup xmm2, xmm1             ; xmm2 = duplicate high 64 bits
+ 00000145  C5 F0/ 58 CA		    vaddps xmm1, xmm1, xmm2          ; xmm1 = [x0+x1, x0+x1, x2+x3, x2+x3]
+ 00000149  C5 F0/ 12 D1		    vmovhlps xmm2, xmm1, xmm1        ; xmm2 = [x2+x3, x2+x3, x2+x3, x2+x3] (move high 64 bits to low)
+ 0000014D  C5 F2/ 58 CA		    vaddss xmm1, xmm1, xmm2          ; xmm1[0] = sum of 64-element chunks
+
+				    ; Add remainders to zmm1[0]
+				    ; First reduce ymm4 to scalar and add
+ 00000151  C4 E3 7D/ 19 E2	    vextractf128 xmm2, ymm4, 1       ; xmm2 = upper 128 bits of ymm4
+	   01
+ 00000157  C5 D8/ 58 E2		    vaddps xmm4, xmm4, xmm2          ; xmm4 = sum of both 128-bit halves
+ 0000015B  C5 FA/ 16 D4		    vmovshdup xmm2, xmm4             ; xmm2 = duplicate high 64 bits
+ 0000015F  C5 D8/ 58 E2		    vaddps xmm4, xmm4, xmm2          ; xmm4 = [y0+y1, y0+y1, y2+y3, y2+y3]
+ 00000163  C5 D8/ 12 D4		    vmovhlps xmm2, xmm4, xmm4        ; xmm2 = [y2+y3, y2+y3, y2+y3, y2+y3]
+ 00000167  C5 DA/ 58 E2		    vaddss xmm4, xmm4, xmm2          ; xmm4[0] = sum of 16/8-element remainders
+ 0000016B  F3/ 0F 58 CC		    addss xmm1, xmm4                 ; Add to tile sum
+
+				    ; Add xmm5 (4-element remainder)
+ 0000016F  F3/ 0F 58 CD		    addss xmm1, xmm5
+
+				    ; Add xmm6 (scalar remainder)
+ 00000173  F3/ 0F 58 CE		    addss xmm1, xmm6
+
+				    ; Add complete tile sum to global accumulator
+ 00000177  C5 FA/ 58 C1		    vaddss xmm0, xmm0, xmm1
+
+				    ; Restore tile size and subtract from remaining
+ 0000017B  41/ 58		    pop r8
+ 0000017D  49/ 2B D8		    sub rbx, r8
+ 00000180  E9 FFFFFEF2		    jmp phase1_tile_loop
+
+ 00000185			phase1_done:
+				    ; xmm0[0] already contains the total sum of squares (scalar accumulator)
+				    ; No horizontal reduction needed
+
+				    ; Compute mean_sq = sum_sq / n
+				    ; Clear xmm15 before using it for integer conversion
+ 00000185  C4 41 00/ 57 FF	    vxorps xmm15, xmm15, xmm15
+ 0000018A  C4 41 82/ 2A FD	    vcvtsi2ss xmm15, xmm15, r13  ; xmm15 = (float)n
+ 0000018F  C4 C1 7A/ 5E C7	    vdivss xmm0, xmm0, xmm15     ; xmm0 = mean_sq
+
+				    ; Add epsilon
+ 00000194  C5 FA/ 10 15		    vmovss xmm2, DWORD PTR [epsilon_const]
+	   00000000 R
+ 0000019C  C5 FA/ 58 C2		    vaddss xmm0, xmm0, xmm2    ; xmm0 = mean_sq + epsilon
+
+				    ; Compute rms = sqrt(mean_sq + epsilon)
+ 000001A0  C5 FA/ 51 C0		    vsqrtss xmm0, xmm0, xmm0   ; xmm0 = rms
+
+				    ; Broadcast rms to all lanes of zmm7 (preserve across phase 2)
+ 000001A4  62 F2 7D 48/ 18	    vbroadcastss zmm7, xmm0    ; zmm7 = [rms, rms, ...]
+	   F8
+
+				    ; ============================================================================
+				    ; Phase 2: Normalize using global RMS, processing tiles
+				    ; ============================================================================
+
+				    ; Reset pointers
+ 000001AA  49/ 8B F6		    mov rsi, r14          ; reset input
+ 000001AD  48/ 8B FF		    mov rdi, rdi          ; output (already set)
+ 000001B0  4D/ 8B E7		    mov r12, r15          ; reset weights
+ 000001B3  49/ 8B DD		    mov rbx, r13          ; reset size
+
+ 000001B6			phase2_tile_loop:
+ 000001B6  48/ 83 FB 00		    cmp rbx, 0
+ 000001BA  0F 8E 000000F2	    jle normalize_done
+
+				    ; Determine current tile size
+ 000001C0  4C/ 8B C3		    mov r8, rbx
+ 000001C3  49/ 81 F8		    cmp r8, TILE_SIZE_FLOATS
+	   00001000
+ 000001CA  7E 07		    jle tile_size_ok2
+ 000001CC  49/ C7 C0		    mov r8, TILE_SIZE_FLOATS
+	   00001000
+ 000001D3			tile_size_ok2:
+
+ 000001D3  41/ 50		    push r8
+
+				    ; Process tile in 16-float chunks (64 bytes per zmm register)
+ 000001D5  4D/ 8B C8		    mov r9, r8
+
+ 000001D8			tile_normalize_loop:
+ 000001D8  49/ 83 F9 10		    cmp r9, 16
+ 000001DC  7C 31		    jl tile_norm_remainder
+
+				    ; Load input and weights
+ 000001DE  62 F1 7C 48/ 28	    vmovaps zmm0, ZMMWORD PTR [rsi]
+	   06
+ 000001E4  62 D1 7C 48/ 28	    vmovaps zmm1, ZMMWORD PTR [r12]
+	   0C 24
+
+				    ; Normalize: y = x / rms * weight
+ 000001EB  62 F1 7C 48/ 5E	    vdivps zmm2, zmm0, zmm7    ; zmm2 = x / rms
+	   D7
+ 000001F1  62 F1 6C 48/ 59	    vmulps zmm2, zmm2, zmm1    ; zmm2 = y * weight
+	   D1
+
+				    ; Store result
+ 000001F7  62 F1 7C 48/ 29	    vmovaps ZMMWORD PTR [rdi], zmm2
+	   17
+
+ 000001FD  48/ 83 C6 40		    add rsi, 64                ; 16 floats * 4 bytes
+ 00000201  48/ 83 C7 40		    add rdi, 64
+ 00000205  49/ 83 C4 40		    add r12, 64
+ 00000209  49/ 83 E9 10		    sub r9, 16
+ 0000020D  EB C9		    jmp tile_normalize_loop
+
+ 0000020F			tile_norm_remainder:
+				    ; Handle remaining elements (less than 16)
+ 0000020F  49/ 83 F9 00		    cmp r9, 0
+ 00000213  0F 8E 0000008F	    jle tile_norm_done
+
+ 00000219  49/ 83 F9 08		    cmp r9, 8
+ 0000021D  7C 2E		    jl tile_norm_remainder_4
+ 0000021F  49/ 83 F9 08		    cmp r9, 8
+ 00000223  7C 28		    jl tile_norm_remainder_4
+
+ 00000225  C5 FC/ 28 06		    vmovaps ymm0, YMMWORD PTR [rsi]
+ 00000229  C4 C1 7C/ 28 0C	    vmovaps ymm1, YMMWORD PTR [r12]
+	   24
+ 0000022F  C5 FC/ 5E D7		    vdivps ymm2, ymm0, ymm7
+ 00000233  C5 EC/ 59 D1		    vmulps ymm2, ymm2, ymm1
+ 00000237  C5 FC/ 29 17		    vmovaps YMMWORD PTR [rdi], ymm2
+
+ 0000023B  48/ 83 C6 20		    add rsi, 32
+ 0000023F  48/ 83 C7 20		    add rdi, 32
+ 00000243  49/ 83 C4 20		    add r12, 32
+ 00000247  49/ 83 E9 08		    sub r9, 8
+ 0000024B  EB C2		    jmp tile_norm_remainder
+
+ 0000024D			tile_norm_remainder_4:
+ 0000024D  49/ 83 F9 04		    cmp r9, 4
+ 00000251  7C 28		    jl tile_norm_remainder_1
+
+ 00000253  C5 F8/ 28 06		    vmovaps xmm0, XMMWORD PTR [rsi]
+ 00000257  C4 C1 78/ 28 0C	    vmovaps xmm1, XMMWORD PTR [r12]
+	   24
+ 0000025D  C5 F8/ 5E D7		    vdivps xmm2, xmm0, xmm7
+ 00000261  C5 E8/ 59 D1		    vmulps xmm2, xmm2, xmm1
+ 00000265  C5 F8/ 29 17		    vmovaps XMMWORD PTR [rdi], xmm2
+
+ 00000269  48/ 83 C6 10		    add rsi, 16
+ 0000026D  48/ 83 C7 10		    add rdi, 16
+ 00000271  49/ 83 C4 10		    add r12, 16
+ 00000275  49/ 83 E9 04		    sub r9, 4
+ 00000279  EB 94		    jmp tile_norm_remainder
+
+ 0000027B			tile_norm_remainder_1:
+ 0000027B  49/ 83 F9 00		    cmp r9, 0
+ 0000027F  7E 27		    jle tile_norm_done
+
+ 00000281  F3/ 0F 10 06		    movss xmm0, DWORD PTR [rsi]
+ 00000285  F3/ 41/ 0F 10 0C	    movss xmm1, DWORD PTR [r12]
+	   24
+ 0000028B  F3/ 0F 5E C7		    divss xmm0, xmm7
+ 0000028F  F3/ 0F 59 C1		    mulss xmm0, xmm1
+ 00000293  F3/ 0F 11 07		    movss DWORD PTR [rdi], xmm0
+
+ 00000297  48/ 83 C6 04		    add rsi, 4
+ 0000029B  48/ 83 C7 04		    add rdi, 4
+ 0000029F  49/ 83 C4 04		    add r12, 4
+ 000002A3  49/ FF C9		    dec r9
+ 000002A6  EB D3		    jmp tile_norm_remainder_1
+
+ 000002A8			tile_norm_done:
+ 000002A8  41/ 58		    pop r8
+ 000002AA  49/ 2B D8		    sub rbx, r8
+ 000002AD  E9 FFFFFF04		    jmp phase2_tile_loop
+
+ 000002B2			normalize_done:
+ 000002B2  48/ 33 C0		    xor rax, rax
+ 000002B5  EB 1B		    jmp cleanup
+
+ 000002B7			error_null:
+ 000002B7  48/ C7 C0		    mov rax, 1
+	   00000001
+ 000002BE  EB 12		    jmp cleanup
+
+ 000002C0			error_zero:
+ 000002C0  48/ C7 C0		    mov rax, 2
+	   00000002
+ 000002C7  EB 09		    jmp cleanup
+
+ 000002C9			error_align:
+ 000002C9  48/ C7 C0		    mov rax, 3
+	   00000003
+ 000002D0  EB 00		    jmp cleanup
+
+ 000002D2			cleanup:
+ 000002D2  C5 F8 77		    vzeroupper
+ 000002D5  41/ 5F		    pop r15
+ 000002D7  41/ 5E		    pop r14
+ 000002D9  41/ 5D		    pop r13
+ 000002DB  41/ 5C		    pop r12
+ 000002DD  5F			    pop rdi
+ 000002DE  5E			    pop rsi
+ 000002DF  5B			    pop rbx
+ 000002E0  48/ 83 C4 40		    add rsp, 64
+ 000002E4  5D			    pop rbp
+ 000002E5  C3			    ret
+
+ 000002E6			MASM_RMSNorm_Tiled ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:17
+F:/rawrxd/src/validation/kernels/masm/rmsnorm_tiled.asm	     Symbols 2 - 1
+
+
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+CONST  . . . . . . . . . . . . .	 00000008 16	  'CONST'	 ReadOnly
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_RMSNorm_Tiled . . . . . . .	P 	 00000000 _TEXT	Length= 000002E6 Public
+  phase1_tile_loop . . . . . . .	L 	 00000077 _TEXT	
+  tile_size_ok . . . . . . . . .	L 	 00000094 _TEXT	
+  tile_sum_loop  . . . . . . . .	L 	 000000AB _TEXT	
+  tile_sum_remainder . . . . . .	L 	 000000CD _TEXT	
+  tile_sum_remainder_4 . . . . .	L 	 000000EF _TEXT	
+  tile_sum_remainder_1 . . . . .	L 	 00000111 _TEXT	
+  tile_sum_done  . . . . . . . .	L 	 0000012C _TEXT	
+  phase1_done  . . . . . . . . .	L 	 00000185 _TEXT	
+  phase2_tile_loop . . . . . . .	L 	 000001B6 _TEXT	
+  tile_size_ok2  . . . . . . . .	L 	 000001D3 _TEXT	
+  tile_normalize_loop  . . . . .	L 	 000001D8 _TEXT	
+  tile_norm_remainder  . . . . .	L 	 0000020F _TEXT	
+  tile_norm_remainder_4  . . . .	L 	 0000024D _TEXT	
+  tile_norm_remainder_1  . . . .	L 	 0000027B _TEXT	
+  tile_norm_done . . . . . . . .	L 	 000002A8 _TEXT	
+  normalize_done . . . . . . . .	L 	 000002B2 _TEXT	
+  error_null . . . . . . . . . .	L 	 000002B7 _TEXT	
+  error_zero . . . . . . . . . .	L 	 000002C0 _TEXT	
+  error_align  . . . . . . . . .	L 	 000002C9 _TEXT	
+  cleanup  . . . . . . . . . . .	L 	 000002D2 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+TILE_SIZE_BYTES  . . . . . . . .	Number	 00004000h   
+TILE_SIZE_FLOATS . . . . . . . .	Number	 00001000h   
+epsilon_const  . . . . . . . . .	DWord	 00000000 CONST	
+one_over_tile  . . . . . . . . .	DWord	 00000004 CONST	
+
+	   0 Warnings
+	   0 Errors

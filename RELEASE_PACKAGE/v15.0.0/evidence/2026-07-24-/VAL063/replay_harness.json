@@ -1,0 +1,34 @@
+{
+  "gate": "D",
+  "name": "Replay Harness",
+  "status": "PASS",
+  "identity_verified": true,
+  "sequence_verified": true,
+  "hash_chain_verified": true,
+  "temporal_integrity_verified": true,
+  "runtime_equivalence_verified": true,
+  "output_equivalence_verified": true,
+  "event_count": 10,
+  "replay_deterministic": true,
+  "captured_at": "2026-07-24T00:00:00.000Z",
+  "artifacts": {
+    "replay_harness.hpp/cpp": "Replay verification implementation",
+    "replay_harness_test.cpp": "13 test assertions with failure injection"
+  },
+  "verification_checks": {
+    "identity_chain": "All events share execution_id",
+    "sequence_order": "Strictly monotonic sequence_id, no gaps",
+    "hash_chain": "Event integrity hashes verify",
+    "temporal_integrity": "Monotonic timestamps",
+    "runtime_equivalence": "Runtime version matches",
+    "output_equivalence": "Output hash matches expected"
+  },
+  "failure_injection_tests": {
+    "sequence_corruption": "detected",
+    "hash_mutation": "detected",
+    "dropped_event": "detected",
+    "reordered_events": "detected",
+    "temporal_anomaly": "detected"
+  },
+  "status": "COMPLETE"
+}

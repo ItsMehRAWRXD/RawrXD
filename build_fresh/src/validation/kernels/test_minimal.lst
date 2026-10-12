@@ -1,0 +1,40 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:13
+F:/rawrxd/src/validation/kernels/masm/test_minimal.asm	     Page 1 - 1
+
+
+				; ============================================================================
+				; test_minimal.asm - Absolute minimal test function
+				; ============================================================================
+				; This function just returns 0 to verify linkage works
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+ 00000000			.code
+
+				; Export the symbol
+				PUBLIC MASM_Test_Minimal
+
+				; ============================================================================
+				; MASM_Test_Minimal - Returns 0 (success)
+				; ============================================================================
+ 00000000			MASM_Test_Minimal PROC
+ 00000000  48/ 33 C0		    xor rax, rax    ; Return 0
+ 00000003  C3			    ret
+ 00000004			MASM_Test_Minimal ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:13
+F:/rawrxd/src/validation/kernels/masm/test_minimal.asm	     Symbols 2 - 1
+
+
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_Test_Minimal  . . . . . . .	P 	 00000000 _TEXT	Length= 00000004 Public
+
+	   0 Warnings
+	   0 Errors

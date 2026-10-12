@@ -1,0 +1,92 @@
+{
+  "id": "VAL-050",
+  "name": "Win32 Startup Stack Safety",
+  "timestamp": "2026-07-24T12:30:00Z",
+  "status": "PASS",
+  "failure": {
+    "exception": "0xC00000FD",
+    "symbol": "Win32IDE::onCreate",
+    "component": "Win32IDE_TabManager",
+    "description": "STATUS_STACK_OVERFLOW during WM_CREATE processing"
+  },
+  "rootCause": {
+    "summary": "Nested CreateWindow and heavy initialization during WM_CREATE",
+    "details": [
+      "WM_CREATE dispatched to onCreate()",
+      "onCreate() called createTabBar() synchronously",
+      "TabManager::initialize() called CreateWindow()",
+      "CreateWindow() can dispatch nested WM_CREATE before original stack unwound",
+      "JSON/theme initialization compounded stack pressure",
+      "Stack exhaustion resulted in 0xC00000FD"
+    ]
+  },
+  "fix": {
+    "strategy": "Deferred child window creation",
+    "implementation": [
+      "Moved createTabBar() from onCreate() to onCreateChildren()",
+      "onCreateChildren() runs after WM_CREATE completes via WM_APP + 99",
+      "Follows existing pattern for createOutputTabs, createPowerShellPanel, createChatPanel"
+    ],
+    "filesModified": [
+      "src/win32app/Win32IDE_Core.cpp"
+    ]
+  },
+  "verification": {
+    "build": "PASS",
+    "binary": "RawrXD-Win32IDE.exe",
+    "sizeBytes": 318285824,
+    "sizeHuman": "318MB",
+    "commit": "56ef83e339b98d54c9a997c46c2d141f11495a7f",
+    "branch": "copilot/vscode-mlyextom-3zgo-phase7a"
+  },
+  "regressionPrevention": {
+    "startupPhaseGuard": "IMPLEMENTED",
+    "heavyInitProtection": "DEFERRED_TO_CHILDREN_PHASE",
+    "stackUsageLogging": "ENABLED",
+    "phaseCheckEnforcement": "ENABLED"
+  },
+  "hardening": {
+    "startupPhaseEnum": [
+      "PreCreate",
+      "CreatingMainWindow",
+      "ChildrenDeferred",
+      "Running"
+    ],
+    "protectedOperations": [
+      "JSON config loading",
+      "Plugin loading",
+      "Model discovery",
+      "Panel creation",
+      "GPU initialization",
+      "Theme parsing"
+    ],
+    "guardMethod": "allowHeavyInitialization()",
+    "filesModified": [
+      "src/win32app/Win32IDE.h",
+      "src/win32app/Win32IDE_Core.cpp",
+      "src/win32app/Win32IDE.cpp"
+    ]
+  },
+  "executionEvidence": {
+    "testId": "VAL-050-EXEC",
+    "timestamp": "2026-07-24T12:44:46Z",
+    "binarySha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "processLaunched": true,
+    "pid": 23872,
+    "stackOverflowDetected": false,
+    "criticalInvariant": "PASS - No 0xC00000FD during startup",
+    "durationMs": 32881.88,
+    "evidencePath": "startup_smoke/startup_execution.json"
+  },
+  "evidenceLevel": "L3",
+  "notes": "This fix demonstrates reproducible failure → diagnosis → fix → verification loop. The startup phase guard prevents recurrence in any subsystem. Execution evidence confirms no stack overflow (0xC00000FD) during startup.",
+  "nextSteps": [
+    "VAL-051: IDE Launch Witness - Full window creation and visibility",
+    "VAL-052: Runtime Component Loading - Verify all subsystems initialize",
+    "VAL-053: GGUF Loading - Load real model file",
+    "VAL-054: Tokenizer - Verify tokenization parity",
+    "VAL-055: Forward Pass - Layer execution",
+    "VAL-056: Sampler - Token generation",
+    "VAL-057: Deterministic Generation - Reproducible output"
+  ]
+}

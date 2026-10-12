@@ -1,0 +1,257 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:12
+F:/rawrxd/src/validation/kernels/masm/rmsnorm_forward_avx2.asm  Page 1 - 1
+
+
+				; ============================================================================
+				; RMSNorm_Forward_AVX2.asm
+				; ============================================================================
+				; RMS Normalization kernel with AVX2 optimization
+				; 
+				; Algorithm:
+				;   1. Compute sum of squares: sum_sq = sum(x[i]^2)
+				;   2. Compute mean square: mean_sq = sum_sq / n
+				;   3. Compute RMS: rms = sqrt(mean_sq + epsilon)
+				;   4. Normalize: y[i] = x[i] / rms * weight[i]
+				;
+				; Performance: 8 floats per iteration (AVX2 YMM registers)
+				; ============================================================================
+
+ 00000000			_TEXT SEGMENT
+
+				; Export the symbol
+				PUBLIC MASM_RMSNorm_Forward_AVX2
+
+				; ============================================================================
+				; MASM_RMSNorm_Forward_AVX2
+				; ============================================================================
+				; Computes RMS normalization with AVX2 SIMD optimization
+				;
+				; Parameters:
+				;   RCX = float* input       (input data, must be 32-byte aligned)
+				;   RDX = float* output      (output data, must be 32-byte aligned)
+				;   R8  = float* weights     (weight vector, must be 32-byte aligned)
+				;   R9  = size_t size        (number of elements, must be multiple of 8)
+				;
+				; Returns:
+				;   RAX = 0 on success, non-zero error code on failure
+				;
+				; Error Codes:
+				;   1 = null pointer (input, output, or weights)
+				;   2 = zero size
+				;   3 = misaligned pointer (not 32-byte aligned)
+				;   4 = invalid size (not multiple of 8)
+				; ============================================================================
+
+				ALIGN 16
+ 00000000			MASM_RMSNorm_Forward_AVX2 PROC
+				    ; Prologue - save non-volatile registers
+ 00000000  53			    push rbx
+ 00000001  56			    push rsi
+ 00000002  57			    push rdi
+ 00000003  41/ 54		    push r12
+ 00000005  41/ 55		    push r13
+ 00000007  48/ 83 EC 28		    sub rsp, 40
+				    
+				    ; Validate parameters
+ 0000000B  48/ 85 C9		    test rcx, rcx
+ 0000000E  0F 84 000000F7	    jz null_pointer_error
+ 00000014  48/ 85 D2		    test rdx, rdx
+ 00000017  0F 84 000000EE	    jz null_pointer_error
+ 0000001D  4D/ 85 C0		    test r8, r8
+ 00000020  0F 84 000000E5	    jz null_pointer_error
+ 00000026  4D/ 85 C9		    test r9, r9
+ 00000029  0F 84 000000E5	    jz zero_size_error
+				    
+				    ; Check alignment (32-byte)
+ 0000002F  48/ F7 C1		    test rcx, 1Fh
+	   0000001F
+ 00000036  0F 85 000000E1	    jnz misaligned_error
+ 0000003C  48/ F7 C2		    test rdx, 1Fh
+	   0000001F
+ 00000043  0F 85 000000D4	    jnz misaligned_error
+ 00000049  49/ F7 C0		    test r8, 1Fh
+	   0000001F
+ 00000050  0F 85 000000C7	    jnz misaligned_error
+				    
+				    ; Check size (must be multiple of 8)
+ 00000056  49/ F7 C1		    test r9, 7
+	   00000007
+ 0000005D  0F 85 000000C3	    jnz invalid_size_error
+				    
+				    ; Save parameters
+ 00000063  48/ 8B F1		    mov rsi, rcx          ; input pointer
+ 00000066  48/ 8B FA		    mov rdi, rdx          ; output pointer
+ 00000069  4D/ 8B E0		    mov r12, r8           ; weights pointer
+ 0000006C  49/ 8B D9		    mov rbx, r9           ; size
+				    
+				    ; Initialize accumulator for sum of squares
+ 0000006F  C5 FC/ 57 C0		    vxorps ymm0, ymm0, ymm0    ; sum_sq = 0
+				    
+				    ; Phase 1: Compute sum of squares
+				    ; Process 8 floats per iteration
+ 00000073			sum_squares_loop:
+ 00000073  48/ 85 DB		    test rbx, rbx
+ 00000076  74 16		    jz sum_done
+				    
+				    ; Load 8 floats from input
+ 00000078  C5 FC/ 28 0E		    vmovaps ymm1, [rsi]
+				    
+				    ; Square each element
+ 0000007C  C5 F4/ 59 D1		    vmulps ymm2, ymm1, ymm1
+				    
+				    ; Accumulate sum of squares
+ 00000080  C5 FC/ 58 C2		    vaddps ymm0, ymm0, ymm2
+				    
+				    ; Advance pointers
+ 00000084  48/ 83 C6 20		    add rsi, 32
+ 00000088  48/ 83 EB 08		    sub rbx, 8
+ 0000008C  EB E5		    jmp sum_squares_loop
+				    
+ 0000008E			sum_done:
+				    ; Horizontal reduction: sum all 8 elements in YMM0
+				    ; ymm0 = [s0, s1, s2, s3, s4, s5, s6, s7]
+				    
+				    ; Step 1: Add high half to low half
+ 0000008E  C4 E3 7D/ 19 C1	    vextractf128 xmm1, ymm0, 1    ; xmm1 = [s4, s5, s6, s7]
+	   01
+ 00000094  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1        ; xmm0 = [s0+s4, s1+s5, s2+s6, s3+s7]
+				    
+				    ; Step 2: Shuffle and add
+ 00000098  C5 FA/ 16 D0		    vmovshdup xmm2, xmm0           ; xmm2 = [s1+s5, s3+s7, s1+s5, s3+s7]
+ 0000009C  C5 F8/ 58 C2		    vaddps xmm0, xmm0, xmm2        ; xmm0 = [s0+s4+s1+s5, s2+s6+s3+s7, ...]
+				    
+				    ; Step 3: Final reduction
+ 000000A0  C5 E8/ 12 D0		    vmovhlps xmm2, xmm2, xmm0      ; xmm2 = [s2+s6+s3+s7, ...]
+ 000000A4  C5 F8/ 58 C2		    vaddps xmm0, xmm0, xmm2        ; xmm0 = [total_sum, ...]
+				    
+				    ; xmm0 now contains the total sum of squares in the first element
+				    
+				    ; Compute mean square: mean_sq = sum_sq / n
+ 000000A8  C4 C1 F2/ 2A C9	    vcvtsi2ss xmm1, xmm1, r9       ; xmm1 = size (as float)
+ 000000AD  C5 FA/ 5E C1		    vdivss xmm0, xmm0, xmm1        ; xmm0 = mean_sq
+				    
+				    ; Add epsilon (1e-5) for numerical stability
+				    ; Load epsilon constant
+ 000000B1  C5 FA/ 10 15		    vmovss xmm2, [epsilon]
+	   00000140 R
+ 000000B9  C5 FA/ 58 C2		    vaddss xmm0, xmm0, xmm2        ; xmm0 = mean_sq + epsilon
+				    
+				    ; Compute RMS: rms = sqrt(mean_sq + epsilon)
+ 000000BD  C5 FA/ 51 C0		    vsqrtss xmm0, xmm0, xmm0       ; xmm0 = rms
+				    
+				    ; Broadcast RMS to all 8 positions
+ 000000C1  C4 E2 7D/ 18 D8	    vbroadcastss ymm3, xmm0        ; ymm3 = [rms, rms, rms, rms, rms, rms, rms, rms]
+				    
+				    ; Phase 2: Normalize and apply weights
+				    ; Reset pointers
+ 000000C6  48/ 8B F1		    mov rsi, rcx          ; input pointer
+ 000000C9  48/ 8B FA		    mov rdi, rdx          ; output pointer
+ 000000CC  49/ 8B D9		    mov rbx, r9           ; size
+				    
+ 000000CF			normalize_loop:
+ 000000CF  48/ 85 DB		    test rbx, rbx
+ 000000D2  74 28		    jz normalize_done
+				    
+				    ; Load 8 floats from input
+ 000000D4  C5 FC/ 28 0E		    vmovaps ymm1, [rsi]
+				    
+				    ; Load 8 floats from weights
+ 000000D8  C4 C1 7C/ 28 14	    vmovaps ymm2, [r12]
+	   24
+				    
+				    ; Normalize: y = x / rms
+ 000000DE  C5 F4/ 5E CB		    vdivps ymm1, ymm1, ymm3
+				    
+				    ; Apply weights: y = y * weight
+ 000000E2  C5 F4/ 59 CA		    vmulps ymm1, ymm1, ymm2
+				    
+				    ; Store result
+ 000000E6  C5 FC/ 29 0F		    vmovaps [rdi], ymm1
+				    
+				    ; Advance pointers
+ 000000EA  48/ 83 C6 20		    add rsi, 32
+ 000000EE  48/ 83 C7 20		    add rdi, 32
+ 000000F2  49/ 83 C4 20		    add r12, 32
+ 000000F6  48/ 83 EB 08		    sub rbx, 8
+ 000000FA  EB D3		    jmp normalize_loop
+				    
+ 000000FC			normalize_done:
+				    ; Success
+ 000000FC  48/ 33 C0		    xor rax, rax          ; return 0
+				    
+				    ; Epilogue
+ 000000FF  48/ 83 C4 28		    add rsp, 40
+ 00000103  41/ 5D		    pop r13
+ 00000105  41/ 5C		    pop r12
+ 00000107  5F			    pop rdi
+ 00000108  5E			    pop rsi
+ 00000109  5B			    pop rbx
+ 0000010A  C3			    ret
+				    
+				; Error handlers
+ 0000010B			null_pointer_error:
+ 0000010B  48/ C7 C0		    mov rax, 1
+	   00000001
+ 00000112  EB 19		    jmp epilogue
+				    
+ 00000114			zero_size_error:
+ 00000114  48/ C7 C0		    mov rax, 2
+	   00000002
+ 0000011B  EB 10		    jmp epilogue
+				    
+ 0000011D			misaligned_error:
+ 0000011D  48/ C7 C0		    mov rax, 3
+	   00000003
+ 00000124  EB 07		    jmp epilogue
+				    
+ 00000126			invalid_size_error:
+ 00000126  48/ C7 C0		    mov rax, 4
+	   00000004
+				    
+ 0000012D			epilogue:
+ 0000012D  48/ 83 C4 28		    add rsp, 40
+ 00000131  41/ 5D		    pop r13
+ 00000133  41/ 5C		    pop r12
+ 00000135  5F			    pop rdi
+ 00000136  5E			    pop rsi
+ 00000137  5B			    pop rbx
+ 00000138  C3			    ret
+
+				ALIGN 16
+ 00000140 3727C5AC		epsilon DD 1.0e-5
+
+ 00000144			MASM_RMSNorm_Forward_AVX2 ENDP
+
+ 00000144			_TEXT ENDS
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:12
+F:/rawrxd/src/validation/kernels/masm/rmsnorm_forward_avx2.asm  Symbols 2 - 1
+
+
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_RMSNorm_Forward_AVX2  . . .	P 	 00000000 _TEXT	Length= 00000144 Public
+  sum_squares_loop . . . . . . .	L 	 00000073 _TEXT	
+  sum_done . . . . . . . . . . .	L 	 0000008E _TEXT	
+  normalize_loop . . . . . . . .	L 	 000000CF _TEXT	
+  normalize_done . . . . . . . .	L 	 000000FC _TEXT	
+  null_pointer_error . . . . . .	L 	 0000010B _TEXT	
+  zero_size_error  . . . . . . .	L 	 00000114 _TEXT	
+  misaligned_error . . . . . . .	L 	 0000011D _TEXT	
+  invalid_size_error . . . . . .	L 	 00000126 _TEXT	
+  epilogue . . . . . . . . . . .	L 	 0000012D _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+epsilon  . . . . . . . . . . . .	DWord	 00000140 _TEXT	
+
+	   0 Warnings
+	   0 Errors

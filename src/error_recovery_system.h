@@ -132,6 +132,11 @@ public:
     // Utility - member functions (const)
     QString errorSeverityToString(ErrorSeverity severity) const;
     QString errorCategoryToString(ErrorCategory category) const;
+    
+    // RecoveryStrategyString - converts RecoveryStrategy enum/ID to string
+    static QString RecoveryStrategyString(const QString& strategyId);
+    static QString RecoveryStrategyString(const struct RecoveryStrategy& strategy);
+    static std::string RecoveryStrategyStringStd(const std::string& strategyId);
 
 signals:
     void errorRecorded(const ErrorRecord& error);

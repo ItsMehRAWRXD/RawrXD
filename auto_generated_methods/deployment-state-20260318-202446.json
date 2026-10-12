@@ -1,0 +1,10 @@
+{
+  "SystemReady": true,
+  "DeploymentStartTime": "2026-03-18T20:24:48.1594454-04:00",
+  "FailedModules": 3,
+  "Version": "1.0.0",
+  "LoadedModules": 25,
+  "Mode": "Full",
+  "ModuleCount": 28,
+  "Timestamp": "2026-03-18T20:24:48.1589188-04:00"
+}

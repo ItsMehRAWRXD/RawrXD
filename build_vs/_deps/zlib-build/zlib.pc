@@ -1,0 +1,13 @@
+prefix=C:/Program Files/RawrXD
+exec_prefix=C:/Program Files/RawrXD
+libdir=C:/Program Files/RawrXD/lib
+sharedlibdir=C:/Program Files/RawrXD/lib
+includedir=C:/Program Files/RawrXD/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.3
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}

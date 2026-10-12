@@ -1,0 +1,148 @@
+{
+  "benchmark": "RawrXD Production Benchmark",
+  "version": "1.0",
+  "timestamp": 1787530670,
+  "model": "D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "hardware": {
+    "cpu": "AMD Ryzen 9 7800X3D",
+    "gpu0": "AMD Radeon RX 7800 XT 16GB",
+    "gpu1": "AMD Radeon Pro W7900 32GB"
+  },
+  "results": [
+  {
+    "model": "D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "quant": "Q4_K",
+    "context_len": 4096,
+    "prompt_tokens": 45,
+    "generated_tokens": 1,
+    "load_ms": 999.758,
+    "prefill_ms": 4772.69,
+    "first_token_ms": 4903.05,
+    "decode_ms": 4903.05,
+    "per_token_ms": 4903.05,
+    "prefill_tps": 9.42864,
+    "decode_tps": 0.203955,
+    "peak_ram_bytes": 25216184320,
+    "peak_vram_bytes": 0
+    ,"profile": {
+  "summary": {
+    "num_tokens_profiled": 1,
+    "avg_latency_ms": 146.783,
+    "avg_tps": 6.813,
+  },
+  "avg_phases_us": {
+    "embed": 25,
+    "attn_norm": 1,
+    "qkv_proj": 0,
+    "rope": 1,
+    "kv_store": 0,
+    "attn_compute": 84,
+    "attn_out_proj": 167,
+    "attn_residual": 0,
+    "ffn_norm": 1,
+    "ffn_gate": 398,
+    "ffn_up": 419,
+    "ffn_swiglu": 1,
+    "ffn_down": 421,
+    "ffn_residual": 0,
+    "final_norm": 0,
+    "logits": 37331,
+    "sampling": 4557,
+    "total": 146783
+  },
+  "avg_quant_us": {
+    "q4_0": 0,
+    "q4_1": 0,
+    "q4_k": 36585,
+    "q5_0": 0,
+    "q5_1": 0,
+    "q5_k": 0,
+    "q6_k": 103461,
+    "q8_0": 0,
+    "q2_k": 0,
+    "q3_k": 0,
+    "fp16": 0,
+    "fp32": 0,
+    "other": 0
+  },
+  "bottleneck": {
+    "phase": "logits",
+    "avg_us": 37331,
+    "pct_of_total": 25.433
+  },
+  "dominant_quant": {
+    "type": "q6_k",
+    "avg_us": 103461,
+    "pct_of_total": 70.486
+  },
+  "profiles": [
+    {
+  "timestamp_ns": 67647791668400,
+  "token_index": 0,
+  "seq_length": 45,
+  "model_name": "loaded",
+  "quant_bits": 0,
+  "hidden_dim": 2048,
+  "num_layers": 22,
+  "num_heads": 32,
+  "latency_ms": 146.783,
+  "tokens_per_second": 6.813,
+  "phases_us": {
+    "embed": 25,
+    "attn_norm": 1,
+    "qkv_proj": 0,
+    "rope": 1,
+    "kv_store": 0,
+    "attn_compute": 84,
+    "attn_out_proj": 167,
+    "attn_residual": 0,
+    "ffn_norm": 1,
+    "ffn_gate": 398,
+    "ffn_up": 419,
+    "ffn_swiglu": 1,
+    "ffn_down": 421,
+    "ffn_residual": 0,
+    "final_norm": 0,
+    "logits": 37331,
+    "sampling": 4557,
+    "total": 146783
+  },
+  "quant_us": {
+    "q4_0": 0,
+    "q4_1": 0,
+    "q4_k": 36585,
+    "q5_0": 0,
+    "q5_1": 0,
+    "q5_k": 0,
+    "q6_k": 103461,
+    "q8_0": 0,
+    "q2_k": 0,
+    "q3_k": 0,
+    "fp16": 0,
+    "fp32": 0,
+    "other": 0
+  }
+}
+
+  ]
+}
+
+  },
+  {
+    "model": "D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "quant": "Q4_K",
+    "context_len": 4096,
+    "prompt_tokens": 45,
+    "generated_tokens": 10,
+    "load_ms": 999.758,
+    "prefill_ms": 4777,
+    "first_token_ms": 4805.28,
+    "decode_ms": 10822.8,
+    "per_token_ms": 1082.28,
+    "prefill_tps": 9.42015,
+    "decode_tps": 0.923976,
+    "peak_ram_bytes": 23769411584,
+    "peak_vram_bytes": 0
+  }
+  ]
+}

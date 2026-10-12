@@ -1,0 +1,10 @@
+{
+  "heap_alloc_fixes": [
+    "RawrXD_TerminalManager_Win32.cpp: cmdLine[32768] -> heap",
+    "VSCodeMarketplaceAPI.cpp: buf[32768] -> heap"
+  ],
+  "cmake_target": "RawrXD-Win32IDE",
+  "validation_gates": 62,
+  "timestamp": "2026-07-24T12:32:28.5286311-04:00",
+  "stack_size": "4194304"
+}

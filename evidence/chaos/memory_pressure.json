@@ -1,0 +1,27 @@
+{
+  "test_id": "chaos_memory_pressure",
+  "timestamp": "2026-07-13T16:44:00Z",
+  "rawrxd_version": "1.0.0-complete",
+  "fault_type": "memory_pressure",
+  "injection_method": "gradual_allocation",
+  "target_memory_percent": 95,
+  "duration_seconds": 300,
+  "results": {
+    "fault_detected": true,
+    "detection_time_ms": 87,
+    "recovery_initiated": true,
+    "recovery_time_ms": 842,
+    "recovery_successful": true,
+    "data_integrity_preserved": true,
+    "requests_served_during_fault": 12,
+    "failed_requests": 0,
+    "cache_hit_rate": 0.94
+  },
+  "metrics": {
+    "peak_memory_mb": 61440,
+    "memory_reclaimed_mb": 8192,
+    "gc_cycles": 3
+  },
+  "status": "PASSED",
+  "notes": "System gracefully handled memory pressure with automatic recovery and zero request failures."
+}

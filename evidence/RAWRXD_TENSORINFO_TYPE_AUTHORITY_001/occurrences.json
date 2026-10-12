@@ -1,0 +1,1514 @@
+[
+  {
+    "file": "standalone_gguf_test.cpp",
+    "line": 30,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "standalone_gguf_test.cpp",
+    "line": 41,
+    "text": "std::vector<TensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "standalone_gguf_test.cpp",
+    "line": 75,
+    "text": "TensorInfo info;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "deploy/tests/test_model_loader_streamer_smoke.cpp",
+    "line": 400,
+    "text": "const auto tensors = loader.GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "deploy/tests/test_model_loader_streamer_smoke.cpp",
+    "line": 437,
+    "text": "const auto tensors = streaming.GetTensorInfo();",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 55,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 84,
+    "text": "virtual std::vector<TensorInfo> GetTensorInfo() const = 0;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 87,
+    "text": "virtual size_t GetTensorByteSize(const TensorInfo& tensor) const = 0;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 96,
+    "text": "virtual std::vector<TensorInfo> GetAllTensorInfo() const = 0;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 118,
+    "text": "std::vector<TensorInfo> GetTensorInfo() const override { return tensors_; }",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 144,
+    "text": "size_t GetTensorByteSize(const TensorInfo& tensor) const override;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 164,
+    "text": "std::vector<TensorInfo> GetAllTensorInfo() const override { return tensors_; }",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 172,
+    "text": "std::vector<TensorInfo> tensors_;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "include/gguf_loader.h",
+    "line": 174,
+    "text": "std::unordered_map<std::string, const TensorInfo*> tensor_index_;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "include/streaming_gguf_loader.h",
+    "line": 47,
+    "text": "std::vector<TensorInfo> GetTensorInfo() const override;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "include/streaming_gguf_loader.h",
+    "line": 49,
+    "text": "size_t GetTensorByteSize(const TensorInfo& tensor) const override;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "include/streaming_gguf_loader.h",
+    "line": 82,
+    "text": "std::vector<TensorInfo> GetAllTensorInfo() const override;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/bench_main.cpp",
+    "line": 167,
+    "text": "result.tensor_count = loader.GetTensorInfo().size();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/gguf_loader.cpp",
+    "line": 136,
+    "text": "TensorInfo tensor;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/gguf_loader.cpp",
+    "line": 171,
+    "text": "[&tensor_name](const TensorInfo& t) { return t.name == tensor_name; });",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/gguf_loader.cpp",
+    "line": 214,
+    "text": "size_t GGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/gguf_loader.cpp",
+    "line": 245,
+    "text": "//       GetAllTensorInfo, GetCurrentMemoryUsage are implemented inline in gguf_loader.h",
+    "is_comment": true,
+    "class": "Unrelated"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "line": 486,
+    "text": "std::vector<TensorInfo> StreamingGGUFLoader::GetAllTensorInfo() const {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "line": 487,
+    "text": "std::vector<TensorInfo> result;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "line": 489,
+    "text": "TensorInfo info;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "line": 500,
+    "text": "std::vector<TensorInfo> StreamingGGUFLoader::GetTensorInfo() const {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "line": 501,
+    "text": "return GetAllTensorInfo();",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "line": 604,
+    "text": "size_t StreamingGGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/win32app/Win32IDE.cpp",
+    "line": 4108,
+    "text": "m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+    "line": 732,
+    "text": "std::vector<TensorInfo> m_modelTensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/bench_main.cpp",
+    "line": 167,
+    "text": "result.tensor_count = loader.GetTensorInfo().size();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/cpu_inference_engine.cpp",
+    "line": 288,
+    "text": "auto infos = m_loader->GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/gguf_loader.cpp",
+    "line": 301,
+    "text": "TensorInfo tensor;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/gguf_loader.cpp",
+    "line": 421,
+    "text": "const TensorInfo* tensor_info = it->second;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/gguf_loader.cpp",
+    "line": 480,
+    "text": "size_t GGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/gguf_loader.cpp",
+    "line": 512,
+    "text": "//       GetAllTensorInfo, GetCurrentMemoryUsage are implemented inline in gguf_loader.h",
+    "is_comment": true,
+    "class": "Unrelated"
+  },
+  {
+    "file": "src/RawrXD_Interfaces.h",
+    "line": 122,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/RawrXD_Interfaces.h",
+    "line": 166,
+    "text": "virtual std::vector<TensorInfo> GetTensorInfo() const = 0;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/RawrXD_Interfaces.h",
+    "line": 172,
+    "text": "virtual size_t GetTensorByteSize(const TensorInfo& tensor) const = 0;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/RawrXD_Interfaces.h",
+    "line": 182,
+    "text": "virtual std::vector<TensorInfo> GetAllTensorInfo() const = 0;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/streaming_gguf_loader.cpp",
+    "line": 490,
+    "text": "std::vector<TensorInfo> StreamingGGUFLoader::GetAllTensorInfo() const {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/streaming_gguf_loader.cpp",
+    "line": 491,
+    "text": "std::vector<TensorInfo> result;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/streaming_gguf_loader.cpp",
+    "line": 493,
+    "text": "TensorInfo info;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/streaming_gguf_loader.cpp",
+    "line": 504,
+    "text": "std::vector<TensorInfo> StreamingGGUFLoader::GetTensorInfo() const {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/streaming_gguf_loader.cpp",
+    "line": 505,
+    "text": "return GetAllTensorInfo();",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/streaming_gguf_loader.cpp",
+    "line": 608,
+    "text": "size_t StreamingGGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/streaming_gguf_loader.h",
+    "line": 47,
+    "text": "std::vector<TensorInfo> GetTensorInfo() const override;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/streaming_gguf_loader.h",
+    "line": 49,
+    "text": "size_t GetTensorByteSize(const TensorInfo& tensor) const override;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/streaming_gguf_loader.h",
+    "line": 82,
+    "text": "std::vector<TensorInfo> GetAllTensorInfo() const override;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.cpp",
+    "line": 97,
+    "text": "if (!parseTensorInfo()) {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.cpp",
+    "line": 418,
+    "text": "bool StreamingGGUFLoaderQt::parseTensorInfo() {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.cpp",
+    "line": 424,
+    "text": "GGUFTensorInfo tensor;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.cpp",
+    "line": 542,
+    "text": "const GGUFTensorInfo& tensor = tensors[tensorIndex];",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.h",
+    "line": 90,
+    "text": "struct GGUFTensorInfo {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.h",
+    "line": 104,
+    "text": "std::vector<GGUFTensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/ai/streaming_gguf_loader_qt.h",
+    "line": 113,
+    "text": "bool parseTensorInfo();",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/cli/sovereign_compute_test.cpp",
+    "line": 18,
+    "text": "int32_t GGUF_GetTensorInfo(void* mappedBase, uint32_t tensorIdx, void* info, void* out);",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/deep2/Batch21_Registry_Dispatch_Test.cpp",
+    "line": 42,
+    "text": "const TensorInfo* targetTensor = nullptr;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/Deep2_Elastic_GEMV_Test.cpp",
+    "line": 101,
+    "text": "const TensorInfo* targetTensor = nullptr;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 192,
+    "text": "* FreeTensorData \u00e2\u20ac\u201d release a TensorInfo::data pointer.",
+    "is_comment": true,
+    "class": "Unrelated"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 962,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 1039,
+    "text": "std::vector<Deep2::TensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 1100,
+    "text": "TensorInfo ti;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 1118,
+    "text": "// GGUFLoader::FreeTensorData -- release a TensorInfo::data pointer.",
+    "is_comment": true,
+    "class": "Unrelated"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 1297,
+    "text": "TensorInfo ti;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/GGUFLoader.hpp",
+    "line": 1367,
+    "text": "Deep2::TensorInfo ti;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/deep2/_iocp_smoke.cpp",
+    "line": 15,
+    "text": "std::vector<Deep2::TensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/modelgenie/ModelGenieExecutor.hpp",
+    "line": 73,
+    "text": "struct LiveTensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/modelgenie/ModelGenieExecutor.hpp",
+    "line": 80,
+    "text": "std::vector<LiveTensorInfo> liveTensors;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.cpp",
+    "line": 71,
+    "text": "auto tensorInfo = m_loader->GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 46,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 75,
+    "text": "virtual std::vector<TensorInfo> GetTensorInfo() const = 0;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 78,
+    "text": "virtual size_t GetTensorByteSize(const TensorInfo& tensor) const = 0;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 87,
+    "text": "virtual std::vector<TensorInfo> GetAllTensorInfo() const = 0;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 109,
+    "text": "std::vector<TensorInfo> GetTensorInfo() const override { return tensors_; }",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 135,
+    "text": "size_t GetTensorByteSize(const TensorInfo& tensor) const override;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 155,
+    "text": "std::vector<TensorInfo> GetAllTensorInfo() const override { return tensors_; }",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 163,
+    "text": "std::vector<TensorInfo> tensors_;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/gguf_loader.h",
+    "line": 165,
+    "text": "std::unordered_map<std::string, const TensorInfo*> tensor_index_;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/model_memory_hotpatch.cpp",
+    "line": 477,
+    "text": "const TensorInfo& info = m_tensorMap.value(tensorName);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/model_memory_hotpatch.hpp",
+    "line": 84,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/model_memory_hotpatch.hpp",
+    "line": 197,
+    "text": "QHash<QString, TensorInfo> m_tensorMap;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/streaming_gguf_loader.h",
+    "line": 47,
+    "text": "std::vector<TensorInfo> GetTensorInfo() const override;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/qtapp/streaming_gguf_loader.h",
+    "line": 49,
+    "text": "size_t GetTensorByteSize(const TensorInfo& tensor) const override;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/qtapp/streaming_gguf_loader.h",
+    "line": 82,
+    "text": "std::vector<TensorInfo> GetAllTensorInfo() const override;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "src/speculative/e2e_integration_test.cpp",
+    "line": 51,
+    "text": "auto tensors = loader.GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/tests/phase7d_simple_gguf_test.cpp",
+    "line": 28,
+    "text": "struct SimpleTensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/tests/phase7d_simple_gguf_test.cpp",
+    "line": 195,
+    "text": "std::vector<SimpleTensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/tests/phase7d_simple_gguf_test.cpp",
+    "line": 199,
+    "text": "SimpleTensorInfo info;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "src/test_harness/hotpatch_e2e_test.cpp",
+    "line": 82,
+    "text": "struct GGUFTensorInfo {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/test_harness/hotpatch_e2e_test.cpp",
+    "line": 142,
+    "text": "static bool parseGGUF(const std::string& path, std::vector<GGUFTensorInfo>& tensors,",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/test_harness/hotpatch_e2e_test.cpp",
+    "line": 165,
+    "text": "GGUFTensorInfo ti;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/test_harness/hotpatch_e2e_test.cpp",
+    "line": 322,
+    "text": "std::vector<GGUFTensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/test_harness/hotpatch_e2e_test.cpp",
+    "line": 365,
+    "text": "GGUFTensorInfo* foundTensor = nullptr;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/win32app/Win32IDE.cpp",
+    "line": 4280,
+    "text": "m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "src/win32app/Win32IDE.h",
+    "line": 732,
+    "text": "std::vector<TensorInfo> m_modelTensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "tests/test_gguf_loader.cpp",
+    "line": 63,
+    "text": "std::vector<TensorInfo> tensors = loader.GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "tests/test_gguf_loader.cpp",
+    "line": 70,
+    "text": "const TensorInfo& tensor = tensors[i];",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "tests/test_gguf_loader.cpp",
+    "line": 87,
+    "text": "auto tensor_info = loader.GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "tmp_build_mg/orig_tool.cpp",
+    "line": 72,
+    "text": "struct LiveTensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "tmp_build_mg/orig_tool.cpp",
+    "line": 79,
+    "text": "std::vector<LiveTensorInfo> liveTensors;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "tools/classify_tensorinfo.py",
+    "line": 1,
+    "text": "# classify_tensorinfo.py - classify every TensorInfo occurrence in the tree.",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "tools/classify_tensorinfo.py",
+    "line": 37,
+    "text": "re.compile(r'TensorInfo\\s*(rom|_rom|from_rom|to_rom|_romable|_convert)', re.I)),",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "tools/classify_tensorinfo.py",
+    "line": 39,
+    "text": "re.compile(r'(rom|gguf|loader|file).{0,24}TensorInfo|TensorInfo.{0,24}(rom|gguf|loader|file)', re.I)),",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "tools/classify_tensorinfo.py",
+    "line": 41,
+    "text": "re.compile(r'readTensorInfo|parseTensorInfo|loadTensorInfo|scanTensorInfo|'",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "tools/classify_tensorinfo.py",
+    "line": 63,
+    "text": "if not re.search(r'TensorInfo', line):",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "tools/classify_tensorinfo.py",
+    "line": 89,
+    "text": "DECL = re.compile(r'\\b(struct|class|using|typedef)\\s+.*\\bTensorInfo\\b', re.I)",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawr_monolith_v2.cpp",
+    "line": 185,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawr_monolith_v2.cpp",
+    "line": 194,
+    "text": "std::vector<TensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawr_monolith_v2.cpp",
+    "line": 305,
+    "text": "TensorInfo ti;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawr_monolith_v2.cpp",
+    "line": 375,
+    "text": "const TensorInfo* get_tensor(const std::string& name) const {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 19,
+    "text": "std::vector<AD_TensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 187,
+    "text": "extern \"C\" uint64_t AD_CountParameters(AD_TensorInfo* tensorInfo) {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 199,
+    "text": "extern \"C\" void AD_IdentifyPattern(AD_TensorInfo* tensorInfo, AD_AnalysisResult* analysis) {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 231,
+    "text": "extern \"C\" int AD_ParseTensorMetadata(AD_TensorInfo* tensorTable, AD_AnalysisResult* analysis, intptr_t fileHandle) {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 258,
+    "text": "AD_TensorInfo info{};",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 294,
+    "text": "extern \"C\" int AD_AnalyzeStructure(AD_TensorInfo* tensorTable, AD_AnalysisResult* analysis) {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.cpp",
+    "line": 383,
+    "text": "std::vector<AD_TensorInfo> table(static_cast<size_t>(header.tensor_count) + 1U);",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.h",
+    "line": 30,
+    "text": "// Tensor metadata (matches MASM TensorInfo)",
+    "is_comment": true,
+    "class": "Unrelated"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.h",
+    "line": 31,
+    "text": "struct AD_TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.h",
+    "line": 85,
+    "text": "int       AD_ParseTensorMetadata(AD_TensorInfo* tensorTable, AD_AnalysisResult* analysis,",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.h",
+    "line": 89,
+    "text": "void      AD_IdentifyPattern(AD_TensorInfo* tensorInfo, AD_AnalysisResult* analysis);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.h",
+    "line": 92,
+    "text": "int       AD_AnalyzeStructure(AD_TensorInfo* tensorTable, AD_AnalysisResult* analysis);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/analyzer_distiller.h",
+    "line": 102,
+    "text": "uint64_t  AD_CountParameters(AD_TensorInfo* tensorInfo);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/GGUFQuantizationDetector.cpp",
+    "line": 26,
+    "text": "} GgufTensorInfo;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_d3d12_bridge_stub.cpp",
+    "line": 37,
+    "text": "bool GGUFD3D12Bridge::UploadGGUFTensor(const TensorInfo& info, const std::vector<uint8_t>& data,",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_d3d12_bridge_stub.h",
+    "line": 14,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_d3d12_bridge_stub.h",
+    "line": 30,
+    "text": "bool UploadGGUFTensor(const TensorInfo& info, const std::vector<uint8_t>& data,",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_format.h",
+    "line": 146,
+    "text": "} GGUFTensorInfo;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_format.h",
+    "line": 162,
+    "text": "GGUFTensorInfo* tensor_infos;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_format.h",
+    "line": 188,
+    "text": "const GGUFTensorInfo* gguf_get_tensor_info(const GGUFContext* ctx, const char* name);",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_format.h",
+    "line": 204,
+    "text": "static inline uint64_t gguf_tensor_elements(const GGUFTensorInfo* info) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_format.h",
+    "line": 213,
+    "text": "size_t gguf_tensor_size_bytes(const GGUFTensorInfo* info);",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_loader_production.cpp",
+    "line": 289,
+    "text": "bool ParseTensorInfo(TensorDescriptor& tensor);",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_loader_production.cpp",
+    "line": 617,
+    "text": "if (!ParseTensorInfo(tensor)) return false;",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_loader_production.cpp",
+    "line": 634,
+    "text": "bool GGUFLoaderProduction::Impl::ParseTensorInfo(TensorDescriptor& tensor) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/gguf_loader_production.cpp",
+    "line": 765,
+    "text": "int GGUFLoader_GetTensorInfo(GGUFLoaderHandle* handle, uint32_t index,",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_pipeline.hpp",
+    "line": 22,
+    "text": "typedef struct SovereignGGUFTensorInfo SovereignGGUFTensorInfo;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_playback_bridge.c",
+    "line": 216,
+    "text": "GGUFTensorInfo* gguf_get_tensor(GGUFContext* ctx, const char* name) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_playback_bridge.c",
+    "line": 229,
+    "text": "GGUFTensorInfo* tensor = gguf_get_tensor(ctx, name);",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_playback_bridge.h",
+    "line": 29,
+    "text": "typedef struct GGUFTensorInfo {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_playback_bridge.h",
+    "line": 37,
+    "text": "} GGUFTensorInfo;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_playback_bridge.h",
+    "line": 51,
+    "text": "GGUFTensorInfo* tensors;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/inference_playback_bridge.h",
+    "line": 227,
+    "text": "GGUFTensorInfo* gguf_get_tensor(",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/layer_offload_manager.cpp",
+    "line": 409,
+    "text": "struct TensorInfoRaw {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/layer_offload_manager.cpp",
+    "line": 417,
+    "text": "std::vector<TensorInfoRaw> tensorInfos;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/layer_offload_manager.cpp",
+    "line": 421,
+    "text": "TensorInfoRaw ti{};",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 49,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 105,
+    "text": "std::vector<TensorInfo>& tensors)",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 133,
+    "text": "TensorInfo ti{};",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 155,
+    "text": "const TensorInfo& ti,",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 185,
+    "text": "std::vector<TensorInfo> tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 196,
+    "text": "std::unordered_map<std::string, std::pair<TensorInfo*, TensorInfo*>> pairs;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 229,
+    "text": "TensorInfo* a_ti = ab_pair.first;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "line": 230,
+    "text": "TensorInfo* b_ti = ab_pair.second;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/MappedGGUFFile.cpp",
+    "line": 137,
+    "text": "if (!ParseTensorInfo()) {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/MappedGGUFFile.cpp",
+    "line": 375,
+    "text": "bool MappedGGUFFile::ParseTensorInfo() {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/MappedGGUFFile.h",
+    "line": 130,
+    "text": "bool ParseTensorInfo();",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/model_loader_chunked_bridge.cpp",
+    "line": 324,
+    "text": "TensorInfo tensor;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/NativeGGUFLoader.h",
+    "line": 7,
+    "text": "struct NativeGGUFTensorInfo {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/NativeGGUFLoader.h",
+    "line": 29,
+    "text": "return ParseHeader() && ParseMetadata() && ParseTensorInfo();",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/NativeGGUFLoader.h",
+    "line": 83,
+    "text": "bool ParseTensorInfo() {",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/NativeGGUFLoader.h",
+    "line": 110,
+    "text": "NativeGGUFTensorInfo info;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/NativeGGUFLoader.h",
+    "line": 123,
+    "text": "const std::vector<NativeGGUFTensorInfo>& GetTensors() const { return m_tensors; }",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/NativeGGUFLoader.h",
+    "line": 131,
+    "text": "std::vector<NativeGGUFTensorInfo> m_tensors;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/native_gguf_loader_link_impl.cpp",
+    "line": 53,
+    "text": "bool NativeGGUFLoader::ParseTensorInfo() {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/native_gguf_loader_link_impl.cpp",
+    "line": 83,
+    "text": "const std::vector<NativeGGUFTensorInfo>& NativeGGUFLoader::GetTensors() const {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/native_speed_layer.cpp",
+    "line": 905,
+    "text": "struct TensorInfoParsed {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/native_speed_layer.cpp",
+    "line": 914,
+    "text": "TensorInfoParsed* infos = static_cast<TensorInfoParsed*>(",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/native_speed_layer.cpp",
+    "line": 915,
+    "text": "_alloca(tensorCount * sizeof(TensorInfoParsed)));",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/quant_ops.c",
+    "line": 849,
+    "text": "size_t gguf_tensor_size_bytes(const GGUFTensorInfo* info) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd.h",
+    "line": 71,
+    "text": "} GGUFTensorInfo;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd.h",
+    "line": 77,
+    "text": "GGUFTensorInfo* tensor_infos;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd.h",
+    "line": 332,
+    "text": "ctx->tensor_infos = (GGUFTensorInfo*)calloc(ctx->header.tensor_count, sizeof(GGUFTensorInfo));",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd.h",
+    "line": 427,
+    "text": "GGUFTensorInfo* info = &ctx->tensor_infos[i];",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd_core.h",
+    "line": 92,
+    "text": "} RXDTensorInfo;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd_core.h",
+    "line": 99,
+    "text": "RXDTensorInfo* tensors;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd_core.h",
+    "line": 366,
+    "text": "m.tensors = (RXDTensorInfo*)calloc(m.tensor_count, sizeof(RXDTensorInfo));",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd_core.h",
+    "line": 446,
+    "text": "RXDTensorInfo* t = &h.model.tensors[i];",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawrxd_demo.c",
+    "line": 252,
+    "text": "GGUFTensorInfo* info = &ctx->tensor_infos[i];",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp",
+    "line": 1305,
+    "text": "void AD_IdentifyPattern(AD_TensorInfo* tensorInfo, AD_AnalysisResult* analysis)",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp",
+    "line": 1344,
+    "text": "uint64_t AD_CountParameters_Internal(AD_TensorInfo* tensorInfo)",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp",
+    "line": 1385,
+    "text": "int AD_ParseTensorMetadata(AD_TensorInfo* tensorTable, AD_AnalysisResult* analysis, intptr_t fileHandle)",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp",
+    "line": 1397,
+    "text": "std::memset(tensorTable, 0, sizeof(AD_TensorInfo));",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp",
+    "line": 1403,
+    "text": "int AD_AnalyzeStructure(AD_TensorInfo* tensorTable, AD_AnalysisResult* analysis)",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp",
+    "line": 1452,
+    "text": "AD_TensorInfo tensor{};",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.cpp",
+    "line": 21,
+    "text": "SovereignGGUFTensorInfo info;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.cpp",
+    "line": 184,
+    "text": "static int ParseTensorInfo(SovereignGGUFModel* model, const uint8_t** ptr) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.cpp",
+    "line": 422,
+    "text": "ParseTensorInfo(model, &ptr);",
+    "is_comment": false,
+    "class": "Loader"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.cpp",
+    "line": 547,
+    "text": "SovereignGGUFTensorInfo* info) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.h",
+    "line": 94,
+    "text": "typedef struct SovereignGGUFTensorInfo {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.h",
+    "line": 114,
+    "text": "} SovereignGGUFTensorInfo;",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_loader.h",
+    "line": 226,
+    "text": "SovereignGGUFTensorInfo* info",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_mapper.cpp",
+    "line": 120,
+    "text": "auto tensor_info = loader->GetAllTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_mapper.cpp",
+    "line": 567,
+    "text": "auto tensor_info = loader->GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_mapper.cpp",
+    "line": 580,
+    "text": "auto tensor_info = loader->GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/sovereign_gguf_mapper.cpp",
+    "line": 771,
+    "text": "auto tensor_info_check = loader->GetTensorInfo();",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/ssot_handlers.cpp",
+    "line": 764,
+    "text": "if (!loader.ParseTensorInfo())",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.cpp",
+    "line": 276,
+    "text": "TensorInfo info;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.cpp",
+    "line": 316,
+    "text": "const TensorInfo* StreamingLoader::FindTensor(const char* name) const {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.cpp",
+    "line": 325,
+    "text": "float* StreamingLoader::LoadTensor(const TensorInfo& info) {",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.cpp",
+    "line": 341,
+    "text": "const TensorInfo* info = FindTensor(name);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.cpp",
+    "line": 346,
+    "text": "void StreamingLoader::Dequantize(const void* src, float* dst, const TensorInfo& info) {",
+    "is_comment": false,
+    "class": "Engine"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 88,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 143,
+    "text": "using TensorCallback = std::function<void(const TensorInfo& info, const void* data, size_t size)>;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 165,
+    "text": "const TensorInfo* GetTensor(size_t index) const {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 170,
+    "text": "const TensorInfo* FindTensor(const char* name) const;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 174,
+    "text": "float* LoadTensor(const TensorInfo& info);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 196,
+    "text": "std::vector<TensorInfo> tensors_;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "line": 208,
+    "text": "void Dequantize(const void* src, float* dst, const TensorInfo& info);",
+    "is_comment": false,
+    "class": "Engine"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/test_mapped_gguf.cpp",
+    "line": 56,
+    "text": "struct TensorInfo {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/test_mapped_gguf.cpp",
+    "line": 64,
+    "text": "std::vector<TensorInfo> tensors = {",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/universal_model_merger.cpp",
+    "line": 1257,
+    "text": "long afterTensorInfo = ftell(f);",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/universal_model_merger.cpp",
+    "line": 1258,
+    "text": "uint64_t dataStart = ((uint64_t)afterTensorInfo + 31) & ~31ULL;",
+    "is_comment": false,
+    "class": "Ambiguous"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/weight_hotswap.c",
+    "line": 85,
+    "text": "const GGUFTensorInfo* info = &session->gguf->tensor_infos[i];",
+    "is_comment": false,
+    "class": "Boundary"
+  },
+  {
+    "file": "~dev/rawrxd/src/core/weight_hotswap.c",
+    "line": 137,
+    "text": "const GGUFTensorInfo* info = &ctx->tensor_infos[i];",
+    "is_comment": false,
+    "class": "Boundary"
+  }
+]

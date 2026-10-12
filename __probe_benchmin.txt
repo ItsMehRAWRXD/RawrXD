@@ -1,0 +1,139 @@
+
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║              RawrXD Sovereign Runtime v1.0-ALPHA                 ║
+║                                                                  ║
+║         Validated Autonomous AI Execution Platform               ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+
+============================================================
+  CONFIGURATION
+============================================================
+  Model:    d:\rawrxd\bench_min.gguf
+  Prompt:   "test"
+  Mode:     inference
+  Backend:  auto
+  Max Tok:  1
+
+============================================================
+  EXECUTING
+============================================================
+  Initializing Sovereign Runtime...
+  Running execution pipeline...
+
+[CPUInferenceEngine] Loading model: d:\rawrxd\bench_min.gguf
+[CPUInferenceEngine] Stage: initialize backend
+failed to create logical device!
+[RawrXD] Vulkan init failed at logical device creation; falling back to CPU mode
+[RawrXD] Stage: loader.Load
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=d:\rawrxd\bench_min.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 2 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 2 MB at 0000029DC7D60000 (2000+ TPS ready)
+[GGUF] size=2097152
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=1
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=1 indexed_storage=0.00 GB
+[RawrXD] Data starts at offset 288
+[RawrXD] Stage: build_tensor_lookup_map
+[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=0, layers=0, heads=0, kv_heads=0, vocab=2, ctx=0, experts=0, experts_used=0
+[RawrXD] Tensor names in model (2 total):
+  [  0] type=0 dims=4 token_embd.weight
+  [  1] type=0 dims=4 output.weight
+[RawrXD] Residency pool explicitly DISABLED via env (RAWRXD_RESIDENCY_POOL_MB=0)
+[RawrXD] Config: dim=4096 layers=32 heads=32 kv_heads=32 vocab=2 hidden=16384 ctx=2048
+[RawrXD] Stage: transformer.Initialize
+[RawrXD] KV cache: 268435456 floats (1073.7 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[RawrXD] Swarm plan: file/layer stripe fallback (32 slices)
+[RawrXD] Stage: tokenizer.Load
+[RawrXD] Inference engine READY
+[CPUInferenceEngine] Model loaded successfully
+[CPU] GenerateStreaming ENTER  input_tokens=5 max_tokens=1
+[CPU] backend ptr=00007FF629AF56B8  model_loaded=1  context_limit=2048  current_pos=5
+[CPU] backend vocab=2 dim=0 layers=0 heads=0
+[CPU] GenerateFromTokens ENTER  tokens=5
+[STREAM] calling Forward() for prefill, tokens=5
+[Forward] GQA: dim=4096 heads=32 kv_heads=32 head_dim=128 kv_dim=4096 hidden=16384
+[MEM] Generation start: avail_phys=39955 MB, avail_virt=133947959 MB
+[MEM] KV footprint: k=1024 MB, v=1024 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=2 * row_bytes(Q2_K)=1344 = 0 MB
+[Forward] prefill: tokens=5 layers=32 total_layer_execs=160 est_ms=20800
+[Forward] B009 layer-outer batched prefill: T=5 layers=32
+[Forward] FATAL: Missing token embedding tensor for token 0
+[STREAM] Forward() returned, logits.size()=0
+[STREAM] entering generation loop, maxTokens=1
+[STREAM] generation iteration 0
+[STREAM] logits empty, breaking
+[STREAM] generation loop complete, generated=0 tokens
+[CPU] GenerateFromTokens RETURN  elapsed=0.2 ms
+[CPU] GenerateStreaming RETURN  total=0.2 ms
+KV:
+  cache_create=0
+  cache_reset=0
+  cache_write=0
+  cache_read=0
+  cache_reuse=0
+  cache_position=0
+  cache_tokens=0
+  full_recompute=0
+
+============================================================
+  EXECUTION RESULT
+============================================================
+  Status: Execution completed successfully
+
+============================================================
+  TIMING
+============================================================
+  Total:        243 ms
+  Load:         0 ms
+  Tokenize:     0 ms
+  Inference:    0 ms
+  Sampling:     0 ms
+  Recovery:     243 ms
+  TPS:          0.00 tokens/sec
+
+============================================================
+  TELEMETRY
+============================================================
+  Tokens Generated: 0
+  Tokens Prompt:    5
+  Memory Peak:      0 MB
+  Recoveries:       1/1
+
+============================================================
+  EVIDENCE
+============================================================
+  Run ID:        
+  Certificate:   RXD-SOVEREIGN-
+  Model Hash:    ...
+  Output Hash:   14695981039346656037...
+  Kernel Validation                       ✗ FAIL
+  Numeric Validation                      ✗ FAIL
+  Recovery Validation                     ✗ FAIL
+
+============================================================
+  FINAL STATUS
+============================================================
+  ✓ EXECUTION SUCCESSFUL
+  ✓ CERTIFICATE: RXD-SOVEREIGN-

@@ -1,0 +1,864 @@
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=0 endRow=640
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=2252800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=640 endRow=1280
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=4505600 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=1280 endRow=1920
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=6758400 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=1920 endRow=2560
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=9011200 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=2560 endRow=3200
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=11264000 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=3200 endRow=3840
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=13516800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=3840 endRow=4480
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=15769600 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=4480 endRow=5120
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=18022400 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=5120 endRow=5760
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=20275200 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=5760 endRow=6400
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=22528000 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=6400 endRow=7040
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=24780800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=8960 endRow=9600
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=33792000 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=7680 endRow=8320
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=29286400 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=8320 endRow=8960
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=31539200 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=7040 endRow=7680
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=27033600 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=2560 endRow=3200
+[LR_EXIT] norm=6.382042e+01 allFinite=YES
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=9600 endRow=10240
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=36044800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=640 endRow=1280
+[LR_EXIT] norm=6.060846e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=0 endRow=640
+[LR_EXIT] norm=5.675730e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=3200 endRow=3840
+[LR_EXIT] norm=6.647944e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=1920 endRow=2560
+[LR_EXIT] norm=6.401446e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=4480 endRow=5120
+[LR_EXIT] norm=6.382204e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=3840 endRow=4480
+[LR_EXIT] norm=6.578165e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=5760 endRow=6400
+[LR_EXIT] norm=6.487062e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=5120 endRow=5760
+[LR_EXIT] norm=6.346476e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=1280 endRow=1920
+[LR_EXIT] norm=5.969773e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=7680 endRow=8320
+[LR_EXIT] norm=2.752850e+08 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=6400 endRow=7040
+[LR_EXIT] norm=1.016472e+24 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=7040 endRow=7680
+[LR_EXIT] norm=6.286013e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=8960 endRow=9600
+[LR_EXIT] norm=-nan allFinite=NO
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=8320 endRow=8960
+[LR_EXIT] norm=6.385142e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=9600 endRow=10240
+[LR_EXIT] norm=1.839294e+32 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=3133440 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=6266880 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=9400320 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=12533760 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=15667200 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=18800640 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=21934080 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=25067520 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=28200960 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=31334400 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=34467840 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=37601280 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=40734720 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=43868160 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=47001600 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=50135040 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_EXIT] norm=4.561264e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_EXIT] norm=4.578007e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_EXIT] norm=4.505805e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_EXIT] norm=4.478834e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_EXIT] norm=4.520873e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_EXIT] norm=4.444296e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_EXIT] norm=4.421832e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_EXIT] norm=4.415369e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_EXIT] norm=4.472854e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_EXIT] norm=4.523314e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_EXIT] norm=4.514406e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_EXIT] norm=4.435493e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_EXIT] norm=4.452551e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_EXIT] norm=4.446843e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_EXIT] norm=4.453682e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_EXIT] norm=4.486815e+01 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_VALIDATE] byte bounds OK: req=3133440 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_VALIDATE] byte bounds OK: req=28200960 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_VALIDATE] byte bounds OK: req=9400320 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_VALIDATE] byte bounds OK: req=12533760 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_VALIDATE] byte bounds OK: req=43868160 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_VALIDATE] byte bounds OK: req=18800640 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_VALIDATE] byte bounds OK: req=21934080 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_VALIDATE] byte bounds OK: req=25067520 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_VALIDATE] byte bounds OK: req=31334400 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_VALIDATE] byte bounds OK: req=34467840 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_VALIDATE] byte bounds OK: req=6266880 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_VALIDATE] byte bounds OK: req=37601280 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_VALIDATE] byte bounds OK: req=40734720 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_VALIDATE] byte bounds OK: req=15667200 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_VALIDATE] byte bounds OK: req=47001600 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_VALIDATE] byte bounds OK: req=50135040 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_EXIT] norm=4.548402e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_EXIT] norm=4.483317e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_EXIT] norm=4.479821e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_EXIT] norm=4.461796e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_EXIT] norm=4.503193e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_EXIT] norm=4.492395e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_EXIT] norm=4.435809e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_EXIT] norm=4.495713e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_EXIT] norm=4.467203e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_EXIT] norm=4.453840e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_EXIT] norm=4.415152e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_EXIT] norm=4.497839e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_EXIT] norm=4.386320e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_EXIT] norm=4.460952e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_EXIT] norm=4.427638e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_EXIT] norm=4.420486e+01 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=0 endRow=320
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=4569600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=2560 endRow=2880
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=41126400 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=640 endRow=960
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=13708800 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=960 endRow=1280
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=18278400 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=1280 endRow=1600
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=22848000 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=1600 endRow=1920
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=27417600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=2240 endRow=2560
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=36556800 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=1920 endRow=2240
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=31987200 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=2880 endRow=3200
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=45696000 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=320 endRow=640
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=9139200 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=3200 endRow=3520
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=50265600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=3520 endRow=3840
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=54835200 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=3840 endRow=4160
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=59404800 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=4160 endRow=4480
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=63974400 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=4480 endRow=4800
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=68544000 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=4800 endRow=5120
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=73113600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=640 endRow=960
+[LR_EXIT] norm=1.972095e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=1280 endRow=1600
+[LR_EXIT] norm=2.206136e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=960 endRow=1280
+[LR_EXIT] norm=2.031434e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=320 endRow=640
+[LR_EXIT] norm=2.147056e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=2240 endRow=2560
+[LR_EXIT] norm=2.102777e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=3200 endRow=3520
+[LR_EXIT] norm=9.347339e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=1920 endRow=2240
+[LR_EXIT] norm=2.301525e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=1600 endRow=1920
+[LR_EXIT] norm=2.311719e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=2880 endRow=3200
+[LR_EXIT] norm=1.982070e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=0 endRow=320
+[LR_EXIT] norm=2.780162e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=2560 endRow=2880
+[LR_EXIT] norm=2.203829e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=3840 endRow=4160
+[LR_EXIT] norm=1.012448e+01 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=4480 endRow=4800
+[LR_EXIT] norm=2.124653e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=4160 endRow=4480
+[LR_EXIT] norm=2.135413e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=3520 endRow=3840
+[LR_EXIT] norm=2.132835e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=4800 endRow=5120
+[LR_EXIT] norm=2.045083e-02 allFinite=YES
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=0 endRow=640
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=2252800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=3840 endRow=4480
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=15769600 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=1280 endRow=1920
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=6758400 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=1920 endRow=2560
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=9011200 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=2560 endRow=3200
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=11264000 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=3200 endRow=3840
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=13516800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=640 endRow=1280
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=4505600 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=4480 endRow=5120
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=18022400 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=5120 endRow=5760
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=20275200 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=5760 endRow=6400
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=22528000 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=6400 endRow=7040
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=24780800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=7040 endRow=7680
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=27033600 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=7680 endRow=8320
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=29286400 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=8320 endRow=8960
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=31539200 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=8960 endRow=9600
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=33792000 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_qkv.weight type=Q5_K(13) rows=640 cols=5120 startRow=9600 endRow=10240
+[LR_VALIDATE_WARN] output misaligned addr=0000017C98C09060
+[LR_VALIDATE] byte bounds OK: req=36044800 <= total=36044800
+[LR_SOURCE] wt.data=000001777A690000 mapped=0 input=00000176CD8B3740 output=0000017C98C09060 sizeBytes=36044800 rowBytes=3520
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=4480 endRow=5120
+[LR_EXIT] norm=6.382204e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=2560 endRow=3200
+[LR_EXIT] norm=6.382042e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=3840 endRow=4480
+[LR_EXIT] norm=6.578165e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=1920 endRow=2560
+[LR_EXIT] norm=6.401446e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=0 endRow=640
+[LR_EXIT] norm=5.675730e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=5760 endRow=6400
+[LR_EXIT] norm=6.487062e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=5120 endRow=5760
+[LR_EXIT] norm=6.346476e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=640 endRow=1280
+[LR_EXIT] norm=6.060846e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=1280 endRow=1920
+[LR_EXIT] norm=5.969773e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=3200 endRow=3840
+[LR_EXIT] norm=6.647944e+01 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=7040 endRow=7680
+[LR_EXIT] norm=1.257203e+02 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=6400 endRow=7040
+[LR_EXIT] norm=1.016472e+24 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=8320 endRow=8960
+[LR_EXIT] norm=1.277028e+02 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=7680 endRow=8320
+[LR_EXIT] norm=2.752850e+08 allFinite=YES
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=8960 endRow=9600
+[LR_EXIT] norm=-nan allFinite=NO
+[LR_GEMV] type=Q5_K(13) rows=640 cols=5120 startRow=9600 endRow=10240
+[LR_EXIT] norm=1.839294e+32 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=3133440 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=21934080 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=12533760 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=9400320 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=15667200 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=18800640 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=6266880 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=25067520 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=28200960 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=31334400 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=34467840 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=37601280 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=40734720 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=43868160 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=47001600 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_EXIT] norm=4.561264e+01 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_gate.weight type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_VALIDATE_WARN] output misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=50135040 <= total=50135040
+[LR_SOURCE] wt.data=000001777C8F0000 mapped=0 input=00000176CD8B3740 output=00000176CD8916E0 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_EXIT] norm=4.505805e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_EXIT] norm=4.421832e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_EXIT] norm=4.520873e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_EXIT] norm=4.452551e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_EXIT] norm=4.578007e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_EXIT] norm=4.444296e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_EXIT] norm=4.472854e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_EXIT] norm=4.415369e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_EXIT] norm=4.486815e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_EXIT] norm=4.435493e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_EXIT] norm=4.478834e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_EXIT] norm=4.514406e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_EXIT] norm=4.523314e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_EXIT] norm=4.446843e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_EXIT] norm=4.453682e+01 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_VALIDATE] byte bounds OK: req=3133440 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_VALIDATE] byte bounds OK: req=25067520 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_VALIDATE] byte bounds OK: req=37601280 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_VALIDATE] byte bounds OK: req=12533760 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_VALIDATE] byte bounds OK: req=15667200 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_VALIDATE] byte bounds OK: req=18800640 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_VALIDATE] byte bounds OK: req=21934080 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_VALIDATE] byte bounds OK: req=28200960 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_VALIDATE] byte bounds OK: req=31334400 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_VALIDATE] byte bounds OK: req=34467840 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_VALIDATE] byte bounds OK: req=6266880 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_VALIDATE] byte bounds OK: req=9400320 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_VALIDATE] byte bounds OK: req=40734720 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_VALIDATE] byte bounds OK: req=43868160 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_VALIDATE] byte bounds OK: req=47001600 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=0 endRow=1088
+[LR_EXIT] norm=4.548402e+01 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_up.weight type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_VALIDATE] byte bounds OK: req=50135040 <= total=50135040
+[LR_SOURCE] wt.data=00000176C45D0000 mapped=0 input=00000176CD8B3740 output=00000176CD8A2700 sizeBytes=50135040 rowBytes=2880
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=4352 endRow=5440
+[LR_EXIT] norm=4.460952e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=9792 endRow=10880
+[LR_EXIT] norm=4.435809e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=1088 endRow=2176
+[LR_EXIT] norm=4.495713e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=7616 endRow=8704
+[LR_EXIT] norm=4.492395e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=6528 endRow=7616
+[LR_EXIT] norm=4.453840e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=10880 endRow=11968
+[LR_EXIT] norm=4.467203e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=5440 endRow=6528
+[LR_EXIT] norm=4.483317e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=3264 endRow=4352
+[LR_EXIT] norm=4.479821e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=8704 endRow=9792
+[LR_EXIT] norm=4.461796e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=15232 endRow=16320
+[LR_EXIT] norm=4.427638e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=14144 endRow=15232
+[LR_EXIT] norm=4.415152e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=11968 endRow=13056
+[LR_EXIT] norm=4.497839e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=2176 endRow=3264
+[LR_EXIT] norm=4.503193e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=13056 endRow=14144
+[LR_EXIT] norm=4.386320e+01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=1088 cols=5120 startRow=16320 endRow=17408
+[LR_EXIT] norm=4.420486e+01 allFinite=YES
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=0 endRow=320
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=4569600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=2880 endRow=3200
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=45696000 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=3840 endRow=4160
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=59404800 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=960 endRow=1280
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=18278400 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=1280 endRow=1600
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=22848000 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=1600 endRow=1920
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=27417600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=1920 endRow=2240
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=31987200 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=2240 endRow=2560
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=36556800 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=2560 endRow=2880
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=41126400 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=3200 endRow=3520
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=50265600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=640 endRow=960
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=13708800 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=3520 endRow=3840
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=54835200 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=320 endRow=640
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=9139200 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=4160 endRow=4480
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=63974400 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=4480 endRow=4800
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=68544000 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.ffn_down.weight type=Q6_K(14) rows=320 cols=17408 startRow=4800 endRow=5120
+[LR_VALIDATE_WARN] input misaligned addr=00000176CD8916E0
+[LR_VALIDATE] byte bounds OK: req=73113600 <= total=73113600
+[LR_SOURCE] wt.data=00000176C0010000 mapped=0 input=00000176CD8916E0 output=00000176CD876640 sizeBytes=73113600 rowBytes=14280
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=1280 endRow=1600
+[LR_EXIT] norm=2.206136e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=960 endRow=1280
+[LR_EXIT] norm=2.031434e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=3840 endRow=4160
+[LR_EXIT] norm=1.012448e+01 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=3520 endRow=3840
+[LR_EXIT] norm=2.132835e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=0 endRow=320
+[LR_EXIT] norm=2.780162e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=1920 endRow=2240
+[LR_EXIT] norm=2.301525e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=2560 endRow=2880
+[LR_EXIT] norm=2.203829e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=640 endRow=960
+[LR_EXIT] norm=1.972095e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=320 endRow=640
+[LR_EXIT] norm=2.147056e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=1600 endRow=1920
+[LR_EXIT] norm=2.311719e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=4480 endRow=4800
+[LR_EXIT] norm=2.124653e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=2880 endRow=3200
+[LR_EXIT] norm=1.982070e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=4160 endRow=4480
+[LR_EXIT] norm=2.135413e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=4800 endRow=5120
+[LR_EXIT] norm=2.045083e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=3200 endRow=3520
+[LR_EXIT] norm=9.347339e-02 allFinite=YES
+[LR_GEMV] type=Q6_K(14) rows=320 cols=17408 startRow=2240 endRow=2560
+[LR_EXIT] norm=2.102777e-02 allFinite=YES

@@ -1,0 +1,1 @@
+cl : Command line error D8036 : '/Fobuild_lnk\full.obj' not allowed with multiple source files

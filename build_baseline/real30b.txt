@@ -1,0 +1,26 @@
+RawrXD GGUF Baseline Capture (TPS blueprint step 01)
+=====================================================
+
+file      : F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+sha256    : 5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+bytes     : 25430738944 (23.68 GB)
+gguf      : magic OK, version 3
+tensors   : 417
+
+--- metadata (44 keys parsed) ---
+architecture            : nemotron_h_moe
+general.name              : Ga_Nvidia_Nemotron_3_5_Nano_Bf16_07292026_Vv0.1
+tokenizer.ggml.model      : gpt2
+context_length            : 1048576
+embedding_length          : 2688
+block_count (layers)      : 53
+attention.head_count      : 32
+vocab_size                : 131072
+rope_dim                  : 84
+expert_count              : 128
+expert_used_count         : 6
+
+--- tensor directory ---
+entries parsed           : 417
+
+baseline frozen. Re-run to confirm the digest is stable.

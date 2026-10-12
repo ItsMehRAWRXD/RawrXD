@@ -1,0 +1,10 @@
+^F:\RAWRXD\TMP_VERIFY_BUILD\_DEPS\ZLIB-SUBBUILD\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd/tmp_verify_build/_deps/zlib-subbuild -BF:/rawrxd/tmp_verify_build/_deps/zlib-subbuild --check-stamp-file F:/rawrxd/tmp_verify_build/_deps/zlib-subbuild/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

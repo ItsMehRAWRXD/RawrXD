@@ -1,0 +1,150 @@
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\SILU_ACTIVATION_AVX512_FIXED_V2.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/silu_activation_avx512_fixed_v2.obj F:/rawrxd/src/validation/kernels/masm/silu_activation_avx512_fixed_v2.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\RMSNORM_FORWARD_AVX2.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/rmsnorm_forward_avx2.obj F:/rawrxd/src/validation/kernels/masm/rmsnorm_forward_avx2.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\TEST_MINIMAL.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/test_minimal.obj F:/rawrxd/src/validation/kernels/masm/test_minimal.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\SILU_CORRECT.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/silu_correct.obj F:/rawrxd/src/validation/kernels/masm/silu_correct.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\RMSNORM_FIXED.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/rmsnorm_fixed.obj F:/rawrxd/src/validation/kernels/masm/rmsnorm_fixed.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\RMSNORM_TILED.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/rmsnorm_tiled.obj F:/rawrxd/src/validation/kernels/masm/rmsnorm_tiled.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\SOFTMAX_FIXED.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/softmax_fixed.obj F:/rawrxd/src/validation/kernels/masm/softmax_fixed.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\SILU_CLAMPED.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/silu_clamped.obj F:/rawrxd/src/validation/kernels/masm/silu_clamped.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\ABI_INTEGRITY_TEST.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/abi_integrity_test.obj F:/rawrxd/src/validation/kernels/masm/abi_integrity_test.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\ABI_INTEGRITY_SIMPLE.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/abi_integrity_simple.obj F:/rawrxd/src/validation/kernels/masm/abi_integrity_simple.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\Q4_0_DEQUANT.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/q4_0_dequant.obj F:/rawrxd/src/validation/kernels/masm/q4_0_dequant.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\Q4_0_DEQUANT_OPTIMIZED.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/q4_0_dequant_optimized.obj F:/rawrxd/src/validation/kernels/masm/q4_0_dequant_optimized.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\RAWRXD_TREEATTENTION_KERNEL.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/RawrXD_TreeAttention_Kernel.obj F:/rawrxd/src/validation/kernels/masm/RawrXD_TreeAttention_Kernel.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_FRESH\CMAKEFILES\3C164F8472B10DA0AE8BCC1FB2EF83E0\TREE_ATTENTION_MASM_VAL038.OBJ.RULE
+setlocal
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" /c /W3 /nologo /Zi /Fl /Fo F:/rawrxd/build_fresh/src/validation/kernels/tree_attention_masm_val038.obj F:/rawrxd/src/validation/kernels/masm/tree_attention_masm_val038.asm
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\SRC\VALIDATION\KERNELS\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_fresh --check-stamp-file F:/rawrxd/build_fresh/src/validation/kernels/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

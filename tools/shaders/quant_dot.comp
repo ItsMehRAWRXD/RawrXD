@@ -9,9 +9,17 @@
 // Block layouts (ggml):
 //   Q4_K (144 bytes) : uint16 d, uint16 dmin, uint8 scales[12], uint8 qs[128]
 //   Q6_K (210 bytes) : uint8 ql[128], uint8 qh[64], int8 scales[16], uint16 d
+//   Q5_0 (22 bytes)  : uint16 d, uint8 qh[4], uint8 qs[16]   (32 values)
+//   Q8_0 (34 bytes)  : uint16 d, int8 qs[32]                 (32 values)
 //   Q8_K (per 256)   : float d, int8 qs[256], int16 bsums[16]
 //
 // Push constants carry the dimensions and the kind selector.
+//
+// Legacy kinds (Q5_0/Q8_0) quantise 32 values per block, so a 256-value Q8_K
+// activation super-block holds EIGHT legacy blocks, and the LAST super-block
+// may be partial (n_in need not divide 256: e.g. 2688 = 10*256 + 128). The
+// shader decodes only the legacy blocks whose elements exist, so a partial
+// tail never reads or writes an out-of-range index.
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
@@ -41,13 +49,17 @@ layout(std430, binding = 2) writeonly buffer Out {
 layout(push_constant) uniform PushConstants {
     uint n_out;      // rows
     uint n_in;       // input dimension
-    uint n_blocks;   // n_in / 256
-    uint kind;       // 0 = Q4_K, 1 = Q6_K
+    uint n_blocks;   // n_in / 256 (k-quants: the 256-value super-block count)
+    uint kind;       // 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0
 };
 
 // Q4_K / Q6_K block sizes in bytes.
 const uint Q4K_BYTES = 144u;
 const uint Q6K_BYTES = 210u;
+// Legacy block sizes in bytes (32 values per block).
+const uint Q50_BYTES = 22u;
+const uint Q80_BYTES = 34u;
+const uint LEGACY_PER_SB = 8u;   // legacy blocks per 256-value super-block
 
 // Read one byte from the packed buffer, which is addressed as u32 words.
 uint pack_byte(uint idx) {
@@ -108,12 +120,70 @@ void main() {
     uint row = gl_GlobalInvocationID.x;
     if (row >= n_out) return;
 
-    uint block_bytes = (kind == 0u) ? Q4K_BYTES : Q6K_BYTES;
-    uint row_base = row * block_bytes * n_blocks;
-
     float sums[8];
     for (int i = 0; i < 8; ++i) sums[i] = 0.0;
     float sumf = 0.0;
+
+    if (kind >= 2u) {
+        // ---- legacy Q5_0 (kind 2) / Q8_0 (kind 3) -------------------------
+        // 32 values per block, eight blocks per 256-value activation
+        // super-block. The packed row stride is (ceil(n_in/32) * lb_bytes);
+        // the final super-block decodes only the blocks that exist.
+        const uint lb_bytes = (kind == 2u) ? Q50_BYTES : Q80_BYTES;
+        const uint row_bytes = ((n_in + 31u) / 32u) * lb_bytes;
+        const uint n_sb = (n_in + 255u) / 256u;
+
+        for (uint b = 0u; b < n_sb; ++b) {
+            const uint sb_off = b * 256u;
+            const uint sb_elems = min(256u, n_in - sb_off);
+            const uint lb_count = sb_elems / 32u;   // host guarantees n_in % 32 == 0
+
+            const uint q8_base = b * Q8_STRIDE;
+            for (uint i = 0u; i < sb_elems; ++i) {
+                act[i] = int(q8_data[q8_base + Q8_OFF_QS + i]);
+            }
+            const float dq = q8_data[q8_base + Q8_OFF_D];
+
+            for (uint lb = 0u; lb < lb_count; ++lb) {
+                const uint blk = row * row_bytes + b * (LEGACY_PER_SB * lb_bytes) + lb * lb_bytes;
+                const uint a0 = lb * 32u;
+                int dotp = 0;
+                if (kind == 2u) {
+                    // Q5_0: fp16 d, qh[4] as a little-endian u32, qs[16] nibbles.
+                    // Low nibble of qs[j] -> element j, high nibble -> element
+                    // j+16. The 5th bit of element j is qh bit j; the 5th bit
+                    // of element j+16 is qh bit j+16 -- ggml's
+                    // dequantize_row_q5_0 forms xh_1 = (qh >> (j+12)) & 0x10,
+                    // and that mask selects bit j+16 of qh, not bit j+12.
+                    const uint qh = pack_byte(blk + 2u) |
+                                    (pack_byte(blk + 3u) << 8u) |
+                                    (pack_byte(blk + 4u) << 16u) |
+                                    (pack_byte(blk + 5u) << 24u);
+                    for (uint j = 0u; j < 16u; ++j) {
+                        const uint qsb = pack_byte(blk + 6u + j);
+                        const int h0 = int((qh >> (j +  0u)) & 1u);
+                        const int h1 = int((qh >> (j + 16u)) & 1u);
+                        const int w0 = (int(qsb & 15u) | (h0 << 4)) - 16;
+                        const int w1 = (int(qsb >> 4)   | (h1 << 4)) - 16;
+                        dotp += w0 * act[a0 + j];
+                        dotp += w1 * act[a0 + j + 16u];
+                    }
+                } else {
+                    // Q8_0: fp16 d, 32 signed byte quants.
+                    for (uint i = 0u; i < 32u; ++i) {
+                        dotp += pack_i8(blk + 2u + i) * act[a0 + i];
+                    }
+                }
+                const float dw = half_to_float(pack_u16(blk + 0u));
+                sumf += dw * dq * float(dotp);
+            }
+        }
+        out_rows[row] = sumf;
+        return;
+    }
+
+    uint block_bytes = (kind == 0u) ? Q4K_BYTES : Q6K_BYTES;
+    uint row_base = row * block_bytes * n_blocks;
 
     for (uint b = 0u; b < n_blocks; ++b) {
         uint base = row_base + b * block_bytes;

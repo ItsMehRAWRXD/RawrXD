@@ -1,0 +1,147 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_POS1_LOGIT_MARGIN_001",
+  "date": "2026-10-10",
+  "REFERENCE_REPRODUCIBLE": "PASS",
+  "ATTENTION_SCALE_VARIANT": "A",
+  "REFERENCE_ARGMAX": 185,
+  "NATIVE_ARGMAX": 1,
+  "REFERENCE_MARGIN_185_1": 0.0583138466,
+  "NATIVE_MARGIN_185_1": -0.0758333206,
+  "REFERENCE_TOKEN_1": 7.901198864,
+  "REFERENCE_TOKEN_185": 7.9595127106,
+  "NATIVE_TOKEN_1": 7.7743811607,
+  "NATIVE_TOKEN_185": 7.6985478401,
+  "FULL_LOGIT_RMSE": 0.2395471261,
+  "FULL_LOGIT_MAXABS": 1.2748451233,
+  "FULL_LOGIT_COSINE": 0.9996104852,
+  "TOP10_NATIVE": [
+    [
+      1,
+      7.7743811607
+    ],
+    [
+      185,
+      7.6985478401
+    ],
+    [
+      790,
+      6.7396774292
+    ],
+    [
+      207,
+      6.0075950623
+    ],
+    [
+      35643,
+      5.9633808136
+    ],
+    [
+      1901,
+      5.91213274
+    ],
+    [
+      6,
+      5.7588911057
+    ],
+    [
+      100001,
+      5.7562556267
+    ],
+    [
+      409,
+      5.7226967812
+    ],
+    [
+      7,
+      5.5166702271
+    ]
+  ],
+  "TOP10_REF": [
+    [
+      185,
+      7.9595127106
+    ],
+    [
+      1,
+      7.901198864
+    ],
+    [
+      790,
+      6.8801045418
+    ],
+    [
+      35643,
+      6.2539100647
+    ],
+    [
+      207,
+      6.0361485481
+    ],
+    [
+      100001,
+      6.0354738235
+    ],
+    [
+      7,
+      5.7329263687
+    ],
+    [
+      1901,
+      5.7174916267
+    ],
+    [
+      6,
+      5.6241512299
+    ],
+    [
+      9213,
+      5.4369745255
+    ]
+  ],
+  "LARGEST_ERRORS": [
+    [
+      97147,
+      1.2748451233
+    ],
+    [
+      18004,
+      1.2674751282
+    ],
+    [
+      42217,
+      1.2561912537
+    ],
+    [
+      74947,
+      1.2161216736
+    ],
+    [
+      69631,
+      1.1754112244
+    ],
+    [
+      89369,
+      1.1694564819
+    ],
+    [
+      66451,
+      1.1572875977
+    ],
+    [
+      91716,
+      1.1553535461
+    ],
+    [
+      93013,
+      1.1436080933
+    ],
+    [
+      85402,
+      1.1361064911
+    ]
+  ],
+  "VERDICT": "Margin reversal at decision boundary. Native underestimates both top tokens vs reference, but underestimates token 185 more (diff -0.261 vs -0.127). Top-10 rankings nearly identical. Error pattern suggests systematic bias in final projection or hidden state, not random noise.",
+  "REFERENCE_HIDDEN_TO_NATIVE_LMHEAD": "PENDING",
+  "FIRST_DIVERGENT_LAYER": "PENDING",
+  "ROOT_CAUSE": "PENDING"
+}

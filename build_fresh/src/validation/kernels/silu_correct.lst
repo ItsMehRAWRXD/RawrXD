@@ -1,0 +1,256 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:14
+F:/rawrxd/src/validation/kernels/masm/silu_correct.asm	     Page 1 - 1
+
+
+				; ============================================================================
+				; silu_correct.asm - Corrected SiLU implementation
+				; ============================================================================
+				; This version uses the same algorithm as the scalar C++ implementation:
+				;   SiLU(x) = x / (1 + exp(-x))
+				; Uses polynomial approximation for exp() that matches scalar version
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+ 00000000			.const
+				ALIGN 16
+				; Constants for exp approximation: exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24
+ 00000000 3F800000		g_exp_c0    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0      ; 1
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 00000020 3F800000		g_exp_c1    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0      ; 1 (coefficient of x)
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 00000040 3F000000		g_exp_c2    REAL4 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5      ; 1/2
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+ 00000060 3E2AAAC1		g_exp_c3    REAL4 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667  ; 1/6
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+ 00000080 3D2AAB04		g_exp_c4    REAL4 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667  ; 1/24
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+ 000000A0 3F800000		g_one       REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 000000C0 BF800000		g_neg_one   REAL4 -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0
+	   BF800000
+	   BF800000
+	   BF800000
+	   BF800000
+	   BF800000
+	   BF800000
+	   BF800000
+
+ 00000000			.code
+
+				; ============================================================================
+				; MASM_SiLU_Correct - Corrected SiLU using exp approximation
+				; ============================================================================
+				; Parameters:
+				;   RCX = float* data (32-byte aligned)
+				;   RDX = size_t data_size (in bytes, multiple of 32)
+				; Returns: RAX = 0 on success
+				; ============================================================================
+
+ 00000000			MASM_SiLU_Correct PROC FRAME
+				    ; Prologue
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+ 00000004  48/ 83 EC 20		    sub rsp, 32
+				    .allocstack 32
+				    .endprolog
+
+				    ; Save parameters
+ 00000008  48/ 8B C1		    mov rax, rcx               ; rax = data pointer
+ 0000000B  4C/ 8B C2		    mov r8, rdx                ; r8 = data_size
+				    
+				    ; Validate inputs
+ 0000000E  48/ 85 C0		    test rax, rax
+ 00000011  0F 84 000000C7	    jz error_null
+ 00000017  4D/ 85 C0		    test r8, r8
+ 0000001A  0F 84 000000C7	    jz error_zero
+ 00000020  48/ A9		    test rax, 31
+	   0000001F
+ 00000026  74 0C		    jz alignment_ok
+ 00000028  48/ C7 C0		    mov rax, 3                 ; Error: misaligned
+	   00000003
+ 0000002F  E9 000000BC		    jmp epilogue
+				    
+ 00000034			alignment_ok:
+ 00000034  49/ F7 C0		    test r8, 31
+	   0000001F
+ 0000003B  74 0C		    jz size_ok
+ 0000003D  48/ C7 C0		    mov rax, 4                 ; Error: invalid size
+	   00000004
+ 00000044  E9 000000A7		    jmp epilogue
+				    
+ 00000049			size_ok:
+				    ; Calculate iterations
+ 00000049  49/ 8B C8		    mov rcx, r8
+ 0000004C  48/ C1 E9 05		    shr rcx, 5                  ; rcx = data_size / 32 (number of 8-float blocks)
+				    
+				    ; Load constants
+ 00000050  C5 7C/ 28 05		    vmovaps ymm8, YMMWORD PTR [g_exp_c0]   ; 1.0
+	   00000000 R
+ 00000058  C5 7C/ 28 0D		    vmovaps ymm9, YMMWORD PTR [g_exp_c1]   ; 1.0
+	   00000020 R
+ 00000060  C5 7C/ 28 15		    vmovaps ymm10, YMMWORD PTR [g_exp_c2]  ; 0.5
+	   00000040 R
+ 00000068  C5 7C/ 28 1D		    vmovaps ymm11, YMMWORD PTR [g_exp_c3]  ; 0.166667
+	   00000060 R
+ 00000070  C5 7C/ 28 25		    vmovaps ymm12, YMMWORD PTR [g_exp_c4]  ; 0.041667
+	   00000080 R
+ 00000078  C5 7C/ 28 2D		    vmovaps ymm13, YMMWORD PTR [g_one]     ; 1.0
+	   000000A0 R
+ 00000080  C5 7C/ 28 35		    vmovaps ymm14, YMMWORD PTR [g_neg_one] ; -1.0
+	   000000C0 R
+				    
+ 00000088			process_loop:
+ 00000088  48/ 83 F9 00		    cmp rcx, 0
+ 0000008C  7E 4B		    jle done
+				    
+				    ; Load 8 floats
+ 0000008E  C5 FC/ 28 00		    vmovaps ymm0, YMMWORD PTR [rax]    ; ymm0 = x
+				    
+				    ; Compute -x
+ 00000092  C4 C1 7C/ 59 CE	    vmulps ymm1, ymm0, ymm14           ; ymm1 = -x
+				    
+				    ; Compute exp(-x) using polynomial: 1 + (-x) + (-x)^2/2 + (-x)^3/6 + (-x)^4/24
+				    ; Let y = -x
+				    ; exp(y) ≈ 1 + y + y^2/2 + y^3/6 + y^4/24
+				    
+				    ; y^2
+ 00000097  C5 F4/ 59 D1		    vmulps ymm2, ymm1, ymm1            ; ymm2 = y^2
+				    
+				    ; y^3 = y^2 * y
+ 0000009B  C5 EC/ 59 D9		    vmulps ymm3, ymm2, ymm1            ; ymm3 = y^3
+				    
+				    ; y^4 = y^2 * y^2
+ 0000009F  C5 EC/ 59 E2		    vmulps ymm4, ymm2, ymm2            ; ymm4 = y^4
+				    
+				    ; exp(y) = 1 + y + y^2/2 + y^3/6 + y^4/24
+ 000000A3  C4 C1 6C/ 59 EA	    vmulps ymm5, ymm2, ymm10           ; ymm5 = y^2/2
+ 000000A8  C4 C1 64/ 59 F3	    vmulps ymm6, ymm3, ymm11           ; ymm6 = y^3/6
+ 000000AD  C4 C1 5C/ 59 FC	    vmulps ymm7, ymm4, ymm12           ; ymm7 = y^4/24
+				    
+ 000000B2  C5 3C/ 58 F9		    vaddps ymm15, ymm8, ymm1           ; ymm15 = 1 + y
+ 000000B6  C5 04/ 58 FD		    vaddps ymm15, ymm15, ymm5          ; ymm15 += y^2/2
+ 000000BA  C5 04/ 58 FE		    vaddps ymm15, ymm15, ymm6          ; ymm15 += y^3/6
+ 000000BE  C5 04/ 58 FF		    vaddps ymm15, ymm15, ymm7          ; ymm15 += y^4/24
+				    
+				    ; Now ymm15 = exp(-x)
+				    ; Compute 1 + exp(-x)
+ 000000C2  C4 41 04/ 58 FD	    vaddps ymm15, ymm15, ymm13         ; ymm15 = 1 + exp(-x)
+				    
+				    ; Compute x / (1 + exp(-x)) = SiLU(x)
+				    ; Use reciprocal multiplication: x * (1 / (1 + exp(-x)))
+ 000000C7  C4 41 7C/ 5E FF	    vdivps ymm15, ymm0, ymm15          ; ymm15 = x / (1 + exp(-x))
+				    
+				    ; Store result
+ 000000CC  C5 7C/ 29 38		    vmovaps YMMWORD PTR [rax], ymm15
+				    
+				    ; Advance
+ 000000D0  48/ 83 C0 20		    add rax, 32
+ 000000D4  48/ FF C9		    dec rcx
+ 000000D7  EB AF		    jmp process_loop
+				    
+ 000000D9			done:
+ 000000D9  48/ 33 C0		    xor rax, rax
+ 000000DC  EB 12		    jmp epilogue
+
+ 000000DE			error_null:
+ 000000DE  48/ C7 C0		    mov rax, 1
+	   00000001
+ 000000E5  EB 09		    jmp epilogue
+
+ 000000E7			error_zero:
+ 000000E7  48/ C7 C0		    mov rax, 2
+	   00000002
+ 000000EE  EB 00		    jmp epilogue
+
+ 000000F0			epilogue:
+				    ; Clear YMM state
+ 000000F0  C5 F8 77		    vzeroupper
+				    
+ 000000F3  48/ 83 C4 20		    add rsp, 32
+ 000000F7  5D			    pop rbp
+ 000000F8  C3			    ret
+
+ 000000F9			MASM_SiLU_Correct ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:14
+F:/rawrxd/src/validation/kernels/masm/silu_correct.asm	     Symbols 2 - 1
+
+
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+CONST  . . . . . . . . . . . . .	 000000E0 16	  'CONST'	 ReadOnly
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_SiLU_Correct  . . . . . . .	P 	 00000000 _TEXT	Length= 000000F9 Public
+  alignment_ok . . . . . . . . .	L 	 00000034 _TEXT	
+  size_ok  . . . . . . . . . . .	L 	 00000049 _TEXT	
+  process_loop . . . . . . . . .	L 	 00000088 _TEXT	
+  done . . . . . . . . . . . . .	L 	 000000D9 _TEXT	
+  error_null . . . . . . . . . .	L 	 000000DE _TEXT	
+  error_zero . . . . . . . . . .	L 	 000000E7 _TEXT	
+  epilogue . . . . . . . . . . .	L 	 000000F0 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+g_exp_c0 . . . . . . . . . . . .	DWord	 00000000 CONST	
+g_exp_c1 . . . . . . . . . . . .	DWord	 00000020 CONST	
+g_exp_c2 . . . . . . . . . . . .	DWord	 00000040 CONST	
+g_exp_c3 . . . . . . . . . . . .	DWord	 00000060 CONST	
+g_exp_c4 . . . . . . . . . . . .	DWord	 00000080 CONST	
+g_neg_one  . . . . . . . . . . .	DWord	 000000C0 CONST	
+g_one  . . . . . . . . . . . . .	DWord	 000000A0 CONST	
+
+	   0 Warnings
+	   0 Errors

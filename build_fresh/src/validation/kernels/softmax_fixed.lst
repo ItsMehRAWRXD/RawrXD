@@ -1,0 +1,345 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:17
+F:/rawrxd/src/validation/kernels/masm/softmax_fixed.asm	     Page 1 - 1
+
+
+				; ============================================================================
+				; softmax_fixed.asm - Corrected Softmax implementation
+				; ============================================================================
+				; 4-phase architecture:
+				;   Phase 1: Horizontal Max Reduction (for numerical stability)
+				;   Phase 2: Exp Approximation (exp(x - max))
+				;   Phase 3: Horizontal Sum Reduction
+				;   Phase 4: Normalization (using reciprocal, not division)
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+ 00000000			.const
+				ALIGN 16
+				; Constants for exp approximation: exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24
+ 00000000 3F800000		g_exp_c0    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0      ; 1
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 00000020 3F800000		g_exp_c1    REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0      ; 1 (x coefficient)
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+ 00000040 3F000000		g_exp_c2    REAL4 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5      ; 1/2
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+	   3F000000
+ 00000060 3E2AAAC1		g_exp_c3    REAL4 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667, 0.166667  ; 1/6
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+	   3E2AAAC1
+ 00000080 3D2AAB04		g_exp_c4    REAL4 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667, 0.041667  ; 1/24
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+	   3D2AAB04
+ 000000A0 E0AD78EC		g_neg_inf   REAL4 -1.0E20, -1.0E20, -1.0E20, -1.0E20, -1.0E20, -1.0E20, -1.0E20, -1.0E20
+	   E0AD78EC
+	   E0AD78EC
+	   E0AD78EC
+	   E0AD78EC
+	   E0AD78EC
+	   E0AD78EC
+	   E0AD78EC
+ 000000C0 3F800000		g_one       REAL4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+	   3F800000
+
+ 00000000			.code
+
+				; ============================================================================
+				; MASM_Softmax_Fixed - Corrected Softmax with AVX2
+				; ============================================================================
+				; Parameters:
+				;   RCX = float* data (32-byte aligned, in-place)
+				;   RDX = size_t data_size (in bytes, multiple of 32)
+				; Returns: RAX = 0 on success
+				; ============================================================================
+
+ 00000000			MASM_Softmax_Fixed PROC FRAME
+				    ; Prologue
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+ 00000004  48/ 83 EC 20		    sub rsp, 32
+				    .allocstack 32
+				    .endprolog
+
+ 00000008  53			    push rbx
+ 00000009  56			    push rsi
+ 0000000A  41/ 54		    push r12
+ 0000000C  41/ 55		    push r13
+ 0000000E  41/ 56		    push r14
+
+				    ; Validate parameters
+ 00000010  48/ 85 C9		    test rcx, rcx
+ 00000013  0F 84 00000143	    jz error_null
+ 00000019  48/ 85 D2		    test rdx, rdx
+ 0000001C  0F 84 00000143	    jz error_zero
+ 00000022  48/ F7 C1		    test rcx, 31
+	   0000001F
+ 00000029  0F 85 0000013F	    jnz error_align
+ 0000002F  48/ F7 C2		    test rdx, 31
+	   0000001F
+ 00000036  0F 85 0000013B	    jnz error_size
+
+				    ; Save parameters
+ 0000003C  48/ 8B F1		    mov rsi, rcx          ; rsi = data pointer
+ 0000003F  48/ 8B DA		    mov rbx, rdx          ; rbx = data_size (bytes)
+ 00000042  4C/ 8B E1		    mov r12, rcx          ; r12 = original data pointer (for phase 2)
+ 00000045  4C/ 8B EA		    mov r13, rdx          ; r13 = original size
+ 00000048  49/ C1 ED 02		    shr r13, 2            ; r13 = number of floats
+
+				    ; Calculate iterations
+ 0000004C  48/ 8B CB		    mov rcx, rbx
+ 0000004F  48/ C1 E9 05		    shr rcx, 5            ; rcx = data_size / 32 (number of 8-float blocks)
+
+				    ; ============================================================================
+				    ; Phase 1: Find Maximum Value (Horizontal Reduction)
+				    ; ============================================================================
+ 00000053  C5 FC/ 28 05		    vmovaps ymm0, YMMWORD PTR [g_neg_inf]  ; ymm0 = max = -inf
+	   000000A0 R
+ 0000005B  48/ 8B C6		    mov rax, rsi          ; rax = data pointer for phase 1
+ 0000005E  4C/ 8B F1		    mov r14, rcx          ; r14 = iteration count
+
+ 00000061			max_loop:
+ 00000061  49/ 83 FE 00		    cmp r14, 0
+ 00000065  7E 11		    jle max_done
+
+ 00000067  C5 FC/ 28 08		    vmovaps ymm1, YMMWORD PTR [rax]        ; ymm1 = 8 floats
+ 0000006B  C5 FC/ 5F C1		    vmaxps ymm0, ymm0, ymm1                ; ymm0 = max(ymm0, ymm1)
+
+ 0000006F  48/ 83 C0 20		    add rax, 32
+ 00000073  49/ FF CE		    dec r14
+ 00000076  EB E9		    jmp max_loop
+
+ 00000078			max_done:
+				    ; Horizontal reduction of ymm0 to get global max
+				    ; ymm0 = [m0, m1, m2, m3, m4, m5, m6, m7]
+ 00000078  C4 E3 7D/ 19 C1	    vextractf128 xmm1, ymm0, 1             ; xmm1 = [m4, m5, m6, m7]
+	   01
+ 0000007E  C5 F8/ 5F C1		    vmaxps xmm0, xmm0, xmm1                ; xmm0 = [max(m0,m4), max(m1,m5), ...]
+				    
+ 00000082  C5 FA/ 16 C8		    vmovshdup xmm1, xmm0                   ; xmm1 = [max(m1,m5), max(m3,m7), ...]
+ 00000086  C5 F8/ 5F C1		    vmaxps xmm0, xmm0, xmm1                ; xmm0 = [max(m0,m1,m4,m5), ...]
+				    
+ 0000008A  C5 F0/ 12 C8		    vmovhlps xmm1, xmm1, xmm0              ; xmm1 = [max(m2,m3,m6,m7), ...]
+ 0000008E  C5 F8/ 5F C1		    vmaxps xmm0, xmm0, xmm1                ; xmm0[0] = global max
+
+				    ; Broadcast max to all lanes
+ 00000092  C4 E2 7D/ 18 F8	    vbroadcastss ymm7, xmm0                ; ymm7 = [max, max, max, ...]
+
+				    ; ============================================================================
+				    ; Phase 2: Compute exp(x - max) and accumulate sum
+				    ; ============================================================================
+ 00000097  48/ 8B C6		    mov rax, rsi          ; rax = data pointer
+ 0000009A  4C/ 8B F1		    mov r14, rcx          ; r14 = iteration count
+ 0000009D  C5 CC/ 57 F6		    vxorps ymm6, ymm6, ymm6                ; ymm6 = sum = 0
+
+				    ; Load exp constants
+ 000000A1  C5 7C/ 28 05		    vmovaps ymm8, YMMWORD PTR [g_exp_c0]   ; 1.0
+	   00000000 R
+ 000000A9  C5 7C/ 28 0D		    vmovaps ymm9, YMMWORD PTR [g_exp_c1]   ; 1.0
+	   00000020 R
+ 000000B1  C5 7C/ 28 15		    vmovaps ymm10, YMMWORD PTR [g_exp_c2]  ; 0.5
+	   00000040 R
+ 000000B9  C5 7C/ 28 1D		    vmovaps ymm11, YMMWORD PTR [g_exp_c3]  ; 0.166667
+	   00000060 R
+ 000000C1  C5 7C/ 28 25		    vmovaps ymm12, YMMWORD PTR [g_exp_c4]  ; 0.041667
+	   00000080 R
+
+ 000000C9			exp_loop:
+ 000000C9  49/ 83 FE 00		    cmp r14, 0
+ 000000CD  7E 44		    jle exp_done
+
+				    ; Load 8 floats
+ 000000CF  C5 FC/ 28 00		    vmovaps ymm0, YMMWORD PTR [rax]        ; ymm0 = x
+
+				    ; Compute x - max
+ 000000D3  C5 FC/ 5C C7		    vsubps ymm0, ymm0, ymm7                ; ymm0 = x - max
+
+				    ; Compute exp(x - max) using polynomial approximation
+				    ; exp(y) ≈ 1 + y + y^2/2 + y^3/6 + y^4/24
+				    
+				    ; y^2
+ 000000D7  C5 FC/ 59 C8		    vmulps ymm1, ymm0, ymm0                ; ymm1 = y^2
+				    
+				    ; y^3 = y^2 * y
+ 000000DB  C5 F4/ 59 D0		    vmulps ymm2, ymm1, ymm0                ; ymm2 = y^3
+				    
+				    ; y^4 = y^2 * y^2
+ 000000DF  C5 F4/ 59 D9		    vmulps ymm3, ymm1, ymm1                ; ymm3 = y^4
+				    
+				    ; exp(y) = 1 + y + y^2/2 + y^3/6 + y^4/24
+ 000000E3  C4 C1 74/ 59 CA	    vmulps ymm1, ymm1, ymm10               ; ymm1 = y^2/2
+ 000000E8  C4 C1 6C/ 59 D3	    vmulps ymm2, ymm2, ymm11               ; ymm2 = y^3/6
+ 000000ED  C4 C1 64/ 59 DC	    vmulps ymm3, ymm3, ymm12               ; ymm3 = y^4/24
+				    
+ 000000F2  C5 BC/ 58 E0		    vaddps ymm4, ymm8, ymm0                ; ymm4 = 1 + y
+ 000000F6  C5 DC/ 58 E1		    vaddps ymm4, ymm4, ymm1                ; ymm4 += y^2/2
+ 000000FA  C5 DC/ 58 E2		    vaddps ymm4, ymm4, ymm2                ; ymm4 += y^3/6
+ 000000FE  C5 DC/ 58 E3		    vaddps ymm4, ymm4, ymm3                ; ymm4 += y^4/24
+				    
+				    ; Store exp result back
+ 00000102  C5 FC/ 29 20		    vmovaps YMMWORD PTR [rax], ymm4
+				    
+				    ; Accumulate sum
+ 00000106  C5 CC/ 58 F4		    vaddps ymm6, ymm6, ymm4                ; ymm6 += exp(x - max)
+
+ 0000010A  48/ 83 C0 20		    add rax, 32
+ 0000010E  49/ FF CE		    dec r14
+ 00000111  EB B6		    jmp exp_loop
+
+ 00000113			exp_done:
+				    ; ============================================================================
+				    ; Phase 3: Horizontal Sum Reduction
+				    ; ============================================================================
+				    ; ymm6 contains partial sums, need to reduce to single value
+ 00000113  C4 E3 7D/ 19 F1	    vextractf128 xmm1, ymm6, 1             ; xmm1 = high 4 elements
+	   01
+ 00000119  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1                ; xmm0 = low + high
+				    
+ 0000011D  C5 FA/ 16 C8		    vmovshdup xmm1, xmm0                   ; xmm1 = shuffled
+ 00000121  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1                ; xmm0 = partial sum
+				    
+ 00000125  C5 F0/ 12 C8		    vmovhlps xmm1, xmm1, xmm0              ; xmm1 = high half
+ 00000129  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1                ; xmm0[0] = total sum
+
+				    ; Compute reciprocal of sum (1/sum) using approximation
+				    ; For better precision, we could use Newton-Raphson refinement
+ 0000012D  C5 FA/ 53 C0		    vrcpss xmm0, xmm0, xmm0                ; xmm0 ≈ 1/sum
+				    
+				    ; Broadcast reciprocal sum to all lanes
+ 00000131  C4 E2 7D/ 18 E8	    vbroadcastss ymm5, xmm0                ; ymm5 = [1/sum, 1/sum, ...]
+
+				    ; ============================================================================
+				    ; Phase 4: Normalize (multiply by reciprocal sum)
+				    ; ============================================================================
+ 00000136  48/ 8B C6		    mov rax, rsi          ; rax = data pointer
+ 00000139  4C/ 8B F1		    mov r14, rcx          ; r14 = iteration count
+
+ 0000013C			normalize_loop:
+ 0000013C  49/ 83 FE 00		    cmp r14, 0
+ 00000140  7E 15		    jle normalize_done
+
+ 00000142  C5 FC/ 28 00		    vmovaps ymm0, YMMWORD PTR [rax]        ; ymm0 = exp(x - max)
+ 00000146  C5 FC/ 59 C5		    vmulps ymm0, ymm0, ymm5                ; ymm0 = exp(x - max) / sum
+ 0000014A  C5 FC/ 29 00		    vmovaps YMMWORD PTR [rax], ymm0        ; store result
+
+ 0000014E  48/ 83 C0 20		    add rax, 32
+ 00000152  49/ FF CE		    dec r14
+ 00000155  EB E5		    jmp normalize_loop
+
+ 00000157			normalize_done:
+ 00000157  48/ 33 C0		    xor rax, rax
+ 0000015A  EB 22		    jmp cleanup
+
+ 0000015C			error_null:
+ 0000015C  48/ C7 C0		    mov rax, 1
+	   00000001
+ 00000163  EB 19		    jmp cleanup
+
+ 00000165			error_zero:
+ 00000165  48/ C7 C0		    mov rax, 2
+	   00000002
+ 0000016C  EB 10		    jmp cleanup
+
+ 0000016E			error_align:
+ 0000016E  48/ C7 C0		    mov rax, 3
+	   00000003
+ 00000175  EB 07		    jmp cleanup
+
+ 00000177			error_size:
+ 00000177  48/ C7 C0		    mov rax, 4
+	   00000004
+
+ 0000017E			cleanup:
+ 0000017E  C5 F8 77		    vzeroupper
+ 00000181  41/ 5E		    pop r14
+ 00000183  41/ 5D		    pop r13
+ 00000185  41/ 5C		    pop r12
+ 00000187  5E			    pop rsi
+ 00000188  5B			    pop rbx
+ 00000189  48/ 83 C4 20		    add rsp, 32
+ 0000018D  5D			    pop rbp
+ 0000018E  C3			    ret
+
+ 0000018F			MASM_Softmax_Fixed ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:17
+F:/rawrxd/src/validation/kernels/masm/softmax_fixed.asm	     Symbols 2 - 1
+
+
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+CONST  . . . . . . . . . . . . .	 000000E0 16	  'CONST'	 ReadOnly
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_Softmax_Fixed . . . . . . .	P 	 00000000 _TEXT	Length= 0000018F Public
+  max_loop . . . . . . . . . . .	L 	 00000061 _TEXT	
+  max_done . . . . . . . . . . .	L 	 00000078 _TEXT	
+  exp_loop . . . . . . . . . . .	L 	 000000C9 _TEXT	
+  exp_done . . . . . . . . . . .	L 	 00000113 _TEXT	
+  normalize_loop . . . . . . . .	L 	 0000013C _TEXT	
+  normalize_done . . . . . . . .	L 	 00000157 _TEXT	
+  error_null . . . . . . . . . .	L 	 0000015C _TEXT	
+  error_zero . . . . . . . . . .	L 	 00000165 _TEXT	
+  error_align  . . . . . . . . .	L 	 0000016E _TEXT	
+  error_size . . . . . . . . . .	L 	 00000177 _TEXT	
+  cleanup  . . . . . . . . . . .	L 	 0000017E _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+g_exp_c0 . . . . . . . . . . . .	DWord	 00000000 CONST	
+g_exp_c1 . . . . . . . . . . . .	DWord	 00000020 CONST	
+g_exp_c2 . . . . . . . . . . . .	DWord	 00000040 CONST	
+g_exp_c3 . . . . . . . . . . . .	DWord	 00000060 CONST	
+g_exp_c4 . . . . . . . . . . . .	DWord	 00000080 CONST	
+g_neg_inf  . . . . . . . . . . .	DWord	 000000A0 CONST	
+g_one  . . . . . . . . . . . . .	DWord	 000000C0 CONST	
+
+	   0 Warnings
+	   0 Errors

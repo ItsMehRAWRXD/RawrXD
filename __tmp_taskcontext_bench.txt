@@ -1,0 +1,37 @@
+=================================================================
+Sovereign Engine - Super-Node Architecture
+High-Performance Single-Machine Inference Engine
+=================================================================
+
+[Main] Creating Super-Node with 1 logical workers...
+[SuperNode] Engine created with 1 logical workers
+[SuperNode] Initializing...
+[SuperNode] Memory pool: 4 GB
+[SuperNode] Arena committed: 2048 MB from pool
+[SuperNode] Model loaded: D:\RawrXD\README.md
+[SuperNode] RawrXD inference engine initialized
+[SuperNode] Inference engine initialized
+[SuperNode] MASM kernel initialized (throughput: 4000 t/s)
+[SuperNode] Thread pinned to cores 0-1
+[SuperNode] Initialized with 1 workers
+[Main] Super-Node initialized successfully!
+
+[Benchmark] Running for 1 seconds...
+[Benchmark] Target throughput: 30,000-40,000 tokens/sec
+
+[SuperNode] Head worker started
+[Benchmark] Time:   0s | Tokens:  10000 | TPS:  10000[Benchmark] Time:   0s | Tokens:  20000 | TPS:  20000[Benchmark] Time:   0s | Tokens:  30000 | TPS:  30000[Benchmark] Time:   0s | Tokens:  40000 | TPS:  40000[Benchmark] Time:   0s | Tokens:  50000 | TPS:  50000[Benchmark] Time:   0s | Tokens:  60000 | TPS:  60000[Benchmark] Time:   0s | Tokens:  70000 | TPS:  70000[Benchmark] Time:   0s | Tokens:  80000 | TPS:  80000[Benchmark] Time:   0s | Tokens:  90000 | TPS:  90000[Benchmark] Time:   0s | Tokens: 100000 | TPS: 100000[Benchmark] Time:   0s | Tokens: 110000 | TPS: 110000[Benchmark] Time:   0s | Tokens: 120000 | TPS: 120000[Benchmark] Time:   0s | Tokens: 130000 | TPS: 130000[Benchmark] Time:   0s | Tokens: 140000 | TPS: 140000[Benchmark] Time:   0s | Tokens: 150000 | TPS: 150000[Benchmark] Time:   0s | Tokens: 160000 | TPS: 160000[Benchmark] Time:   0s | Tokens: 170000 | TPS: 170000[Benchmark] Time:   0s | Tokens: 180000 | TPS: 180000[Benchmark] Time:   0s | Tokens: 190000 | TPS: 190000[Benchmark] Time:   0s | Tokens: 200000 | TPS: 200000[Benchmark] Time:   0s | Tokens: 210000 | TPS: 210000
+
+[Benchmark] Complete!
+[Benchmark] Total tokens: 215896
+[Benchmark] Duration: 1.00 seconds
+[Benchmark] Throughput: 215896 tokens/sec
+[Benchmark] Target: 30,000-40,000 tokens/sec
+[Benchmark] Status: ✅ EXCELLENT (617% of target)
+
+[Main] Shutting down...
+[SuperNode] Shutting down...
+[SuperNode] Inference engine shutdown complete
+[SuperNode] Head worker stopped
+[SuperNode] Shutdown complete
+[Main] Done!

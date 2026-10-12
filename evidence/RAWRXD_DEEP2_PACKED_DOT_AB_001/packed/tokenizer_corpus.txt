@@ -1,0 +1,28 @@
+User: Hello, world!\n\nAssistant:
+The quick brown fox jumps over the lazy dog
+Multiple   spaces    between    words
+	tab	separated	values
+Trailing spaces   
+emoji test: 😀🚀✅
+CJK: 你好世界こんにちは안녕하세요
+Russian: Привет мир
+Arabic: مرحبا بالعالم
+devanagari: नमस्ते दुनिया
+combining: éàô
+zero-width: ‍‌‍
+punctuation!!! ??? ...
+URLs: https://example.com/path?q=1&x=2
+code: if (x == 1 && y != 2) { return; }
+numbers: 1234567890 3.14159 -42 1e10
+underscores_snake_case and camelCase
+ALL CAPS SENTENCE
+mixed123abc456def
+newlines:\nand\ttabs\r\n
+quotes "double" 'single' `back`
+math: 2 + 2 = 4 < 5 > 1
+special: @#$%^&*(){}[]|
+tokenization edge: HelloHelloHelloHello
+concat:Hello,world
+unnormalizable: ⁣⁣⁣
+byte fallback: \x00\x01
+predictable  patterns of letters

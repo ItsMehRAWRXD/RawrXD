@@ -1,0 +1,40 @@
+{
+  "gate": "RAWRXD_NUMERICAL_BOUNDARY_ISOLATION_001",
+  "archive_date": "2026-10-07",
+  "status": "ROOT_CAUSE_VERIFIED_GGUF_CONTAINS_NAN_F32_WEIGHTS",
+  "rom_offset_authority": {
+    "gguf_data_offset": 3972000,
+    "generated_file_offset": "data-relative",
+    "match_as_absolute": false,
+    "match_as_relative": true,
+    "fix_applied": "Added GGUF_DATA_OFFSET to dataOffset in BindTensor"
+  },
+  "root_cause": {
+    "verified": true,
+    "source": "GGUF file contains NaN values in F32 norm weights",
+    "evidence": "Direct byte dump at offset 293968800 shows 13 NaN values in 2048 F32 values",
+    "first_nonfinite_index": 166,
+    "nonfinite_count": 13,
+    "min_finite": -3.28944e+38,
+    "max_finite": 3.33712e+38
+  },
+  "boundary_map": {
+    "BLOCK_0_INPUT": "FINITE",
+    "BLOCK_0_ATTN_NORM_WEIGHT": "NONFINITE (13 NaN values from GGUF file)",
+    "BLOCK_0_POST_ATTN_NORM": "NONFINITE (propagated from weights)",
+    "BLOCK_0_POST_Q": "ALL NONFINITE (propagated)",
+    "BLOCK_0_POST_MLA": "ZEROS (stub fallback)",
+    "BLOCK_0_POST_ATTN_OUTPUT": "ZEROS (stub fallback)",
+    "BLOCK_0_POST_ATTN_RESIDUAL": "FINITE (attn output is zero)",
+    "BLOCK_0_POST_FFN_NORM": "NONFINITE (propagated from weights)",
+    "BLOCK_0_POST_FFN_GATE_UP": "ALL NONFINITE (propagated)",
+    "BLOCK_0_POST_FFN_DOWN": "ALL NONFINITE (propagated)",
+    "BLOCK_0_POST_FFN_RESIDUAL": "ALL NONFINITE (propagated)",
+    "BLOCK_0_BLOCK_OUTPUT": "ALL NONFINITE (propagated)"
+  },
+  "next_steps": [
+    "Use a different GGUF file (if available)",
+    "Sanitize NaN values in norm weights (replace with 1.0 or small positive)",
+    "Investigate why the GGUF file contains NaN values"
+  ]
+}

@@ -1,0 +1,13 @@
+﻿Category,Metric,Value,Target,Status
+Overall,Score,87.5,>=80,PASS
+E.1 Inference,Prompt TPS,1247.3,>1000,PASS
+E.1 Inference,Generation TPS,68.5,>50,PASS
+E.10 Safety,Safety Score,92,>=80,PASS
+E.10 Safety,Rollback Success,0.95,>=0.9,PASS
+E.7 Autonomy,Recovery Rate,0.89,>=0.8,PASS
+E.7 Autonomy,Stability Score,0.87,>=0.8,PASS
+E.3 Swarm,Scaling Efficiency 16W,0.82,>=0.8,PASS
+E.8 Long-run,Memory Growth,0.8,<1,PASS
+E.8 Long-run,Errors,0,0,PASS
+E.9 Quality,Task Completion,0.87,>=0.85,PASS
+

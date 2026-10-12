@@ -1,0 +1,116 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_UNIVERSAL_INGEST",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "title": "Model-agnostic GGUF ingestion for Deep2 (replaces the per-model generated IR)",
+  "scope": "Reverse-engineers Deep2's ingestion path so it works on ANY GGUF. The old path compared the loaded model byte-for-byte against a generated per-model IR table (TensorROM.generated.hpp) and fail-closed on anything else, so Deep2 could only ever run the one model the table was generated from. This layer derives architecture, config, tensor roles and the op graph AT RUNTIME from GGUF metadata and the tensor-name directory, and resolves weights by name with ggml.",
+  "files_added": {
+    "header": "src/deep2/modelgenie/universal_gguf.hpp",
+    "implementation": "src/deep2/modelgenie/universal_gguf.cpp",
+    "verification_tool": "tools/deep2_universal_ingest.cpp",
+    "build": "tools/build_deep2_universal_ingest.bat"
+  },
+  "what_was_replaced": {
+    "old": "src/modelgenie/ModelGenieExecutor.hpp :: ROMResolver::Resolve(id) compares live.name / live.type / live.dataOffset / live.encodedBytes / rank / every dim against GEN::kTensorROMTable[id] and returns nullptr on ANY mismatch. kExecutionIRTable is a compile-time table of 300 ops for one specific model.",
+    "consequence": "Any model that was not DeepSeek-V2-Lite-Chat.Q4_K_M.gguf resolved zero tensors, executed zero ops, and produced null logits. Confirmed by ROM_DBG instrumentation: the ROM table wanted token_embd.weight type=1 (Q4_K) bytes=117964800, while DeepSeek-Coder-V2-Lite-Instruct carries type=2 (Q4_0).",
+    "new": "Architecture + config from metadata; tensor role from the GGUF tensor name (blk.<idx>.<role>.weight); op graph built per block from the roles actually present; weights resolved by name and dequantised with ggml."
+  },
+  "results": {
+    "files_scanned": 121,
+    "gguf_files": 28,
+    "non_gguf_blobs": 93,
+    "non_gguf_are_expected_rejects": "All 93 are ollama manifest/template blobs, maximum 35.9 KB. They legitimately fail the GGUF magic check.",
+    "gguf_parsed": 28,
+    "gguf_parse_failed": 0,
+    "verdict_rule": "PASS means every GGUF in the directory ingested. It does NOT claim every model can execute a decode step; see the graph counts for that distinction."
+  },
+  "architectures_covered": {
+    "count": 12,
+    "list": ["llama", "qwen2", "qwen3", "qwen35", "qwen35moe", "granite", "gemma3", "starcoder2", "phi3", "deepseek2", "deepseek4", "nemotron_h / nemotron_h_moe", "gptoss", "laguna", "qwen3next", "clip"],
+    "decode_graph_emitted": 22,
+    "no_decode_graph": 6,
+    "no_graph_reasons": {
+      "clip (x3)": "Encoder, not a decoder. Ingested and classified; correctly refused a decode graph.",
+      "nemotron_h / nemotron_h_moe": "Mamba-style SSM blocks. Deep2 has no SSM scan primitive; the graph is emitted and the SSM op is recorded as explicitly Unsupported rather than silently dropped.",
+      "qwen3next": "SSM + linear-attention hybrid. Same SSM gap."
+    }
+  },
+  "quantization_coverage": {
+    "types_seen": ["f32", "f16", "bf16", "q4_0", "q5_0", "q6_K", "q8_0", "q2_K", "q3_K", "q4_K", "q5_K", "iq2_xs", "iq3_xxs", "i32", "mxfp4"],
+    "loadable": "all except i32",
+    "i32": "3 tensors, e.g. blk.N.ffn_gate_tid2eid.weight - an integer expert-index table, not float data. Correctly reported as not dequantisable.",
+    "counts": { "f32": 6677, "f16": 367, "bf16": 642, "q4_0": 922, "q5_0": 165, "q6_K": 790, "q8_0": 732, "q2_K": 321, "q3_K": 160, "q4_K": 3861, "q5_K": 120, "iq2_xs": 50, "iq3_xxs": 77, "i32": 3, "mxfp4": 182 },
+    "gpu_quant_capable": "q4_K and q6_K tensors keep their raw quantised bytes so the Vulkan dispatcher (RAWRXD_DEEP2_GPU_QUANT_DOT_002) can consume them directly."
+  },
+  "role_classification": {
+    "method": "Pure function of the GGUF tensor name. Per-block prefix blk.<idx>. plus the role suffix determines Role and block index; global tensors are recognised exactly.",
+    "roles": ["TokenEmbedding", "OutputNorm", "OutputWeight", "AttnNorm", "AttnQ/K/V/Output", "AttnQKV", "AttnKNorm", "AttnKvAMqa / AttnKvB (MLA)", "FfnNorm", "FfnGate/Up/Down", "ExpFfnGate/Up/Down (MoE)", "RouterGate", "Ssm* (Mamba)", "Rope*"],
+    "worked_example": {
+      "model": "phi3",
+      "blk0_roles": ["attn_norm:weight", "attn_out:weight", "qkv(fused):weight", "down:weight", "ffn_norm:weight", "up:weight"],
+      "note": "phi3 fuses q/k/v into attn_qkv, and its FFN has no separate gate - both correctly reflected in the emitted graph (259 ops, attn emitted after the split point)."
+    }
+  },
+  "op_graph": {
+    "vocabulary": "Same primitives Deep2 already implements: EmbeddingLookup, RmsNorm, Linear, Attention, MatMul, MlaDecompress, Router, TopK, MoEExecute, ResidualAdd, LmHead.",
+    "deepseek2_example": {
+      "model": "DeepSeek-V2-Lite-Chat",
+      "config": [["block_count", 27], ["embedding_length", 2048], ["head_count", 16], ["head_count_kv", 16], ["vocab", 102400], ["expert_count", 64], ["expert_used", 6], ["expert_shared", 2], ["expert_ffn", 1408], ["kv_lora_rank", 512], ["key_length", 192], ["value_length", 128], ["leading_dense", 1]],
+      "ops": 300,
+      "breakdown": ["embd=1", "rms=55", "linear=54", "attn=27", "mla=27", "router=27", "topk=27", "moe=27", "resid=54", "lmhead=1"],
+      "note": "300 ops matches the generated table's op count exactly, but is now derived rather than hard-coded."
+    },
+    "llama_family_example": "DeepSeek R1 Distill Llama 70B (llama, 80 blocks) -> 963 ops, no MoE; TopK/Router/MoE absent because expert_count is 0."
+  },
+  "weight_resolution": {
+    "verified_on": "DeepSeek-V2-Lite-Chat (377 tensors)",
+    "result": "377/377 tensors dequantised, 285,601,280 floats, exit 0",
+    "bound": "A bounded prefix per tensor (1M floats) is retained in the harness, not the whole model, because a fully dequantised 9.65 GB model is ~38 GB of f32."
+  },
+  "bugs_found_and_fixed_in_this_layer": [
+    {
+      "bug": "The tensor directory walk ran 'while pos < size' instead of for exactly tensor_count entries, so it ran off the end of the directory into the tensor payload and read weight bytes as tensor names.",
+      "evidence": "Entry #377: name='' nd=0 on a 377-tensor model.",
+      "fix": "Bound the loop by the declared tensor_count and reject empty names."
+    },
+    {
+      "bug": "GGUF BOOL was treated as a 4-byte scalar.",
+      "fix": "1 byte, per the GGUF spec."
+    },
+    {
+      "bug": "f32/f16/bf16 reported as not dequantisable because ggml exposes no to_float for them.",
+      "fix": "Treat them as raw-loadable (memcpy / fp16 / bf16 conversion) rather than as a gap."
+    },
+    {
+      "bug": "Element counts were cast to int for ggml's to_float, which overflows for large tensors.",
+      "fix": "Dequantise in bounded chunks."
+    },
+    {
+      "bug": "Every dequantised tensor was retained, exhausting memory by block 18 of a 9.65 GB model.",
+      "fix": "Retain a bounded prefix per tensor."
+    },
+    {
+      "bug": "vocab_size reported as 0 for models that do not declare it (phi3, gemma3).",
+      "fix": "Derive it from token_embd.weight dims[1]; same fallback for embedding_length from dims[0]."
+    }
+  ],
+  "what_this_establishes": [
+    "Deep2 can parse and classify every GGUF in the model zoo, independent of which model the old generated IR happened to target.",
+    "Architecture, config and tensor roles are derived at runtime, so adding a new model requires no code generation step.",
+    "All 15 quantisation types present in the zoo are loadable except i32, which is not float data.",
+    "The emitted op graph uses the same primitive vocabulary Deep2 already implements, and is built only from the roles a given model actually has.",
+    "Weights resolve and dequantise correctly against a real 377-tensor MoE/MLA model."
+  ],
+  "what_this_does_not_establish": [
+    "Execution. Ingestion derives the graph; it does not run a token. RAWRXD_DEEP2_EXECUTOR_GPU_E2E_001 remains the executable milestone.",
+    "Numerical correctness of any forward pass. No logits are produced here.",
+    "That SSM-family models can decode: nemotron_h, nemotron_h_moe and qwen3next need an SSM scan primitive Deep2 does not have, and the certificate says so rather than pretending.",
+    "MoE routing correctness. Router/TopK/MoEExecute nodes are emitted but not executed.",
+    "Any TPS measurement."
+  ],
+  "reproduction": {
+    "build": "tools/build_deep2_universal_ingest.bat",
+    "zoo_run": "tools/deep2_universal_ingest.exe --dir F:\\OllamaModels\\blobs",
+    "weights_run": "tools/deep2_universal_ingest.exe --dir <dir-with-one-gguf> --weights"
+  }
+}

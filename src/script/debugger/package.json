@@ -1,0 +1,153 @@
+{
+  "name": "rawrxd-script-debugger",
+  "displayName": "RawrXD-Script Debugger",
+  "description": "Debug Adapter for RawrXD-Script JavaScript Engine",
+  "version": "1.0.0",
+  "publisher": "rawrxd",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": ["Debuggers"],
+  "keywords": ["javascript", "rawrxd", "debugger", "vm"],
+  "activationEvents": [
+    "onDebugResolve:rawrxd-script",
+    "onLanguage:javascript",
+    "onLanguage:rawrxd-script"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "rawrxd-script",
+        "aliases": ["RawrXD-Script", "rxs"],
+        "extensions": [".rxs", ".rxd", ".rawrxd"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rawrxd-script",
+        "scopeName": "source.rawrxd-script",
+        "path": "./syntaxes/rawrxd-script.tmLanguage.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "rawrxd-script",
+        "label": "RawrXD-Script Debugger",
+        "program": "./out/debugAdapter.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the RawrXD-Script file to debug",
+                "default": "${workspaceFolder}/main.rxs"
+              },
+              "args": {
+                "type": ["array", "string"],
+                "description": "Command line arguments",
+                "default": []
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory",
+                "default": "${workspaceFolder}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Stop at entry point",
+                "default": true
+              },
+              "trace": {
+                "type": "boolean",
+                "description": "Enable DAP tracing",
+                "default": false
+              }
+            }
+          },
+          "attach": {
+            "properties": {
+              "processId": {
+                "type": "number",
+                "description": "Process ID to attach to"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Stop at entry point",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "rawrxd-script",
+            "request": "launch",
+            "name": "Debug RawrXD-Script",
+            "program": "${workspaceFolder}/main.rxs",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": true,
+            "trace": false
+          },
+          {
+            "type": "rawrxd-script",
+            "request": "attach",
+            "name": "Attach to RawrXD-Script VM",
+            "processId": "${command:pickProcess}",
+            "stopOnEntry": false
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "RawrXD-Script",
+      "properties": {
+        "rawrxd-script.executablePath": {
+          "type": "string",
+          "default": "rxd-script-dap.exe",
+          "description": "Path to the RawrXD-Script DAP server executable"
+        },
+        "rawrxd-script.showBytecode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show bytecode disassembly in debug view"
+        },
+        "rawrxd-script.showRegisters": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show VM registers (r0-r15) in debug view"
+        }
+      }
+    },
+    "views": {
+      "debug": [
+        {
+          "id": "rawrxdBytecode",
+          "name": "Bytecode",
+          "when": "debugType == 'rawrxd-script'"
+        },
+        {
+          "id": "rawrxdRegisters",
+          "name": "VM Registers",
+          "when": "debugType == 'rawrxd-script'"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^18.x",
+    "typescript": "^4.9.4"
+  }
+}

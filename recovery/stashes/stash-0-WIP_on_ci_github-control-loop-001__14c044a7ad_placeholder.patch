@@ -1,0 +1,80 @@
+diff --git a/include/gguf_loader.h b/include/gguf_loader.h
+index 7aca05eca2..52f886a17c 100644
+--- a/include/gguf_loader.h
++++ b/include/gguf_loader.h
+@@ -6,9 +6,18 @@
+ #include <cstdint>
+ #include <fstream>
+ #include <unordered_map>
+-#include "vulkan_compute.h"
+ #include "brutal_gzip.h"
+-#include "deflate_brutal_qt.hpp"
++// vulkan_compute.h is only needed by translation units that use the full
++// VulkanCompute type; this header only stores a pointer, which the forward
++// declaration below covers. Pulling in vulkan/vulkan.h here would make every
++// consumer of gguf_loader.h require the Vulkan SDK.
++#if defined(__has_include)
++#  if __has_include(<QtCore/QByteArray>)
++#    include "deflate_brutal_qt.hpp"
++#  endif
++#else
++#  include "deflate_brutal_qt.hpp"
++#endif
+ 
+ class VulkanCompute;
+ 
+diff --git a/src/browser/BrowserTestEngine.cpp b/src/browser/BrowserTestEngine.cpp
+index 01bfb990a6..ca46a6f59b 100644
+--- a/src/browser/BrowserTestEngine.cpp
++++ b/src/browser/BrowserTestEngine.cpp
+@@ -41,6 +41,14 @@ namespace fs = std::filesystem;
+ namespace RawrXD {
+ namespace Browser {
+ 
++namespace {
++// TEMPORARY diagnostic logger. Writes to F:\rawrxd\tmp_dbg.log.
++void dbgLog(const char* msg) {
++    FILE* f = std::fopen("F:\\rawrxd\\tmp_dbg.log", "a");
++    if (f) { std::fprintf(f, "%s\n", msg); std::fflush(f); std::fclose(f); }
++}
++}
++
+ // ============================================================================
+ // Forward declarations for internal implementation classes
+ // ============================================================================
+@@ -2694,7 +2702,11 @@ WebView2BrowserContext::WebView2BrowserContext(std::shared_ptr<WebView2Browser>
+ 
+ std::future<std::shared_ptr<Page>> WebView2BrowserContext::newPage() {
+     return std::async(std::launch::async, [this]() -> std::shared_ptr<Page> {
++        dbgLog("NP0: newPage enter");
+         auto page = std::make_shared<WebView2Page>(shared_from_this());
++        dbgLog("NP0b: page constructed");
++        page->init();
++        dbgLog("NP0c: page init done");
+ 
+         // Create a real WebView2 host backed by ICoreWebView2*.
+         // WebView2 requires the environment + controller to be
+@@ -2705,15 +2717,22 @@ std::future<std::shared_ptr<Page>> WebView2BrowserContext::newPage() {
+         // (ExecuteScript, Navigate, CapturePreview, ...) are also
+         // marshalled to that thread.
+         if (m_browser) {
++            dbgLog("NP1: container");
+             auto container = std::make_shared<WebView2Container>();
++            dbgLog("NP2: made");
+             // Marshal all container WebView2 calls to the STA thread.
+             container->setStaDispatcher([browser = m_browser](std::function<void()> task) {
+                 browser->runOnStaThread(std::move(task));
+             });
+             HWND host = m_browser->hiddenWindow();
++            dbgLog("NP3: dispatcher set");
+             bool ok = m_browser->runOnStaThread([&]() -> bool {
+-                return container->initialize(static_cast<void*>(host));
++                dbgLog("NP4: in STA task, calling initialize");
++                bool r = container->initialize(static_cast<void*>(host));
++                dbgLog(r ? "NP5: initialize ok" : "NP5: initialize FAILED");
++                return r;
+             });
++            dbgLog("NP6: sta returned");
+             page->setContainer(container);
+             (void)ok; // container is attached regardless; real
+                       // automation is available only if ok.

@@ -1,0 +1,29 @@
+ninja: Entering directory `f:\~dev\RawrXD\build-ninja-fresh'
+[1/13] Sync + regenerate SSOT beacon ownership artifacts
+Synced F:\~dev\rawrxd\src\core\ssot_beacon.symbols.txt from ssot_handlers_ext.cpp (633 symbols)
+Generated F:\~dev\rawrxd\src\core\ssot_beacon_table.inc (633 symbols)
+[2/13] Building ASM_MASM object CMakeFiles\RawrXD_Gold.dir\src\asm\RawrXD_PE_Exporter.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_PE_Exporter.asm
+[3/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\ssot_beacon.cpp.obj
+[4/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\speciator_engine.cpp.obj
+[5/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\hardware_synthesizer.cpp.obj
+[6/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\ui\debugger_core.cpp.obj
+[7/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\ui\webview2_bridge.cpp.obj
+[8/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\self_host_engine.cpp.obj
+[9/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\gold_link_closure.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD_Gold.dir/src/core/gold_link_closure.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_GOLD_BUILD=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_OMEGA1_ENABLED=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -IF:\~dev\rawrxd\include -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\server -IF:\~dev\rawrxd\src\agent -IF:\~dev\rawrxd\src\agentic -IF:\~dev\rawrxd\src\cli -IF:\~dev\rawrxd\src\ui -IF:\~dev\rawrxd\src\git -IF:\~dev\rawrxd\src\lsp -IF:\~dev\rawrxd\src\gpu -IF:\~dev\rawrxd\src\tools -IF:\~dev\rawrxd\src\telemetry -IF:\~dev\rawrxd\src\reverse_engineering -IF:\~dev\rawrxd\src\win32app -IF:\~dev\rawrxd\src\sovereign -IF:\~dev\rawrxd\src\sovereign\puppeteer -IF:\~dev\rawrxd\src\intent -IF:\~dev\rawrxd\src\guardrails -IF:\~dev\rawrxd\src\hotpatch -IF:\~dev\rawrxd\src\kernel -IF:\~dev\rawrxd\src\omega1_modules -IF:\~dev\rawrxd\include\gpu -IC:\VulkanSDK\1.4.357.0\include -IF:\~dev\rawrxd\3rdparty\quickjs_ng\.. -IF:\~dev\rawrxd\src\reverse_engineering\pe_tools -IF:\~dev\rawrxd\3rdparty\quickjs_ng -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:IC:\VulkanSDK\1.4.357.0\Include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W0 /arch:AVX512 /O2 /showIncludes /FoCMakeFiles\RawrXD_Gold.dir\src\core\gold_link_closure.cpp.obj /FdCMakeFiles\RawrXD_Gold.dir\ /FS -c F:\~dev\rawrxd\src\core\gold_link_closure.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\expected(11): warning STL4038: The contents of <expected> are available only with C++23 or later.
+F:\~dev\rawrxd\src\core\gold_link_closure.cpp(787): error C2039: 'expected': is not a member of 'std'
+F:\~dev\rawrxd\include\nlohmann/json.hpp(24335): note: see declaration of 'std'
+F:\~dev\rawrxd\src\core\gold_link_closure.cpp(787): error C7568: argument list missing after assumed function template 'expected'
+F:\~dev\rawrxd\src\core\gold_link_closure.cpp(787): error C2062: type '<error type>' unexpected
+F:\~dev\rawrxd\src\core\gold_link_closure.cpp(787): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\core\gold_link_closure.cpp(787): error C2447: '{': missing function header (old-style formal list?)
+[10/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\gguf_d3d12_bridge.cpp.obj
+[11/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\ui\RawrXD_MainLoop.cpp.obj
+[12/13] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\inference\gpu_dispatch_gate.cpp.obj
+ninja: build stopped: subcommand failed.

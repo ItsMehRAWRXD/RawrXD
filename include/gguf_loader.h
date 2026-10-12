@@ -6,9 +6,18 @@
 #include <cstdint>
 #include <fstream>
 #include <unordered_map>
-#include "vulkan_compute.h"
 #include "brutal_gzip.h"
-#include "deflate_brutal_qt.hpp"
+// vulkan_compute.h is only needed by translation units that use the full
+// VulkanCompute type; this header only stores a pointer, which the forward
+// declaration below covers. Pulling in vulkan/vulkan.h here would make every
+// consumer of gguf_loader.h require the Vulkan SDK.
+#if defined(__has_include)
+#  if __has_include(<QtCore/QByteArray>)
+#    include "deflate_brutal_qt.hpp"
+#  endif
+#else
+#  include "deflate_brutal_qt.hpp"
+#endif
 
 class VulkanCompute;
 

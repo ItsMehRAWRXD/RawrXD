@@ -1,0 +1,6 @@
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=2048 cols=2048 startRow=0 endRow=2048
+[LR_VALIDATE_WARN] input misaligned addr=00000210E72638A0
+[LR_VALIDATE_WARN] output misaligned addr=000002108FB30020
+[LR_VALIDATE] byte bounds OK: req=2359296 <= total=2359296
+[LR_SOURCE] wt.data=00000210EE680000 mapped=1 input=00000210E72638A0 output=000002108FB30020 sizeBytes=2359296 rowBytes=1152
+[LR_VALIDATE] result=PASS

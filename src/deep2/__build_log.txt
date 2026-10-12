@@ -1,0 +1,35 @@
+Deep2_Elastic_Forward_Test.cpp
+deep2_link_stubs.cpp
+ReverseIntegration.cpp
+ReverseHotpatchEngine.cpp
+ProductionProfiler.cpp
+Chamber.cpp
+BP16Streamer.cpp
+MoERouter.cpp
+MoERouter.cpp(72): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+MoERouter.cpp(341): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+MoEWeightProxy.cpp
+MedusaDecoder.cpp
+NUFusedPacker.cpp
+WarmupScheduler.cpp
+WarmupScheduler.cpp(52): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+WarmupScheduler.cpp(63): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+PlasmaGovernor.cpp
+SovereignOutOfCoreRuntime.cpp
+MARS.cpp
+CompressedKVCache.cpp
+NVMeStream.cpp
+NVMeStream.cpp(230): error C2589: '(': illegal token on right side of '::'
+NVMeStream.cpp(230): error C2059: syntax error: ')'
+SlidingWindowEngine.cpp
+K2GlobalTensorIndex.cpp
+RouterPrefetchTelemetry.cpp
+ToroidalKVCache.cpp
+HotPatcher.cpp
+DualGPUHook.cpp
+QuantKernelMASM.cpp
+ReverseEngine.cpp
+ReverseModelLoader.cpp
+advanced_sampler.cpp
+LINK : fatal error LNK1181: cannot open input file 'NVMeStream.obj'
+LINK FAILED 

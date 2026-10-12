@@ -1,0 +1,2 @@
+task_id,status,elapsed_ms,fuzzy_patch_score,ws_fuzzy_patch_score,patch_jaccard_similarity,patch_size_ratio,emitted_patch_lines,gold_patch_lines,context_bytes_injected,gold_hunk_count,response_token_estimate,retry_attempts,api_error_class,patch_execution_checked,patch_execution_success,autonomous_repair_enabled,autonomous_repair_attempts,autonomous_repair_succeeded,prompt_byte_count,wall_clock_ts
+rawrxd-001,FAILED,0.00,0.0000,0.0000,0.0000,0.0000,0,0,0,0,0,0,unknown,false,false,false,0,false,0,-

@@ -1,0 +1,107 @@
+{
+    "name": "BigDaddyG-Reverse-Model",
+    "type": "reverse_assembly",
+    "version": "1.5",
+    "model_description": "Enhanced rule and sample-driven reverse-assembly byte predictor.",
+    
+    "metadata": {
+        "accuracy": 0.89,
+        "training_samples": 300,
+        "last_trained": {
+            "value": "/Date(1760836576457)/",
+            "DisplayHint": 2,
+            "DateTime": "Saturday, October 18, 2025 9:16:16 PM"
+        }
+    },
+
+    "pattern_settings": {
+        "mode": "sequence_match",
+        "allow_partial": true,
+        "min_confidence": 0.65,
+        "case_sensitive": false
+    },
+
+    "patterns": [
+        {
+            "id": "REV_PUSH_EBP",
+            "pattern": "push ebp",
+            "description": "Reversed push base pointer",
+            "bytes": [85]
+        },
+        {
+            "id": "REV_MOV_EBP_ESP",
+            "pattern": "mov ebp, esp",
+            "description": "Reversed move stack pointer",
+            "bytes": [236, 139]
+        },
+        {
+            "id": "REV_PUSH_IMM",
+            "pattern": "push imm",
+            "description": "Reversed push immediate",
+            "bytes": [0, 106]
+        },
+        {
+            "id": "REV_CALL_ABS",
+            "pattern": "call abs",
+            "description": "Reversed call absolute",
+            "bytes": [21, 255]
+        },
+        {
+            "id": "REV_POP_EBP",
+            "pattern": "pop ebp",
+            "description": "Reversed pop base pointer",
+            "bytes": [93]
+        },
+        {
+            "id": "REV_RET",
+            "pattern": "ret",
+            "description": "Reversed return",
+            "bytes": [195]
+        }
+    ],
+
+    "samples": [
+        { "input": "Reverse assembly for:", "output": 85,  "confidence": 0.95928947809584875 },
+        { "input": "Reverse assembly for:", "output": 255, "confidence": 0.9613024752313748 },
+        { "input": "Reverse assembly for:", "output": 106, "confidence": 0.95868533670841027 },
+        { "input": "Reverse assembly for:", "output": 4,   "confidence": 0.91098294931509671 },
+        { "input": "Reverse assembly for:", "output": 106, "confidence": 0.98279698570854823 },
+        { "input": "Reverse assembly for:", "output": 0,   "confidence": 0.97777928649810109 },
+        { "input": "Reverse assembly for:", "output": 48,  "confidence": 0.89085569154511 },
+        { "input": "Reverse assembly for:", "output": 48,  "confidence": 0.99915014681366743 },
+        { "input": "Reverse assembly for:", "output": 195, "confidence": 0.959912644424435 },
+        { "input": "Reverse assembly for:", "output": 0,   "confidence": 0.96297558482409251 },
+        { "input": "Reverse assembly for:", "output": 64,  "confidence": 0.89496180317130025 },
+        { "input": "Reverse assembly for:", "output": 195, "confidence": 0.949091312563555 },
+        { "input": "Reverse assembly for:", "output": 106, "confidence": 0.97613787087432013 },
+        { "input": "Reverse assembly for:", "output": 0,   "confidence": 0.94184903066225767 },
+        { "input": "Reverse assembly for:", "output": 0,   "confidence": 0.95518613217640025 },
+        { "input": "Reverse assembly for:", "output": 255, "confidence": 0.92760864691697464 },
+        { "input": "Reverse assembly for:", "output": 0,   "confidence": 0.89787690372107409 },
+        { "input": "Reverse assembly for:", "output": 48,  "confidence": 0.91594405187570682 },
+        { "input": "Reverse assembly for:", "output": 64,  "confidence": 0.91581890847339242 },
+        { "input": "Reverse assembly for:", "output": 48,  "confidence": 0.93052666475555235 },
+        { "input": "Reverse assembly for:", "output": 255, "confidence": 0.92889166382555466 },
+        { "input": "Reverse assembly for:", "output": 139, "confidence": 0.90513012507703627 },
+        { "input": "Reverse assembly for:", "output": 64,  "confidence": 0.97336577117134149 },
+        { "input": "Reverse assembly for:", "output": 0,   "confidence": 0.88064896525845349 },
+        { "input": "Reverse assembly for:", "output": 48,  "confidence": 0.94670745604983875 },
+        { "input": "Reverse assembly for:", "output": 21,  "confidence": 0.91911123182117527 },
+        { "input": "Reverse assembly for:", "output": 195, "confidence": 0.9787779234716566 },
+        { "input": "Reverse assembly for:", "output": 236, "confidence": 0.93241885068473351 },
+        { "input": "Reverse assembly for:", "output": 195, "confidence": 0.92693851587685683 },
+        { "input": "Reverse assembly for:", "output": 21,  "confidence": 0.93687129542085867 }
+    ],
+
+    "post_processing": {
+        "dedupe_consecutive": true,
+        "normalize_byte_range": true,
+        "clip_range": [0, 255]
+    },
+
+    "export": {
+        "format": "json",
+        "compatible_with": ["BigDaddyG-Orchestrator", "Sunshine-Engine", "EON-ASM", "OmegaBuild"],
+        "checksum": "auto"
+    }
+}

@@ -1,0 +1,285 @@
+=== RAWRXD_VULKAN_MATMUL_CORRECTNESS_001 ===
+shader: F:\rawrxd\tools\shaders\matmul_fixed.spv
+
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+DEVICE_0=AMD Radeon AI PRO R9700 vendor=0x1002 discrete_compute=yes
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 32768 bytes
+Allocated buffer 1 with 49152 bytes
+Allocated buffer 2 with 24576 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 6x4x1 workgroups
+MatMul dispatch completed successfully (64x128 * 128x96 -> 64x96)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 6x4x1 workgroups
+MatMul dispatch completed successfully (64x128 * 128x96 -> 64x96)
+regular_64x128x96    M=64  K=128 N=96  cos=+1.0000000000 rel=3.04e-07 max=1.94e-07 finite=1 det=1 PASS
+
+--- SINGLE ELEMENT ATTRIBUTION (C[0][0]) ---
+K contributions (first 8 of 128):
+  i=0   A[0][0]=+0.420735  B[0][0]=-0.004037  term=-0.001698
+  i=1   A[0][1]=+0.494679  B[1][0]=+0.326862  term=+0.161692
+  i=2   A[0][2]=+0.325144  B[2][0]=+0.206045  term=+0.066994
+  i=3   A[0][3]=-0.004426  B[3][0]=-0.125923  term=+0.000557
+  i=4   A[0][4]=-0.331817  B[4][0]=-0.008044  term=+0.002669
+  i=5   A[0][5]=-0.495889  B[5][0]=+0.324967  term=-0.161148
+  i=6   A[0][6]=-0.415887  B[6][0]=+0.210036  term=-0.087351
+  i=7   A[0][7]=-0.131187  B[7][0]=-0.123993  term=+0.016266
+  ... total over all 128: CPU C[0][0]=+0.12071758
+GPU C[0][0]=+0.12071762   delta=+4.470e-08
+GPU C[0][1]=+0.23902081   CPU C[0][1]=+0.23902082
+
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 1024 bytes
+Allocated buffer 1 with 1024 bytes
+Allocated buffer 2 with 1024 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (16x16 * 16x16 -> 16x16)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (16x16 * 16x16 -> 16x16)
+min_16x16x16         M=16  K=16  N=16  cos=+1.0000000000 rel=1.83e-07 max=4.84e-08 finite=1 det=1 PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 364 bytes
+Allocated buffer 1 with 260 bytes
+Allocated buffer 2 with 140 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (7x13 * 13x5 -> 7x5)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (7x13 * 13x5 -> 7x5)
+irregular_7x13x5     M=7   K=13  N=5   cos=+1.0000000000 rel=1.04e-07 max=3.73e-08 finite=1 det=1 PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 4 bytes
+Allocated buffer 1 with 4 bytes
+Allocated buffer 2 with 4 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (1x1 * 1x1 -> 1x1)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (1x1 * 1x1 -> 1x1)
+scalar_1x1x1         M=1   K=1   N=1   cos=+1.0000000000 rel=0.00e+00 max=0.00e+00 finite=1 det=1 PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 800 bytes
+Allocated buffer 1 with 2400 bytes
+Allocated buffer 2 with 12 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (1x200 * 200x3 -> 1x3)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 1x1x1 workgroups
+MatMul dispatch completed successfully (1x200 * 200x3 -> 1x3)
+thin_1x200x3         M=1   K=200 N=3   cos=+1.0000000000 rel=1.34e-06 max=1.04e-07 finite=1 det=1 PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 2244 bytes
+Allocated buffer 1 with 4420 bytes
+Allocated buffer 2 with 8580 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 5x3x1 workgroups
+MatMul dispatch completed successfully (33x17 * 17x65 -> 33x65)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 5x3x1 workgroups
+MatMul dispatch completed successfully (33x17 * 17x65 -> 33x65)
+irregular_33x17x65   M=33  K=17  N=65  cos=+1.0000000000 rel=1.55e-07 max=5.96e-08 finite=1 det=1 PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 32768 bytes
+Allocated buffer 1 with 32768 bytes
+Allocated buffer 2 with 65536 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 8x8x1 workgroups
+MatMul dispatch completed successfully (128x64 * 64x128 -> 128x128)
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 8x8x1 workgroups
+MatMul dispatch completed successfully (128x64 * 64x128 -> 128x128)
+regular_128x64x128   M=128 K=64  N=128 cos=+1.0000000000 rel=2.27e-07 max=1.34e-07 finite=1 det=1 PASS
+Released all tensors
+Vulkan resources cleaned up successfully
+
+=== DUAL-GPU SPLIT-ROW MATMUL ===
+Enumerated 5 Vulkan device(s):
+  [0] AMD Radeon AI PRO R9700                              vendor=0x1002 type=2
+  [1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)       vendor=0x1002 type=2
+  [2] AMD Radeon(TM) Graphics                              vendor=0x1002 type=1
+  [3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)       vendor=0x1002 type=1
+  [4] Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 type=4
+Using device 0 and device 2
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 0
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 65536 bytes
+Allocated buffer 1 with 131072 bytes
+Allocated buffer 2 with 32768 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 8x4x1 workgroups
+MatMul dispatch completed successfully (64x256 * 256x128 -> 64x128)
+GPU0 (AMD Radeon AI PRO R9700): rows 0..64 -> dispatched 64x256x128
+Released all tensors
+Vulkan resources cleaned up successfully
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 2
+Selected device: AMD Radeon(TM) Graphics
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon(TM) Graphics
+AMD Device: Yes
+Compute Queue Family: 0
+Loaded shader: matmul
+Created permanent MatMul descriptor set layout
+Created permanent MatMul descriptor pool
+Created MatMul pipeline layout with push constants
+MatMul pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 65536 bytes
+Allocated buffer 1 with 131072 bytes
+Allocated buffer 2 with 32768 bytes
+Updated descriptor set with 3 storage buffers (A, B, Output)
+Dispatching: 8x4x1 workgroups
+MatMul dispatch completed successfully (64x256 * 256x128 -> 64x128)
+GPU2 (AMD Radeon(TM) Graphics): rows 64..128 -> dispatched 64x256x128
+Released all tensors
+Vulkan resources cleaned up successfully
+DUAL_GPU_COMBINED cos=+1.0000000000 rel=9.31e-07 max=2.50e-07 finite=1 PASS
+DUAL_GPU_BOTH_USED=PASS (rows_done=128 of 128 across 2 devices)
+
+=== SUMMARY ===
+SHAPES_PASSED=8/8
+VERDICT=PASS

@@ -1,0 +1,45 @@
+{
+  "global_overrides": {
+    "seed": 42,
+    "repeat_count": 1,
+    "cooldown_sec": 10,
+    "burn_in_samples": 100,
+    "saturation_threshold": 48,
+    "include_slot_metadata": true,
+    "sidecar_interval_ms": 25
+  },
+  "experiments": [
+    {
+      "name": "BASELINE_NoStreamer",
+      "overrides": {
+        "streamer": 0,
+        "request_count": 2000,
+        "cancel_percent": 10
+      }
+    },
+    {
+      "name": "STREAMER_Active",
+      "overrides": {
+        "streamer": 1,
+        "request_count": 2000,
+        "cancel_percent": 10
+      }
+    },
+    {
+      "name": "HIGH_VOLATILITY",
+      "overrides": {
+        "streamer": 0,
+        "request_count": 2000,
+        "cancel_percent": 50
+      }
+    },
+    {
+      "name": "STRESS_LOAD",
+      "overrides": {
+        "streamer": 0,
+        "request_count": 5000,
+        "cancel_percent": 10
+      }
+    }
+  ]
+}

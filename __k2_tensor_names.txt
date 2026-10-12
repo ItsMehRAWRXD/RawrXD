@@ -1,0 +1,11 @@
+Magic:   b'GGUF'
+Version: 3
+Tensors: 98
+Metadata: 63
+Metadata end:      6911082
+Tensor info start: 6911104
+Traceback (most recent call last):
+  File "D:\rawrxd\__probe_tensor_table.py", line 76, in <module>
+    name = f.read(name_len).decode('utf-8', errors='replace')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+MemoryError

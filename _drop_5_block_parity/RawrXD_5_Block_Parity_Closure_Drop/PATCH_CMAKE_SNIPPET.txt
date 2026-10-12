@@ -1,0 +1,38 @@
+INSERT IMMEDIATELY BEFORE THE CANONICAL:
+
+    add_executable(RawrXD-Win32IDE WIN32 ...)
+
+DO NOT put it before later list(APPEND WIN32IDE_SOURCES ...) blocks.
+
+----------------------------------------------------------------
+
+include("${CMAKE_SOURCE_DIR}/cmake/P1Closure.cmake")
+
+rawrxd_p1_assert_required_hexmag()
+
+rawrxd_p1_filter_source_list(
+    WIN32IDE_SOURCES
+    "${CMAKE_BINARY_DIR}/P1_WIN32IDE_MISSING_SOURCES.txt"
+)
+
+if(DEFINED ASM_KERNEL_SOURCES)
+    rawrxd_p1_filter_source_list(
+        ASM_KERNEL_SOURCES
+        "${CMAKE_BINARY_DIR}/P1_ASM_KERNEL_MISSING_SOURCES.txt"
+    )
+endif()
+
+if(DEFINED WIN32IDE_EXTRA_ASM)
+    rawrxd_p1_filter_source_list(
+        WIN32IDE_EXTRA_ASM
+        "${CMAKE_BINARY_DIR}/P1_WIN32IDE_EXTRA_ASM_MISSING_SOURCES.txt"
+    )
+endif()
+
+----------------------------------------------------------------
+
+Disposition:
+  missing stale source path -> skipped + recorded
+  missing required HexMag source -> FATAL_ERROR
+  present source compile failure -> real compile debt
+  unresolved external -> real provider/link graph debt

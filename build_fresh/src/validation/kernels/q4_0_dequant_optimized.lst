@@ -1,0 +1,295 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:20
+F:/rawrxd/src/validation/kernels/masm/q4_0_dequant_optimized.asm  Page 1 - 1
+
+
+				; ============================================================================
+				; q4_0_dequant_optimized.asm - Q4_0 Dequantization Kernel (AVX2) - OPTIMIZED
+				; ============================================================================
+				; 
+				; OPTIMIZATIONS APPLIED:
+				;   1. Constant hoisting: sub8_const loaded once before loop
+				;   2. 2x unrolling: Process 2 blocks per iteration to amortize loop overhead
+				;   3. Coalesced loads: Use 8-byte loads where possible
+				;
+				; Q4_0 Block Layout (18 bytes total):
+				;   bytes 0-3:   float32 scale (d)
+				;   bytes 4-11:  8 bytes containing 16 nibbles (qs[0..7])
+				;   bytes 12-17: padding
+				;
+				; Dequantization formula:
+				;   weight = nibble_value - 8
+				;   output = weight * scale
+				;
+				; Parameters:
+				;   RCX = const void* input (Q4_0 blocks)
+				;   RDX = float* output (dequantized floats, 16 per block)
+				;   R8  = size_t num_blocks
+				;
+				; Returns: RAX = 0 on success
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+ 00000000			.const
+				ALIGN 16
+				; Low nibble mask (0x0F) - 16 bytes for xmm operations
+ 00000000 0F 0F 0F 0F 0F	nibble_mask    DB 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
+	   0F 0F 0F
+ 00000008  0F 0F 0F 0F 0F	               DB 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
+	   0F 0F 0F
+
+				ALIGN 16
+				; Subtract 8 constant (as float) - loaded once and broadcast
+ 00000010 41000000		sub8_const     REAL4 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0
+	   41000000
+	   41000000
+	   41000000
+	   41000000
+	   41000000
+	   41000000
+	   41000000
+
+ 00000000			.code
+
+				; ============================================================================
+				; MASM_Q4_0_Dequantize_Optimized - Optimized Q4_0 dequantization
+				; ============================================================================
+ 00000000			MASM_Q4_0_Dequantize_Optimized PROC FRAME
+				    ; Prologue - save non-volatile registers
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+ 00000004  53			    push rbx
+				    .pushreg rbx
+ 00000005  56			    push rsi
+				    .pushreg rsi
+ 00000006  57			    push rdi
+				    .pushreg rdi
+ 00000007  41/ 54		    push r12
+				    .pushreg r12
+ 00000009  41/ 55		    push r13
+				    .pushreg r13
+ 0000000B  48/ 83 EC 20		    sub rsp, 32
+				    .allocstack 32
+				    .endprolog
+
+				    ; Save parameters
+ 0000000F  48/ 8B F1		    mov rsi, rcx           ; rsi = input (Q4_0 blocks)
+ 00000012  48/ 8B FA		    mov rdi, rdx           ; rdi = output (float buffer)
+ 00000015  49/ 8B D8		    mov rbx, r8            ; rbx = num_blocks
+
+				    ; Validate inputs
+ 00000018  48/ 85 F6		    test rsi, rsi
+ 0000001B  0F 84 00000190	    jz error_null
+ 00000021  48/ 85 FF		    test rdi, rdi
+ 00000024  0F 84 00000187	    jz error_null
+ 0000002A  48/ 85 DB		    test rbx, rbx
+ 0000002D  0F 84 00000187	    jz error_zero
+
+				    ; ========================================================================
+				    ; OPTIMIZATION 1: Hoist constant loading outside the loop
+				    ; ========================================================================
+ 00000033  C4 62 7D/ 18 05	    vbroadcastss ymm8, DWORD PTR [sub8_const]    ; ymm8 = 8.0f (preserved)
+	   00000010 R
+ 0000003C  C5 F9/ 6F 3D		    vmovdqa xmm7, XMMWORD PTR [nibble_mask]      ; xmm7 = nibble mask
+	   00000000 R
+
+				    ; Calculate num_blocks / 2 for unrolled loop
+ 00000044  4C/ 8B E3		    mov r12, rbx
+ 00000047  49/ D1 EC		    shr r12, 1                 ; r12 = num_blocks / 2 (pairs to process)
+ 0000004A  4D/ 85 E4		    test r12, r12
+ 0000004D  0F 84 000000EB	    jz single_block_loop       ; If less than 2 blocks, use simple loop
+
+				    ; ========================================================================
+				    ; OPTIMIZATION 2: 2x unrolled main loop
+				    ; Process 2 blocks per iteration to amortize loop overhead
+				    ; ========================================================================
+ 00000053			unrolled_loop:
+				    ; Process BLOCK 1 (at rsi)
+				    ; -------------------------------------------------
+ 00000053  C4 E2 7D/ 18 06	    vbroadcastss ymm0, DWORD PTR [rsi]           ; ymm0 = scale1
+				    
+				    ; Load 8 bytes of qs data at once (more efficient than two 4-byte loads)
+ 00000058  C4 61 F9/ 6E 56	    vmovq xmm10, QWORD PTR [rsi+4]             ; xmm10 = qs[0..7]
+	   04
+				    
+				    ; Extract low nibbles for first 4 bytes
+ 0000005E  C5 29/ DB DF		    vpand xmm11, xmm10, xmm7                     ; xmm11 = low nibbles
+ 00000062  C4 C1 19/ 71 D2	    vpsrlw xmm12, xmm10, 4
+	   04
+ 00000068  C5 19/ DB E7		    vpand xmm12, xmm12, xmm7                     ; xmm12 = high nibbles
+				    
+				    ; Process first 8 weights (from first 4 qs bytes)
+ 0000006C  C4 41 21/ 60 EC	    vpunpcklbw xmm13, xmm11, xmm12               ; Interleave
+ 00000071  C4 42 7D/ 31 F5	    vpmovzxbd ymm14, xmm13
+ 00000076  C4 41 7C/ 5B FE	    vcvtdq2ps ymm15, ymm14
+ 0000007B  C4 41 04/ 5C F8	    vsubps ymm15, ymm15, ymm8
+ 00000080  C5 04/ 59 F8		    vmulps ymm15, ymm15, ymm0
+ 00000084  C5 7C/ 11 3F		    vmovups YMMWORD PTR [rdi], ymm15             ; Store weights 0-7
+				    
+				    ; Process next 8 weights (from next 4 qs bytes)
+ 00000088  C4 C1 29/ 73 DA	    vpsrldq xmm10, xmm10, 4                      ; Shift to next 4 bytes
+	   04
+ 0000008E  C5 29/ DB DF		    vpand xmm11, xmm10, xmm7
+ 00000092  C4 C1 19/ 71 D2	    vpsrlw xmm12, xmm10, 4
+	   04
+ 00000098  C5 19/ DB E7		    vpand xmm12, xmm12, xmm7
+ 0000009C  C4 41 21/ 60 EC	    vpunpcklbw xmm13, xmm11, xmm12
+ 000000A1  C4 42 7D/ 31 F5	    vpmovzxbd ymm14, xmm13
+ 000000A6  C4 41 7C/ 5B FE	    vcvtdq2ps ymm15, ymm14
+ 000000AB  C4 41 04/ 5C F8	    vsubps ymm15, ymm15, ymm8
+ 000000B0  C5 04/ 59 F8		    vmulps ymm15, ymm15, ymm0
+ 000000B4  C5 7C/ 11 7F		    vmovups YMMWORD PTR [rdi+32], ymm15          ; Store weights 8-15
+	   20
+
+				    ; Process BLOCK 2 (at rsi+18)
+				    ; -------------------------------------------------
+ 000000B9  C4 E2 7D/ 18 4E	    vbroadcastss ymm1, DWORD PTR [rsi+18]        ; ymm1 = scale2
+	   12
+				    
+ 000000BF  C4 61 F9/ 6E 56	    vmovq xmm10, QWORD PTR [rsi+22]            ; xmm10 = qs[0..7] for block 2
+	   16
+				    
+				    ; First 8 weights
+ 000000C5  C5 29/ DB DF		    vpand xmm11, xmm10, xmm7
+ 000000C9  C4 C1 19/ 71 D2	    vpsrlw xmm12, xmm10, 4
+	   04
+ 000000CF  C5 19/ DB E7		    vpand xmm12, xmm12, xmm7
+ 000000D3  C4 41 21/ 60 EC	    vpunpcklbw xmm13, xmm11, xmm12
+ 000000D8  C4 42 7D/ 31 F5	    vpmovzxbd ymm14, xmm13
+ 000000DD  C4 41 7C/ 5B FE	    vcvtdq2ps ymm15, ymm14
+ 000000E2  C4 41 04/ 5C F8	    vsubps ymm15, ymm15, ymm8
+ 000000E7  C5 04/ 59 F9		    vmulps ymm15, ymm15, ymm1
+ 000000EB  C5 7C/ 11 7F		    vmovups YMMWORD PTR [rdi+64], ymm15          ; Store weights 0-7 of block 2
+	   40
+				    
+				    ; Next 8 weights
+ 000000F0  C4 C1 29/ 73 DA	    vpsrldq xmm10, xmm10, 4
+	   04
+ 000000F6  C5 29/ DB DF		    vpand xmm11, xmm10, xmm7
+ 000000FA  C4 C1 19/ 71 D2	    vpsrlw xmm12, xmm10, 4
+	   04
+ 00000100  C5 19/ DB E7		    vpand xmm12, xmm12, xmm7
+ 00000104  C4 41 21/ 60 EC	    vpunpcklbw xmm13, xmm11, xmm12
+ 00000109  C4 42 7D/ 31 F5	    vpmovzxbd ymm14, xmm13
+ 0000010E  C4 41 7C/ 5B FE	    vcvtdq2ps ymm15, ymm14
+ 00000113  C4 41 04/ 5C F8	    vsubps ymm15, ymm15, ymm8
+ 00000118  C5 04/ 59 F9		    vmulps ymm15, ymm15, ymm1
+ 0000011C  C5 7C/ 11 7F		    vmovups YMMWORD PTR [rdi+96], ymm15          ; Store weights 8-15 of block 2
+	   60
+
+				    ; Advance pointers
+ 00000121  48/ 83 C6 24		    add rsi, 36                ; 2 blocks * 18 bytes
+ 00000125  48/ 81 C7		    add rdi, 128               ; 2 blocks * 16 floats * 4 bytes
+	   00000080
+ 0000012C  49/ FF CC		    dec r12
+ 0000012F  0F 85 FFFFFF1E	    jnz unrolled_loop
+
+				    ; Handle remaining block (if odd count)
+ 00000135  48/ F7 C3		    test rbx, 1
+	   00000001
+ 0000013C  74 6E		    jz done
+
+				    ; ========================================================================
+				    ; Single block loop for remaining blocks
+				    ; ========================================================================
+ 0000013E			single_block_loop:
+ 0000013E  C4 E2 7D/ 18 06	    vbroadcastss ymm0, DWORD PTR [rsi]           ; ymm0 = scale
+				    
+ 00000143  C4 61 F9/ 6E 56	    vmovq xmm10, QWORD PTR [rsi+4]             ; Load 8 qs bytes
+	   04
+				    
+				    ; First 8 weights
+ 00000149  C5 29/ DB DF		    vpand xmm11, xmm10, xmm7
+ 0000014D  C4 C1 19/ 71 D2	    vpsrlw xmm12, xmm10, 4
+	   04
+ 00000153  C5 19/ DB E7		    vpand xmm12, xmm12, xmm7
+ 00000157  C4 41 21/ 60 EC	    vpunpcklbw xmm13, xmm11, xmm12
+ 0000015C  C4 42 7D/ 31 F5	    vpmovzxbd ymm14, xmm13
+ 00000161  C4 41 7C/ 5B FE	    vcvtdq2ps ymm15, ymm14
+ 00000166  C4 41 04/ 5C F8	    vsubps ymm15, ymm15, ymm8
+ 0000016B  C5 04/ 59 F8		    vmulps ymm15, ymm15, ymm0
+ 0000016F  C5 7C/ 11 3F		    vmovups YMMWORD PTR [rdi], ymm15
+				    
+				    ; Next 8 weights
+ 00000173  C4 C1 29/ 73 DA	    vpsrldq xmm10, xmm10, 4
+	   04
+ 00000179  C5 29/ DB DF		    vpand xmm11, xmm10, xmm7
+ 0000017D  C4 C1 19/ 71 D2	    vpsrlw xmm12, xmm10, 4
+	   04
+ 00000183  C5 19/ DB E7		    vpand xmm12, xmm12, xmm7
+ 00000187  C4 41 21/ 60 EC	    vpunpcklbw xmm13, xmm11, xmm12
+ 0000018C  C4 42 7D/ 31 F5	    vpmovzxbd ymm14, xmm13
+ 00000191  C4 41 7C/ 5B FE	    vcvtdq2ps ymm15, ymm14
+ 00000196  C4 41 04/ 5C F8	    vsubps ymm15, ymm15, ymm8
+ 0000019B  C5 04/ 59 F8		    vmulps ymm15, ymm15, ymm0
+ 0000019F  C5 7C/ 11 7F		    vmovups YMMWORD PTR [rdi+32], ymm15
+	   20
+
+ 000001A4  48/ 83 C6 12		    add rsi, 18
+ 000001A8  48/ 83 C7 40		    add rdi, 64
+
+ 000001AC			done:
+ 000001AC  48/ 33 C0		    xor rax, rax               ; Return 0 (success)
+ 000001AF  EB 10		    jmp cleanup
+
+ 000001B1			error_null:
+ 000001B1  48/ C7 C0		    mov rax, 1
+	   00000001
+ 000001B8  EB 07		    jmp cleanup
+
+ 000001BA			error_zero:
+ 000001BA  48/ C7 C0		    mov rax, 2
+	   00000002
+
+ 000001C1			cleanup:
+ 000001C1  C5 F8 77		    vzeroupper
+ 000001C4  48/ 83 C4 20		    add rsp, 32
+ 000001C8  41/ 5D		    pop r13
+ 000001CA  41/ 5C		    pop r12
+ 000001CC  5F			    pop rdi
+ 000001CD  5E			    pop rsi
+ 000001CE  5B			    pop rbx
+ 000001CF  5D			    pop rbp
+ 000001D0  C3			    ret
+
+ 000001D1			MASM_Q4_0_Dequantize_Optimized ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:20
+F:/rawrxd/src/validation/kernels/masm/q4_0_dequant_optimized.asm  Symbols 2 - 1
+
+
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+CONST  . . . . . . . . . . . . .	 00000030 16	  'CONST'	 ReadOnly
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_Q4_0_Dequantize_Optimized .	P 	 00000000 _TEXT	Length= 000001D1 Public
+  unrolled_loop  . . . . . . . .	L 	 00000053 _TEXT	
+  single_block_loop  . . . . . .	L 	 0000013E _TEXT	
+  done . . . . . . . . . . . . .	L 	 000001AC _TEXT	
+  error_null . . . . . . . . . .	L 	 000001B1 _TEXT	
+  error_zero . . . . . . . . . .	L 	 000001BA _TEXT	
+  cleanup  . . . . . . . . . . .	L 	 000001C1 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+nibble_mask  . . . . . . . . . .	Byte	 00000000 CONST	
+sub8_const . . . . . . . . . . .	DWord	 00000010 CONST	
+
+	   0 Warnings
+	   0 Errors

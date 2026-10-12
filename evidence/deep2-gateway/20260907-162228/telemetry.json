@@ -1,0 +1,6 @@
+{
+  "test": "telemetry",
+  "endpoint": "http://127.0.0.1:11435/api/status",
+  "reachable": true,
+  "response": "{"ok":true,"telemetry":true,"requests":1}"
+}

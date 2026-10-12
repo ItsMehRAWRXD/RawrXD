@@ -1,0 +1,18 @@
+{
+  "complete": true,
+  "total_bytes": 18671230848,
+  "expert_union_bytes": 0,
+  "expert_union_count": 0,
+  "shape_count": 0,
+  "name_count": 0,
+  "intersection_count": 0,
+  "intersection_bytes": 0,
+  "dominant_actual_dtype": "Q4_K",
+  "dtype_bytes": {
+    "F32": 5328768,
+    "Q4_K": 14213283840,
+    "Q6_K": 4452618240
+  },
+  "conflicts": [
+  ]
+}

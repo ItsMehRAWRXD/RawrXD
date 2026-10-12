@@ -1,0 +1,59 @@
+{
+  "ModelSizeGB": 376.71,
+  "TestDate": "2026-07-19 16:42:43",
+  "Model": "DeepSeek-V3.1 671B",
+  "Configuration": {
+    "WarmupPasses": 1,
+    "BenchmarkPasses": 3,
+    "TestTokens": 128
+  },
+  "Results": [
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.4,
+        "Success": true,
+        "SequentialReadSpeed": 5803.73,
+        "LoadTime": 0.1850088
+      },
+      "Timestamp": "2026-07-19 16:42:42",
+      "Run": 1,
+      "Inference": {
+        "Success": false,
+        "Error": "Cannot convert argument \"val2\", with value: \"404494150400\", for \"Max\" to type \"System.Int32\": \"Cannot convert value \"404494150400\" to type \"System.Int32\". Error: \"Value was either too large or too small for an Int32.\"\""
+      }
+    },
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.29,
+        "Success": true,
+        "SequentialReadSpeed": 5505.02,
+        "LoadTime": 0.1934963
+      },
+      "Timestamp": "2026-07-19 16:42:42",
+      "Run": 2,
+      "Inference": {
+        "Success": false,
+        "Error": "Cannot convert argument \"val2\", with value: \"404494150400\", for \"Max\" to type \"System.Int32\": \"Cannot convert value \"404494150400\" to type \"System.Int32\". Error: \"Value was either too large or too small for an Int32.\"\""
+      }
+    },
+    {
+      "ModelLoading": {
+        "RandomAccessLatency": 0.3,
+        "Success": true,
+        "SequentialReadSpeed": 6243.02,
+        "LoadTime": 0.1710251
+      },
+      "Timestamp": "2026-07-19 16:42:43",
+      "Run": 3,
+      "Inference": {
+        "Success": false,
+        "Error": "Cannot convert argument \"val2\", with value: \"404494150400\", for \"Max\" to type \"System.Int32\": \"Cannot convert value \"404494150400\" to type \"System.Int32\". Error: \"Value was either too large or too small for an Int32.\"\""
+      }
+    }
+  ],
+  "SystemInfo": {
+    "RAM_GB": 64.0,
+    "CPU": "AMD Ryzen 7 7800X3D 8-Core Processor           ",
+    "Cores": 8
+  }
+}

@@ -1,0 +1,37 @@
+﻿{
+    "git_branch":  "main",
+    "runtime_abi_version":  "1.0",
+    "command_registry_hash":  "e36022f099a9f100b0bbb6ddf454c578baced7a6626aac9a54760080b925d50f",
+    "version":  "1.0.0",
+    "capabilities":  {
+                         "zlib_runtime":  true,
+                         "streaming_inference":  true,
+                         "gpu_acceleration":  true,
+                         "cpu_fallback":  true,
+                         "ghost_text":  true,
+                         "lsp_support":  true,
+                         "vulkan_runtime":  true
+                     },
+    "model_engine_abi":  "1.0",
+    "components":  {
+                       "lsp_ui":  "1.0.0",
+                       "vulkan_loader":  "1.0.0",
+                       "compression":  "1.0.0",
+                       "inference_engine":  "1.0.0",
+                       "ai_settings_dialog":  "1.0.0",
+                       "project_explorer":  "1.0.0",
+                       "ai_bridge":  "1.0.0",
+                       "ghost_text":  "1.0.0",
+                       "zlib_loader":  "1.0.0",
+                       "ansi_terminal":  "1.0.0",
+                       "git_integration":  "1.0.0"
+                   },
+    "build_date":  "2026-07-29T16:54:26Z",
+    "git_commit":  "b27dd4cf1ea7ec5fb9e64302e0538b48cd6432ab",
+    "build_environment":  {
+                              "architecture":  "x64",
+                              "platform":  "Windows",
+                              "cmake_version":  "4.2.0",
+                              "compiler":  "unknown"
+                          }
+}

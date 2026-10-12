@@ -1,0 +1,238 @@
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:15
+F:/rawrxd/src/validation/kernels/masm/rmsnorm_fixed.asm	     Page 1 - 1
+
+
+				; ============================================================================
+				; rmsnorm_fixed.asm - Corrected RMSNorm implementation
+				; ============================================================================
+				; Fixes bug where weights pointer wasn't reset before normalize loop
+				; 
+				; Algorithm:
+				;   1. Compute sum of squares: sum_sq = sum(x[i]^2)
+				;   2. Compute mean square: mean_sq = sum_sq / n
+				;   3. Compute RMS: rms = sqrt(mean_sq + epsilon)
+				;   4. Normalize: y[i] = x[i] / rms * weight[i]
+				; ============================================================================
+
+				OPTION CASEMAP:NONE
+
+ 00000000			.const
+				ALIGN 16
+ 00000000 3727C5AC		epsilon_const REAL4 1.0e-5
+
+ 00000000			.code
+
+				; ============================================================================
+				; MASM_RMSNorm_Fixed - Corrected RMSNorm with AVX2
+				; ============================================================================
+				; Parameters:
+				;   RCX = float* input (32-byte aligned)
+				;   RDX = float* output (32-byte aligned)
+				;   R8  = float* weights (32-byte aligned)
+				;   R9  = size_t size (multiple of 8)
+				; Returns: RAX = 0 on success
+				; ============================================================================
+
+ 00000000			MASM_RMSNorm_Fixed PROC FRAME
+				    ; Prologue - CRITICAL: Save non-volatile registers BEFORE .endprolog
+ 00000000  55			    push rbp
+				    .pushreg rbp
+ 00000001  48/ 8B EC		    mov rbp, rsp
+				    .setframe rbp, 0
+ 00000004  53			    push rbx
+				    .pushreg rbx
+ 00000005  56			    push rsi
+				    .pushreg rsi
+ 00000006  57			    push rdi
+				    .pushreg rdi
+ 00000007  41/ 54		    push r12
+				    .pushreg r12
+ 00000009  41/ 55		    push r13
+				    .pushreg r13
+ 0000000B  41/ 56		    push r14
+				    .pushreg r14
+ 0000000D  48/ 83 EC 20		    sub rsp, 32
+				    .allocstack 32
+				    .endprolog
+
+				    ; Validate parameters
+ 00000011  48/ 85 C9		    test rcx, rcx
+ 00000014  0F 84 000000F8	    jz error_null
+ 0000001A  48/ 85 D2		    test rdx, rdx
+ 0000001D  0F 84 000000EF	    jz error_null
+ 00000023  4D/ 85 C0		    test r8, r8
+ 00000026  0F 84 000000E6	    jz error_null
+ 0000002C  4D/ 85 C9		    test r9, r9
+ 0000002F  0F 84 000000E6	    jz error_zero
+				    
+				    ; Check alignment
+ 00000035  48/ F7 C1		    test rcx, 31
+	   0000001F
+ 0000003C  0F 85 000000E2	    jnz error_align
+ 00000042  48/ F7 C2		    test rdx, 31
+	   0000001F
+ 00000049  0F 85 000000D5	    jnz error_align
+ 0000004F  49/ F7 C0		    test r8, 31
+	   0000001F
+ 00000056  0F 85 000000C8	    jnz error_align
+				    
+				    ; Check size
+ 0000005C  49/ F7 C1		    test r9, 7
+	   00000007
+ 00000063  0F 85 000000C4	    jnz error_size
+
+				    ; Save parameters
+ 00000069  48/ 8B F1		    mov rsi, rcx          ; rsi = input
+ 0000006C  48/ 8B FA		    mov rdi, rdx          ; rdi = output
+ 0000006F  4D/ 8B E0		    mov r12, r8           ; r12 = weights
+ 00000072  49/ 8B D9		    mov rbx, r9           ; rbx = size
+ 00000075  4D/ 8B E9		    mov r13, r9           ; r13 = original size (for later)
+ 00000078  4D/ 8B F0		    mov r14, r8           ; r14 = original weights pointer
+
+				    ; Phase 1: Compute sum of squares
+ 0000007B  C5 FC/ 57 C0		    vxorps ymm0, ymm0, ymm0    ; ymm0 = sum_sq = 0
+
+ 0000007F			sum_loop:
+ 0000007F  48/ 83 FB 00		    cmp rbx, 0
+ 00000083  7E 16		    jle sum_done
+				    
+ 00000085  C5 FC/ 28 0E		    vmovaps ymm1, YMMWORD PTR [rsi]
+ 00000089  C5 F4/ 59 D1		    vmulps ymm2, ymm1, ymm1    ; ymm2 = x^2
+ 0000008D  C5 FC/ 58 C2		    vaddps ymm0, ymm0, ymm2    ; sum_sq += x^2
+				    
+ 00000091  48/ 83 C6 20		    add rsi, 32
+ 00000095  48/ 83 EB 08		    sub rbx, 8
+ 00000099  EB E4		    jmp sum_loop
+
+ 0000009B			sum_done:
+				    ; Horizontal reduction of ymm0
+ 0000009B  C4 E3 7D/ 19 C1	    vextractf128 xmm1, ymm0, 1
+	   01
+ 000000A1  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1
+ 000000A5  C5 FA/ 16 C8		    vmovshdup xmm1, xmm0
+ 000000A9  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1
+ 000000AD  C5 F0/ 12 C8		    vmovhlps xmm1, xmm1, xmm0
+ 000000B1  C5 F8/ 58 C1		    vaddps xmm0, xmm0, xmm1
+				    
+				    ; xmm0[0] = total sum of squares
+				    
+				    ; Compute mean_sq = sum_sq / n
+ 000000B5  C4 C1 F2/ 2A CD	    vcvtsi2ss xmm1, xmm1, r13
+ 000000BA  C5 FA/ 5E C1		    vdivss xmm0, xmm0, xmm1    ; xmm0 = mean_sq
+				    
+				    ; Add epsilon
+ 000000BE  C5 FA/ 10 15		    vmovss xmm2, DWORD PTR [epsilon_const]
+	   00000000 R
+ 000000C6  C5 FA/ 58 C2		    vaddss xmm0, xmm0, xmm2    ; xmm0 = mean_sq + epsilon
+				    
+				    ; Compute rms = sqrt(mean_sq + epsilon)
+ 000000CA  C5 FA/ 51 C0		    vsqrtss xmm0, xmm0, xmm0   ; xmm0 = rms
+				    
+				    ; Broadcast rms to all lanes
+ 000000CE  C4 E2 7D/ 18 D8	    vbroadcastss ymm3, xmm0      ; ymm3 = [rms, rms, ...]
+
+				    ; Phase 2: Normalize and apply weights
+				    ; Reset pointers
+ 000000D3  48/ 8B F1		    mov rsi, rcx          ; reset input
+ 000000D6  48/ 8B FA		    mov rdi, rdx          ; reset output
+ 000000D9  4D/ 8B E6		    mov r12, r14          ; reset weights (THIS WAS THE BUG!)
+ 000000DC  49/ 8B DD		    mov rbx, r13          ; reset size
+
+ 000000DF			normalize_loop:
+ 000000DF  48/ 83 FB 00		    cmp rbx, 0
+ 000000E3  7E 28		    jle normalize_done
+				    
+ 000000E5  C5 FC/ 28 06		    vmovaps ymm0, YMMWORD PTR [rsi]    ; ymm0 = input
+ 000000E9  C4 C1 7C/ 28 0C	    vmovaps ymm1, YMMWORD PTR [r12]    ; ymm1 = weights
+	   24
+				    
+				    ; y = x / rms
+ 000000EF  C5 FC/ 5E D3		    vdivps ymm2, ymm0, ymm3
+				    
+				    ; y = y * weight
+ 000000F3  C5 EC/ 59 D1		    vmulps ymm2, ymm2, ymm1
+				    
+ 000000F7  C5 FC/ 29 17		    vmovaps YMMWORD PTR [rdi], ymm2
+				    
+ 000000FB  48/ 83 C6 20		    add rsi, 32
+ 000000FF  48/ 83 C7 20		    add rdi, 32
+ 00000103  49/ 83 C4 20		    add r12, 32
+ 00000107  48/ 83 EB 08		    sub rbx, 8
+ 0000010B  EB D2		    jmp normalize_loop
+
+ 0000010D			normalize_done:
+ 0000010D  48/ 33 C0		    xor rax, rax
+ 00000110  EB 22		    jmp cleanup
+
+ 00000112			error_null:
+ 00000112  48/ C7 C0		    mov rax, 1
+	   00000001
+ 00000119  EB 19		    jmp cleanup
+
+ 0000011B			error_zero:
+ 0000011B  48/ C7 C0		    mov rax, 2
+	   00000002
+ 00000122  EB 10		    jmp cleanup
+
+ 00000124			error_align:
+ 00000124  48/ C7 C0		    mov rax, 3
+	   00000003
+ 0000012B  EB 07		    jmp cleanup
+
+ 0000012D			error_size:
+ 0000012D  48/ C7 C0		    mov rax, 4
+	   00000004
+
+ 00000134			cleanup:
+ 00000134  C5 F8 77		    vzeroupper
+ 00000137  41/ 5E		    pop r14
+ 00000139  41/ 5D		    pop r13
+ 0000013B  41/ 5C		    pop r12
+ 0000013D  5F			    pop rdi
+ 0000013E  5E			    pop rsi
+ 0000013F  5B			    pop rbx
+ 00000140  48/ 83 C4 20		    add rsp, 32
+ 00000144  5D			    pop rbp
+ 00000145  C3			    ret
+
+ 00000146			MASM_RMSNorm_Fixed ENDP
+
+				END
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0   10/09/26 22:53:15
+F:/rawrxd/src/validation/kernels/masm/rmsnorm_fixed.asm	     Symbols 2 - 1
+
+
+
+
+Segments:
+
+                N a m e                  Length   Align   Class
+
+CONST  . . . . . . . . . . . . .	 00000004 16	  'CONST'	 ReadOnly
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+MASM_RMSNorm_Fixed . . . . . . .	P 	 00000000 _TEXT	Length= 00000146 Public
+  sum_loop . . . . . . . . . . .	L 	 0000007F _TEXT	
+  sum_done . . . . . . . . . . .	L 	 0000009B _TEXT	
+  normalize_loop . . . . . . . .	L 	 000000DF _TEXT	
+  normalize_done . . . . . . . .	L 	 0000010D _TEXT	
+  error_null . . . . . . . . . .	L 	 00000112 _TEXT	
+  error_zero . . . . . . . . . .	L 	 0000011B _TEXT	
+  error_align  . . . . . . . . .	L 	 00000124 _TEXT	
+  error_size . . . . . . . . . .	L 	 0000012D _TEXT	
+  cleanup  . . . . . . . . . . .	L 	 00000134 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+$xdatasym  . . . . . . . . . . .	Byte	 00000000 _XDATA	
+epsilon_const  . . . . . . . . .	DWord	 00000000 CONST	
+
+	   0 Warnings
+	   0 Errors

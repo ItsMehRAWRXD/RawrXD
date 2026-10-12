@@ -1,0 +1,261 @@
+# Sovereign Engine Staging Deployment
+# Phase 1: Manual Bootstrap for 8-Node Cluster
+# Usage: .\deploy_staging_cluster.ps1 [-ValidateOnly]
+
+param(
+    [string]$ConfigFile = "staging_config.json",
+    [switch]$ValidateOnly = $false
+)
+
+$ErrorActionPreference = "Stop"
+
+# Node configuration - PHYSICAL MODE
+# 8-node cluster at 192.168.1.10-17
+$Nodes = @(
+    @{ Id = 0; Role = "HEAD";   IP = "192.168.1.10"; RouterPort = 5555; PubPort = 5556; GPU = $true;  AMX = $true },
+    @{ Id = 1; Role = "WORKER"; IP = "192.168.1.11"; RouterPort = 5555; PubPort = 5556; GPU = $true;  AMX = $true },
+    @{ Id = 2; Role = "WORKER"; IP = "192.168.1.12"; RouterPort = 5555; PubPort = 5556; GPU = $true;  AMX = $true },
+    @{ Id = 3; Role = "WORKER"; IP = "192.168.1.13"; RouterPort = 5555; PubPort = 5556; GPU = $true;  AMX = $true },
+    @{ Id = 4; Role = "WORKER"; IP = "192.168.1.14"; RouterPort = 5555; PubPort = 5556; GPU = $false; AMX = $true },
+    @{ Id = 5; Role = "WORKER"; IP = "192.168.1.15"; RouterPort = 5555; PubPort = 5556; GPU = $false; AMX = $true },
+    @{ Id = 6; Role = "WORKER"; IP = "192.168.1.16"; RouterPort = 5555; PubPort = 5556; GPU = $false; AMX = $true },
+    @{ Id = 7; Role = "WORKER"; IP = "192.168.1.17"; RouterPort = 5555; PubPort = 5556; GPU = $false; AMX = $true }
+)
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Sovereign Engine Staging Deployment" -ForegroundColor Cyan
+Write-Host "Phase 1: Manual Bootstrap" -ForegroundColor Cyan
+Write-Host "========================================`n" -ForegroundColor Cyan
+
+# Pre-deployment checks
+Write-Host "Phase 1: Pre-deployment Validation" -ForegroundColor Yellow
+
+$allNodesReady = $true
+
+foreach ($node in $Nodes) {
+    Write-Host "  Checking Node $($node.Id) ($($node.IP))..." -NoNewline
+    
+    # Test connectivity
+    if (Test-Connection -ComputerName $node.IP -Count 1 -Quiet -ErrorAction SilentlyContinue) {
+        Write-Host " ✅ Online" -ForegroundColor Green
+    } else {
+        Write-Host " ❌ Offline" -ForegroundColor Red
+        $allNodesReady = $false
+        continue
+    }
+    
+    # Check ports (5555, 5556)
+    try {
+        $port5555 = Test-NetConnection -ComputerName $node.IP -Port 5555 -WarningAction SilentlyContinue
+        $port5556 = Test-NetConnection -ComputerName $node.IP -Port 5556 -WarningAction SilentlyContinue
+        
+        if ($port5555.TcpTestSucceeded -and $port5556.TcpTestSucceeded) {
+            Write-Host "    Ports 5555/5556: ✅ Open" -ForegroundColor Green
+        } else {
+            Write-Host "    Ports 5555/5556: ⚠️ Check firewall" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "    Port check: ⚠️ Unable to verify" -ForegroundColor Yellow
+    }
+    
+    # Check NTP sync
+    try {
+        $ntpStatus = Invoke-Command -ComputerName $node.IP -ScriptBlock {
+            $service = Get-Service w32time -ErrorAction SilentlyContinue
+            return $service.Status
+        } -ErrorAction SilentlyContinue
+        
+        if ($ntpStatus -eq "Running") {
+            Write-Host "    NTP: ✅ Synchronized" -ForegroundColor Green
+        } else {
+            Write-Host "    NTP: ⚠️ Service not running" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "    NTP: ⚠️ Unable to verify" -ForegroundColor Yellow
+    }
+}
+
+if (-not $allNodesReady) {
+    Write-Host "`n❌ Validation failed. Not all nodes are reachable." -ForegroundColor Red
+    exit 1
+}
+
+if ($ValidateOnly) {
+    Write-Host "`n✅ Validation complete. All nodes ready for deployment." -ForegroundColor Green
+    exit 0
+}
+
+# Deploy binaries
+Write-Host "`nPhase 2: Binary Deployment" -ForegroundColor Yellow
+
+$DeployPath = "C:\Sovereign\bin"
+$Artifacts = @(
+    "SovereignOrchestrator.dll",
+    "SovereignFlowControl.dll",
+    "SovereignWeightSync.dll",
+    "SovereignRingAttention.dll",
+    "swarm_benchmark_optimized.exe",
+    "sovereign_cli.exe"
+)
+
+foreach ($node in $Nodes) {
+    Write-Host "  Deploying to Node $($node.Id) ($($node.IP))..." -NoNewline
+    
+    try {
+        # Create directory
+        Invoke-Command -ComputerName $node.IP -ScriptBlock {
+            param($path)
+            New-Item -ItemType Directory -Force -Path $path | Out-Null
+        } -ArgumentList $DeployPath -ErrorAction SilentlyContinue
+        
+        # Copy artifacts
+        foreach ($artifact in $Artifacts) {
+            $source = ".\build\production\bin\$artifact"
+            if (Test-Path $source) {
+                $dest = "\\$($node.IP)\C$\Sovereign\bin\$artifact"
+                Copy-Item $source $dest -Force -ErrorAction SilentlyContinue
+            }
+        }
+        
+        Write-Host " ✅ Deployed" -ForegroundColor Green
+    } catch {
+        Write-Host " ❌ Failed: $_" -ForegroundColor Red
+    }
+}
+
+# Configure nodes
+Write-Host "`nPhase 3: Node Configuration" -ForegroundColor Yellow
+
+$headNode = $Nodes | Where-Object { $_.Role -eq "HEAD" }
+
+foreach ($node in $Nodes) {
+    Write-Host "  Configuring Node $($node.Id)..." -NoNewline
+    
+    $config = @"
+{
+    "nodeId": $($node.Id),
+    "role": "$($node.Role)",
+    "headNodeIp": "$($headNode.IP)",
+    "bindAddress": "0.0.0.0:$($node.RouterPort)",
+    "dataPlane": {
+        "routerEndpoint": "tcp://$($headNode.IP):$($headNode.RouterPort)",
+        "pubEndpoint": "tcp://$($node.IP):$($node.PubPort)"
+    },
+    "hardware": {
+        "enableGPU": $($node.GPU.ToString().ToLower()),
+        "enableAMX": $($node.AMX.ToString().ToLower()),
+        "threadPoolSize": 8
+    },
+    "telemetry": {
+        "prometheusPort": $(8080 + $node.Id),
+        "logLevel": "INFO"
+    }
+}
+"@
+    
+    try {
+        # SIMULATION MODE: Write configs locally with node-specific paths
+        $nodeConfigDir = "D:\RawrXD\simulation\node$($node.Id)"
+        New-Item -ItemType Directory -Force -Path $nodeConfigDir | Out-Null
+        $configPath = "$nodeConfigDir\config.json"
+        $config | Out-File -FilePath $configPath -Encoding UTF8 -Force
+        Write-Host " ✅ Configured" -ForegroundColor Green
+    } catch {
+        Write-Host " ❌ Failed: $_" -ForegroundColor Red
+    }
+}
+
+# Start services - SIMULATION MODE
+Write-Host "`nPhase 4: Service Startup (Simulation Mode)" -ForegroundColor Yellow
+
+foreach ($node in $Nodes) {
+    Write-Host "  Starting Node $($node.Id) on port $($node.RouterPort)..." -NoNewline
+    
+    try {
+        $nodeConfigDir = "D:\RawrXD\simulation\node$($node.Id)"
+        $configPath = "$nodeConfigDir\config.json"
+        $exePath = "D:\RawrXD\build\production\bin\sovereign_cli.exe"
+        
+        # Create log file for this node
+        $logPath = "$nodeConfigDir\node.log"
+        
+        if (Test-Path $exePath) {
+            # Start process with node-specific config
+            $process = Start-Process -FilePath $exePath `
+                -ArgumentList "--config `"$configPath`" --node-id $($node.Id)" `
+                -PassThru -WindowStyle Hidden `
+                -WorkingDirectory $nodeConfigDir `
+                -RedirectStandardOutput $logPath `
+                -RedirectStandardError "$nodeConfigDir\error.log"
+            
+            # Store PID
+            $process.Id | Out-File "$nodeConfigDir\sovereign.pid" -Force
+            
+            Write-Host " ✅ Started (PID: $($process.Id))" -ForegroundColor Green
+        } else {
+            Write-Host " ⚠️ Binary not found, creating simulation marker" -ForegroundColor Yellow
+            "SIMULATION_MODE_NODE_$($node.Id)" | Out-File "$nodeConfigDir\simulation.marker" -Force
+        }
+    } catch {
+        Write-Host " ❌ Failed: $_" -ForegroundColor Red
+    }
+}
+
+# Verify cluster - SIMULATION MODE
+Write-Host "`nPhase 5: Cluster Verification" -ForegroundColor Yellow
+
+Start-Sleep -Seconds 2
+
+Write-Host "  Checking cluster status..." -ForegroundColor Gray
+
+$runningNodes = 0
+foreach ($node in $Nodes) {
+    $nodeConfigDir = "D:\RawrXD\simulation\node$($node.Id)"
+    $pidFile = "$nodeConfigDir\sovereign.pid"
+    $markerFile = "$nodeConfigDir\simulation.marker"
+    
+    Write-Host "    Node $($node.Id) (Port $($node.RouterPort)): " -NoNewline
+    
+    if (Test-Path $pidFile) {
+        $pid = Get-Content $pidFile
+        $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+        if ($process) {
+            Write-Host "✅ Running (PID: $pid)" -ForegroundColor Green
+            $runningNodes++
+        } else {
+            Write-Host "⚠️ Process not found" -ForegroundColor Yellow
+        }
+    } elseif (Test-Path $markerFile) {
+        Write-Host "✅ Simulation marker present" -ForegroundColor Green
+        $runningNodes++
+    } else {
+        Write-Host "❌ Not initialized" -ForegroundColor Red
+    }
+}
+
+Write-Host "`n  Cluster Status: $runningNodes/$($Nodes.Count) nodes active" -ForegroundColor Cyan
+
+if ($runningNodes -eq $Nodes.Count) {
+    Write-Host "  ✅ All nodes operational!" -ForegroundColor Green
+} else {
+    Write-Host "  ⚠️ Some nodes may need attention" -ForegroundColor Yellow
+}
+
+Write-Host "`n========================================" -ForegroundColor Green
+Write-Host "Simulation Deployment Complete!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "SIMULATION MODE ACTIVE:" -ForegroundColor Yellow
+Write-Host "  - 8 nodes mapped to localhost with port offsets" -ForegroundColor Gray
+Write-Host "  - Configs stored in D:\RawrXD\simulation\node[N]\" -ForegroundColor Gray
+Write-Host "  - Each node uses unique ports for ZMQ communication" -ForegroundColor Gray
+Write-Host ""
+Write-Host "Next Steps:" -ForegroundColor White
+Write-Host "  1. Check node logs: Get-Content .\simulation\node0\node.log" -ForegroundColor Gray
+Write-Host "  2. Verify ports: netstat -an | findstr 555" -ForegroundColor Gray
+Write-Host "  3. Run integration test: .\run_simulation_test.ps1" -ForegroundColor Gray
+Write-Host ""
+Write-Host "When ready for physical deployment:" -ForegroundColor Cyan
+Write-Host "  - Update IPs to 192.168.1.10-17" -ForegroundColor Gray
+Write-Host "  - Switch from simulation to remote execution mode" -ForegroundColor Gray
+

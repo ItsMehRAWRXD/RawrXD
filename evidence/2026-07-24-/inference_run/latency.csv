@@ -1,0 +1,5 @@
+timestamp,event,latency_ms
+2026-07-24T12:43:57.9996450-04:00,prompt_tokenization,2
+2026-07-24T12:43:57.9996689-04:00,inference_start,0
+2026-07-24T12:43:57.9996778-04:00,token_generation,8
+2026-07-24T12:43:57.9996847-04:00,inference_end,8
