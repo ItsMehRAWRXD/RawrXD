@@ -441,7 +441,9 @@ void print_report(const PhaseTotals& t, const std::string& label) {
     printf("  total decode time     : %.2f ms\n", t.total_ms());
     printf("  throughput            : %.2f tok/s\n", t.tps());
     printf("  avg ms per token      : %.3f ms\n", t.tokens ? t.total_ms() / t.tokens : 0.0);
-    printf("  weight bytes / token  : %.2f MiB\n", t.bytes_read / (1024.0 * 1024.0));
+    printf("  weight bytes / token  : %.2f MiB  (total swept %.2f MiB)\n",
+           t.tokens ? t.bytes_read / (double)t.tokens / (1024.0 * 1024.0) : 0.0,
+           t.bytes_read / (1024.0 * 1024.0));
     printf("  effective bandwidth   : %.2f GiB/s\n",
            t.total_ms() > 0
                ? (t.bytes_read / (1024.0 * 1024.0 * 1024.0)) / (t.total_ms() / 1000.0)
@@ -549,18 +551,12 @@ PhaseTotals profile_model(const std::string& path, int tokens) {
 
     PhaseTotals totals;
     std::vector<float> state(dim, 0.0f), next(dim, 0.0f);
-    // Real logits over the real vocabulary (capped to keep the soft_max op
-    // bounded; the cap is reported so the number is never misleading).
-    const int logit_cap = 32768;
-    const int n_logits = (int)std::min<uint64_t>(vocab, (uint64_t)logit_cap);
+    // FULL-vocabulary logits: no cap. The soft_max ops and argmax run over the
+    // real vocab (e.g. 102400 for V2-Lite, 152064 for R1-32B) so sampling is not
+    // restricted to a subrange.
+    const int n_logits = (int)vocab;
     std::vector<float> logits((size_t)n_logits, 0.0f);
-
-    if (n_logits != (int)vocab) {
-        printf("  NOTE: vocab=%zu exceeds the %d-logit soft_max cap; sampling\n"
-               "        covers the first %d logits. Output projection still\n"
-               "        sweeps the real full weight tensor.\n",
-               vocab, logit_cap, n_logits);
-    }
+    printf("  full-vocabulary soft_max over %d logits (no cap)\n", n_logits);
 
     uint32_t cursor = 1;
     for (int t = 0; t < tokens; ++t) {
