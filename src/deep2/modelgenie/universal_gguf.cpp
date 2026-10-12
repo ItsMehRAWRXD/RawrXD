@@ -430,6 +430,14 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ffn_gate_exps.weight") != std::string::npos) return Role::ExpFfnGate;
     if (n.find(".ffn_up_exps.weight") != std::string::npos) return Role::ExpFfnUp;
     if (n.find(".ffn_down_exps.weight") != std::string::npos) return Role::ExpFfnDown;
+    // deepseek2's shared experts use the "_shexp" suffix. These MUST be tested
+    // before the plain "ffn_gate.weight" test below: the substring
+    // "ffn_gate_shexp.weight" contains neither "ffn_gate_exps" nor
+    // "ffn_gate.weight" (the char after "ffn_gate" is "_", not "."), so the
+    // order matters for correctness rather than just clarity.
+    if (n.find(".ffn_gate_shexp.weight") != std::string::npos) return Role::SharedFfnGate;
+    if (n.find(".ffn_up_shexp.weight") != std::string::npos) return Role::SharedFfnUp;
+    if (n.find(".ffn_down_shexp.weight") != std::string::npos) return Role::SharedFfnDown;
     if (n.find(".ffn_gate.weight") != std::string::npos) return Role::FfnGate;
     if (n.find(".ffn_up.weight") != std::string::npos) return Role::FfnUp;
     if (n.find(".ffn_down.weight") != std::string::npos) return Role::FfnDown;
@@ -574,6 +582,15 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
     pick("attention.head_count_kv", s.heads_kv);
     pick("rope.dimension_count", s.rope_dim);
     pick("rope.freq_base", s.rope_freq_base);
+    // RoPE scaling. The type decides whether the angles are interpolated at
+    // all; an absent type is plain RoPE. These are the model's OWN numbers and
+    // are never substituted with llama.cpp defaults, because a wrong factor
+    // silently rescales every positional angle.
+    s.rope_scaling_type = Get(m, p + "rope.scaling.type");
+    s.rope_scaling_factor = GetD(m, p + "rope.scaling.factor", 1.0);
+    pick("rope.scaling.original_context_length", s.rope_orig_ctx);
+    s.yarn_log_multiplier =
+        GetD(m, p + "rope.scaling.yarn_log_multiplier", 0.0);
     pick("vocab_size", s.vocab);
     pick("context_length", s.context_length);
     pick("expert_count", s.expert_count);
@@ -832,6 +849,16 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         // FFN path, not a Router/TopK/MoE triple that cannot bind.
         const bool hasRouter = !name(Role::RouterGate).empty();
         const bool hasDenseFfn = !name(Role::FfnGate).empty() && !name(Role::FfnUp).empty();
+        // deepseek2 shipped with n_shared_experts shared experts that run on
+        // EVERY token, alongside the routed experts. They live in tensors named
+        // blk.N.ffn_{gate,up,down}_shexp.weight - a different suffix from the
+        // routed experts and from the dense-FFN weights, so a name lookup for
+        // "ffn_gate" never finds them. A MoE block must execute BOTH paths and
+        // add them; executing only the routed experts silently drops the shared
+        // expert's contribution, which on this checkpoint is half of the FFN
+        // output width (2816 of 4224 total fused intermediate elements).
+        const bool hasSharedFfn = !name(Role::SharedFfnGate).empty() &&
+                                  !name(Role::SharedFfnUp).empty();
         if (hasRouter && s.expert_count > 0) {
             GraphOp o;
             o.op = Op::Router; o.block = (int32_t)b;
@@ -848,6 +875,35 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.out = "moe_out";
             o.detail = "experts: " + name(Role::ExpFfnUp) + "," + name(Role::ExpFfnDown); // gate slot is in .c
             g.ops.push_back(o);
+            // Shared experts: unconditional (not routed, not gated by the
+            // router's weights). Their output is ADDED to the routed output.
+            if (hasSharedFfn) {
+                for (Role r : {Role::SharedFfnGate, Role::SharedFfnUp}) {
+                    o = GraphOp{};
+                    o.op = Op::Linear; o.block = (int32_t)b;
+                    o.a = "ffn_norm"; o.b = name(r);
+                    o.out = (r == Role::SharedFfnGate) ? "shared_gate" : "shared_up";
+                    g.ops.push_back(o);
+                }
+                {
+                    o = GraphOp{};
+                    o.op = Op::SwiGLU; o.block = (int32_t)b;
+                    o.a = "shared_gate"; o.b = "shared_up"; o.out = "shared_swiglu";
+                    g.ops.push_back(o);
+                }
+                {
+                    o = GraphOp{};
+                    o.op = Op::Linear; o.block = (int32_t)b;
+                    o.a = "shared_swiglu"; o.b = name(Role::SharedFfnDown);
+                    o.out = "shared_out";
+                    g.ops.push_back(o);
+                }
+                o = GraphOp{};
+                o.op = Op::ResidualAdd; o.block = (int32_t)b;
+                o.a = "moe_out"; o.b = "shared_out"; o.out = "moe_out";
+                o.detail = "deepseek2 shared experts added to routed experts";
+                g.ops.push_back(o);
+            }
         } else if (hasDenseFfn) {
             const bool hasShared = s.kind == ArchKind::DeepSeekMLA;
             // Dense FFN: gate/up projections, then SwiGLU, then down.

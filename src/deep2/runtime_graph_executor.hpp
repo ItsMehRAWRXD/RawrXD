@@ -58,7 +58,12 @@ struct Instr {
     // up projections both read "ffn_norm", so an executor that threads
     // `hidden_` through them would feed the gate's output into `up`.
     std::string aName, bName, outName;
-    int32_t q = -1, k = -1, v = -1;    // attention: split q/k/v slots
+    // attention: `q` carries the WEIGHT slot of the projection that consumes
+    // this attention op's output (resolved at bind time). OpAttention uses it
+    // to fail closed when the concatenated output width does not match the
+    // projection's declared input width. `k`/`v` are unused by the current
+    // graph shapes (the arena carries the q/k/v activations by name).
+    int32_t q = -1;
     std::string detail;
 };
 
@@ -103,7 +108,39 @@ public:
     double HiddenL2() const { return hidden_l2_; }
 
     // Force the CPU path for quantised projections (differential testing).
-    void SetForceCpu(bool force);
+    void SetForceCpu(bool force) { force_cpu_ = force; }
+    bool ForceCpu() const { return force_cpu_; }
+
+    // ---- first-divergence instrumentation (RAWRXD_DEEP2 recovery) ----------
+    // When enabled, every executed op appends a checksum of its output buffer
+    // here. Two executors of the same graph (e.g. GPU vs CPU-pinned) can then
+    // be compared op-by-op to find the FIRST divergent tensor instead of
+    // debugging the final logits, which mix every layer's error together.
+    struct OpTrace {
+        int block = -1;
+        int pc = -1;
+        int op = -1;
+        std::string name;
+        std::string weight;   // bName: the weight operand, for isolated replay
+        std::string input;    // aName: the activation operand
+        size_t size = 0;
+        uint64_t checksum = 0;
+        // First few output values, recorded so a divergence can be inspected
+        // (garbage-vs-nearly-equal distinguishes a wrong kernel from a wrong
+        // weight or activation without a second tool).
+        float first_vals[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        // Full output copy when value capture is on (single-token forensics).
+        std::vector<float> values;
+    };
+    // enable: checksum per op. capture_values: also copies each op's full
+    // output so a divergence can be diffed element-by-element. Both default
+    // off; neither changes execution semantics.
+    void SetOpTrace(bool enable, bool capture_values = false) {
+        trace_ops_ = enable;
+        trace_capture_values_ = capture_values;
+        op_traces_.clear();
+    }
+    const std::vector<OpTrace>& OpTraces() const { return op_traces_; }
 
 private:
     // kernels
@@ -113,6 +150,24 @@ private:
     bool OpAttention(const Instr& in, const std::vector<float>& q,
                      const std::vector<float>& k, const std::vector<float>& v,
                      std::vector<float>& y, size_t position, std::string& err);
+    // RoPE angle for rotary pair `pair` (elements 2*pair, 2*pair+1) at token
+    // position `position`, over `nDims` rotary ELEMENTS. Plain RoPE:
+    //   theta = position * freq_base^(-2*pair/nDims)
+    // exactly as ggml computes it (theta_scale = base^(-2/n_dims)).
+    // When the model ships rope.scaling.type == "yarn" (deepseek2), the angle is
+    // interpolated between the extrapolated frequency and 1/factor of it, with
+    // the corr_dim ramp -- ggml's rope_yarn() ramp_mix formula.
+    double RopeAngle(size_t position, size_t pair, size_t nDims, bool yarn) const;
+    // One-shot (per position) latch for the ATTN_TRACE angle witness.
+    mutable int n_dims_seen_ = -1;
+    // One-shot (per position) latch for the score witness.
+    mutable int score_seen_ = -1;
+    // Attention score scale for head width `headDim`. Plain models use
+    // 1/sqrt(headDim). A yarn model (deepseek2) uses llama.cpp deepseek2.cpp's
+    // mscale^2 / sqrt(n_embd_head_k), where the mscale derivation is in
+    // modelgenie/ModelGenieExecutor.cpp and was certified against a llama.cpp
+    // dump by RAWRXD_ATTENTION_SCALE_AB_001.
+    double AttentionScoreScale(size_t headDim, bool yarn) const;
     bool OpRouterTopK(const Instr& router, const Instr& topk,
                       const std::vector<float>& x,
                       std::vector<uint32_t>& ids, std::vector<float>& w);
@@ -171,6 +226,21 @@ private:
 
     // quantised dispatch counters (mirrored into stats_ at bind/first run)
     uint64_t gpu_calls_ = 0, cpu_calls_ = 0;
+    // Per-executor CPU pin. It MUST stay per-executor: the parity harness binds a
+    // second "reference" executor with this set, and the earlier implementation
+    // forwarded it to the PROCESS-WIDE QuantDot switch, which the harness then
+    // restored before the comparison loop. The "reference" therefore ran on the
+    // GPU too, and GPU-vs-GPU agreement printed an exact zero error that looked
+    // like a perfect parity pass while certifying nothing.
+    bool force_cpu_ = false;
+    // First-divergence instrumentation state (public SetOpTrace/OpTraces).
+    std::vector<OpTrace> op_traces_;
+    bool trace_ops_ = false;
+    bool trace_capture_values_ = false;
+    // First observed reason a quantised projection did NOT run on the GPU.
+    // Mirrored into BindStats::fallback_reason so the receipt can never claim
+    // fallback='<none>' while cpu_calls > 0.
+    std::string cpu_fallback_reason_;
 
     // Tokens executed so far. Distinguishes the first token (cold start:
     // cache warm-up and lazy pipeline creation) from steady-state decode so

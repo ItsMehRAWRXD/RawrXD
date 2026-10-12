@@ -236,6 +236,72 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         program_.push_back(in);
     }
 
+    // ---- 2a. producer/consumer geometry pass -------------------------------
+    // Resolve, for every attention op, the WEIGHT slot of the projection that
+    // consumes its output, and record it in Instr::q. OpAttention then has the
+    // model's own declared input width for that projection and can fail closed
+    // when the concatenated attention output does not match it -- the
+    // deepseek2 class of defect, where the output was built from the 192-wide
+    // query head instead of the 128-wide value head and the projection
+    // (blk.0.attn_output.weight, dims [2048, 2048]) rejected 3,072 elements.
+    //
+    // Arena names such as "attn_out" are REUSED by every block, so the producer
+    // is resolved as the NEAREST PRECEDING writer of that name in the SAME
+    // block. Resolving through a last-writer map instead bound every block to
+    // the final block's projection, which happens to have identical dims and
+    // therefore hid the attribution error behind a passing check.
+    for (size_t i = 0; i < program_.size(); ++i) {
+        Instr& consumer = program_[i];
+        if (consumer.op != OpKind::Linear || consumer.b < 0) continue;
+        if (consumer.aName.empty() || consumer.aName[0] == '<') continue;
+        for (size_t j = i; j-- > 0;) {
+            const Instr& producer = program_[j];
+            if (producer.block != consumer.block) break;      // stay in-block
+            if (producer.outName != consumer.aName) continue;
+            if (producer.op == OpKind::Attention) program_[j].q = consumer.b;
+            break;   // nearest producer only
+        }
+    }
+
+    // ---- 2b. model geometry summary (fail-closed diagnostics) --------------
+    // Printed once at bind so the attention path can always be audited against
+    // the model's own metadata: architecture, head counts, head lengths, and
+    // the attention projection dims actually present in the file.
+    if (spec_.architecture == "deepseek2" || spec_.kv_lora_rank > 0) {
+        std::fprintf(stderr,
+                     "[geom] architecture=%s embedding_length=%zu head_count=%zu "
+                     "head_count_kv=%zu key_length=%zu value_length=%zu "
+                     "kv_lora_rank=%zu blocks=%zu\n",
+                     spec_.architecture.c_str(), (size_t)spec_.embd,
+                     (size_t)spec_.heads, (size_t)spec_.heads_kv,
+                     (size_t)spec_.key_length, (size_t)spec_.value_length,
+                     (size_t)spec_.kv_lora_rank, (size_t)spec_.block_count);
+        const char* names[4] = {"blk.0.attn_q.weight", "blk.0.attn_kv_a_mqa.weight",
+                                "blk.0.attn_kv_b.weight", "blk.0.attn_output.weight"};
+        for (const char* n : names) {
+            for (const auto& t : tensors_) {
+                if (t.name != n) continue;
+                std::fprintf(stderr, "[geom]   %-28s dims=[%zu,%zu]\n", n,
+                             t.dims.empty() ? 0 : (size_t)t.dims[0],
+                             t.dims.size() > 1 ? (size_t)t.dims[1] : 0);
+                break;
+            }
+        }
+        // The invariant the attention path must preserve, stated with the
+        // model's own numbers: value_width must divide the projection input,
+        // and per-head value width must be strictly narrower than the per-head
+        // query width for MLA (the query head carries the rotary half).
+        const size_t H = (size_t)std::max<uint64_t>(spec_.heads, 1);
+        const size_t qW = (size_t)spec_.key_length;
+        const size_t vW = (size_t)spec_.value_length;
+        if (vW == 0 || qW == 0 || H == 0 || vW > qW) {
+            stats_.error = "attention geometry metadata inconsistent: head_count=" +
+                           std::to_string(H) + " key_length=" + std::to_string(qW) +
+                           " value_length=" + std::to_string(vW);
+            return false;
+        }
+    }
+
     // ---- 2b. env-gated execution-graph provenance dump (no semantics change) ----
     // RR_GRAPH_TRACE=1 prints every compiled instruction (block, kind, operands,
     // published output) and resolves each named operand to its producing op, so
@@ -319,10 +385,6 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     bound_ = true;
     stats_.bound = true;
     return true;
-}
-
-void Executor::SetForceCpu(bool force) {
-    QuantDot::SetForceCpu(force);
 }
 
 float* Executor::WeightData(int32_t slot, size_t& floats_out) {
@@ -448,18 +510,31 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         sumf -= dmin * float(sumi);
                     } else {
                         // ---- Q6_K ----
-                        for (int j = 0; j < 256; ++j) {
-                            const int hlf = j / 128;      // ql half
-                            const int loff = (j % 64) / 32 * 32 + (j % 32);
-                            const int hoff = (j / 64) % 2 * 32 + (j % 32);
-                            const int part = (j / 64) % 2;              // low nibble (0) / high nibble (1)
-                            const int qhpos = ((j % 64) / 32) * 32 + (j % 32);
-                            const int shift4 = (part == 0) ? 0 : 4;
-                            const int shifth = (part == 0) ? 0 : 2;
-                            const int low4  = (blk[loff] >> shift4) & 0xF;
-                            const int high2 = (blk[128 + qhpos] >> shifth) & 3;
-                            a[j] = low4 | (high2 << 4);
-                            (void)hlf; (void)hoff;
+                        // ggml block_q6_K: ql[128] holds the 4-bit values (low
+                        // nibbles of bytes 0..63 for the first 128 values, high
+                        // nibbles of bytes 0..31 for 32..63, low of 32..95 for
+                        // 64..95, high of 32..63 for 96..127), qh[64] holds the
+                        // top two bits of every value (4 values per qh byte at
+                        // shifts 0/2/4/6), scales[16] are one per 16 values, and
+                        // the fp16 scale sits at 208. This mirrors
+                        // ggml_vec_dot_q6_K_q8_K_generic exactly.
+                        //
+                        // The previous per-j nibble/shift mapping sampled the
+                        // wrong bytes for most indices and silently corrupted
+                        // EVERY Q6_K projection (cosine 0.08 against the GPU
+                        // path on blk.0.attn_v.weight), which is what made the
+                        // logits parity gate fail while the kernel was right.
+                        for (int j = 0; j < 256; ++j) a[j] = 0;
+                        for (int j = 0; j < 2; ++j) {          // 128-value halves
+                            const uint8_t* q4 = blk + j * 64;
+                            const uint8_t* qh = blk + 128 + j * 32;
+                            int* ah = a + j * 128;
+                            for (int l = 0; l < 32; ++l) {
+                                ah[l +  0] = (int8_t)((q4[l +  0] & 0xF) | (((qh[l] >> 0) & 3) << 4)) - 32;
+                                ah[l + 32] = (int8_t)((q4[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+                                ah[l + 64] = (int8_t)((q4[l +  0] >>  4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+                                ah[l + 96] = (int8_t)((q4[l + 32] >>  4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+                            }
                         }
                         int32_t scales[16];
                         for (int s = 0; s < 16; ++s) {
@@ -470,7 +545,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         for (int s = 0; s < 16; ++s) {
                             const int32_t sc = scales[s];
                             for (int l = 0; l < 16; ++l)
-                                aux32[l & 7] += sc * (int32_t)q8b[1 + s * 16 + l] * (a[s * 16 + l] - 32);
+                                aux32[l & 7] += sc * (int32_t)q8b[1 + s * 16 + l] * a[s * 16 + l];
                         }
                         uint16_t h;
                         std::memcpy(&h, blk + 208, 2);
@@ -519,8 +594,18 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
-                                              q8.data(), q8.size() * sizeof(float));
-        if (gpu) { ++gpu_calls_; } else { ++cpu_calls_; }
+                                              q8.data(), q8.size() * sizeof(float),
+                                              force_cpu_);
+        if (gpu) {
+            ++gpu_calls_;
+        } else {
+            ++cpu_calls_;
+            const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+            if (cpu_fallback_reason_.empty() && rcpt.fallback_reason) {
+                cpu_fallback_reason_ = std::string("k-quant dot: ") + rcpt.fallback_reason +
+                    " (weight=" + w.name + ")";
+            }
+        }
         // Env-gated differential check: the GPU kernel must reproduce the CPU
         // dot exactly, and must never emit a non-finite value. A divergence is
         // a kernel defect and is reported with the tensor that produced it.
@@ -595,6 +680,9 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             y[j] = (float)acc;
         }
         ++cpu_calls_;
+        if (cpu_fallback_reason_.empty()) {
+            cpu_fallback_reason_ = "legacy quant type dequantised on CPU, no GPU kernel: " + w.name;
+        }
         return true;
     }
 
@@ -623,6 +711,67 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     }
     ++cpu_calls_;
     return true;
+}
+
+// ---------------------------------------------------------------------------
+// RoPE angle and attention score scale (reference-derived)
+// ---------------------------------------------------------------------------
+double Executor::RopeAngle(size_t position, size_t pair, size_t nDims, bool yarn) const {
+    const double base = (double)spec_.rope_freq_base;
+    // ggml: theta_scale = powf(freq_base, -2/n_dims); theta_extrap(pair k) =
+    // position * theta_scale^k = position * base^(-2k/n_dims).
+    const double theta_extrap =
+        (double)position * std::pow(base, -2.0 * double(pair) / double(nDims));
+    if (!yarn) return theta_extrap;
+
+    // ---- YaRN (ggml rope_yarn + ggml_rope_yarn_corr_dims) -------------------
+    const double n_rot = double(nDims);
+    const double n_ctx_orig = spec_.rope_orig_ctx > 0
+                                  ? (double)spec_.rope_orig_ctx : 4096.0;
+    const double factor = spec_.rope_scaling_factor > 0.0
+                              ? spec_.rope_scaling_factor : 1.0;
+    const double freq_scale = 1.0 / factor;
+    constexpr double beta_fast = 32.0, beta_slow = 1.0;
+    const double start = std::floor(n_rot * std::log(n_ctx_orig / (beta_fast * 2.0 * 3.14159265358979323846)) /
+                                    (2.0 * std::log(base)));
+    const double end   = std::ceil(n_rot * std::log(n_ctx_orig / (beta_slow * 2.0 * 3.14159265358979323846)) /
+                                   (2.0 * std::log(base)));
+    const double low  = std::max(0.0, start);
+    const double high = std::min(n_rot - 1.0, end);
+    // rope_yarn_ramp(low, high, i0) evaluates
+    //   1 - clamp((i0/2 - low)/max(0.001, high-low))
+    // so the coordinate is the PAIR INDEX (i0/2), NOT the element index.
+    // Passing i0 = 2*pair doubles the coordinate, which for deepseek2
+    // (low ~= 10, high ~= 23, n_rot = 64) compresses the whole ramp into the
+    // first 12 pairs and leaves the other 20 pairs un-interpolated. The
+    // remaining pairs keep the full 1x frequency instead of the 1/40 scale,
+    // which is a large, systematic error in the rotational angle.
+    const double ramp_mix = 1.0 - std::min(1.0, std::max(0.0, (double(pair) - low) /
+                                                           std::max(0.001, high - low)));
+    const double theta_interp = freq_scale * theta_extrap;
+    return theta_interp * (1.0 - ramp_mix) + theta_extrap * ramp_mix;
+}
+
+double Executor::AttentionScoreScale(size_t headDim, bool yarn) const {
+    if (!yarn || headDim == 0) return 1.0 / std::sqrt(double(headDim));
+    // llama.cpp deepseek2.cpp (see the certified derivation in
+    // modelgenie/ModelGenieExecutor.cpp, RAWRXD_ATTENTION_SCALE_AB_001):
+    //   freq_scale      = 1 / rope.scaling.factor          (0.025 for factor 40)
+    //   attn_factor     = yarn_attn_factor = rope_attn_factor / (1+0.1*ln(1/fs))
+    //   attn_factor_org = attn_factor * (1+0.1*ln(1/fs))   -> 1.0 (cancels)
+    //   mscale          = attn_factor_org * (1+0.1*yarn_log_mul*ln(1/fs))
+    //   kq_scale        = mscale^2 / sqrt(n_embd_head_k)
+    // For deepseek2 (factor 40, yarn_log_multiplier 0.0707) that is
+    // mscale = 1.2608, mscale^2 = 1.5896, kq_scale = 0.114721 -- the value the
+    // A/B test certified against llama.cpp's own kq/softmax dumps.
+    const double factor = spec_.rope_scaling_factor > 0.0 ? spec_.rope_scaling_factor : 1.0;
+    const double ln_fs = std::log(factor);                 // ln(1/freq_scale)
+    const double attn_factor = 1.0 / (1.0 + 0.1 * ln_fs);  // rope_attn_factor = 1
+    const double attn_factor_org = attn_factor * (1.0 + 0.1 * ln_fs);
+    const double yarn_log_mul = spec_.yarn_log_multiplier > 0.0
+                                    ? spec_.yarn_log_multiplier / 0.1 : 0.0;
+    const double mscale = attn_factor_org * (1.0 + 0.1 * yarn_log_mul * ln_fs);
+    return mscale * mscale / std::sqrt(double(headDim));
 }
 
 bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
@@ -717,6 +866,10 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     const size_t D = isMla ? qPerHead : qPerHead;
     if (D == 0) { err = "attention: head dim 0"; return false; }
     const size_t qD = isMla ? qPerHead : qPerHead;
+    // YaRN rope scaling, decided by the model's own metadata. deepseek2 ships
+    // rope.scaling.type "yarn"; an empty type (llama, qwen, gemma, nemotron)
+    // keeps plain, unscaled RoPE so their angles are untouched.
+    const bool yarn = (spec_.rope_scaling_type == "yarn");
 
     // RoPE: the ROTARY slice only. In MLA that is the last qk_rope dims of q
     // and of k; in a GQA model it is the whole head. Rotating the entire head
@@ -726,38 +879,72 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     const size_t ropeOff = isMla ? (kPerHead - (kPerHead > 0 ? 0 : 0)) : 0;
     (void)ropeDims;
     (void)ropeOff;
-    // DeepSeek: qk_nope = key_length - value_length; the rope part follows.
-    const size_t qk_nope = isMla ? (kl - vl) : 0;
+    // The nope/rope split of the QUERY and KEY heads comes from the model's own
+    // rotary dimension count -- deepseek2.rope.dimension_count = 64 -- so the
+    // key head is 192 = 128 nope + 64 rope. It must NOT be derived from the
+    // value length: the value head is a SEPARATE 128-wide vector, and
+    // key_length - value_length happens to be 64, which rotates the wrong 128
+    // channels and leaves the score covering only the first two thirds of the
+    // head (the exact failure the rope witness caught:
+    // ATTN_ROPE_ELEMENTS=128 printed for a model whose rope slice is 64).
+    if (isMla && spec_.rope_dim == 0) {
+        err = "attention: MLA requires rope.dimension_count to split the q/k head";
+        return false;
+    }
+    const size_t ropeDim = isMla ? (size_t)spec_.rope_dim : D;
+    const size_t qk_nope = isMla ? (kl - ropeDim) : 0;
     const size_t q_rope_dim = isMla ? (qD - qk_nope) : D;
     const size_t k_rope_dim = isMla ? (kPerHead - qk_nope) : D;
-    const size_t ropeLen = std::min(q_rope_dim, k_rope_dim);
+    const size_t ropeLen = isMla ? ropeDim : std::min(q_rope_dim, k_rope_dim);
     const size_t qRopeOff = isMla ? qk_nope : 0;
     const size_t kRopeOff = isMla ? qk_nope : 0;
 
     auto rope = [&](std::vector<float>& t, size_t heads, size_t headDim,
-                    size_t ropeLen, size_t ropeOff) {
-        // RoPE rotates consecutive pairs (p[2k], p[2k+1]). The inv_freq MUST be
-        // indexed by the PAIR index k, not the element index: using i makes
-        // every pair rotate at a different rate than the reference and silently
-        // destroys positional information. rope_len counts ELEMENTS, so the
-        // number of pairs is rope_len/2 and freq_k = base^(-2k / n_pairs).
-        const size_t nPairs = ropeLen / 2;
-        if (nPairs == 0) return;
+                    size_t ropeLen, size_t ropeOff, bool yarn) {
+        // NEOX pairing, which is what llama/ggml and DeepSeek's HF code use
+        // ("rotate_half"): element i rotates with element i + n_dims/2, NOT
+        // with its neighbour i+1. ggml implements it as
+        //   rotate_pairs(n_dims, n_dims/2, ...)
+        //   x0 = src[ic]; x1 = src[ic + n_offset]        (n_offset = n_dims/2)
+        //   dst[ic]        = x0*cos - x1*sin
+        //   dst[ic+n_off]  = x0*sin + x1*cos
+        // with ic = i/2 and the loop running i over 0..n_dims step 2, so the
+        // pairs are (0,32), (1,33), ... for a 64-element rotary slice.
+        //
+        // Rotating adjacent pairs instead (GGML_ROPE_TYPE_NORMAL) is a
+        // DIFFERENT positional encoding, not a rounding difference: every
+        // channel is paired with the wrong partner, so the dot product
+        // q_rope . k_rope no longer realises the intended relative offset.
+        // That was the state of this runtime and is why the argmax position
+        // stream looked plausible while no logit matched the reference.
+        const size_t nDims = ropeLen;              // rotary ELEMENTS
+        if (nDims < 2) return;
+        const size_t nOff = nDims / 2;
         for (size_t h = 0; h < heads; ++h) {
             float* p = t.data() + h * headDim + ropeOff;
-            const size_t lim = std::min(ropeLen, headDim - std::min(ropeOff, headDim));
-            for (size_t i = 0; i + 1 < lim; i += 2) {
-                const size_t k = i / 2;
-                const double theta = (double)position *
-                    std::pow((double)spec_.rope_freq_base,
-                             -2.0 * double(k) / double(nPairs));
+            const size_t lim = std::min(nDims, headDim - std::min(ropeOff, headDim));
+            for (size_t i = 0; i < nOff && 2*i < lim; ++i) {
+                const size_t k = i;
+                const double theta = RopeAngle(position, k, nDims, yarn);
                 const float c = (float)std::cos(theta), s = (float)std::sin(theta);
-                const float a = p[i], b = p[i + 1];
-                p[i] = a * c - b * s;
-                p[i + 1] = a * s + b * c;
+                const float a = p[i], b = p[i + nOff];
+                p[i]        = a * c - b * s;
+                p[i + nOff] = a * s + b * c;
             }
         }
     };
+
+    // ---- YaRN attention score scale -----------------------------------------
+    // deepseek2 ships rope.scaling.type=yarn. llama.cpp (deepseek2.cpp) then
+    // scales the attention score by mscale^2 / n_embd_head_k, NOT by
+    // 1/sqrt(n_embd_head_k) -- the derivation is in the header of
+    // modelgenie/ModelGenieExecutor.cpp and was certified there by
+    // RAWRXD_ATTENTION_SCALE_AB_001 against a llama.cpp dump (variant with
+    // mscale^2: 19/20 argmax, mean cosine 0.999114; plain 1/sqrt: 17/20 argmax,
+    // mean cosine 0.988951). Without it every position still runs but the
+    // generation is garbage, which is exactly the signature of a model that
+    // executes with the wrong-scale scores.
+    const double scoreScale = AttentionScoreScale(qD, yarn);
 
     // ---- Geometry validation (fail closed on inconsistency) ----
     // The Q/K/V widths must agree with the head counts actually in use. An
@@ -797,8 +984,8 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // RoPE is applied to the QUERY heads and to the KV heads. The KV call must
     // iterate hk, not H: with H=32 and a 256-element K buffer, looping 32 heads
     // at stride kPerHead reads 31*128 bytes past the end.
-    rope(qr, H, qPerHead, ropeLen, qRopeOff);
-    rope(kr, hk, kPerHead, ropeLen, kRopeOff);
+    rope(qr, H, qPerHead, ropeLen, qRopeOff, yarn);
+    rope(kr, hk, kPerHead, ropeLen, kRopeOff, yarn);
 
     // Append to this layer's KV cache.
     auto& K = kv_k_[(size_t)in.block];
@@ -811,11 +998,20 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
 
     const size_t T = position + 1;
-    // Output width follows the QUERY heads, not the value heads: with GQA the
-    // output projection is [qWidth, embd], so each of the H query heads must
-    // contribute qPerHead values. Using vPerHead produced 32*8=256 when the
-    // projection required 32*128=4096.
-    const size_t outW = qPerHead;
+    // THE ATTENTION OUTPUT IS THE VALUE STREAM, NOT THE QUERY STREAM.
+    //
+    // The output is the concatenation of every query head's VALUE slice, so its
+    // width is H * vPerHead -- never H * qPerHead. In GQA/MHA the two widths
+    // coincide, which is why sizing by the query width worked for llama/qwen
+    // and why the defect was invisible outside MLA. In MLA they do not:
+    // deepseek2's query head is 192 wide (128 nope + 64 rope) while its value
+    // head is 128, so sizing by the query width produced 16*192 = 3,072
+    // elements for a projection (blk.0.attn_output.weight, [2048, 2048]) that
+    // requires 16*128 = 2,048. That is the exact rejected input from the
+    // geometry trace:
+    //   [attn] block=0 pos=0 q=3072 k=3072 v=2048 H=16 hk=16 kl=192 vl=128
+    //   gpu fail: linear: x=3072 n_in=2048 weight=blk.0.attn_output.weight
+    const size_t outW = vPerHead;
     y.assign(H * outW, 0.0f);
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
@@ -838,21 +1034,116 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             double acc = 0.0;
             for (size_t d = 0; d < nopeD; ++d) acc += double(qp[d]) * double(kp[d]);
             for (size_t i = 0; i < ropeLen; ++i) acc += double(qrope[i]) * double(krope[i]);
-            scores[t] = (float)(acc / std::sqrt((double)std::max<size_t>(qD, 1)));
+            scores[t] = (float)(acc * scoreScale);
         }
         SoftmaxVec(scores);
+        // Score witness (head 0 only, block 0, once per position). This is the
+        // quantity an independent reference computes from the file's own bytes;
+        // comparing it localises a divergence to the score path specifically,
+        // which the value stream cannot reveal because position 0's softmax is
+        // trivially 1.0 and therefore never exercises the score at all.
+        if (in.block == 0 && h == 0 && score_seen_ != (int)position + 1) {
+            std::fprintf(stderr, "[attn-scores] block=%d pos=%zu scale=%.9f",
+                         (int)in.block, position, scoreScale);
+            for (size_t t = 0; t < T; ++t)
+                std::fprintf(stderr, " s%zu=%.6f", t, (double)scores[t]);
+            std::fprintf(stderr, "\n");
+            std::fflush(stderr);
+            score_seen_ = (int)position + 1;
+        }
         float* op = y.data() + h * outW;
         for (size_t t = 0; t < T; ++t) {
-            // Value for this query head comes from its KV group. The value head
-            // may be narrower than qPerHead; read only what exists and leave the
-            // remaining output lanes at zero rather than reading past the KV
-            // buffer.
+            // Value for this query head comes from its KV group. Every value
+            // lane of the head must be accumulated: outW IS vPerHead, so the
+            // copy is exact and no lane is dropped or padded with zeros.
             const float* vp = V.data() + t * vW + g * vPerHead;
             const float s = scores[t];
-            const size_t copyW = std::min(vPerHead, outW);
-            for (size_t d = 0; d < copyW; ++d) op[d] += s * vp[d];
+            for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
         }
-    }    return true;
+    }
+
+    // ---- post-concatenation invariant (fail closed) -------------------------
+    // The concatenated output must be exactly H * vPerHead, and the consumer
+    // (the attention output projection) must declare an input width that
+    // matches it. Both are checked here, immediately after the concatenation
+    // and BEFORE the projection runs, so a geometry defect cannot present
+    // itself as a numerical error or as a silently truncated result.
+    //
+    // `in.q` carries the slot of the attention-output projection's WEIGHT,
+    // resolved at bind time (see Bind's producer/consumer pass). It is absent
+    // only for blocks whose attention output has no projection consumer.
+    if (y.size() != H * vPerHead) {
+        err = "attention geometry mismatch: attention output width " +
+              std::to_string(y.size()) + " != heads*value_width " +
+              std::to_string(H * vPerHead) + " (H=" + std::to_string(H) +
+              " vPerHead=" + std::to_string(vPerHead) + ")";
+        return false;
+    }
+    if (in.q >= 0 && (size_t)in.q < tensors_.size()) {
+        const TensorRec& proj = tensors_[(size_t)in.q];
+        const size_t projIn = proj.dims.empty() ? 0 : (size_t)proj.dims[0];
+        if (projIn != 0 && projIn != y.size()) {
+            err = "attention geometry mismatch: attention output width " +
+                  std::to_string(y.size()) + " (heads=" + std::to_string(H) +
+                  " x value_width=" + std::to_string(vPerHead) +
+                  ", query_width=" + std::to_string(qPerHead) +
+                  ") does not match projection '" + proj.name +
+                  "' input dim " + std::to_string(projIn);
+            return false;
+        }
+    }
+    if (std::getenv("ATTN_TRACE")) {
+        const TensorRec* proj = (in.q >= 0 && (size_t)in.q < tensors_.size())
+                                    ? &tensors_[(size_t)in.q] : nullptr;
+        std::fprintf(stderr,
+                     "[attn-geom-witness] block=%d ATTN_Q_WIDTH=%zu ATTN_K_WIDTH=%zu "
+                     "ATTN_V_WIDTH=%zu ATTN_OUTPUT_WIDTH=%zu ATTN_PROJECTION_INPUT=%zu "
+                     "proj=%s H=%zu qPerHead=%zu vPerHead=%zu isMla=%d\n",
+                     (int)in.block, qWidth, kWidth, vWidth, y.size(),
+                     proj && !proj->dims.empty() ? (size_t)proj->dims[0] : 0,
+                     proj ? proj->name.c_str() : "<none>", H, qPerHead, vPerHead,
+                     isMla ? 1 : 0);
+        std::fprintf(stderr,
+                     "[attn-rope] block=%d ATTN_POSITION=%zu ATTN_ROPE_TYPE=%s "
+                     "ATTN_ROPE_ELEMENTS=%zu ATTN_ROPE_FREQ_BASE=%llu "
+                     "ATTN_ROPE_FACTOR=%.6f ATTN_ROPE_ORIG_CTX=%llu "
+                     "ATTN_SCORE_SCALE=%.9f (plain 1/sqrt(%zu)=%.9f)\n",
+                     (int)in.block, position, spec_.rope_scaling_type.c_str(),
+                     ropeLen, (unsigned long long)spec_.rope_freq_base,
+                     spec_.rope_scaling_factor,
+                     (unsigned long long)spec_.rope_orig_ctx, scoreScale, qD,
+                     1.0 / std::sqrt((double)std::max<size_t>(qD, 1)));
+        // YaRN angle witness, printed for the rotary pairs of the first head of
+        // block 0's attention. Compare against tools/deep2_rope_yarn_reference,
+        // which computes the same thing with the vendored ggml's rope op.
+        // Once per POSITION (not once per process), because position 0 is the
+        // identity rotation and would otherwise hide every rope defect.
+        if (in.block == 0 && n_dims_seen_ != (int)position + 1) {
+            const size_t nD = ropeLen;
+            std::fprintf(stderr, "[attn-rope-angles] block=%d ATTN_POSITION=%zu ATT_PAIRS=%zu\n",
+                         (int)in.block, position, nD / 2);
+            for (size_t k = 0; k < nD / 2 && k < 32; ++k)
+                std::fprintf(stderr, "  k=%zu theta=%.9f (ramp-mixed)\n", k,
+                             RopeAngle(position, k, nD, yarn));
+            // MLA component witness: K_nope[0], rope'd k_rope[0..2], V[0]. This
+            // is the same set of quantities an independent reader of the GGUF
+            // computes, so a mismatch localises the defect to the decode math
+            // rather than to the backend running it.
+            if (isMla && kWidth >= H * kPerHead && vWidth >= H * vPerHead) {
+                std::fprintf(stderr,
+                             "[mla-witness] block=%d pos=%zu k_nope0=%.9f v0=%.9f "
+                             "q_nope0=%.9f q_rope0=%.9f\n",
+                             (int)in.block, position,
+                             (double)k[(size_t)0 * kPerHead],
+                             (double)v[(size_t)0],
+                             (double)qr[(size_t)0 * qPerHead],
+                             (double)qr[(size_t)0 * qPerHead + qRopeOff]);
+            }
+            std::fflush(stderr);
+            n_dims_seen_ = (int)position + 1;
+        }
+    }
+    return true;
 }
 
 bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
@@ -917,7 +1208,31 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     }
     if (spec_.expert_used == 0) { last_error_ = "router: expert_used 0"; return false; }
     const size_t kused = (size_t)spec_.expert_used;
-    SoftmaxVec(logits);
+    // The routing formula is architecture-specific and is the difference between
+    // a coherent model and plausible noise:
+    //   softmax  (deepseek2 default): scores = softmax(logits), top-k greedy,
+    //             then renormalise the SELECTED scores to sum to 1.
+    //   sigmoid  (deepseek3-style):  scores = sigmoid(logits) before top-k.
+    // Softmax over ALL experts followed by renormalising the top-k is NOT
+    // equivalent to either: softmax spreads mass over 64 experts, so the top-k
+    // renormalised weights are not the reference's, and the ORDER can differ
+    // whenever two experts sit within the softmax's dynamic range.
+    if (std::getenv("ROUTER_TRACE")) {
+        std::fprintf(stderr, "[router-raw] blk=%d n_exp=%zu k=%zu logits=",
+                     (int)router.block, n_exp, kused);
+        for (size_t e = 0; e < n_exp; ++e)
+            std::fprintf(stderr, "%.5f,", logits[e]);
+        std::fprintf(stderr, "\n");
+        std::fflush(stderr);
+    }
+    const bool sigmoid_routing = (spec_.architecture == "deepseek3" ||
+                                  spec_.architecture == "deepseek4");
+    if (sigmoid_routing) {
+        for (size_t e = 0; e < n_exp; ++e)
+            logits[e] = 1.0f / (1.0f + std::exp(-logits[e]));
+    } else {
+        SoftmaxVec(logits);
+    }
     std::vector<uint32_t> idx(n_exp);
     for (uint32_t i = 0; i < n_exp; ++i) idx[i] = i;
     std::stable_sort(idx.begin(), idx.end(),
@@ -930,6 +1245,13 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     for (size_t i = 0; i < kused; ++i) {
         ids[i] = idx[i];
         w[i] = (float)(logits[idx[i]] / renorm);
+    }
+    if (std::getenv("ROUTER_TRACE")) {
+        std::fprintf(stderr, "[router-sel] blk=%d selected=", (int)router.block);
+        for (size_t i = 0; i < kused; ++i)
+            std::fprintf(stderr, "%zu:%.5f,", (size_t)ids[i], (double)w[i]);
+        std::fprintf(stderr, "\n");
+        std::fflush(stderr);
     }
     return true;
 }
@@ -1368,16 +1690,19 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     rowView.data = src;
                     rowView.bytes = row_stride;
                     rowView.dims[1] = 1;                 // exactly one row
-                    if (std::getenv("RR_TRACE_TOKEN")) {
-                        std::fprintf(stderr, "  [emb] token=%u n_in=%zu vocab=%zu row_stride=%zu bytes=%zu type=%d dims=[%zu,%zu]\n",
-                                     token, n_in, vocab, row_stride, row_stride,
-                                     (int)rowView.ggml_type, (size_t)rowView.dims[0],
-                                     rowView.dims.size() > 1 ? (size_t)rowView.dims[1] : 0);
-                    }
                     DequantPrefix(rowView, hidden_, n_in);
                     if (std::getenv("RR_TRACE_TOKEN")) {
-                        std::fprintf(stderr, "  [emb] dequant got=%zu want=%zu type_size_needed\n",
-                                     hidden_.size(), n_in);
+                        const double l2 = [&] {
+                            double s = 0.0;
+                            for (float v : hidden_) s += double(v) * double(v);
+                            return std::sqrt(s);
+                        }();
+                        std::fprintf(stderr, "  [emb] token=%u n_in=%zu vocab=%zu row_stride=%zu type=%d l2=%.6f e0=%.9f e1=%.9f\n",
+                                     token, n_in, vocab, row_stride,
+                                     (int)rowView.ggml_type, l2,
+                                     hidden_.size() > 0 ? (double)hidden_[0] : 0.0,
+                                     hidden_.size() > 1 ? (double)hidden_[1] : 0.0);
+                        std::fflush(stderr);
                     }
                     if (hidden_.size() < n_in) {
                         last_error_ = "embedding: dequant short";
@@ -1610,6 +1935,44 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (it != act.end()) chk("arena", it->second);
             }
         }
+
+        // RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY: first-divergence
+        // instrumentation. Two executors of the same graph (GPU vs CPU-pinned)
+        // can be compared op-by-op to find the FIRST divergent tensor instead
+        // of the final logits, where every layer's error is mixed together.
+        // A 64-bit FNV-1a over the op's output buffer is enough to decide
+        // equality; the export below also records sizes for reporting.
+        if (trace_ops_) {
+            const std::vector<float>* out = nullptr;
+            if (!in.outName.empty() && in.outName[0] != '<') {
+                auto it = act.find(in.outName);
+                if (it != act.end()) out = &it->second;
+            }
+            if (!out && !hidden_.empty()) out = &hidden_;
+            if (!out && !logits_.empty()) out = &logits_;
+            if (out) {
+                uint64_t h = 1469598103934665603ull;
+                for (float v : *out) {
+                    uint32_t u = 0;
+                    std::memcpy(&u, &v, sizeof(u));
+                    h ^= u;
+                    h *= 1099511628211ull;
+                }
+                OpTrace tr;
+                tr.block = in.block;
+                tr.pc = (int)pc;
+                tr.op = (int)in.op;
+                tr.name = in.outName.empty() ? "<hidden>" : in.outName;
+                tr.weight = in.bName;
+                tr.input = in.aName;
+                tr.size = out->size();
+                tr.checksum = h;
+                for (size_t vi = 0; vi < 8 && vi < out->size(); ++vi)
+                    tr.first_vals[vi] = (*out)[vi];
+                if (trace_capture_values_) tr.values = *out;
+                op_traces_.push_back(tr);
+            }
+        }
     }
 
     if (logits_.empty()) { last_error_ = "no logits produced"; return false; }
@@ -1617,6 +1980,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     stats_.gpu_calls += gpu_calls_;
     stats_.cpu_calls += cpu_calls_;
+    if (!cpu_fallback_reason_.empty() && stats_.fallback_reason.empty()) {
+        stats_.fallback_reason = cpu_fallback_reason_;
+    }
     stats_.gpu_rows += 0;
     if (!unresolved_inputs_.empty()) {
         last_error_ = "graph referenced activations that were never produced: ";

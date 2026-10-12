@@ -1502,6 +1502,25 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             set_target_properties(deep2_runtime_dispatch PROPERTIES
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             )
+
+            # Independent YaRN RoPE reference. Runs the VENDORED ggml's own
+            # GGML_OP_ROPE (the very compute path llama.cpp uses) with
+            # deepseek2's parameters at nonzero positions, so the executor's
+            # NEOX pairing and yarn angle can be compared against a genuine
+            # reference instead of against the same code twice. Position 0 is
+            # the identity rotation for every scheme, so it cannot witness a
+            # independent-reference tests cannot witness. Position 0 is the
+            # identity rotation under every scheme.
+            add_executable(deep2_rope_yarn_reference
+                ${CMAKE_SOURCE_DIR}/tools/deep2_rope_yarn_reference.cpp
+            )
+            target_include_directories(deep2_rope_yarn_reference PRIVATE
+                ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+            )
+            target_link_libraries(deep2_rope_yarn_reference PRIVATE ggml-cpu ggml-base)
+            set_target_properties(deep2_rope_yarn_reference PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            )
         endif()
         message(STATUS "rawrxd_deep2_engine enabled (link inventory target)")
     endif()
