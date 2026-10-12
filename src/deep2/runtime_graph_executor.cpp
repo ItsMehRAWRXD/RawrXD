@@ -1086,37 +1086,55 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     const size_t qRopeOff = isMla ? qk_nope : 0;
     const size_t kRopeOff = isMla ? qk_nope : 0;
 
+    // RoPE pairing is architecture-specific. llama.cpp (llama_model_rope_type)
+    // uses two pairings:
+    //   NORM  - pair i is elements (2i, 2i+1) - LLAMA, DEEPSEEK, DEEPSEEK2,...
+    //   NEOX  - pair i is elements (i, i + n_rot/2) - QWEN, QWEN2, GEMMA, ...
+    // DeepSeek-Coder-V2 (deepseek2) is NORM. Applying NEOX to it pairs every
+    // rotary element with the wrong partner, so the q.k score at any position
+    // > 0 is a different function than the reference's. Position 0 hides it
+    // (every angle is 0 there) and position 1 exposes it, which is exactly the
+    // certified divergence: blk00 attn_proj cos 0.865 while every pre-attention
+    // tensor matched llama.cpp at cos >= 0.9999.
+    //
+    // Verified against a reference ggml build: NORMAL pairing reproduces
+    // llama.cpp's post-rope Qcur and k_pe to cos 1.0000000 / RMS 1.5e-4.
+    const bool rope_adjacent =
+        spec_.architecture == "deepseek" || spec_.architecture.rfind("deepseek", 0) == 0;
+
     auto rope = [&](std::vector<float>& t, size_t heads, size_t headDim,
                     size_t ropeLen, size_t ropeOff, bool yarn) {
-        // NEOX pairing, which is what llama/ggml and DeepSeek's HF code use
-        // ("rotate_half"): element i rotates with element i + n_dims/2, NOT
-        // with its neighbour i+1. ggml implements it as
-        //   rotate_pairs(n_dims, n_dims/2, ...)
-        //   x0 = src[ic]; x1 = src[ic + n_offset]        (n_offset = n_dims/2)
-        //   dst[ic]        = x0*cos - x1*sin
-        //   dst[ic+n_off]  = x0*sin + x1*cos
-        // with ic = i/2 and the loop running i over 0..n_dims step 2, so the
-        // pairs are (0,32), (1,33), ... for a 64-element rotary slice.
-        //
-        // Rotating adjacent pairs instead (GGML_ROPE_TYPE_NORMAL) is a
-        // DIFFERENT positional encoding, not a rounding difference: every
-        // channel is paired with the wrong partner, so the dot product
-        // q_rope . k_rope no longer realises the intended relative offset.
-        // That was the state of this runtime and is why the argmax position
-        // stream looked plausible while no logit matched the reference.
-        const size_t nDims = ropeLen;              // rotary ELEMENTS
+        // nDims is the number of rotary ELEMENTS in the slice.
+        const size_t nDims = ropeLen;
         if (nDims < 2) return;
-        const size_t nOff = nDims / 2;
         for (size_t h = 0; h < heads; ++h) {
             float* p = t.data() + h * headDim + ropeOff;
             const size_t lim = std::min(nDims, headDim - std::min(ropeOff, headDim));
-            for (size_t i = 0; i < nOff && 2*i < lim; ++i) {
-                const size_t k = i;
-                const double theta = RopeAngle(position, k, nDims, yarn);
-                const float c = (float)std::cos(theta), s = (float)std::sin(theta);
-                const float a = p[i], b = p[i + nOff];
-                p[i]        = a * c - b * s;
-                p[i + nOff] = a * s + b * c;
+            if (rope_adjacent) {
+                // NORM: pair i is elements (2i, 2i+1), rotated by angle i.
+                for (size_t i = 0; 2 * i + 1 < lim; ++i) {
+                    const double theta = RopeAngle(position, i, nDims, yarn);
+                    const float c = (float)std::cos(theta), s = (float)std::sin(theta);
+                    const float a = p[2 * i], b = p[2 * i + 1];
+                    p[2 * i]     = a * c - b * s;
+                    p[2 * i + 1] = a * s + b * c;
+                }
+            } else {
+                // NEOX: pair i is elements (i, i + nDims/2).
+                // ggml implements it as rotate_pairs(n_dims, n_dims/2, ...)
+                //   x0 = src[ic]; x1 = src[ic + n_offset]        (n_offset = n_dims/2)
+                //   dst[ic]        = x0*cos - x1*sin
+                //   dst[ic+n_off]  = x0*sin + x1*cos
+                // with ic = i/2 and the loop running i over 0..n_dims step 2, so the
+                // pairs are (0,32), (1,33), ... for a 64-element rotary slice.
+                const size_t nOff = nDims / 2;
+                for (size_t i = 0; i < nOff && 2 * i < lim; ++i) {
+                    const double theta = RopeAngle(position, i, nDims, yarn);
+                    const float c = (float)std::cos(theta), s = (float)std::sin(theta);
+                    const float a = p[i], b = p[i + nOff];
+                    p[i]        = a * c - b * s;
+                    p[i + nOff] = a * s + b * c;
+                }
             }
         }
     };
@@ -1746,7 +1764,11 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     std::vector<uint8_t> upDone(nSel, 0);
 
     // ---- phase 1: every selected expert's up-projection ----------------------
-    const bool batchUp = !force_cpu_ && nSel >= 2 && QuantDot::BeginBatch();
+    // RR_NO_MOE_BATCH forces the single-call path (the reference behaviour
+    // before batching) so a parity difference can be A/B-attributed to the
+    // batching itself rather than to the MoE math.
+    static const bool noMoeBatch = std::getenv("RR_NO_MOE_BATCH") != nullptr;
+    const bool batchUp = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
     size_t queuedUp = 0;
     for (size_t e = 0; e < nSel; ++e)
     {
@@ -1800,6 +1822,17 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     }
 
     // ---- per-expert SwiGLU (all up-dots are complete now) --------------------
+    if (std::getenv("MOE_TRACE")) {
+        double us = 0.0, ds = 0.0;
+        for (size_t i = 0; i < nSel * ffn && i < 4096; ++i) us += uAll[i];
+        std::fprintf(stderr,
+                     "[moe-up] block=%d nSel=%zu batched=%d upDone=%zu u0=%.6g %.6g %.6g %.6g sum4096=%.6g\n",
+                     (int)moe.block, nSel, (int)batchUp,
+                     (size_t)std::count(upDone.begin(), upDone.end(), (uint8_t)1),
+                     uAll[0], uAll[1], uAll[2], uAll[3], us);
+        std::fflush(stderr);
+        (void)ds;
+    }
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
@@ -1848,7 +1881,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const bool dShapeAll = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) &&
                            (dIn <= ffn);
     const size_t downRowBytes = dShapeAll ? QuantRowBytes(dKind, dIn) : 0u;
-    const bool batchDown = !force_cpu_ && nSel >= 2 && QuantDot::BeginBatch();
+    const bool batchDown = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
     size_t queuedDown = 0;
     for (size_t e = 0; e < nSel; ++e)
     {
@@ -1910,6 +1943,14 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     }
 
     // ---- routing-weighted accumulation ---------------------------------------
+    if (std::getenv("MOE_TRACE")) {
+        double ys = 0.0;
+        for (size_t i = 0; i < olen && i < 4096; ++i) ys += y[i];
+        std::fprintf(stderr, "[moe-y] block=%d y0=%.6g %.6g %.6g %.6g sum=%.6g\n", (int)moe.block,
+                     y.empty() ? 0.0 : y[0], y.empty() ? 0.0 : y[1], y.empty() ? 0.0 : y[2],
+                     y.empty() ? 0.0 : y[3], ys);
+        std::fflush(stderr);
+    }
     for (size_t e = 0; e < nSel; ++e)
     {
         if ((size_t)ids[e] >= usableE) continue;

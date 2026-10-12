@@ -1,0 +1,170 @@
+"""torch.library custom ops wrapping libr9k's ctypes kernels, so they can sit inside vLLM's torch.compile'd model
+graph (Dynamo cannot trace ctypes calls) and be captured into CUDA/HIP graphs.
+
+  torch.ops.r9700.fp8_linear(x[M,K] bf16, wq, ws, N, K) -> [M,N] bf16     per-row fp8 weight x per-token fp8 act
+  torch.ops.r9700.mxfp4_linear(x[M,K] bf16, wq, wsr, N, K) -> [M,N] bf16  MXFP4 weight x per-token fp8 act
+  torch.ops.r9700.nvfp4_linear(x[M,K] bf16, wq, ws16, wg, N, K) -> [M,N]  native NVFP4 weight x per-token fp8 act
+"""
+from __future__ import annotations
+
+import os
+
+import torch
+
+from vllm.utils.torch_utils import direct_register_custom_op
+
+_LIB = torch.library.Library("r9700", "FRAGMENT")
+_DONE = False
+
+
+def _fp8_linear(x: torch.Tensor, wq: torch.Tensor, ws: torch.Tensor, N: int, K: int) -> torch.Tensor:
+    from .kernels import fp8 as F8, moe as KM
+    q, s = KM.quant_rows_fp8(x)
+    M = x.shape[0]
+    if M >= F8.PREFILL_MIN_M and K % 32 == 0:            # prefill widths: the LDS-tiled WMMA kernel
+        return F8.gemm_fp8_tiled(q, s, F8.Fp8Weight(wq, ws, N, K))
+    return F8.gemm_fp8(q, s, F8.Fp8Weight(wq, ws, N, K), None, *F8.pick_cfg("fp8row", N, K, M))
+
+
+def _fp8_linear_fake(x: torch.Tensor, wq: torch.Tensor, ws: torch.Tensor, N: int, K: int) -> torch.Tensor:
+    return x.new_empty((x.shape[0], N))
+
+
+# R9K_FP8_QA=1: at decode widths (M <= 16) the activation quant is fused into the block GEMM (one launch per
+# linear instead of two; same operands bit for bit).
+_FP8_QA = os.environ.get("R9K_FP8_QA", "0") == "1"
+
+
+def _fp8_block_linear(x: torch.Tensor, wq: torch.Tensor, bs: torch.Tensor, N: int, K: int) -> torch.Tensor:
+    from .kernels import fp8 as F8
+    M = x.shape[0]
+    if _FP8_QA and 0 < M <= 16 and K % 128 == 0 and hasattr(F8._L(), "r9k_gemm_fp8_block_qa"):
+        return F8.gemm_fp8_block_qa(x, wq, bs, N, K, None, *F8.pick_cfg("fp8block", N, K, M))
+    q, s = F8.quant_group128_fp8(x)
+    return F8.gemm_fp8_block(q, s, wq, bs, N, K, None, *F8.pick_cfg("fp8block", N, K, M))
+
+
+_MX_TABLES: dict[tuple, tuple] = {}
+
+
+def _identity_tables(x, M, MT=None):
+    from .kernels import moe as KM
+    if MT is None:
+        MT = 4 if M >= 64 else (2 if M >= 32 else 1)
+    blk = KM.MOE_BLOCK * MT
+    mpad = (M + blk - 1) // blk * blk
+    key = (x.device.index, mpad, blk)
+    t = _MX_TABLES.get(key)
+    if t is None:
+        t = (torch.arange(mpad, dtype=torch.int32, device=x.device),
+             torch.zeros(mpad // blk, dtype=torch.int32, device=x.device),
+             torch.full((1,), mpad, dtype=torch.int32, device=x.device))
+        _MX_TABLES[key] = t
+    return t, MT
+
+
+def _nvfp4_linear(x: torch.Tensor, wq: torch.Tensor, ws: torch.Tensor, wg: torch.Tensor, N: int, K: int
+                  ) -> torch.Tensor:
+    from .kernels import moe as KM
+    M = x.shape[0]
+    out = torch.empty((M, N), dtype=torch.bfloat16, device=x.device)
+    if M == 0:
+        return out
+    q, s = KM.quant_rows_fp8(x)
+    cfg = KM.pick_cfg(N, K, 16, M=M, kind="nvfp4")
+    if KM.is_prefill_cfg(cfg):
+        t, _ = _identity_tables(x, M, KM.prefill_block(cfg[1]) // KM.MOE_BLOCK)
+        KM.moe_gemm(q, s, KM.Nvfp4Experts(wq, ws, wg, N, K), out, *t, M, 1, None, num_experts=1, prefill=cfg[1])
+        return out
+    t, MT = _identity_tables(x, M, cfg[3] if len(cfg) > 3 else None)
+    KM.moe_gemm(q, s, KM.Nvfp4Experts(wq, ws, wg, N, K), out, *t, M, 1, None, *cfg[:3], num_experts=1, MT=MT,
+                ldsa=bool(cfg[4]) if len(cfg) > 4 else False)
+    return out
+
+
+def _nvfp4_linear_fake(x, wq, ws, wg, N: int, K: int) -> torch.Tensor:
+    return x.new_empty((x.shape[0], N))
+
+
+def mxfp4_gemm_q(q: torch.Tensor, s: torch.Tensor, W, out: torch.Tensor, M: int, cfg, topk_w=None) -> None:
+    """out [M, W.N] bf16 = dequant(q * s) @ W^T (* topk_w[row]) for a dense MXFP4 weight, on the kernel `cfg`
+    (pick_cfg) names: A-tiled (q from quant_rows_fp8(tiled=True)), LDS-tiled prefill, or the MT decode kernel."""
+    from .kernels import moe as KM
+    if KM.is_atiled_cfg(cfg):
+        # fragment-tiled activation straight into the WMMA registers (no LDS A staging); fold picks the W variant
+        t, _ = _identity_tables(q, M, KM.atiled_block(cfg[1]) // KM.MOE_BLOCK)
+        KM.moe_gemm(q, s, W, out, *t, M, 1, topk_w, num_experts=1, prefill=cfg[1], a_tiled=True)
+    elif KM.is_prefill_cfg(cfg):
+        t, _ = _identity_tables(q, M, KM.prefill_block(cfg[1]) // KM.MOE_BLOCK)
+        KM.moe_gemm(q, s, W, out, *t, M, 1, topk_w, num_experts=1, prefill=cfg[1])
+    else:
+        t, MT = _identity_tables(q, M, cfg[3] if len(cfg) > 3 else None)
+        KM.moe_gemm(q, s, W, out, *t, M, 1, topk_w, *cfg[:3], num_experts=1, MT=MT,
+                    ldsa=bool(cfg[4]) if len(cfg) > 4 else False)
+
+
+def _mxfp4_linear(x: torch.Tensor, wq: torch.Tensor, wsr: torch.Tensor, N: int, K: int, fold: bool = False
+                  ) -> torch.Tensor:
+    from .kernels import moe as KM
+    M = x.shape[0]
+    out = torch.empty((M, N), dtype=torch.bfloat16, device=x.device)
+    if M == 0:
+        return out
+    cfg = KM.pick_cfg(N, K, M=M, kind="mxfp4", fold=fold)
+    W = KM.Mxfp4Experts(wq, wsr, N, K, fold)
+    q, s = KM.quant_rows_fp8(x, tiled=KM.is_atiled_cfg(cfg))
+    mxfp4_gemm_q(q, s, W, out, M, cfg)
+    return out
+
+
+def _mxfp4_linear_fake(x: torch.Tensor, wq: torch.Tensor, wsr: torch.Tensor, N: int, K: int, fold: bool = False
+                       ) -> torch.Tensor:
+    return x.new_empty((x.shape[0], N))
+
+
+def register() -> None:
+    global _DONE
+    if _DONE:
+        return
+    direct_register_custom_op("fp8_linear", _fp8_linear, mutates_args=[], fake_impl=_fp8_linear_fake, target_lib=_LIB)
+    direct_register_custom_op("fp8_block_linear", _fp8_block_linear, mutates_args=[], fake_impl=_fp8_linear_fake,
+                              target_lib=_LIB)
+    direct_register_custom_op("mxfp4_linear", _mxfp4_linear, mutates_args=[], fake_impl=_mxfp4_linear_fake,
+                              target_lib=_LIB)
+    direct_register_custom_op("nvfp4_linear", _nvfp4_linear, mutates_args=[], fake_impl=_nvfp4_linear_fake,
+                              target_lib=_LIB)
+    _DONE = True
+
+
+def fp8_linear(x: torch.Tensor, W) -> torch.Tensor:
+    register()
+    lead = x.shape[:-1]
+    x2 = x.reshape(-1, W.K)
+    x2 = (x2 if x2.dtype == torch.bfloat16 else x2.to(torch.bfloat16)).contiguous()
+    return torch.ops.r9700.fp8_linear(x2, W.wq, W.ws, W.N, W.K).reshape(*lead, W.N)
+
+
+def mxfp4_linear(x: torch.Tensor, wq: torch.Tensor, wsr: torch.Tensor, N: int, K: int, fold: bool = False
+                 ) -> torch.Tensor:
+    register()
+    lead = x.shape[:-1]
+    x2 = x.reshape(-1, K)
+    x2 = (x2 if x2.dtype == torch.bfloat16 else x2.to(torch.bfloat16)).contiguous()
+    return torch.ops.r9700.mxfp4_linear(x2, wq, wsr, N, K, fold).reshape(*lead, N)
+
+
+def nvfp4_linear(x: torch.Tensor, wq: torch.Tensor, ws: torch.Tensor, wg: torch.Tensor, N: int, K: int
+                 ) -> torch.Tensor:
+    register()
+    lead = x.shape[:-1]
+    x2 = x.reshape(-1, K)
+    x2 = (x2 if x2.dtype == torch.bfloat16 else x2.to(torch.bfloat16)).contiguous()
+    return torch.ops.r9700.nvfp4_linear(x2, wq, ws, wg, N, K).reshape(*lead, N)
+
+
+def fp8_block_linear(x: torch.Tensor, wq: torch.Tensor, bs: torch.Tensor, N: int, K: int) -> torch.Tensor:
+    register()
+    lead = x.shape[:-1]
+    x2 = x.reshape(-1, K)
+    x2 = (x2 if x2.dtype == torch.bfloat16 else x2.to(torch.bfloat16)).contiguous()
+    return torch.ops.r9700.fp8_block_linear(x2, wq, bs, N, K).reshape(*lead, N)

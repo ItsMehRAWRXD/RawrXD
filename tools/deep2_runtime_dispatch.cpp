@@ -902,9 +902,9 @@ int main(int argc, char* argv[])
                     bool batchOk = QuantDot::BeginBatch();
                     if (batchOk) {
                         batchOk = QuantDot::DotBlocked(wantKind, t.data, t.bytes, x.data(), n_in,
-                                                        y_batch.data(), n_out, fallback,
-                                                        q8.data(), q8.size() * sizeof(float),
-                                                        false);
+                                                       y_batch.data(), n_out, fallback,
+                                                       q8.data(), q8.size() * sizeof(float),
+                                                       false);
                         batchOk = QuantDot::EndBatch() && batchOk;
                     }
                     if (!batchOk) {
@@ -916,6 +916,46 @@ int main(int argc, char* argv[])
                             bw = std::max(bw, std::fabs(double(y_batch[j]) - double(y_gpu[j])));
                         std::printf("  %s batched vs single call: max_abs=%.3g\n", kname, bw);
                         Check(bw == 0.0, "batched dispatch matches single-call dispatch exactly");
+                    }
+
+                    // TWO-entry batch with DIFFERENT activations: this is the
+                    // shape the MoE path uses (several queued dots in one
+                    // submission). A single-entry batch cannot catch a
+                    // region/descriptor mix-up between entries.
+                    if (wantKind >= 2 && n_out * sizeof(float) * 2 <= 64u * 1024u * 1024u) {
+                        std::vector<float> x2(x.size());
+                        for (size_t i = 0; i < x.size(); ++i) x2[i] = 0.5f * x[i];
+                        std::vector<float> q8_2;
+                        quantizeQ8(x2, q8_2);
+                        std::vector<float> ya(n_out, 0.0f), yb(n_out, 0.0f);
+                        std::vector<float> ya_ref(n_out, 0.0f), yb_ref(n_out, 0.0f);
+                        QuantDot::DotBlocked(wantKind, t.data, t.bytes, x.data(), n_in,
+                                            ya_ref.data(), n_out, fallback,
+                                            q8.data(), q8.size() * sizeof(float), false);
+                        QuantDot::DotBlocked(wantKind, t.data, t.bytes, x2.data(), n_in,
+                                            yb_ref.data(), n_out, fallback,
+                                            q8_2.data(), q8_2.size() * sizeof(float), false);
+                        const bool two = QuantDot::BeginBatch() &&
+                            QuantDot::DotBlocked(wantKind, t.data, t.bytes, x.data(), n_in,
+                                                ya.data(), n_out, fallback,
+                                                q8.data(), q8.size() * sizeof(float), false) &&
+                            QuantDot::DotBlocked(wantKind, t.data, t.bytes, x2.data(), n_in,
+                                                yb.data(), n_out, fallback,
+                                                q8_2.data(), q8_2.size() * sizeof(float), false) &&
+                            QuantDot::EndBatch();
+                        if (!two) {
+                            Check(false, "two-entry batched dispatch executes");
+                        } else {
+                            double wa = 0.0, wb = 0.0;
+                            for (size_t j = 0; j < n_out; ++j) {
+                                wa = std::max(wa, std::fabs(double(ya[j]) - double(ya_ref[j])));
+                                wb = std::max(wb, std::fabs(double(yb[j]) - double(yb_ref[j])));
+                            }
+                            std::printf("  %s two-entry batch: entry0 max_abs=%.3g entry1 max_abs=%.3g\n",
+                                        kname, wa, wb);
+                            Check(wa == 0.0 && wb == 0.0,
+                                  "two-entry batch matches single calls exactly");
+                        }
                     }
                 }
                 ++probed;

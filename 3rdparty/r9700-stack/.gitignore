@@ -1,0 +1,6 @@
+*.so
+*.so.*
+profiling/traces/
+secrets*
+__pycache__/
+*.pyc
