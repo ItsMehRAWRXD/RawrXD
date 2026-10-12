@@ -1,0 +1,10 @@
+{
+  "Model": "llama3.1:8b",
+  "StartedAt": "2026-10-12T16:20:35.0397583-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 44.3,
+  "EvalCount": 255,
+  "Tps": 5.8,
+  "Preview": "Here is a 3-step plan for benchmarking a GPU inference engine: **Step 1: Prepare the Environment** * Set up a test system with a compatible GPU and sufficient memory * Install the GPU inference engine and any required dependencies * Choose a representative dataset and model for testing (e.g. ImageNet, ResNet-50) * Configure the test environment to measure inference performance (e.g. batch size, pr"
+}

@@ -1,0 +1,10 @@
+{
+  "Model": "llama3.2:latest",
+  "StartedAt": "2026-10-12T16:18:25.2771116-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 7.9,
+  "EvalCount": 128,
+  "Tps": 16.1,
+  "Preview": "**GPU Inference Engine Benchmarking Plan** **Step 1: Data Collection (Pre-Benchmarking)** 1. Collect a diverse set of models (e.g., image classification, object detection, segmentation) and their corresponding inference inputs (e.g., images, tensors). 2. Measure the performance of the GPU inference engine on a representative dataset using a benchmarking framework (e.g., OpenVINO, TensorFlow Lite)."
+}

@@ -1,0 +1,10 @@
+{
+  "Model": "llama3.2:3b",
+  "StartedAt": "2026-10-12T16:19:14.6151199-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 1.6,
+  "EvalCount": 256,
+  "Tps": 162.0,
+  "Preview": "**GPU Inference Engine Benchmarking Plan** **Step 1: Prepare Test Environment** * Install a reference implementation of the target inference engine (e.g., OpenVINO, TensorFlow Lite) * Choose a set of benchmarking frameworks (e.g., TensorFlow, PyTorch, OpenCV) * Select a diverse set of input models (e.g., images, videos, audio) and corresponding inference tasks (e.g., object detection, segmentation"
+}

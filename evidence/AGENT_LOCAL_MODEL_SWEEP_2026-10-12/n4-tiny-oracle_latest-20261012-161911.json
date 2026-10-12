@@ -1,0 +1,10 @@
+{
+  "Model": "n4-tiny-oracle:latest",
+  "StartedAt": "2026-10-12T16:19:11.3494929-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 0.9,
+  "EvalCount": 256,
+  "Tps": 287.9,
+  "Preview": "I don't have access to the specific details of your project or the hardware you are using. However, here's a general overview of how you can benchmark a GPU inference engine: 1. Identify the target application: before starting the benchmarking process, you need to identify the specific application or use case for which you want to benchmark the GPU inference engine. This will help you select the a"
+}

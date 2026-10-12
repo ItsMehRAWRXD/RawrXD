@@ -1,0 +1,10 @@
+{
+  "Model": "qwen35-40b-heretic-q8:latest",
+  "StartedAt": "2026-10-12T16:19:16.2659600-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 38.8,
+  "EvalCount": 256,
+  "Tps": 6.6,
+  "Preview": "1. Select a diverse set of machine learning models and datasets to evaluate the GPU's performance. 2. Measure inference speed, accuracy, and resource utilization (GPU memory, power consumption) for each model and dataset. 3. Compare results against baseline and other GPUs to identify strengths and weaknesses. Benchmarking a GPU inference engine involves evaluating its performance across various mo"
+}
