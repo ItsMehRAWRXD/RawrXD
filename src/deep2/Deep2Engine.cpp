@@ -7785,6 +7785,25 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         return false;
     }
 
+    // Weight identity, computed once and used by both the packed-quant and the
+    // F32 path. The backend uses cacheKey to keep a dequantized copy of this
+    // window resident across decode steps, so the key must identify the weight
+    // (name/shape/type) rather than the host buffer address -- the F32 path
+    // used to hash the pointer, which makes a streaming loader's recycled
+    // scratch buffers collide across layers and silently serve stale weights.
+    uint64_t cacheKey = 0;
+    if (!wt.name.empty()) {
+        cacheKey = 14695981039346656037ull;
+        for (unsigned char c : wt.name) {
+            cacheKey ^= c;
+            cacheKey *= 1099511628211ull;
+        }
+        cacheKey ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
+    } else {
+        cacheKey = (uint64_t)(uintptr_t)wt.data ^
+                   ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
+    }
+
     if (wt.data && wt.sizeBytes &&
         (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
          wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
@@ -7794,7 +7813,8 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
          wt.type == (int)GGMLType::GGML_TYPE_Q6_K)) {
         const bool ok = vc->DispatchGEMVQuant(
             wt.type, wt.data, wt.sizeBytes, input, output,
-            static_cast<uint32_t>(wt.rows), static_cast<uint32_t>(wt.cols));
+            static_cast<uint32_t>(wt.rows), static_cast<uint32_t>(wt.cols),
+            cacheKey);
         if (ok) {
             ++vulkanGemvOk_;
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++gpuFwd_.q4kPackedOps;
@@ -7851,17 +7871,8 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
     const uint64_t weightBytes = elems * sizeof(float);
     const uint64_t inputBytes = wt.cols * sizeof(float);
     const uint64_t outputBytes = wt.rows * sizeof(float);
-    uint64_t cacheKey = 0;
-    if (!wt.name.empty()) {
-        cacheKey = 14695981039346656037ull;
-        for (unsigned char c : wt.name) {
-            cacheKey ^= c;
-            cacheKey *= 1099511628211ull;
-        }
-        cacheKey ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
-    } else {
-        cacheKey = (uint64_t)(uintptr_t)wF32 ^ ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
-    }
+    // cacheKey is computed above, before the packed-quant branch, so both
+    // dispatch paths address the same weight window.
     const bool ok = vc->DispatchGEMV(
         wF32, input, output,
         static_cast<uint32_t>(wt.rows),

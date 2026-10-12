@@ -33,7 +33,13 @@
 
 #pragma once
 
-#include "vulkan_compute.h"   // Vk* types, VulkanDeviceInfo
+#include "vulkan_compute.h"    // Vk* types, VulkanDeviceInfo, ::VulkanCompute (device level)
+// The GPU compute implementation that CPUInference::VulkanCompute adapts.
+// Path-qualified so it cannot collide with the device-level vulkan_compute.h
+// included on the line above -- an unqualified "vulkan_compute.h" here would
+// bind to whichever comes first on the include path, which is the exact class
+// identity bug this whole integration exists to remove.
+#include "deep2/vulkan_compute.h"
 
 #include <cstdint>
 #include <cstddef>
@@ -321,8 +327,18 @@ private:
                                uint32_t rows, uint32_t cols, uint64_t cacheKey);
 
     // ---- Real backend -------------------------------------------------------
-    // The genuine global ::VulkanCompute instance created by InitializeSolo().
-    std::unique_ptr<::VulkanCompute> backend_;
+    // The genuine GPU compute implementation created by InitializeSolo().
+    //
+    // This is Deep2::VulkanCompute (src/deep2/vulkan_compute.h), NOT the
+    // device-level ::VulkanCompute from include/vulkan_compute.h. That other
+    // class's ExecuteMatMul is documented CPU fallback ("Naive CPU fallback
+    // (O(m*k*n)) for benchmarking correctness") and its only real kernel is
+    // ExecuteQuantDot, so a GEMV built on it performs no device work and
+    // reports gpu_calls=0 -- which is exactly the "zero GPU calls /
+    // PARITY_VERDICT=NOT_RUN" symptom in the parity probe. The Deep2
+    // implementation ships the deep2_qgemv* / deep2_argmax / deep2_spec_* shader
+    // family and the quantised dispatch, so it is the one that actually runs.
+    std::unique_ptr<Deep2::VulkanCompute> backend_;
     bool initialized_ = false;
     VulkanDeviceInfo device_info_{};
 

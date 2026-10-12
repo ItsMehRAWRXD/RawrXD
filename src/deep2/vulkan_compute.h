@@ -1630,6 +1630,21 @@ private:
 
 } // namespace Deep2
 
-namespace CPUInference {
-using VulkanCompute = Deep2::VulkanCompute;
-}
+// NOTE: there is deliberately NO "namespace CPUInference { using VulkanCompute
+// = Deep2::VulkanCompute; }" alias here.
+//
+// An earlier version declared that alias, which collides with the engine's
+// actual backend contract. Deep2Engine.cpp calls:
+//   DispatchGEMV / DispatchGEMVQuant / GemvSuccess / GemvWeightHits /
+//   GemvWeightUploads / InitializeSolo / SetPinResidentBudget
+// on a CPUInference::VulkanCompute. Deep2::VulkanCompute declares none of
+// those seven (it exposes differently-named DeviceBuf-based variants such as
+// DispatchGemvQuant). Aliasing the names therefore made a Deep2 build either
+// fail to compile or, worse, bind the engine to a class with a different
+// method set - an ABI mismatch.
+//
+// The authoritative engine-facing contract is include/vulkan_compute_cpu_ns.hpp,
+// which declares exactly the surface the engine uses. CPUInference::VulkanCompute
+// is a SEPARATE class there and is realised as an adapter over this
+// Deep2::VulkanCompute implementation, so the 6872-line device/kernel/shader
+// code below is reused rather than duplicated.

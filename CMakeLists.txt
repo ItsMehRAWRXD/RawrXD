@@ -1427,6 +1427,45 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
         NOMINMAX _CRT_SECURE_NO_WARNINGS DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
     )
     message(STATUS "rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree")
+
+    # ------------------------------------------------------------------------
+    # Deep2Engine: the engine that drives the GPU compute environment.
+    #
+    # Built here deliberately even though it cannot link yet. The link errors
+    # ARE the deliverable: they are the exact, complete inventory of
+    # CPUInference::VulkanCompute members the production engine actually calls,
+    # which is the only honest way to size the remaining work. Classifying
+    # that list into "adapter over Deep2::VulkanCompute", "inline", "residency
+    # management", "genuinely missing kernel" and "never called" is what
+    # prevents implementing ~150 methods blind.
+    # ------------------------------------------------------------------------
+    if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp)
+        add_executable(rawrxd_deep2_engine
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
+        )
+        target_include_directories(rawrxd_deep2_engine PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        )
+        target_link_libraries(rawrxd_deep2_engine PRIVATE
+            rawrxd_gpu_compute
+            ggml
+            Vulkan::Vulkan
+        )
+        target_compile_options(rawrxd_deep2_engine PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        target_compile_definitions(rawrxd_deep2_engine PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS
+            DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+        )
+        set_target_properties(rawrxd_deep2_engine PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        message(STATUS "rawrxd_deep2_engine enabled (link inventory target)")
+    endif()
 else()
     message(STATUS "rawrxd_gpu_compute EXCLUDED: src/deep2/vulkan_compute.{h,cpp} absent")
 endif()

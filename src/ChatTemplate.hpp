@@ -68,6 +68,26 @@ public:
     // Apply template to single user/assistant turn
     std::string applyUserAssistant(const std::string& user, const std::string& assistant = "") const;
 
+    // ---- Metadata-driven construction (used by Deep2Engine) ----------------
+    // Detects the template from the GGUF metadata (architecture, chat_template
+    // string, BOS/EOS tokens) and configures this object. Returns false only
+    // when the metadata is too empty to pick a format at all, in which case the
+    // caller falls back to a raw prompt. `alias` is reserved for a model
+    // alias/name hint and may be empty.
+    bool initFromMetadata(const std::string& architecture,
+                           const std::string& alias,
+                           const std::string& chatTemplate,
+                           const std::string& bosToken,
+                           const std::string& eosToken);
+
+    // Human-readable name of the detected template type (never null).
+    const char* getTypeName() const;
+
+    // True when `text` contains an end-of-turn marker for this template.
+    // Matches the model's own EOS token plus the conventional sentinel strings
+    // for the detected family, so a caller can trim trailing turns safely.
+    bool isEndOfTurn(const std::string& text) const;
+
 private:
     ChatTemplateConfig config_;
     ChatTemplateType type_ = ChatTemplateType::NONE;
