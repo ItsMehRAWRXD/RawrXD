@@ -379,6 +379,14 @@ int main(int argc, char* argv[]) {
     bool dumpWeights = false;
     bool forceCpu = false;
     std::string logitsJson;
+    // Feed the token stream VERBATIM, without prepending the model's BOS.
+    // The reference dumps (evidence/LLAMA_2TOKEN_REF) were captured from a
+    // llama.cpp sequence that does not start with the BOS id, so comparing
+    // against them requires the executor to see the same ids at the same
+    // positions. Without this flag Deep2 prepends bos_token_id and every
+    // position is off by one - a comparison that appears to run and reports
+    // meaningless agreement.
+    bool noBos = false;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--model" && i + 1 < argc) model = argv[++i];
@@ -386,6 +394,7 @@ int main(int argc, char* argv[]) {
         else if (a == "--force-cpu") forceCpu = true;
         else if (a == "--dump-logits" && i + 1 < argc) logitsJson = argv[++i];
         else if (a == "--token-ids" && i + 1 < argc) tokenIdsArg = argv[++i];
+        else if (a == "--no-bos") noBos = true;
         else if (a == "--dump-tensors") dumpTensors = true;
     else if (a == "--prompt" && i + 1 < argc) prompt = argv[++i];
         else { std::printf("unknown arg %s\n", a.c_str()); return 1; }
@@ -663,7 +672,7 @@ int main(int argc, char* argv[]) {
         } else {
             QuantDot::SetForceCpu(saved);
             std::vector<int32_t> seq;
-            if (tk.bos_id >= 0) seq.push_back(tk.bos_id);
+            if (tk.bos_id >= 0 && !noBos) seq.push_back(tk.bos_id);
             for (int32_t id : enc.ids) seq.push_back(id);
 
             std::vector<std::vector<float>> gpuL, refL;
@@ -907,6 +916,10 @@ int main(int argc, char* argv[]) {
             g_exact_generation = exact_generation;
             std::printf("  GENERATION_EXACT_PARITY=%s\n", exact_generation ? "PASS" : "FAIL");
             if (!logitsJson.empty()) {
+                // Full logits. An 8-element truncation cannot measure a
+                // divergence against an external reference: the reference dumps
+                // are 102,400 floats per position, so any comparison needs the
+                // whole vector, not its first eight entries.
                 FILE* f = std::fopen(logitsJson.c_str(), "wb");
                 if (f) {
                     std::fprintf(f, "{\"positions\": %zu, \"argmax\": [", gpuT.size());
@@ -916,7 +929,7 @@ int main(int argc, char* argv[]) {
                     for (size_t s = 0; s < gpuL.size(); ++s) {
                         if (s) std::fprintf(f, ",");
                         std::fprintf(f, "[");
-                        const size_t n = std::min<size_t>(gpuL[s].size(), 8);
+                        const size_t n = gpuL[s].size();   // no truncation
                         for (size_t i = 0; i < n; ++i)
                             std::fprintf(f, "%s%.8f", i ? "," : "", gpuL[s][i]);
                         std::fprintf(f, "]");
