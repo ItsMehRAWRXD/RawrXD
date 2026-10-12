@@ -1,0 +1,8 @@
+[TRACE] generation_begin (prompt_len=7 tokens=3 mode=certification)
+[TRACE] forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.125000000 s0=1.000000
+[TRACE] forward_0_end (ok=0, 142.0 ms)
+[TRACE] repeat_begin
+[TRACE] repeat_bind_begin (state reset: fresh executor + rebind)
+[TRACE] repeat_bind_end (ok)
+[TRACE] repeat_done

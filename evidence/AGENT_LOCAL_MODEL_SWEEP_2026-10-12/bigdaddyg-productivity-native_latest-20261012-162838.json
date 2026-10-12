@@ -1,0 +1,10 @@
+{
+  "Model": "bigdaddyg-productivity-native:latest",
+  "StartedAt": "2026-10-12T16:28:38.8161354-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 16.0,
+  "EvalCount": 256,
+  "Tps": 16.0,
+  "Preview": "Certainly! Here's a 3-step plan for benchmarking a GPU inference engine: Step 1: Determine the Workload The first step in benchmarking a GPU inference engine is to determine the workload that the engine will be processing. This could include tasks such as image classification, object detection, or language modeling. It's important to choose a workload that is representative of the engine's intende"
+}

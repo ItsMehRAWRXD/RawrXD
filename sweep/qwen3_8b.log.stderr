@@ -1,0 +1,24 @@
+[TRACE] generation_begin (prompt_len=7 tokens=3 mode=certification)
+[TRACE] forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+[TRACE] forward_0_end (ok=1, 10307.5 ms)
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+[TRACE] step 0 ok (gpu 10307.5 ms)
+[attn-scores] block=0 pos=1 scale=0.088388348 s0=0.497910 s1=0.502090
+[attn-scores] block=0 pos=1 scale=0.088388348 s0=0.497910 s1=0.502090
+[TRACE] step 1 ok (gpu 2184.2 ms)
+[attn-scores] block=0 pos=2 scale=0.088388348 s0=0.331173 s1=0.335888 s2=0.332939
+[attn-scores] block=0 pos=2 scale=0.088388348 s0=0.331173 s1=0.335888 s2=0.332939
+[TRACE] step 2 ok (gpu 2157.9 ms)
+[TRACE] repeat_begin
+[TRACE] repeat_bind_begin (state reset: fresh executor + rebind)
+[TRACE] repeat_bind_end (ok)
+[TRACE] repeat_forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+[TRACE] repeat_forward_0_end (ok)
+[TRACE] repeat step 0 ok
+[attn-scores] block=0 pos=1 scale=0.088388348 s0=0.497910 s1=0.502090
+[TRACE] repeat step 1 ok
+[attn-scores] block=0 pos=2 scale=0.088388348 s0=0.331173 s1=0.335888 s2=0.332939
+[TRACE] repeat step 2 ok
+[TRACE] repeat_done

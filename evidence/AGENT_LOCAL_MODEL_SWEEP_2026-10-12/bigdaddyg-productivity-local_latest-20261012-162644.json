@@ -1,0 +1,10 @@
+{
+  "Model": "bigdaddyg-productivity-local:latest",
+  "StartedAt": "2026-10-12T16:26:44.3535363-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 16.4,
+  "EvalCount": 256,
+  "Tps": 15.6,
+  "Preview": "Sure, here's a 3-step plan for benchmarking a GPU inference engine: Step 1: Determine the Workload * Identify the specific workload that the GPU inference engine is designed to handle (e.g., deep learning, computer vision, scientific simulations). * Determine the performance requirements for the workload (e.g., throughput, latency, accuracy). Step 2: Select Benchmarking Tools and Methodologies * C"
+}

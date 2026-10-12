@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // deep2_agentic_loop.cpp -- RAWRXD_AUTONOMOUS_AGENT_E2E_001 (v2)
 // ============================================================================
 // End-to-end autonomous agentic loop on the native Deep2 runtime:
@@ -134,7 +134,7 @@ static std::string ByteFallbackToken(char c)
 
 // GPT-2 byte encoder. GPT-2 remaps the 256 byte values onto printable Unicode
 // so its vocabulary never contains a raw control character: byte 0x0A becomes
-// U+010A ("Ã„Å "), space becomes U+0120 ("Ã„Â "). The mapping is the standard
+// U+010A ("ÄŠ"), space becomes U+0120 ("Ä "). The mapping is the standard
 // bytes_to_unicode() table, reproduced exactly rather than approximated.
 static std::string Gpt2ByteSymbol(unsigned char b)
 {
@@ -199,10 +199,10 @@ static bool Gpt2RemappedToken(const std::string& t, int& byteOut)
 // THIS vocab is DISCOVERED, not assumed.
 //
 // Two conventions exist:
-//   * SentencePiece models use U+2581 ("Ã¢â€“Â", bytes E1 96 81)
+//   * SentencePiece models use U+2581 ("â–", bytes E1 96 81)
 //   * GPT-2/BPE-style vocabularies (DeepSeek, Qwen, CodeLlama...) use U+0120
 //     ("G" with dot above, bytes C4 A0), which is why the merge table reads
-//     "Ã¢â€“Â add" as "Ã„Â  Ã„Â add".
+//     "â– add" as "Ä  Ä add".
 // The marker is picked by testing which one the token set actually contains,
 // so a wrong assumption is a reported failure rather than a wrong encoding.
 static const char* kSpMarker = "\xE1\x96\x81";  // U+2581
@@ -236,7 +236,7 @@ static std::string SpNormalize(const std::string& in, const char* marker)
             // One space marker per horizontal whitespace character.
             //
             // Collapsing a run to a single marker is SentencePiece behaviour,
-            // not GPT-2's. GPT-2's BPE regex is " ?\p{L}+", so it emits one "Ä "
+            // not GPT-2's. GPT-2's BPE regex is " ?\p{L}+", so it emits one "Ġ"
             // token per space, which is what preserves indentation: the previous
             // collapse turned "\n    return" into "\n return" and left the
             // byte-exact round-trip check failing on every indented block.
@@ -291,7 +291,7 @@ static std::string DetokenizeWith(const std::vector<std::string>& toks, const st
         }
         // GPT-2 vocabularies store remapped bytes as multi-byte UTF-8: decode
         // U+0100..U+0143 back to the original byte. Without this a newline is
-        // stored as "Ã„Å " and detokenizes to those two UTF-8 bytes rather than
+        // stored as "ÄŠ" and detokenizes to those two UTF-8 bytes rather than
         // 0x0A, so decode(encode(x)) never equals x on multi-line text.
         int gpt2Byte = 0;
         if (Gpt2RemappedToken(t, gpt2Byte))
@@ -371,7 +371,7 @@ struct SpEncoder
 
     std::string marker;
 
-    void Build(const Tokenizer& tk)
+    void Build(const RawrXD::Deep2::Universal::Tokenizer& tk)
     {
         tokens = tk.tokens;
         marker = DetectSpaceMarker(tk.tokens);
@@ -393,6 +393,26 @@ struct SpEncoder
             if (!rankOf.count(m))
                 rankOf[m] = (int32_t)r;
         }
+    }
+
+    // Per-token decode with the SAME conventions as DetokenizeWith:
+    // SentencePiece marker -> ' ', "<0xNN>" byte pieces -> the raw byte,
+    // GPT-2 remapped codepoints -> the original byte.
+    std::string Piece(uint32_t id) const {
+        if (id >= tokens.size()) return "";
+        const std::string t = tokens[id];
+        if (t.size() == 6 && t[0] == '<' && t[1] == '0' && t[2] == 'x')
+            return std::string(1, (char)(unsigned)std::strtoul(t.c_str() + 3, nullptr, 16));
+        int b = 0;
+        if (Gpt2RemappedToken(t, b))
+            return std::string(1, (char)b);
+        std::string out;
+        for (size_t i = 0; i < t.size();) {
+            if (t.compare(i, marker.size(), marker) == 0) { out += ' '; i += marker.size(); continue; }
+            out += t[i];
+            ++i;
+        }
+        return out;
     }
 
     // Split the normalised text into SentencePiece characters (UTF-8 aware).
@@ -467,7 +487,7 @@ struct SpEncoder
             // Two conventions are tried, because the vocab decides which one
             // applies, and guessing wrong is what produced <unk> for newlines:
             //   * the explicit byte tokens <0x0A> used by SentencePiece models
-            //   * the GPT-2 byte-encoder symbol for the same byte ("Ã„Å ")
+            //   * the GPT-2 byte-encoder symbol for the same byte ("ÄŠ")
             bool emitted = false;
             for (size_t c = 0; c < s.size(); ++c)
             {
@@ -498,6 +518,8 @@ struct SpEncoder
             }
         }
         return true;
+    }
+};
 
 // ------------- fail-closed action parsing ------------------------------------
 struct Action {
@@ -575,11 +597,11 @@ int main(int argc, char* argv[]) {
     const auto t_load0 = std::chrono::steady_clock::now();
     const IngestReport& rep = Ingest(args.model, false);
     if (!rep.ok) { Logf_("INGEST_FAIL: %s\n", rep.error.c_str()); return 1; }
-    Encoder enc;
-    enc.Init();
+    SpEncoder enc;
+    enc.Build(GetTokenizer());
     Logf_("[stage] ingest done in %.1f ms: arch=%s blocks=%llu vocab=%zu\n",
           std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_load0).count(),
-          rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count, enc.pieces.size());
+          rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count, enc.tokens.size());
 
     Executor ex;
     ex.SetForceCpu(args.cpu);
@@ -611,7 +633,9 @@ int main(int argc, char* argv[]) {
 
     for (int step = 1; step <= args.max_steps && !finished; ++step) {
         // ---- feed only NEW text -------------------------------------------------
-        const std::vector<uint32_t> new_ids = enc.Encode(pending);
+        std::vector<int32_t> enc_ids;
+        enc.Encode(pending, enc_ids);
+        std::vector<uint32_t> new_ids(enc_ids.begin(), enc_ids.end());
         const auto t_step = std::chrono::steady_clock::now();
         for (size_t i = 0; i < new_ids.size(); ++i) {
             if (!ex.ExecuteToken(new_ids[i], fed.size())) {
@@ -633,8 +657,8 @@ int main(int argc, char* argv[]) {
         for (int t = 0; t < args.max_new; ++t) {
             const std::vector<float>& lg = ex.Logits();
             for (uint32_t i = 1; i < lg.size(); ++i) if (lg[i] > lg[next]) next = i;
-            if (next == enc.eos) { Logf_("\n[step %d] eos after %d tokens\n", step, t); break; }
-            gen += enc.Visible(next);
+            if (next == (uint32_t)GetTokenizer().eos_id) { Logf_("\n[step %d] eos after %d tokens\n", step, t); break; }
+            gen += enc.Piece(next);
             if (!ex.ExecuteToken(next, fed.size())) {
                 Logf_("EXEC_FAIL gen pos=%zu err=%s\n", fed.size(), ex.LastError().c_str());
                 break;

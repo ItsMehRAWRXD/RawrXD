@@ -1,0 +1,15 @@
+[TRACE] generation_begin (prompt_len=7 tokens=3 mode=certification)
+[TRACE] forward_0_begin
+[TRACE] forward_0_end (ok=1, 2834.6 ms)
+[TRACE] step 0 ok (gpu 2834.6 ms)
+[TRACE] step 1 ok (gpu 1531.8 ms)
+[TRACE] step 2 ok (gpu 1551.2 ms)
+[TRACE] repeat_begin
+[TRACE] repeat_bind_begin (state reset: fresh executor + rebind)
+[TRACE] repeat_bind_end (ok)
+[TRACE] repeat_forward_0_begin
+[TRACE] repeat_forward_0_end (ok)
+[TRACE] repeat step 0 ok
+[TRACE] repeat step 1 ok
+[TRACE] repeat step 2 ok
+[TRACE] repeat_done

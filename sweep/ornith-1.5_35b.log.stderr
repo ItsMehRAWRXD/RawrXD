@@ -1,0 +1,7 @@
+[TRACE] generation_begin (prompt_len=7 tokens=3 mode=certification)
+[TRACE] forward_0_begin
+[TRACE] forward_0_end (ok=0, 1.3 ms)
+[TRACE] repeat_begin
+[TRACE] repeat_bind_begin (state reset: fresh executor + rebind)
+[TRACE] repeat_bind_end (ok)
+[TRACE] repeat_done
