@@ -29,6 +29,89 @@
 #pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "comctl32.lib")
 
+// nlohmann/json.hpp is pulled in for refreshModuleList()'s Get-Module JSON.
+// It is included here (rather than only via ModelConnection.h) because this
+// translation unit uses nlohmann::json::parse directly.
+#include <nlohmann/json.hpp>
+
+namespace {
+
+// ---------------------------------------------------------------------------
+// Native CPU inference helper.
+//
+// RawrXD::CPUInferenceEngine exposes Tokenize / GenerateStreaming /
+// IsModelLoaded / LoadModel. It has no infer() method - three call sites in
+// this file invoked engine->infer(prompt) and two invoked engine->isModelLoaded()
+// / engine->loadModel(), none of which exist. This routes them through the real
+// API (note the capitalisation: IsModelLoaded/LoadModel, not isModelLoaded/loadModel).
+// ---------------------------------------------------------------------------
+std::string NativeEngineInfer(RawrXD::CPUInferenceEngine* engine,
+                              const std::string& prompt,
+                              int maxTokens = 512)
+{
+    if (!engine) return "Error: Native CPU engine not available.";
+    if (!engine->IsModelLoaded()) return "Error: No model loaded in Native CPU Engine.";
+
+    // Tokenize() returns std::vector<int>; GenerateStreaming wants int32_t.
+    const std::vector<int> tokensInt = engine->Tokenize(prompt);
+    std::vector<int32_t> tokens(tokensInt.begin(), tokensInt.end());
+    if (tokens.empty()) return "";
+
+    std::string out;
+    engine->GenerateStreaming(tokens, maxTokens,
+        [&out](const std::string& piece) { out += piece; },
+        []() {},
+        nullptr);
+    return out;
+}
+
+// Run a child process and capture its stdout. Used by refreshModuleList()'s
+// PowerShell module enumeration, which called a non-existent ExecCmd().
+std::string CaptureProcessOutput(const std::string& commandLine)
+{
+    std::string result;
+
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+    HANDLE readPipe = nullptr;
+    HANDLE writePipe = nullptr;
+    if (!CreatePipe(&readPipe, &writePipe, &sa, 0)) return result;
+
+    STARTUPINFOA si = {};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = writePipe;
+    si.hStdError = writePipe;
+    PROCESS_INFORMATION pi = {};
+
+    std::vector<char> cmd(commandLine.begin(), commandLine.end());
+    cmd.push_back('\0');
+
+    const BOOL ok = CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, TRUE,
+                                   CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+    CloseHandle(writePipe);
+    if (!ok) {
+        CloseHandle(readPipe);
+        return result;
+    }
+
+    char buffer[4096];
+    DWORD bytesRead = 0;
+    while (ReadFile(readPipe, buffer, sizeof(buffer), &bytesRead, nullptr) && bytesRead > 0) {
+        result.append(buffer, bytesRead);
+    }
+
+    WaitForSingleObject(pi.hProcess, 10000);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    CloseHandle(readPipe);
+    return result;
+}
+
+} // namespace
+
+
 #define IDC_EDITOR 1001
 #define IDC_TERMINAL 1002
 #define IDC_COMMAND_INPUT 1003
@@ -3217,11 +3300,8 @@ void Win32IDE::analyzeScript()
     std::thread([this, script]() {
         if (m_nativeEngine) {
             std::string prompt = "Analyze the following script and report potential bugs, security issues, and improvements:\n\n" + script;
-            // Assuming CPUInferenceEngine has an 'infer' or 'generate' method that takes a string
-            // Based on cpu_inference_engine.cpp read earlier: std::string infer(const std::string& prompt);
-            
             auto* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
-            std::string result = engine->infer(prompt);
+            std::string result = NativeEngineInfer(engine, prompt);
             
             // Post result back to UI thread or just append (if appendToOutput is thread-safe or we lock)
             // appendToOutput uses SendMessage which is generally thread-safe for simple text
@@ -3253,11 +3333,11 @@ void Win32IDE::refreshModuleList()
     
     // Dynamic module enumeration via Powershell command
     std::string cmd = "powershell.exe -NoProfile -Command \"Get-Module -ListAvailable | Select-Object -First 50 Name, Version | ConvertTo-Json -Compress\"";
-    std::string output = ExecCmd(cmd.c_str());
+    std::string output = CaptureProcessOutput(cmd);
     
     if (output.find("Error") == std::string::npos && !output.empty()) {
         try {
-            auto json = nlohmann::json::parse(output);
+            nlohmann::json json = nlohmann::json::parse(output);
             if (json.is_array()) {
                 for (const auto& item : json) {
                     ModuleInfo m;
@@ -4813,7 +4893,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         // Use the native fallback engine if available
         if (m_nativeEngine) {
              auto* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
-             std::string response = engine->infer(message);
+             std::string response = NativeEngineInfer(engine, message);
              m_chatHistory.push_back({message, response});
              return response;
         }
@@ -5220,9 +5300,9 @@ bool Win32IDE::initializeInference()
     // Connect Native Engine to Model
     if (m_nativeEngine && !m_loadedModelPath.empty()) {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
-        if (!engine->isModelLoaded()) {
+        if (!engine->IsModelLoaded()) {
             appendToOutput("Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
-            if (engine->loadModel(m_loadedModelPath)) {
+            if (engine->LoadModel(m_loadedModelPath)) {
                 m_nativeEngineLoaded = true;
                 appendToOutput("✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
             } else {
@@ -5354,15 +5434,11 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     if (m_nativeEngine && m_nativeEngineLoaded) {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
         // If engine doesn't have a model loaded, try to load current one
-        if (!engine->isModelLoaded() && !m_loadedModelPath.empty()) {
-            engine->loadModel(m_loadedModelPath);
+        if (!engine->IsModelLoaded() && !m_loadedModelPath.empty()) {
+            engine->LoadModel(m_loadedModelPath);
         }
         
-        if (engine->isModelLoaded()) {
-            return engine->infer(prompt);
-        } else {
-             return "Error: No model loaded in Native CPU Engine.";
-        }
+        return NativeEngineInfer(engine, prompt);
     }
 
     return std::string("[Native Engine Error]\nModel: ") + modelName + "\nPrompt: " + prompt + "\n(Ollama unavailable and Native Engine not ready)";
@@ -5877,7 +5953,21 @@ Win32IDE::~Win32IDE() {
         m_nativeEngine = nullptr;
     }
     m_nativeEngineLoaded = false;
-    // Resource cleanup
-    Win32TerminalManager::cleanup();
+
+    // Terminal cleanup. Win32TerminalManager has no static cleanup() entry
+    // point; each pane owns its manager through a unique_ptr, so tear the
+    // shells down explicitly (the managers' own destructors also call stop()
+    // if they are still alive at destruction time).
+    for (auto& pane : m_terminalPanes) {
+        if (pane.manager) {
+            pane.manager->stop();
+            pane.manager.reset();
+        }
+    }
+    m_terminalPanes.clear();
+    if (m_dedicatedPowerShellTerminal) {
+        m_dedicatedPowerShellTerminal->stop();
+        m_dedicatedPowerShellTerminal.reset();
+    }
 }
 

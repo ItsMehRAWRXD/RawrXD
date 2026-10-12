@@ -1411,10 +1411,19 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_Autonomy.cpp
+        # Lifecycle methods declared in Win32IDE.h but defined in their own
+        # translation unit (createWindow/showWindow/runMessageLoop/onSize/
+        # editor surface/Ollama bridge + the WindowProc dispatch chain).
+        src/win32app/Win32IDE_lifecycle.cpp
         src/win32app/TransparentRenderer.cpp
         src/gguf_loader.cpp
+        # Concrete IGGUFLoader implementation + the CPU inference engine
+        # executor: both are referenced from Win32IDE.h's members but their
+        # definitions live in separate translation units.
+        src/GGUFLoader.cpp
         src/gguf_vocab_resolver.cpp
         src/streaming_gguf_loader.cpp
+        src/cpu_inference_engine_impl.cpp
         src/utils/ErrorReporter.cpp
         src/utils/Diagnostics.cpp
     )
@@ -1435,6 +1444,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             ${CMAKE_SOURCE_DIR}/src/win32app
             ${CMAKE_SOURCE_DIR}/src/utils
             ${CMAKE_SOURCE_DIR}/include
+            # ggml.h / ggml_type_traits for the CPU executor's quant geometry.
+            ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
             # gguf_loader.h includes vulkan_compute.h -> vulkan/vulkan.h, so the
             # Vulkan SDK include path is required even when GPU compute is off.
             ${Vulkan_INCLUDE_DIRS}
@@ -1449,14 +1460,51 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         target_compile_options(RawrXD-Win32IDE-Native PRIVATE
             /EHsc $<$<CONFIG:Release>:/O2>
         )
+        # RichEdit 2.0 ("RichEdit20A" / RICHEDIT_CLASSA) is used by the editor,
+        # terminal and PowerShell-panel controls. The IDE reaches it only as a
+        # registered window class (the PowerShell panel does
+        # LoadLibrary("Riched20.dll")) plus window messages such as EM_SETTEXTEX,
+        # EM_SETCHARFORMAT and EM_EXGETSEL, so no import library is strictly
+        # required. Hardcoding riched32/richedit here made the link fail outright
+        # on SDKs that do not ship those import libs (the 10.0.26100.0 SDK used
+        # for this build has neither riched20.lib nor riched32.lib). Link them
+        # when the SDK provides them, and skip silently otherwise.
+        set(RAWRXD_RICHEDIT_LIBS)
+        foreach(_relib riched20 riched32 richedit msftedit)
+            find_library(RAWRXD_LIB_${_relib} ${_relib})
+            if(RAWRXD_LIB_${_relib})
+                list(APPEND RAWRXD_RICHEDIT_LIBS ${RAWRXD_LIB_${_relib}})
+            endif()
+        endforeach()
+        if(RAWRXD_RICHEDIT_LIBS)
+            message(STATUS "RawrXD-Win32IDE-Native: RichEdit import libs: ${RAWRXD_RICHEDIT_LIBS}")
+        else()
+            message(STATUS "RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK")
+        endif()
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
-            comctl32 comdlg32 riched32 richedit shell32 user32 gdi32
+            comctl32 comdlg32
+            ${RAWRXD_RICHEDIT_LIBS}
+            shell32 user32 gdi32
             ole32 oleaut32 uuid advapi32 d3d11 dxgi d3dcompiler
+            # TransparentRenderer (src/win32app/TransparentRenderer.cpp) uses
+            # Direct2D, DirectWrite and DirectComposition for the glass /
+            # composited editor surface, and DWM for the blur-behind window.
+            # These were missing, so D2D1CreateFactory, DWriteCreateFactory,
+            # DCompositionCreateDevice and DwmEnableBlurBehindWindow were all
+            # unresolved at link time.
+            d2d1 dwrite dxguid dwmapi dcomp
         )
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE
         )
+        # The CPU executor's row_geom()/row_dot()/dequant_all() read block size,
+        # type size and the to_float converter from ggml's authoritative type
+        # table, so ggml_get_type_traits must link.
+        if(TARGET ggml)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE ggml)
+            target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_GGML=1)
+        endif()
         message(STATUS "RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled")
     else()
         list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE-Native)

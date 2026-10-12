@@ -158,8 +158,8 @@ BOOL PromptRegisterClass(HINSTANCE hInst)
         return DefWindowProcW(hwnd, msg, wParam, lParam);
     };
     wc.hInstance = hInst;
-    wc.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
-    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hIcon = LoadIconW(nullptr, MAKEINTRESOURCEW(32512)); // IDI_APPLICATION
+    wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(32512)); // IDC_ARROW
     wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
     wc.lpszClassName = PROMPT_CLASS_NAME;
 
@@ -707,24 +707,16 @@ void Win32IDE::newFileInExplorer()
     qInfo() << "[Win32IDE] DEBUG: Starting new file creation from Explorer";
     
     try {
-        // Production implementation with proper error handling
-        bool success = newFile();
+        // newFile() is void - it reports its own progress through
+        // appendToOutput and its own Save-changes prompt, and its outcome is
+        // "no exception thrown" (same semantics as the File > New menu path).
+        newFile();
+
+        qInfo() << "[Win32IDE] INFO: New file created successfully from Explorer";
         
-        if (success) {
-            qInfo() << "[Win32IDE] INFO: New file created successfully from Explorer";
-            
-            // Log metrics
-            qDebug() << "[Win32IDE] METRIC: new_file_created=1";
-            qDebug() << "[Win32IDE] METRIC: source=explorer";
-        } else {
-            qWarning() << "[Win32IDE] ERROR: Failed to create new file from Explorer";
-            
-            // Show user-friendly error message
-            MessageBoxA(m_hwndMain, 
-                       "Failed to create new file. Please check permissions and try again.", 
-                       "File Creation Error", 
-                       MB_ICONERROR | MB_OK);
-        }
+        // Log metrics
+        qDebug() << "[Win32IDE] METRIC: new_file_created=1";
+        qDebug() << "[Win32IDE] METRIC: source=explorer";
     } catch (const std::exception& e) {
         qCritical() << "[Win32IDE] CRITICAL: Exception during new file creation:" << e.what();
         
@@ -739,10 +731,9 @@ void Win32IDE::newFolderInExplorer()
 {
     qInfo() << "[Win32IDE] DEBUG: Starting new folder creation from Explorer";
 
-    char folderName[256] = "NewFolder";
-
+    std::string folderName;
     if (!PromptText(m_hwndMain, "Create New Folder", "Enter folder name:",
-                    std::string(folderName), folderName)) {
+                    "NewFolder", folderName)) {
         qInfo() << "[Win32IDE] INFO: Folder creation cancelled by user";
         return;
     }
@@ -751,7 +742,7 @@ void Win32IDE::newFolderInExplorer()
         std::string fullPath = m_explorerRootPath + "\\" + folderName;
 
         // Validate folder name
-        if (folderName[0] == '\0') {
+        if (folderName.empty()) {
             qWarning() << "[Win32IDE] ERROR: Empty folder name provided";
             MessageBoxA(m_hwndMain, "Folder name cannot be empty.", "Invalid Input", MB_ICONWARNING);
             return;

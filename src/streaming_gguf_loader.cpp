@@ -6,6 +6,15 @@
 #include <stdexcept>
 #include <iostream>
 
+// Compiled at global scope; bring the RawrXD interface vocabulary in explicitly
+// (the header no longer re-declares these at file scope, because it is also
+// included from inside namespace RawrXD by the engine executor).
+using RawrXD::GGMLType;
+using RawrXD::GGUFHeader;
+using RawrXD::GGUFMetadata;
+using RawrXD::IGGUFLoader;
+using RawrXD::TensorInfo;
+
 StreamingGGUFLoader::StreamingGGUFLoader()
     : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB) {
     std::memset(&header_, 0, sizeof(GGUFHeader));
@@ -503,6 +512,24 @@ std::vector<TensorInfo> StreamingGGUFLoader::GetAllTensorInfo() const {
 
 std::vector<TensorInfo> StreamingGGUFLoader::GetTensorInfo() const {
     return GetAllTensorInfo();
+}
+
+const TensorInfo* StreamingGGUFLoader::GetTensorInfo(const std::string& name) const {
+    auto it = tensor_index_.find(name);
+    if (it == tensor_index_.end()) return nullptr;
+    static thread_local TensorInfo cache;
+    cache = TensorInfo{};
+    cache.name = it->second.name;
+    cache.shape = it->second.shape;
+    cache.type = it->second.type;
+    cache.offset = it->second.offset;
+    cache.size = it->second.size;
+    cache.size_bytes = it->second.size;
+    return &cache;
+}
+
+const std::vector<std::string>& StreamingGGUFLoader::GetVocabulary() const {
+    return metadata_.tokens;
 }
 
 // ============================================================================
