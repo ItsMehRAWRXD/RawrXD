@@ -137,6 +137,14 @@ int main(int argc, char* argv[])
     // Per-tensor detail for the legacy quant types (Q4_0/Q4_1/Q5_0/Q5_1/Q8_0)
     // and for F16/F32 matmul tensors: the latter are the remaining CPU-path
     // population on models like qwen3 (36 F16 tensors).
+    if (std::getenv("PROBE_ALL")) {
+        for (const TensorRec& t : rep.tensors) {
+            if (t.name.find("blk.0.") == 0 || t.name.find("blk.1.") == 0)
+                std::printf("  ALL %-52s type=%-2d dims=%zu\n", t.name.c_str(), (int)t.gguf_type,
+                            t.dims.size());
+        }
+        return 0;
+    }
     for (const TensorRec& t : rep.tensors) {
         size_t blck = 0, ts = 0;
         const bool isLegacyQuant = LegacyGeometry(t.ggml_type, blck, ts);

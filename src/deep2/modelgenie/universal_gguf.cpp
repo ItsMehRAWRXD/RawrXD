@@ -665,7 +665,20 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         const auto& roles = it->second;
         auto name = [&](Role r) -> std::string {
             auto f = roles.find(r);
-            return f == roles.end() ? std::string() : f->second;
+            if (f != roles.end()) return f->second;
+            // Two role spellings exist for the attention output projection:
+            // newer converters write "attn_output.weight" (Role::AttnOutput)
+            // and older ones "attn_o.weight" (Role::AttnO). The graph's
+            // residual add consumes the role name for AttnOutput, so a model
+            // using the older spelling got NO output-projection op at all and
+            // failed with "residualadd: addend 'attn_proj' missing" - seven
+            // models in the ollama sweep hit exactly that (qwen3.8:27b,
+            // ornith-1.5:35b, qwen35-40b-heretic, qwen3-next:80b, and others).
+            if (r == Role::AttnOutput) {
+                auto g2 = roles.find(Role::AttnO);
+                if (g2 != roles.end()) return g2->second;
+            }
+            return std::string();
         };
 
         // Snapshot the BLOCK INPUT as resid_in BEFORE the first norm runs.
