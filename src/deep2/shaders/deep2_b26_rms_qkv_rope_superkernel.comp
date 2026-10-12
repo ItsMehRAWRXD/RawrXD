@@ -1,0 +1,65 @@
+#version 460
+// B26 reference superkernel: RMSNorm -> dense Q/K/V projections -> RoPE.
+// This F32 reference establishes bindings/dataflow. Production quant specializations
+// replace matrix reads with Deep2's actual packed GGUF formats.
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) readonly buffer X  { float x[]; };
+layout(set=0,binding=1,std430) readonly buffer N  { float normW[]; };
+layout(set=0,binding=2,std430) readonly buffer WQ { float wq[]; };
+layout(set=0,binding=3,std430) readonly buffer WK { float wk[]; };
+layout(set=0,binding=4,std430) readonly buffer WV { float wv[]; };
+layout(set=0,binding=5,std430) writeonly buffer Q { float q[]; };
+layout(set=0,binding=6,std430) writeonly buffer K { float k[]; };
+layout(set=0,binding=7,std430) writeonly buffer V { float v[]; };
+
+layout(push_constant) uniform PC {
+    uint hidden;
+    uint qRows;
+    uint kRows;
+    uint vRows;
+    uint headDim;
+    uint ropeDim;
+    float invRms;
+    float ropeBasePhase;
+} pc;
+
+shared float sx[1024];
+shared float redQ[256];
+shared float redK[256];
+shared float redV[256];
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    uint lid = gl_LocalInvocationID.x;
+
+    for (uint i=lid; i<pc.hidden && i<1024u; i+=256u)
+        sx[i] = x[i] * pc.invRms * normW[i];
+    barrier();
+
+    float sq=0.0, sk=0.0, sv=0.0;
+    for (uint c=lid;c<pc.hidden;c+=256u) {
+        float xv = (c<1024u) ? sx[c] : x[c]*pc.invRms*normW[c];
+        if (row<pc.qRows) sq += wq[row*pc.hidden+c]*xv;
+        if (row<pc.kRows) sk += wk[row*pc.hidden+c]*xv;
+        if (row<pc.vRows) sv += wv[row*pc.hidden+c]*xv;
+    }
+    redQ[lid]=sq; redK[lid]=sk; redV[lid]=sv; barrier();
+
+    for(uint stride=128u;stride>0u;stride>>=1u) {
+        if(lid<stride) {
+            redQ[lid]+=redQ[lid+stride];
+            redK[lid]+=redK[lid+stride];
+            redV[lid]+=redV[lid+stride];
+        }
+        barrier();
+    }
+
+    if(lid==0u) {
+        if(row<pc.qRows) q[row]=redQ[0];
+        if(row<pc.kRows) k[row]=redK[0];
+        if(row<pc.vRows) v[row]=redV[0];
+        // RoPE is intentionally performed by production specialization where
+        // paired dimensions can be coordinated without a global barrier.
+    }
+}

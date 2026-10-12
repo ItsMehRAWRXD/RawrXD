@@ -1,0 +1,59 @@
+#version 460
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+layout(local_size_x=256) in;
+
+// Last-mile memory path: one shared X tile, coalesced packed Q4 loads,
+// subgroup reduction. Exact Q4_K scale/min layout is supplied by production specialization.
+
+layout(set=0,binding=0,std430) readonly buffer W { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) readonly buffer S { float scale[]; };
+layout(set=0,binding=3,std430) writeonly buffer Y { float y[]; };
+
+layout(push_constant) uniform PC {
+    uint rows;
+    uint cols;
+    uint wordsPerRow;
+    uint groupsPerRow;
+    uint groupSize;
+    uint tileCols;
+} pc;
+
+shared float sx[1024];
+shared float sgSum[8];
+
+float dq4(uint word,uint nib){
+    return float(int((word>>(nib*4u))&15u)-8);
+}
+
+void main(){
+    uint row=gl_WorkGroupID.x;
+    if(row>=pc.rows) return;
+    uint lid=gl_LocalInvocationID.x;
+    float acc=0.0;
+
+    for(uint base=0;base<pc.cols;base+=pc.tileCols){
+        for(uint i=lid;i<pc.tileCols && base+i<pc.cols;i+=256u)
+            sx[i]=x[base+i];
+        barrier();
+
+        for(uint i=lid;i<pc.tileCols && base+i<pc.cols;i+=256u){
+            uint c=base+i;
+            uint wi=row*pc.wordsPerRow+(c>>3u);
+            uint gi=row*pc.groupsPerRow+(c/pc.groupSize);
+            acc+=dq4(w[wi],c&7u)*scale[gi]*sx[i];
+        }
+        barrier();
+    }
+
+    float s=subgroupAdd(acc);
+    if(subgroupElect()) sgSum[gl_SubgroupID]=s;
+    barrier();
+
+    if(gl_SubgroupID==0u){
+        float v=gl_SubgroupInvocationID<gl_NumSubgroups ?
+                sgSum[gl_SubgroupInvocationID] : 0.0;
+        float total=subgroupAdd(v);
+        if(subgroupElect()) y[row]=total;
+    }
+}

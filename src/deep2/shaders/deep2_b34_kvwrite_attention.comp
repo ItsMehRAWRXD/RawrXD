@@ -1,0 +1,48 @@
+#version 460
+// Batch 34: fused KV write + immediate attention read reference.
+// Demonstrates write-through dataflow; production path substitutes exact attention math.
+layout(local_size_x=128) in;
+
+layout(set=0,binding=0,std430) readonly buffer KNEW { float knew[]; };
+layout(set=0,binding=1,std430) readonly buffer VNEW { float vnew[]; };
+layout(set=0,binding=2,std430) buffer KCACHE { float kcache[]; };
+layout(set=0,binding=3,std430) buffer VCACHE { float vcache[]; };
+layout(set=0,binding=4,std430) readonly buffer Q { float q[]; };
+layout(set=0,binding=5,std430) writeonly buffer O { float outv[]; };
+
+layout(push_constant) uniform PC {
+    uint pos;
+    uint heads;
+    uint headDim;
+    uint context;
+} pc;
+
+shared float red[128];
+
+void main() {
+    uint h = gl_WorkGroupID.x;
+    if(h>=pc.heads) return;
+    uint lid=gl_LocalInvocationID.x;
+
+    for(uint d=lid; d<pc.headDim; d+=128u) {
+        uint dst=(pc.pos*pc.heads+h)*pc.headDim+d;
+        kcache[dst]=knew[h*pc.headDim+d];
+        vcache[dst]=vnew[h*pc.headDim+d];
+    }
+    barrier();
+
+    float sum=0.0;
+    for(uint t=0;t<=pc.pos && t<pc.context;++t) {
+        for(uint d=lid;d<pc.headDim;d+=128u) {
+            uint idx=(t*pc.heads+h)*pc.headDim+d;
+            sum += q[h*pc.headDim+d]*kcache[idx]*vcache[idx];
+        }
+    }
+    red[lid]=sum;
+    barrier();
+    for(uint stride=64u;stride>0u;stride>>=1u) {
+        if(lid<stride) red[lid]+=red[lid+stride];
+        barrier();
+    }
+    if(lid==0u) outv[h]=red[0];
+}

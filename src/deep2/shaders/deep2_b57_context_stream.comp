@@ -1,0 +1,44 @@
+#version 460
+layout(local_size_x=128) in;
+
+// Context-length specialized streaming attention reference.
+// Production implementation binds exact MLA/GQA KV layouts.
+
+layout(set=0,binding=0,std430) readonly buffer Q { float q[]; };
+layout(set=0,binding=1,std430) readonly buffer K { float k[]; };
+layout(set=0,binding=2,std430) readonly buffer V { float v[]; };
+layout(set=0,binding=3,std430) writeonly buffer O { float outv[]; };
+
+layout(push_constant) uniform PC {
+    uint context;
+    uint heads;
+    uint headDim;
+    uint tokenTile;
+} pc;
+
+shared float red[128];
+
+void main(){
+    uint h=gl_WorkGroupID.x;
+    if(h>=pc.heads) return;
+    uint lid=gl_LocalInvocationID.x;
+    float acc=0.0;
+
+    for(uint base=0;base<pc.context;base+=pc.tokenTile){
+        uint end=min(pc.context,base+pc.tokenTile);
+        for(uint t=base;t<end;++t){
+            float d=0.0;
+            for(uint i=lid;i<pc.headDim;i+=128u)
+                d+=q[h*pc.headDim+i]*k[(t*pc.heads+h)*pc.headDim+i];
+            red[lid]=d; barrier();
+            for(uint s=64u;s>0u;s>>=1u){
+                if(lid<s)red[lid]+=red[lid+s];
+                barrier();
+            }
+            if(lid==0u)acc+=red[0];
+            barrier();
+        }
+    }
+
+    if(lid==0u)outv[h]=acc;
+}

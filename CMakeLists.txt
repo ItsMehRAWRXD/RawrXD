@@ -1387,6 +1387,51 @@ else()
 endif()
 
 # ============================================================================
+# Custom GPU compute environment (Deep2::VulkanCompute + KernelRegistry-backed
+# quantised dispatch)
+#
+# This is the subsystem that sits above the raw Vulkan device layer: the
+# kernel/registry/dispatch surface that Deep2Engine talks to. It used to live
+# only in the ~dev scratch tree, so anything that included
+# "vulkan_compute.h" from a Deep2 translation unit resolved the *device-level*
+# include/vulkan_compute.h instead (a different class, without DispatchGEMVQuant,
+# DispatchGEMV, GemvSuccessCount, SetPinResidentBudget or the CPUInference
+# alias). That is why Deep2Engine could never be built from this tree.
+#
+# The headers now ship beside the engine in src/deep2/, so a quoted include
+# from src/deep2/ finds them before the include/ path.
+# ============================================================================
+if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
+    add_library(rawrxd_gpu_compute STATIC
+        src/deep2/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+    )
+    target_include_directories(rawrxd_gpu_compute PUBLIC
+        ${CMAKE_SOURCE_DIR}/src
+        # Must precede include/ so "vulkan_compute.h" resolves to the
+        # Deep2::VulkanCompute definition this library implements.
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(rawrxd_gpu_compute PUBLIC ggml_interface)
+    endif()
+    if(MSVC)
+        target_compile_options(rawrxd_gpu_compute PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(rawrxd_gpu_compute PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(rawrxd_gpu_compute PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    message(STATUS "rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree")
+else()
+    message(STATUS "rawrxd_gpu_compute EXCLUDED: src/deep2/vulkan_compute.{h,cpp} absent")
+endif()
+
+# ============================================================================
 # Native (dependency-free, Qt-free) Win32 IDE
 # ============================================================================
 # The genuine RawrXD Win32 IDE: CreateWindow/Win32 API, D3D11/Vulkan

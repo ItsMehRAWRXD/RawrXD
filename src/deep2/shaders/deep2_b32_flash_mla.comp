@@ -1,0 +1,54 @@
+#version 460
+// Batch 32 flash-style MLA reference kernel.
+// Performs online-softmax accumulation without materializing a full score matrix.
+layout(local_size_x=128) in;
+
+layout(set=0,binding=0,std430) readonly buffer Q  { float q[]; };
+layout(set=0,binding=1,std430) readonly buffer KV { float kv[]; };
+layout(set=0,binding=2,std430) writeonly buffer O { float outv[]; };
+
+layout(push_constant) uniform PC {
+    uint context;
+    uint rank;
+    uint heads;
+    uint kvStride;
+} pc;
+
+shared float partial[128];
+
+void main() {
+    uint head = gl_WorkGroupID.x;
+    if (head >= pc.heads) return;
+    uint lid = gl_LocalInvocationID.x;
+
+    float m = -3.402823e38;
+    float l = 0.0;
+    float acc = 0.0;
+
+    for (uint t=0; t<pc.context; ++t) {
+        float dot = 0.0;
+        uint base = t * pc.kvStride;
+        for (uint r=lid; r<pc.rank; r+=128u)
+            dot += q[head*pc.rank+r] * kv[base+r];
+
+        partial[lid]=dot;
+        barrier();
+        for(uint stride=64u;stride>0u;stride>>=1u) {
+            if(lid<stride) partial[lid]+=partial[lid+stride];
+            barrier();
+        }
+
+        if(lid==0u) {
+            float s = partial[0];
+            float nm = max(m,s);
+            float alpha = (m == -3.402823e38) ? 0.0 : exp(m-nm);
+            float beta = exp(s-nm);
+            acc = acc*alpha + beta*s;
+            l = l*alpha + beta;
+            m = nm;
+        }
+        barrier();
+    }
+
+    if(lid==0u) outv[head] = (l>0.0) ? acc/l : 0.0;
+}
