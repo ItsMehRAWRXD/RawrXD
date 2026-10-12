@@ -1,0 +1,20 @@
+{
+  "Model": "bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+  "StartedAt": "2026-10-12T16:53:42.4410030-04:00",
+  "KeepAlive": 0,
+  "Cold": true,
+  "Before": {
+    "CommittedGB": 44.24,
+    "LimitGB": 65.63,
+    "AvailableGB": 30.33
+  },
+  "PeakCommittedGB": 45.21,
+  "HttpStatus": 500,
+  "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+  "After": {
+    "CommittedGB": 44.0,
+    "LimitGB": 65.87,
+    "AvailableGB": 21.14
+  },
+  "Classification": "RUNTIME_FAILURE"
+}

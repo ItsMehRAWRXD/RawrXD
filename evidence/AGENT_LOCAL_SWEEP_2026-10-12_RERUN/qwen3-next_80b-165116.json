@@ -1,0 +1,20 @@
+{
+  "Model": "qwen3-next:80b",
+  "StartedAt": "2026-10-12T16:50:44.1748666-04:00",
+  "KeepAlive": 0,
+  "Cold": true,
+  "Before": {
+    "CommittedGB": 46.51,
+    "LimitGB": 65.42,
+    "AvailableGB": 20.73
+  },
+  "PeakCommittedGB": 67.08,
+  "HttpStatus": 500,
+  "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+  "After": {
+    "CommittedGB": 46.65,
+    "LimitGB": 65.42,
+    "AvailableGB": 15.42
+  },
+  "Classification": "RUNTIME_FAILURE"
+}
