@@ -1476,6 +1476,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
                 ${CMAKE_SOURCE_DIR}/src/deep2/runtime_graph_executor.cpp
                 ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie/universal_gguf.cpp
                 ${CMAKE_SOURCE_DIR}/src/deep2/quant_dot_dispatch.cpp
+                ${CMAKE_SOURCE_DIR}/src/deep2/op_linear.cpp
                 ${CMAKE_SOURCE_DIR}/src/vulkan_compute.cpp
             )
             target_include_directories(deep2_runtime_dispatch PRIVATE
