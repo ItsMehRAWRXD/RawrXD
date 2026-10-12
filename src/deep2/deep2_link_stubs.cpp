@@ -10,9 +10,7 @@
 #include <string>
 #include <functional>
 
-namespace CPUInference {
-
-// VulkanCompute stubs
+// VulkanCompute stubs (global namespace, matching vulkan_compute.h)
 VulkanCompute::VulkanCompute() {}
 VulkanCompute::~VulkanCompute() {}
 bool VulkanCompute::Initialize() { return false; }
@@ -21,8 +19,6 @@ bool VulkanCompute::DispatchGEMV(const float*, const float*, float*, unsigned in
     return false;
 }
 bool VulkanCompute::FlushAsyncCommands() { return false; }
-
-} // namespace CPUInference
 
 // OllamaBlobParser stub
 namespace rawrxd { namespace ollama {

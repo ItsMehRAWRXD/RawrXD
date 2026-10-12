@@ -13,6 +13,8 @@
 #include "license_enforcement.h"
 #include "feature_flags_runtime.h"
 #include "rawrxd_telemetry_exports.h"
+#include "core/utc_provider.h"
+#include "core/utc_asm_abi.h"
 
 #include <cstdio>
 #include <cstring>
@@ -381,11 +383,14 @@ void LicenseEnforcer::recordEvent(SubsystemID sub, License::FeatureID feat,
     if (auditEnabled) {
         // Emit formal telemetry for enterprise audit compliance
         // (Assuming UTC is already linked)
-#if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) || defined(RAWR_HAS_MASM)
         if (!allowed) {
-            UTC_LogEvent("license_denied");
-        }
+#if defined(RAWRXD_NATIVE_UTC_PROVIDER_LINKED) && RAWRXD_NATIVE_UTC_PROVIDER_LINKED
+            utc::LogEvent("license_denied", "enforcement_gate");
 #endif
+#if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) && RAWRXD_LINK_TELEMETRY_KERNEL_ASM
+            UTC_LogEvent("license_denied");
+#endif
+        }
     }
 }
 

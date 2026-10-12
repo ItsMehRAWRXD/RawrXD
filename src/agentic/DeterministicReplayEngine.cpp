@@ -12,6 +12,8 @@
 #include "DeterministicReplayEngine.h"
 #include "AgentToolHandlers.h"
 #include "autonomous_recovery_orchestrator.hpp"
+#include "core/utc_provider.h"
+#include "core/utc_asm_abi.h"
 
 #include <fstream>
 #include <filesystem>
@@ -571,7 +573,7 @@ std::string DeterministicReplayEngine::GenerateReplayId() {
 TelemetrySnapshot DeterministicReplayEngine::CaptureTelemetrySnapshot() {
     TelemetrySnapshot snap;
 
-#if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) || defined(RAWR_HAS_MASM)
+#if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) && RAWRXD_LINK_TELEMETRY_KERNEL_ASM
     // Read all 8 counters through the fenced UTC_ReadCounter path
     snap.inference      = UTC_ReadCounter(&g_Counter_Inference);
     snap.scsiFails      = UTC_ReadCounter(&g_Counter_ScsiFails);
@@ -728,14 +730,19 @@ bool DeterministicReplayEngine::AttemptAutoRecovery(
         m_recoveryCallback(event, result.success, m_recoveryUserData);
     }
 
-#if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) || defined(RAWR_HAS_MASM)
+#if (defined(RAWRXD_NATIVE_UTC_PROVIDER_LINKED) && RAWRXD_NATIVE_UTC_PROVIDER_LINKED) || (defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) && RAWRXD_LINK_TELEMETRY_KERNEL_ASM)
     char logBuf[256];
     snprintf(logBuf, sizeof(logBuf),
              "[T4-Replay] Auto-recovery %s for %s at step %d",
              result.success ? "PASSED" : "FAILED",
              FailureClassString(event.classification),
              event.stepNumber);
+#if defined(RAWRXD_NATIVE_UTC_PROVIDER_LINKED) && RAWRXD_NATIVE_UTC_PROVIDER_LINKED
+    utc::LogEvent("T4-Replay", logBuf);
+#endif
+#if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) && RAWRXD_LINK_TELEMETRY_KERNEL_ASM
     UTC_LogEvent(logBuf);
+#endif
 #endif
 
     return result.success;
