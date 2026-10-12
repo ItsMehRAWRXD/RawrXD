@@ -154,8 +154,39 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         return it == slot_by_name_.end() ? -1 : it->second;
     };
     if (findSlot("token_embd.weight") < 0) { stats_.error = "missing token_embd.weight"; return false; }
-    if (findSlot("output.weight") < 0) { stats_.error = "missing output.weight"; return false; }
     if (findSlot("output_norm.weight") < 0) { stats_.error = "missing output_norm.weight"; return false; }
+
+    // The LM head. Models that tie their embeddings (Qwen2.5-Coder-1.5B and
+    // most base checkpoints) ship no output.weight at all and share
+    // token_embd.weight as the head. Accepting the embedding there is correct
+    // only when it can serve as a [vocab, hidden] projection, so the geometry
+    // is validated against the model's own tensors rather than assumed. If
+    // neither candidate is usable, binding still fails - a model with no
+    // projectable head cannot choose a next token, and substituting something
+    // of the wrong shape would silently produce nonsense.
+    if (findSlot("output.weight") < 0) {
+        const int32_t emb = findSlot("token_embd.weight");
+        const TensorRec* e = (emb >= 0) ? &tensors_[(size_t)emb] : nullptr;
+        uint64_t hiddenDim = spec_.embd;
+        if (hiddenDim == 0) {
+            for (const auto& t : tensors_) {
+                if (t.name == "blk.0.attn_output.weight" && t.dims.size() >= 2) {
+                    hiddenDim = t.dims[0];
+                    break;
+                }
+            }
+        }
+        const bool canTie = (e != nullptr) && (hiddenDim != 0) &&
+                            (e->dims.size() >= 2) &&
+                            (e->dims[0] == (decltype(e->dims[0]))hiddenDim) &&
+                            (e->dims[1] > (decltype(e->dims[1]))hiddenDim);
+        if (!canTie) {
+            stats_.error = "missing output.weight and token_embd.weight cannot "
+                           "serve as a tied LM head";
+            return false;
+        }
+        // Tied embeddings: the head op resolves through token_embd.weight.
+    }
 
     // ---- 2. compile the runtime graph into instructions ----
     // Each op in the runtime graph names its tensors by name string; map those
@@ -340,7 +371,17 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     if (quant && (n_in % 256) == 0) {
         const int kind = (w.ggml_type == GGML_TYPE_Q4_K) ? 0 : 1;
         const size_t rb = (n_in / 256) * (size_t)(kind == 0 ? 144 : 210);
-        if (w.bytes < rb * n_out) { err = "linear: weight bytes short"; return false; }
+        if (w.bytes < rb * n_out) {
+            if (std::getenv("LINEAR_TRACE")) {
+                std::fprintf(stderr, "[quant-short] w=%s type=%d dims=[%zu,%zu] bytes=%zu need=%zu (rb=%zu n_out=%zu)\n",
+                             w.name.c_str(), (int)w.ggml_type, (size_t)w.dims[0],
+                             w.dims.size() > 1 ? (size_t)w.dims[1] : 0,
+                             w.bytes, rb * n_out, rb, n_out);
+                std::fflush(stderr);
+            }
+            err = "linear: weight bytes short";
+            return false;
+        }
         const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);        // The independent reference decodes ONE packed row at a time. It must
         // not materialise a dequantised [n_out, n_in] float matrix: for a
         // 102400-row output projection that is 4x the encoded size and, when
@@ -351,26 +392,107 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         // (273 floats per 256 values: d, qs[256], bsums[16]); dotting with the
         // raw float activation instead would compare quantised-vs-float and
         // report the activation quantisation error, not the kernel's.
+        //
+        // The arithmetic mirrors ggml_vec_dot_q4_K_q8_K_generic /
+        // ggml_vec_dot_q6_K_q8_K_generic EXACTLY: integer products formed first
+        // and accumulated in 8 int32 lanes, the fp16 scales applied last, and
+        // the min term folded in through the half-block sums. Dequantising the
+        // weight to floats and dotting instead is algebraically the same number
+        // but rounds differently at every element, which left the GPU-vs-CPU
+        // parity gate at 1.4e-04 relative error - above its 1e-4 bound - even
+        // though both sides were correct.
         QuantDot::CpuDot cpu =
             [&](const uint8_t* row, const void* q8_act, size_t) -> float {
                 const float* q8 = static_cast<const float*>(q8_act);
-                static thread_local std::vector<float> rw;
-                rw.assign(n_in, 0.0f);
-                tr->to_float(row, rw.data(), (int)n_in);
-                double acc = 0.0;
-                for (size_t b = 0; b < (n_in / 256); ++b) {
-                    const float d = q8[b * 273];
-                    const float* qs = q8 + b * 273 + 1;
-                    const float* wr = rw.data() + b * 256;
-                    for (int i = 0; i < 256; ++i)
-                        acc += double(wr[i]) * (double(qs[i]) * d);
+                const size_t nblk = n_in / 256;
+                const size_t blk_bytes = (kind == 0) ? 144u : 210u;
+                int32_t a[256];
+                int32_t aux32[8];
+                float sums[8], sumf = 0.0f;
+                for (int l = 0; l < 8; ++l) sums[l] = 0.0f;
+                for (size_t b = 0; b < nblk; ++b) {
+                    const uint8_t* blk = row + b * blk_bytes;
+                    const float* q8b = q8 + b * 273;
+                    for (int l = 0; l < 8; ++l) aux32[l] = 0;
+                    if (kind == 0) {
+                        // ---- Q4_K ----
+                        for (int j = 0; j < 4; ++j) {
+                            for (int l = 0; l < 32; ++l) {
+                                a[j * 64 + l]      = blk[16 + j * 32 + l] & 0xF;
+                                a[j * 64 + 32 + l] = blk[16 + j * 32 + l] >> 4;
+                            }
+                        }
+                        int32_t scales[8], mins[8];
+                        for (int s = 0; s < 8; ++s) {
+                            if (s < 4) {
+                                scales[s] = blk[4 + s] & 63;
+                                mins[s]   = blk[4 + s + 4] & 63;
+                            } else {
+                                scales[s] = (blk[4 + s + 4] & 0xF) | ((blk[4 + s - 4] >> 6) << 4);
+                                mins[s]   = (blk[4 + s + 4] >> 4) | ((blk[4 + s] >> 6) << 4);
+                            }
+                        }
+                        for (int s = 0; s < 8; ++s) {
+                            const int32_t sc = scales[s];
+                            for (int l = 0; l < 32; ++l)
+                                aux32[l & 7] += sc * (int32_t)q8b[1 + s * 32 + l] * a[s * 32 + l];
+                        }
+                        uint16_t h;
+                        std::memcpy(&h, blk + 0, 2);
+                        const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
+                        std::memcpy(&h, blk + 2, 2);
+                        const float dmin = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
+                        for (int l = 0; l < 8; ++l) sums[l] += d * float(aux32[l]);
+                        int32_t sumi = 0;
+                        for (int j = 0; j < 16; ++j) sumi += (int32_t)q8b[257 + j] * mins[j / 2];
+                        sumf -= dmin * float(sumi);
+                    } else {
+                        // ---- Q6_K ----
+                        for (int j = 0; j < 256; ++j) {
+                            const int hlf = j / 128;      // ql half
+                            const int loff = (j % 64) / 32 * 32 + (j % 32);
+                            const int hoff = (j / 64) % 2 * 32 + (j % 32);
+                            const int part = (j / 64) % 2;              // low nibble (0) / high nibble (1)
+                            const int qhpos = ((j % 64) / 32) * 32 + (j % 32);
+                            const int shift4 = (part == 0) ? 0 : 4;
+                            const int shifth = (part == 0) ? 0 : 2;
+                            const int low4  = (blk[loff] >> shift4) & 0xF;
+                            const int high2 = (blk[128 + qhpos] >> shifth) & 3;
+                            a[j] = low4 | (high2 << 4);
+                            (void)hlf; (void)hoff;
+                        }
+                        int32_t scales[16];
+                        for (int s = 0; s < 16; ++s) {
+                            int8_t sc;
+                            std::memcpy(&sc, blk + 192 + s, 1);
+                            scales[s] = sc;
+                        }
+                        for (int s = 0; s < 16; ++s) {
+                            const int32_t sc = scales[s];
+                            for (int l = 0; l < 16; ++l)
+                                aux32[l & 7] += sc * (int32_t)q8b[1 + s * 16 + l] * (a[s * 16 + l] - 32);
+                        }
+                        uint16_t h;
+                        std::memcpy(&h, blk + 208, 2);
+                        const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
+                        for (int l = 0; l < 8; ++l) sums[l] += d * float(aux32[l]);
+                    }
                 }
-                return (float)acc;
+                for (int l = 0; l < 8; ++l) sumf += sums[l];
+                return sumf;
             };
 // Build the Q8_K activation in the interleaved layout (per 256 values:
         // d, qs[256], bsums[16] = 273 floats) so the GPU kernel and the CPU
         // reference dot against an identical activation. Without this the
         // parity gate compares quantised-vs-float and measures activation error.
+        //
+        // bsums[] is the ggml block_q8_K layout: SIXTEEN half-block sums, each
+        // covering 16 activation values, at offsets 257..272. ggml's
+        // ggml_vec_dot_q4_K_q8_K_generic forms
+        //     sumi = sum_j bsums[j] * mins[j/2]
+        // and subtracts dmin * sumi, so a single whole-block total makes every
+        // sub-block but the first use a zero minimum and silently corrupts the
+        // min term of the Q4_K reference dot.
         const size_t n_blk = n_in / 256;
         std::vector<float> q8(n_blk * 273, 0.0f);
         for (size_t b = 0; b < n_blk; ++b) {
@@ -380,13 +502,13 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             const float inv = d > 0.0f ? 1.0f / d : 0.0f;
             float* blk = q8.data() + b * 273;
             blk[0] = d;
-            int32_t bsum = 0;
+            int32_t bsums[16] = {0};
             for (size_t i = 0; i < 256; ++i) {
                 const int32_t v = (int32_t)std::lround(x[b * 256 + i] * inv);
                 blk[1 + i] = (float)v;
-                bsum += v;
+                bsums[i / 16] += v;
             }
-            blk[257] = (float)bsum;
+            for (size_t k = 0; k < 16; ++k) blk[257 + k] = (float)bsums[k];
         }
         y.assign(n_out, 0.0f);
         if (std::getenv("QUANT_TRACE")) {
@@ -399,6 +521,30 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                                               x.data(), n_in, y.data(), n_out, cpu,
                                               q8.data(), q8.size() * sizeof(float));
         if (gpu) { ++gpu_calls_; } else { ++cpu_calls_; }
+        // Env-gated differential check: the GPU kernel must reproduce the CPU
+        // dot exactly, and must never emit a non-finite value. A divergence is
+        // a kernel defect and is reported with the tensor that produced it.
+        if (gpu && std::getenv("RR_GPU_CHECK")) {
+            std::vector<float> ref(n_out, 0.0f);
+            for (size_t j = 0; j < n_out; ++j) {
+                const uint8_t* row = reinterpret_cast<const uint8_t*>(w.data) + j * rb;
+                ref[j] = cpu(row, q8.data(), j);
+            }
+            size_t badnan = 0, worstj = 0;
+            double worstd = 0.0;
+            for (size_t j = 0; j < n_out; ++j) {
+                if (!std::isfinite(y[j])) { if (!badnan) worstj = j; ++badnan; continue; }
+                const double dd = std::fabs(double(y[j]) - double(ref[j]));
+                if (dd > worstd) { worstd = dd; worstj = j; }
+            }
+            if (badnan || worstd > 1e-2 * std::max(1.0, double(std::fabs(ref[worstj])))) {
+                std::fprintf(stderr,
+                    "[GPU-DIVERGE] w=%s kind=%d n_in=%zu n_out=%zu nan=%zu worst_row=%zu gpu=%.6g cpu=%.6g diff=%.6g\n",
+                    w.name.c_str(), kind, n_in, n_out, badnan, worstj,
+                    (double)y[worstj], (double)ref[worstj], worstd);
+                std::fflush(stderr);
+            }
+        }
         return true;
     }
 
@@ -425,7 +571,19 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         if (n_in % blk != 0) { err = "linear: n_in not a multiple of the block size"; return false; }
         const size_t blocks_per_row = n_in / blk;
         const size_t row_bytes = blocks_per_row * ts;
-        if (w.bytes < row_bytes * n_out) { err = "linear: weight bytes short"; return false; }
+        if (w.bytes < row_bytes * n_out) {
+            if (std::getenv("LINEAR_TRACE")) {
+                std::fprintf(stderr, "[linear-short-legacy] w=%s type=%d dims=[%zu,%zu] bytes=%zu "
+                                     "need=%zu (row_bytes=%zu n_out=%zu blk=%zu ts=%zu)\n",
+                             w.name.c_str(), (int)w.ggml_type, (size_t)w.dims[0],
+                             w.dims.size() > 1 ? (size_t)w.dims[1] : 0,
+                             w.bytes, row_bytes * n_out, row_bytes, n_out,
+                             (size_t)blk, (size_t)ts);
+                std::fflush(stderr);
+            }
+            err = "linear: weight bytes short";
+            return false;
+        }
 
         std::vector<float> rw(n_in, 0.0f);
         y.assign(n_out, 0.0f);
@@ -489,6 +647,13 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // instrumentation that locates the faulting access: if a buffer length or
     // per-head width is inconsistent, the fault follows from it directly.
     if (std::getenv("ATTN_TRACE")) {
+        auto nf = [](const std::vector<float>& v) {
+            size_t n = 0;
+            for (float f : v) if (!std::isfinite(f)) ++n;
+            return n;
+        };
+        std::fprintf(stderr, "[attn-nan] block=%d pos=%zu qnn=%zu knn=%zu vnn=%zu\n",
+                     (int)in.block, position, nf(q), nf(k), nf(v));
         std::fprintf(stderr, "[attn] block=%d pos=%zu q=%zu k=%zu v=%zu H=%zu hk=%zu kl=%zu vl=%zu kvcache=%zu,%zu\n",
                      (int)in.block, position, q.size(), k.size(), v.size(),
                      H, (size_t)spec_.heads_kv, (size_t)spec_.key_length,
@@ -662,7 +827,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // produce bit-identical logits, because the context contribution cancelled
     // while the embedding-path contribution survived - the degenerate-output
     // signature. In a GQA model there is no split and the whole head is dotted.
-    const size_t nopeD = isMla ? qk_nope : qD;
+    const size_t nopeD = isMla ? qk_nope : 0;
     for (size_t h = 0; h < H; ++h) {
         const size_t g = isMla ? h : (h / group);
         const float* qp = qr.data() + h * qPerHead;
@@ -714,6 +879,14 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     (void)hdim;
 
     std::vector<float> logits;
+    if (std::getenv("ROUTER_TRACE")) {
+        size_t nnan = 0;
+        for (size_t i = 0; i < x.size(); ++i) if (!std::isfinite(x[i])) ++nnan;
+        std::fprintf(stderr, "[router] blk=%d tensor='%s' dims=%zu/%d n_hidden=%zu n_exp=%zu x=%zu nnan=%zu\n",
+                     (int)router.block, rt.name.c_str(), rt.dims.size(),
+                     rt.dims.empty() ? 0 : (int)rt.dims[0], n_hidden, n_exp, x.size(), nnan);
+        std::fflush(stderr);
+    }
     if (rt.ggml_type == GGML_TYPE_F32) {
         logits.assign(static_cast<size_t>(n_exp), 0.0f);
         if (!rt.data || rt.bytes < n_exp * n_hidden * sizeof(float)) {
@@ -1113,6 +1286,15 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (std::getenv("RR_TRACE_TOKEN")) std::fprintf(stderr, "  [token] pos=%zu token=%u cache_sizes=%zu,%zu,...\n", position, token, kv_k_.empty()?0:kv_k_[0].size(), kv_v_.empty()?0:kv_v_[0].size());
     position_ = position;
 
+    // Wall-clock for this token. BindStats already declares cold_start_ms /
+    // steady_kernel_ms / dispatch_ms / total_ms but nothing ever filled them,
+    // which is why every receipt reported dispatch_ms=0.000 and no TPS could be
+    // derived. Total covers the whole token (prefill and decode alike); the
+    // first token additionally records cold start, because it includes cache
+    // warm-up and any lazy pipeline creation.
+    const auto token_started = std::chrono::steady_clock::now();
+    ++tokens_executed_;
+
     // Activation arena: SSA values from the runtime graph, keyed by the name
     // the graph gave them. A block's gate and up projections both read
     // "ffn_norm", so an op's DECLARED input is used, not the running hidden.
@@ -1441,6 +1623,19 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         for (size_t i = 0; i < unresolved_inputs_.size() && i < 4; ++i)
             last_error_ += unresolved_inputs_[i] + "; ";
         return false;
+    }
+
+    // Accumulate the measured wall-clock into the receipts.
+    const auto token_finished = std::chrono::steady_clock::now();
+    const double token_ms =
+        std::chrono::duration<double, std::milli>(token_finished - token_started).count();
+    stats_.dispatch_ms += token_ms;
+    stats_.total_ms += token_ms;
+    if (tokens_executed_ == 1) {
+        // The first token pays for cache warm-up and lazy pipeline creation.
+        stats_.cold_start_ms = token_ms;
+    } else {
+        stats_.steady_kernel_ms += token_ms;
     }
     return true;
 }

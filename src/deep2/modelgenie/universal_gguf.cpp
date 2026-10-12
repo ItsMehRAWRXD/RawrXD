@@ -420,9 +420,11 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".attn_q.weight") != std::string::npos) return Role::AttnQ;
     if (n.find(".attn_k.weight") != std::string::npos) return Role::AttnK;
     if (n.find(".attn_v.weight") != std::string::npos) return Role::AttnV;
+    if (n.find(".attn_o.weight") != std::string::npos) return Role::AttnO;
     if (n.find(".attn_output.weight") != std::string::npos) return Role::AttnOutput;
     if (n.find(".ffn_norm.weight") != std::string::npos ||
-        n.find(".post_attention_norm.weight") != std::string::npos) return Role::FfnNorm;
+        n.find(".post_attention_norm.weight") != std::string::npos ||
+        n.find(".ssm_norm.weight") != std::string::npos) return Role::FfnNorm;
     if (n.find(".ffn_gate_inp.weight") != std::string::npos ||
         n.find(".exp_probs_b.bias") != std::string::npos) return Role::RouterGate;
     if (n.find(".ffn_gate_exps.weight") != std::string::npos) return Role::ExpFfnGate;
@@ -692,7 +694,11 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             p.block = (int32_t)b;
             p.a = "ssm_out";
             p.b = name(Role::SsmOut);
-            p.out = "ssm_proj";
+            // Written under attn_proj: the block's residual add below consumes
+            // attn_proj for every mixer kind (attention or SSM). Naming it
+            // ssm_proj left the residual add reading an arena entry that
+            // never existed.
+            p.out = "attn_proj";
             g.ops.push_back(p);
         }
 
@@ -750,7 +756,13 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.a = "qkv"; o.b = "qkv(split)"; o.out = "attn_out";
             o.detail = "fused qkv -> attention core (split internally)";
             g.ops.push_back(o);
-        } else {
+        } else if (!name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
+                   !name(Role::AttnV).empty()) {
+            // Standard (dense) attention. This branch requires all three
+            // projections: an architecture that omits them is an SSM/hybrid
+            // block whose mixer is the Mamba2 scan emitted above, and emitting
+            // attention ops with empty weight names there fails at bind time
+            // with "linear: no weight".
             for (Role r : {Role::AttnQ, Role::AttnK, Role::AttnV}) {
                 GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
@@ -764,13 +776,30 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o.a = "q"; o.b = "k,v"; o.out = "attn_out";
                 g.ops.push_back(o);
             }
-            {
+// Output projection: only for non-MLA models (MLA handles its own output projection)
+            if (s.kind != ArchKind::DeepSeekMLA && !name(Role::AttnOutput).empty()) {
                 GraphOp o;
                 o.op = Op::Linear; o.block = (int32_t)b;
                 o.a = "attn_out"; o.b = name(Role::AttnOutput); o.out = "attn_proj";
                 g.ops.push_back(o);
             }
+        } else if (name(Role::AttnQ).empty() && name(Role::SsmOut).empty()) {
+            // No attention projections and no SSM output: this is a
+            // shared-expert MoE block. Its norm output passes straight to the
+            // residual as the "attention projection", so the residual add
+            // below has a real operand instead of an unresolvable slot.
+            // (Nemotron-H interleaves these: blk.1/3/6/... carry only
+            // attn_norm + exp_probs_b.bias + the expert tensors.)
+            GraphOp o;
+            o.op = Op::Publish;
+            o.block = (int32_t)b;
+            o.a = "attn_norm";
+            o.out = "attn_proj";
+            o.detail = "shared-expert MoE block: no mixer, norm passes to residual";
+            g.ops.push_back(o);
         }
+        // else: either an attention block handled above, or an SSM-only block
+        // whose scan already wrote attn_proj.
 
         // Residual add. resid_in was published above, before the attention
         // ops, so it holds the block input.
@@ -780,11 +809,21 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.a = "resid_in"; o.b = "attn_proj"; o.out = "resid1";
             g.ops.push_back(o);
         }
-        // ffn norm
-        {
+        // ffn norm. SSM blocks carry ssm_norm.weight; attention blocks carry
+        // post_attention_norm.weight. Nemotron-H MoE blocks carry neither -
+        // their only norm is attn_norm, which the MoE consumes directly, so
+        // the norm output is published rather than re-normalised with a weight
+        // that does not exist.
+        if (!name(Role::FfnNorm).empty()) {
             GraphOp o;
             o.op = Op::RmsNorm; o.block = (int32_t)b;
             o.a = "resid1"; o.b = name(Role::FfnNorm); o.out = "ffn_norm";
+            g.ops.push_back(o);
+        } else if (!name(Role::AttnNorm).empty()) {
+            GraphOp o;
+            o.op = Op::RmsNorm; o.block = (int32_t)b;
+            o.a = "resid1"; o.b = name(Role::AttnNorm); o.out = "ffn_norm";
+            o.detail = "no FFN norm tensor; attn_norm reused for the FFN input";
             g.ops.push_back(o);
         }
 
@@ -792,6 +831,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         // dense before MoE begins, so a block with no router must get the dense
         // FFN path, not a Router/TopK/MoE triple that cannot bind.
         const bool hasRouter = !name(Role::RouterGate).empty();
+        const bool hasDenseFfn = !name(Role::FfnGate).empty() && !name(Role::FfnUp).empty();
         if (hasRouter && s.expert_count > 0) {
             GraphOp o;
             o.op = Op::Router; o.block = (int32_t)b;
@@ -808,7 +848,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.out = "moe_out";
             o.detail = "experts: " + name(Role::ExpFfnUp) + "," + name(Role::ExpFfnDown); // gate slot is in .c
             g.ops.push_back(o);
-        } else {
+        } else if (hasDenseFfn) {
             const bool hasShared = s.kind == ArchKind::DeepSeekMLA;
             // Dense FFN: gate/up projections, then SwiGLU, then down.
             for (Role r : {Role::FfnGate, Role::FfnUp}) {
@@ -831,6 +871,17 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 g.ops.push_back(o);
             }
             (void)hasShared;
+        } else {
+            // No FFN of any kind (nemotron_h SSM and attention blocks): the
+            // norm output passes through to the residual instead of emitting
+            // gate/up Linear ops with unresolvable empty weight names.
+            GraphOp o;
+            o.op = Op::Publish;
+            o.block = (int32_t)b;
+            o.a = "ffn_norm";
+            o.out = "ffn_out";
+            o.detail = "no FFN weights in this block; norm passes to residual";
+            g.ops.push_back(o);
         }
 
         // residual add
@@ -849,18 +900,78 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
     // produces the vocabulary logits that choose the next token.
     {
         GraphOp o;
+
+        // Final norm and output projection. These MUST come after every block:
+        // the norm is applied to the layered hidden state and the projection
+        // produces the vocabulary logits that choose the next token.
+        //
+        // Tied embeddings: base checkpoints such as Qwen2.5-Coder-1.5B store no
+        // separate output.weight and reuse the token embedding matrix as the LM
+        // head. Substituting it is only correct when the geometry matches
+        // ([vocabSize, hiddenDim]), so the substitution is made with that check
+        // rather than silently binding a tensor that is not there. If the shapes
+        // disagree, lmHeadWeight stays empty, no head op is emitted, and Bind
+        // fails closed ("missing output.weight") rather than producing logits
+        // from the wrong shape.
+        std::string lmHeadWeight;
+        auto findByName = [&](const char* n) -> const TensorRec* {
+            for (const auto& t : tensors) {
+                if (t.name == n) return &t;
+            }
+            return nullptr;
+        };
+
+        if (findByName("output.weight") != nullptr) {
+            lmHeadWeight = "output.weight";
+        } else {
+            if (const TensorRec* e = findByName("token_embd.weight")) {
+                // Validate geometry before substituting, per the model's OWN
+                // tensors rather than metadata: a square block projection such
+                // as blk.0.attn_output.weight is [hiddenDim, hiddenDim], so its
+                // dims[0] gives hiddenDim without relying on spec fields that
+                // some exports leave at zero. GGUF dims[0] is ne[0]
+                // (innermost), so the embedding is [hiddenDim, vocabCount].
+                uint64_t hiddenDim = s.embd;
+                if (hiddenDim == 0) {
+                    for (const auto& t : tensors) {
+                        if (t.name == "blk.0.attn_output.weight" &&
+                            t.dims.size() >= 2) {
+                            hiddenDim = t.dims[0];
+                            break;
+                        }
+                    }
+                }
+                const bool hiddenOk = (hiddenDim != 0) &&
+                    (e->dims.size() >= 2) &&
+                    (e->dims[0] == (decltype(e->dims[0]))hiddenDim);
+                // Row count must be the vocabulary, which is strictly larger
+                // than hiddenDim for any real LM. If the spec carries a vocab
+                // count, require an exact match; otherwise require the strict
+                // inequality rather than guessing a number.
+                const bool vocabOk =
+                    (s.vocab != 0) ? (e->dims[1] == (decltype(e->dims[1]))s.vocab)
+                                  : (e->dims[1] > (decltype(e->dims[1]))hiddenDim);
+                if (hiddenOk && vocabOk) {
+                    lmHeadWeight = "token_embd.weight";
+                }
+            }
+        }
+
         o.op = Op::RmsNorm;
         o.block = -1;
         o.a = "<hidden>";
         o.b = "output_norm.weight";
         o.out = "out_norm";
         g.ops.push_back(o);
-        o = GraphOp{};
-        o.op = Op::LmHead;
-        o.a = "out_norm";
-        o.b = "output.weight";
-        o.out = "logits";
-        g.ops.push_back(o);
+
+        if (!lmHeadWeight.empty()) {
+            o = GraphOp{};
+            o.op = Op::LmHead;
+            o.a = "out_norm";
+            o.b = lmHeadWeight;
+            o.out = "logits";
+            g.ops.push_back(o);
+        }
     }
 
     // Anything the family needs but has no primitive is recorded, not hidden.

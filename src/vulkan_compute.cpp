@@ -1045,7 +1045,17 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
 
     VkDescriptorPoolCreateInfo dp{};
     dp.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    // ExecuteQuantDot allocates one set per dispatch and recycles it with
+    // vkFreeDescriptorSets once the GPU work has completed. Without
+    // VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT that free is invalid
+    // and returns an error, so no set was ever reclaimed and the fixed-size
+    // pool (64 sets) was exhausted after ~64 dispatches. Every subsequent
+    // quant-dot then failed with "Quant-dot descriptor allocation failed",
+    // which silently pushed the model onto CPU and broke the GPU-only
+    // certificate. The flag makes the recycle path actually reclaim sets.
+    dp.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     dp.maxSets = 64;
+    quant_pool_max_sets_ = dp.maxSets;
     dp.poolSizeCount = 1;
     dp.pPoolSizes = &pool_size;
     if (vkCreateDescriptorPool(device_, &dp, nullptr, &quant_descriptor_pool_) != VK_SUCCESS) {
@@ -1143,8 +1153,17 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     alloc.pSetLayouts = &quant_descriptor_set_layout_;
 
     VkDescriptorSet ds = VK_NULL_HANDLE;
-    if (vkAllocateDescriptorSets(device_, &alloc, &ds) != VK_SUCCESS) {
-        std::cerr << "Quant-dot descriptor allocation failed" << std::endl;
+    // Report the exact VkResult. "Quant-dot descriptor allocation failed" on
+    // its own distinguishes nothing: VK_ERROR_OUT_OF_POOL_MEMORY means the
+    // pool is exhausted (a lifecycle bug), whereas VK_ERROR_FRAGMENTED_POOL
+    // means it is sized wrong. Both previously looked identical in the log.
+    const VkResult alloc_result =
+        vkAllocateDescriptorSets(device_, &alloc, &ds);
+    if (alloc_result != VK_SUCCESS) {
+        std::cerr << "[QUANT_DOT] descriptor allocation failed: VkResult="
+                  << static_cast<int>(alloc_result)
+                  << " (5=VK_ERROR_OUT_OF_POOL_MEMORY, 12=VK_ERROR_FRAGMENTED_POOL)"
+                  << " pool_maxSets=" << quant_pool_max_sets_ << std::endl;
         return false;
     }
 
@@ -1188,7 +1207,20 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         }
     }
 
-    vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &ds);
+    // Recycle the set. This runs after ExecuteSingleTimeCommands, which waits
+    // on a fence, so the GPU is guaranteed finished with the set. The result is
+    // checked: a silently failing free here is exactly what previously starved
+    // the pool, and returning false makes the caller retry on CPU rather than
+    // letting the next allocation fail with a confusing error.
+    const VkResult free_result = vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &ds);
+    if (free_result != VK_SUCCESS) {
+        std::cerr << "[QUANT_DOT] descriptor set free failed: VkResult="
+                  << static_cast<int>(free_result)
+                  << " - pool was not created with "
+                     "VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT"
+                  << std::endl;
+        return false;
+    }
     return ok;
 }
 

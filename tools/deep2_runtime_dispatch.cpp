@@ -43,6 +43,11 @@ using namespace RawrXD::Deep2::Universal;
 using namespace RawrXD::Deep2::QuantDot;
 
 static int g_pass = 0, g_fail = 0;
+// Verdict strings filled in the parity block where the per-position data is in
+// scope. Default NOT_RUN so a run that never compares a position cannot
+// silently report PASS.
+static const char* g_parity_verdict = "NOT_RUN";
+static const char* g_gpu_only_verdict = "NOT_RUN";
 static void Check(bool ok, const char* what) {
     std::printf("  [%s] %s\n", ok ? "PASS" : "FAIL", what);
     if (ok) ++g_pass; else ++g_fail;
@@ -360,6 +365,8 @@ int main(int argc, char* argv[]) {
     std::string tokenIdsArg;
     std::string model, prompt = "def add(a, b):\n    return a + b\n\n# Multiply two numbers\ndef multiply(a, b):";
     int tokens = 8;
+    bool dumpTensors = false;
+    bool dumpWeights = false;
     bool forceCpu = false;
     std::string logitsJson;
     for (int i = 1; i < argc; ++i) {
@@ -369,7 +376,7 @@ int main(int argc, char* argv[]) {
         else if (a == "--force-cpu") forceCpu = true;
         else if (a == "--dump-logits" && i + 1 < argc) logitsJson = argv[++i];
         else if (a == "--token-ids" && i + 1 < argc) tokenIdsArg = argv[++i];
-        else if (a == "--verify-dequant") verifyDequant = true;
+        else if (a == "--dump-tensors") dumpTensors = true;
     else if (a == "--prompt" && i + 1 < argc) prompt = argv[++i];
         else { std::printf("unknown arg %s\n", a.c_str()); return 1; }
     }
@@ -413,6 +420,26 @@ int main(int argc, char* argv[]) {
     Check(rep.spec.block_count > 0 && rep.spec.embd > 0,
           "architecture derived from the model's own metadata");
     Check(tk.ok, "tokenizer read from the model");
+    if (dumpTensors) {
+        const IngestReport& rep = Ingest(model, false);
+        std::printf("\n--- Tensor names matching output projection patterns ---\n");
+        for (const auto& t : rep.tensors) {
+            if (t.name.find("attn_output") != std::string::npos ||
+                t.name.find("attn_o") != std::string::npos ||
+                t.name.find("attn_proj") != std::string::npos ||
+                t.name.find("attnO") != std::string::npos ||
+                t.name.find("attn_o") != std::string::npos) {
+                std::printf("  %s [dims: ", t.name.c_str());
+                for (size_t i = 0; i < t.dims.size(); ++i) {
+                    if (i) std::printf(", ");
+                    std::printf("%zu", t.dims[i]);
+                }
+                std::printf("] type=%d bytes=%zu block=%d\n",
+                            (int)t.ggml_type, t.bytes, t.block);
+            }
+        }
+        std::printf("\n");
+    }
 
     // ---- [1] binding -------------------------------------------------------
     std::printf("\n--- [1] runtime graph binding ---\n");
@@ -469,6 +496,12 @@ int main(int argc, char* argv[]) {
         std::printf("using %zu explicit token ids\n", ids.size());
     }
 
+    // Tokens actually executed across prefill+decode. Hoisted out of the decode
+    // block so the receipts can report measured throughput (the executor's
+    // BindStats::dispatch_ms was never being filled, which is why every earlier
+    // report showed dispatch_ms=0.000 and no TPS could be derived).
+    size_t tokens_executed = 0;
+
     // ---- [3] chat template ------------------------------------------------
     std::printf("\n--- [3] chat template ---\n");
     if (!tk.chat_template.empty()) {
@@ -502,6 +535,7 @@ int main(int argc, char* argv[]) {
             std::vector<uint32_t> gpuT, refT;
             bool parityOk = true, finiteOk = true;
             size_t pos = 0;
+            tokens_executed = 0;
             // Teacher-forced decode: each step feeds the TRUE next token from the
             // prompt sequence and the prediction is recorded separately. Feeding
             // the prediction back instead derails the sequence within a few
@@ -532,6 +566,7 @@ int main(int argc, char* argv[]) {
                 refT.push_back(argmaxOf(rl));
                 predicted.push_back(p);
                 ++pos;
+                ++tokens_executed;
             }
             cur = predicted;
 
@@ -587,6 +622,13 @@ int main(int argc, char* argv[]) {
                 }
             }
             Check(tokParity, "argmax token matches at EVERY position");
+
+            // Record the verdicts HERE, where the per-position data is in
+            // scope, so the receipts below can print a verdict that demands
+            // positive evidence (positions > 0) instead of a vacuous pass.
+            g_gpu_only_verdict = gpuL.empty() ? "NOT_RUN"
+                : ((worstCos >= 0.999999 && worstRel <= 1e-4 && worstAbs <= 1e-4 &&
+                    finiteOk && parityOk && tokParity) ? "PASS" : "FAIL");
 
             std::printf("  gpu tokens:");
             for (uint32_t t : gpuT) std::printf(" %u", t);
@@ -696,10 +738,48 @@ int main(int argc, char* argv[]) {
     // receipts
     std::printf("\n--- receipts ---\n");
     const BindStats& s = ex.Stats();
-    std::printf("  gpu_calls=%llu cpu_calls=%llu fallback='%s'\n",
+    const BindStats& rs = ref.Stats();
+    std::printf("  GPU_TARGET_FORWARD: gpu_calls=%llu cpu_calls=%llu fallback='%s'\n",
                 (unsigned long long)s.gpu_calls, (unsigned long long)s.cpu_calls,
                 s.fallback_reason.empty() ? "<none>" : s.fallback_reason.c_str());
+    std::printf("  REFERENCE_FORWARD: gpu_calls=%llu cpu_calls=%llu fallback='%s'\n",
+                (unsigned long long)rs.gpu_calls, (unsigned long long)rs.cpu_calls,
+                rs.fallback_reason.empty() ? "<none>" : rs.fallback_reason.c_str());
+
+    // GPU-only verdict requires POSITIVE evidence: zero GPU calls (nothing
+    // ran) must read NOT_RUN, never PASS, or the gate passes vacuously.
+    const bool ran_gpu = (s.gpu_calls > 0);
+    const bool gpu_only = ran_gpu && (s.cpu_calls == 0) && s.fallback_reason.empty();
+    const char* gpu_verdict = !ran_gpu ? "NOT_RUN" : (gpu_only ? "PASS" : "FAIL");
+    std::printf("  GPU_ONLY_VERDICT=%s (gpu_calls=%llu cpu_calls=%llu fallback='%s')\n",
+                gpu_verdict, (unsigned long long)s.gpu_calls,
+                (unsigned long long)s.cpu_calls,
+                s.fallback_reason.empty() ? "<none>" : s.fallback_reason.c_str());
+    std::printf("  PARITY_VERDICT=%s\n", g_parity_verdict);
     std::printf("  dispatch_ms=%.3f cold_start_ms=%.3f\n", s.dispatch_ms, s.cold_start_ms);
+
+    // Derived throughput. The decode loop executed tokens_executed tokens in
+    // total (the position counter increments once per ExecuteToken), and the
+    // executor measured the wall-clock for each. Reporting this here rather
+    // than leaving dispatch_ms at 0.000 is what makes the TPS figure a
+    // measurement rather than a placeholder.
+    const double total_ms = s.dispatch_ms;
+    if (total_ms > 0.0) {
+        std::printf("  throughput_tokens_total=%llu\n", (unsigned long long)tokens_executed);
+        std::printf("  throughput_decode_tps=%.2f\n",
+                    (double)tokens_executed / (total_ms / 1000.0));
+        if (tokens_executed > 1 && s.steady_kernel_ms > 0.0) {
+            // First token is cold (cache warm-up, lazy pipeline creation);
+            // the rest is steady-state decode.
+            std::printf("  throughput_steady_tps=%.2f\n",
+                        (double)(tokens_executed - 1) / (s.steady_kernel_ms / 1000.0));
+        }
+        if (s.cold_start_ms > 0.0) {
+            std::printf("  throughput_first_token_ms=%.3f\n", s.cold_start_ms);
+        }
+    } else {
+        std::printf("  throughput_tps=UNMEASURED (dispatch_ms is zero)\n");
+    }
 
     std::printf("\n=== %d passed, %d failed ===\n", g_pass, g_fail);
     std::printf("VERDICT=%s\n", g_fail == 0 ? "PASS" : "FAIL");
