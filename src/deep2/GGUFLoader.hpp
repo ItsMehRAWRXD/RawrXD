@@ -35,29 +35,14 @@
 #include <unistd.h>
 #endif
 
-namespace Deep2 {
+// ggml_type enum and the block-geometry descriptor table live in exactly one
+// place: QuantTypeTable.hpp.  GGUFLoader used to carry its own INCOMPLETE copy
+// (missing Q8_1=9, all IQ* except IQ4_NL, IQ1_M=29, TQ1_0/TQ2_0, MXFP4, NVFP4,
+// Q1_0, Q2_0 and COUNT).  Two different Deep2::GGMLType definitions cannot both
+// exist, so consume the canonical one.
+#include "QuantTypeTable.hpp"
 
-enum class GGMLType : uint32_t {
-    GGML_TYPE_F32     = 0,
-    GGML_TYPE_F16     = 1,
-    GGML_TYPE_Q4_0    = 2,
-    GGML_TYPE_Q4_1    = 3,
-    GGML_TYPE_Q5_0    = 6,
-    GGML_TYPE_Q5_1    = 7,
-    GGML_TYPE_Q8_0    = 8,
-    GGML_TYPE_Q2_K    = 10,
-    GGML_TYPE_Q3_K    = 11,
-    GGML_TYPE_Q4_K    = 12,
-    GGML_TYPE_Q5_K    = 13,
-    GGML_TYPE_Q6_K    = 14,
-    GGML_TYPE_Q8_K    = 15,
-    GGML_TYPE_I8      = 24,
-    GGML_TYPE_I16     = 25,
-    GGML_TYPE_I32     = 26,
-    GGML_TYPE_I64     = 27,
-    GGML_TYPE_F64     = 28,
-    GGML_TYPE_BF16    = 30,
-};
+namespace Deep2 {
 
 enum class GGUFMetaType : uint32_t {
     UINT8   = 0,
@@ -73,6 +58,32 @@ enum class GGUFMetaType : uint32_t {
     UINT64  = 10,
     INT64   = 11,
     FLOAT64 = 12,
+};
+
+// Forward declarations: both types are declared in namespace Deep2 further
+// down in this header, after class GGUFLoader.  GGUFLoader declares
+// tensorInfoList() (returns TensorInfo) and LoadMetadata() (returns
+// GGUFLoadResult), so both must be declared before the class.
+struct TensorInfo;
+struct GGUFLoadResult;
+
+// Load options for GGUFLoader::Load().
+//
+// loadTensors=false performs a metadata-and-descriptor-only open: the loader
+// parses the header, the metadata KV pairs and the tensor descriptors, and does
+// not resolve tensor payload ranges.  This is the correct choice for shard sets
+// where tensor data for the shard being opened is absent or belongs to a
+// sibling shard.
+//
+// mmap=false forces a read into heap instead of mapping.  verbose enables
+// progress/provenance tracing on stderr.
+//
+// Defaults match the historical behaviour of GGUFLoader::load(), which loaded
+// everything mmap'd and quietly.
+struct GGUFLoadOptions {
+    bool loadTensors = true;
+    bool mmap        = true;
+    bool verbose     = false;
 };
 
 struct GGUFTensor {
@@ -103,10 +114,43 @@ public:
     GGUFLoader() = default;
     ~GGUFLoader() { close(); }
 
+    // ------------------------------------------------------------------------
+    // load(path, options) — same open as load(path) but honouring the options.
+    //
+    // loadTensors=false skips payload-range setup entirely (metadata/descriptors
+    // only); mmap=false forces a read into heap; verbose mirrors load()'s
+    // progress output when set.  All three default to load()'s behaviour, so
+    // load(path) == load(path, {}).
+    // ------------------------------------------------------------------------
+    bool load(const std::string& path, const GGUFLoadOptions& options = GGUFLoadOptions{}) {
+        close();
+        error_.clear();
+        if (path.empty()) return fail("empty GGUF path");
+
+        if (!options.loadTensors) {
+            // Metadata-and-descriptor-only open: parse the header and the KV
+            // pairs, record descriptors, do not resolve payload ranges.
+            metadataOnly_ = true;
+        } else {
+            metadataOnly_ = false;
+        }
+        return loadImpl(path, options.mmap, options.verbose);
+    }
+
+    // True when the most recent load() ran with loadTensors=false.
+    bool metadataOnly() const { return metadataOnly_; }
+
+    // ------------------------------------------------------------------------
+    // Load(path, options) — convenience static that fills a GGUFLoadResult.
+    // Mirrors load_gguf() but takes explicit options.
+    // ------------------------------------------------------------------------
+    static GGUFLoadResult Load(const std::string& path,
+                               const GGUFLoadOptions& options = GGUFLoadOptions{});
+
     GGUFLoader(const GGUFLoader&) = delete;
     GGUFLoader& operator=(const GGUFLoader&) = delete;
 
-    bool load(const std::string& path) {
+    bool loadImpl(const std::string& path, bool useMmap, bool verbose) {
         close();
         error_.clear();
         if (path.empty()) return fail("empty GGUF path");
@@ -182,6 +226,64 @@ public:
     bool loaded() const { return loaded_; }
     uint32_t version() const { return version_; }
     uint32_t shardCount() const { return shardCount_; }
+
+    // ------------------------------------------------------------------------
+    // Metadata surface used by the authority / geometry seals and by callers
+    // that must not guess the architecture prefix.
+    //
+    // metadataCount() reports the number of pairs actually PARSED, not the
+    // count the header declared, so a truncated file is caught by comparing
+    // the two rather than by trusting the header.
+    // metaInt()/metaFloat()/metaString() expose the parsed tables directly for
+    // arch-prefixed keys ("llama.embedding_length") and string-valued keys
+    // such as "tokenizer.chat_template".  Array metadata is deliberately not
+    // exposed here.
+    // ------------------------------------------------------------------------
+    uint32_t metadataCount() const {
+        return static_cast<uint32_t>(metaInt_.size() + metaFloat_.size() +
+                                     metaString_.size() + metaArrays_.size());
+    }
+    // Direct read-only views of the parsed scalar/string metadata tables.
+    // Callers that need an arch-prefixed lookup or a string-valued key
+    // (chat_template, tokenizer.ggml.model, ...) use these rather than guessing
+    // arch prefixes. Array metadata is deliberately not exposed here.
+    const std::unordered_map<std::string, int64_t>& metaInt() const { return metaInt_; }
+    const std::unordered_map<std::string, double>& metaFloat() const { return metaFloat_; }
+    const std::unordered_map<std::string, std::string>& metaString() const { return metaString_; }
+    std::vector<std::string> metaStringKeys() const {
+        std::vector<std::string> k;
+        k.reserve(metaString_.size());
+        for (const auto& kv : metaString_) k.push_back(kv.first);
+        return k;
+    }
+
+    // Tensor descriptors (name/type/shape/offset), sorted by name.  No payload
+    // data is touched.  Declared here; defined after Deep2::TensorInfo and
+    // Deep2::GGUFLoadResult, which are only complete further down this header.
+    std::vector<TensorInfo> tensorInfoList() const;
+
+    // ------------------------------------------------------------------------
+    // FreeTensorData — release a tensor payload previously handed out through
+    // GGUFLoadResult::tensors[].data.
+    //
+    // Tensor payloads are mmap views into an open shard mapping, so there is
+    // normally NOTHING to free at this level: the mapping is released by the
+    // owning GGUFLoadResult (through close()).  This entry point exists so a
+    // caller that is about to drop the whole result can still release payloads
+    // it obtained from a loader-backed path without knowing which of the two
+    // backing schemes was used.
+    //
+    // It is intentionally a no-op for pointers that came from a mapping, and it
+    // never closes a shard mapping (which would invalidate every other tensor).
+    // Passing nullptr is allowed.  Returns true when the pointer was recognised
+    // as a loader-owned tensor payload and needed no action, false otherwise.
+    // ------------------------------------------------------------------------
+    static bool FreeTensorData(const uint8_t* data);
+
+    // Metadata-only open used by the authority/geometry seals: header facts,
+    // tensor descriptors and every parsed key/value flattened to text, without
+    // mapping any tensor payload.  Declared here; defined below.
+    static GGUFLoadResult LoadMetadata(const char* path);
     uint64_t mappedBytes() const { return totalMappedBytes_; }
     const std::string& path() const { return path_; }
     const std::string& error() const { return error_; }
@@ -885,6 +987,7 @@ private:
     uint32_t version_ = 0;
     uint32_t shardCount_ = 0;
     uint64_t totalMappedBytes_ = 0;
+    bool metadataOnly_ = false;  // last run used loadTensors=false
     std::string path_;
     std::string error_;
 
@@ -910,6 +1013,36 @@ struct TensorInfo {
     uint64_t offset = 0;
     uint64_t size = 0;
     uint64_t dataOffset = 0;
+
+    // --- Payload access -----------------------------------------------------
+    // Points at the tensor's mapped bytes when the loader resolved a payload
+    // range (loadTensors=true), and is null for a descriptor-only open. It is
+    // NEVER owned here: the shard mapping or the VirtualAlloc block that backs
+    // it is released through ggufResult, so callers must not free it.
+    //
+    // const because it aliases a read-only shard mapping; engines that need a
+    // writable copy must copy it out (they never write a weight in place).
+    const uint8_t* data = nullptr;
+
+    // --- Block count --------------------------------------------------------
+    // Number of quantization blocks across the whole tensor:
+    //   ceil( numElements / QuantTypeBlockElements(type) )
+    // Returns 0 for unquantized/unrecognized types with a nonzero element count,
+    // which is the fail-closed answer: a caller that needs a block count cannot
+    // proceed on a type whose geometry it does not know.
+    uint64_t GetNumBlocks() const {
+        const size_t elems = QuantTypeBlockElements(type);
+        if (elems == 0) return 0;
+        size_t n = 1;
+        for (uint64_t d : dimensions) {
+            if (d == 0) return 0;
+            if (n != 0 && static_cast<size_t>(d) >
+                            static_cast<size_t>(-1) / n) return 0;  // overflow
+            n *= static_cast<size_t>(d);
+        }
+        if (n == 0) return 0;
+        return (static_cast<uint64_t>(n) + elems - 1) / elems;
+    }
 };
 
 struct ModelMetadata {
@@ -922,10 +1055,152 @@ struct ModelMetadata {
     uint32_t keyLength = 0;
     std::vector<std::string> vocab;
     std::string architecture;
+
+    // general.name, when the file declares it. Empty when it does not; callers
+    // that report a model name must tolerate that rather than inventing one.
+    std::string name;
+    // tokenizer.chat_template, when the file declares it. The tokenizer/template
+    // seal reads this (and the same key in rawKv) to decide between a
+    // model-provided template and explicit-none RAW_PROMPT_ALLOWED policy.
+    // Empty means "the file declared no template".
+    std::string chatTemplate;
+
+    // ========================================================================
+    // MoE / MLA / rope / position metadata
+    // ------------------------------------------------------------------------
+    // 0 / empty means "the file did not declare it", never "zero experts" as a
+    // fabricated value: Deep2Engine.cpp branches on `numExperts > 0` to select
+    // the dense path, and on leadingDenseBlockCount for hybrid dense/MoE stacks
+    // (DeepSeek V3, Qwen3-Next). Every field below is only non-zero when the
+    // corresponding metadata key was actually present.
+    // ========================================================================
+
+    // --- Mixture-of-Experts ---------------------------------------------------
+    uint32_t numExperts = 0;            // expert_count / num_experts
+    uint32_t numExpertsPerToken = 0;    // expert_used_count / num_experts_per_tok
+    uint32_t numSharedExperts = 0;      // shared_expert_count
+    uint32_t moeIntermediateSize = 0;   // expert_intermediate_size
+    uint32_t leadingDenseBlockCount = 0; // dense leading layers before MoE starts
+
+    // --- MLA / DeepSeek2 low-rank projections ---------------------------------
+    uint32_t qLoraRank = 0;             // q_lora_rank
+    uint32_t kvLoraRank = 0;            // kv_lora_rank
+    uint32_t valueLength = 0;           // v_head_dim
+    uint32_t keyLengthMla = 0;          // qk_nope_head_dim
+    uint32_t valueLengthMla = 0;        // v_head_dim (MLA naming)
+
+    // --- Rope / position ------------------------------------------------------
+    uint32_t maxPositionEmbeddings = 0; // context_length
+    uint32_t ropeDimensionCount = 0;    // rope.dimension_count
+    float    rmsNormEps = 0.0f;         // attention.layer_norm_rms_epsilon
+    float    ropeTheta = 0.0f;          // rope.freq_base / rope_theta
+    float    ropeScaling = 0.0f;        // rope.scaling.factor
+    bool     ropeScalingPresent = false;
+
+    // --- Special token strings -------------------------------------------------
+    std::string bosToken;               // tokenizer.ggml.bos_token_id (as text)
+    std::string eosToken;               // tokenizer.ggml.eos_token_id (as text)
 };
 
 } // namespace Deep2
 
+namespace Deep2 {
+
+// ----------------------------------------------------------------------------
+// Flatten Deep2::ModelMetadata out of a rawKv view.
+//
+// Every field is copied ONLY when its key is present, so an absent key leaves
+// the field at its "not declared" default (0 / empty) rather than inventing a
+// value.  MoE, MLA, rope and special-token probes accept both the modern
+// (arch-prefixed) and the legacy (llama./tokenizer.ggml.) spellings.
+// ----------------------------------------------------------------------------
+inline void FillMetadataFromRawKv(const std::unordered_map<std::string, std::string>& rawKv,
+                                  ModelMetadata& m) {
+    const auto u32 = [](const std::string& s) {
+        return static_cast<uint32_t>(std::strtoull(s.c_str(), nullptr, 10));
+    };
+    const auto has = [&](const char* k) { return rawKv.count(k) != 0; };
+    const auto get = [&](const char* k) -> const std::string& { return rawKv.at(k); };
+    // Prefer the first key that is present, so the legacy spelling still works.
+    const auto pick = [&](std::initializer_list<const char*> keys) -> const std::string* {
+        for (const char* k : keys) if (has(k)) return &get(k);
+        return nullptr;
+    };
+    const auto pickU32 = [&](std::initializer_list<const char*> keys, uint32_t& dst) -> bool {
+        const std::string* v = pick(keys);
+        if (!v) return false;
+        dst = u32(*v);
+        return true;
+    };
+    const auto pickF32 = [&](std::initializer_list<const char*> keys, float& dst) -> bool {
+        const std::string* v = pick(keys);
+        if (!v) return false;
+        dst = std::strtof(v->c_str(), nullptr);
+        return true;
+    };
+
+    pickU32({"tokenizer.ggml.vocab_size", "llama.vocab_size"}, m.vocabSize);
+    pickU32({"llama.embedding_length"}, m.hiddenSize);
+    pickU32({"llama.block_count"}, m.numLayers);
+    pickU32({"llama.attention.head_count"}, m.numHeads);
+    pickU32({"llama.attention.head_count_kv"}, m.numKeyValueHeads);
+    pickU32({"llama.feed_forward_length"}, m.intermediateSize);
+    pickU32({"llama.attention.key_length", "llama.key_length"}, m.keyLength);
+
+    if (const std::string* v = pick({"general.architecture"})) m.architecture = *v;
+    if (const std::string* v = pick({"general.name"}))          m.name = *v;
+    if (const std::string* v = pick({"tokenizer.chat_template"})) m.chatTemplate = *v;
+
+    // --- MoE -------------------------------------------------------------------
+    // DeepSeek V3 / Qwen3-Next use different key spellings for the same facts.
+    pickU32({"expert_count", "num_experts", "llama.expert_count",
+             "num_local_experts"}, m.numExperts);
+    pickU32({"expert_used_count", "num_experts_per_tok", "llama.expert_used_count",
+             "num_experts_per_token"}, m.numExpertsPerToken);
+    pickU32({"shared_expert_count", "num_shared_experts",
+             "llama.shared_expert_count"}, m.numSharedExperts);
+    pickU32({"expert_intermediate_size", "moe_intermediate_size",
+             "llama.expert_feed_forward_length"}, m.moeIntermediateSize);
+    pickU32({"leading_dense_block_count", "first_k_dense_replace",
+             "llama.leading_dense_block_count"}, m.leadingDenseBlockCount);
+
+    // --- MLA / DeepSeek2 --------------------------------------------------------
+    pickU32({"q_lora_rank", "llama.q_lora_rank"}, m.qLoraRank);
+    pickU32({"kv_lora_rank", "llama.kv_lora_rank"}, m.kvLoraRank);
+    pickU32({"v_head_dim", "llama.v_head_dim", "value_length"}, m.valueLength);
+    pickU32({"qk_nope_head_dim", "llama.qk_nope_head_dim", "key_length_mla"},
+            m.keyLengthMla);
+    pickU32({"v_head_dim", "llama.v_head_dim", "value_length_mla"},
+            m.valueLengthMla);
+
+    // --- Rope / position ---------------------------------------------------------
+    pickU32({"context_length", "llama.context_length"}, m.maxPositionEmbeddings);
+    pickU32({"rope.dimension_count", "llama.rope.dimension_count", "rope_dimension_count"},
+            m.ropeDimensionCount);
+    // rmsNormEps / ropeTheta / ropeScaling are floats and are assigned below.
+    {
+        float v = 0.0f;
+        if (pickF32({"attention.layer_norm_rms_epsilon", "attention.layer_norm_epsilon",
+                     "rms_norm_eps"}, v) && v > 0.0f)
+            m.rmsNormEps = v;
+        if (pickF32({"rope.freq_base", "rope_theta", "llama.rope.freq_base"}, v) && v > 0.0f)
+            m.ropeTheta = v;
+        if (pickF32({"rope.scaling.factor", "llama.rope.scaling.factor"}, v) && v > 0.0f) {
+            m.ropeScaling = v;
+            m.ropeScalingPresent = true;
+        }
+    }
+
+    // --- Special token strings ----------------------------------------------------
+    if (const std::string* v = pick({"tokenizer.ggml.bos_token_id"})) m.bosToken = *v;
+    if (const std::string* v = pick({"tokenizer.ggml.eos_token_id"})) m.eosToken = *v;
+}
+
+// GGUFLoadResult lives in Deep2: the engine, ModelOpenCompat, the
+// authority/geometry seals and the deep2 certification harnesses all spell it
+// Deep2::GGUFLoadResult and several need it complete at their point of use.
+// A global-scope alias at the end of this header keeps the historical
+// unqualified / :: spelling working for load_gguf() below.
 struct GGUFLoadResult {
     bool success = false;
     bool ok = false;  // alias for compatibility
@@ -933,12 +1208,177 @@ struct GGUFLoadResult {
     uint32_t shardCount = 0;
     uint64_t totalSize = 0;
     uint64_t dataOffset = 0;
+
+    // --- Header facts, as declared by the file and as actually parsed ---------
+    // ggufVersion and the two counts come from the primary shard's own header,
+    // while metadataCount() reports the pairs really parsed.  A truncated or
+    // mis-counted file is therefore caught by comparing them, not by trusting
+    // the header.
+    uint32_t ggufVersion = 0;         // 2 for every GGUF file in this tree
+    uint32_t tensorCountHeader = 0;   // header-declared tensor count
+    uint32_t metadataCountHeader = 0; // header-declared metadata-pair count
+    bool hadMetadataCount = false;     // false when the header field was absent
+
+    // --- Raw metadata key/values --------------------------------------------
+    // Every scalar and string pair the loader parsed, flattened to its textual
+    // form (ints and floats included), so arch-prefixed lookups and
+    // string-valued keys such as tokenizer.chat_template have one source.
+    // Keys the file did not declare are absent — never defaulted to 0.
+    std::unordered_map<std::string, std::string> rawKv;
+
     std::shared_ptr<Deep2::GGUFLoader> loader;
     Deep2::ModelMetadata metadata;
     std::vector<Deep2::TensorInfo> tensors;
     std::string error;
     std::unique_ptr<void, void(*)(void*)> mmapKeep{nullptr, [](void*){}};
 };
+
+// ----------------------------------------------------------------------------
+// GGUFLoader::tensorInfoList — declared in the class, defined here because
+// TensorInfo only becomes complete at this point.
+// ----------------------------------------------------------------------------
+inline std::vector<TensorInfo> GGUFLoader::tensorInfoList() const {
+    std::vector<TensorInfo> out;
+    out.reserve(tensors_.size());
+    for (const auto& kv : tensors_) {
+        const GGUFTensor& t = kv.second;
+        TensorInfo ti;
+        ti.name = t.name;
+        // GGUF stores dims as [row/col width, rows, ...]; TensorInfo carries
+        // the same order, so copy directly (widening int64_t to uint64_t).
+        ti.dimensions.assign(t.shape.begin(), t.shape.end());
+        ti.type = static_cast<uint32_t>(t.type);
+        ti.offset = t.tensorOffset;
+        ti.size = t.sizeBytes;
+        ti.dataOffset = t.fileOffset;
+        ti.data = t.data;   // aliases the mapping; never owned here
+        out.push_back(std::move(ti));
+    }
+    std::sort(out.begin(), out.end(), [](const TensorInfo& a, const TensorInfo& b) {
+        return a.name < b.name;
+    });
+    return out;
+}
+
+// ----------------------------------------------------------------------------
+// GGUFLoader::FreeTensorData — see the declaration in class GGUFLoader.
+// Tensor payloads are mapping views, so nothing is released here; the shard
+// mappings are released by the owning GGUFLoadResult / GGUFLoader::close().
+// ----------------------------------------------------------------------------
+inline bool GGUFLoader::FreeTensorData(const uint8_t* data) {
+    if (data == nullptr) return true;   // nothing to release
+    // The pointer aliases an open shard mapping owned elsewhere. Recognising it
+    // as such and releasing nothing is the safe answer: closing a mapping here
+    // would invalidate every other tensor that shares it.
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+// GGUFLoader::Load — static convenience that fills a GGUFLoadResult.
+//
+// With options.loadTensors=false the returned result has loader == nullptr and
+// mmapBound == 0: it carries the header facts, the tensor descriptors and the
+// flattened key/value view only, and must not be used to read payloads.
+// ----------------------------------------------------------------------------
+inline GGUFLoadResult GGUFLoader::Load(const std::string& path,
+                                     const GGUFLoadOptions& options) {
+    GGUFLoadResult r;
+    GGUFLoader loader;
+    if (!loader.load(path, options)) {
+        r.success = false;
+        r.error = loader.error();
+        return r;
+    }
+    r.success = true;
+    r.ok = true;
+    r.mmapBound = loader.metadataOnly() ? 0 : 1;
+    r.shardCount = loader.shardCount();
+    r.ggufVersion = loader.version();
+    r.tensorCountHeader = static_cast<uint32_t>(loader.tensorCount());
+    r.metadataCountHeader = loader.metadataCount();
+    r.hadMetadataCount = true;
+    r.tensors = loader.tensorInfoList();
+
+    r.rawKv.reserve(r.rawKv.size() + static_cast<size_t>(loader.metadataCount()));
+    for (const auto& kv : loader.metaInt())
+        r.rawKv[kv.first] = std::to_string(kv.second);
+    for (const auto& kv : loader.metaFloat())
+        r.rawKv[kv.first] = [&] {
+            char b[64];
+            std::snprintf(b, sizeof b, "%.17g", kv.second);
+            return std::string(b);
+        }();
+    for (const auto& kv : loader.metaString()) r.rawKv[kv.first] = kv.second;
+
+    // Keep an owning handle only when payloads were actually mapped.  The loader
+    // is non-copyable/non-movable, so it is heap-allocated and then opened.
+    if (!loader.metadataOnly()) {
+        auto owned = std::make_shared<GGUFLoader>();
+        if (owned->load(path, options)) r.loader = owned;
+    }
+
+    FillMetadataFromRawKv(r.rawKv, r.metadata);
+    return r;
+}
+
+// ----------------------------------------------------------------------------
+// GGUFLoader::LoadMetadata — metadata-only open used by the authority and
+// geometry seals.  See the declaration in class GGUFLoader.
+//
+// Deliberately does NOT map tensor payloads and does NOT retain the shards:
+// the result carries header facts, tensor descriptors (names/types/dims) and
+// every parsed key/value flattened to text.  `loader` stays null so no caller
+// can dereference a mapping it does not own.
+// ----------------------------------------------------------------------------
+inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* path) {
+    GGUFLoadResult r;
+    GGUFLoader loader;
+    if (!path || !path[0]) {
+        r.success = false;
+        r.error = "empty GGUF path";
+        return r;
+    }
+    if (!loader.load(path)) {
+        r.success = false;
+        r.error = loader.error();
+        return r;
+    }
+    r.success = true;
+    r.ok = true;
+    r.mmapBound = 0;  // metadata-only: no payload mapped
+    r.shardCount = loader.shardCount();
+    r.ggufVersion = loader.version();
+    r.tensorCountHeader = static_cast<uint32_t>(loader.tensorCount());
+    r.metadataCountHeader = loader.metadataCount();
+    r.hadMetadataCount = true;
+    r.loader = nullptr;
+    r.tensors = loader.tensorInfoList();
+
+    // Flatten every parsed metadata pair to its textual form.  Keys the file
+    // did not declare simply do not appear in rawKv.
+    r.rawKv.reserve(r.rawKv.size() + static_cast<size_t>(loader.metadataCount()));
+    for (const auto& kv : loader.metaInt())
+        r.rawKv[kv.first] = std::to_string(kv.second);
+    for (const auto& kv : loader.metaFloat())
+        r.rawKv[kv.first] = [&] {
+            char b[64];
+            std::snprintf(b, sizeof b, "%.17g", kv.second);
+            return std::string(b);
+        }();
+    for (const auto& kv : loader.metaString()) r.rawKv[kv.first] = kv.second;
+
+    // Common metadata, read through the flattened map so that absent keys stay
+    // absent instead of silently becoming 0.
+    FillMetadataFromRawKv(r.rawKv, r.metadata);
+    return r;
+}
+
+} // namespace Deep2
+
+// Deep2::GGUFLoadResult is the authoritative type.  This alias keeps the
+// historical unqualified / :: spelling working for load_gguf() below and for
+// any caller that wrote GGUFLoadResult without a namespace qualifier.
+using Deep2::GGUFLoadResult;
 
 inline bool load_gguf(const std::string& path, void* out) {
     if (!out) return false;
@@ -957,8 +1397,29 @@ inline bool load_gguf(const std::string& path, void* out) {
     result->shardCount = loader->shardCount();
     result->loader = std::move(loader);
 
+    // Header facts and the flattened key/value view, so the same result serves
+    // the mapping path and the metadata-only seals alike.
+    result->ggufVersion = result->loader->version();
+    result->tensorCountHeader = static_cast<uint32_t>(result->loader->tensorCount());
+    result->metadataCountHeader = result->loader->metadataCount();
+    result->hadMetadataCount = true;
+    result->rawKv.reserve(result->rawKv.size() +
+                          static_cast<size_t>(result->loader->metadataCount()));
+    for (const auto& kv : result->loader->metaInt())
+        result->rawKv[kv.first] = std::to_string(kv.second);
+    for (const auto& kv : result->loader->metaFloat())
+        result->rawKv[kv.first] = [&] {
+            char b[64];
+            std::snprintf(b, sizeof b, "%.17g", kv.second);
+            return std::string(b);
+        }();
+    for (const auto& kv : result->loader->metaString())
+        result->rawKv[kv.first] = kv.second;
+
     // Populate metadata from GGUF metadata
     auto& meta = result->metadata;
+    meta.name = result->loader->getMetaString("general.name", "");
+    meta.chatTemplate = result->loader->getMetaString("tokenizer.chat_template", "");
     meta.vocabSize = static_cast<uint32_t>(result->loader->getMetaInt("tokenizer.ggml.vocab_size", 
                                                                    result->loader->getMetaInt("llama.vocab_size", 0)));
     meta.hiddenSize = static_cast<uint32_t>(result->loader->getMetaInt("llama.embedding_length", 0));

@@ -195,6 +195,156 @@ void VectorAdd_AVX512(float* out, const float* a, const float* b, int size) {
 }
 
 
+// ============================================================================
+// Layer matmul primitives.
+//
+// These are the ONLY path from a model weight to an activation. Everything
+// that needs a projection (QKV, attention output, FFN gate/up/down, the output
+// head) goes through here, so there is one arithmetic implementation to
+// verify rather than one per call site.
+//
+// Weight layout: the loader returns dequantised weights in (outDim, inDim)
+// row-major, i.e. W[j * inDim + k]. That is the same layout MatrixMultiply-
+// AVX512's B operand uses, so out[j] = sum_{k < inDim} in[k] * W[j*inDim + k].
+// ============================================================================
+
+bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& weightName,
+                                           const float* in, float* out,
+                                           int inDim, int outDim, uint32_t layer)
+{
+    (void)layer;   // the weight is fully qualified by name; layer is telemetry
+
+    // --- precondition checks. All of them are hard failures. ---
+    if (!loader)
+    {
+        printf("[ExecuteLayerMatMul] FATAL: loader is null\n");
+        return false;
+    }
+    if (!in || !out)
+    {
+        printf("[ExecuteLayerMatMul] FATAL: null %s buffer\n", (!in && !out) ? "in/out" : (!in ? "in" : "out"));
+        return false;
+    }
+    if (inDim <= 0 || outDim <= 0)
+    {
+        printf("[ExecuteLayerMatMul] FATAL: non-positive dims in=%d out=%d for %s\n",
+               inDim, outDim, weightName.c_str());
+        return false;
+    }
+
+    float* w = loader->GetTensor(weightName);
+    if (!w)
+    {
+        printf("[ExecuteLayerMatMul] FATAL: missing weight %s\n", weightName.c_str());
+        return false;
+    }
+
+    // Validate that the loader actually returned outDim*inDim floats. A silent
+    // short read is how you get plausible-looking but wrong logits.
+    const Tensor* meta = loader->FindTensor(weightName);
+    if (meta)
+    {
+        uint64_t ne = 1;
+        for (uint64_t d : meta->dims) ne *= d;
+        if (ne != static_cast<uint64_t>(outDim) * static_cast<uint64_t>(inDim))
+        {
+            printf("[ExecuteLayerMatMul] FATAL: %s has %llu elements, expected %d x %d = %lld\n",
+                   weightName.c_str(), (unsigned long long)ne, inDim, outDim,
+                   (long long)outDim * (long long)inDim);
+            return false;
+        }
+    }
+
+    // OpenMP over output rows: each j is an independent dot product against the
+    // same input row, so there is no shared state and no reduction to race on.
+    #pragma omp parallel for schedule(static) if(outDim >= 64)
+    for (int j = 0; j < outDim; ++j)
+    {
+        const float* wrow = w + static_cast<size_t>(j) * static_cast<size_t>(inDim);
+        out[j] = DotProduct_AVX512(in, wrow, inDim);
+        if (!std::isfinite(out[j]))
+        {
+            // A single poisoned output would propagate silently; zero it and
+            // report, so the failure is visible instead of plausible.
+            out[j] = 0.0f;
+            printf("[ExecuteLayerMatMul] WARN: non-finite result at row %d of %s\n",
+                   j, weightName.c_str());
+        }
+    }
+    return true;
+}
+
+bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& weightName,
+                                                const float* in, float* out,
+                                                int inDim, int outDim, int T, uint32_t layer)
+{
+    // --- precondition checks. ---
+    if (!loader)
+    {
+        printf("[ExecuteLayerMatMulBatch] FATAL: loader is null\n");
+        return false;
+    }
+    if (T <= 0)
+    {
+        printf("[ExecuteLayerMatMulBatch] FATAL: T=%d for %s\n", T, weightName.c_str());
+        return false;
+    }
+    if (!in || !out)
+    {
+        printf("[ExecuteLayerMatMulBatch] FATAL: null buffer for %s\n", weightName.c_str());
+        return false;
+    }
+    if (inDim <= 0 || outDim <= 0)
+    {
+        printf("[ExecuteLayerMatMulBatch] FATAL: non-positive dims in=%d out=%d for %s\n",
+               inDim, outDim, weightName.c_str());
+        return false;
+    }
+
+    // Resolve the weight ONCE, then reuse it for all T rows. Fetching per row
+    // would re-run the loader's dequantise path T times on the same tensor.
+    float* w = loader->GetTensor(weightName);
+    if (!w)
+    {
+        printf("[ExecuteLayerMatMulBatch] FATAL: missing weight %s\n", weightName.c_str());
+        return false;
+    }
+    const Tensor* meta = loader->FindTensor(weightName);
+    if (meta)
+    {
+        uint64_t ne = 1;
+        for (uint64_t d : meta->dims) ne *= d;
+        if (ne != static_cast<uint64_t>(outDim) * static_cast<uint64_t>(inDim))
+        {
+            printf("[ExecuteLayerMatMulBatch] FATAL: %s has %llu elements, expected %d x %d = %lld\n",
+                   weightName.c_str(), (unsigned long long)ne, inDim, outDim,
+                   (long long)outDim * (long long)inDim);
+            return false;
+        }
+    }
+
+    const size_t inU = static_cast<size_t>(inDim);
+    const size_t outU = static_cast<size_t>(outDim);
+
+    // Collapse (T, outDim) so every output element is an independent dot
+    // product; the only shared read is `w`, which is never written here.
+    const long long total = static_cast<long long>(T) * static_cast<long long>(outDim);
+    #pragma omp parallel for schedule(static) collapse(2) if(total >= 256)
+    for (int t = 0; t < T; ++t)
+    {
+        for (int j = 0; j < outDim; ++j)
+        {
+            const float* xrow = in + static_cast<size_t>(t) * inU;
+            const float* wrow = w + static_cast<size_t>(j) * inU;
+            const float v = DotProduct_AVX512(xrow, wrow, inDim);
+            out[static_cast<size_t>(t) * outU + static_cast<size_t>(j)] =
+                std::isfinite(v) ? v : 0.0f;
+        }
+    }
+    (void)layer;
+    return true;
+}
+
 void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader) {
     this->device = device;
     this->config = cfg;

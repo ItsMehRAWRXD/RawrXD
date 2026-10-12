@@ -21,6 +21,9 @@
 // Tokenizer - use the canonical GGUFEmbeddedTokenizer for exact parity with ModelGenieRuntime
 #include "../../tokenizer/gguf_embedded_tokenizer.hpp"
 
+// Native chat template renderer (GGUF tokenizer.chat_template)
+#include "ChatTemplate.hpp"
+
 // ModelGenie IRExecutor - the certified 300-op executor. This header pulls in
 // the authoritative generated IR table, tensor ROM and model config, so there
 // is exactly one definition of the execution graph for both the runtime library
@@ -132,125 +135,56 @@ namespace {
         float samplerParams[6] = {0.7f, 0.9f, 40.0f, 1.1f, 64.0f, 0.0f}; // temp, top_p, top_k, repeat_penalty, repeat_last_n, seed
     };
     
-    // Real tokenizer using GGUF metadata
+    // Real tokenizer using GGUF metadata - uses canonical GGUFEmbeddedTokenizer
+    // for exact tokenization parity with ModelGenieRuntime
     struct TokenizerImpl {
         ModelImpl* model = nullptr;
-        std::vector<std::string> vocab;           // id -> token text
-        std::unordered_map<std::string, uint32_t> tokenToId;  // token text -> id
-        std::vector<uint8_t> tokenTypes;          // token type per id
-        std::vector<std::pair<std::string, std::string>> merges;  // BPE merges
-        uint32_t bosTokenId = 0;
-        uint32_t eosTokenId = 0;
-        uint32_t unkTokenId = 0;
+        std::unique_ptr<RawrXD::GGUFEmbeddedTokenizer> tokenizer;
         bool loaded = false;
         
         bool loadFromModel(ModelImpl* m) {
             model = m;
             if (!m || !m->loader || !m->loaded) return false;
             
-            // Load vocabulary from tokenizer.ggml.tokens
-            std::vector<std::string> tokens;
-            if (!m->loader->getMetaStringArray("tokenizer.ggml.tokens", tokens)) {
+            tokenizer = std::make_unique<RawrXD::GGUFEmbeddedTokenizer>();
+            if (!tokenizer->LoadFromGGUF(m->path)) {
+                tokenizer.reset();
                 return false;
             }
-            
-            vocab.reserve(tokens.size());
-            for (const auto& token : tokens) {
-                vocab.push_back(token);
-            }
-            
-            // Build token-to-id map
-            tokenToId.reserve(vocab.size() * 2);
-            for (size_t i = 0; i < vocab.size(); ++i) {
-                tokenToId[vocab[i]] = static_cast<uint32_t>(i);
-            }
-            
-            // Load token types if available
-            std::vector<int32_t> tokenTypes;
-            if (m->loader->getMetaInt32Array("tokenizer.ggml.token_type", tokenTypes)) {
-                this->tokenTypes.resize(tokenTypes.size());
-                for (size_t i = 0; i < tokenTypes.size(); ++i) {
-                    this->tokenTypes[i] = static_cast<uint8_t>(tokenTypes[i]);
-                }
-            }
-            
-            // Load merges
-            std::vector<std::string> mergesStr;
-            if (m->loader->getMetaStringArray("tokenizer.ggml.merges", mergesStr)) {
-                merges.reserve(mergesStr.size());
-                for (const auto& merge : mergesStr) {
-                    size_t spacePos = merge.find(' ');
-                    if (spacePos != std::string::npos) {
-                        std::string first = merge.substr(0, spacePos);
-                        std::string second = merge.substr(spacePos + 1);
-                        merges.emplace_back(first, second);
-                    }
-                }
-            }
-            
-            // Load special token IDs
-            bosTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.bos_token_id", 1));
-            eosTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.eos_token_id", 2));
-            unkTokenId = static_cast<uint32_t>(m->loader->getMetaInt("tokenizer.ggml.unk_token_id", 0));
             
             loaded = true;
             return true;
         }
         
         size_t encode(const std::string& text, uint32_t* outTokens, size_t maxTokens) const {
-            if (!loaded || vocab.empty()) return 0;
+            if (!loaded || !tokenizer) return 0;
             
-            // Simple greedy BPE tokenization (naive implementation for now)
-            // Real implementation would use the merges table
-            size_t tokenCount = 0;
-            std::string current;
-            
-            for (char c : text) {
-                current += c;
-                auto it = tokenToId.find(current);
-                if (it != tokenToId.end()) {
-                    // Found a match, but check if we can extend
-                    continue;
-                }
-                
-                // Current string not in vocab, emit previous
-                if (current.size() > 1) {
-                    current.pop_back(); // remove the char that made it invalid
-                }
-                if (!current.empty()) {
-                    auto it = tokenToId.find(current);
-                    if (it != tokenToId.end() && tokenCount < maxTokens) {
-                        outTokens[tokenCount++] = it->second;
-                    } else if (tokenCount < maxTokens) {
-                        outTokens[tokenCount++] = unkTokenId;
-                    }
-                }
-                current = text.substr(text.find(current) + current.size() - 1, 1);
+            std::vector<uint32_t> tokens;
+            if (!tokenizer->EncodeLongestMatch(text, tokens)) {
+                return 0;
             }
             
-            // Handle remaining
-            if (!current.empty() && tokenCount < maxTokens) {
-                auto it = tokenToId.find(current);
-                if (it != tokenToId.end()) {
-                    outTokens[tokenCount++] = it->second;
-                } else {
-                    outTokens[tokenCount++] = unkTokenId;
-                }
+            size_t tokenCount = std::min(tokens.size(), maxTokens);
+            for (size_t i = 0; i < tokenCount; ++i) {
+                outTokens[i] = tokens[i];
             }
-            
             return tokenCount;
         }
         
         std::string decode(const uint32_t* tokens, size_t tokenCount) const {
-            if (!loaded) return "";
+            if (!loaded || !tokenizer) return "";
             std::string result;
             for (size_t i = 0; i < tokenCount; ++i) {
-                uint32_t id = tokens[i];
-                if (id < vocab.size()) {
-                    result += vocab[id];
-                }
+                const std::string& tokenText = tokenizer->Token(tokens[i]);
+                result += tokenText;
             }
             return result;
+        }
+        
+        uint32_t getEosTokenId() const {
+            if (!loaded || !tokenizer) return 2;
+            int32_t eos = tokenizer->EosToken();
+            return eos >= 0 ? static_cast<uint32_t>(eos) : 2;
         }
     };
     
@@ -609,12 +543,80 @@ int RawrXDCore_RunInference(
         return 0;
     }
 
-    // Tokenize prompt
-    std::vector<uint32_t> promptTokens(4096);
-    size_t tokenCount = tokenizer->encode(prompt, promptTokens.data(), promptTokens.size());
-    promptTokens.resize(tokenCount);
+    // Native prompt construction (RAWRXD_MODELGENIE_NATIVE_CHAT_001):
+    // 1. Apply the model's native chat template (GGUF
+    //    tokenizer.chat_template) for a single user turn with the
+    //    assistant generation prefix.
+    // 2. Tokenize with the model's native SentencePiece tokenizer
+    //    (GGUFEmbeddedTokenizer::EncodeLongestMatch - the same
+    //    implementation the runtime's mg_model_tokenize uses).
+    const int32_t bosId = tokenizer->tokenizer->BosToken();
+    const int32_t eosId = tokenizer->tokenizer->EosToken();
+    const std::string bosText =
+        bosId >= 0 ? tokenizer->tokenizer->Token(static_cast<uint32_t>(bosId))
+                   : std::string();
 
-    if (tokenCount == 0) {
+    std::vector<uint32_t> promptTokens;
+    const std::string chatTemplate =
+        impl->model->getMetaString("tokenizer.chat_template", "");
+    std::string rendered;
+    bool templated = false;
+    if (!chatTemplate.empty()) {
+        RawrXD::ChatTemplateVars tmplVars;
+        tmplVars.bosToken = bosText;
+        tmplVars.eosToken =
+            eosId >= 0
+                ? tokenizer->tokenizer->Token(static_cast<uint32_t>(eosId))
+                : std::string();
+        tmplVars.addGenerationPrompt = true;
+        tmplVars.messages.push_back({"user", prompt});
+        templated = RawrXD::RenderChatTemplate(chatTemplate, tmplVars, rendered);
+        if (!templated) {
+            logMessage(RAWXD_LOG_WARNING,
+                       "Chat template uses unsupported constructs; "
+                       "falling back to raw prompt");
+        }
+    }
+
+    if (templated) {
+        // The template renders {{ bos_token }} as the BOS token's
+        // string form; emit the BOS id directly so the first token
+        // never depends on atomic special-token matching.
+        if (bosId >= 0 && !bosText.empty() &&
+            rendered.size() >= bosText.size() &&
+            rendered.compare(0, bosText.size(), bosText) == 0) {
+            promptTokens.push_back(static_cast<uint32_t>(bosId));
+            std::vector<uint32_t> rest;
+            if (!tokenizer->tokenizer->EncodeLongestMatch(
+                    rendered.substr(bosText.size()), rest)) {
+                setLastError(RAWXD_ERROR_INTERNAL);
+                logMessage(RAWXD_LOG_ERROR,
+                           "Native tokenizer failed on templated prompt");
+                return 0;
+            }
+            promptTokens.insert(promptTokens.end(), rest.begin(), rest.end());
+        } else if (!tokenizer->tokenizer->EncodeLongestMatch(rendered,
+                                                             promptTokens)) {
+            setLastError(RAWXD_ERROR_INTERNAL);
+            logMessage(RAWXD_LOG_ERROR,
+                       "Native tokenizer failed on templated prompt");
+            return 0;
+        }
+    } else {
+        // Raw prompt: BOS + encode(prompt) (llama.cpp raw-prompt
+        // behavior when the model has no usable chat template).
+        if (bosId >= 0) promptTokens.push_back(static_cast<uint32_t>(bosId));
+        std::vector<uint32_t> body;
+        if (!tokenizer->tokenizer->EncodeLongestMatch(prompt, body)) {
+            setLastError(RAWXD_ERROR_INTERNAL);
+            logMessage(RAWXD_LOG_ERROR,
+                       "Native tokenizer failed on prompt: %s", prompt);
+            return 0;
+        }
+        promptTokens.insert(promptTokens.end(), body.begin(), body.end());
+    }
+
+    if (promptTokens.empty()) {
         setLastError(RAWXD_ERROR_INVALID_ARGUMENT);
         logMessage(RAWXD_LOG_ERROR, "Prompt encoded to zero tokens: %s", prompt);
         return 0;
@@ -637,41 +639,45 @@ int RawrXDCore_RunInference(
         return 0;
     }
 
-    // Autoregressive generation - generate tokens one at a time
+    // Autoregressive greedy decode. After Prefill the executor's
+    // logits already predict the first generated token (mirrors
+    // IRExecutor::Generate - no extra Execute() here; an extra
+    // Execute would re-process the last prompt token at the wrong
+    // position and corrupt the KV cache).
     int generated = 0;
-    for (size_t i = 0; i < static_cast<size_t>(p.maxTokens); ++i) {
-        // Execute the IR for the current position
-        bool execOk = impl->model->irExecutor->Execute();
-        if (!execOk) {
-            setLastError(RAWXD_ERROR_INTERNAL);
-            logMessage(RAWXD_LOG_ERROR, "IRExecutor execution failed at step %zu", i);
-            return generated;
-        }
-
-        // Sample the next token (greedy)
-        uint32_t nextToken = impl->model->irExecutor->SampleToken();
-        
-        // Check for EOS
-        if (nextToken == tokenizer->eosTokenId) {
+    uint32_t nextToken = impl->model->irExecutor->SampleToken();
+    for (int i = 0; i < p.maxTokens; ++i) {
+        // EOS terminates the stream (GGUF-defined eos_token_id)
+        if (eosId >= 0 && nextToken == static_cast<uint32_t>(eosId)) {
             logMessage(RAWXD_LOG_DEBUG, "EOS token sampled, stopping generation");
             break;
         }
 
-        // Decode token to text
-        std::string tokenText = tokenizer->decode(&nextToken, 1);
+        // Detokenize with the model's native tokenizer (the
+        // ModelGenie detokenization path - same vocab the
+        // encoder used)
+        const std::string& tokenText = tokenizer->tokenizer->Token(nextToken);
 
-        // Call user callback
-        if (!callback(static_cast<int>(nextToken), tokenText.c_str(), userData)) {
+        // Stream the token to the caller; returning false cancels
+        if (!callback(static_cast<int>(nextToken), tokenText.c_str(),
+                      userData)) {
             logMessage(RAWXD_LOG_DEBUG, "Callback requested stop");
             break;
         }
         generated++;
 
-        // Advance position in KV cache
-        impl->model->irExecutor->AdvancePosition();
-        
-        // Set the next token as input for the next iteration
+        // Feed the sampled token back as the next input, then
+        // execute the IR for the new position
         impl->model->irExecutor->SetTokenId(nextToken);
+        impl->model->irExecutor->ClearArena();
+        if (!impl->model->irExecutor->Execute()) {
+            setLastError(RAWXD_ERROR_INTERNAL);
+            logMessage(RAWXD_LOG_ERROR,
+                       "IRExecutor execution failed at step %d", i);
+            return generated;
+        }
+        impl->model->irExecutor->AdvancePosition();
+        nextToken = impl->model->irExecutor->SampleToken();
     }
 
     // Verify IR dispatch completeness
@@ -689,6 +695,49 @@ int RawrXDCore_RunInference(
     impl->currentPosition = impl->model->irExecutor->Position();
 
     return generated;
+}
+
+size_t RawrXDCore_Tokenize(
+    const RawrXDModel* model,
+    const char* text,
+    int* outTokens,
+    size_t maxTokens
+) {
+    if (!model || !text) return 0;
+    ModelImpl* impl = reinterpret_cast<ModelImpl*>(const_cast<RawrXDModel*>(model));
+    if (!impl->loaded) return 0;
+
+    // Get or create the model's native tokenizer (cached per model,
+    // same instance RunInference uses).
+    TokenizerImpl* tokenizer = nullptr;
+    {
+        std::lock_guard<std::mutex> tokLock(g_tokenizersMutex);
+        auto tokIt = g_tokenizers.find(impl);
+        if (tokIt == g_tokenizers.end()) {
+            TokenizerImpl newTok;
+            if (newTok.loadFromModel(impl)) {
+                g_tokenizers[impl] = std::move(newTok);
+                tokenizer = &g_tokenizers[impl];
+            }
+        } else {
+            tokenizer = &tokIt->second;
+        }
+    }
+    if (!tokenizer || !tokenizer->loaded) return 0;
+
+    // Encode with the model's native SentencePiece tokenizer - the
+    // same GGUFEmbeddedTokenizer the runtime's mg_model_tokenize
+    // uses. No BOS is prepended and no chat template is applied;
+    // the text is encoded exactly as given.
+    std::vector<uint32_t> ids;
+    if (!tokenizer->tokenizer->EncodeLongestMatch(text, ids)) return 0;
+
+    if (!outTokens || maxTokens == 0) return ids.size();
+    const size_t n = ids.size() < maxTokens ? ids.size() : maxTokens;
+    for (size_t i = 0; i < n; ++i) {
+        outTokens[i] = static_cast<int>(ids[i]);
+    }
+    return ids.size();
 }
 
 void RawrXDCore_GetMemoryStats(RawrXDMemoryStats* stats) {

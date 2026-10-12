@@ -172,3 +172,19 @@ private:
     // Helper for creating staging buffers (reduces code duplication)
     bool CreateStagingBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory& memory);
 };
+
+// ============================================================================
+// The namespaced Deep2 GPU-forward contract.
+//
+// CPUInference::VulkanCompute is a DIFFERENT C++ class from ::VulkanCompute
+// above: it has a larger method set (GEMV dispatch, weight-window residency,
+// fused forward arena, MLA decode).  It was only ever forward-declared in the
+// engine and in the deep2 headers, which is why ~30 translation units that
+// DEFINE its members and the engine that CALLS them could not resolve one
+// identical declaration.
+//
+// Declaring it here — after ::VulkanCompute and VulkanDeviceInfo, which it
+// references — makes every translation unit that includes this header see the
+// same complete class.
+// ============================================================================
+#include "vulkan_compute_cpu_ns.hpp"

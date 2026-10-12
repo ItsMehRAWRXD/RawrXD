@@ -41,6 +41,14 @@
 #include "vulkan_compute.h"
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
+// Session geometry / authority sealing, Q2_K product bind, continuity counters
+// and the decode-quality probe. The engine's private state below is declared
+// against these exact types.
+#include "lavapath/GgufDynamicGeometry.hpp"
+#include "Deep2SsVkProductBind.hpp"
+#include "d2_engine_ssvk_bind16.h"
+#include "Deep2PersistentContinuity.hpp"
+#include "d2_gen_quality_probe.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -48,6 +56,15 @@
 #include <filesystem>
 #include <unordered_map>
 #include <atomic>
+
+// AuthorityBundle is defined in deep2/lavapath/LocalModelAuthority_Bundle.hpp.
+// Forward-declared only: including it here would pull in a chain that expects a
+// richer Deep2::GGUFLoadResult surface than GGUFLoader.hpp exposes today.
+namespace rawr {
+namespace olma {
+struct AuthorityBundle;
+}
+}
 
 namespace Deep2
 {
@@ -71,6 +88,13 @@ namespace Deep2
 
         // BP16 / external mapping support
         bool mapped = false; // true if data is externally owned (do not free)
+
+        // Physical identity. For a tensor that lives in a GGUF file rather than
+        // in RAM: absolute byte offset = data-section base + relative offset.
+        // shardId 0 is the "unknown / single-file" sentinel.
+        uint32_t shardId = 0;
+        uint64_t fileOffset = 0;
+        bool hasFileBacking = false;
     };
 
     // ============================================================================
@@ -118,14 +142,28 @@ namespace Deep2
         WeightTensor moeSharedDown;        // [hiddenDim, sharedIntermediate]
 
         // SSM / Mamba (State Space Model) — hybrid architecture support
+        WeightTensor ssmIn;     // [ssmConvDim + ssmState, hiddenDim] — input projection (Q8_0/Q4_K)
         WeightTensor ssmA;      // [ssmStateDim] — SSM state transition parameters (F32)
         WeightTensor ssmAlpha;  // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
         WeightTensor ssmBeta;   // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
+        WeightTensor ssmD;      // [ssmInner] — Mamba2 D gate (F32)
         WeightTensor ssmConv1d; // [convKernelSize, hiddenDim*2] — causal conv1d weights (F32)
+        WeightTensor ssmConv1dBias; // [hiddenDim*2] — causal conv1d bias (F32)
         WeightTensor ssmDtBias; // [ssmStateDim] — delta_t bias (F32)
         WeightTensor ssmNorm;   // [ssmStateDim] — RMSNorm weights for SSM path (F32)
         WeightTensor ssmOut;    // [hiddenDim, hiddenDim] — SSM output projection (Q4_K)
         bool hasSSM = false;    // true when SSM tensors are populated
+
+        // Attention projection biases.
+        // These are the addenda applied after the wq/wk/wv GEMV in LinearW():
+        //   output[i] = dot(wq_row_i, input) + bq[i]
+        // NOT aliases for wq/wk/wv — a weight row and a bias vector have
+        // different shapes and different GGUF tensor names. `bias` is nullptr
+        // when the architecture supplies no bias tensor for that projection.
+        WeightTensor bq;        // [hiddenDim]      or nullptr
+        WeightTensor bk;        // [kvDim]          or nullptr
+        WeightTensor bv;        // [kvDim]          or nullptr
+        WeightTensor bo;        // [hiddenDim]      or nullptr
     };
 
     // ============================================================================
@@ -567,6 +605,20 @@ namespace Deep2
         bool isMARSEnabled() const { return marsEnabled_; }
         MARS::MARSController *getMARSController() { return marsController_.get(); }
 
+        // ------------------------------------------------------------------------
+        // MARS authority predicates.
+        // ------------------------------------------------------------------------
+        // True only when the MARS placement authority actually holds: the
+        // controller is armed AND the placement was made by the authority path
+        // (not by a permissive fallback).  Callers must NOT treat a false result
+        // as an error — it means "MARS may not own placement", so the K2 stream
+        // authority stands down instead.
+        bool marsHostResidentAuthorityOk() const;
+
+        // Stand down from MARS empty placement for the given reason.  Emits the
+        // reason so the standdown is attributable in the residency evidence.
+        void standdownMARSEmptyPlacement(const char *reason);
+
         // Place a model tensor under MARS lease control
         MARS::VRAMLease *placeTensorMARS(
             uint64_t tensorId,
@@ -772,6 +824,157 @@ namespace Deep2
         float *ssmTemp = nullptr;      // [hiddenDim] — SSM temp buffer
         size_t ssmStateDim = 32;       // SSM state dimension (from tensor dims)
         size_t ssmConvKernel = 4;      // Conv1d kernel size (from tensor dims)
+
+
+        // ====================================================================
+        // Nemotron-H hybrid SSM geometry + Mamba2 runtime state
+        // --------------------------------------------------------------------
+        // `ssmStateDim` / `ssmConvKernel` above are buffer SIZING parameters.
+        // The fields below are the model GEOMETRY that the hybrid SSM path
+        // resolves from the tensors (NemotronHGeometry.hpp), plus the Mamba2
+        // aliases derived from it. They are deliberately kept distinct: the
+        // state size is never taken from the A/dt projection rank (that old
+        // bug produced 96 where 128 was correct).
+        // ====================================================================
+
+        // ---- Model geometry (resolved by NemotronHGeometry) ----
+        bool nemotronGeoOk_ = false;  // geometry resolved & self-consistent
+        size_t ssmInner_ = 0;         // inner / expansion dimension
+        size_t ssmStateSize_ = 0;     // SSM state size N (e.g. 128)
+        size_t ssmHeads_ = 0;         // Mamba2 head count
+        size_t ssmHeadDimM_ = 0;      // Mamba2 per-head dimension
+        size_t ssmGroups_ = 0;        // GSSM grouping
+        size_t ssmConvDim_ = 0;       // causal conv1d channels
+        size_t ssmInRows_ = 0;        // rows of the in-projection
+        size_t ssmHybridLayers_ = 0;  // count of hybrid SSM layers (0 = none)
+
+        // ---- Authentic Mamba2 execution state ----
+        // Aliased onto ssmState / ssmConvState / ssmX / ssmY / ssmTemp above
+        // when the geometry is valid. armed==false means no Mamba2 aliasing.
+        bool ssmMambaArmed_ = false;
+        float *ssmMambaProj_ = nullptr;   // alias of ssmTemp
+        float *ssmMambaY_ = nullptr;      // alias of ssmX
+        float *ssmMambaState_ = nullptr;  // alias of ssmState
+        float *ssmMambaConv_ = nullptr;   // alias of ssmConvState
+        size_t ssmMambaInRows_ = 0;
+        size_t ssmMambaInner_ = 0;
+        size_t ssmMambaStateN_ = 0;
+        size_t ssmMambaHeads_ = 0;
+        size_t ssmMambaHeadDim_ = 0;
+        size_t ssmMambaGroups_ = 0;
+        size_t ssmMambaConvDim_ = 0;
+        size_t ssmMambaConvK_ = 0;
+        size_t ssmMambaGroupState_ = 0;
+        size_t ssmMambaDtRank_ = 0;
+
+        // ---- SSM path diagnostics ----
+        uint64_t ssmRealCalls_ = 0;      // selective-scan evaluations executed
+        uint64_t ssmIdentityCalls_ = 0;  // pass-through evaluations executed
+
+        // ====================================================================
+        // Session geometry and authority seal
+        // --------------------------------------------------------------------
+        // Immutable per-session facts resolved from GGUF metadata on load.
+        // Subsequent consumers read the session geometry, never static
+        // defaults, so the architecture actually present drives execution.
+        // ====================================================================
+        Deep2::GgufDynamicGeometry sessionGeometry_{};
+
+        // Authority seal for the session (geom / schema / quant / tok ladder).
+        // Held by pointer: the bundle is defined in
+        // lavapath/LocalModelAuthority_Bundle.hpp, which transitively requires
+        // a richer Deep2::GGUFLoadResult surface than GGUFLoader.hpp currently
+        // exposes, so it must NOT be included here — that chain is a defect of
+        // its own and is only needed by Deep2Engine.cpp, which already includes
+        // it through lavapath/AuthorityBridge.hpp.
+        std::unique_ptr<rawr::olma::AuthorityBundle> sessionAuth_;
+
+        // ====================================================================
+        // Engine lifecycle state
+        // --------------------------------------------------------------------
+        // Closed             -> no model residency
+        // Indexed            -> index / metadata opened, tensors not all mapped
+        // Choreographable    -> weights consumable by the choreographer
+        // Generating         -> decode loop is active
+        // (This is the engine's own lifecycle; it is NOT the registry's
+        //  ModelRegistry::ModelState, whose states are UNLOADED/LOADING/...)
+        // ====================================================================
+        enum class ModelState {
+            Closed = 0,
+            Indexed = 1,
+            Choreographable = 2,
+            Generating = 3
+        };
+        ModelState modelState_ = ModelState::Closed;
+
+        // ====================================================================
+        // Host Q8 GEMV capability receipts
+        // --------------------------------------------------------------------
+        // Results of HostQ8GemvSafe probing. They record what the host path is
+        // allowed to do numerically; they never fabricate a capability that the
+        // probe did not observe.
+        // ====================================================================
+        bool hostQ8GemvSafe_ = false;
+        bool hostQ8Ffn_ = false;
+        bool hostQ8Attn_ = false;
+        bool hostQ8SsmIn_ = false;
+        bool hostQ8Finite_ = false;
+        bool hostQ8Bounds_ = false;
+        bool hostQ8Parity_ = false;
+
+        // ====================================================================
+        // Decode-quality probe (DEEP2_GEN_QUALITY_TRACE)
+        // --------------------------------------------------------------------
+        // Observe-only seam. It samples the logits AFTER they are finalized and
+        // AFTER sampling has selected a token, so it can never perturb decode.
+        // ====================================================================
+        void resetGenQualityProbe();
+        void armGenQualityProbe();
+        void emitGenQualityProbe(int selected, const float *logits,
+                                 int argmaxId, float argmaxLogit);
+        uint64_t genQualityOrdinal_ = 0;
+        int genQualityTokRoundtrip_ = 1;   // 1 = encode(decode(t)) == {t}
+        int genQualityChatValid_ = 0;      // chat template accepted for model
+        void *genQualityProbe_ = nullptr; // D2GenQualityProbe* when tracing
+
+        // ====================================================================
+        // Q2_K in-process packed dual (SsVk) product bind, plus same-process
+        // continuity counters. All are observed, none are synthesized.
+        // ====================================================================
+        SsVkProductBind ssVkProductBind_{};
+        D2EngineSsVkBind16 ssvkBind16_{};
+        Deep2::PersistentContinuity persistCont_{};
+
+        // ---- Persistent packed-dual / BIND16 decode binding ---------------------
+        // One-time wiring of the in-process Q2_K packed-dual GEMV and the
+        // BIND16 product run into the SSVK product bind. Idempotent: a second
+        // call reuses the existing binding rather than re-opening the context.
+        bool EnsurePersistentDecodeBinding();
+        void emitContinuitySnap(FILE *f, uint32_t gen) const;
+        void emitHostQ8GemvReceipts(FILE *f) const;
+
+        // Bind helpers used by EnsurePersistentDecodeBinding().
+        void bindSsVkPackedQ2K(void *gemvFn, void *adapterCtx);
+        void bindSsVkPackedProduct(void *productRunFn, void *adapterCtx);
+
+        // ---- Persistent KV length -----------------------------------------------
+        // Positions currently occupied by the persistent KV cache, i.e. the
+        // decode-session residency, not the per-request window.
+        size_t persistentKvLength() const;
+
+        // ====================================================================
+        // Residency / device lifecycle counters
+        // ====================================================================
+        uint64_t commandRebuildEvents_ = 0;
+        uint64_t deviceCreateEvents_ = 0;
+        uint64_t dualStickResetEvents_ = 0;
+        uint64_t modelLoadEvents_ = 0;
+        uint64_t residencyEpoch_ = 0;
+        bool hostDecodeSanitize_ = false;  // host-side NaN/Inf scrubbing on
+                                             // decode outputs before sampling
+        bool marsStandby_ = false;         // MARS controller parked (not active)
+
+        float *attnHeadScratch_ = nullptr; // pre-output head-concat scratch
 
         bool initialized = false;
 

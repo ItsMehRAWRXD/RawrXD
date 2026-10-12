@@ -3,12 +3,21 @@
 #include "Deep2Engine.h"
 #include "GGUFLoader.hpp"
 #include "NemotronHSsmMap.hpp"
+// block_q8_0 (fp16 scale + 32 x int8, 34 bytes) is defined in rawr:: by
+// q8_0_dequant.h; the bounds and reference-kernel helpers below operate on
+// that exact layout for GGML_TYPE_Q8_0 payloads.
+#include "../speculative/q8_0_dequant.h"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <vector>
 
 namespace Deep2 {
+
+// Q8_0 block layout (fp16 scale + 32 x int8 = 34 bytes) is defined by
+// rawr::block_q8_0 in speculative/q8_0_dequant.h. The bounds and reference
+// kernels below walk that exact ggml ABI, so bring it in unqualified.
+using rawr::block_q8_0;
 
 struct HostQ8GemvReceipts {
     int ffn = 0;

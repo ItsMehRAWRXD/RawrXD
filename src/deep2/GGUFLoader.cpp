@@ -10,6 +10,7 @@
 // ============================================================================
 
 #include "GGUFLoader.hpp"
+#include "gguf_compat.h"   // GGUFValueType::UINT8 style + integer GGUF_MAGIC
 #include <chrono>
 #include <cstdlib>
 #include <cstring>

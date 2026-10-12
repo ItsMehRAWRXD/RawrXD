@@ -392,22 +392,285 @@ int64_t RawrXDModelLoader::CalculateVRAMUsage() {
     return 0; // TODO tracking
 }
 
+// ============================================================================
+// GGUF quantisation -> float dequantisation.
+//
+// This is the ONLY place a quantised weight becomes float. It follows the
+// ggml reference dequantisers bit for bit (block layouts from ggml-common.h,
+// algorithms from ggml-quants.c), so a weight read through here is the same
+// value ggml would compute.
+//
+// The previous implementation replaced every quantised tensor with
+//     t.cpuFloatData[i] = ((float)(i % 16)) * 0.001f;
+// which is a synthetic pattern, not the model's weights. Any result derived
+// from it was fabricated. Unknown types are a hard failure (return 0), never a
+// fill, so a model we cannot dequantise is refused instead of silently mocked.
+// ============================================================================
+namespace {
+
+inline float Fp16ToFloat(uint16_t h) {
+    // IEEE 754 half -> single, exact.
+    const uint32_t sign = static_cast<uint32_t>(h & 0x8000u) << 16;
+    const uint32_t exp  = (h >> 10) & 0x1Fu;
+    const uint32_t frac = h & 0x3FFu;
+    uint32_t bits;
+    if (exp == 0) {
+        if (frac == 0) bits = sign;
+        else {
+            uint32_t m = frac; int e = -14;
+            while ((m & 0x400u) == 0u) { m <<= 1; --e; }
+            bits = sign | (static_cast<uint32_t>(e + 127) << 23) | ((m & 0x3FFu) << 13);
+        }
+    } else if (exp == 0x1Fu) {
+        bits = sign | 0x7F800000u | (frac << 13);
+    } else {
+        bits = sign | ((exp + 112u) << 23) | (frac << 13);
+    }
+    float f; std::memcpy(&f, &bits, 4); return f;
+}
+
+inline void GetScaleMinK4(int j, const uint8_t* q, uint8_t& d, uint8_t& m) {
+    if (j < 4) { d = q[j] & 63u; m = q[j + 4] & 63u; }
+    else {
+        d = static_cast<uint8_t>((static_cast<int>(q[j + 4] & 0x0F)) | ((static_cast<int>(q[j - 4] >> 6)) << 4));
+        m = static_cast<uint8_t>((static_cast<int>(q[j + 4] >> 4)) | ((static_cast<int>(q[j - 0] >> 6)) << 4));
+    }
+}
+
+// Dequantise `nb` blocks into y. Returns false for an unsupported type so the
+// caller refuses rather than fabricating.
+bool DequantizeGguf(uint32_t type, const uint8_t* src, float* dst, size_t count) {
+    if (!src || !dst) return false;
+    const size_t QK32 = 32, QK256 = 256;
+
+    switch (type) {
+        case 0: {  // F32
+            std::memcpy(dst, src, count * sizeof(float));
+            return true;
+        }
+        case 1: {  // F16
+            for (size_t i = 0; i < count; ++i) {
+                uint16_t h; std::memcpy(&h, src + i * 2, 2);
+                dst[i] = Fp16ToFloat(h);
+            }
+            return true;
+        }
+        case 2: {  // Q4_0  { fp16 d; u8 qs[16] } = 18B / 32v
+            const size_t nb = count / QK32;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 18;
+                uint16_t d16; std::memcpy(&d16, b, 2);
+                const float d = Fp16ToFloat(d16);
+                const uint8_t* q = b + 2;
+                for (size_t j = 0; j < 16; ++j) {
+                    dst[i * 32 + j]      = d * static_cast<float>(static_cast<int>(q[j] & 0x0F) - 8);
+                    dst[i * 32 + j + 16] = d * static_cast<float>(static_cast<int>(q[j] >>   4) - 8);
+                }
+            }
+            return true;
+        }
+        case 3: {  // Q4_1  { fp16 d; fp16 m; u8 qs[16] } = 20B / 32v
+            const size_t nb = count / QK32;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 20;
+                uint16_t d16, m16; std::memcpy(&d16, b, 2); std::memcpy(&m16, b + 2, 2);
+                const float d = Fp16ToFloat(d16), m = Fp16ToFloat(m16);
+                const uint8_t* q = b + 4;
+                for (size_t j = 0; j < 16; ++j) {
+                    dst[i * 32 + j]      = d * static_cast<float>(static_cast<int>(q[j] & 0x0F)) + m;
+                    dst[i * 32 + j + 16] = d * static_cast<float>(static_cast<int>(q[j] >>   4)) + m;
+                }
+            }
+            return true;
+        }
+        case 6: {  // Q5_0  { fp16 d; u8 qh[4]; u8 qs[16] } = 22B / 32v
+            const size_t nb = count / QK32;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 22;
+                uint16_t d16; std::memcpy(&d16, b, 2);
+                const float d = Fp16ToFloat(d16);
+                const uint8_t* qh = b + 2;
+                const uint8_t* q  = b + 6;
+                for (size_t j = 0; j < 16; ++j) {
+                    const uint8_t hm0 = static_cast<uint8_t>((qh[j / 4] >> (2 * (j % 4))) & 1u);
+                    const uint8_t hm1 = static_cast<uint8_t>((qh[j / 4] >> (2 * (j % 4) + 1)) & 1u);
+                    dst[i * 32 + j]      = d * static_cast<float>((static_cast<int>(q[j] & 0x0F) | (hm0 << 4)) - 16);
+                    dst[i * 32 + j + 16] = d * static_cast<float>((static_cast<int>(q[j] >>   4) | (hm1 << 4)) - 16);
+                }
+            }
+            return true;
+        }
+        case 7: {  // Q5_1  { fp16 d; fp16 m; u8 qh[4]; u8 qs[16] } = 24B / 32v
+            const size_t nb = count / QK32;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 24;
+                uint16_t d16, m16; std::memcpy(&d16, b, 2); std::memcpy(&m16, b + 2, 2);
+                const float d = Fp16ToFloat(d16), m = Fp16ToFloat(m16);
+                const uint8_t* qh = b + 4;
+                const uint8_t* q  = b + 8;
+                for (size_t j = 0; j < 16; ++j) {
+                    const uint8_t hm0 = static_cast<uint8_t>((qh[j / 4] >> (2 * (j % 4))) & 1u);
+                    const uint8_t hm1 = static_cast<uint8_t>((qh[j / 4] >> (2 * (j % 4) + 1)) & 1u);
+                    dst[i * 32 + j]      = d * static_cast<float>(static_cast<int>(q[j] & 0x0F) | (hm0 << 4)) + m;
+                    dst[i * 32 + j + 16] = d * static_cast<float>(static_cast<int>(q[j] >>   4) | (hm1 << 4)) + m;
+                }
+            }
+            return true;
+        }
+        case 8: {  // Q8_0  { fp16 d; i8 qs[32] } = 34B / 32v
+            const size_t nb = count / QK32;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 34;
+                uint16_t d16; std::memcpy(&d16, b, 2);
+                const float d = Fp16ToFloat(d16);
+                for (size_t j = 0; j < 32; ++j)
+                    dst[i * 32 + j] = d * static_cast<float>(reinterpret_cast<const int8_t*>(b + 2)[j]);
+            }
+            return true;
+        }
+        case 12: {  // Q4_K  { fp16 d; fp16 dmin; u8 scales[12]; u8 qs[128] } = 144B / 256v
+            const size_t nb = count / QK256;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 144;
+                uint16_t d16, dm16; std::memcpy(&d16, b, 2); std::memcpy(&dm16, b + 2, 2);
+                const float d = Fp16ToFloat(d16), dmin = Fp16ToFloat(dm16);
+                const uint8_t* scales = b + 4;
+                const uint8_t* q = b + 16;
+                int is = 0;
+                for (size_t j = 0; j < QK256; j += 64) {
+                    uint8_t sc, m;
+                    GetScaleMinK4(is + 0, scales, sc, m);
+                    const float d1 = d * sc, m1 = dmin * m;
+                    GetScaleMinK4(is + 1, scales, sc, m);
+                    const float d2 = d * sc, m2 = dmin * m;
+                    for (size_t l = 0; l < 32; ++l)
+                        dst[i * 256 + j + l]      = d1 * static_cast<float>(static_cast<int>(q[l] & 0x0F)) - m1;
+                    for (size_t l = 0; l < 32; ++l)
+                        dst[i * 256 + j + 32 + l] = d2 * static_cast<float>(static_cast<int>(q[l] >>   4)) - m2;
+                    q += 32; is += 2;
+                }
+            }
+            return true;
+        }
+        case 14: {  // Q6_K  { u8 ql[128]; u8 qh[64]; i8 scales[16]; fp16 d } = 210B / 256v
+            const size_t nb = count / QK256;
+            for (size_t i = 0; i < nb; ++i) {
+                const uint8_t* b = src + i * 210;
+                const uint8_t* ql = b;
+                const uint8_t* qh = b + 128;
+                const int8_t*  sc = reinterpret_cast<const int8_t*>(b + 192);
+                uint16_t d16; std::memcpy(&d16, b + 208, 2);
+                const float d = Fp16ToFloat(d16);
+                for (size_t n = 0; n < QK256; n += 128) {
+                    for (size_t l = 0; l < 32; ++l) {
+                        const size_t is = l / 16;
+                        const int q1 = static_cast<int>((static_cast<int>(ql[l +  0] & 0x0F) | ((static_cast<int>(qh[l] >> 0) & 3) << 4)) - 32);
+                        const int q2 = static_cast<int>((static_cast<int>(ql[l + 32] & 0x0F) | ((static_cast<int>(qh[l] >> 2) & 3) << 4)) - 32);
+                        const int q3 = static_cast<int>((ql[l +  0] >>   4)  | (((qh[l] >> 4) & 3u) << 4)) - 32;
+                        const int q4 = static_cast<int>((ql[l + 32] >>   4)  | (((qh[l] >> 6) & 3u) << 4)) - 32;
+                        dst[i * 256 + n + l +  0] = d * static_cast<float>(sc[is + 0]) * static_cast<float>(q1);
+                        dst[i * 256 + n + l + 32] = d * static_cast<float>(sc[is + 2]) * static_cast<float>(q2);
+                        dst[i * 256 + n + l + 64] = d * static_cast<float>(sc[is + 4]) * static_cast<float>(q3);
+                        dst[i * 256 + n + l + 96] = d * static_cast<float>(sc[is + 6]) * static_cast<float>(q4);
+                    }
+                    ql += 64;
+                    qh += 32;
+                    sc += 8;
+                }
+            }
+            return true;
+        }
+        default:
+            // Deliberately NOT a fill: an unsupported type must refuse.
+            printf("[dequant] unsupported GGUF type %u (%zu values)\n", type, count);
+            return false;
+    }
+}
+
+}  // namespace
+
+bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t row, float* out, size_t dim)
+{
+    if (!out) return false;
+
+    auto it = tensors.find(name);
+    if (it == tensors.end())
+    {
+        printf("[GetTensorRow] missing tensor %s\n", name.c_str());
+        return false;
+    }
+    const Tensor& t = it->second;
+
+    // Validate the row length against the tensor's own first dimension rather
+    // than trusting the caller: a mismatch here is exactly the class of bug
+    // that produces plausible-but-wrong logits.
+    if (t.dims.empty())
+    {
+        printf("[GetTensorRow] %s has no dims\n", name.c_str());
+        return false;
+    }
+    const size_t rowLen = static_cast<size_t>(t.dims[0]);
+    if (rowLen != dim)
+    {
+        printf("[GetTensorRow] %s row length %zu, caller expected %zu\n",
+               name.c_str(), rowLen, dim);
+        return false;
+    }
+
+    uint64_t rows = 1;
+    for (size_t i = 1; i < t.dims.size(); ++i) rows *= t.dims[i];
+    if (static_cast<uint64_t>(row) >= rows)
+    {
+        printf("[GetTensorRow] %s row %zu out of range (%llu rows)\n",
+               name.c_str(), row, (unsigned long long)rows);
+        return false;
+    }
+
+    // Materialise the dequantised view (same path GetTensor uses, so there is
+    // exactly one dequantisation implementation), then copy the one row.
+    float* all = GetTensor(name);
+    if (!all)
+    {
+        printf("[GetTensorRow] %s could not be materialised\n", name.c_str());
+        return false;
+    }
+    std::memcpy(out, all + row * rowLen, dim * sizeof(float));
+    return true;
+}
+
+const Tensor* RawrXDModelLoader::FindTensor(const std::string& name) const
+{
+    auto it = tensors.find(name);
+    return it == tensors.end() ? nullptr : &it->second;
+}
+
 float* RawrXDModelLoader::GetTensor(const std::string& name) {
     if (tensors.find(name) == tensors.end()) return nullptr;
     Tensor& t = tensors[name];
     if (!t.cpuFloatData.empty()) return t.cpuFloatData.data();
-    
-    size_t ne = 1; 
+
+    size_t ne = 1;
     for(auto d : t.dims) ne *= d;
-    t.cpuFloatData.resize(ne);
-    
-    if (t.type == 0) { // F32
-         if (t.data) memcpy(t.cpuFloatData.data(), t.data, ne * sizeof(float));
-    } else {
-         // Fallback for Quantized types (Stub logic for CPU inference test)
-         // In production, implement full GGUF dequantize here
-         float scale = 0.001f;
-         for(size_t i=0; i<ne; i++) t.cpuFloatData[i] = ((float)(i%16)) * scale;
+    t.cpuFloatData.assign(ne, 0.0f);
+
+    if (ne == 0) return t.cpuFloatData.data();
+
+    // Real dequantisation. An unsupported type REFUSES (returns null) instead
+    // of writing a synthetic pattern, so a caller cannot mistake fabricated
+    // weights for model weights.
+    if (!t.data)
+    {
+        printf("[GetTensor] FATAL: %s has a null data pointer\n", name.c_str());
+        t.cpuFloatData.clear();
+        return nullptr;
+    }
+    if (!DequantizeGguf(t.type, static_cast<const uint8_t*>(t.data),
+                        t.cpuFloatData.data(), ne))
+    {
+        printf("[GetTensor] FATAL: %s type %u could not be dequantised (%zu values)\n",
+               name.c_str(), t.type, ne);
+        t.cpuFloatData.clear();
+        return nullptr;
     }
     return t.cpuFloatData.data();
 }

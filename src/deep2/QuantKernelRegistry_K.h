@@ -9,6 +9,22 @@
 #include <cstring>
 #include <immintrin.h>
 #include "GGUFLoader.hpp"
+// gguf_compat.h sets GGML_COMMON_DECL_CPP + the empty GGML_COMMON_AGGR_*
+// macros, then pulls in ggml.h/gguf.h/ggml-common.h. Including it INSTEAD of a
+// bare ggml-common.h is required: a bare include leaves the K-quant scale
+// fields nested under an anonymous-union member and block.d fails to resolve.
+#include "gguf_compat.h"
+
+// RESTRICT was used 7x in this header but defined nowhere, which made every
+// signature `const block_q2_K* RESTRICT x` fail with C4430 "missing type
+// specifier" (the parser read `RESTRICT x` as a declaration).
+#ifndef RESTRICT
+#ifdef _MSC_VER
+#define RESTRICT __restrict
+#else
+#define RESTRICT __restrict__
+#endif
+#endif
 
 using namespace Deep2;
 

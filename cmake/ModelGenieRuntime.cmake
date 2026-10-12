@@ -17,24 +17,39 @@ if(NOT TARGET ModelGenieRuntime)
         ${RAWRXD_SOURCE_DIR}/src/deep2/modelgenie/ModelGenomeReader.cpp
     )
 
+    # RawrXDCore links this library PRIVATE and installs an EXPORT set
+    # (RawrXDCoreTargets). A PRIVATE link dependency still belongs to the
+    # export set for linking purposes, so the target must be part of one.
+    # Declaring it here lets install(TARGETS ... EXPORT RawrXDCoreTargets)
+    # in src/core/dll/CMakeLists.txt pick it up.
+    install(TARGETS ModelGenieRuntime
+        EXPORT RawrXDCoreTargets
+        ARCHIVE DESTINATION lib
+    )
+
     set_target_properties(ModelGenieRuntime PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         POSITION_INDEPENDENT_CODE OFF
         FOLDER "Deep2"
+        EXPORT_NAME ModelGenieRuntime
     )
 
+    # Wrapped in $<BUILD_INTERFACE:...> so these source-tree paths stay out of
+    # the exported RawrXDCoreTargets interface. RawrXDCore links this library
+    # PRIVATE and installs an EXPORT set, and install(EXPORT) refuses
+    # interface paths prefixed in the source directory.
     target_include_directories(ModelGenieRuntime PUBLIC
-        ${RAWRXD_SOURCE_DIR}
-        ${RAWRXD_SOURCE_DIR}/include
-        ${RAWRXD_SOURCE_DIR}/src
-        ${RAWRXD_SOURCE_DIR}/src/deep2
-        ${RAWRXD_SOURCE_DIR}/src/deep2/modelgenie
-        ${RAWRXD_SOURCE_DIR}/src/modelgenie
-        ${RAWRXD_SOURCE_DIR}/src/tokenizer
-        ${RAWRXD_SOURCE_DIR}/tools
-        ${RAWRXD_SOURCE_DIR}/generated/DeepSeek-V2-Lite-Chat
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/src>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/src/deep2>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/src/deep2/modelgenie>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/src/modelgenie>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/src/tokenizer>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/tools>
+        $<BUILD_INTERFACE:${RAWRXD_SOURCE_DIR}/generated/DeepSeek-V2-Lite-Chat>
     )
 
     if(MSVC)

@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "MoEWeightsLoader.hpp"
+#include "gguf_compat.h"   // QK_K / block_q*_K / QK4_0..QK8_1 + GGUFValueType
 #include <cstdio>
 #include <cstring>
 #include <chrono>

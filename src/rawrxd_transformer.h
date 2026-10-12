@@ -30,6 +30,28 @@ public:
     std::vector<float> ForwardBatch(const std::vector<uint32_t>& tokens, int start_pos);
     void InvalidateDecodeCarry();
 
+    // -----------------------------------------------------------------------
+    // Layer matmul primitives.
+    //
+    // Both functions resolve `weightName` through the model loader ONCE, then
+    // compute. ExecuteLayerMatMul is the single-row form; ExecuteLayerMatMulBatch
+    // is the T-row form and delegates to it so there is exactly one arithmetic
+    // path (a bug in one is a bug in the other, never a divergence).
+    //
+    // Weight layout: the loader returns dequantised weights in (outDim, inDim)
+    // row-major, i.e. W[j * inDim + k], matching MatrixMultiply_AVX512's B
+    // operand. Output: out[j] = sum_{k < inDim} in[k] * W[j * inDim + k].
+    //
+    // Returns false (and leaves `out` untouched apart from what it wrote) when
+    // the tensor is missing or a dimension is non-positive. Callers must treat
+    // false as a hard failure, not a soft one.
+    // -----------------------------------------------------------------------
+    bool ExecuteLayerMatMul(const std::string& weightName, const float* in, float* out,
+                            int inDim, int outDim, uint32_t layer);
+
+    bool ExecuteLayerMatMulBatch(const std::string& weightName, const float* in, float* out,
+                                 int inDim, int outDim, int T, uint32_t layer);
+
 private:
     Config config;
     VkDevice device;

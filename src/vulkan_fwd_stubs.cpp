@@ -10,9 +10,9 @@ bool VulkanCompute::CopyArenaHiddenTo(VulkanCompute&, uint32_t) { return false; 
 bool VulkanCompute::DispatchGemvDevice(const float*, uint64_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchGemvPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::DispatchGemvQ6kPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
-bool VulkanCompute::DispatchGEMVQ6kPacked(const void*, size_t, const float*, float*, uint32_t, uint32_t) { return false; }
+
 bool VulkanCompute::DispatchGemvQuant(int, const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint64_t) { return false; }
-bool VulkanCompute::DispatchGEMVQuant(int, const void*, size_t, const float*, float*, uint32_t, uint32_t, uint64_t) { return false; }
+
 bool VulkanCompute::EnsureQ4kPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kFusedPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kOprojPipeline() { return false; }
@@ -38,13 +38,9 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void*, size_t, const float*, flo
                                           uint32_t, uint32_t, uint64_t) {
     return false;
 }
-bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void*, size_t, const float*, float*,
-                                           uint32_t, uint32_t, uint64_t) {
-    return false;
-}
-void VulkanCompute::GemvReuseInputNext() {}
-void VulkanCompute::GemvFuseResidualNext(const float*) {}
-uint64_t VulkanCompute::GemvInputReuseHits() const { return 0; }
+
+
+
 bool VulkanCompute::EnsureQ6kPipeline() { return false; }
 bool VulkanCompute::EnsureQ5kPipeline() { return false; }
 bool VulkanCompute::EnsureQ3kPipeline() { return false; }
@@ -125,17 +121,17 @@ bool VulkanCompute::HasPinnedGemvWeight(uint64_t, size_t, uint32_t, uint32_t) co
 bool VulkanCompute::TouchPinnedGemvWeight(uint64_t, size_t, uint32_t, uint32_t) {
     return false;
 }
-void VulkanCompute::ReleaseWeightWindow() {}
-void VulkanCompute::ClearPinnedGemvWeights() {}
-size_t VulkanCompute::WeightBudgetBytes() const { return 0; }
-size_t VulkanCompute::WeightPinBudgetFloor() const { return 0; }
-void VulkanCompute::SetPinResidentBudget(size_t) {}
-void VulkanCompute::SetPinResidentBudgetAt(size_t, const char*) {}
-const char* VulkanCompute::PinBudgetOwnerSite() const { return "NONE"; }
-uint64_t VulkanCompute::WeightPinCacheCount() const { return 0; }
-uint64_t VulkanCompute::WeightPinResidentBytes() const { return 0; }
-bool VulkanCompute::WantWeightStream() { return false; }
-size_t VulkanCompute::DeviceLocalHeapBytes() const { return 0; }
+
+
+
+
+
+
+
+
+
+
+
 bool VulkanCompute::ApplyWeightWindowPolicy(size_t, size_t, uint32_t, size_t) { return false; }
 }
 #endif

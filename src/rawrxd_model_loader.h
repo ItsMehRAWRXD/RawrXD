@@ -47,6 +47,21 @@ class RawrXDModelLoader {
 public:
     bool Load(const wchar_t* path, VkDevice device, VkPhysicalDevice physDevice);
     float* GetTensor(const std::string& name);
+
+    // Fetch ONE row (of `dim` floats) from a named tensor into `out`.
+    //
+    // The tensor's row length is its first GGUF dimension (dims[0]); `dim` is the
+    // caller's expectation and is validated against it, so a mismatch is a hard
+    // error rather than a silently truncated copy. `row` is the row index.
+    //
+    // Used by the embedding lookup, where copying the whole embedding table to
+    // pull one row would be both slow and pointless.
+    bool GetTensorRow(const std::string& name, size_t row, float* out, size_t dim);
+
+    // Const access to a tensor's metadata (dims/type), or nullptr if absent.
+    // Lets callers validate a weight's shape before feeding it to a kernel
+    // instead of trusting the name and hoping.
+    const Tensor* FindTensor(const std::string& name) const;
     
 private:
     VkDevice device;

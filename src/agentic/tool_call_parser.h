@@ -20,6 +20,14 @@ struct ParsedToolCall {
 struct ToolCallParseResult {
     std::vector<ParsedToolCall> toolCalls;
     bool                        hadPartialFailure = false;
+
+    // True when at least one tool call was parsed out of the model output.
+    bool hasToolCalls = false;
+
+    // The prose that remained after the last accepted tool call, i.e. what the
+    // user should still see even though the assistant also invoked tools.
+    // Empty when no tool call was parsed.
+    std::string remainingText;
 };
 
 class ToolCallParser {

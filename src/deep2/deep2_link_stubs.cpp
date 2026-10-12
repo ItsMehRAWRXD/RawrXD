@@ -10,19 +10,14 @@
 #include <string>
 #include <functional>
 
-namespace CPUInference {
-
-// VulkanCompute stubs
-VulkanCompute::VulkanCompute() {}
-VulkanCompute::~VulkanCompute() {}
-bool VulkanCompute::Initialize() { return false; }
-bool VulkanCompute::InitializeSolo(const char*) { return false; }
-bool VulkanCompute::DispatchGEMV(const float*, const float*, float*, unsigned int, unsigned int) {
-    return false;
-}
-bool VulkanCompute::FlushAsyncCommands() { return false; }
-
-} // namespace CPUInference
+// NOTE: CPUInference::VulkanCompute is declared once in
+// include/vulkan_compute_cpu_ns.hpp (pulled in by vulkan_compute.h) and
+// implemented for real in src/vulkan_compute_cpu_ns.cpp.  Previous versions of
+// this file re-declared members of it inside `namespace CPUInference` with
+// signatures that did not match the engine's calls (C2888: e.g. a 5-argument
+// DispatchGEMV while Deep2Engine.cpp calls a 6-argument one, plus Initialize()
+// and FlushAsyncCommands() which are not members of the class at all).  Those
+// definitions are gone; the real implementation now supplies them.
 
 // OllamaBlobParser stub
 namespace rawrxd { namespace ollama {

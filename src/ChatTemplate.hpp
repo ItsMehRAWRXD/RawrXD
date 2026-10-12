@@ -23,6 +23,9 @@ enum class ChatTemplateType {
     QWEN2,
     ZEPHYR,
     YI,
+    // No template, but the model still needs its BOS token: the raw prompt is
+    // sent prefixed with <bos> rather than embedded in a dialogue wrapper.
+    RAW_BOS,
     UNKNOWN
 };
 
@@ -55,6 +58,42 @@ public:
 
     // Get template type
     ChatTemplateType getType() const { return type_; }
+
+    // ------------------------------------------------------------------------
+    // Model-aware initialisation
+    // ------------------------------------------------------------------------
+    // Build the template from the model's own facts:
+    //   arch          GGUF general.architecture ("llama", "qwen2", "gemma2", ...)
+    //   systemDefault system prompt to apply when the caller passes none
+    //   templateStr   the model's chat template, when it declares one
+    //   bos/eos       the model's begin/end-of-sequence token strings
+    //
+    // Returns false when no template could be resolved at all (arch empty and
+    // no templateStr). In that case getType() == UNKNOWN and callers must fall
+    // back to the raw prompt. When the architecture is known but the file
+    // declares no template, the built-in rule for that architecture is used and
+    // RAW_BOS is returned if the only safe wrapper is a bare BOS prefix.
+    bool initFromMetadata(const std::string& arch,
+                          const std::string& systemDefault,
+                          const std::string& templateStr,
+                          const std::string& bos,
+                          const std::string& eos);
+
+    // ------------------------------------------------------------------------
+    // Single-turn formatting and type name
+    // ------------------------------------------------------------------------
+    // Format exactly one user (or assistant) turn using the detected template.
+    std::string formatSingle(const std::string& user, const std::string& assistant = "");
+
+    // Stable, human-readable name of the detected type ("llama3", "chatml", ...).
+    const char* getTypeName() const;
+
+    // True when `text` is one of this template's end-of-turn markers (EOS,
+    // <|EOT|>, <|eot_id|>, ...). Used to trim generated text.
+    bool isEndOfTurn(const std::string& text) const;
+
+    // True when `text` is the model's EOS token (or an equivalent stop marker).
+    bool isEos(const std::string& text) const;
 
     // Get configuration
     const ChatTemplateConfig& getConfig() const { return config_; }

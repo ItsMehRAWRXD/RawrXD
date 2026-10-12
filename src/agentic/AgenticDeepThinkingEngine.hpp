@@ -60,6 +60,31 @@ enum class RecoveryStrategy {
     FreezeHotpatching
 };
 
+// Stable string form for a recovery strategy. Used by the recovery orchestrator
+// to emit a machine-readable strategy in its JSON result and its telemetry
+// event (e.g. "strategy=RESTART_SERVICE"). ADL resolves this from any code that
+// holds a RecoveryStrategy, so callers need no qualification.
+inline const char* RecoveryStrategyString(RecoveryStrategy s) {
+    switch (s) {
+        case RecoveryStrategy::NONE:              return "none";
+        case RecoveryStrategy::RESTART_SERVICE:   return "restart_service";
+        case RecoveryStrategy::RESTART_PROCESS:   return "restart_process";
+        case RecoveryStrategy::CLEAR_CACHE:       return "clear_cache";
+        case RecoveryStrategy::RELOAD_MODEL:      return "reload_model";
+        case RecoveryStrategy::RESET_BRIDGE:      return "reset_bridge";
+        case RecoveryStrategy::ROLLBACK_STATE:    return "rollback_state";
+        case RecoveryStrategy::AUTOMATIC_RETRY:   return "automatic_retry";
+        case RecoveryStrategy::FALLBACK_MODE:     return "fallback_mode";
+        case RecoveryStrategy::ESCALATE_TO_USER:  return "escalate_to_user";
+        case RecoveryStrategy::SourceEdit:        return "source_edit";
+        case RecoveryStrategy::HotpatchRedirect:  return "hotpatch_redirect";
+        case RecoveryStrategy::ReduceBatchSize:   return "reduce_batch_size";
+        case RecoveryStrategy::SwapKVToDisk:      return "swap_kv_to_disk";
+        case RecoveryStrategy::FreezeHotpatching: return "freeze_hotpatching";
+        default:                                  return "unknown";
+    }
+}
+
 // ============================================================================
 // Structs
 // ============================================================================

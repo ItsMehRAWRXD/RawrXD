@@ -12,6 +12,7 @@
 
 #include "ReverseHotpatchEngine.hpp"
 #include "GGUFLoader.hpp"
+#include "gguf_compat.h"   // block_q4_0/q4_1/q5_0 + QK_K + GGUFValueType
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
