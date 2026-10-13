@@ -307,6 +307,9 @@ inline RelevantContext buildRelevantContext(const std::string& question,
 struct Response {
     ResponseKind kind = ResponseKind::Uncertain;
     std::string text;
+    /// The model's own answer text, preserved when the host replaced it with a
+    /// verified figure. Never shown as a competing answer; audit only.
+    std::string modelAnswerUnverified;
     bool verified = false;          ///< evidence-determines-truth: default false
     std::vector<ToolResult> toolRuns;
     std::vector<ToolReceipt> receipts;  ///< host record of what really executed
@@ -588,15 +591,18 @@ inline std::string hostVerifyCount(const std::string& question,
 
     if (hostCount < 0) return answer;  // no derivable count; leave as is
 
+    // The host-derived count IS the answer. The model's own number is not shown
+    // beside it as a competing figure: two different counts in one reply is a
+    // user-facing correctness problem, not useful transparency. The model's
+    // original text is preserved for auditing in the --json
+    // "model_answer_unverified" field instead of the answer body.
     std::ostringstream out;
     out << "There are " << hostCount << " matching source files.\n\n"
-        << "COUNT VERIFIED BY HOST: the number above is taken from the "
-        << "'matching_files' summary of the search_text result this CLI "
-        << "actually executed (host receipt, tool=" << evidenceTool
-        << "). The model's own recount of that list was not trusted, because a "
-           "recount of a long list is exactly where it errs.\n\n"
-        << "--- model's original response, unverified ---\n"
-        << answer;
+        << "Verified by the host from the '" << evidenceTool
+        << "' result this CLI actually executed (host receipt). The count comes "
+           "from that result's own matching_files summary, not from a model "
+           "recount of the file list -- a recount of a long list is exactly "
+           "where it errs.";
     return out.str();
 }
 
@@ -1169,6 +1175,9 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         return false;
     };
 
+    std::vector<ToolReceipt> receipts;
+    bool usedTools = false;
+
     // HOST POLICY (RAWRXD_AGENT_EVIDENCE_001, H1): a question that names a file
     // or asks for its contents declares that the answer must come from that
     // file, so the host requires at least one executed receipt before any
@@ -1197,13 +1206,54 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     const bool requiresFileEvidence = namesAFile(q.text);
     int evidenceRefusals = 0;
 
-    std::vector<ToolReceipt> receipts;
-    bool usedTools = false;
+    // Does the ledger contain at least one receipt the HOST actually ran?
+    auto hasExecutedReceipt = [&]() {
+        for (const auto& r : receipts)
+            if (r.status == ActionStatus::Executed) return true;
+        return false;
+    };
+    // H1 evidence gate for every answer-producing path. A question that names a
+    // file cannot be answered without a real execution: the host refuses the
+    // answer and asks for the read twice, then returns the explicit limitation.
+    // Returns true when resp holds the final answer, false when the host
+    // refused and the caller must continue the loop.
+    auto answerOrRefuse = [&](const std::string& modelText, bool grounded) -> bool {
+        if (requiresFileEvidence && !hasExecutedReceipt()) {
+            if (evidenceRefusals < 2) {
+                ++evidenceRefusals;
+                first = client.complete(
+                    {{{"role", "user"},
+                      {"content", buildUniversalPrompt(q) +
+                                  "\nREFUSED_BY_HOST: the question asks about the "
+                                  "contents of a file, and no tool has executed "
+                                  "yet. Reply with a tool_call JSON now, e.g. "
+                                  "{\"kind\":\"tool_call\",\"tool\":\"read_file\","
+                                  "\"args\":{\"path\":\"<the file>\"}}, or use "
+                                  "search_text."}}},
+                    600);
+                return false;
+            }
+            resp.kind = ResponseKind::Uncertain;
+            resp.text =
+                "I could not verify the file's contents: the question requires "
+                "reading a file, and no tool executed successfully during this "
+                "answer, so any content I offered would be invented. Re-run with "
+                "tool access, or read the file directly.";
+            resp.receipts = receipts;
+            return true;
+        }
+        resp.kind = grounded ? ResponseKind::ToolRequired : ResponseKind::Answer;
+        resp.text = gateAnswer(modelText, receipts, grounded);
+        resp.answerIsGrounded = grounded && !resp.toolRuns.empty();
+        resp.receipts = receipts;
+        return true;
+    };
+
     // HOST POLICY: never open the tool loop for a question that forbids tools.
     // tools_executed is built only from receipts the host populates after a
     // real execution, so a forbidden tool produces no receipt and no count.
     // A question that names a file DOES open the route (its answer must come
-    // from that file, per the H1 policy below).
+    // from that file, per the H1 policy above).
     const bool toolsAllowed =
         wantsRepositoryEvidence(q.text) || requiresFileEvidence;
     if (!toolsAllowed)
@@ -1285,12 +1335,10 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         }
 
         // Still nothing usable: the reply is data, not action. Fall back to the
-        // grounded answer rather than crashing on a null json.
+        // grounded answer rather than crashing on a null json -- unless the
+        // host requires file evidence first (H1).
         if (kind.empty()) {
-            resp.kind = ResponseKind::Answer;
-            resp.text = gateAnswer(first.content, receipts, usedTools);
-            resp.answerIsGrounded = usedTools;
-            resp.receipts = receipts;
+            if (!answerOrRefuse(first.content, usedTools)) continue;
             return resp;
         }
 
@@ -1447,47 +1495,28 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         }
 
         // final_answer -- gate it against the receipts before the user sees it.
-        //
-        // H1 evidence gate: a question that names a file cannot be answered
-        // without at least one executed receipt. Refuse (and ask for the read)
-        // up to twice, then return the explicit limitation.
-        if (requiresFileEvidence && executedSet.empty() && evidenceRefusals < 2) {
-            ++evidenceRefusals;
-            first = client.complete(
-                {{{"role", "user"},
-                  {"content", buildUniversalPrompt(decisionQ) +
-                              "\nREFUSED_BY_HOST: the question asks about the "
-                              "contents of a file, and no tool has executed yet. "
-                              "Reply with a tool_call JSON now, e.g. "
-                              "{\"kind\":\"tool_call\",\"tool\":\"read_file\","
-                              "\"args\":{\"path\":\"<the file>\"}} or search_text."}}},
-                600);
+        // The H1 evidence gate runs inside answerOrRefuse: a file question with
+        // no executed receipt is refused (twice) and then answered with the
+        // explicit limitation instead of model-generated content.
+        if (!answerOrRefuse(
+                obj.is_null() ? first.content : obj.value("answer", first.content),
+                usedTools))
             continue;
-        }
-        resp.kind = usedTools ? ResponseKind::ToolRequired : ResponseKind::Answer;
-        if (requiresFileEvidence && executedSet.empty()) {
-            // Refusal budget exhausted without any real execution: the answer
-            // is the explicit limitation, NOT model-generated file content.
-            resp.kind = ResponseKind::Uncertain;
-            resp.text =
-                "I could not verify the file's contents: the question requires "
-                "reading a file, and no tool executed successfully during this "
-                "answer, so any content I offered would be invented. Re-run with "
-                "tool access, or read the file directly.";
-            resp.receipts = receipts;
-            return resp;
-        }
-        resp.text = gateAnswer(
-            obj.is_null() ? first.content : obj.value("answer", first.content),
-            receipts, usedTools);
-        resp.answerIsGrounded = usedTools && !resp.toolRuns.empty();
-        resp.receipts = receipts;
         return resp;
     }
 
-    resp.kind = ResponseKind::Answer;
-    resp.text = gateAnswer(first.content, receipts, usedTools);
-    resp.receipts = receipts;
+    // Loop exhausted: answer from the collected evidence. If the host required
+    // file evidence and none was collected, the refusal cannot continue, so the
+    // limitation is returned directly.
+    if (!answerOrRefuse(first.content, usedTools)) {
+        resp.kind = ResponseKind::Uncertain;
+        resp.text =
+            "I could not verify the file's contents: the question requires "
+            "reading a file, and no tool executed successfully during this "
+            "answer, so any content I offered would be invented. Re-run with "
+            "tool access, or read the file directly.";
+        resp.receipts = receipts;
+    }
     return resp;
 }
 

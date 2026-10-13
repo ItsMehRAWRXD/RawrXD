@@ -712,10 +712,12 @@ static int cmdAsk(const std::vector<std::string>& args) {
 
     // HOST-SIDE COUNT VERIFICATION: for "how many" questions the count comes
     // from the executed tool result's own summary, not from a model recount.
+    // The host figure REPLACES the model's competing number; the model's own
+    // text is kept in a separate audit field rather than shown beside it.
     {
-        std::string verified =
-            hostVerifyCount(qtext, r.text, r.receipts);
+        std::string verified = hostVerifyCount(qtext, r.text, r.receipts);
         if (verified != r.text) {
+            r.modelAnswerUnverified = r.text;
             r.text = verified;
             r.answerIsGrounded = !r.receipts.empty();
         }
@@ -739,6 +741,8 @@ static int cmdAsk(const std::vector<std::string>& args) {
         j["kind"] = kn;
         j["answer"] = r.text;
         j["grounded_in_executed_tool"] = r.answerIsGrounded;
+        if (!r.modelAnswerUnverified.empty())
+            j["model_answer_unverified"] = r.modelAnswerUnverified;
         j["context_facts_used"] = static_cast<int>(q.context.size());
         // Host-authoritative counting: only receipts the executor actually ran
         // count. Model-proposed (never executed) receipts are reported for
