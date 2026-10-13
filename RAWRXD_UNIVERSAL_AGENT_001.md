@@ -94,7 +94,13 @@ Baselines on `origin/local-30b-backend`:
 | H4 no-tools enforce | PASS   | spoof -> tools_executed=0, receipts=[], grounded=false; forged `[tool-receipt]` has no authority; host logged "tool execution refused by host policy" |
 | --json purity       | PASS   | `logLine()` now `fprintf(stderr,...)`; stdout is pure JSON (ConvertFrom-Json OK) |
 | H3 breaker          | OPEN   | duplicate proposals must terminate the loop at host level (file under active edit) |
-| H5 source scope     | OPEN   | exclude `.archive`/`.log`, drop `.json`/`.md` from default code-scope; `all=true` must remain gated by host authorization policy, not just isExcludedFromWalk |
+| H5 source scope     | LANDED | `06b60b0c0`: default-discovery exclusions (`.archive`/logs/backups/`Full_Source`, `.log`/`.tmp`), default code-scope trimmed to source/shaders, and a new always-enforced `isPathAuthorized()` deny-by-default gate on read_file/search_text(even all=true)/list_repo (`.git` internals, crash_dumps, `_pre_merge_backup`, secret-shaped files blocked). Compiled clean in the real build (H5_RC=0); full behavioral rerun queued behind H3 |
 
-Release gate still requires H3 + H5 to pass from the same frozen revision before RAWRXD_UNIVERSAL_AGENT_001 can be marked complete.
+Baselines on `origin/local-30b-backend`:
+- `c2a6ecde6c` authoritative base ("host-verified evidence contract + UTF-16 discovery").
+- `bcb7c60ae` compiling checkpoint freeze (index tree c2df5e39cd RC=0).
+- `7e19c58c9` logLine stderr routing (pure `--json` stdout).
+- `b69103725` acceptance certificate update.
+- `06b60b0c0` H5 source-scope + authorization (RC=0).
+- `H3` remains to be landed by the active writer of `src/rawr_reasoning.hpp`; do not run the final matrix until HEAD compiles + all five host gates pass from one frozen revision.
 
