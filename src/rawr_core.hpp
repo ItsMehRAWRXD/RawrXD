@@ -71,8 +71,11 @@ inline std::string truncateForLedger(const std::string& s, size_t limit) {
 inline void logLine(const std::string& msg) {
     SYSTEMTIME st;
     GetLocalTime(&st);
-    printf("[%02d:%02d:%02d.%03d] %s\n", st.wHour, st.wMinute, st.wSecond,
-           st.wMilliseconds, msg.c_str());
+    // Diagnostics belong on STDERR so `rawr ... --json` keeps stdout as pure,
+    // machine-parseable JSON. (Previously printf -> stdout, which interleaved
+    // timestamped policy/trace lines into the JSON envelope and broke parsing.)
+    fprintf(stderr, "[%02d:%02d:%02d.%03d] %s\n", st.wHour, st.wMinute, st.wSecond,
+            st.wMilliseconds, msg.c_str());
 }
 
 inline std::wstring utf8ToWide(const std::string& s) {
