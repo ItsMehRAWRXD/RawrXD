@@ -357,12 +357,13 @@ struct Engine {
 
 // ----------------------------------------------------------------------------
 int main(int argc, char** argv) {
-    std::string model, prompt = "def add(a, b):";
+    std::string model, prompt = "def add(a, b):", ids;
     int n_tokens = 16;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--model" && i + 1 < argc) model = argv[++i];
         else if (a == "--prompt" && i + 1 < argc) prompt = argv[++i];
+        else if (a == "--ids" && i + 1 < argc) ids = argv[++i];
         else if (a == "--tokens" && i + 1 < argc) n_tokens = atoi(argv[++i]);
         else { fprintf(stderr, "unknown argument: %s\n", a.c_str()); return 1; }
     }
@@ -376,8 +377,23 @@ int main(int argc, char** argv) {
         fprintf(stderr, "cannot open/parse '%s' as GGUF\n", model.c_str());
         return 2;
     }
+
+    // --ids seeds the decode with explicit token IDs, bypassing this tool's
+    // tokenizer so a generation-parity run against llama.cpp cannot be
+    // confounded by a tokenizer disagreement (pure forward/generation parity).
+    std::vector<int> id_seed;
+    if (!ids.empty()) {
+        std::string cur;
+        for (char c : ids) {
+            if (c == ',' || c == ' ') {
+                if (!cur.empty()) { id_seed.push_back(atoi(cur.c_str())); cur.clear(); }
+            } else cur += c;
+        }
+        if (!cur.empty()) id_seed.push_back(atoi(cur.c_str()));
+    }
+
     Tokenizer tok;
-    if (!tok.load(f)) {
+    if (!tok.load(f) && id_seed.empty()) {
         fprintf(stderr, "model has no tokenizer.ggml.tokens vocabulary\n");
         return 2;
     }
@@ -393,8 +409,8 @@ int main(int argc, char** argv) {
            (unsigned long long)eng.heads, (unsigned long long)eng.head_dim,
            (unsigned long long)eng.vocab);
 
-    std::vector<int> toks = tok.encode(prompt);
-    printf("prompt tokens (%zu):", toks.size());
+    std::vector<int> toks = id_seed.empty() ? tok.encode(prompt) : id_seed;
+    printf("%s tokens (%zu):", id_seed.empty() ? "prompt" : "seed", toks.size());
     for (int t : toks) printf(" %d", t);
     printf("\n");
 
@@ -413,11 +429,20 @@ int main(int argc, char** argv) {
 
     // ---- decode ----
     std::vector<int> gen{argmax_f(logits)};
+    std::vector<double> gen_max;
+    gen_max.push_back(*std::max_element(logits.begin(), logits.end()));
     t0 = clk::now();
     for (int i = 1; i < n_tokens && !eng.failed; ++i) {
         eng.step(gen.back(), logits);
         gen.push_back(argmax_f(logits));
+        gen_max.push_back(*std::max_element(logits.begin(), logits.end()));
     }
+    // Machine-readable generation stream for cross-engine comparison
+    // (same format as llama_gen_ref): step id max_logit
+    printf("GENSTREAM:");
+    for (size_t i = 0; i < gen.size(); ++i)
+        printf(" %d %.6f", gen[i], gen_max[i]);
+    printf("\n");
     const double decode_ms = ms_since(t0);
     if (eng.failed) {
         fprintf(stderr, "FAILED during decode (token %zu)\n", gen.size());

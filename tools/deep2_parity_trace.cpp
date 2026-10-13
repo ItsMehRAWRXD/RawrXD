@@ -56,7 +56,8 @@ int main(int argc, char* argv[]) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
 
-    std::string model, outdir = "parity_out", tokensArg = "1 185";
+    std::string model, outdir = "parity_out", tokensArg = "1 185", gate4;
+    bool gpu_native = false;
     int generate = 0;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -64,6 +65,8 @@ int main(int argc, char* argv[]) {
         else if (a == "--outdir" && i + 1 < argc) outdir = argv[++i];
         else if (a == "--tokens" && i + 1 < argc) tokensArg = argv[++i];
         else if (a == "--generate" && i + 1 < argc) generate = std::atoi(argv[++i]);
+        else if (a == "--gate4" && i + 1 < argc) gate4 = argv[++i];
+        else if (a == "--gpu") gpu_native = true;
         else {
             std::printf("unknown arg %s\n", a.c_str());
             return 1;
@@ -111,7 +114,7 @@ int main(int argc, char* argv[]) {
                 (unsigned long long)rep.spec.rope_dim, rep.spec.rms_eps);
 
     RuntimeGraph::Executor ex;
-    ex.SetForceCpu(true);  // CPU-pinned: the certification path
+    ex.SetForceCpu(!gpu_native);  // CPU-pinned unless --gpu asks for GPU-native dispatch
     if (!ex.Bind(rep)) {
         std::printf("BIND_FAIL: %s\n", ex.Stats().error.c_str());
         return 1;
@@ -157,7 +160,9 @@ int main(int argc, char* argv[]) {
             }
         }
         if (lst) std::fclose(lst);
-        ex.SetOpTrace(false);
+        // Gate 4 needs the traces after the pass; SetOpTrace clears them,
+        // so only stop tracing when the dispatch auditor is not running.
+        if (gate4.empty()) ex.SetOpTrace(false);
     }
 
     // ---- greedy generation (multi-token agreement with KV reuse) -----------
@@ -194,9 +199,72 @@ int main(int argc, char* argv[]) {
         std::printf("\n");
     }
 
+    // ---- Gate 4: dispatch contract audit (RAWRXD_GATE4_DISPATCH_001) -------
+    // Two configurations are certified with the same code path:
+    //   --gate4 cpu  : CPU-native (SetForceCpu is the host policy pin), every
+    //                  execution authorized; any OTHER device change fails.
+    //   --gate4 gpu  : GPU-native (no pin); every quantized dot must run on the
+    //                  GPU (selected backend == vulkan), any CPU substitute
+    //                  without authorization is a policy violation.
     const RuntimeGraph::BindStats& b = ex.Stats();
+    if (!gate4.empty()) {
+        const bool wantVulkan = (gate4 == "gpu");
+        const std::vector<RuntimeGraph::Executor::OpTrace>& trs = ex.OpTraces();
+        int g4_failures = 0;
+        auto G4 = [&](bool ok, const std::string& what) {
+            std::printf("  [%s] %s\n", ok ? "PASS" : "FAIL", what.c_str());
+            if (!ok) ++g4_failures;
+        };
+        size_t dotOps = 0, executed = 0, unauthorized = 0, missing = 0;
+        size_t vulkanOps = 0, cpuOps = 0;
+        bool finite = true;
+        for (const auto& t : trs) {
+            if (!t.values.empty())
+                for (float v : t.values)
+                    if (!std::isfinite(v)) finite = false;
+            // Quantized projections identified by their graph output name: the
+            // attention q/k/v projections, the wo output projection, and the
+            // three FFN projections (all are weight x activation dots).
+            static const char* kDotOuts[] = {"q", "k", "v", "attn_proj", "gate",
+                                             "up", "ffn_out"};
+            bool isDot = false;
+            for (const char* dname : kDotOuts)
+                if (t.name == dname) { isDot = true; break; }
+            if (!isDot) continue;
+            ++dotOps;
+            if (t.dispatch_backend == "vulkan") ++vulkanOps; else if (t.dispatch_backend == "cpu") ++cpuOps;
+            if (t.dispatch_backend.empty()) { ++missing; continue; }
+            ++executed;
+            if (wantVulkan) {
+                if (t.dispatch_backend != "vulkan") ++unauthorized;
+            } else {
+                if (t.dispatch_fallback.size() && !t.dispatch_forced) ++unauthorized;
+            }
+        }
+        G4(dotOps > 0, "forward executed quantized projections");
+        G4(executed == dotOps, "every dot has a recorded dispatch decision");
+        G4(missing == 0, "no missing kernel silently became a success");
+        G4(unauthorized == 0, "no unauthorized fallback");
+        G4(finite, "forward produced finite outputs");
+        G4(ex.Stats().ops_total > 0, "all expected layers bound");
+        if (std::getenv("G4_DEBUG"))
+            for (size_t i = 0; i < trs.size() && i < 8; ++i)
+                std::fprintf(stderr, "G4 trace[%zu] name=[%s] weight=[%s] backend=[%s] forced=%d\n",
+                             i, trs[i].name.c_str(), trs[i].weight.c_str(),
+                             trs[i].dispatch_backend.c_str(), (int)trs[i].dispatch_forced);
+        std::printf("GATE4_%s config=%s dots=%zu vulkan=%zu cpu=%zu gpu_calls=%llu "
+                    "cpu_calls=%llu fallback=%s\n",
+                    g4_failures == 0 ? "PASS" : "FAIL", gate4.c_str(), dotOps,
+                    vulkanOps, cpuOps, (unsigned long long)b.gpu_calls,
+                    (unsigned long long)b.cpu_calls, b.fallback_reason.c_str());
+        return g4_failures == 0 ? 0 : 4;
+    }
+
     std::printf("gpu_calls=%llu cpu_calls=%llu fallback=%s\n", (unsigned long long)b.gpu_calls,
                 (unsigned long long)b.cpu_calls,
                 b.fallback_reason.empty() ? "<none>" : b.fallback_reason.c_str());
     return 0;
 }
+
+
+

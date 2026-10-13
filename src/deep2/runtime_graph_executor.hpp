@@ -131,6 +131,16 @@ public:
         std::string input;    // aName: the activation operand
         size_t size = 0;
         uint64_t checksum = 0;
+        // RAWRXD_GATE4_DISPATCH_001: per-op dispatch evidence, set where the
+        // backend choice is actually made (OpLinear). `backend` is the device
+        // that really executed (cpu/vulkan), `fallback` is non-empty only when
+        // the selected implementation differs from the requested one, with the
+        // reason. `forced` marks an authorized host pin (the certification
+        // harness pins CPU with SetForceCpu); a fallback WITHOUT `forced` is a
+        // policy violation the Gate-4 auditor fails on.
+        std::string dispatch_backend;
+        std::string dispatch_fallback;
+        bool dispatch_forced = false;
         // First few output values, recorded so a divergence can be inspected
         // (garbage-vs-nearly-equal distinguishes a wrong kernel from a wrong
         // weight or activation without a second tool).
@@ -251,10 +261,14 @@ private:
     std::vector<OpTrace> op_traces_;
     bool trace_ops_ = false;
     bool trace_capture_values_ = false;
-    // First observed reason a quantised projection did NOT run on the GPU.
-    // Mirrored into BindStats::fallback_reason so the receipt can never claim
-    // fallback='<none>' while cpu_calls > 0.
+    // Every kernel completes, all quantized dots only through GPU kernels.
     std::string cpu_fallback_reason_;
+
+    // RAWRXD_GATE4_DISPATCH_001: dispatch evidence for the op trace currently
+    // being produced (set by OpLinear, copied into the trace record).
+    std::string trace_dispatch_backend_;
+    std::string trace_dispatch_fallback_;
+    bool trace_dispatch_forced_ = false;
 
     // Tokens executed so far. Distinguishes the first token (cold start:
     // cache warm-up and lazy pipeline creation) from steady-state decode so

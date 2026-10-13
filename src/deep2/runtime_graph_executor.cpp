@@ -802,6 +802,19 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                     " (weight=" + w.name + ")";
             }
         }
+        // RAWRXD_GATE4_DISPATCH_001: per-op dispatch evidence for the current
+        // trace record. A forced pin (SetForceCpu) is an authorized host
+        // selection, not a fallback; anything else that changed the selected
+        // device records the reason for the Gate-4 auditor.
+        trace_dispatch_backend_ = gpu ? "vulkan" : "cpu";
+        trace_dispatch_forced_ = force_cpu_;
+        trace_dispatch_fallback_.clear();
+        if (!gpu && !force_cpu_) {
+            const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
+            trace_dispatch_fallback_ =
+                rcpt.fallback_reason ? std::string(rcpt.fallback_reason)
+                                     : std::string("cpu selected without reason");
+        }
         // Env-gated differential check: the GPU kernel must reproduce the CPU
         // dot exactly, and must never emit a non-finite value. A divergence is
         // a kernel defect and is reported with the tensor that produced it.
@@ -2930,6 +2943,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 tr.input = in.aName;
                 tr.size = out->size();
                 tr.checksum = h;
+                tr.dispatch_backend = trace_dispatch_backend_;
+                tr.dispatch_fallback = trace_dispatch_fallback_;
+                tr.dispatch_forced = trace_dispatch_forced_;
                 for (size_t vi = 0; vi < 8 && vi < out->size(); ++vi)
                     tr.first_vals[vi] = (*out)[vi];
                 if (trace_capture_values_) tr.values = *out;
