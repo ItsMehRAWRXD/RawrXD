@@ -1,5 +1,10 @@
 # H3 / H5 deterministic host-gate certification
 
+Provenance (this certification):
+- Source revision: `9f502fa9d8a60bc3d0ce91ff004e5dc6f3ecfe6a`
+- `bin/rawr.exe` build: RAWREXE_RC=0, SHA256 `5CE4D412C328CACBE7D81E4CF023D535D1D23BBE1FED50F011D51583B5BC7750` (899072 bytes)
+- Deterministic suites: `H5_RC=0  H3_RC=0` (`HOST_GATES_H3_H5_CERTIFIED`)
+
 Reproduce with:  `tests\verify_h3h5.bat`  (no LLM backend required)
 Toolchain: MSVC VS2022, links production `src/rawr_core.cpp` and the inline
 `src/rawr_reasoning.hpp` controller.
