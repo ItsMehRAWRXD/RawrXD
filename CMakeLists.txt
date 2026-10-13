@@ -3129,8 +3129,27 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
     endforeach()
     set_target_properties(q8k_parity_tool q8k_edge_tests PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+
+    # Model Genie capability admission + parity certification.
+    add_executable(quant_parity_cert src/deep2/quant_parity_cert.cpp
+                                  src/deep2/QuantParityRegistry.cpp
+                                  src/deep2/Q8KParity.cpp)
+    target_include_directories(quant_parity_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(quant_parity_cert PRIVATE cxx_std_20)
+    target_compile_options(quant_parity_cert PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(quant_parity_cert PRIVATE
+        NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(quant_parity_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+
     enable_testing()
     add_test(NAME q8k_edge_tests COMMAND q8k_edge_tests)
+    add_test(NAME q8k_byte_parity COMMAND q8k_parity_tool --blocks 8 --seed 12345)
+    add_test(NAME quant_parity_cert COMMAND quant_parity_cert --blocks 8 --seed 12345)
     message(STATUS "q8k parity harness: Q8_K byte-level verification targets enabled")
 endif()
 
