@@ -39,31 +39,35 @@ enum GgufValueType : uint32_t {
 };
 
 // ── GGML tensor types, with block geometry from the reference layout ────────
+// The numeric IDs are authoritative: read from the ggml.h that this build
+// actually uses (3rdparty/ggml/include/ggml.h:380). An earlier version of this
+// table guessed IDs 4-7 and 14, which silently produced wrong row sizes for
+// every K-quant tensor and cascaded into bogus "past EOF" and "overlap"
+// failures. IDs beyond 15 are deliberately UNKNOWN so the auditor fails closed
+// rather than inventing geometry.
 struct TypeInfo {
     const char* name;
     uint32_t blockElems;   ///< elements per block
     uint32_t blockBytes;   ///< bytes per block
 };
 
-// ggml block sizes. A row length must be a multiple of blockElems, and its byte
-// size is (rowLen / blockElems) * blockBytes.
 static const TypeInfo kTypes[] = {
     /*0  F32   */ {"F32",   1,   4},
     /*1  F16   */ {"F16",   1,   2},
     /*2  Q4_0  */ {"Q4_0",  32,  18},
     /*3  Q4_1  */ {"Q4_1",  32,  20},
-    /*4  Q5_0  */ {"Q5_0",  32,  22},
-    /*5  Q5_1  */ {"Q5_1",  32,  24},
-    /*6  Q8_0  */ {"Q8_0",  32,  34},
-    /*7  Q8_1  */ {"Q8_1",  32,  36},
-    /*8  Q2_K  */ {"Q2_K",  256, 84},
-    /*9  Q3_K  */ {"Q3_K",  256, 110},
-    /*10 Q4_K  */ {"Q4_K",  256, 144},
-    /*11 Q5_K  */ {"Q5_K",  256, 176},
-    /*12 Q6_K  */ {"Q6_K",  256, 210},
-    /*13 Q8_K  */ {"Q8_K",  256, 292},
-    /*14 MXFP4 */ {"MXFP4", 32,  17},
-    /*15 MXFP6 */ {"MXFP6", 32,  17},
+    /*4  (removed in ggml: Q4_2) */ {"REMOVED_Q4_2", 0, 0},
+    /*5  (removed in ggml: Q4_3) */ {"REMOVED_Q4_3", 0, 0},
+    /*6  Q5_0  */ {"Q5_0",  32,  22},
+    /*7  Q5_1  */ {"Q5_1",  32,  24},
+    /*8  Q8_0  */ {"Q8_0",  32,  34},
+    /*9  Q8_1  */ {"Q8_1",  32,  36},
+    /*10 Q2_K  */ {"Q2_K",  256, 84},
+    /*11 Q3_K  */ {"Q3_K",  256, 110},
+    /*12 Q4_K  */ {"Q4_K",  256, 144},
+    /*13 Q5_K  */ {"Q5_K",  256, 176},
+    /*14 Q6_K  */ {"Q6_K",  256, 210},
+    /*15 Q8_K  */ {"Q8_K",  256, 292},
 };
 constexpr int kTypeCount = 16;
 
