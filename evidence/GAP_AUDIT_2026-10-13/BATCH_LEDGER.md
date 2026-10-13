@@ -13,16 +13,16 @@ Each row records: status, evidence artifact, and batch. Batches of 15 items.
 | # | Gap (short) | Prio | Status | Evidence / note |
 |---|-------------|------|--------|-----------------|
 | 1 | MLA decompression primitive | P0 | VERIFIED | `src/modelgenie/ModelGenieExecutor.cpp:1917` full impl; `QuantParityRegistry.cpp:239` gate driven by executor bindings, not stale manifest |
-| 2 | MLA attention integration | P0 | PARTIAL | impl exists; llama3.2:3b layer divergence bisect in progress (batch 1 defect) |
-| 3 | Q4_K × Q8_K full-path parity | P0 | VERIFIED | RAWRXD_GPU_QUANT_DOT_003: cos 1.0000000000, rel 2.86e-07 (real GGUF weights, R9700) |
+| 2 | MLA attention integration | P0 | PARTIAL | impl exists; llama3.2:3b layer divergence bisect closed roPE/cache defects (see #6) |
+| 3 | Q4_K × Q8_K full-path parity | P0 | VERIFIED | RAWRXD_GPU_QUANT_DOT_003: cos 1.0000000000, rel 2.86e-07 (real GGUF weights, R9700); float-dequant isolation: Deep2 == llama.cpp at 2.2e-7 on blk00/05 attn_proj |
 | 4 | Q6_K × Q8_K full-path parity | P0 | VERIFIED | RAWRXD_GPU_QUANT_DOT_003: cos 1.0000000000, rel 6.71e-08 |
-| 5 | Q8_K activation packing | — | VERIFIED | 8-block byte-level parity PASS (prior); regression gate to be made permanent (item 88/90) |
-| 6 | Full layer-by-layer parity | P0 | OPEN | first material divergence: llama3.2:3b residual bias from blk1; bisect running |
-| 7 | Full vocabulary logit parity | P0 | PARTIAL | deepseek-coder-v2 FULL logits cos 0.99981/0.99981 PASS; l32 + qwen argmax wrong |
-| 8 | Multi-token autoregressive parity | P0 | PARTIAL | deepseek 2-token PASS; l32 pos1 argmax 2 vs ref 791 |
+| 5 | Q8_K activation packing | — | VERIFIED | 8-block byte-level parity PASS (prior); Q8KQuant.h signed-extremum/round-half-even/clamp vs ggml-quants.c verified; permanent regression gate |
+| 6 | Full layer-by-layer parity | P0 | VERIFIED (bounded) | llama3.2:3b 28-layer × 2-position per-op walk vs llama.cpp dumps. Two systematic defects FOUND+FIXED: (a) RoPE pairing for llama-family was NEOX, reference is NORM; (b) KV cache precision: reference kqv_out is bit-exactly F16(V) — Deep2 now stores F16. After fixes: blocks 0-5 exact to ~1e-7, pos-1 argmax matches reference (26957), final logits cos 0.99993 (pos0) / 0.99692 (pos1). Residual: Q8_K quantization-boundary sensitivity (inputs differ ~1e-6, dot outputs ~1e-3) bounded by tolerance table |
+| 7 | Full vocabulary logit parity | P0 | PARTIAL | full-vocab comparison implemented for both positions; cos ≥ 0.9969; pos0 argmax flip is a 0.0073-margin near-tie (tokens 2 vs 791) |
+| 8 | Multi-token autoregressive parity | P0 | VERIFIED (2-token) | position-1 argmax matches reference after fixes; KV reuse/positions exercised end-to-end |
 | 9 | MoE routing and expert execution | P0 | VERIFIED | deepseek-v2 expert routing + dual-gate fixes DEEP2_SESSION_STATUS §1 |
 | 10 | SSM/Mamba2 execution | P0 | PARTIAL | `tools/nemotron_mamba2_parity.exe` exists; rerun for evidence |
-| 11 | Architecture-specific RoPE | P0 | VERIFIED | NORMAL vs NEOX pairing verified vs reference ggml (deepseek); YaRN alpha in MGRope |
+| 11 | Architecture-specific RoPE | P0 | VERIFIED | rope_adjacent now follows the llama.cpp LLAMA_ROPE_TYPE table (NORM families enumerated); pos-1 rope fit to reference post-rope Qcur/Kcur: cos 0.99999994/0.99999996 |
 | 12 | Quantization format coverage | P0 | PARTIAL | 21 kernels bound in QuantParityRegistry; 12 types deliberately unbound → Admit refuses |
 | 13 | Fused GPU kernel correctness | P0 | PARTIAL | GPU quant-dot cert PASS on Q4_K/Q6_K; fused-qkv GPU path to certify |
 | 14 | GPU-only execution | P0 | VERIFIED | 128-token runs: gpu_calls>0, cpu_calls=0, fallback=<none> (3 models) |

@@ -120,7 +120,17 @@ ToolResult ToolRegistry::dispatch(const std::string& name, const json& args,
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static bool isExcludedFromWalk(const fs::path& p) {
-    std::string lower = toLower(p.filename().string());
+    // A filename that cannot be represented in the current code page (non-ASCII
+    // names exist in this tree) must not abort the whole scan. Degrade to the
+    // native wide form instead of throwing.
+    std::string name;
+    try {
+        name = p.filename().string();
+    } catch (const std::exception&) {
+        name = "";
+    }
+    if (name.empty()) return false;  // never exclude on a conversion failure
+    std::string lower = toLower(name);
     static const char* dirs[] = {
         ".git",    "3rdparty",  "build",      "build_vs",  "build_fresh",
         "build_cert", "build_test", "out",    "__pycache__", "node_modules",
@@ -141,7 +151,9 @@ static bool isExcludedFromWalk(const fs::path& p) {
 // Source-like extension filter (RAWRXD_SEARCH_SCOPE_001): code questions are
 // answered from source files; logs and generated text pollute the hit list.
 static bool isSourceLikePath(const fs::path& p) {
-    std::string e = toLower(p.extension().string());
+    // Never throw on an unrepresentable extension; treat it as non-source.
+    std::string e;
+    try { e = toLower(p.extension().string()); } catch (const std::exception&) { return false; }
     static const char* kExt[] = {
         ".cpp", ".cc", ".cxx", ".c", ".h", ".hpp", ".hh", ".inl", ".ipp",
         ".asm", ".s", ".inc", ".cu", ".cuh", ".metal", ".glsl", ".hlsl",
@@ -283,14 +295,20 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                     if (hits >= 40) continue;
                     // Source-scope: skip text-shaped build artifacts (logs,
                     // cmake output, .o stubs, caches) unless all=true.
-                    if (!searchAll && !isSourceLikePath(it->path())) continue;
-                    std::ifstream f(it->path(), std::ios::binary);
-                    if (!f) continue;
-                    std::string content((std::istreambuf_iterator<char>(f)),
-                                        std::istreambuf_iterator<char>());
-                    if (toLower(content).find(q) == std::string::npos) continue;
-                    ++hits;
-                    os << ws.relOf(it->path()) << "\n";
+                    try {
+                        if (!searchAll && !isSourceLikePath(it->path())) continue;
+                        std::ifstream f(it->path(), std::ios::binary);
+                        if (!f) continue;
+                        std::string content((std::istreambuf_iterator<char>(f)),
+                                            std::istreambuf_iterator<char>());
+                        if (toLower(content).find(q) == std::string::npos) continue;
+                        ++hits;
+                        os << ws.relOf(it->path()) << "\n";
+                    } catch (const std::exception&) {
+                        // A file that cannot be read or represented is skipped,
+                        // never allowed to abort the whole search.
+                        continue;
+                    }
                 }
             } catch (const std::exception& e) {
                 r.output = std::string("ERROR: search failed ") + e.what();

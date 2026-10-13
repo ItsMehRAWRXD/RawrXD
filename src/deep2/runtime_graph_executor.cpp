@@ -20,6 +20,40 @@ using Universal::TensorRec;
 namespace {
 
 // ---------------------------------------------------------------------------
+// RAWRXD_RESOURCE_GOVERNOR_001 — admitted, bounded KV residency.
+//
+// One process governor for host-RAM leases (weight residency and KV growth).
+// DEEP2_KV_BUDGET_MB overrides the default host budget. The KV cache grows by
+// lease only: growth that does not fit the budget fails the forward pass
+// closed, because silently truncating the cache corrupts every later
+// position rather than degrading gracefully.
+// ---------------------------------------------------------------------------
+rawrxd::deep2::Governor& ProcessGovernor() {
+    static rawrxd::deep2::Governor governor = [] {
+        std::uint64_t mb = 8192;   // 8 GiB default host admission budget
+        if (const char* e = std::getenv("DEEP2_KV_BUDGET_MB")) {
+            const unsigned long long v = std::strtoull(e, nullptr, 10);
+            if (v > 0) mb = v;
+        }
+        return rawrxd::deep2::Governor({mb * 1024ull * 1024ull, 0, 0});
+    }();
+    return governor;
+}
+
+}  // namespace
+
+// RAWRXD_RESOURCE_GOVERNOR_001: acquire a host admission lease for `bytes` of
+// KV cache growth. Returns an empty optional when the budget is exhausted; the
+// caller must then fail the forward pass closed.
+std::optional<GovernorLease> Executor::TryLeaseKv(size_t bytes) {
+    auto lease = ProcessGovernor().tryAcquire(rawrxd::deep2::Pool::Host, bytes);
+    if (!lease) return std::nullopt;
+    return lease;
+}
+
+namespace {
+
+// ---------------------------------------------------------------------------
 // RAWRXD_DEEP2_LEGACY_QUANT_GPU_001 - shared quant-dot helpers.
 //
 // Every quantised matmul in the executor (linear projections AND MoE expert
@@ -1327,12 +1361,33 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // by block 28 -- the exact llama3.2:3b symptom this engine carried.
     // Round on write, like the reference does. DEEP2_KV_F32=1 keeps the full
     // precision cache for diagnostics (llama.cpp with -ctk f32 -ctv f32).
+    //
+    // Admitted residency (RAWRXD_RESOURCE_GOVERNOR_001): the growth bytes are
+    // leased from the host budget first. Budget exhaustion fails the forward
+    // pass closed — a silently truncated KV cache would corrupt every later
+    // position instead of degrading honestly.
     auto& K = kv_k_[(size_t)in.block];
     auto& V = kv_v_[(size_t)in.block];
     const size_t kvW = kr.size();
     const size_t vW = v.size();
-    if (K.size() < (position + 1) * kvW) K.resize((position + 1) * kvW, 0.0f);
-    if (V.size() < (position + 1) * vW) V.resize((position + 1) * vW, 0.0f);
+    const size_t needK = (position + 1) * kvW;
+    const size_t needV = (position + 1) * vW;
+    const size_t growBytes = (K.size() >= needK ? 0 : (needK - K.size()) * sizeof(float)) +
+                             (V.size() >= needV ? 0 : (needV - V.size()) * sizeof(float));
+    if (growBytes > 0) {
+        auto lease = TryLeaseKv(growBytes);
+        if (!lease) {
+            err = "kv cache growth rejected by resource governor (block " +
+                  std::to_string(in.block) + ", position " +
+                  std::to_string(position) + ", requested " +
+                  std::to_string(growBytes) +
+                  " bytes; raise DEEP2_KV_BUDGET_MB or reduce context)";
+            return false;
+        }
+        kv_leases_.push_back(std::move(*lease));
+    }
+    if (K.size() < needK) K.resize(needK, 0.0f);
+    if (V.size() < needV) V.resize(needV, 0.0f);
     if (std::getenv("DEEP2_KV_F32") != nullptr) {
         std::memcpy(K.data() + position * kvW, kr.data(), kvW * sizeof(float));
         std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));

@@ -198,10 +198,17 @@ public:
     }
 
     std::string relOf(const fs::path& p) const {
-        std::error_code ec;
-        fs::path r = fs::relative(p, fs::path(root_), ec);
-        if (ec || r.empty()) return p.string();
-        return r.string();
+        // A path with characters outside the current code page cannot be
+        // converted; report the raw form rather than throwing and aborting a
+        // whole directory walk.
+        try {
+            std::error_code ec;
+            fs::path r = fs::relative(p, fs::path(root_), ec);
+            if (ec || r.empty()) return p.string();
+            return r.string();
+        } catch (const std::exception&) {
+            try { return p.string(); } catch (...) { return "<unrepresentable path>"; }
+        }
     }
 
 private:

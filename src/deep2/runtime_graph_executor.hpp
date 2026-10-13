@@ -28,11 +28,17 @@
 #include <cstddef>
 #include <chrono>
 #include <map>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "deep2_resource_governor.hpp"
 #include "universal_gguf.hpp"
+
+// Short alias for the governor's move-only lease handle. The resource
+// governor itself owns the accounting; the executor holds only leases.
+using GovernorLease = rawrxd::deep2::Governor::Lease;
 
 namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
 
@@ -212,6 +218,14 @@ private:
       // per-layer KV cache: kv_k_[layer][pos * kvW + i]
       std::vector<std::vector<float>> kv_k_, kv_v_;
       std::vector<std::vector<float>> kvat_;   // latent cache for MLA
+
+      // RAWRXD_RESOURCE_GOVERNOR_001: KV residency is admitted, not unbounded.
+      // Every cache growth acquires a lease against the process host budget;
+      // growth that does not fit fails the forward pass closed rather than
+      // silently truncating the cache (which would corrupt every later
+      // position). The leases live as long as the cache they paid for.
+      std::vector<std::optional<GovernorLease>> kv_leases_;
+      static std::optional<GovernorLease> TryLeaseKv(size_t bytes);
 
       // SSM recurrence state, one row per SSM block. Allocated at bind time
       // from the model's declared d_state and d_inner, and carried across

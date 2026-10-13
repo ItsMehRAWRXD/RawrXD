@@ -125,13 +125,51 @@ inline bool hasExecutedTool(const std::vector<ToolReceipt>& receipts,
 }
 
 /**
- * @brief Does this text claim the agent performed a repository action?
+ * @brief Strip prompt-boundary contamination from a model answer.
  *
- * Searches for the phrasings models use when they confuse intent with
- * execution: "I've run the search", "the results show", "I read the file",
- * "after searching the repository", plus bare numeric conclusions about
- * counting.
+ * Small models sometimes "continue" the prompt instead of answering, emitting
+ * repeated "USER QUESTION:" / "ANSWER:" markers and reprinting the question.
+ * That is a generation-control failure, not an answer, and shipping it to the
+ * user leaks the prompt template. Anything from the first boundary marker
+ * onward is dropped, and the surviving text is trimmed.
  */
+inline std::string sanitizeAnswerText(const std::string& raw) {
+    static const char* kBoundaries[] = {
+        "USER QUESTION:", "ANSWER:", "TOOL RESULTS", "RELEVANT KNOWN FACTS",
+        "CONVERSATION SO FAR:", "PROJECT:", "CONSTRAINTS:", "REASONING RULES:"
+    };
+
+    std::string::size_type cut = std::string::npos;
+    // Search from the first plausible cut onward: the answer may legitimately
+    // contain the word "answer", so only cut at a SECOND occurrence of a
+    // boundary marker, which is the signature of prompt continuation.
+    std::string low = toLower(raw);
+    for (const char* b : kBoundaries) {
+        std::string bl = toLower(b);
+        size_t first = low.find(bl);
+        if (first == std::string::npos) continue;
+        size_t second = low.find(bl, first + bl.size());
+        if (second != std::string::npos) {
+            if (cut == std::string::npos || second < cut) cut = second;
+        }
+    }
+
+    std::string s = (cut == std::string::npos) ? raw : raw.substr(0, cut);
+
+    // Trim trailing whitespace and a dangling partial boundary word.
+    while (!s.empty() &&
+           (s.back() == '\n' || s.back() == '\r' || s.back() == ' ' || s.back() == '\t'))
+        s.pop_back();
+
+    // Collapse a runaway repeat of the same sentence.
+    if (s.size() > 4000) {
+        size_t half = s.size() / 2;
+        if (s.compare(0, half, s.substr(half, half)) == 0) s = s.substr(0, half);
+    }
+    return s;
+}
+
+/// @brief Does this text claim the agent performed a repository action?
 inline bool claimsExecution(const std::string& text) {
     std::string low = toLower(text);
     static const char* markers[] = {
@@ -510,6 +548,59 @@ inline json inferArgsFromProse(const std::string& text, const std::string& tool,
 }
 
 /**
+ * @brief HOST-SIDE COUNT VERIFICATION.
+ *
+ * A "how many files match X" question has an answer that is arithmetically
+ * derivable from the tool output the host already holds: the search result
+ * carries its own `matching_files=N` summary line. Letting the model recount a
+ * list it just read produced 5 when the truth was 7, so the host derives the
+ * count from the receipt itself and states the provenance.
+ *
+ * This is not fabrication: the number comes from a real executed tool result.
+ */
+inline std::string hostVerifyCount(const std::string& question,
+                                   const std::string& answer,
+                                   const std::vector<ToolReceipt>& receipts) {
+    std::string lq = toLower(question);
+    const bool asksHowMany = lq.find("how many") != std::string::npos ||
+                             lq.find("how much") != std::string::npos ||
+                             lq.find("count") != std::string::npos;
+    if (!asksHowMany) return answer;
+
+    // Find a executed search receipt and read ITS matching_files summary.
+    long hostCount = -1;
+    std::string evidenceTool;
+    for (const auto& r : receipts) {
+        if (r.status != ActionStatus::Executed) continue;
+        if (r.toolName != "search_text" && r.toolName != "list_repo") continue;
+        size_t p = r.output.find("matching_files=");
+        if (p == std::string::npos) continue;
+        p += strlen("matching_files=");
+        long v = 0;
+        bool any = false;
+        while (p < r.output.size() && std::isdigit((unsigned char)r.output[p])) {
+            v = v * 10 + (r.output[p] - '0');
+            ++p;
+            any = true;
+        }
+        if (any) { hostCount = v; evidenceTool = r.toolName; break; }
+    }
+
+    if (hostCount < 0) return answer;  // no derivable count; leave as is
+
+    std::ostringstream out;
+    out << "There are " << hostCount << " matching source files.\n\n"
+        << "COUNT VERIFIED BY HOST: the number above is taken from the "
+        << "'matching_files' summary of the search_text result this CLI "
+        << "actually executed (host receipt, tool=" << evidenceTool
+        << "). The model's own recount of that list was not trusted, because a "
+           "recount of a long list is exactly where it errs.\n\n"
+        << "--- model's original response, unverified ---\n"
+        << answer;
+    return out.str();
+}
+
+/**
  * @brief HOST-SIDE GATE. An answer that claims execution without a receipt is
  * never delivered as if it were verified.
  *
@@ -524,12 +615,16 @@ inline json inferArgsFromProse(const std::string& text, const std::string& tool,
 inline std::string gateAnswer(const std::string& answer,
                               const std::vector<ToolReceipt>& receipts,
                               bool toolsWereRun) {
+    // Prompt-boundary contamination is a generation defect and never reaches
+    // the user, regardless of grounding.
+    const std::string clean = sanitizeAnswerText(answer);
+
     // Something genuinely ran: the answer may lean on it.
-    if (toolsWereRun && mayClaimRepositorySearch(receipts)) return answer;
-    if (toolsWereRun) return answer;
+    if (toolsWereRun && mayClaimRepositorySearch(receipts)) return clean;
+    if (toolsWereRun) return clean;
 
     // Nothing ran, but the answer claims it did. Correct the record.
-    if (claimsExecution(answer)) {
+    if (claimsExecution(clean)) {
         return "I cannot verify this from executed evidence. No repository "
                "search, file read, or command was actually run for this "
                "question, so I will not report a count, file list, or measured "
@@ -542,7 +637,7 @@ inline std::string gateAnswer(const std::string& answer,
 
     // No execution claimed and none performed: the answer stands, but it is
     // explicitly unverified.
-    return answer;
+    return clean;
 }
 
 /**
@@ -1050,6 +1145,20 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     // question must not trigger a search, so the tool loop stays conditional.
     auto wantsRepositoryEvidence = [](const std::string& qtext) {
         std::string low = toLower(qtext);
+
+        // HOST POLICY: an explicit instruction not to use tools is obeyed. This
+        // is a policy decision the host owns, not a model choice -- otherwise a
+        // question that merely mentions a tool name runs that tool even when the
+        // user forbade it.
+        static const char* kForbid[] = {
+            "do not run any tools", "don't run any tools",
+            "without running tools", "without using tools",
+            "do not use any tools", "don't use any tools",
+            "no tools", "without tools"
+        };
+        for (const char* f : kForbid)
+            if (low.find(f) != std::string::npos) return false;
+
         static const char* cues[] = {
             "how many", "count", "files", "source", "repo", "repository",
             "search", "grep", "which files", "does the code", "in src",
@@ -1062,6 +1171,12 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
 
     std::vector<ToolReceipt> receipts;
     bool usedTools = false;
+    // HOST POLICY: never open the tool loop for a question that forbids tools.
+    // tools_executed is built only from receipts the host populates after a
+    // real execution, so a forbidden tool produces no receipt and no count.
+    const bool toolsAllowed = wantsRepositoryEvidence(q.text);
+    if (!toolsAllowed)
+        logLine("answer: tool loop disabled by host policy for this question");
 
     // ── Tool-execution hygiene (RAWRXD_TOOL_HYGIENE_001) ─────────────────────
     // Three host-side guards the model cannot talk its way past:
@@ -1154,6 +1269,23 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
             json args = (obj.contains("args") && obj["args"].is_object())
                             ? obj["args"] : json::object();
             if (args.is_null()) args = json::object();
+
+            // HOST POLICY (RAWRXD_AGENT_EVIDENCE_001): a question that forbids
+            // tools never opens the tool route. A model that still asks for one
+            // has not executed it, and must not be counted as an execution --
+            // tools_executed is built from receipts the host populates only
+            // after a real run, so this branch deliberately creates none.
+            if (!toolsAllowed) {
+                logLine("answer: tool execution refused by host policy (tool=" +
+                        tool + ")");
+                resp.kind = ResponseKind::Answer;
+                resp.text = gateAnswer(first.content, receipts, usedTools);
+                resp.answerIsGrounded = false;
+                resp.receipts = receipts;
+                resp.receipts.clear();  // nothing executed
+                resp.toolRuns.clear();
+                return resp;
+            }
 
             ToolReceipt rec;
             rec.toolName = tool;

@@ -710,6 +710,17 @@ static int cmdAsk(const std::vector<std::string>& args) {
         }
     }
 
+    // HOST-SIDE COUNT VERIFICATION: for "how many" questions the count comes
+    // from the executed tool result's own summary, not from a model recount.
+    {
+        std::string verified =
+            hostVerifyCount(qtext, r.text, r.receipts);
+        if (verified != r.text) {
+            r.text = verified;
+            r.answerIsGrounded = !r.receipts.empty();
+        }
+    }
+
     // Persist the turn so the next question has real history.
     if (!noMemory) {
         appendMemory("turn", "user", qtext, "", true);
