@@ -1,0 +1,43 @@
+[stage] loading model F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+[stage] ingest done in 4729.1 ms: arch=llama blocks=28 vocab=128256
+[stage] tokenizer round-trip: PASS (24 ids -> 58 chars)
+[stage] executor bound: ops=395 path=gpu-first
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] prefill +121 tokens (ctx=122) in 594342 ms
+[step 1] tok 0/200: TO
+[step 1] generated 19 chars in 28707 ms: TOOL read calc.cpp
+[step 1] TOOL read -> calc.cpp ; observation 205 bytes:
+#include <cstdio>
+int add(int a, int b) {
+    return a - b;
+}
+int main() {
+    if (add(2, 3) == 5) { printf("PASS\n"); return 0; }
+    printf("FAIL: add(2,3)=%d expected 5\n", add(2, 3));
+    return 1;
+}
+
+[step 2] prefill +97 tokens (ctx=225) in 468718 ms
+[step 2] tok 0/200: TO
+[step 2] tok 10/200: TOOL write task.md
+TOOL write task.md
+[step 2] generated 60 chars in 93526 ms: TOOL write task.md
+TOOL write task.md
+RESULT:
+TOOL read task
+[step 2] TOOL read -> task ; observation 16 bytes:
+(file not found)
+[step 3] prefill +12 tokens (ctx=255) in 61713 ms
+[step 3] tok 0/200: TO

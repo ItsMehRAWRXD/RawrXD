@@ -1,0 +1,16 @@
+genstep  1: llama_ref_argmax=    13 deep2_gen=    13 MATCH
+genstep  2: llama_ref_argmax= 29966 deep2_gen=    13 MISMATCH
+genstep  3: llama_ref_argmax= 29966 deep2_gen= 29966 MATCH
+genstep  4: llama_ref_argmax= 29989 deep2_gen= 29989 MATCH
+genstep  5: llama_ref_argmax=  1792 deep2_gen=  1792 MATCH
+genstep  6: llama_ref_argmax= 29989 deep2_gen= 29989 MATCH
+genstep  7: llama_ref_argmax= 29958 deep2_gen= 29958 MATCH
+genstep  8: llama_ref_argmax=    13 deep2_gen=    13 MATCH
+genstep  9: llama_ref_argmax=  6028 deep2_gen=  6028 MATCH
+genstep 10: llama_ref_argmax=   366 deep2_gen=   366 MATCH
+genstep 11: llama_ref_argmax=  2649 deep2_gen=  2649 MATCH
+genstep 12: llama_ref_argmax=   592 deep2_gen=   592 MATCH
+genstep 13: llama_ref_argmax=   901 deep2_gen=   901 MATCH
+genstep 14: llama_ref_argmax=  1048 deep2_gen=  1048 MATCH
+genstep 15: llama_ref_argmax=   278 deep2_gen=   278 MATCH
+genstep 16: llama_ref_argmax=  1422 deep2_gen=  1422 MATCH

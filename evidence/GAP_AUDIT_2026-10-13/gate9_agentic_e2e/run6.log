@@ -1,0 +1,81 @@
+[stage] loading model F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[stage] ingest done in 26228.5 ms: arch=nemotron_h blocks=42 vocab=131072
+[stage] tokenizer round-trip: PASS (24 ids -> 58 chars)
+[stage] executor bound: ops=242 path=gpu-first
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[step 1] prefill +126 tokens (ctx=127) in 104373 ms
+
+[step 1] eos after 0 tokens
+[step 1] generated 0 chars in 1 ms: 
+[step 2] prefill +32 tokens (ctx=159) in 26159 ms
+[step 2] tok 0/200: TO
+
+[step 2] eos after 7 tokens
+[step 2] generated 21 chars in 5659 ms: TOOL read: read: read
+[step 3] prefill +32 tokens (ctx=198) in 25880 ms
+[step 3] tok 0/200: You
+[step 3] tok 10/200: You are are are the the the the the the the
+[step 3] tok 20/200: You are are are the the the the the the the the the the the the the the the the the
+[step 3] tok 30/200: You are are are the the the the the the the the the the the the the the the the the the the the the the the the the the the
+
+[step 3] eos after 34 tokens
+[step 3] generated 135 chars in 27426 ms: You are are are the the the the the the the the the the the the the the the the the the the the the the the the the the the the the the
+[step 4] prefill +32 tokens (ctx=264) in 24719 ms
+
+[step 4] eos after 0 tokens
+[step 4] generated 0 chars in 0 ms: 
+[step 5] prefill +32 tokens (ctx=296) in 22739 ms
+
+[step 5] eos after 0 tokens
+[step 5] generated 0 chars in 1 ms: 
+[step 6] prefill +32 tokens (ctx=328) in 22682 ms
+
+[step 6] eos after 0 tokens
+[step 6] generated 0 chars in 1 ms: 
+[step 7] prefill +32 tokens (ctx=360) in 23009 ms
+
+[step 7] eos after 0 tokens
+[step 7] generated 0 chars in 1 ms: 
+[step 8] prefill +32 tokens (ctx=392) in 22764 ms
+
+[step 8] eos after 0 tokens
+[step 8] generated 0 chars in 0 ms: 
+[step 9] prefill +32 tokens (ctx=424) in 23159 ms
+
+[step 9] eos after 0 tokens
+[step 9] generated 0 chars in 1 ms: 
+[step 10] prefill +32 tokens (ctx=456) in 23046 ms
+
+[step 10] eos after 0 tokens
+[step 10] generated 0 chars in 1 ms: 
+[step 11] prefill +32 tokens (ctx=488) in 22773 ms
+
+[step 11] eos after 0 tokens
+[step 11] generated 0 chars in 1 ms: 
+[step 12] prefill +32 tokens (ctx=520) in 23037 ms
+
+[step 12] eos after 0 tokens
+[step 12] generated 0 chars in 1 ms: 
+
+=== verification (harness-run, independent of the model) ===
+MODEL_SAID_FINISH      no
+SOURCE_PATCHED         FAIL (calc.cpp contains no fix)
+BUILD_ARTIFACT         not observed
+TEST_EXECUTION         FAIL (calc.exe exit=0 out=)
+TOOL_RESULT_FEEDBACK   12 steps completed
+FINAL_VERDICT          FAIL
+Released all tensors
+Vulkan resources cleaned up successfully
+EXIT_CODE=1 

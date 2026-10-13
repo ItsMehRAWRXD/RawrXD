@@ -1,0 +1,278 @@
+tokens: 129: 1 185 278 20606 23808 7936 14336 28416 17408 18176 21568 11008 28928 18944 14848 14848 0 16704 16128 9280 5248 12288 1280 25856 5440 29952 23808 21248 6656 17664 768 21248 18688 22016 15360 2880 29568 20096 7808 6400 22784 256 22784 20544 11264 29184 23296 24320 15104 2048 17920 22592 13312 10816 3328 13312 4608 24576 15360 10496 15360 9472 22528 11064 512 22848 20480 20024 27648 26368 6656 29760 8448 24320 26624 24832 6144 8960 10296 16640 19456 18944 9728 25600 26368 3584 24128 6144 18432 30464 17720 15872 7424 27136 26368 6144 7936 18944 13568 20480 1088 14592 13312 8960 4096 21248 64 3840 8512 12416 31616 26880 15872 2048 11584 18944 21504 19200 21816 22784 512 14848 31744 26368 3072 7680 3584 6712 5120
+ingesting F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ...
+arch=llama blocks=22 embd=2048 heads=32 kv=4 lora=0 kl=0 vl=0 experts=0 used=0 shared=0 dense_lead=0 rope_dim=64 eps=1e-05
+bound ops=311
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+pos=0 token=1 argmax=2760 max_logit=8.211859 (3804.6 ms)
+  op traces: 311
+pos=1 token=185 argmax=13 max_logit=8.292262 (1225.0 ms)
+  op traces: 311
+pos=2 token=278 argmax=29871 max_logit=6.397908 (1182.7 ms)
+  op traces: 311
+pos=3 token=20606 argmax=261 max_logit=17.346825 (1328.0 ms)
+  op traces: 311
+pos=4 token=23808 argmax=29892 max_logit=8.684772 (1271.3 ms)
+  op traces: 311
+pos=5 token=7936 argmax=25402 max_logit=14.733177 (1300.5 ms)
+  op traces: 311
+pos=6 token=14336 argmax=29871 max_logit=7.635278 (1268.4 ms)
+  op traces: 311
+pos=7 token=28416 argmax=278 max_logit=8.973655 (1186.0 ms)
+  op traces: 311
+pos=8 token=17408 argmax=278 max_logit=8.604357 (1184.2 ms)
+  op traces: 311
+pos=9 token=18176 argmax=7345 max_logit=10.576283 (1131.8 ms)
+  op traces: 311
+pos=10 token=21568 argmax=29892 max_logit=7.630267 (1204.2 ms)
+  op traces: 311
+pos=11 token=11008 argmax=437 max_logit=8.650736 (1218.5 ms)
+  op traces: 311
+pos=12 token=28928 argmax=30011 max_logit=7.609920 (1306.8 ms)
+  op traces: 311
+pos=13 token=18944 argmax=278 max_logit=7.555882 (1296.4 ms)
+  op traces: 311
+pos=14 token=14848 argmax=13794 max_logit=8.358417 (1240.8 ms)
+  op traces: 311
+pos=15 token=14848 argmax=29871 max_logit=7.742516 (1189.4 ms)
+  op traces: 311
+pos=16 token=0 argmax=278 max_logit=8.840016 (1315.8 ms)
+  op traces: 311
+pos=17 token=16704 argmax=423 max_logit=12.882180 (1280.0 ms)
+  op traces: 311
+pos=18 token=16128 argmax=824 max_logit=10.277798 (1324.0 ms)
+  op traces: 311
+pos=19 token=9280 argmax=29949 max_logit=6.966800 (1330.0 ms)
+  op traces: 311
+pos=20 token=5248 argmax=29871 max_logit=7.453335 (1220.8 ms)
+  op traces: 311
+pos=21 token=12288 argmax=29871 max_logit=7.339029 (1139.6 ms)
+  op traces: 311
+pos=22 token=1280 argmax=29882 max_logit=7.453256 (1308.5 ms)
+  op traces: 311
+pos=23 token=25856 argmax=29889 max_logit=7.016390 (1264.1 ms)
+  op traces: 311
+pos=24 token=5440 argmax=3072 max_logit=7.426932 (1054.1 ms)
+  op traces: 311
+pos=25 token=29952 argmax=29879 max_logit=8.753674 (1212.2 ms)
+  op traces: 311
+pos=26 token=23808 argmax=29871 max_logit=7.239718 (1321.6 ms)
+  op traces: 311
+pos=27 token=21248 argmax=29871 max_logit=7.711679 (1148.8 ms)
+  op traces: 311
+pos=28 token=6656 argmax=305 max_logit=7.763729 (1137.1 ms)
+  op traces: 311
+pos=29 token=17664 argmax=29889 max_logit=7.641155 (1239.7 ms)
+  op traces: 311
+pos=30 token=768 argmax=950 max_logit=10.112138 (1237.1 ms)
+  op traces: 311
+pos=31 token=21248 argmax=278 max_logit=8.139247 (1165.0 ms)
+  op traces: 311
+pos=32 token=18688 argmax=1039 max_logit=8.915085 (1255.3 ms)
+  op traces: 311
+pos=33 token=22016 argmax=29879 max_logit=9.699438 (1252.9 ms)
+  op traces: 311
+pos=34 token=15360 argmax=29952 max_logit=6.953014 (1209.7 ms)
+  op traces: 311
+pos=35 token=2880 argmax=2880 max_logit=8.115892 (1126.3 ms)
+  op traces: 311
+pos=36 token=29568 argmax=2880 max_logit=7.930939 (1195.8 ms)
+  op traces: 311
+pos=37 token=20096 argmax=5590 max_logit=9.850926 (1304.4 ms)
+  op traces: 311
+pos=38 token=7808 argmax=29875 max_logit=7.532105 (1173.7 ms)
+  op traces: 311
+pos=39 token=6400 argmax=29871 max_logit=6.689086 (1194.3 ms)
+  op traces: 311
+pos=40 token=22784 argmax=13574 max_logit=12.167844 (1203.1 ms)
+  op traces: 311
+pos=41 token=256 argmax=29877 max_logit=7.711610 (1253.0 ms)
+  op traces: 311
+pos=42 token=22784 argmax=13574 max_logit=8.722361 (1160.8 ms)
+  op traces: 311
+pos=43 token=20544 argmax=2880 max_logit=8.114771 (1128.5 ms)
+  op traces: 311
+pos=44 token=11264 argmax=839 max_logit=9.309148 (1261.1 ms)
+  op traces: 311
+pos=45 token=29184 argmax=29871 max_logit=7.207722 (1067.4 ms)
+  op traces: 311
+pos=46 token=23296 argmax=305 max_logit=7.347923 (1191.1 ms)
+  op traces: 311
+pos=47 token=24320 argmax=698 max_logit=8.636671 (1226.1 ms)
+  op traces: 311
+pos=48 token=15104 argmax=29871 max_logit=6.827130 (1362.5 ms)
+  op traces: 311
+pos=49 token=2048 argmax=30064 max_logit=7.215231 (1201.2 ms)
+  op traces: 311
+pos=50 token=17920 argmax=29871 max_logit=6.787328 (1218.8 ms)
+  op traces: 311
+pos=51 token=22592 argmax=292 max_logit=9.023383 (1196.1 ms)
+  op traces: 311
+pos=52 token=13312 argmax=29871 max_logit=6.692384 (1102.1 ms)
+  op traces: 311
+pos=53 token=10816 argmax=29871 max_logit=6.831486 (1188.9 ms)
+  op traces: 311
+pos=54 token=3328 argmax=29871 max_logit=6.336662 (1257.1 ms)
+  op traces: 311
+pos=55 token=13312 argmax=29871 max_logit=7.146912 (1189.4 ms)
+  op traces: 311
+pos=56 token=4608 argmax=292 max_logit=6.958100 (1208.2 ms)
+  op traces: 311
+pos=57 token=24576 argmax=29871 max_logit=7.033556 (1209.1 ms)
+  op traces: 311
+pos=58 token=15360 argmax=2880 max_logit=8.650302 (1226.1 ms)
+  op traces: 311
+pos=59 token=10496 argmax=29899 max_logit=10.970137 (1313.1 ms)
+  op traces: 311
+pos=60 token=15360 argmax=2880 max_logit=7.558102 (1176.1 ms)
+  op traces: 311
+pos=61 token=9472 argmax=29965 max_logit=8.133062 (1123.1 ms)
+  op traces: 311
+pos=62 token=22528 argmax=1049 max_logit=10.551716 (1289.5 ms)
+  op traces: 311
+pos=63 token=11064 argmax=29871 max_logit=6.202394 (1299.4 ms)
+  op traces: 311
+pos=64 token=512 argmax=4830 max_logit=8.348386 (1123.9 ms)
+  op traces: 311
+pos=65 token=22848 argmax=310 max_logit=6.707311 (1179.9 ms)
+  op traces: 311
+pos=66 token=20480 argmax=348 max_logit=8.187093 (1199.0 ms)
+  op traces: 311
+pos=67 token=20024 argmax=29871 max_logit=6.736176 (1137.1 ms)
+  op traces: 311
+pos=68 token=27648 argmax=475 max_logit=9.806510 (1183.5 ms)
+  op traces: 311
+pos=69 token=26368 argmax=29872 max_logit=6.636621 (1241.8 ms)
+  op traces: 311
+pos=70 token=6656 argmax=29871 max_logit=6.830145 (1133.6 ms)
+  op traces: 311
+pos=71 token=29760 argmax=261 max_logit=6.962222 (1172.7 ms)
+  op traces: 311
+pos=72 token=8448 argmax=29871 max_logit=6.734398 (1213.5 ms)
+  op traces: 311
+pos=73 token=24320 argmax=15104 max_logit=11.170405 (1239.1 ms)
+  op traces: 311
+pos=74 token=26624 argmax=310 max_logit=6.244572 (1034.7 ms)
+  op traces: 311
+pos=75 token=24832 argmax=1099 max_logit=7.978164 (1176.8 ms)
+  op traces: 311
+pos=76 token=6144 argmax=293 max_logit=6.943167 (1152.8 ms)
+  op traces: 311
+pos=77 token=8960 argmax=29879 max_logit=9.709232 (1250.9 ms)
+  op traces: 311
+pos=78 token=10296 argmax=29871 max_logit=6.900134 (1275.7 ms)
+  op traces: 311
+pos=79 token=16640 argmax=292 max_logit=10.023840 (1234.2 ms)
+  op traces: 311
+pos=80 token=19456 argmax=29871 max_logit=6.038468 (1167.2 ms)
+  op traces: 311
+pos=81 token=18944 argmax=29871 max_logit=6.670892 (1204.7 ms)
+  op traces: 311
+pos=82 token=9728 argmax=778 max_logit=8.950338 (1249.8 ms)
+  op traces: 311
+pos=83 token=25600 argmax=29871 max_logit=6.660780 (1186.1 ms)
+  op traces: 311
+pos=84 token=26368 argmax=10100 max_logit=9.563478 (1214.8 ms)
+  op traces: 311
+pos=85 token=3584 argmax=30043 max_logit=8.777669 (1239.7 ms)
+  op traces: 311
+pos=86 token=24128 argmax=29871 max_logit=7.058309 (1253.7 ms)
+  op traces: 311
+pos=87 token=6144 argmax=293 max_logit=6.858518 (1237.1 ms)
+  op traces: 311
+pos=88 token=18432 argmax=358 max_logit=8.340679 (1099.8 ms)
+  op traces: 311
+pos=89 token=30464 argmax=29879 max_logit=7.886274 (1280.6 ms)
+  op traces: 311
+pos=90 token=17720 argmax=781 max_logit=6.969378 (1258.8 ms)
+  op traces: 311
+pos=91 token=15872 argmax=375 max_logit=10.133911 (1126.8 ms)
+  op traces: 311
+pos=92 token=7424 argmax=368 max_logit=9.185421 (1238.1 ms)
+  op traces: 311
+pos=93 token=27136 argmax=29871 max_logit=6.693669 (1231.3 ms)
+  op traces: 311
+pos=94 token=26368 argmax=29872 max_logit=8.488487 (1306.7 ms)
+  op traces: 311
+pos=95 token=6144 argmax=29871 max_logit=6.716408 (1147.1 ms)
+  op traces: 311
+pos=96 token=7936 argmax=265 max_logit=7.707117 (1148.6 ms)
+  op traces: 311
+pos=97 token=18944 argmax=5917 max_logit=6.836106 (1298.8 ms)
+  op traces: 311
+pos=98 token=13568 argmax=8995 max_logit=10.563189 (1199.4 ms)
+  op traces: 311
+pos=99 token=20480 argmax=29871 max_logit=6.086341 (1148.2 ms)
+  op traces: 311
+pos=100 token=1088 argmax=2503 max_logit=8.758580 (1300.6 ms)
+  op traces: 311
+pos=101 token=14592 argmax=287 max_logit=8.382374 (1219.0 ms)
+  op traces: 311
+pos=102 token=13312 argmax=29871 max_logit=6.648321 (1137.8 ms)
+  op traces: 311
+pos=103 token=8960 argmax=29879 max_logit=7.967123 (1164.9 ms)
+  op traces: 311
+pos=104 token=4096 argmax=2231 max_logit=7.337239 (1251.0 ms)
+  op traces: 311
+pos=105 token=21248 argmax=15322 max_logit=10.431652 (1293.3 ms)
+  op traces: 311
+pos=106 token=64 argmax=29881 max_logit=6.751804 (1172.6 ms)
+  op traces: 311
+pos=107 token=3840 argmax=644 max_logit=8.062024 (1179.0 ms)
+  op traces: 311
+pos=108 token=8512 argmax=29879 max_logit=6.917062 (1256.6 ms)
+  op traces: 311
+pos=109 token=12416 argmax=29871 max_logit=6.843350 (1130.2 ms)
+  op traces: 311
+pos=110 token=31616 argmax=29871 max_logit=7.035726 (1139.2 ms)
+  op traces: 311
+pos=111 token=26880 argmax=4336 max_logit=8.546594 (1227.5 ms)
+  op traces: 311
+pos=112 token=15872 argmax=29871 max_logit=6.582918 (1343.6 ms)
+  op traces: 311
+pos=113 token=2048 argmax=29871 max_logit=6.359697 (1174.8 ms)
+  op traces: 311
+pos=114 token=11584 argmax=26569 max_logit=7.228323 (1170.1 ms)
+  op traces: 311
+pos=115 token=18944 argmax=29871 max_logit=6.950688 (1262.6 ms)
+  op traces: 311
+pos=116 token=21504 argmax=29871 max_logit=6.385259 (1271.7 ms)
+  op traces: 311
+pos=117 token=19200 argmax=29889 max_logit=6.718303 (1177.8 ms)
+  op traces: 311
+pos=118 token=21816 argmax=6598 max_logit=7.353748 (1173.2 ms)
+  op traces: 311
+pos=119 token=22784 argmax=13574 max_logit=7.848114 (1249.2 ms)
+  op traces: 311
+pos=120 token=512 argmax=20184 max_logit=8.599514 (1241.4 ms)
+  op traces: 311
+pos=121 token=14848 argmax=14848 max_logit=7.137598 (1167.9 ms)
+  op traces: 311
+pos=122 token=31744 argmax=9184 max_logit=7.432578 (1202.8 ms)
+  op traces: 311
+pos=123 token=26368 argmax=6144 max_logit=9.681821 (1258.7 ms)
+  op traces: 311
+pos=124 token=3072 argmax=29879 max_logit=8.561243 (1112.2 ms)
+  op traces: 311
+pos=125 token=7680 argmax=295 max_logit=8.284205 (999.3 ms)
+  op traces: 311
+pos=126 token=3584 argmax=29871 max_logit=6.968210 (1160.9 ms)
+  op traces: 311
+pos=127 token=6712 argmax=30002 max_logit=9.497685 (1213.8 ms)
+  op traces: 311
+pos=128 token=5120 argmax=23497 max_logit=7.115044 (1106.2 ms)
+  op traces: 311
+gpu_calls=19995 cpu_calls=0 fallback=<none>
+Released all tensors
+Vulkan resources cleaned up successfully

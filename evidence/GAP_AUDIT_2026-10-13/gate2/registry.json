@@ -1,0 +1,289 @@
+{
+  "admission_certified": 1,
+  "admission_probe_only": 3,
+  "admission_refused": 1,
+  "bindings": [
+    {
+      "evidence": "",
+      "ggml_id": 0,
+      "kernel": "gemv_f32",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "F32"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 1,
+      "kernel": "gemv_f16",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "F16"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 2,
+      "kernel": "gemv_q4_0",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q4_0"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 3,
+      "kernel": "gemv_q4_1",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q4_1"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 6,
+      "kernel": "gemv_q5_0",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q5_0"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 7,
+      "kernel": "gemv_q5_1",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q5_1"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 8,
+      "kernel": "gemv_q8_0",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q8_0"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 10,
+      "kernel": "gemv_q2_k",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q2_K"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 11,
+      "kernel": "gemv_q3_k",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q3_K"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 12,
+      "kernel": "gemv_q4_k",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q4_K"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 13,
+      "kernel": "gemv_q5_k",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q5_K"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 14,
+      "kernel": "gemv_q6_k",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "Q6_K"
+    },
+    {
+      "evidence": "q8k_parity_tool/q8k_edge_tests: quant_parity_cert seed=12345 blocks=8",
+      "ggml_id": 15,
+      "kernel": "gemv_q8_k",
+      "kernel_ready": true,
+      "packing_parity": "packing_verified",
+      "type": "Q8_K"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 16,
+      "kernel": "gemv_iq2_xxs",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ2_XXS"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 17,
+      "kernel": "gemv_iq2_xs",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ2_XS"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 18,
+      "kernel": "gemv_iq3_xxs",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ3_XXS"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 19,
+      "kernel": "gemv_iq1_s",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ1_S"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 20,
+      "kernel": "gemv_iq4_nl",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ4_NL"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 21,
+      "kernel": "gemv_iq3_s",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ3_S"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 22,
+      "kernel": "gemv_iq2_s",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ2_S"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 23,
+      "kernel": "gemv_iq4_xs",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "IQ4_XS"
+    },
+    {
+      "evidence": "",
+      "ggml_id": 30,
+      "kernel": "gemv_bf16",
+      "kernel_ready": true,
+      "packing_parity": "unverified",
+      "type": "BF16"
+    }
+  ],
+  "coverage": {
+    "dot_verified": 0,
+    "failed": 0,
+    "kernel_bound": 22,
+    "kernel_missing": 13,
+    "known_types": 35,
+    "logits_verified": 0,
+    "packing_verified": 1
+  },
+  "evidence": [
+    {
+      "detail": "d/qs[256]/bsums[16] byte-identical vs ggml quantize_row_q8_K_ref",
+      "evidence": "q8k_parity_tool/q8k_edge_tests: quant_parity_cert seed=12345 blocks=8",
+      "ggml_id": 15,
+      "path": "packing",
+      "recorded_at_ms": 1791922246101,
+      "status": "packing_verified"
+    }
+  ],
+  "mla_decompress_available": true,
+  "primitive_gates": [
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:RmsNormFwd dispatch",
+      "primitive": "RmsNormFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:LinearFwd dispatch",
+      "primitive": "LinearFwd"
+    },
+    {
+      "available": false,
+      "binding_status": "declared_unimplemented",
+      "implementation_required": true,
+      "kernel_present": false,
+      "note": "ModelGenieExecutor.cpp:MatMulFwd dispatch returns false; no graph producer emits it (Universal::Op::MatMul lowered to OpKind::Unsupported)",
+      "primitive": "MatMulFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:AttentionFwd dispatch",
+      "primitive": "AttentionFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:MlaDecompressFwd dispatch",
+      "primitive": "MlaDecompressFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:RouterFwd dispatch (via LinearFwd)",
+      "primitive": "RouterFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:TopKFwd dispatch",
+      "primitive": "TopKFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:MoEExecuteFwd dispatch",
+      "primitive": "MoEExecuteFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:ResidualAddFwd dispatch",
+      "primitive": "ResidualAddFwd"
+    },
+    {
+      "available": true,
+      "binding_status": "bound",
+      "implementation_required": true,
+      "kernel_present": true,
+      "note": "ModelGenieExecutor.cpp:LMHeadFwd dispatch",
+      "primitive": "LMHeadFwd"
+    }
+  ],
+  "q8k_packing_parity": "PASS",
+  "result": "PASS",
+  "schema": "RAWRXD_QUANT_PARITY_REGISTRY/1.0",
+  "tool": "quant_parity_cert"
+}

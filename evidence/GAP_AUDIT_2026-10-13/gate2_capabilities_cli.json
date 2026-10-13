@@ -1,0 +1,394 @@
+﻿{
+  "end_to_end_forward_parity": "not_verified",
+  "generated_by": "rawr capabilities",
+  "modes": [
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Default agent: inspect, modify, build and test",
+      "execute_by_default": true,
+      "name": "code",
+      "plan_files_only": false,
+      "source_edits_allowed": true
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": true,
+        "write": false
+      },
+      "description": "Answer and explain without changing anything",
+      "execute_by_default": false,
+      "name": "ask",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Diagnose crashes, apply and verify fixes",
+      "execute_by_default": true,
+      "name": "debug",
+      "plan_files_only": false,
+      "source_edits_allowed": true
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Research and produce implementation plans",
+      "execute_by_default": false,
+      "name": "plan",
+      "plan_files_only": true,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Design components, interfaces and dependency graphs",
+      "execute_by_default": false,
+      "name": "architect",
+      "plan_files_only": true,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": true,
+        "write": false
+      },
+      "description": "Review code, diffs and security (read-only)",
+      "execute_by_default": false,
+      "name": "review",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": true,
+        "write": false
+      },
+      "description": "Investigate local sources and approved docs",
+      "execute_by_default": false,
+      "name": "research",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": false
+      },
+      "description": "Check completeness and produce evidence",
+      "execute_by_default": true,
+      "name": "audit",
+      "plan_files_only": false,
+      "source_edits_allowed": true
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Discover, generate and execute tests",
+      "execute_by_default": true,
+      "name": "test",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Fix build failures and failing tests",
+      "execute_by_default": true,
+      "name": "repair",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Restructure while preserving behavior",
+      "execute_by_default": true,
+      "name": "refactor",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": false,
+        "write": false
+      },
+      "description": "Measure real inference and system performance",
+      "execute_by_default": true,
+      "name": "benchmark",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": false
+      },
+      "description": "Coordinate specialized subagents (alias: orchestrator)",
+      "execute_by_default": true,
+      "name": "swarm",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": true,
+        "search": true,
+        "write": true
+      },
+      "description": "Execute a persistent backlog across sessions",
+      "execute_by_default": true,
+      "name": "autonomous",
+      "plan_files_only": false,
+      "source_edits_allowed": false
+    }
+  ],
+  "multi_token_kv_parity": "not_verified",
+  "native_forward_zero_fallback": "not_verified",
+  "primitives": [
+    {
+      "name": "RmsNormFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:RmsNormFwd"
+    },
+    {
+      "name": "LinearFwd",
+      "note": "dispatched; verified against ggml Q8_K path via kquant_dot_parity",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:LinearFwd"
+    },
+    {
+      "name": "MatMulFwd",
+      "note": "no graph producer emits it; Universal::Op::MatMul is lowered to OpKind::Unsupported",
+      "status": "declared_unimplemented",
+      "status_source": "ModelGenieExecutor.cpp (returns false)"
+    },
+    {
+      "name": "AttentionFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:AttentionFwd"
+    },
+    {
+      "name": "MlaDecompressFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:MlaDecompressFwd"
+    },
+    {
+      "name": "RouterFwd",
+      "note": "via LinearFwd",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:RouterFwd"
+    },
+    {
+      "name": "TopKFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:TopKFwd"
+    },
+    {
+      "name": "MoEExecuteFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:MoEExecuteFwd"
+    },
+    {
+      "name": "ResidualAddFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:ResidualAddFwd"
+    },
+    {
+      "name": "LMHeadFwd",
+      "note": "dispatched",
+      "status": "bound",
+      "status_source": "ModelGenieExecutor.cpp:LMHeadFwd"
+    }
+  ],
+  "primitives_provenance": "status read from the Model Genie admission registry (src/deep2/QuantParityRegistry.cpp) and recorded here; this CLI does not link that TU, so statuses are transcribed rather than introspected. The authoritative emitter is quant_parity_cert, run as a ctest gate.",
+  "quantization_kernels": [
+    {
+      "ctest_gate": "kquant_dot_parity / q8k_byte_parity",
+      "evidence": "byte-identical to ggml quantize_row_q8_K_ref: 32/32 blocks, 0 mismatch",
+      "format": "Q8_K",
+      "verification": "verified"
+    },
+    {
+      "ctest_gate": "kquant_dot_parity",
+      "evidence": "vec_dot_q4_K_q8_K matches ggml_vec_dot_q4_K_q8_K_generic; worst_rel=0",
+      "format": "Q4_K",
+      "verification": "verified"
+    },
+    {
+      "ctest_gate": "kquant_dot_parity",
+      "evidence": "vec_dot_q6_K_q8_K matches reference; worst_rel=5.36e-07 (summation order)",
+      "format": "Q6_K",
+      "verification": "verified"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "no executed comparison against the ggml reference yet",
+      "format": "Q2_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "no executed comparison against the ggml reference yet",
+      "format": "Q3_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "no executed comparison against the ggml reference yet",
+      "format": "Q5_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "no executed comparison against the ggml reference yet",
+      "format": "Q8_0",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "no executed comparison against the ggml reference yet",
+      "format": "Q8_1",
+      "verification": "declared_only"
+    }
+  ],
+  "schema": "rawrxd-capability-manifest/1",
+  "source_revision": "ee2083111a5ce9e0ce69f7fa5cf39d0b020c621a",
+  "tool_count": 7,
+  "tools": [
+    {
+      "capability": {
+        "execute": true,
+        "read": false,
+        "search": false,
+        "write": false
+      },
+      "description": "Read-only porcelain git status for the workspace",
+      "name": "git_status",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool git_status (live dispatch through the same registry)"
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": false,
+        "write": false
+      },
+      "description": "Recursively list files under a workspace-relative path",
+      "name": "list_repo",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool list_repo (live dispatch through the same registry)"
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": true,
+        "search": false,
+        "write": false
+      },
+      "description": "Read up to 60KB of a workspace file",
+      "name": "read_file",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool read_file (live dispatch through the same registry)"
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": false,
+        "search": false,
+        "write": false
+      },
+      "description": "Invoke the CMake build for the workspace",
+      "name": "run_build",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool run_build (live dispatch through the same registry)"
+    },
+    {
+      "capability": {
+        "execute": true,
+        "read": false,
+        "search": false,
+        "write": false
+      },
+      "description": "Invoke the CTest suite for the workspace",
+      "name": "run_tests",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool run_tests (live dispatch through the same registry)"
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": false,
+        "search": true,
+        "write": false
+      },
+      "description": "Case-insensitive text search across the workspace",
+      "name": "search_text",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool search_text (live dispatch through the same registry)"
+    },
+    {
+      "capability": {
+        "execute": false,
+        "read": false,
+        "search": false,
+        "write": true
+      },
+      "description": "Create/modify a workspace file (overwrite is backed up first)",
+      "name": "write_file",
+      "status": "registered_and_dispatchable",
+      "verification": "rawr tool write_file (live dispatch through the same registry)"
+    }
+  ],
+  "workspace": "F:\\rawrxd"
+}
+

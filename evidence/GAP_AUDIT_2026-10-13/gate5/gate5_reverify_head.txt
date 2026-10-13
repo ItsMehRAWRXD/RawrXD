@@ -1,0 +1,26 @@
+﻿artifact validation: PASS (129 positions x 3 sides, 128000 bytes each)
+[cpu] argmax agreement: 117/129 ; worst cos: 0.9962328 (pos 1) ; worst maxdiff: 1.1889 ; nonfinite: 0
+[cpu] disagreements: 12 ; explained by margin<maxerr (boundary/measurement): 12 ; UNEXPLAINED: 0
+[cpu] VERDICT: PASS (all disagreements bounded by measured error)
+[gpu] argmax agreement: 116/129 ; worst cos: 0.9964745 (pos 100) ; worst maxdiff: 1.1685 ; nonfinite: 0
+[gpu] disagreements: 13 ; explained by margin<maxerr (boundary/measurement): 13 ; UNEXPLAINED: 0
+[gpu] VERDICT: PASS (all disagreements bounded by measured error)
+
+side pos       cos maxdiff ref_argmax d2_argmax agree
+---- ---       --- ------- ---------- --------- -----
+cpu    0 0.9997774  0.2867       2760      2760  True
+cpu    1 0.9962328  1.0229         13        13  True
+cpu    2 0.9998394  0.4352      29871     29871  True
+cpu    8 0.9995049  0.5367        278       278  True
+cpu   32  0.998817  0.5734       1039      1039  True
+cpu  128 0.9969359  0.7389      23497     23497  True
+gpu    0 0.9997565   0.233       2760      2760  True
+gpu    1 0.9973946  0.9424         13        13  True
+gpu    2 0.9998767  0.3492      29871     29871  True
+gpu    8 0.9995353  0.4701        278       278  True
+gpu   32 0.9986865  0.5333       1039      1039  True
+gpu  128  0.998425  0.5289      23497     23497  True
+
+
+
+GATE5_RESULT: PASS
