@@ -664,7 +664,23 @@ static int cmdAsk(const std::vector<std::string>& args) {
     MemoryFile mem = loadMemory();
     ASK_TRACE("after load_memory");
     if (!noMemory) {
-        q.history = mem.history;
+        // RAWRXD_EVIDENCE_002: prior conversation turns must not substitute for
+        // real evidence. A question about the repository's current state whose
+        // answer can be echoed from history would look correct with
+        // tools_executed=0. History is withheld for those questions so the host
+        // evidence gate is the only route to an answer.
+        bool needsCurrentRepoState = false;
+        {
+            std::string low = toLower(qtext);
+            for (const char* c : {"how many", "count", "files reference",
+                                  "source files", "which files", "search_text",
+                                  "in src", "in the repo", "git status"})
+                if (low.find(c) != std::string::npos) {
+                    needsCurrentRepoState = true;
+                    break;
+                }
+        }
+        if (!needsCurrentRepoState) q.history = mem.history;
         ASK_TRACE("before build_context");
         RelevantContext rc = buildRelevantContext(
             qtext, mem.facts,
@@ -740,10 +756,19 @@ static int cmdAsk(const std::vector<std::string>& args) {
                                                              : "tool_required";
         j["kind"] = kn;
         j["answer"] = r.text;
-        j["grounded_in_executed_tool"] = r.answerIsGrounded;
+        j["context_facts_used"] = static_cast<int>(q.context.size());
+        // Provenance: which facts were actually SUPPLIED to the model, and the
+        // anchors that matched. A count alone cannot distinguish "retrieved"
+        // from "used", so the identifiers are recorded.
+        if (!selected.empty()) {
+            json ids = json::array();
+            for (const auto& s : selected) ids.push_back(s);
+            j["context_facts_supplied"] = ids;
+            j["context_fact_anchors"] = static_cast<int>(ids.size());
+        }
         if (!r.modelAnswerUnverified.empty())
             j["model_answer_unverified"] = r.modelAnswerUnverified;
-        j["context_facts_used"] = static_cast<int>(q.context.size());
+        j["grounded_in_executed_tool"] = r.answerIsGrounded;
         // Host-authoritative counting: only receipts the executor actually ran
         // count. Model-proposed (never executed) receipts are reported for
         // transparency but NEVER contribute to tools_executed.

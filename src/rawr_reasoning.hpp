@@ -22,7 +22,10 @@
 #include "rawr_core.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <cstddef>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <set>
@@ -31,14 +34,14 @@
 
 namespace rawr {
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Universal answer contract
 //
 // The same entry point handles every subject. There is no question-specific
 // branch: the model determines the answer shape from the context, and the
 // controller only decides HOW the answer may be produced (direct answer,
 // authorised tool use, clarification, or an explicit statement of limits).
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum class ResponseKind : uint8_t {
     Answer,          ///< direct answer from reasoning + context
@@ -91,14 +94,14 @@ struct RelevantContext {
     std::vector<Fact> facts;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Tool receipts
 //
 // A tool receipt is the host's record that a tool genuinely ran. The model can
 // never create one. This is what separates "the model said it searched" from
 // "a search was executed" -- the distinction that decides whether an answer is
 // evidence or fiction.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum class ActionStatus : uint8_t {
     Proposed,   ///< model asked; nothing has happened yet
@@ -223,13 +226,23 @@ inline double lexicalRelevance(const std::string& question, const std::string& f
         return out;
     };
 
+    // Crude but necessary English stemming: "gpus" must match "gpu" and
+    // "drivers" must match "driver". Without this, the single most common shape
+    // of a hardware question scores zero against the inventory that answers it.
+    auto stem = [](std::string t) {
+        if (t.size() > 3 && t.back() == 's') t.pop_back();       // gpus -> gpu
+        else if (t.size() > 5 && t.compare(t.size() - 2, 2, "es") == 0)
+            t = t.substr(0, t.size() - 2);                        // boxes -> box
+        return t;
+    };
+
     const std::vector<std::string> qt = tokenize(question);
     const std::vector<std::string> ft = tokenize(fact);
     if (qt.empty() || ft.empty()) return 0.0;
 
-    // Term frequency in the fact.
+    // Term frequency in the fact, keyed by stem so plurals unify.
     std::map<std::string, int> fcount;
-    for (const auto& t : ft) fcount[t]++;
+    for (const auto& t : ft) fcount[stem(t)]++;
 
     // Document-ish frequency proxy: a term is "rare" if it appears in the fact
     // once but is long enough to be specific. Longer tokens are treated as more
@@ -269,10 +282,21 @@ inline double lexicalRelevance(const std::string& question, const std::string& f
 }
 
 /**
- * @brief Select only the facts that are relevant to this question.
+ * @brief Select the facts relevant to this question.
  *
  * Passing the whole memory to the model is not context awareness; it is noise
  * that dilutes attention and lets irrelevant facts steer the answer.
+ *
+ * Selection uses ANCHOR COUNT: the number of distinct non-stop tokens of length
+ * >= 3 shared between the question and the fact (after stemming). A single fixed
+ * similarity threshold was wrong here -- for a short question like "which GPUs
+ * do I have?" the only shared term is "gpu", whose weighted score alone never
+ * clears 0.65, so every useful fact was rejected and context_facts_used was 0
+ * even though the answer was right. Ranking by anchor count, then by weighted
+ * relevance, keeps precision without discarding short but precise questions.
+ *
+ * @param minAnchors require at least this many shared tokens (default 1)
+ * @param maxFacts   never return more than this many facts
  */
 inline RelevantContext buildRelevantContext(const std::string& question,
                                             const std::vector<Fact>& memory,
@@ -280,26 +304,88 @@ inline RelevantContext buildRelevantContext(const std::string& question,
                                                 const std::string&,
                                                 const std::string&)>& relevance,
                                             double threshold = 0.65,
-                                            std::vector<std::string>* selected = nullptr) {
+                                            std::vector<std::string>* selected = nullptr,
+                                            int minAnchors = 1,
+                                            int maxFacts = 6) {
+    (void)threshold;  // retained for call-site compatibility; anchor count ranks
+
     RelevantContext rc;
     rc.question = question;
 
+    static const std::set<std::string> kStop = {
+        "the", "and", "for", "with", "how", "many", "what", "which", "does",
+        "are", "was", "were", "have", "has", "had", "you", "your", "this",
+        "that", "from", "about", "into", "over", "under", "any", "all", "can",
+        "will", "would", "should", "there", "their", "them", "then", "than",
+        "also", "just", "like", "make", "made", "some", "such", "only", "other"
+    };
+
+    auto tokenize = [](const std::string& s) {
+        std::vector<std::string> out;
+        std::string cur;
+        for (char c : s) {
+            if (std::isalnum(static_cast<unsigned char>(c))) cur += static_cast<char>(std::tolower(c));
+            else { if (!cur.empty()) { out.push_back(cur); cur.clear(); } }
+        }
+        if (!cur.empty()) out.push_back(cur);
+        return out;
+    };
+    auto stem = [](std::string t) {
+        if (t.size() > 3 && t.back() == 's') t.pop_back();
+        else if (t.size() > 5 && t.compare(t.size() - 2, 2, "es") == 0)
+            t = t.substr(0, t.size() - 2);
+        return t;
+    };
+
+    std::set<std::string> qAnchors;
+    for (const auto& t : tokenize(question)) {
+        std::string s = stem(t);
+        if (s.size() < 3 || kStop.count(s)) continue;
+        qAnchors.insert(s);
+    }
+
     struct Scored {
         const Fact* f;
-        double s;
+        int anchors;
+        double rel;
+        std::vector<std::string> hits;
     };
     std::vector<Scored> scored;
     for (const auto& f : memory) {
-        double s = relevance(question, f.content);
-        if (s >= threshold) scored.push_back({&f, s});
+        std::set<std::string> fAnchors;
+        for (const auto& t : tokenize(f.content)) {
+            std::string s = stem(t);
+            if (s.size() < 3) continue;
+            fAnchors.insert(s);
+        }
+        std::vector<std::string> hits;
+        for (const auto& a : qAnchors)
+            if (fAnchors.count(a)) hits.push_back(a);
+        if (static_cast<int>(hits.size()) < minAnchors) continue;
+        Scored sc;
+        sc.f = &f;
+        sc.anchors = static_cast<int>(hits.size());
+        sc.rel = relevance(question, f.content);
+        sc.hits = hits;
+        scored.push_back(sc);
     }
-    // Highest relevance first, so the strongest context leads.
+
+    // Most anchors first; ties broken by weighted relevance.
     std::stable_sort(scored.begin(), scored.end(),
-                     [](const Scored& a, const Scored& b) { return a.s > b.s; });
+                     [](const Scored& a, const Scored& b) {
+                         if (a.anchors != b.anchors) return a.anchors > b.anchors;
+                         return a.rel > b.rel;
+                     });
 
     for (const auto& s : scored) {
+        if (static_cast<int>(rc.facts.size()) >= maxFacts) break;
         rc.facts.push_back(*s.f);
-        if (selected) selected->push_back(s.f->content);
+        if (selected) {
+            std::string entry = s.f->content + "  [anchors=" + std::to_string(s.anchors);
+            for (const auto& h : s.hits) entry += "," + h;
+            entry += "]";
+            selected->push_back(entry);
+        }
     }
     return rc;
 }
@@ -409,9 +495,9 @@ brief justification.
     return out.str();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Answer gating and model-reply repair
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * @brief Repair a malformed model JSON reply (unquoted keys, stray fences).
@@ -619,11 +705,23 @@ inline std::string hostVerifyCount(const std::string& question,
  * @param toolsWereRun whether any tool executed at all
  */
 inline std::string gateAnswer(const std::string& answer,
-                              const std::vector<ToolReceipt>& receipts,
-                              bool toolsWereRun) {
+                                 const std::vector<ToolReceipt>& receipts,
+                                 bool toolsWereRun) {
     // Prompt-boundary contamination is a generation defect and never reaches
     // the user, regardless of grounding.
     const std::string clean = sanitizeAnswerText(answer);
+
+    // Host-side length boundary (RAWRXD_ANSWER_LENGTH_001): a degenerate
+    // generation loop (a 3B Q2_K model repeating one sentence until the token
+    // cap) is truncated at the boundary with an honest note. This is a safety
+    // limit, not a substitute for fixing the generation path.
+    constexpr size_t kMaxAnswerChars = 4000;
+    if (clean.size() > kMaxAnswerChars) {
+        return clean.substr(0, kMaxAnswerChars) +
+               "\n[answer truncated by host length limit: " +
+               std::to_string(clean.size()) + " characters generated]";
+    }
+
 
     // Something genuinely ran: the answer may lean on it.
     if (toolsWereRun && mayClaimRepositorySearch(receipts)) return clean;
@@ -779,13 +877,13 @@ inline Response universalAnswer(InferenceClient& client, const Question& q,
     return resp;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Structured agent decision
 //
 // The model must return a *decision*, not prose that the host has to guess at.
 // This is the layer that removes the "unparsable response" failure class: a
 // malformed reply is an observation the agent can repair, never an instruction.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum class DecisionKind : uint8_t {
     FinalAnswer,       ///< answer now
@@ -810,9 +908,9 @@ struct ExecutionLimits {
     int maxContextTokens = 16384;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Evidence-based reasoning controller
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum class EvidenceKind : uint8_t {
     UserInstruction,
@@ -1100,14 +1198,14 @@ private:
     ReasoningState state_;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Universal answer orchestration
 //
 //   context -> intent -> evidence -> reasoning -> tools(if needed) -> answer
 //
 // Tool use is CONDITIONAL. A simple question must not trigger file searches or
 // a swarm; a debugging task may need many real operations.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * @brief Answer ANY question through one deterministic policy.
@@ -1204,6 +1302,28 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         return false;
     };
     const bool requiresFileEvidence = namesAFile(q.text);
+
+    // RAWRXD_EVIDENCE_002: a question about the CURRENT state of the repository
+    // (how many files match, what references what, what is in src) also cannot
+    // be answered from the prompt or from a prior conversation. Without this,
+    // a model that read the answer earlier in the session echoes it back with
+    // tools_executed=0 and a correct-looking number -- indistinguishable from
+    // a verified result, which is worse than a visible failure.
+    auto asksForRepoState = [](const std::string& qt) {
+        std::string low = toLower(qt);
+        static const char* kRepoCues[] = {
+            "how many", "how much", "count", "files reference", "files match",
+            "files in", "source files", "which files", "what files",
+            "referenced by", "references to", "exist in", "implemented in",
+            "in src", "in the repo", "in the repository", "search_text",
+            "list_repo", "grep", "git status"
+        };
+        for (const char* c : kRepoCues)
+            if (low.find(c) != std::string::npos) return true;
+        return false;
+    };
+    const bool requiresRepoEvidence = asksForRepoState(q.text);
+    const bool requiresEvidence = requiresFileEvidence || requiresRepoEvidence;
     int evidenceRefusals = 0;
 
     // Does the ledger contain at least one receipt the HOST actually ran?
@@ -1215,22 +1335,54 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     // H1 evidence gate for every answer-producing path. A question that names a
     // file cannot be answered without a real execution: the host refuses the
     // answer and asks for the read twice, then returns the explicit limitation.
-    // Returns true when resp holds the final answer, false when the host
-    // refused and the caller must continue the loop.
+    // The refusal names the exact read call to make (path extracted from the
+    // question), so the model does not have to guess the argument.
+    auto extractFilePath = [](const std::string& qt) -> std::string {
+        static const char* kExts[] = {
+            ".md", ".cpp", ".hpp", ".h", ".c", ".txt", ".json", ".jsonl",
+            ".bat", ".ps1", ".cmake", ".py", ".yaml", ".yml", ".toml"
+        };
+        size_t i = 0;
+        while (i < qt.size()) {
+            size_t start = i;
+            while (i < qt.size() && !std::isspace(static_cast<unsigned char>(qt[i])) &&
+                   qt[i] != ',' && qt[i] != ';' && qt[i] != ')' && qt[i] != '(')
+                ++i;
+            std::string tok = qt.substr(start, i - start);
+            for (const char* e : kExts) {
+                if (tok.size() > std::strlen(e) &&
+                    tok.compare(tok.size() - std::strlen(e), std::strlen(e), e) == 0) {
+                    while (!tok.empty() && (tok.front() == '"' || tok.front() == '\''))
+                        tok.erase(tok.begin());
+                    while (!tok.empty() && (tok.back() == '"' || tok.back() == '\'' ||
+                                            tok.back() == '.'))
+                        tok.pop_back();
+                    return tok;
+                }
+            }
+            ++i;
+        }
+        return {};
+    };
     auto answerOrRefuse = [&](const std::string& modelText, bool grounded) -> bool {
         if (requiresFileEvidence && !hasExecutedReceipt()) {
             if (evidenceRefusals < 2) {
                 ++evidenceRefusals;
+                const std::string path = extractFilePath(q.text);
+                std::string refusal =
+                    "\nREFUSED_BY_HOST: the question asks about the contents of "
+                    "a file, and no tool has executed yet. ";
+                if (!path.empty())
+                    refusal +=
+                        std::string("Reply with exactly this next: {\"kind\":"
+                                    "\"tool_call\",\"tool\":\"read_file\","
+                                    "\"args\":{\"path\":\"") +
+                        path + "\"}}.";
+                else
+                    refusal += "Reply with a tool_call JSON now: read_file or "
+                               "search_text.";
                 first = client.complete(
-                    {{{"role", "user"},
-                      {"content", buildUniversalPrompt(q) +
-                                  "\nREFUSED_BY_HOST: the question asks about the "
-                                  "contents of a file, and no tool has executed "
-                                  "yet. Reply with a tool_call JSON now, e.g. "
-                                  "{\"kind\":\"tool_call\",\"tool\":\"read_file\","
-                                  "\"args\":{\"path\":\"<the file>\"}}, or use "
-                                  "search_text."}}},
-                    600);
+                    {{{"role", "user"}, {"content", refusal}}}, 600);
                 return false;
             }
             resp.kind = ResponseKind::Uncertain;
@@ -1258,7 +1410,8 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         wantsRepositoryEvidence(q.text) || requiresFileEvidence;
     if (!toolsAllowed)
         logLine("answer: tool loop disabled by host policy for this question");
-    // ── Tool-execution hygiene (RAWRXD_TOOL_HYGIENE_001) ─────────────────────
+
+    // â”€â”€ Tool-execution hygiene (RAWRXD_TOOL_HYGIENE_001) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Three host-side guards the model cannot talk its way past:
     //   1. DEDUP CACHE. An identical (tool, canonical args) call is never
     //      executed twice. The prior real observation is replayed instead of
@@ -1302,7 +1455,7 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
             return resp;
         }
 
-        // ── Structured decision, with repair and heuristic fallback ---------
+        // â”€â”€ Structured decision, with repair and heuristic fallback ---------
         json obj;
         try { obj = json::parse(dr.content); } catch (...) { obj = json(); }
         if (obj.is_null()) {
