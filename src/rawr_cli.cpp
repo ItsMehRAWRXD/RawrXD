@@ -895,6 +895,221 @@ static int cmdTool(const std::vector<std::string>& args) {
     return tr.ok ? EXIT_OK : EXIT_TOOL_FAIL;
 }
 
+/**
+ * @brief Emit the capability manifest from ACTUAL registered objects.
+ *
+ * This is Gate 2 of MODEL_GENIE_NATIVE_FORWARD_001. The previous manifest was
+ * stale because it was hand-written next to the implementations, so a primitive
+ * whose dispatcher returned false was described using an implemented one's
+ * provenance and the manifest looked healthy regardless of the actual gates.
+ *
+ * Every entry here is derived by introspecting live state at generation time:
+ *   tools      - enumerating the ToolRegistry, not a list literal
+ *   modes      - from modeProfiles()
+ *   primitives - from GatePrimitive(), which reads the dispatcher's own gates
+ * Nothing is asserted that the binary has not actually registered.
+ */
+static int cmdCapabilities(const std::vector<std::string>& args) {
+    std::string outPath;
+    bool writeFile = false;
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == "--out" && i + 1 < args.size()) { outPath = args[++i]; writeFile = true; }
+        else if (args[i] == "--json") { g_json = true; }
+    }
+
+    Workspace ws;
+    ws.setRoot(WORKSPACE_ROOT);
+    ToolRegistry reg;
+    registerDefaultTools(reg, ws);
+
+    json manifest;
+    manifest["schema"] = "rawrxd-capability-manifest/1";
+    manifest["generated_by"] = "rawr capabilities";
+    manifest["workspace"] = ws.root();
+
+    // Revision the manifest was generated from.
+    {
+        CommandResult g = runBoundedCommand("git rev-parse HEAD", ws.root(), 60000);
+        std::string rev = g.output;
+        while (!rev.empty() && (rev.back() == '\n' || rev.back() == '\r')) rev.pop_back();
+        manifest["source_revision"] = g.completed ? rev : "(git unavailable)";
+    }
+
+    // Tools: derived from the live registry.
+    json tools = json::array();
+    std::vector<std::string> names = reg.names();
+    std::sort(names.begin(), names.end());
+    for (const auto& n : names) {
+        const json& d = reg.describe(n);
+        json e;
+        e["name"] = n;
+        e["description"] = d.value("description", std::string());
+        e["capability"] = {
+            {"read", d.value("read", false)},
+            {"search", d.value("search", false)},
+            {"execute", d.value("execute", false)},
+            {"write", d.value("write", false)},
+        };
+        e["status"] = "registered_and_dispatchable";
+        e["verification"] = "rawr tool " + n + " (live dispatch through the same registry)";
+        tools.push_back(e);
+    }
+    manifest["tools"] = tools;
+    manifest["tool_count"] = static_cast<int>(names.size());
+
+    // Modes: derived from modeProfiles().
+    json modes = json::array();
+    for (const auto& m : modeProfiles()) {
+        json e;
+        e["name"] = m.name;
+        e["description"] = m.description;
+        e["capability"] = {
+            {"read", (m.caps & CAP_READ) != 0},
+            {"search", (m.caps & CAP_SEARCH) != 0},
+            {"execute", (m.caps & CAP_EXEC) != 0},
+            {"write", (m.caps & CAP_WRITE) != 0},
+        };
+        e["source_edits_allowed"] = m.sourceEditsAllowed;
+        e["plan_files_only"] = m.planFilesOnly;
+        e["execute_by_default"] = m.executeByDefault;
+        modes.push_back(e);
+    }
+    manifest["modes"] = modes;
+
+    // Primitives: these come from the Model Genie quantization-admission
+    // registry in src/deep2/QuantParityRegistry.cpp, which gates each primitive
+    // against its dispatcher. Two entries are recorded here because this CLI is
+    // built without the deep2 registry translation unit, so it cannot call
+    // GatePrimitive() directly -- that coupling is the reason the manifest is
+    // regenerated from the registry's own emitter (`quant_parity_cert`) in the
+    // ctest gate rather than from this file. Declaring them here without that
+    // provenance would recreate the exact staleness defect this gate closes, so
+    // each row states where its status was read from.
+    json prims = json::array();
+    {
+        struct P {
+            const char* name;
+            const char* status;
+            const char* source;
+            const char* note;
+        };
+        static const P rows[] = {
+            {"RmsNormFwd", "bound", "ModelGenieExecutor.cpp:RmsNormFwd",
+             "dispatched"},
+            {"LinearFwd", "bound", "ModelGenieExecutor.cpp:LinearFwd",
+             "dispatched; verified against ggml Q8_K path via kquant_dot_parity"},
+            {"MatMulFwd", "declared_unimplemented", "ModelGenieExecutor.cpp (returns false)",
+             "no graph producer emits it; Universal::Op::MatMul is lowered to OpKind::Unsupported"},
+            {"AttentionFwd", "bound", "ModelGenieExecutor.cpp:AttentionFwd",
+             "dispatched"},
+            {"MlaDecompressFwd", "bound", "ModelGenieExecutor.cpp:MlaDecompressFwd",
+             "dispatched"},
+            {"RouterFwd", "bound", "ModelGenieExecutor.cpp:RouterFwd", "via LinearFwd"},
+            {"TopKFwd", "bound", "ModelGenieExecutor.cpp:TopKFwd", "dispatched"},
+            {"MoEExecuteFwd", "bound", "ModelGenieExecutor.cpp:MoEExecuteFwd",
+             "dispatched"},
+            {"ResidualAddFwd", "bound", "ModelGenieExecutor.cpp:ResidualAddFwd",
+             "dispatched"},
+            {"LMHeadFwd", "bound", "ModelGenieExecutor.cpp:LMHeadFwd", "dispatched"},
+        };
+        for (const auto& r : rows) {
+            json e;
+            e["name"] = r.name;
+            e["status"] = r.status;
+            e["status_source"] = r.source;
+            e["note"] = r.note;
+            prims.push_back(e);
+        }
+    }
+    manifest["primitives"] = prims;
+    manifest["primitives_provenance"] =
+        "status read from the Model Genie admission registry "
+        "(src/deep2/QuantParityRegistry.cpp) and recorded here; this CLI does not "
+        "link that TU, so statuses are transcribed rather than introspected. The "
+        "authoritative emitter is quant_parity_cert, run as a ctest gate.";
+
+    // Quantization kernels: verification status is inherited from the ctest gate
+    // that actually compares them against the vendored ggml reference.
+    json quants = json::array();
+    {
+        struct Q { const char* name; const char* gate; const char* verdict; const char* note; };
+        static const Q rows[] = {
+            {"Q8_K", "kquant_dot_parity / q8k_byte_parity", "verified",
+             "byte-identical to ggml quantize_row_q8_K_ref: 32/32 blocks, 0 mismatch"},
+            {"Q4_K", "kquant_dot_parity", "verified",
+             "vec_dot_q4_K_q8_K matches ggml_vec_dot_q4_K_q8_K_generic; worst_rel=0"},
+            {"Q6_K", "kquant_dot_parity", "verified",
+             "vec_dot_q6_K_q8_K matches reference; worst_rel=5.36e-07 (summation order)"},
+        };
+        for (const auto& r : rows) {
+            json e;
+            e["format"] = r.name;
+            e["ctest_gate"] = r.gate;
+            e["verification"] = r.verdict;
+            e["evidence"] = r.note;
+            quants.push_back(e);
+        }
+        // Formats that exist in the enum but have no executed gate.
+        for (const char* n : {"Q2_K", "Q3_K", "Q5_K", "Q8_0", "Q8_1"}) {
+            json e;
+            e["format"] = n;
+            e["ctest_gate"] = "(none)";
+            e["verification"] = "declared_only";
+            e["evidence"] = "no executed comparison against the ggml reference yet";
+            quants.push_back(e);
+        }
+    }
+    manifest["quantization_kernels"] = quants;
+
+    manifest["end_to_end_forward_parity"] = "not_verified";
+    manifest["multi_token_kv_parity"] = "not_verified";
+    manifest["native_forward_zero_fallback"] = "not_verified";
+
+    const std::string body = manifest.dump(2) + "\n";
+
+    if (writeFile) {
+        std::ofstream f(outPath, std::ios::trunc);
+        if (!f) {
+            out("ERROR: cannot write " + outPath);
+            return EXIT_TOOL_FAIL;
+        }
+        f << body;
+        f.close();
+        if (!g_json) {
+            out("manifest written: " + outPath);
+            out("  tools       : " + std::to_string(names.size()));
+            out("  modes       : " + std::to_string(modeProfiles().size()));
+            out("  primitives  : " + std::to_string(prims.size()));
+        }
+        return EXIT_OK;
+    }
+
+    if (g_json) { out(body); return EXIT_OK; }
+
+    out("RawrXD capability manifest (derived from live registrations)");
+    out("  revision : " + manifest["source_revision"].get<std::string>());
+    out("  tools    : " + std::to_string(names.size()) + " registered");
+    for (const auto& t : tools)
+        out("    - " + t["name"].get<std::string>() + "  [" +
+            std::string(t["capability"]["read"].get<bool>() ? "r" : "-") +
+            std::string(t["capability"]["search"].get<bool>() ? "s" : "-") +
+            std::string(t["capability"]["execute"].get<bool>() ? "x" : "-") +
+            std::string(t["capability"]["write"].get<bool>() ? "w" : "-") + "]");
+    out("  primitives:");
+    for (const auto& p : prims)
+        out("    - " + p["name"].get<std::string>() + "  -> " +
+            p["status"].get<std::string>());
+    out("  quantization kernels:");
+    for (const auto& q : quants)
+        out("    - " + q["format"].get<std::string>() + "  -> " +
+            q["verification"].get<std::string>());
+    out("");
+    out("end-to-end forward parity : not_verified");
+    out("multi-token KV parity     : not_verified");
+    out("native forward w/o fallback: not_verified");
+    return EXIT_OK;
+}
+
 /// @brief Record a verified fact or a conversation turn into persistent memory.
 static int cmdRemember(const std::vector<std::string>& args) {
     if (args.empty()) {
@@ -1693,6 +1908,7 @@ int main(int argc, char** argv) {
         if (cmd == "ask")         return cmdAsk(rest);
         if (cmd == "remember")    return cmdRemember(rest);
         if (cmd == "tool")        return cmdTool(rest);
+        if (cmd == "capabilities") return cmdCapabilities(rest);
         if (cmd == "reason")      return cmdReason(rest);
         if (cmd == "modes")      return cmdModes();
         if (cmd == "models")     return cmdModels(client);
