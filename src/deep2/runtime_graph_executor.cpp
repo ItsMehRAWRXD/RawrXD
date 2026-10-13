@@ -2441,6 +2441,29 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (qv.empty()) qv = hidden_;
                 if (kv.empty()) kv = qv;
                 if (vv.empty()) vv = kv;
+                // FUSED-QKV SPLIT: a fused attention block (Phi3Fused and
+                // friends) hands ONE vector whose rows are [q|k|v] stacked.
+                // The graph declares this with bName "qkv(split)", meaning the
+                // split happens inside the attention core. This executor never
+                // implemented that split: kv/vv fell back to the SAME full
+                // fused vector, so every per-head width read the FULL fused
+                // width (e.g. 9216/32 = 288 instead of 3072/32 = 96) and every
+                // Phi3Fused block failed with an attention-projection
+                // geometry mismatch. Split the thirds explicitly: the quarter
+                // boundaries come from the model metadata (equal thirds), and
+                // the attention core below then sees the real per-head widths.
+                if (in.bName == "qkv(split)") {
+                    if (qv.empty() || qv.size() % 3 != 0) {
+                        last_error_ = "attention: fused qkv width " +
+                                      std::to_string(qv.size()) +
+                                      " is not divisible by 3";
+                        return false;
+                    }
+                    const size_t w = qv.size() / 3;
+                    kv.assign(qv.begin() + (ptrdiff_t)w, qv.begin() + (ptrdiff_t)(2 * w));
+                    vv.assign(qv.begin() + (ptrdiff_t)(2 * w), qv.end());
+                    qv.resize(w);
+                }
                 if (!OpAttention(in, qv, kv, vv, y, position, e)) { last_error_ = e; return false; }
                 arena("attn") = y;
                 if (!in.outName.empty()) arena(in.outName) = y;
@@ -2468,6 +2491,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 const std::string dst = in.outName.empty() ? std::string("published") : in.outName;
                 arena(dst) = src;
                 hidden_ = src;
+                // Env-gated dump of the published hidden vector. The block-0
+                // publish is the EMBEDDING (resid_in), so this captures Deep2's
+                // embedding for token-level parity comparison.
+                if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_HIDDEN")) {
+                    char dp[600];
+                    std::snprintf(dp, sizeof(dp), "%s.pub.b%d.%s.f32", dumpPrefix,
+                                  (int)in.block, dst.c_str());
+                    if (std::FILE* df = std::fopen(dp, "wb")) {
+                        std::fwrite(hidden_.data(), sizeof(float), hidden_.size(), df);
+                        std::fclose(df);
+                    }
+                }
                 break;
             }
             case OpKind::ResidualAdd: {
@@ -2513,6 +2548,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                                  (double)hidden_[0],
                                  hidden_.size() > 1 ? (double)hidden_[1] : 0.0);
                     std::fflush(stderr);
+                }
+                // Env-gated binary dump of every block's residual vectors so an
+                // independent implementation can compare the FULL 1,536-value
+                // vectors (not just norms): <prefix>.blk<N>.<outName>.f32
+                if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_HIDDEN")) {
+                    char dp[600];
+                    std::snprintf(dp, sizeof(dp), "%s.blk%d.%s.f32", dumpPrefix,
+                                  (int)in.block, in.outName.c_str());
+                    if (std::FILE* df = std::fopen(dp, "wb")) {
+                        std::fwrite(hidden_.data(), sizeof(float), hidden_.size(), df);
+                        std::fclose(df);
+                    }
                 }
                 break;
             }
