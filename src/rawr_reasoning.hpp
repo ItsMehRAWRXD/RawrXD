@@ -1426,6 +1426,37 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     int budgetBreaks = 0;
     bool forceFinal = false;
 
+    // H1 host-side evidence routing (RAWRXD_AGENT_EVIDENCE_001): when the
+    // question names a file, the host performs the read itself instead of
+    // hoping the model proposes it. The controller decides HOW the answer may
+    // be produced, and for file-content questions that way is a real host
+    // execution with a real receipt. The model still writes the final answer,
+    // but only from the real observation.
+    if (requiresFileEvidence && toolsAllowed && reg.exists("read_file")) {
+        const std::string path = extractFilePath(q.text);
+        if (!path.empty()) {
+            json rargs = json::object();
+            rargs["path"] = path;
+            const std::string canonical = "read_file|" + rargs.dump();
+            if (!executedSet.count(canonical)) {
+                ToolReceipt rec;
+                rec.toolName = "read_file";
+                rec.arguments = rargs.dump();
+                rec.status = ActionStatus::Proposed;
+                ToolResult tr = reg.dispatch("read_file", rargs, ctx);
+                executedSet.insert(canonical);
+                rec.status = tr.ok ? ActionStatus::Executed : ActionStatus::Failed;
+                rec.output = tr.output;
+                rec.ok = tr.ok;
+                receipts.push_back(rec);
+                resp.toolRuns.push_back(tr);
+                usedTools = true;
+                logLine("answer: host-executed read_file receipt for named file " +
+                        path + " (ok=" + (tr.ok ? "true" : "false") + ")");
+            }
+        }
+    }
+
     for (int iter = 0; iter < limits.maxIterations; ++iter) {
         // Ask for a decision. The decision prompt carries the original answer
         // only as reference; the real conversation is rebuilt each round so
