@@ -1673,6 +1673,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/engine_subsystems.cpp
         )
         target_include_directories(rawrxd_deep2_engine PRIVATE
             ${CMAKE_SOURCE_DIR}/src
