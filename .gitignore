@@ -109,3 +109,6 @@ evidence/PARITY_2026-10-13/
 *.stderr
 *.dmp
 .env
+
+# native forward gate build tree
+build_forward_001/
