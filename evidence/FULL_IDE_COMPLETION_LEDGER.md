@@ -93,3 +93,44 @@ device: AMD Radeon AI PRO R9700 (Vulkan), 8 prompt tokens, 128 generated tokens.
 3. Batched speculative verification (unlocks S07 speedup measurement).
 4. Kernel dispatch geometry (tiled matmul) — the Gate 12 blocker.
 5. Gates 16–18 audit results → IDE feature completion → 19/20.
+
+## Session-3 addendum (autonomous completion agent, 2026-10-13 late)
+
+Integration branch HEAD is now 2f795322c4 (the D1/D2 work landed on
+local-30b-backend):
+
+| Item | Status | Evidence |
+| ---- | ------ | -------- |
+| D1 — batched multi-token prefill | **PASS (bit-exact)** | Executor::PrefillBatch; full-logit BIT_EXACT vs serial — tinyllama 32000 logits max_abs=0, DeepSeek-V2-Lite MoE/MLA 102400 logits max_abs=0; decode streams identical |
+| D2 — GPU submission batching | **PASS (measured)** | submits/waits 8835→5139 (-41.8%; 158→92/token); decode TPS 1.50→3.53 (tinyllama Q4_K_M); batch-replay UAF fixed; identical outputs |
+
+Performance honesty note: 3.53 tok/s is the certified native decode rate — the 150 TPS
+floor remains OPEN and unattained on this hardware/loop.
+
+### Gate 16 (native toolchain + IDE build) — PARTIAL, compile repaired, link blocked
+
+- **FIXED** the audit's gate-blocking Win32IDE.cpp C2679: a namespace collision — the
+  members were declared against unqualified IGGUFLoader/GGUFMetadata/TensorInfo
+  while the real interface is RawrXD::IGGUFLoader (src/RawrXD_Interfaces.h); both
+  loaders derive from it. Plus rchitecture_type is a std::string (to_string
+  removed) and missing <commdlg.h>/<shellapi.h> in the sidebar/commands TU.
+  **All 16 RawrXD-Win32IDE sources now compile clean** (VS2022 + Qt 6.7.3 headers +
+  Vulkan SDK). Commit 5808c3bdf.
+- **FIXED** Deep2::MedusaDecoder (engine linked it with header-only declarations):
+  full declared surface implemented in src/deep2/engine_subsystems.cpp — head
+  registration, F32 projectHead mat-vec that fails closed on quantized heads, top-k
+  candidate extraction, prefix-correct tree verification, repeated-rejection
+  auto-disable. Engine unresolved externals 266 → 221.
+- **BLOCKED (genuine)**: Win32IDE LINK. The only Qt on this box is
+  C:\Qt\6.7.3\msvc2019_64; only VS2022 is installed. Prebuilt Qt libs cannot link
+  VS2022 objects (v142 vs v143 ABI). Certification needs a VS2019 toolchain or an
+  msvc2022_64 Qt build — do not mark Gate 16/17 PASS from the compile result alone.
+
+### Defects carried forward
+
+- Engine link: 221 unresolved externals remain (KVCache, MARS, MoE*, Warmup,
+  RouterPrefetchTelemetry, QuantKernelRegistry, ReverseHotpatchEngine, PlasmaGovernor,
+  Chamber, Sovereign, Deep2Device_*, OllamaBlobParser, GetBlockGeometryForType).
+- Qt ABI blocker (above).
+- Gate 5 stays PARTIAL (bounded-error certification, not exact parity) per the program
+  standard; S07 and S12 stay OPEN until measured acceptance and 150 TPS pass.
