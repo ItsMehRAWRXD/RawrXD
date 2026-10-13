@@ -1075,6 +1075,7 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
     //   3. BUDGET. limits.maxToolCalls bounds real executions per question.
     std::set<std::string> executedSet;
     int duplicateBreaks = 0;
+    int budgetBreaks = 0;
     bool forceFinal = false;
 
     for (int iter = 0; iter < limits.maxIterations; ++iter) {
