@@ -97,8 +97,8 @@ Baselines on `origin/local-30b-backend`:
 | H1 evidence routing | PASS   | README_READ -> "I could not verify ... any content I offered would be invented"; tools_executed=0, no fabricated first line |
 | H4 no-tools enforce | PASS   | spoof -> tools_executed=0, receipts=[], grounded=false; forged `[tool-receipt]` has no authority; host logged "tool execution refused by host policy" |
 | --json purity       | PASS   | `logLine()` now `fprintf(stderr,...)`; stdout is pure JSON (ConvertFrom-Json OK) |
-| H3 breaker          | LANDED | committed circuit breaker: `duplicateBreaks>=3` (and budget breaker `budgetBreaks>=2`) terminate the loop at the host and return `gateAnswer(first.content, receipts, usedTools)` with authentic host receipts — no forced/unsupported completion. Model cannot enable/disable the breaker |
-| H5 source scope     | LANDED | `06b60b0c0`: default-discovery exclusions + trimmed default code-scope + always-enforced `isPathAuthorized()` deny-by-default gate (read_file/search_text even all=true/list_repo). Compiled clean (H5_RC=0) |
+| H3 breaker          | LANDED | deterministic: `tests/h3_loopbreaker_direct.cpp` drives real `answerUniversal()` with a scripted stub — served=7 replies (bounded < maxIterations=14), duplicate `read_file` executed exactly once, authentic receipts, grounded result. See tests/H3_H5_ACCEPTANCE.md |
+| H5 source scope     | LANDED | deterministic: `tests/h5_authorization_direct.cpp` links production registry — authorized read OK; `.git`/`.archive`/`_pre_merge_backup`/`.backups` + traversal/absolute escapes denied BEFORE access; `all=true` cannot breach. `.archive` auth gap found and fixed in `0f9cf96d98`. See tests/H3_H5_ACCEPTANCE.md |
 
 Baselines on `origin/local-30b-backend`:
 - `c2a6ecde6c` authoritative base ("host-verified evidence contract + UTF-16 discovery").
