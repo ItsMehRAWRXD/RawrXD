@@ -212,13 +212,16 @@ static bool isExcludedFromWalk(const fs::path& p) {
         ".git",    "3rdparty",  "build",      "build_vs",  "build_fresh",
         "build_cert", "build_test", "out",    "__pycache__", "node_modules",
         "vs_validation", ".cache", "dist",   "~dev",       "_deps",
-        "bench",   ".swarm_runs", "evidence", "crash_dumps"
+        "bench",   ".swarm_runs", "evidence", "crash_dumps",
+        ".archive", "_archive", "_pre_merge_backup", ".backups", "logs",
+        "full_source", "full source", "tmp_build"
     };
     for (const char* d : dirs)
         if (lower == d) return true;
 
     for (const char* ext : {".gguf", ".dll", ".exe", ".pdb", ".lib", ".obj",
-                             ".zip", ".7z", ".iso", ".bin"})
+                             ".zip", ".7z", ".iso", ".bin", ".log", ".tmp",
+                             ".exp", ".ilk"})
         if (lower.size() > strlen(ext) &&
             lower.compare(lower.size() - strlen(ext), strlen(ext), ext) == 0)
             return true;
@@ -226,7 +229,9 @@ static bool isExcludedFromWalk(const fs::path& p) {
 }
 
 // Source-like extension filter (RAWRXD_SEARCH_SCOPE_001): code questions are
-// answered from source files; logs and generated text pollute the hit list.
+// answered from source files. Data/markup/build-script text (.json, .md, .txt,
+// .yaml, .bat ...) is excluded from DEFAULT scope so it cannot pollute hits;
+// it remains reachable only via an explicit all=true search on an authorized path.
 static bool isSourceLikePath(const fs::path& p) {
     // Never throw on an unrepresentable extension; treat it as non-source.
     std::string e;
@@ -235,13 +240,39 @@ static bool isSourceLikePath(const fs::path& p) {
         ".cpp", ".cc", ".cxx", ".c", ".h", ".hpp", ".hh", ".inl", ".ipp",
         ".asm", ".s", ".inc", ".cu", ".cuh", ".metal", ".glsl", ".hlsl",
         ".vert", ".frag", ".comp", ".py", ".rs", ".go", ".java", ".cs",
-        ".js", ".jsx", ".ts", ".tsx", ".m", ".mm", ".swift", ".kt",
-        ".md", ".txt", ".json", ".jsonl", ".yaml", ".yml", ".toml", ".cfg",
-        ".bat", ".ps1", ".sh", ".cmake", ".gnf", ".gnf"
+        ".js", ".jsx", ".ts", ".tsx", ".m", ".mm", ".swift", ".kt"
     };
     for (const char* s : kExt)
         if (e == s) return true;
     return false;
+}
+
+// ALWAYS-ENFORCED access policy (RAWRXD_SOURCE_AUTH_001). This is separate from
+// isExcludedFromWalk (which only governs DEFAULT discovery). No scope flag --
+// including all=true -- may bypass this. Secrets, VCS internals and crash/backup
+// dumps are never readable through any tool. Deny-by-default on any doubt.
+static bool isPathAuthorized(const fs::path& p) {
+    std::vector<std::string> parts;
+    try {
+        for (const auto& part : p) parts.push_back(toLower(part.string()));
+    } catch (...) {
+        return false;  // unrepresentable path component: refuse
+    }
+    for (const auto& s : parts) {
+        if (s == ".git" || s == "crash_dumps" || s == ".backups" ||
+            s == "_pre_merge_backup")
+            return false;
+    }
+    std::string name;
+    try { name = toLower(p.filename().string()); } catch (...) { return false; }
+    if (name.empty()) return true;
+    static const char* blocked[] = {
+        ".env", ".pem", ".key", ".keystore", ".p12", ".pfx", ".ppk",
+        "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "credentials", "secrets"
+    };
+    for (const char* b : blocked)
+        if (name.find(b) != std::string::npos) return false;
+    return true;
 }
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -279,6 +310,7 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                         continue;
                     }
                     if (!it->is_regular_file(ec)) continue;
+                    if (!isPathAuthorized(it->path())) continue;
                     if (count < 300) os << ws.relOf(it->path()) << "\n";
                     ++count;
                 }
@@ -312,6 +344,10 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
             if (!fs::is_regular_file(fs::path(abs), ec) || ec) {
                 r.output = "ERROR: not a regular file: " + rel +
                            " (use list_repo to discover real paths)";
+                return r;
+            }
+            if (!isPathAuthorized(fs::path(abs))) {
+                r.output = "ERROR: access denied (restricted path): " + rel;
                 return r;
             }
             uintmax_t sz = fs::file_size(fs::path(abs), ec);
@@ -374,6 +410,8 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                         continue;
                     }
                     if (!it->is_regular_file(ec)) continue;
+                    // Always-enforced authorization; all=true cannot bypass it.
+                    if (!isPathAuthorized(it->path())) continue;
                     ++scanned;
                     if (hits >= 40) continue;
                     // Source-scope: skip text-shaped build artifacts (logs,
