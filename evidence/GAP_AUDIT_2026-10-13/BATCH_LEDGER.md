@@ -122,3 +122,4 @@ Native batch capability drops (tools/native_batches, MSVC-verified this session)
   These verify the batch capability contracts; they do not yet wire the drops into
   the production AgentOrchestrator ABI (that requires the decorated symbol list).
 
+
