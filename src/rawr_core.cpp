@@ -119,6 +119,83 @@ ToolResult ToolRegistry::dispatch(const std::string& name, const json& args,
 // Walk helper shared by the filesystem tools
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+/**
+ * @brief Read a text file and return it as UTF-8.
+ *
+ * This tree contains UTF-16-encoded sources (BOMs such as FF FE are present).
+ * A byte-level ASCII search against those files silently finds nothing, which
+ * is the worst failure mode: it reports a confident, wrong count instead of
+ * reporting that it could not read a file. Decoding here makes read_file and
+ * search_text see the same content any editor would.
+ */
+static bool readTextUtf8(const std::string& path, std::string& out,
+                         std::string& detectedEncoding) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;
+    std::string raw((std::istreambuf_iterator<char>(f)),
+                    std::istreambuf_iterator<char>());
+    if (raw.empty()) { out.clear(); detectedEncoding = "empty"; return true; }
+
+    auto hasPrefix = [&](const char* p, size_t n) {
+        return raw.size() >= n && std::memcmp(raw.data(), p, n) == 0;
+    };
+
+    // UTF-16 LE with BOM
+    if (hasPrefix("\xFF\xFE", 2)) {
+        detectedEncoding = "utf-16le";
+        std::string body = raw.substr(2);
+        out.clear();
+        out.reserve(body.size());
+        for (size_t i = 0; i + 1 < body.size(); i += 2) {
+            unsigned short u =
+                (unsigned char)body[i] | ((unsigned char)body[i + 1] << 8);
+            if (u < 0x80) {
+                out += static_cast<char>(u);
+            } else if (u < 0x800) {
+                out += static_cast<char>(0xC0 | (u >> 6));
+                out += static_cast<char>(0x80 | (u & 0x3F));
+            } else {
+                out += static_cast<char>(0xE0 | (u >> 12));
+                out += static_cast<char>(0x80 | ((u >> 6) & 0x3F));
+                out += static_cast<char>(0x80 | (u & 0x3F));
+            }
+        }
+        return true;
+    }
+    // UTF-16 BE with BOM
+    if (hasPrefix("\xFE\xFF", 2)) {
+        detectedEncoding = "utf-16be";
+        std::string body = raw.substr(2);
+        out.clear();
+        out.reserve(body.size());
+        for (size_t i = 0; i + 1 < body.size(); i += 2) {
+            unsigned short u =
+                ((unsigned char)body[i] << 8) | (unsigned char)body[i + 1];
+            if (u < 0x80) {
+                out += static_cast<char>(u);
+            } else if (u < 0x800) {
+                out += static_cast<char>(0xC0 | (u >> 6));
+                out += static_cast<char>(0x80 | (u & 0x3F));
+            } else {
+                out += static_cast<char>(0xE0 | (u >> 12));
+                out += static_cast<char>(0x80 | ((u >> 6) & 0x3F));
+                out += static_cast<char>(0x80 | (u & 0x3F));
+            }
+        }
+        return true;
+    }
+    // UTF-8 with BOM (strip the BOM so content matches cleanly)
+    if (hasPrefix("\xEF\xBB\xBF", 3)) {
+        detectedEncoding = "utf-8-bom";
+        out = raw.substr(3);
+        return true;
+    }
+
+    detectedEncoding = "utf-8";
+    out = raw;
+    return true;
+}
+
 static bool isExcludedFromWalk(const fs::path& p) {
     // A filename that cannot be represented in the current code page (non-ASCII
     // names exist in this tree) must not abort the whole scan. Degrade to the
@@ -244,12 +321,18 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                 return r;
             }
             try {
-                std::ifstream f(abs, std::ios::binary);
-                if (!f) { r.output = "ERROR: cannot open " + rel; return r; }
-                std::string content((std::istreambuf_iterator<char>(f)),
-                                    std::istreambuf_iterator<char>());
-                if (content.empty()) { r.output = "(empty) " + rel; r.ok = true; return r; }
-                r.output = truncateForLedger(content, 60 * 1024);
+                std::string content, enc;
+                if (!readTextUtf8(abs, content, enc)) {
+                    r.output = "ERROR: cannot open " + rel;
+                    return r;
+                }
+                if (content.empty()) {
+                    r.output = "(empty) " + rel;
+                    r.ok = true;
+                    return r;
+                }
+                r.output = truncateForLedger(content, 60 * 1024) +
+                           "\n[encoding=" + enc + "]";
                 r.ok = true;
                 return r;
             } catch (const std::exception& e) {
@@ -297,13 +380,11 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                     // cmake output, .o stubs, caches) unless all=true.
                     try {
                         if (!searchAll && !isSourceLikePath(it->path())) continue;
-                        std::ifstream f(it->path(), std::ios::binary);
-                        if (!f) continue;
-                        std::string content((std::istreambuf_iterator<char>(f)),
-                                            std::istreambuf_iterator<char>());
+                        std::string content, enc;
+                        if (!readTextUtf8(it->path().string(), content, enc)) continue;
                         if (toLower(content).find(q) == std::string::npos) continue;
                         ++hits;
-                        os << ws.relOf(it->path()) << "\n";
+                        os << ws.relOf(it->path()) << " [" << enc << "]\n";
                     } catch (const std::exception&) {
                         // A file that cannot be read or represented is skipped,
                         // never allowed to abort the whole search.

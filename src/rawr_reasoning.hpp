@@ -1169,15 +1169,45 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         return false;
     };
 
+    // HOST POLICY (RAWRXD_AGENT_EVIDENCE_001, H1): a question that names a file
+    // or asks for its contents declares that the answer must come from that
+    // file, so the host requires at least one executed receipt before any
+    // final answer is accepted. Without this the model answers file-content
+    // questions from its own weights and invents the content -- the
+    // README_READ defect. Refusals ask for the real read; after the refusal
+    // budget the answer is an explicit "no tool evidence" limitation, never
+    // invented content.
+    auto namesAFile = [](const std::string& qt) {
+        std::string low = toLower(qt);
+        static const char* kFileCues[] = {
+            "read the file", "read the", "first line", "last line",
+            "contents of", "what does the file", "in the file",
+            "file read", "open the file", "show the file"
+        };
+        for (const char* c : kFileCues)
+            if (low.find(c) != std::string::npos) return true;
+        // A path-like token with a source/config extension.
+        for (const char* ext : {".md", ".cpp", ".hpp", ".h", ".c", ".txt",
+                                ".json", ".jsonl", ".bat", ".ps1", ".cmake",
+                                ".py", ".yaml", ".yml", ".toml"}) {
+            if (low.find(ext) != std::string::npos) return true;
+        }
+        return false;
+    };
+    const bool requiresFileEvidence = namesAFile(q.text);
+    int evidenceRefusals = 0;
+
     std::vector<ToolReceipt> receipts;
     bool usedTools = false;
     // HOST POLICY: never open the tool loop for a question that forbids tools.
     // tools_executed is built only from receipts the host populates after a
     // real execution, so a forbidden tool produces no receipt and no count.
-    const bool toolsAllowed = wantsRepositoryEvidence(q.text);
+    // A question that names a file DOES open the route (its answer must come
+    // from that file, per the H1 policy below).
+    const bool toolsAllowed =
+        wantsRepositoryEvidence(q.text) || requiresFileEvidence;
     if (!toolsAllowed)
         logLine("answer: tool loop disabled by host policy for this question");
-
     // ── Tool-execution hygiene (RAWRXD_TOOL_HYGIENE_001) ─────────────────────
     // Three host-side guards the model cannot talk its way past:
     //   1. DEDUP CACHE. An identical (tool, canonical args) call is never
@@ -1417,7 +1447,36 @@ inline Response answerUniversal(InferenceClient& client, ToolRegistry& reg,
         }
 
         // final_answer -- gate it against the receipts before the user sees it.
+        //
+        // H1 evidence gate: a question that names a file cannot be answered
+        // without at least one executed receipt. Refuse (and ask for the read)
+        // up to twice, then return the explicit limitation.
+        if (requiresFileEvidence && executedSet.empty() && evidenceRefusals < 2) {
+            ++evidenceRefusals;
+            first = client.complete(
+                {{{"role", "user"},
+                  {"content", buildUniversalPrompt(decisionQ) +
+                              "\nREFUSED_BY_HOST: the question asks about the "
+                              "contents of a file, and no tool has executed yet. "
+                              "Reply with a tool_call JSON now, e.g. "
+                              "{\"kind\":\"tool_call\",\"tool\":\"read_file\","
+                              "\"args\":{\"path\":\"<the file>\"}} or search_text."}}},
+                600);
+            continue;
+        }
         resp.kind = usedTools ? ResponseKind::ToolRequired : ResponseKind::Answer;
+        if (requiresFileEvidence && executedSet.empty()) {
+            // Refusal budget exhausted without any real execution: the answer
+            // is the explicit limitation, NOT model-generated file content.
+            resp.kind = ResponseKind::Uncertain;
+            resp.text =
+                "I could not verify the file's contents: the question requires "
+                "reading a file, and no tool executed successfully during this "
+                "answer, so any content I offered would be invented. Re-run with "
+                "tool access, or read the file directly.";
+            resp.receipts = receipts;
+            return resp;
+        }
         resp.text = gateAnswer(
             obj.is_null() ? first.content : obj.value("answer", first.content),
             receipts, usedTools);

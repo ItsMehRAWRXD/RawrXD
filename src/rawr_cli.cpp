@@ -1,6 +1,6 @@
-/**
+﻿/**
  * @file rawr_cli.cpp
- * @brief `rawr` — the RawrXD native command-line interface.
+ * @brief `rawr` â€” the RawrXD native command-line interface.
  *
  * `rawr run <model> [mode]` is the universal entry point: it starts an agent
  * session against the SAME shared native core (rawr_core.hpp) used by the IDE
@@ -28,9 +28,9 @@ using namespace rawr;
 
 static const char* WORKSPACE_ROOT = R"(F:\rawrxd)";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Output helpers
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static bool g_json = false;
 // Runtime-gated ask-path tracing for diagnosis. Set RAWRXD_ASK_TRACE=1 to
@@ -58,9 +58,9 @@ enum ExitCode {
     EXIT_CRASH = 42,
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Model-output parsing (tolerant of small-model JSON defects)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static bool tryParseJsonRun(const std::string& s, json& out) {
     try { out = json::parse(s); return true; } catch (...) { return false; }
@@ -180,9 +180,9 @@ static bool resolveRunToolCall(const json& obj, RunToolCall& t) {
     return !t.tool.empty();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// The agent loop — one implementation, shared by run/doctor/self-audit
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// The agent loop â€” one implementation, shared by run/doctor/self-audit
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static const char* RUN_SYSTEM_PROMPT =
     "You are the RawrXD local coding agent. You work inside a real repository "
@@ -365,9 +365,9 @@ static RunOutcome runAgentLoop(InferenceClient& client, ToolRegistry& reg,
     return ro;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Commands
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static void cmdToolsList(const ToolRegistry& reg, const ModeProfile* mode) {
     std::vector<std::string> names = reg.names();
@@ -561,13 +561,13 @@ static int cmdRun(const std::vector<std::string>& args) {
     return ro.completed ? EXIT_OK : EXIT_FAIL;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Persistent agent memory: conversation history + verified facts + receipts.
 //
 // This is what makes "explain this conversation" and "given my hardware
 // configuration" answerable -- the context is recovered from disk, relevance
 // filtered, and injected. Every entry carries provenance.
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 struct MemoryFile {
     std::string path = std::string(WORKSPACE_ROOT) + "\\evidence\\agent_memory.jsonl";
@@ -796,6 +796,74 @@ static int cmdAsk(const std::vector<std::string>& args) {
         out("\n(no tools were executed; this answer is not evidence-backed)");
     }
     return EXIT_OK;
+}
+
+/// @brief Run one registered tool directly. This is the debugging and
+/// automation entry point: it goes through the exact same registry, permission
+/// policy and workspace scoping as any agent-invoked call.
+static int cmdTool(const std::vector<std::string>& args) {
+    if (args.empty()) {
+        out("usage: rawr tool <tool_name> '<args-json>' [--mode NAME] [--json]");
+        out("example: rawr tool search_text '{\"query\":\"block_q8_K\",\"path\":\"src/deep2\"}'");
+        return EXIT_FAIL;
+    }
+    std::string tool = args[0];
+    std::string argsJson = args.size() > 1 ? args[1] : "{}";
+    std::string modeName = "ask";
+    for (size_t i = 2; i < args.size(); ++i)
+        if (args[i] == "--mode" && i + 1 < args.size()) modeName = args[++i];
+
+    const ModeProfile* mode = findMode(modeName);
+    if (!mode) {
+        out("ERROR: unknown mode '" + modeName + "'");
+        return EXIT_FAIL;
+    }
+
+    Workspace ws;
+    ws.setRoot(WORKSPACE_ROOT);
+    ToolRegistry reg;
+    registerDefaultTools(reg, ws);
+    if (!reg.exists(tool)) {
+        out("ERROR: unknown tool '" + tool + "'");
+        return EXIT_FAIL;
+    }
+
+    json jargs;
+    try { jargs = json::parse(argsJson); }
+    catch (const std::exception& e) {
+        out("ERROR: arguments are not valid JSON: " + std::string(e.what()));
+        return EXIT_FAIL;
+    }
+    if (!jargs.is_object()) {
+        out("ERROR: arguments must be a JSON object");
+        return EXIT_FAIL;
+    }
+
+    ToolContext ctx;
+    ctx.mode = mode;
+    ctx.ws = &ws;
+    ToolResult tr = reg.dispatch(tool, jargs, ctx);
+
+    if (g_json) {
+        json j;
+        j["tool"] = tr.tool;
+        j["args"] = tr.argsJson;
+        j["ok"] = tr.ok;
+        j["denied"] = tr.denied;
+        j["exit_code"] = tr.exitCode;
+        j["output"] = truncateForLedger(tr.output, 20000);
+        outJson(j);
+    } else {
+        out("tool : " + tr.tool + " " + tr.argsJson);
+        out("mode : " + std::string(mode->name));
+        out("status: " + std::string(tr.denied ? "DENIED"
+                               : (tr.ok ? "executed ok" : "FAILED")) +
+            (tr.exitCode ? " (exit " + std::to_string(tr.exitCode) + ")" : ""));
+        out("---- output ----");
+        out(tr.output);
+    }
+    if (tr.denied) return EXIT_DENIED;
+    return tr.ok ? EXIT_OK : EXIT_TOOL_FAIL;
 }
 
 /// @brief Record a verified fact or a conversation turn into persistent memory.
@@ -1293,11 +1361,11 @@ static int cmdDoctor(ToolRegistry& reg, InferenceClient& client) {
                  {"verdict", allOk ? "PASS" : "FAIL"}});
     } else {
         out("RawrXD doctor");
-        out("─────────────────────────────────────────────");
+        out("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
         for (const auto& c : checks)
             out("  [" + std::string(c["status"] == "PASS" ? " PASS " : " FAIL ") + "] " +
                 c["check"].get<std::string>() + " - " + c["detail"].get<std::string>());
-        out("─────────────────────────────────────────────");
+        out("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
         out("VERDICT: " + std::string(allOk ? "PASS" : "FAIL") + " (" +
             std::to_string(failures) + " failure(s))");
     }
@@ -1515,9 +1583,9 @@ static int cmdSymbols(const std::vector<std::string>& args) {
     return r.ok ? EXIT_OK : EXIT_TOOL_FAIL;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Help
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 static void usage() {
     out("rawr - RawrXD native CLI");
@@ -1564,9 +1632,9 @@ static void usage() {
     out("            5 tool failure, 42 driver crash");
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // main
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
@@ -1595,6 +1663,7 @@ int main(int argc, char** argv) {
         if (cmd == "run")        return cmdRun(rest);
         if (cmd == "ask")         return cmdAsk(rest);
         if (cmd == "remember")    return cmdRemember(rest);
+        if (cmd == "tool")        return cmdTool(rest);
         if (cmd == "reason")      return cmdReason(rest);
         if (cmd == "modes")      return cmdModes();
         if (cmd == "models")     return cmdModels(client);
