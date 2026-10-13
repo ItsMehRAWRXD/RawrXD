@@ -1,0 +1,23 @@
+{
+  "tag": "tiny_gpu_cold1",
+  "model": "D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "mode": "gpu-native",
+  "arch": "llama",
+  "blocks": 22,
+  "prefill_tokens": 32,
+  "generate_tokens": 32,
+  "bind_ms": 2731.0,
+  "prefill_ms": 10003.8,
+  "prefill_tps": 3.20,
+  "ttft_ms": 12734.9,
+  "decode_ms": 7350.8,
+  "decode_tps_mean": 4.35,
+  "decode_p50_ms": 229.60,
+  "decode_p95_ms": 231.82,
+  "aggregate_tps": 3.69,
+  "gpu_calls": 9920,
+  "cpu_calls": 0,
+  "fallback": "<none>",
+  "nonfinite_logits": 0,
+  "pcie": {"link": "", "theoretical_gbps": 0.00, "h2d_gbps": 13.66, "d2h_gbps": 11.44}
+}

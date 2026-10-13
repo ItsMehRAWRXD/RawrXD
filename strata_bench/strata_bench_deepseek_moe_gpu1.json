@@ -1,0 +1,23 @@
+{
+  "tag": "deepseek_moe_gpu1",
+  "model": "D:\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+  "mode": "gpu-native",
+  "arch": "deepseek2",
+  "blocks": 27,
+  "prefill_tokens": 32,
+  "generate_tokens": 16,
+  "bind_ms": 38772.7,
+  "prefill_ms": 33222.4,
+  "prefill_tps": 0.96,
+  "ttft_ms": 71995.4,
+  "decode_ms": 13021.8,
+  "decode_tps_mean": 1.23,
+  "decode_p50_ms": 739.11,
+  "decode_p95_ms": 1743.51,
+  "aggregate_tps": 1.04,
+  "gpu_calls": 28992,
+  "cpu_calls": 0,
+  "fallback": "<none>",
+  "nonfinite_logits": 0,
+  "pcie": {"link": "", "theoretical_gbps": 0.00, "h2d_gbps": 19.71, "d2h_gbps": 26.09}
+}

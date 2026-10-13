@@ -1127,6 +1127,45 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
     return true;
 }
 
+// RAWRXD_GATE7_TPS_001: a two-timestamp pool used to measure TRUE device-side
+// shader time. Lazy and self-disabling: a device without valid timestamp bits
+// (or a failed pool creation) leaves ts_supported_ false and every caller
+// simply skips the queries - gpu_ms then stays exactly 0, never estimated.
+bool VulkanCompute::EnsureQuantTimestampPool() {
+    if (quant_ts_pool_) return ts_supported_;
+    if (quant_ts_pool_attempted_) return ts_supported_;
+    quant_ts_pool_attempted_ = true;
+    const VkPhysicalDeviceLimits& lim = device_info_.properties.limits;
+    // timestampValidBits is a QUEUE FAMILY property in this SDK's headers
+    // (VkQueueFamilyProperties), not a VkPhysicalDeviceLimits member; the
+    // period stays on the limits. Query the family once, lazily.
+    uint32_t ts_bits = 0;
+    uint32_t qcount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device_, &qcount, nullptr);
+    if (qcount > 0) {
+        std::vector<VkQueueFamilyProperties> qprops(qcount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physical_device_, &qcount, qprops.data());
+        const uint32_t qf = device_info_.compute_queue_family < qcount ? device_info_.compute_queue_family : 0;
+        ts_bits = qprops[qf].timestampValidBits;
+    }
+    if (ts_bits == 0 || lim.timestampPeriod <= 0.0f) {
+        ts_supported_ = false;
+        return false;
+    }
+    ts_period_ns_ = lim.timestampPeriod;
+    VkQueryPoolCreateInfo qi{};
+    qi.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    qi.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    qi.queryCount = 2;
+    if (vkCreateQueryPool(device_, &qi, nullptr, &quant_ts_pool_) != VK_SUCCESS) {
+        quant_ts_pool_ = nullptr;
+        ts_supported_ = false;
+        return false;
+    }
+    ts_supported_ = true;
+    return true;
+}
+
 // RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY
 //
 // One command buffer per dispatch: activation upload -> pipeline barrier ->
@@ -1273,6 +1312,16 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         return false;
     }
 
+    // RAWRXD_GATE7_TPS_001: bracket the whole submission on the device
+    // timeline. TOP_OF_PIPE here and BOTTOM_OF_PIPE just before the end capture
+    // upload + shader execution + readback as the GPU saw them, independent of
+    // how long the HOST blocked in vkWaitForFences.
+    const bool ts = EnsureQuantTimestampPool();
+    if (ts) {
+        vkCmdResetQueryPool(quant_cmd_, quant_ts_pool_, 0, 2);
+        vkCmdWriteTimestamp(quant_cmd_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, quant_ts_pool_, 0);
+    }
+
     // Activation upload (staging -> device).
     VkBufferCopy up_region{};
     up_region.size = q8_bytes;
@@ -1322,6 +1371,11 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     down_region.size = out_bytes;
     vkCmdCopyBuffer(quant_cmd_, obuf->buffer, readback_buffer_, 1, &down_region);
 
+    // Second timestamp: after the readback copy so the measured span covers
+    // every GPU-side stage of this submission.
+    if (ts) vkCmdWriteTimestamp(quant_cmd_, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                quant_ts_pool_, 1);
+
     if (vkEndCommandBuffer(quant_cmd_) != VK_SUCCESS) {
         std::cerr << "Quant-dot command buffer end failed" << std::endl;
         ReleaseQuantScratch(obuf);
@@ -1359,6 +1413,16 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     // The fence signals only after the whole submission (upload, dispatch,
     // copy) drains, so this is the measured queue-side cost of the call.
     gpu_counters_.kernel_ms += waited_ms;
+    // RAWRXD_GATE7_TPS_001: the same span read off the DEVICE timeline. This is
+    // the only measure of actual GPU work; kernel_ms above is host time.
+    if (ts) {
+        uint64_t stamps[2] = {0, 0};
+        const VkResult qr = vkGetQueryPoolResults(device_, quant_ts_pool_, 0, 2,
+                                                  sizeof(stamps), stamps, sizeof(uint64_t),
+                                                  VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+        if (qr == VK_SUCCESS && stamps[1] >= stamps[0] && ts_period_ns_ > 0.0)
+            gpu_counters_.gpu_ms += double(stamps[1] - stamps[0]) * ts_period_ns_ / 1e6;
+    }
     gpu_counters_.download_bytes += out_bytes;
 
     // The readback buffer is HOST_COHERENT, so once the fence has signalled the
@@ -1607,6 +1671,13 @@ bool VulkanCompute::EndQuantDotBatch() {
         return false;
     }
 
+    // RAWRXD_GATE7_TPS_001: device timeline bracket for the whole batch.
+    const bool ts = EnsureQuantTimestampPool();
+    if (ts) {
+        vkCmdResetQueryPool(quant_cmd_, quant_ts_pool_, 0, 2);
+        vkCmdWriteTimestamp(quant_cmd_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, quant_ts_pool_, 0);
+    }
+
     // ---- upload all activations ------------------------------------------------
     size_t q8_up_cursor = 0;
     for (auto& e : quant_batch_entries_) {
@@ -1702,6 +1773,9 @@ bool VulkanCompute::EndQuantDotBatch() {
         }
     }
 
+    if (ts) vkCmdWriteTimestamp(quant_cmd_, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                quant_ts_pool_, 1);
+
     if (vkEndCommandBuffer(quant_cmd_) != VK_SUCCESS) {
         std::cerr << "[QUANT_DOT] batch command buffer end failed" << std::endl;
         return false;
@@ -1730,6 +1804,14 @@ bool VulkanCompute::EndQuantDotBatch() {
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
     gpu_counters_.kernel_ms +=
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
+    if (ts) {
+        uint64_t stamps[2] = {0, 0};
+        const VkResult qr = vkGetQueryPoolResults(device_, quant_ts_pool_, 0, 2,
+                                                  sizeof(stamps), stamps, sizeof(uint64_t),
+                                                  VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+        if (qr == VK_SUCCESS && stamps[1] >= stamps[0] && ts_period_ns_ > 0.0)
+            gpu_counters_.gpu_ms += double(stamps[1] - stamps[0]) * ts_period_ns_ / 1e6;
+    }
 
     // The readback is host-coherent; the fence guarantees visibility.
     size_t cursor = 0;
@@ -2027,15 +2109,23 @@ bool VulkanCompute::EnsureHostVisible(size_t bytes, VkBuffer& buf,
 }
 
 VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed, size_t bytes,
-                                              int kind) {
+                                               int kind) {
     uint64_t fp = 0;
     std::memcpy(&fp, packed, sizeof(fp) < bytes ? sizeof(fp) : bytes);
+
+    // STRATA_S08: policy is seeded once from the environment (lru default) so
+    // an unset deployment keeps the historical eviction behaviour.
+    if (weight_cache_policy_ < 0) {
+        const char* pol = std::getenv("RR_WEIGHT_CACHE_POLICY");
+        weight_cache_policy_ = (pol && std::strcmp(pol, "hotness") == 0) ? 1 : 0;
+    }
 
     auto it = quant_weight_cache_.find(packed);
     if (it != quant_weight_cache_.end()) {
         QuantWeight& e = it->second;
         if (e.bytes == bytes && e.kind == kind && e.fingerprint == fp) {
             e.last_used = ++quant_lru_seq_;
+            ++e.use_count;   // hotness signal: dispatches served while resident
             ++gpu_counters_.weight_cache_hits;
             return &e;
         }
@@ -2053,12 +2143,24 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
            gpu_counters_.device_bytes_live + bytes > quant_weight_budget_bytes_) {
         auto victim = quant_weight_cache_.begin();
         for (auto cit = quant_weight_cache_.begin(); cit != quant_weight_cache_.end(); ++cit) {
-            if (cit->second.last_used < victim->second.last_used) victim = cit;
+            if (weight_cache_policy_ == 1) {
+                // Hotness policy (STRATA_S08): evict the coldest entry by
+                // dispatch count, breaking ties by recency. A weight the MoE
+                // router keeps selecting stays resident across tokens; a
+                // one-shot weight is the first to go.
+                if (cit->second.use_count < victim->second.use_count ||
+                    (cit->second.use_count == victim->second.use_count &&
+                     cit->second.last_used < victim->second.last_used))
+                    victim = cit;
+            } else {
+                if (cit->second.last_used < victim->second.last_used) victim = cit;
+            }
         }
         if (victim->second.buffer) vkDestroyBuffer(device_, victim->second.buffer, nullptr);
         if (victim->second.memory) vkFreeMemory(device_, victim->second.memory, nullptr);
         gpu_counters_.device_bytes_live -= victim->second.bytes;
         quant_weight_cache_.erase(victim);
+        ++gpu_counters_.weight_cache_evictions;
     }
 
     QuantWeight e;
@@ -2093,6 +2195,35 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     ++gpu_counters_.weight_cache_misses;
     auto res = quant_weight_cache_.emplace(packed, e);
     return &res.first->second;
+}
+
+// RAWRXD_STRATA_S02: read-only residency query. Used by the Strata expert
+// ledger to observe whether a routed expert slice is already device-resident
+// (a cache HIT) or must be staged (a MISS). No mutation, no upload, so it is
+// safe to call for pure accounting and cannot change dispatch behaviour.
+bool VulkanCompute::IsQuantWeightResident(const void* packed, size_t bytes, int kind) const {
+    if (!packed) return false;
+    auto it = quant_weight_cache_.find(packed);
+    if (it == quant_weight_cache_.end()) return false;
+    const QuantWeight& e = it->second;
+    return e.bytes == bytes && e.kind == kind;
+}
+
+// RAWRXD_STRATA_S03: prefetch a weight into the device-local cache ahead of
+// its dependent dispatch. Reuses the same fingerprint-validated cache as the
+// dispatch path, so a prefetch can never serve stale bytes: either the entry
+// is already resident (counted as a prefetch hit, nothing uploaded) or it is
+// uploaded now under the residency budget and the later dispatch finds it.
+bool VulkanCompute::PrefetchQuantWeight(const void* packed, size_t bytes, int kind) {
+    if (!packed) return false;
+    if (IsQuantWeightResident(packed, bytes, kind)) {
+        ++gpu_counters_.weight_prefetch_hits;
+        return true;
+    }
+    QuantWeight* w = EnsureQuantWeight(packed, bytes, kind);
+    if (!w) return false;
+    ++gpu_counters_.weight_prefetches;
+    return true;
 }
 
 // Pooled device buffers. Acquire returns a free entry with capacity >= bytes,
@@ -2260,6 +2391,9 @@ void VulkanCompute::ReleaseQuantFastPath() {
     readback_size_ = 0;
     if (quant_cmd_) { vkFreeCommandBuffers(device_, command_pool_, 1, &quant_cmd_); quant_cmd_ = nullptr; }
     if (quant_fence_) { vkDestroyFence(device_, quant_fence_, nullptr); quant_fence_ = nullptr; }
+    if (quant_ts_pool_) { vkDestroyQueryPool(device_, quant_ts_pool_, nullptr); quant_ts_pool_ = nullptr; }
+    quant_ts_pool_attempted_ = false;
+    ts_supported_ = false;
     quant_ds_ring_.clear();
     quant_fast_ready_ = false;
     gpu_counters_.device_bytes_live = 0;

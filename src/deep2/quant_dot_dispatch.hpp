@@ -124,9 +124,54 @@ struct BackendStats {
     double kernel_ms = 0;
     double submit_ms = 0;
     double wait_ms = 0;
+    double gpu_ms = 0;                 // TRUE device-side time (GPU timestamps)
 };
 
 // Never touches the GPU; safe to call before any dispatch.
 const BackendStats& BackendCounters();
+
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_STRATA_S01..S08: VRAM expert-residency observation and control.
+//
+// The backend already keeps dispatched weights in a device-local, budgeted,
+// fingerprint-validated cache (Upload-once / reuse-every-decode). These
+// accessors let the Strata expert layer OBSERVE that cache and STEER it
+// without changing dispatch semantics:
+//   * IsWeightResident - read-only query, no mutation (cache HIT accounting).
+//   * PrefetchWeight   - cache-insertion ahead of a dependent dispatch; either
+//                        it was already resident (prefetch hit) or it is
+//                        uploaded now under the same budget and fingerprint
+//                        rules, so a later dispatch can never read stale bytes.
+//   * SetCachePolicy   - 0 = LRU (default), 1 = hotness (STRATA_S08).
+//   * CacheStats       - the measured hit/miss/eviction/prefetch/transfer
+//                        counters the S01/S02/S04/S08 certificates reduce to.
+// ---------------------------------------------------------------------------
+bool IsWeightResident(const void* packed, size_t bytes, int kind);
+bool PrefetchWeight(const void* packed, size_t bytes, int kind);
+void SetCachePolicy(int policy);   // 0 = LRU, 1 = hotness
+
+struct CacheStats {
+    uint64_t hits = 0;            // dispatches served from VRAM
+    uint64_t misses = 0;          // first uploads
+    uint64_t evictions = 0;       // budget evictions
+    uint64_t prefetches = 0;      // explicit prefetch uploads
+    uint64_t prefetch_hits = 0;   // prefetches that found it resident
+    uint64_t upload_bytes = 0;    // host -> device
+    uint64_t download_bytes = 0;  // device -> host
+    uint64_t device_bytes_live = 0;
+    uint64_t device_bytes_peak = 0;
+    uint64_t submits = 0;
+    uint64_t waits = 0;
+    double kernel_ms = 0;
+    double submit_ms = 0;
+    double wait_ms = 0;
+};
+
+CacheStats GetCacheStats();
+
+// STRATA_S05: pin the compute device (e.g. 0 = first discrete GPU, the second
+// discrete AMD card in a two-GPU host). -1 restores score-based auto-select.
+// Must be called before the first dispatch; selection is otherwise automatic.
+void SetPreferredDevice(int index);
 
 } } }

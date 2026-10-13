@@ -26,6 +26,7 @@ namespace {
 bool g_force_cpu = false;
 Receipt g_receipt;
 BackendStats g_backend;
+int32_t g_preferred_device = -1;   // STRATA_S05: device pin, applied at first init
 
 VulkanCompute& Gpu()
 {
@@ -33,6 +34,8 @@ VulkanCompute& Gpu()
     static bool initialised = false;
     if (!initialised) {
         initialised = true;
+        // STRATA_S05: honour a device pin requested before the first dispatch.
+        gpu.SetPreferredDeviceIndex(g_preferred_device);
         gpu.Initialize();                  // false stays false; receipt explains
     }
     return gpu;
@@ -162,6 +165,44 @@ bool EndBatch()
 void SetForceCpu(bool force) { g_force_cpu = force; }
 bool ForceCpu() { return g_force_cpu; }
 
+bool IsWeightResident(const void* packed, size_t bytes, int kind) {
+    return Gpu().IsQuantWeightResident(packed, bytes, kind);
+}
+
+bool PrefetchWeight(const void* packed, size_t bytes, int kind) {
+    return Gpu().PrefetchQuantWeight(packed, bytes, kind);
+}
+
+void SetCachePolicy(int policy) {
+    Gpu().SetWeightCachePolicy(policy == 1 ? 1 : 0);
+}
+
+CacheStats GetCacheStats() {
+    const GpuCounters& c = Gpu().GetGpuCounters();
+    CacheStats s;
+    s.hits = c.weight_cache_hits;
+    s.misses = c.weight_cache_misses;
+    s.evictions = c.weight_cache_evictions;
+    s.prefetches = c.weight_prefetches;
+    s.prefetch_hits = c.weight_prefetch_hits;
+    s.upload_bytes = c.upload_bytes;
+    s.download_bytes = c.download_bytes;
+    s.device_bytes_live = c.device_bytes_live;
+    s.device_bytes_peak = c.device_bytes_peak;
+    s.submits = c.submits;
+    s.waits = c.waits;
+    s.kernel_ms = c.kernel_ms;
+    s.submit_ms = c.submit_ms;
+    s.wait_ms = c.wait_ms;
+    return s;
+}
+
+void SetPreferredDevice(int index) {
+    // Applied by Gpu() at first initialisation; calling this after the first
+    // dispatch has no effect (the device already exists).
+    g_preferred_device = (int32_t)index;
+}
+
 const Receipt& LastReceipt() { return g_receipt; }
 
 const BackendStats& BackendCounters() {
@@ -186,6 +227,7 @@ const BackendStats& BackendCounters() {
     g_backend.kernel_ms = c.kernel_ms;
     g_backend.submit_ms = c.submit_ms;
     g_backend.wait_ms = c.wait_ms;
+    g_backend.gpu_ms = c.gpu_ms;
     return g_backend;
 }
 

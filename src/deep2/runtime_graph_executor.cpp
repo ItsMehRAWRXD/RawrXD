@@ -690,8 +690,52 @@ bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
     return true;
 }
 
+bool Executor::FlushDotBatch() {
+    if (!dot_batch_open_) return true;
+    dot_batch_open_ = false;
+    const size_t ops = dot_batch_ops_;
+    const size_t rows = dot_batch_rows_;
+    dot_batch_ops_ = 0;
+    dot_batch_rows_ = 0;
+    if (ops == 0) {
+        // Nothing was ever queued (every member of the group took a
+        // non-quantised path): ending an empty batch is a pure no-op.
+        return QuantDot::EndBatch();
+    }
+    const bool ok = QuantDot::EndBatch();
+    if (!ok) {
+        // EndBatch's failure contract: every queued dot was REPLAYED on the
+        // CPU fallback and its output buffer holds real numbers. The batch
+        // therefore produced correct math but zero GPU calls, and the
+        // counters must say so - and the Gate-4 dispatch auditor must not
+        // see a vulkan receipt for a dot that ran on the host.
+        gpu_calls_ = (gpu_calls_ >= ops) ? gpu_calls_ - ops : 0;
+        cpu_calls_ += ops;
+        dot_batch_broken_ = true;
+        if (cpu_fallback_reason_.empty()) {
+            cpu_fallback_reason_ = "quant-dot batch failed; CPU replay (ops=" +
+                std::to_string(ops) + ", rows=" + std::to_string(rows) + ")";
+        }
+        for (size_t idx : dot_batch_trace_idx_) {
+            if (idx < op_traces_.size()) {
+                op_traces_[idx].dispatch_backend = "cpu";
+                op_traces_[idx].dispatch_fallback = "quant-dot batch replay";
+            }
+        }
+    } else if (act_map_ && !dot_batch_last_out_slot_.empty()) {
+        // Reproduce the non-batched path's post-Linear "hidden_ = y": the last
+        // queued dot of the group is the one the next op would have seen as
+        // the running hidden state.
+        auto it = act_map_->find(dot_batch_last_out_slot_);
+        if (it != act_map_->end()) hidden_ = it->second;
+    }
+    dot_batch_trace_idx_.clear();
+    dot_batch_last_out_slot_.clear();
+    return ok;
+}
+
 bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
-                        std::vector<float>& y, std::string& err) {
+                        std::vector<float>& y, std::string& err, bool join_batch) {
     if (wslot < 0) {
         err = "linear: no weight";
         if (std::getenv("LINEAR_TRACE")) {
@@ -790,6 +834,34 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                          w.name.c_str(), kind, n_in, n_out, n_blk, rb, w.bytes,
                          rb * n_out);
             std::fflush(stderr);
+        }
+        // RAWRXD_GATE7_TPS_001: when the op loop opened a dot batch for this
+        // input, QUEUE into it: the whole group is recorded into one command
+        // buffer behind one fence instead of one submit+fence per dot. The
+        // output buffer is filled by the group's EndBatch, which the loop
+        // guarantees runs before any op that reads y.
+        // The differential per-op GPU check runs on the single-call path only:
+        // it reads y immediately, which a queued dot cannot honour.
+        if (join_batch && dot_batch_open_ && !std::getenv("RR_GPU_CHECK")) {
+            const bool qok = QuantDot::DotBlocked(kind, w.data, w.bytes,
+                                                  x.data(), n_in, y.data(), n_out, cpu,
+                                                  q8.data(), q8.size() * sizeof(float),
+                                                  force_cpu_);
+            const QuantDot::Receipt& qr = QuantDot::LastReceipt();
+            if (qok && qr.queued) {
+                ++gpu_calls_;
+                dot_batch_ops_++;
+                dot_batch_rows_ += n_out;
+                dot_batch_trace_idx_.push_back(op_traces_.size());
+                trace_dispatch_backend_ = "vulkan";
+                trace_dispatch_forced_ = force_cpu_;
+                trace_dispatch_fallback_.clear();
+                return true;
+            }
+            // The queue refused this dot. Flush what IS queued (those outputs
+            // become host-valid) and fall through to the single-call path so
+            // this op still gets real math on the GPU.
+            FlushDotBatch();
         }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
@@ -1416,6 +1488,23 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             vp[i] = ggml_fp16_to_fp32(ggml_fp32_to_fp16(v[i]));
     }
 
+    // RAWRXD_DEEP2_STRATA_S06: INT8 (Q8_0) KV tier, opt-in. The row the
+    // attention is about to read is replaced by its INT8 round-trip, and the
+    // INT8 bytes are retained in the tier's store (that is the memory the
+    // savings ratio is measured on). Purely a storage-representation change
+    // on the write side: no geometry, no lease, and no dispatch decision
+    // changes, and the default-off switch keeps every previously certified
+    // run bit-identical.
+    if (strata_int8_kv_) {
+        std::vector<float> rt;
+        strata_kv8_.RoundTripRow(kr.data(), kvW, rt);
+        std::memcpy(K.data() + position * kvW, rt.data(), kvW * sizeof(float));
+        strata_kv8_.AppendK((int)in.block, kr.data(), kvW);
+        strata_kv8_.RoundTripRow(v.data(), vW, rt);
+        std::memcpy(V.data() + position * vW, rt.data(), vW * sizeof(float));
+        strata_kv8_.AppendV((int)in.block, v.data(), vW);
+    }
+
     const size_t T = position + 1;
     // THE ATTENTION OUTPUT IS THE VALUE STREAM, NOT THE QUERY STREAM.
     //
@@ -1808,6 +1897,16 @@ static bool DequantRange(const TensorRec& t, size_t base, size_t count, std::vec
     return true;
 }
 
+// RAWRXD_DEEP2_STRATA_S08: hand the eviction policy to the backend weight
+// cache. 0 keeps the historical LRU behaviour; 1 enables the hotness policy
+// (evict coldest by aged dispatch count). Called by certification harnesses
+// BEFORE any dispatch; the backend seeds its default from the environment
+// only when this was never called.
+void Executor::SetStrataCachePolicy(int policy)
+{
+    QuantDot::SetCachePolicy(policy);
+}
+
 bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
@@ -1999,6 +2098,67 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     std::vector<float> hAll(nSel * ffn, 0.0f);
     std::vector<float> dyAll(nSel * embd, 0.0f);
     std::vector<uint8_t> upDone(nSel, 0);
+
+    // ---- RAWRXD_DEEP2_STRATA_S01..S08: expert residency observation ----------
+    // PURE ACCOUNTING + PREFETCH. The residency query (IsWeightResident) does
+    // not mutate the backend cache, so this block cannot change any number;
+    // the prefetch (PrefetchWeight) inserts slices into the SAME fingerprint-
+    // validated, budgeted device cache the dispatch path uses, so a later
+    // dispatch can never read stale bytes. Disabled by default; harnesses opt
+    // in with SetStrataExpertTracking/SetStrataExpertPrefetch.
+    if (strata_experts_) {
+        const size_t upRowB = QuantRowBytes(uKind, uIn);
+        // Phase 1b derives the gate kind later; the observation needs the same
+        // value here, derived identically from the same tensor.
+        const int gKindS = have_gate ? QuantKindOf(gateT->ggml_type) : -1;
+        const size_t gateRowB = (gKindS >= 0) ? QuantRowBytes(gKindS, gIn) : 0u;
+        // Same geometry test phase 2 applies to the down bank (dIn must divide
+        // the kernel's block width); duplicated here so the observation and
+        // the dispatch agree by construction, and asserted identical below.
+        const bool dShape = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) && (dIn <= ffn);
+        const size_t downRowB = dShape ? QuantRowBytes(dKind, dIn) : 0u;
+        for (size_t e = 0; e < nSel; ++e) {
+            const size_t ex = (size_t)ids[e];
+            if (ex >= usableE) continue;
+            if (upGpuShape) {
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(upT->data) + ex * ulen * upRowB;
+                strata_ledger_.Observe((int)moe.block, (int)ex, Strata::ExpertBank::Up,
+                                       QuantDot::IsWeightResident(p, upRowB * ulen, uKind),
+                                       upRowB * ulen);
+            }
+            if (have_gate && gKindS >= 0) {
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(gateT->data) + ex * glen * gateRowB;
+                strata_ledger_.Observe((int)moe.block, (int)ex, Strata::ExpertBank::Gate,
+                                       QuantDot::IsWeightResident(p, gateRowB * glen, gKindS),
+                                       gateRowB * glen);
+            }
+            if (dShape) {
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(downT->data) + ex * olen * downRowB;
+                strata_ledger_.Observe((int)moe.block, (int)ex, Strata::ExpertBank::Down,
+                                       QuantDot::IsWeightResident(p, downRowB * olen, dKind),
+                                       downRowB * olen);
+            }
+        }
+        // STRATA_S03: prefetch the DOWN bank at block entry. The up/gate dots
+        // run first (phases 1/1b) and stage their own weights on first
+        // dispatch; the down dots run last, so prefetching their slices at
+        // block entry moves that upload ahead of the up/gate compute instead
+        // of serialising it into phase 2. The cache's fingerprint check makes
+        // a stale read impossible: either the prefetched bytes are the bytes
+        // the dispatch will find, or the entry is replaced and re-uploaded.
+        if (strata_prefetch_ && dShape) {
+            for (size_t e = 0; e < nSel; ++e) {
+                const size_t ex = (size_t)ids[e];
+                if (ex >= usableE) continue;
+                const uint8_t* p = reinterpret_cast<const uint8_t*>(downT->data) + ex * olen * downRowB;
+                const bool already = QuantDot::IsWeightResident(p, downRowB * olen, dKind);
+                if (!already)
+                    QuantDot::PrefetchWeight(p, downRowB * olen, dKind);
+                strata_ledger_.ObservePrefetch((int)moe.block, (int)ex, Strata::ExpertBank::Down,
+                                               already, downRowB * olen);
+            }
+        }
+    }
 
     // ---- phase 1: every selected expert's up-projection ----------------------
     // RR_NO_MOE_BATCH forces the single-call path (the reference behaviour
@@ -2376,10 +2536,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (std::getenv("RR_TRACE_TOKEN")) std::fprintf(stderr, "  [token] pos=%zu token=%u cache_sizes=%zu,%zu,...\n", position, token, kv_k_.empty()?0:kv_k_[0].size(), kv_v_.empty()?0:kv_v_[0].size());
     position_ = position;
 
+    // RAWRXD_GATE7_TPS_001: a pass that returned early can leave a dot group
+    // open; the device-side batch state is process-wide, so close it before
+    // anything queues into it. Ending an empty batch is a no-op. Drop the
+    // arena pointer FIRST: after a failed pass the map it pointed into is
+    // gone, and the safety flush must not read through it.
+    act_map_ = nullptr;
+    if (dot_batch_open_) FlushDotBatch();
+
     // Wall-clock for this token. BindStats already declares cold_start_ms /
     // steady_kernel_ms / dispatch_ms / total_ms but nothing ever filled them,
-    // which is why every receipt reported dispatch_ms=0.000 and no TPS could be
-    // derived. Total covers the whole token (prefill and decode alike); the
+    // which is why every receipt reported dispatch_ms=0.000 and no TPS could
+    // be derived. Total covers the whole token (prefill and decode alike); the
     // first token additionally records cold start, because it includes cache
     // warm-up and any lazy pipeline creation.
     const auto token_started = std::chrono::steady_clock::now();
@@ -2390,6 +2558,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     // "ffn_norm", so an op's DECLARED input is used, not the running hidden.
     std::unordered_map<std::string, std::vector<float>> act;
     auto arena = [&](const std::string& n) -> std::vector<float>& { return act[n]; };
+    act_map_ = &act;   // RAWRXD_GATE7_TPS_001: lets FlushDotBatch refresh hidden_
+
+    // RAWRXD_GATE7_TPS_001: eligibility for quant-dot grouping. Bias-carrying
+    // models add the bias to y AFTER the op returns (which a queued dot has
+    // not produced yet), and the diagnostic hooks read y the same way, so
+    // those configurations keep the one-submit-per-dot path.
+    const bool can_batch_ = !force_cpu_ && !dot_batch_broken_ && !spec_.has_bias && !trace_ops_ &&
+        !std::getenv("DEEP2_NO_DOT_BATCH") && !std::getenv("RR_GPU_CHECK") &&
+        !std::getenv("DEEP2_DUMP_FFN") && !std::getenv("ATTN_DUMP") &&
+        !std::getenv("ATTN_TRACE");
     auto resolveIn = [&](const Instr& i) -> const std::vector<float>& {
         if (!i.aName.empty() && i.aName[0] != '<' && i.op != OpKind::MlaDecompress) {
             auto it = act.find(i.aName);
@@ -2416,9 +2594,34 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     bool ids_valid = false;
 
     const int32_t embSlot = slot_by_name_["token_embd.weight"];
+    std::string dot_batch_last_out_slot_;
+    auto flush_group = [&]() {
+        const bool ok = FlushDotBatch();
+        if (!dot_batch_last_out_slot_.empty()) {
+            hidden_ = arena(dot_batch_last_out_slot_);
+            dot_batch_last_out_slot_.clear();
+        }
+        return ok;
+    };
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
+        // Only named, independent linear operands may share a submission.
+        // Flush before resolving an operand that could consume queued output.
+        const bool join_batch_ = can_batch_ && in.op == OpKind::Linear &&
+            !in.aName.empty() && in.aName[0] != '<' &&
+            in.outName != in.aName;
+        if (dot_batch_open_ &&
+            (!join_batch_ || in.aName != dot_batch_input_)) {
+            if (!flush_group()) {
+                last_error_ = "quant-dot batch submission failed";
+                return false;
+            }
+        }
+        if (join_batch_ && !dot_batch_open_) {
+            dot_batch_open_ = QuantDot::BeginBatch();
+            dot_batch_input_ = in.aName;
+        }
         if (std::getenv("RR_OP_TRACE")) {
             std::fprintf(stderr, "  [loop] pc=%zu/%zu kind=%d blk=%d a='%s' b='%s' out='%s' bSlot=%d\n",
                          pc, program_.size(), (int)in.op, (int)in.block,
@@ -2494,9 +2697,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                                  (int)in.block, in.bName.c_str(), (int)in.b,
                                  in.aName.c_str(), in.outName.c_str(), xi.size());
                 }
-                std::vector<float> y;
+                // RAWRXD_GATE7_TPS_001: bind the output straight to its arena
+                // slot. A queued dot's destination pointer must outlive the
+                // op that queued it (EndBatch writes there), so a case-local
+                // temporary is not safe; the arena slot is.
+                const std::string linSlot = in.outName.empty() ? std::string("lin") : in.outName;
+                std::vector<float>& y = arena(linSlot);
                 std::string e;
-                if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }
+                // join_batch_ is the loop-scope group decision above: the batch
+                // is already open when it is true.
+                if (!OpLinear(in.b, xi, y, e, join_batch_)) { last_error_ = e; return false; }
                 // ---- attention projection bias: y = W x + b ---------------
                 // Qwen2.5 and friends ship attn_q/k/v.bias tensors (in
                 // qwen2.5-coder-1.5b, blk.0.attn_k.bias alone has L2 ~1237 --
@@ -2627,8 +2837,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                                  xi.size()>2?(double)xi[2]:0.0);
                     std::fflush(stderr);
                 }
-                arena(in.outName.empty() ? std::string("lin") : in.outName) = y;
-                hidden_ = y;
+                // y already IS the arena slot; the queued dot's EndBatch
+                // fills it at the group flush.
+                if (dot_batch_open_) {
+                    dot_batch_last_out_slot_ = linSlot;
+                } else {
+                    hidden_ = y;
+                }
                 break;
             }
             case OpKind::MlaDecompress: {
@@ -2982,6 +3197,10 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         }
     }
 
+    if (dot_batch_open_ && !flush_group()) {
+        last_error_ = "quant-dot batch submission failed";
+        return false;
+    }
     if (logits_.empty()) { last_error_ = "no logits produced"; return false; }
     for (float v : logits_) if (!std::isfinite(v)) ++nonfinite_logits_;
 

@@ -34,6 +34,8 @@
 #include <vector>
 
 #include "deep2_resource_governor.hpp"
+#include "StrataExpertResidency.hpp"
+#include "StrataInt8KVCache.hpp"
 #include "universal_gguf.hpp"
 
 // Short alias for the governor's move-only lease handle. The resource
@@ -118,6 +120,37 @@ public:
     void SetForceCpu(bool force) { force_cpu_ = force; }
     bool ForceCpu() const { return force_cpu_; }
 
+    // ---- RAWRXD_DEEP2_STRATA_S01..S08: MoE expert residency observation -----
+    // The backend VRAM weight cache is observed and steered through this
+    // ledger. Enabling it changes NO arithmetic: it records residency
+    // outcomes the dispatch path reports anyway, and (optionally) prefetches
+    // routed expert slices into the same fingerprint-validated cache ahead of
+    // their dependent dispatch. Default OFF so every previously certified
+    // harness runs bit-identically until it opts in.
+    void SetStrataExpertTracking(bool enable) { strata_experts_ = enable; }
+    bool StrataExpertTracking() const { return strata_experts_; }
+    // Prefetch routed expert slices at MoE block entry (STRATA_S03). Implies
+    // SetStrataExpertTracking(true).
+    void SetStrataExpertPrefetch(bool enable) { strata_prefetch_ = enable; }
+    // Eviction policy handed to the backend cache: 0 = LRU (baseline),
+    // 1 = hotness (STRATA_S08).
+    void SetStrataCachePolicy(int policy);
+    // INT8 (Q8_0) KV storage tier (STRATA_S06). When enabled, every KV row
+    // written is round-tripped through the INT8 representation and the
+    // attention reads the round-tripped values, so the quantised tier's
+    // parity is exercised on the real path. Default OFF; the FP32/F16 cache
+    // keeps its exact certified numerics until a harness opts in. The MLA
+    // latent cache is never touched by this switch.
+    void SetStrataInt8KV(bool enable) { strata_int8_kv_ = enable; }
+    bool StrataInt8KV() const { return strata_int8_kv_; }
+    const Strata::Int8KVCache& StrataInt8Store() const { return strata_kv8_; }
+    Strata::Int8KVStats StrataInt8KStats() const { return strata_kv8_.Snapshot(); }
+    const Strata::ExpertResidencyLedger& StrataLedger() const { return strata_ledger_; }
+    const Strata::ExpertResidencyLedger::Summary StrataExpertSummary() const
+    {
+        return strata_ledger_.Snapshot();
+    }
+
     // ---- first-divergence instrumentation (RAWRXD_DEEP2 recovery) ----------
     // When enabled, every executed op appends a checksum of its output buffer
     // here. Two executors of the same graph (e.g. GPU vs CPU-pinned) can then
@@ -162,8 +195,12 @@ public:
 private:
     // kernels
     bool OpRmsNorm(const Instr& in, const std::vector<float>& x, std::vector<float>& y);
+    // join_batch: the op loop handed us an open quant-dot batch for this
+    // input, so this dot QUEUES into that batch (one command buffer, one
+    // fence for the whole group) instead of submitting on its own. Default
+    // false keeps every other call site on the single-submit path.
     bool OpLinear(int32_t wslot, const std::vector<float>& x,
-                  std::vector<float>& y, std::string& err);
+                  std::vector<float>& y, std::string& err, bool join_batch = false);
     bool OpAttention(const Instr& in, const std::vector<float>& q,
                      const std::vector<float>& k, const std::vector<float>& v,
                      std::vector<float>& y, size_t position, std::string& err);
@@ -266,8 +303,37 @@ private:
     std::vector<OpTrace> op_traces_;
     bool trace_ops_ = false;
     bool trace_capture_values_ = false;
+
+    // RAWRXD_DEEP2_STRATA_S01..S08: expert residency ledger + policy switches.
+    Strata::ExpertResidencyLedger strata_ledger_;
+    bool strata_experts_ = false;
+    bool strata_prefetch_ = false;
+    // RAWRXD_DEEP2_STRATA_S06: INT8 KV tier (default off, opt-in per harness).
+    bool strata_int8_kv_ = false;
+    Strata::Int8KVCache strata_kv8_;
     // Every kernel completes, all quantized dots only through GPU kernels.
     std::string cpu_fallback_reason_;
+
+    // ---- RAWRXD_GATE7_TPS_001: per-token quant-dot batching -----------------
+    // Consecutive LINEAR ops reading the SAME arena input (a block's q/k/v,
+    // its gate/up) are independent, so they can share ONE command buffer and
+    // ONE fence instead of one submit+fence each. The op loop opens and
+    // flushes groups by input name; the executor owns the batch lifetime and
+    // the honest accounting when a batch submission fails (EndBatch replays
+    // the group on the CPU fallback, so the counters must say CPU).
+    // DEEP2_NO_DOT_BATCH=1 disables grouping entirely (differential testing).
+    bool FlushDotBatch();
+    bool dot_batch_open_ = false;
+    bool dot_batch_broken_ = false;          // a failed group disables grouping
+    std::string dot_batch_input_;
+    size_t dot_batch_ops_ = 0;
+    size_t dot_batch_rows_ = 0;
+    std::vector<size_t> dot_batch_trace_idx_;  // trace records to correct on replay
+    // Set for the duration of ExecuteToken so FlushDotBatch can refresh
+    // hidden_ from the finished arena buffer (the non-batched path's
+    // "hidden_ = y" after the last queued dot).
+    std::string dot_batch_last_out_slot_;
+    std::unordered_map<std::string, std::vector<float>>* act_map_ = nullptr;
 
     // RAWRXD_GATE4_DISPATCH_001: dispatch evidence for the op trace currently
     // being produced (set by OpLinear, copied into the trace record).
