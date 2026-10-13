@@ -35,7 +35,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+#include <fstream>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -54,7 +56,8 @@ namespace {
 struct Args {
     std::string model, task, workdir = "agentic_ws";
     int max_steps = 12, max_new = 200;
-    bool cpu = false, toktest = false;
+    bool cpu = false, toktest = false, parity = false;
+    std::string parity_ids, parity_positions, parity_out = "parity";
 };
 
 Args Parse(int argc, char* argv[]) {
@@ -68,6 +71,10 @@ Args Parse(int argc, char* argv[]) {
         else if (s == "--max-new" && i + 1 < argc) a.max_new = std::atoi(argv[++i]);
         else if (s == "--cpu") a.cpu = true;
         else if (s == "--toktest") a.toktest = true;
+        else if (s == "--parity") a.parity = true;
+        else if (s == "--parity-ids" && i + 1 < argc) a.parity_ids = argv[++i];
+        else if (s == "--parity-positions" && i + 1 < argc) a.parity_positions = argv[++i];
+        else if (s == "--parity-out" && i + 1 < argc) a.parity_out = argv[++i];
     }
     return a;
 }
@@ -846,6 +853,133 @@ static std::string GatedIdsLine(const std::vector<int32_t>& ids) {
     return o;
 }
 
+// ============================================================================
+// Parity harness (--parity): feed an explicit token-id sequence through the
+// native Deep2 executor, and at each requested position dump the full logit
+// vector as raw float32 LE plus a machine-readable per-position receipt
+// (argmax, top-10, nonfinite count, gpu/cpu dispatch counters). The matching
+// llama.cpp side produces the identical token sequence and positions, so the
+// comparison is exact-position by exact-position with identical KV history.
+// ============================================================================
+struct ParityReceipt {
+    int position = 0;
+    int token_id = 0;
+    int argmax = -1;
+    int top10[10];
+    size_t logits = 0;
+    size_t nonfinite = 0;
+    uint64_t gpu_calls = 0, cpu_calls = 0;
+};
+
+static int ParityRun(const Args& args)
+{
+    Logf_("[parity] loading %s\n", args.model.c_str());
+    const IngestReport& rep = Ingest(args.model, false);
+    if (!rep.ok) { Logf_("INGEST_FAIL: %s\n", rep.error.c_str()); return 2; }
+
+    // token id file: comma-separated ints (includes BOS; llama.cpp's tokenize
+    // produces this exact sequence so both engines see identical history).
+    std::vector<int32_t> ids;
+    {
+        std::ifstream f(args.parity_ids);
+        std::string s((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        for (size_t i = 0; i < s.size();)
+        {
+            char* endp = nullptr;
+            long v = std::strtol(s.c_str() + i, &endp, 10);
+            if (endp == s.c_str() + i) { ++i; continue; }
+            ids.push_back((int32_t)v);
+            i = (size_t)(endp - s.c_str());
+        }
+    }
+    if (ids.empty()) { Logf_("PARITY_FAIL: empty ids file %s\n", args.parity_ids.c_str()); return 2; }
+
+    // positions file: comma-separated positions to dump.
+    std::vector<int> positions;
+    {
+        std::ifstream f(args.parity_positions);
+        std::string s((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        for (size_t i = 0; i < s.size();)
+        {
+            char* endp = nullptr;
+            long v = std::strtol(s.c_str() + i, &endp, 10);
+            if (endp == s.c_str() + i) { ++i; continue; }
+            positions.push_back((int)v);
+            i = (size_t)(endp - s.c_str());
+        }
+    }
+    if (positions.empty()) { Logf_("PARITY_FAIL: empty positions file\n"); return 2; }
+
+    Executor ex;
+    ex.SetForceCpu(args.cpu);
+    if (!ex.Bind(rep)) { Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str()); return 3; }
+    Logf_("[parity] executor bound: ops=%zu ids=%zu positions=%zu path=%s\n",
+          ex.Stats().ops_total, ids.size(), positions.size(), args.cpu ? "cpu" : "gpu-first");
+
+    std::set<int> wanted(positions.begin(), positions.end());
+    int receipts = 0;
+    for (size_t pos = 0; pos < ids.size(); ++pos)
+    {
+        if (!ex.ExecuteToken((uint32_t)ids[pos], pos))
+        {
+            Logf_("PARITY_EXEC_FAIL pos=%zu err=%s\n", pos, ex.LastError().c_str());
+            return 3;
+        }
+        if (!wanted.count((int)pos))
+            continue;
+        const std::vector<float>& lg = ex.Logits();
+        size_t nonfinite = 0;
+        for (float v : lg) if (!std::isfinite(v)) ++nonfinite;
+        uint32_t top = 0;
+        for (uint32_t i = 1; i < lg.size(); ++i) if (lg[i] > lg[top]) top = i;
+        // top-10 (naive partial selection, no full sort)
+        std::vector<std::pair<float, int32_t>> all;
+        all.reserve(lg.size());
+        for (uint32_t i = 0; i < lg.size(); ++i) all.emplace_back(lg[i], (int32_t)i);
+        std::partial_sort(all.begin(), all.begin() + (std::min<size_t>(10, all.size())), all.end(),
+                          [](const auto& a, const auto& b) { return a.first > b.first; });
+        ParityReceipt rc;
+        rc.position = (int)pos;
+        rc.token_id = ids[pos];
+        rc.argmax = (int)top;
+        rc.logits = lg.size();
+        rc.nonfinite = nonfinite;
+        rc.gpu_calls = ex.Stats().gpu_calls;
+        rc.cpu_calls = ex.Stats().cpu_calls;
+        for (size_t k = 0; k < 10 && k < all.size(); ++k) rc.top10[k] = all[k].second;
+
+        // full vector dump: raw little-endian float32
+        char path[512];
+        std::snprintf(path, sizeof(path), "%s.pos%zu.f32", args.parity_out.c_str(), pos);
+        {
+            std::ofstream out(path, std::ios::binary);
+            out.write(reinterpret_cast<const char*>(lg.data()), (std::streamsize)(lg.size() * sizeof(float)));
+        }
+        // per-position receipt
+        std::snprintf(path, sizeof(path), "%s.pos%zu.json", args.parity_out.c_str(), pos);
+        {
+            std::ofstream out(path);
+            out << "{\"position\":" << rc.position << ",\"token_id\":" << rc.token_id
+                << ",\"argmax\":" << rc.argmax << ",\"logits\":" << rc.logits
+                << ",\"nonfinite\":" << rc.nonfinite << ",\"gpu_calls\":" << rc.gpu_calls
+                << ",\"cpu_calls\":" << rc.cpu_calls << ",\"top10\":[";
+            for (size_t k = 0; k < 10 && k < all.size(); ++k) {
+                if (k) out << ',';
+                out << rc.top10[k];
+            }
+            out << "]}\n";
+        }
+        Logf_("PARITY_RC position=%d token_id=%d argmax=%d logits=%zu nonfinite=%zu gpu=%llu cpu=%llu\n",
+              rc.position, rc.token_id, rc.argmax, rc.logits, rc.nonfinite,
+              (unsigned long long)rc.gpu_calls, (unsigned long long)rc.cpu_calls);
+        ++receipts;
+    }
+    Logf_("PARITY %s receipts=%d gpu_calls=%llu cpu_calls=%llu\n",
+          receipts == (int)positions.size() ? "PASS" : "FAIL", receipts,
+          (unsigned long long)ex.Stats().gpu_calls, (unsigned long long)ex.Stats().cpu_calls);
+    return receipts == (int)positions.size() ? 0 : 1;
+}
+
 static int TokTest(const Args& args) {
     Logf_("[toktest] loading vocabulary from %s\n", args.model.c_str());
     const auto t0 = std::chrono::steady_clock::now();
@@ -910,14 +1044,40 @@ static int TokTest(const Args& args) {
     // initial failure report, to separate an inverse-mapping defect from an
     // encoding/merge defect.
     {
-        const uint32_t probe[] = {198, 220, 256, 257, 258, 189, 190, 293, 1074};
+        // Token contract: for each token implicated in a failing case, print
+        // the raw stored piece, its decoded bytes, and whether the inverse
+        // byte map touched it - a loader defect (raw piece already wrong) is
+        // then separable from an inverse-map defect (correct loader, wrong
+        // decode).
+        const uint32_t probe[] = {198, 220, 256, 257, 258, 189, 190, 293, 1074,
+                                  165, 171, 152, 155, 187, 13, 141, 199, 31937, 29875};
         for (uint32_t pid : probe)
         {
-            if (pid < enc.tokens.size())
-                Logf_("TOKPIECE %u %s\n", pid, HexHead(enc.tokens[pid], 32).c_str());
+            if (pid >= enc.tokens.size())
+                continue;
+            const std::string& piece = enc.tokens[pid];
+            const std::string decoded = enc.Piece(pid);
+            const bool gpt2Conv = (!enc.marker.empty() && enc.marker[0] == '\xC4');
+            bool applied = false;
+            for (size_t k = 0; k < piece.size();)
+            {
+                size_t len = 0;
+                const unsigned cp = Utf8CharAt(piece, k, &len);
+                if ((gpt2Conv && cp >= 0xA1u && cp <= 323) ||
+                    (!gpt2Conv && piece.compare(k, enc.marker.size(), enc.marker) == 0) ||
+                    (piece.size() == 6 && piece[0] == '<' && piece[1] == '0' && piece[2] == 'x'))
+                {
+                    applied = true;
+                    break;
+                }
+                k += len;
+            }
+            Logf_("TOKEN id=%u\n  RAW_PIECE_HEX     = %s\n  DECODED_PIECE_HEX = %s\n  INVERSE_MAP_APPLIED = %s\n",
+                  pid, HexHead(piece, 40).c_str(), HexHead(decoded, 40).c_str(),
+                  applied ? "yes" : "no");
         }
         if (!enc.tokens.empty())
-            Logf_("TOKPIECE 0 %s  ; unk-slot piece\n", HexHead(enc.tokens[0], 32).c_str());
+            Logf_("TOKEN id=0 (unk-slot)\n  RAW_PIECE_HEX     = %s\n", HexHead(enc.tokens[0], 40).c_str());
     // Marker dominance receipt: exact hit counts for both conventions, so the
     // detection is audited against the real vocabulary, not asserted.
     {
@@ -1018,6 +1178,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     if (args.toktest) return TokTest(args);
+    if (args.parity) return ParityRun(args);
 
     Logf_("[stage] loading model %s\n", args.model.c_str());
     const auto t_load0 = std::chrono::steady_clock::now();
