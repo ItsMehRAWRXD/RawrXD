@@ -108,3 +108,4 @@ Each row records: status, evidence artifact, and batch. Batches of 15 items.
 | 94 | Source-to-binary provenance | P1 | — | queued (batch 7) |
 | 95 | Reproducible release builds | P1 | — | queued (batch 7) |
 | 96 | Automated deployment/rollback | P1 | — | queued (batch 7) |
+

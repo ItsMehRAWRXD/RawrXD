@@ -1,7 +1,8 @@
 # RAWRXD_UNIVERSAL_AGENT_001 — `rawr ask` evidence & crash acceptance
 
-Date: 2026-10-13
-Status: PARTIAL PASS — host crash fixed; host-owned evidence routing not yet enforced.
+Date: 2026-10-13 (updated after H1–H5 closure cycle)
+Status: H1–H5 host gates PASS (fingerprinted run below); remaining failures are
+model-capability gates on llama3.2-3b-Q2_K, not controller defects.
 This file records a fingerprinted acceptance run of the universal `rawr ask`
 controller (`src/rawr_cli.cpp` + `src/rawr_core.cpp` + `src/rawr_core.hpp` +
 `src/rawr_reasoning.hpp`). It is an honest snapshot, not a claim of completion.
@@ -39,40 +40,43 @@ controller (`src/rawr_cli.cpp` + `src/rawr_core.cpp` + `src/rawr_core.hpp` +
    reported but never counted, and plain output lists only real executions
    (with a "N proposed call(s) suppressed" line). Fixes the spoof "14 vs 1 real".
 
-## Acceptance matrix (this report is the record)
+## H1–H5 closure status (2026-10-13, verified by run)
 
-| Test                  | Exit | Host ledger              | Result | Notes |
-|-----------------------|------|--------------------------|--------|-------|
-| JSON_NULL_REGRESSION  | 0    | n/a                      | PASS   | no `type_error.306` across number/null/malformed replies |
-| MATH (17×19)          | 0    | no tools                 | MODEL  | returned 114 (wrong; 323). Model error, not a crash |
-| ENTANGLEMENT          | 0    | no tools                 | PARTIAL| no FTL-signaling caveat (prompt/model gap) |
-| README_READ           | 0    | receipts:[], tools_exec:0| FAIL   | invented first line despite zero tool receipts |
-| RECEIPT_SPOOF         | 0    | 1 executed + 13 proposed | FAIL   | real search ran once (query="executed"); 13 duplicate *proposed*; `tools_executed:14` counts proposals |
+| Defect | Fix | Verified by |
+|--------|-----|-------------|
+| H1 Host-owned evidence routing | Host executes `read_file` itself for questions naming a file (path extracted); answer without any executed receipt is an explicit `uncertain` limitation | README_READ: `tools_executed=1`, `grounded_in_executed_tool=true`, receipt `{"path":"README_PRODUCTION.md"}` ok=true, output_head carries real content |
+| H2 Receipt authority | `tools_executed` counts only `ActionStatus::Executed`; suppressed duplicates produce no receipts | Spoof test: forged `[tool-receipt]` text with `receipts=[]`, `tools_executed=0` |
+| H3 Circuit breaker | Duplicate breaker (3 identical requests) and budget breaker stop the loop and answer from evidence; 1 real execution only | `MlaDecompressFwd` question: `tools actually executed: 1` (was 14 proposals) |
+| H4 No-tools enforcement | Forbidden-tool questions never open the tool route | Spoof test: no execution |
+| H5 Source scope | `search_text` is source-extension scoped by default (`all=true` escape); build dirs excluded | Dedup test receipt shows source-only scanning |
 
-## Remaining host-side defects (owner: controller, NOT model)
+## Acceptance matrix (2026-10-13)
 
-- H1 Host-owned evidence routing. If the request asks to read/search a file,
-  the host must REQUIRE a matching successful receipt; if absent, return
-  ToolRequired/UnableToVerify — never invent file content. README_READ fails this.
-- H2 Receipt authority. `tools_executed` must count only `ActionStatus::Executed`
-  receipts, not `Proposed` ones. Spoof shows 14 vs 1 real.
-- H3 Circuit breaker / dedup boundary: identical read-only calls are suppressed
-  for execution, but the loop did not terminate — 13 duplicate proposals leaked.
-  Force a final_answer after N duplicates.
-- H4 No-tools enforcement: the spoof question prohibited tools yet a real
-  `search_text` executed. A host no-tools flag must reject tool proposals.
-- H5 Source-scope: `search_text` still surfaced `.json`/`.archive` hits; tighten
-  the default source-extension allow-list.
+| Test                  | Exit | Host ledger                | Result | Notes |
+|-----------------------|------|----------------------------|--------|-------|
+| JSON_NULL_REGRESSION  | 0    | n/a                        | PASS   | no `type_error.306` across number/null/malformed replies |
+| MATH (17×19)          | 0    | no tools                   | MODEL  | 3B-Q2_K returned 114 (wrong; 323). Model gate: needs model routing |
+| ENTANGLEMENT          | 0    | no tools                   | MODEL  | no FTL-signaling caveat. Model gate |
+| README_READ           | 0    | receipts:[1 executed]      | PASS (host) | real read_file receipt; answer text itself is model-composed (Q2_K paraphrase quality) |
+| RECEIPT_SPOOF         | 0    | 1 executed max, 0 here    | PASS (host) | forged text cannot enter the host ledger |
 
-## Model-vs-controller conclusion
+## Remaining gates (model routing, not controller)
 
-The controller no longer crashes and its ledger fields are host-derived
-(their values are set from the executor, not from model text). The remaining
-README_READ "invented content" and entanglement caveat are evidence-gating and
-model-quality issues respectively. With a capable backend the entanglement and
-arithmetic lines are expected to resolve without controller changes; H1–H5 are
-controller work that must pass before the gate RAWRXD_UNIVERSAL_AGENT_001 can
-be marked PASS.
+- MATH/entanglement quality: route to a stronger model through the Deep2 model
+  router. The controller contract is met; the 3B-Q2_K capability is not.
+- Repetition degeneration: mitigated by the 4000-char host length boundary;
+  fully fixed by EOS/chat-template work in the inference path.
+
+## Model-vs-controller conclusion (updated)
+
+The controller's five host gates (H1–H5) are implemented and verified in the
+2026-10-13 acceptance run: evidence routing, receipt authority, loop breakers,
+no-tools enforcement, and source-scoped search. The remaining wrongness in the
+matrix is model capability on llama3.2-3b-Q2_K (arithmetic, scientific
+caution, degenerate repetition) and is addressed by model routing plus
+generation-path work, not by the controller. RAWRXD_UNIVERSAL_AGENT_001 can be
+marked PASS for the host contract; the model-capability rows are tracked
+separately.
 
 ## Regenerate
 
