@@ -112,3 +112,32 @@ evidence/PARITY_2026-10-13/
 
 # native forward gate build tree
 build_forward_001/
+
+# ---- 2026-10-13 gap audit: diagnostic tensor dumps + bench build trees ----
+# Multi-GB of per-op .bin dumps (gate5/gate6/gate8 trees) and local build
+# outputs; the run transcripts, receipts and comparators ARE committed so
+# every dump remains regenerable from the recorded commands.
+build_gate4/
+build_recert/
+tests/bin/
+evidence/GAP_AUDIT_2026-10-13/gate4_moe_batch/
+evidence/GAP_AUDIT_2026-10-13/gate4_moe_batch.retry/
+evidence/GAP_AUDIT_2026-10-13/gate4_moe_nobatch/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_cpu/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_cpu_2tok/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_cpu_kvf32/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu_2tok/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu_check/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu_kvf32/
+evidence/GAP_AUDIT_2026-10-13/gate4_ci/*/
+evidence/GAP_AUDIT_2026-10-13/gate5/d2_*/
+evidence/GAP_AUDIT_2026-10-13/gate5/ref/
+evidence/GAP_AUDIT_2026-10-13/gate5/ref_head/
+evidence/GAP_AUDIT_2026-10-13/gate5/ref_long/
+evidence/GAP_AUDIT_2026-10-13/gate6/*/
+evidence/GAP_AUDIT_2026-10-13/gate7/*/
+evidence/GAP_AUDIT_2026-10-13/gate7_decode/ref_chain/
+evidence/GAP_AUDIT_2026-10-13/gate7_probe/nemotron/
+evidence/GAP_AUDIT_2026-10-13/gate8_mem/
+evidence/GAP_AUDIT_2026-10-13/gate8_mem3/
