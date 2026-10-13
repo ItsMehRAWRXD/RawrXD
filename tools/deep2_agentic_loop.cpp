@@ -34,6 +34,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cmath>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -52,7 +54,7 @@ namespace {
 struct Args {
     std::string model, task, workdir = "agentic_ws";
     int max_steps = 12, max_new = 200;
-    bool cpu = false;
+    bool cpu = false, toktest = false;
 };
 
 Args Parse(int argc, char* argv[]) {
@@ -65,6 +67,7 @@ Args Parse(int argc, char* argv[]) {
         else if (s == "--max-steps" && i + 1 < argc) a.max_steps = std::atoi(argv[++i]);
         else if (s == "--max-new" && i + 1 < argc) a.max_new = std::atoi(argv[++i]);
         else if (s == "--cpu") a.cpu = true;
+        else if (s == "--toktest") a.toktest = true;
     }
     return a;
 }
@@ -136,91 +139,267 @@ static std::string ByteFallbackToken(char c)
 // so its vocabulary never contains a raw control character: byte 0x0A becomes
 // U+010A ("ÄŠ"), space becomes U+0120 ("Ä "). The mapping is the standard
 // bytes_to_unicode() table, reproduced exactly rather than approximated.
-static std::string Gpt2ByteSymbol(unsigned char b)
+// Codepoint.classListLetter guess for the llama-3 split groups: ASCII letters
+// plus the letter-block ranges (Latin/Greek/Cyrillic/CJK), symbols and
+// punctuation excluded.
+static bool CpIsLetter(unsigned cp)
 {
-    // Printable ranges map to themselves (single-byte UTF-8).
-    if ((b >= '!' && b <= '~') || (b >= 0xA1 && b <= 0xAC) || (b >= 0xAE && b <= 0xFF))
+    return (cp >= 'a' && cp <= 'z') || (cp >= 'A' && cp <= 'Z') ||
+           (cp >= 0x00AA && cp <= 0x2BFF && !(cp >= 0x2000 && cp <= 0x206F) && !(cp >= 0x2190 && cp <= 0x2BFF));
+}
+
+// Exact llama-3 split-group boundary: returns the end of the group starting
+// at p in s. Groups (first match wins at each position):
+//   contractions ('s|'t|'re|'ve|'m|'ll|'d, case-insensitive)
+//   [^\r\n\p{L}\p{N}]?\p{L}+   (optional single non-alnum-non-CRLF prefix)
+//   \p{N}{1,3}                 (up to 3 digits)
+//   ?[^\s\p{L}\p{N}]+[\r\n]*   (optional single space prefix, punct group)
+//   \s*[\r\n]+                 (whitespace leading a CRLF run)
+//   \s+                        (any other whitespace run, greedy)
+static size_t NextSplitEnd(const std::string& s, size_t p)
+{
+    const size_t n = s.size();
+    auto isL = [](unsigned c) { return CpIsLetter(c); };
+    auto isN = [](unsigned c) { return c >= '0' && c <= '9'; };
+    auto isCRLF = [](unsigned c) { return c == '\n' || c == '\r'; };
+    auto isWs = [](unsigned c) { return c == ' ' || c == '\t' || c == '\v' || c == '\f' || c == '\n' || c == '\r'; };
+    auto isOther = [](unsigned c) { return c >= 0x80; };
+
+    const unsigned char c0 = (unsigned char)s[p];
+    // contractions
+    if (c0 == '\'')
     {
-        return std::string(1, (char)b);
+        const auto ci = [&](const char* a, size_t alen) {
+            if (p + alen > n) return false;
+            for (size_t k = 0; k < alen; ++k)
+                if (std::tolower((unsigned char)s[p + k]) != (unsigned char)std::tolower(a[k])) return false;
+            return true;
+        };
+        if (ci("'s", 2) || ci("'t", 2) || ci("'m", 2) || ci("'d", 2) ||
+            ci("'re", 3) || ci("'ve", 3) || ci("'ll", 3))
+        {
+            size_t e = p + 2;
+            if (e <= n && (s[p + 1] == 'r' || s[p + 1] == 'v' || s[p + 1] == 'l') &&
+                (n - p >= 3) && (s[p + 2] == 'e' || s[p + 2] == 'l'))
+                e = p + 3;
+            return e;
+        }
     }
-    // Everything else maps into U+0100..
-    unsigned cp;
-    if (b <= 0x20)
-        cp = 256u + b;  // 0x00-0x20 -> U+0100-U+0120
-    else if (b <= 0x7F)
-        cp = 256u + b;  // unreachable (0x21-0x7E above)
-    else if (b <= 0xA0)
-        cp = 256u + 33u + (b - 0x7F);  // 0x7F-0xA0 -> U+0121-U+0142
-    else
-        cp = 256u + 33u + 34u;  // 0xAD       -> U+0143
+    // [^\r\n\p{L}\p{N}]?\p{L}+
+    {
+        size_t q = p;
+        if (!isL((unsigned)c0) && !isN((unsigned)c0) && !isCRLF((unsigned)c0))
+        {
+            if (q + 1 < n && isL((unsigned)(unsigned char)s[q + 1]))
+                q += 1;
+        }
+        if (isL((unsigned)(unsigned char)s[q]) && !(q == p && !isL((unsigned)c0) && q + !(p + 1 < n ? 1u : 0u) <= p && q == p))
+        {
+            if ((q != p || isL((unsigned)c0)))
+            {
+                size_t e = q;
+                while (e + 1 <= n && e < n && isL((unsigned)(unsigned char)s[e]))
+                    ++e;
+                return e > p ? e : p + 1;
+            }
+        }
+    }
+    // \p{N}{1,3}
+    if (isN((unsigned)c0))
+    {
+        size_t e = p;
+        while (e < n && isN((unsigned)(unsigned char)s[e]) && e - p < 3)
+            ++e;
+        return e;
+    }
+    // ?[^\s L N]+[\r\n]*
+    if (!isL((unsigned)c0) && !isN((unsigned)c0) && !isWs((unsigned)c0))
+    {
+        size_t e = p;
+        while (e < n && (unsigned char)s[e] >= 0x21 && !isL((unsigned)(unsigned char)s[e]) && !isN((unsigned)(unsigned char)s[e]))
+            ++e;
+        while (e < n && isCRLF((unsigned)(unsigned char)s[e]))
+            ++e;
+        return e > p ? e : p + 1;
+    }
+    // \s*[\r\n]+
+    if (isWs((unsigned)c0) || isCRLF((unsigned)c0))
+    {
+        size_t j = p;
+        while (j < n && isWs((unsigned)(unsigned char)s[j]) && !isCRLF((unsigned)(unsigned char)s[j]))
+            ++j;
+        if (j < n && isCRLF((unsigned)(unsigned char)s[j]))
+        {
+            while (j < n && isCRLF((unsigned)(unsigned char)s[j]))
+                ++j;
+            return j;
+        }
+        // whitespace run NOT followed by CRLF: single space + letters falls to
+        // the letter rule above (already consumed); otherwise greedy \s+
+        while (j < n && isWs((unsigned)(unsigned char)s[j]))
+            ++j;
+        return j > p ? j : p + 1;
+    }
+    if (isOther((unsigned)c0))
+        return p + 1;
+    return p + 1;
+}
+static std::string Utf8FromCp(unsigned cp)
+{
     std::string s;
-    if (cp < 0x800)
+    if (cp < 0x80)
+        s += (char)cp;
+    else if (cp < 0x800)
     {
         s += (char)(0xC0 | (cp >> 6));
+        s += (char)(0x80 | (cp & 0x3F));
+    }
+    else
+    {
+        s += (char)(0xE0 | (cp >> 12));
+        s += (char)(0x80 | ((cp >> 6) & 0x3F));
         s += (char)(0x80 | (cp & 0x3F));
     }
     return s;
 }
 
-// Inverse of Gpt2ByteSymbol: mapped codepoint back to the original byte.
-// Returns -1 for a codepoint that is not part of the remapped range.
+// Iterate one UTF-8 character. Returns its codepoint; leaves len set to the
+// byte advance. Malformed input degrades to a single raw byte (pass-through).
+static unsigned Utf8CharAt(const std::string& s, size_t i, size_t* len)
+{
+    const unsigned char c0 = (unsigned char)s[i];
+    *len = 1;
+    unsigned cp = c0;
+    if ((c0 & 0xE0) == 0xC0 && i + 1 < s.size())
+    {
+        cp = ((c0 & 0x1Fu) << 6) | ((unsigned char)s[i + 1] & 0x3F);
+        *len = 2;
+    }
+    else if ((c0 & 0xF0) == 0xE0 && i + 2 < s.size())
+    {
+        cp = ((c0 & 0x0Fu) << 12) | (((unsigned char)s[i + 1] & 0x3F) << 6) |
+             ((unsigned char)s[i + 2] & 0x3F);
+        *len = 3;
+    }
+    else if ((c0 & 0xF8) == 0xF0 && i + 3 < s.size())
+    {
+        cp = ((c0 & 0x07u) << 18) | (((unsigned char)s[i + 1] & 0x3F) << 12) |
+             (((unsigned char)s[i + 2] & 0x3F) << 6) | ((unsigned char)s[i + 3] & 0x3F);
+        *len = 4;
+    }
+    return cp;
+}
+
+// Inverse of the bytes_to_unicode bijection: codepoint back to the original
+// byte. Covers the FULL alphabet, not just the U+0100..U+0143 remap range:
+// the self-mapped Latin codepoints (U+00A1..U+00AC, U+00AE..U+00FF) are byte
+// representatives too (byte 0xF0 is the character U+00F0), with U+00AD's
+// representative being U+0143. Returns -1 for real (non-alphabet) text.
 static int Gpt2SymbolToByte(unsigned cp)
 {
-    if (cp < 256 || cp > 323)
-        return -1;
-    if (cp <= 288)
+    if ((cp >= 0xA1 && cp <= 0xAC) || (cp >= 0xAE && cp <= 0xFF))
+        return (int)cp;
+    if (cp >= 256 && cp <= 288)
         return (int)(cp - 256);  // 0x00-0x20
-    if (cp <= 322)
+    if (cp >= 289 && cp <= 322)
         return (int)(cp - 289 + 0x7F);  // 0x7F-0xA0
-    return 0xAD;                        // 323
+    if (cp == 323)
+        return 0xAD;  // 323
+    return -1;
 }
 
-// True when the token text is a remapped GPT-2 byte pair (U+0100..U+0143).
-static bool Gpt2RemappedToken(const std::string& t, int& byteOut)
+// GPT-2 byte encoder: the strict bytes_to_unicode bijection byte <-> codepoint.
+// Non-ASCII outputs are the UTF-8 of the mapped codepoint (vocabulary pieces
+// are UTF-8, so a raw single byte is the wrong key); only printable ASCII maps
+// to its own single byte. Conversion happens ONLY at this byte-alphabet
+// boundary - it is never applied to already-encoded vocabulary pieces.
+static std::string Gpt2ByteSymbol(unsigned char b)
 {
-    if (t.size() != 2)
-        return false;
-    const unsigned char b0 = (unsigned char)t[0];
-    const unsigned char b1 = (unsigned char)t[1];
-    if (b0 != 0xC4)
-        return false;  // U+0100..U+0143 encodes as C4 xx
-    if ((b1 & 0xC0) != 0x80)
-        return false;
-    const unsigned cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
-    const int b = Gpt2SymbolToByte(cp);
-    if (b < 0)
-        return false;
-    byteOut = b;
-    return true;
+    if (b >= '!' && b <= '~')
+        return std::string(1, (char)b);
+    if ((b >= 0xA1 && b <= 0xAC) || (b >= 0xAE && b <= 0xFF))
+        return Utf8FromCp((unsigned)b);
+    if (b <= 0x20)
+        return Utf8FromCp(256u + b);                  // 0x00-0x20 -> U+0100-U+0120
+    if (b <= 0xA0)
+        return Utf8FromCp(256u + 33u + (b - 0x7F));   // 0x7F-0xA0 -> U+0121-U+0142
+    return Utf8FromCp(256u + 33u + 34u);              // 0xAD -> U+0143
 }
 
-// Normalise text the way llama.cpp's llm_tokenizer does for SentencePiece:
-// each run of whitespace becomes one space marker, and the space marker for
-// THIS vocab is DISCOVERED, not assumed.
+// One token piece -> its visible bytes, honoring the vocabulary's own
+// convention. Does one job only: byte-alphabet inverse at the representation
+// boundary. "<0xNN>" byte pieces emit the raw byte; GPT-2 remapped codepoints
+// (U+0100..U+0143) decode through the inverse bijection as complete UTF-8
+// characters; the SentencePiece marker becomes a literal space.
+static std::string TokenToVisible(const std::string& t, bool gpt2Conv, const std::string& marker)
+{
+    if (t.size() == 6 && t[0] == '<' && t[1] == '0' && t[2] == 'x' && t[5] == '>')
+        return std::string(1, (char)(unsigned)std::strtoul(t.c_str() + 3, nullptr, 16));
+    std::string out;
+    out.reserve(t.size());
+    for (size_t i = 0; i < t.size();)
+    {
+        if (!gpt2Conv && t.compare(i, marker.size(), marker) == 0)
+        {
+            out += ' ';
+            i += marker.size();
+            continue;
+        }
+        size_t len = 0;
+        const unsigned cp = Utf8CharAt(t, i, &len);
+        const int alphabetByte = gpt2Conv ? Gpt2SymbolToByte(cp) : -1;
+        if (alphabetByte >= 0)
+        {
+            out += (char)alphabetByte;
+        }
+        else
+        {
+            if (i + len > t.size())
+                len = t.size() - i;
+            out.append(t, i, len);
+        }
+        i += len;
+    }
+    return out;
+}
+
+// Normalise text: one space marker per literal SPACE character, with the
+// marker discovered from the vocabulary (never assumed).
 //
 // Two conventions exist:
-//   * SentencePiece models use U+2581 ("â–", bytes E1 96 81)
-//   * GPT-2/BPE-style vocabularies (DeepSeek, Qwen, CodeLlama...) use U+0120
-//     ("G" with dot above, bytes C4 A0), which is why the merge table reads
-//     "â– add" as "Ä  Ä add".
-// The marker is picked by testing which one the token set actually contains,
-// so a wrong assumption is a reported failure rather than a wrong encoding.
-static const char* kSpMarker = "\xE1\x96\x81";  // U+2581
+//   * SentencePiece models use U+2581 (bytes E1 96 81)
+//   * GPT-2/BPE-style vocabularies (Qwen, Llama3, DeepSeek, CodeLlama...)
+//     use U+0120 (bytes C4 A0)
+//
+// This tokenizer is byte-exact first: tabs (0x09), vertical tab (0x0B), form
+// feed (0x0C), CR and LF are PRESERVED as literal bytes and reach the byte
+// alphabet like any other value. Whitespace collapsing is the model's
+// tokenizer specification's job, not this harness's - silently converting a
+// tab to a space corrupts every indented code block.
+// U+2581 (LOWER ONE EIGHTH BLOCK) is the SentencePiece space marker.
+// Its UTF-8 encoding is E2 96 81 - the previous constant used E1 96 81
+// (U+1481), which matched NO real vocabulary piece and silently forced every
+// SentencePiece model into the GPT-2 marker convention.
+static const char* kSpMarker = "\xE2\x96\x81";  // U+2581
 static const char* kGpt2Marker = "\xC4\xA0";    // U+0120
 
 static const char* DetectSpaceMarker(const std::vector<std::string>& toks)
 {
+    // Dominance, not first-hit: a GPT-2-style vocab carries thousands of
+    // 0xC4A0-marked pieces and none of the 3-byte U+2581 form; a SentencePiece
+    // vocab is the reverse. First-hit detection (below) fired on a stray
+    // 0xC4A0-containing piece in a SentencePiece vocab and pushed the whole
+    // model through the wrong protocol. Count and take the majority; a tie
+    // defaults to SentencePiece (the older convention).
+    size_t gpt2Hits = 0, spHits = 0;
     for (const auto& t : toks)
     {
-        if (t.find(kGpt2Marker) != std::string::npos)
-            return kGpt2Marker;
+        if (t.find(kGpt2Marker) != std::string::npos) ++gpt2Hits;
+        if (t.find(kSpMarker) != std::string::npos) ++spHits;
     }
-    for (const auto& t : toks)
-    {
-        if (t.find(kSpMarker) != std::string::npos)
-            return kSpMarker;
-    }
-    return kSpMarker;  // default
+    if (gpt2Hits > spHits)
+        return kGpt2Marker;
+    return kSpMarker;
 }
 
 static std::string SpNormalize(const std::string& in, const char* marker)
@@ -231,28 +410,18 @@ static std::string SpNormalize(const std::string& in, const char* marker)
     for (size_t i = 0; i < in.size(); ++i)
     {
         const unsigned char c = (unsigned char)in[i];
-        if (c == ' ' || c == '\t' || c == '\v' || c == '\f')
+        if (c == ' ')
         {
-            // One space marker per horizontal whitespace character.
-            //
-            // Collapsing a run to a single marker is SentencePiece behaviour,
-            // not GPT-2's. GPT-2's BPE regex is " ?\p{L}+", so it emits one "Ġ"
-            // token per space, which is what preserves indentation: the previous
-            // collapse turned "\n    return" into "\n return" and left the
-            // byte-exact round-trip check failing on every indented block.
+            // One space marker per literal space. Runs are preserved (one
+            // marker per space), which is what keeps indentation byte-exact.
             out += marker;
             continue;
         }
-        // NEWLINES ARE NOT WHITESPACE-COLLAPSIBLE.
-        //
-        // The previous behaviour folded '\n' into the space marker too, so
-        // "def add(a, b):\n    return a + b" encoded as
-        // "def add(a, b): return a + b" and every decode(encode(x)) round-trip on
-        // multi-line text failed. For a GPT-2 vocabulary a newline is its own
-        // token (U+000A), so it has to survive normalisation as a literal
-        // character; BPE then either matches a real newline token or falls back
-        // to byte tokens, and the detokenizer reproduces it exactly.
-        if (c == '\n' || c == '\r')
+        // BYTE-EXACT WHITESPACE: tab (0x09), VT (0x0B), FF (0x0C), CR and LF
+        // survive normalisation as literal bytes. They flow through the byte
+        // alphabet like any other value; converting any of them to a space
+        // marker is codec corruption.
+        if (c == '\t' || c == '\v' || c == '\f' || c == '\n' || c == '\r')
         {
             if (pendingSpace)
             {
@@ -276,46 +445,38 @@ static std::string SpNormalize(const std::string& in, const char* marker)
 
 static std::string DetokenizeWith(const std::vector<std::string>& toks, const std::vector<int32_t>& ids)
 {
+    const bool gpt2Conv = DetectSpaceMarker(toks)[0] == '\xC4';
     const std::string marker(DetectSpaceMarker(toks));
     std::string raw;
     for (int32_t id : ids)
     {
         if (id < 0 || (size_t)id >= toks.size())
             continue;
-        const std::string& t = toks[(size_t)id];
-        // Byte-fallback pieces assemble a raw byte string.
-        if (t.size() == 6 && t[0] == '<' && t[1] == '0' && t[2] == 'x')
-        {
-            raw += (char)(unsigned)std::strtoul(t.c_str() + 3, nullptr, 16);
-            continue;
-        }
-        // GPT-2 vocabularies store remapped bytes as multi-byte UTF-8: decode
-        // U+0100..U+0143 back to the original byte. Without this a newline is
-        // stored as "ÄŠ" and detokenizes to those two UTF-8 bytes rather than
-        // 0x0A, so decode(encode(x)) never equals x on multi-line text.
-        int gpt2Byte = 0;
-        if (Gpt2RemappedToken(t, gpt2Byte))
-        {
-            raw += (char)gpt2Byte;
-            continue;
-        }
-        raw += t;
+        raw += TokenToVisible(toks[(size_t)id], gpt2Conv, marker);
     }
-    // Replace the marker with a real space.
-    std::string out;
-    out.reserve(raw.size());
-    for (size_t i = 0; i < raw.size();)
+    // Residual-marker recovery for the SentencePiece convention: pieces whose
+    // marker came through the byte-fallback path (<0xE1><0x96><0x81>) survive
+    // per-piece translation as raw bytes. Translate the assembled text once
+    // at the end so the convention boundary is the only place conversion can
+    // happen, exactly once.
+    if (!gpt2Conv)
     {
-        if (raw.compare(i, marker.size(), marker) == 0)
+        std::string out;
+        out.reserve(raw.size());
+        for (size_t i = 0; i < raw.size();)
         {
-            out += ' ';
-            i += marker.size();
-            continue;
+            if (raw.compare(i, marker.size(), marker) == 0)
+            {
+                out += ' ';
+                i += marker.size();
+                continue;
+            }
+            out += raw[i];
+            ++i;
         }
-        out += raw[i];
-        ++i;
+        return out;
     }
-    return out;
+    return raw;
 }
 
 // Merge two adjacent symbols if the model's merge table allows it.
@@ -395,24 +556,14 @@ struct SpEncoder
         }
     }
 
-    // Per-token decode with the SAME conventions as DetokenizeWith:
-    // SentencePiece marker -> ' ', "<0xNN>" byte pieces -> the raw byte,
-    // GPT-2 remapped codepoints -> the original byte.
+    // Per-token decode with the SAME convention handling as DetokenizeWith:
+    // "<0xNN>" byte pieces -> the raw byte, GPT-2 remapped codepoints decoded
+    // as complete UTF-8 characters through the inverse bijection, SentencePiece
+    // marker -> ' ', ordinary bytes preserved exactly.
     std::string Piece(uint32_t id) const {
         if (id >= tokens.size()) return "";
-        const std::string t = tokens[id];
-        if (t.size() == 6 && t[0] == '<' && t[1] == '0' && t[2] == 'x')
-            return std::string(1, (char)(unsigned)std::strtoul(t.c_str() + 3, nullptr, 16));
-        int b = 0;
-        if (Gpt2RemappedToken(t, b))
-            return std::string(1, (char)b);
-        std::string out;
-        for (size_t i = 0; i < t.size();) {
-            if (t.compare(i, marker.size(), marker) == 0) { out += ' '; i += marker.size(); continue; }
-            out += t[i];
-            ++i;
-        }
-        return out;
+        const bool gpt2Conv = (!marker.empty() && marker[0] == '\xC4');
+        return TokenToVisible(tokens[id], gpt2Conv, marker);
     }
 
     // Split the normalised text into SentencePiece characters (UTF-8 aware).
@@ -443,9 +594,58 @@ struct SpEncoder
         if (!ok)
             return false;
 
+        // llama-3 canonical grouping: first split the RAW text into the same
+        // groups llama.cpp's split regex defines, then encode each group
+        // independently. Merges never cross a group boundary, so the greedy
+        // whitespace+letter merges cannot bleed across (the defect: mine
+        // produced "ĠĠ ĠĠreturn" where llama.cpp produces "ĠĠĠĠ return"). For
+        // the SentencePiece convention there is no BPE split (unigram or
+        // per-byte emission), so the whole text stays one group.
+        const bool gpt2Conv = (!marker.empty() && marker[0] == '\xC4');
+        size_t gp = 0;
+        while (gp < text.size())
+        {
+            const size_t gEnd = NextSplitEnd(text, gp);
+            if (!EncodeCanon(text.substr(gp, gEnd - gp), ids, gpt2Conv))
+                return false;
+            gp = gEnd;
+        }
+        return true;
+    }
+
+    bool EncodeCanon(const std::string& text, std::vector<int32_t>& ids, bool gpt2Conv)
+    {
         const std::string norm = SpNormalize(text, marker.c_str());
         std::vector<std::string> syms;
-        ToSpChars(norm, syms);
+        if (gpt2Conv)
+        {
+            // Byte-alphabet protocol: in a GPT-2-style vocabulary every input
+            // byte enters BPE as its byte-Alphabet representative, never as a
+            // whole raw-UTF-8 slice. Slicing by input characters can key real
+            // text pieces ('é' = C3 A9) that decode - correctly, by the
+            // byoma alphabet protocol - to a single byte, breaking the encode/
+            // decode bijection. Byte-rep seeds BPE so only representatives and
+            // their true merges are selectable; only the marker sequence stays
+            // grouped (it is the piece 'Ġ', which decodes to byte 0x20).
+            const size_t mlen = marker.size();
+            syms.reserve(norm.size());
+            for (size_t i = 0; i < norm.size();)
+            {
+                if (mlen == 2 && (unsigned char)norm[i] == 0xC4 && i + 1 < norm.size() &&
+                    (unsigned char)norm[i + 1] == 0xA0)
+                {
+                    syms.push_back(marker);
+                    i += mlen;
+                    continue;
+                }
+                syms.push_back(Gpt2ByteSymbol((unsigned char)norm[i]));
+                ++i;
+            }
+        }
+        else
+        {
+            ToSpChars(norm, syms);
+        }
         if (syms.empty())
             return true;
 
@@ -482,34 +682,55 @@ struct SpEncoder
                 ids.push_back(it->second);
                 continue;
             }
-            // Not a single token: emit byte-fallback pieces if the model has them.
-            //
-            // Two conventions are tried, because the vocab decides which one
-            // applies, and guessing wrong is what produced <unk> for newlines:
-            //   * the explicit byte tokens <0x0A> used by SentencePiece models
-            //   * the GPT-2 byte-encoder symbol for the same byte ("ÄŠ")
+            // Not a single token: emit byte-fallback pieces if the model has
+            // them. Coverage runs over WHOLE UTF-8 characters, never over the
+            // individual bytes of a multi-byte codepoint (double-encoding trap).
+            // Two vocabulary conventions are tried, because the vocab decides
+            // which one applies:
+            //   * the explicit byte tokens <0xNN> of SentencePiece models
+            //   * the GPT-2 byte-alphabet symbol for each raw byte
+            // Emission is byte-alphabet-complete: every one of the 256 byte
+            // values has a defined symbol in both conventions.
             bool emitted = false;
-            for (size_t c = 0; c < s.size(); ++c)
+            std::vector<std::string> chs;
+            ToSpChars(s, chs);
+            for (const auto& ch : chs)
             {
-                const unsigned char byte = (unsigned char)s[c];
-                int32_t id = -1;
-                auto bit = idOf.find(ByteFallbackToken(s[c]));
-                if (bit != idOf.end())
+                auto suit = idOf.find(ch);
+                if (suit != idOf.end())
                 {
-                    id = bit->second;
+                    ids.push_back(suit->second);
+                    emitted = true;
+                    continue;
                 }
-                else
+                bool chOk = true;
+                for (size_t k = 0; k < ch.size(); ++k)
                 {
-                    auto git = idOf.find(Gpt2ByteSymbol(byte));
-                    if (git != idOf.end())
-                        id = git->second;
+                    const unsigned char byte = (unsigned char)ch[k];
+                    int32_t id = -1;
+                    auto bit = idOf.find(ByteFallbackToken((char)byte));
+                    if (bit != idOf.end())
+                    {
+                        id = bit->second;
+                    }
+                    else
+                    {
+                        auto git = idOf.find(Gpt2ByteSymbol(byte));
+                        if (git != idOf.end())
+                            id = git->second;
+                    }
+                    if (id < 0)
+                    {
+                        chOk = false;
+                        break;
+                    }
+                    ids.push_back(id);
                 }
-                if (id < 0)
+                if (!chOk)
                 {
                     emitted = false;
                     break;
                 }
-                ids.push_back(id);
                 emitted = true;
             }
             if (!emitted)
@@ -581,6 +802,210 @@ void Logf_(const char* fmt, ...) {
     std::fflush(stdout);
 }
 
+// ============================================================================
+// Gate-1 tokenizer parity battery (fail-closed, byte-exact).
+//
+// Conviction level: round-trip equality is necessary but NOT sufficient, so
+// this mode is the machine-readable receipt layer for the parity gate:
+//   * decode(encode(x)) == x byte-exact through TWO independent decoders
+//     (the DetokenizeWith reference path ported from deep2_runtime_dispatch,
+//     and the per-token Piece() path used during generation),
+//   * no unknown-token emission for any ordinary-text class,
+//   * the detected vocabulary convention (U+0120 GPT-2 style vs U+2581
+//     SentencePiece style) is reported, not assumed,
+//   * machine-readable TOKIDS lines so a second implementation (or an
+//     external reference harness) can compare token IDs exactly,
+//   * a forward sanity receipt (finite logits) through the same runtime the
+//     agentic loop uses.
+// Battery covers: expressions, indentation, CRLF, whitespace runs, tabs,
+// accents, CJK, 4-byte UTF-8, control bytes, soft-hyphen edge, and the
+// calc.cpp-shaped multi-line source.
+// ============================================================================
+struct TokCase { const char* name; std::string input; };
+
+static std::string HexHead(const std::string& s, size_t n = 48) {
+    char buf[4];
+    std::string o;
+    const size_t lim = s.size() < n ? s.size() : n;
+    for (size_t i = 0; i < lim; ++i) {
+        std::snprintf(buf, sizeof(buf), "%02x", (unsigned char)s[i]);
+        o += buf;
+        if (i % 2) o += ' ';
+    }
+    if (s.size() > n) o += "...";
+    return o;
+}
+
+static std::string GatedIdsLine(const std::vector<int32_t>& ids) {
+    std::string o;
+    char buf[16];
+    for (size_t i = 0; i < ids.size(); ++i) {
+        std::snprintf(buf, sizeof(buf), "%s%d", i ? "," : "", ids[i]);
+        o += buf;
+    }
+    return o;
+}
+
+static int TokTest(const Args& args) {
+    Logf_("[toktest] loading vocabulary from %s\n", args.model.c_str());
+    const auto t0 = std::chrono::steady_clock::now();
+    const IngestReport& rep = Ingest(args.model, false);
+    if (!rep.ok) { Logf_("INGEST_FAIL: %s\n", rep.error.c_str()); return 2; }
+    SpEncoder enc;
+    enc.Build(GetTokenizer());
+    if (!enc.ok) { Logf_("TOKTEST FAIL: empty vocabulary\n"); return 2; }
+
+    const char* marker = DetectSpaceMarker(enc.tokens);
+    const bool gpt2Convention = (marker[0] == '\xC4');
+    Logf_("[toktest] vocab=%zu merges=%zu convention=%s arch=%s blocks=%llu bos=%d eos=%d (%.1f ms)\n",
+          enc.tokens.size(), GetTokenizer().merges.size(),
+          gpt2Convention ? "U+0120_gpt2" : "U+2581_sentencepiece",
+          rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count,
+          GetTokenizer().bos_id, GetTokenizer().eos_id,
+          std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count());
+
+    std::vector<TokCase> cases = {
+        {"plain_expr",  "int add(int a, int b) { return a + b; }"},
+        {"indent_nl",   "def f():\n    return 42\n"},
+        {"crlf",        "line1\r\nline2\r\n"},
+        {"multi_space", "    x    y\t z  w"},
+        {"tab_first",   "\t\ta b"},
+        {"accents",     "caf\xC3\xA9 na\xC3\xAF" "ve \xC3\x9C" "ber stra\xC3\x9F" "e"},
+        {"cjk",         "\xE4\xBD\xA0\xE5\xA5\xBD \xE4\xB8\x96\xE7\x95\x8C"},
+        {"emoji",       "hi \xF0\x9F\x91\x8B end"},
+        {"ctrl_bytes",  "a\x01\x02\x7f b"},
+        {"edge_ad",     "p\xC3\xBF q\xC2\xAD r"},
+        {"calc_src",    "#include <cstdio>\nint add(int a, int b) {\n    return a - b;\n}\nint main() {\n    printf(\"%d\\n\", add(2, 3));\n    return 0;\n}\n"},
+    };
+
+    int fails = 0;
+    for (const TokCase& c : cases) {
+        std::vector<int32_t> ids;
+        enc.Encode(c.input, ids);
+        // Encode() emits id 0 ONLY when no byte-fallback symbol exists for an
+        // input byte. Any 0 in battery output is therefore a genuine
+        // unknown-emission failure, independent of vocabulary convention.
+        bool has_unk = false;
+        for (int32_t id : ids) {
+            if (id == 0) { has_unk = true; break; }
+        }
+        std::string d1 = DetokenizeWith(enc.tokens, ids);   // reference decoder
+        std::string d2;                                     // generation-path decoder
+        for (int32_t id : ids) d2 += enc.Piece((uint32_t)id);
+        const bool rt1 = (d1 == c.input), rt2 = (d2 == c.input);
+        const bool okc = rt1 && rt2 && !has_unk && !ids.empty();
+        Logf_("TOKCASE %-11s bytes=%3zu ids=%4zu unk=%d %s%s%s%s\n", c.name, c.input.size(), ids.size(),
+              has_unk ? 1 : 0, okc ? "PASS" : "FAIL",
+              rt1 ? "" : " [detok-mismatch]", rt2 ? "" : " [piece-mismatch]",
+              has_unk ? " [unknown-emission]" : "");
+        Logf_("TOKIDS %s %s\n", c.name, GatedIdsLine(ids).c_str());
+        if (!okc) {
+            ++fails;
+            Logf_("  input   : %s\n  detok   : %s\n  pieces  : %s\n",
+                  HexHead(c.input).c_str(), HexHead(d1).c_str(), HexHead(d2).c_str());
+        }
+    }
+
+    // Vocabulary-piece probe: exact bytes of the pieces implicated in the
+    // initial failure report, to separate an inverse-mapping defect from an
+    // encoding/merge defect.
+    {
+        const uint32_t probe[] = {198, 220, 256, 257, 258, 189, 190, 293, 1074};
+        for (uint32_t pid : probe)
+        {
+            if (pid < enc.tokens.size())
+                Logf_("TOKPIECE %u %s\n", pid, HexHead(enc.tokens[pid], 32).c_str());
+        }
+        if (!enc.tokens.empty())
+            Logf_("TOKPIECE 0 %s  ; unk-slot piece\n", HexHead(enc.tokens[0], 32).c_str());
+    // Marker dominance receipt: exact hit counts for both conventions, so the
+    // detection is audited against the real vocabulary, not asserted.
+    {
+        size_t gpt2Hits = 0, spHits = 0;
+        for (const auto& t : enc.tokens)
+        {
+            if (t.find(kGpt2Marker) != std::string::npos) ++gpt2Hits;
+            if (t.find(kSpMarker) != std::string::npos) ++spHits;
+        }
+        Logf_("TOKMARK gpt2_hits=%zu sp_hits=%zu chosen=%s\n", gpt2Hits, spHits,
+              gpt2Hits > spHits ? "U+0120_gpt2" : "U+2581_sentencepiece");
+        // Reference pieces for the convention decision and the SP byte table.
+        const uint32_t mid[] = {13, 199, 141, 220, 31937, 29875};
+        for (uint32_t pid : mid)
+        {
+            if (pid < enc.tokens.size())
+                Logf_("TOKPIECE %u %s\n", pid, HexHead(enc.tokens[pid], 32).c_str());
+        }
+    }
+    }
+
+    // Exhaustive byte-alphabet round-trip: EVERY raw byte value 0x00..0xFF
+    // must survive encode/decode byte-exactly through the vocabulary's byte
+    // alphabet. A single miss fails the gate.
+    {
+        std::string all;
+        all.reserve(256);
+        for (size_t b = 0; b < 256; ++b)
+            all += (char)b;
+        std::vector<int32_t> ids;
+        enc.Encode(all, ids);
+        std::string d1 = DetokenizeWith(enc.tokens, ids);
+        std::string d2;
+        for (int32_t id : ids) d2 += enc.Piece((uint32_t)id);
+        const bool ok256 = (d1 == all) && (d2 == all);
+        bool hasZero = false;
+        for (int32_t i : ids) if (i == 0) hasZero = true;
+        Logf_("TOKCASE all256bytes bytes=256 ids=%4zu unk=%d %s%s%s\n", ids.size(), hasZero ? 1 : 0,
+              ok256 ? "PASS" : "FAIL",
+              (d1 == all) ? "" : " [detok-mismatch]", (d2 == all) ? "" : " [piece-mismatch]");
+        if (!ok256)
+        {
+            ++fails;
+            size_t p = 0;
+            while (p < all.size() && p < d1.size() && all[p] == d1[p]) ++p;
+            Logf_("  first_diff at byte %zu: input=%02x detok=%02x\n",
+                  p, p < all.size() ? (unsigned char)all[p] : 0, p < d1.size() ? (unsigned char)d1[p] : 0);
+        }
+    }
+
+    Logf_("[toktest] forward sanity: binding executor\n");
+    Executor ex;
+    ex.SetForceCpu(args.cpu);
+    if (!ex.Bind(rep)) { Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str()); return 3; }
+    Logf_("[toktest] executor bound: ops=%zu path=%s\n", ex.Stats().ops_total, args.cpu ? "cpu" : "gpu-first");
+    std::vector<uint32_t> feed;
+    const int bos_id = GetTokenizer().bos_id;
+    if (bos_id >= 0) {
+        if (!ex.ExecuteToken((uint32_t)bos_id, feed.size())) {
+            Logf_("EXEC_FAIL bos pos=%zu err=%s\n", feed.size(), ex.LastError().c_str());
+            return 3;
+        }
+        feed.push_back((uint32_t)bos_id);
+    }
+    std::vector<int32_t> probe_ids;
+    enc.Encode(cases[0].input, probe_ids);
+    for (int32_t i : probe_ids) {
+        if (!ex.ExecuteToken((uint32_t)i, feed.size())) {
+            Logf_("EXEC_FAIL pos=%zu err=%s\n", feed.size(), ex.LastError().c_str());
+            return 3;
+        }
+        feed.push_back((uint32_t)i);
+    }
+    const std::vector<float>& lg = ex.Logits();
+    size_t nonfinite = 0;
+    for (float v : lg) if (!std::isfinite(v)) ++nonfinite;
+    uint32_t top = 0;
+    for (uint32_t i = 1; i < lg.size(); ++i) if (lg[i] > lg[top]) top = i;
+    const bool fwd_ok = (nonfinite == 0 && lg.size() > 0);
+    Logf_("FORWARD_SANITY logits=%zu nonfinite=%zu top=%u top_piece=%s %s\n",
+          lg.size(), nonfinite, top, enc.Piece(top).c_str(), fwd_ok ? "PASS" : "FAIL");
+
+    Logf_("TOKTEST %s fails=%d convention=%s vocab=%zu\n",
+          (fails == 0 && fwd_ok) ? "PASS" : "FAIL", fails,
+          gpt2Convention ? "U+0120_gpt2" : "U+2581_sentencepiece", enc.tokens.size());
+    return (fails == 0 && fwd_ok) ? 0 : 1;
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -589,9 +1014,10 @@ int main(int argc, char* argv[]) {
     const Args args = Parse(argc, argv);
     if (args.model.empty()) {
         std::printf("usage: deep2_agentic_loop.exe --model <gguf> [--task f] [--workdir D] "
-                    "[--max-steps N] [--max-new N] [--cpu]\n");
+                    "[--max-steps N] [--max-new N] [--cpu] [--toktest]\n");
         return 1;
     }
+    if (args.toktest) return TokTest(args);
 
     Logf_("[stage] loading model %s\n", args.model.c_str());
     const auto t_load0 = std::chrono::steady_clock::now();
@@ -602,6 +1028,21 @@ int main(int argc, char* argv[]) {
     Logf_("[stage] ingest done in %.1f ms: arch=%s blocks=%llu vocab=%zu\n",
           std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_load0).count(),
           rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count, enc.tokens.size());
+
+    // Tokenizer self-check: decode(encode(x)) == x on the prompt. A wrong
+    // tokenizer silently corrupts every position, and no amount of correct
+    // inference can compensate for it.
+    {
+        std::vector<int32_t> rt;
+        enc.Encode("TOOL read calc.cpp\nint add(int a, int b) { return a + b; }", rt);
+        std::string back;
+        for (int32_t id : rt) back += enc.Piece((uint32_t)id);
+        const bool rt_ok = back.find("TOOL read calc.cpp") != std::string::npos;
+        Logf_("[stage] tokenizer round-trip: %s (%zu ids -> %zu chars)\n",
+              rt_ok ? "PASS" : "FAIL", rt.size(), back.size());
+        if (!rt_ok)
+            Logf_("[stage] round-trip text was: %s\n", back.c_str());
+    }
 
     Executor ex;
     ex.SetForceCpu(args.cpu);
@@ -625,7 +1066,11 @@ int main(int argc, char* argv[]) {
         "TASK: " + task + "\n";
 
     // The conversation is executed ONCE, token by token, and only grown.
+    // llama.cpp's sequence starts with the model's BOS; Deep2's executor must
+    // see the same ids at the same positions, so the BOS is fed first and is
+    // part of the executed context from here on.
     std::vector<uint32_t> fed;
+    if (GetTokenizer().bos_id >= 0) fed.push_back((uint32_t)GetTokenizer().bos_id);
     std::string pending = prompt;
     bool finished = false, built = false, ran_pass = false;
     int last_bash_exit = -1;

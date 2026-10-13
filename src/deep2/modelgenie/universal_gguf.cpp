@@ -797,6 +797,18 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.a = "qkv"; o.b = "qkv(split)"; o.out = "attn_out";
             o.detail = "fused qkv -> attention core (split internally)";
             g.ops.push_back(o);
+            // Output projection to attn_proj: the residual add below consumes
+            // attn_proj for EVERY mixer kind, because the block's residual add
+            // is emitted unconditionally. This branch omitted the projection,
+            // so every Phi3Fused block failed at the first ResidualAdd with
+            // "residualadd: addend 'attn_proj' missing" even though the fused
+            // qkv linear and the attention core themselves ran correctly.
+            if (!name(Role::AttnOutput).empty()) {
+                GraphOp o2;
+                o2.op = Op::Linear; o2.block = (int32_t)b;
+                o2.a = "attn_out"; o2.b = name(Role::AttnOutput); o2.out = "attn_proj";
+                g.ops.push_back(o2);
+            }
         } else if (!name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
                    !name(Role::AttnV).empty()) {
             // Standard (dense) attention. This branch requires all three
