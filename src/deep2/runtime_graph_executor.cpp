@@ -11,6 +11,7 @@
 
 #include "ggml.h"
 #include "quant_dot_dispatch.hpp"
+#include "Q8KQuant.h"   // single ggml-exact Q8_K activation quantiser
 
 namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
 
@@ -37,26 +38,22 @@ constexpr size_t kQ8Stride = 273;   // floats per 256-value activation super-blo
 // Quantise x into the interleaved Q8_K layout: per super-block d, qs[256],
 // bsums[16] (bsums are unused by the legacy kernels but kept so the layout is
 // identical for all kinds).
+//
+// CHANGED 2026-10-13: this was a second, divergent Q8_K implementation. It used
+// unsigned amax/127 for the scale, std::lround (half away from zero) for the
+// values, and no MIN(127,v) clamp, while ggml's quantize_row_q8_K_ref uses the
+// SIGNED extremum (iscale = -127.f/max, d = 1/iscale), round-half-to-even
+// nearest_int, and a clamp. The byte-level differential in src/deep2/Q8KParity.cpp
+// showed ggml d=0xBCD9E6F9 (-0.0266) against this function's 0x3CD9E6F9
+// (+0.0266): identical magnitude, opposite sign bit, plus 751 differing qs
+// values across 4 of 8 blocks once halfway ties were present.
+//
+// The quantiser now lives in src/deep2/Q8KQuant.h so this and the parity path
+// below cannot drift apart again.
 inline void BuildInterleavedQ8(const float* x, size_t n_in, std::vector<float>& q8) {
     const size_t n_sb = (n_in + 255u) / 256u;
     q8.assign(n_sb * kQ8Stride, 0.0f);
-    for (size_t b = 0; b < n_sb; ++b) {
-        const size_t off = b * 256u;
-        const size_t elems = std::min<size_t>(256u, n_in - off);
-        float mx = 0.0f;
-        for (size_t i = 0; i < elems; ++i) mx = std::max(mx, std::fabs(x[off + i]));
-        const float d = mx / 127.0f;
-        const float inv = d > 0.0f ? 1.0f / d : 0.0f;
-        float* blk = q8.data() + b * kQ8Stride;
-        blk[0] = d;
-        int32_t bsums[16] = {0};
-        for (size_t i = 0; i < elems; ++i) {
-            const int32_t v = (int32_t)std::lround(x[off + i] * inv);
-            blk[1 + i] = (float)v;
-            bsums[i / 16] += v;
-        }
-        for (size_t k = 0; k < 16; ++k) blk[257 + k] = (float)bsums[k];
-    }
+    BuildInterleavedQ8K(x, n_in, q8.data());
 }
 
 // Packed row stride for a kind / n_in pair.
@@ -83,12 +80,112 @@ inline int QuantKindOf(ggml_type t) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// K-quant row dot against the interleaved Q8_K activation, mirroring
+// ggml_vec_dot_q4_K_q8_K_generic / ggml_vec_dot_q6_K_q8_K_generic EXACTLY:
+// integer products formed first and accumulated in 8 int32 lanes, the fp16
+// scales applied last, and the Q4_K min term folded in through the per-block
+// sums.  This is the single shared implementation for BOTH the linear path and
+// the MoE expert path: the header contract says those two "cannot drift apart",
+// but the MoE helper previously dequantised the row to float and dot-producted
+// that instead.  That is algebraically the same number yet rounds differently
+// at every element, and because DeepSeek's expert FFNs dominate its compute it
+// is what left the DeepSeek teacher-forced gate at 0.03-0.11 relative logit
+// error while the identical dense-linear path reached 0.0297 on Qwen.
+//
+// q8 layout per 256-value super-block: [0]=d, [1..256]=qs, [257..272]=bsums.
+// ---------------------------------------------------------------------------
+inline float KQuantRowDotQ8(int kind, const uint8_t* row, const float* q8,
+                            size_t n_in) {
+    const size_t nblk = n_in / 256u;
+    const size_t blk_bytes = (kind == 0) ? 144u : 210u;
+    int32_t a[256];
+    int32_t aux32[8];
+    float sums[8], sumf = 0.0f;
+    for (int l = 0; l < 8; ++l) sums[l] = 0.0f;
+    for (size_t b = 0; b < nblk; ++b) {
+        const uint8_t* blk = row + b * blk_bytes;
+        const float* q8b = q8 + b * kQ8Stride;
+        for (int l = 0; l < 8; ++l) aux32[l] = 0;
+        if (kind == 0) {
+            // ---- Q4_K: low nibble -> element j, high -> j+32 (per group of 4)
+            for (int j = 0; j < 4; ++j) {
+                for (int l = 0; l < 32; ++l) {
+                    a[j * 64 + l]      = blk[16 + j * 32 + l] & 0xF;
+                    a[j * 64 + 32 + l] = blk[16 + j * 32 + l] >> 4;
+                }
+            }
+            int32_t scales[8], mins[8];
+            for (int s = 0; s < 8; ++s) {
+                if (s < 4) {
+                    scales[s] = blk[4 + s] & 63;
+                    mins[s]   = blk[4 + s + 4] & 63;
+                } else {
+                    scales[s] = (blk[4 + s + 4] & 0xF) | ((blk[4 + s - 4] >> 6) << 4);
+                    mins[s]   = (blk[4 + s + 4] >> 4) | ((blk[4 + s] >> 6) << 4);
+                }
+            }
+            for (int s = 0; s < 8; ++s) {
+                const int32_t sc = scales[s];
+                for (int l = 0; l < 32; ++l)
+                    aux32[l & 7] += sc * (int32_t)q8b[1 + s * 32 + l] * a[s * 32 + l];
+            }
+            uint16_t h;
+            std::memcpy(&h, blk + 0, 2);
+            const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
+            std::memcpy(&h, blk + 2, 2);
+            const float dmin = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
+            for (int l = 0; l < 8; ++l) sums[l] += d * float(aux32[l]);
+            int32_t sumi = 0;
+            for (int j = 0; j < 16; ++j) sumi += (int32_t)q8b[257 + j] * mins[j / 2];
+            sumf -= dmin * float(sumi);
+        } else {
+            // ---- Q6_K: ql[128] + qh[64] + 16 int8 scales + fp16 scale ----
+            for (int j = 0; j < 256; ++j) a[j] = 0;
+            for (int j = 0; j < 2; ++j) {          // 128-value halves
+                const uint8_t* q4 = blk + j * 64;
+                const uint8_t* qh = blk + 128 + j * 32;
+                int* ah = a + j * 128;
+                for (int l = 0; l < 32; ++l) {
+                    ah[l +  0] = (int8_t)((q4[l +  0] & 0xF) | (((qh[l] >> 0) & 3) << 4)) - 32;
+                    ah[l + 32] = (int8_t)((q4[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+                    ah[l + 64] = (int8_t)((q4[l +  0] >>  4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+                    ah[l + 96] = (int8_t)((q4[l + 32] >>  4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+                }
+            }
+            int32_t scales[16];
+            for (int s = 0; s < 16; ++s) {
+                int8_t sc;
+                std::memcpy(&sc, blk + 192 + s, 1);
+                scales[s] = sc;
+            }
+            for (int s = 0; s < 16; ++s) {
+                const int32_t sc = scales[s];
+                for (int l = 0; l < 16; ++l)
+                    aux32[l & 7] += sc * (int32_t)q8b[1 + s * 16 + l] * a[s * 16 + l];
+            }
+            uint16_t h;
+            std::memcpy(&h, blk + 208, 2);
+            const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
+            for (int l = 0; l < 8; ++l) sums[l] += d * float(aux32[l]);
+        }
+    }
+    for (int l = 0; l < 8; ++l) sumf += sums[l];
+    return sumf;
+}
+
 // Decode ONE packed row (kind 0..3) and dot it against the interleaved Q8
 // activation, exactly as the shader does: ggml block decoders, fp16 scales,
 // integer MACs, super-block activation scale applied once per super-block.
 inline float RowDotInterleavedQ8(int kind, const uint8_t* row, const float* q8v, size_t n_in) {
-    if (kind >= 2) {
-        // ---- legacy Q5_0 / Q8_0 / Q4_0 (32 values per block) ----
+    if (kind <= 1) {
+        // ---- k-quants Q4_K / Q6_K: shared ggml-accurate integer-MAC path ----
+        // (the linear path in the executor routes through the same function, so
+        // a dense projection and an MoE expert slice cannot diverge)
+        return (n_in % 256u) == 0u ? KQuantRowDotQ8(kind, row, q8v, n_in) : 0.0f;
+    }
+    // ---- legacy Q5_0 / Q8_0 / Q4_0 (32 values per block) ----
+    {
         const size_t lb_bytes = (kind == 2) ? 22u : ((kind == 3) ? 34u : 18u);
         const size_t n_sb = (n_in + 255u) / 256u;
         double acc = 0.0;
@@ -142,19 +239,6 @@ inline float RowDotInterleavedQ8(int kind, const uint8_t* row, const float* q8v,
         }
         return (float)acc;
     }
-    // ---- k-quants Q4_K / Q6_K: ggml decoder row, quantised-activation dot ----
-    static thread_local std::vector<float> rw;
-    const ggml_type_traits* tr = ggml_get_type_traits(kind == 0 ? GGML_TYPE_Q4_K : GGML_TYPE_Q6_K);
-    if (!tr) return 0.0f;
-    rw.assign(n_in, 0.0f);
-    tr->to_float(row, rw.data(), (int)n_in);
-    double acc = 0.0;
-    for (size_t b = 0; b < n_in / 256u; ++b) {
-        const float dq = q8v[b * kQ8Stride + 0];
-        for (size_t i = 0; i < 256u; ++i)
-            acc += double(rw[b * 256u + i]) * (double)dq * (double)q8v[b * kQ8Stride + 1 + i];
-    }
-    return (float)acc;
 }
 
 const char* opName(Universal::Op o) {
@@ -583,8 +667,8 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             err = "linear: weight bytes short";
             return false;
         }
-        const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);        // The independent reference decodes ONE packed row at a time. It must
-        // not materialise a dequantised [n_out, n_in] float matrix: for a
+        // The reference decodes ONE packed row at a time. It must not
+        // materialise a dequantised [n_out, n_in] float matrix: for a
         // 102400-row output projection that is 4x the encoded size and, when
         // indexed as rows, walks far past the buffer that was actually filled.
         //
@@ -602,98 +686,15 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         // but rounds differently at every element, which left the GPU-vs-CPU
         // parity gate at 1.4e-04 relative error - above its 1e-4 bound - even
         // though both sides were correct.
+        //
+        // Dense projections and MoE expert slices now share ONE implementation
+        // (KQuantRowDotQ8 above) so the two cannot drift apart: DeepSeek's
+        // expert FFN path previously used the float-dot variant, which is what
+        // left its teacher-forced gate at 0.03-0.11 relative logit error.
         QuantDot::CpuDot cpu =
             [&](const uint8_t* row, const void* q8_act, size_t) -> float {
-                const float* q8 = static_cast<const float*>(q8_act);
-                const size_t nblk = n_in / 256;
-                const size_t blk_bytes = (kind == 0) ? 144u : 210u;
-                int32_t a[256];
-                int32_t aux32[8];
-                float sums[8], sumf = 0.0f;
-                for (int l = 0; l < 8; ++l) sums[l] = 0.0f;
-                for (size_t b = 0; b < nblk; ++b) {
-                    const uint8_t* blk = row + b * blk_bytes;
-                    const float* q8b = q8 + b * 273;
-                    for (int l = 0; l < 8; ++l) aux32[l] = 0;
-                    if (kind == 0) {
-                        // ---- Q4_K ----
-                        for (int j = 0; j < 4; ++j) {
-                            for (int l = 0; l < 32; ++l) {
-                                a[j * 64 + l]      = blk[16 + j * 32 + l] & 0xF;
-                                a[j * 64 + 32 + l] = blk[16 + j * 32 + l] >> 4;
-                            }
-                        }
-                        int32_t scales[8], mins[8];
-                        for (int s = 0; s < 8; ++s) {
-                            if (s < 4) {
-                                scales[s] = blk[4 + s] & 63;
-                                mins[s]   = blk[4 + s + 4] & 63;
-                            } else {
-                                scales[s] = (blk[4 + s + 4] & 0xF) | ((blk[4 + s - 4] >> 6) << 4);
-                                mins[s]   = (blk[4 + s + 4] >> 4) | ((blk[4 + s] >> 6) << 4);
-                            }
-                        }
-                        for (int s = 0; s < 8; ++s) {
-                            const int32_t sc = scales[s];
-                            for (int l = 0; l < 32; ++l)
-                                aux32[l & 7] += sc * (int32_t)q8b[1 + s * 32 + l] * a[s * 32 + l];
-                        }
-                        uint16_t h;
-                        std::memcpy(&h, blk + 0, 2);
-                        const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
-                        std::memcpy(&h, blk + 2, 2);
-                        const float dmin = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
-                        for (int l = 0; l < 8; ++l) sums[l] += d * float(aux32[l]);
-                        int32_t sumi = 0;
-                        for (int j = 0; j < 16; ++j) sumi += (int32_t)q8b[257 + j] * mins[j / 2];
-                        sumf -= dmin * float(sumi);
-                    } else {
-                        // ---- Q6_K ----
-                        // ggml block_q6_K: ql[128] holds the 4-bit values (low
-                        // nibbles of bytes 0..63 for the first 128 values, high
-                        // nibbles of bytes 0..31 for 32..63, low of 32..95 for
-                        // 64..95, high of 32..63 for 96..127), qh[64] holds the
-                        // top two bits of every value (4 values per qh byte at
-                        // shifts 0/2/4/6), scales[16] are one per 16 values, and
-                        // the fp16 scale sits at 208. This mirrors
-                        // ggml_vec_dot_q6_K_q8_K_generic exactly.
-                        //
-                        // The previous per-j nibble/shift mapping sampled the
-                        // wrong bytes for most indices and silently corrupted
-                        // EVERY Q6_K projection (cosine 0.08 against the GPU
-                        // path on blk.0.attn_v.weight), which is what made the
-                        // logits parity gate fail while the kernel was right.
-                        for (int j = 0; j < 256; ++j) a[j] = 0;
-                        for (int j = 0; j < 2; ++j) {          // 128-value halves
-                            const uint8_t* q4 = blk + j * 64;
-                            const uint8_t* qh = blk + 128 + j * 32;
-                            int* ah = a + j * 128;
-                            for (int l = 0; l < 32; ++l) {
-                                ah[l +  0] = (int8_t)((q4[l +  0] & 0xF) | (((qh[l] >> 0) & 3) << 4)) - 32;
-                                ah[l + 32] = (int8_t)((q4[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
-                                ah[l + 64] = (int8_t)((q4[l +  0] >>  4) | (((qh[l] >> 4) & 3) << 4)) - 32;
-                                ah[l + 96] = (int8_t)((q4[l + 32] >>  4) | (((qh[l] >> 6) & 3) << 4)) - 32;
-                            }
-                        }
-                        int32_t scales[16];
-                        for (int s = 0; s < 16; ++s) {
-                            int8_t sc;
-                            std::memcpy(&sc, blk + 192 + s, 1);
-                            scales[s] = sc;
-                        }
-                        for (int s = 0; s < 16; ++s) {
-                            const int32_t sc = scales[s];
-                            for (int l = 0; l < 16; ++l)
-                                aux32[l & 7] += sc * (int32_t)q8b[1 + s * 16 + l] * a[s * 16 + l];
-                        }
-                        uint16_t h;
-                        std::memcpy(&h, blk + 208, 2);
-                        const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(h)) * q8b[0];
-                        for (int l = 0; l < 8; ++l) sums[l] += d * float(aux32[l]);
-                    }
-                }
-                for (int l = 0; l < 8; ++l) sumf += sums[l];
-                return sumf;
+                return KQuantRowDotQ8(kind, row,
+                                       static_cast<const float*>(q8_act), n_in);
             };
 // Build the Q8_K activation in the interleaved layout (per 256 values:
         // d, qs[256], bsums[16] = 273 floats) so the GPU kernel and the CPU
@@ -707,23 +708,28 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         // and subtracts dmin * sumi, so a single whole-block total makes every
         // sub-block but the first use a zero minimum and silently corrupts the
         // min term of the Q4_K reference dot.
+        // Build the Q8_K activation in the interleaved layout (per 256 values:
+        // d, qs[256], bsums[16] = 273 floats) so the GPU kernel and the CPU
+        // reference dot against an identical activation. Without this the
+        // parity gate compares quantised-vs-float and measures activation error.
+        //
+        // bsums[] is the ggml block_q8_K layout: SIXTEEN half-block sums, each
+        // covering 16 activation values, at offsets 257..272. ggml's
+        // ggml_vec_dot_q4_K_q8_K_generic forms
+        //     sumi = sum_j bsums[j] * mins[j/2]
+        // and subtracts dmin * sumi, so a single whole-block total makes every
+        // sub-block but the first use a zero minimum and silently corrupts the
+        // min term of the Q4_K reference dot.
+        //
+        // CHANGED 2026-10-13: replaced the inline quantiser with the shared,
+        // ggml-exact one in src/deep2/Q8KQuant.h. The previous code used unsigned
+        // amax/127 for d, std::lround for the values and no MIN(127,v) clamp,
+        // whereas ggml's quantize_row_q8_K_ref uses the SIGNED extremum
+        // (iscale = -127.f/max, d = 1/iscale), round-half-to-even, and a clamp.
+        // src/deep2/Q8KParity.cpp measures the difference byte-for-byte.
         const size_t n_blk = n_in / 256;
         std::vector<float> q8(n_blk * 273, 0.0f);
-        for (size_t b = 0; b < n_blk; ++b) {
-            float mx = 0.0f;
-            for (size_t i = 0; i < 256; ++i) mx = std::max(mx, std::fabs(x[b * 256 + i]));
-            const float d = mx / 127.0f;
-            const float inv = d > 0.0f ? 1.0f / d : 0.0f;
-            float* blk = q8.data() + b * 273;
-            blk[0] = d;
-            int32_t bsums[16] = {0};
-            for (size_t i = 0; i < 256; ++i) {
-                const int32_t v = (int32_t)std::lround(x[b * 256 + i] * inv);
-                blk[1 + i] = (float)v;
-                bsums[i / 16] += v;
-            }
-            for (size_t k = 0; k < 16; ++k) blk[257 + k] = (float)bsums[k];
-        }
+        BuildInterleavedQ8K(x.data(), n_in, q8.data());
         y.assign(n_out, 0.0f);
         if (std::getenv("QUANT_TRACE")) {
             std::fprintf(stderr, "[quant] w=%s kind=%d n_in=%zu n_out=%zu n_blk=%zu rb=%zu wbytes=%zu need=%zu\n",
@@ -1038,6 +1044,21 @@ double Executor::AttentionScoreScale(size_t headDim, bool yarn) const {
 bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                            const std::vector<float>& k, const std::vector<float>& v,
                            std::vector<float>& y, size_t position, std::string& err) {
+    // Env-gated dump of the POST-PROJECTION Q/K/V for this block. At position
+    // zero attention output == V, so comparing this against the reference's
+    // Q/K/V checkpoints separates weight-read, bias, and input-norm causes:
+    // if V matches here the defect is downstream (expansion/concatenation),
+    // if it differs here the defect is in the projection or its input.
+    if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_QKV")) {
+        char dp[600];
+        std::snprintf(dp, sizeof(dp), "%s.blk%d.qkv.f32", dumpPrefix, (int)in.block);
+        if (std::FILE* df = std::fopen(dp, "wb")) {
+            std::fwrite(q.data(), sizeof(float), q.size(), df);
+            std::fwrite(k.data(), sizeof(float), k.size(), df);
+            std::fwrite(v.data(), sizeof(float), v.size(), df);
+            std::fclose(df);
+        }
+    }
     // Attention covering BOTH families present in the zoo:
     //
     //   DeepSeek MLA: heads=16, q per head = 192 (128 nope + 64 rope),
@@ -1338,6 +1359,19 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float* vp = V.data() + t * vW + g * vPerHead;
             const float s = scores[t];
             for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
+        }
+    }
+
+    // Env-gated dump of the GQA-expanded attention buffer (the pre-O_proj
+    // concat, 1 x H*vPerHead). Comparing this against the reference's
+    // ATTN_VALUE checkpoint isolates head expansion/concatenation defects
+    // from projection defects in one step.
+    if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_ATTN")) {
+        char dp[600];
+        std::snprintf(dp, sizeof(dp), "%s.blk%d.attnvalue.f32", dumpPrefix, (int)in.block);
+        if (std::FILE* df = std::fopen(dp, "wb")) {
+            std::fwrite(y.data(), sizeof(float), y.size(), df);
+            std::fclose(df);
         }
     }
 
@@ -2343,6 +2377,78 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 std::vector<float> y;
                 std::string e;
                 if (!OpLinear(in.b, xi, y, e)) { last_error_ = e; return false; }
+                // ---- attention projection bias: y = W x + b ---------------
+                // Qwen2.5 and friends ship attn_q/k/v.bias tensors (in
+                // qwen2.5-coder-1.5b, blk.0.attn_k.bias alone has L2 ~1237 --
+                // 64x the projection output). The loader records the
+                // model-level has_bias flag, but no executor path consumed it,
+                // so every bias-carrying projection ran bias-free while every
+                // bias-free architecture (llama3.2, deepseek) was unaffected.
+                //
+                // Applied exactly once, here, for every backend: OpLinear
+                // produced the W x term and the add is on the host result, so
+                // the GPU path cannot silently skip it and the CPU path cannot
+                // double-apply it. The bias is decoded through DequantPrefix,
+                // which honours the tensor's ACTUAL type (F32 here, F16 or
+                // quantised elsewhere), never an assumed one.
+                if (spec_.has_bias) {
+                    std::string biasName = in.bName;
+                    const std::string wSuffix = ".weight";
+                    if (biasName.size() > wSuffix.size() &&
+                        biasName.compare(biasName.size() - wSuffix.size(), wSuffix.size(), wSuffix) == 0) {
+                        biasName.replace(biasName.size() - wSuffix.size(), wSuffix.size(), ".bias");
+                    } else {
+                        biasName += ".bias";
+                    }
+                    auto bit = slot_by_name_.find(biasName);
+                    // Fail closed when the model declares this projection must
+                    // carry a bias (the attn_q/k/v family the loader keyed off)
+                    // but the tensor is missing or unresolved.
+                    const bool mustHave = biasName.find(".attn_q.") != std::string::npos ||
+                                          biasName.find(".attn_k.") != std::string::npos ||
+                                          biasName.find(".attn_v.") != std::string::npos;
+                    if (bit != slot_by_name_.end()) {
+                        const TensorRec& bt = tensors_[(size_t)bit->second];
+                        std::vector<float> bv;
+                        const size_t got = DequantPrefix(bt, bv, y.size());
+                        if (got < y.size()) {
+                            last_error_ = "linear: bias '" + biasName + "' decoded " +
+                                          std::to_string(got) + " of " + std::to_string(y.size()) +
+                                          " (type=" + std::to_string((int)bt.ggml_type) +
+                                          ", bytes=" + std::to_string(bt.bytes) + ")";
+                            return false;
+                        }
+                        for (size_t i = 0; i < y.size(); ++i) y[i] += bv[i];
+                    } else if (mustHave) {
+                        last_error_ = "linear: declared bias tensor missing: " + biasName;
+                        return false;
+                    }
+                    // no sibling and no declaration -> bias-free, unchanged
+                }
+                // Env-gated FFN-chain dumps. The Linear op's INPUT for
+                // ffn_gate IS the FFN_NORM output (the norm feeds only the two
+                // projections), so one hook captures NORM/GATE/UP/DOWN and the
+                // decision tree needs no further instrumentation.
+                if (const char* ffnPrefix = std::getenv("DEEP2_DUMP_FFN")) {
+                    auto dumpVec = [&](const std::vector<float>& v, const char* tag) {
+                        char dp[600];
+                        std::snprintf(dp, sizeof(dp), "%s.blk%d.%s.f32", ffnPrefix,
+                                      (int)in.block, tag);
+                        if (std::FILE* df = std::fopen(dp, "wb")) {
+                            std::fwrite(v.data(), sizeof(float), v.size(), df);
+                            std::fclose(df);
+                        }
+                    };
+                    if (in.bName.find("ffn_gate") != std::string::npos) {
+                        dumpVec(xi, "ffn_norm");
+                        dumpVec(y, "ffn_gate");
+                    } else if (in.bName.find("ffn_up") != std::string::npos) {
+                        dumpVec(y, "ffn_up");
+                    } else if (in.bName.find("ffn_down") != std::string::npos) {
+                        dumpVec(xi, "ffn_down_in");
+                        dumpVec(y, "ffn_down");
+                    }
+                }
                 // Attention-output projection witness. The embedding, K, V and
                 // attention output were all verified identical to an
                 // independent implementation, so this is the last stage in the
@@ -2592,6 +2698,21 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 hidden_ = y;
                 const std::string dst = in.outName.empty() ? std::string("swiglu") : in.outName;
                 arena(dst) = y;
+                // Env-gated full-vector dump of the SwiGLU product. The down
+                // projection consumes this; comparing it against
+                // silu(REF_FFN_GATE) * REF_FFN_UP separates a SwiGLU defect
+                // from a down-projection defect. Input-width comparison
+                // (this vector must be all 8,960 intermediate elements) is
+                // included because a truncated input yields a plausible but
+                // wrong down output.
+                if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_FFN")) {
+                    char dp[600];
+                    std::snprintf(dp, sizeof(dp), "%s.blk%d.swiglu.f32", dumpPrefix, (int)in.block);
+                    if (std::FILE* df = std::fopen(dp, "wb")) {
+                        std::fwrite(y.data(), sizeof(float), y.size(), df);
+                        std::fclose(df);
+                    }
+                }
                 break;
             }
             case OpKind::Router: {

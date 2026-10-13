@@ -1,0 +1,61 @@
+# =============================================================================
+# RawrXD agent structured-output grammar (GBNF) — production artifact
+# =============================================================================
+# Purpose: constrain a local model to emit exactly ONE validated action per
+# response. This eliminates the malformed-output class of failure observed in
+# the agent trace (unquoted keys, duplicate keys, unbalanced brackets, tool
+# calls issued after the controller requested a final response, and unrelated
+# prose instead of the action envelope).
+#
+# Why the previous grammar failed
+#   1. Escaping: `"\"action\"\" : \"\"tool\"\"` contained extra quotes and
+#      could not represent valid JSON, so nothing the model produced parsed.
+#   2. `arg ::= [^"]*` forced every argument to a bare string, so a nested
+#      object such as `"args":{"path":"src/agent"}` was unrepresentable.
+#   3. `findings` / `next_actions` were typed as strings instead of arrays.
+#
+# Corrections in this grammar
+#   * Action envelopes are one per response: toolcall OR finalcall.
+#   * `args` is a full JSON `object`, and `value` accepts object/array/
+#     string/number/boolean/null.
+#   * `findings` and `next_actions` are real JSON arrays.
+#   * String content is properly restricted: control characters are excluded
+#     and escapes are validated, rather than the regex-ish `[^"]*` which
+#     permits invalid JSON string content.
+#
+# Load constraints: llama.cpp GBNF syntax. This grammar must be loaded AND
+# enforced by the inference backend for the guarantee to hold.
+#
+# NOTE: this grammar permits arbitrary JSON inside `args` and the arrays, by
+# design. It does NOT enforce key uniqueness, tool-name authorization, or
+# argument schemas. Those are enforced natively by StructuredAction.h after
+# decoding. A syntactically valid response is not necessarily an authorized or
+# semantically valid tool call.
+# =============================================================================
+
+root ::= ws (toolcall | finalcall) ws
+
+toolcall ::= "{" ws "\"action\"" ws ":" ws "\"tool\"" ws "," ws "\"tool\"" ws ":" ws tool ws "," ws "\"args\"" ws ":" ws object ws "}"
+
+finalcall ::= "{" ws "\"action\"" ws ":" ws "\"final\"" ws "," ws "\"summary\"" ws ":" ws string ws "," ws "\"findings\"" ws ":" ws array ws "," ws "\"next_actions\"" ws ":" ws array ws "}"
+
+tool ::= "\"list_repo\"" | "\"read_file\"" | "\"search_text\"" | "\"git_status\"" | "\"write_file\"" | "\"run_build\"" | "\"run_tests\""
+
+object ::= "{" ws (pair (ws "," ws pair)*)? ws "}"
+pair ::= string ws ":" ws value
+
+array ::= "[" ws (value (ws "," ws value)*)? ws "]"
+
+value ::= object | array | string | number | "true" | "false" | "null"
+
+string ::= "\"" chars "\""
+chars ::= char*
+char ::= [^"\\\x00-\x1F] | "\\" (["\\/bfnrt] | "u" hex hex hex hex)
+hex ::= [0-9a-fA-F]
+
+number ::= "-"? int frac? exp?
+int ::= "0" | [1-9] [0-9]*
+frac ::= "." [0-9]+
+exp ::= [eE] [+-]? [0-9]+
+
+ws ::= [ \t\n\r]*

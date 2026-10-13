@@ -1,6 +1,7 @@
 #include "backend/ollama_client.h"
 #include <sstream>
 #include <stdexcept>
+#include <iostream>
 #include <algorithm>
 #include <nlohmann/json.hpp>
 
@@ -165,21 +166,31 @@ std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
 
 OllamaResponse OllamaClient::parseResponse(const std::string& json_str) {
     OllamaResponse resp;
-    
+
     // Production-ready JSON parsing with nlohmann/json
     try {
         json j = json::parse(json_str);
-        
+
         // Extract response fields with safe access
         resp.model = j.value("model", std::string());
         resp.response = j.value("response", std::string());
         resp.done = j.value("done", false);
-        
+        resp.done_reason = j.value("done_reason", std::string());
+
+        // Chat-mode fields (used by /api/chat)
+        if (j.contains("message")) {
+            const auto& msg = j["message"];
+            resp.message = msg.value("content", std::string());
+            if (msg.contains("tool_calls")) {
+                resp.tool_calls = msg["tool_calls"];
+            }
+        }
+
         // Extract performance metrics
         resp.total_duration = j.value("total_duration", uint64_t(0));
         resp.prompt_eval_count = j.value("prompt_eval_count", uint64_t(0));
         resp.eval_count = j.value("eval_count", uint64_t(0));
-        
+
         // Extract optional fields
         if (j.contains("load_duration")) {
             resp.load_duration = j["load_duration"].get<uint64_t>();
@@ -190,13 +201,13 @@ OllamaResponse OllamaClient::parseResponse(const std::string& json_str) {
         if (j.contains("eval_duration")) {
             resp.eval_duration = j["eval_duration"].get<uint64_t>();
         }
-        
+
     } catch (const json::exception& e) {
         // Log parsing error and return partial response
         std::cerr << "JSON parsing error in parseResponse: " << e.what() << std::endl;
         // resp already initialized with defaults
     }
-    
+
     return resp;
 }
 
@@ -386,6 +397,31 @@ bool OllamaClient::makeStreamingPostRequest(const std::string& endpoint,
 #else
 // Linux/Mac implementation would use libcurl here
 #endif
+
+// ---------------------------------------------------------------------------
+// OllamaResponse factory methods
+// ---------------------------------------------------------------------------
+static OllamaResponse MakeOkResponse(const std::string& text, uint64_t ptok, uint64_t ctok) {
+    OllamaResponse r;
+    r.model = "ollama";
+    r.response = text;
+    r.message = text;
+    r.done = true;
+    r.done_reason = "stop";
+    r.prompt_eval_count = ptok;
+    r.eval_count = ctok;
+    return r;
+}
+
+static OllamaResponse MakeErrorResponse(const std::string& msg) {
+    OllamaResponse r;
+    r.done = true;
+    r.done_reason = "error";
+    // Encode error in the response field so callers that only inspect
+    // .response still see a distinguishable failure marker.
+    r.response = "[ERROR] " + msg;
+    return r;
+}
 
 } // namespace Backend
 } // namespace RawrXD

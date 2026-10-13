@@ -3062,6 +3062,116 @@ if(RAWRXD_BUILD_TESTS)
 endif()
 
 # ============================================================================
+# RawrXD Agentic Backend Library (Deep2 + Ollama unified inference)
+# ============================================================================
+# Dependency-free C++20 static library providing:
+#   - InferenceBackend abstraction (Deep2 primary, Ollama backup)
+#   - BackendRouter with auto/deep2/ollama/manual selection + failover
+#   - ToolCallBridge (shared tool registry for both backends)
+#   - PersistentTaskBacklog (durable task state)
+#   - SelfRepairLoop (autonomous compile/test/diagnose/repair/rollback)
+# No Qt dependency. Uses WinHTTP on Windows for HTTP transport.
+#
+add_library(rawrxd_agentic_backend STATIC
+    src/agentic/OllamaBackend.cpp
+    src/agentic/Deep2Backend.cpp
+    src/agentic/BackendRouter.cpp
+    src/agentic/PersistentTaskBacklog.cpp
+    src/agentic/SelfRepairLoop.cpp
+    src/agentic/AgentMode.cpp
+    src/agentic/AgentSession.cpp
+    src/agentic/WorkspaceToolHost.cpp
+    src/agentic/StructuredAction.cpp
+    src/agentic/RawrSwarmEvents.cpp
+    src/agentic/RawrLiveTools.cpp
+    src/backend/ollama_client.cpp
+)
+target_include_directories(rawrxd_agentic_backend PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+)
+target_link_libraries(rawrxd_agentic_backend PUBLIC
+    nlohmann_json::nlohmann_json
+)
+if(MSVC)
+    target_compile_options(rawrxd_agentic_backend PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(rawrxd_agentic_backend PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    target_link_libraries(rawrxd_agentic_backend PUBLIC winhttp)
+else()
+    target_compile_options(rawrxd_agentic_backend PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    find_package(Threads REQUIRED)
+    target_link_libraries(rawrxd_agentic_backend PUBLIC Threads::Threads)
+endif()
+    message(STATUS "rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled")
+
+# ============================================================================
+# Q8_K activation parity harness
+# ============================================================================
+# Proves that Deep2's Q8_K activation preparation is byte-identical to the
+# authoritative ggml reference (3rdparty/ggml/src/ggml-quants.c:2555)
+# across zero blocks, signed extrema, rounding ties, saturation and partial
+# super-blocks. This is the gate for the DeepSeek 67-position parity run.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
+    add_executable(q8k_parity_tool src/deep2/q8k_parity_tool.cpp
+                                 src/deep2/Q8KParity.cpp)
+    add_executable(q8k_edge_tests src/deep2/q8k_parity_edge_tests.cpp
+                               src/deep2/Q8KParity.cpp)
+    foreach(tgt q8k_parity_tool q8k_edge_tests)
+        target_include_directories(${tgt} PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/deep2
+            ${CMAKE_SOURCE_DIR}/include)
+        target_compile_features(${tgt} PRIVATE cxx_std_20)
+        target_compile_options(${tgt} PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+        target_compile_definitions(${tgt} PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    endforeach()
+    set_target_properties(q8k_parity_tool q8k_edge_tests PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME q8k_edge_tests COMMAND q8k_edge_tests)
+    message(STATUS "q8k parity harness: Q8_K byte-level verification targets enabled")
+endif()
+
+# ============================================================================
+# Unified RawrXD CLI (first-class CLI replacing rawrxd_cli.cpp)
+# ============================================================================
+# Exposes all RawrXD capabilities via CLI: model management, chat, agent,
+# build, test, parity, git, and autonomous development. No Qt dependency.
+#
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
+    add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp)
+    target_link_libraries(RawrXD-CLI-V2 PRIVATE
+        rawrxd_agentic_backend
+        nlohmann_json::nlohmann_json
+        ws2_32
+        winmm
+    )
+    if(Vulkan_FOUND)
+        target_link_libraries(RawrXD-CLI-V2 PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml_interface)
+        target_link_libraries(RawrXD-CLI-V2 PRIVATE ggml_interface)
+    endif()
+    target_include_directories(RawrXD-CLI-V2 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    target_compile_options(RawrXD-CLI-V2 PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(RawrXD-CLI-V2 PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(RawrXD-CLI-V2 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}"
+        OUTPUT_NAME "rawr"
+    )
+    message(STATUS "RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)")
+else()
+    list(APPEND RAWRXD_QT_TARGETS RawrXD-CLI-V2)
+    message(STATUS "RawrXD-CLI-V2 EXCLUDED: src/rawrxd_cli_v2.cpp not present in this tree")
+endif()
+
+# ============================================================================
 # Final Project Summary
 # ============================================================================
 message(STATUS "========================================")
