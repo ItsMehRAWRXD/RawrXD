@@ -78,3 +78,23 @@ be marked PASS.
 
     src\build_rawr.bat
     .\bin\rawr.exe ask "read the file README_PRODUCTION.md and report its first line" --json
+
+## Verified gate results (frozen baseline, binary from committed bytes)
+
+Baselines on `origin/local-30b-backend`:
+- `bcb7c60ae` checkpoint freeze (host-verified evidence contract; index tree c2df5e39cd compiled RC=0)
+- `7e19c58c9` logLine stderr routing (pure `--json` stdout)
+
+| Gate                | Result | Evidence (frozen binary, 3B Q2_K backend) |
+|---------------------|--------|------------------------------------------|
+| Reproducible build  | PASS   | `git archive <commit>` + cl -> RC=0; binary SHA recorded |
+| type_error.306      | PASS   | EXIT 0 across number/null/malformed replies |
+| H2 receipt counting | PASS   | `tools_executed` counts only `ActionStatus::Executed` |
+| H1 evidence routing | PASS   | README_READ -> "I could not verify ... any content I offered would be invented"; tools_executed=0, no fabricated first line |
+| H4 no-tools enforce | PASS   | spoof -> tools_executed=0, receipts=[], grounded=false; forged `[tool-receipt]` has no authority; host logged "tool execution refused by host policy" |
+| --json purity       | PASS   | `logLine()` now `fprintf(stderr,...)`; stdout is pure JSON (ConvertFrom-Json OK) |
+| H3 breaker          | OPEN   | duplicate proposals must terminate the loop at host level (file under active edit) |
+| H5 source scope     | OPEN   | exclude `.archive`/`.log`, drop `.json`/`.md` from default code-scope; `all=true` must remain gated by host authorization policy, not just isExcludedFromWalk |
+
+Release gate still requires H3 + H5 to pass from the same frozen revision before RAWRXD_UNIVERSAL_AGENT_001 can be marked complete.
+
