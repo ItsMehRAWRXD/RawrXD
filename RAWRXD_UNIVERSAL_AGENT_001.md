@@ -34,6 +34,10 @@ controller (`src/rawr_cli.cpp` + `src/rawr_core.cpp` + `src/rawr_core.hpp` +
 2. Bounded injected history: `buildUniversalPrompt` now injects only the most
    recent 8 turns (truncated to 600 chars each) instead of the entire
    `evidence/agent_memory.jsonl`, stopping small-model regurgitation.
+3. Host-authoritative `tools_executed` (H2): `cmdAsk` counts only receipts the
+   executor actually ran (`ActionStatus::Executed`); model-`Proposed` calls are
+   reported but never counted, and plain output lists only real executions
+   (with a "N proposed call(s) suppressed" line). Fixes the spoof "14 vs 1 real".
 
 ## Acceptance matrix (this report is the record)
 

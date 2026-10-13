@@ -729,7 +729,13 @@ static int cmdAsk(const std::vector<std::string>& args) {
         j["answer"] = r.text;
         j["grounded_in_executed_tool"] = r.answerIsGrounded;
         j["context_facts_used"] = static_cast<int>(q.context.size());
-        j["tools_executed"] = static_cast<int>(r.receipts.size());
+        // Host-authoritative counting: only receipts the executor actually ran
+        // count. Model-proposed (never executed) receipts are reported for
+        // transparency but NEVER contribute to tools_executed.
+        int executedCount = 0;
+        for (const auto& t : r.receipts)
+            if (t.status == ActionStatus::Executed) ++executedCount;
+        j["tools_executed"] = executedCount;
         json truns = json::array();
         for (const auto& t : r.receipts) {
             json e;
@@ -759,11 +765,22 @@ static int cmdAsk(const std::vector<std::string>& args) {
         out("\n(context: " + std::to_string(selected.size()) +
             " relevant fact(s) recovered from memory)");
     }
-    if (!r.receipts.empty()) {
-        out("\n(tools actually executed: " + std::to_string(r.receipts.size()) + ")");
-        for (const auto& t : r.receipts)
+    // Host-authoritative disclosure: only executions count; proposals never do.
+    int executedCount = 0;
+    for (const auto& t : r.receipts)
+        if (t.status == ActionStatus::Executed) ++executedCount;
+    if (executedCount > 0) {
+        out("\n(tools actually executed: " + std::to_string(executedCount) + ")");
+        for (const auto& t : r.receipts) {
+            if (t.status != ActionStatus::Executed) continue;
             out("  " + std::string(t.ok ? "[executed] " : "[FAILED]   ") + t.toolName +
                 " " + t.arguments);
+        }
+        const int suppressed =
+            static_cast<int>(r.receipts.size()) - executedCount;
+        if (suppressed > 0)
+            out("  (" + std::to_string(suppressed) +
+                " proposed call(s) suppressed; not executed, not counted)");
     } else {
         out("\n(no tools were executed; this answer is not evidence-backed)");
     }
