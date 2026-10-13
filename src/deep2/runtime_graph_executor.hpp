@@ -106,6 +106,18 @@ public:
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);
 
+    // RAWRXD_DEEP2_D1_BATCHED_PREFILL: multi-token prefill. Ops run
+    // op-major / token-minor: every Linear op queues one dot PER TOKEN into a
+    // single submission (P dots, one command buffer, one fence for a whole
+    // same-input projection group), while attention, MoE, SSM and norms run
+    // per token in causal order so the KV cache and recurrent state are
+    // byte-identical to the serial ExecuteToken path. After the call,
+    // Logits() holds the LAST token's logits exactly as ExecuteToken would
+    // have produced them, and hidden_ is that token's final hidden state, so
+    // generation continues with plain ExecuteToken. Opt-in; the serial path
+    // is untouched. Returns false with LastError() set on any failure.
+    bool PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos);
+
     const std::vector<float>& Logits() const { return logits_; }
     size_t Position() const { return position_; }
     bool Ok() const { return bound_ && !last_error_.empty() == false; }

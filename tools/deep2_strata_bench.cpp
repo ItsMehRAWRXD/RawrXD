@@ -340,11 +340,15 @@ int main(int argc, char* argv[])
     bool strata_prefetch = false;
     int cache_policy = 0;        // 0 = LRU baseline, 1 = hotness (STRATA_S08)
     int device_pin = -1;         // STRATA_S05: Vulkan device index (-1 = auto)
+    bool prefill_batch = false;  // STRATA_D1: multi-token batched prefill
+    std::string logits_path;     // D1: dump this run's final logits
+    std::string logits_ref;      // D1: compare against a reference dump
     bool int8kv = false;         // STRATA_S06: INT8 KV storage tier
     int kv_selftest = 0;         // STRATA_S06: synthetic Q8_0 round-trip test
     long long kv_context = 0;    // STRATA_S11: long-context KV store test
     int spec_generate = 0;       // STRATA_S07: speculative decode token budget
     int draft_k = 4;             // STRATA_S07: maximum draft length per chain
+    std::vector<std::string> prompt_ids;  // explicit prompt token ids
     int draft_min_ngram = 3;     // preserve the original lookup rule by default
     int spec_trace_chains = 1;   // record the first chain; 0 records all chains
     double baseline_tps_in = 0;  // STRATA_S07: plain-decode TPS for speedup math
@@ -381,7 +385,21 @@ int main(int argc, char* argv[])
             kv_context = std::atoll(argv[++i]);  // STRATA_S11: long-context KV
         else if (a == "--spec" && i + 1 < argc)
             spec_generate = std::atoi(argv[++i]); // STRATA_S07: speculative budget
-        else if (a == "--draft-k" && i + 1 < argc)
+        else if (a == "--tokens" && i + 1 < argc)
+    {
+        // Space-separated (or comma-separated) token id list.
+        const std::string all = argv[++i];
+        std::string cur;
+        for (char c : all) {
+            if (c == ' ' || c == ',') {
+                if (!cur.empty()) { prompt_ids.push_back(cur); cur.clear(); }
+            } else {
+                cur += c;
+            }
+        }
+        if (!cur.empty()) prompt_ids.push_back(cur);
+    }
+    else if (a == "--draft-k" && i + 1 < argc)
             draft_k = std::atoi(argv[++i]);       // STRATA_S07: max draft length
         else if (a == "--draft-min-ngram" && i + 1 < argc)
             draft_min_ngram = std::atoi(argv[++i]);
@@ -393,6 +411,12 @@ int main(int argc, char* argv[])
             repeat_prompt = true;                 // STRATA_S07: copy workload
         else if (a == "--device" && i + 1 < argc)
             device_pin = std::atoi(argv[++i]);    // STRATA_S05: pin GPU device
+        else if (a == "--prefill-batch")
+            prefill_batch = true;                 // STRATA_D1: batched prefill
+        else if (a == "--dump-logits" && i + 1 < argc)
+            logits_path = argv[++i];              // D1: write final logits
+        else if (a == "--compare-logits" && i + 1 < argc)
+            logits_ref = argv[++i];               // D1: full-logit parity check
     }
     if (draft_min_ngram < 1 || draft_min_ngram > 16 || spec_trace_chains < 0) {
         std::fprintf(stderr, "invalid draft minimum or trace-chain limit\n");
@@ -585,12 +609,19 @@ int main(int argc, char* argv[])
 
     // ---- prefill phase -----------------------------------------------------
     const auto pf_t0 = std::chrono::steady_clock::now();
-    for (size_t pos = 0; pos < prompt.size(); ++pos)
-    {
-        if (!ex.ExecuteToken(prompt[pos], pos) || ex.NonFiniteLogits() != 0)
-        {
-            std::printf("PREFILL_FAIL pos=%zu err=%s\n", pos, ex.LastError().c_str());
+    if (prefill_batch) {
+        // STRATA_D1: one batched pass (one submission per projection group)
+        // instead of P serial ExecuteToken calls.
+        if (!ex.PrefillBatch(prompt, 0)) {
+            std::printf("PREFILL_BATCH_FAIL: %s\n", ex.LastError().c_str());
             return 1;
+        }
+    } else {
+        for (size_t pos = 0; pos < prompt.size(); ++pos) {
+            if (!ex.ExecuteToken(prompt[pos], pos)) {
+                std::printf("PREFILL_FAIL pos=%zu err=%s\n", pos, ex.LastError().c_str());
+                return 1;
+            }
         }
     }
     const double prefill_ms = MsSince(pf_t0);
@@ -812,6 +843,58 @@ int main(int argc, char* argv[])
     for (uint32_t t : gen_ids)
         std::printf(" %u", t);
     std::printf("\n");
+
+    // ---- STRATA_D1: full-logit parity evidence ------------------------------
+    // Dumps this run's post-prefill logits and/or compares them against a
+    // reference dump (serial prefill) with max-abs error, cosine similarity
+    // and argmax agreement over the FULL vocabulary - the D1 gate requires
+    // batched-vs-serial full-logit parity, not an argmax match.
+    const std::vector<float>& final_logits = ex.Logits();
+    if (!logits_path.empty()) {
+        if (std::FILE* lf = std::fopen(logits_path.c_str(), "wb")) {
+            const uint32_t n = (uint32_t)final_logits.size();
+            std::fwrite(&n, sizeof(n), 1, lf);
+            std::fwrite(final_logits.data(), sizeof(float), final_logits.size(), lf);
+            std::fclose(lf);
+            std::printf("D1_LOGITS_DUMP %s (%zu values)\n", logits_path.c_str(), final_logits.size());
+        } else {
+            std::printf("D1_LOGITS_DUMP_FAIL %s\n", logits_path.c_str());
+        }
+    }
+    if (!logits_ref.empty()) {
+        std::vector<float> ref;
+        bool loaded = false;
+        if (std::FILE* lf = std::fopen(logits_ref.c_str(), "rb")) {
+            uint32_t n = 0;
+            if (std::fread(&n, sizeof(n), 1, lf) == 1) {
+                ref.resize(n);
+                loaded = std::fread(ref.data(), sizeof(float), n, lf) == n;
+            }
+            std::fclose(lf);
+        }
+        if (!loaded || ref.size() != final_logits.size()) {
+            std::printf("D1_LOGITS_PARITY FAIL (reference missing or size mismatch: %zu vs %zu)\n",
+                        ref.size(), final_logits.size());
+        } else {
+            double max_abs = 0.0, dot = 0.0, na = 0.0, nb = 0.0;
+            uint32_t am_ref = 0, am_run = 0;
+            for (size_t i = 0; i < ref.size(); ++i) {
+                const double d = std::fabs((double)ref[i] - (double)final_logits[i]);
+                if (d > max_abs) max_abs = d;
+                dot += (double)ref[i] * (double)final_logits[i];
+                na += (double)ref[i] * (double)ref[i];
+                nb += (double)final_logits[i] * (double)final_logits[i];
+                if (ref[i] > ref[am_ref]) am_ref = (uint32_t)i;
+                if (final_logits[i] > final_logits[am_run]) am_run = (uint32_t)i;
+            }
+            const bool argmax_agree = (am_ref == am_run);
+            const double cosine = (na > 0 && nb > 0) ? dot / (std::sqrt(na) * std::sqrt(nb)) : 0.0;
+            const bool bit_exact = (max_abs == 0.0);
+            std::printf("D1_LOGITS_PARITY %s max_abs_err=%.9g cosine=%.9f argmax_agree=%s n=%zu\n",
+                        bit_exact ? "BIT_EXACT" : (max_abs < 1e-4 ? "WITHIN_TOLERANCE" : "DIVERGENT"),
+                        max_abs, cosine, argmax_agree ? "yes" : "no", ref.size());
+        }
+    }
     // ---- RAWRXD_DEEP2_STRATA_S01/S02/S04/S08/S09: residency + backend receipt
     const QuantDot::CacheStats cs = QuantDot::GetCacheStats();
     std::printf("S02_VRAM_CACHE hits=%llu misses=%llu evictions=%llu prefetches=%llu prefetch_hits=%llu "

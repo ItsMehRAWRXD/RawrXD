@@ -61,15 +61,54 @@ State taken from `evidence/GAP_AUDIT_2026-10-13/` and this session's re-verifica
 - D8 `RR_WEIGHT_CACHE_POLICY=hotness` measured worse than LRU on DeepSeek-V2-Lite routing; kept as opt-in, default LRU.
 - D9 Build-tree contention: concurrent sessions and CCleaner intermittently lock `tools\*.exe`/obj targets (LNK1104); retry builds rather than assuming failure.
 
-## 4. Session commits
+## 3. D1 / D2 execution — 2026-10-13 (verified)
+
+### D2 — dependency-correct GPU submission batching: **VERIFIED**
+
+A/B on tinyllama Q4_K_M, R9700, identical workload (prefill 32 / generate 24), batching default-on vs `DEEP2_NO_DOT_BATCH=1`:
+
+| Config | submits | waits | kernel_ms | decode TPS | TOKSTREAM |
+|--------|---------|-------|-----------|------------|-----------|
+| batching ON (default) | 5,139 | 5,139 | 13,635.5 | **3.53** | identical |
+| batching OFF | 8,835 | 8,835 | 38,147.4 | 1.50 | identical |
+
+**41.8% fewer submissions and fences, 2.35× decode throughput, zero numerical change.** Receipts: `strata_bench_d2_batch_on.json`, `strata_bench_d2_batch_off.json`.
+
+### D1 — multi-token batched prefill: **VERIFIED (correctness) / per-architecture speedup**
+
+New `Executor::PrefillBatch(tokens, startPos)` (`runtime_graph_executor.cpp`): op-major/token-minor; each Linear op queues one dot per token into one submission (chunked at `QuantDot::BatchCapacity()`=32 dots); attention/MoE/SSM/norms run per token in causal order via the same kernels as `ExecuteToken`. Opt-in; serial path untouched.
+
+| Model | Prefill TPS serial → batched | Full-logit parity | Decode stream |
+|-------|------------------------------|-------------------|---------------|
+| tinyllama Q4_K_M (dense) | 1.95 → **3.53 (1.85×)** | **BIT_EXACT** (32,000 logits, max_abs=0, cos=1.0) | identical |
+| DeepSeek-V2-Lite Q4_K_M (MoE/MLA) | 0.53 → 0.55 (neutral) | **BIT_EXACT** (102,400 logits, max_abs=0, cos=1.0) | identical |
+
+MoE neutrality explained: its decode cost is the per-token expert compute (18 expert dots/token/block), which this change does not batch across tokens; projection submissions were not the bottleneck there. Cross-token expert batching is tracked as **D10**.
+
+### Defects found and fixed during D1
+
+- **D11 (fixed):** batch CPU-replay invoked a capture-by-reference `CpuDot` lambda after its stack frame returned (use-after-return, access violation on any EndBatch failure). All queued closures now capture by value (`runtime_graph_executor.cpp`: OpLinear k-quant path, MoE up/gate/down banks).
+- **D12 (fixed):** `kQuantBatchMaxSets=32` device ring capacity was not exposed; a 48-dot prefill batch failed closed and (via D11) crashed. `QuantDot::BatchCapacity()` added; `PrefillBatch` chunks at the capacity.
+- **D9 (standing):** concurrent sessions/CCleaner intermittently lock build outputs (LNK1104); retry.
+
+## 4. Gates 16–18 read-only audit (independent worker, 2026-10-13)
+
+- **Gate 16 — FAIL:** advertised native compiler/linker sources absent; `rawrxd.exe`, `rawrxd_compiler_qt`, MASM suite excluded from CMake; `MedusaDecoder.cpp` missing (d2.exe will not link); `Win32IDE-Native` fails to compile at `Win32IDE.cpp:5247-5248` (C2679); no build+link+run exit codes on record.
+- **Gate 17 — NOT VERIFIED:** Qt IDE surfaces excluded ("Qt6 not found"); native IDE unbuilding; `RawrXD-IDE` CMake target behind `if(FALSE)`; pervasive `placeholder`/`TODO` markers; the lone smoke test drives dead `.obj`s; no end-to-end launch→edit→build→run session.
+- **Gate 18 — PARTIAL:** `ToolAuthority`/`PermissionGate` in `src/agentic/AgentMode.{h,cpp}` is real and enforced by the live `rawr` CLI (`rawrxd_cli_v2.cpp:307-309`); verifiable execution receipts exist only as orphaned scaffolding in `tools/native_batches/*` (no CMake target, no `ExecutionReceipt` symbol under `src/`); live evidence is log/JSON-only; the E2E evidence path references the non-existent `build_gate4`.
+
+Ownership assigned to the IDE worker; inference-owned files (D1 executor, D2 Vulkan/quant-dot) are off-limits to that worker.
+
+## 5. Session commits
 
 - `ce8ee05cd4` fix(deep2): remove duplicate ssmConvState/MLA declarations (C2365) — pushed
 - Strata program commit (this session's source + evidence): see `git log` after commit of this ledger
 
 ## 5. Next dependencies (in order)
 
-1. D1 batched prefill in the executor → unblocks S07 speedup measurement, S11 model-level context, and the largest S12 gain.
-2. D2 dependency-correct command batching across the dense path → next-largest S12 gain.
+1. D1 follow-up (D10): cross-token expert batching inside OpMoEExecute for MoE prefill speedup (parity gate: BIT_EXACT vs serial).
+2. D2 follow-up: extend same-submission grouping beyond q/k/v (dense FFN up/gate pairs, output projections) and measure submits/token.
 3. Gate 5 closure: full-logit llama.cpp reference parity at many positions.
 4. D3 concurrent multi-GPU scheduling for Gate 10.
-5. IDE/audit features (Gates 16–18) once the inference core is stable.
+5. Gates 16–18 per the audit above (IDE worker scope).
+6. Gate 11 (DeepSeek 671B) needs weights not present on disk; Gate 15/17/19/20 depend on 11–14.

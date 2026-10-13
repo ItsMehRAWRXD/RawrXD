@@ -789,10 +789,14 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         // (KQuantRowDotQ8 above) so the two cannot drift apart: DeepSeek's
         // expert FFN path previously used the float-dot variant, which is what
         // left its teacher-forced gate at 0.03-0.11 relative logit error.
+        // CRITICAL: this closure is STORED into the quant-dot batch and may be
+        // invoked at EndBatch time (the fail-closed CPU replay runs after this
+        // stack frame is gone), so it captures by VALUE. A by-reference capture
+        // is a use-after-return that only fires on the failure path.
         QuantDot::CpuDot cpu =
-            [&](const uint8_t* row, const void* q8_act, size_t) -> float {
+            [kind, n_in](const uint8_t* row, const void* q8_act, size_t) -> float {
                 return KQuantRowDotQ8(kind, row,
-                                       static_cast<const float*>(q8_act), n_in);
+                                      static_cast<const float*>(q8_act), n_in);
             };
 // Build the Q8_K activation in the interleaved layout (per 256 values:
         // d, qs[256], bsums[16] = 273 floats) so the GPU kernel and the CPU
@@ -2173,11 +2177,13 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         if (ex >= usableE) continue;
         if (!upGpuShape) continue;
         float* out = &uAll[e * ffn];
-        if (batchUp) {
-            // Queued: DotBlocked defers to the batch's single submission.
-            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
-                return RowDotInterleavedQ8(uKind, row, static_cast<const float*>(q8_act), uIn);
-            };
+          if (batchUp) {
+              // Queued: DotBlocked defers to the batch's single submission.
+              // Capture by VALUE: the batch may invoke this closure after this
+              // frame returns (fail-closed CPU replay).
+              QuantDot::CpuDot cpu = [uKind, uIn](const uint8_t* row, const void* q8_act, size_t) -> float {
+                  return RowDotInterleavedQ8(uKind, row, static_cast<const float*>(q8_act), uIn);
+              };
             const size_t row_bytes = QuantRowBytes(uKind, uIn);
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(upT->data) +
                                     ex * ulen * row_bytes;
@@ -2236,9 +2242,9 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             float* out = &gAll[e * ffn];
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(gateT->data) +
                                     ex * glen * gRowBytes;
-            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
-                return RowDotInterleavedQ8(gKind, row, static_cast<const float*>(q8_act), gIn);
-            };
+              QuantDot::CpuDot cpu = [gKind, gIn](const uint8_t* row, const void* q8_act, size_t) -> float {
+                  return RowDotInterleavedQ8(gKind, row, static_cast<const float*>(q8_act), gIn);
+              };
             if (batchGate) {
                 const bool queued = QuantDot::DotBlocked(gKind, packed, gRowBytes * glen, x.data(),
                                                          gIn, out, glen, cpu, q8up.data(),
@@ -2357,9 +2363,9 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             float* out = &dyAll[e * embd];
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(downT->data) +
                                     ex * olen * downRowBytes;
-            QuantDot::CpuDot cpu = [&](const uint8_t* row, const void* q8_act, size_t) -> float {
-                return RowDotInterleavedQ8(dKind, row, static_cast<const float*>(q8_act), dIn);
-            };
+              QuantDot::CpuDot cpu = [dKind, dIn](const uint8_t* row, const void* q8_act, size_t) -> float {
+                  return RowDotInterleavedQ8(dKind, row, static_cast<const float*>(q8_act), dIn);
+              };
             if (batchDown) {
                 // Queued: the second batch's single submission runs it.
                 const bool queued = QuantDot::DotBlocked(dKind, packed, downRowBytes * olen,
@@ -2529,6 +2535,511 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
 // ---------------------------------------------------------------------------
 // Execute one token
 // ---------------------------------------------------------------------------
+// ============================================================================
+// RAWRXD_DEEP2_D1_BATCHED_PREFILL
+// ============================================================================
+// Multi-token prefill: ops run op-major, tokens minor. For each Linear op the
+// per-token dots are QUEUED into one quant-dot batch (P dots, one command
+// buffer, one fence per same-input projection group) instead of P serial
+// submit+fence cycles. Every other op runs per token in causal order using the
+// SAME kernels as ExecuteToken (OpRmsNorm/OpAttention/OpMoEExecute/...), so
+// the KV cache and any recurrent state are written in exactly the serial
+// order and the numerics are the serial numerics. Attention-projection bias
+// (has_bias models) is applied on the host after the group's EndBatch, the
+// same rule the serial path uses for its queued dots. LmHead runs for the
+// last token only, leaving Logits() identical to the serial path's.
+//
+// Correctness is gated by parity: D1 is only counted once batched and serial
+// prefill produce identical full logits and identical follow-on decode.
+// ============================================================================
+bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos)
+{
+    const size_t P = tokens.size();
+    if (P == 0) {
+        last_error_ = "prefill-batch: empty token list";
+        return false;
+    }
+    if (force_cpu_) {
+        // The CPU path already has no submission overhead to remove; refuse
+        // rather than pretend (the serial path stays the CPU reference).
+        last_error_ = "prefill-batch: force_cpu pinned; use ExecuteToken";
+        return false;
+    }
+
+    const int32_t embSlot = slot_by_name_["token_embd.weight"];
+    if (embSlot < 0) {
+        last_error_ = "prefill-batch: no embedding tensor bound";
+        return false;
+    }
+
+    // Per-token state, keyed exactly like ExecuteToken's hidden_/act pair.
+    struct TokState {
+        std::vector<float> hidden;
+        std::map<std::string, std::vector<float>> act;
+    };
+    std::vector<TokState> ts(P);
+    auto findAct = [&](size_t t, const std::string& n) -> const std::vector<float>* {
+        auto it = ts[t].act.find(n);
+        return it == ts[t].act.end() ? nullptr : &it->second;
+    };
+    auto resolveIn = [&](size_t t, const Instr& i, bool& ok) -> const std::vector<float>& {
+        ok = true;
+        if (!i.aName.empty() && i.aName[0] != '<' && i.op != OpKind::MlaDecompress) {
+            const std::vector<float>* p = findAct(t, i.aName);
+            if (!p) {
+                ok = false;
+                last_error_ = "prefill-batch: named operand absent: " + i.aName;
+                static const std::vector<float> empty_vec;
+                return empty_vec;
+            }
+            return *p;
+        }
+        return ts[t].hidden;
+    };
+
+    // Pending host-side bias applications, drained after each group's flush.
+    struct PendingBias {
+        size_t token;
+        std::string outName;
+        std::string biasName;
+        bool must_have;
+    };
+    std::vector<PendingBias> pending_bias;
+    // Per-token routing decisions, carried between the Router and MoEExecute
+    // program ops exactly as the serial path carries them in loop state.
+    std::vector<std::vector<uint32_t>> router_ids;
+    std::vector<std::vector<float>> router_w;
+    auto drainBias = [&]() -> bool {
+        for (const PendingBias& pb : pending_bias) {
+            std::vector<float>& y = ts[pb.token].act[pb.outName];
+            auto bit = slot_by_name_.find(pb.biasName);
+            if (bit != slot_by_name_.end()) {
+                const TensorRec& bt = tensors_[(size_t)bit->second];
+                std::vector<float> bv;
+                const size_t got = DequantPrefix(bt, bv, y.size());
+                if (got < y.size()) {
+                    last_error_ = "prefill-batch: bias '" + pb.biasName + "' decoded " +
+                                  std::to_string(got) + " of " + std::to_string(y.size());
+                    return false;
+                }
+                for (size_t i = 0; i < y.size(); ++i) y[i] += bv[i];
+            } else if (pb.must_have) {
+                last_error_ = "prefill-batch: declared bias tensor missing: " + pb.biasName;
+                return false;
+            }
+        }
+        pending_bias.clear();
+        return true;
+    };
+
+    bool batch_open = false;
+    size_t batch_dots = 0;
+    std::string batch_input;
+    std::string group_last_out;
+    auto flushGroup = [&]() -> bool {
+        if (!batch_open) return true;
+        batch_open = false;
+        batch_dots = 0;
+        const bool ok = QuantDot::EndBatch();
+        if (!ok) {
+            last_error_ = "prefill-batch: dot batch submission failed";
+            return false;
+        }
+        if (!drainBias()) return false;
+        // Mirror the serial path's flush_group: the group's last output
+        // becomes each token's hidden carrier.
+        if (!group_last_out.empty()) {
+            for (size_t t = 0; t < P; ++t) {
+                auto it = ts[t].act.find(group_last_out);
+                if (it != ts[t].act.end())
+                    ts[t].hidden = it->second;
+            }
+            group_last_out.clear();
+        }
+        return true;
+    };
+
+    logits_.clear();
+    nonfinite_logits_ = 0;
+
+    for (size_t pc = 0; pc < program_.size(); ++pc) {
+        const Instr& in = program_[pc];
+        if (std::getenv("D1_TRACE")) {
+            std::fprintf(stderr, "[d1] pc=%zu/%zu op=%d blk=%d a='%s' b='%s' out='%s'\n",
+                         pc, program_.size(), (int)in.op, (int)in.block,
+                         in.aName.c_str(), in.bName.c_str(), in.outName.c_str());
+            std::fflush(stderr);
+        }
+
+        // ---- Linear: queue one dot per token into the group's batch --------
+        if (in.op == OpKind::Linear) {
+            const size_t cap = QuantDot::BatchCapacity();
+            const bool same_group = batch_open && in.aName == batch_input &&
+                                    !in.outName.empty() && in.outName != in.aName;
+            if (batch_open && !same_group) {
+                if (!flushGroup()) return false;
+            }
+            if (!batch_open) {
+                if (!QuantDot::BeginBatch()) {
+                    last_error_ = "prefill-batch: BeginBatch failed";
+                    return false;
+                }
+                batch_open = true;
+                batch_input = in.aName;
+                batch_dots = 0;
+            }
+            const std::string linSlot = in.outName.empty() ? std::string("lin") : in.outName;
+            group_last_out = linSlot;
+            for (size_t t = 0; t < P; ++t) {
+                // D1 batching contract: one batch holds at most BatchCapacity
+                // dots (the descriptor ring). Exceeding it makes EndBatch fail
+                // closed, so a large prefill chunks across several submissions
+                // instead of pretending one is enough.
+                if (batch_dots >= cap) {
+                    if (!flushGroup()) return false;
+                    if (!QuantDot::BeginBatch()) {
+                        last_error_ = "prefill-batch: BeginBatch chunk failed";
+                        return false;
+                    }
+                    batch_open = true;
+                    batch_input = in.aName;
+                    batch_dots = 0;
+                }
+                bool ok = true;
+                const std::vector<float>& xi = resolveIn(t, in, ok);
+                if (!ok) return false;
+                std::vector<float>& y = ts[t].act[linSlot];
+                std::string e;
+                if (!OpLinear(in.b, xi, y, e, /*join_batch=*/true)) {
+                    last_error_ = e;
+                    return false;
+                }
+                ++batch_dots;
+                if (spec_.has_bias) {
+                    // Same host-side rule as the serial path: queued output is
+                    // only real after the flush, so the add is deferred.
+                    std::string biasName = in.bName;
+                    const std::string wSuffix = ".weight";
+                    if (biasName.size() > wSuffix.size() &&
+                        biasName.compare(biasName.size() - wSuffix.size(), wSuffix.size(), wSuffix) == 0)
+                        biasName.replace(biasName.size() - wSuffix.size(), wSuffix.size(), ".bias");
+                    else
+                        biasName += ".bias";
+                    PendingBias pb;
+                    pb.token = t;
+                    pb.outName = linSlot;
+                    pb.biasName = biasName;
+                    pb.must_have = biasName.find(".attn_q.") != std::string::npos ||
+                                   biasName.find(".attn_k.") != std::string::npos ||
+                                   biasName.find(".attn_v.") != std::string::npos;
+                    pending_bias.push_back(std::move(pb));
+                }
+            }
+            continue;
+        }
+
+        // Any non-Linear op may consume queued output: flush the group first.
+        if (batch_open && !flushGroup()) return false;
+
+        bool ok = true;
+        switch (in.op) {
+            case OpKind::EmbeddingLookup: {
+                const TensorRec& emb = tensors_[(size_t)embSlot];
+                const size_t n_in = (size_t)emb.dims[0];
+                const size_t vocab = (size_t)emb.dims[1];
+                const size_t row_stride = emb.bytes / std::max<size_t>(vocab, 1);
+                if (row_stride == 0) {
+                    last_error_ = "prefill-batch: embedding row stride 0";
+                    return false;
+                }
+                for (size_t t = 0; t < P; ++t) {
+                    if (tokens[t] >= vocab || !emb.data) {
+                        last_error_ = "prefill-batch: token out of range";
+                        return false;
+                    }
+                    const uint8_t* src = emb.data + (size_t)tokens[t] * row_stride;
+                    if (src + row_stride > emb.data + emb.bytes) {
+                        last_error_ = "prefill-batch: embedding row outside tensor";
+                        return false;
+                    }
+                    if (emb.ggml_type == GGML_TYPE_F32) {
+                        ts[t].hidden.assign(n_in, 0.0f);
+                        std::memcpy(ts[t].hidden.data(), src, n_in * sizeof(float));
+                    } else {
+                        TensorRec rowView = emb;
+                        rowView.data = src;
+                        rowView.bytes = row_stride;
+                        rowView.dims[1] = 1;
+                        ts[t].hidden.clear();
+                        DequantPrefix(rowView, ts[t].hidden, n_in);
+                        if (ts[t].hidden.size() < n_in) {
+                            last_error_ = "prefill-batch: embedding dequant short";
+                            return false;
+                        }
+                    }
+                }
+                break;
+            }
+            case OpKind::RmsNorm: {
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>& xi = resolveIn(t, in, ok);
+                    if (!ok) return false;
+                    std::vector<float>& y = ts[t].act[in.outName.empty() ? std::string("rms") : in.outName];
+                    if (!OpRmsNorm(in, xi, y)) return false;
+                    ts[t].hidden = y;
+                }
+                break;
+            }
+            case OpKind::MlaDecompress: {
+                for (size_t t = 0; t < P; ++t) {
+                    std::vector<float> k, v;
+                    std::string e;
+                    const std::vector<float>* detailP =
+                        in.detail.empty() ? nullptr : findAct(t, in.detail);
+                    const std::vector<float>& mlaIn = detailP ? *detailP : resolveIn(t, in, ok);
+                    if (!ok) return false;
+                    if (!OpMlaDecompress(in, mlaIn, k, v, startPos + t, e)) {
+                        last_error_ = e;
+                        return false;
+                    }
+                    const std::string kvName = in.outName.empty() ? std::string("kv") : in.outName;
+                    ts[t].act[kvName] = k;
+                    ts[t].act["k"] = k;
+                    ts[t].act["v"] = v;
+                }
+                break;
+            }
+            case OpKind::Attention: {
+                for (size_t t = 0; t < P; ++t) {
+                    std::vector<float> y;
+                    std::string e;
+                    std::vector<float> qv, kv, vv;
+                    const std::vector<float>* q = findAct(t, "q");
+                    const std::vector<float>* k = findAct(t, "k");
+                    const std::vector<float>* v = findAct(t, "v");
+                    if (q && !q->empty()) qv = *q; else qv = ts[t].hidden;
+                    if (k && !k->empty()) kv = *k; else kv = qv;
+                    if (v && !v->empty()) vv = *v; else vv = kv;
+                    if (in.bName == "qkv(split)") {
+                        if (qv.empty() || qv.size() % 3 != 0) {
+                            last_error_ = "prefill-batch: fused qkv width not divisible by 3";
+                            return false;
+                        }
+                        const size_t w = qv.size() / 3;
+                        kv.assign(qv.begin() + (ptrdiff_t)w, qv.begin() + (ptrdiff_t)(2 * w));
+                        vv.assign(qv.begin() + (ptrdiff_t)(2 * w), qv.end());
+                        qv.resize(w);
+                    }
+                    if (!OpAttention(in, qv, kv, vv, y, startPos + t, e)) {
+                        last_error_ = e;
+                        return false;
+                    }
+                    ts[t].act["attn"] = y;
+                    if (!in.outName.empty()) ts[t].act[in.outName] = y;
+                    ts[t].hidden = y;
+                }
+                break;
+            }
+            case OpKind::Publish: {
+                for (size_t t = 0; t < P; ++t) {
+                    std::vector<float> src;
+                    if (in.aName.empty() || in.aName == "<hidden>") {
+                        src = ts[t].hidden;
+                    } else {
+                        const std::vector<float>* p = findAct(t, in.aName);
+                        if (!p) {
+                            last_error_ = "prefill-batch: publish source missing: " + in.aName;
+                            return false;
+                        }
+                        src = *p;
+                    }
+                    if (src.empty()) {
+                        last_error_ = "prefill-batch: publish empty source";
+                        return false;
+                    }
+                    const std::string dst = in.outName.empty() ? std::string("published") : in.outName;
+                    ts[t].act[dst] = src;
+                    ts[t].hidden = src;
+                }
+                break;
+            }
+            case OpKind::ResidualAdd: {
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float> empty_vec;
+                    const std::vector<float>* resid = &empty_vec;
+                    if (!in.aName.empty() && in.aName[0] != '<') {
+                        resid = findAct(t, in.aName);
+                        if (!resid) {
+                            last_error_ = "prefill-batch: residualadd source missing: " + in.aName;
+                            return false;
+                        }
+                    } else {
+                        resid = &ts[t].hidden;
+                    }
+                    const std::vector<float>* add = &ts[t].hidden;
+                    if (!in.bName.empty() && in.bName[0] != '<') {
+                        add = findAct(t, in.bName);
+                        if (!add) {
+                            last_error_ = "prefill-batch: residualadd addend missing: " + in.bName;
+                            return false;
+                        }
+                    }
+                    const size_t n = std::max(resid->size(), add->size());
+                    if (n == 0) {
+                        last_error_ = "prefill-batch: residualadd empty operands";
+                        return false;
+                    }
+                    std::vector<float> y(n, 0.0f);
+                    for (size_t i = 0; i < n; ++i)
+                        y[i] = (i < resid->size() ? (*resid)[i] : 0.0f) +
+                               (i < add->size() ? (*add)[i] : 0.0f);
+                    ts[t].hidden = y;
+                    ts[t].act[in.outName.empty() ? std::string("resid") : in.outName] = y;
+                }
+                break;
+            }
+            case OpKind::SquaredReLU: {
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>* in_v = &ts[t].hidden;
+                    if (!in.aName.empty() && in.aName[0] != '<') {
+                        in_v = findAct(t, in.aName);
+                        if (!in_v) {
+                            last_error_ = "prefill-batch: squaredrelu input missing";
+                            return false;
+                        }
+                    }
+                    std::vector<float> y(in_v->size(), 0.0f);
+                    for (size_t i = 0; i < in_v->size(); ++i) {
+                        const float v = (*in_v)[i];
+                        y[i] = (v > 0.0f) ? v * v : 0.0f;
+                    }
+                    ts[t].hidden = y;
+                    ts[t].act[in.outName.empty() ? std::string("mlp_act") : in.outName] = y;
+                }
+                break;
+            }
+            case OpKind::SwiGLU: {
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>* gp = &ts[t].hidden;
+                    const std::vector<float>* up = &ts[t].hidden;
+                    if (!in.aName.empty() && in.aName[0] != '<') {
+                        gp = findAct(t, in.aName);
+                        if (!gp) {
+                            last_error_ = "prefill-batch: swiglu gate missing";
+                            return false;
+                        }
+                    }
+                    if (!in.bName.empty() && in.bName[0] != '<') {
+                        up = findAct(t, in.bName);
+                        if (!up) {
+                            last_error_ = "prefill-batch: swiglu up missing";
+                            return false;
+                        }
+                    }
+                    const size_t n = std::min(gp->size(), up->size());
+                    if (n == 0) {
+                        last_error_ = "prefill-batch: swiglu empty inputs";
+                        return false;
+                    }
+                    std::vector<float> y(n, 0.0f);
+                    for (size_t i = 0; i < n; ++i) {
+                        const float g = (*gp)[i];
+                        y[i] = (g / (1.0f + std::exp(-g))) * (*up)[i];
+                    }
+                    ts[t].hidden = y;
+                    ts[t].act[in.outName.empty() ? std::string("swiglu") : in.outName] = y;
+                }
+                break;
+            }
+            case OpKind::Router: {
+                // Per token: capture the router's own input (its aName) and
+                // its routing decision. The serial path stores these in loop
+                // state between the Router and MoEExecute ops; the batched
+                // path stores them per token.
+                router_ids.assign(P, {});
+                router_w.assign(P, {});
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>& xi = resolveIn(t, in, ok);
+                    if (!ok) return false;
+                    if (!OpRouterTopK(in, in, xi, router_ids[t], router_w[t]))
+                        return false;
+                    if (!in.outName.empty())
+                        ts[t].act[in.outName] = xi;   // publish router logits for TopK
+                }
+                break;
+            }
+            case OpKind::TopK:
+                break;   // handled together with Router (serial parity)
+            case OpKind::MoEExecute: {
+                if (router_ids.size() != P) {
+                    last_error_ = "prefill-batch: moe without router result";
+                    return false;
+                }
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>& xi = resolveIn(t, in, ok);
+                    if (!ok) return false;
+                    std::vector<float> y;
+                    std::string e;
+                    if (!OpMoEExecute(in, xi, router_ids[t], router_w[t], y, e)) {
+                        last_error_ = e;
+                        return false;
+                    }
+                    ts[t].act["moe"] = y;
+                    if (!in.outName.empty()) ts[t].act[in.outName] = y;
+                    ts[t].hidden = y;
+                }
+                break;
+            }
+            case OpKind::SsmScan: {
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>* ssmIn = findAct(t, in.aName);
+                    if (!ssmIn || ssmIn->empty()) {
+                        last_error_ = "prefill-batch: ssm input missing";
+                        return false;
+                    }
+                    std::vector<float> y;
+                    std::string e;
+                    if (!OpSsmScan(in, *ssmIn, y, e)) {
+                        last_error_ = e;
+                        return false;
+                    }
+                    ts[t].act[in.outName] = y;
+                }
+                break;
+            }
+            case OpKind::LmHead: {
+                // Only the last token's logits are the prefill result; the
+                // serial path would have run this once per token and kept the
+                // last. Identical math on identical inputs.
+                const size_t t = P - 1;
+                std::vector<float> y;
+                std::string e;
+                if (!OpLinear(in.b, ts[t].hidden, y, e)) {
+                    last_error_ = e;
+                    return false;
+                }
+                logits_ = y;
+                break;
+            }
+            default:
+                last_error_ = "prefill-batch: unhandled op";
+                return false;
+        }
+    }
+    if (batch_open && !flushGroup()) return false;
+    if (logits_.empty()) {
+        last_error_ = "prefill-batch: no LmHead produced logits";
+        return false;
+    }
+    for (float v : logits_)
+        if (!std::isfinite(v)) ++nonfinite_logits_;
+    // Continue decode from the last token's state, exactly as the serial path
+    // would have left it.
+    hidden_ = ts[P - 1].hidden;
+    hidden_l2_ = 0.0;
+    return true;
+}
+
 bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
     last_error_.clear();

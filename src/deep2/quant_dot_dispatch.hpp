@@ -174,4 +174,10 @@ CacheStats GetCacheStats();
 // Must be called before the first dispatch; selection is otherwise automatic.
 void SetPreferredDevice(int index);
 
+// D1: the maximum dots one quant-dot batch can hold (the device descriptor
+// ring capacity). Callers that queue more than this many dots must chunk;
+// exceeding it makes EndBatch fail closed (CPU replay), so the capacity is a
+// hard contract, not a tuning hint.
+size_t BatchCapacity();
+
 } } }

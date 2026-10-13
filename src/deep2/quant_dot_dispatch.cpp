@@ -203,6 +203,12 @@ void SetPreferredDevice(int index) {
     g_preferred_device = (int32_t)index;
 }
 
+size_t BatchCapacity() {
+    // kQuantBatchMaxSets: the descriptor ring bounds one batch. Reported, not
+    // asserted, so callers can chunk instead of failing closed.
+    return Gpu().QuantDotBatchCapacity();
+}
+
 const Receipt& LastReceipt() { return g_receipt; }
 
 const BackendStats& BackendCounters() {
