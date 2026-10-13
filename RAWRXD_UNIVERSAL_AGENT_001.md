@@ -97,8 +97,8 @@ Baselines on `origin/local-30b-backend`:
 | H1 evidence routing | PASS   | README_READ -> "I could not verify ... any content I offered would be invented"; tools_executed=0, no fabricated first line |
 | H4 no-tools enforce | PASS   | spoof -> tools_executed=0, receipts=[], grounded=false; forged `[tool-receipt]` has no authority; host logged "tool execution refused by host policy" |
 | --json purity       | PASS   | `logLine()` now `fprintf(stderr,...)`; stdout is pure JSON (ConvertFrom-Json OK) |
-| H3 breaker          | OPEN   | duplicate proposals must terminate the loop at host level (file under active edit) |
-| H5 source scope     | LANDED | `06b60b0c0`: default-discovery exclusions (`.archive`/logs/backups/`Full_Source`, `.log`/`.tmp`), default code-scope trimmed to source/shaders, and a new always-enforced `isPathAuthorized()` deny-by-default gate on read_file/search_text(even all=true)/list_repo (`.git` internals, crash_dumps, `_pre_merge_backup`, secret-shaped files blocked). Compiled clean in the real build (H5_RC=0); full behavioral rerun queued behind H3 |
+| H3 breaker          | LANDED | committed circuit breaker: `duplicateBreaks>=3` (and budget breaker `budgetBreaks>=2`) terminate the loop at the host and return `gateAnswer(first.content, receipts, usedTools)` with authentic host receipts — no forced/unsupported completion. Model cannot enable/disable the breaker |
+| H5 source scope     | LANDED | `06b60b0c0`: default-discovery exclusions + trimmed default code-scope + always-enforced `isPathAuthorized()` deny-by-default gate (read_file/search_text even all=true/list_repo). Compiled clean (H5_RC=0) |
 
 Baselines on `origin/local-30b-backend`:
 - `c2a6ecde6c` authoritative base ("host-verified evidence contract + UTF-16 discovery").
