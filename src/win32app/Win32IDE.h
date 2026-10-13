@@ -538,9 +538,9 @@ private:
     void buildCommandRegistry();
     static LRESULT CALLBACK CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     // Command palette UI handles and data
-    HWND m_hwndCommandPalette;
-    HWND m_hwndCommandPaletteInput;
-    HWND m_hwndCommandPaletteList;
+    HWND m_hwndCommandPalette = nullptr;
+    HWND m_hwndCommandPaletteInput = nullptr;
+    HWND m_hwndCommandPaletteList = nullptr;
     bool m_commandPaletteVisible;
     std::vector<CommandPaletteItem> m_commandRegistry;
     std::vector<CommandPaletteItem> m_filteredCommands;
@@ -752,10 +752,10 @@ private:
     std::string getRawrXDPowerShellPath();
     
     // GGUF Model loader (initialized in constructor) - supports both streaming and standard implementations
-    std::unique_ptr<IGGUFLoader> m_ggufLoader;
+    std::unique_ptr<RawrXD::IGGUFLoader> m_ggufLoader;
     std::string m_loadedModelPath;
-    GGUFMetadata m_currentModelMetadata;
-    std::vector<TensorInfo> m_modelTensors;
+    RawrXD::GGUFMetadata m_currentModelMetadata;
+    std::vector<RawrXD::TensorInfo> m_modelTensors;
     bool m_useStreamingLoader; // preference to use streaming loader to minimize memory
     bool m_useVulkanRenderer; // preference to use Vulkan renderer if enabled
 
@@ -766,8 +766,8 @@ private:
     
     // AI Inference State
     InferenceConfig m_inferenceConfig;
-    bool m_inferenceRunning;
-    bool m_inferenceStopRequested;
+    bool m_inferenceRunning = false;
+    bool m_inferenceStopRequested = false;
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;
@@ -775,29 +775,29 @@ private:
     std::function<void(const std::string&, bool)> m_inferenceCallback;
 
     // File Explorer Sidebar - tree view items
-    HWND m_hwndFileTree;
+    HWND m_hwndFileTree = nullptr;
     std::map<HTREEITEM, std::string> m_treeItemPaths;
 
-    HINSTANCE m_hInstance;
-    HWND m_hwndMain;
-    HWND m_hwndEditor;
-    HWND m_hwndCommandInput;
-    HWND m_hwndStatusBar;
-    HWND m_hwndOutputTabs;
-    HWND m_hwndMinimap;
-    HWND m_hwndHelp;
-    HWND m_hwndFloatingPanel;
-    HWND m_hwndFloatingContent;
+    HINSTANCE m_hInstance = nullptr;
+    HWND m_hwndMain = nullptr;
+    HWND m_hwndEditor = nullptr;
+    HWND m_hwndCommandInput = nullptr;
+    HWND m_hwndStatusBar = nullptr;
+    HWND m_hwndOutputTabs = nullptr;
+    HWND m_hwndMinimap = nullptr;
+    HWND m_hwndHelp = nullptr;
+    HWND m_hwndFloatingPanel = nullptr;
+    HWND m_hwndFloatingContent = nullptr;
 
-    HMENU m_hMenu;
-    HWND m_hwndToolbar;
-    HWND m_hwndTitleLabel;
-    HWND m_hwndBtnMinimize;
-    HWND m_hwndBtnMaximize;
-    HWND m_hwndBtnClose;
-    HWND m_hwndBtnGitHub;
-    HWND m_hwndBtnMicrosoft;
-    HWND m_hwndBtnSettings;
+    HMENU m_hMenu = nullptr;
+    HWND m_hwndToolbar = nullptr;
+    HWND m_hwndTitleLabel = nullptr;
+    HWND m_hwndBtnMinimize = nullptr;
+    HWND m_hwndBtnMaximize = nullptr;
+    HWND m_hwndBtnClose = nullptr;
+    HWND m_hwndBtnGitHub = nullptr;
+    HWND m_hwndBtnMicrosoft = nullptr;
+    HWND m_hwndBtnSettings = nullptr;
     std::string m_lastTitleBarText;
 
     // Document tabs (VS Code style). m_openDocuments holds the file path of every
@@ -818,15 +818,15 @@ private:
     
     // Git integration
     GitStatus m_gitStatus;
-    HWND m_hwndGitPanel;
-    HWND m_hwndGitStatusText;
-    HWND m_hwndGitFileList;
+    HWND m_hwndGitPanel = nullptr;
+    HWND m_hwndGitStatusText = nullptr;
+    HWND m_hwndGitFileList = nullptr;
     std::vector<GitFile> m_currentGitFiles;
     bool m_gitPanelVisible;
     WNDPROC m_gitPanelProc;
     std::string m_gitRepoPath;
     bool m_gitAutoRefresh;
-    HWND m_hwndCommitDialog; // commit dialog handle
+    HWND m_hwndCommitDialog = nullptr; // commit dialog handle
     
     // File operations
     std::vector<std::string> m_recentFiles;
@@ -842,8 +842,8 @@ private:
     // Theme system
     IDETheme m_currentTheme;
     std::map<std::string, IDETheme> m_themes;
-    HBRUSH m_backgroundBrush;
-    HFONT m_editorFont;
+    HBRUSH m_backgroundBrush = nullptr;
+    HFONT m_editorFont = nullptr;
 
     // Code snippets
     std::vector<CodeSnippet> m_codeSnippets;
@@ -854,7 +854,7 @@ private:
     std::string m_activeOutputTab;
     bool m_outputPanelVisible;
     int m_selectedOutputTab;
-    HWND m_hwndSeverityFilter;
+    HWND m_hwndSeverityFilter = nullptr;
     int m_severityFilterLevel; // 0=All, 1=Info+, 2=Warn+, 3=Error only
 
     // Clipboard history
@@ -874,11 +874,11 @@ private:
     LARGE_INTEGER m_profilingFreq;
 
     // Module management
-    HWND m_hwndModuleBrowser;
-    HWND m_hwndModuleList;
-    HWND m_hwndModuleLoadButton;
-    HWND m_hwndModuleUnloadButton;
-    HWND m_hwndModuleRefreshButton;
+    HWND m_hwndModuleBrowser = nullptr;
+    HWND m_hwndModuleList = nullptr;
+    HWND m_hwndModuleLoadButton = nullptr;
+    HWND m_hwndModuleUnloadButton = nullptr;
+    HWND m_hwndModuleRefreshButton = nullptr;
     bool m_moduleBrowserVisible;
     WNDPROC m_modulePanelProc;
     std::vector<ModuleInfo> m_modules;
@@ -894,7 +894,7 @@ private:
     bool m_editorHooksInstalled;
     
     // Splitter bar for terminal/output resize
-    HWND m_hwndSplitter;
+    HWND m_hwndSplitter = nullptr;
     bool m_splitterDragging;
     int m_splitterY;
     
@@ -908,50 +908,50 @@ private:
     bool m_searchWholeWord;
     bool m_searchUseRegex;
     int m_lastFoundPos;
-    HWND m_hwndFindDialog;
-    HWND m_hwndReplaceDialog;
+    HWND m_hwndFindDialog = nullptr;
+    HWND m_hwndReplaceDialog = nullptr;
     
     // Primary Sidebar state
-    HWND m_hwndActivityBar;
-    HWND m_hwndSidebar;
-    HWND m_hwndSidebarContent;
+    HWND m_hwndActivityBar = nullptr;
+    HWND m_hwndSidebar = nullptr;
+    HWND m_hwndSidebarContent = nullptr;
     bool m_sidebarVisible;
     int m_sidebarWidth;
     SidebarView m_currentSidebarView;
     
     // Explorer View
-    HWND m_hwndExplorerTree;
-    HWND m_hwndExplorerToolbar;
-    HIMAGELIST m_hImageListExplorer;
+    HWND m_hwndExplorerTree = nullptr;
+    HWND m_hwndExplorerToolbar = nullptr;
+    HIMAGELIST m_hImageListExplorer = nullptr;
     std::string m_explorerRootPath;
     
     // Search View
-    HWND m_hwndSearchInput;
-    HWND m_hwndSearchResults;
-    HWND m_hwndSearchOptions;
-    HWND m_hwndIncludePattern;
-    HWND m_hwndExcludePattern;
+    HWND m_hwndSearchInput = nullptr;
+    HWND m_hwndSearchResults = nullptr;
+    HWND m_hwndSearchOptions = nullptr;
+    HWND m_hwndIncludePattern = nullptr;
+    HWND m_hwndExcludePattern = nullptr;
     std::vector<std::string> m_searchResults;
     bool m_searchInProgress;
     
     // Source Control View (extends existing Git)
-    HWND m_hwndSCMFileList;
-    HWND m_hwndSCMToolbar;
-    HWND m_hwndSCMMessageBox;
+    HWND m_hwndSCMFileList = nullptr;
+    HWND m_hwndSCMToolbar = nullptr;
+    HWND m_hwndSCMMessageBox = nullptr;
     
     // Run and Debug View
-    HWND m_hwndDebugConfigs;
-    HWND m_hwndDebugToolbar;
-    HWND m_hwndDebugVariables;
-    HWND m_hwndDebugCallStack;
-    HWND m_hwndDebugConsole;
+    HWND m_hwndDebugConfigs = nullptr;
+    HWND m_hwndDebugToolbar = nullptr;
+    HWND m_hwndDebugVariables = nullptr;
+    HWND m_hwndDebugCallStack = nullptr;
+    HWND m_hwndDebugConsole = nullptr;
     bool m_debuggingActive;
     // m_breakpoints defined in Debugger State section with Breakpoint struct
     
     // Extensions View
-    HWND m_hwndExtensionsList;
-    HWND m_hwndExtensionSearch;
-    HWND m_hwndExtensionDetails;
+    HWND m_hwndExtensionsList = nullptr;
+    HWND m_hwndExtensionSearch = nullptr;
+    HWND m_hwndExtensionDetails = nullptr;
     struct Extension {
         std::string id;
         std::string name;
@@ -964,7 +964,7 @@ private:
     std::vector<Extension> m_extensions;
     
     // Outline View (code structure)
-    HWND m_hwndOutlineTree;
+    HWND m_hwndOutlineTree = nullptr;
     struct OutlineItem {
         std::string name;
         std::string type;  // function, class, variable, etc.
@@ -979,7 +979,7 @@ private:
     void goToOutlineItem(int index);
     
     // Timeline View (file history)
-    HWND m_hwndTimelineList;
+    HWND m_hwndTimelineList = nullptr;
     struct TimelineEntry {
         std::string message;
         std::string author;
@@ -999,23 +999,23 @@ private:
     
     // Activity Bar (Far Left) - vertical icon bar for switching sidebar views
     static const int ACTIVITY_BAR_WIDTH = 48;
-    HWND m_activityBarButtons[7];  // Explorer, Search, SCM, Debug, Extensions, Settings, Accounts
+    HWND m_activityBarButtons[7]{};  // Explorer, Search, SCM, Debug, Extensions, Settings, Accounts
     int m_activeActivityBarButton;
-    HBRUSH m_actBarBackgroundBrush;
-    HBRUSH m_actBarHoverBrush;
-    HBRUSH m_actBarActiveBrush;
+    HBRUSH m_actBarBackgroundBrush = nullptr;
+    HBRUSH m_actBarHoverBrush = nullptr;
+    HBRUSH m_actBarActiveBrush = nullptr;
     static LRESULT CALLBACK ActivityBarButtonProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
     // Secondary Sidebar (Right) - AI Chat / Copilot area
-    HWND m_hwndSecondarySidebar;
-    HWND m_hwndSecondarySidebarHeader;
-    HWND m_hwndCopilotChatInput;
-    HWND m_hwndCopilotChatOutput;
-    HWND m_hwndCopilotSendBtn;
-    HWND m_hwndCopilotClearBtn;
-    HWND m_hwndModelSelector;
-    HWND m_hwndMaxTokensSlider;
-    HWND m_hwndMaxTokensLabel;
+    HWND m_hwndSecondarySidebar = nullptr;
+    HWND m_hwndSecondarySidebarHeader = nullptr;
+    HWND m_hwndCopilotChatInput = nullptr;
+    HWND m_hwndCopilotChatOutput = nullptr;
+    HWND m_hwndCopilotSendBtn = nullptr;
+    HWND m_hwndCopilotClearBtn = nullptr;
+    HWND m_hwndModelSelector = nullptr;
+    HWND m_hwndMaxTokensSlider = nullptr;
+    HWND m_hwndMaxTokensLabel = nullptr;
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
     int m_currentMaxTokens;
@@ -1030,15 +1030,15 @@ private:
         Problems = 2,
         DebugConsole = 3
     };
-    HWND m_hwndPanelContainer;
-    HWND m_hwndPanelTabs;
-    HWND m_hwndPanelToolbar;
-    HWND m_hwndPanelNewTerminalBtn;
-    HWND m_hwndPanelSplitTerminalBtn;
-    HWND m_hwndPanelKillTerminalBtn;
-    HWND m_hwndPanelMaximizeBtn;
-    HWND m_hwndPanelCloseBtn;
-    HWND m_hwndProblemsListView;
+    HWND m_hwndPanelContainer = nullptr;
+    HWND m_hwndPanelTabs = nullptr;
+    HWND m_hwndPanelToolbar = nullptr;
+    HWND m_hwndPanelNewTerminalBtn = nullptr;
+    HWND m_hwndPanelSplitTerminalBtn = nullptr;
+    HWND m_hwndPanelKillTerminalBtn = nullptr;
+    HWND m_hwndPanelMaximizeBtn = nullptr;
+    HWND m_hwndPanelCloseBtn = nullptr;
+    HWND m_hwndProblemsListView = nullptr;
     PanelTab m_activePanelTab;
     bool m_panelVisible;
     bool m_panelMaximized;
@@ -1075,7 +1075,7 @@ private:
         int copilotSuggestions;       // number of available suggestions
     };
     StatusBarInfo m_statusBarInfo;
-    HWND m_statusBarParts[12];  // Individual status bar items for custom drawing
+    HWND m_statusBarParts[12]{};  // Individual status bar items for custom drawing
     
     // VS Code UI Creation/Update functions
     void createActivityBarUI(HWND hwndParent);
@@ -1132,10 +1132,10 @@ private:
     std::string m_ollamaModelOverride; // if set, use this tag instead of deriving from filename
 
     // File Explorer members (additional)
-    HIMAGELIST m_hImageList;
+    HIMAGELIST m_hImageList = nullptr;
     std::vector<FileExplorerItem> m_rootItems;
     std::string m_currentExplorerPath;
-    HWND m_hwndFileExplorer;  // Primary file explorer window
+    HWND m_hwndFileExplorer = nullptr;  // Primary file explorer window
     
     // Model Chat state
     bool m_chatMode;
@@ -1145,20 +1145,20 @@ private:
     // ========================================================================
     
     // PowerShell Panel Window Handles
-    HWND m_hwndPowerShellPanel;           // Main PowerShell panel container
-    HWND m_hwndPowerShellOutput;          // PowerShell output/console area
-    HWND m_hwndPowerShellInput;           // PowerShell command input
-    HWND m_hwndPowerShellToolbar;         // PowerShell panel toolbar
-    HWND m_hwndPowerShellStatusBar;       // PowerShell status (version, execution policy)
+    HWND m_hwndPowerShellPanel = nullptr;           // Main PowerShell panel container
+    HWND m_hwndPowerShellOutput = nullptr;          // PowerShell output/console area
+    HWND m_hwndPowerShellInput = nullptr;           // PowerShell command input
+    HWND m_hwndPowerShellToolbar = nullptr;         // PowerShell panel toolbar
+    HWND m_hwndPowerShellStatusBar = nullptr;       // PowerShell status (version, execution policy)
     
     // PowerShell Panel Buttons
-    HWND m_hwndPSBtnExecute;              // Execute button
-    HWND m_hwndPSBtnClear;                // Clear console
-    HWND m_hwndPSBtnStop;                 // Stop execution
-    HWND m_hwndPSBtnHistory;              // Command history
-    HWND m_hwndPSBtnRestart;              // Restart PowerShell session
-    HWND m_hwndPSBtnLoadRawrXD;           // Load RawrXD.ps1 module
-    HWND m_hwndPSBtnToggle;               // Toggle panel visibility
+    HWND m_hwndPSBtnExecute = nullptr;              // Execute button
+    HWND m_hwndPSBtnClear = nullptr;                // Clear console
+    HWND m_hwndPSBtnStop = nullptr;                 // Stop execution
+    HWND m_hwndPSBtnHistory = nullptr;              // Command history
+    HWND m_hwndPSBtnRestart = nullptr;              // Restart PowerShell session
+    HWND m_hwndPSBtnLoadRawrXD = nullptr;           // Load RawrXD.ps1 module
+    HWND m_hwndPSBtnToggle = nullptr;               // Toggle panel visibility
     
     // PowerShell Panel State
     bool m_powerShellPanelVisible;
@@ -1175,7 +1175,7 @@ private:
     // PowerShell Execution State
     bool m_powerShellExecuting;
     std::string m_powerShellCurrentOutput;
-    HANDLE m_powerShellProcessHandle;
+    HANDLE m_powerShellProcessHandle = nullptr;
     std::unique_ptr<Win32TerminalManager> m_dedicatedPowerShellTerminal;
     
     // PowerShell Panel Functions
@@ -1296,16 +1296,16 @@ private:
 
 private:
     // Debugger UI Components
-    HWND m_hwndDebuggerContainer;
-    HWND m_hwndDebuggerTabs;
-    HWND m_hwndDebuggerBreakpoints;
-    HWND m_hwndDebuggerWatch;
-    HWND m_hwndDebuggerVariables;
-    HWND m_hwndDebuggerStackTrace;
-    HWND m_hwndDebuggerMemory;
-    HWND m_hwndDebuggerToolbar;
-    HWND m_hwndDebuggerInput;
-    HWND m_hwndDebuggerStatus;
+    HWND m_hwndDebuggerContainer = nullptr;
+    HWND m_hwndDebuggerTabs = nullptr;
+    HWND m_hwndDebuggerBreakpoints = nullptr;
+    HWND m_hwndDebuggerWatch = nullptr;
+    HWND m_hwndDebuggerVariables = nullptr;
+    HWND m_hwndDebuggerStackTrace = nullptr;
+    HWND m_hwndDebuggerMemory = nullptr;
+    HWND m_hwndDebuggerToolbar = nullptr;
+    HWND m_hwndDebuggerInput = nullptr;
+    HWND m_hwndDebuggerStatus = nullptr;
     
     // Debugger State
     bool m_debuggerEnabled;

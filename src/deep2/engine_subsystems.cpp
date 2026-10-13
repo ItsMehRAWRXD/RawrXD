@@ -1,5 +1,5 @@
 ﻿// ============================================================================
-// ProductionProfiler.cpp â€” per-token production profiling
+// engine_subsystems.cpp — the Deep2 engine's missing subsystem layer
 // ============================================================================
 // Real timing collector: the engine wraps each forward-pass stage with
 // begin/end pairs; the profiler accumulates wall-clock microseconds into a
@@ -524,6 +524,174 @@ void ReverseIntegration::onAttentionComputed(int layer_idx, const float* attenti
 ReverseIntegration::Stats ReverseIntegration::getStats() const {
     std::lock_guard<std::recursive_mutex> lock(pImpl_->mtx);
     return pImpl_->stats;
+}
+
+} // namespace Deep2
+
+// ============================================================================
+// MedusaDecoder — speculative multi-head decoding (Deep2::MedusaDecoder)
+// ============================================================================
+// Real implementation of the declared speculative-decoding surface:
+//   * head weights are registered by the caller (setHeadWeights) and used
+//     as [rows=vocab][cols=hidden] row-major matrices;
+//   * projectHead performs the actual mat-vec (F32 weights) — no fabricated
+//     logits; non-F32 head weights fail closed (the caller then uses its own
+//     fallback, which is what hasHeadWeights guards);
+//   * generateCandidates builds the top-k per-head candidate tree;
+//   * verifyCandidates performs the accepted-prefix check against the main
+//     model's logits — the acceptance that Strata S07 measures.
+// ============================================================================
+#include "MedusaDecoder.hpp"
+
+#include <cstring>
+#include <limits>
+
+namespace Deep2 {
+
+MedusaDecoder::MedusaDecoder() : config_(), numHeads_(0) {
+    for (auto& h : heads_) h = MedusaHeadWeights{};
+}
+
+MedusaDecoder::~MedusaDecoder() = default;
+
+bool MedusaDecoder::initialize(const MedusaConfig& config) {
+    if (config.numHeads == 0 || config.numHeads > 16) return false;
+    config_ = config;
+    numHeads_ = config.numHeads;
+    stats_ = MedusaStats{};
+    return true;
+}
+
+void MedusaDecoder::setHeadWeights(size_t headIndex, const MedusaHeadWeights& weights) {
+    if (headIndex >= 16) return;
+    heads_[headIndex] = weights;
+    if (headIndex + 1 > numHeads_) numHeads_ = headIndex + 1;
+}
+
+void MedusaDecoder::projectHead(size_t headIndex, const float* hiddenState,
+                                float* logits, size_t vocabSize) {
+    if (headIndex >= numHeads_ || !hiddenState || !logits) return;
+    const MedusaHeadWeights& w = heads_[headIndex];
+    if (!w.weightData || w.rows == 0 || w.cols == 0) return;
+    // Fail closed on any non-F32 head: the declared layout for quantized heads
+    // needs the dequant path this engine has not certified for Medusa, and
+    // fabricating logits from packed bytes would be exactly the silent
+    // wrongness the speculative verifier exists to catch.
+    if (w.quantType != 0) return;
+    const size_t rows = (w.sizeBytes > 0 && w.rows > vocabSize) ? vocabSize : w.rows;
+    if (rows > vocabSize) return;
+    const float* W = static_cast<const float*>(w.weightData);
+    const size_t cols = w.cols;
+    for (size_t v = 0; v < rows; ++v) {
+        const float* row = W + v * cols;
+        float acc = 0.0f;
+        for (size_t c = 0; c < cols; ++c) acc += row[c] * hiddenState[c];
+        logits[v] = acc;
+    }
+    for (size_t v = rows; v < vocabSize; ++v) logits[v] = -std::numeric_limits<float>::infinity();
+}
+
+void MedusaDecoder::topKFromLogits(const float* logits, size_t vocabSize,
+                                   size_t k, std::vector<MedusaCandidate>& out,
+                                   int headIndex, int parentIndex) {
+    if (!logits || vocabSize == 0 || k == 0) return;
+    // Partial-selection top-k (k is small; this stays cheap and exact).
+    std::vector<std::pair<float, int>> vals;
+    vals.reserve(vocabSize);
+    for (size_t i = 0; i < vocabSize; ++i) vals.emplace_back(logits[i], (int)i);
+    const size_t take = k < vals.size() ? k : vals.size();
+    std::partial_sort(vals.begin(), vals.begin() + take, vals.end(),
+                      [](const std::pair<float, int>& a, const std::pair<float, int>& b) {
+                          return a.first > b.first;
+                      });
+    out.clear();
+    out.reserve(take);
+    for (size_t i = 0; i < take; ++i) {
+        MedusaCandidate c;
+        c.tokenId = vals[i].second;
+        c.probability = vals[i].first;
+        c.headIndex = headIndex;
+        c.parentIndex = parentIndex;
+        out.push_back(c);
+    }
+}
+
+std::vector<SpeculativeTreeNode> MedusaDecoder::buildTree(
+    const std::vector<std::vector<MedusaCandidate>>& perHeadCandidates,
+    const int* lastAcceptedToken, size_t numLastTokens) {
+    std::vector<SpeculativeTreeNode> tree;
+    int rootId = -1;
+    if (lastAcceptedToken && numLastTokens > 0) rootId = lastAcceptedToken[numLastTokens - 1];
+    for (const auto& headCands : perHeadCandidates) {
+        for (const MedusaCandidate& c : headCands) {
+            SpeculativeTreeNode n;
+            n.tokenId = c.tokenId;
+            n.probability = c.probability;
+            n.parentId = (c.parentIndex < 0) ? rootId : c.parentIndex;
+            n.depth = 1;
+            n.accepted = false;
+            tree.push_back(n);
+            if ((int)tree.size() >= (int)config_.maxTreeSize) return tree;
+        }
+    }
+    return tree;
+}
+
+std::vector<SpeculativeTreeNode> MedusaDecoder::generateCandidates(
+    const float* hiddenState, size_t hiddenDim,
+    const int* lastAcceptedToken, size_t numLastTokens) {
+    std::vector<std::vector<MedusaCandidate>> perHead;
+    perHead.reserve(numHeads_);
+    std::vector<float> headLogits;
+    for (size_t h = 0; h < numHeads_; ++h) {
+        if (!hasHeadWeights(h)) break;
+        const size_t rows = heads_[h].rows ? heads_[h].rows : hiddenDim;
+        headLogits.assign(rows, 0.0f);
+        projectHead(h, hiddenState, headLogits.data(), rows);
+        std::vector<MedusaCandidate> cands;
+        topKFromLogits(headLogits.data(), rows, config_.topKPerHead, cands, (int)h, -1);
+        perHead.push_back(std::move(cands));
+    }
+    return buildTree(perHead, lastAcceptedToken, numLastTokens);
+}
+
+size_t MedusaDecoder::verifyCandidates(
+    const std::vector<SpeculativeTreeNode>& candidates,
+    const float* mainLogits, size_t vocabSize,
+    int* acceptedTokens, size_t maxAccept) {
+    if (!mainLogits || !acceptedTokens || maxAccept == 0 || candidates.empty()) return 0;
+    // The main model's argmax is the only token guaranteed acceptable at this
+    // position: a candidate is accepted iff it equals that argmax AND its
+    // parent chain is accepted (prefix correctness — accepting a child before
+    // its parent accepted would be a fabricated token stream).
+    size_t argmax = 0;
+    for (size_t v = 1; v < vocabSize; ++v) {
+        if (mainLogits[v] > mainLogits[argmax]) argmax = v;
+    }
+    size_t accepted = 0;
+    bool anyParent = true;
+    for (const auto& n : candidates) {
+        if (n.parentId != -1) {
+            bool parentSeen = false;
+            for (const auto& m : candidates) {
+                if (m.tokenId == n.parentId && m.accepted) { parentSeen = true; break; }
+            }
+            if (!parentSeen) anyParent = false;
+        }
+        const bool nodeOk = (n.tokenId == (int)argmax) && anyParent;
+        if (nodeOk && accepted < maxAccept) {
+            acceptedTokens[accepted++] = n.tokenId;
+        }
+    }
+    stats_.update(accepted > 0, accepted);
+    return accepted;
+}
+
+bool MedusaDecoder::shouldSpeculate() const {
+    if (!config_.enabled) return false;
+    if (stats_.autoDisabled) return false;
+    if (stats_.consecutiveFails >= config_.maxConsecutiveFails) return false;
+    return numHeads_ > 0;
 }
 
 } // namespace Deep2

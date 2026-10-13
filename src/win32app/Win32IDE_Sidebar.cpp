@@ -4,7 +4,9 @@
 
 #include "Win32IDE.h"
 #include <commctrl.h>
-#include <shlwapi.h> 
+#include <commdlg.h>
+#include <shellapi.h>
+#include <shlwapi.h>
 #include <regex>     
 #include <filesystem>
 #include <fstream>   

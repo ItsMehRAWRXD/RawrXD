@@ -6,6 +6,8 @@
 // It now lives with the other Win32IDE member definitions, below the includes.
 
 #include "Win32IDE.h"
+#include "Win32IDE_CommandIDs.h"
+#include <regex>
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "../cpu_inference_engine.h" // Added for Native Fallback
@@ -112,7 +114,6 @@ std::string CaptureProcessOutput(const std::string& commandLine)
 } // namespace
 
 
-#define IDC_EDITOR 1001
 #define IDC_TERMINAL 1002
 #define IDC_COMMAND_INPUT 1003
 #define IDC_STATUS_BAR 1004
@@ -130,20 +131,8 @@ std::string CaptureProcessOutput(const std::string& commandLine)
 #define IDC_SPLITTER 1016
 #define IDC_SEVERITY_FILTER 1017
 #define IDC_TITLE_TEXT 1018
-#define IDC_BTN_MINIMIZE 1019
-#define IDC_BTN_MAXIMIZE 1020
-#define IDC_BTN_CLOSE 1021
-#define IDC_BTN_GITHUB 1022
-#define IDC_BTN_MICROSOFT 1023
-#define IDC_BTN_SETTINGS 1024
 #define IDC_FILE_EXPLORER 1025
 #define IDC_FILE_TREE 1026
-#define IDM_AUTONOMY_TOGGLE 4150
-#define IDM_AUTONOMY_START 4151
-#define IDM_AUTONOMY_STOP 4152
-#define IDM_AUTONOMY_SET_GOAL 4153
-#define IDM_AUTONOMY_STATUS 4154
-#define IDM_AUTONOMY_MEMORY 4155
 
 // Activity Bar (Far Left) - VS Code style icon bar
 #define IDC_ACTIVITY_BAR 1100
@@ -214,72 +203,15 @@ std::string CaptureProcessOutput(const std::string& commandLine)
 #define IDC_STATUS_COPILOT 1410
 #define IDC_STATUS_NOTIFICATIONS 1411
 
-#define IDM_FILE_NEW 2001
-#define IDM_FILE_OPEN 2002
-#define IDM_FILE_SAVE 2003
-#define IDM_FILE_SAVEAS 2004
-#define IDM_FILE_LOAD_MODEL 2006
-#define IDM_FILE_EXIT 2005
 
-#define IDM_EDIT_UNDO 2007
-#define IDM_EDIT_REDO 2008
-#define IDM_EDIT_CUT 2009
-#define IDM_EDIT_COPY 2010
-#define IDM_EDIT_PASTE 2011
-#define IDM_EDIT_SNIPPET 2012
-#define IDM_EDIT_COPY_FORMAT 2013
-#define IDM_EDIT_PASTE_PLAIN 2014
-#define IDM_EDIT_CLIPBOARD_HISTORY 2015
-#define IDM_EDIT_FIND 2016
-#define IDM_EDIT_REPLACE 2017
-#define IDM_EDIT_FIND_NEXT 2018
-#define IDM_EDIT_FIND_PREV 2019
 
-#define IDM_VIEW_MINIMAP 2020
-#define IDM_VIEW_OUTPUT_TABS 2021
-#define IDM_VIEW_MODULE_BROWSER 2022
-#define IDM_VIEW_THEME_EDITOR 2023
-#define IDM_VIEW_FLOATING_PANEL 2024
-#define IDM_VIEW_OUTPUT_PANEL 2025
-#define IDM_VIEW_USE_STREAMING_LOADER 2026
-#define IDM_VIEW_USE_VULKAN_RENDERER 2027
-#define IDM_VIEW_SIDEBAR 2028
-#define IDM_VIEW_TERMINAL 2029
 
-#define IDM_TERMINAL_POWERSHELL 3001
-#define IDM_TERMINAL_CMD 3002
-#define IDM_TERMINAL_STOP 3003
-#define IDM_TERMINAL_SPLIT_H 3004
-#define IDM_TERMINAL_SPLIT_V 3005
-#define IDM_TERMINAL_CLEAR_ALL 3006
 
-#define IDM_TOOLS_PROFILE_START 3010
-#define IDM_TOOLS_PROFILE_STOP 3011
-#define IDM_TOOLS_PROFILE_RESULTS 3012
-#define IDM_TOOLS_ANALYZE_SCRIPT 3013
 
-#define IDM_GIT_STATUS 3020
-#define IDM_GIT_COMMIT 3021
-#define IDM_GIT_PUSH 3022
-#define IDM_GIT_PULL 3023
-#define IDM_GIT_PANEL 3024
 
-#define IDM_MODULES_REFRESH 3050
-#define IDM_MODULES_IMPORT 3051
-#define IDM_MODULES_EXPORT 3052
 
-#define IDM_HELP_ABOUT 4001
-#define IDM_HELP_CMDREF 4002
-#define IDM_HELP_PSDOCS 4003
-#define IDM_HELP_SEARCH 4004
 
 // Agent menu IDs
-#define IDM_AGENT_START_LOOP 4100
-#define IDM_AGENT_EXECUTE_CMD 4101
-#define IDM_AGENT_CONFIGURE_MODEL 4102
-#define IDM_AGENT_VIEW_TOOLS 4103
-#define IDM_AGENT_VIEW_STATUS 4104
-#define IDM_AGENT_STOP 4105
 
 // Command Palette control IDs
 #define IDC_CMDPAL_CONTAINER 1500
@@ -3605,6 +3537,55 @@ void Win32IDE::toggleFloatingPanel()
 // would have shared one command ID and WM_COMMAND could not tell them apart.
 #define IDC_BTN_FIND_CLOSE 5033
 
+namespace {
+HWND CreateSearchWindow(HINSTANCE instance, HWND parent, DLGPROC proc,
+                        Win32IDE* ide, const char* title) {
+    // A real modeless dialog installs the DLGPROC, unlike a STATIC window.
+    struct EmptyDialog { DLGTEMPLATE dialog; WORD menu, windowClass, title; };
+    EmptyDialog layout{};
+    layout.dialog.style = WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME;
+    layout.dialog.dwExtendedStyle = WS_EX_DLGMODALFRAME;
+    layout.dialog.x = 100; layout.dialog.y = 100;
+    layout.dialog.cx = 270; layout.dialog.cy = 140;
+    HWND window = CreateDialogIndirectParamA(instance, &layout.dialog, parent, proc,
+                                             reinterpret_cast<LPARAM>(ide));
+    if (window) SetWindowTextA(window, title);
+    return window;
+}
+struct SearchMatch { size_t start, length; std::string replacement; };
+std::vector<SearchMatch> SearchMatches(const std::string& text, const std::string& search,
+        bool caseSensitive, bool wholeWord, bool useRegex, const std::string& replacement) {
+    std::vector<SearchMatch> matches;
+    if (search.empty()) return matches;
+    auto word = [](unsigned char c) { return std::isalnum(c) != 0 || c == '_'; };
+    auto boundary = [&](size_t start, size_t length) {
+        return !wholeWord || ((start == 0 || !word(text[start - 1])) &&
+            (start + length == text.size() || !word(text[start + length])));
+    };
+    if (useRegex) {
+        auto flags = std::regex::ECMAScript;
+        if (!caseSensitive) flags |= std::regex::icase;
+        const std::regex expression(search, flags);
+        for (std::sregex_iterator it(text.begin(), text.end(), expression), end; it != end; ++it) {
+            const auto start = static_cast<size_t>(it->position());
+            const auto length = static_cast<size_t>(it->length());
+            if (boundary(start, length)) matches.push_back({start, length, it->format(replacement)});
+        }
+    } else {
+        std::string haystack = text, needle = search;
+        if (!caseSensitive) {
+            auto lower = [](unsigned char c) { return static_cast<char>(std::tolower(c)); };
+            std::transform(haystack.begin(), haystack.end(), haystack.begin(), lower);
+            std::transform(needle.begin(), needle.end(), needle.begin(), lower);
+        }
+        for (size_t pos = 0; (pos = haystack.find(needle, pos)) != std::string::npos; pos += needle.size()) {
+            if (boundary(pos, needle.size())) matches.push_back({pos, needle.size(), replacement});
+        }
+    }
+    return matches;
+}
+} // namespace
+
 void Win32IDE::showFindDialog()
 {
     if (m_hwndFindDialog && IsWindow(m_hwndFindDialog)) {
@@ -3617,9 +3598,9 @@ void Win32IDE::showFindDialog()
     
     if (!m_hwndFindDialog) {
         // Fallback: create simple dialog programmatically
-        HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "STATIC", "Find",
-            WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-            100, 100, 400, 150, m_hwndMain, nullptr, m_hInstance, nullptr);
+        HWND hwndDlg = CreateSearchWindow(m_hInstance, m_hwndMain, FindDialogProc, this, "Find");
+        if (!hwndDlg) return;
+        SetWindowPos(hwndDlg, nullptr, 100, 100, 400, 150, SWP_NOZORDER | SWP_NOACTIVATE);
         m_hwndFindDialog = hwndDlg;
         
         CreateWindowExA(0, "STATIC", "Find what:", WS_CHILD | WS_VISIBLE,
@@ -3641,7 +3622,7 @@ void Win32IDE::showFindDialog()
             110, 80, 90, 28, hwndDlg, (HMENU)IDC_BTN_FIND_CLOSE, m_hInstance, nullptr);
     }
     
-    ShowWindow(m_hwndFindDialog, SW_SHOW);
+    ShowWindow(m_hwndFindDialog, IsWindowVisible(m_hwndMain) ? SW_SHOW : SW_HIDE);
 }
 
 void Win32IDE::showReplaceDialog()
@@ -3652,9 +3633,9 @@ void Win32IDE::showReplaceDialog()
     }
     
     // Create simple replace dialog
-    HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "STATIC", "Replace",
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        100, 100, 400, 200, m_hwndMain, nullptr, m_hInstance, nullptr);
+    HWND hwndDlg = CreateSearchWindow(m_hInstance, m_hwndMain, ReplaceDialogProc, this, "Replace");
+    if (!hwndDlg) return;
+    SetWindowPos(hwndDlg, nullptr, 100, 100, 400, 200, SWP_NOZORDER | SWP_NOACTIVATE);
     m_hwndReplaceDialog = hwndDlg;
     
     CreateWindowExA(0, "STATIC", "Find what:", WS_CHILD | WS_VISIBLE,
@@ -3685,7 +3666,7 @@ void Win32IDE::showReplaceDialog()
     CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE,
         310, 110, 70, 28, hwndDlg, (HMENU)IDC_BTN_FIND_CLOSE, m_hInstance, nullptr);
     
-    ShowWindow(m_hwndReplaceDialog, SW_SHOW);
+    ShowWindow(m_hwndReplaceDialog, IsWindowVisible(m_hwndMain) ? SW_SHOW : SW_HIDE);
 }
 
 void Win32IDE::findNext()
@@ -3724,141 +3705,87 @@ void Win32IDE::replaceAll()
     int count = replaceText(m_lastSearchText, m_lastReplaceText, true, m_searchCaseSensitive, m_searchWholeWord, m_searchUseRegex);
     
     std::string msg = "Replaced " + std::to_string(count) + " occurrence(s).";
-    MessageBoxA(m_hwndMain, msg.c_str(), "Replace All", MB_OK | MB_ICONINFORMATION);
+    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, reinterpret_cast<LPARAM>(msg.c_str()));
 }
 
 bool Win32IDE::findText(const std::string& searchText, bool forward, bool caseSensitive, bool wholeWord, bool useRegex)
 {
     if (!m_hwndEditor || searchText.empty()) return false;
-    
-    // Get editor text
-    int textLen = GetWindowTextLengthA(m_hwndEditor);
-    if (textLen == 0) return false;
-    
-    std::string editorText(textLen + 1, 0);
-    GetWindowTextA(m_hwndEditor, &editorText[0], textLen + 1);
-    editorText.resize(textLen);
-    
-    // Get current selection to start search from there
-    CHARRANGE selection;
-    SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&selection);
-    
-    int startPos = forward ? selection.cpMax : selection.cpMin - 1;
-    if (startPos < 0) startPos = 0;
-    if (startPos >= textLen) startPos = textLen - 1;
-    
-    // Simple case-insensitive search (regex not implemented in this version)
-    std::string haystack = editorText;
-    std::string needle = searchText;
-    
-    if (!caseSensitive) {
-        std::transform(haystack.begin(), haystack.end(), haystack.begin(), ::tolower);
-        std::transform(needle.begin(), needle.end(), needle.begin(), ::tolower);
+    const int length = GetWindowTextLengthA(m_hwndEditor);
+    std::string text(length + 1, '\0');
+    GetWindowTextA(m_hwndEditor, text.data(), length + 1);
+    text.resize(length);
+    CHARRANGE selection{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+    std::vector<SearchMatch> matches;
+    try { matches = SearchMatches(text, searchText, caseSensitive, wholeWord, useRegex, ""); }
+    catch (const std::regex_error& e) {
+        MessageBoxA(m_hwndMain, e.what(), "Invalid search expression", MB_OK | MB_ICONERROR);
+        return false;
     }
-    
-    size_t foundPos = std::string::npos;
-    
+    if (matches.empty()) {
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, reinterpret_cast<LPARAM>("Text not found."));
+        return false;
+    }
+    const SearchMatch* found = forward ? &matches.front() : &matches.back();
     if (forward) {
-        foundPos = haystack.find(needle, startPos);
-        // Wrap around
-        if (foundPos == std::string::npos && startPos > 0) {
-            foundPos = haystack.find(needle, 0);
+        for (const auto& match : matches) if (match.start >= static_cast<size_t>(selection.cpMax)) {
+            found = &match; break;
         }
     } else {
-        // Search backwards
-        if (startPos > 0) {
-            foundPos = haystack.rfind(needle, startPos);
-        }
-        // Wrap around
-        if (foundPos == std::string::npos) {
-            foundPos = haystack.rfind(needle);
-        }
+        for (auto it = matches.rbegin(); it != matches.rend(); ++it)
+            if (it->start < static_cast<size_t>(selection.cpMin)) { found = &*it; break; }
     }
-    
-    if (foundPos != std::string::npos) {
-        // Select found text
-        selection.cpMin = foundPos;
-        selection.cpMax = foundPos + searchText.length();
-        SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&selection);
-        SendMessage(m_hwndEditor, EM_SCROLLCARET, 0, 0);
-        m_lastFoundPos = foundPos;
-        return true;
-    }
-    
-    MessageBoxA(m_hwndMain, "Text not found.", "Find", MB_OK | MB_ICONINFORMATION);
-    return false;
+    selection.cpMin = static_cast<LONG>(found->start);
+    selection.cpMax = static_cast<LONG>(found->start + found->length);
+    SendMessageA(m_hwndEditor, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+    SendMessageA(m_hwndEditor, EM_SCROLLCARET, 0, 0);
+    m_lastFoundPos = selection.cpMin;
+    return true;
 }
 
-int Win32IDE::replaceText(const std::string& searchText, const std::string& replaceText, bool all, bool caseSensitive, bool wholeWord, bool useRegex)
+int Win32IDE::replaceText(const std::string& searchText, const std::string& replacement, bool all,
+                         bool caseSensitive, bool wholeWord, bool useRegex)
 {
     if (!m_hwndEditor || searchText.empty()) return 0;
-    
-    int replaceCount = 0;
-    
+    const int length = GetWindowTextLengthA(m_hwndEditor);
+    std::string text(length + 1, '\0');
+    GetWindowTextA(m_hwndEditor, text.data(), length + 1);
+    text.resize(length);
+    std::vector<SearchMatch> matches;
+    try { matches = SearchMatches(text, searchText, caseSensitive, wholeWord, useRegex, replacement); }
+    catch (const std::regex_error& e) {
+        MessageBoxA(m_hwndMain, e.what(), "Invalid search expression", MB_OK | MB_ICONERROR);
+        return 0;
+    }
+    if (matches.empty()) return 0;
     if (all) {
-        // Replace all occurrences
-        // Get editor text
-        int textLen = GetWindowTextLengthA(m_hwndEditor);
-        if (textLen == 0) return 0;
-        
-        std::string editorText(textLen + 1, 0);
-        GetWindowTextA(m_hwndEditor, &editorText[0], textLen + 1);
-        editorText.resize(textLen);
-        
         std::string result;
-        size_t pos = 0;
-        
-        std::string haystack = editorText;
-        std::string needle = searchText;
-        
-        if (!caseSensitive) {
-            std::transform(haystack.begin(), haystack.end(), haystack.begin(), ::tolower);
-            std::transform(needle.begin(), needle.end(), needle.begin(), ::tolower);
+        size_t cursor = 0;
+        for (const auto& match : matches) {
+            result.append(text, cursor, match.start - cursor);
+            result.append(match.replacement);
+            cursor = match.start + match.length;
         }
-        
-        while ((pos = haystack.find(needle, pos)) != std::string::npos) {
-            result.append(editorText, 0, pos);
-            result.append(replaceText);
-            pos += needle.length();
-            replaceCount++;
-        }
-        
-        if (replaceCount > 0) {
-            result.append(editorText, pos, std::string::npos);
-            SetWindowTextA(m_hwndEditor, result.c_str());
+        result.append(text, cursor, std::string::npos);
+        SendMessageA(m_hwndEditor, EM_SETSEL, 0, -1);
+        SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE, reinterpret_cast<LPARAM>(result.c_str()));
+        m_fileModified = true;
+        return static_cast<int>(matches.size());
+    }
+    CHARRANGE selection{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&selection));
+    for (const auto& match : matches) {
+        if (match.start == static_cast<size_t>(selection.cpMin) &&
+            match.start + match.length == static_cast<size_t>(selection.cpMax)) {
+            SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE,
+                         reinterpret_cast<LPARAM>(match.replacement.c_str()));
             m_fileModified = true;
-        }
-    } else {
-        // Replace current selection if it matches search text
-        CHARRANGE selection;
-        SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&selection);
-        
-        int selLen = selection.cpMax - selection.cpMin;
-        if (selLen > 0) {
-            std::string selectedText(selLen + 1, 0);
-            SendMessage(m_hwndEditor, EM_GETSELTEXT, 0, (LPARAM)&selectedText[0]);
-            selectedText.resize(selLen);
-            
-            std::string cmpSelected = selectedText;
-            std::string cmpSearch = searchText;
-            
-            if (!caseSensitive) {
-                std::transform(cmpSelected.begin(), cmpSelected.end(), cmpSelected.begin(), ::tolower);
-                std::transform(cmpSearch.begin(), cmpSearch.end(), cmpSearch.begin(), ::tolower);
-            }
-            
-            if (cmpSelected == cmpSearch) {
-                SendMessage(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)replaceText.c_str());
-                m_fileModified = true;
-                replaceCount = 1;
-                
-                // Find next occurrence
-                findText(searchText, true, caseSensitive, wholeWord, useRegex);
-            }
+            findText(searchText, true, caseSensitive, wholeWord, useRegex);
+            return 1;
         }
     }
-    
-    return replaceCount;
+    return 0;
 }
 
 INT_PTR CALLBACK Win32IDE::FindDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -4470,7 +4397,7 @@ std::string Win32IDE::getModelInfo() const
     info += "Context Length: " + std::to_string(m_currentModelMetadata.context_length) + "\n";
     info += "Embedding Dim: " + std::to_string(m_currentModelMetadata.embedding_dim) + "\n";
     info += "Vocab Size: " + std::to_string(m_currentModelMetadata.vocab_size) + "\n";
-    info += "Architecture: " + std::to_string(m_currentModelMetadata.architecture_type) + "\n\n";
+    info += "Architecture: " + m_currentModelMetadata.architecture_type + "\n\n";
 
     // Show zone status (memory efficiency indicator)
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
@@ -5311,6 +5238,23 @@ void Win32IDE::showCommitDialog()
 // AI INFERENCE IMPLEMENTATION - Connects GGUF Loader to Chat Panel
 // ============================================================================
 
+bool Win32IDE::loadModelForInference(const std::string& filepath)
+{
+    const DWORD attributes = GetFileAttributesA(filepath.c_str());
+    if (filepath.empty() || attributes == INVALID_FILE_ATTRIBUTES ||
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) || m_inferenceRunning) return false;
+    // The menu must parse and bind the chosen model before reporting readiness.
+    if (m_useStreamingLoader) m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
+    else m_ggufLoader = std::make_unique<RawrXD::GGUFLoader>();
+    m_nativeEngineLoaded = false;
+    if (!loadGGUFModel(filepath) || !initializeInference()) {
+        m_loadedModelPath.clear();
+        m_modelTensors.clear();
+        return false;
+    }
+    return m_nativeEngine && m_nativeEngine->IsModelLoaded();
+}
+
 bool Win32IDE::initializeInference()
 {
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
@@ -5329,24 +5273,22 @@ bool Win32IDE::initializeInference()
 
     // Check if model is loaded via GGUF loader (Streaming)
     if (m_loadedModelPath.empty()) {
-        if (!m_ggufLoader) {
-            appendToOutput("No model loaded for inference", "Errors", OutputSeverity::Error);
-            return false;
-        }
-        // If ggufLoader has a file open but path var is empty, try to recover (unlikely)
+        appendToOutput("No model selected for inference", "Errors", OutputSeverity::Error);
+        return false;
     }
     
     // Connect Native Engine to Model
     if (m_nativeEngine && !m_loadedModelPath.empty()) {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
-        if (!engine->IsModelLoaded()) {
+        {
+            m_nativeEngineLoaded = false;
             appendToOutput("Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
             if (engine->LoadModel(m_loadedModelPath)) {
                 m_nativeEngineLoaded = true;
                 appendToOutput(" Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
             } else {
                  appendToOutput(" Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
-                 // Don't fail completely if we have Ollama fallback, but for "no simulation" we adhere to native.
+                 return false;
             }
         }
     }

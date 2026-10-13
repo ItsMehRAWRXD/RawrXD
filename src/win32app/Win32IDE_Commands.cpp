@@ -3,68 +3,76 @@
 
 #include "Win32IDE.h"
 #include <commctrl.h>
+#include <commdlg.h>
 #include <richedit.h>
 #include <functional>
 #include <algorithm>
 #include <cctype>
 
-// Menu command IDs
-#define IDM_FILE_NEW 1001
-#define IDM_FILE_OPEN 1002
-#define IDM_FILE_SAVE 1003
-#define IDM_FILE_SAVEAS 1004
-#define IDM_FILE_SAVEALL 1005
-#define IDM_FILE_CLOSE 1006
-#define IDM_FILE_RECENT_BASE 1010
-#define IDM_FILE_RECENT_CLEAR 1020
-#define IDM_FILE_EXIT 1099
+#include "Win32IDE_CommandIDs.h"
 
-#define IDM_EDIT_UNDO 2001
-#define IDM_EDIT_REDO 2002
-#define IDM_EDIT_CUT 2003
-#define IDM_EDIT_COPY 2004
-#define IDM_EDIT_PASTE 2005
-#define IDM_EDIT_SELECT_ALL 2006
-#define IDM_EDIT_FIND 2007
-#define IDM_EDIT_REPLACE 2008
-
-// ============================================================================
-// MENU COMMAND SYSTEM (25+ Features)
-// ============================================================================
-
+// The menu IDs are sparse and mix File/Edit/View commands in the 2000 range.
+// Range routing misclassified them and claimed unknown commands were handled.
 bool Win32IDE::routeCommand(int commandId) {
-    // Check if command has a registered handler
     auto it = m_commandHandlers.find(commandId);
     if (it != m_commandHandlers.end()) {
-        it->second(); // Execute handler
+        it->second();
         return true;
     }
-    
-    // Route to appropriate handler based on command ID range
-    if (commandId >= 1000 && commandId < 2000) {
+    if (commandId >= IDM_FILE_RECENT_BASE && commandId < IDM_FILE_RECENT_CLEAR) {
         handleFileCommand(commandId);
         return true;
-    } else if (commandId >= 2000 && commandId < 3000) {
-        handleEditCommand(commandId);
-        return true;
-    } else if (commandId >= 3000 && commandId < 4000) {
-        handleViewCommand(commandId);
-        return true;
-    } else if (commandId >= 4000 && commandId < 5000) {
-        handleTerminalCommand(commandId);
-        return true;
-    } else if (commandId >= 5000 && commandId < 6000) {
-        handleToolsCommand(commandId);
-        return true;
-    } else if (commandId >= 6000 && commandId < 7000) {
-        handleModulesCommand(commandId);
-        return true;
-    } else if (commandId >= 7000 && commandId < 8000) {
-        handleHelpCommand(commandId);
-        return true;
     }
-    
-    return false;
+    switch (commandId) {
+    case IDM_FILE_NEW: case IDM_FILE_OPEN: case IDM_FILE_SAVE:
+    case IDM_FILE_SAVEAS: case IDM_FILE_EXIT: case IDM_FILE_LOAD_MODEL:
+    case IDM_FILE_SAVEALL: case IDM_FILE_CLOSE: case IDM_FILE_RECENT_CLEAR:
+        handleFileCommand(commandId); return true;
+    case IDM_EDIT_UNDO: case IDM_EDIT_REDO: case IDM_EDIT_CUT:
+    case IDM_EDIT_COPY: case IDM_EDIT_PASTE: case IDM_EDIT_SELECT_ALL:
+    case IDM_EDIT_FIND: case IDM_EDIT_REPLACE: case IDM_EDIT_FIND_NEXT:
+    case IDM_EDIT_FIND_PREV: case IDM_EDIT_SNIPPET: case IDM_EDIT_COPY_FORMAT:
+    case IDM_EDIT_PASTE_PLAIN: case IDM_EDIT_CLIPBOARD_HISTORY:
+        handleEditCommand(commandId); return true;
+    case IDM_VIEW_MINIMAP: case IDM_VIEW_OUTPUT_TABS: case IDM_VIEW_MODULE_BROWSER:
+    case IDM_VIEW_THEME_EDITOR: case IDM_VIEW_FLOATING_PANEL: case IDM_VIEW_OUTPUT_PANEL:
+    case IDM_VIEW_USE_STREAMING_LOADER: case IDM_VIEW_USE_VULKAN_RENDERER:
+    case IDM_VIEW_SIDEBAR: case IDM_VIEW_TERMINAL: case IDM_VIEW_SECONDARY_SIDEBAR:
+    case IDM_VIEW_PANEL:
+        handleViewCommand(commandId); return true;
+    case IDM_TERMINAL_POWERSHELL: case IDM_TERMINAL_CMD: case IDM_TERMINAL_STOP:
+    case IDM_TERMINAL_SPLIT_H: case IDM_TERMINAL_SPLIT_V: case IDM_TERMINAL_CLEAR_ALL:
+        handleTerminalCommand(commandId); return true;
+    case IDM_TOOLS_PROFILE_START: case IDM_TOOLS_PROFILE_STOP:
+    case IDM_TOOLS_PROFILE_RESULTS: case IDM_TOOLS_ANALYZE_SCRIPT:
+        handleToolsCommand(commandId); return true;
+    case IDM_MODULES_REFRESH: case IDM_MODULES_IMPORT: case IDM_MODULES_EXPORT:
+        handleModulesCommand(commandId); return true;
+    case IDM_HELP_ABOUT: case IDM_HELP_CMDREF: case IDM_HELP_PSDOCS:
+    case IDM_HELP_SEARCH: case IDM_HELP_SHORTCUTS:
+        handleHelpCommand(commandId); return true;
+    case IDM_GIT_STATUS: showGitStatus(); return true;
+    case IDM_GIT_COMMIT: showCommitDialog(); return true;
+    case IDM_GIT_PUSH: gitPush(); return true;
+    case IDM_GIT_PULL: gitPull(); return true;
+    case IDM_GIT_PANEL: showGitPanel(); return true;
+    case IDM_GIT_STAGE_ALL:
+        for (const auto& f : getGitChangedFiles()) if (!f.staged) gitStageFile(f.path);
+        return true;
+    case IDM_AGENT_START_LOOP: onAgentStartLoop(); return true;
+    case IDM_AGENT_EXECUTE_CMD: onAgentExecuteCommand(); return true;
+    case IDM_AGENT_CONFIGURE_MODEL: onAgentConfigureModel(); return true;
+    case IDM_AGENT_VIEW_TOOLS: onAgentViewTools(); return true;
+    case IDM_AGENT_VIEW_STATUS: onAgentViewStatus(); return true;
+    case IDM_AGENT_STOP: onAgentStop(); return true;
+    case IDM_AUTONOMY_TOGGLE: onAutonomyToggle(); return true;
+    case IDM_AUTONOMY_START: onAutonomyStart(); return true;
+    case IDM_AUTONOMY_STOP: onAutonomyStop(); return true;
+    case IDM_AUTONOMY_SET_GOAL: onAutonomySetGoal(); return true;
+    case IDM_AUTONOMY_STATUS: onAutonomyViewStatus(); return true;
+    case IDM_AUTONOMY_MEMORY: onAutonomyViewMemory(); return true;
+    default: return false;
+    }
 }
 
 void Win32IDE::registerCommandHandler(int commandId, std::function<void()> handler) {
@@ -113,7 +121,6 @@ void Win32IDE::handleFileCommand(int commandId) {
     switch (commandId) {
         case IDM_FILE_NEW:
             newFile();
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"New file created");
             break;
             
         case IDM_FILE_OPEN:
@@ -144,9 +151,24 @@ void Win32IDE::handleFileCommand(int commandId) {
             clearRecentFiles();
             break;
             
+        case IDM_FILE_LOAD_MODEL: {
+            char modelPath[MAX_PATH] = {};
+            OPENFILENAMEA dialog{};
+            dialog.lStructSize = sizeof(dialog);
+            dialog.hwndOwner = m_hwndMain;
+            dialog.lpstrFile = modelPath;
+            dialog.nMaxFile = MAX_PATH;
+            dialog.lpstrFilter = "GGUF Models (*.gguf)\0*.gguf\0All Files\0*.*\0";
+            dialog.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+            if (GetOpenFileNameA(&dialog) && !loadModelForInference(modelPath)) {
+                SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+                    reinterpret_cast<LPARAM>("Model loading failed; consult inference diagnostics."));
+            }
+            break;
+        }
         case IDM_FILE_EXIT:
             if (!m_fileModified || promptSaveChanges()) {
-                PostQuitMessage(0);
+                DestroyWindow(m_hwndMain);
             }
             break;
             
@@ -199,15 +221,20 @@ void Win32IDE::handleEditCommand(int commandId) {
             break;
             
         case IDM_EDIT_FIND:
-            MessageBoxA(m_hwndMain, "Find dialog - Feature available", "Find", MB_OK);
+            showFindDialog();
             break;
             
         case IDM_EDIT_REPLACE:
-            MessageBoxA(m_hwndMain, "Replace dialog - Feature available", "Replace", MB_OK);
+            showReplaceDialog();
             break;
             
-        default:
-            break;
+        case IDM_EDIT_FIND_NEXT: findNext(); break;
+        case IDM_EDIT_FIND_PREV: findPrevious(); break;
+        case IDM_EDIT_SNIPPET: showSnippetManager(); break;
+        case IDM_EDIT_COPY_FORMAT: copyWithFormatting(); break;
+        case IDM_EDIT_PASTE_PLAIN: pasteWithoutFormatting(); break;
+        case IDM_EDIT_CLIPBOARD_HISTORY: showClipboardHistory(); break;
+        default: break;
     }
 }
 
@@ -216,124 +243,72 @@ void Win32IDE::handleEditCommand(int commandId) {
 // ============================================================================
 
 void Win32IDE::handleViewCommand(int commandId) {
+    auto unsupported = [this](const char* message) {
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, reinterpret_cast<LPARAM>(message));
+        LOG_WARNING(message);
+    };
     switch (commandId) {
-        case 3001: // Toggle Minimap
-            toggleMinimap();
-            break;
-            
-        case 3002: // Toggle Output Tabs
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Output tabs toggled");
-            break;
-            
-        case 3003: // Toggle Floating Panel
-            toggleFloatingPanel();
-            break;
-            
-        case 3004: // Theme Editor
-            showThemeEditor();
-            break;
-            
-        case 3005: // Module Browser
-            showModuleBrowser();
-            break;
-            
-        default:
-            break;
+    case IDM_VIEW_MINIMAP: toggleMinimap(); break;
+    case IDM_VIEW_MODULE_BROWSER: showModuleBrowser(); break;
+    case IDM_VIEW_SIDEBAR: toggleSidebar(); break;
+    case IDM_VIEW_SECONDARY_SIDEBAR: toggleSecondarySidebar(); break;
+    case IDM_VIEW_USE_STREAMING_LOADER:
+        m_useStreamingLoader = !m_useStreamingLoader;
+        CheckMenuItem(m_hMenu, IDM_VIEW_USE_STREAMING_LOADER,
+            MF_BYCOMMAND | (m_useStreamingLoader ? MF_CHECKED : MF_UNCHECKED));
+        break;
+    case IDM_VIEW_THEME_EDITOR:
+        unsupported("Unsupported: interactive theme editing is unavailable in this build."); break;
+    case IDM_VIEW_FLOATING_PANEL:
+        if (m_hwndFloatingPanel && IsWindow(m_hwndFloatingPanel)) toggleFloatingPanel();
+        else unsupported("Unsupported: floating panel has no window in this build.");
+        break;
+    case IDM_VIEW_USE_VULKAN_RENDERER:
+        unsupported("Unsupported: switching the Vulkan editor renderer is not integrated."); break;
+    case IDM_VIEW_OUTPUT_TABS: case IDM_VIEW_OUTPUT_PANEL: case IDM_VIEW_PANEL:
+        unsupported("Unsupported: output-panel layout is not integrated in this build."); break;
+    case IDM_VIEW_TERMINAL:
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell");
+        for (auto& pane : m_terminalPanes) {
+            if (pane.hwnd) ShowWindow(pane.hwnd, (GetWindowLongPtrA(pane.hwnd, GWL_STYLE) & WS_VISIBLE) ? SW_HIDE : SW_SHOW);
+        }
+        break;
+    default: break;
     }
 }
-
-// ============================================================================
-// TERMINAL COMMAND HANDLERS
-// ============================================================================
 
 void Win32IDE::handleTerminalCommand(int commandId) {
     switch (commandId) {
-        case 4001: // Start PowerShell
-            startPowerShell();
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"PowerShell started");
-            break;
-            
-        case 4002: // Start CMD
-            startCommandPrompt();
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Command Prompt started");
-            break;
-            
-        case 4003: // Stop Terminal
-            stopTerminal();
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Terminal stopped");
-            break;
-            
-        case 4004: // Clear Terminal
-            // Clear the active terminal pane
-            {
-                TerminalPane* activePane = getActiveTerminalPane();
-                if (activePane && activePane->hwnd) {
-                    SetWindowTextA(activePane->hwnd, "");
-                }
-            }
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Terminal cleared");
-            break;
-            
-        default:
-            break;
+    case IDM_TERMINAL_POWERSHELL:
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell");
+        startPowerShell(); break;
+    case IDM_TERMINAL_CMD:
+        if (m_terminalPanes.empty()) createTerminalPane(Win32TerminalManager::CommandPrompt, "Command Prompt");
+        startCommandPrompt(); break;
+    case IDM_TERMINAL_STOP: stopTerminal(); break;
+    case IDM_TERMINAL_SPLIT_H: splitTerminalHorizontal(); break;
+    case IDM_TERMINAL_SPLIT_V: splitTerminalVertical(); break;
+    case IDM_TERMINAL_CLEAR_ALL: clearAllTerminals(); break;
+    default: break;
     }
 }
-
-// ============================================================================
-// TOOLS COMMAND HANDLERS
-// ============================================================================
 
 void Win32IDE::handleToolsCommand(int commandId) {
     switch (commandId) {
-        case 5001: // Start Profiling
-            startProfiling();
-            break;
-            
-        case 5002: // Stop Profiling
-            stopProfiling();
-            break;
-            
-        case 5003: // Show Profile Results
-            showProfileResults();
-            break;
-            
-        case 5004: // Analyze Script
-            analyzeScript();
-            break;
-            
-        case 5005: // Code Snippets
-            showSnippetManager();
-            break;
-            
-        default:
-            break;
+    case IDM_TOOLS_PROFILE_START: startProfiling(); break;
+    case IDM_TOOLS_PROFILE_STOP: stopProfiling(); break;
+    case IDM_TOOLS_PROFILE_RESULTS: showProfileResults(); break;
+    case IDM_TOOLS_ANALYZE_SCRIPT: analyzeScript(); break;
+    default: break;
     }
 }
 
-// ============================================================================
-// MODULES COMMAND HANDLERS
-// ============================================================================
-
 void Win32IDE::handleModulesCommand(int commandId) {
     switch (commandId) {
-        case 6001: // Refresh Module List
-            refreshModuleList();
-            break;
-            
-        case 6002: // Import Module
-            importModule();
-            break;
-            
-        case 6003: // Export Module
-            exportModule();
-            break;
-            
-        case 6004: // Show Module Browser
-            showModuleBrowser();
-            break;
-            
-        default:
-            break;
+    case IDM_MODULES_REFRESH: refreshModuleList(); break;
+    case IDM_MODULES_IMPORT: importModule(); break;
+    case IDM_MODULES_EXPORT: exportModule(); break;
+    default: break;
     }
 }
 
@@ -343,19 +318,19 @@ void Win32IDE::handleModulesCommand(int commandId) {
 
 void Win32IDE::handleHelpCommand(int commandId) {
     switch (commandId) {
-        case 7001: // Command Reference
+        case IDM_HELP_CMDREF: // Command Reference
             showCommandReference();
             break;
             
-        case 7002: // PowerShell Docs
+        case IDM_HELP_PSDOCS: // PowerShell Docs
             showPowerShellDocs();
             break;
             
-        case 7003: // Search Help
+        case IDM_HELP_SEARCH: // Search Help
             searchHelp("");
             break;
             
-        case 7004: // About
+        case IDM_HELP_ABOUT: // About
             MessageBoxA(m_hwndMain, 
                        "RawrXD IDE v2.0\n\n"
                        "Features:\n"
@@ -374,7 +349,7 @@ void Win32IDE::handleHelpCommand(int commandId) {
                        MB_OK | MB_ICONINFORMATION);
             break;
             
-        case 7005: // Keyboard Shortcuts
+        case IDM_HELP_SHORTCUTS: // Keyboard Shortcuts
             MessageBoxA(m_hwndMain,
                        "Keyboard Shortcuts:\n\n"
                        "File Operations:\n"
@@ -416,67 +391,67 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.clear();
     
     // File commands
-    m_commandRegistry.push_back({1001, "File: New File", "Ctrl+N", "File"});
-    m_commandRegistry.push_back({1002, "File: Open File", "Ctrl+O", "File"});
-    m_commandRegistry.push_back({1003, "File: Save", "Ctrl+S", "File"});
-    m_commandRegistry.push_back({1004, "File: Save As", "Ctrl+Shift+S", "File"});
-    m_commandRegistry.push_back({1005, "File: Save All", "", "File"});
-    m_commandRegistry.push_back({1006, "File: Close File", "Ctrl+W", "File"});
-    m_commandRegistry.push_back({1020, "File: Clear Recent Files", "", "File"});
+    m_commandRegistry.push_back({IDM_FILE_NEW, "File: New File", "Ctrl+N", "File"});
+    m_commandRegistry.push_back({IDM_FILE_OPEN, "File: Open File", "Ctrl+O", "File"});
+    m_commandRegistry.push_back({IDM_FILE_SAVE, "File: Save", "Ctrl+S", "File"});
+    m_commandRegistry.push_back({IDM_FILE_SAVEAS, "File: Save As", "Ctrl+Shift+S", "File"});
+    m_commandRegistry.push_back({IDM_FILE_SAVEALL, "File: Save All", "", "File"});
+    m_commandRegistry.push_back({IDM_FILE_CLOSE, "File: Close File", "Ctrl+W", "File"});
+    m_commandRegistry.push_back({IDM_FILE_RECENT_CLEAR, "File: Clear Recent Files", "", "File"});
     
     // Edit commands
-    m_commandRegistry.push_back({2001, "Edit: Undo", "Ctrl+Z", "Edit"});
-    m_commandRegistry.push_back({2002, "Edit: Redo", "Ctrl+Y", "Edit"});
-    m_commandRegistry.push_back({2003, "Edit: Cut", "Ctrl+X", "Edit"});
-    m_commandRegistry.push_back({2004, "Edit: Copy", "Ctrl+C", "Edit"});
-    m_commandRegistry.push_back({2005, "Edit: Paste", "Ctrl+V", "Edit"});
-    m_commandRegistry.push_back({2006, "Edit: Select All", "Ctrl+A", "Edit"});
-    m_commandRegistry.push_back({2007, "Edit: Find", "Ctrl+F", "Edit"});
-    m_commandRegistry.push_back({2008, "Edit: Replace", "Ctrl+H", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_UNDO, "Edit: Undo", "Ctrl+Z", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_REDO, "Edit: Redo", "Ctrl+Y", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_CUT, "Edit: Cut", "Ctrl+X", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_COPY, "Edit: Copy", "Ctrl+C", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_PASTE, "Edit: Paste", "Ctrl+V", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_SELECT_ALL, "Edit: Select All", "Ctrl+A", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_FIND, "Edit: Find", "Ctrl+F", "Edit"});
+    m_commandRegistry.push_back({IDM_EDIT_REPLACE, "Edit: Replace", "Ctrl+H", "Edit"});
     
     // View commands
-    m_commandRegistry.push_back({3001, "View: Toggle Minimap", "Ctrl+M", "View"});
-    m_commandRegistry.push_back({3002, "View: Toggle Output Panel", "", "View"});
-    m_commandRegistry.push_back({3003, "View: Toggle Floating Panel", "F11", "View"});
-    m_commandRegistry.push_back({3004, "View: Theme Editor", "", "View"});
-    m_commandRegistry.push_back({3005, "View: Module Browser", "", "View"});
-    m_commandRegistry.push_back({3006, "View: Toggle Sidebar", "Ctrl+B", "View"});
-    m_commandRegistry.push_back({3007, "View: Toggle Secondary Sidebar", "Ctrl+Alt+B", "View"});
-    m_commandRegistry.push_back({3008, "View: Toggle Panel", "Ctrl+J", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_MINIMAP, "View: Toggle Minimap", "Ctrl+M", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_OUTPUT_PANEL, "View: Toggle Output Panel", "", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_FLOATING_PANEL, "View: Toggle Floating Panel", "F11", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_THEME_EDITOR, "View: Theme Editor", "", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_MODULE_BROWSER, "View: Module Browser", "", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_SIDEBAR, "View: Toggle Sidebar", "Ctrl+B", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_SECONDARY_SIDEBAR, "View: Toggle Secondary Sidebar", "Ctrl+Alt+B", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_PANEL, "View: Toggle Panel", "Ctrl+J", "View"});
     
     // Terminal commands
-    m_commandRegistry.push_back({4001, "Terminal: New PowerShell", "", "Terminal"});
-    m_commandRegistry.push_back({4002, "Terminal: New Command Prompt", "", "Terminal"});
-    m_commandRegistry.push_back({4003, "Terminal: Kill Terminal", "", "Terminal"});
-    m_commandRegistry.push_back({4004, "Terminal: Clear Terminal", "", "Terminal"});
-    m_commandRegistry.push_back({4005, "Terminal: Split Terminal", "", "Terminal"});
+    m_commandRegistry.push_back({IDM_TERMINAL_POWERSHELL, "Terminal: New PowerShell", "", "Terminal"});
+    m_commandRegistry.push_back({IDM_TERMINAL_CMD, "Terminal: New Command Prompt", "", "Terminal"});
+    m_commandRegistry.push_back({IDM_TERMINAL_STOP, "Terminal: Kill Terminal", "", "Terminal"});
+    m_commandRegistry.push_back({IDM_TERMINAL_CLEAR_ALL, "Terminal: Clear Terminal", "", "Terminal"});
+    m_commandRegistry.push_back({IDM_TERMINAL_SPLIT_H, "Terminal: Split Terminal", "", "Terminal"});
     
     // Tools commands
-    m_commandRegistry.push_back({5001, "Tools: Start Profiling", "", "Tools"});
-    m_commandRegistry.push_back({5002, "Tools: Stop Profiling", "", "Tools"});
-    m_commandRegistry.push_back({5003, "Tools: Show Profile Results", "", "Tools"});
-    m_commandRegistry.push_back({5004, "Tools: Analyze Script", "", "Tools"});
-    m_commandRegistry.push_back({5005, "Tools: Code Snippets", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_PROFILE_START, "Tools: Start Profiling", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_PROFILE_STOP, "Tools: Stop Profiling", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_PROFILE_RESULTS, "Tools: Show Profile Results", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_ANALYZE_SCRIPT, "Tools: Analyze Script", "", "Tools"});
+    m_commandRegistry.push_back({IDM_EDIT_SNIPPET, "Tools: Code Snippets", "", "Tools"});
     
     // Module commands
-    m_commandRegistry.push_back({6001, "Modules: Refresh List", "", "Modules"});
-    m_commandRegistry.push_back({6002, "Modules: Import Module", "", "Modules"});
-    m_commandRegistry.push_back({6003, "Modules: Export Module", "", "Modules"});
-    m_commandRegistry.push_back({6004, "Modules: Browser", "", "Modules"});
+    m_commandRegistry.push_back({IDM_MODULES_REFRESH, "Modules: Refresh List", "", "Modules"});
+    m_commandRegistry.push_back({IDM_MODULES_IMPORT, "Modules: Import Module", "", "Modules"});
+    m_commandRegistry.push_back({IDM_MODULES_EXPORT, "Modules: Export Module", "", "Modules"});
+    m_commandRegistry.push_back({IDM_VIEW_MODULE_BROWSER, "Modules: Browser", "", "Modules"});
     
     // Git commands
-    m_commandRegistry.push_back({8001, "Git: Show Status", "", "Git"});
-    m_commandRegistry.push_back({8002, "Git: Commit", "Ctrl+Shift+C", "Git"});
-    m_commandRegistry.push_back({8003, "Git: Push", "", "Git"});
-    m_commandRegistry.push_back({8004, "Git: Pull", "", "Git"});
-    m_commandRegistry.push_back({8005, "Git: Stage All", "", "Git"});
+    m_commandRegistry.push_back({IDM_GIT_STATUS, "Git: Show Status", "", "Git"});
+    m_commandRegistry.push_back({IDM_GIT_COMMIT, "Git: Commit", "Ctrl+Shift+C", "Git"});
+    m_commandRegistry.push_back({IDM_GIT_PUSH, "Git: Push", "", "Git"});
+    m_commandRegistry.push_back({IDM_GIT_PULL, "Git: Pull", "", "Git"});
+    m_commandRegistry.push_back({IDM_GIT_STAGE_ALL, "Git: Stage All", "", "Git"});
     
     // Help commands
-    m_commandRegistry.push_back({7001, "Help: Command Reference", "", "Help"});
-    m_commandRegistry.push_back({7002, "Help: PowerShell Docs", "", "Help"});
-    m_commandRegistry.push_back({7003, "Help: Search Help", "", "Help"});
-    m_commandRegistry.push_back({7004, "Help: About", "", "Help"});
-    m_commandRegistry.push_back({7005, "Help: Keyboard Shortcuts", "", "Help"});
+    m_commandRegistry.push_back({IDM_HELP_CMDREF, "Help: Command Reference", "", "Help"});
+    m_commandRegistry.push_back({IDM_HELP_PSDOCS, "Help: PowerShell Docs", "", "Help"});
+    m_commandRegistry.push_back({IDM_HELP_SEARCH, "Help: Search Help", "", "Help"});
+    m_commandRegistry.push_back({IDM_HELP_ABOUT, "Help: About", "", "Help"});
+    m_commandRegistry.push_back({IDM_HELP_SHORTCUTS, "Help: Keyboard Shortcuts", "", "Help"});
     
     m_filteredCommands = m_commandRegistry;
 }
@@ -618,23 +593,7 @@ void Win32IDE::executeCommandFromPalette(int index)
     // Route the command
     routeCommand(commandId);
     
-    // Handle special view commands
-    if (commandId == 3006) toggleSidebar();
-    else if (commandId == 3007) toggleSecondarySidebar();
-    else if (commandId == 3008) togglePanel();
-    
-    // Handle Git commands
-    else if (commandId == 8001) showGitStatus();
-    else if (commandId == 8002) showCommitDialog();
-    else if (commandId == 8003) gitPush();
-    else if (commandId == 8004) gitPull();
-    else if (commandId == 8005) {
-        // Stage all
-        std::vector<GitFile> files = getGitChangedFiles();
-        for (const auto& f : files) {
-            if (!f.staged) gitStageFile(f.path);
-        }
-    }
+
 }
 
 LRESULT CALLBACK Win32IDE::CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
