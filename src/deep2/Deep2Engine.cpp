@@ -5777,13 +5777,6 @@ if (lw.useMLA) {
         const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
         const size_t headDim = modelWeights.headDim;
         const size_t numHeads = config.numHeads;
-        const size_t kvLoraRank = config.kvLoraRank > 0 ? config.kvLoraRank : 512;
-        const size_t qLoraRank = config.qLoraRank > 0 ? config.qLoraRank : 1536;
-        const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
-        const size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
-        const size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
-        const size_t headDim = modelWeights.headDim;
-        const size_t numHeads = config.numHeads;
 
         // Ensure MLA buffers are allocated
         if (mlaQ_a.size() < qLoraRank) mlaQ_a.resize(qLoraRank);
