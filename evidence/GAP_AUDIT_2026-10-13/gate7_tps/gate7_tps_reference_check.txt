@@ -1,0 +1,5 @@
+compared_positions=128
+finite=True
+argmax_matches=127/128
+verdict=PASS_BOUNDED
+mismatch pos=7 ref=29871 d2=278 d2_rank_in_ref=1 ref_top_logit=8.5449

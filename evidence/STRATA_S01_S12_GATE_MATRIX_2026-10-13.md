@@ -24,6 +24,15 @@
 
 **Final: S01, S02, S04, S06, S10 PASS · S03, S05, S09, S11 PARTIAL · S08 FAIL (improvement) · S07 BLOCKED (architecture) · S12 FAIL (floor)**
 
+## Post-matrix: D1/D2 throughput work (same day, verified)
+
+`evidence/FULL_IDE_COMPLETION_LEDGER.md` §3 carries the receipts. Effect on this matrix:
+
+- **S10/S12 decode measurement updated:** D2 submission grouping took tinyllama Q4_K_M decode from 1.50 → **3.53 TPS** (submits/waits 8,835 → 5,139, −41.8%, identical outputs). S12 remains FAIL against the 150 TPS floor; the measured ceiling moved, the gap did not close.
+- **S12 prefill measurement updated:** D1 batched prefill took dense prefill from 1.95 → **3.53 TPS** (BIT_EXACT full-logit parity). MoE prefill unchanged (0.53 → 0.55) — expert compute bound.
+- **S03/S09 note:** the synchronous-upload limitation behind S03's PARTIAL and the dense-path per-dot fences behind S09's PARTIAL are the same architectural constraint D2 partially addresses; remaining work is tracked as D10 (cross-token expert batching) and the D2 follow-up (FFN up/gate grouping).
+- **S11 note:** D1 does not change the no-batched-prefill blocker for model-level ≥4K context runs, because prefill at 3.53 TPS still makes a 4K prompt a ~19-minute run (arithmetic disclosed).
+
 ## Reproduction commands
 
 ```

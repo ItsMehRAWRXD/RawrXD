@@ -139,5 +139,6 @@ evidence/GAP_AUDIT_2026-10-13/gate6/*/
 evidence/GAP_AUDIT_2026-10-13/gate7/*/
 evidence/GAP_AUDIT_2026-10-13/gate7_decode/ref_chain/
 evidence/GAP_AUDIT_2026-10-13/gate7_probe/nemotron/
+evidence/GAP_AUDIT_2026-10-13/gate7_tps/*/
 evidence/GAP_AUDIT_2026-10-13/gate8_mem/
 evidence/GAP_AUDIT_2026-10-13/gate8_mem3/
