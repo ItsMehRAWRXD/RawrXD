@@ -57,11 +57,13 @@ int main(int argc, char* argv[]) {
     setvbuf(stderr, nullptr, _IONBF, 0);
 
     std::string model, outdir = "parity_out", tokensArg = "1 185";
+    int generate = 0;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--model" && i + 1 < argc) model = argv[++i];
         else if (a == "--outdir" && i + 1 < argc) outdir = argv[++i];
         else if (a == "--tokens" && i + 1 < argc) tokensArg = argv[++i];
+        else if (a == "--generate" && i + 1 < argc) generate = std::atoi(argv[++i]);
         else {
             std::printf("unknown arg %s\n", a.c_str());
             return 1;
@@ -156,6 +158,40 @@ int main(int argc, char* argv[]) {
         }
         if (lst) std::fclose(lst);
         ex.SetOpTrace(false);
+    }
+
+    // ---- greedy generation (multi-token agreement with KV reuse) -----------
+    // Mirrors llama_gen_ref: the argmax of the LAST seed position is gen[0],
+    // then each generated token is decoded through the persistent KV cache for
+    // a total of `generate` entries. Printed in the same GENSTREAM format so
+    // the two engines can be compared token-for-token.
+    if (generate > 0) {
+        std::vector<uint32_t> gen;
+        std::vector<double> genMax;
+        size_t gpos = tokens.size() - 1;
+        const std::vector<float>* last = &ex.Logits();
+        auto argmaxOf = [](const std::vector<float>& lg) {
+            uint32_t a = 0;
+            for (size_t i = 1; i < lg.size(); ++i)
+                if (lg[i] > lg[a]) a = (uint32_t)i;
+            return a;
+        };
+        gen.push_back(argmaxOf(*last));
+        genMax.push_back((*last)[gen.back()]);
+        for (int i = 1; i < generate; ++i) {
+            ++gpos;
+            if (!ex.ExecuteToken((uint32_t)gen.back(), gpos)) {
+                std::printf("GEN_FAIL pos=%zu err=%s\n", gpos, ex.LastError().c_str());
+                return 1;
+            }
+            last = &ex.Logits();
+            gen.push_back(argmaxOf(*last));
+            genMax.push_back((*last)[gen.back()]);
+        }
+        std::printf("GENSTREAM:");
+        for (size_t i = 0; i < gen.size(); ++i)
+            std::printf(" %u %.6f", gen[i], genMax[i]);
+        std::printf("\n");
     }
 
     const RuntimeGraph::BindStats& b = ex.Stats();
