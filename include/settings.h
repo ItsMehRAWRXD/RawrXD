@@ -1,20 +1,21 @@
 #pragma once
 
+#include <QSettings>
 #include <QString>
 #include <QVariant>
-#include <QSettings>
-#include <string>
 #include <cstdint>
+#include <string>
 
 // App state structure for settings
-struct AppState {
+struct AppState
+{
     // Compute settings
     bool enable_gpu_matmul = true;
     bool enable_gpu_attention = true;
     bool enable_cpu_gpu_compare = false;
     bool enable_detailed_quant = false;
     bool compute_settings_dirty = false;
-    
+
     // Overclock settings
     bool enable_overclock_governor = true;
     uint32_t target_all_core_mhz = 3600;
@@ -33,24 +34,25 @@ struct AppState {
     bool overclock_settings_dirty = false;
 };
 
-class Settings {
-public:
+class Settings
+{
+  public:
     Settings();
     ~Settings();
-    
+
     // Two-phase initialization: call after QApplication exists
     void initialize();
-    
+
     // Qt-based settings (for GUI)
     void setValue(const QString& key, const QVariant& value);
     QVariant getValue(const QString& key, const QVariant& default_value = QVariant());
-    
+
     // File-based settings (for compute/overclock)
     static bool LoadCompute(AppState& state, const std::string& path);
     static bool SaveCompute(const AppState& state, const std::string& path);
     static bool LoadOverclock(AppState& state, const std::string& path);
     static bool SaveOverclock(const AppState& state, const std::string& path);
-    
-private:
+
+  private:
     QSettings* settings_;
 };

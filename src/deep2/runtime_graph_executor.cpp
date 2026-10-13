@@ -428,7 +428,24 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             case Universal::Op::EmbeddingLookup: in.op = OpKind::EmbeddingLookup; break;
             case Universal::Op::RmsNorm: in.op = OpKind::RmsNorm; break;
             case Universal::Op::Linear: in.op = OpKind::Linear; break;
-            case Universal::Op::MatMul: in.op = OpKind::Linear; break;
+            // VERIFIED LOWERING RULE (audit 2026-10-13): no graph producer emits
+            // Universal::Op::MatMul. universal_gguf.cpp contains 11 sites that
+            // assign Op::Linear and 0 sites that assign Op::MatMul, so this
+            // arm is unreachable for every model the runtime ingests today.
+            //
+            // It is deliberately NOT aliased onto Linear. The two contracts are
+            // different: Linear is a weight-backed GGUF projection whose `b`
+            // operand must resolve to a ROM weight slot, while MatMul is a
+            // general tensor x tensor product with arbitrary stride, transpose
+            // and broadcast rules. Folding MatMul into Linear would let a future
+            // producer silently compute a projection when a matmul was asked for.
+            //
+            // Instead it fails closed through OpKind::Unsupported, which the bind
+            // step turns into an explicit "unimplemented operators" error rather
+            // than a wrong result. (OpLinear() also rejects wslot < 0, so this
+            // was already fail-closed at execution time; this moves the refusal
+            // to lowering, where it is diagnosable.)
+            case Universal::Op::MatMul: in.op = OpKind::Unsupported; break;
             case Universal::Op::Attention: in.op = OpKind::Attention; break;
             case Universal::Op::MlaDecompress: in.op = OpKind::MlaDecompress; break;
             case Universal::Op::Router: in.op = OpKind::Router; break;
@@ -1181,21 +1198,31 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     const size_t qRopeOff = isMla ? qk_nope : 0;
     const size_t kRopeOff = isMla ? qk_nope : 0;
 
-    // RoPE pairing is architecture-specific. llama.cpp (llama_model_rope_type)
-    // uses two pairings:
-    //   NORM  - pair i is elements (2i, 2i+1) - LLAMA, DEEPSEEK, DEEPSEEK2,...
-    //   NEOX  - pair i is elements (i, i + n_rot/2) - QWEN, QWEN2, GEMMA, ...
-    // DeepSeek-Coder-V2 (deepseek2) is NORM. Applying NEOX to it pairs every
-    // rotary element with the wrong partner, so the q.k score at any position
-    // > 0 is a different function than the reference's. Position 0 hides it
-    // (every angle is 0 there) and position 1 exposes it, which is exactly the
-    // certified divergence: blk00 attn_proj cos 0.865 while every pre-attention
-    // tensor matched llama.cpp at cos >= 0.9999.
-    //
-    // Verified against a reference ggml build: NORMAL pairing reproduces
-    // llama.cpp's post-rope Qcur and k_pe to cos 1.0000000 / RMS 1.5e-4.
+    // RoPE pairing is architecture-specific. llama.cpp (llama_model_rope_type,
+    // src/llama-model.cpp) splits the families:
+    //   NORM  - pair i is elements (2i, 2i+1) - LLAMA, LLAMA4, DEEPSEEK,
+    //          DEEPSEEK2, GRANITE, STARCODER, MISTRAL3, COHERE, ...
+    //   NEOX  - pair i is elements (i, i + n_rot/2) - QWEN2, QWEN3, GEMMA,
+    //          PHI3, FALCON, STABLELM, ...
+    // The earlier condition only admitted the deepseek* families to the NORM
+    // branch, so every llama-family model (llama3.1/3.2, granite, ...) was
+    // rotated with NEOX pairing. Position 0 hides the defect (every angle is
+    // 0 there); position 1 exposes it. Certified on llama3.2:3b against a
+    // llama.cpp dump (commit c479922a): reference post-rope Qcur/Kcur
+    // reproduce with NORM at cos 0.99999994/0.99999996, with NEOX only
+    // 0.9684/0.8658 - the reported blk00 pos1 attn_out cos 0.9843.
+    const std::string& arch = spec_.architecture;
     const bool rope_adjacent =
-        spec_.architecture == "deepseek" || spec_.architecture.rfind("deepseek", 0) == 0;
+        arch == "deepseek" || arch.rfind("deepseek", 0) == 0 ||
+        arch == "llama"    || arch.rfind("llama", 0) == 0 ||
+        arch == "granite"  || arch.rfind("granite", 0) == 0 ||
+        arch == "starcoder"|| arch == "mistral"  || arch.rfind("mistral", 0) == 0 ||
+        arch == "cohere"   || arch.rfind("cohere", 0) == 0 ||
+        arch == "command-r"|| arch == "internlm2"|| arch.rfind("internlm", 0) == 0 ||
+        arch == "baichuan" || arch.rfind("baichuan", 0) == 0 ||
+        arch == "xverse"   || arch == "minicpm"  || arch.rfind("minicpm", 0) == 0 ||
+        arch == "arctic"   || arch == "olmo"     || arch.rfind("olmo", 0) == 0 ||
+        arch == "chameleon"|| arch.rfind("bailingmoe", 0) == 0;
 
     auto rope = [&](std::vector<float>& t, size_t heads, size_t headDim,
                     size_t ropeLen, size_t ropeOff, bool yarn) {
@@ -1288,14 +1315,35 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     rope(kr, hk, kPerHead, ropeLen, kRopeOff, yarn);
 
     // Append to this layer's KV cache.
+    //
+    // llama.cpp compatibility (RAWRXD_KV_F16_CACHE_001): the reference stores
+    // K/V into an F16 cache by default -- llama_context_default_params() sets
+    // type_k = type_v = GGML_TYPE_F16. Measured against a llama.cpp node dump
+    // (llama3.2:3b, position 0, every layer): the reference kqv_out node is
+    // BIT-EXACTLY the F16 rounding of the V projection output (rel 0.000e+00
+    // against the F32 projection's 3.345e-04). An F32 cache therefore makes
+    // Deep2 diverge from every llama.cpp reference at the attention output
+    // itself, and the residual stream amplifies that 3e-4 into an argmax flip
+    // by block 28 -- the exact llama3.2:3b symptom this engine carried.
+    // Round on write, like the reference does. DEEP2_KV_F32=1 keeps the full
+    // precision cache for diagnostics (llama.cpp with -ctk f32 -ctv f32).
     auto& K = kv_k_[(size_t)in.block];
     auto& V = kv_v_[(size_t)in.block];
     const size_t kvW = kr.size();
     const size_t vW = v.size();
     if (K.size() < (position + 1) * kvW) K.resize((position + 1) * kvW, 0.0f);
     if (V.size() < (position + 1) * vW) V.resize((position + 1) * vW, 0.0f);
-    std::memcpy(K.data() + position * kvW, kr.data(), kvW * sizeof(float));
-    std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
+    if (std::getenv("DEEP2_KV_F32") != nullptr) {
+        std::memcpy(K.data() + position * kvW, kr.data(), kvW * sizeof(float));
+        std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
+    } else {
+        float* kp = K.data() + position * kvW;
+        for (size_t i = 0; i < kvW; ++i)
+            kp[i] = ggml_fp16_to_fp32(ggml_fp32_to_fp16(kr[i]));
+        float* vp = V.data() + position * vW;
+        for (size_t i = 0; i < vW; ++i)
+            vp[i] = ggml_fp16_to_fp32(ggml_fp32_to_fp16(v[i]));
+    }
 
     const size_t T = position + 1;
     // THE ATTENTION OUTPUT IS THE VALUE STREAM, NOT THE QUERY STREAM.

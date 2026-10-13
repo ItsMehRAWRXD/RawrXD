@@ -14,6 +14,8 @@ import sys
 import os
 import numpy as np
 
+_DUMP = os.environ.get("REF_DUMP") or None
+
 MODEL = sys.argv[1] if len(sys.argv) > 1 else \
     r"F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf"
 TOKEN_ID = int(sys.argv[2]) if len(sys.argv) > 2 else 750
@@ -278,12 +280,28 @@ def embed_row(tok):
     return dequant_q4_k_vec(
         np.frombuffer(raw, dtype=np.uint8).reshape(nb_per_row, 144))[:H]
 
-# --- LM head chunked Q6_K ---
+# --- LM head (tied to token_embd when output.weight is absent) ---
 lm_dims, lm_ttype, lm_toff = tinfo.get("output.weight", tinfo["token_embd.weight"])
 lm_cols = lm_dims[0]
 lm_rows = int(np.prod(lm_dims[1:]))
 lm_nb_per_row = (lm_cols + BLOCK_VALS - 1) // BLOCK_VALS
-lm_row_bytes = lm_nb_per_row * BLOCK_BYTES[TYPE_Q6_K]
+# Type-aware row stride.  Hardcoding Q6_K here was the prior latent defect:
+# for qwen2.5-coder_1.5b-base.gguf token_embd.weight is Q6_K so it happened
+# to be right, but a Q4_K/F16/F32 head (or a separate output.weight with a
+# different type) silently reads every row at the wrong offset.
+lm_row_bytes = lm_nb_per_row * BLOCK_BYTES[lm_ttype]
+
+
+def _lm_decode(raw, nrows):
+    arr = np.frombuffer(raw, dtype=np.uint8).reshape(
+        nrows * lm_nb_per_row, BLOCK_BYTES[lm_ttype])
+    if lm_ttype == TYPE_Q6_K:
+        v = dequant_q6_k_vec(arr)
+    elif lm_ttype == TYPE_Q4_K:
+        v = dequant_q4_k_vec(arr)
+    else:
+        raise RuntimeError(f"LM head: unsupported type {lm_ttype}")
+    return v.reshape(nrows, lm_cols)
 
 def logits_top10_from(hn):
     logits = np.empty(lm_rows, dtype=np.float32)
@@ -293,11 +311,9 @@ def logits_top10_from(hn):
         r1 = min(r0 + CH, lm_rows)
         f.seek(data_start + lm_toff + r0 * lm_row_bytes)
         raw = f.read((r1 - r0) * lm_row_bytes)
-        blk = np.frombuffer(raw, dtype=np.uint8).reshape(
-            (r1 - r0) * lm_nb_per_row, 210)
-        deq = dequant_q6_k_vec(blk).reshape(r1 - r0, lm_cols)
+        deq = _lm_decode(raw, r1 - r0)
         logits[r0:r1] = (deq.astype(np.float64) @ hn64).astype(np.float32)
-        del blk, deq
+        del raw, deq
     return logits
 
 # --- KV cache: [L][NKH][NPOS][head_dim] ---
@@ -465,6 +481,8 @@ for pos in range(start_pos, NPOS):
     emit_top10(pos, logits)
     predicted = int(np.argmax(logits))
     generated.append(predicted)
+    if _DUMP:
+        logits.astype("<f4").tofile(f"{_DUMP}.pos{pos}.LOGITS.f32")
     if pos + 1 < len(TEACHER_TOKENS):
         # teacher-force the next position from the frozen common trajectory
         tok = TEACHER_TOKENS[pos + 1]

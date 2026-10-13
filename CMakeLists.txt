@@ -3146,10 +3146,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
     set_target_properties(quant_parity_cert PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 
+    # K-quant dot-product parity gate (Q8_K packing + Q4_K/Q6_K x Q8_K dots).
+    # Compares Deep2's kernels against the vendored ggml reference in this
+    # repository, so drift on either side fails the build.
+    add_executable(kquant_dot_parity src/deep2/test_kquant_dot_parity.cpp)
+    target_include_directories(kquant_dot_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(kquant_dot_parity PRIVATE cxx_std_20)
+    target_compile_options(kquant_dot_parity PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(kquant_dot_parity PRIVATE
+        NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(kquant_dot_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+
     enable_testing()
     add_test(NAME q8k_edge_tests COMMAND q8k_edge_tests)
     add_test(NAME q8k_byte_parity COMMAND q8k_parity_tool --blocks 8 --seed 12345)
     add_test(NAME quant_parity_cert COMMAND quant_parity_cert --blocks 8 --seed 12345)
+    add_test(NAME kquant_dot_parity COMMAND kquant_dot_parity)
     message(STATUS "q8k parity harness: Q8_K byte-level verification targets enabled")
 endif()
 

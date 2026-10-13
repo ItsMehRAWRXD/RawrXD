@@ -390,16 +390,38 @@ QJsonObject ModelInvoker::sendClaudeRequest(const QString& prompt,
 }
 
 /**
- * @brief Send request to OpenAI API
+ * @brief Send request to OpenAI-compatible API (OpenAI, llama.cpp, etc.)
  */
 QJsonObject ModelInvoker::sendOpenAIRequest(const QString& prompt,
                                             int maxTokens,
                                             double temperature)
 {
-    QUrl url("https://api.openai.com/v1/chat/completions");
+    // Use m_endpoint if set, otherwise default to OpenAI
+    QString baseUrl = m_endpoint;
+    if (baseUrl.isEmpty()) {
+        baseUrl = "https://api.openai.com/v1";
+    }
+    // Ensure endpoint ends with /v1 or similar, then append /chat/completions
+    QString urlStr = baseUrl;
+    if (!urlStr.endsWith("/v1") && !urlStr.endsWith("/v1/")) {
+        if (!urlStr.endsWith("/")) {
+            urlStr += "/";
+        }
+        urlStr += "v1";
+    }
+    if (!urlStr.endsWith("/")) {
+        urlStr += "/";
+    }
+    urlStr += "chat/completions";
+
+    QUrl url(urlStr);
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Authorization", ("Bearer " + m_apiKey).toUtf8());
+    
+    // Only add Authorization header if apiKey is provided
+    if (!m_apiKey.isEmpty()) {
+        request.setRawHeader("Authorization", ("Bearer " + m_apiKey).toUtf8());
+    }
 
     QJsonObject payload;
     payload["model"] = m_model;
@@ -423,7 +445,7 @@ QJsonObject ModelInvoker::sendOpenAIRequest(const QString& prompt,
     loop.exec();
 
     if (reply->error() != QNetworkReply::NoError) {
-        qWarning() << "[ModelInvoker] OpenAI API error:" << reply->errorString();
+        qWarning() << "[ModelInvoker] OpenAI-compatible API error:" << reply->errorString();
         reply->deleteLater();
         return QJsonObject();
     }

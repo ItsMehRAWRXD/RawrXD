@@ -71,7 +71,8 @@ public:
     std::vector<DirEntry> ListRepo(const std::string& path, std::string& error) const;
     std::vector<SearchHit> SearchText(const std::string& query,
                                       const std::string& path,
-                                      std::string& error) const;
+                                      std::string& error,
+                                      bool searchAll = false) const;
     std::vector<DirEntry> FindFiles(const std::string& pattern,
                                     const std::string& path,
                                     std::string& error) const;

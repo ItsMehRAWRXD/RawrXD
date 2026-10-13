@@ -142,11 +142,47 @@ std::vector<DirEntry> WorkspaceToolHost::ListRepo(const std::string& path,
 }
 
 // ---------------------------------------------------------------------------
+// Source-scope policy for text search (RAWRXD_SEARCH_SCOPE_001)
+// ---------------------------------------------------------------------------
+// Code questions asked of a model must not be answered from build artifacts:
+// obj files, logs, cmake output and vendored copies pollute the hit list and
+// mislead the model. The default scope is source-like extensions; searching
+// everything (logs, marks, json) requires the caller to pass {"all":true},
+// which the agent can use deliberately.
+static bool IsSourceLike(const std::filesystem::path& p) {
+    static const char* kExt[] = {
+        ".cpp", ".cc", ".cxx", ".c", ".h", ".hpp", ".hh", ".inl", ".ipp",
+        ".asm", ".s", ".inc", ".cu", ".cuh", ".metal", ".glsl", ".hlsl",
+        ".spv", ".vert", ".frag", ".comp", ".py", ".rs", ".go", ".java",
+        ".cs", ".js", ".jsx", ".ts", ".tsx", ".m", ".mm", ".swift", ".kt"
+    };
+    std::string e = p.extension().string();
+    for (auto& c : e) c = static_cast<char>(::tolower(c));
+    for (const char* s : kExt)
+        if (e == s) return true;
+    return false;
+}
+
+static bool IsIgnoredDir(const std::filesystem::path& p) {
+    static const char* kSkip[] = {
+        "build", "build_ggml", "build_ggml_profiler", ".git", ".svn",
+        "node_modules", "__pycache__", ".vs", ".vscode", ".kilo", ".archive",
+        "3rdparty", "vendor", "deps", "output", "dist", "bin", "obj",
+        "CMakeFiles", "x64", "Debug", "Release", "MinSizeRel", "RelWithDebInfo"
+    };
+    const std::string n = p.filename().string();
+    for (const char* s : kSkip)
+        if (n == s) return true;
+    return false;
+}
+
+// ---------------------------------------------------------------------------
 // Structured text search (defaults to the workspace root)
 // ---------------------------------------------------------------------------
 std::vector<SearchHit> WorkspaceToolHost::SearchText(const std::string& query,
                                                      const std::string& path,
-                                                     std::string& error) const {
+                                                     std::string& error,
+                                                     bool searchAll) const {
     std::vector<SearchHit> hits;
     if (query.empty()) {
         error = "search_text requires a non-empty query. "
@@ -171,7 +207,12 @@ std::vector<SearchHit> WorkspaceToolHost::SearchText(const std::string& query,
                  root_to_walk,
                  fs::directory_options::skip_permission_denied, ec), end;
              it != end && matches < 250 && !ec; it.increment(ec)) {
+            if (it->is_directory(ec) && IsIgnoredDir(it->path())) {
+                it.disable_recursion_pending();
+                continue;
+            }
             if (it->is_regular_file(ec)) {
+                if (!searchAll && !IsSourceLike(it->path())) continue;
                 if (it->file_size(ec) <= 1024 * 1024) {
                     candidates.push_back(it->path().string());
                 }

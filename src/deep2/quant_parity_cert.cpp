@@ -45,16 +45,19 @@ void PrintPrimitiveTable() {
 
     struct Row { ModelGenie::Primitive p; const char* name; const char* src; };
     static const Row rows[] = {
-        {ModelGenie::Primitive::RmsNormFwd,       "RmsNormFwd",       "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::LinearFwd,        "LinearFwd",        "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::AttentionFwd,     "AttentionFwd",     "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::MlaDecompressFwd, "MlaDecompressFwd", "ModelGenieExecutor.cpp:1917"},
-        {ModelGenie::Primitive::MoEExecuteFwd,    "MoEExecuteFwd",    "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::TopKFwd,          "TopKFwd",          "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::RouterFwd,        "RouterFwd",        "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::ResidualAddFwd,   "ResidualAddFwd",   "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::LMHeadFwd,        "LMHeadFwd",        "ModelGenieExecutor.cpp"},
-        {ModelGenie::Primitive::MatMulFwd,        "MatMulFwd",        "dispatch returns false"},
+        {ModelGenie::Primitive::RmsNormFwd,       "RmsNormFwd",       "ModelGenieExecutor.cpp:RmsNormFwd"},
+        {ModelGenie::Primitive::LinearFwd,        "LinearFwd",        "ModelGenieExecutor.cpp:LinearFwd"},
+        {ModelGenie::Primitive::AttentionFwd,     "AttentionFwd",     "ModelGenieExecutor.cpp:AttentionFwd"},
+        {ModelGenie::Primitive::MlaDecompressFwd, "MlaDecompressFwd", "ModelGenieExecutor.cpp:MlaDecompressFwd"},
+        {ModelGenie::Primitive::MoEExecuteFwd,    "MoEExecuteFwd",    "ModelGenieExecutor.cpp:MoEExecuteFwd"},
+        {ModelGenie::Primitive::TopKFwd,          "TopKFwd",          "ModelGenieExecutor.cpp:TopKFwd"},
+        {ModelGenie::Primitive::RouterFwd,        "RouterFwd",        "ModelGenieExecutor.cpp:RouterFwd"},
+        {ModelGenie::Primitive::ResidualAddFwd,   "ResidualAddFwd",   "ModelGenieExecutor.cpp:ResidualAddFwd"},
+        {ModelGenie::Primitive::LMHeadFwd,        "LMHeadFwd",        "ModelGenieExecutor.cpp:LMHeadFwd"},
+        // Declared and gated, but the dispatcher returns false and no graph
+        // producer emits it, so it is reported as declared-unimplemented
+        // rather than borrowed provenance.
+        {ModelGenie::Primitive::MatMulFwd,        "MatMulFwd",        "ModelGenieExecutor.cpp:dispatch returns false (unreachable in produced graphs)"},
     };
 
     int available = 0, required = 0;

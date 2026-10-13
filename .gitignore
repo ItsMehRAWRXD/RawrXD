@@ -84,3 +84,28 @@ RawrXD-ModelLoader/build/
 RawrXD-ModelLoader/build-arm64/
 build/
 build-*/
+
+# ---- evaluation harness artifacts (rebuilt binaries + intermediates) ----
+/_eval_harness/
+_eval_harness/
+
+# ---- machine build trees ----
+build_vs/
+build_fresh/
+vs_validation/
+
+# ---- local backups ----
+/.backups/
+.backups/
+
+# ---- crash dumps (may contain process memory; keep local) ----
+evidence/crash_dumps/
+
+# ---- large binary parity dumps (keep locally; only summaries are committed) ----
+evidence/PARITY_2026-10-13/
+
+# ---- run logs / core dumps ----
+*.err
+*.stderr
+*.dmp
+.env

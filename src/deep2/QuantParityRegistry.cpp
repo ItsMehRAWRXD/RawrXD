@@ -21,6 +21,48 @@ static int64_t NowUnixMs() {
 }
 
 // ---------------------------------------------------------------------------
+// Primitive identity — the single source of truth for manifest provenance.
+// Every primitive's name and binding note is derived here, so a manifest entry
+// can never describe a different primitive than the one it reports.
+// ---------------------------------------------------------------------------
+static const char* PrimitiveName(ModelGenie::Primitive p) {
+    switch (p) {
+        case ModelGenie::Primitive::RmsNormFwd:       return "RmsNormFwd";
+        case ModelGenie::Primitive::LinearFwd:        return "LinearFwd";
+        case ModelGenie::Primitive::MatMulFwd:        return "MatMulFwd";
+        case ModelGenie::Primitive::AttentionFwd:     return "AttentionFwd";
+        case ModelGenie::Primitive::MlaDecompressFwd: return "MlaDecompressFwd";
+        case ModelGenie::Primitive::RouterFwd:        return "RouterFwd";
+        case ModelGenie::Primitive::TopKFwd:          return "TopKFwd";
+        case ModelGenie::Primitive::MoEExecuteFwd:    return "MoEExecuteFwd";
+        case ModelGenie::Primitive::ResidualAddFwd:   return "ResidualAddFwd";
+        case ModelGenie::Primitive::LMHeadFwd:        return "LMHeadFwd";
+        case ModelGenie::Primitive::None:
+        default:                                      return "None";
+    }
+}
+
+// Where the binding actually lives in the dispatcher.
+// MatMulFwd reports the true state (dispatch returns false) rather than
+// borrowing an implemented primitive's provenance.
+static const char* PrimitiveBindingNote(ModelGenie::Primitive p) {
+    switch (p) {
+        case ModelGenie::Primitive::RmsNormFwd:       return "ModelGenieExecutor.cpp:RmsNormFwd dispatch";
+        case ModelGenie::Primitive::LinearFwd:        return "ModelGenieExecutor.cpp:LinearFwd dispatch";
+        case ModelGenie::Primitive::MatMulFwd:        return "ModelGenieExecutor.cpp:MatMulFwd dispatch returns false; no graph producer emits it (Universal::Op::MatMul lowered to OpKind::Unsupported)";
+        case ModelGenie::Primitive::AttentionFwd:     return "ModelGenieExecutor.cpp:AttentionFwd dispatch";
+        case ModelGenie::Primitive::MlaDecompressFwd: return "ModelGenieExecutor.cpp:MlaDecompressFwd dispatch";
+        case ModelGenie::Primitive::RouterFwd:        return "ModelGenieExecutor.cpp:RouterFwd dispatch (via LinearFwd)";
+        case ModelGenie::Primitive::TopKFwd:          return "ModelGenieExecutor.cpp:TopKFwd dispatch";
+        case ModelGenie::Primitive::MoEExecuteFwd:    return "ModelGenieExecutor.cpp:MoEExecuteFwd dispatch";
+        case ModelGenie::Primitive::ResidualAddFwd:   return "ModelGenieExecutor.cpp:ResidualAddFwd dispatch";
+        case ModelGenie::Primitive::LMHeadFwd:        return "ModelGenieExecutor.cpp:LMHeadFwd dispatch";
+        case ModelGenie::Primitive::None:
+        default:                                      return "not declared";
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Kernel binding
 // ---------------------------------------------------------------------------
 bool QuantParityRegistry::BindKernel(uint32_t ggmlId, const std::string& kernelName) {
@@ -259,8 +301,15 @@ PrimitiveGate QuantParityRegistry::GatePrimitive(ModelGenie::Primitive p) {
             break;
 
         case ModelGenie::Primitive::MatMulFwd:
-            // The dispatcher explicitly returns false for this primitive
-            // (ModelGenieExecutor.cpp:1135-1137): declared, not implemented.
+            // Declared, gated, and still returning false in the dispatcher
+            // (ModelGenieExecutor.cpp). Deliberately NOT folded into LinearFwd:
+            // LinearFwd is a weight-backed GGUF projection while MatMulFwd is a
+            // general tensor x tensor product, so aliasing them would let a
+            // caller compute the wrong thing. No graph producer emits
+            // Universal::Op::MatMul today (11 sites emit Op::Linear, 0 emit
+            // Op::MatMul), and that op is lowered to OpKind::Unsupported so a
+            // future producer fails closed at bind time instead of silently
+            // mis-executing.
             g.available = false;
             g.kernelPresent = false;
             g.implementationRequired = true;
@@ -366,6 +415,13 @@ std::string QuantParityRegistry::ToJson() const {
     os << "\n  ],\n";
 
     // Primitive gates (MLA reality)
+    //
+    // The name and note MUST be derived from the primitive being reported.
+    // The previous emitter printed "mla_decompress" and
+    // "ModelGenieExecutor.cpp:1917" for every primitive, so an unimplemented
+    // primitive was described using an implemented one's provenance and the
+    // manifest looked healthy. A manifest that cannot identify the primitive it
+    // is reporting is not evidence.
     os << "  \"primitive_gates\": [\n";
     static const ModelGenie::Primitive kPrims[] = {
         ModelGenie::Primitive::RmsNormFwd,
@@ -384,11 +440,14 @@ std::string QuantParityRegistry::ToJson() const {
         if (!first) os << ",\n";
         first = false;
         const PrimitiveGate g = GatePrimitive(p);
-        os << "    {\"primitive\": \"mla_decompress\""
-           << ", \"available\": " << (g.available ? "true" : "false")
-           << ", \"implementation_required\": " << (g.implementationRequired ? "true" : "false")
-           << ", \"kernel_present\": " << (g.kernelPresent ? "true" : "false")
-           << ", \"note\": \"ModelGenieExecutor.cpp:1917\"}";
+        os << "    {\"primitive\": \"" << PrimitiveName(p) << "\""
+            << ", \"available\": " << (g.available ? "true" : "false")
+            << ", \"implementation_required\": " << (g.implementationRequired ? "true" : "false")
+            << ", \"kernel_present\": " << (g.kernelPresent ? "true" : "false")
+            << ", \"binding_status\": " << (g.available ? "\"bound\""
+                                             : (g.implementationRequired ? "\"declared_unimplemented\""
+                                                                          : "\"not_required\""))
+            << ", \"note\": \"" << PrimitiveBindingNote(p) << "\"}";
     }
     os << "\n  ],\n";
 
