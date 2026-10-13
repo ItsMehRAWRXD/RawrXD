@@ -407,6 +407,23 @@ endif()
 # dependency-free builds. It is a WINDOWS-ONLY library (WebView2,
 # WinHTTP, windows.h), so it is gated on WIN32 to keep non-Windows
 # builds working.
+
+# nlohmann/json is vendored header-only at include/nlohmann/json.hpp, but the
+# targets at CMakeLists.txt:3095 and :3182 link nlohmann_json::nlohmann_json,
+# which was never defined -- so `cmake -G "Visual Studio 17 2022"` aborted with
+# "Target ... links to nlohmann_json::nlohmann_json but the target was not
+# found". Define the imported/interface target from the vendored header instead
+# of adding a network dependency or removing the call sites.
+if(NOT TARGET nlohmann_json)
+    add_library(nlohmann_json INTERFACE)
+    target_include_directories(nlohmann_json SYSTEM INTERFACE
+        ${CMAKE_SOURCE_DIR}/include)
+    if(NOT TARGET nlohmann_json::nlohmann_json)
+        add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
+    endif()
+    message(STATUS "nlohmann_json: using vendored header at include/nlohmann/json.hpp")
+endif()
+
 if(WIN32)
     add_subdirectory(src/workflow)
 endif()
