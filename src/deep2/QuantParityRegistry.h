@@ -212,7 +212,10 @@ public:
 
 private:
     QuantParityRegistry() = default;
-    mutable std::mutex m_mtx;
+    // Recursive: ToJson() holds the lock for an atomic snapshot and then calls
+    // ComputeCoverage()/StatusOf()/GatePrimitive(), which lock it again. A plain
+    // mutex made that re-lock UB (fastfail 0xC0000409 on the --json path).
+    mutable std::recursive_mutex m_mtx;
     std::map<uint32_t, KernelBinding>  m_bindings;
     std::vector<ParityEvidence>        m_evidence;
 };

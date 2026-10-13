@@ -48,6 +48,7 @@ enum class OpKind : uint8_t {
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
     Publish,      // copy an arena value to a named one (residual bookkeeping)
     SwiGLU,       // out = silu(gate) * up, the dense-FFN activation
+    SquaredReLU,  // out = relu(x)^2, Nemotron's gateless MLP activation
     Unsupported
 };
 
@@ -240,7 +241,11 @@ private:
       // SSM recurrence state, one row per SSM block. Allocated at bind time
       // from the model's declared d_state and d_inner, and carried across
       // decode positions because the recurrence IS the state.
+      // RAWRXD_GATE7_MAMBA2_001: state is head-grouped (n_heads x head_dim x
+      // d_state), and ssm_conv_ carries each block's causal conv1d history
+      // ((kernel-1) samples per channel) across tokens.
       std::vector<std::vector<float> > ssm_state_;
+      std::vector<std::vector<float> > ssm_conv_;
       bool first_bind_ = true;   // trace only the primary executor
       std::vector<uint32_t> ssm_state_slots_;
     std::vector<float> logits_;

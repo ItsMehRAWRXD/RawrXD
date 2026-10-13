@@ -71,7 +71,7 @@ bool QuantParityRegistry::BindKernel(uint32_t ggmlId, const std::string& kernelN
     const QuantTypeDescriptor* d = LookupQuantType(ggmlId);
     if (!d) return false;
 
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     KernelBinding b;
     b.ggmlId     = ggmlId;
     b.quantName  = d->name;
@@ -89,13 +89,13 @@ bool QuantParityRegistry::BindKernel(uint32_t ggmlId, const std::string& kernelN
 }
 
 const KernelBinding* QuantParityRegistry::Find(uint32_t ggmlId) const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     auto it = m_bindings.find(ggmlId);
     return it != m_bindings.end() ? &it->second : nullptr;
 }
 
 std::vector<KernelBinding> QuantParityRegistry::AllBindings() const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     std::vector<KernelBinding> out;
     out.reserve(m_bindings.size());
     for (const auto& [id, b] : m_bindings) out.push_back(b);
@@ -118,7 +118,7 @@ bool QuantParityRegistry::RecordParity(uint32_t ggmlId, ParityPath path,
     // Only a known, non-zero-geometry type can be certified.
     if (!LookupQuantType(ggmlId)) return false;
 
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
     ParityEvidence ev;
     ev.ggmlId      = ggmlId;
@@ -142,7 +142,7 @@ bool QuantParityRegistry::RecordParity(uint32_t ggmlId, ParityPath path,
 }
 
 ParityStatus QuantParityRegistry::StatusOf(uint32_t ggmlId, ParityPath path) const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     // The strongest status recorded for this exact (id, path).
     ParityStatus best = ParityStatus::Unverified;
     bool failed = false;
@@ -155,7 +155,7 @@ ParityStatus QuantParityRegistry::StatusOf(uint32_t ggmlId, ParityPath path) con
 }
 
 ParityStatus QuantParityRegistry::BestStatus(uint32_t ggmlId) const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     ParityStatus best = ParityStatus::Unverified;
     bool failed = false;
     for (const auto& e : m_evidence) {
@@ -167,14 +167,14 @@ ParityStatus QuantParityRegistry::BestStatus(uint32_t ggmlId) const {
 }
 
 std::vector<ParityEvidence> QuantParityRegistry::EvidenceFor(uint32_t ggmlId) const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     std::vector<ParityEvidence> out;
     for (const auto& e : m_evidence) if (e.ggmlId == ggmlId) out.push_back(e);
     return out;
 }
 
 std::vector<ParityEvidence> QuantParityRegistry::AllEvidence() const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     return m_evidence;
 }
 
@@ -229,7 +229,7 @@ bool QuantParityRegistry::IsCertified(uint32_t ggmlId) const {
 // Coverage
 // ---------------------------------------------------------------------------
 QuantParityRegistry::Coverage QuantParityRegistry::ComputeCoverage() const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
     Coverage c{};
     for (uint32_t i = 0; i < static_cast<uint32_t>(GGMLType::GGML_TYPE_COUNT); ++i) {
@@ -380,7 +380,7 @@ void QuantParityRegistry::RegisterBuiltinKernels() {
 // Evidence ledger serialization
 // ---------------------------------------------------------------------------
 std::string QuantParityRegistry::ToJson() const {
-    std::lock_guard<std::mutex> lock(m_mtx);
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
 
     std::ostringstream os;
     os << "{\n";

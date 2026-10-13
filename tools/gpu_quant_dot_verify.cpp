@@ -238,6 +238,19 @@ int main(int argc, char** argv) {
         {1, 33,  768,  "q6k_irregular_33x768"},
         {1, 1,   256,  "q6k_min_1x256"},
         {1, 17,  2048, "q6k_17x2048"},
+        // RAWRXD_GATE4_KERNEL_GEOMETRY_001: the shapes a real model actually
+        // exercises. The original suite stopped at 8 super-blocks (in<=2048),
+        // but tinyllama's ffn_down is Q6_K with n_in=5632 = 22 super-blocks -
+        // a geometry the kernel evidence never covered. The block-count sweep
+        // localises any block-count-dependent accumulation drift, and the two
+        // full shapes are the exact projections consumed per layer.
+        {0, 5632, 2048, "q4k_ffngate_5632x2048"},
+        {1, 2048, 5632, "q6k_ffndown_2048x5632"},
+        {1, 8,   2304, "q6k_bcount_9x256"},
+        {1, 8,   2560, "q6k_bcount_10x256"},
+        {1, 8,   3584, "q6k_bcount_14x256"},
+        {1, 8,   4608, "q6k_bcount_18x256"},
+        {1, 8,   5632, "q6k_bcount_22x256"},
     };
 
     int pass = 0, total = 0;

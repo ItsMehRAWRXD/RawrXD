@@ -20,7 +20,7 @@ using Universal::TensorRec;
 namespace {
 
 // ---------------------------------------------------------------------------
-// RAWRXD_RESOURCE_GOVERNOR_001 — admitted, bounded KV residency.
+// RAWRXD_RESOURCE_GOVERNOR_001 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â admitted, bounded KV residency.
 //
 // One process governor for host-RAM leases (weight residency and KV growth).
 // DEEP2_KV_BUDGET_MB overrides the default host budget. The KV cache grows by
@@ -377,6 +377,7 @@ const char* OpKindName(OpKind k) {
         case OpKind::ResidualAdd: return "ResidualAdd";
         case OpKind::Publish: return "Publish";
         case OpKind::SwiGLU: return "SwiGLU";
+        case OpKind::SquaredReLU: return "SquaredReLU";
         case OpKind::LmHead: return "LmHead";
 
         default: return "Unsupported";
@@ -488,6 +489,7 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             case Universal::Op::ResidualAdd: in.op = OpKind::ResidualAdd; break;
             case Universal::Op::Publish: in.op = OpKind::Publish; break;
             case Universal::Op::SwiGLU: in.op = OpKind::SwiGLU; break;
+            case Universal::Op::SquaredReLU: in.op = OpKind::SquaredReLU; break;
             case Universal::Op::LmHead: in.op = OpKind::LmHead; break;
             case Universal::Op::SsmScan: in.op = OpKind::SsmScan; break;
 
@@ -595,6 +597,7 @@ bool Executor::Bind(const Universal::IngestReport& report) {
                 case OpKind::ResidualAdd:     return "ResidualAdd";
                 case OpKind::Publish:         return "Publish";
                 case OpKind::SwiGLU:          return "SwiGLU";
+                case OpKind::SquaredReLU:     return "SquaredReLU";
                 case OpKind::LmHead:          return "LmHead";
                 case OpKind::SsmScan:         return "SsmScan";
                 default:                      return "Other";
@@ -1377,7 +1380,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     //
     // Admitted residency (RAWRXD_RESOURCE_GOVERNOR_001): the growth bytes are
     // leased from the host budget first. Budget exhaustion fails the forward
-    // pass closed — a silently truncated KV cache would corrupt every later
+    // pass closed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â a silently truncated KV cache would corrupt every later
     // position instead of degrading honestly.
     auto& K = kv_k_[(size_t)in.block];
     auto& V = kv_v_[(size_t)in.block];
@@ -1432,7 +1435,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     std::vector<float> scores(T);
     // GQA groups: consecutive query heads share one KV head.
     const size_t group = std::max<size_t>(H / std::max<size_t>(hk, 1), 1);
-    // MLA score = q_nopeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_nope  +  q_ropeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_rope.
+    // MLA score = q_nopeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_nope  +  q_ropeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·k_rope.
     //
     // Dotting the whole per-head width is WRONG for MLA: q's rope slots would
     // be multiplied by K's no-rope slots. That cross-term made every position
@@ -1458,7 +1461,8 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         // comparing it localises a divergence to the score path specifically,
         // which the value stream cannot reveal because position 0's softmax is
         // trivially 1.0 and therefore never exercises the score at all.
-        if (in.block == 0 && h == 0 && score_seen_ != (int)position + 1) {
+        if (in.block == 0 && h == 0 && std::getenv("ATTN_SCORE_TRACE") &&
+            score_seen_ != (int)position + 1) {
             std::fprintf(stderr, "[attn-scores] block=%d pos=%zu scale=%.9f",
                          (int)in.block, position, scoreScale);
             for (size_t t = 0; t < T; ++t)
@@ -1863,7 +1867,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     // The gate expert is a SEPARATE tensor (blk.N.ffn_gate_exps.weight) from
     // the up expert (blk.N.ffn_up_exps.weight). The graph builder names the gate
     // in moe.c and up/down in moe.detail. Falling back to `gateT = upT` makes
-    // the SwiGLU become silu(x·Wu)·(x·Wu), i.e. the same projection used twice,
+    // the SwiGLU become silu(xÃƒâ€šÃ‚Â·Wu)Ãƒâ€šÃ‚Â·(xÃƒâ€šÃ‚Â·Wu), i.e. the same projection used twice,
     // which silently corrupts every MoE block (26 of 27 on deepseek2) while
     // leaving the dense block and all norms correct - exactly the signature of
     // a run whose block-0 values match and whose later blocks do not.
@@ -2785,6 +2789,30 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 }
                 break;
             }
+            case OpKind::SquaredReLU: {
+                // Nemotron's gateless MLP activation: out = relu(x)^2.
+                // The block ships ffn_up and ffn_down with NO gate tensor, so
+                // the SwiGLU path cannot express it; this is that block's
+                // activation. Squares of the positive half only: negatives are
+                // zero, as ReLU requires. relu^2 was pinned against the
+                // llama.cpp reference (cos 0.797 vs 0.26 relu / 0.67 gelu /
+                // 0.50 silu on nemotron-3-nano position 0).
+                const std::vector<float>* in_v = &hidden_;
+                if (!in.aName.empty() && in.aName[0] != '<') {
+                    auto it = act.find(in.aName);
+                    if (it == act.end()) { last_error_ = "squaredrelu: input missing"; return false; }
+                    in_v = &it->second;
+                }
+                std::vector<float> y(in_v->size(), 0.0f);
+                for (size_t i = 0; i < in_v->size(); ++i) {
+                    const float v = (*in_v)[i];
+                    y[i] = (v > 0.0f) ? v * v : 0.0f;
+                }
+                hidden_ = y;
+                const std::string dst = in.outName.empty() ? std::string("mlp_act") : in.outName;
+                arena(dst) = y;
+                break;
+            }
             case OpKind::SwiGLU: {
                 // out = silu(gate) * up, elementwise.
                 // The down projection MUST consume this. Feeding it the norm
@@ -2957,8 +2985,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (logits_.empty()) { last_error_ = "no logits produced"; return false; }
     for (float v : logits_) if (!std::isfinite(v)) ++nonfinite_logits_;
 
-    stats_.gpu_calls += gpu_calls_;
-    stats_.cpu_calls += cpu_calls_;
+    // Mirror the dispatch counters into the receipt stats. gpu_calls_/cpu_calls_
+    // are CUMULATIVE over every token this executor has run, so the mirror is
+    // an ASSIGNMENT. Adding them per token double-counted the history: a
+    // 2-token run reported 155 + 310 = 465 dispatches for the 310 that really
+    // executed, and a k-token run reported k(k+1)/2 x the per-token count.
+    stats_.gpu_calls = gpu_calls_;
+    stats_.cpu_calls = cpu_calls_;
     if (!cpu_fallback_reason_.empty() && stats_.fallback_reason.empty()) {
         stats_.fallback_reason = cpu_fallback_reason_;
     }
@@ -2987,28 +3020,45 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
 
 // ---------------------------------------------------------------------------
-// OpSsmScan - Mamba2 selective scan.
+// OpSsmScan - Mamba2 selective scan (RAWRXD_GATE7_MAMBA2_001).
 //
-// The missing primitive for nemotron_h / qwen3-next. An SSM has no parallel
-// form to approximate, so the recurrence below IS the block. Per channel i,
-// for one token:
-//     dt    = softplus(dt_b[i])
-//     decay = exp(dt * A[i])
-//     state = decay*state + dt * x[i]
-//     y     = state + D[i] * x[i]
-// Every operand comes from the model's own tensors; nothing is defaulted.
+// The previous implementation was a Mamba1-style SISO recurrence. It never
+// consumed the causal conv1d weights (o.c / ssm_conv1d.bias), dropped the z
+// gate, derived dt from the bias alone, and carried ONE scalar state per
+// channel instead of the head-grouped (n_heads x head_dim x d_state)
+// recurrence. Nemotron_h and qwen3-next mixers are Mamba2, so Deep2's hybrid
+// output diverged from the llama.cpp reference at cosine -0.015 while its own
+// two backends agreed with each other: a silent wrong answer, exactly what
+// Gate 7 must catch. This is the real Mamba2 block, with every operand taken
+// from the model's own tensors (nemotron_h measured layout):
+//
+//   in_proj  : [3136 -> 17504]  = z(7680) | x(7680) | B(1024) | C(1024) | dt(96)
+//   ssm_a    : [96]  per head (negative),   ssm_d   : [96]  per head
+//   ssm_dt.b: [96]  per head,               conv1d  : 9728 channels, kernel 4
+//                                             9728 = x(7680) + B(1024) + C(1024)
+//   ssm_norm : [7680] gated RMSNorm weight (stored 2D [960,8], flat 7680)
+//   ssm_out  : [3136 -> ...] handled by the graph's projection op
+//
+//   dt   = softplus(dt + dt_bias)                     (per head)
+//   h    = exp(dt*A) * h + dt * x * B                 (state: heads x head_dim x N)
+//   y    = C . h + D * x                              (per head)
+//   y    = RmsNorm(y * silu(z)) * ssm_norm            (gate first, then norm)
+//
+// The conv history and the recurrence state live per block across tokens - the
+// recurrence IS the state - and are zero-filled on first use.
 // ---------------------------------------------------------------------------
 bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
                          std::vector<float>& y, std::string& err) {
-    const size_t D = (size_t)spec_.ssm_inner_size;
-    const size_t N = (size_t)spec_.ssm_state_size;
-    if (D == 0 || N == 0) { err = "ssm: ssm.inner_size / ssm.state_size not declared"; return false; }
+    const size_t D = (size_t)spec_.ssm_inner_size;      // d_inner (x and z width)
+    const size_t N = (size_t)spec_.ssm_state_size;      // d_state
+    const size_t G = (size_t)spec_.ssm_group_count;     // n_groups
+    const size_t K = (size_t)spec_.ssm_conv_kernel;     // conv kernel
+    if (D == 0 || N == 0 || G == 0 || K < 2) {
+        err = "ssm: ssm geometry (inner_size/state_size/group_count/conv_kernel) not declared";
+        return false;
+    }
     if (in.b < 0) { err = "ssm: no in-projection slot"; return false; }
-
-    std::vector<float> xd;
-    if (!OpLinear(in.b, x, xd, err)) return false;
-    if (xd.size() < D) { err = "ssm: in-projection smaller than d_inner"; return false; }
-    xd.resize(D);
+    if (in.c < 0) { err = "ssm: no conv1d weight slot"; return false; }
 
     auto slotOf = [&](const char* tag) -> int32_t {
         const std::string needle = std::string(tag) + "=";
@@ -3025,49 +3075,157 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     const int32_t aSlot = slotOf("A");
     const int32_t dtSlot = slotOf("dtB");
     const int32_t dSlot = slotOf("D");
+    const int32_t convBSlot = slotOf("convB");
+    const int32_t normSlot = slotOf("norm");
     if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
+    if (convBSlot < 0) { err = "ssm: model has no ssm_conv1d.bias"; return false; }
+    if (normSlot < 0) { err = "ssm: model has no ssm_norm.weight"; return false; }
 
-    std::vector<float> A, DtB, Dd;
-    if (aSlot < 0 || dtSlot < 0) { err = "ssm: model has no ssm_a / ssm_dt.bias"; return false; }
-
-    // Mamba2 scale/decay tensors are far smaller than d_inner and BROADCAST
-    // across head groups rather than providing one value per channel.
-    //
-    // Measured on the real Nemotron-3.5-Lightning-30B:
-    //     D (ssm.inner_size)  = 4096
-    //     N (ssm.state_size)  = 128
-    //     blk.0.ssm_a         = [1, 64]   -> 64 elements
-    //
-    // Requiring D distinct values here reported "ssm_a too small" on a perfectly
-    // valid tensor, which blocked every Mamba2 block. Load what each tensor
-    // actually provides and index modulo its length, which is the broadcast the
-    // architecture specifies.
-    DequantPrefix(tensors_[(size_t)aSlot], A, D);
-    DequantPrefix(tensors_[(size_t)dtSlot], DtB, D);
-    if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], Dd, D);
-
-    if (A.empty()) { err = "ssm: ssm_a dequantized to nothing"; return false; }
-    if (DtB.empty()) { err = "ssm: ssm_dt.bias dequantized to nothing"; return false; }
-    if (Dd.empty()) Dd.assign(D, 0.0f);
-
-    if (std::getenv("SSM_TRACE")) {
-        std::fprintf(stderr, "[ssm] block=%d D=%zu aElems=%zu dtElems=%zu dElems=%zu\n",
-                     (int)in.block, D, A.size(), DtB.size(), Dd.size());
+    std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
+    if (DequantPrefix(tensors_[(size_t)aSlot], A, 1u << 16) == 0) {
+        err = "ssm: ssm_a dequantized to nothing"; return false;
+    }
+    if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, 1u << 16) == 0) {
+        err = "ssm: ssm_dt.bias dequantized to nothing"; return false;
+    }
+    if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], Dv, 1u << 16);
+    if (Dv.empty()) Dv.assign(A.size(), 0.0f);
+    if (DequantPrefix(tensors_[(size_t)convBSlot], ConvB, 1u << 20) == 0) {
+        err = "ssm: ssm_conv1d.bias dequantized to nothing"; return false;
+    }
+    if (DequantPrefix(tensors_[(size_t)normSlot], NormW, 1u << 20) == 0) {
+        err = "ssm: ssm_norm dequantized to nothing"; return false;
+    }
+    if (DequantPrefix(tensors_[(size_t)in.c], ConvW, 1u << 24) == 0) {
+        err = "ssm: ssm_conv1d.weight dequantized to nothing"; return false;
     }
 
+    // ---- 1. in_proj: the FULL zxbcdt projection ----------------------------
+    std::vector<float> zxbcdt;
+    if (!OpLinear(in.b, x, zxbcdt, err)) return false;
+
+    const size_t nHeads = A.size();               // 96
+    const size_t headDim = D / nHeads;            // 80
+    const size_t Ntot = N * G;                    // B/C width   (1024)
+    const size_t convCh = D + 2 * Ntot;           // 9728
+    const size_t dtOff = 2 * D + 2 * Ntot;        // 17408
+    if (nHeads == 0 || headDim * nHeads != D) {
+        err = "ssm: ssm_a (" + std::to_string(nHeads) +
+              ") does not divide d_inner (" + std::to_string(D) + ")";
+        return false;
+    }
+    if (zxbcdt.size() < dtOff + nHeads) {
+        err = "ssm: in-projection output " + std::to_string(zxbcdt.size()) +
+              " smaller than the zxbcdt geometry " + std::to_string(dtOff + nHeads);
+        return false;
+    }
+    if (ConvW.size() < K * convCh || ConvB.size() < convCh) {
+        err = "ssm: conv1d weights smaller than " + std::to_string(convCh) + " channels";
+        return false;
+    }
+    if (NormW.size() < D) { err = "ssm: ssm_norm smaller than d_inner"; return false; }
+
+    const float* z = zxbcdt.data();
+    const float* xz = zxbcdt.data() + D;                    // x (NVIDIA/nemotron order)
+    const float* Bp = zxbcdt.data() + 2 * D;
+    const float* Cp = zxbcdt.data() + 2 * D + Ntot;
+    const float* dtp = zxbcdt.data() + dtOff;
+
+    // Layout pinned against the llama.cpp reference and ggml's own SSM primitives:
+    // in_proj output = [z | x | B | C | dt], conv weight [K, C] with the newest
+    // tap last, SiLU on every conv channel, A used as stored (negative), z gate
+    // before the gated norm. Each alternative was measured: x/z swap -0.09,
+    // transposed conv layout -0.10, dt-first -0.29, SiLU-on-x-only -0.04,
+    // norm-before-gate -0.007 on the nemotron-3-nano reference cosine.
+
+    // ---- 2. causal depthwise conv1d over [x | B | C] ------------------------
+    if (ssm_conv_.size() <= (size_t)in.block) ssm_conv_.resize((size_t)in.block + 1);
+    std::vector<float>& conv = ssm_conv_[(size_t)in.block];
+    if (conv.size() != (K - 1) * convCh) conv.assign((K - 1) * convCh, 0.0f);
+
+    std::vector<float> convOut(convCh);
+    {
+        // Concatenate the three convolved slices into one buffer first so the
+        // depthwise pass can index channels uniformly.
+        std::vector<float> cur(convCh);
+        for (size_t i = 0; i < D; ++i) cur[i] = xz[i];
+        for (size_t i = 0; i < Ntot; ++i) { cur[D + i] = Bp[i]; cur[D + Ntot + i] = Cp[i]; }
+        for (size_t c = 0; c < convCh; ++c) {
+            float acc = 0.0f;
+            for (size_t j = 0; j < K; ++j) {
+                // window[K-1] is the current sample, older samples follow.
+                const float v = (j < K - 1) ? conv[c * (K - 1) + j] : cur[c];
+                const float w = ConvW[c * K + j];
+                acc += w * v;
+            }
+            acc += ConvB[c];
+            // shift the history: oldest drops, current becomes newest
+            for (size_t j = 0; j + 1 < K - 1; ++j) conv[c * (K - 1) + j] = conv[c * (K - 1) + j + 1];
+            if (K > 1) conv[c * (K - 1) + K - 2] = cur[c];
+            // SiLU on the conv output of every convolved channel, as the GGUF's
+            // single fused conv over [x | B | C] requires.
+            convOut[c] = acc / (1.0f + std::exp(-acc));
+        }
+    }
+    const float* xc = convOut.data();
+    const float* Bc = convOut.data() + D;
+    const float* Cc = convOut.data() + D + Ntot;
+
+    // ---- 3. dt = softplus(dt + dt_bias), per head ---------------------------
+    std::vector<float> dt(nHeads);
+    const bool trace = std::getenv("SSM_TRACE") != nullptr;
+    for (size_t h = 0; h < nHeads; ++h) {
+        const float v = dtp[h] + DtB[h];
+        dt[h] = (v > 20.0f) ? v : std::log1p(std::exp(v));
+    }
+
+    // ---- 4/5. head-grouped recurrence over the N-dim state ------------------
     if (ssm_state_.size() <= (size_t)in.block) ssm_state_.resize((size_t)in.block + 1);
     std::vector<float>& st = ssm_state_[(size_t)in.block];
-    if (st.size() != D) st.assign(D, 0.0f);
+    if (st.size() != nHeads * headDim * N) st.assign(nHeads * headDim * N, 0.0f);
 
+    const size_t headsPerGroup = nHeads / G;
+    for (size_t h = 0; h < nHeads; ++h) {
+        const size_t g = h / headsPerGroup;
+        const float decay = std::exp(dt[h] * A[h]);
+        const float* Bg = Bc + g * N;
+        for (size_t j = 0; j < headDim; ++j) {
+            const size_t base = (h * headDim + j) * N;
+            const float c = dt[h] * xc[h * headDim + j];
+            for (size_t n = 0; n < N; ++n)
+                st[base + n] = decay * st[base + n] + c * Bg[n];
+        }
+    }
+
+    // ---- 6. y = C . state + D * x, then the z gate, then the gated norm -----
+    // Gate BEFORE norm (the winning order measured against the reference).
     y.assign(D, 0.0f);
-    auto softplus = [](float z) -> float { return (z > 20.0f) ? z : std::log1p(std::exp(z)); };
-
+    for (size_t h = 0; h < nHeads; ++h) {
+        const size_t g = h / headsPerGroup;
+        const float* Cg = Cc + g * N;
+        const float dh = Dv[h % Dv.size()];
+        for (size_t j = 0; j < headDim; ++j) {
+            const size_t base = (h * headDim + j) * N;
+            float acc = 0.0f;
+            for (size_t n = 0; n < N; ++n) acc += Cg[n] * st[base + n];
+            const size_t idx = h * headDim + j;
+            y[idx] = acc + dh * xc[idx];
+        }
+    }
     for (size_t i = 0; i < D; ++i) {
-        const float dt = softplus(DtB[i % DtB.size()]);
-        const float decay = std::exp(dt * A[i % A.size()]);
-        const float xin = xd[i];
-        st[i] = decay * st[i] + dt * xin;
-        y[i] = st[i] + Dd[i % Dd.size()] * xin;
+        const float gate = z[i] / (1.0f + std::exp(-z[i]));
+        y[i] = y[i] * gate;
+    }
+    double ss = 0.0;
+    for (size_t i = 0; i < D; ++i) ss += (double)y[i] * (double)y[i];
+    const float rms = std::sqrt((float)(ss / (double)D) + 1e-5f);
+    for (size_t i = 0; i < D; ++i) y[i] = y[i] / rms * NormW[i];
+
+    if (trace) {
+        std::fprintf(stderr, "[ssm] block=%d D=%zu N=%zu G=%zu K=%zu heads=%zu headDim=%zu "
+                             "in=%zu convCh=%zu A0=%.6f dt0=%.6f y0=%.6f\n",
+                     (int)in.block, D, N, G, K, nHeads, headDim, zxbcdt.size(), convCh,
+                     A[0], dt[0], y[0]);
     }
     return true;
 }

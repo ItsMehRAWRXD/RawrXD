@@ -29,12 +29,12 @@
 // ============================================================================
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cmath>
 #include <fstream>
 #include <map>
 #include <set>
@@ -46,71 +46,100 @@
 #include "universal_gguf.hpp"
 
 using namespace RawrXD::Deep2;
+using RawrXD::Deep2::RuntimeGraph::Executor;
 using RawrXD::Deep2::Universal::GetTokenizer;
 using RawrXD::Deep2::Universal::Ingest;
 using RawrXD::Deep2::Universal::IngestReport;
-using RawrXD::Deep2::RuntimeGraph::Executor;
 
-namespace {
+namespace
+{
 
-struct Args {
+struct Args
+{
     std::string model, task, workdir = "agentic_ws";
     int max_steps = 12, max_new = 200;
     bool cpu = false, toktest = false, parity = false;
     std::string parity_ids, parity_positions, parity_out = "parity";
 };
 
-Args Parse(int argc, char* argv[]) {
+Args Parse(int argc, char* argv[])
+{
     Args a;
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i)
+    {
         std::string s = argv[i];
-        if (s == "--model" && i + 1 < argc) a.model = argv[++i];
-        else if (s == "--task" && i + 1 < argc) a.task = argv[++i];
-        else if (s == "--workdir" && i + 1 < argc) a.workdir = argv[++i];
-        else if (s == "--max-steps" && i + 1 < argc) a.max_steps = std::atoi(argv[++i]);
-        else if (s == "--max-new" && i + 1 < argc) a.max_new = std::atoi(argv[++i]);
-        else if (s == "--cpu") a.cpu = true;
-        else if (s == "--toktest") a.toktest = true;
-        else if (s == "--parity") a.parity = true;
-        else if (s == "--parity-ids" && i + 1 < argc) a.parity_ids = argv[++i];
-        else if (s == "--parity-positions" && i + 1 < argc) a.parity_positions = argv[++i];
-        else if (s == "--parity-out" && i + 1 < argc) a.parity_out = argv[++i];
+        if (s == "--model" && i + 1 < argc)
+            a.model = argv[++i];
+        else if (s == "--task" && i + 1 < argc)
+            a.task = argv[++i];
+        else if (s == "--workdir" && i + 1 < argc)
+            a.workdir = argv[++i];
+        else if (s == "--max-steps" && i + 1 < argc)
+            a.max_steps = std::atoi(argv[++i]);
+        else if (s == "--max-new" && i + 1 < argc)
+            a.max_new = std::atoi(argv[++i]);
+        else if (s == "--cpu")
+            a.cpu = true;
+        else if (s == "--toktest")
+            a.toktest = true;
+        else if (s == "--parity")
+            a.parity = true;
+        else if (s == "--parity-ids" && i + 1 < argc)
+            a.parity_ids = argv[++i];
+        else if (s == "--parity-positions" && i + 1 < argc)
+            a.parity_positions = argv[++i];
+        else if (s == "--parity-out" && i + 1 < argc)
+            a.parity_out = argv[++i];
     }
     return a;
 }
 
-std::string ReadFile(const std::string& p) {
+std::string ReadFile(const std::string& p)
+{
     FILE* f = std::fopen(p.c_str(), "rb");
-    if (!f) return {};
+    if (!f)
+        return {};
     std::string s;
     char buf[4096];
     size_t n;
-    while ((n = std::fread(buf, 1, sizeof(buf), f)) > 0) s.append(buf, n);
+    while ((n = std::fread(buf, 1, sizeof(buf), f)) > 0)
+        s.append(buf, n);
     std::fclose(f);
     return s;
 }
 
-bool WriteFile(const std::string& p, const std::string& s) {
+bool WriteFile(const std::string& p, const std::string& s)
+{
     FILE* f = std::fopen(p.c_str(), "wb");
-    if (!f) return false;
+    if (!f)
+        return false;
     const size_t n = std::fwrite(s.data(), 1, s.size(), f);
     std::fclose(f);
     return n == s.size();
 }
 
-std::string Trim(const std::string& s) {
+std::string Trim(const std::string& s)
+{
     size_t a = 0, b = s.size();
-    while (a < b && std::isspace((unsigned char)s[a])) ++a;
-    while (b > a && std::isspace((unsigned char)s[b - 1])) --b;
+    while (a < b && std::isspace((unsigned char)s[a]))
+        ++a;
+    while (b > a && std::isspace((unsigned char)s[b - 1]))
+        --b;
     return s.substr(a, b - a);
 }
 
-std::string RunCmd(const std::string& cmd, int* exit_code) {
+std::string RunCmd(const std::string& cmd, int* exit_code)
+{
     std::string out;
     FILE* p = _popen(cmd.c_str(), "r");
-    if (!p) { *exit_code = -1; return "popen failed"; }
+    if (!p)
+    {
+        *exit_code = -1;
+        return "popen failed";
+    }
     char buf[512];
-    while (std::fgets(buf, sizeof(buf), p)) out += buf;
+    while (std::fgets(buf, sizeof(buf), p))
+        out += buf;
     *exit_code = _pclose(p);
     return out;
 }
@@ -176,18 +205,20 @@ static size_t NextSplitEnd(const std::string& s, size_t p)
     // contractions
     if (c0 == '\'')
     {
-        const auto ci = [&](const char* a, size_t alen) {
-            if (p + alen > n) return false;
+        const auto ci = [&](const char* a, size_t alen)
+        {
+            if (p + alen > n)
+                return false;
             for (size_t k = 0; k < alen; ++k)
-                if (std::tolower((unsigned char)s[p + k]) != (unsigned char)std::tolower(a[k])) return false;
+                if (std::tolower((unsigned char)s[p + k]) != (unsigned char)std::tolower(a[k]))
+                    return false;
             return true;
         };
-        if (ci("'s", 2) || ci("'t", 2) || ci("'m", 2) || ci("'d", 2) ||
-            ci("'re", 3) || ci("'ve", 3) || ci("'ll", 3))
+        if (ci("'s", 2) || ci("'t", 2) || ci("'m", 2) || ci("'d", 2) || ci("'re", 3) || ci("'ve", 3) || ci("'ll", 3))
         {
             size_t e = p + 2;
-            if (e <= n && (s[p + 1] == 'r' || s[p + 1] == 'v' || s[p + 1] == 'l') &&
-                (n - p >= 3) && (s[p + 2] == 'e' || s[p + 2] == 'l'))
+            if (e <= n && (s[p + 1] == 'r' || s[p + 1] == 'v' || s[p + 1] == 'l') && (n - p >= 3) &&
+                (s[p + 2] == 'e' || s[p + 2] == 'l'))
                 e = p + 3;
             return e;
         }
@@ -200,7 +231,8 @@ static size_t NextSplitEnd(const std::string& s, size_t p)
             if (q + 1 < n && isL((unsigned)(unsigned char)s[q + 1]))
                 q += 1;
         }
-        if (isL((unsigned)(unsigned char)s[q]) && !(q == p && !isL((unsigned)c0) && q + !(p + 1 < n ? 1u : 0u) <= p && q == p))
+        if (isL((unsigned)(unsigned char)s[q]) &&
+            !(q == p && !isL((unsigned)c0) && q + !(p + 1 < n ? 1u : 0u) <= p && q == p))
         {
             if ((q != p || isL((unsigned)c0)))
             {
@@ -223,7 +255,8 @@ static size_t NextSplitEnd(const std::string& s, size_t p)
     if (!isL((unsigned)c0) && !isN((unsigned)c0) && !isWs((unsigned)c0))
     {
         size_t e = p;
-        while (e < n && (unsigned char)s[e] >= 0x21 && !isL((unsigned)(unsigned char)s[e]) && !isN((unsigned)(unsigned char)s[e]))
+        while (e < n && (unsigned char)s[e] >= 0x21 && !isL((unsigned)(unsigned char)s[e]) &&
+               !isN((unsigned)(unsigned char)s[e]))
             ++e;
         while (e < n && isCRLF((unsigned)(unsigned char)s[e]))
             ++e;
@@ -284,14 +317,13 @@ static unsigned Utf8CharAt(const std::string& s, size_t i, size_t* len)
     }
     else if ((c0 & 0xF0) == 0xE0 && i + 2 < s.size())
     {
-        cp = ((c0 & 0x0Fu) << 12) | (((unsigned char)s[i + 1] & 0x3F) << 6) |
-             ((unsigned char)s[i + 2] & 0x3F);
+        cp = ((c0 & 0x0Fu) << 12) | (((unsigned char)s[i + 1] & 0x3F) << 6) | ((unsigned char)s[i + 2] & 0x3F);
         *len = 3;
     }
     else if ((c0 & 0xF8) == 0xF0 && i + 3 < s.size())
     {
-        cp = ((c0 & 0x07u) << 18) | (((unsigned char)s[i + 1] & 0x3F) << 12) |
-             (((unsigned char)s[i + 2] & 0x3F) << 6) | ((unsigned char)s[i + 3] & 0x3F);
+        cp = ((c0 & 0x07u) << 18) | (((unsigned char)s[i + 1] & 0x3F) << 12) | (((unsigned char)s[i + 2] & 0x3F) << 6) |
+             ((unsigned char)s[i + 3] & 0x3F);
         *len = 4;
     }
     return cp;
@@ -327,10 +359,10 @@ static std::string Gpt2ByteSymbol(unsigned char b)
     if ((b >= 0xA1 && b <= 0xAC) || (b >= 0xAE && b <= 0xFF))
         return Utf8FromCp((unsigned)b);
     if (b <= 0x20)
-        return Utf8FromCp(256u + b);                  // 0x00-0x20 -> U+0100-U+0120
+        return Utf8FromCp(256u + b);  // 0x00-0x20 -> U+0100-U+0120
     if (b <= 0xA0)
-        return Utf8FromCp(256u + 33u + (b - 0x7F));   // 0x7F-0xA0 -> U+0121-U+0142
-    return Utf8FromCp(256u + 33u + 34u);              // 0xAD -> U+0143
+        return Utf8FromCp(256u + 33u + (b - 0x7F));  // 0x7F-0xA0 -> U+0121-U+0142
+    return Utf8FromCp(256u + 33u + 34u);             // 0xAD -> U+0143
 }
 
 // One token piece -> its visible bytes, honoring the vocabulary's own
@@ -401,8 +433,10 @@ static const char* DetectSpaceMarker(const std::vector<std::string>& toks)
     size_t gpt2Hits = 0, spHits = 0;
     for (const auto& t : toks)
     {
-        if (t.find(kGpt2Marker) != std::string::npos) ++gpt2Hits;
-        if (t.find(kSpMarker) != std::string::npos) ++spHits;
+        if (t.find(kGpt2Marker) != std::string::npos)
+            ++gpt2Hits;
+        if (t.find(kSpMarker) != std::string::npos)
+            ++spHits;
     }
     if (gpt2Hits > spHits)
         return kGpt2Marker;
@@ -567,8 +601,10 @@ struct SpEncoder
     // "<0xNN>" byte pieces -> the raw byte, GPT-2 remapped codepoints decoded
     // as complete UTF-8 characters through the inverse bijection, SentencePiece
     // marker -> ' ', ordinary bytes preserved exactly.
-    std::string Piece(uint32_t id) const {
-        if (id >= tokens.size()) return "";
+    std::string Piece(uint32_t id) const
+    {
+        if (id >= tokens.size())
+            return "";
         const bool gpt2Conv = (!marker.empty() && marker[0] == '\xC4');
         return TokenToVisible(tokens[id], gpt2Conv, marker);
     }
@@ -750,58 +786,85 @@ struct SpEncoder
 };
 
 // ------------- fail-closed action parsing ------------------------------------
-struct Action {
-    bool valid = false;      // a COMPLETE, dispatchable command was recognised
+struct Action
+{
+    bool valid = false;  // a COMPLETE, dispatchable command was recognised
     bool finish = false;
     std::string tool, arg1, arg2;
     std::string raw;
 };
 
-Action ParseAction(const std::string& text) {
+Action ParseAction(const std::string& text)
+{
     Action a;
     // The last line that starts a TOOL command.
     size_t lineStart = text.rfind("\nTOOL ");
-    lineStart = (lineStart == std::string::npos) ? (text.rfind("TOOL ") == 0 ? 0 : std::string::npos)
-                                                 : lineStart + 1;
-    if (lineStart == std::string::npos) return a;
+    lineStart = (lineStart == std::string::npos) ? (text.rfind("TOOL ") == 0 ? 0 : std::string::npos) : lineStart + 1;
+    if (lineStart == std::string::npos)
+        return a;
     size_t lineEnd = text.find('\n', lineStart);
-    const std::string line = text.substr(lineStart, lineEnd == std::string::npos
-                                                       ? std::string::npos : lineEnd - lineStart);
+    const std::string line =
+        text.substr(lineStart, lineEnd == std::string::npos ? std::string::npos : lineEnd - lineStart);
     const std::string t = Trim(line);
-    if (t.rfind("TOOL finish", 0) == 0 && Trim(t.substr(11)).empty()) {
-        a.valid = true; a.finish = true; a.tool = "finish"; a.raw = t;
+    if (t.rfind("TOOL finish", 0) == 0 && Trim(t.substr(11)).empty())
+    {
+        a.valid = true;
+        a.finish = true;
+        a.tool = "finish";
+        a.raw = t;
         return a;
     }
-    if (t.rfind("TOOL read ", 0) == 0) {
+    if (t.rfind("TOOL read ", 0) == 0)
+    {
         const std::string path = Trim(t.substr(10));
-        if (path.empty()) return a;
-        a.valid = true; a.tool = "read"; a.arg1 = path; a.raw = t;
+        if (path.empty())
+            return a;
+        a.valid = true;
+        a.tool = "read";
+        a.arg1 = path;
+        a.raw = t;
         return a;
     }
-    if (t.rfind("TOOL bash ", 0) == 0) {
+    if (t.rfind("TOOL bash ", 0) == 0)
+    {
         const std::string cmd = Trim(t.substr(10));
-        if (cmd.empty()) return a;
-        a.valid = true; a.tool = "bash"; a.arg1 = cmd; a.raw = t;
+        if (cmd.empty())
+            return a;
+        a.valid = true;
+        a.tool = "bash";
+        a.arg1 = cmd;
+        a.raw = t;
         return a;
     }
-    if (t.rfind("TOOL write ", 0) == 0) {
+    if (t.rfind("TOOL write ", 0) == 0)
+    {
         const size_t sp = t.find(' ', 11);
-        if (sp == std::string::npos) return a;
+        if (sp == std::string::npos)
+            return a;
         const std::string path = t.substr(11, sp - 11);
-        if (path.empty()) return a;
+        if (path.empty())
+            return a;
         const size_t a1 = t.find("@@", sp);
-        if (a1 == std::string::npos) return a;              // no open delimiter: incomplete
+        if (a1 == std::string::npos)
+            return a;  // no open delimiter: incomplete
         const size_t a2 = t.find("@@", a1 + 2);
-        if (a2 == std::string::npos) return a;              // no close delimiter: incomplete
+        if (a2 == std::string::npos)
+            return a;  // no close delimiter: incomplete
         const std::string body = t.substr(a1 + 2, a2 - (a1 + 2));
-        if (body.empty()) return a;
-        a.valid = true; a.tool = "write"; a.arg1 = path; a.arg2 = body; a.raw = t;
+        if (body.empty())
+            return a;
+        a.valid = true;
+        a.tool = "write";
+        a.arg1 = path;
+        a.arg2 = body;
+        a.raw = t;
         return a;
     }
     return a;
 }
 
-void Logf_(const char* fmt, ...) {
+void Logf_(const char* fmt, ...)
+{
     va_list ap;
     va_start(ap, fmt);
     std::vfprintf(stdout, fmt, ap);
@@ -828,25 +891,35 @@ void Logf_(const char* fmt, ...) {
 // accents, CJK, 4-byte UTF-8, control bytes, soft-hyphen edge, and the
 // calc.cpp-shaped multi-line source.
 // ============================================================================
-struct TokCase { const char* name; std::string input; };
+struct TokCase
+{
+    const char* name;
+    std::string input;
+};
 
-static std::string HexHead(const std::string& s, size_t n = 48) {
+static std::string HexHead(const std::string& s, size_t n = 48)
+{
     char buf[4];
     std::string o;
     const size_t lim = s.size() < n ? s.size() : n;
-    for (size_t i = 0; i < lim; ++i) {
+    for (size_t i = 0; i < lim; ++i)
+    {
         std::snprintf(buf, sizeof(buf), "%02x", (unsigned char)s[i]);
         o += buf;
-        if (i % 2) o += ' ';
+        if (i % 2)
+            o += ' ';
     }
-    if (s.size() > n) o += "...";
+    if (s.size() > n)
+        o += "...";
     return o;
 }
 
-static std::string GatedIdsLine(const std::vector<int32_t>& ids) {
+static std::string GatedIdsLine(const std::vector<int32_t>& ids)
+{
     std::string o;
     char buf[16];
-    for (size_t i = 0; i < ids.size(); ++i) {
+    for (size_t i = 0; i < ids.size(); ++i)
+    {
         std::snprintf(buf, sizeof(buf), "%s%d", i ? "," : "", ids[i]);
         o += buf;
     }
@@ -861,7 +934,8 @@ static std::string GatedIdsLine(const std::vector<int32_t>& ids) {
 // llama.cpp side produces the identical token sequence and positions, so the
 // comparison is exact-position by exact-position with identical KV history.
 // ============================================================================
-struct ParityReceipt {
+struct ParityReceipt
+{
     int position = 0;
     int token_id = 0;
     int argmax = -1;
@@ -875,7 +949,11 @@ static int ParityRun(const Args& args)
 {
     Logf_("[parity] loading %s\n", args.model.c_str());
     const IngestReport& rep = Ingest(args.model, false);
-    if (!rep.ok) { Logf_("INGEST_FAIL: %s\n", rep.error.c_str()); return 2; }
+    if (!rep.ok)
+    {
+        Logf_("INGEST_FAIL: %s\n", rep.error.c_str());
+        return 2;
+    }
 
     // token id file: comma-separated ints (includes BOS; llama.cpp's tokenize
     // produces this exact sequence so both engines see identical history).
@@ -887,12 +965,20 @@ static int ParityRun(const Args& args)
         {
             char* endp = nullptr;
             long v = std::strtol(s.c_str() + i, &endp, 10);
-            if (endp == s.c_str() + i) { ++i; continue; }
+            if (endp == s.c_str() + i)
+            {
+                ++i;
+                continue;
+            }
             ids.push_back((int32_t)v);
             i = (size_t)(endp - s.c_str());
         }
     }
-    if (ids.empty()) { Logf_("PARITY_FAIL: empty ids file %s\n", args.parity_ids.c_str()); return 2; }
+    if (ids.empty())
+    {
+        Logf_("PARITY_FAIL: empty ids file %s\n", args.parity_ids.c_str());
+        return 2;
+    }
 
     // positions file: comma-separated positions to dump.
     std::vector<int> positions;
@@ -903,18 +989,30 @@ static int ParityRun(const Args& args)
         {
             char* endp = nullptr;
             long v = std::strtol(s.c_str() + i, &endp, 10);
-            if (endp == s.c_str() + i) { ++i; continue; }
+            if (endp == s.c_str() + i)
+            {
+                ++i;
+                continue;
+            }
             positions.push_back((int)v);
             i = (size_t)(endp - s.c_str());
         }
     }
-    if (positions.empty()) { Logf_("PARITY_FAIL: empty positions file\n"); return 2; }
+    if (positions.empty())
+    {
+        Logf_("PARITY_FAIL: empty positions file\n");
+        return 2;
+    }
 
     Executor ex;
     ex.SetForceCpu(args.cpu);
-    if (!ex.Bind(rep)) { Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str()); return 3; }
-    Logf_("[parity] executor bound: ops=%zu ids=%zu positions=%zu path=%s\n",
-          ex.Stats().ops_total, ids.size(), positions.size(), args.cpu ? "cpu" : "gpu-first");
+    if (!ex.Bind(rep))
+    {
+        Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str());
+        return 3;
+    }
+    Logf_("[parity] executor bound: ops=%zu ids=%zu positions=%zu path=%s\n", ex.Stats().ops_total, ids.size(),
+          positions.size(), args.cpu ? "cpu" : "gpu-first");
 
     std::set<int> wanted(positions.begin(), positions.end());
     int receipts = 0;
@@ -929,13 +1027,18 @@ static int ParityRun(const Args& args)
             continue;
         const std::vector<float>& lg = ex.Logits();
         size_t nonfinite = 0;
-        for (float v : lg) if (!std::isfinite(v)) ++nonfinite;
+        for (float v : lg)
+            if (!std::isfinite(v))
+                ++nonfinite;
         uint32_t top = 0;
-        for (uint32_t i = 1; i < lg.size(); ++i) if (lg[i] > lg[top]) top = i;
+        for (uint32_t i = 1; i < lg.size(); ++i)
+            if (lg[i] > lg[top])
+                top = i;
         // top-10 (naive partial selection, no full sort)
         std::vector<std::pair<float, int32_t>> all;
         all.reserve(lg.size());
-        for (uint32_t i = 0; i < lg.size(); ++i) all.emplace_back(lg[i], (int32_t)i);
+        for (uint32_t i = 0; i < lg.size(); ++i)
+            all.emplace_back(lg[i], (int32_t)i);
         std::partial_sort(all.begin(), all.begin() + (std::min<size_t>(10, all.size())), all.end(),
                           [](const auto& a, const auto& b) { return a.first > b.first; });
         ParityReceipt rc;
@@ -946,7 +1049,8 @@ static int ParityRun(const Args& args)
         rc.nonfinite = nonfinite;
         rc.gpu_calls = ex.Stats().gpu_calls;
         rc.cpu_calls = ex.Stats().cpu_calls;
-        for (size_t k = 0; k < 10 && k < all.size(); ++k) rc.top10[k] = all[k].second;
+        for (size_t k = 0; k < 10 && k < all.size(); ++k)
+            rc.top10[k] = all[k].second;
 
         // full vector dump: raw little-endian float32
         char path[512];
@@ -959,84 +1063,103 @@ static int ParityRun(const Args& args)
         std::snprintf(path, sizeof(path), "%s.pos%zu.json", args.parity_out.c_str(), pos);
         {
             std::ofstream out(path);
-            out << "{\"position\":" << rc.position << ",\"token_id\":" << rc.token_id
-                << ",\"argmax\":" << rc.argmax << ",\"logits\":" << rc.logits
-                << ",\"nonfinite\":" << rc.nonfinite << ",\"gpu_calls\":" << rc.gpu_calls
+            out << "{\"position\":" << rc.position << ",\"token_id\":" << rc.token_id << ",\"argmax\":" << rc.argmax
+                << ",\"logits\":" << rc.logits << ",\"nonfinite\":" << rc.nonfinite << ",\"gpu_calls\":" << rc.gpu_calls
                 << ",\"cpu_calls\":" << rc.cpu_calls << ",\"top10\":[";
-            for (size_t k = 0; k < 10 && k < all.size(); ++k) {
-                if (k) out << ',';
+            for (size_t k = 0; k < 10 && k < all.size(); ++k)
+            {
+                if (k)
+                    out << ',';
                 out << rc.top10[k];
             }
             out << "]}\n";
         }
-        Logf_("PARITY_RC position=%d token_id=%d argmax=%d logits=%zu nonfinite=%zu gpu=%llu cpu=%llu\n",
-              rc.position, rc.token_id, rc.argmax, rc.logits, rc.nonfinite,
-              (unsigned long long)rc.gpu_calls, (unsigned long long)rc.cpu_calls);
+        Logf_("PARITY_RC position=%d token_id=%d argmax=%d logits=%zu nonfinite=%zu gpu=%llu cpu=%llu\n", rc.position,
+              rc.token_id, rc.argmax, rc.logits, rc.nonfinite, (unsigned long long)rc.gpu_calls,
+              (unsigned long long)rc.cpu_calls);
         ++receipts;
     }
-    Logf_("PARITY %s receipts=%d gpu_calls=%llu cpu_calls=%llu\n",
-          receipts == (int)positions.size() ? "PASS" : "FAIL", receipts,
-          (unsigned long long)ex.Stats().gpu_calls, (unsigned long long)ex.Stats().cpu_calls);
+    Logf_("PARITY %s receipts=%d gpu_calls=%llu cpu_calls=%llu\n", receipts == (int)positions.size() ? "PASS" : "FAIL",
+          receipts, (unsigned long long)ex.Stats().gpu_calls, (unsigned long long)ex.Stats().cpu_calls);
     return receipts == (int)positions.size() ? 0 : 1;
 }
 
-static int TokTest(const Args& args) {
+static int TokTest(const Args& args)
+{
     Logf_("[toktest] loading vocabulary from %s\n", args.model.c_str());
     const auto t0 = std::chrono::steady_clock::now();
     const IngestReport& rep = Ingest(args.model, false);
-    if (!rep.ok) { Logf_("INGEST_FAIL: %s\n", rep.error.c_str()); return 2; }
+    if (!rep.ok)
+    {
+        Logf_("INGEST_FAIL: %s\n", rep.error.c_str());
+        return 2;
+    }
     SpEncoder enc;
     enc.Build(GetTokenizer());
-    if (!enc.ok) { Logf_("TOKTEST FAIL: empty vocabulary\n"); return 2; }
+    if (!enc.ok)
+    {
+        Logf_("TOKTEST FAIL: empty vocabulary\n");
+        return 2;
+    }
 
     const char* marker = DetectSpaceMarker(enc.tokens);
     const bool gpt2Convention = (marker[0] == '\xC4');
     Logf_("[toktest] vocab=%zu merges=%zu convention=%s arch=%s blocks=%llu bos=%d eos=%d (%.1f ms)\n",
-          enc.tokens.size(), GetTokenizer().merges.size(),
-          gpt2Convention ? "U+0120_gpt2" : "U+2581_sentencepiece",
-          rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count,
-          GetTokenizer().bos_id, GetTokenizer().eos_id,
+          enc.tokens.size(), GetTokenizer().merges.size(), gpt2Convention ? "U+0120_gpt2" : "U+2581_sentencepiece",
+          rep.spec.architecture.c_str(), (unsigned long long)rep.spec.block_count, GetTokenizer().bos_id,
+          GetTokenizer().eos_id,
           std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count());
 
     std::vector<TokCase> cases = {
-        {"plain_expr",  "int add(int a, int b) { return a + b; }"},
-        {"indent_nl",   "def f():\n    return 42\n"},
-        {"crlf",        "line1\r\nline2\r\n"},
+        {"plain_expr", "int add(int a, int b) { return a + b; }"},
+        {"indent_nl", "def f():\n    return 42\n"},
+        {"crlf", "line1\r\nline2\r\n"},
         {"multi_space", "    x    y\t z  w"},
-        {"tab_first",   "\t\ta b"},
-        {"accents",     "caf\xC3\xA9 na\xC3\xAF" "ve \xC3\x9C" "ber stra\xC3\x9F" "e"},
-        {"cjk",         "\xE4\xBD\xA0\xE5\xA5\xBD \xE4\xB8\x96\xE7\x95\x8C"},
-        {"emoji",       "hi \xF0\x9F\x91\x8B end"},
-        {"ctrl_bytes",  "a\x01\x02\x7f b"},
-        {"edge_ad",     "p\xC3\xBF q\xC2\xAD r"},
-        {"calc_src",    "#include <cstdio>\nint add(int a, int b) {\n    return a - b;\n}\nint main() {\n    printf(\"%d\\n\", add(2, 3));\n    return 0;\n}\n"},
+        {"tab_first", "\t\ta b"},
+        {"accents", "caf\xC3\xA9 na\xC3\xAF"
+                    "ve \xC3\x9C"
+                    "ber stra\xC3\x9F"
+                    "e"},
+        {"cjk", "\xE4\xBD\xA0\xE5\xA5\xBD \xE4\xB8\x96\xE7\x95\x8C"},
+        {"emoji", "hi \xF0\x9F\x91\x8B end"},
+        {"ctrl_bytes", "a\x01\x02\x7f b"},
+        {"edge_ad", "p\xC3\xBF q\xC2\xAD r"},
+        {"calc_src", "#include <cstdio>\nint add(int a, int b) {\n    return a - b;\n}\nint main() {\n    "
+                     "printf(\"%d\\n\", add(2, 3));\n    return 0;\n}\n"},
     };
 
     int fails = 0;
-    for (const TokCase& c : cases) {
+    for (const TokCase& c : cases)
+    {
         std::vector<int32_t> ids;
         enc.Encode(c.input, ids);
         // Encode() emits id 0 ONLY when no byte-fallback symbol exists for an
         // input byte. Any 0 in battery output is therefore a genuine
         // unknown-emission failure, independent of vocabulary convention.
         bool has_unk = false;
-        for (int32_t id : ids) {
-            if (id == 0) { has_unk = true; break; }
+        for (int32_t id : ids)
+        {
+            if (id == 0)
+            {
+                has_unk = true;
+                break;
+            }
         }
-        std::string d1 = DetokenizeWith(enc.tokens, ids);   // reference decoder
-        std::string d2;                                     // generation-path decoder
-        for (int32_t id : ids) d2 += enc.Piece((uint32_t)id);
+        std::string d1 = DetokenizeWith(enc.tokens, ids);  // reference decoder
+        std::string d2;                                    // generation-path decoder
+        for (int32_t id : ids)
+            d2 += enc.Piece((uint32_t)id);
         const bool rt1 = (d1 == c.input), rt2 = (d2 == c.input);
         const bool okc = rt1 && rt2 && !has_unk && !ids.empty();
         Logf_("TOKCASE %-11s bytes=%3zu ids=%4zu unk=%d %s%s%s%s\n", c.name, c.input.size(), ids.size(),
-              has_unk ? 1 : 0, okc ? "PASS" : "FAIL",
-              rt1 ? "" : " [detok-mismatch]", rt2 ? "" : " [piece-mismatch]",
+              has_unk ? 1 : 0, okc ? "PASS" : "FAIL", rt1 ? "" : " [detok-mismatch]", rt2 ? "" : " [piece-mismatch]",
               has_unk ? " [unknown-emission]" : "");
         Logf_("TOKIDS %s %s\n", c.name, GatedIdsLine(ids).c_str());
-        if (!okc) {
+        if (!okc)
+        {
             ++fails;
-            Logf_("  input   : %s\n  detok   : %s\n  pieces  : %s\n",
-                  HexHead(c.input).c_str(), HexHead(d1).c_str(), HexHead(d2).c_str());
+            Logf_("  input   : %s\n  detok   : %s\n  pieces  : %s\n", HexHead(c.input).c_str(), HexHead(d1).c_str(),
+                  HexHead(d2).c_str());
         }
     }
 
@@ -1049,8 +1172,8 @@ static int TokTest(const Args& args) {
         // byte map touched it - a loader defect (raw piece already wrong) is
         // then separable from an inverse-map defect (correct loader, wrong
         // decode).
-        const uint32_t probe[] = {198, 220, 256, 257, 258, 189, 190, 293, 1074,
-                                  165, 171, 152, 155, 187, 13, 141, 199, 31937, 29875};
+        const uint32_t probe[] = {198, 220, 256, 257, 258, 189, 190, 293,   1074, 165,
+                                  171, 152, 155, 187, 13,  141, 199, 31937, 29875};
         for (uint32_t pid : probe)
         {
             if (pid >= enc.tokens.size())
@@ -1072,31 +1195,32 @@ static int TokTest(const Args& args) {
                 }
                 k += len;
             }
-            Logf_("TOKEN id=%u\n  RAW_PIECE_HEX     = %s\n  DECODED_PIECE_HEX = %s\n  INVERSE_MAP_APPLIED = %s\n",
-                  pid, HexHead(piece, 40).c_str(), HexHead(decoded, 40).c_str(),
-                  applied ? "yes" : "no");
+            Logf_("TOKEN id=%u\n  RAW_PIECE_HEX     = %s\n  DECODED_PIECE_HEX = %s\n  INVERSE_MAP_APPLIED = %s\n", pid,
+                  HexHead(piece, 40).c_str(), HexHead(decoded, 40).c_str(), applied ? "yes" : "no");
         }
         if (!enc.tokens.empty())
             Logf_("TOKEN id=0 (unk-slot)\n  RAW_PIECE_HEX     = %s\n", HexHead(enc.tokens[0], 40).c_str());
-    // Marker dominance receipt: exact hit counts for both conventions, so the
-    // detection is audited against the real vocabulary, not asserted.
-    {
-        size_t gpt2Hits = 0, spHits = 0;
-        for (const auto& t : enc.tokens)
+        // Marker dominance receipt: exact hit counts for both conventions, so the
+        // detection is audited against the real vocabulary, not asserted.
         {
-            if (t.find(kGpt2Marker) != std::string::npos) ++gpt2Hits;
-            if (t.find(kSpMarker) != std::string::npos) ++spHits;
+            size_t gpt2Hits = 0, spHits = 0;
+            for (const auto& t : enc.tokens)
+            {
+                if (t.find(kGpt2Marker) != std::string::npos)
+                    ++gpt2Hits;
+                if (t.find(kSpMarker) != std::string::npos)
+                    ++spHits;
+            }
+            Logf_("TOKMARK gpt2_hits=%zu sp_hits=%zu chosen=%s\n", gpt2Hits, spHits,
+                  gpt2Hits > spHits ? "U+0120_gpt2" : "U+2581_sentencepiece");
+            // Reference pieces for the convention decision and the SP byte table.
+            const uint32_t mid[] = {13, 199, 141, 220, 31937, 29875};
+            for (uint32_t pid : mid)
+            {
+                if (pid < enc.tokens.size())
+                    Logf_("TOKPIECE %u %s\n", pid, HexHead(enc.tokens[pid], 32).c_str());
+            }
         }
-        Logf_("TOKMARK gpt2_hits=%zu sp_hits=%zu chosen=%s\n", gpt2Hits, spHits,
-              gpt2Hits > spHits ? "U+0120_gpt2" : "U+2581_sentencepiece");
-        // Reference pieces for the convention decision and the SP byte table.
-        const uint32_t mid[] = {13, 199, 141, 220, 31937, 29875};
-        for (uint32_t pid : mid)
-        {
-            if (pid < enc.tokens.size())
-                Logf_("TOKPIECE %u %s\n", pid, HexHead(enc.tokens[pid], 32).c_str());
-        }
-    }
     }
 
     // Exhaustive byte-alphabet round-trip: EVERY raw byte value 0x00..0xFF
@@ -1111,32 +1235,41 @@ static int TokTest(const Args& args) {
         enc.Encode(all, ids);
         std::string d1 = DetokenizeWith(enc.tokens, ids);
         std::string d2;
-        for (int32_t id : ids) d2 += enc.Piece((uint32_t)id);
+        for (int32_t id : ids)
+            d2 += enc.Piece((uint32_t)id);
         const bool ok256 = (d1 == all) && (d2 == all);
         bool hasZero = false;
-        for (int32_t i : ids) if (i == 0) hasZero = true;
+        for (int32_t i : ids)
+            if (i == 0)
+                hasZero = true;
         Logf_("TOKCASE all256bytes bytes=256 ids=%4zu unk=%d %s%s%s\n", ids.size(), hasZero ? 1 : 0,
-              ok256 ? "PASS" : "FAIL",
-              (d1 == all) ? "" : " [detok-mismatch]", (d2 == all) ? "" : " [piece-mismatch]");
+              ok256 ? "PASS" : "FAIL", (d1 == all) ? "" : " [detok-mismatch]", (d2 == all) ? "" : " [piece-mismatch]");
         if (!ok256)
         {
             ++fails;
             size_t p = 0;
-            while (p < all.size() && p < d1.size() && all[p] == d1[p]) ++p;
-            Logf_("  first_diff at byte %zu: input=%02x detok=%02x\n",
-                  p, p < all.size() ? (unsigned char)all[p] : 0, p < d1.size() ? (unsigned char)d1[p] : 0);
+            while (p < all.size() && p < d1.size() && all[p] == d1[p])
+                ++p;
+            Logf_("  first_diff at byte %zu: input=%02x detok=%02x\n", p, p < all.size() ? (unsigned char)all[p] : 0,
+                  p < d1.size() ? (unsigned char)d1[p] : 0);
         }
     }
 
     Logf_("[toktest] forward sanity: binding executor\n");
     Executor ex;
     ex.SetForceCpu(args.cpu);
-    if (!ex.Bind(rep)) { Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str()); return 3; }
+    if (!ex.Bind(rep))
+    {
+        Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str());
+        return 3;
+    }
     Logf_("[toktest] executor bound: ops=%zu path=%s\n", ex.Stats().ops_total, args.cpu ? "cpu" : "gpu-first");
     std::vector<uint32_t> feed;
     const int bos_id = GetTokenizer().bos_id;
-    if (bos_id >= 0) {
-        if (!ex.ExecuteToken((uint32_t)bos_id, feed.size())) {
+    if (bos_id >= 0)
+    {
+        if (!ex.ExecuteToken((uint32_t)bos_id, feed.size()))
+        {
             Logf_("EXEC_FAIL bos pos=%zu err=%s\n", feed.size(), ex.LastError().c_str());
             return 3;
         }
@@ -1144,8 +1277,10 @@ static int TokTest(const Args& args) {
     }
     std::vector<int32_t> probe_ids;
     enc.Encode(cases[0].input, probe_ids);
-    for (int32_t i : probe_ids) {
-        if (!ex.ExecuteToken((uint32_t)i, feed.size())) {
+    for (int32_t i : probe_ids)
+    {
+        if (!ex.ExecuteToken((uint32_t)i, feed.size()))
+        {
             Logf_("EXEC_FAIL pos=%zu err=%s\n", feed.size(), ex.LastError().c_str());
             return 3;
         }
@@ -1153,37 +1288,48 @@ static int TokTest(const Args& args) {
     }
     const std::vector<float>& lg = ex.Logits();
     size_t nonfinite = 0;
-    for (float v : lg) if (!std::isfinite(v)) ++nonfinite;
+    for (float v : lg)
+        if (!std::isfinite(v))
+            ++nonfinite;
     uint32_t top = 0;
-    for (uint32_t i = 1; i < lg.size(); ++i) if (lg[i] > lg[top]) top = i;
+    for (uint32_t i = 1; i < lg.size(); ++i)
+        if (lg[i] > lg[top])
+            top = i;
     const bool fwd_ok = (nonfinite == 0 && lg.size() > 0);
-    Logf_("FORWARD_SANITY logits=%zu nonfinite=%zu top=%u top_piece=%s %s\n",
-          lg.size(), nonfinite, top, enc.Piece(top).c_str(), fwd_ok ? "PASS" : "FAIL");
+    Logf_("FORWARD_SANITY logits=%zu nonfinite=%zu top=%u top_piece=%s %s\n", lg.size(), nonfinite, top,
+          enc.Piece(top).c_str(), fwd_ok ? "PASS" : "FAIL");
 
-    Logf_("TOKTEST %s fails=%d convention=%s vocab=%zu\n",
-          (fails == 0 && fwd_ok) ? "PASS" : "FAIL", fails,
+    Logf_("TOKTEST %s fails=%d convention=%s vocab=%zu\n", (fails == 0 && fwd_ok) ? "PASS" : "FAIL", fails,
           gpt2Convention ? "U+0120_gpt2" : "U+2581_sentencepiece", enc.tokens.size());
     return (fails == 0 && fwd_ok) ? 0 : 1;
 }
 
 }  // namespace
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     const Args args = Parse(argc, argv);
-    if (args.model.empty()) {
+    if (args.model.empty())
+    {
         std::printf("usage: deep2_agentic_loop.exe --model <gguf> [--task f] [--workdir D] "
                     "[--max-steps N] [--max-new N] [--cpu] [--toktest]\n");
         return 1;
     }
-    if (args.toktest) return TokTest(args);
-    if (args.parity) return ParityRun(args);
+    if (args.toktest)
+        return TokTest(args);
+    if (args.parity)
+        return ParityRun(args);
 
     Logf_("[stage] loading model %s\n", args.model.c_str());
     const auto t_load0 = std::chrono::steady_clock::now();
     const IngestReport& rep = Ingest(args.model, false);
-    if (!rep.ok) { Logf_("INGEST_FAIL: %s\n", rep.error.c_str()); return 1; }
+    if (!rep.ok)
+    {
+        Logf_("INGEST_FAIL: %s\n", rep.error.c_str());
+        return 1;
+    }
     SpEncoder enc;
     enc.Build(GetTokenizer());
     Logf_("[stage] ingest done in %.1f ms: arch=%s blocks=%llu vocab=%zu\n",
@@ -1197,75 +1343,90 @@ int main(int argc, char* argv[]) {
         std::vector<int32_t> rt;
         enc.Encode("TOOL read calc.cpp\nint add(int a, int b) { return a + b; }", rt);
         std::string back;
-        for (int32_t id : rt) back += enc.Piece((uint32_t)id);
+        for (int32_t id : rt)
+            back += enc.Piece((uint32_t)id);
         const bool rt_ok = back.find("TOOL read calc.cpp") != std::string::npos;
-        Logf_("[stage] tokenizer round-trip: %s (%zu ids -> %zu chars)\n",
-              rt_ok ? "PASS" : "FAIL", rt.size(), back.size());
+        Logf_("[stage] tokenizer round-trip: %s (%zu ids -> %zu chars)\n", rt_ok ? "PASS" : "FAIL", rt.size(),
+              back.size());
         if (!rt_ok)
             Logf_("[stage] round-trip text was: %s\n", back.c_str());
     }
 
     Executor ex;
     ex.SetForceCpu(args.cpu);
-    if (!ex.Bind(rep)) { Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str()); return 1; }
-    Logf_("[stage] executor bound: ops=%zu path=%s\n", ex.Stats().ops_total,
-          args.cpu ? "cpu" : "gpu-first");
+    if (!ex.Bind(rep))
+    {
+        Logf_("BIND_FAIL: %s\n", ex.Stats().error.c_str());
+        return 1;
+    }
+    Logf_("[stage] executor bound: ops=%zu path=%s\n", ex.Stats().ops_total, args.cpu ? "cpu" : "gpu-first");
 
     const std::string task = args.task.empty()
-        ? "Fix the bug in calc.cpp so its main() prints PASS, build it and run it."
-        : ReadFile(args.task);
+                                 ? "Fix the bug in calc.cpp so its main() prints PASS, build it and run it."
+                                 : ReadFile(args.task);
 
-    const std::string prompt =
-        "You are an autonomous coding agent with four tools. Reply with EXACTLY one line "
-        "each turn, no other text:\n"
-        "TOOL read <path>                 - print the file\n"
-        "TOOL write <path> @@<content>@@  - replace the file with content\n"
-        "TOOL bash <command>              - run a shell command\n"
-        "TOOL finish                      - declare the task complete\n"
-        "Example turn: TOOL read calc.cpp\n"
-        "Workspace: the current directory contains calc.cpp and task.md.\n"
-        "TASK: " + task + "\n";
+    const std::string prompt = "You are an autonomous coding agent with four tools. Reply with EXACTLY one line "
+                               "each turn, no other text:\n"
+                               "TOOL read <path>                 - print the file\n"
+                               "TOOL write <path> @@<content>@@  - replace the file with content\n"
+                               "TOOL bash <command>              - run a shell command\n"
+                               "TOOL finish                      - declare the task complete\n"
+                               "Example turn: TOOL read calc.cpp\n"
+                               "Workspace: the current directory contains calc.cpp and task.md.\n"
+                               "TASK: " +
+                               task + "\n";
 
     // The conversation is executed ONCE, token by token, and only grown.
     // llama.cpp's sequence starts with the model's BOS; Deep2's executor must
     // see the same ids at the same positions, so the BOS is fed first and is
     // part of the executed context from here on.
     std::vector<uint32_t> fed;
-    if (GetTokenizer().bos_id >= 0) fed.push_back((uint32_t)GetTokenizer().bos_id);
+    if (GetTokenizer().bos_id >= 0)
+        fed.push_back((uint32_t)GetTokenizer().bos_id);
     std::string pending = prompt;
     bool finished = false, built = false, ran_pass = false;
     int last_bash_exit = -1;
     std::string last_bash_out, last_write;
 
-    for (int step = 1; step <= args.max_steps && !finished; ++step) {
+    for (int step = 1; step <= args.max_steps && !finished; ++step)
+    {
         // ---- feed only NEW text -------------------------------------------------
         std::vector<int32_t> enc_ids;
         enc.Encode(pending, enc_ids);
         std::vector<uint32_t> new_ids(enc_ids.begin(), enc_ids.end());
         const auto t_step = std::chrono::steady_clock::now();
-        for (size_t i = 0; i < new_ids.size(); ++i) {
-            if (!ex.ExecuteToken(new_ids[i], fed.size())) {
+        for (size_t i = 0; i < new_ids.size(); ++i)
+        {
+            if (!ex.ExecuteToken(new_ids[i], fed.size()))
+            {
                 Logf_("EXEC_FAIL prefill pos=%zu err=%s\n", fed.size(), ex.LastError().c_str());
                 return 1;
             }
             fed.push_back(new_ids[i]);
         }
         if (!new_ids.empty())
-            Logf_("[step %d] prefill +%zu tokens (ctx=%zu) in %.0f ms\n", step, new_ids.size(),
-                  fed.size(), std::chrono::duration<double, std::milli>(
-                                  std::chrono::steady_clock::now() - t_step).count());
+            Logf_("[step %d] prefill +%zu tokens (ctx=%zu) in %.0f ms\n", step, new_ids.size(), fed.size(),
+                  std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_step).count());
 
         // ---- greedy generation, printing every token --------------------------
         std::string gen;
         uint32_t next = 0;
         const auto t_gen = std::chrono::steady_clock::now();
         int shown = 0;
-        for (int t = 0; t < args.max_new; ++t) {
+        for (int t = 0; t < args.max_new; ++t)
+        {
             const std::vector<float>& lg = ex.Logits();
-            for (uint32_t i = 1; i < lg.size(); ++i) if (lg[i] > lg[next]) next = i;
-            if (next == (uint32_t)GetTokenizer().eos_id) { Logf_("\n[step %d] eos after %d tokens\n", step, t); break; }
+            for (uint32_t i = 1; i < lg.size(); ++i)
+                if (lg[i] > lg[next])
+                    next = i;
+            if (next == (uint32_t)GetTokenizer().eos_id)
+            {
+                Logf_("\n[step %d] eos after %d tokens\n", step, t);
+                break;
+            }
             gen += enc.Piece(next);
-            if (!ex.ExecuteToken(next, fed.size())) {
+            if (!ex.ExecuteToken(next, fed.size()))
+            {
                 Logf_("EXEC_FAIL gen pos=%zu err=%s\n", fed.size(), ex.LastError().c_str());
                 break;
             }
@@ -1273,49 +1434,62 @@ int main(int argc, char* argv[]) {
             if (shown++ % 10 == 0)
                 Logf_("[step %d] tok %d/%d: %s\n", step, t, args.max_new, Trim(gen).c_str());
             const Action probe = ParseAction(gen);
-            if (probe.valid && gen.find_first_of("\n", 0) != std::string::npos) break;
-            if (probe.valid && (size_t)t > 40) break;   // safety: complete command found
+            if (probe.valid && gen.find_first_of("\n", 0) != std::string::npos)
+                break;
+            if (probe.valid && (size_t)t > 40)
+                break;  // safety: complete command found
         }
         Logf_("[step %d] generated %zu chars in %.0f ms: %s\n", step, gen.size(),
               std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_gen).count(),
               Trim(gen).c_str());
 
         const Action act = ParseAction(gen);
-        if (!act.valid) {
+        if (!act.valid)
+        {
             pending = "\nRESULT: your reply was not one complete TOOL line. Reply with EXACTLY one "
                       "TOOL line, e.g. TOOL read calc.cpp\n";
             continue;
         }
-        if (act.finish) { finished = true; break; }
+        if (act.finish)
+        {
+            finished = true;
+            break;
+        }
 
         // ---- dispatch -----------------------------------------------------------
         std::string result;
-        if (act.tool == "read") {
+        if (act.tool == "read")
+        {
             result = ReadFile(args.workdir + "/" + act.arg1);
-            if (result.empty()) result = "(file not found)";
-        } else if (act.tool == "write") {
+            if (result.empty())
+                result = "(file not found)";
+        }
+        else if (act.tool == "write")
+        {
             const std::string path = args.workdir + "/" + act.arg1;
             const bool ok = WriteFile(path, act.arg2);
             last_write = act.arg1;
-            result = ok ? ("wrote " + act.arg1 + " (" + std::to_string(act.arg2.size()) + " bytes)")
-                        : "write failed";
-        } else if (act.tool == "bash") {
+            result = ok ? ("wrote " + act.arg1 + " (" + std::to_string(act.arg2.size()) + " bytes)") : "write failed";
+        }
+        else if (act.tool == "bash")
+        {
             int code = 0;
             result = RunCmd("cd /d " + args.workdir + " && " + act.arg1, &code);
             last_bash_exit = code;
             last_bash_out = result;
-            built = (result.find("calc.exe") != std::string::npos) ||
-                    (act.arg1.find("calc.exe") != std::string::npos);
+            built = (result.find("calc.exe") != std::string::npos) || (act.arg1.find("calc.exe") != std::string::npos);
             char hdr[48];
             std::snprintf(hdr, sizeof(hdr), "[exit %d]\n", code);
             result = hdr + result;
-        } else {
+        }
+        else
+        {
             result = "unsupported tool";
         }
         if (result.size() > 2500)
             result = result.substr(0, 1200) + "\n...[truncated]...\n" + result.substr(result.size() - 800);
-        Logf_("[step %d] TOOL %s -> %s ; observation %zu bytes:\n%s\n", step, act.tool.c_str(),
-              act.arg1.c_str(), result.size(), result.c_str());
+        Logf_("[step %d] TOOL %s -> %s ; observation %zu bytes:\n%s\n", step, act.tool.c_str(), act.arg1.c_str(),
+              result.size(), result.c_str());
 
         // ---- append the MODEL's action and the observation, in order ------------
         pending = "\n" + act.raw + "\nRESULT:\n" + result + "\n";
@@ -1333,10 +1507,8 @@ int main(int argc, char* argv[]) {
     Logf_("SOURCE_PATCHED         %s (%s contains %s)\n", src_fixed ? "PASS" : "FAIL", "calc.cpp",
           src_fixed ? "a + b" : "no fix");
     Logf_("BUILD_ARTIFACT         %s\n", built ? "attempted" : "not observed");
-    Logf_("TEST_EXECUTION         %s (calc.exe exit=%d out=%s)\n", exe_ok ? "PASS" : "FAIL", exit_now,
-          run_out.c_str());
+    Logf_("TEST_EXECUTION         %s (calc.exe exit=%d out=%s)\n", exe_ok ? "PASS" : "FAIL", exit_now, run_out.c_str());
     Logf_("TOOL_RESULT_FEEDBACK   %d steps completed\n", args.max_steps);
     Logf_("FINAL_VERDICT          %s\n", (finished && src_fixed && exe_ok) ? "PASS" : "FAIL");
     return (finished && src_fixed && exe_ok) ? 0 : 1;
 }
-

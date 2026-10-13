@@ -423,8 +423,13 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".attn_o.weight") != std::string::npos) return Role::AttnO;
     if (n.find(".attn_output.weight") != std::string::npos) return Role::AttnOutput;
     if (n.find(".ffn_norm.weight") != std::string::npos ||
-        n.find(".post_attention_norm.weight") != std::string::npos ||
-        n.find(".ssm_norm.weight") != std::string::npos) return Role::FfnNorm;
+        n.find(".post_attention_norm.weight") != std::string::npos) return Role::FfnNorm;
+    // RAWRXD_GATE7_MAMBA2_001: .ssm_norm.weight is the SSM block's GATED norm,
+    // not the FFN norm. Routing it to FfnNorm (as this rule once did) made a
+    // hybrid block's roles[FfnNorm] ambiguous - every SSM block also carries
+    // ffn_norm.weight - so the graph emitted an SsmScan detail whose ";norm="
+    // resolved empty and the real Mamba2 gate could never load its weight.
+    // It must classify as SsmNorm below, and it is excluded here.
     if (n.find(".ffn_gate_inp.weight") != std::string::npos ||
         n.find(".exp_probs_b.bias") != std::string::npos) return Role::RouterGate;
     if (n.find(".ffn_gate_exps.weight") != std::string::npos) return Role::ExpFfnGate;
@@ -836,6 +841,38 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o.a = "attn_out"; o.b = name(Role::AttnOutput); o.out = "attn_proj";
                 g.ops.push_back(o);
             }
+        } else if ((s.kind == ArchKind::SsmHybrid || s.kind == ArchKind::Qwen3Next) &&
+                   !name(Role::FfnUp).empty() && !name(Role::FfnDown).empty() &&
+                   name(Role::FfnGate).empty()) {
+            // Nemotron's gateless MLP block (RAWRXD_GATE7_HYBRID_001). This
+            // block ships ffn_up [3136,12544] and ffn_down [12544,3136] with NO
+            // gate tensor, so SwiGLU cannot express it: the MLP IS the block's
+            // only mixer and its activation is squared ReLU. Its input norm is
+            // the block's attn_norm (the block has no other norm).
+            //
+            // The old graph fell through to the shared-expert Publish fallback
+            // here, which copied attn_norm straight into attn_proj: the block
+            // contributed nothing and then double-added its norm into the
+            // residual stream. Deep2's nemotron_h output diverged from the
+            // llama.cpp reference at cosine -0.015 with both backends agreeing
+            // with each other.
+            {
+                GraphOp o;
+                o.op = Op::Linear; o.block = (int32_t)b;
+                o.a = "attn_norm"; o.b = name(Role::FfnUp); o.out = "mlp_up";
+                g.ops.push_back(o);
+            }
+            {
+                GraphOp o;
+                o.op = Op::SquaredReLU; o.block = (int32_t)b;
+                o.a = "mlp_up"; o.out = "mlp_act";
+                g.ops.push_back(o);
+            }            {
+                GraphOp o;
+                o.op = Op::Linear; o.block = (int32_t)b;
+                o.a = "mlp_act"; o.b = name(Role::FfnDown); o.out = "attn_proj";
+                g.ops.push_back(o);
+            }
         } else if (name(Role::AttnQ).empty() && name(Role::SsmOut).empty()) {
             // No attention projections and no SSM output: this is a
             // shared-expert MoE block. Its norm output passes straight to the
@@ -862,6 +899,20 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.a = "resid_in"; o.b = "attn_proj"; o.out = "resid1";
             g.ops.push_back(o);
         }
+
+        // RAWRXD_GATE7_HYBRID_001: does this block actually have an FFN?
+        // nemotron_h blocks carry exactly ONE mixer - an SSM scan, the gateless
+        // MLP emitted above, or attention - and no FFN of any kind. The graph
+        // used to emit an ffn_norm RmsNorm plus a pass-through Publish for every
+        // such block, which added the normed input into the residual stream a
+        // SECOND time (ffn_out == ffn_norm in the traces, then resid2 =
+        // resid1 + ffn_norm). Skip the whole FFN section when the block has no
+        // FFN tensors; the mixer's ResidualAdd above already produced the block
+        // output, which hidden_ carries to the next block.
+        const bool hasFfn = !name(Role::FfnGate).empty() ||
+                            !name(Role::ExpFfnGate).empty() ||
+                            !name(Role::SharedFfnGate).empty();
+        if (!hasFfn) continue;
         // ffn norm. SSM blocks carry ssm_norm.weight; attention blocks carry
         // post_attention_norm.weight. Nemotron-H MoE blocks carry neither -
         // their only norm is attn_norm, which the MoE consumes directly, so

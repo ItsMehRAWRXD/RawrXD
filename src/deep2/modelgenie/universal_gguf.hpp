@@ -156,6 +156,7 @@ enum class Op : uint8_t {
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
     SwiGLU,       // out = silu(gate) * up, the dense-FFN activation
     Publish,      // copy an arena value to a named one (residual bookkeeping)
+    SquaredReLU,  // out = relu(x)^2, Nemotron's gateless MLP activation
     Unsupported
 };
 

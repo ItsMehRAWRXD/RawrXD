@@ -1061,9 +1061,30 @@ static int cmdCapabilities(const std::vector<std::string>& args) {
     }
     manifest["quantization_kernels"] = quants;
 
-    manifest["end_to_end_forward_parity"] = "not_verified";
-    manifest["multi_token_kv_parity"] = "not_verified";
-    manifest["native_forward_zero_fallback"] = "not_verified";
+    // Forward/KV/fallback parity verdicts. These were hard-coded "not_verified",
+    // which went stale the moment Gates 4/6 were recorded PASS: a manifest that
+    // denies a verified capability is as unusable as one that asserts an
+    // unverified one. Each verdict below cites the gate that verified it and
+    // the evidence artifact that recorded it, and the gate-2 consistency ctest
+    // fails closed if a cited artifact is missing or its verdict is not PASS.
+    // This CLI still does not link the deep2 registry TU, so it cannot
+    // introspect these; the citation IS the provenance, and the ctest is the
+    // enforcement.
+    manifest["end_to_end_forward_parity"] = {
+        {"status", "verified"},
+        {"verified_by", "MODEL_GENIE_NATIVE_FORWARD_001 Gate 4 (native CPU+GPU forward, zero fallback)"},
+        {"evidence", "evidence/GAP_AUDIT_2026-10-13/GATE4_CERTIFICATION_2026-10-13.md"}
+    };
+    manifest["multi_token_kv_parity"] = {
+        {"status", "verified"},
+        {"verified_by", "MODEL_GENIE_NATIVE_FORWARD_001 Gate 6 (multi-token KV cache)"},
+        {"evidence", "evidence/GAP_AUDIT_2026-10-13/GATE6_KVCACHE_CONTEXT.md"}
+    };
+    manifest["native_forward_zero_fallback"] = {
+        {"status", "verified"},
+        {"verified_by", "MODEL_GENIE_NATIVE_FORWARD_001 Gate 4 (no unauthorized CPU or GPU fallback, cpu+gpu)"},
+        {"evidence", "evidence/GAP_AUDIT_2026-10-13/GATE4_NATIVE_FORWARD.md"}
+    };
 
     const std::string body = manifest.dump(2) + "\n";
 
@@ -1104,9 +1125,9 @@ static int cmdCapabilities(const std::vector<std::string>& args) {
         out("    - " + q["format"].get<std::string>() + "  -> " +
             q["verification"].get<std::string>());
     out("");
-    out("end-to-end forward parity : not_verified");
-    out("multi-token KV parity     : not_verified");
-    out("native forward w/o fallback: not_verified");
+    out("end-to-end forward parity : verified (Gate 4; evidence/GAP_AUDIT_2026-10-13/GATE4_CERTIFICATION_2026-10-13.md)");
+    out("multi-token KV parity     : verified (Gate 6; evidence/GAP_AUDIT_2026-10-13/GATE6_KVCACHE_CONTEXT.md)");
+    out("native forward w/o fallback: verified (Gate 4; evidence/GAP_AUDIT_2026-10-13/GATE4_NATIVE_FORWARD.md)");
     return EXIT_OK;
 }
 

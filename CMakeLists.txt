@@ -1403,6 +1403,218 @@ else()
     message(STATUS "deep2_token_profiler EXCLUDED: profiler source or Vulkan SDK not available")
 endif()
 
+# Gate 4 — native forward dispatch audit.
+#
+# Registered inside the SAME Vulkan guard as deep2_token_profiler, with the same
+# conventions, because this auditor had no CMake target at all: its source exists
+# (tools/deep2_parity_trace.cpp, implements --gate4 <cpu|gpu>) but nothing
+# registered it, so `cmake --build --target help` did not list it and the only
+# way anyone had run it was a hand-rolled cl command. A gate that cannot be
+# reproduced through the build system is not CI-enforceable and cannot be
+# certified, regardless of what a direct compile previously produced.
+#
+# The guard is deliberately the same one that gates the sibling: --gate4 gpu
+# requires the Vulkan SDK include path, and on a machine without it the target
+# must be EXCLUDED with a message rather than silently building a GPU-less
+# auditor and letting a missing Vulkan path look like a certification pass.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_parity_trace
+        tools/deep2_parity_trace.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        # RAWRXD_GATE4_LINK_001: the QuantDot implementation layer and the
+        # Vulkan engine it drives. The dispatch layer's five entry points
+        # (DotBlocked, DotF16, BeginBatch, EndBatch, LastReceipt) are DEFINED
+        # in src/deep2/quant_dot_dispatch.cpp - it is not a generated stub -
+        # and it calls the ::VulkanCompute GPU execution path DEFINED in
+        # src/vulkan_compute.cpp. Without both translation units the target
+        # links with LNK2019 on exactly those five QuantDot symbols, because
+        # runtime_graph_executor.cpp and op_linear.cpp are their only callers
+        # in this target. These are the identical translation units the
+        # hand-rolled tools/build_deep2_parity_trace.bat compiles, so the
+        # CMake target and the bat now share ONE definition of the build.
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_parity_trace PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_parity_trace PRIVATE ggml_interface)
+    endif()
+    # The Vulkan loader library (vulkan-1.lib): src/vulkan_compute.cpp invokes
+    # the vk* entry points directly, and the GPU-native audit is required to
+    # reach a real device rather than a CPU substitute.
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_parity_trace PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_parity_trace PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_parity_trace PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_parity_trace PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_parity_trace EXCLUDED: auditor source or Vulkan SDK unavailable - "
+                   "Gate 4 GPU audit will be SKIPPED_UNSUPPORTED, never PASS")
+endif()
+
+# Gate 4 kernel evidence (RAWRXD_DEEP2_GPU_QUANT_DOT_001): the native Vulkan
+# quantised-dot verifier. It builds synthetic Q4_K/Q6_K rows plus Q8_K
+# activations, runs vc.ExecuteQuantDot on the REAL device and compares it
+# against an independent CPU decode of the same GGML block layouts
+# (cosine >= 0.999999 and relative <= 1e-4 per shape). It previously existed
+# only as a hand-compiled tool, so its PASS could not be re-proved from a
+# clean tree; it is now registered under the same Vulkan guard as the
+# dispatch auditor, and EXCLUDED (never silently passed) without a device.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_quant_dot_verify.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(gpu_quant_dot_verify
+        tools/gpu_quant_dot_verify.cpp
+        src/vulkan_compute.cpp
+    )
+    target_include_directories(gpu_quant_dot_verify PRIVATE
+        # include/ FIRST: the tool's bare "vulkan_compute.h" must resolve to
+        # the global ::VulkanCompute this binary builds, not the Deep2 one.
+        # The repo root is what makes src/vulkan_compute.cpp's prefixed
+        # "include/vulkan_compute.h" resolve to the same header.
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(gpu_quant_dot_verify PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(gpu_quant_dot_verify PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(gpu_quant_dot_verify PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(gpu_quant_dot_verify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)")
+else()
+    message(STATUS "gpu_quant_dot_verify EXCLUDED: Vulkan SDK unavailable - kernel parity evidence cannot be produced")
+endif()
+
+# Gate 4 kernel evidence on REAL GGUF weights (RAWRXD_DEEP2_GPU_QUANT_DOT_002):
+# runs VulkanCompute::ExecuteQuantDot on bytes read from a real GGUF tensor
+# with a real activation, and compares the GPU result against BOTH ggml's own
+# float dequantise+dot and an independent CPU integer-lane decode. Synthetic
+# shapes cannot expose data-dependent accumulation behaviour; real weight
+# distributions can. Same Vulkan guard as its siblings.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_quant_dot_realweights.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(gpu_quant_dot_realweights
+        tools/gpu_quant_dot_realweights.cpp
+        src/vulkan_compute.cpp
+    )
+    target_include_directories(gpu_quant_dot_realweights PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(gpu_quant_dot_realweights PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(gpu_quant_dot_realweights PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(gpu_quant_dot_realweights PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(gpu_quant_dot_realweights PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(gpu_quant_dot_realweights PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)")
+else()
+    message(STATUS "gpu_quant_dot_realweights EXCLUDED: source or Vulkan SDK unavailable")
+endif()
+
+# Gate 7 hybrid evidence (RAWRXD_GATE7_HYBRID_001): independent Mamba2 block-0
+# reference probe. It decodes the SSM weights through ggml's own dequantiser
+# (a different decode path from the executor) and recomputes the block-0 mixer
+# with independent float arithmetic, so the first divergent tensor of the
+# hybrid can be localised instead of inferred from end-to-end logits.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/mamba2_ref_probe.cpp")
+    add_executable(mamba2_ref_probe tools/mamba2_ref_probe.cpp)
+    target_include_directories(mamba2_ref_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(mamba2_ref_probe PRIVATE ggml_interface)
+    endif()
+    if(MSVC)
+        target_compile_options(mamba2_ref_probe PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(mamba2_ref_probe PRIVATE -std=c++20 $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(mamba2_ref_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "mamba2_ref_probe enabled (independent Mamba2 block-0 reference)")
+endif()
+
+# Gate 9 agentic E2E harness (RAWRXD_AUTONOMOUS_AGENT_E2E_001): drives a real
+# inference -> tool-call -> real execution -> observation -> resumed inference
+# loop over the native Deep2 executor, and prints a tool receipt (every
+# invocation, its observation size, and the final verdict) as its conclusion.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_agentic_loop
+        tools/deep2_agentic_loop.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_agentic_loop PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_agentic_loop PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_agentic_loop PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_agentic_loop PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_agentic_loop PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_agentic_loop PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_agentic_loop enabled (Gate 9 agentic E2E harness)")
+endif()
+
 # ============================================================================
 # Custom GPU compute environment (Deep2::VulkanCompute + KernelRegistry-backed
 # quantised dispatch)
@@ -2780,7 +2992,8 @@ add_executable(test_kv_cache
     src/vulkan_compute.cpp
 )
 target_link_libraries(test_kv_cache PRIVATE Vulkan::Vulkan)
-target_include_directories(test_kv_cache PRIVATE 
+target_include_directories(test_kv_cache PRIVATE
+    ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/include
     ${Vulkan_INCLUDE_DIRS}
 )
@@ -3183,6 +3396,17 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
     add_test(NAME q8k_byte_parity COMMAND q8k_parity_tool --blocks 8 --seed 12345)
     add_test(NAME quant_parity_cert COMMAND quant_parity_cert --blocks 8 --seed 12345)
     add_test(NAME kquant_dot_parity COMMAND kquant_dot_parity)
+    # Gate 2 (MODEL_GENIE_NATIVE_FORWARD_001): manifest consistency. Cross-checks
+    # the authoritative registry emitter (quant_parity_cert --json) against the
+    # CLI manifest (rawr capabilities --json), rejecting stale or contradictory
+    # claims: revision must equal HEAD, primitive binding statuses must agree,
+    # "verified" quants must be backed by an executed gate, and every cited
+    # parity artifact must exist and record PASS.
+    add_test(NAME gate2_manifest_consistency
+             COMMAND ${CMAKE_COMMAND} -E env POWERSHELL_TELEMETRY_OPTOUT=1
+             powershell -ExecutionPolicy Bypass -NoProfile -File
+             "${CMAKE_SOURCE_DIR}/tools/gate2_manifest_consistency.ps1"
+             -BuildDir "${CMAKE_BINARY_DIR}")
     message(STATUS "q8k parity harness: Q8_K byte-level verification targets enabled")
 endif()
 

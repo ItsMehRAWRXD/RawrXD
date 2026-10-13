@@ -10,29 +10,46 @@ The H3/H5 certificate recorded binary hash `5CE4D412…` against source revision
 `9f502fa9d8`, while the certificate itself was authored at `3e0f850c42`. The
 question was whether a hash recorded at `9f502fa9d8` is valid for `3e0f850c42`.
 
-## Resolved by direct file comparison
+## Correction: byte-identity is NOT established, and cannot be
 
-I diffed the two revisions rather than assuming. `git diff --name-only`
-between them:
+I initially concluded that because no source file differs between
+`9f502fa9d8` and `3e0f850c42`, the two binaries "are byte-identical". That
+stronger claim is not supported and I have withdrawn it. Two independent builds
+from the **same** source produce different files:
 
 ```
-9f502fa9d8..3e0f850c42
-  tests/H3_H5_ACCEPTANCE.md
+build1  C2E563883A56F7341D02F72CEEBEB645A84EB8A0B01D8F650A2DDB034B5C216C
+build2  7AAA51A4D67960CB804D0622CC2A8FF6EDC06748214BA76E016A6D86013D586D
 ```
 
-That is a documentation-only change. **No file under `src/` or `include/`
-differs.** A binary compiled from `9f502fa9d8` is therefore byte-identical to
-one compiled from `3e0f850c42`, and the recorded `5CE4D412…` hash is valid for
-both revisions. The apparent provenance gap does not exist for that pair.
+Inspecting the PE headers shows why: the linker writes a COFF build timestamp
+into every output.
 
-The definitive check is the one above: compare the source file sets, not the
-commit messages.
+```
+b1 : COFF timestamp 2026-10-13T05:27:36Z
+b2 : COFF timestamp 2026-10-13T05:27:45Z
+```
 
-## Where the hash does NOT transfer
+So byte-identity is unreachable with this toolchain regardless of source state.
+What *is* sound is the weaker and still useful claim: **the compiled code is
+equivalent** because no source file differs. That is an argument about inputs,
+not about output hashes.
 
-It does NOT transfer to the current HEAD, because `src/rawr_cli.cpp` changed
-after `3e0f850c42` (the Gate 2 capability-manifest work). Any certificate
-carried forward must be re-issued after a rebuild.
+### What this means for the certificate
+
+The correct statement is:
+
+> The H3/H5 binary hash `5CE4D412…` was recorded against source revision
+> `9f502fa9d8`. That revision and `3e0f850c42` differ only in
+> `tests/H3_H5_ACCEPTANCE.md`; nothing under `src/` or `include/` differs, so
+> the code compiled from either revision is equivalent. No byte-identity claim
+> is made, because this toolchain embeds a build timestamp in every output and
+> cannot produce reproducible-byte binaries.
+
+To get genuinely reproducible binaries, the build would need a deterministic
+timestamp (`/Brepro` for the linker, or a stripped/normalized build) — this is
+a real gap for certificate workflows that compare hashes, and it is listed
+below rather than hidden.
 
 ## Current build record
 

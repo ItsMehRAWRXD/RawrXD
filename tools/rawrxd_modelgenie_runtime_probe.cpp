@@ -22,6 +22,30 @@ using namespace RawrXD::Deep2::ModelGenie;
 
 using namespace RawrXD::Deep2::Generated;
 
+// The generated ExecutionIR exposes fixed operand slots (input0..input7 /
+// weight0..weight7 with counts), not arrays. These adapters read those slots by
+// index so this probe compiles against the current schema.
+static inline const RawrXD::Deep2::ModelGenie::OperandRef& OpInputAt(
+    const RawrXD::Deep2::Generated::OperationIR& op, uint32_t i) {
+    switch (i) {
+        case 0: return op.input0;  case 1: return op.input1;
+        case 2: return op.input2;  case 3: return op.input3;
+        case 4: return op.input4;  case 5: return op.input5;
+        case 6: return op.input6;  case 7: return op.input7;
+        default: { static const RawrXD::Deep2::ModelGenie::OperandRef kNone{}; return kNone; }
+    }
+}
+static inline const RawrXD::Deep2::ModelGenie::OperandRef& OpWeightAt(
+    const RawrXD::Deep2::Generated::OperationIR& op, uint32_t i) {
+    switch (i) {
+        case 0: return op.weight0;  case 1: return op.weight1;
+        case 2: return op.weight2;  case 3: return op.weight3;
+        case 4: return op.weight4;  case 5: return op.weight5;
+        case 6: return op.weight6;  case 7: return op.weight7;
+        default: { static const RawrXD::Deep2::ModelGenie::OperandRef kNone{}; return kNone; }
+    }
+}
+
 //=============================================================================
 // Gate proofs
 //=============================================================================
@@ -226,9 +250,9 @@ static bool ProveRuntimeGraphConstructed() {
     int lmHeadOpId = -1;
     for (uint32_t i = 0; i < kExecutionOpCount; ++i) {
         if (kExecutionIRTable[i].opcode == OpCode::Linear &&
-            kExecutionIRTable[i].weights.size() > 0 &&
-            kExecutionIRTable[i].weights[0].domain == ModelGenie::OperandDomain::RomTensor &&
-            kExecutionIRTable[i].weights[0].id == 1) {  // token_embd.weight
+            kExecutionIRTable[i].weightCount > 0 &&
+            kExecutionIRTable[i].weight0.domain == OperandDomain::RomTensor &&
+            kExecutionIRTable[i].weight0.id == 1) {  // token_embd.weight
             embeddingOpId = static_cast<int>(kExecutionIRTable[i].opId);
         }
         if (kExecutionIRTable[i].opcode == OpCode::LMHead) {
@@ -253,8 +277,9 @@ static bool ProveRuntimeGraphConstructed() {
     for (uint32_t i = 0; i < kExecutionOpCount; ++i) {
         const auto& op = kExecutionIRTable[i];
         outputCount[op.opId] = 0;
-        for (const auto& input : op.inputs) {
-            if (input.domain == ModelGenie::OperandDomain::Activation) {
+        for (uint32_t in_i = 0; in_i < op.inputCount; ++in_i) {
+            const auto& input = OpInputAt(op, in_i);
+            if (input.domain == OperandDomain::Activation) {
                 inputCount[input.id] = 0;
             }
         }
@@ -262,8 +287,9 @@ static bool ProveRuntimeGraphConstructed() {
 
     for (uint32_t i = 0; i < kExecutionOpCount; ++i) {
         const auto& op = kExecutionIRTable[i];
-        for (const auto& input : op.inputs) {
-            if (input.domain == ModelGenie::OperandDomain::Activation) {
+        for (uint32_t in_i = 0; in_i < op.inputCount; ++in_i) {
+            const auto& input = OpInputAt(op, in_i);
+            if (input.domain == OperandDomain::Activation) {
                 successors[input.id].push_back(op.opId);
                 outputCount[op.opId]++;
             }
@@ -287,8 +313,9 @@ static bool ProveRuntimeGraphConstructed() {
         for (uint32_t i = 0; i < kExecutionOpCount; ++i) {
             if (!visited[i]) {
                 const auto& op = kExecutionIRTable[i];
-                for (const auto& input : op.inputs) {
-                    if (input.domain == ModelGenie::OperandDomain::Activation && input.id == current) {
+                for (uint32_t in_i = 0; in_i < op.inputCount; ++in_i) {
+                    const auto& input = OpInputAt(op, in_i);
+                    if (input.domain == OperandDomain::Activation && input.id == current) {
                         visited[i] = true;
                         queue.push_back(i);
                         break;
