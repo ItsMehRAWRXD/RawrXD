@@ -1572,8 +1572,9 @@ bool Deep2Engine::allocateBuffers() {
         mlaQ_a  = alignedAlloc(qLoraRank);
         mlaKV_a = alignedAlloc(kvLoraRank + qkRopeHeadDim);
         mlaQ_b  = alignedAlloc(numHeads * headDim);
-        mlaK_b  = alignedAlloc(numHeads * qkNopeHeadDim);
+        mlaK_b  = alignedAlloc(numHeads * (qkNopeHeadDim + qkRopeHeadDim));
         mlaV_b  = alignedAlloc(numHeads * vHeadDim);
+        mlaK_pe = alignedAlloc(numHeads * qkRopeHeadDim);
 
         fprintf(stderr,
             "[MLA_ALLOC] hidden=%zu heads=%zu headDim=%zu qProjSize=%zu q_b=%zu kv_a=%zu k_b=%zu v_b=%zu\n",
@@ -1603,7 +1604,7 @@ bool Deep2Engine::allocateBuffers() {
         return false;
     }
     if (config.useMLA &&
-        (!mlaQ_a || !mlaKV_a || !mlaQ_b || !mlaK_b || !mlaV_b)) {
+        (!mlaQ_a || !mlaKV_a || !mlaQ_b || !mlaK_b || !mlaV_b || !mlaK_pe)) {
         fprintf(stderr, "[Deep2Engine] ERROR: MLA buffer allocation failed\n");
         return false;
     }
@@ -1630,6 +1631,7 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(mlaQ_b);
     alignedFree(mlaK_b);
     alignedFree(mlaV_b);
+    alignedFree(mlaK_pe);
     alignedFree(ssmState);
     alignedFree(ssmConvState);
     alignedFree(ssmX);
@@ -1637,7 +1639,7 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(ssmTemp);
     hiddenStates = attentionOutput = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
-    mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
+    mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = mlaK_pe = nullptr;
     ssmState = ssmConvState = ssmX = ssmY = ssmTemp = nullptr;
 }
 
@@ -1818,7 +1820,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     GGUFLoadResult result = GGUFLoader::Load(firstShard.string().c_str(), options);
     if (!result.success) {
-        printf("[Deep2Engine] ERROR: Failed to load GGUF metadata: %s\n", result.error);
+        printf("[Deep2Engine] ERROR: Failed to load GGUF metadata: %s\n", result.error.c_str());
         return false;
     }
 
@@ -2032,7 +2034,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         const std::string tokPath = firstShard.string();
         if (!CanonicalTokenizer::Instance().LoadFromGGUF(tokPath)) {
             fprintf(stderr, "[Deep2Engine] WARNING: CanonicalTokenizer load failed: %s\n",
-                    CanonicalTokenizer::Instance().LastError());
+                    CanonicalTokenizer::Instance().LastError().c_str());
         }
         auto bundle = LoadTokenizerFromGGUF(tokPath.c_str());
         if (bundle.ok) {
@@ -5760,6 +5762,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
 
     // ── MLA (K2) path ──────────────────────────────────────────────────
 if (lw.useMLA) {
+        const size_t pos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
         // MLA (DeepSeek-V2) attention: factorized Q/K/V projections
         // Q: hidden -> q_a -> RMSNorm -> q_b -> Q [numHeads * headDim]
         // KV: hidden -> kv_a_mqa -> split -> [compressed_kv | k_pe]
@@ -5777,50 +5780,53 @@ if (lw.useMLA) {
         const size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
         const size_t headDim = modelWeights.headDim;
         const size_t numHeads = config.numHeads;
+        (void)numHeads;
 
-        // Ensure MLA buffers are allocated
-        if (mlaQ_a.size() < qLoraRank) mlaQ_a.resize(qLoraRank);
-        if (mlaKV_a.size() < kvLoraRank + qkRopeHeadDim) mlaKV_a.resize(kvLoraRank + qkRopeHeadDim);
-        if (mlaQ_b.size() < numHeads * headDim) mlaQ_b.resize(numHeads * headDim);
-        if (mlaK_b.size() < numHeads * (qkNopeHeadDim + qkRopeHeadDim)) mlaK_b.resize(numHeads * (qkNopeHeadDim + qkRopeHeadDim));
-        if (mlaV_b.size() < numHeads * vHeadDim) mlaV_b.resize(numHeads * vHeadDim);
-        if (mlaK_pe.size() < numHeads * qkRopeHeadDim) mlaK_pe.resize(numHeads * qkRopeHeadDim);
+        // NOTE: the MLA buffers are raw aligned allocations sized once in
+        // allocateBuffers() with exactly these dimensions; the half-migrated
+        // std::vector calls that were here (.size()/.resize()/.data()) did not
+        // compile against those raw members.
 
-        // ── Q path: hidden -> q_a -> RMSNorm -> q_b -> Q ─────────────────
-        LinearW(lw.attnQ_a, input, nullptr, mlaQ_a.data(), qLoraRank);
-        RMSNormW(lw.attnQ_a_norm, mlaQ_a.data(), mlaQ_a.data(), qLoraRank, modelWeights.normEps);
-        LinearW(lw.attnQ_b, mlaQ_a.data(), nullptr, qProj, numHeads * headDim);
+        // ── Q path: hidden -> q_a -> RMSNorm -> q_b -> Q ────────────────────
+        LinearW(lw.attnQ_a, input, nullptr, mlaQ_a, qLoraRank);
+        RMSNormW(lw.attnQ_a_norm, mlaQ_a, mlaQ_a, qLoraRank, modelWeights.normEps);
+        LinearW(lw.attnQ_b, mlaQ_a, nullptr, qProj, numHeads * headDim);
         B3_TraceState("ATTN_Q_MLA", layer, qProj, numHeads * headDim);
 
-        // ── KV path: hidden -> kv_a_mqa -> split ──────────────────────────
-        LinearW(lw.attnKV_a_mqa, input, nullptr, mlaKV_a.data(), kvLoraRank + qkRopeHeadDim);
+        // ── KV path: hidden -> kv_a_mqa -> split ────────────────────────────
+        LinearW(lw.attnKV_a_mqa, input, nullptr, mlaKV_a, kvLoraRank + qkRopeHeadDim);
 
         // Split: first kvLoraRank = compressed_kv, last qkRopeHeadDim = k_pe
-        float* compressedKV = mlaKV_a.data();
-        float* k_pe = mlaKV_a.data() + kvLoraRank;
+        float* compressedKV = mlaKV_a;
+        float* k_pe = mlaKV_a + kvLoraRank;
 
         // compressed_kv -> RMSNorm -> kv_b -> K_nope + V
         RMSNormW(lw.attnKV_a_norm, compressedKV, compressedKV, kvLoraRank, modelWeights.normEps);
-        LinearW(lw.attnK_b, compressedKV, nullptr, mlaK_b.data(), numHeads * (qkNopeHeadDim + qkRopeHeadDim));
-        LinearW(lw.attnV_b, compressedKV, nullptr, mlaV_b.data(), numHeads * vHeadDim);
+        LinearW(lw.attnK_b, compressedKV, nullptr, mlaK_b, numHeads * (qkNopeHeadDim + qkRopeHeadDim));
+        LinearW(lw.attnV_b, compressedKV, nullptr, mlaV_b, numHeads * vHeadDim);
 
         // k_pe -> RoPE
         if (config.useRoPE) {
-            applyRoPE(nullptr, k_pe, qkRopeHeadDim, numHeads, 0, pos,
+            applyRoPE(nullptr, k_pe, qkRopeHeadDim, 0, 1, pos,
                       modelWeights.ropeTheta, modelWeights.ropeScaling);
+            for (size_t h = 0; h < numHeads; ++h) {
+                applyRoPE(qProj + h * headDim + qkNopeHeadDim, nullptr,
+                          qkRopeHeadDim, 1, 0, pos,
+                          modelWeights.ropeTheta, modelWeights.ropeScaling);
+            }
         }
 
         // K = concat(K_nope, K_pe) [numHeads, headDim] where headDim = qkNopeHeadDim + qkRopeHeadDim
         for (size_t h = 0; h < numHeads; ++h) {
             float* k_head = kProj + h * headDim;
-            const float* k_nope = mlaK_b.data() + h * (qkNopeHeadDim + qkRopeHeadDim);
-            const float* k_pe_head = k_pe + h * qkRopeHeadDim;
+            const float* k_nope = mlaK_b + h * (qkNopeHeadDim + qkRopeHeadDim);
+            const float* k_pe_head = k_pe;
             memcpy(k_head, k_nope, qkNopeHeadDim * sizeof(float));
             memcpy(k_head + qkNopeHeadDim, k_pe_head, qkRopeHeadDim * sizeof(float));
         }
 
         // V is already in mlaV_b [numHeads * vHeadDim]
-        memcpy(vProj, mlaV_b.data(), numHeads * vHeadDim * sizeof(float));
+        memcpy(vProj, mlaV_b, numHeads * vHeadDim * sizeof(float));
 
         B3_TraceState("ATTN_QKV_MLA", layer, qProj, numHeads * headDim);
 
@@ -5839,14 +5845,33 @@ if (lw.useMLA) {
         
         if (kvCache) {
             // Store current K/V in cache
-            kvCache->store(layer, pos, kProj, vProj);
+            if (kvCache->headCount() != numHeads || kvCache->headDimSize() < headDim ||
+                kvCache->headDimSize() < vHeadDim || kvCache->isFull()) {
+                throw std::runtime_error("MLA KV cache geometry/capacity mismatch");
+            }
+            for (size_t h = 0; h < numHeads; ++h) {
+                float* cachedK = nullptr;
+                float* cachedV = nullptr;
+                kvCache->getKVPointers(layer, h, &cachedK, &cachedV);
+                if (!cachedK || !cachedV) throw std::runtime_error("MLA KV cache write unavailable");
+                std::memcpy(cachedK, kProj + h * headDim, headDim * sizeof(float));
+                std::memcpy(cachedV, vProj + h * vHeadDim, vHeadDim * sizeof(float));
+            }
             
             // Retrieve all K/V up to current position
-            size_t kvLen = kvCache->length(layer);
+            size_t kvLen = pos + 1;
             if (kvLen > 0) {
                 std::vector<float> K_cache(numHeads * headDim * kvLen);
                 std::vector<float> V_cache(numHeads * vHeadDim * kvLen);
-                kvCache->retrieve(layer, 0, kvLen, K_cache.data(), V_cache.data());
+                for (size_t t = 0; t < kvLen; ++t) {
+                    for (size_t h = 0; h < numHeads; ++h) {
+                        const float* cachedK = kvCache->getK(layer, h, t);
+                        const float* cachedV = kvCache->getV(layer, h, t);
+                        if (!cachedK || !cachedV) throw std::runtime_error("MLA KV cache read unavailable");
+                        std::memcpy(K_cache.data() + (t * numHeads + h) * headDim, cachedK, headDim * sizeof(float));
+                        std::memcpy(V_cache.data() + (t * numHeads + h) * vHeadDim, cachedV, vHeadDim * sizeof(float));
+                    }
+                }
                 
                 // Compute attention for each head
                 for (size_t h = 0; h < numHeads; ++h) {
@@ -5879,7 +5904,6 @@ if (lw.useMLA) {
                     }
                     
                     // Weighted sum of V
-                    float* out_h = &attnOut[h * vHeadDim];
                     memset(out_h, 0, vHeadDim * sizeof(float));
                     for (size_t t = 0; t < kvLen; ++t) {
                         const float* V_t = &V_cache[t * numHeads * vHeadDim + h * vHeadDim];
@@ -5889,7 +5913,8 @@ if (lw.useMLA) {
                         }
                     }
                 }
-            } else {
+            }
+        } else {
                 // No cache: single token attention (Q * K^T * V with single position)
                 for (size_t h = 0; h < numHeads; ++h) {
                     const float* Q_h = qProj + h * headDim;
@@ -5905,7 +5930,6 @@ if (lw.useMLA) {
                     score *= (1.0f / std::sqrt(static_cast<float>(headDim)));
                     
                     // Single position: softmax is 1.0, output = V
-                    float* out_h = &attnOut[h * vHeadDim];
                     memcpy(out_h, vProj + h * vHeadDim, vHeadDim * sizeof(float));
                 }
             }
@@ -5943,9 +5967,11 @@ if (lw.useMLA) {
                 reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
             }
             
-            // Skip the standard attention computation below
-            continue;
-        } else {
+            // MLA path is complete: it applies its own output projection and
+            // hooks above. Return, skipping the standard attention below.
+            // (A `continue` was here — illegal: computeAttention has no loop.)
+            return;
+        }
 
     // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
     if (lw.wqkv.data && !lw.hasSSM) {
@@ -9362,7 +9388,7 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
             static_cast<uint32_t>(shards.size()));
     } else {
         printf("[Deep2Engine] openK2ShardDirectory: metadata parse failed (%s), using fallback contract\n",
-               firstMeta.error);
+               firstMeta.error.c_str());
         k2ShardConfig_ = makeK2Config0905Fallback();
         k2ShardConfig_.numShards = static_cast<uint32_t>(shards.size());
     }
