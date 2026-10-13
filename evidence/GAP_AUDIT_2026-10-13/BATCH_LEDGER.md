@@ -109,3 +109,16 @@ Each row records: status, evidence artifact, and batch. Batches of 15 items.
 | 95 | Reproducible release builds | P1 | — | queued (batch 7) |
 | 96 | Automated deployment/rollback | P1 | — | queued (batch 7) |
 
+
+
+## Batch zone status (2026-10-13)
+
+Native batch capability drops (tools/native_batches, MSVC-verified this session):
+
+- BATCH_01_15_PASS  - tool policy/audit, budgets, retry, journal, evidence ledger,
+  dependency graph, work queue, session, workspace-confined files, FIM/inference callback
+- BATCH_16_30_PASS, BATCH_31_45_PASS, BATCH_46_60_PASS  (cumulative, /MT /W4, MSVC x64)
+- All four built and run green by tools\native_batches\build_all_batches.bat.
+  These verify the batch capability contracts; they do not yet wire the drops into
+  the production AgentOrchestrator ABI (that requires the decorated symbol list).
+
