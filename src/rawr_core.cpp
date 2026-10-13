@@ -259,8 +259,8 @@ static bool isPathAuthorized(const fs::path& p) {
         return false;  // unrepresentable path component: refuse
     }
     for (const auto& s : parts) {
-        if (s == ".git" || s == "crash_dumps" || s == ".backups" ||
-            s == "_pre_merge_backup")
+        if (s == ".git" || s == ".archive" || s == "_archive" ||
+            s == "crash_dumps" || s == ".backups" || s == "_pre_merge_backup")
             return false;
     }
     std::string name;
