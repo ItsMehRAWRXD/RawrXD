@@ -1,0 +1,118 @@
+================================================================================
+DEEP2 CERTIFICATION RECEIPTS (RECONSTRUCTED 2026-10-14 after an accidental
+overwrite; every number below is reproducible from the surviving raw dumps in
+this directory: d2_gpu_head/, d2_cpu_head/, ref_head/, qwen*/ nemotron*/ deepseek*,
+splitparity/, moe_ds/, q2k/, q3k/, and via tools/logit_compare.exe).
+
+HEAD baseline: 4213f568...; HEAD git 4213f56908 (+ device-aware engine changes in src/).
+Machine-readable ledger: ../gate_ledger.json. Checkpoint: ../../AUTONOMOUS_STATE.md.
+================================================================================
+
+=== A. NATIVE GPU FORWARD EXECUTION (items 1/3/4/6) — Radeon AI PRO R9700, Vulkan 1.4.349 ===
+  4 architecture families, cpu_calls=0, fallback=<none>, logits_finite=yes, gpu_complete=yes, exit 0:
+   llama     tinyllama-1.1b Q4_K_M (sha256 9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0, 668788096 B)  22 blk 2048 embd
+   qwen2     qwen2.5-coder-1.5b-base (sha256 6a773663...698851e) 28 blk 1536 embd
+   deepseek2 DeepSeek-V2-Lite Q4_K_M (sha256 5d33e5f0...340b343a4) 27 blk 2048 embd experts=64/6 MLA kv_lora_rank512
+   nemotron_h nemotron-3-nano_4b (sha256 527db2cf...37242970) 42 blk 3136 embd (SSM/Mamba2 hybrid)
+  Failure handling: dummy.gguf -> INGEST_FAIL "GGUF header/metadata parse failed", exit 1 (fail-closed).
+  Decode TPS (dense, R9700): llama ~4.5, qwen2.5-coder ~1.42, deepseek-V2-Lite ~0.885 (short). 150 TPS NOT met.
+
+=== B. INDEPENDENT llama.cpp PARITY (item 5) — all bounded, all disagreements margin-explained ===
+  Reference = independent llama.cpp clone (tools from tmp_llama-clone). Comparator = logit_compare.exe.
+  llama  GPU vs ref (129 pos, vocab 32000): argmax 116/129, cos 0.99647454, max-abs 1.168507 (pos16), explained 13, unexplained 0.
+        CPU vs ref (129): 117/129, cos 0.99623281, max-abs 1.188872; GPU vs CPU (self): 119/129, cos 0.99651254, max-abs 1.104414.
+  qwen2  GPU vs ref (64 pos, vocab 151936): argmax 55/64, cos 0.98935972, max-abs 1.569948, unexplained 0 (bounded, healthy).
+  nemotron_h GPU vs ref (64 pos, vocab 131072): argmax 6/64, cos -0.18167872, max-abs 13.92 (PARITY FAIL).
+        nemotron_h CPU vs ref (49): argmax 4/49, cos 0.53308076, max-abs 12.34 (FAILS on BOTH -> SSM/hybrid MODELING divergence, not GPU-only; GENSTREAM 1681 1681 1681). DO NOT certify nemotron_h.
+  deepseek2 vs ref: NOT established (engine unstable across sustained runs).
+
+=== C. CONCURRENT DUAL-GPU (item b) — R9700 (dev0,31.86GiB) + RX 7800 XT (dev4,15.98GiB) ===
+  Two bench procs concurrently: 55/58 samples both-GPUs-busy, 9136 ms wall; identical GENSTREAM on both; cpu_calls=0. Independent exec PASS.
+  DualGpuBridge plumbing (evidence/extern/dual_gpu_bridge): real plan [0,15)/[15,22); REAL host-staged device0->device4 activation 8192 B, byte-identical, 3.19 ms, BRIDGE_VERDICT PASS.
+
+=== D. DEVICE-AWARE QuantDot + SPLIT-MODEL (additive; single-GPU proven byte-identical) ===
+  src: quant_dot_dispatch (GpuFor(int) multi-device; g_active_device override default -1 = no-op; SetActiveDevice;
+  GetCacheStatsOn(device)); runtime_graph_executor (g_block_vk block->device; BlockVkByIndex; DevScope RAII in
+  OpLinear + OpMoEExecute; SetBlockVulkanDevice). Activations are host-mediated; serial fence-completes per dot.
+  TinyLlama split(--split 11, blks 11-21 on RX 7800 XT) vs single-GPU, decode=20 (27 pos): 27/27, cos 1.0,
+     max-abs 0, bitwise_identical YES (864,000). Single-GPU vs original frozen (129 pos): bit-identical 4,128,000, 0 differ.
+  (Mid-work bug caught+fixed: BlockVkFor returned 0 -> routed via duplicate GpuFor(0) blinding primary counters;
+   fixed to -1 for primary so counters stay on Gpu(); residency then cold_misses=155/warm=0/live=600MiB.)
+
+=== E. MoE DEVICE-AWARE ROUTING (roadmap 01/02/05) — DeepSeek-V2-Lite (rgb1072... ) ===
+  OpMoEExecute routes all expert up/gate/down dots to the owning block's device.
+  split13 (blks 13-26 on dev4): secondary submits=5122 misses=1579 live=2994.9MiB; cpu_calls=0;
+     full logits vs single-GPU baseline bit-identical 1,126,400 (0 differ, cos 1.0). 11/11 argmax.
+  split0 (whole model on dev4): secondary submits=9541 misses=2907 live=5513.3MiB; bit-identical 1,126,400.
+  TODO 01 PASS, 02 PASS (bit-identity => selection/routing/accumulation unchanged), 05 PASS.
+
+=== F. TODO-03/G03/G04 — residency, eviction, budgets, pinning ===
+  Weight residency (deep2_residency_probe, same live context): COLD misses=155 -> WARM misses=0, live 600 MiB; PASS.
+  Device-aware prefetch (IsWeightResident/PrefetchWeight honor g_active_device): dev4 prefetches=1109; re-verified bit-identical.
+  G03 independent budgets (RR_WEIGHT_CACHE_MAX_BYTES_<idx>): dev0=8GiB evictions=0 live=2682.7MiB; dev4=2GiB evictions=721
+     live=1907.3MiB; split bit-identical 1,126,400. PASS.
+  G04 in-flight pinning (batch-scoped batch_pinned_; eviction skips in-flight; cleared after EndBatch fence):
+     batched single-GPU 6045 evictions bit-identical; concurrent both-GPU (dev0 ev506/dev4 ev1194) bit-identical. Single-GPU
+     Q4_K unchanged. PASS.
+
+=== G. G05 — NATIVE Q2_K/Q3_K GPU KERNELS ===
+  Adds kinds 5(Q2_K,84B)/6(Q3_K,110B) across shader(quant_dot.comp recompiled via glslc) + RowBytesForKind + DotBlocked
+  range + QuantKindOf/GPU-branch + KQuantRowDotQ8 dequant-dot + VulkanCompute QuantDotGeometry & ExecuteQuantDot geometry.
+  (Two bugs fixed en route: QuantDotGeometry/ExecuteQuantDot treated kind5 as legacy->18B; and shader's early legacy
+   decoder intercepted kind 5/6 -> ALL-ZERO output; gated legacy to 2..4. Unsupported kinds still fail-closed.)
+  Q2_K (llama3.2-3b-Q2_K, vocab 128256, 129 pos) GPU vs llama.cpp: argmax 121/129, cos 0.99703978, max-abs 1.664651,
+     8 disagreements all margin-explained, 0 unexplained, cpu_calls=0 (single-call AND batch), finite.
+  Q3_K_S (llama3.2-3b-Q3_K_S) GPU vs llama.cpp: argmax 116/129, cos 0.98632392, max-abs 1.190547, 13 explained, 0 unexplained, cpu_calls=0.
+  Q4_K single-GPU regression vs frozen: bit-identical 4,128,000, 0 differ (no regression).
+  G05 = PASS (native GPU coverage, cpu_calls=0). Parity is BOUNDED same regime as accepted Q4_K (116/129, cos .99647454,
+     max-abs 1.168507). Bit-exact match to llama.cpp's integer-lane q-quant dot is a separate G08 exactness enhancement
+     (Q4_K is not bitwise either) - not claimed.
+
+=== H. BLOCKERS (recorded, never passed by assertion) ===
+  G07 DeepSeek-671B: no real 671B GGUF on disk (dummy_200b.gguf = zero placeholder).
+  G15 150 TPS: measured best ~4.5 TPS (llama); ~33x gap (per-row dispatch geometry + host-wait).
+  G06/G08 nemotron_h: SSM/hybrid parity broken vs reference (B). deepseek2 long-run instability (short-window parity only).
+  G16/G18 IDE: Win32IDE link blocked by Qt v142 vs VS2022 v143 ABI.
+  Extracted source drops (assemble before wiring): evidence/extern/{dual_gpu_bridge, modelpluscontext, hotpatch, hardware_pressure, nanoquant}.
+
+=== I. UNIVERSAL PLAGUE MEMORY ENGINE (UPME) -- ROM POLICY  [include/plague_memory.hpp, tools/plague_rom_receipt.cpp] ===
+  Shared fabric implemented (real, used by all four policies): universal page directory
+  (page identity / content_key / policy / owner_agent / generation / priority / pin_count /
+  residency / bytes / crc), residency controller with per-device budgets (G03),
+  generation-checked leases + fence-safe pinning (G04), byte-verified transfer plugin (G02),
+  LRU + priority-aware budgeted eviction, per-agent isolation and budgets, fail-closed
+  reconstruction, invalidation that drops residents and stale leases, swarm replication rules.
+  ROM policy: IMMUTABLE content-addressed weight pages, native GGUF quantized block bytes
+  (Q2_K/Q3_K/... carried as-is; no F32 expansion, no CPU dequantisation), on-demand
+  reconstruction from the engine's own universal_gguf Memory-map, byte/CRC verification,
+  device-aware prefetch that follows block/expert execution, replication, eviction, reuse.
+  Context and Emulator policies carry their real structures/metadata and execute through the
+  same fabric (context COW materialisation, emulator VAT + demand paging + exec-page
+  validation + translated-code invalidation + MMIO-authoritative rule); Context paging and
+  Emulator coherence correctness receipts are the staged next strata (ROM first per plan).
+  RECEIPT (tools/plague_rom_receipt.exe --model F:\rawrxd\llama3.2-3b-Q2_K.gguf --tensors 0
+           --budget 8388608 --dev-budget 8388608, exit 0):
+    A0 ingest OK arch=llama tensors=255 model_bytes=1363935456 (real mmap, 1356097792 B of pages)
+    A1 on-demand reconstruction byte-exact 255/255, byte_mismatch=0, crc_ok=255, recons=255        PASS
+    A2 native quantized pages, size_ok=255, quant_ok=255 (no F32 expansion / no CPU dequant)        PASS
+    A3 warm reuse 255/255, hits_delta=255, recons_delta=0                                            PASS
+    A4 device-aware prefetch warmed block 0: 9/9 resident hits, 12 hints                              PASS
+    A5 pin + generation lease: pinned=1, invalidate refused while pinned=1, dropped=1,
+       resident after refusal=1, stale generation rejected=1                                           PASS
+    A6 agent budget 8 MiB: evictions_delta=255, recons_delta=255, exact=255 bad=0,
+       resident=8269824 B <= budget                                                                    PASS
+    A7 swarm: ROM replica byte-exact=1, mutable KV replication refused=1,
+       immutable KV replicated=1, MMIO replication refused=1                                             PASS
+    A8 fail-closed: reader detached -> size_fail_delta=1, no serving of unusable page                  PASS
+    A9a G02 byte-verified GPU transfer on R9700 (device 0): transfers=48 ok=48 bad=0,
+       independent direct roundtrips=48, warm=48, re-upload after eviction=1,
+       verify_fail=0 transfer_fail=0, fabric device bytes 8269824 <= 8388608 budget                     PASS
+    A9b byte-verified placement on RX 7800 XT (device 4): 16 ok / 16                                      PASS
+    PLAGUE_ROM_RECEIPT tensor_pages=255 stages=10 passed=10 verdict=PASS
+  Log: evidence/BUILD_2026-10-14_UPME_PLAGUE_MEMORY/plague_rom_receipt.log
+  NOT yet done / honest limits: Context paging + Emulator coherence correctness receipts
+  (staged next); multi-device ROM propagation currently binds the fabric transfer to one
+  engine instance at a time (second device exercised directly, not as a live replica); no
+  durable NVMe paging yet (backing is the model file itself); the 1 TiB logical-address
+  drop in evidence/extern/virtual_rom remains a host-side component, folded in as reference.
+
