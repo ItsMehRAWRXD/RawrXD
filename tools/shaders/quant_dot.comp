@@ -51,12 +51,14 @@ layout(push_constant) uniform PushConstants {
     uint n_out;      // rows
     uint n_in;       // input dimension
     uint n_blocks;   // n_in / 256 (k-quants: the 256-value super-block count)
-    uint kind;       // 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0
+    uint kind;       // 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K
 };
 
 // Q4_K / Q6_K block sizes in bytes.
 const uint Q4K_BYTES = 144u;
 const uint Q6K_BYTES = 210u;
+const uint Q2K_BYTES = 84u;   // G05: scales[16]|qs[64]|d(f16)|dmin(f16)
+const uint Q3K_BYTES = 110u;  // G05: hmask[32]|qs[64]|scales[12]|d(f16)
 // Legacy block sizes in bytes (32 values per block).
 const uint Q50_BYTES = 22u;
 const uint Q80_BYTES = 34u;
@@ -126,7 +128,7 @@ void main() {
     for (int i = 0; i < 8; ++i) sums[i] = 0.0;
     float sumf = 0.0;
 
-    if (kind >= 2u) {
+    if (kind >= 2u && kind <= 4u) {   // legacy Q5_0/Q8_0/Q4_0 only; kinds 5/6 are k-quants
         // ---- legacy Q5_0 / Q8_0 / Q4_0 ----------------------------
         // 32 values per block, eight blocks per 256-value activation
         // super-block. The packed row stride is (ceil(n_in/32) * lb_bytes);
@@ -194,7 +196,8 @@ void main() {
         out_rows[row] = sumf;
         return;
     }
-    uint block_bytes = (kind == 0u) ? Q4K_BYTES : Q6K_BYTES;
+    uint block_bytes = (kind == 0u) ? Q4K_BYTES : (kind == 1u) ? Q6K_BYTES
+                     : (kind == 5u) ? Q2K_BYTES : (kind == 6u) ? Q3K_BYTES : Q4K_BYTES;
     uint row_base = row * block_bytes * n_blocks;
 
     for (uint b = 0u; b < n_blocks; ++b) {
@@ -240,7 +243,7 @@ void main() {
             for (int i = 0; i < 8; ++i) sums[i] += d * float(lanes[i]);
             sumf -= dmin * float(min_sum);
 
-        } else {
+        } else if (kind == 1u) {
             // ---- Q6_K ----
             uint ql_off = base + 0u;
             uint qh_off = base + 128u;
@@ -269,6 +272,69 @@ void main() {
 
             float d = half_to_float(pack_u16(base + 208u)) * q8_data[b * Q8_STRIDE + Q8_OFF_D];
             for (int i = 0; i < 8; ++i) sums[i] += d * float(lanes[i]);
+
+        } else if (kind == 5u) {
+            // ---- G05 Q2_K: scales[16] | qs[64] | d(f16@80) | dmin(f16@82) ----
+            // Dequantise each weight x = d*(sc&0xF)*q2 - dmin*(sc>>4), dot vs the Q8
+            // activation. Mirrors the CPU reference (ggml-exact geometry).
+            float d = half_to_float(pack_u16(base + 80u));
+            float dmin = half_to_float(pack_u16(base + 82u));
+            float qd = q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            float bacc = 0.0;
+            int is = 0;
+            for (uint n = 0u; n < 256u; n += 128u) {
+                uint qgrp = base + 16u + (n / 128u) * 32u;  // this group's 32 qs bytes
+                int shift = 0;
+                for (uint j = 0u; j < 4u; ++j) {
+                    { uint sc = pack_byte(base + uint(is++));
+                      float dl = d * float(sc & 0xFu), ml = dmin * float(sc >> 4u);
+                      for (uint l = 0u; l < 16u; ++l)
+                          bacc += (dl * float((pack_byte(qgrp + l) >> uint(shift)) & 3u) - ml) * float(act[n + j*32u + l]); }
+                    { uint sc = pack_byte(base + uint(is++));
+                      float dl = d * float(sc & 0xFu), ml = dmin * float(sc >> 4u);
+                      for (uint l = 0u; l < 16u; ++l)
+                          bacc += (dl * float((pack_byte(qgrp + l + 16u) >> uint(shift)) & 3u) - ml) * float(act[n + j*32u + 16u + l]); }
+                    shift += 2;
+                }
+            }
+            sums[0] += bacc * qd;
+
+        } else if (kind == 6u) {
+            // ---- G05 Q3_K: hmask[32] | qs[64] | scales[12]->16i8 | d(f16@108) ----
+            float d_all = half_to_float(pack_u16(base + 108u));
+            float qd = q8_data[b * Q8_STRIDE + Q8_OFF_D];
+            uint s0 = pack_byte(base+96u)|(pack_byte(base+97u)<<8u)|(pack_byte(base+98u)<<16u)|(pack_byte(base+99u)<<24u);
+            uint s1 = pack_byte(base+100u)|(pack_byte(base+101u)<<8u)|(pack_byte(base+102u)<<16u)|(pack_byte(base+103u)<<24u);
+            uint s2 = pack_byte(base+104u)|(pack_byte(base+105u)<<8u)|(pack_byte(base+106u)<<16u)|(pack_byte(base+107u)<<24u);
+            uint kmask1 = 0x03030303u, kmask2 = 0x0f0f0f0fu;
+            uint n0 = (s0 & kmask2)          | (((s2 >> 0) & kmask1) << 4);
+            uint n1 = (s1 & kmask2)          | (((s2 >> 2) & kmask1) << 4);
+            uint n2 = ((s0 >> 4) & kmask2)   | (((s2 >> 4) & kmask1) << 4);
+            uint n3 = ((s1 >> 4) & kmask2)   | (((s2 >> 6) & kmask1) << 4);
+            float bacc = 0.0;
+            uint m = 1u; int is = 0;
+            for (uint n = 0u; n < 256u; n += 128u) {
+                uint qgrp = base + 32u + (n / 128u) * 32u;  // qs[64] at base+32
+                int shift = 0;
+                for (uint j = 0u; j < 4u; ++j) {
+                    { int sj = is++; uint sww = (sj<4)?n0:(sj<8)?n1:(sj<12)?n2:n3;
+                      int sbyte = int((sww >> ((sj&3)*8u)) & 0xFFu); if (sbyte>=128) sbyte-=256;
+                      float dl = d_all * float(sbyte - 32);
+                      for (uint l = 0u; l < 16u; ++l) {
+                          int q = int((pack_byte(qgrp + l) >> uint(shift)) & 3u);
+                          int hb = (pack_byte(base + l) & m) == 0u ? 4 : 0;
+                          bacc += (dl * float(q - hb)) * float(act[n + j*32u + l]); } }
+                    { int sj = is++; uint sww = (sj<4)?n0:(sj<8)?n1:(sj<12)?n2:n3;
+                      int sbyte = int((sww >> ((sj&3)*8u)) & 0xFFu); if (sbyte>=128) sbyte-=256;
+                      float dl = d_all * float(sbyte - 32);
+                      for (uint l = 0u; l < 16u; ++l) {
+                          int q = int((pack_byte(qgrp + l + 16u) >> uint(shift)) & 3u);
+                          int hb = (pack_byte(base + l + 16u) & m) == 0u ? 4 : 0;
+                          bacc += (dl * float(q - hb)) * float(act[n + j*32u + 16u + l]); } }
+                    shift += 2; m <<= 1;
+                }
+            }
+            sums[0] += bacc * qd;
         }
     }
 

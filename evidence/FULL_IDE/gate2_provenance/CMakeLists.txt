@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.20)
+project(rawrxd_gate2_provenance LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_executable(gate2_admission_probe audit_probe.cpp F:/rawrxd/src/deep2/QuantParityRegistry.cpp)
+target_include_directories(gate2_admission_probe PRIVATE F:/rawrxd/src F:/rawrxd/src/deep2 F:/rawrxd/src/deep2/modelgenie F:/rawrxd/include)
+target_compile_definitions(gate2_admission_probe PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+add_executable(modelgenome_capabilities_tests
+    F:/rawrxd/src/deep2/modelgenie/tests/ModelGenomeCapabilitiesTests.cpp
+    F:/rawrxd/src/deep2/modelgenie/ModelGenomeReader.cpp
+    F:/rawrxd/src/deep2/QuantParityRegistry.cpp)
+target_include_directories(modelgenome_capabilities_tests PRIVATE F:/rawrxd/src F:/rawrxd/src/deep2 F:/rawrxd/src/deep2/modelgenie F:/rawrxd/include)
+target_compile_definitions(modelgenome_capabilities_tests PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+add_executable(quant_parity_cert F:/rawrxd/src/deep2/quant_parity_cert.cpp F:/rawrxd/src/deep2/QuantParityRegistry.cpp F:/rawrxd/src/deep2/Q8KParity.cpp)
+target_include_directories(quant_parity_cert PRIVATE F:/rawrxd/src F:/rawrxd/src/deep2 F:/rawrxd/src/deep2/modelgenie F:/rawrxd/include)
+target_compile_definitions(quant_parity_cert PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+set_target_properties(quant_parity_cert PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+add_executable(kquant_dot_parity F:/rawrxd/src/deep2/test_kquant_dot_parity.cpp)
+target_include_directories(kquant_dot_parity PRIVATE F:/rawrxd/src F:/rawrxd/src/deep2 F:/rawrxd/src/deep2/modelgenie F:/rawrxd/include)
+target_compile_definitions(kquant_dot_parity PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+set_target_properties(kquant_dot_parity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")

@@ -313,7 +313,7 @@
     }
   ],
   "schema": "rawrxd-capability-manifest/1",
-  "source_revision": "ee2083111a5ce9e0ce69f7fa5cf39d0b020c621a",
+  "source_revision": "ce8ee05cd442aee45af7476de7f3144f795cb6b9",
   "tool_count": 7,
   "tools": [
     {

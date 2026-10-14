@@ -1176,6 +1176,17 @@ bool VulkanCompute::EnsureQuantTimestampPool() {
 // small recycled ring. The host still waits for the fence before reading the
 // output, so every reuse is race-free, and every failure is reported to the
 // caller (never a silent CPU pass-off).
+//
+// RAWRXD_G04_TRIAGE: env-gated host-side step trace. RR_QD_TRACE=1 prints each
+// dispatch milestone to stderr so a hang can be localised (which stage is the
+// last one printed) without a debugger. Cost is one getenv check per call.
+#define QDTRACE(msg) do { \
+    static const bool qd_trace_on_ = (std::getenv("RR_QD_TRACE") != nullptr); \
+    if (qd_trace_on_) { \
+        std::stringstream _qd_ss_; _qd_ss_ << std::this_thread::get_id(); \
+        std::cerr << "[qd-trace t" << _qd_ss_.str().substr(_qd_ss_.str().size() - 4) << "] " << msg << std::endl; \
+    } \
+} while (0)
 bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
                                      const void* q8_interleaved, size_t q8_bytes,
                                      void* out, size_t out_bytes,
@@ -1183,17 +1194,24 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 {
     // Validate everything up front. No silent CPU fallback: a failure is
     // reported to the caller so it can decide what to do.
+    // RAWRXD_G04: this call is one atomic residency transaction. The weight is
+    // pinned for the whole dispatch so no concurrent eviction (from another
+    // thread's prefetch or batch) can retire the buffer mid-call, and the
+    // device objects the command buffer references stay alive until the fence
+    // has been waited on. Dispatch is serialised, which is the pre-existing
+    // contract; what is new is that residency steering can no longer race it.
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!packed || !q8_interleaved || !out) return false;
-    if (kind < 0 || kind > 4) return false;
+    if (kind < 0 || kind > 6) return false;   // G05: +Q2_K(5)/Q3_K(6)
     if (n_out == 0 || n_in == 0 || n_blocks == 0) return false;
 
-    // Kinds 0/1 are the k-quants (one 256-value super-block per block); kinds
+    // Kinds 0/1/5/6 are the k-quants (one 256-value super-block per block); kinds
     // 2/3/4 are legacy types (32 values per block, eight per super-block). For
     // the legacy kinds the LAST activation super-block may be PARTIAL:
     // n_in need not divide 256 (e.g. 2688 = 10*256 + 128), so the activation
     // carries ceil(n_in/256) super-blocks and the shader decodes only the
     // legacy blocks whose elements exist.
-    const bool legacy = (kind >= 2);
+    const bool legacy = (kind >= 2 && kind <= 4);
     size_t block_bytes = 0, need_packed = 0, need_q8 = 0;
     if (legacy) {
         if ((n_in % 32u) != 0) return false;
@@ -1204,7 +1222,7 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     } else {
         if ((n_in % 256u) != 0) return false;
         if (n_blocks != n_in / 256u) return false;
-        block_bytes = (kind == 0) ? 144u : 210u;
+        block_bytes = (kind == 0) ? 144u : (kind == 1) ? 210u : (kind == 5) ? 84u : 110u;  // Q4_K/Q6_K/Q2_K/Q3_K
         need_packed = n_out * n_blocks * block_bytes;
         need_q8 = n_blocks * 273u * sizeof(float);
     }
@@ -1218,7 +1236,14 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 
     // ---- 1. device-resident weight: upload once, reuse every decode step ----
     QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, kind);
-    if (!w) return false;
+    if (!w) { QDTRACE("no weight"); return false; }
+    // RAWRXD_G04 in-flight pin: hold the entry until this call's fence wait.
+    struct WeightPin {
+        VulkanCompute& v;
+        const void* key;
+        ~WeightPin() { v.UnpinQuantWeight(key); }
+    } weight_pin{*this, packed};
+    PinQuantWeight(packed, packed_bytes, kind);
 
     // ---- 2. pooled device buffers for the activation and the output --------
     QuantScratch* q8buf = AcquireQuantScratch(q8_bytes);
@@ -1377,6 +1402,7 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
                                 quant_ts_pool_, 1);
 
     if (vkEndCommandBuffer(quant_cmd_) != VK_SUCCESS) {
+        QDTRACE("cmd end failed");
         std::cerr << "Quant-dot command buffer end failed" << std::endl;
         ReleaseQuantScratch(obuf);
         ReleaseQuantScratch(q8buf);
@@ -1394,17 +1420,25 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         ReleaseQuantScratch(q8buf);
         return false;
     }
+    ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
     const auto submit_end = std::chrono::steady_clock::now();
     gpu_counters_.submit_ms +=
         std::chrono::duration<double, std::milli>(submit_end - submit_begin).count();
+    QDTRACE("submitted n_out=" << n_out << " n_in=" << n_in << " n_blocks=" << n_blocks
+                               << " kind=" << kind << " q8_bytes=" << q8_bytes
+                               << " packed_bytes=" << packed_bytes << " out_bytes=" << out_bytes);
 
     if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+        QDTRACE("fence wait returned error");
         std::cerr << "Quant-dot fence wait failed" << std::endl;
         ReleaseQuantScratch(obuf);
         ReleaseQuantScratch(q8buf);
         return false;
     }
+    // RAWRXD_G04: this epoch's fence has signalled, so weights retired during
+    // it (or any earlier epoch) can no longer be referenced by in-flight work.
+    NoteSubmissionComplete();
     const auto wait_end = std::chrono::steady_clock::now();
     ++gpu_counters_.waits;
     const double waited_ms =
@@ -1450,13 +1484,20 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 // 256-value activation super-block for the legacy kinds).
 // ---------------------------------------------------------------------------
 bool VulkanCompute::BeginQuantDotBatch() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (quant_batch_active_) return false;   // batches do not nest
     if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) return false;
     auto it = shaders_.find("quantdot");
     if (it == shaders_.end() || !it->second.pipeline) return false;
     if (!EnsureQuantFastPath()) return false;
 
+    // RAWRXD_G04: release any pins left over from a PREVIOUS batch that ended
+    // abnormally. A leaked pin would make its entry permanently un-evictable
+    // and slowly push the cache over budget, so pins are never allowed to
+    // outlive the batch that acquired them.
+    for (const void* key : batch_pinned_) UnpinQuantWeight(key);
     quant_batch_entries_.clear();
+    batch_pinned_.clear();   // G04: fresh pin set per batch
     quant_batch_q8_host_used_ = 0;
     quant_batch_out_host_used_ = 0;
     // Descriptor sets: one distinct set per queued dot (updating a set that an
@@ -1486,6 +1527,7 @@ bool VulkanCompute::BeginQuantDotBatch() {
         gpu_counters_.descriptor_allocations += kQuantBatchMaxSets;
     }
     quant_batch_active_ = true;
+    QDTRACE("begin-batch ok");
     return true;
 }
 
@@ -1495,17 +1537,17 @@ namespace {
 bool QuantDotGeometry(int kind, size_t n_in, size_t n_out, size_t n_blocks,
                       size_t& block_bytes, size_t& need_packed, size_t& need_q8,
                       size_t& n_sb) {
-    if (kind < 0 || kind > 4) return false;
+    if (kind < 0 || kind > 6) return false;   // G05: +Q2_K(5)/Q3_K(6)
     if (n_out == 0 || n_in == 0) return false;
-    if (kind >= 2) {
+    if (kind >= 2 && kind <= 4) {   // legacy 32-value kinds only (Q5_0/Q8_0/Q4_0)
         if ((n_in % 32u) != 0) return false;
         block_bytes = (kind == 2) ? 22u : ((kind == 3) ? 34u : 18u);  // Q5_0 / Q8_0 / Q4_0
         n_sb = (n_in + 255u) / 256u;
         need_packed = n_out * ((n_in + 31u) / 32u) * block_bytes;
         need_q8 = n_sb * 273u * sizeof(float);
-    } else {
+    } else {   // k-quants, 256-value super-blocks: Q4_K/Q6_K/Q2_K/Q3_K
         if (n_blocks == 0 || (n_in % 256u) != 0 || n_blocks != n_in / 256u) return false;
-        block_bytes = (kind == 0) ? 144u : 210u;  // Q4_K / Q6_K
+        block_bytes = (kind == 0) ? 144u : (kind == 1) ? 210u : (kind == 5) ? 84u : 110u;  // Q4_K/Q6_K/Q2_K/Q3_K
         n_sb = n_blocks;
         need_packed = n_out * n_blocks * block_bytes;
         need_q8 = n_blocks * 273u * sizeof(float);
@@ -1518,6 +1560,11 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
                                   const void* q8_interleaved, size_t q8_bytes,
                                   void* out, size_t out_bytes,
                                   size_t n_out, size_t n_in, int kind) {
+    // RAWRXD_G04: the whole queue step (weight residency + host-buffer growth +
+    // pin) is one atomic residency transaction. Without this, a concurrent
+    // prefetch's eviction pass could free the weight between the lookup here
+    // and the submission in EndQuantDotBatch.
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!quant_batch_active_) return false;
     if (quant_batch_entries_.size() >= kQuantBatchMaxSets) return false;
     if (!packed || !q8_interleaved || !out) return false;
@@ -1532,6 +1579,15 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     // a cache hit costs nothing).
     QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, kind);
     if (!w) return false;
+
+    // RAWRXD_G04: pin this in-flight weight's cache entry so a later Queue's
+    // eviction pass (or a concurrent prefetch) cannot retire its buffer before
+    // EndQuantDotBatch reads it.
+    PinQuantWeight(packed, packed_bytes, kind);
+    batch_pinned_.insert(packed);
+    // G04: pin this in-flight weight's cache entry so a later Queue's eviction
+    // cannot free it before EndQuantDotBatch reads it.
+    batch_pinned_.insert(packed);
 
     // Region at the END of the current batch usage. The host buffers GROW
     // CONTENT-PRESERVING: EnsureHostVisible would destroy and recreate them and
@@ -1589,12 +1645,30 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     e.n_blocks = (uint32_t)n_sb;   // the shader's super-block count (legacy-aware)
     e.kind = (uint32_t)kind;
     quant_batch_entries_.push_back(e);
+    QDTRACE("queued entry n_out=" << n_out << " n_in=" << n_in << " kind=" << kind
+                                   << " q8_bytes=" << q8_bytes << " entries=" << quant_batch_entries_.size());
     return true;
 }
 
 bool VulkanCompute::EndQuantDotBatch() {
+    // RAWRXD_G04: holding quant_mu_ across record+submit+wait is what makes the
+    // deferred-destruction epoch discipline sound: nothing else can retire a
+    // weight while the command buffer that references it is in flight, and the
+    // epoch's fence is waited on before the lock (and the pins) are released.
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!quant_batch_active_) return false;
     quant_batch_active_ = false;
+    // RAWRXD_G04: the in-flight pins are released on EVERY exit path, including
+    // the early failure returns below. A path that returns with pins still held
+    // would leave those entries permanently un-evictable.
+    struct PinReleaseGuard {
+        VulkanCompute& v;
+        std::unordered_set<const void*>& pins;
+        ~PinReleaseGuard() {
+            for (const void* key : pins) v.UnpinQuantWeight(key);
+            pins.clear();
+        }
+    } pin_guard{*this, batch_pinned_};
     const size_t n = quant_batch_entries_.size();
     if (n == 0) return true;
 
@@ -1790,14 +1864,20 @@ bool VulkanCompute::EndQuantDotBatch() {
         std::cerr << "[QUANT_DOT] batch queue submit failed" << std::endl;
         return false;
     }
+    QDTRACE("end-batch submitted entries=" << quant_batch_entries_.size());
+    ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
     const auto submit_end = std::chrono::steady_clock::now();
     gpu_counters_.submit_ms +=
         std::chrono::duration<double, std::milli>(submit_end - submit_begin).count();
     if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
         std::cerr << "[QUANT_DOT] batch fence wait failed" << std::endl;
+        QDTRACE("end-batch fence ERROR");
         return false;
     }
+    QDTRACE("end-batch fence done");
+    // RAWRXD_G04: the batch's in-flight work is complete; retire is now safe.
+    NoteSubmissionComplete();
     const auto wait_end = std::chrono::steady_clock::now();
     ++gpu_counters_.waits;
     gpu_counters_.wait_ms +=
@@ -1822,6 +1902,9 @@ bool VulkanCompute::EndQuantDotBatch() {
         cursor += e.out_bytes;
     }
     quant_batch_entries_.clear();
+    // RAWRXD_G04: the epoch submitted above is now complete, so every weight
+    // retired during this batch (or before it) can be destroyed safely.
+    NoteSubmissionComplete();
     return true;
 }
 
@@ -1894,6 +1977,8 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
                                   void* out, size_t out_bytes,
                                   size_t n_out) {
     const bool trace = (std::getenv("RR_F16_TRACE") != nullptr);
+    // RAWRXD_G04: same atomic-residency contract as ExecuteQuantDot.
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
 #define F16_FAIL(msg) do { if (trace) { std::cerr << "[f16-trace] " << msg << std::endl; } return false; } while (0)
     if (!packed || !x || !out) F16_FAIL("null argument");
     if (n_out == 0 || n_in == 0 || (n_in % 2u) != 0) F16_FAIL("n_in odd/zero");
@@ -1910,6 +1995,13 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     // entry; the fingerprint still guards the pointer/bytes/size identity).
     QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, /*kind=*/-2);
     if (!w) return false;
+    // RAWRXD_G04 in-flight pin: hold the entry until this call's fence wait.
+    struct WeightPin {
+        VulkanCompute& v;
+        const void* key;
+        ~WeightPin() { v.UnpinQuantWeight(key); }
+    } weight_pin{*this, packed};
+    PinQuantWeight(packed, packed_bytes, -2);
 
     // Device-side activation (scratch) and output (scratch).
     QuantScratch* xbuf = AcquireQuantScratch(need_x);
@@ -2046,6 +2138,7 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
         ReleaseQuantScratch(xbuf);
         return false;
     }
+    ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
     if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
         std::cerr << "fp16 dot fence wait failed" << std::endl;
@@ -2053,6 +2146,8 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
         ReleaseQuantScratch(xbuf);
         return false;
     }
+    // RAWRXD_G04: the epoch's fence has signalled; deferred destruction is safe.
+    NoteSubmissionComplete();
     ++gpu_counters_.waits;
     gpu_counters_.download_bytes += n_out * sizeof(float);
     std::memcpy(out, readback_mapped_, n_out * sizeof(float));
@@ -2110,8 +2205,18 @@ bool VulkanCompute::EnsureHostVisible(size_t bytes, VkBuffer& buf,
 
 VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed, size_t bytes,
                                                int kind) {
+    // RAWRXD_G04: the residency cache is shared device state. Every mutation
+    // (lookup, upload, eviction) happens under quant_mu_, so a concurrent
+    // IsQuantWeightResident / PrefetchWeight / lease can never observe or
+    // mutate the cache while an eviction is mid-flight.
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+
     uint64_t fp = 0;
     std::memcpy(&fp, packed, sizeof(fp) < bytes ? sizeof(fp) : bytes);
+    QDTRACE("ensure enter bytes=" << bytes << " kind=" << kind
+                                  << " live=" << gpu_counters_.device_bytes_live
+                                  << " budget=" << quant_weight_budget_bytes_
+                                  << " cached=" << quant_weight_cache_.size());
 
     // STRATA_S08: policy is seeded once from the environment (lru default) so
     // an unset deployment keeps the historical eviction behaviour.
@@ -2129,10 +2234,19 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
             ++gpu_counters_.weight_cache_hits;
             return &e;
         }
-        // Stale entry (pointer reuse): destroy and re-upload below.
-        if (e.buffer) vkDestroyBuffer(device_, e.buffer, nullptr);
-        if (e.memory) vkFreeMemory(device_, e.memory, nullptr);
-        gpu_counters_.device_bytes_live -= e.bytes;
+        // Stale entry (pointer reuse): retire and re-upload below. Retirement
+        // (not immediate destruction) keeps the rule uniform - the objects are
+        // destroyed by the fence reap, never inline.
+        if (e.pin_count == 0) {
+            RetireQuantWeight(e);
+        } else {
+            // Extremely rare: a stale pointer reused while the old entry is
+            // still pinned. Keep the entry (it stays pinned and un-evictable),
+            // and let the caller's upload target be a fresh allocation below
+            // only after the pin drops. Safest action is to refuse rather than
+            // free a buffer somebody is still reading.
+            return nullptr;
+        }
         quant_weight_cache_.erase(it);
     }
 
@@ -2141,13 +2255,20 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     // than assuming infinite device memory.
     while (!quant_weight_cache_.empty() &&
            gpu_counters_.device_bytes_live + bytes > quant_weight_budget_bytes_) {
-        auto victim = quant_weight_cache_.begin();
+        QDTRACE("evict pass: live=" << gpu_counters_.device_bytes_live
+                                    << " need=" << gpu_counters_.device_bytes_live + bytes
+                                    << " budget=" << quant_weight_budget_bytes_
+                                    << " cached=" << quant_weight_cache_.size());
+        auto victim = quant_weight_cache_.end();
         for (auto cit = quant_weight_cache_.begin(); cit != quant_weight_cache_.end(); ++cit) {
+            // G04 in-flight pinning: a weight referenced by an OPEN quant-dot
+            // batch, by an in-progress single dispatch, or by an outstanding
+            // generation lease must not be evicted before its reader is done,
+            // or that reader would read a freed device buffer (use-after-free).
+            if (cit->second.pin_count > 0) continue;
+            if (batch_pinned_.find(cit->first) != batch_pinned_.end()) continue;
+            if (victim == quant_weight_cache_.end()) { victim = cit; continue; }
             if (weight_cache_policy_ == 1) {
-                // Hotness policy (STRATA_S08): evict the coldest entry by
-                // dispatch count, breaking ties by recency. A weight the MoE
-                // router keeps selecting stays resident across tokens; a
-                // one-shot weight is the first to go.
                 if (cit->second.use_count < victim->second.use_count ||
                     (cit->second.use_count == victim->second.use_count &&
                      cit->second.last_used < victim->second.last_used))
@@ -2156,12 +2277,19 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
                 if (cit->second.last_used < victim->second.last_used) victim = cit;
             }
         }
-        if (victim->second.buffer) vkDestroyBuffer(device_, victim->second.buffer, nullptr);
-        if (victim->second.memory) vkFreeMemory(device_, victim->second.memory, nullptr);
-        gpu_counters_.device_bytes_live -= victim->second.bytes;
+        if (victim == quant_weight_cache_.end()) {
+            // Only pinned entries remain: nothing may be safely evicted. The
+            // budget is then transiently exceeded rather than freeing a buffer
+            // that is in flight. Correctness outranks the budget, and the
+            // override is counted so it is never silent.
+            ++quant_budget_overrides_;
+            break;
+        }
+        RetireQuantWeight(victim->second);
         quant_weight_cache_.erase(victim);
         ++gpu_counters_.weight_cache_evictions;
     }
+
 
     QuantWeight e;
     e.bytes = bytes;
@@ -2179,22 +2307,165 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     // so the instrumentation stays complete.
     if (!AllocateBuffer(bytes, e.buffer, e.memory)) {
         std::cerr << "Quant-dot weight buffer allocation failed" << std::endl;
+        QDTRACE("ensure alloc FAILED");
         return nullptr;
     }
     ++gpu_counters_.buffer_allocations;
     gpu_counters_.device_bytes_live += bytes;
     if (gpu_counters_.device_bytes_live > gpu_counters_.device_bytes_peak)
         gpu_counters_.device_bytes_peak = gpu_counters_.device_bytes_live;
+    QDTRACE("ensure uploading bytes=" << bytes);
     if (!CopyHostToBuffer(const_cast<void*>(packed), e.buffer, bytes)) {
         std::cerr << "Quant-dot weight upload failed" << std::endl;
+        QDTRACE("ensure upload FAILED");
         vkDestroyBuffer(device_, e.buffer, nullptr);
         vkFreeMemory(device_, e.memory, nullptr);
         gpu_counters_.device_bytes_live -= bytes;
         return nullptr;
     }
+    QDTRACE("ensure upload done");
     ++gpu_counters_.weight_cache_misses;
     auto res = quant_weight_cache_.emplace(packed, e);
     return &res.first->second;
+}
+
+// ---------------------------------------------------------------------------
+// RAWRXD_G04: concurrent-safe residency primitives.
+// ---------------------------------------------------------------------------
+
+// Fence-safe eviction, step 1: stop accounting the objects as live and PARK
+// them on the retired list instead of destroying them inline. The eviction
+// loop above runs while a submission may still be in flight on the shared
+// command buffer; destroying a VkBuffer the GPU is still reading is undefined
+// behaviour that no amount of host-side locking can fix. ReapRetiredWeights()
+// performs step 2 once the epoch's fence has signalled.
+//
+// Caller must hold quant_mu_.
+void VulkanCompute::RetireQuantWeight(const QuantWeight& w) {
+    RetiredWeight r;
+    r.buffer = w.buffer;
+    r.memory = w.memory;
+    r.bytes = w.bytes;
+    r.retired_epoch = quant_epoch_;
+    quant_retired_.push_back(r);
+    if (gpu_counters_.device_bytes_live >= w.bytes)
+        gpu_counters_.device_bytes_live -= w.bytes;
+    else
+        gpu_counters_.device_bytes_live = 0;
+}
+
+// Fence-safe eviction, step 2: destroy every retired entry whose dispatch
+// epoch has completed. Every submission in this class uses the single shared
+// quant_fence_ and waits on it before returning, so once epoch E has been
+// waited on, no command buffer recorded at or before E can still be executing.
+//
+// Caller must hold quant_mu_.
+void VulkanCompute::ReapRetiredWeights() {
+    if (quant_retired_.empty()) return;
+    std::vector<RetiredWeight> keep;
+    keep.reserve(quant_retired_.size());
+    for (const RetiredWeight& r : quant_retired_) {
+        if (r.retired_epoch <= quant_completed_epoch_) {
+            if (r.buffer) vkDestroyBuffer(device_, r.buffer, nullptr);
+            if (r.memory) vkFreeMemory(device_, r.memory, nullptr);
+            ++quant_retired_reaped_;
+        } else {
+            keep.push_back(r);
+        }
+    }
+    quant_retired_.swap(keep);
+}
+
+// Records that the submission issued for epoch quant_epoch_ has completed and
+// its fence has been waited on, which is the moment deferred destructions
+// become safe. Caller must hold quant_mu_.
+void VulkanCompute::NoteSubmissionComplete() {
+    quant_completed_epoch_ = quant_epoch_;
+    ReapRetiredWeights();
+}
+
+// RAWRXD_G04 in-flight pinning. A pin is the unit of "somebody may still read
+// this buffer": an open quant-dot batch, an in-progress single dispatch, or an
+// outstanding generation lease. The residency budget skips pinned entries, so
+// a pinned weight can never be evicted out from under its reader.
+//
+// Caller must hold quant_mu_.
+bool VulkanCompute::PinQuantWeight(const void* packed, size_t bytes, int kind) {
+    if (!packed) return false;
+    auto it = quant_weight_cache_.find(packed);
+    if (it == quant_weight_cache_.end()) return false;
+    QuantWeight& e = it->second;
+    if (!(e.bytes == bytes && e.kind == kind && e.buffer)) return false;
+    ++e.pin_count;
+    return true;
+}
+
+// Caller must hold quant_mu_.
+void VulkanCompute::UnpinQuantWeight(const void* packed) {
+    if (!packed) return;
+    auto it = quant_weight_cache_.find(packed);
+    if (it == quant_weight_cache_.end()) return;
+    if (it->second.pin_count > 0) --it->second.pin_count;
+}
+
+uint64_t VulkanCompute::AcquireWeightLease(const void* packed, size_t bytes, int kind) {
+    if (!packed) return 0;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!EnsureQuantFastPath()) return 0;
+    // Upload first (if needed) and then pin: a lease that cannot materialise
+    // the weight on the device is refused rather than silently unbacked.
+    if (!EnsureQuantWeight(packed, bytes, kind)) return 0;
+    if (!PinQuantWeight(packed, bytes, kind)) return 0;
+    const uint64_t id = ++quant_lease_seq_;
+    quant_leases_.emplace(id, packed);
+    return id;
+}
+
+void VulkanCompute::ReleaseWeightLease(uint64_t lease_id) {
+    if (!lease_id) return;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    auto it = quant_leases_.find(lease_id);
+    if (it == quant_leases_.end()) return;   // stale / double release: rejected, not mis-applied
+    UnpinQuantWeight(it->second);
+    quant_leases_.erase(it);
+}
+
+size_t VulkanCompute::OutstandingWeightLeases() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    return quant_leases_.size();
+}
+
+size_t VulkanCompute::PinnedWeightCount() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    size_t n = 0;
+    for (const auto& kv : quant_weight_cache_)
+        if (kv.second.pin_count > 0) ++n;
+    return n;
+}
+
+size_t VulkanCompute::RetiredWeightCount() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    return quant_retired_.size();
+}
+
+uint64_t VulkanCompute::RetiredWeightsReaped() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    return quant_retired_reaped_;
+}
+
+uint64_t VulkanCompute::WeightResidencyEpoch() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    return quant_epoch_;
+}
+
+uint64_t VulkanCompute::CompletedWeightEpoch() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    return quant_completed_epoch_;
+}
+
+uint64_t VulkanCompute::BudgetOverrides() const {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    return quant_budget_overrides_;
 }
 
 // RAWRXD_STRATA_S02: read-only residency query. Used by the Strata expert
@@ -2203,6 +2474,7 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
 // safe to call for pure accounting and cannot change dispatch behaviour.
 bool VulkanCompute::IsQuantWeightResident(const void* packed, size_t bytes, int kind) const {
     if (!packed) return false;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     auto it = quant_weight_cache_.find(packed);
     if (it == quant_weight_cache_.end()) return false;
     const QuantWeight& e = it->second;
@@ -2214,15 +2486,27 @@ bool VulkanCompute::IsQuantWeightResident(const void* packed, size_t bytes, int 
 // dispatch path, so a prefetch can never serve stale bytes: either the entry
 // is already resident (counted as a prefetch hit, nothing uploaded) or it is
 // uploaded now under the residency budget and the later dispatch finds it.
+//
+// RAWRXD_G04: safe to call while another thread holds an OPEN quant-dot batch.
+// The batch's weights are pinned for the batch's lifetime, so the prefetch's
+// eviction pass cannot free a buffer the pending batch still references.
 bool VulkanCompute::PrefetchQuantWeight(const void* packed, size_t bytes, int kind) {
     if (!packed) return false;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (IsQuantWeightResident(packed, bytes, kind)) {
         ++gpu_counters_.weight_prefetch_hits;
         return true;
     }
     QuantWeight* w = EnsureQuantWeight(packed, bytes, kind);
+    QDTRACE("prefetch ensure done bytes=" << bytes << " ok=" << (w != nullptr));
     if (!w) return false;
     ++gpu_counters_.weight_prefetches;
+    // RAWRXD_G04: the upload above is a completed submission, so any retirement
+    // recorded at or before the completed epoch can be destroyed now. This
+    // keeps the deferred list bounded under a long prefetch-only steering pass
+    // (which issues no dispatch of its own and would otherwise accumulate
+    // unreaped retirements indefinitely).
+    ReapRetiredWeights();
     return true;
 }
 
@@ -2232,6 +2516,7 @@ bool VulkanCompute::PrefetchQuantWeight(const void* packed, size_t bytes, int ki
 // never invalidate a pointer the caller already holds. All reuse happens
 // after the caller's fence wait, so a released buffer is never in flight.
 VulkanCompute::QuantScratch* VulkanCompute::AcquireQuantScratch(size_t bytes) {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     for (auto& up : quant_scratch_pool_) {
         QuantScratch* s = up.get();
         if (!s->in_use && s->capacity >= bytes) {
@@ -2252,10 +2537,13 @@ VulkanCompute::QuantScratch* VulkanCompute::AcquireQuantScratch(size_t bytes) {
 }
 
 void VulkanCompute::ReleaseQuantScratch(QuantScratch* s) {
-    if (s) s->in_use = false;
+    if (!s) return;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    s->in_use = false;
 }
 
 bool VulkanCompute::EnsureQuantFastPath() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (quant_fast_ready_) return true;
     if (!device_ || quant_descriptor_set_layout_ == nullptr) return false;
 
@@ -2277,7 +2565,13 @@ bool VulkanCompute::EnsureQuantFastPath() {
         }
         quant_weight_budget_bytes_ = (largest > 0) ? (uint64_t)(largest / 100u * 90u)
                                                    : (uint64_t)1 << 30;
-        const char* env = std::getenv("RR_WEIGHT_CACHE_MAX_BYTES");
+        // Per-device budget: an index-specific override (e.g. RR_WEIGHT_CACHE_MAX_BYTES_4)
+        // takes precedence over the global RR_WEIGHT_CACHE_MAX_BYTES, so the two GPUs can
+        // carry INDEPENDENT resident-weight budgets. Absent -> global -> 90% of the heap.
+        char per_key[64];
+        std::snprintf(per_key, sizeof(per_key), "RR_WEIGHT_CACHE_MAX_BYTES_%d", (int)active_device_index_);
+        const char* per = std::getenv(per_key);
+        const char* env = (per && *per) ? per : std::getenv("RR_WEIGHT_CACHE_MAX_BYTES");
         if (env && *env) {
             const unsigned long long v = std::strtoull(env, nullptr, 10);
             if (v > 0) quant_weight_budget_bytes_ = (uint64_t)v;
@@ -2343,11 +2637,25 @@ bool VulkanCompute::EnsureQuantFastPath() {
 }
 
 void VulkanCompute::ReleaseQuantFastPath() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     for (auto& kv : quant_weight_cache_) {
         if (kv.second.buffer) vkDestroyBuffer(device_, kv.second.buffer, nullptr);
         if (kv.second.memory) vkFreeMemory(device_, kv.second.memory, nullptr);
     }
     quant_weight_cache_.clear();
+    // RAWRXD_G04: outstanding leases are meaningless once the device objects
+    // are gone; drop them so a later release cannot unpin a dead entry.
+    quant_leases_.clear();
+    batch_pinned_.clear();
+    // RAWRXD_G04: drain the fence-deferred retirement list. Cleanup() calls
+    // vkDeviceWaitIdle() before this, so every deferred entry's referencing
+    // work has already completed and inline destruction is safe here.
+    for (const RetiredWeight& r : quant_retired_) {
+        if (r.buffer) vkDestroyBuffer(device_, r.buffer, nullptr);
+        if (r.memory) vkFreeMemory(device_, r.memory, nullptr);
+        ++quant_retired_reaped_;
+    }
+    quant_retired_.clear();
     // Batch buffers (host and device) and the batch descriptor sets.
     if (quant_batch_q8_host_) {
         if (quant_batch_q8_host_mapped_) { vkUnmapMemory(device_, quant_batch_q8_host_mem_); }

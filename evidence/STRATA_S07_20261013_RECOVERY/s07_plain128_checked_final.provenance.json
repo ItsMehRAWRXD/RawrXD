@@ -1,0 +1,23 @@
+{
+  "process_wall_ms": 48166.4615,
+  "arguments": [
+    "--model",
+    "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "--prefill",
+    "32",
+    "--generate",
+    "128",
+    "--gpu",
+    "--int8kv",
+    "--no-calibrate",
+    "--tag",
+    "s07_plain128_checked_final",
+    "--outdir",
+    "F:/rawrxd/evidence/STRATA_S07_20261013_RECOVERY"
+  ],
+  "exit_code": 0,
+  "binary_sha256": "A684C5C3FC92B9DA6696CE695C7637CF0C6B6B8FFCD791038B873D463DEF3216",
+  "tag": "s07_plain128_checked_final",
+  "interference": [],
+  "valid_isolation": true
+}

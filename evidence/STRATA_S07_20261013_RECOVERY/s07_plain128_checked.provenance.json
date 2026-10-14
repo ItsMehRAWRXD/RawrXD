@@ -1,0 +1,29 @@
+{
+  "interference": [
+    {
+      "command": "\"F:\\rawrxd\\tools\\deep2_strata_bench.exe\" --kv-context-test 1000000",
+      "at": "2026-10-13T17:54:53.5508771-04:00",
+      "pid": 7640
+    }
+  ],
+  "arguments": [
+    "--model",
+    "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "--prefill",
+    "32",
+    "--generate",
+    "128",
+    "--gpu",
+    "--int8kv",
+    "--no-calibrate",
+    "--tag",
+    "s07_plain128_checked",
+    "--outdir",
+    "F:/rawrxd/evidence/STRATA_S07_20261013_RECOVERY"
+  ],
+  "process_wall_ms": 56166.9482,
+  "exit_code": 0,
+  "tag": "s07_plain128_checked",
+  "binary_sha256": "A684C5C3FC92B9DA6696CE695C7637CF0C6B6B8FFCD791038B873D463DEF3216",
+  "valid_isolation": false
+}

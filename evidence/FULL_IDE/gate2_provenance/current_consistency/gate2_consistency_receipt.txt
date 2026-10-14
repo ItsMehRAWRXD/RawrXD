@@ -1,0 +1,10 @@
+﻿=== Gate 2: manifest consistency (2026-10-13T18:10:53.5488342-04:00) ===
+C1 quant_parity_cert           PASS (exit 0, RESULT: RESULT: PASS)
+C2 rawr capabilities           PASS (exit 0, tools=7, revision=843a14c3298ab6aade87fbb597748bd8311f2716)
+C3 manifest revision == HEAD   PASS (843a14c3298ab6aade87fbb597748bd8311f2716)
+C4 primitive sets agree        PASS (10 primitives)
+C5 binding statuses agree      PASS (no contradictions)
+C6 verified quants backed     PASS (verified=[Q8_K,Q4_K,Q6_K], kquant_dot_parity exit 0)
+C7 cited parity evidence      PASS (3 artifacts exist and record PASS)
+
+GATE2_RESULT: PASS

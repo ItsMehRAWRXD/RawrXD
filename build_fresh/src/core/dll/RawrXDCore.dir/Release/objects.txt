@@ -1,2 +1,0 @@
-F:/rawrxd/build_fresh/src/core/dll/RawrXDCore.dir/Release/RawrXDCore.obj
-F:/rawrxd/build_fresh/src/core/dll/RawrXDCore.dir/Release/GGUFLoader.obj

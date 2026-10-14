@@ -1,4 +1,0 @@
-agentic-resilience 1 0.357842
-hexmag-integration 1 0.0254099
-gguf-baseline-help 1 0.0165736
----

@@ -7,6 +7,7 @@
 
 #include "ModelGenome.hpp"
 #include "ModelGenomeReader.hpp"
+#include "../QuantParityRegistry.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -108,6 +109,39 @@ uint32_t CountRank(const std::array<uint32_t, 4>& dims) {
 namespace RawrXD {
 namespace Deep2 {
 namespace ModelGenie {
+
+void RefreshModelGenomeCapabilities(ModelGenome& genome) {
+    auto& caps = genome.capabilities;
+    caps.requiredPrimitives.clear();
+    caps.availablePrimitives.clear();
+    caps.unimplementedPrimitives.clear();
+    caps.firstUnimplementedPrimitive = Primitive::None;
+
+    for (const auto& op : genome.executionOps) {
+        const Primitive p = op.requiredPrimitive;
+        if (p == Primitive::None ||
+            std::find(caps.requiredPrimitives.begin(), caps.requiredPrimitives.end(), p) !=
+                caps.requiredPrimitives.end()) {
+            continue;
+        }
+        caps.requiredPrimitives.push_back(p);
+        const auto gate = QuantParityRegistry::GatePrimitive(p);
+        if (gate.available && gate.kernelPresent) {
+            caps.availablePrimitives.push_back(p);
+        } else {
+            caps.unimplementedPrimitives.push_back(p);
+            if (caps.firstUnimplementedPrimitive == Primitive::None) {
+                caps.firstUnimplementedPrimitive = p;
+            }
+        }
+    }
+
+    // A frozen historical boundary is not a current binding decision. Require
+    // a nonempty produced graph and a real binding for every required primitive.
+    caps.runtimeExecutable = !genome.executionOps.empty() &&
+        !caps.requiredPrimitives.empty() && caps.unimplementedPrimitives.empty() &&
+        QuantParityRegistry::RuntimeExecutable(genome);
+}
 
 bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& genome) {
     // ABI breadcrumb
@@ -434,22 +468,10 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
     }
     
     //=========================================================================
-    // Parse model.execution.txt for capability manifest
+    // Historical model.execution.txt diagnostics are preserved in the frozen
+    // evidence, but cannot determine current kernel availability. Capabilities
+    // are reconciled with the produced graph and admission registry below.
     //=========================================================================
-    {
-        std::ifstream executionFile(executionPath);
-        std::string line;
-        while (std::getline(executionFile, line)) {
-            if (line.find("FIRST_UNPROVEN_BOUNDARY") != std::string::npos) {
-                if (line.find("MLA_DECOMPRESS_FORWARD") != std::string::npos) {
-                    genome.capabilities.firstUnimplementedPrimitive = Primitive::MlaDecompressFwd;
-                }
-            }
-            if (line.find("WHY_UNPROVEN") != std::string::npos) {
-                // Could parse the reason
-            }
-        }
-    }
     
     //=========================================================================
     // Build Execution IR from execution model (TYPED SSA)
@@ -723,21 +745,7 @@ bool LoadModelGenomeFromEvidence(const std::string& evidenceDir, ModelGenome& ge
     lmHead.blockIndex = UINT32_MAX;
     genome.executionOps.push_back(lmHead);
     
-    // Derive required primitives from ExecutionIR to ensure manifest/graph consistency
-    std::vector<Primitive> requiredVec;
-    for (const auto& op : genome.executionOps) {
-        if (std::find(requiredVec.begin(), requiredVec.end(), op.requiredPrimitive) == requiredVec.end()) {
-            requiredVec.push_back(op.requiredPrimitive);
-        }
-    }
-    genome.capabilities.requiredPrimitives = requiredVec;
-    
-    genome.capabilities.availablePrimitives = genome.capabilities.requiredPrimitives;
-    genome.capabilities.unimplementedPrimitives.clear();
-    if (genome.capabilities.firstUnimplementedPrimitive != Primitive::None) {
-        genome.capabilities.unimplementedPrimitives.push_back(genome.capabilities.firstUnimplementedPrimitive);
-    }
-    genome.capabilities.runtimeExecutable = false;
+    RefreshModelGenomeCapabilities(genome);
     
     //=========================================================================
     // Compute Residency Bounds

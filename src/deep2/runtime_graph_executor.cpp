@@ -110,6 +110,8 @@ inline int QuantKindOf(ggml_type t) {
     case GGML_TYPE_Q5_0: return 2;
     case GGML_TYPE_Q8_0: return 3;
     case GGML_TYPE_Q4_0: return 4;
+    case GGML_TYPE_Q2_K: return 5;   // G05: native Q2_K GPU kernel (validated vs llama.cpp)
+    case GGML_TYPE_Q3_K: return 6;   // G05: native Q3_K GPU kernel (validated vs llama.cpp)
     default: return -1;
     }
 }
@@ -133,6 +135,64 @@ inline float KQuantRowDotQ8(int kind, const uint8_t* row, const float* q8,
                             size_t n_in) {
     const size_t nblk = n_in / 256u;
     const size_t blk_bytes = (kind == 0) ? 144u : 210u;
+    // G05: Q2_K (kind 5) / Q3_K (kind 6) dequant-dot (ggml-exact geometry). Float
+    // reconstruction x q8, bounded-correct like the legacy path, so the CPU path /
+    // fallback for these lowbit kinds stays correct and fail-closed. Returns here
+    // (before the integer-lane Q4_K/Q6_K loop) and uses its own block stride.
+    if (kind == 5 || kind == 6) {
+        const size_t lb = (kind == 5) ? 84u : 110u;   // Q2_K / Q3_K super-block bytes
+        float acc = 0.0f;
+        for (size_t b = 0; b < nblk; ++b) {
+            const uint8_t* xb = row + b * lb;
+            const float* q8b = q8 + b * kQ8Stride;
+            const float dact = q8b[0];
+            const float* qa = q8b + 1;   // activation qs[256]
+            float bacc = 0.0f;
+            if (kind == 5) {
+                // Q2_K: scales[16] | qs[64] | d(f16@80) | dmin(f16@82)
+                uint16_t hd, hdm; std::memcpy(&hd, &xb[80], 2); std::memcpy(&hdm, &xb[82], 2);
+                const float d    = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hd));
+                const float dmin = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hdm));
+                const uint8_t* sc = xb;         // scales[16]
+                const uint8_t* qs = xb + 16;    // qs[64]
+                int is = 0; const uint8_t* q = qs;
+                for (int n = 0; n < 256; n += 128) { int shift = 0;
+                    for (int j = 0; j < 4; ++j) {
+                        { uint8_t s=sc[is++]; float dl=d*(float)(s&0xF), ml=dmin*(float)(s>>4);
+                          for (int l=0;l<16;++l){ float wf=dl*(float)((int8_t)((q[l]   >>shift)&3))-ml; bacc+=wf*qa[n+j*32+l]; } }
+                        { uint8_t s=sc[is++]; float dl=d*(float)(s&0xF), ml=dmin*(float)(s>>4);
+                          for (int l=0;l<16;++l){ float wf=dl*(float)((int8_t)((q[l+16]>>shift)&3))-ml; bacc+=wf*qa[n+j*32+16+l]; } }
+                        shift += 2; }
+                    q += 32; }
+            } else {
+                // Q3_K: hmask[32] | qs[64] | scales[12] | d(f16@108)
+                uint16_t hd; std::memcpy(&hd, &xb[108], 2);
+                const float d_all = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hd));
+                const uint8_t* hm = xb;         // hmask[32]
+                const uint8_t* qs = xb + 32;    // qs[64]
+                const uint8_t* sraw = xb + 96;  // scales[12] -> 16 int8
+                uint32_t aux[4]; std::memcpy(aux, sraw, 12);
+                const uint32_t kmask1 = 0x03030303u, kmask2 = 0x0f0f0f0fu;
+                uint32_t tmp = aux[2];
+                aux[2] = ((aux[0]>>4)&kmask2) | (((tmp>>4)&kmask1)<<4);
+                aux[3] = ((aux[1]>>4)&kmask2) | (((tmp>>6)&kmask1)<<4);
+                aux[0] =  (aux[0]   &kmask2)  | (((tmp>>0)&kmask1)<<4);
+                aux[1] =  (aux[1]   &kmask2)  | (((tmp>>2)&kmask1)<<4);
+                const int8_t* scales = (const int8_t*)aux;
+                uint8_t m = 1; int is = 0; const uint8_t* q = qs;
+                for (int n = 0; n < 256; n += 128) { int shift = 0;
+                    for (int j = 0; j < 4; ++j) {
+                        { float dl=d_all*(float)(scales[is++]-32);
+                          for (int l=0;l<16;++l){ float wf=dl*(float)((int8_t)((q[l]   >>shift)&3) - ((hm[l]   &m)?0:4)); bacc+=wf*qa[n+j*32+l]; } }
+                        { float dl=d_all*(float)(scales[is++]-32);
+                          for (int l=0;l<16;++l){ float wf=dl*(float)((int8_t)((q[l+16]>>shift)&3) - ((hm[l+16]&m)?0:4)); bacc+=wf*qa[n+j*32+16+l]; } }
+                        shift += 2; m <<= 1; }
+                    q += 32; }
+            }
+            acc += bacc * dact;
+        }
+        return acc;
+    }
     int32_t a[256];
     int32_t aux32[8];
     float sums[8], sumf = 0.0f;
@@ -734,6 +794,41 @@ bool Executor::FlushDotBatch() {
     return ok;
 }
 
+// RAWRXD_MULTI_GPU: per-block Vulkan device routing for split-model dual-GPU.
+// g_block_vk maps a transformer block index -> Vulkan device index (0 = default
+// primary). BlockVkFor parses "blk.N." from a weight name; anything without a
+// numeric block (output/token embedding) routes to the default device. The
+// DevScope RAII sets QuantDot::SetActiveDevice for the duration of an op and
+// restores it afterwards, so single-GPU callers (that never populate the map)
+// have every block route to device 0 == the exact historical path (verified
+// bit-identical: single-GPU parity cos=1.0, max-abs=0 after this change).
+namespace {
+std::map<uint32_t, uint32_t> g_block_vk;   // block index -> Vulkan device index
+int32_t BlockVkByIndex(uint32_t blk) {
+    auto it = g_block_vk.find(blk);
+    if (it == g_block_vk.end() || it->second == 0) return -1;  // primary -> no override (use Gpu())
+    return (int32_t)it->second;
+}
+int32_t BlockVkFor(const std::string& n) {
+    const size_t p = n.find("blk.");
+    if (p == std::string::npos) return -1;
+    uint32_t blk = 0; bool any = false;
+    for (size_t k = p + 4; k < n.size() && n[k] >= '0' && n[k] <= '9'; ++k) { blk = blk * 10u + (uint32_t)(n[k] - '0'); any = true; }
+    if (!any) return -1;
+    return BlockVkByIndex(blk);
+}
+struct DevScope {
+    int32_t prev;
+    explicit DevScope(int32_t d) : prev(QuantDot::ActiveDevice()) { QuantDot::SetActiveDevice(d); }
+    ~DevScope() { QuantDot::SetActiveDevice(prev); }
+};
+}  // namespace
+
+// Assign every op whose weight lives in `block` to Vulkan device `vk_index`
+// (0 = default/primary). Call before the first ExecuteToken; empty map keeps
+// the whole model on the default device.
+void SetBlockVulkanDevice(uint32_t block, uint32_t vk_index) { g_block_vk[block] = vk_index; }
+
 bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         std::vector<float>& y, std::string& err, bool join_batch) {
     if (wslot < 0) {
@@ -746,14 +841,18 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     }
     const TensorRec& w = tensors_[(size_t)wslot];
     if (!w.data || w.dims.size() < 2) { err = "linear: bad weight"; return false; }
+    // Route this linear op's quant dots to the device that owns its block.
+    const DevScope dev_scope(BlockVkFor(w.name));
     const size_t n_in = (size_t)w.dims[0];
     const size_t n_out = (size_t)w.dims[1];
     if (x.size() != n_in) { char b2[192]; std::snprintf(b2, sizeof(b2), "linear: x=%zu n_in=%zu weight=%s dims=[%zu,%zu]", x.size(), n_in, w.name.c_str(), (size_t)w.dims[0], w.dims.size()>1?(size_t)w.dims[1]:0); err = b2; return false; }
 
-    const bool quant = (w.ggml_type == GGML_TYPE_Q4_K || w.ggml_type == GGML_TYPE_Q6_K);
+    const bool quant = (w.ggml_type == GGML_TYPE_Q4_K || w.ggml_type == GGML_TYPE_Q6_K ||
+                        w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q3_K);  // G05: +Q2_K/Q3_K
     if (quant && (n_in % 256) == 0) {
-        const int kind = (w.ggml_type == GGML_TYPE_Q4_K) ? 0 : 1;
-        const size_t rb = (n_in / 256) * (size_t)(kind == 0 ? 144 : 210);
+        const int kind = QuantKindOf(w.ggml_type);
+        const size_t rb = (kind == 0) ? (n_in / 256) * 144u : (kind == 1) ? (n_in / 256) * 210u
+                        : (kind == 5) ? (n_in / 256) * 84u  : (n_in / 256) * 110u;
         if (w.bytes < rb * n_out) {
             if (std::getenv("LINEAR_TRACE")) {
                 std::fprintf(stderr, "[quant-short] w=%s type=%d dims=[%zu,%zu] bytes=%zu need=%zu (rb=%zu n_out=%zu)\n",
@@ -1915,6 +2014,9 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
     y.assign(spec_.embd, 0.0f);
+    // RAWRXD_MULTI_GPU: route ALL of this MoE block's expert dots (up/gate/down,
+    // routed + shared) to the device that owns the block.
+    const DevScope dev_scope(BlockVkByIndex((uint32_t)moe.block));
     // Derived from the graph's own detail field, which names the model's real
     // tensors. The graph emits
     //   detail = "experts: <up>,<down>"

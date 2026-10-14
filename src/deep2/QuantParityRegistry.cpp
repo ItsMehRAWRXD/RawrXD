@@ -332,7 +332,10 @@ bool QuantParityRegistry::RuntimeExecutable(const ModelGenie::ModelGenome& genom
     for (const auto& required : genome.capabilities.requiredPrimitives) {
         if (required == ModelGenie::Primitive::None) continue;
         const PrimitiveGate g = GatePrimitive(required);
-        if (g.implementationRequired && !g.available) return false;
+        // Unknown required IDs have no binding even though GatePrimitive's
+        // default case cannot label an unknown implementation as required.
+        // A declaration or unknown value must never make the graph executable.
+        if (!g.available || !g.kernelPresent) return false;
     }
     return true;
 }

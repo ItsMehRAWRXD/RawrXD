@@ -1,0 +1,6 @@
+{
+  "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/gate2_manifest_consistency.ps1 -BuildDir F:/rawrxd/evidence/FULL_IDE/gate2_provenance/build -CliExe F:/rawrxd/_eval_harness/rawr_rebuilt.exe -RepoRoot F:/rawrxd -EvidenceDir F:/rawrxd/evidence/FULL_IDE/gate2_provenance/fresh_registry_consistency",
+  "exit_code": 0,
+  "build_exit": 0,
+  "scope": "fresh registry and quant executables; existing hashed CLI executable"
+}

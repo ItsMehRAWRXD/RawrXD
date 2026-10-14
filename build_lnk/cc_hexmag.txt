@@ -1,6 +1,0 @@
-HexMagSwarmOrchestrator.cpp
-src/deep2\Tokenizer.hpp(239): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-F:\rawrxd\src\deep2\TensorView.hpp(69): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-src/deep2\CycloneScheduler.hpp(36): warning C4099: 'Deep2::ElasticResidentTensor': type name first seen using 'struct' now seen using 'class'
-src/deep2\ElasticResidencyManager.hpp(169): note: see declaration of 'Deep2::ElasticResidentTensor'
-F:\rawrxd\src\agentic\vulkan_compute.h(4): warning C4094: untagged 'class' declared no symbols

@@ -1,6 +1,0 @@
-CoInitializeEx OK
-Hidden window: 00000000000C019A
-Loaded WebView2Loader: C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\Markdown\runtimes\win-x64\native\WebView2Loader.dll
-User data folder: C:\Users\Garrett\AppData\Local\Temp\RawrXDWV2Probe
-CreateCoreWebView2EnvironmentWithOptions: 0x00000000
-Environment created OK

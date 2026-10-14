@@ -1,0 +1,15 @@
+{
+  "status": "PRODUCER_ADMISSION_CHECKS_PASS_GATE2_OPEN",
+  "checks": 15,
+  "failures": 0,
+  "baseline_unknown_required_exit": 1,
+  "repaired_unknown_required_exit": 0,
+  "producer_tests_exit": 0,
+  "fresh_registry_consistency_exit": 0,
+  "gpu_work": false,
+  "head_at_receipt": "d09d513a2d53da2290ca2b99e18c83cd4b9bc4c8",
+  "scope": "primitive producer consistency and fail-closed unknown-required admission; no numerical/model/GPU certification",
+  "acceptance": "ACCEPTANCE.md",
+  "report": "REPORT.md",
+  "provenance": "repair_provenance.json"
+}

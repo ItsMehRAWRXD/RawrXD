@@ -1,0 +1,17 @@
+architecture deepseek2
+model_name synthetic_binding_fixture
+block_count 1
+leading_dense_blocks 1
+embedding_length 4
+feed_forward_length 4
+context_length 16
+vocab_size 4
+head_count 1
+head_count_kv 1
+rope_freq_base 10000
+rope_dimension_count 2
+rms_eps 0.00001
+kv_lora_rank 2
+key_length 4
+value_length 4
+encoded_weight_bytes 832

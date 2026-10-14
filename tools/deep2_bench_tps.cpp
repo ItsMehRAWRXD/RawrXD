@@ -91,6 +91,7 @@ int main(int argc, char* argv[]) {
     size_t decode_n = 128;
     size_t runs = 1;
     bool gpu = true;
+    int device_index = -1;   // -1 = score-based auto-select; >=0 pins the Vulkan device
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--model" && i + 1 < argc) model = argv[++i];
@@ -98,6 +99,7 @@ int main(int argc, char* argv[]) {
         else if (a == "--decode" && i + 1 < argc) decode_n = (size_t)std::strtoull(argv[++i], nullptr, 10);
         else if (a == "--runs" && i + 1 < argc) runs = (size_t)std::strtoull(argv[++i], nullptr, 10);
         else if (a == "--cpu") gpu = false;
+        else if (a == "--device" && i + 1 < argc) device_index = (int)std::strtol(argv[++i], nullptr, 10);
         else if (a == "--dump-logits" && i + 1 < argc) dumpLogitsDir = argv[++i];
         else if (a == "--no-batch") {
 #ifdef _WIN32
@@ -110,8 +112,15 @@ int main(int argc, char* argv[]) {
     }
     if (model.empty()) {
         std::printf("usage: deep2_bench_tps.exe --model <gguf> --tokens \"1 185\" "
-                    "[--decode N] [--runs N] [--cpu]\n");
+                    "[--decode N] [--runs N] [--cpu] [--device N]\n");
         return 1;
+    }
+
+    // STRATA_S05 device pin (multi-GPU): apply BEFORE the first QuantDot::Gpu()
+    // static init so a process can be pinned to a specific physical Vulkan device.
+    if (device_index >= 0) {
+        RawrXD::Deep2::QuantDot::SetPreferredDevice(device_index);
+        std::printf("device-pin requested index=%d\n", device_index);
     }
 
     std::printf("BENCH model=%s decode=%zu runs=%zu backend=%s\n", model.c_str(),
@@ -256,6 +265,18 @@ int main(int argc, char* argv[]) {
                     "wait_ms=%.1f\n", run,
                     run_submits / exec_positions, run_waits / exec_positions,
                     run_gpu_ms, run_submit_ms, run_wait_ms);
+        // Accounting note: the blended per_token rate above divides (prefill+decode)
+        // submits by (prefill+decode) positions, so it is NOT a decode-only rate.
+        // tokens_out counts the free argmax of the last prefill position as gen[0];
+        // the authoritative per-phase rates are the boundary submits/position below.
+        {
+            const size_t decode_fwd = gen.size() ? gen.size() - 1 : 0;  // decode forward passes
+            std::printf("RUN%zu: ACCOUNT positions=%.0f decode_forward_passes=%zu "
+                        "prefill_submits_per_pos=%.1f decode_submits_per_fwd=%.1f\n",
+                        run, exec_positions, decode_fwd,
+                        tokens.size() ? (double)pf_submits / (double)tokens.size() : 0.0,
+                        decode_fwd ? (double)dc_submits / (double)decode_fwd : 0.0);
+        }
         std::printf("RUN%zu: gpu_time_share=%.1f%% of the measured window "
                     "(gpu %.1f ms of prefill+decode %.1f ms)\n",
                     run, e2e_ms > 0 ? 100.0 * run_gpu_ms / e2e_ms : 0.0,

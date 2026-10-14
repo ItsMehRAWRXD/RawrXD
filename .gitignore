@@ -142,3 +142,20 @@ evidence/GAP_AUDIT_2026-10-13/gate7_probe/nemotron/
 evidence/GAP_AUDIT_2026-10-13/gate7_tps/*/
 evidence/GAP_AUDIT_2026-10-13/gate8_mem/
 evidence/GAP_AUDIT_2026-10-13/gate8_mem3/
+
+# ---- 2026-10-14 one-pipeline run: local ggml build trees + regenerable page
+# dumps (real model tensor bytes) are not repo content; the receipt and the
+# command line that regenerates them ARE committed. ----
+build_audit/
+build_gate_recovery_20261013/
+evidence/deep2_one_pipeline/pages/
+
+# ---- 2026-10-14 cleanup: stray copied dependency tree and local worktrees
+# must never enter the index (one is a mis-pathed build output, the others are
+# nested git repositories). ----
+/F/
+/.worktrees/
+
+# ---- 2026-10-14: regenerable parity/logit dump blobs stay local; the receipts,
+# comparators and run transcripts that regenerate them remain versioned. ----
+*.bin

@@ -1,2 +1,0 @@
-[Deep2Adapter] model loaded through the authority: F:/rawrxd/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
-[Deep2Adapter] model loaded through the authority: F:/rawrxd/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf

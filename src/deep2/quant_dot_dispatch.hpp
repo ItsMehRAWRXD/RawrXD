@@ -2,7 +2,6 @@
 // RAWRXD_DEEP2_GPU_QUANT_DOT_001
 //
 // Quantised dot-product dispatch: GPU-first, CPU fallback, fail-closed.
-//
 // The kernel itself (packed Q4_K/Q6_K x Q8_K) is proven correct by
 // RAWRXD_DEEP2_GPU_QUANT_DOT_001 - 4/4 shapes on two discrete AMD GPUs at
 // cosine 1.0. This header is the DISPATCH layer that decides which path runs.
@@ -29,6 +28,8 @@
 #include <cstddef>
 #include <cstdint>
 
+class VulkanCompute;
+
 namespace RawrXD {
 namespace Deep2 {
 namespace QuantDot {
@@ -42,6 +43,13 @@ using CpuDot = std::function<float(const uint8_t* row, const void* q8_act, size_
 // one executor's CPU pin cannot leak into another's comparison.
 void SetForceCpu(bool force);
 bool ForceCpu();
+
+// RAWRXD_MULTI_GPU: per-op device override for split-model dual-GPU. -1 (the
+// default) restores the primary device and leaves every single-GPU path
+// byte-for-byte unchanged. Set around a layer's ops to dispatch them to a
+// second Vulkan device (via GpuFor).
+void SetActiveDevice(int32_t device);
+int32_t ActiveDevice();
 
 // Run n_out dot products, each n_in long, using packed quantised weights.
 // force_cpu pins THIS call to the CPU path regardless of the GPU.
@@ -66,6 +74,25 @@ bool DotF16(const void* wBytes, size_t wBytesCount,
             float* y, size_t n_out,
             const CpuDot& cpu,
             bool force_cpu = false);
+
+// RAWRXD_MULTI_GPU: device-parametrated variants that route the GPU path to a
+// specific Vulkan device (GpuFor). device<0 or == the primary pin behaves
+// exactly like DotBlocked/DotF16; the primary single-device path is unchanged.
+// Same CPU-fallback + receipt contract; batching is not used (serial schedule).
+bool DotBlockedOn(int32_t device, int kind,
+                  const void* wBytes, size_t wBytesCount,
+                  const float* x, size_t n_in,
+                  float* y, size_t n_out,
+                  const CpuDot& cpu,
+                  const void* q8_interleaved = nullptr,
+                  size_t q8_bytes = 0,
+                  bool force_cpu = false);
+bool DotF16On(int32_t device,
+              const void* wBytes, size_t wBytesCount,
+              const float* x, size_t n_in,
+              float* y, size_t n_out,
+              const CpuDot& cpu,
+              bool force_cpu = false);
 
 // ---------------------------------------------------------------------------
 // Batched dispatch (RAWRXD_DEEP2_LEGACY_QUANT_GPU_001).
@@ -165,9 +192,46 @@ struct CacheStats {
     double kernel_ms = 0;
     double submit_ms = 0;
     double wait_ms = 0;
+    // ---- RAWRXD_G04: concurrent-safe residency -----------------------------
+    uint64_t pinned = 0;            // cache entries currently pinned (in flight)
+    uint64_t leases = 0;            // generation leases outstanding
+    uint64_t retired_pending = 0;   // evicted, destruction deferred to the fence
+    uint64_t retired_reaped = 0;    // deferred destructions completed
+    uint64_t budget_overrides = 0;  // evictions deferred: every entry pinned
+    uint64_t epoch = 0;             // dispatch generations submitted
+    uint64_t completed_epoch = 0;   // generations whose fence has signalled
 };
 
 CacheStats GetCacheStats();
+
+// RAWRXD_G04: generation lease over one device-resident weight. While a lease
+// is outstanding the residency budget cannot evict the entry, so a caller can
+// hold residency across several dispatches (or across a concurrent steering
+// pass) without its buffer being freed underneath it. Returns a non-zero id,
+// or 0 when the weight cannot be materialised. Release with ReleaseWeightLease;
+// a stale or repeated id is rejected rather than mis-applied.
+uint64_t AcquireWeightLease(const void* packed, size_t bytes, int kind);
+void ReleaseWeightLease(uint64_t lease_id);
+
+// RAWRXD_G04: pin the residency budget (bytes) for the device that serves the
+// next dispatch. 0 restores the derived default. Applied together with the
+// device pin at first initialisation (same contract as SetPreferredDevice):
+// set it before the first dispatch, otherwise the budget has already been
+// resolved from the device heap / RR_WEIGHT_CACHE_MAX_BYTES.
+void SetWeightCacheBudget(int64_t bytes);
+
+// RAWRXD_MULTI_GPU: per-device counters for a secondary device (via GpuFor).
+// Lets a split-model run prove the content GPU dispatched. device<0 or == the
+// primary pin returns the primary device's counters.
+CacheStats GetCacheStatsOn(int32_t device);
+
+// RAWRXD_G04: the device context that serves this process's dispatch. Gates
+// that must exercise device-level residency primitives directly - the
+// Begin/Queue/End quant-dot batch, a residency budget pin, the lease API -
+// use the SAME context the dispatcher uses, so a certificate can never
+// accidentally certify a second, idle GPU. device<0 returns the primary
+// context; any other value returns the secondary context for that index.
+VulkanCompute& DispatchDevice(int32_t device = -1);
 
 // STRATA_S05: pin the compute device (e.g. 0 = first discrete GPU, the second
 // discrete AMD card in a two-GPU host). -1 restores score-based auto-select.

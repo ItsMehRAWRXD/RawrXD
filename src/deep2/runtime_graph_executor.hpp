@@ -56,6 +56,13 @@ enum class OpKind : uint8_t {
 
 const char* OpKindName(OpKind k);
 
+// RAWRXD_MULTI_GPU: assign a transformer block's quant ops to a Vulkan device
+// index (0 = default/primary) for split-model dual-GPU. Call before the first
+// ExecuteToken; an empty mapping keeps the whole model on the default device
+// (single-GPU behaviour, verified bit-identical).
+void SetBlockVulkanDevice(uint32_t block, uint32_t vk_index);
+
+
 // A tensor resolved once at bind time. `slot` indexes the executor's tensors_;
 // `aux` carries optional companion slots (e.g. K and V for a fused QKV).
 struct Instr {

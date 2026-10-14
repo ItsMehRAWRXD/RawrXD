@@ -1,7 +1,7 @@
-﻿=== Gate 2: manifest consistency (2026-10-13T16:10:46.0808029-04:00) ===
+﻿=== Gate 2: manifest consistency (2026-10-13T17:48:08.8005092-04:00) ===
 C1 quant_parity_cert           PASS (exit 0, RESULT: RESULT: PASS)
-C2 rawr capabilities           PASS (exit 0, tools=7, revision=ee2083111a5ce9e0ce69f7fa5cf39d0b020c621a)
-C3 manifest revision == HEAD   PASS (ee2083111a5ce9e0ce69f7fa5cf39d0b020c621a)
+C2 rawr capabilities           PASS (exit 0, tools=7, revision=ce8ee05cd442aee45af7476de7f3144f795cb6b9)
+C3 manifest revision == HEAD   PASS (ce8ee05cd442aee45af7476de7f3144f795cb6b9)
 C4 primitive sets agree        PASS (10 primitives)
 C5 binding statuses agree      PASS (no contradictions)
 C6 verified quants backed     PASS (verified=[Q8_K,Q4_K,Q6_K], kquant_dot_parity exit 0)

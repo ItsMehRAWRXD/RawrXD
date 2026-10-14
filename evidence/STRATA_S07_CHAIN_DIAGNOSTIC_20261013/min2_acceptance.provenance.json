@@ -1,0 +1,31 @@
+{
+  "binary_sha256": "3504B00F7D277FD1C06AFE0A1AAA75FF2290B9CCB2D1115982B0B5B8AEF2B1AD",
+  "exit_code": 0,
+  "tag": "min2_acceptance",
+  "interference": [],
+  "arguments": [
+    "--model",
+    "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "--prefill",
+    "32",
+    "--generate",
+    "128",
+    "--gpu",
+    "--int8kv",
+    "--no-calibrate",
+    "--tag",
+    "min2_acceptance",
+    "--outdir",
+    "F:/rawrxd/evidence/STRATA_S07_CHAIN_DIAGNOSTIC_20261013",
+    "--draft-min-ngram",
+    "2",
+    "--spec-trace-chains",
+    "0",
+    "--spec",
+    "128",
+    "--baseline-tps",
+    "0"
+  ],
+  "valid_isolation": true,
+  "process_wall_ms": 42685.2957
+}

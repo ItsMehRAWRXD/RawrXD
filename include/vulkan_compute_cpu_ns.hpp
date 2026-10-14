@@ -366,6 +366,15 @@ private:
     uint64_t last_d2h_vk_ = 0;
     uint64_t last_d2h_phase_ = 0;
     bool     fwd_arena_ready_ = false;
+
+    // ---- GEMV staging mirrors (ENGINE_RECOVERY) -------------------------------
+    // GemvActIn()/GemvActOut() must return DeviceBuf&, but the device buffers
+    // they alias live inside Deep2::VulkanCompute (whose DeviceBuf is a
+    // different nested type). These two members hold the translated mirror so
+    // the returned reference is stable and refers to this instance. They are
+    // populated by EnsureGemvActDevice().
+    DeviceBuf gemv_act_in_{};
+    DeviceBuf gemv_act_out_{};
 };
 
 } // namespace CPUInference

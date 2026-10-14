@@ -20,6 +20,7 @@ cl.exe /nologo /std:c++20 /W4 /WX- /EHsc /O2 ^
     "F:\rawrxd\tools\rawrxd_modelgenie_ir_executor.cpp" ^
     "F:\rawrxd\src\deep2\modelgenie\ModelGenome.cpp" ^
     "F:\rawrxd\src\deep2\modelgenie\ModelGenomeReader.cpp" ^
+    "F:\rawrxd\src\deep2\QuantParityRegistry.cpp" ^
     "F:\rawrxd\src\modelgenie\ModelGenieExecutor.cpp" ^
     "F:\rawrxd\src\vulkan_compute.cpp" ^
     "F:\rawrxd\src\deep2\quant_dot_dispatch.cpp" ^

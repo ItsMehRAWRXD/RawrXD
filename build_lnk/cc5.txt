@@ -1,2 +1,0 @@
-AdvancedAgentCoordinator.cpp
-src\agentic\AdvancedAgentCoordinator.cpp(413): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data

@@ -806,6 +806,10 @@ Action ParseAction(const std::string& text)
     const std::string line =
         text.substr(lineStart, lineEnd == std::string::npos ? std::string::npos : lineEnd - lineStart);
     const std::string t = Trim(line);
+    // A nonempty argument can still be a partial token stream. Only a line
+    // terminator closes read/bash/finish; write closes with its second @@.
+    if (lineEnd == std::string::npos && t.rfind("TOOL write ", 0) != 0)
+        return a;
     if (t.rfind("TOOL finish", 0) == 0 && Trim(t.substr(11)).empty())
     {
         a.valid = true;
@@ -844,20 +848,21 @@ Action ParseAction(const std::string& text)
         const std::string path = t.substr(11, sp - 11);
         if (path.empty())
             return a;
-        const size_t a1 = t.find("@@", sp);
+        const std::string command = text.substr(lineStart);
+        const size_t a1 = command.find("@@", sp);
         if (a1 == std::string::npos)
             return a;  // no open delimiter: incomplete
-        const size_t a2 = t.find("@@", a1 + 2);
+        const size_t a2 = command.find("@@", a1 + 2);
         if (a2 == std::string::npos)
             return a;  // no close delimiter: incomplete
-        const std::string body = t.substr(a1 + 2, a2 - (a1 + 2));
+        const std::string body = command.substr(a1 + 2, a2 - (a1 + 2));
         if (body.empty())
             return a;
         a.valid = true;
         a.tool = "write";
         a.arg1 = path;
         a.arg2 = body;
-        a.raw = t;
+        a.raw = command.substr(0, a2 + 2);
         return a;
     }
     return a;
@@ -1421,6 +1426,7 @@ int main(int argc, char* argv[])
                     next = i;
             if (next == (uint32_t)GetTokenizer().eos_id)
             {
+                gen += '\n'; // EOS also closes the final command line.
                 Logf_("\n[step %d] eos after %d tokens\n", step, t);
                 break;
             }
@@ -1434,10 +1440,8 @@ int main(int argc, char* argv[])
             if (shown++ % 10 == 0)
                 Logf_("[step %d] tok %d/%d: %s\n", step, t, args.max_new, Trim(gen).c_str());
             const Action probe = ParseAction(gen);
-            if (probe.valid && gen.find_first_of("\n", 0) != std::string::npos)
+            if (probe.valid)
                 break;
-            if (probe.valid && (size_t)t > 40)
-                break;  // safety: complete command found
         }
         Logf_("[step %d] generated %zu chars in %.0f ms: %s\n", step, gen.size(),
               std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_gen).count(),
@@ -1474,7 +1478,7 @@ int main(int argc, char* argv[])
         else if (act.tool == "bash")
         {
             int code = 0;
-            result = RunCmd("cd /d " + args.workdir + " && " + act.arg1, &code);
+            result = RunCmd("cd /d \"" + args.workdir + "\" && " + act.arg1 + " 2>&1", &code);
             last_bash_exit = code;
             last_bash_out = result;
             built = (result.find("calc.exe") != std::string::npos) || (act.arg1.find("calc.exe") != std::string::npos);
@@ -1499,7 +1503,7 @@ int main(int argc, char* argv[])
     const std::string src = ReadFile(args.workdir + "/calc.cpp");
     const bool src_fixed = src.find("a + b") != std::string::npos || src.find("a+b") != std::string::npos;
     int exit_now = -999;
-    const std::string run_out = RunCmd("calc.exe", &exit_now);
+    const std::string run_out = RunCmd("cd /d \"" + args.workdir + "\" && .\\calc.exe 2>&1", &exit_now);
     const bool exe_ok = exit_now == 0 && run_out.find("PASS") != std::string::npos;
 
     Logf_("\n=== verification (harness-run, independent of the model) ===\n");

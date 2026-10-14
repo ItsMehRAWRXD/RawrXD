@@ -1,0 +1,38 @@
+[geom] architecture=deepseek2 embedding_length=2048 head_count=16 head_count_kv=16 key_length=192 value_length=128 kv_lora_rank=512 blocks=27
+[geom]   blk.0.attn_q.weight          dims=[2048,3072]
+[geom]   blk.0.attn_kv_a_mqa.weight   dims=[2048,576]
+[geom]   blk.0.attn_kv_b.weight       dims=[512,4096]
+[geom]   blk.0.attn_output.weight     dims=[2048,2048]
+STRATA_BENCH tag=deepseek_moe_gpu1 model=D:\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf mode=gpu-native prefill=32 generate=16
+S04_TRANSFER h2d_gbps=19.71 d2h_gbps=26.09 bytes_moved=2684354560
+ingesting D:\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf ...
+arch=deepseek2 blocks=27 embd=2048 heads=16 kv=16 experts=64 used=6 shared=2
+bound ops=458 (38772.7 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+S10_TTFT_MS 71995.4
+S10_PREFILL_TOKENS 32
+S10_PREFILL_MS 33222.4
+S10_PREFILL_TPS 0.96
+S10_DECODE_TOKENS 16
+S10_DECODE_MS 13021.8
+S10_DECODE_TPS_MEAN 1.23
+S10_DECODE_TPS_MEDIAN 1.35
+S10_DECODE_P50_MS 739.11
+S10_DECODE_P95_MS 1743.51
+S10_AGGREGATE_TPS 1.04
+DISPATCH gpu_calls=28992 cpu_calls=0 fallback=<none> nonfinite_logits=0
+RECEIPT strata_bench/strata_bench_deepseek_moe_gpu1.json
+Released all tensors
+Vulkan resources cleaned up successfully
