@@ -228,6 +228,37 @@ endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_C_EXTENSIONS OFF)
 
+# ============================================================
+# STATIC ANALYSIS - Clang-Tidy Integration
+# ============================================================
+option(RAWRXD_ENABLE_CLANG_TIDY "Enable Clang-Tidy static analysis during build" OFF)
+
+if(RAWRXD_ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE clang-tidy)
+    if(CLANG_TIDY_EXE)
+        message(STATUS "Clang-Tidy found: ${CLANG_TIDY_EXE}")
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+        set(CMAKE_C_CLANG_TIDY "${CLANG_TIDY_EXE};-config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+    else()
+        message(WARNING "Clang-Tidy not found in PATH - static analysis disabled")
+    endif()
+endif()
+
+# ============================================================
+# CODE COVERAGE - gcov/llvm-cov Integration
+# ============================================================
+option(RAWRXD_ENABLE_COVERAGE "Enable code coverage instrumentation (GCC/Clang only)" OFF)
+
+if(RAWRXD_ENABLE_COVERAGE AND NOT MSVC)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping")
+    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fprofile-instr-generate -fcoverage-mapping")
+    message(STATUS "Code coverage instrumentation enabled (Clang/LLVM)")
+elseif(RAWRXD_ENABLE_COVERAGE AND MSVC)
+    message(WARNING "Code coverage not yet supported for MSVC in this configuration")
+endif()
+
 # Detect compiler and set output directory suffix
 if(MINGW)
     set(COMPILER_SUFFIX "mingw")
@@ -4426,4 +4457,60 @@ else()
     else()
         message(STATUS "No Qt-dependent targets were excluded")
     endif()
+endif()
+
+# ============================================================
+# CPACK - PACKAGE GENERATION
+# ============================================================
+option(RAWRXD_ENABLE_PACKAGING "Enable CPack packaging (ZIP, NSIS, etc.)" OFF)
+
+if(RAWRXD_ENABLE_PACKAGING)
+    # Package metadata
+    set(CPACK_PACKAGE_NAME "RawrXD")
+    set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+    set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "RawrXD - AI-Native Autonomous IDE")
+    set(CPACK_PACKAGE_VENDOR "RawrXD Project")
+    set(CPACK_PACKAGE_CONTACT "https://github.com/ItsMehRAWRXD/RawrXD")
+    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
+    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+    set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+
+    # Windows ZIP package
+    set(CPACK_GENERATOR "ZIP")
+    set(CPACK_ZIP_COMPRESSION "ZSTD")
+
+    # NSIS installer (if NSIS is available)
+    find_program(MAKENSIS_EXE makensis)
+    if(MAKENSIS_EXE)
+        list(APPEND CPACK_GENERATOR "NSIS")
+        set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64/RawrXD")
+        set(CPACK_NSIS_MODIFY_PATH ON)
+        set(CPACK_NSIS_DISPLAY_NAME "RawrXD ${PROJECT_VERSION}")
+        set(CPACK_NSIS_HELP_LINK "https://github.com/ItsMehRAWRXD/RawrXD")
+        set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ItsMehRAWRXD/RawrXD")
+        set(CPACK_NSIS_CONTACT "RawrXD Project")
+        set(CPACK_NSIS_INSTALLED_ICON_NAME "bin/RawrXD-Chromatic.exe")
+        set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/assets/icon.ico")
+        set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/assets/icon.ico")
+    endif()
+
+    # Package components
+    set(CPACK_COMPONENTS_ALL "Runtime;Development;Documentation")
+    set(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "Runtime")
+    set(CPACK_COMPONENT_RUNTIME_DESCRIPTION "RawrXD runtime binaries")
+    set(CPACK_COMPONENT_DEVELOPMENT_DISPLAY_NAME "Development")
+    set(CPACK_COMPONENT_DEVELOPMENT_DESCRIPTION "Headers and libraries for development")
+    set(CPACK_COMPONENT_DOCUMENTATION_DISPLAY_NAME "Documentation")
+    set(CPACK_COMPONENT_DOCUMENTATION_DESCRIPTION "Documentation and examples")
+
+    # Include files for packaging
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/bin/" DESTINATION "bin" COMPONENT Runtime)
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/include/" DESTINATION "include" COMPONENT Development)
+    install(FILES "${CMAKE_SOURCE_DIR}/README.md" "${CMAKE_SOURCE_DIR}/LICENSE" DESTINATION "." COMPONENT Documentation)
+
+    include(CPack)
+    message(STATUS "CPack packaging enabled: ${CPACK_GENERATOR}")
 endif()
