@@ -244,4 +244,20 @@ void SetPreferredDevice(int index);
 // hard contract, not a tuning hint.
 size_t BatchCapacity();
 
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: fused multi-token LM-head projection.
+// Runs a batched Q4_K GEMV over P token-position hidden vectors, loading the
+// output-weight matrix once and producing P logits vectors in one kernel
+// launch. This is the "batched GPU verification" primitive required by
+// speculative decoding (8 draft tokens ~1.16x cost per the EXL3/RDNA4 reference).
+// Returns true if the GPU path executed, false if CPU fallback was used.
+bool DispatchLmHeadBatchQ4K(
+    const void* wBytes, size_t wBytesCount,
+    const float* inputBatch, size_t inputBatchCount,
+    float* outputBatch, size_t outputBatchCount,
+    size_t rows,     // vocab size
+    size_t cols,     // hidden dimension
+    size_t batch,    // number of token positions (P)
+    bool force_cpu = false);
+
 } } }

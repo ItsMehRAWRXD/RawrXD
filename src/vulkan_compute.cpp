@@ -1972,6 +1972,74 @@ bool VulkanCompute::EnsureF16DotPipeline() {
     return true;
 }
 
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: fused multi-token Q4_K GEMV for
+// speculative LM-head verification. Loads the Q4_K weight matrix once and
+// computes up to 8 token-position hidden vectors in one kernel launch.
+// Reuses the quant-dot descriptor set layout (3 storage buffers: input batch,
+// weight, output batch) and a small push-constant block.
+bool VulkanCompute::EnsureQ4KBatchGemvPipeline() {
+    if (shaders_.count("q4k_batch_gemv") &&
+        shaders_["q4k_batch_gemv"].pipeline &&
+        shaders_["q4k_batch_gemv"].layout) {
+        return true;
+    }
+    const char* kQ4KBatchGemvShaderPath = "tools/shaders/deep2_qgemv_batch8row.spv";
+    std::vector<uint32_t> code;
+    if (!LoadSPIRVCode(kQ4KBatchGemvShaderPath, code) || code.empty()) {
+        std::cerr << "Failed to load Q4K-batch-GEMV SPIR-V: " << kQ4KBatchGemvShaderPath << std::endl;
+        return false;
+    }
+    VkShaderModuleCreateInfo sm{};
+    sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = code.size() * sizeof(uint32_t);
+    sm.pCode = code.data();
+
+    ComputeShader cs;
+    cs.name = "q4k_batch_gemv";
+    cs.spirv_code = code;
+    if (vkCreateShaderModule(device_, &sm, nullptr, &cs.module) != VK_SUCCESS) {
+        std::cerr << "Failed to create Q4K-batch-GEMV shader module" << std::endl;
+        return false;
+    }
+    // Reuses the quant-dot descriptor set layout: three storage buffers
+    // (input batch, weight, output batch). The push constant matches the
+    // shader's QBatchPush: {type=12, rows=vocab, cols=hidden, weightBytes, batch}.
+    if (!quant_descriptor_set_layout_) {
+        std::cerr << "Q4K-batch-GEMV needs the quant-dot descriptor layout" << std::endl;
+        return false;
+    }
+    VkPushConstantRange pc{};
+    pc.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pc.offset = 0;
+    pc.size = sizeof(uint32_t) * 5;  // type, rows, cols, weightBytes, batch
+    VkPipelineLayoutCreateInfo pl{};
+    pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pl.setLayoutCount = 1;
+    pl.pSetLayouts = &quant_descriptor_set_layout_;
+    pl.pushConstantRangeCount = 1;
+    pl.pPushConstantRanges = &pc;
+    if (vkCreatePipelineLayout(device_, &pl, nullptr, &cs.layout) != VK_SUCCESS) {
+        std::cerr << "Failed to create Q4K-batch-GEMV pipeline layout" << std::endl;
+        return false;
+    }
+    VkPipelineShaderStageCreateInfo stage{};
+    stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stage.module = cs.module;
+    stage.pName = "main";
+    VkComputePipelineCreateInfo cp{};
+    cp.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cp.stage = stage;
+    cp.layout = cs.layout;
+    if (vkCreateComputePipelines(device_, nullptr, 1, &cp, nullptr, &cs.pipeline) != VK_SUCCESS) {
+        std::cerr << "Failed to create Q4K-batch-GEMV pipeline" << std::endl;
+        return false;
+    }
+    shaders_["q4k_batch_gemv"] = cs;
+    return true;
+}
+
 bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
                                   const float* x, size_t n_in,
                                   void* out, size_t out_bytes,
@@ -2153,6 +2221,221 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     std::memcpy(out, readback_mapped_, n_out * sizeof(float));
     ReleaseQuantScratch(obuf);
     ReleaseQuantScratch(xbuf);
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: simple buffer upload/download helpers.
+// Use the existing staging buffer and command buffer pool.
+bool VulkanCompute::UploadBuffer(VkBuffer dst, const void* src, size_t bytes) {
+    if (!dst || !src || bytes == 0) return false;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!EnsureHostVisible(bytes, upload_staging_, upload_staging_mem_,
+                           upload_staging_size_, upload_staging_mapped_)) {
+        return false;
+    }
+    std::memcpy(upload_staging_mapped_, src, bytes);
+    gpu_counters_.upload_bytes += bytes;
+
+    VkCommandBuffer cmd = quant_cmd_;
+    if (vkResetFences(device_, 1, &quant_fence_) != VK_SUCCESS ||
+        vkResetCommandBuffer(cmd, 0) != VK_SUCCESS) {
+        return false;
+    }
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if (vkBeginCommandBuffer(cmd, &begin_info) != VK_SUCCESS) return false;
+
+    VkBufferCopy region{};
+    region.size = bytes;
+    vkCmdCopyBuffer(cmd, upload_staging_, dst, 1, &region);
+
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) return false;
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd;
+    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) return false;
+    ++quant_epoch_;
+    ++gpu_counters_.submits;
+    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) return false;
+    NoteSubmissionComplete();
+    ++gpu_counters_.waits;
+    return true;
+}
+
+bool VulkanCompute::DownloadBuffer(VkBuffer src, void* dst, size_t bytes) {
+    if (!src || !dst || bytes == 0) return false;
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!EnsureHostVisible(bytes, readback_buffer_, readback_memory_,
+                           readback_size_, readback_mapped_)) {
+        return false;
+    }
+
+    VkCommandBuffer cmd = quant_cmd_;
+    if (vkResetFences(device_, 1, &quant_fence_) != VK_SUCCESS ||
+        vkResetCommandBuffer(cmd, 0) != VK_SUCCESS) {
+        return false;
+    }
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if (vkBeginCommandBuffer(cmd, &begin_info) != VK_SUCCESS) return false;
+
+    VkBufferCopy region{};
+    region.size = bytes;
+    vkCmdCopyBuffer(cmd, src, readback_buffer_, 1, &region);
+
+    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) return false;
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd;
+    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS) return false;
+    ++quant_epoch_;
+    ++gpu_counters_.submits;
+    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) return false;
+    NoteSubmissionComplete();
+    ++gpu_counters_.waits;
+    gpu_counters_.download_bytes += bytes;
+    std::memcpy(dst, readback_mapped_, bytes);
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// Quant-dot fast path helpers.
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: fused multi-token Q4_K GEMV for
+// speculative LM-head verification. Runs a batched Q4_K x float GEMV over
+// `batch` input vectors (concatenated in inputBatch), loading the packed
+// Q4_K weight matrix once and producing `batch` output vectors in one
+// kernel launch. This is the "batched GPU verification" primitive required
+// by speculative decoding (8 draft tokens ~1.16x cost per the EXL3/RDNA4
+// reference). Returns true if the GPU path executed, false on failure.
+// The caller must ensure inputBatch has size >= batch*cols*sizeof(float)
+// and outputBatch has size >= batch*rows*sizeof(float). rows = vocab size,
+// cols = hidden dimension, batch = number of token positions (P, max 8).
+bool VulkanCompute::DispatchGemvQ4KBatch(
+    const void* weights, size_t weightBytes,
+    VkBuffer inputBatch, VkBuffer outputBatch,
+    uint32_t rows, uint32_t cols, uint32_t batch) {
+    const bool trace = (std::getenv("RR_Q4K_BATCH_TRACE") != nullptr);
+    // RAWRXD_G04: same atomic-residency contract as ExecuteQuantDot.
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    #define Q4K_BATCH_FAIL(msg) do { if (trace) { std::cerr << "[q4k-batch-trace] " << msg << std::endl; } return false; } while (0)
+    if (!weights || weightBytes == 0 || !inputBatch || !outputBatch)
+        Q4K_BATCH_FAIL("null argument");
+    if (rows == 0 || cols == 0 || batch == 0 || batch > 8)
+        Q4K_BATCH_FAIL("invalid rows/cols/batch (batch max 8)");
+    // Callers pass device-side scratch buffers; the expected byte counts are
+    // derived from the geometry and documented on the declaration.
+    const size_t in_bytes  = (size_t)batch * cols * sizeof(float);
+    const size_t out_bytes = (size_t)batch * rows * sizeof(float);
+    if (!EnsureQuantDotPipeline(kQuantDotShaderPath)) Q4K_BATCH_FAIL("quant pipeline");
+    if (!EnsureQ4KBatchGemvPipeline()) Q4K_BATCH_FAIL("q4k-batch-gemv pipeline");
+    if (!EnsureQuantFastPath()) Q4K_BATCH_FAIL("fast path");
+
+    // Weight bytes are uploaded once and cached (kind=12 marks the Q4_K batch
+    // cache entry; the fingerprint still guards the pointer/bytes/size identity).
+    QuantWeight* w = EnsureQuantWeight(weights, weightBytes, /*kind=*/12);
+    if (!w) Q4K_BATCH_FAIL("weight cache miss");
+    // RAWRXD_G04 in-flight pin: hold the entry until this call's fence wait.
+    struct WeightPin {
+        VulkanCompute& v;
+        const void* key;
+        ~WeightPin() { v.UnpinQuantWeight(key); }
+    } weight_pin{*this, weights};
+    PinQuantWeight(weights, weightBytes, 12);
+
+    // Descriptor set from the recycled ring: three storage buffers
+    // (weight, input batch, output batch). The caller has already uploaded
+    // the concatenated activations into inputBatch (UploadBuffer) and will
+    // read the concatenated logits from outputBatch (DownloadBuffer) after
+    // this call returns.
+    VkDescriptorSet ds = quant_ds_ring_[quant_ds_ring_next_];
+    quant_ds_ring_next_ = (quant_ds_ring_next_ + 1) % quant_ds_ring_.size();
+    ++gpu_counters_.descriptor_reuses;
+    ++gpu_counters_.descriptor_sets_in_flight;
+    if (gpu_counters_.descriptor_sets_in_flight > gpu_counters_.descriptor_sets_peak)
+        gpu_counters_.descriptor_sets_peak = gpu_counters_.descriptor_sets_in_flight;
+    struct InFlightGuard {
+        GpuCounters& c;
+        ~InFlightGuard() { if (c.descriptor_sets_in_flight > 0) --c.descriptor_sets_in_flight; }
+    } in_flight_guard{gpu_counters_};
+
+    VkDescriptorBufferInfo infos[3];
+    VkWriteDescriptorSet writes[3];
+    const VkBuffer bufs[3] = { w->buffer, inputBatch, outputBatch };
+    const size_t sizes[3] = { weightBytes, in_bytes, out_bytes };
+    for (int i = 0; i < 3; ++i) {
+        infos[i] = {};
+        infos[i].buffer = bufs[i];
+        infos[i].range = sizes[i];
+        writes[i] = {};
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = ds;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
+
+    if (vkResetFences(device_, 1, &quant_fence_) != VK_SUCCESS ||
+        vkResetCommandBuffer(quant_cmd_, 0) != VK_SUCCESS)
+        Q4K_BATCH_FAIL("reset failed");
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if (vkBeginCommandBuffer(quant_cmd_, &begin_info) != VK_SUCCESS)
+        Q4K_BATCH_FAIL("command buffer begin failed");
+
+    auto it = shaders_.find("q4k_batch_gemv");
+    if (it == shaders_.end() || !it->second.pipeline)
+        Q4K_BATCH_FAIL("q4k_batch_gemv pipeline missing");
+    // Push constants: {type=12, rows=vocab, cols=hidden, weightBytes, batch}
+    struct QBatchPush {
+        uint32_t type = 12;
+        uint32_t rows = 0;
+        uint32_t cols = 0;
+        uint32_t weightBytes = 0;
+        uint32_t batch = 0;
+    };
+    QBatchPush pc{};
+    pc.type = 12;
+    pc.rows = rows;
+    pc.cols = cols;
+    pc.weightBytes = static_cast<uint32_t>(weightBytes);
+    pc.batch = batch;
+    vkCmdPushConstants(quant_cmd_, it->second.layout, VK_SHADER_STAGE_COMPUTE_BIT,
+                       0, sizeof(pc), &pc);
+    vkCmdBindPipeline(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
+    vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
+                            it->second.layout, 0, 1, &ds, 0, nullptr);
+    // Dispatch: each workgroup handles 8 rows (cohort 0..7), so
+    // groups = ceil(rows/8).
+    uint32_t groups = (rows + 7u) / 8u;
+    vkCmdDispatch(quant_cmd_, groups, 1, 1);
+
+    // The caller downloads after this returns, so no readback barrier here;
+    // the fence wait below is the full ordering point.
+    if (vkEndCommandBuffer(quant_cmd_) != VK_SUCCESS)
+        Q4K_BATCH_FAIL("command buffer end failed");
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &quant_cmd_;
+    if (vkQueueSubmit(compute_queue_, 1, &submit_info, quant_fence_) != VK_SUCCESS)
+        Q4K_BATCH_FAIL("queue submit failed");
+    ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
+    ++gpu_counters_.submits;
+    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+        Q4K_BATCH_FAIL("fence wait failed");
+    // RAWRXD_G04: the epoch's fence has signalled; deferred destruction is safe.
+    NoteSubmissionComplete();
+    ++gpu_counters_.waits;
+    #undef Q4K_BATCH_FAIL
     return true;
 }
 

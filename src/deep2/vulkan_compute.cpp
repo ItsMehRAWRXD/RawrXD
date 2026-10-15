@@ -13,6 +13,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <thread>
 
@@ -6874,6 +6875,29 @@ bool VulkanCompute::WaitHiddenCopy(HiddenCopyTicket& ticket) {
         vkFreeCommandBuffers(device_,commandPool_,1,&ticket.cmd);
     ticket={};
     return ok;
+}
+
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: global accessor for the primary
+// Deep2::VulkanCompute instance. Used by the executor for fused LM-head
+// batch dispatch. Mirrors the canonical VulkanCompute::Gpu() pattern.
+VulkanCompute& GetDeep2VulkanCompute() {
+    static std::unique_ptr<VulkanCompute> g_deep2_vk;
+    static std::once_flag init_flag;
+    std::call_once(init_flag, []() {
+        g_deep2_vk = std::make_unique<VulkanCompute>(0);
+        if (!g_deep2_vk->Initialize()) {
+            std::cerr << "Failed to initialize Deep2::VulkanCompute for fused LM-head\n";
+            g_deep2_vk.reset();
+        }
+    });
+    if (!g_deep2_vk) {
+        // Return a dummy reference that will fail gracefully - the executor
+        // checks for null and falls back to serial path.
+        static VulkanCompute dummy;
+        return dummy;
+    }
+    return *g_deep2_vk;
 }
 
 } // namespace Deep2

@@ -3100,7 +3100,10 @@ bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
 {
-    if(type!=8 && type!=10 && type!=12 && type!=14) return false;
+    // DEEP2_GPU_COVERAGE_AUTHORITY: mirrors Deep2GpuTypeSupported exactly and
+    // the quant weight decode in deep2_qgemv.comp.
+    // F32(0) Q4_0(2) Q8_0(8) Q2_K(10) Q4_K(12) Q6_K(14).
+    if(type!=0 && type!=2 && type!=8 && type!=10 && type!=12 && type!=14) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;

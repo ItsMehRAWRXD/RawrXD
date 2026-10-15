@@ -2,7 +2,7 @@
 #extension GL_KHR_shader_subgroup_basic : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 // Batch 9 packed GGUF GEMV.
-// Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+// Supported: Q4_0(2), Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
 //
 // 40TPS_BATCH2:
 //   one workgroup = one output row
@@ -48,6 +48,20 @@ void q4kScaleMin(uint base, uint sb, out uint sc, out uint mn) {
         mn = (getb(base + 12u + j) >> 4u) |
              ((getb(base + 8u + j) >> 6u) << 4u);
     }
+}
+
+// DEEP2_GPU_COVERAGE_AUTHORITY: Q4_0 (ggml type 2).
+// block_q4_0: d(fp16, 2 bytes) + 16 packed int8 nibble values = 18 bytes, 32 columns.
+// weight = d * float(nibble - 8); column i reads the low nibble of qs[i/2]
+// when i is even and the high nibble when i is odd (ggml q4_0 layout).
+float q4_0_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint i = col % 32u;
+    uint b = rowBase + block * 18u;
+    float d = geth(b);
+    uint packed = getb(b + 2u + (i / 2u));
+    uint nib = ((i & 1u) == 0u) ? (packed & 15u) : (packed >> 4u);
+    return d * float(int(nib) - 8);
 }
 
 float q8_0_weight(uint rowBase, uint col) {
@@ -181,7 +195,10 @@ void main() {
 
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
-    if (pc.type == 8u) {
+    if (pc.type == 2u) {
+        blocksPerRow = (pc.cols + 31u) / 32u;
+        rowBytes = blocksPerRow * 18u;
+    } else if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
         rowBytes = blocksPerRow * 34u;
     } else if (pc.type == 10u) {
@@ -212,7 +229,8 @@ void main() {
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
-            if (pc.type == 8u) ww = q8_0_weight(rb, j);
+            if (pc.type == 2u) ww = q4_0_weight(rb, j);
+            else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
             else if (pc.type == 14u) ww = q6k_weight(rb, j);
             acc += ww * x[j];

@@ -60,6 +60,11 @@ struct Args
     int max_steps = 12, max_new = 200;
     bool cpu = false, toktest = false, parity = false;
     std::string parity_ids, parity_positions, parity_out = "parity";
+    // Repair task configuration
+    std::string target_file = "calc.cpp";
+    std::string build_command;
+    std::string run_command;
+    std::string expected_output = "PASS";
 };
 
 Args Parse(int argc, char* argv[])
@@ -90,6 +95,15 @@ Args Parse(int argc, char* argv[])
             a.parity_positions = argv[++i];
         else if (s == "--parity-out" && i + 1 < argc)
             a.parity_out = argv[++i];
+        // Repair task configuration
+        else if (s == "--target-file" && i + 1 < argc)
+            a.target_file = argv[++i];
+        else if (s == "--build-command" && i + 1 < argc)
+            a.build_command = argv[++i];
+        else if (s == "--run-command" && i + 1 < argc)
+            a.run_command = argv[++i];
+        else if (s == "--expected-output" && i + 1 < argc)
+            a.expected_output = argv[++i];
     }
     return a;
 }
@@ -1366,9 +1380,19 @@ int main(int argc, char* argv[])
     }
     Logf_("[stage] executor bound: ops=%zu path=%s\n", ex.Stats().ops_total, args.cpu ? "cpu" : "gpu-first");
 
-    const std::string task = args.task.empty()
-                                 ? "Fix the bug in calc.cpp so its main() prints PASS, build it and run it."
+const std::string task = args.task.empty()
+                                 ? "Fix the bug in " + args.target_file + " so its main() prints " + args.expected_output + ", build it and run it."
                                  : ReadFile(args.task);
+
+    // Build command defaults to MSVC cl.exe for .cpp files
+    std::string build_cmd = args.build_command.empty()
+        ? ("cl /nologo /EHsc /std:c++20 /Fe:\"" + args.workdir + "/" + args.target_file.substr(0, args.target_file.find_last_of('.')) + ".exe\" \"" + args.workdir + "/" + args.target_file + "\"")
+        : args.build_command;
+    
+    // Run command defaults to executing the built exe
+    std::string run_cmd = args.run_command.empty()
+        ? (args.workdir + "/" + args.target_file.substr(0, args.target_file.find_last_of('.')) + ".exe")
+        : args.run_command;
 
     const std::string prompt = "You are an autonomous coding agent with four tools. Reply with EXACTLY one line "
                                "each turn, no other text:\n"
@@ -1376,8 +1400,8 @@ int main(int argc, char* argv[])
                                "TOOL write <path> @@<content>@@  - replace the file with content\n"
                                "TOOL bash <command>              - run a shell command\n"
                                "TOOL finish                      - declare the task complete\n"
-                               "Example turn: TOOL read calc.cpp\n"
-                               "Workspace: the current directory contains calc.cpp and task.md.\n"
+                               "Example turn: TOOL read " + args.target_file + "\n"
+                               "Workspace: the current directory contains " + args.target_file + ".\n"
                                "TASK: " +
                                task + "\n";
 
@@ -1451,7 +1475,7 @@ int main(int argc, char* argv[])
         if (!act.valid)
         {
             pending = "\nRESULT: your reply was not one complete TOOL line. Reply with EXACTLY one "
-                      "TOOL line, e.g. TOOL read calc.cpp\n";
+                      "TOOL line, e.g. TOOL read " + args.target_file + "\n";
             continue;
         }
         if (act.finish)
@@ -1477,14 +1501,25 @@ int main(int argc, char* argv[])
         }
         else if (act.tool == "bash")
         {
-            int code = 0;
-            result = RunCmd("cd /d \"" + args.workdir + "\" && " + act.arg1 + " 2>&1", &code);
-            last_bash_exit = code;
-            last_bash_out = result;
-            built = (result.find("calc.exe") != std::string::npos) || (act.arg1.find("calc.exe") != std::string::npos);
-            char hdr[48];
-            std::snprintf(hdr, sizeof(hdr), "[exit %d]\n", code);
-            result = hdr + result;
+            // Validate bash command is not malformed
+            if (act.arg1.find("TOOL ") != std::string::npos || act.arg1.find("$(") != std::string::npos)
+            {
+                result = "[exit -1]\nERROR: malformed bash command - contains TOOL or $( syntax\n";
+                last_bash_exit = -1;
+                last_bash_out = result;
+            }
+            else
+            {
+                int code = 0;
+                result = RunCmd("cd /d \"" + args.workdir + "\" && " + act.arg1 + " 2>&1", &code);
+                last_bash_exit = code;
+                last_bash_out = result;
+                built = (result.find(args.target_file.substr(0, args.target_file.find_last_of('.')) + ".exe") != std::string::npos) || 
+                        (act.arg1.find(args.target_file.substr(0, args.target_file.find_last_of('.')) + ".exe") != std::string::npos);
+                char hdr[48];
+                std::snprintf(hdr, sizeof(hdr), "[exit %d]\n", code);
+                result = hdr + result;
+            }
         }
         else
         {
@@ -1500,18 +1535,40 @@ int main(int argc, char* argv[])
     }
 
     // ---- INDEPENDENT verification (the model's word is not evidence) ----------
-    const std::string src = ReadFile(args.workdir + "/calc.cpp");
+    const std::string src = ReadFile(args.workdir + "/" + args.target_file);
     const bool src_fixed = src.find("a + b") != std::string::npos || src.find("a+b") != std::string::npos;
+    
+    // Execute the build command if not already done
+    if (!built)
+    {
+        Logf_("[verification] running build command: %s\n", build_cmd.c_str());
+        int code = 0;
+        std::string build_out = RunCmd("cd /d \"" + args.workdir + "\" && " + build_cmd + " 2>&1", &code);
+        if (code == 0)
+        {
+            built = true;
+            Logf_("[verification] build succeeded\n");
+        }
+        else
+        {
+            Logf_("[verification] build failed (exit %d): %s\n", code, build_out.c_str());
+        }
+    }
+    
     int exit_now = -999;
-    const std::string run_out = RunCmd("cd /d \"" + args.workdir + "\" && .\\calc.exe 2>&1", &exit_now);
-    const bool exe_ok = exit_now == 0 && run_out.find("PASS") != std::string::npos;
+    std::string run_out;
+    if (built)
+    {
+        run_out = RunCmd("cd /d \"" + args.workdir + "\" && " + run_cmd + " 2>&1", &exit_now);
+    }
+    const bool exe_ok = exit_now == 0 && run_out.find(args.expected_output) != std::string::npos;
 
     Logf_("\n=== verification (harness-run, independent of the model) ===\n");
     Logf_("MODEL_SAID_FINISH      %s\n", finished ? "yes" : "no");
-    Logf_("SOURCE_PATCHED         %s (%s contains %s)\n", src_fixed ? "PASS" : "FAIL", "calc.cpp",
+    Logf_("SOURCE_PATCHED         %s (%s contains %s)\n", src_fixed ? "PASS" : "FAIL", args.target_file.c_str(),
           src_fixed ? "a + b" : "no fix");
     Logf_("BUILD_ARTIFACT         %s\n", built ? "attempted" : "not observed");
-    Logf_("TEST_EXECUTION         %s (calc.exe exit=%d out=%s)\n", exe_ok ? "PASS" : "FAIL", exit_now, run_out.c_str());
+    Logf_("TEST_EXECUTION         %s (%s exit=%d out=%s)\n", exe_ok ? "PASS" : "FAIL", args.target_file.c_str(), exit_now, run_out.c_str());
     Logf_("TOOL_RESULT_FEEDBACK   %d steps completed\n", args.max_steps);
     Logf_("FINAL_VERDICT          %s\n", (finished && src_fixed && exe_ok) ? "PASS" : "FAIL");
     return (finished && src_fixed && exe_ok) ? 0 : 1;

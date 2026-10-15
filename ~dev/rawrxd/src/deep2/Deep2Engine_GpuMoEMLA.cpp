@@ -103,7 +103,25 @@ bool Deep2Engine::tryVulkanHostGEMV(
     }
     GpuWeightView view{};
     if(!fullView(wt,view)){
-        std::fprintf(stderr,"GEMV_SINGLE fullView failed name=%s\n",wt.name.empty()?"null":wt.name.c_str()); std::fflush(stderr);
+        // DEEP2_GPU_GEMV_UNSUPPORTED_TYPE_001: fail CLOSED with the exact
+        // reason. The GPU row-split lane only serves F32(0) Q8_0(8) Q2_K(10)
+        // Q4_K(12) Q6_K(14); any other quant type must be reported with its
+        // geometry so the kernel-coverage gate can see the real gap instead
+        // of a bare "failed" label.
+        const bool typeOk=Deep2GpuTypeSupported(wt.type);
+        const bool geomOk=(wt.rows!=0 && wt.rows<=std::numeric_limits<uint32_t>::max());
+        const bool bytesOk=(wt.type==0)||(wt.sizeBytes!=0 && wt.rows!=0 && wt.sizeBytes%wt.rows==0);
+        std::fprintf(stderr,
+            "GEMV_SINGLE fullView failed name=%s type=%d rows=%zu cols=%zu "
+            "sizeBytes=%zu supportedType=%d geometryOk=%d bytesOk=%d "
+            "reason=%s\n",
+            wt.name.empty()?"null":wt.name.c_str(),
+            (int)wt.type,wt.rows,wt.cols,wt.sizeBytes,
+            (int)typeOk,(int)geomOk,(int)bytesOk,
+            !typeOk?"UNSUPPORTED_QUANT_TYPE":
+            (!geomOk?"BAD_GEOMETRY":
+            (!bytesOk?"BAD_QUANT_BYTES":"UNKNOWN")));
+        std::fflush(stderr);
         return false;
     }
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();

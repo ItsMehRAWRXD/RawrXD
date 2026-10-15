@@ -1630,6 +1630,11 @@ private:
 
 } // namespace Deep2
 
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: global accessor for the primary
+// Deep2::VulkanCompute instance. Used by the executor for fused LM-head
+// batch dispatch. Mirrors the canonical VulkanCompute::Gpu() pattern.
+Deep2::VulkanCompute& GetDeep2VulkanCompute();
+
 // NOTE: there is deliberately NO "namespace CPUInference { using VulkanCompute
 // = Deep2::VulkanCompute; }" alias here.
 //

@@ -624,8 +624,19 @@ RowSplitPlan chooseThroughputSplit(
     return Deep2ChooseRowSplitWeighted(rows,s0,s1);
 }
 
+// DEEP2_GPU_COVERAGE_AUTHORITY: the GPU quant GEMV lane serves exactly the
+// types DispatchGemvQuant accepts (see vulkan_compute.cpp). Mirrored here so
+// every caller fails closed with a reason instead of a silent CPU fallback.
+bool Deep2GpuTypeSupported(int t) noexcept {
+    // F32(0) Q4_0(2) Q8_0(8) Q2_K(10) Q4_K(12) Q6_K(14) — the packed quant
+    // GEMV shader path (deep2_qgemv.comp). Types like Q3_K(11) Q4_1(3)
+    // Q5_*(6/7/13) Q8_K(15) BF16(30) are intentionally NOT here until their
+    // shader weight decode is certified against the reference.
+    return t==0 || t==2 || t==8 || t==10 || t==12 || t==14;
+}
+
 bool supportedGpuType(int t) noexcept {
-    return t==0 || t==8 || t==10 || t==12 || t==14;
+    return Deep2GpuTypeSupported(t);
 }
 
 uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept {

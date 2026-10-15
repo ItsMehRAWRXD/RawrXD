@@ -123,7 +123,19 @@ public:
     // have produced them, and hidden_ is that token's final hidden state, so
     // generation continues with plain ExecuteToken. Opt-in; the serial path
     // is untouched. Returns false with LastError() set on any failure.
-    bool PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos);
+    //
+    // RAWRXD_DEEP2_SPEC_VERIFY_001: when perPosLogits is non-null the pass
+    // runs in VERIFY mode: LmHead executes for EVERY token, not just the
+    // last, and (*perPosLogits)[t] receives the logits produced after
+    // consuming tokens[t] at position startPos+t. That per-position logit
+    // set IS the batched-verification primitive for speculative decoding:
+    // gamma drafted tokens are checked against the verifier's own argmax at
+    // each position in ONE batched pass. The last-token contract is kept
+    // (Logits() and hidden_ are unchanged), and any non-finite value in any
+    // captured position fails the pass closed - a speculative accept must
+    // never be decided on garbage logits.
+    bool PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos,
+                      std::vector<std::vector<float>>* perPosLogits = nullptr);
 
     const std::vector<float>& Logits() const { return logits_; }
     size_t Position() const { return position_; }
@@ -134,6 +146,13 @@ public:
     // Diagnostics for activation health (prefill/decode gates).
     size_t NonFiniteLogits() const { return nonfinite_logits_; }
     double HiddenL2() const { return hidden_l2_; }
+
+    // RAWRXD_DEEP2_SPEC_VERIFY_001: true when the bound graph contains a
+    // recurrent (Mamba2 selective-scan) block. Speculative verification
+    // cannot roll a rejected draft back out of a recurrent state - the state
+    // IS the memory - so the verifier must fail closed on these graphs
+    // instead of corrupting every later position.
+    bool HasSsm() const { return has_ssm_; }
 
     // Force the CPU path for quantised projections (differential testing).
     void SetForceCpu(bool force) { force_cpu_ = force; }
@@ -169,6 +188,58 @@ public:
     {
         return strata_ledger_.Snapshot();
     }
+
+    // ---- DEEP2_CONTEXT_SCALING_001: read-only KV inspection -----------------
+    // Long-context certification needs to observe the cache without being
+    // able to perturb it. These accessors are const and copy-free: they
+    // report geometry and expose the actual cache rows, so a harness can
+    // verify (a) the allocation horizon grew with position, (b) each
+    // position's row is what the running model actually wrote, and (c) the
+    // residency governor's admitted byte total.
+    size_t KvBlocks() const { return kv_k_.size(); }
+    // Per-block K row width in floats (0 before the first write).
+    size_t KvRowWidthK(int block) const {
+        if (block < 0 || (size_t)block >= kv_width_k_.size()) return 0;
+        return kv_width_k_[(size_t)block];
+    }
+    // Per-block V row width in floats (0 before the first write).
+    size_t KvRowWidthV(int block) const {
+        if (block < 0 || (size_t)block >= kv_width_v_.size()) return 0;
+        return kv_width_v_[(size_t)block];
+    }
+    // Positions currently allocated for a block's K cache.
+    size_t KvRows(int block) const {
+        const size_t w = KvRowWidthK(block);
+        if (w == 0) return 0;
+        if (block < 0 || (size_t)block >= kv_k_.size()) return 0;
+        return kv_k_[(size_t)block].size() / w;
+    }
+    // The K row for `position` of `block`, or empty when out of range.
+    std::vector<float> KvKRow(int block, size_t position) const {
+        const size_t w = KvRowWidthK(block);
+        if (w == 0 || block < 0 || (size_t)block >= kv_k_.size()) return {};
+        const auto& K = kv_k_[(size_t)block];
+        if ((position + 1) * w > K.size()) return {};
+        return std::vector<float>(K.begin() + (long)(position * w),
+                                  K.begin() + (long)((position + 1) * w));
+    }
+    // Same for the value stream.
+    std::vector<float> KvVRow(int block, size_t position) const {
+        const size_t w = KvRowWidthV(block);
+        if (w == 0 || block < 0 || (size_t)block >= kv_v_.size()) return {};
+        const auto& V = kv_v_[(size_t)block];
+        if ((position + 1) * w > V.size()) return {};
+        return std::vector<float>(V.begin() + (long)(position * w),
+                                  V.begin() + (long)((position + 1) * w));
+    }
+    // Causal-consistency probe: count leading all-zero rows. Growth fills
+    // unwritten positions with exactly 0.0f, so for a sequence decoded to
+    // position N the count must be 0 (every position < N+1 was written).
+    size_t KvLeadingZeroRows(int block) const;
+    // Total KV cache bytes currently resident (both streams, all blocks).
+    size_t KvResidentBytes() const;
+    // Number of residency leases currently held by the KV governor.
+    size_t KvLeaseCount() const { return kv_leases_.size(); }
 
     // ---- first-divergence instrumentation (RAWRXD_DEEP2 recovery) ----------
     // When enabled, every executed op appends a checksum of its output buffer
@@ -286,6 +357,11 @@ private:
       std::vector<std::vector<float>> kv_k_, kv_v_;
       std::vector<std::vector<float>> kvat_;   // latent cache for MLA
 
+      // DEEP2_CONTEXT_SCALING_001: per-block cache row widths, latched on the
+      // first write so certification accessors can slice rows without
+      // guessing geometry. 0 = never written.
+      std::vector<size_t> kv_width_k_, kv_width_v_;
+
       // RAWRXD_RESOURCE_GOVERNOR_001: KV residency is admitted, not unbounded.
       // Every cache growth acquires a lease against the process host budget;
       // growth that does not fit fails the forward pass closed rather than
@@ -364,6 +440,9 @@ private:
     // cache warm-up and lazy pipeline creation) from steady-state decode so
     // BindStats::cold_start_ms and steady_kernel_ms mean something.
     uint64_t tokens_executed_ = 0;
+    // RAWRXD_DEEP2_SPEC_VERIFY_001: recurrent-state detection for the
+    // speculative-verification fail-closed gate. Set once at bind time.
+    bool has_ssm_ = false;
 };
 
 } } }  // namespace

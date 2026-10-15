@@ -351,6 +351,50 @@ static inline float f16_to_f32(uint16_t h) {
     return reinterpret_cast<float&>(bits);
 }
 
+// fp32 to fp16 conversion (for test weight generation)
+static inline uint16_t f32_to_f16(float f) {
+    uint32_t bits;
+    std::memcpy(&bits, &f, sizeof(bits));
+    uint32_t sign = bits & 0x80000000;
+    uint32_t exp  = (bits >> 23) & 0xFF;
+    uint32_t frac = bits & 0x007FFFFF;
+    
+    if (exp == 0) {
+        if (frac == 0) return static_cast<uint16_t>(sign >> 16); // +/- zero
+        // Denormalized float - flush to zero for fp16
+        return static_cast<uint16_t>(sign >> 16);
+    }
+    if (exp == 0xFF) {
+        // Inf or NaN
+        return static_cast<uint16_t>((sign >> 16) | 0x7C00 | (frac >> 13));
+    }
+    
+    int newExp = static_cast<int>(exp) - 127 + 15;
+    if (newExp <= 0) {
+        // Underflow to zero or denormal - flush to zero
+        return static_cast<uint16_t>(sign >> 16);
+    }
+    if (newExp >= 31) {
+        // Overflow to infinity
+        return static_cast<uint16_t>((sign >> 16) | 0x7C00);
+    }
+    
+    uint32_t newFrac = frac >> 13;
+    // Round to nearest even
+    if ((frac & 0x00001000) && ((frac & 0x00002000) || (newFrac & 1))) {
+        newFrac++;
+        if (newFrac == 0x400) { // mantissa overflow
+            newFrac = 0;
+            newExp++;
+            if (newExp >= 31) {
+                return static_cast<uint16_t>((sign >> 16) | 0x7C00);
+            }
+        }
+    }
+    
+    return static_cast<uint16_t>((sign >> 16) | (newExp << 10) | newFrac);
+}
+
 static void gemv_f16_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -590,6 +634,110 @@ static float vec_dot_q4_K_q8_K(const block_q4_K* x, const block_q8_K* y, size_t 
         sumf -= dmin * static_cast<float>(sumi);
     }
     for (int l = 0; l < 8; ++l) sumf += sums[l];
+    return sumf;
+}
+
+// Port of ggml_vec_dot_q2_K_q8_K_generic
+// Q2_K x Q8_K integer dot product (matches llama.cpp reference exactly)
+static float vec_dot_q2_K_q8_K(const block_q2_K* x, const block_q8_K* y, size_t cols) {
+    const size_t nb = cols / 256;
+    float sumf = 0.f;
+    for (size_t i = 0; i < nb; ++i) {
+        const uint8_t* q2 = x[i].qs;
+        const int8_t*  q8 = y[i].qs;
+        const uint8_t* sc = x[i].scales;
+
+        int summs = 0;
+        for (int j = 0; j < 16; ++j) {
+            summs += y[i].bsums[j] * (sc[j] >> 4);
+        }
+
+        const float dall = y[i].d * f16_to_f32(x[i].d);
+        const float dmin = y[i].d * f16_to_f32(x[i].dmin);
+
+        int isum = 0;
+        int is = 0;
+        int d;
+        for (int k = 0; k < 2; ++k) {  // QK_K/128 = 2
+            int shift = 0;
+            for (int j = 0; j < 4; ++j) {
+                d = sc[is++] & 0xF;
+                int isuml = 0;
+                for (int l = 0; l < 16; ++l) isuml += q8[l] * ((q2[l] >> shift) & 3);
+                isum += d * isuml;
+                d = sc[is++] & 0xF;
+                isuml = 0;
+                for (int l = 16; l < 32; ++l) isuml += q8[l] * ((q2[l] >> shift) & 3);
+                isum += d * isuml;
+                shift += 2;
+                q8 += 32;
+            }
+            q2 += 32;
+        }
+        sumf += dall * isum - dmin * summs;
+    }
+    return sumf;
+}
+
+// Port of ggml_vec_dot_q3_K_q8_K_generic
+// Q3_K x Q8_K integer dot product (matches llama.cpp reference exactly)
+static float vec_dot_q3_K_q8_K(const block_q3_K* x, const block_q8_K* y, size_t cols) {
+    const size_t nb = cols / 256;
+    float sumf = 0.f;
+    for (size_t i = 0; i < nb; ++i) {
+        const uint8_t* q3 = x[i].qs;
+        const uint8_t* hm = x[i].hmask;
+        const int8_t*  q8 = y[i].qs;
+        const float d = f16_to_f32(x[i].d) * y[i].d;
+
+        int8_t aux8[256];
+        int32_t aux32[8];
+        float sums[8];
+        memset(sums, 0, 8 * sizeof(float));
+        int8_t* a = aux8;
+        uint8_t m = 1;
+        for (int j = 0; j < 256; j += 128) {
+            for (int l = 0; l < 32; ++l) a[l] = (q3[l] >> 0) & 3;
+            for (int l = 0; l < 32; ++l) a[l] -= (hm[l] & m ? 0 : 4);
+            a += 32; m <<= 1;
+            for (int l = 0; l < 32; ++l) a[l] = (q3[l] >> 2) & 3;
+            for (int l = 0; l < 32; ++l) a[l] -= (hm[l] & m ? 0 : 4);
+            a += 32; m <<= 1;
+            for (int l = 0; l < 32; ++l) a[l] = (q3[l] >> 4) & 3;
+            for (int l = 0; l < 32; ++l) a[l] -= (hm[l] & m ? 0 : 4);
+            a += 32; m <<= 1;
+            for (int l = 0; l < 32; ++l) a[l] = (q3[l] >> 6) & 3;
+            for (int l = 0; l < 32; ++l) a[l] -= (hm[l] & m ? 0 : 4);
+            a += 32; m <<= 1;
+            q3 += 32;
+        }
+        a = aux8;
+
+        uint32_t auxs[4];
+        memcpy(auxs, x[i].scales, 12);
+        uint32_t tmp = auxs[2];
+        auxs[2] = ((auxs[0] >> 4) & 0x0F0F0F0F) | (((tmp >> 4) & 0x03030303) << 4);
+        auxs[3] = ((auxs[1] >> 4) & 0x0F0F0F0F) | (((tmp >> 6) & 0x03030303) << 4);
+        auxs[0] = (auxs[0] & 0x0F0F0F0F) | (((tmp >> 0) & 0x03030303) << 4);
+        auxs[1] = (auxs[1] & 0x0F0F0F0F) | (((tmp >> 2) & 0x03030303) << 4);
+        const int8_t* scales = reinterpret_cast<const int8_t*>(auxs);
+
+        memset(aux32, 0, 8 * sizeof(int32_t));
+        for (int j = 0; j < 16; ++j) {  // QK_K/16 = 16
+            for (int l = 0; l < 8; ++l) {
+                int16_t prod = static_cast<int16_t>(q8[l]) * a[l];
+                aux32[l] += (scales[j] - 32) * prod;
+            }
+            q8 += 8; a += 8;
+            for (int l = 0; l < 8; ++l) {
+                int16_t prod = static_cast<int16_t>(q8[l]) * a[l];
+                aux32[l] += (scales[j] - 32) * prod;
+            }
+            q8 += 8; a += 8;
+        }
+        for (int l = 0; l < 8; ++l) sums[l] += d * aux32[l];
+        for (int l = 0; l < 8; ++l) sumf += sums[l];
+    }
     return sumf;
 }
 
@@ -1315,16 +1463,109 @@ static void gemv_q8_0_avx2(
     }
 }
 
+// Forward declaration
+static void quantize_row_q8_K_avx2(const float* x, block_q8_K* y, size_t k);
+
 // --- Q4_K GEMV (AVX2) ---
-// Delegate to scalar reference (ggml-compatible nibble layout). SIMD path
-// previously used the wrong 16-byte/same-scale packing and is not trusted.
+// Optimized Q4_K × Q8_K path matching llama.cpp mul_mat.
+// Uses scalar quantization (matching reference exactly) and integer dot product.
 static void gemv_q4_k_avx2(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    gemv_q4_k_scalar(w, x, y, rows, cols);
+    if (cols % 256 != 0) {
+        // Fallback to scalar for non-multiple-of-256 shapes
+        gemv_q4_k_scalar(w, x, y, rows, cols);
+        return;
+    }
+
+    // Hot path: Q4_K × Q8_K with scalar quantization (matching reference exactly)
+    const size_t blocksPerRow = cols / 256;
+    std::vector<block_q8_K> xQ8(blocksPerRow);
+    
+    // Use scalar quantization to match reference exactly
+    quantize_row_q8_K(x, xQ8.data(), cols);
+    
+    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        y[r] += vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
+    }
+}
+
+// AVX2-accelerated quantize_row_q8_K
+static void quantize_row_q8_K_avx2(const float* x, block_q8_K* y, size_t k) {
+    const size_t nb = k / 256;
+    for (size_t i = 0; i < nb; ++i) {
+        // Find max absolute value using AVX2
+        __m256 maxVec = _mm256_setzero_ps();
+        __m256 maxValVec = _mm256_setzero_ps();
+        
+        for (int j = 0; j < 256; j += 8) {
+            __m256 xv = _mm256_loadu_ps(x + j);
+            __m256 absVec = _mm256_andnot_ps(_mm256_set1_ps(-0.0f), xv); // fabs
+            __m256 cmp = _mm256_cmp_ps(absVec, maxVec, _CMP_GT_OQ);
+            maxVec = _mm256_blendv_ps(maxVec, absVec, cmp);
+            maxValVec = _mm256_blendv_ps(maxValVec, xv, cmp);
+        }
+        
+        // Horizontal max reduction
+        __m128 lo = _mm256_castps256_ps128(maxVec);
+        __m128 hi = _mm256_extractf128_ps(maxVec, 1);
+        __m128 max128 = _mm_max_ps(lo, hi);
+        max128 = _mm_max_ps(max128, _mm_permute_ps(max128, 0x4E)); // swap 128-bit lanes
+        max128 = _mm_max_ps(max128, _mm_shuffle_ps(max128, max128, 0xB1)); // swap 64-bit
+        float maxAbs = _mm_cvtss_f32(max128);
+        
+        // Also get the signed max value
+        lo = _mm256_castps256_ps128(maxValVec);
+        hi = _mm256_extractf128_ps(maxValVec, 1);
+        __m128 maxVal128 = _mm_max_ps(lo, hi);
+        maxVal128 = _mm_max_ps(maxVal128, _mm_permute_ps(maxVal128, 0x4E));
+        maxVal128 = _mm_max_ps(maxVal128, _mm_shuffle_ps(maxVal128, maxVal128, 0xB1));
+        float maxVal = _mm_cvtss_f32(maxVal128);
+        
+        if (!maxAbs) {
+            y[i].d = 0.f;
+            std::memset(y[i].qs, 0, 256);
+            std::memset(y[i].bsums, 0, sizeof(y[i].bsums));
+            x += 256;
+            continue;
+        }
+        
+        const float iscale = -127.f / maxVal;
+        __m256 scaleVec = _mm256_set1_ps(iscale);
+        
+        // Quantize 8 elements at a time
+        for (int j = 0; j < 256; j += 8) {
+            __m256 xv = _mm256_loadu_ps(x + j);
+            __m256 qv = _mm256_mul_ps(xv, scaleVec);
+            __m256 roundVec = _mm256_round_ps(qv, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+            __m256i qi = _mm256_cvtps_epi32(roundVec);
+            
+            // Clamp to int8 range [-127, 127]
+            __m256i max127 = _mm256_set1_epi32(127);
+            __m256i min127 = _mm256_set1_epi32(-127);
+            qi = _mm256_min_epi32(_mm256_max_epi32(qi, min127), max127);
+            
+            // Pack to int8
+            __m128i qi128 = _mm256_cvtepi32_epi8(qi);
+            _mm_storeu_si64(reinterpret_cast<__m128i*>(y[i].qs + j), qi128);
+        }
+        
+        // Compute block sums (16 sums of 16 elements each)
+        for (int j = 0; j < 16; ++j) {
+            int sum = 0;
+            for (int ii = 0; ii < 16; ++ii) {
+                sum += y[i].qs[j * 16 + ii];
+            }
+            y[i].bsums[j] = static_cast<int16_t>(sum);
+        }
+        
+        y[i].d = 1.f / iscale;
+        x += 256;
+    }
 }
 
 // ===========================================================================
@@ -1595,6 +1836,8 @@ static void dequant_q8_k(const uint8_t* src, float* dst, size_t n) {
 }
 
 // --- Q2_K GEMV (scalar) ---
+// Uses Q2_K x Q8_K integer dot product path (matches llama.cpp mul_mat) when cols % 256 == 0.
+// Falls back to FP32 dequant·x for non-multiple-of-256 shapes.
 static void gemv_q2_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -1603,40 +1846,56 @@ static void gemv_q2_k_scalar(
 ) {
     const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(w);
     size_t blocksPerRow = (cols + 255) / 256;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q2_K* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q2_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float dmin = f16_to_f32(blk.dmin);
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
-            if (elemsInBlock == 0) break;
-            for (int chunk = 0; chunk < 2; ++chunk) {
-                for (int subBlock = 0; subBlock < 4; ++subBlock) {
-                    for (int group = 0; group < 2; ++group) {
-                        int scaleIdx = chunk * 8 + subBlock * 2 + group;
-                        uint8_t sc = blk.scales[scaleIdx];
-                        float dl = d * (float)(sc & 0x0F);
-                        float ml = dmin * (float)(sc >> 4);
-                        for (int pos = 0; pos < 16; ++pos) {
-                            int idx = chunk * 128 + subBlock * 32 + group * 16 + pos;
-                            if ((size_t)idx >= elemsInBlock) break;
-                            int qsIdx = chunk * 32 + group * 16 + pos;
-                            int qsShift = subBlock * 2;
-                            int q = (blk.qs[qsIdx] >> qsShift) & 0x03;
-                            acc += (dl * (float)q - ml) * x[base + idx];
+
+    if (cols % 256 != 0) {
+        // Fallback: FP32 dequant·x (non-ggml-mul_mat shapes)
+        for (size_t r = 0; r < rows; ++r) {
+            float acc = 0.0f;
+            const block_q2_K* rowBlocks = blocks + r * blocksPerRow;
+            for (size_t b = 0; b < blocksPerRow; ++b) {
+                const block_q2_K& blk = rowBlocks[b];
+                float d = f16_to_f32(blk.d);
+                float dmin = f16_to_f32(blk.dmin);
+                size_t base = b * 256;
+                size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
+                if (elemsInBlock == 0) break;
+                for (int chunk = 0; chunk < 2; ++chunk) {
+                    for (int subBlock = 0; subBlock < 4; ++subBlock) {
+                        for (int group = 0; group < 2; ++group) {
+                            int scaleIdx = chunk * 8 + subBlock * 2 + group;
+                            uint8_t sc = blk.scales[scaleIdx];
+                            float dl = d * (float)(sc & 0x0F);
+                            float ml = dmin * (float)(sc >> 4);
+                            for (int pos = 0; pos < 16; ++pos) {
+                                int idx = chunk * 128 + subBlock * 32 + group * 16 + pos;
+                                if ((size_t)idx >= elemsInBlock) break;
+                                int qsIdx = chunk * 32 + group * 16 + pos;
+                                int qsShift = subBlock * 2;
+                                int q = (blk.qs[qsIdx] >> qsShift) & 0x03;
+                                acc += (dl * (float)q - ml) * x[base + idx];
+                            }
                         }
                     }
                 }
             }
+            y[r] += acc;
         }
-        y[r] += acc;
+        return;
+    }
+
+    // Hot path: match llama.cpp CPU mul_mat(Q2_K, Q8_K)
+    const size_t blocksPerRowExact = cols / 256;
+    std::vector<block_q8_K> xQ8(blocksPerRowExact);
+    quantize_row_q8_K(x, xQ8.data(), cols);
+    const block_q2_K* wBlocks = reinterpret_cast<const block_q2_K*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        y[r] += vec_dot_q2_K_q8_K(wBlocks + r * blocksPerRowExact, xQ8.data(), cols);
     }
 }
 
-// --- Q3_K GEMV (scalar) — ggml dequantize_row_q3_K layout ---
+// --- Q3_K GEMV (scalar) ---
+// Uses Q3_K x Q8_K integer dot product path (matches llama.cpp mul_mat) when cols % 256 == 0.
+// Falls back to FP32 dequant·x for non-multiple-of-256 shapes.
 static void gemv_q3_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -1644,54 +1903,66 @@ static void gemv_q3_k_scalar(
     size_t rows, size_t cols
 ) {
     const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(w);
-    const size_t blocksPerRow = (cols + 255) / 256;
-    const uint32_t kmask1 = 0x03030303u;
-    const uint32_t kmask2 = 0x0f0f0f0fu;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q3_K* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q3_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            if (!std::isfinite(d)) d = 0.0f;
-            uint32_t aux[4];
-            std::memcpy(aux, blk.scales, 12);
-            const uint32_t tmp = aux[2];
-            aux[2] = ((aux[0] >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
-            aux[3] = ((aux[1] >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
-            aux[0] = (aux[0] & kmask2) | (((tmp >> 0) & kmask1) << 4);
-            aux[1] = (aux[1] & kmask2) | (((tmp >> 2) & kmask1) << 4);
-            const int8_t* scales = reinterpret_cast<const int8_t*>(aux);
-            const uint8_t* q = blk.qs;
-            const uint8_t* hm = blk.hmask;
-            const float* xb = x + b * 256;
-            const size_t base = b * 256;
-            const size_t elemsInBlock =
-                (b + 1 == blocksPerRow) ? (cols - base) : 256;
-            uint8_t m = 1;
-            int is = 0;
-            size_t written = 0;
-            for (int n128 = 0; n128 < 256 && written < elemsInBlock; n128 += 128) {
-                int shift = 0;
-                for (int j = 0; j < 4 && written < elemsInBlock; ++j) {
-                    float dl = d * (float)(scales[is++] - 32);
-                    for (int l = 0; l < 16 && written < elemsInBlock; ++l, ++written)
-                        acc += dl *
-                               (float)(((q[l] >> shift) & 3) - ((hm[l] & m) ? 0 : 4)) *
-                               xb[n128 + j * 32 + l];
-                    dl = d * (float)(scales[is++] - 32);
-                    for (int l = 0; l < 16 && written < elemsInBlock; ++l, ++written)
-                        acc += dl *
-                               (float)(((q[l + 16] >> shift) & 3) -
-                                       ((hm[l + 16] & m) ? 0 : 4)) *
-                               xb[n128 + j * 32 + 16 + l];
-                    shift += 2;
-                    m <<= 1;
+    size_t blocksPerRow = (cols + 255) / 256;
+
+    if (cols % 256 != 0) {
+        // Fallback: FP32 dequant·x (non-ggml-mul_mat shapes)
+        for (size_t r = 0; r < rows; ++r) {
+            float acc = 0.0f;
+            const block_q3_K* rowBlocks = blocks + r * blocksPerRow;
+            for (size_t b = 0; b < blocksPerRow; ++b) {
+                const block_q3_K& blk = rowBlocks[b];
+                float d = f16_to_f32(blk.d);
+                if (!std::isfinite(d)) d = 0.0f;
+                uint32_t aux[4];
+                std::memcpy(aux, blk.scales, 12);
+                const uint32_t tmp = aux[2];
+                aux[2] = ((aux[0] >> 4) & 0x0F0F0F0Fu) | (((tmp >> 4) & 0x03030303u) << 4);
+                aux[3] = ((aux[1] >> 4) & 0x0F0F0F0Fu) | (((tmp >> 6) & 0x03030303u) << 4);
+                aux[0] = (aux[0] & 0x0F0F0F0Fu) | (((tmp >> 0) & 0x03030303u) << 4);
+                aux[1] = (aux[1] & 0x0F0F0F0Fu) | (((tmp >> 2) & 0x03030303u) << 4);
+                const int8_t* scales = reinterpret_cast<const int8_t*>(aux);
+                const uint8_t* q = blk.qs;
+                const uint8_t* hm = blk.hmask;
+                const float* xb = x + b * 256;
+                const size_t base = b * 256;
+                const size_t elemsInBlock =
+                    (b + 1 == blocksPerRow) ? (cols - base) : 256;
+                uint8_t m = 1;
+                int is = 0;
+                size_t written = 0;
+                for (int n128 = 0; n128 < 256 && written < elemsInBlock; n128 += 128) {
+                    int shift = 0;
+                    for (int j = 0; j < 4 && written < elemsInBlock; ++j) {
+                        float dl = d * (float)(scales[is++] - 32);
+                        for (int l = 0; l < 16 && written < elemsInBlock; ++l, ++written)
+                            acc += dl *
+                                   (float)(((q[l] >> shift) & 3) - ((hm[l] & m) ? 0 : 4)) *
+                                   xb[n128 + j * 32 + l];
+                        dl = d * (float)(scales[is++] - 32);
+                        for (int l = 0; l < 16 && written < elemsInBlock; ++l, ++written)
+                            acc += dl *
+                                   (float)(((q[l + 16] >> shift) & 3) -
+                                           ((hm[l + 16] & m) ? 0 : 4)) *
+                                   xb[n128 + j * 32 + 16 + l];
+                        shift += 2;
+                        m <<= 1;
+                    }
+                    q += 32;
                 }
-                q += 32;
             }
+            y[r] += acc;
         }
-        y[r] += acc;
+        return;
+    }
+
+    // Hot path: match llama.cpp CPU mul_mat(Q3_K, Q8_K)
+    const size_t blocksPerRowExact = cols / 256;
+    std::vector<block_q8_K> xQ8(blocksPerRowExact);
+    quantize_row_q8_K(x, xQ8.data(), cols);
+    const block_q3_K* wBlocks = reinterpret_cast<const block_q3_K*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        y[r] += vec_dot_q3_K_q8_K(wBlocks + r * blocksPerRowExact, xQ8.data(), cols);
     }
 }
 static void gemv_q5_k_scalar(
@@ -1884,7 +2155,9 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+    // AVX2 intrinsic implementation for Q4_K GEMV
+    if (hasAVX2) RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx2);
+    else         RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
@@ -2039,7 +2312,7 @@ static const char* KernelImplName(int type, GEMVKernelFn fn) {
         break;
     case GGMLType::GGML_TYPE_Q4_K:
         if (fn == gemv_q4_k_avx512) return "avx512(scalar-delegate)";
-        if (fn == gemv_q4_k_avx2)   return "avx2(scalar-delegate)";
+        if (fn == gemv_q4_k_avx2)   return "avx2";
         if (fn == gemv_q4_k_scalar)  return "scalar";
         break;
     case GGMLType::GGML_TYPE_Q5_K:

@@ -1835,12 +1835,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         for (size_t t = 0; t < attend; ++t) {
             const float* k = kvCache->keyPtr(layer, kvHead, t);
             if (!k) throw std::runtime_error("attention: invalid K cache read");
-            double dot = 0.0;
+            // Match llama.cpp: KQ scores come from ggml_vec_dot_f32 over the
+            // head dimension, i.e. an f32 dot product. Accumulating in f32 here
+            // (rather than double) keeps Deep2 on the reference reduction path.
+            float dot = 0.0f;
             for (size_t d = 0; d < headDim; ++d) {
-                dot += static_cast<double>(q[d]) *
-                       static_cast<double>(k[d]);
+                dot = std::fma(q[d], k[d], dot);
             }
-            scores[t] = static_cast<float>(dot) * scale;
+            scores[t] = dot * scale;
         }
         parityEmitLayer(static_cast<int>(layer), "ATTN_SCORES",
                         scores.data(), attend);

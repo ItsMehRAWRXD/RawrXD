@@ -669,4 +669,98 @@ bool DotF16On(int32_t device,
     return false;
 }
 
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: fused multi-token LM-head projection.
+// Runs a batched Q4_K GEMV over P token-position hidden vectors, loading the
+// output-weight matrix once and producing P logits vectors in one kernel
+// launch. Returns true if the GPU path executed, false if CPU fallback used.
+bool DispatchLmHeadBatchQ4K(
+    const void* wBytes, size_t wBytesCount,
+    const float* inputBatch, size_t inputBatchCount,
+    float* outputBatch, size_t outputBatchCount,
+    size_t rows,     // vocab size
+    size_t cols,     // hidden dimension
+    size_t batch,    // number of token positions (P)
+    bool force_cpu)
+{
+    g_receipt = Receipt{};
+    if (!wBytes || wBytesCount == 0 || !inputBatch || inputBatchCount == 0 ||
+        !outputBatch || outputBatchCount == 0 || rows == 0 || cols == 0 || batch == 0 ||
+        batch > 8) {
+        g_receipt.fallback_reason = "lmhead-batch: invalid arguments";
+        return false;
+    }
+    if (inputBatchCount != batch * cols) {
+        g_receipt.fallback_reason = "lmhead-batch: inputBatchCount mismatch";
+        return false;
+    }
+    if (outputBatchCount != batch * rows) {
+        g_receipt.fallback_reason = "lmhead-batch: outputBatchCount mismatch";
+        return false;
+    }
+    if (force_cpu || g_force_cpu) {
+        // No CPU fallback inside this layer: the caller (Executor::
+        // PrefillBatch) runs its serial per-token OpLinear path, which is the
+        // exact arithmetic reference. Returning false here routes it there.
+        g_receipt.used_gpu = false;
+        g_receipt.cpu_rows = batch * rows;
+        g_receipt.fallback_reason = "force_cpu; caller uses serial per-token path";
+        return false;
+    }
+
+    // Use the canonical VulkanCompute's fused Q4_K batch GEMV via its scratch system.
+    auto& gpu = Gpu();
+    const size_t in_bytes = batch * cols * sizeof(float);
+    const size_t out_bytes = batch * rows * sizeof(float);
+
+    // Acquire scratch buffers for input and output batches
+    VulkanCompute::QuantScratch* inScratch = gpu.AcquireQuantScratch(in_bytes);
+    if (!inScratch) {
+        g_receipt.fallback_reason = "lmhead-batch: input scratch allocation failed";
+        return false;
+    }
+    VulkanCompute::QuantScratch* outScratch = gpu.AcquireQuantScratch(out_bytes);
+    if (!outScratch) {
+        gpu.ReleaseQuantScratch(inScratch);
+        g_receipt.fallback_reason = "lmhead-batch: output scratch allocation failed";
+        return false;
+    }
+
+    // Upload concatenated hidden vectors to input scratch
+    if (!gpu.UploadBuffer(inScratch->buffer, inputBatch, inputBatchCount * sizeof(float))) {
+        gpu.ReleaseQuantScratch(outScratch);
+        gpu.ReleaseQuantScratch(inScratch);
+        g_receipt.fallback_reason = "lmhead-batch: input upload failed";
+        return false;
+    }
+
+    // Dispatch fused multi-row GEMV
+    if (!gpu.DispatchGemvQ4KBatch(
+            wBytes, wBytesCount,
+            inScratch->buffer, outScratch->buffer,
+            static_cast<uint32_t>(rows),
+            static_cast<uint32_t>(cols),
+            static_cast<uint32_t>(batch))) {
+        gpu.ReleaseQuantScratch(outScratch);
+        gpu.ReleaseQuantScratch(inScratch);
+        g_receipt.fallback_reason = "lmhead-batch: fused dispatch failed";
+        return false;
+    }
+
+    // Download concatenated logits
+    if (!gpu.DownloadBuffer(outScratch->buffer, outputBatch, outputBatchCount * sizeof(float))) {
+        gpu.ReleaseQuantScratch(outScratch);
+        gpu.ReleaseQuantScratch(inScratch);
+        g_receipt.fallback_reason = "lmhead-batch: output download failed";
+        return false;
+    }
+
+    gpu.ReleaseQuantScratch(outScratch);
+    gpu.ReleaseQuantScratch(inScratch);
+
+    g_receipt.used_gpu = true;
+    g_receipt.gpu_rows = batch * rows;
+    return true;
+}
+
 } } }

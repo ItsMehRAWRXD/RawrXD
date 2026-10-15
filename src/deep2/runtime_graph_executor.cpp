@@ -718,6 +718,15 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     kv_k_.assign(B, {});
     kv_v_.assign(B, {});
     kvat_.assign(B, {});
+    kv_width_k_.assign(B, 0);
+    kv_width_v_.assign(B, 0);
+
+    // RAWRXD_DEEP2_SPEC_VERIFY_001: detect recurrent blocks. A rejected
+    // speculative draft cannot be rolled back out of an SSM state, so the
+    // verifier (Deep2::SpeculativeVerifier) refuses these graphs.
+    has_ssm_ = false;
+    for (const auto& in : program_)
+        if (in.op == OpKind::SsmScan) { has_ssm_ = true; break; }
 
     bound_ = true;
     stats_.bound = true;
@@ -1579,6 +1588,12 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     }
     if (K.size() < needK) K.resize(needK, 0.0f);
     if (V.size() < needV) V.resize(needV, 0.0f);
+    // DEEP2_CONTEXT_SCALING_001: latch the row widths on first write so the
+    // read-only certification accessors can slice rows exactly.
+    if (in.block >= 0 && (size_t)in.block < kv_width_k_.size()) {
+        kv_width_k_[(size_t)in.block] = kvW;
+        kv_width_v_[(size_t)in.block] = vW;
+    }
     if (std::getenv("DEEP2_KV_F32") != nullptr) {
         std::memcpy(K.data() + position * kvW, kr.data(), kvW * sizeof(float));
         std::memcpy(V.data() + position * vW, v.data(), vW * sizeof(float));
@@ -2654,7 +2669,8 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
 // Correctness is gated by parity: D1 is only counted once batched and serial
 // prefill produce identical full logits and identical follow-on decode.
 // ============================================================================
-bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos)
+bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos,
+                            std::vector<std::vector<float>>* perPosLogits)
 {
     const size_t P = tokens.size();
     if (P == 0) {
@@ -3109,7 +3125,86 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                 }
                 break;
             }
-            case OpKind::LmHead: {
+case OpKind::LmHead: {
+                // RAWRXD_DEEP2_SPEC_VERIFY_001: verify mode runs LmHead for
+                // EVERY token so the caller can check each drafted position
+                // against the verifier's own argmax. The math is identical
+                // to the last-token path (same OpLinear, same input), just
+                // executed once per position.
+                //
+                // Optimization: when the output weight is Q4_K (type 12) and we
+                // are in verify mode, run a FUSED multi-row GEMV that loads the
+                // weight once and computes all P logits in one kernel launch.
+                // This amortizes the weight upload + kernel dispatch over P
+                // tokens, which is the "batched GPU verification" primitive the
+                // EXL3/RDNA4 reference relies on (8 draft tokens ~1.16x cost).
+                if (perPosLogits) {
+                    const TensorRec& lmh = tensors_[(size_t)in.b];
+                    const bool is_q4k = (lmh.ggml_type == 12); // GGML_TYPE_Q4_K
+                    if (is_q4k && lmh.data && lmh.bytes > 0) {
+                        // Fused batch path: upload all P hidden vectors, one
+                        // kernel launch, download all P logits.
+                        const size_t hidden_dim = ts[0].hidden.size();
+                        const size_t vocab = lmh.dims[0] ? (size_t)lmh.dims[0] : spec_.vocab;
+                        if (hidden_dim > 0 && vocab > 0) {
+                            // Prepare concatenated input batch
+                            std::vector<float> flat_in;
+                            flat_in.reserve(P * hidden_dim);
+                            for (size_t t = 0; t < P; ++t)
+                                flat_in.insert(flat_in.end(),
+                                               ts[t].hidden.begin(),
+                                               ts[t].hidden.end());
+                            // Output buffer for concatenated logits
+                            std::vector<float> flat_out(P * vocab);
+                            // Call the fused dispatch via quant_dot layer
+                            RawrXD::Deep2::QuantDot::CpuDot dummy_cpu = 
+                                [](const uint8_t*, const void*, size_t) -> float { return 0.0f; };
+                            if (RawrXD::Deep2::QuantDot::DispatchLmHeadBatchQ4K(
+                                    lmh.data, lmh.bytes,
+                                    flat_in.data(), flat_in.size(),
+                                    flat_out.data(), flat_out.size(),
+                                    vocab, hidden_dim, P,
+                                    force_cpu_)) {
+                                perPosLogits->assign(P, {});
+                                for (size_t t = 0; t < P; ++t) {
+                                    (*perPosLogits)[t].assign(
+                                        flat_out.begin() + t * vocab,
+                                        flat_out.begin() + (t + 1) * vocab);
+                                    for (float v : (*perPosLogits)[t]) {
+                                        if (!std::isfinite(v)) {
+                                            last_error_ = "prefill-batch: non-finite logits at verify position " +
+                                                          std::to_string(t);
+                                            return false;
+                                        }
+                                    }
+                                }
+                                logits_ = perPosLogits->back();
+                                break;
+                            }
+                            // Fall through to serial path if fused path unavailable/failed
+                        }
+                    }
+                    // Serial fallback (original per-token OpLinear)
+                    perPosLogits->assign(P, {});
+                    for (size_t t = 0; t < P; ++t) {
+                        std::vector<float> y;
+                        std::string e;
+                        if (!OpLinear(in.b, ts[t].hidden, y, e)) {
+                            last_error_ = e;
+                            return false;
+                        }
+                        for (float v : y) {
+                            if (!std::isfinite(v)) {
+                                last_error_ = "prefill-batch: non-finite logits at verify position " +
+                                              std::to_string(t);
+                                                return false;
+                                            }
+                                        }
+                                        (*perPosLogits)[t] = std::move(y);
+                                    }
+                                    logits_ = perPosLogits->back();
+                                    break;
+                                }
                 // Only the last token's logits are the prefill result; the
                 // serial path would have run this once per token and kept the
                 // last. Identical math on identical inputs.
@@ -4061,6 +4156,34 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     }
     return true;
 }
+size_t Executor::KvLeadingZeroRows(int block) const {
+    const size_t wk = KvRowWidthK(block);
+    if (wk == 0 || block < 0 || (size_t)block >= kv_k_.size()) return 0;
+    const auto& K = kv_k_[(size_t)block];
+    const size_t rows = K.size() / wk;
+    size_t zero_rows = 0;
+    for (size_t p = 0; p < rows; ++p) {
+        bool all_zero = true;
+        for (size_t i = 0; i < wk; ++i) {
+            if (K[p * wk + i] != 0.0f) { all_zero = false; break; }
+        }
+        if (!all_zero) break;
+        ++zero_rows;
+    }
+    return zero_rows;
+}
+
+size_t Executor::KvResidentBytes() const {
+    size_t total = 0;
+    for (const auto& K : kv_k_) total += K.size() * sizeof(float);
+    for (const auto& V : kv_v_) total += V.size() * sizeof(float);
+    return total;
+}
+
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001 batch helpers live in quant_dot_dispatch.
+// ---------------------------------------------------------------------------
+
 } } }  // namespace
 
 

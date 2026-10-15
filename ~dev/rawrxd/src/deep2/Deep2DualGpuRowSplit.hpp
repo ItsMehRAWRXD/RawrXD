@@ -49,6 +49,12 @@ struct RowSplitReceipt {
     uint64_t hostEnvelopeOverlapNs = 0;
 };
 
+// DEEP2_GPU_COVERAGE_AUTHORITY: single source of truth for which GGML quant
+// types the GPU row-split lane serves. Kept in sync with VulkanCompute::
+// DispatchGemvQuant. Any type outside this set must fail CLOSED with a
+// reason tag so the kernel-coverage gate observes the true gap.
+bool Deep2GpuTypeSupported(int ggmlType) noexcept;
+
 bool Deep2BuildGpuWeightView(
     const WeightTensor& wt,
     uint32_t rowBegin,
