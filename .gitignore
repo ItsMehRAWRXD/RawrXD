@@ -98,6 +98,15 @@ build_agent_esp/
 build_snap_process_guard/
 _build/
 
+# ---- production hardening build trees (local, machine-specific) ----
+build_hardening_cfg/
+build_hardening_tests/
+build_asan_check/
+build-ci/
+build_dbg_url/
+*.pdb
+*.ilk
+
 # CMake machine state inside build trees (nested caches reference absolute
 # generator/compiler paths from the machine that produced them)
 _build/*.cmake

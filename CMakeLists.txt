@@ -56,24 +56,23 @@ if(RAWRXD_ENABLE_HARDENING)
         # ("invalid numeric argument"), so they live in add_link_options() only.
         # /GS - Buffer Security Check (stack cookie)
         # /guard:cf - Control Flow Guard (CFG)
-        # /guard:ehcont - Export Suppression (EH Continuation)
-        # /VOLATILE:ISO - ISO C++ volatile semantics
-        # /SDL - Security Development Lifecycle (recommended subset of warnings)
-        # /W4 - Warning Level 4
-        # /WX - Treat warnings as errors (optional, can be strict)
-        # /FC - Full source file paths in diagnostics
-        # /Zc:strictStrings - Strict string literal type checking
-        # /Zc:throwingNew - Standard conforming operator new
+        # /guard:ehcont - EH Continuation metadata
+        # /VOLATILE:ISO - ISO C++ volatile semantics (stronger than MSVC default)
+        # /W4 - Warning Level 4 (per-target /WX is opt-in, see rawrxd_security)
+        # /Zc:strictStrings - Strict string literal typing (read-only literals)
+        # /Zc:throwingNew - Standard-conforming operator new
         # /permissive- - Standards conformance mode
-
+        # NOTE: no /SDL. On this toolchain (VS2022 19.44 + Ninja/Makefiles
+        # generators) /SDL is rejected per-file with D9002 "ignoring unknown
+        # option", which is noise plus a false sense of hardening. The concrete
+        # guarantees we need - /GS, /guard:cf, /guard:ehcont, conformance - are
+        # applied explicitly above instead of the SDL bundle.
         add_compile_options(
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/GS>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:cf>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:ehcont>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/VOLATILE:ISO>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/SDL>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/W4>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/FC>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/Zc:strictStrings>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/Zc:throwingNew>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/permissive->
@@ -4465,6 +4464,107 @@ else()
     else()
         message(STATUS "No Qt-dependent targets were excluded")
     endif()
+endif()
+
+# ============================================================
+# PRODUCTION HARDENING - RawrXD Security Library
+# ============================================================
+# Dependency-free (C++20 standard library only, NO Qt) so that every target in
+# this tree - including the native, Qt-free engines - can link it, and so the
+# security guarantees are testable in the narrowest possible toolchain.
+#
+#   rawrxd_security: input validation boundary, secure memory, crash containment
+#
+# These components are the executable form of PRODUCTION_HARDENING.md.
+option(RAWRXD_BUILD_SECURITY_LIB "Build the rawrxd_security hardening library" ON)
+
+if(RAWRXD_BUILD_SECURITY_LIB)
+    set(RAWRXD_SECURITY_SOURCES
+        src/utils/input_sanitizer.cpp
+        src/utils/secure_buffer.cpp
+        src/utils/crash_handler.cpp
+    )
+    set(RAWRXD_SECURITY_HEADERS
+        include/input_sanitizer.h
+        include/secure_buffer.h
+        include/crash_handler.h
+    )
+
+    # Every source is verified to exist: a missing hardening component must fail
+    # configure loudly rather than silently producing an incomplete lib.
+    foreach(_src IN LISTS RAWRXD_SECURITY_SOURCES RAWRXD_SECURITY_HEADERS)
+        if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_src}")
+            message(FATAL_ERROR
+                "rawrxd_security requires '${_src}', which is missing. "
+                "The hardening library must not be built partially.")
+        endif()
+    endforeach()
+
+    add_library(rawrxd_security STATIC ${RAWRXD_SECURITY_SOURCES} ${RAWRXD_SECURITY_HEADERS})
+    add_library(RawrXD::security ALIAS rawrxd_security)
+
+    target_include_directories(rawrxd_security PUBLIC ${CMAKE_SOURCE_DIR}/include)
+    # Also expose src/_utils for internal headers that may live beside sources.
+    target_include_directories(rawrxd_security PRIVATE ${CMAKE_SOURCE_DIR}/src/utils)
+
+    set_target_properties(rawrxd_security PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        POSITION_INDEPENDENT_CODE ON
+        DEBUG_POSTFIX ""
+    )
+
+    if(MSVC)
+        # /W4 is the floor for the security library, and warnings are errors:
+        # hardening code that cannot be audited cleanly is not hardened.
+        target_compile_options(rawrxd_security PRIVATE /W4 /WX /permissive- /EHsc)
+        target_link_libraries(rawrxd_security PUBLIC dbghelp bcrypt)
+    else()
+        target_compile_options(rawrxd_security PRIVATE -Wall -Wextra -Wpedantic -Werror)
+        if(WIN32)
+            target_link_libraries(rawrxd_security PUBLIC dbghelp bcrypt)
+        endif()
+    endif()
+
+    list(LENGTH RAWRXD_SECURITY_SOURCES _sec_src_count)
+    message(STATUS "rawrxd_security: hardening library ENABLED (${_sec_src_count} sources)")
+
+    # ---- Hardening test suite (dependency-free: no Qt required) -----------
+    if(RAWRXD_BUILD_TESTS)
+        set(RAWRXD_HARDENING_TEST_SOURCES
+            tests/test_harness.h
+            tests/test_input_sanitizer.cpp
+            tests/test_crash_resilience.cpp
+            tests/main_hardening_tests.cpp
+        )
+        foreach(_t IN LISTS RAWRXD_HARDENING_TEST_SOURCES)
+            if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_t}")
+                message(FATAL_ERROR "Hardening test suite requires '${_t}'")
+            endif()
+        endforeach()
+
+        add_executable(rawrxd_hardening_tests ${RAWRXD_HARDENING_TEST_SOURCES})
+        target_link_libraries(rawrxd_hardening_tests PRIVATE rawrxd_security)
+
+        set_target_properties(rawrxd_hardening_tests PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
+        )
+
+        # Enable CTest so `ctest` discovers the hardening suite.
+        enable_testing()
+        add_test(NAME hardening_security COMMAND rawrxd_hardening_tests)
+        set_tests_properties(hardening_security PROPERTIES
+            LABELS "security;hardening"
+            TIMEOUT 300
+        )
+        message(STATUS "rawrxd_hardening_tests: registered with CTest (run: ctest -L security)")
+    endif()
+else()
+    add_compile_definitions(RAWRXD_SECURITY_DISABLED=1)
+    message(WARNING "rawrxd_security DISABLED: input validation and crash containment "
+                    "will NOT be linked. Do not ship this configuration.")
 endif()
 
 # ============================================================
