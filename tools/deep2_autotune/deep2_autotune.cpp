@@ -97,7 +97,7 @@ std::optional<Result> measure(Runtime& runtime, const Config& c, uint64_t budget
 Hardware discover_hardware() {
   Hardware h;
   SYSTEM_INFO si{}; GetNativeSystemInfo(&si);
-  h.logical_cpus = std::max(1u,si.dwNumberOfProcessors);
+  h.logical_cpus = (si.dwNumberOfProcessors > 1) ? si.dwNumberOfProcessors : 1u;
   MEMORYSTATUSEX ms{}; ms.dwLength = sizeof(ms);
   if (GlobalMemoryStatusEx(&ms)) h.ram_bytes = ms.ullTotalPhys;
   // Enumerate display adapters without introducing DXGI/ADL dependencies.
@@ -141,7 +141,7 @@ std::optional<Decision> autotune(Runtime& runtime,const Hardware& hw,const std::
   if (!runtime.activate(best->config,error)) {
     diagnostic="Winning configuration could not activate: "+error;return {};
   }
-  if (!save(profile_path,format(k,best->config))) {
+  if (!save(profile_path,fmt_profile(k,best->config))) {
     diagnostic="Configuration activated, but profile persistence failed";
     return best;
   }
