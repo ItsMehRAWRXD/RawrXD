@@ -18,6 +18,13 @@
 # can be built and tested on its own.
 # ============================================================================
 
+# Pin the CRT explicitly instead of relying on the parent scope. This library
+# is linked into an executable that also links ggml and the IDE sources, and a
+# /MT object meeting an /MD object is an LNK2038 link error that compiles
+# cleanly and only surfaces when the executable is linked.
+set(RAWRXD_PRODUCTION_RUNTIME_LIB
+    "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
 add_library(rawrxd_production_hardening STATIC
     SovereignProductionConfig.cpp
     SovereignObservability.cpp
@@ -25,6 +32,8 @@ add_library(rawrxd_production_hardening STATIC
     SovereignSecurityHardening.cpp
     ProductionRuntime.cpp
 )
+set_property(TARGET rawrxd_production_hardening
+             PROPERTY MSVC_RUNTIME_LIBRARY ${RAWRXD_PRODUCTION_RUNTIME_LIB})
 
 target_include_directories(rawrxd_production_hardening PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -38,16 +47,14 @@ target_compile_definitions(rawrxd_production_hardening PUBLIC
 )
 
 if(MSVC)
-    # /W4 is intentional: this module is the baseline for quality gates and a
-    # warning here is treated as a defect in review, not as noise to suppress.
+    # /W4 is intentional: this module is the baseline for quality gates, so a
+    # warning here is treated as a defect in review, not noise to suppress.
     target_compile_options(rawrxd_production_hardening PRIVATE
         /EHsc /std:c++20 /W4 /permissive-
         /wd4100  # unreferenced formal parameter: interfaces keep parameters
                  # for signature compatibility
     )
-    # /Zi without /DEBUG keeps the PDB name out of the link line while still
-    # allowing the crash handler to produce a useful minidump in RelWithDebInfo.
-    target_link_libraries(rawrxd_production_hardening PRIVATE
+    target_link_libraries(rawrxd_production_hardening PUBLIC
         bcrypt
         dbghelp
     )
@@ -64,6 +71,8 @@ endif()
 add_executable(rawrxd_production_tests
     tests/production_hardening_tests.cpp
 )
+set_property(TARGET rawrxd_production_tests
+             PROPERTY MSVC_RUNTIME_LIBRARY ${RAWRXD_PRODUCTION_RUNTIME_LIB})
 target_link_libraries(rawrxd_production_tests PRIVATE
     rawrxd_production_hardening
 )
@@ -89,6 +98,8 @@ message(STATUS "rawrxd_production_hardening: production hardening runtime enable
 add_executable(rawrxd_health_probe
     tools/health_probe.cpp
 )
+set_property(TARGET rawrxd_health_probe
+             PROPERTY MSVC_RUNTIME_LIBRARY ${RAWRXD_PRODUCTION_RUNTIME_LIB})
 target_link_libraries(rawrxd_health_probe PRIVATE
     rawrxd_production_hardening
 )
