@@ -183,3 +183,11 @@ evidence/deep2_one_pipeline/pages/
 # the e2e fixture, the gate and the evidence harness ARE versioned. ----
 /tools/rawrxd_parity_final/build/
 /tools/rawrxd_parity_final/parity_evidence_ws/
+/tools/rawrxd_parity_final/build_asan/
+/tools/rawrxd_parity_final/build_package_asan/
+
+# ---- produced source-drop packages and their staging area (regenerable via
+# scripts/package_production_drop.ps1; the SBOM/report are rebuilt each run) ----
+/_drop/
+_drop/
+build_package_asan/

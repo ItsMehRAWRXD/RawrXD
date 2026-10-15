@@ -94,7 +94,10 @@ add_test(NAME rawr_run_self_test COMMAND rawr_run --self-test)
 option(RAWRXD_BUILD_FUZZ "Build the fuzz harness for the security-critical parsers" ON)
 
 if(RAWRXD_BUILD_FUZZ)
-  add_executable(rawr_fuzz_parsers EXCLUDE_FROM_ALL rawr_fuzz_parsers.cpp)
+  # NOT EXCLUDE_FROM_ALL: it is registered with add_test() below, so a plain
+  # `cmake --build` must produce it. Excluding it makes every clean build fail
+  # ctest with "(Not Run)" because the executable is absent.
+  add_executable(rawr_fuzz_parsers rawr_fuzz_parsers.cpp)
   target_compile_features(rawr_fuzz_parsers PRIVATE cxx_std_20)
 
   # The harness #includes the drop, so it must inherit the same hardening flags
