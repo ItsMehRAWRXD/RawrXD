@@ -30,18 +30,51 @@ enum class CompressionType : uint32_t {
 };
 
 enum class GGMLType : uint32_t {
+    // Canonical ggml_type IDs (matches 3rdparty/ggml/include/ggml.h and
+    // src/deep2/QuantTypeTable.hpp). These values are the on-disk GGUF tensor
+    // type tags, so they MUST stay in sync with llama.cpp/ggml. The previous
+    // enum had several K-quant and Q8_0/Q5_1 values swapped (e.g. Q4_K was 10
+    // instead of 12, Q8_0 was 7 instead of 8), which caused on-disk tensors to
+    // be mislabeled and mis-sized.
     F32 = 0,
     F16 = 1,
     Q4_0 = 2,
     Q4_1 = 3,
-    Q4_K = 10,
-    Q5_K = 11,
-    Q3_K = 12,
-    Q2_K = 9,
-    Q6_K = 13,
-    Q8_0 = 7,
-    Q5_1 = 5,
-    F16_HALF = 4,
+    // 4,5 removed in ggml (Q4_2/Q4_3 support dropped)
+    Q5_0 = 6,
+    Q5_1 = 7,
+    Q8_0 = 8,
+    Q8_1 = 9,
+    Q2_K = 10,
+    Q3_K = 11,
+    Q4_K = 12,
+    Q5_K = 13,
+    Q6_K = 14,
+    Q8_K = 15,
+    IQ2_XXS = 16,
+    IQ2_XS = 17,
+    IQ3_XXS = 18,
+    IQ1_S = 19,
+    IQ4_NL = 20,
+    IQ3_S = 21,
+    IQ2_S = 22,
+    IQ4_XS = 23,
+    I8 = 24,
+    I16 = 25,
+    I32 = 26,
+    I64 = 27,
+    F64 = 28,
+    IQ1_M = 29,
+    BF16 = 30,
+    // 31-33 removed (Q4_0_x_x variants)
+    TQ1_0 = 34,
+    TQ2_0 = 35,
+    // 36-38 removed (IQ4_NL_x_x variants)
+    MXFP4 = 39,
+    NVFP4 = 40,
+    Q1_0 = 41,
+    Q2_0 = 42,
+    COUNT = 43,
 };
 
 struct GGUFHeader {

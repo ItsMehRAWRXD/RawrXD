@@ -269,6 +269,69 @@ public:
         return def;
     }
 
+    // Read the first element of an integer-typed GGUF array metadata entry.
+    // Returns `def` when the key is absent, not an array, has a non-integer
+    // element type, or is empty.  This is what makes per-layer array metadata
+    // (e.g. expert_used_count, head_count_kv, feed_forward_length) readable
+    // as a scalar when every layer shares the same value.
+    int64_t getMetaIntArrayFirst(const std::string& key, int64_t def = 0) const {
+        auto it = metaArrays_.find(key);
+        if (it == metaArrays_.end()) return def;
+        const MetaArrayView& a = it->second;
+        if (a.count == 0 || !a.data) return def;
+        uint32_t et = a.elementType;
+        // Only integer element types are supported here.
+        if (et != static_cast<uint32_t>(GGUFMetaType::UINT8) &&
+            et != static_cast<uint32_t>(GGUFMetaType::INT8) &&
+            et != static_cast<uint32_t>(GGUFMetaType::UINT16) &&
+            et != static_cast<uint32_t>(GGUFMetaType::INT16) &&
+            et != static_cast<uint32_t>(GGUFMetaType::UINT32) &&
+            et != static_cast<uint32_t>(GGUFMetaType::INT32) &&
+            et != static_cast<uint32_t>(GGUFMetaType::UINT64) &&
+            et != static_cast<uint32_t>(GGUFMetaType::INT64))
+            return def;
+        const uint8_t* p = a.data;
+        int64_t v = 0;
+        switch (et) {
+            case static_cast<uint32_t>(GGUFMetaType::UINT8): {
+                uint8_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::INT8): {
+                int8_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::UINT16): {
+                uint16_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::INT16): {
+                int16_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::UINT32): {
+                uint32_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::INT32): {
+                int32_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::UINT64): {
+                uint64_t x = 0;
+                if (!readPod(p, a.end, x)) return def;
+                if (x > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) return def;
+                v = static_cast<int64_t>(x); break;
+            }
+            case static_cast<uint32_t>(GGUFMetaType::INT64): {
+                int64_t x = 0;
+                if (!readPod(p, a.end, x)) return def; v = x; break;
+            }
+            default: return def;
+        }
+        return v;
+    }
+
     std::string getMetaString(const std::string& key,
                               const std::string& def = {}) const {
         auto it = metaString_.find(key);
@@ -583,12 +646,14 @@ private:
             case 13: blockElems = 256; blockBytes = 176; return true; // Q5_K
             case 14: blockElems = 256; blockBytes = 210; return true; // Q6_K
             case 15: blockElems = 256; blockBytes = 292; return true; // Q8_K
+            case 16: blockElems = 256; blockBytes = 66;  return true; // IQ2_XXS
             case 24: blockElems = 1;   blockBytes = 1;   return true; // I8
             case 25: blockElems = 1;   blockBytes = 2;   return true; // I16
             case 26: blockElems = 1;   blockBytes = 4;   return true; // I32
             case 27: blockElems = 1;   blockBytes = 8;   return true; // I64
             case 28: blockElems = 1;   blockBytes = 8;   return true; // F64
             case 30: blockElems = 1;   blockBytes = 2;   return true; // BF16
+            case 40: blockElems = 64;  blockBytes = 36;  return true; // NVFP4
             default: blockElems = blockBytes = 0; return false;
         }
     }
@@ -598,29 +663,67 @@ private:
         if (t.shape.empty()) return false;
 
         size_t blockElems = 0, blockBytes = 0;
-        if (!typeGeometry(static_cast<uint32_t>(t.type), blockElems, blockBytes))
+        if (!typeGeometry(static_cast<uint32_t>(t.type), blockElems, blockBytes)) {
+            fprintf(stderr,
+                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u typeGeometry returned false\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type));
             return false;
+        }
 
-        if (t.shape[0] <= 0) return false;
-        const size_t rowElems = static_cast<size_t>(t.shape[0]);
-        if (blockElems > 1 && (rowElems % blockElems) != 0)
+        if (t.shape[0] <= 0) {
+            fprintf(stderr,
+                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u shape[0]=%lld <= 0\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type), (long long)t.shape[0]);
             return false;
+        }
+        const size_t rowElems = static_cast<size_t>(t.shape[0]);
+        if (blockElems > 1 && (rowElems % blockElems) != 0) {
+            fprintf(stderr,
+                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u blockElems=%zu blockBytes=%zu "
+                "shape[0]=%zu rowElems=%zu rowElems%%blockElems=%zu\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type), blockElems, blockBytes,
+                rowElems, rowElems, rowElems % blockElems);
+            return false;
+        }
 
         const size_t blocksPerRow =
             (rowElems + blockElems - 1) / blockElems;
 
         size_t rowBytes = 0;
-        if (mulOverflow(blocksPerRow, blockBytes, rowBytes)) return false;
+        if (mulOverflow(blocksPerRow, blockBytes, rowBytes)) {
+            fprintf(stderr,
+                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u blocksPerRow=%zu blockBytes=%zu overflow\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type), blocksPerRow, blockBytes);
+            return false;
+        }
 
         size_t rows = 1;
         for (size_t d = 1; d < t.shape.size(); ++d) {
-            if (t.shape[d] <= 0) return false;
-            size_t next = 0;
-            if (mulOverflow(rows, static_cast<size_t>(t.shape[d]), next))
+            if (t.shape[d] <= 0) {
+                fprintf(stderr,
+                    "[GGUF_DIAG] tensorByteSize FAIL: name=%s shape[%zu]=%lld <= 0\n",
+                    t.name.c_str(), d, (long long)t.shape[d]);
                 return false;
+            }
+            size_t next = 0;
+            if (mulOverflow(rows, static_cast<size_t>(t.shape[d]), next)) {
+                fprintf(stderr,
+                    "[GGUF_DIAG] tensorByteSize FAIL: name=%s rows overflow at dim %zu\n",
+                    t.name.c_str(), d);
+                return false;
+            }
             rows = next;
         }
-        return !mulOverflow(rowBytes, rows, out);
+        if (!mulOverflow(rowBytes, rows, out)) {
+            fprintf(stderr,
+                "[GGUF_DIAG] tensorByteSize PASS: name=%s type=%u shape[0]=%zu rows=%zu out=%zu\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type), rowElems, rows, out);
+            return true;
+        }
+        fprintf(stderr,
+            "[GGUF_DIAG] tensorByteSize FAIL: name=%s final overflow rowBytes=%zu rows=%zu\n",
+            t.name.c_str(), rowBytes, rows);
+        return false;
     }
 
     bool skipValue(uint32_t type, const uint8_t*& p,
@@ -832,8 +935,27 @@ private:
                 return fail("unaligned GGUF tensor offset in " + path);
 
             size_t bytes = 0;
-            if (!tensorByteSize(t, bytes))
+            if (!tensorByteSize(t, bytes)) {
+                size_t be = 0, bb = 0;
+                typeGeometry(static_cast<uint32_t>(t.type), be, bb);
+                std::string reason;
+                if (be == 0 && bb == 0)
+                    reason = "unknown_type";
+                else if (t.shape[0] <= 0)
+                    reason = "empty_first_dim";
+                else if (be > 1 && (static_cast<size_t>(t.shape[0]) % be) != 0)
+                    reason = "row_not_block_aligned";
+                else
+                    reason = "byte_size_overflow";
+                fprintf(stderr,
+                    "[GGUF_REJECT] name=%s type=%u "
+                    "shape=[%lld%s] blockElems=%zu blockBytes=%zu reason=%s\n",
+                    t.name.c_str(), static_cast<uint32_t>(t.type),
+                    (long long)t.shape[0],
+                    t.shape.size() > 1 ? ",..." : "",
+                    be, bb, reason.c_str());
                 return fail("unsupported/malformed GGML tensor type or shape: " + t.name);
+            }
 
             pending.emplace_back(std::move(t));
         }
@@ -1209,6 +1331,11 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
             if (ld.hasMeta(k)) {
                 int64_t v = ld.getMetaInt(k, def);
                 if (v != 0) return v;
+                // Scalar read returned 0 but the key may be an integer array
+                // (e.g. expert_used_count, head_count_kv).  Try the first
+                // array element as the scalar value.
+                int64_t av = ld.getMetaIntArrayFirst(k, def);
+                if (av != 0) return av;
             }
         }
         return def;
@@ -1239,8 +1366,14 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
     // ---- MoE ----
     meta.numExperts = static_cast<uint32_t>(readInt(
         keyWithFallback("expert_count"), 0));
-    meta.numExpertsPerToken = static_cast<uint32_t>(readInt(
-        keyWithFallback("expert_used_count"), 0));
+    {
+        std::vector<std::string> moeTopKKeys;
+        moeTopKKeys.push_back(archKey("expert_used_count"));
+        moeTopKKeys.push_back(archKey("expert_group_used_count"));
+        moeTopKKeys.push_back("llama.expert_used_count");
+        moeTopKKeys.push_back("llama.expert_group_used_count");
+        meta.numExpertsPerToken = static_cast<uint32_t>(readInt(moeTopKKeys, 0));
+    }
     meta.numSharedExperts = static_cast<uint32_t>(readInt(
         keyWithFallback("expert_shared_count"), 0));
     meta.moeIntermediateSize = static_cast<uint32_t>(readInt(

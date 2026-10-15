@@ -35,6 +35,9 @@
 #include "agentic/process_win32.hpp"
 #endif
 
+#include "deep2/Deep2CLIBridge.hpp"
+#include <functional>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -59,6 +62,8 @@ static std::unique_ptr<rawrxd::tools::Registry> g_tools;
 static std::unique_ptr<WorkspaceToolHost>  g_ws;
 static std::unique_ptr<PermissionGate>     g_gate;
 static std::unique_ptr<AgentSession>       g_ledger;
+static Deep2EngineHandle*                  localEngine = nullptr;
+static std::function<InferenceResult(const std::vector<ChatMessage>&, int)> deep2CompleteFn;
 static std::atomic<bool>                   g_running{true};
 static std::string                         g_workspace;
 static std::string                         g_model;
@@ -151,6 +156,50 @@ static std::string RunGit(const std::string& args) {
 // Backend initialization
 // ---------------------------------------------------------------------------
 static bool InitBackend(BackendMode mode, const std::string& model) {
+    // Direct Deep2Engine (in-process GGUF inference) takes priority — no HTTP router needed.
+    if (mode == BackendMode::Deep2) {
+        if (localEngine) {
+            deep2_free(localEngine);
+            localEngine = nullptr;
+        }
+        std::string modelPath = g_workspace + "/" + model;
+        if (!std::filesystem::exists(modelPath)) {
+            modelPath = model;
+        }
+        std::fprintf(stderr, "[Deep2Backend] Loading model: %s\n", modelPath.c_str());
+        localEngine = deep2_load_model(modelPath.c_str());
+        if (!localEngine) {
+            std::cerr << "Failed to load model via Deep2Engine: " << model << "\n";
+            std::cerr << "Use --backend ollama for HTTP-based inference instead.\n";
+            return false;
+        }
+        std::fprintf(stderr, "[Deep2Backend] Model loaded: hidden=%u vocab=%u layers=%zu\n",
+                     deep2_hidden_dim(localEngine),
+                     deep2_vocab_size(localEngine),
+                     deep2_num_layers(localEngine));
+
+        deep2CompleteFn = [localEngine](const std::vector<ChatMessage>& msgs, int maxTokens) {
+            std::string prompt;
+            for (const auto& m : msgs) {
+                if (!prompt.empty()) prompt += "\n\n";
+                prompt += m.role + ": " + m.content;
+            }
+            std::string text;
+            if (!deep2_generate(localEngine, prompt.c_str(), static_cast<size_t>(maxTokens), text)) {
+                return InferenceResult::Error("Deep2Engine generated empty response");
+            }
+            InferenceResult r = InferenceResult::Ok(text);
+            r.prompt_tokens = static_cast<int>(prompt.size() / 4);
+            r.completion_tokens = static_cast<int>(text.size() / 4);
+            r.tokens_per_sec = 0.0;
+            r.total_duration_ms = 0;
+            return r;
+        };
+
+        g_model = model;
+        return true;
+    }
+
     if (g_router) {
         g_router->SetMode(mode);
         if (!model.empty()) {
@@ -460,10 +509,35 @@ static int CmdRun(const std::vector<std::string>& args) {
 
     PrintBanner(mode);
 
-    // One-shot mode: `rawr run <model> <mode> "prompt"` executes and exits.
+    // One-shot mode: `rawr run <model> --task "..."` executes and exits.
     if (flags.count("prompt") || flags.count("task")) {
         std::string prompt = flags.count("prompt") ? flags["prompt"] : flags["task"];
-        return 0;    // handled by CmdAgent below; kept for CLI compatibility
+        g_ledger->AppendUserMessage(prompt);
+        g_ledger->RecordAgentTurn();
+
+        std::vector<ChatMessage> messages;
+        for (const auto& m : g_ledger->Conversation()) {
+            ChatMessage cm;
+            cm.role = m.value("role", std::string());
+            cm.content = m.value("content", std::string());
+            messages.push_back(cm);
+        }
+
+        InferenceResult result = g_router->ChatSync(messages, json::array());
+        if (!result.success) {
+            std::cerr << "[error] " << result.error_message << "\n";
+            g_ledger->RecordFailure("inference failed: " + result.error_message);
+            return 1;
+        }
+
+        g_ledger->AppendAssistantMessage(result.response);
+        std::cout << result.response << "\n";
+
+        g_ledger->SetTermination(TerminationReason::ModelCompleted, 0);
+        g_ledger->SetVerdict("one-shot task completed");
+
+        g_ledger->Flush();
+        return 0;
     }
 
     // Interactive REPL.

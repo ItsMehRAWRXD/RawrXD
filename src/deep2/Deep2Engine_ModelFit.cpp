@@ -203,7 +203,14 @@ bool Deep2Engine::buildFitGeometry(const std::string& ggufPath,
     auto metaSize = [&](const char* suffix, size_t def = 0) -> size_t {
         const int64_t v = loader.getMetaInt(a + "." + suffix,
                                             static_cast<int64_t>(def));
-        return v > 0 ? static_cast<size_t>(v) : def;
+        if (v != 0) return static_cast<size_t>(v);
+        // Array-typed metadata (e.g. expert_used_count, head_count_kv,
+        // feed_forward_length) is not readable via getMetaInt.  Try the
+        // first array element as the scalar value.
+        const int64_t av = loader.getMetaIntArrayFirst(a + "." + suffix,
+                                                       static_cast<int64_t>(def));
+        if (av != 0) return static_cast<size_t>(av);
+        return def;
     };
 
     geo.hiddenDim = metaSize("embedding_length", 0);

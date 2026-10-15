@@ -21,8 +21,10 @@
  */
 #include "rawr_core.hpp"
 #include "rawr_reasoning.hpp"
+#include "Deep2Engine.h"
 
 #include <csignal>
+#include <functional>
 
 using namespace rawr;
 
@@ -47,6 +49,46 @@ static void out(const std::string& s) {
 }
 
 static void outJson(const json& j) { out(j.dump(2)); }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Local Deep2 inference adapter — wraps Deep2Engine::generateText() so the
+// agent loop can run without an HTTP backend on port 8080.
+// ─────────────────────────────────────────────────────────────────────────
+static InferenceResult deep2Complete(Deep2Engine& engine,
+                                     const std::vector<json>& messages,
+                                     int maxTokens) {
+    InferenceResult result;
+    result.ok = false;
+
+    // Build a plain-text prompt from chat messages.
+    std::string prompt;
+    for (const auto& m : messages) {
+        std::string role = m.value("role", "user");
+        std::string content = m.value("content", std::string());
+        if (!content.empty()) {
+            if (!prompt.empty()) prompt += "\n\n";
+            prompt += role + ": " + content;
+        }
+    }
+    if (prompt.empty()) {
+        result.error = "empty prompt";
+        return result;
+    }
+
+    // Deep2Engine::generateText returns the full generated text.
+    std::string text = engine.generateText(prompt, static_cast<size_t>(maxTokens));
+    if (text.empty()) {
+        result.error = "empty generation";
+        return result;
+    }
+
+    result.ok = true;
+    result.content = text;
+    result.completionTokens = static_cast<int>(text.size() / 4);  // rough estimate
+    result.promptTokens = static_cast<int>(prompt.size() / 4);
+    result.finishReason = "stop";
+    return result;
+}
 
 enum ExitCode {
     EXIT_OK = 0,
@@ -212,8 +254,8 @@ struct RunOutcome {
     std::vector<ToolResult> results;
 };
 
-static RunOutcome runAgentLoop(InferenceClient& client, ToolRegistry& reg,
-                               const Workspace& ws, const ModeProfile& mode,
+static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<json>&, int)> completeFn,
+                               ToolRegistry& reg, const Workspace& ws, const ModeProfile& mode,
                                const std::string& goal, int maxTurns = 12) {
     RunOutcome ro;
     ToolContext ctx;
@@ -262,7 +304,7 @@ static RunOutcome runAgentLoop(InferenceClient& client, ToolRegistry& reg,
             break;
         }
         ro.turns = turn;
-        InferenceResult r = client.complete(messages, finalOnly ? 900 : 240);
+        InferenceResult r = completeFn(messages, finalOnly ? 900 : 240);
         if (!r.ok) {
             logLine("run: inference failure at turn " + std::to_string(turn) + ": " +
                     r.error);
@@ -404,8 +446,18 @@ static void cmdToolsList(const ToolRegistry& reg, const ModeProfile* mode) {
 
 static int cmdRun(const std::vector<std::string>& args) {
     if (args.empty()) {
-        out("usage: rawr run <model> [mode] [--mode NAME] [--backend deep2|ollama] "
-            "[--goal TEXT] [--json]");
+        out("usage: rawr run <model> [--mode NAME] [--backend deep2|ollama] "
+            "[--goal TEXT] [--task TEXT] [--json]");
+        out("");
+        out("  <model>    GGUF filename (e.g. nemotron-bolt.gguf)");
+        out("  --mode     Agent mode: code, ask, debug, audit, etc. (default: code)");
+        out("  --backend  deep2 = local Deep2 engine, ollama = HTTP port 8080");
+        out("  --goal     Natural-language task for the agent");
+        out("  --task     Alias for --goal");
+        out("");
+        out("Examples:");
+        out("  rawr run nemotron-bolt.gguf --task \"audit the IDE\"");
+        out("  rawr run nemotron-bolt.gguf --mode code --goal \"inspect src/deep2\"");
         return EXIT_FAIL;
     }
 
@@ -421,6 +473,7 @@ static int cmdRun(const std::vector<std::string>& args) {
         else if (a == "--backend" && i + 1 < args.size()) backend = args[++i];
         else if (a == "--json") g_json = true;
         else if (a == "--goal" && i + 1 < args.size()) goal = args[++i];
+        else if (a == "--task" && i + 1 < args.size()) goal = args[++i];
         else if (a.rfind("--", 0) == 0) { /* unknown flag ignored */ }
         else if (positional == 0) { modeName = a; ++positional; }
         else goal += (goal.empty() ? "" : " ") + a;
@@ -437,31 +490,102 @@ static int cmdRun(const std::vector<std::string>& args) {
     ToolRegistry reg;
     registerDefaultTools(reg, ws);
 
-    InferenceClient client;
-    client.setEndpoint(8080);
-    client.setModel(model);
-
-    if (!g_json) {
-        out("RawrXD Local Agent");
-        out("Model:    " + model);
-        out("Backend:  " + backend + (backend == "deep2" ? " (primary)" : " (backup)"));
-        out("Mode:     " + std::string(mode->name) + " - " +
-            std::string(mode->description));
-        out("Root:     " + ws.root());
-        out("Edits:    " + std::string(mode->sourceEditsAllowed ? "allowed by policy"
-                                                                : "denied"));
-        out("Execute:  " + std::string(mode->executeByDefault ? "allowed by policy"
-                                                              : "denied by default"));
-        out("Tools:    " + std::to_string(reg.size()) + " registered");
-        out("");
+    // Resolve the model path inside the workspace.
+    std::string modelPath = ws.resolve(model, true);
+    if (modelPath.empty()) {
+        out("ERROR: model not found inside workspace: " + model);
+        out("Run `rawr models` to list loadable GGUF files.");
+        return EXIT_FAIL;
     }
 
-    // Verify inference before reporting a live session.
-    if (!client.ping()) {
-        out("ERROR: no local inference backend reachable on 127.0.0.1:8080");
-        out("AUDIT_STATUS=FAIL");
-        out("AUDIT_REASON=inference_unavailable");
-        return EXIT_NO_INFERENCE;
+    // Choose the inference path: local Deep2 engine or HTTP backend.
+    bool useLocalDeep2 = (backend == "deep2");
+
+    std::function<InferenceResult(const std::vector<json>&, int)> completeFn;
+    Deep2Engine localEngine;  // only constructed when useLocalDeep2
+
+    if (useLocalDeep2) {
+        // Load the model through Deep2Engine (in-process GGUF inference).
+        if (!g_json) {
+            out("Loading model via Deep2 engine: " + model);
+        }
+        if (!localEngine.loadModel(modelPath)) {
+            out("ERROR: Deep2Engine failed to load model: " + model);
+            out("Falling back to HTTP backend on 127.0.0.1:8080...");
+            useLocalDeep2 = false;
+        } else {
+            if (!g_json) {
+                out("Deep2 model loaded: " + model +
+                    "  hidden=" + std::to_string(localEngine.getConfig().hiddenDim) +
+                    "  vocab=" + std::to_string(localEngine.getModelWeights().vocabSize));
+            }
+            completeFn = [&localEngine](const std::vector<json>& msgs, int maxTokens) {
+                return deep2Complete(localEngine, msgs, maxTokens);
+            };
+        }
+    }
+
+    if (!useLocalDeep2) {
+        InferenceClient client;
+        client.setEndpoint(8080);
+        client.setModel(model);
+
+        if (!g_json) {
+            out("RawrXD Local Agent");
+            out("Model:    " + model);
+            out("Backend:  " + backend + (backend == "deep2" ? " (primary)" : " (backup)"));
+            out("Mode:     " + std::string(mode->name) + " - " +
+                std::string(mode->description));
+            out("Root:     " + ws.root());
+            out("Edits:    " + std::string(mode->sourceEditsAllowed ? "allowed by policy"
+                                                                    : "denied"));
+            out("Execute:  " + std::string(mode->executeByDefault ? "allowed by policy"
+                                                                  : "denied by default"));
+            out("Tools:    " + std::to_string(reg.size()) + " registered");
+            out("");
+        }
+
+        // Verify inference before reporting a live session.
+        if (!client.ping()) {
+            out("ERROR: no local inference backend reachable on 127.0.0.1:8080");
+            out("AUDIT_STATUS=FAIL");
+            out("AUDIT_REASON=inference_unavailable");
+            return EXIT_NO_INFERENCE;
+        }
+
+        completeFn = [&client](const std::vector<json>& msgs, int maxTokens) {
+            return client.complete(msgs, maxTokens);
+        };
+
+        if (!g_json) {
+            out("RawrXD Local Agent");
+            out("Model:    " + model);
+            out("Backend:  " + backend + (backend == "deep2" ? " (primary)" : " (backup)"));
+            out("Mode:     " + std::string(mode->name) + " - " +
+                std::string(mode->description));
+            out("Root:     " + ws.root());
+            out("Edits:    " + std::string(mode->sourceEditsAllowed ? "allowed by policy"
+                                                                    : "denied"));
+            out("Execute:  " + std::string(mode->executeByDefault ? "allowed by policy"
+                                                                  : "denied by default"));
+            out("Tools:    " + std::to_string(reg.size()) + " registered");
+            out("");
+        }
+    } else {
+        if (!g_json) {
+            out("RawrXD Local Agent (Deep2 backend)");
+            out("Model:    " + model);
+            out("Backend:  deep2 (in-process GGUF inference)");
+            out("Mode:     " + std::string(mode->name) + " - " +
+                std::string(mode->description));
+            out("Root:     " + ws.root());
+            out("Edits:    " + std::string(mode->sourceEditsAllowed ? "allowed by policy"
+                                                                    : "denied"));
+            out("Execute:  " + std::string(mode->executeByDefault ? "allowed by policy"
+                                                                  : "denied by default"));
+            out("Tools:    " + std::to_string(reg.size()) + " registered");
+            out("");
+        }
     }
 
     if (goal.empty()) {
@@ -494,7 +618,7 @@ static int cmdRun(const std::vector<std::string>& args) {
             }
             if (line.empty()) continue;
 
-            RunOutcome ro = runAgentLoop(client, reg, ws, *mode, line);
+            RunOutcome ro = runAgentLoop(completeFn, reg, ws, *mode, line);
             if (g_json) {
                 json j;
                 j["mode"] = mode->name;
@@ -515,7 +639,7 @@ static int cmdRun(const std::vector<std::string>& args) {
         return EXIT_OK;
     }
 
-    RunOutcome ro = runAgentLoop(client, reg, ws, *mode, goal);
+    RunOutcome ro = runAgentLoop(completeFn, reg, ws, *mode, goal);
 
     if (g_json) {
         json j;
@@ -1646,7 +1770,10 @@ static int cmdSelfAudit(ToolRegistry& reg, InferenceClient& client) {
 
     logLine("self-audit: starting agent run");
     RunOutcome ro = runAgentLoop(
-        client, reg, ws, *mode,
+        [&client](const std::vector<json>& msgs, int maxTokens) {
+            return client.complete(msgs, maxTokens);
+        },
+        reg, ws, *mode,
         "Audit the remaining work to complete yourself. Inspect the repository "
         "with real tools, then produce a prioritized evidence ledger.",
         12);

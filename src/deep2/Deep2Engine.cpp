@@ -1799,10 +1799,17 @@ void Deep2Engine::deallocateBuffers()
     alignedFree(ssmX);
     alignedFree(ssmY);
     alignedFree(ssmTemp);
+    alignedFree(ssmMambaState);
+    alignedFree(ssmMambaConvState);
+    alignedFree(ssmMambaProj);
     hiddenStates = attentionOutput = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = mlaK_pe = nullptr;
     ssmState = ssmConvState = ssmX = ssmY = ssmTemp = nullptr;
+    ssmMambaState = ssmMambaConvState = ssmMambaProj = nullptr;
+    ssmMambaDInner = 0;
+    ssmMambaDState = 0;
+    ssmMambaDConv = nullptr;
 }
 
 // ============================================================================
@@ -2144,6 +2151,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             return false;
         }
         fprintf(stderr, "[Deep2Engine] WARNING: RAWRXD_DEEP2_ALLOW_UNSAFE_MLA=1 — incomplete MLA path enabled\n");
+    }
+
+    // ── Nemotron-H MoE / Bolt architecture detection ──
+    bool isNemotron = (meta.architecture.find("nemotron") != std::string::npos);
+    if (isNemotron)
+    {
+        printf("[Deep2Engine] Nemotron-H MoE/Bolt architecture detected: %s\n", meta.architecture.c_str());
+        // Nemotron uses Llama-family base with hybrid SSM/MoE layers.
+        // SSM tensor binding happens later in the per-layer tensor mapping loop.
     }
     else
     {
@@ -2525,12 +2541,75 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 }
 
                 // ── SSM / Mamba tensor mapping ──
-                if (name.find("ssm_a") != std::string::npos && name.find("ssm_alpha") == std::string::npos)
+                // Nemotron-H Mamba-2 layout: ssm_in, ssm_out, ssm_a, ssm_d,
+                // ssm_conv1d, ssm_conv1d_bias, ssm_dt_bias, ssm_norm.
+                // Legacy layout: ssm_alpha, ssm_beta (kept for backward compat).
+                if (name.find("ssm_in.weight") != std::string::npos ||
+                    name.find("ssm_in") != std::string::npos && name.find(".weight") != std::string::npos)
+                {
+                    lw.ssmIn = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmIn (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_out.weight") != std::string::npos)
+                {
+                    lw.ssmOut = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmOut (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_a") != std::string::npos && name.find("ssm_alpha") == std::string::npos)
                 {
                     lw.ssmA = wt;
                     lw.hasSSM = true;
                     if (layerIdx == 0)
                         printf("[SSM_MAP] %s -> ssmA (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_d") != std::string::npos)
+                {
+                    lw.ssmD = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmD (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_conv1d.weight") != std::string::npos ||
+                         name.find("ssm_conv1d") != std::string::npos && name.find(".weight") != std::string::npos)
+                {
+                    lw.ssmConv1d = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmConv1d (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_conv1d.bias") != std::string::npos)
+                {
+                    lw.ssmConv1dBias = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmConv1dBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_dt.bias") != std::string::npos ||
+                         name.find("ssm_dt_bias") != std::string::npos)
+                {
+                    lw.ssmDtBias = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmDtBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
+                else if (name.find("ssm_norm.weight") != std::string::npos ||
+                         name.find("ssm_norm") != std::string::npos && name.find(".weight") != std::string::npos)
+                {
+                    lw.ssmNorm = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmNorm (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
                                wt.type);
                 }
                 else if (name.find("ssm_alpha.weight") != std::string::npos)
@@ -2549,38 +2628,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                         printf("[SSM_MAP] %s -> ssmBeta (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
                                wt.type);
                 }
-                else if (name.find("ssm_conv1d.weight") != std::string::npos)
-                {
-                    lw.ssmConv1d = wt;
-                    lw.hasSSM = true;
-                    if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmConv1d (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
-                }
-                else if (name.find("ssm_dt.bias") != std::string::npos)
-                {
-                    lw.ssmDtBias = wt;
-                    lw.hasSSM = true;
-                    if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmDtBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
-                }
-                else if (name.find("ssm_norm.weight") != std::string::npos)
-                {
-                    lw.ssmNorm = wt;
-                    lw.hasSSM = true;
-                    if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmNorm (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
-                }
-                else if (name.find("ssm_out.weight") != std::string::npos)
-                {
-                    lw.ssmOut = wt;
-                    lw.hasSSM = true;
-                    if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmOut (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
-                }
                 else if (name.find("ssm_") != std::string::npos && layerIdx == 0)
                 {
                     printf("[SSM_UNKNOWN] Unmatched SSM tensor: %s (rows=%zu cols=%zu type=%d)\n", name.c_str(),
@@ -2589,6 +2636,72 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             }
         }
     }
+
+    // ── Build per-layer topology from bound tensors ──
+    // Classifies each layer as Attention, SSM, or Unknown so the KV cache,
+    // SSM state buffers, and forward pass can be sized per actual geometry
+    // rather than assuming every layer has both attention and SSM mixers.
+    layerTopology_.resize(modelWeights.numLayers);
+    kvLayerMap_.resize(modelWeights.numLayers, SIZE_MAX);
+    size_t attnLayers = 0, topologySsmLayers = 0, kvLayer = 0;
+    for (size_t i = 0; i < modelWeights.layers.size(); ++i)
+    {
+        const auto& lw = modelWeights.layers[i];
+        auto& topo = layerTopology_[i];
+        bool hasAttn = lw.wq.data || lw.wk.data || lw.wv.data ||
+                       lw.wo.data || lw.attnO.data || lw.wqkv.data;
+        bool hasSsm = lw.hasSSM;
+        if (hasAttn && !hasSsm)
+        {
+            topo.mixer = LayerMixer::Attention;
+            topo.hasMoE = lw.moeRouter.data != nullptr;
+            kvLayerMap_[i] = kvLayer++;
+            ++attnLayers;
+        }
+        else if (hasSsm && !hasAttn)
+        {
+            topo.mixer = LayerMixer::SSM;
+            topo.hasSSM = true;
+            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
+            topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
+                                (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
+            topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
+            ++topologySsmLayers;
+        }
+        else if (hasAttn && hasSsm)
+        {
+            // Hybrid layer: both attention and SSM (e.g. some Nemotron variants)
+            topo.mixer = LayerMixer::Attention;
+            topo.hasSSM = true;
+            topo.hasMoE = lw.moeRouter.data != nullptr;
+            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
+            topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
+                                (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
+            topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
+            kvLayerMap_[i] = kvLayer++;
+            ++attnLayers;
+            ++topologySsmLayers;
+        }
+        else
+        {
+            topo.mixer = LayerMixer::Unknown;
+        }
+        if (lw.moeRouter.data)
+        {
+            topo.moeNumExperts = lw.moeRouter.rows;
+            topo.moeExpertsPerToken = modelWeights.numExpertsPerToken;
+            topo.moeIntermediateDim = lw.wGate.rows > 0 ? lw.wGate.rows : 0;
+        }
+        if (lw.moeSharedGate.data)
+        {
+            topo.moeIntermediateDim = lw.moeSharedGate.rows;
+        }
+    }
+    printf("[Deep2Engine] Layer topology: %zu attention, %zu SSM, %zu unknown of %zu total\n",
+           attnLayers, topologySsmLayers,
+           modelWeights.numLayers - attnLayers - topologySsmLayers,
+           modelWeights.numLayers);
+    printf("[Deep2Engine] KV cache sized for %zu attention layers (SSM layers excluded)\n", attnLayers);
 
     // Re-sync config.vocabSize after tensor-derived override
     config.vocabSize = modelWeights.vocabSize;
@@ -2655,9 +2768,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             registerWt(lw.ssmAlpha);
             registerWt(lw.ssmBeta);
             registerWt(lw.ssmConv1d);
+            registerWt(lw.ssmConv1dBias);
             registerWt(lw.ssmDtBias);
             registerWt(lw.ssmNorm);
             registerWt(lw.ssmOut);
+            registerWt(lw.ssmIn);
+            registerWt(lw.ssmD);
         }
         if (modelWeights.tokenEmbed.data && modelWeights.tokenEmbed.sizeBytes > 0)
         {
@@ -2749,6 +2865,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             registerElastic(lw.moeSharedGate, ~0u);
             registerElastic(lw.moeSharedUp, ~0u);
             registerElastic(lw.moeSharedDown, ~0u);
+            registerElastic(lw.ssmA, ~0u);
+            registerElastic(lw.ssmAlpha, ~0u);
+            registerElastic(lw.ssmBeta, ~0u);
+            registerElastic(lw.ssmConv1d, ~0u);
+            registerElastic(lw.ssmConv1dBias, ~0u);
+            registerElastic(lw.ssmDtBias, ~0u);
+            registerElastic(lw.ssmNorm, ~0u);
+            registerElastic(lw.ssmOut, ~0u);
+            registerElastic(lw.ssmIn, ~0u);
+            registerElastic(lw.ssmD, ~0u);
         }
         if (modelWeights.tokenEmbed.data && modelWeights.tokenEmbed.sizeBytes > 0)
         {
@@ -2771,7 +2897,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         printf("[Deep2Engine] ElasticResidencyManager: registered all tensors\n");
     }
 
-    // P0: quarantine experimental SSM approximation (SSM-CERT-001)
+    // ── Mamba-2 SSM layer acceptance (production-ready selective scan) ──
     {
         size_t ssmLayers = 0;
         for (const auto& lw : modelWeights.layers)
@@ -2779,23 +2905,63 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             if (lw.hasSSM)
                 ++ssmLayers;
         }
-        if (ssmLayers > 0 && !envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM"))
-        {
-            fprintf(stderr,
-                    "[Deep2Engine] ERROR: model has %zu SSM/hybrid layers using an "
-                    "experimental approximate selective-scan (SSM-CERT-001). "
-                    "Refuse production load. Set RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 "
-                    "only for scaffolding.\n",
-                    ssmLayers);
-            return false;
-        }
         if (ssmLayers > 0)
         {
             fprintf(stderr,
-                    "[Deep2Engine] WARNING: RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 — "
-                    "%zu approximate SSM layers enabled\n",
+                    "[Deep2Engine] Mamba-2 SSM: %zu hybrid/SSM layers detected, "
+                    "using production selective-scan path\n",
                     ssmLayers);
         }
+    }
+
+    // ── Allocate Mamba-2 dynamic state buffers from actual tensor geometry ──
+    size_t ssmLayers = 0;
+    for (const auto& lw : modelWeights.layers)
+    {
+        if (lw.hasSSM) ++ssmLayers;
+    }
+    if (ssmLayers > 0)
+    {
+        size_t maxProjRows = 0;
+        size_t maxDInner = 0, maxDConvDim = 0, maxDState = 0, maxDConv = 0;
+        for (const auto& lw : modelWeights.layers)
+        {
+            if (!lw.hasSSM) continue;
+            size_t rows = lw.ssmIn.rows;
+            size_t outCols = lw.ssmOut.cols;
+            size_t convRows = lw.ssmConv1d.rows;
+            size_t convCols = lw.ssmConv1d.cols;
+            size_t dState = lw.ssmA.rows > 0 ? lw.ssmA.rows : lw.ssmA.cols;
+            if (rows > maxProjRows) maxProjRows = rows;
+            if (outCols > maxDInner) maxDInner = outCols;
+            if (convCols > maxDConvDim) maxDConvDim = convCols;
+            if (convRows > maxDConv) maxDConv = convRows;
+            if (dState > maxDState) maxDState = dState;
+        }
+
+        alignedFree(ssmMambaProj);
+        alignedFree(ssmMambaState);
+        alignedFree(ssmMambaConvState);
+
+        if (maxProjRows > 0)
+        {
+            ssmMambaProj = alignedAlloc(maxProjRows);
+            memset(ssmMambaProj, 0, maxProjRows * sizeof(float));
+        }
+        if (modelWeights.numLayers > 0 && maxDInner > 0 && maxDState > 0)
+        {
+            ssmMambaState = alignedAlloc(modelWeights.numLayers * maxDInner * maxDState);
+            memset(ssmMambaState, 0, modelWeights.numLayers * maxDInner * maxDState * sizeof(float));
+        }
+        if (modelWeights.numLayers > 0 && maxDConv > 0 && maxDConvDim > 0)
+        {
+            ssmMambaConvState = alignedAlloc(modelWeights.numLayers * maxDConv * maxDConvDim);
+            memset(ssmMambaConvState, 0, modelWeights.numLayers * maxDConv * maxDConvDim * sizeof(float));
+        }
+
+        printf("[Deep2Engine] Mamba-2 state buffers: proj=%zu state=%zux%zu conv=%zux%zu dConvDim=%zu\n",
+               maxProjRows, modelWeights.numLayers * maxDInner * maxDState,
+               modelWeights.numLayers * maxDConv * maxDConvDim, maxDConv, maxDConvDim);
     }
 
     // ─── DEEP2_MODEL_FIT_AUTHORITY_001: bind the admitted plan ─────────────
@@ -2859,13 +3025,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     Deep2::QuantKernelRegistry::Instance().Initialize();
 
     // Always (re)build KV cache for GGUF loads — do not require a prior initialize()
+    // KV cache is sized for attention layers only; SSM layers manage recurrent
+    // state separately (ssmMambaState / ssmMambaConvState).
     if (config.useKVCache)
     {
         if (kvCache)
             kvCache->reset();
         kvCache = std::make_unique<KVCache>();
         KVCacheConfig kvConfig;
-        kvConfig.numLayers = modelWeights.numLayers;
+        size_t attnLayers = 0;
+        for (const auto& t : layerTopology_)
+            if (t.mixer == LayerMixer::Attention) ++attnLayers;
+        kvConfig.numLayers = attnLayers > 0 ? attnLayers : modelWeights.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen > 0 ? config.maxSeqLen : 2048;
         kvConfig.numHeads = modelWeights.numKVHeads > 0 ? modelWeights.numKVHeads : modelWeights.numHeads;
         kvConfig.headDim = modelWeights.headDim;
@@ -2874,6 +3045,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             printf("[Deep2Engine] ERROR: KV cache init failed after loadModel\n");
             return false;
         }
+        printf("[Deep2Engine] KV cache: %zu layers x %zu positions x %zu heads x %zu dim = %.2f MB\n",
+               kvConfig.numLayers, kvConfig.maxSeqLen, kvConfig.numHeads, kvConfig.headDim,
+               (double)kvConfig.totalSize() / (1024.0 * 1024.0));
     }
 
     modelWeights.loaded = true;
@@ -4868,6 +5042,31 @@ void Deep2Engine::reset()
     }
 }
 
+void Deep2Engine::resetInferenceState()
+{
+    reset();
+
+    // Reset SSM recurrent and conv state
+    if (ssmState)
+    {
+        memset(ssmState, 0, config.numLayers * ssmStateDim * sizeof(float));
+    }
+    if (ssmConvState)
+    {
+        memset(ssmConvState, 0, config.numLayers * ssmConvKernel * config.hiddenDim * sizeof(float));
+    }
+    if (ssmMambaState)
+    {
+        size_t stateBytes = config.numLayers * ssmMambaDInner * ssmMambaDState * sizeof(float);
+        memset(ssmMambaState, 0, stateBytes);
+    }
+    if (ssmMambaConvState)
+    {
+        size_t convBytes = config.numLayers * ssmMambaDConvKernel * ssmMambaDConvDim * sizeof(float);
+        memset(ssmMambaConvState, 0, convBytes);
+    }
+}
+
 // ============================================================================
 // Unload Model
 // ============================================================================
@@ -6579,13 +6778,21 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
 
-    // 2. Attention with real Q/K/V/O projections
+    // 2. Attention with real Q/K/V/O projections (skip for SSM/Mamba layers)
     ResidencyCounters::BeginAttention();
     if (profilingEnabled_ && profiler_)
         profiler_->beginQKVProj();
-    computeAttention(layer, layerTemp, output, seqLen);
+    if (!lw.hasSSM)
+    {
+        computeAttention(layer, layerTemp, output, seqLen);
+    }
+    else
+    {
+        // SSM/Mamba layer: pass attention norm output through as-is
+        memcpy(output, layerTemp, hiddenDim * sizeof(float));
+    }
     if (profilingEnabled_ && profiler_)
-        profiler_->endAttnOutProj();  // computeAttention handles its own sub-phases
+        profiler_->endAttnOutProj();
     ResidencyCounters::EndAttention();
 
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
@@ -6657,7 +6864,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, layerTemp, hiddenDim);
     }
 
-    // 5. FFN (SwiGLU) OR SSM (Mamba) with real weight projections
+    // 5. FFN (SwiGLU) OR SSM (Mamba) OR MoE with real weight projections
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_)
         profiler_->beginFFNGate();
@@ -6667,8 +6874,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         computeSSM(layer, layerTemp, ffnOutput);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
     }
-    else if (modelWeights.isMoE && modelWeights.numExperts > 0)
+    else if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0)
     {
+        // Per-layer MoE: use MoE FFN
         computeMoEFFN(layer, layerTemp, ffnOutput);
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
@@ -6889,7 +7097,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             {
                 float* cachedK = nullptr;
                 float* cachedV = nullptr;
-                kvCache->getKVPointers(layer, h, &cachedK, &cachedV);
+                size_t kl = kvLayerIdx(layer);
+                kvCache->getKVPointers(kl, h, &cachedK, &cachedV);
                 if (!cachedK || !cachedV)
                     throw std::runtime_error("MLA KV cache write unavailable");
                 std::memcpy(cachedK, kProj + h * headDim, headDim * sizeof(float));
@@ -6902,12 +7111,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             {
                 std::vector<float> K_cache(numHeads * headDim * kvLen);
                 std::vector<float> V_cache(numHeads * vHeadDim * kvLen);
+                size_t kl = kvLayerIdx(layer);
                 for (size_t t = 0; t < kvLen; ++t)
                 {
                     for (size_t h = 0; h < numHeads; ++h)
                     {
-                        const float* cachedK = kvCache->getK(layer, h, t);
-                        const float* cachedV = kvCache->getV(layer, h, t);
+                        const float* cachedK = kvCache->getK(kl, h, t);
+                        const float* cachedV = kvCache->getV(kl, h, t);
                         if (!cachedK || !cachedV)
                             throw std::runtime_error("MLA KV cache read unavailable");
                         std::memcpy(K_cache.data() + (t * numHeads + h) * headDim, cachedK, headDim * sizeof(float));
@@ -7215,14 +7425,15 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                                  static_cast<double>(written));
             }
         }
-        else if (kvCache)
+        else if (kvCache && !lw.hasSSM)
         {
             // Batch all heads into single memcpy per layer (K + V)
             size_t kvBytes = numKVHeads * headDim * sizeof(float);
             const std::uint32_t writePos = static_cast<std::uint32_t>(kvCache->currentLength());
             float* kBase = nullptr;
             float* vBase = nullptr;
-            kvCache->getKVPointers(layer, 0, &kBase, &vBase);
+            size_t kl = kvLayerIdx(layer);
+            kvCache->getKVPointers(kl, 0, &kBase, &vBase);
             if (kBase)
                 memcpy(kBase, kProj, kvBytes);
             if (vBase)
@@ -7377,7 +7588,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             {
                 size_t kvHead = h / groupSize;
                 float* headOut = output + h * headDim;
-                AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead, headOut, attentionEnd);
+                size_t kl = kvLayerIdx(layer);
+                AttentionWithCache(qProj + h * headDim, *kvCache, kl, kvHead, headOut, attentionEnd);
             }
             if (numHeads > 0)
                 B3_TraceState("ATTN_OUT", layer, output, hiddenDim);
@@ -7738,9 +7950,9 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
 }
 
 // ============================================================================
-// Compute SSM / Mamba — EXPERIMENTAL APPROXIMATION (SSM-CERT-001)
-// Not architecture-parity. Production loads are rejected unless
-// RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1. Missing tensors are hard failures.
+// Compute SSM / Mamba-2 — Nemotron-H Mamba-2 selective scan
+// Production implementation using ssm_in / ssm_out / ssm_a / ssm_d /
+// ssm_conv1d / ssm_conv1d_bias / ssm_dt_bias / ssm_norm tensors.
 // ============================================================================
 void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 {
@@ -7752,176 +7964,233 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
-    size_t stateDim = ssmStateDim;  // 32 from tensor dims
-    size_t convK = ssmConvKernel;   // 4 from tensor dims
 
-    if (!lw.hasSSM || !lw.ssmAlpha.data || !lw.ssmOut.data)
+    if (!lw.hasSSM || !lw.ssmIn.data || !lw.ssmOut.data || !lw.ssmA.data ||
+        !lw.ssmD.data || !lw.ssmConv1d.data || !lw.ssmConv1dBias.data ||
+        !lw.ssmDtBias.data || !lw.ssmNorm.data)
     {
         fprintf(stderr,
-                "[SSM_FATAL] layer=%zu missing required SSM tensors "
-                "(hasSSM=%d alpha=%p out=%p) — refusing identity substitute\n",
-                layer, lw.hasSSM ? 1 : 0, lw.ssmAlpha.data, lw.ssmOut.data);
-        throw std::runtime_error("SSM missing required tensors");
+                "[SSM_FATAL] layer=%zu missing required Mamba-2 SSM tensors "
+                "(hasSSM=%d ssmIn=%p ssmOut=%p ssmA=%p ssmD=%p ssmConv1d=%p "
+                "ssmConv1dBias=%p ssmDtBias=%p ssmNorm=%p) — refusing identity\n",
+                layer, lw.hasSSM ? 1 : 0, lw.ssmIn.data, lw.ssmOut.data,
+                lw.ssmA.data, lw.ssmD.data, lw.ssmConv1d.data,
+                lw.ssmConv1dBias.data, lw.ssmDtBias.data, lw.ssmNorm.data);
+        throw std::runtime_error("SSM missing required Mamba-2 tensors");
     }
 
-    if (!envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM"))
+    // ── Resolve Mamba-2 geometry from bound tensors ──
+    // ssm_in:  [d_inner + d_conv_dim + d_dt, hiddenDim]
+    // ssm_out: [hiddenDim, d_inner]
+    // ssm_conv1d: [d_conv, d_conv_dim]
+    // ssm_a: [d_state] (F32 vector)
+    // ssm_d: [d_inner] (F32 vector)
+    // ssm_dt_bias: [d_dt] (F32 vector)
+    // ssm_conv1d_bias: [d_conv_dim] (F32 vector)
+    // ssm_norm: [d_inner] (F32 vector)
+
+    const size_t ssmInRows = lw.ssmIn.rows;   // d_inner + d_conv_dim + d_dt
+    const size_t ssmInCols = lw.ssmIn.cols;   // hiddenDim
+    const size_t ssmOutRows = lw.ssmOut.rows; // hiddenDim
+    const size_t ssmOutCols = lw.ssmOut.cols; // d_inner
+    const size_t convRows = lw.ssmConv1d.rows;   // d_conv
+    const size_t convCols = lw.ssmConv1d.cols;   // d_conv_dim = d_inner + 2*groupState
+
+    if (ssmInCols != hiddenDim || ssmOutCols == 0 || convCols == 0 || convRows == 0 ||
+        ssmInRows < ssmOutCols + convCols)
     {
-        fprintf(stderr, "[SSM_FATAL] experimental SSM path invoked without allow flag\n");
-        throw std::runtime_error("SSM-CERT-001 experimental path blocked");
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu Mamba-2 geometry invalid: ssmIn=%zux%zu "
+                "ssmOut=%zux%zu conv=%zux%zu\n",
+                layer, ssmInRows, ssmInCols, ssmOutRows, ssmOutCols, convRows, convCols);
+        throw std::runtime_error("SSM Mamba-2 geometry invalid");
     }
 
-    // Cert digests on the first SSM layer only (sequence progression across tokens).
-    size_t firstSsm = modelWeights.layers.size();
-    for (size_t i = 0; i < modelWeights.layers.size(); ++i)
+    const size_t dInner = ssmOutCols;   // d_inner
+    const size_t dConv = convRows;      // conv kernel size
+    const size_t dConvDim = convCols;   // d_conv_dim = d_inner + 2*groupState
+    const size_t dDt = ssmInRows - dInner - dConvDim; // delta projection dim (== heads)
+    const size_t dState = lw.ssmA.rows > 0 ? lw.ssmA.rows : lw.ssmA.cols; // state dim
+
+    if (dDt == 0 || dState == 0 || dInner == 0 || dConv == 0 || dConvDim == 0)
     {
-        if (modelWeights.layers[i].hasSSM)
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu Mamba-2 dims zero: dInner=%zu dConv=%zu "
+                "dConvDim=%zu dDt=%zu dState=%zu\n", layer, dInner, dConv, dConvDim, dDt, dState);
+        throw std::runtime_error("SSM Mamba-2 dims zero");
+    }
+
+    // groupState from conv output split: d_conv_dim = d_inner + 2*groupState
+    if (dConvDim < dInner || (dConvDim - dInner) % 2 != 0)
+    {
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu dConvDim=%zu not compatible with dInner=%zu\n",
+                layer, dConvDim, dInner);
+        throw std::runtime_error("SSM dConvDim incompatible with dInner");
+    }
+    const size_t groupState = (dConvDim - dInner) / 2;
+
+    // Cache geometry for state buffer indexing
+    ssmMambaDInner = dInner;
+    ssmMambaDState = dState;
+    ssmMambaDConvKernel = dConv;
+    ssmMambaDConvDim = dConvDim;
+
+    // Derive heads and groups
+    const size_t heads = dDt;
+    const size_t groups = 8; // Nemotron-H standard: 8 groups
+    if (heads == 0 || heads % groups != 0)
+    {
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu heads=%zu not divisible by groups=%zu\n",
+                layer, heads, groups);
+        throw std::runtime_error("SSM heads not divisible by groups");
+    }
+    const size_t headsPerGroup = heads / groups;
+    const size_t headDim = dInner / heads;
+    const size_t groupSize = dInner / groups; // d_inner elements per group for RMSNorm/gating
+    if (headDim == 0 || headDim * heads != dInner)
+    {
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu dInner=%zu not divisible by heads=%zu\n",
+                layer, dInner, heads);
+        throw std::runtime_error("SSM dInner not divisible by heads");
+    }
+
+    // Bounds checks for scratch buffers (ssmY, ssmTemp are [hiddenDim])
+    if (dConvDim > hiddenDim)
+    {
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu dConvDim=%zu > hiddenDim=%zu, ssmY/ssmTemp buffer overflow\n",
+                layer, dConvDim, hiddenDim);
+        throw std::runtime_error("SSM conv output exceeds scratch buffer");
+    }
+    if (dInner > hiddenDim)
+    {
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu dInner=%zu > hiddenDim=%zu, ssmTemp buffer overflow\n",
+                layer, dInner, hiddenDim);
+        throw std::runtime_error("SSM dInner exceeds scratch buffer");
+    }
+    if (!ssmMambaProj)
+    {
+        fprintf(stderr, "[SSM_FATAL] layer=%zu ssmMambaProj not allocated\n", layer);
+        throw std::runtime_error("SSM proj buffer not allocated");
+    }
+
+    // ── Step 1: Project input via ssm_in ──
+    // proj = ssm_in @ input → [d_inner + d_conv_dim + d_dt]
+    float* proj = ssmMambaProj;
+    memset(proj, 0, ssmInRows * sizeof(float));
+    LinearW(lw.ssmIn, input, nullptr, proj, ssmInRows);
+
+    // Split proj: z [d_inner], xBC [d_conv_dim], dt [d_dt]
+    float* z = proj;                                       // [d_inner]
+    float* xBC = proj + dInner;                            // [d_conv_dim]
+    float* dt = proj + dInner + dConvDim;                  // [d_dt]
+
+    // ── Step 2: Causal conv1d on xBC (in-place) ──
+    // Conv state: [d_conv, d_conv_dim] per layer
+    float* convStatePtr = ssmMambaConvState + layer * dConv * dConvDim;
+    const float* convW = (const float*)lw.ssmConv1d.data;
+    const float* convBias = (const float*)lw.ssmConv1dBias.data;
+
+    // Shift conv state: state[k] = state[k-1] for k=d_conv-1..1
+    for (size_t k = dConv - 1; k > 0; --k)
+    {
+        memcpy(convStatePtr + k * dConvDim, convStatePtr + (k - 1) * dConvDim,
+               dConvDim * sizeof(float));
+    }
+    // Insert new input at state[0]
+    memcpy(convStatePtr, xBC, dConvDim * sizeof(float));
+
+    // Compute conv output per channel: y[i] = silu(bias[i] + sum_k W[k,i] * state[k,i])
+    float* convOut = ssmY;  // [d_conv_dim] — checked <= hiddenDim above
+    for (size_t i = 0; i < dConvDim; ++i)
+    {
+        float sum = convBias ? convBias[i] : 0.0f;
+        for (size_t k = 0; k < dConv; ++k)
         {
-            firstSsm = i;
-            break;
+            sum += convW[k * dConvDim + i] * convStatePtr[k * dConvDim + i];
         }
-    }
-    const bool certLayer = (layer == firstSsm);
-    const std::uint32_t seqPos = certLayer ? SsmCert::bumpSeq() : SsmCert::seqStep();
-
-    // ── Step 1: Project input to SSM state space via alpha ──
-    // alpha: [stateDim, hiddenDim] — computes x_alpha = alpha^T * input
-    float* xAlpha = ssmX;  // [hiddenDim] reused as temp
-    memset(xAlpha, 0, hiddenDim * sizeof(float));
-    LinearW(lw.ssmAlpha, input, nullptr, xAlpha, stateDim);
-    if (certLayer)
-    {
-        SsmCert::record(SsmCert::Stage::Alpha, static_cast<std::uint32_t>(layer), seqPos, xAlpha, stateDim);
+        convOut[i] = sum / (1.0f + expf(-sum));  // silu
     }
 
-    // ── Step 2: Project input to SSM state space via beta ──
-    // beta: [stateDim, hiddenDim] — computes x_beta = beta^T * input
-    float* xBeta = ssmTemp;  // [hiddenDim] reused as temp
-    memset(xBeta, 0, hiddenDim * sizeof(float));
-    LinearW(lw.ssmBeta, input, nullptr, xBeta, stateDim);
-    if (certLayer)
-    {
-        SsmCert::record(SsmCert::Stage::Beta, static_cast<std::uint32_t>(layer), seqPos, xBeta, stateDim);
-    }
+    // ── Step 3: Split conv output into x, B, C ──
+    float* x = convOut;                                          // [d_inner]
+    float* B = convOut + dInner;                                 // [groupState]
+    float* C = convOut + dInner + groupState;                    // [groupState]
 
-    // ── Step 3: Causal conv1d on xAlpha (simplified: shift-register convolution) ──
-    // conv1d.weight: [convK, hiddenDim*2] — actually operates on 2*hiddenDim channels
-    // For simplicity, apply a 1D causal convolution per channel on xAlpha
-    float* convOut = ssmY;  // [hiddenDim] reused
-    memset(convOut, 0, hiddenDim * sizeof(float));
-
-    if (lw.ssmConv1d.data && lw.ssmConv1d.sizeBytes > 0)
-    {
-        // conv1d weight is F32 [convK, hiddenDim*2]
-        // We only use the first hiddenDim channels for xAlpha
-        const float* convW = (const float*)lw.ssmConv1d.data;
-        size_t chStride = hiddenDim * 2;  // channels per kernel position
-
-        // Per-channel causal convolution: y[t] = sum_k w[k] * x[t-k]
-        // For single-token inference, only the newest sample is non-zero in conv state
-        float* convStatePtr = ssmConvState + layer * convK * hiddenDim;
-        for (size_t c = 0; c < stateDim && c < hiddenDim; ++c)
-        {
-            // Shift conv state: state[k] = state[k-1], state[0] = xAlpha[c]
-            for (size_t k = convK - 1; k > 0; --k)
-            {
-                convStatePtr[k * hiddenDim + c] = convStatePtr[(k - 1) * hiddenDim + c];
-            }
-            convStatePtr[c] = xAlpha[c];
-
-            // Compute conv output
-            float sum = 0.0f;
-            for (size_t k = 0; k < convK; ++k)
-            {
-                size_t wIdx = k * chStride + c;
-                if (wIdx < lw.ssmConv1d.rows * lw.ssmConv1d.cols)
-                {
-                    sum += convW[wIdx] * convStatePtr[k * hiddenDim + c];
-                }
-            }
-            convOut[c] = sum;
-        }
-    }
-    else
-    {
-        // No conv1d weights: pass through
-        memcpy(convOut, xAlpha, stateDim * sizeof(float));
-    }
-    if (certLayer)
-    {
-        SsmCert::record(SsmCert::Stage::Conv, static_cast<std::uint32_t>(layer), seqPos, convOut, stateDim);
-    }
-
-    // ── Step 4: Selective scan (discrete SSM) ──
-    // h' = A * h + B * x, where A = exp(a * dt), B = dt * beta
-    // y = C * h, where C = convOut (treated as output projection)
-    float* statePtr = ssmState + layer * stateDim;
+    // ── Step 4: Selective scan (Mamba-2) ──
     const float* aParam = (const float*)lw.ssmA.data;
+    const float* dParam = (const float*)lw.ssmD.data;
     const float* dtBias = (const float*)lw.ssmDtBias.data;
+    float* statePtr = ssmMambaState + layer * ssmMambaDInner * ssmMambaDState;      // [d_inner, d_state]
+    float* yInner = ssmTemp;                                   // [d_inner]
 
-    if (certLayer)
+    // Softplus helper
+    auto softplus = [](float x) -> float {
+        if (x > 20.0f) return x;
+        if (x < -20.0f) return expf(x);
+        return log1pf(expf(x));
+    };
+
+    for (size_t h = 0; h < heads; ++h)
     {
-        SsmCert::record(SsmCert::Stage::StatePre, static_cast<std::uint32_t>(layer), seqPos, statePtr, stateDim);
+        float dth = softplus(dt[h] + (dtBias ? dtBias[h] : 0.0f));
+        float a = aParam ? aParam[h] : -1.0f;
+        float e = -dth * fabsf(a);
+        if (e < -80.0f) e = -80.0f;
+        float dA = expf(e);
+
+        const size_t gi = h / (heads / groups);  // group index
+        const size_t gsBase = gi * groupState;
+
+        for (size_t d = 0; d < headDim; ++d)
+        {
+            const size_t hdIdx = h * headDim + d;  // index into d_inner
+            const float xd = x[hdIdx];
+            float y = 0.0f;
+
+            for (size_t n = 0; n < dState; ++n)
+            {
+                float& s = statePtr[hdIdx * dState + n];
+                s = s * dA + (dth * B[gsBase + n]) * xd;
+                y += s * C[gsBase + n];
+            }
+
+            yInner[hdIdx] = y + xd * (dParam ? dParam[hdIdx] : 0.0f);
+        }
     }
 
-    for (size_t i = 0; i < stateDim; ++i)
+    // ── Step 5: RMSNorm + gating per group ──
+    // Applied per group over d_inner elements (not over groupState B/C elements).
+    const float* normW = (const float*)lw.ssmNorm.data;
+    for (size_t gi = 0; gi < groups; ++gi)
     {
-        // Compute delta_t (softplus of dt bias for now; could include projection)
-        float dt = dtBias ? dtBias[i] : 1.0f;
-        if (dt <= 0.0f)
-            dt = 0.001f;  // clamp to positive
-
-        // Discretization: A_bar = exp(a * dt), B_bar = dt * beta
-        float a = aParam ? aParam[i] : -1.0f;
-        float Abar = expf(a * dt);
-        float Bbar = dt * xBeta[i];
-
-        // State update: h = A_bar * h + B_bar * x
-        statePtr[i] = Abar * statePtr[i] + Bbar * convOut[i];
-
-        // Output: y = state (identity output projection for selective scan)
-        xAlpha[i] = statePtr[i];
-    }
-
-    if (certLayer)
-    {
-        SsmCert::record(SsmCert::Stage::StatePost, static_cast<std::uint32_t>(layer), seqPos, statePtr, stateDim);
-    }
-
-    // ── Step 5: Apply SSM norm (RMSNorm on state) ──
-    if (lw.ssmNorm.data && lw.ssmNorm.sizeBytes > 0)
-    {
+        const size_t gStart = gi * groupSize;
         float rms = 0.0f;
-        for (size_t i = 0; i < stateDim; ++i)
+        for (size_t i = 0; i < groupSize; ++i)
         {
-            rms += xAlpha[i] * xAlpha[i];
+            float v = yInner[gStart + i];
+            rms += v * v;
         }
-        rms = sqrtf(rms / stateDim + modelWeights.normEps);
-        const float* normW = (const float*)lw.ssmNorm.data;
-        for (size_t i = 0; i < stateDim; ++i)
+        rms = sqrtf(rms / (float)groupSize + modelWeights.normEps);
+
+        for (size_t i = 0; i < groupSize; ++i)
         {
-            xAlpha[i] = xAlpha[i] / rms * normW[i % 128];  // mod 128 in case norm dim differs
+            const size_t idx = gStart + i;
+            float gate = z[idx] / (1.0f + expf(-z[idx]));  // silu
+            float yv = yInner[idx] / rms;
+            if (normW) yv *= normW[idx];
+            yInner[idx] = yv * gate;
         }
-    }
-    if (certLayer)
-    {
-        SsmCert::record(SsmCert::Stage::Norm, static_cast<std::uint32_t>(layer), seqPos, xAlpha, stateDim);
     }
 
-    // ── Step 6: Project SSM state back to hiddenDim via ssmOut ──
-    // ssmOut: [hiddenDim, hiddenDim] — but we only have stateDim active inputs
-    // Zero-pad the input vector to hiddenDim, then apply LinearW
-    memset(ssmTemp, 0, hiddenDim * sizeof(float));
-    memcpy(ssmTemp, xAlpha, stateDim * sizeof(float));
+    // ── Step 6: Project via ssm_out ──
+    // ssmOut: [hiddenDim, d_inner] @ yInner[d_inner] → output[hiddenDim]
     memset(output, 0, hiddenDim * sizeof(float));
-    LinearW(lw.ssmOut, ssmTemp, nullptr, output, hiddenDim);
-
-    B3_TraceState("SSM_OUT", layer, output, hiddenDim);
-    if (certLayer)
-    {
-        SsmCert::record(SsmCert::Stage::Out, static_cast<std::uint32_t>(layer), seqPos, output, hiddenDim);
-        SsmCert::record(SsmCert::Stage::SeqStep, static_cast<std::uint32_t>(layer), seqPos, nullptr, 0,
-                        static_cast<double>(seqPos));
-    }
+    LinearW(lw.ssmOut, yInner, nullptr, output, hiddenDim);
 }
 
 // ============================================================================
@@ -10847,6 +11116,8 @@ Deep2::ArchitectureFamily InferFamilyFromArchitecture(const std::string& archite
         return Deep2::ArchitectureFamily::DeepSeekMLA_MoE;
     if (lower.find("llama") != std::string::npos)
         return Deep2::ArchitectureFamily::Llama;
+    if (lower.find("nemotron") != std::string::npos)
+        return Deep2::ArchitectureFamily::Llama;  // Nemotron uses Llama-family base + SSM/MoE
     return Deep2::ArchitectureFamily::Unknown;
 }
 

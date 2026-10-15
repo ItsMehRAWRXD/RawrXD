@@ -1853,9 +1853,19 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_repeat_tuner_cert.cpp" A
     )
     set_source_files_properties(${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_RepeatTuner.asm
         PROPERTIES LANGUAGE ASM_MASM)
+    # Without LINKER_LANGUAGE CMake resolves the object library's language from
+    # the target's first CXX source (none here) and then applies the C++ compile
+    # rules to the assembler, emitting A4018 warnings for every /Zc /GS /MD flag
+    # and leaving the expected .obj unproduced. Pin it to MASM.
+    set_target_properties(rawrxd_hexmag_repeat PROPERTIES
+        LINKER_LANGUAGE ASM_MASM
+    )
     if(MSVC)
-        # MASM-specific options only (no C++ options)
-        target_compile_options(rawrxd_hexmag_repeat PRIVATE /Zi /Cx /W3 /errorReport:prompt)
+        # MASM-specific options only (no C++ options), scoped by language so they
+        # can never be mirrored onto a CXX translation unit.
+        target_compile_options(rawrxd_hexmag_repeat PRIVATE
+            $<$<COMPILE_LANGUAGE:ASM_MASM>:/Zi /Cx /W3 /errorReport:prompt>
+        )
     endif()
 
     # HexMag repeat tuner cert
@@ -2584,6 +2594,7 @@ endforeach()
         # same implementation instead of re-listing sources and risking ODR violations.
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
             # Deep2Log.cpp defines Logf_() EXACTLY ONCE and is shared by
             # Deep2Engine.cpp and tools/deep2_agentic_loop.cpp. Every target
             # that compiles either of those needs this in the link, or Logf_
@@ -4459,6 +4470,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp)
     target_link_libraries(RawrXD-CLI-V2 PRIVATE
         rawrxd_agentic_backend
+        deep2_engine_lib
+        deep2_snap
+        rawrxd_agent_esp
+        snap_process_guard
         nlohmann_json::nlohmann_json
         ws2_32
         winmm
@@ -4473,6 +4488,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${CMAKE_SOURCE_DIR}/src/deep2
     )
     target_compile_options(RawrXD-CLI-V2 PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     target_compile_definitions(RawrXD-CLI-V2 PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
