@@ -4597,6 +4597,47 @@ if(RAWRXD_BUILD_SECURITY_LIB)
         )
         message(STATUS "rawrxd_hardening_tests: registered with CTest (run: ctest -L security)")
     endif()
+
+    # ---- Loader integration tests (needs the Vulkan SDK) ----------------
+    # Separate from the suite above on purpose: the security suite is
+    # dependency-free and CI-runnable anywhere, while these tests link the real
+    # GGUFLoader + vocab resolver + Vulkan headers to prove the validation
+    # boundary actually changes runtime behaviour at the model-load call site.
+    if(RAWRXD_BUILD_TESTS AND ENABLE_VULKAN
+       AND EXISTS "${CMAKE_SOURCE_DIR}/src/gguf_loader.cpp"
+       AND EXISTS "${CMAKE_SOURCE_DIR}/src/gguf_vocab_resolver.cpp"
+       AND EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_loader_hardening.cpp")
+        add_executable(rawrxd_loader_hardening_tests
+            tests/test_harness.h
+            tests/test_input_sanitizer.cpp
+            tests/test_gguf_loader_hardening.cpp
+            tests/test_crash_resilience.cpp
+            tests/main_hardening_tests.cpp
+            src/gguf_loader.cpp
+            src/gguf_vocab_resolver.cpp
+        )
+        target_include_directories(rawrxd_loader_hardening_tests PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/utils)
+        # Reuse the hardening library's own sources rather than guessing at
+        # which of them gguf_loader.cpp needs.
+        target_link_libraries(rawrxd_loader_hardening_tests PRIVATE rawrxd_security)
+        if(Vulkan_FOUND)
+            target_link_libraries(rawrxd_loader_hardening_tests PRIVATE Vulkan::Vulkan)
+        endif()
+        set_target_properties(rawrxd_loader_hardening_tests PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED ON
+        )
+        add_test(NAME hardening_model_loader COMMAND rawrxd_loader_hardening_tests)
+        set_tests_properties(hardening_model_loader PROPERTIES
+            LABELS "security;hardening;models"
+            TIMEOUT 300
+        )
+        message(STATUS "rawrxd_loader_hardening_tests: loader integration tests registered with CTest")
+    endif()
 else()
     add_compile_definitions(RAWRXD_SECURITY_DISABLED=1)
     message(WARNING "rawrxd_security DISABLED: input validation and crash containment "

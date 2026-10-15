@@ -16,13 +16,14 @@ could not be verified on this machine are marked explicitly.
 | Component | Files | Verified |
 |---|---|---|
 | Compiler/linker hardening flags | `CMakeLists.txt` (lines 43–115) | Configured, builds, no D-code warnings |
-| Input validation boundary | `include/input_sanitizer.h`, `src/utils/input_sanitizer.cpp` | 67 tests, `/W4 /WX` clean |
+| Input validation boundary | `include/input_sanitizer.h`, `src/utils/input_sanitizer.cpp` | 79 tests, `/W4 /WX` clean |
 | Secure memory primitives | `include/secure_buffer.h`, `src/utils/secure_buffer.cpp` | ASan clean |
 | Crash containment + safe mode | `include/crash_handler.h`, `src/utils/crash_handler.cpp` | ASan clean |
+| **Model-load integration** | `src/gguf_loader.cpp`, `include/gguf_loader.h` | Runtime-tested; warning-free at `/W4` |
 | Dependency-free test harness | `tests/test_harness.h` | In use |
-| Test suite | `tests/test_input_sanitizer.cpp`, `tests/test_crash_resilience.cpp`, `tests/main_hardening_tests.cpp` | 67/67 pass |
-| CMake wiring + CTest | `CMakeLists.txt` (`rawrxd_security`, `rawrxd_hardening_tests`) | `ctest -L security` → 100% |
-| CI gates | `.github/workflows/ci.yml` | 3 jobs, Windows paths executed locally |
+| Test suite | `tests/test_input_sanitizer.cpp`, `tests/test_crash_resilience.cpp`, `tests/test_gguf_loader_hardening.cpp` | 79/79 pass |
+| CMake wiring + CTest | `CMakeLists.txt` (`rawrxd_security`, `rawrxd_hardening_tests`, `rawrxd_loader_hardening_tests`) | `ctest -L security` → 100% |
+| CI gates | `.github/workflows/security-suite.yml` | 3 jobs, Windows paths executed locally |
 | Local verification scripts | `tools/production_hardening/*.bat` | Executed |
 
 All new production code is **dependency-free C++20** (standard library only, no
@@ -119,13 +120,63 @@ paths** (`_purecall`, invalid parameter), and **POSIX fatal signals**.
 
 ---
 
+## 2.5 Integration at the model-load call site
+
+Adding a library proves nothing until it is wired into a real code path. The
+first (and highest-risk) integration point is `GGUFLoader::Open()`, which is
+where every externally-supplied model path reaches the filesystem. It previously
+opened the path with **no validation at all**:
+
+```cpp
+// BEFORE - external input straight to std::ifstream
+bool GGUFLoader::Open(const std::string& filepath) {
+    filepath_ = filepath;
+    file_.open(filepath, std::ios::binary);
+```
+
+It now runs the model-file policy (extension allow-list, regular file, size cap)
+before touching the filesystem, and **fails closed** — a rejected path never
+reaches `std::ifstream`, and `Open()` now returns a real diagnosis through
+`GetLastOpenError()` instead of a bare `false`:
+
+```cpp
+// AFTER
+std::string validatedPath;
+if (!RawrXD::Security::InputSanitizer::instance()
+        .validateModelFilePath(filepath, validatedPath)) {
+    last_open_error_ = /* policy name + reason */;
+    return false;   // no file opened, no state mutated
+}
+filepath_ = validatedPath;
+```
+
+**Policy matching the consumer.** `Open()` consumes a *filesystem* path, not a
+shell command line. The generic `resolvePath()` policy therefore would have been
+wrong here: it rejects `~`, `$env`, `${` and `::`, which a shell expands but
+`std::ifstream` does not — applying it would refuse legitimate user-selected
+model locations. `validateModelFilePath()` is deliberately the narrower,
+consumer-appropriate policy; `resolveModelPath(input, baseDir, out)` remains
+available for sandboxed/contained usage.
+
+**A second bug found at the same site: silent narrowing of file-controlled
+metadata.** `GGUFMetadata::embedding_dim`, `vocab_size`, `layer_count` and
+`context_length` are `uint32_t`, but they were assigned directly from a
+file-controlled `uint64_t`. A metadata value of `0x100000008` would silently
+become `8`, so the loader would size buffers and index tensors using a number
+that disagrees with what the file declares. Values that cannot be represented in
+`uint32_t` are now rejected rather than truncated, which also removed all four
+`C4244` narrowing warnings from the translation unit.
+
+`src/gguf_loader.cpp` now compiles **warning-free** at `/W4 /permissive-`.
+
+---
+
 ## 3. Bugs found by these tests during development
 
 The hardening suite caught real defects in its own first implementation. They
 are listed because they demonstrate the tests have teeth:
 
-1. **`/SDL` rejected (D9002)** — removed; replaced with explicit flags.
-2. **Traversal check rejected `/` and `?`** — rejected *every* valid absolute
+1. **`/SDL` rejected (D9002)** — removed; replaced with explicit flags.2. **Traversal check rejected `/` and `?`** — rejected *every* valid absolute
    path. Fixed to a precise dangerous-sequence list.
 3. **Hostname trailing hyphen accepted** — now rejected.
 4. **IPv4 leading zeros accepted** (`010.1.1.1`) — octal ambiguity, now rejected.
@@ -137,6 +188,10 @@ are listed because they demonstrate the tests have teeth:
    `http://::1/x` (ambiguous/malformed for consumers). Now re-wrapped.
 8. **Safe-mode reason overwritten** — contradicted its own documented
    root-cause retention. Implemented as documented.
+9. **Silent narrowing of file-controlled GGUF metadata** — `uint64_t` metadata
+   values were assigned directly into `uint32_t` fields (found at the
+   `GGUFLoader` integration site), so `0x100000008` was read as `8`. Now
+   rejected instead of truncated; also cleared 4 × `C4244` warnings.
 
 ---
 
@@ -144,8 +199,11 @@ are listed because they demonstrate the tests have teeth:
 
 ### Full project (existing path)
 ```powershell
+# Both hardening suites are CTest-registered with the `security` label:
+#   hardening_security      - dependency-free (no Qt/Vulkan needed)
+#   hardening_model_loader  - GGUFLoader integration (needs the Vulkan SDK)
 cmake -S . -B build-vs -G "Visual Studio 17 2022" -A x64 -DRAWRXD_BUILD_TESTS=ON
-cmake --build build-vs --config Release --target rawrxd_hardening_tests
+cmake --build build-vs --config Release --target rawrxd_hardening_tests rawrxd_loader_hardening_tests
 ctest --test-dir build-vs -C Release -L security --output-on-failure
 ```
 
@@ -153,6 +211,11 @@ ctest --test-dir build-vs -C Release -L security --output-on-failure
 ```powershell
 tools\production_hardening\run_hardening_tests.bat   # build + run, non-zero on failure
 tools\production_hardening\verify_asan.bat           # same suite under AddressSanitizer
+```
+
+### Standalone (loader integration tests; needs `VULKAN_SDK`)
+```powershell
+tools\production_hardening\run_loader_tests.bat
 ```
 
 ### Link the library into another target
@@ -166,7 +229,7 @@ Headers: `include/input_sanitizer.h`, `include/secure_buffer.h`, `include/crash_
 
 ## 5. Test suite summary
 
-67 tests across two suites, all passing. Coverage by area:
+79 tests across three suites, all passing (67 + 12 loader-integration). Coverage by area:
 
 | Area | Tests |
 |---|---|
@@ -183,6 +246,9 @@ Headers: `include/input_sanitizer.h`, `include/secure_buffer.h`, `include/crash_
 | SecureBuffer bounds, zeroize, allocation, move | 8 |
 | CSPRNG + constant-time equality | 2 |
 | Crash artifact writing, safe mode, scope, degradation | 11 |
+| **GGUFLoader integration**: extension, NUL, control chars, length, relative, missing, directory | 7 |
+| **GGUFLoader integration**: valid model loads, reason cleared on success, in-range metadata | 3 |
+| **GGUFLoader integration**: metadata truncation (out-of-range rejected, max-U32 accepted) | 2 |
 
 Example (a policy encoded as an assertion):
 
@@ -219,9 +285,11 @@ designed to be runnable where the full build is not.
 
 Being explicit about what is *not* done:
 
-1. **No end-to-end integration with the Qt app.** The library is verified in
-   isolation and wired into CMake, but no application call site has been migrated
-   to use it yet. `RAWRXD_VALIDATE_PATH`-style macros are provided for that work.
+1. **Only one call site is integrated.** `GGUFLoader::Open()` now validates the
+   model path and returns a diagnosis. The Qt UI (`InferenceEngine::loadModel`),
+   the URL/download paths, and the Win32 shell (`Win32IDE.cpp`'s loader call)
+   are **not** yet migrated. `RAWRXD_VALIDATE_PATH`-style macros are provided
+   for that work.
 2. **The full project build is not CI-gated** (see above).
 3. **`rawrxd_security` is not yet linked** by the Qt/IDE targets; it is a new,
    independent library.
@@ -233,16 +301,22 @@ Being explicit about what is *not* done:
 6. **The legacy `include/security_manager.h`** (AES-GCM/DPAPI design) has no
    implementation in this drop. The new components are complementary, not a
    replacement.
+7. **The loader tests require the Vulkan SDK** (`VULKAN_SDK`), so they are a
+   separate CTest target from the dependency-free suite rather than being merged
+   into it. The dependency-free suite remains the always-runnable gate.
 
 ---
 
 ## 8. What to do next (highest value first)
 
-1. **Migrate call sites**: route model-path and URL inputs through
-   `RAWRXD_VALIDATE_PATH` / `RAWRXD_VALIDATE_URL` in the loader and UI layers.
+1. **Migrate the remaining call sites**: route model-path and URL inputs through
+   `RAWRXD_VALIDATE_PATH` / `RAWRXD_VALIDATE_URL` in the Qt
+   `InferenceEngine::loadModel` and the Win32 shell loader call.
 2. **Install the crash handler at startup**:
    `RawrXD::Resilience::CrashHandler::instance().install("crashes")`.
 3. **Use `inSafeMode()`** to degrade the GPU path after a crash.
-4. **Add the Qt shell to CI** with an official Qt install step once the hardening
+4. **Cover the inference paths**: KV cache, tensor index and quantization paths
+   currently have no test coverage from this drop.
+5. **Add the Qt shell to CI** with an official Qt install step once the hardening
    gate is green.
-5. **Set `/WX` project-wide** once the existing targets are clean at `/W4`.
+6. **Set `/WX` project-wide** once the existing targets are clean at `/W4`.

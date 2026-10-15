@@ -155,14 +155,21 @@ public:
     std::vector<UnsupportedTypeInfo> GetUnsupportedQuantizationTypes() const;
     std::string GetRecommendedConversionType() const;
     
-    // Streaming interface stubs (non-streaming loader - minimal implementations)
+    // Streaming interface stubs (non-streaming loader - minimal implementations).
+    // Parameter names are omitted deliberately: these are unused stubs, and
+    // naming them invites future confusion about whether the arguments matter.
     bool BuildTensorIndex() override { return true; }  // Already built during ParseHeader
-    bool LoadZone(const std::string& zone_name, uint64_t max_memory_mb = 512) override { return true; }
-    bool UnloadZone(const std::string& zone_name) override { return true; }
+    bool LoadZone(const std::string&, uint64_t = 512) override { return true; }
+    bool UnloadZone(const std::string&) override { return true; }
     std::vector<std::string> GetLoadedZones() const override { return {"all"}; }
     std::vector<std::string> GetAllZones() const override { return {"all"}; }
     std::vector<TensorInfo> GetAllTensorInfo() const override { return tensors_; }
     uint64_t GetCurrentMemoryUsage() const override { return 0; }
+
+    /// Human-readable reason the last Open() failed. Empty on success.
+    /// Populated when Open() returns false so callers/UI can show a real
+    /// diagnosis instead of a generic "failed to open".
+    const std::string& GetLastOpenError() const { return last_open_error_; }
 
 private:
     std::string filepath_;
@@ -177,6 +184,9 @@ private:
     std::unordered_map<std::string, VulkanTensor> vulkan_tensors_;
     bool use_dummy_mode_{false};  // Skip tensor loading for huge files
     uint64_t file_size_{0};
+
+    /// Reason Open() most recently failed (empty when the last Open succeeded).
+    std::string last_open_error_;
     
     // Unsupported type tracking (for IDE conversion workflow)
     std::vector<UnsupportedTypeInfo> unsupported_types_;

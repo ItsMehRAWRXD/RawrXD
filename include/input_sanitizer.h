@@ -183,6 +183,29 @@ public:
                           const std::string& baseDir,
                           std::string& out);
 
+    /**
+     * @brief Validate a model file path for a FILESYSTEM consumer.
+     *
+     * Use this for user-selected model files (e.g. GGUFLoader::Open), where the
+     * path is handed to std::ifstream / CreateFile and NOT to a shell.
+     *
+     * Why not reuse resolvePath(): that policy is shell-oriented and rejects
+     * '~', '$env', '${' and '::'. Those tokens have no expansion meaning for a
+     * filesystem call, so applying them here would refuse legitimate
+     * user-selected model locations - a functional regression with no security
+     * gain. This validator applies only the checks that are meaningful for a
+     * filesystem consumer:
+     *   - no NUL / control characters (path smuggling into lower layers)
+     *   - no overlong path (truncation + resource abuse)
+     *   - extension allow-list (never load an arbitrary executable as a model)
+     *   - exists, is a regular file, and is within the size cap
+     *
+     * For sandboxed usage where containment matters, use
+     * resolveModelPath(input, baseDir, out) instead, which adds directory
+     * containment and the full traversal/escape checks.
+     */
+    bool validateModelFilePath(const std::string& input, std::string& out);
+
     /// True when @p path is equal to or inside @p root (both normalized).
     static bool isWithinRoot(const std::string& path, const std::string& root);
 

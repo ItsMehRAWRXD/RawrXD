@@ -1,6 +1,8 @@
 #include "gguf_loader.h"
 #include "gguf_vocab_resolver.h"
+#include "input_sanitizer.h"   // production hardening: model-path validation
 #include <algorithm>
+#include <limits>
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
@@ -46,10 +48,32 @@ GGUFLoader::~GGUFLoader() {
 }
 
 bool GGUFLoader::Open(const std::string& filepath) {
-    filepath_ = filepath;
-    file_.open(filepath, std::ios::binary);
+    // ---- Production hardening: validate the path BEFORE touching the fs ----
+    // The path arrives from a user file-picker, a config file or a CLI
+    // argument, so it is externally controlled. Previously it went straight to
+    // std::ifstream with no checks at all. Now it passes the model-file policy
+    // (NUL/control smuggling, length, extension allow-list, regular file, size
+    // cap) and a rejected path never reaches the filesystem layer.
+    //
+    // Shell-oriented escapes are intentionally NOT rejected here: this path is
+    // consumed by ifstream, which does not expand '~' or '$VAR', so those
+    // checks would refuse legitimate user-selected model locations.
+    std::string validatedPath;
+    if (!RawrXD::Security::InputSanitizer::instance().validateModelFilePath(filepath, validatedPath)) {
+        last_open_error_ = std::string("model path rejected (")
+                         + std::string(RawrXD::Security::ToString(
+                               RawrXD::Security::InputSanitizer::instance().lastResult()))
+                         + "): "
+                         + RawrXD::Security::InputSanitizer::instance().lastError();
+        return false;   // fail-closed: no file is opened, no state mutated
+    }
+    last_open_error_.clear();
+
+    filepath_ = validatedPath;
+    file_.open(filepath_, std::ios::binary);
     if (!file_.is_open()) {
         // Return false instead of throwing to allow graceful fallback
+        last_open_error_ = "cannot open file: " + filepath_;
         return false;
     }
     
@@ -62,9 +86,11 @@ bool GGUFLoader::Open(const std::string& filepath) {
             Close();
             return false;
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
+        // Clean up, then rethrow unchanged: the caller needs the original
+        // exception (it carries the specific parse failure), not a new one.
         Close();
-        throw;  // Re-throw after cleanup
+        throw;
     }
     
     return true;
@@ -202,15 +228,34 @@ bool GGUFLoader::ParseMetadata() {
             if (!ReadValue(uint64_val)) throw std::runtime_error("Failed to read uint64 for key: " + key);
             metadata_.kv_pairs[key] = std::to_string(uint64_val);
             
-            // Parse important numeric metadata
+            // Parse important numeric metadata.
+            //
+            // These metadata fields are uint32_t, but the value comes straight
+            // from a file-controlled uint64. A direct assignment SILENTLY
+            // TRUNCATES: a file declaring embedding_length = 0x100000008 would
+            // be read as 8, so the loader would then size buffers and index
+            // tensors using a value that disagrees with what the file claims.
+            // Reject out-of-range values instead of narrowing.
+            //
+            // The ceiling is the same for all four fields: the largest value a
+            // uint32_t can hold, which is already absurd for these quantities.
+            constexpr uint64_t kMaxMetadataValue =
+                static_cast<uint64_t>(std::numeric_limits<uint32_t>::max());
+
+            if (uint64_val > kMaxMetadataValue) {
+                throw std::runtime_error(
+                    "GGUF metadata '" + key + "'=" + std::to_string(uint64_val)
+                    + " exceeds the uint32 range; refusing to truncate");
+            }
+
             if (key == "llama.block_count") {
-                metadata_.layer_count = uint64_val;
+                metadata_.layer_count = static_cast<uint32_t>(uint64_val);
             } else if (key == "llama.context_length") {
-                metadata_.context_length = uint64_val;
+                metadata_.context_length = static_cast<uint32_t>(uint64_val);
             } else if (key == "llama.embedding_length") {
-                metadata_.embedding_dim = uint64_val;
+                metadata_.embedding_dim = static_cast<uint32_t>(uint64_val);
             } else if (key == "llama.vocab_size") {
-                metadata_.vocab_size = uint64_val;
+                metadata_.vocab_size = static_cast<uint32_t>(uint64_val);
             }
         } else if (value_type == 11) {  // int64
             int64_t int64_val;

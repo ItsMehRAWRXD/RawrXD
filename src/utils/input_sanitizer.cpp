@@ -461,6 +461,82 @@ bool InputSanitizer::isWithinRoot(const std::string& path, const std::string& ro
     return p.compare(0, r.size(), r) == 0 && p[r.size()] == '/';
 }
 
+bool InputSanitizer::validateModelFilePath(const std::string& input, std::string& out)
+{
+    // See the header note: this is the FILESYSTEM-consumer policy, applied
+    // before a model path reaches std::ifstream. Shell-oriented escape checks
+    // (from resolvePath) are deliberately NOT applied here, because a
+    // filesystem call performs no expansion of '~', '$VAR' or '::'.
+
+    if (input.empty()) {
+        setResult(ValidationResult::Empty, "model path: empty");
+        return false;
+    }
+    if (input.size() > m_cfg.maxPathLength) {
+        setResult(ValidationResult::TooLong,
+                  "model path: " + std::to_string(input.size()) + " bytes exceeds limit "
+                  + std::to_string(m_cfg.maxPathLength));
+        return false;
+    }
+    if (containsNullBytes(input)) {
+        setResult(ValidationResult::NullByte, "model path: embedded NUL byte");
+        return false;
+    }
+    if (containsControlChars(input)) {
+        setResult(ValidationResult::ControlChar,
+                  "model path: control character (path smuggling / log forging)");
+        return false;
+    }
+
+    fs::path p;
+    try {
+        p = fs::u8path(input);
+        if (p.empty()) {
+            setResult(ValidationResult::InvalidChars, "model path: unrepresentable");
+            return false;
+        }
+    } catch (const std::exception& e) {
+        setResult(ValidationResult::InvalidChars, std::string("model path: ") + e.what());
+        return false;
+    }
+
+    if (p.is_relative()) {
+        setResult(ValidationResult::NotAllowed,
+                  "model path: relative paths are not accepted for models");
+        return false;
+    }
+    if (!extensionAllowed(p, m_cfg.allowedModelExtensions)) {
+        setResult(ValidationResult::BadExtension,
+                  "model path: extension '" + pathToString(p.extension()) + "' not allowed");
+        return false;
+    }
+
+    std::error_code ec;
+    if (!fs::exists(p, ec) || ec) {
+        setResult(ValidationResult::IoError, "model path: file not found '" + input + "'");
+        return false;
+    }
+    if (fs::is_directory(p, ec)) {
+        setResult(ValidationResult::InvalidChars, "model path: path is a directory");
+        return false;
+    }
+    const auto sz = fs::file_size(p, ec);
+    if (ec) {
+        setResult(ValidationResult::IoError, "model path: cannot stat '" + input + "'");
+        return false;
+    }
+    if (sz > m_cfg.maxModelFileSize) {
+        setResult(ValidationResult::FileTooLarge,
+                  "model path: " + std::to_string(sz) + " bytes exceeds cap "
+                  + std::to_string(m_cfg.maxModelFileSize));
+        return false;
+    }
+
+    out = pathToString(p.lexically_normal());
+    setResult(ValidationResult::Ok, "");
+    return true;
+}
+
 bool InputSanitizer::isWithinAnyRoot(const std::string& path,
                                      const std::vector<std::string>& roots)
 {
