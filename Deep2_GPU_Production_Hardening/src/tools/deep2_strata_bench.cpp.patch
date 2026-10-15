@@ -1,0 +1,88 @@
+// ============================================================================
+// deep2_strata_bench.cpp — Enhanced Receipt Output (P0-A, P0-C, P1)
+// ============================================================================
+
+// In main() after bench execution, add to receipt printing:
+
+const auto& cs = vk.GetGpuCounters();
+
+// S04_BACKEND — Extended with real GPU timing
+std::printf("S04_BACKEND upload_bytes=%llu download_bytes=%llu submits=%llu waits=%llu "
+            "gpu_ms=%.1f host_wait_ms=%.1f submit_cpu_ms=%.1f\n",
+            (unsigned long long)cs.upload_bytes,
+            (unsigned long long)cs.download_bytes,
+            (unsigned long long)cs.submits,
+            (unsigned long long)cs.waits,
+            cs.gpu_ms,
+            cs.host_wait_ms,
+            cs.submit_cpu_ms);
+
+// Legacy (keep for compatibility)
+std::printf("S04_BACKEND_LEGACY kernel_ms=%.1f wait_ms=%.1f submit_ms=%.1f\n",
+            cs.kernel_ms, cs.wait_ms, cs.submit_ms);
+
+// S01_EXPERT_LEDGER — Real observations
+const Strata::ExpertResidencyLedger::Summary es = ex.StrataExpertSummary();
+std::printf("S01_EXPERT_LEDGER observations=%llu hits=%llu misses=%llu evictions=%llu "
+            "prefetch_submits=%llu prefetch_hits=%llu hit_rate=%.4f distinct_experts=%llu\n",
+            (unsigned long long)es.observations,
+            (unsigned long long)es.hits,
+            (unsigned long long)es.misses,
+            (unsigned long long)es.evictions,
+            (unsigned long long)es.prefetch_submits,
+            (unsigned long long)es.prefetch_hits,
+            es.hit_rate,
+            (unsigned long long)es.distinct_experts);
+
+// S02_VRAM_CACHE — Extended with total residency
+std::printf("S02_VRAM_CACHE hits=%llu misses=%llu evictions=%llu prefetches=%llu prefetch_hits=%llu "
+            "hit_rate=%.4f device_bytes_live=%llu device_bytes_peak=%llu "
+            "total_device_weight_bytes=%llu total_device_weight_peak=%llu\n",
+            (unsigned long long)cs.weight_cache_hits,
+            (unsigned long long)cs.weight_cache_misses,
+            (unsigned long long)cs.weight_cache_evictions,
+            (unsigned long long)cs.weight_prefetches,
+            (unsigned long long)cs.weight_prefetch_hits,
+            (cs.weight_cache_hits + cs.weight_cache_misses > 0)
+                ? static_cast<double>(cs.weight_cache_hits) / (cs.weight_cache_hits + cs.weight_cache_misses)
+                : 0.0,
+            (unsigned long long)cs.device_bytes_live,
+            (unsigned long long)cs.device_bytes_peak,
+            (unsigned long long)cs.total_device_weight_bytes,
+            (unsigned long long)cs.total_device_weight_peak);
+
+// JSON receipt (extended)
+std::printf("\"backend\": {\n");
+std::printf("  \"upload_bytes\": %llu,\n", (unsigned long long)cs.upload_bytes);
+std::printf("  \"download_bytes\": %llu,\n", (unsigned long long)cs.download_bytes);
+std::printf("  \"submits\": %llu,\n", (unsigned long long)cs.submits);
+std::printf("  \"waits\": %llu,\n", (unsigned long long)cs.waits);
+std::printf("  \"gpu_ms\": %.1f,\n", cs.gpu_ms);
+std::printf("  \"host_wait_ms\": %.1f,\n", cs.host_wait_ms);
+std::printf("  \"submit_cpu_ms\": %.1f,\n", cs.submit_cpu_ms);
+std::printf("  \"kernel_ms\": %.1f,\n", cs.kernel_ms);
+std::printf("  \"wait_ms\": %.1f,\n", cs.wait_ms);
+std::printf("  \"submit_ms\": %.1f\n", cs.submit_ms);
+std::printf("},\n");
+
+std::printf("\"residency\": {\n");
+std::printf("  \"total_device_weight_bytes\": %llu,\n", (unsigned long long)cs.total_device_weight_bytes);
+std::printf("  \"total_device_weight_peak\": %llu,\n", (unsigned long long)cs.total_device_weight_peak);
+std::printf("  \"cache_device_bytes\": %llu,\n", (unsigned long long)cs.device_bytes_peak);
+std::printf("  \"cache_hits\": %llu,\n", (unsigned long long)cs.weight_cache_hits);
+std::printf("  \"cache_misses\": %llu,\n", (unsigned long long)cs.weight_cache_misses);
+std::printf("  \"cache_evictions\": %llu\n", (unsigned long long)cs.weight_cache_evictions);
+std::printf("},\n");
+
+std::printf("\"expert_ledger\": {\n");
+std::printf("  \"enabled\": true,\n");
+std::printf("  \"policy\": \"lru\",\n");
+std::printf("  \"observations\": %llu,\n", (unsigned long long)es.observations);
+std::printf("  \"hits\": %llu,\n", (unsigned long long)es.hits);
+std::printf("  \"misses\": %llu,\n", (unsigned long long)es.misses);
+std::printf("  \"evictions\": %llu,\n", (unsigned long long)es.evictions);
+std::printf("  \"prefetch_submits\": %llu,\n", (unsigned long long)es.prefetch_submits);
+std::printf("  \"prefetch_hits\": %llu,\n", (unsigned long long)es.prefetch_hits);
+std::printf("  \"hit_rate\": %.4f,\n", es.hit_rate);
+std::printf("  \"distinct_experts\": %llu\n", (unsigned long long)es.distinct_experts);
+std::printf("}\n");

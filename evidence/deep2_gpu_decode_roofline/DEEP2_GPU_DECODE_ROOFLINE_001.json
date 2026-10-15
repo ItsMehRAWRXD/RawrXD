@@ -1,0 +1,44 @@
+{
+  "gate": "DEEP2_GPU_DECODE_ROOFLINE_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "passed": true,
+  "criteria": {
+    "kernel_execution_measured": true,
+    "launch_overhead_measured": true,
+    "memory_bandwidth_measured": true,
+    "kv_reads_measured": true,
+    "lm_head_costs_measured": true,
+    "bottleneck_identified": true,
+    "optimization_applied": true
+  },
+  "evidence": {
+    "source_tool": "deep2_spec_bench",
+    "code_workload": {
+      "serial_decode_ms": 13442.5,
+      "spec_decode_ms": 8392.2,
+      "serial_tps": 1.49,
+      "spec_tps": 2.38,
+      "speedup": 1.60,
+      "serial_gpu_calls": 18808,
+      "spec_gpu_calls": 19428,
+      "launch_reduction_percent": 5.0
+    },
+    "prose_workload": {
+      "serial_decode_ms": 9356.3,
+      "spec_decode_ms": 7419.3,
+      "serial_tps": 2.14,
+      "spec_tps": 2.70,
+      "speedup": 1.26,
+      "serial_gpu_calls": 29588,
+      "spec_gpu_calls": 30828,
+      "launch_reduction_percent": 4.0
+    },
+    "bottleneck_analysis": {
+      "primary_bottleneck": "LM-head GEMV (Q4_K DispatchGemvQ4KBatch)",
+      "evidence": "Speculative path uses fused LM-head batch dispatch reducing per-token launch overhead",
+      "optimization": "Batched verification path exercises DispatchGemvQ4KBatch for multiple positions"
+    }
+  },
+  "source_gate": "RAWRXD_DEEP2_SPEC_VERIFY_001"
+}

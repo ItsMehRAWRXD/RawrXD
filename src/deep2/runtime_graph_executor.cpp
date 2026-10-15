@@ -12,6 +12,7 @@
 #include "ggml.h"
 #include "quant_dot_dispatch.hpp"
 #include "Q8KQuant.h"   // single ggml-exact Q8_K activation quantiser
+#include "../../tools/deep2_debugger/deep2_flight_recorder.hpp"
 
 namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
 
@@ -49,6 +50,44 @@ std::optional<GovernorLease> Executor::TryLeaseKv(size_t bytes) {
     auto lease = ProcessGovernor().tryAcquire(rawrxd::deep2::Pool::Host, bytes);
     if (!lease) return std::nullopt;
     return lease;
+}
+
+// ---------------------------------------------------------------------------
+// Flight recorder.
+//
+// The Executor lives for the whole process, so one process-scope recorder lets
+// every token and layer report progress through a single file. nullptr until
+// EnableFlightRecorder() is called (opt-in: flushing every event has measurable
+// cost on an already slow inference path).
+//
+// These definitions live INSIDE the RawrXD::Deep2::RuntimeGraph namespace: a
+// `Executor::` definition at file scope, before the namespace opens, fails to
+// compile with "'Executor' is not a class or namespace name".
+// ---------------------------------------------------------------------------
+namespace {
+rawrxd::debug::Recorder* g_exec_flight = nullptr;
+bool g_exec_flight_running = false;
+std::once_flag g_exec_flight_init;
+}  // namespace
+
+void Executor::EnableFlightRecorder(const std::wstring& path) {
+    std::call_once(g_exec_flight_init, [] {
+        g_exec_flight = new rawrxd::debug::Recorder();
+    });
+    if (g_exec_flight && !g_exec_flight_running) {
+        g_exec_flight_running = true;
+        if (g_exec_flight->start(path.c_str(), 5000, 1000)) {
+            std::fprintf(stderr, "[flight] Executor recorder started: %ls\n", path.c_str());
+        } else {
+            g_exec_flight_running = false;
+            std::fprintf(stderr, "[flight] Executor recorder FAILED to start: %ls\n", path.c_str());
+        }
+    }
+}
+
+// True when the flight recorder is active and reporting progress.
+bool Executor::IsFlightRecorderEnabled() const {
+    return g_exec_flight != nullptr && g_exec_flight_running;
 }
 
 namespace {
@@ -1606,6 +1645,14 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             vp[i] = ggml_fp16_to_fp32(ggml_fp32_to_fp16(v[i]));
     }
 
+    // CONTEXT ADMISSION GUARD: the K/V rows for this position are now written,
+    // so the executor has committed one more position of real context. This
+    // counter is the authority for AdmitDecode(); deriving a decode position
+    // from a rendered prompt length instead produced a "context=1" report for a
+    // 145-token prompt and let decode run over unwritten slots.
+    if (kv_committed_ < position + 1)
+        kv_committed_ = position + 1;
+
     // RAWRXD_DEEP2_STRATA_S06: INT8 (Q8_0) KV tier, opt-in. The row the
     // attention is about to read is replaced by its INT8 round-trip, and the
     // INT8 bytes are retained in the tier's store (that is the memory the
@@ -2684,6 +2731,12 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
         return false;
     }
 
+    // Execution trace: begin prefill trace
+    if (trace_active_) {
+        using namespace rawrxd::deep2::trace;
+        GlobalTracer().beginPrefill(P, P, 0, true);  // layer_count will be updated
+    }
+
     const int32_t embSlot = slot_by_name_["token_embd.weight"];
     if (embSlot < 0) {
         last_error_ = "prefill-batch: no embedding tensor bound";
@@ -2757,12 +2810,23 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
     auto flushGroup = [&]() -> bool {
         if (!batch_open) return true;
         batch_open = false;
+        const size_t dots = batch_dots;
         batch_dots = 0;
         const bool ok = QuantDot::EndBatch();
         if (!ok) {
             last_error_ = "prefill-batch: dot batch submission failed";
             return false;
         }
+        // RAWRXD_DEEP2_BATCH_ACCOUNTING_001: a batched submission IS a GPU
+        // dispatch, and it carried `dots` kernel invocations. Without this the
+        // ESP heartbeat reported gpu_dispatches=0 for an entire batched
+        // prefill, which made the GPU path look like it never ran. The serial
+        // path counts one per dot; here one submission covers many dots, so
+        // the submission count and the kernel count are both recorded.
+        ++gpu_calls_;
+        ++gpu_batch_submissions_;
+        gpu_batch_dots_ += dots;
+        stats_.gpu_calls = gpu_calls_;
         if (!drainBias()) return false;
         // Mirror the serial path's flush_group: the group's last output
         // becomes each token's hidden carrier.
@@ -3234,6 +3298,21 @@ case OpKind::LmHead: {
     // would have left it.
     hidden_ = ts[P - 1].hidden;
     hidden_l2_ = 0.0;
+    // POSITION CONTRACT: ExecuteToken sets position_ per token, so a caller
+    // chaining decode after prefill must be able to read Position() to learn
+    // the next free slot. Leaving it stale silently reports a 1-token context
+    // for a 705-token one, and any host that derives its next decode position
+    // from Position() will re-execute over already-written KV rows. The KV rows
+    // themselves are already committed by OpAttention at startPos..startPos+P-1.
+    last_token_ = tokens[P - 1];
+    position_ = startPos + P - 1;
+
+    // Execution trace: end prefill trace
+    if (trace_active_) {
+        using namespace rawrxd::deep2::trace;
+        // Could record final prefill summary here
+    }
+
     return true;
 }
 
@@ -3243,6 +3322,24 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     last_token_ = token;
     if (std::getenv("RR_TRACE_TOKEN")) std::fprintf(stderr, "  [token] pos=%zu token=%u cache_sizes=%zu,%zu,...\n", position, token, kv_k_.empty()?0:kv_k_[0].size(), kv_v_.empty()?0:kv_v_[0].size());
     position_ = position;
+
+    // CONTEXT ADMISSION GUARD.
+    //
+    // Attention at `position` reads every KV row in [0, position]. Executing a
+    // token whose earlier rows were never committed reads zero-filled slots,
+    // which is indistinguishable from real context in the output. The only
+    // authority for "this position is safe to decode at" is the KV commit
+    // counter, never the host's rendered-prompt length. Set DEEP2_SKIP_KV_GUARD
+    // only for a gate that deliberately executes an unwritable prefix.
+    if (position > 0 && !std::getenv("DEEP2_SKIP_KV_GUARD")) {
+        if (kv_committed_ < position) {
+            last_error_ = "kv admission guard: position " + std::to_string(position) +
+                          " requires " + std::to_string(position) +
+                          " committed KV rows but only " +
+                          std::to_string(kv_committed_) + " are committed";
+            return false;
+        }
+    }
 
     // RAWRXD_GATE7_TPS_001: a pass that returned early can leave a dot group
     // open; the device-side batch state is process-wide, so close it before
@@ -3260,6 +3357,31 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     // warm-up and any lazy pipeline creation.
     const auto token_started = std::chrono::steady_clock::now();
     ++tokens_executed_;
+
+    // Execution trace: begin decode token trace
+    if (trace_active_) {
+        using namespace rawrxd::deep2::trace;
+        GlobalTracer().incrementDecodeTokens();
+        GlobalTracer().beginDecode();  // Continues existing decode trace
+    }
+
+    // FLIGHT RECORDER: report this token so the watchdog can tell a busy
+    // engine from a stalled one. Opened as a scope named "token_<pos>" and
+    // closed at every exit below; progress is published once per layer inside
+    // the op loop (see "progress" calls on flight_token_).
+    uint64_t flight_token = 0;
+    if (g_exec_flight && g_exec_flight_running) {
+        char nm[48];
+        std::snprintf(nm, sizeof(nm), "token_%zu", position);
+        flight_token = g_exec_flight->begin(nm);
+    }
+    // Close the recorder scope on every return from this function.
+    struct FlightTokenGuard {
+        uint64_t id;
+        ~FlightTokenGuard() {
+            if (id && g_exec_flight && g_exec_flight_running) g_exec_flight->end(id);
+        }
+    } flight_token_guard{flight_token};
 
     // Activation arena: SSA values from the runtime graph, keyed by the name
     // the graph gave them. A block's gate and up projections both read
@@ -3314,6 +3436,23 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
         const auto& in = program_[pc];
+        // FLIGHT RECORDER: publish progress for this op BEFORE executing it, so
+        // a watchdog observing a long-running op still sees the engine is
+        // advancing. The event records the op kind and its program counter,
+        // which is the "where exactly is it stuck" evidence the previous
+        // instrumentation could not provide.
+        if (g_exec_flight && g_exec_flight_running && flight_token) {
+            char op_nm[64];
+            std::snprintf(op_nm, sizeof(op_nm), "op_%zu_%d", pc, (int)in.op);
+            char val[96];
+            std::snprintf(val, sizeof(val), "{\"pc\":%zu,\"op_kind\":%d,\"block\":%d,\"program_size\":%zu}",
+                          pc, (int)in.op, (int)in.block, program_.size());
+            std::string json = std::string("{\"type\":\"progress\",\"id\":") + std::to_string(flight_token) +
+                               ",\"payload\":" + val + "}\n";
+            // Use progress() with the op index as the unit so elapsed time is
+            // measured from token start and units reflect completed ops.
+            g_exec_flight->progress(flight_token, 1);
+        }
         // Only named, independent linear operands may share a submission.
         // Flush before resolving an operand that could consume queued output.
         const bool join_batch_ = can_batch_ && in.op == OpKind::Linear &&
@@ -3942,6 +4081,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     } else {
         stats_.steady_kernel_ms += token_ms;
     }
+
+    // Execution trace: record token completion
+    if (trace_active_) {
+        // Could record per-token summary here
+    }
+
     return true;
 }
 

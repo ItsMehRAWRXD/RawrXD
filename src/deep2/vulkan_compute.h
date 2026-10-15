@@ -168,6 +168,12 @@ public:
     GpuWorkInterval LastInterval() const;
     bool calibratedTimestampsAvailable() const noexcept { return calibratedAvailable_; }
 
+    // Flight recorder counter for GPU dispatches
+    std::atomic<uint64_t> gpu_dispatch_count_{0};
+    uint64_t get_dispatch_count() const noexcept { return gpu_dispatch_count_.load(std::memory_order_relaxed); }
+    void reset_dispatch_count() noexcept { gpu_dispatch_count_.store(0, std::memory_order_relaxed); }
+    void increment_dispatch_count(uint64_t n = 1) noexcept { gpu_dispatch_count_.fetch_add(n, std::memory_order_relaxed); }
+
     bool ApplyWeightWindowPolicy(size_t maxWeightBytes, size_t budgetBytes,
                                  uint32_t slotOverride, size_t arenaBytes);
     bool ReserveDecodeScratch();

@@ -9,6 +9,7 @@
 // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
 
 #include "Deep2Engine.h"
+#include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
 #include "AttnCertProbe.hpp"
 #include "CanonicalTokenizer.hpp"
@@ -66,6 +67,7 @@
 #ifdef __GNUC__
 #include <cpuid.h>
 #endif
+#include "deep2_flight_recorder.hpp"
 #include "gguf_loader.h"
 
 #ifdef RAWRXD_DEEP2_CERT
@@ -1596,6 +1598,61 @@ bool Deep2Engine::initialize(const EngineConfig& cfg)
         }
     }
 
+    // Initialize KV cache with correct GQA dimensions
+    if (config.useKVCache)
+    {
+        kvCache = std::make_unique<KVCache>();
+        KVCacheConfig kvConfig;
+        kvConfig.numLayers = config.numLayers;
+        kvConfig.maxSeqLen = config.maxSeqLen;
+        kvConfig.numHeads = config.numKVHeads > 0 ? config.numKVHeads : config.numHeads;
+        kvConfig.headDim = config.headDim > 0 ? config.headDim : (config.hiddenDim / config.numHeads);
+
+        printf("[KVCache] Allocating: layers=%zu seq=%zu kv_heads=%zu headDim=%zu\n", kvConfig.numLayers,
+               kvConfig.maxSeqLen, kvConfig.numHeads, kvConfig.headDim);
+
+        if (!kvCache->initialize(kvConfig))
+        {
+            printf("[Deep2Engine] ERROR: Failed to initialize KV cache\n");
+            return false;
+        }
+    }
+
+    // Initialize Deep2 Flight Recorder
+    flight_recorder_ = std::make_unique<rawrxd::debug::Recorder>();
+
+    // EngineConfig::modelPath is a FIXED-SIZE narrow char array (char[512],
+    // kept that way for C API compatibility) - NOT a std::string, so it has no
+    // begin()/end().
+    //
+    // Two fixes are load-bearing here:
+    //  1. Bounded conversion. The array is always 512 bytes but the string it
+    //     holds may be shorter, so the length is taken by scanning up to the
+    //     array bound. Reading all 512 bytes would splice uninitialized bytes
+    //     of the caller's stack into the log path.
+    //  2. Narrow copy for logging. The recorder wants a wide path, but Logf_ is
+    //     narrow-only (vfprintf), so the log line uses the narrow copy. Passing
+    //     the wide buffer to %s would silently print garbage.
+    size_t modelPathLen = 0;
+    while (modelPathLen < sizeof(config.modelPath)
+           && config.modelPath[modelPathLen] != '\0') {
+        ++modelPathLen;
+    }
+    const std::string modelPathNarrow(config.modelPath, modelPathLen);
+    const std::wstring flightPathWide(modelPathNarrow.begin(), modelPathNarrow.end());
+
+    flight_log_path_ = flightPathWide + L"_flight.jsonl";
+    const std::string flightLogPathNarrow = modelPathNarrow + "_flight.jsonl";
+
+    if (flight_recorder_->start(flight_log_path_.c_str(), 5000, 1000))
+    {
+        Logf_("[flight] Recorder started: %s\n", flightLogPathNarrow.c_str());
+    }
+    else
+    {
+        Logf_("[flight] WARNING: Failed to start flight recorder\n");
+    }
+
     // Allocate buffers
     if (!allocateBuffers())
     {
@@ -1815,6 +1872,38 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             }
         }
         // #endregion
+    }
+
+    // ─── DEEP2_MODEL_FIT_AUTHORITY_001: admission before any allocation ─────
+    // The fit estimator runs FIRST, before a single weight is bound or a buffer
+    // allocated. A model that cannot be placed is refused here rather than
+    // being loaded and then failing (or silently falling back) mid-inference.
+    //
+    // Fail-closed: if the estimator rejects, loadModel() returns false and no
+    // GPU/host allocation is made. This replaces the previous behaviour where
+    // the model was loaded and the executor re-chose a backend from
+    // environment variables.
+    {
+        probeHostHardware(ggufPath);
+        const rawrxd::ModelFitPlan plan = estimateModelFit(ggufPath, config.maxSeqLen);
+        fitPlan_ = plan;
+        fitPlanValid_ = true;
+        if (!plan.accepted)
+        {
+            fitRejectReason_ = plan.rejectReason.empty()
+                                   ? "model-fit estimator rejected placement"
+                                   : plan.rejectReason;
+            printf("[Deep2Engine] MODEL_FIT_REJECTED model=%s reason=%s\n",
+                   ggufPath.c_str(), fitRejectReason_.c_str());
+            plan.emit(stderr);
+            return false;
+        }
+        printf("[Deep2Engine] MODEL_FIT_ADMITTED model=%s mode=%s devices=%zu "
+               "kv_per_token=%llu max_ctx_est=%zu\n",
+               ggufPath.c_str(), rawrxd::FitLaneName(plan.lane),
+               plan.devices.size(),
+               (unsigned long long)plan.kvBytesPerToken,
+               (size_t)plan.maxContextEstimated);
     }
 
     // ── Ollama model detection and resolution ──────────────────────────
@@ -2707,6 +2796,48 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     "%zu approximate SSM layers enabled\n",
                     ssmLayers);
         }
+    }
+
+    // ─── DEEP2_MODEL_FIT_AUTHORITY_001: bind the admitted plan ─────────────
+    // Now that the real geometry (layer count, KV heads, headDim) is bound, the
+    // plan is committed so the KV arena is sized from the KV budget the
+    // estimator actually reserved, and the execution lane is fixed by the plan
+    // rather than re-selected from DEEP2_DENSE_EXEC / DEEP2_RESIDENT_FIRST.
+    {
+        const rawrxd::ModelFitPlan livePlan =
+            estimateModelFit(ggufPath, config.maxSeqLen);
+        if (livePlan.accepted)
+        {
+            fitPlan_ = livePlan;
+            fitPlanValid_ = true;
+            commitFitPlan(livePlan);
+        }
+        else
+        {
+            // The estimator became stricter with the real geometry bound.
+            // Refuse rather than allocate an arena we already know is too small.
+            fitRejectReason_ = livePlan.rejectReason.empty()
+                                   ? "model-fit estimator rejected after geometry bind"
+                                   : livePlan.rejectReason;
+            printf("[Deep2Engine] MODEL_FIT_REJECTED (post-bind) model=%s reason=%s\n",
+                   ggufPath.c_str(), fitRejectReason_.c_str());
+            fitPlan_ = livePlan;
+            fitPlanValid_ = true;
+            return false;
+        }
+
+        // Seal the session model identity used by the KV-provenance gate.
+        sessionModelId_.id = rawrxd::ExecutionAuthority::Instance().NewModelInstance();
+        sessionModelId_.modelPath = ggufPath;
+        sessionModelId_.layerCount = modelWeights.numLayers;
+        sessionModelId_.hiddenDim = modelWeights.hiddenDim;
+        sessionModelId_.vocabSize = modelWeights.vocabSize;
+        sessionModelId_.numKVHeads = modelWeights.numKVHeads;
+        sessionModelId_.headDim = modelWeights.headDim;
+        sessionModelId_.ropeTheta = modelWeights.ropeTheta;
+        sessionModelId_.ropeScaling = modelWeights.ropeScaling;
+        kvProvenanceValid_ = false;   // no committed prefix yet
+        kvProvenanceTokens_.clear();
     }
 
     // Re-allocate buffers with correct dimensions
@@ -5438,6 +5569,15 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
+    // ============================================================================
+    // Deep2 Flight Recorder: Prefill instrumentation
+    // ============================================================================
+    uint64_t prefill_scope_id = 0;
+    if (flight_recorder_)
+    {
+        prefill_scope_id = flight_recorder_->begin("prefill");
+    }
+
     // Process prompt tokens (prefill)
     for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
     {
@@ -5578,6 +5718,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
 
     auto prefillEnd = std::chrono::high_resolution_clock::now();
     const double prefillMs = std::chrono::duration<double, std::milli>(prefillEnd - startTime).count();
+
+    // End prefill flight recorder scope
+    if (flight_recorder_ && prefill_scope_id != 0)
+    {
+        flight_recorder_->end(prefill_scope_id);
+    }
 
     std::printf("[AGENT] PREFILL_DONE prompt_tokens=%zu prefill_ms=%.3f\n", promptLen, prefillMs);
     std::fflush(stdout);
@@ -6332,9 +6478,22 @@ std::string Deep2Engine::generateChat(const std::string& userMessage, const std:
 // ============================================================================
 void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen)
 {
+    // Flight recorder scope for this layer
+    uint64_t layer_scope_id = 0;
+    if (flight_recorder_)
+    {
+        char layer_name[32];
+        std::snprintf(layer_name, sizeof(layer_name), "layer_%zu", layer);
+        layer_scope_id = flight_recorder_->begin(layer_name);
+    }
+
     if (layer >= modelWeights.layers.size())
     {
         memcpy(output, input, config.hiddenDim * sizeof(float));
+        if (flight_recorder_ && layer_scope_id != 0)
+        {
+            flight_recorder_->end(layer_scope_id);
+        }
         return;
     }
 
@@ -6606,6 +6765,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         const uint64_t latUs =
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(layerT1 - layerT0).count());
         LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr, static_cast<uint32_t>(layer), liveSeq, latUs);
+    }
+
+    if (flight_recorder_ && layer_scope_id != 0)
+    {
+        flight_recorder_->end(layer_scope_id);
     }
 }
 

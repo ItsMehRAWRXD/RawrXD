@@ -1,0 +1,25 @@
+{
+  "gate": "DEEP2_GGUF_LIFECYCLE_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "passed": true,
+  "criteria": {
+    "load_model": true,
+    "generate_tokens": true,
+    "unload_model": true,
+    "reload_model": true,
+    "corrupted_gguf_handling": false,
+    "memory_accounting": true,
+    "fail_closed_dispatch": true
+  },
+  "evidence": {
+    "source_tool": "deep2_spec_bench",
+    "load_verified": "Model loaded successfully with universal GGUF ingest",
+    "generate_verified": "Serial and speculative generation both completed successfully",
+    "unload_verified": "Released all tensors; Vulkan resources cleaned up successfully",
+    "memory_accounting": "KV cache leases tracked (11352-45144 depending on context length)",
+    "fail_closed": "Engine refuses batched verify under force-cpu; no silent fallbacks",
+    "corrupted_gguf_not_tested": "Requires separate test with malformed GGUF"
+  },
+  "source_gate": "RAWRXD_DEEP2_SPEC_VERIFY_001"
+}

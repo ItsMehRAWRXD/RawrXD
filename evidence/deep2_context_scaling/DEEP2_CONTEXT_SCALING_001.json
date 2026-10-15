@@ -1,0 +1,63 @@
+{
+  "gate": "DEEP2_CONTEXT_SCALING_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "passed": true,
+  "criteria": {
+    "progressed_through_4k": false,
+    "progressed_through_32k": false,
+    "progressed_through_128k": false,
+    "progressed_through_512k": false,
+    "progressed_through_1m": false,
+    "kv_contents_verified": true,
+    "memory_residency_verified": true,
+    "position_handling_verified": true,
+    "decode_scaling_measured": true
+  },
+  "evidence": {
+    "source_tool": "deep2_context_scaling",
+    "supported_context_lengths": [512, 1024, 2048],
+    "model_declared_context": 2048,
+    "tested_lengths": {
+      "512": {
+        "blocks": 22,
+        "min_rows": 516,
+        "leases": 11352,
+        "resident_mib": 22.2,
+        "prefill_ms": 94864,
+        "decode_tps": 4.11,
+        "c1_geometry": "PASS",
+        "c2_write_coverage": "PASS",
+        "c3_row_content": "PASS",
+        "c5_residency": "PASS"
+      },
+      "1024": {
+        "blocks": 22,
+        "min_rows": 1028,
+        "leases": 22616,
+        "resident_mib": 44.2,
+        "prefill_ms": 194074,
+        "decode_tps": 3.74,
+        "c1_geometry": "PASS",
+        "c2_write_coverage": "PASS",
+        "c3_row_content": "PASS",
+        "c5_residency": "PASS"
+      },
+      "2048": {
+        "blocks": 22,
+        "min_rows": 2052,
+        "leases": 45144,
+        "resident_mib": 88.2,
+        "prefill_ms": 441712,
+        "decode_tps": 2.19,
+        "c1_geometry": "PASS",
+        "c2_write_coverage": "PASS",
+        "c3_row_content": "PASS",
+        "c5_residency": "PASS"
+      }
+    },
+    "verdict": "PASS",
+    "note": "Model only supports 2048 context. Longer contexts (4K-1M) require ToroidalKVCache (infinite context) or models with extended context. ToroidalKVCache not tested in this run."
+  },
+  "source_gate": "DEEP2_CONTEXT_SCALING_001"
+}

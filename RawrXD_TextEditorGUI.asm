@@ -653,9 +653,12 @@ mr_alloc_plain:
     mov  g_hHeap, rax
     test rax, rax
     jz   mr_null
-    mov  rcx, rax
-    mov  edx, HEAP_ZERO_MEMORY
-    mov  r8, rdx
+    ; [H-28] keep the requested size in R10 before clobbering RDX with the
+    ; flags. The old `mov r8, rdx` read back HEAP_ZERO_MEMORY and so allocated
+    ; a fixed 8-byte block no matter what size was asked for.
+    mov  rcx, rax                    ; hHeap
+    mov  edx, HEAP_ZERO_MEMORY       ; dwFlags
+    mov  r8, r10                     ; size
     call HeapAlloc
     jmp  mr_exit
 mr_null:
@@ -676,10 +679,14 @@ MemFree PROC
     mov  rax, g_hHeap
     test rax, rax
     jz   mf_done
-    mov  rdx, rax
-    mov  rcx, rax
-    xor  r8d, r8d
-    mov  r9, r11
+    ; [H-27] HeapFree(hHeap, dwFlags, lpMem) takes the block in R8, not R9,
+    ; and dwFlags in EDX, not R8. The old code put hHeap in both rcx and rdx,
+    ; zero in r8 and the pointer in r9, so HeapFree always failed with
+    ; ERROR_INVALID_PARAMETER -- and the SetLastError(0) below hid it. Every
+    ; free was a silent no-op.
+    mov  rcx, rax                    ; hHeap
+    xor  edx, edx                    ; dwFlags
+    mov  r8, r11                     ; lpMem
     call HeapFree
     xor  ecx, ecx
     call SetLastError
@@ -922,9 +929,13 @@ BufInsert PROC
 
     test rcx, rcx
     jz   bi_fail
-    test rdx, rdx
-    jz   bi_fail
+    ; [H-31] offset 0 is a valid insertion point -- a fresh document's caret is
+    ; exactly there. The old `test rdx,rdx / jz bi_fail` rejected it, so every
+    ; insert into an empty document silently failed while still returning true.
+    ; Bounds are already enforced by the `off > BUF_LEN` check below.
     test r8, r8
+    jz   bi_fail
+    test r9, r9
     jz   bi_fail
 
     mov  rbx, rcx                      ; buf
@@ -1756,6 +1767,10 @@ EditorInitDocument PROC                       ; (CTX* ctx)
     mov  rax, [r12 + BUF_DATA]
     mov  word ptr [rax], 0
     mov  qword ptr [r12 + BUF_LEN], 0
+    ; [H-29] LinesRebuild takes the CTX* in rcx. It was never set here, so
+    ; rcx still held whatever BufEnsure's call chain left behind -- a wild
+    ; pointer that LinesRebuild happily dereferenced.
+    mov  rcx, rbx
     call LinesRebuild
     test eax, eax
     jz   eid_fail
@@ -2082,35 +2097,57 @@ EditorInsert PROC                               ; (CTX*, const WCHAR* data, QWOR
     test rcx, rcx
     jz   ei_fail
     test r8, r8
-    jz   ei_ok
-    mov  rbx, rcx
-    mov  r12, rdx
-    mov  r13, r8
-    mov  r14d, r9d
+    jz   ei_ok                         ; zero-length insert is a no-op success
 
+    mov  rbx, rcx                      ; ctx
+    mov  r12, rdx                      ; data
+    mov  r13, r8                       ; len
+
+    ; [H-30] The old body ended here: it allocated an undo scratch block,
+    ; discarded the pointer (leaking it) and jumped to `mov eax,1`. Nothing was
+    ; ever inserted, BUF_LEN stayed 0, and every caller saw success. This is the
+    ; real implementation.
+
+    ; clamp the caret so the insert offset is always in range
     mov  rcx, rbx
     call CursorClamp
-    mov  r15, [rbx + CTX_CURSOR]
+    mov  r14, rax                      ; valid caret offset
+
+    mov  r15, [rbx + CTX_BUF]
     test r15, r15
     jz   ei_fail
-    mov  rbp, 0
 
-    ; capture the bytes for undo before mutating the document
-    mov  rcx, r13               ; 64-bit: document offsets are qwords
-    add  rcx, 1                 ; + NUL terminator
-    shl  rcx, 1                 ; *2 -> bytes (UTF-16)
-    call MemAlloc
-    test rax, rax
+    ; BufInsert performs its own capacity growth and NUL-invariant fix
+    mov  rcx, r15                      ; buf
+    mov  rdx, r14                      ; off
+    mov  r8, r12                       ; src
+    mov  r9, r13                       ; len
+    call BufInsert
+    test eax, eax
     jz   ei_fail
-    mov  rbx, 0                        ; placeholder (kept simple: undo data copy below)
-    jmp  ei_real
-ei_real:
+
+    ; the caret advances past the inserted run
+    add  r14, r13
+    mov  rdx, [rbx + CTX_CURSOR]
+    test rdx, rdx
+    jz   ei_rebuild
+    mov  [rdx + CUR_OFF], r14
+
+ei_rebuild:
+    ; keep the line index consistent with the new buffer contents
+    mov  rcx, rbx
+    call LinesRebuild
+    test eax, eax
+    jz   ei_fail
+
     mov  eax, 1
     jmp  ei_exit
+
 ei_fail:
     xor eax, eax
+    jmp  ei_exit
 ei_ok:
-    mov  eax, 1
+    mov eax, 1
 ei_exit:
     add  rsp, 64
     pop  r15

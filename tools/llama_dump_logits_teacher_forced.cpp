@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     llama_context_params ctx_params = llama_context_default_params();
     ctx_params.n_ctx = 1024;
     ctx_params.n_batch = 1024;
-    ctx_params.embeddings = false;
+    ctx_params.embeddings = true;  // Enable embeddings to get hidden state
     struct llama_context* ctx = llama_init_from_model(model, ctx_params);
     if (!ctx) {
         std::fprintf(stderr, "Failed to create context\n");
@@ -130,12 +130,12 @@ int main(int argc, char* argv[])
             std::snprintf(path, sizeof(path), "%s/ref_hidden_pos%zu.bin", out_dir, pos);
             f = std::fopen(path, "wb");
             if (f) {
-                size_t hidden_written = std::fwrite(embeddings, sizeof(float), 2048, f);
+                size_t hidden_written = std::fwrite(embeddings, sizeof(float), 3072, f);
                 std::fclose(f);
-                if (hidden_written == 2048) {
+                if (hidden_written == 3072) {
                     std::printf("Wrote ref_hidden_pos%zu.bin (%zu floats)\n", pos, hidden_written);
                 } else {
-                    std::fprintf(stderr, "Incomplete hidden write: %zu/2048\n", hidden_written);
+                    std::fprintf(stderr, "Incomplete hidden write: %zu/3072\n", hidden_written);
                 }
             }
         } else {

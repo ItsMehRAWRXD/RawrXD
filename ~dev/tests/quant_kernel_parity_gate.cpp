@@ -58,10 +58,16 @@ constexpr float kF16Atol = 1e-3f;
 constexpr float kF16Rtol = 2e-4f;
 constexpr float kQ8Atol  = 2e-3f;
 constexpr float kQ8Rtol  = 3e-4f;
+constexpr float kQ4Atol  = 5e-3f;  // Q4_K wider tolerance due to quantization
+constexpr float kQ4Rtol  = 1e-3f;
+constexpr float kQ8KAtol = 1e-3f;
+constexpr float kQ8KRtol = 2e-4f;
 
 const size_t kRowsAll[] = {1, 2, 7, 31};
 const size_t kColsF16[] = {1, 7, 8, 15, 16, 17, 31, 32, 33, 127, 128, 129, 5120};
 const size_t kColsQ8[]  = {1, 7, 8, 15, 16, 17, 31, 32, 33, 63, 64, 65, 5120};
+const size_t kColsQ4[]  = {256, 512, 768, 1024, 2048, 5120}; // multiples of 256 for hot path
+const size_t kColsQ8K[] = {256, 512, 768, 1024, 2048, 5120}; // multiples of 256 for hot path
 
 struct GateCpu {
     bool fma = false, f16c = false, avx2 = false;
@@ -258,6 +264,98 @@ void runQ8Case(size_t rows, size_t cols, Deep2::GEMVKernelFn opt,
 
 } // namespace
 
+// ------------- Q4_K parity: gemv_q4_k_avx2 vs scalar -------------
+// Uses the Q4_K × Q8_K hot path (cols % 256 == 0).
+void runQ4Case(size_t rows, size_t cols, Deep2::GEMVKernelFn opt,
+              size_t caseNo, std::mt19937& rng, KernelMetrics& m) {
+    if (cols % 256 != 0) return; // Only test hot path
+    
+    const size_t blocksPerRow = cols / 256;
+    std::vector<uint8_t> w(rows * blocksPerRow * sizeof(Deep2::block_q4_K));
+    std::uniform_real_distribution<float> dDist(0.001f, 0.1f);
+    std::uniform_real_distribution<float> dminDist(-0.1f, 0.1f);
+    std::uniform_int_distribution<int> scaleDist(0, 63);
+    std::uniform_int_distribution<int> qDist(0, 255);
+    
+    for (size_t r = 0; r < rows; ++r) {
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            auto* blk = reinterpret_cast<Deep2::block_q4_K*>(
+                w.data() + (r * blocksPerRow + b) * sizeof(Deep2::block_q4_K));
+            blk->d = Deep2::f32_to_f16(dDist(rng));
+            blk->dmin = Deep2::f32_to_f16(dminDist(rng));
+            for (int i = 0; i < 12; ++i)
+                blk->scales[i] = (uint8_t)scaleDist(rng);
+            for (int i = 0; i < 128; ++i)
+                blk->qs[i] = (uint8_t)qDist(rng);
+        }
+    }
+    
+    std::vector<float> x(cols);
+    std::uniform_real_distribution<float> xDist(-1.0f, 1.0f);
+    for (auto& v : x) v = xDist(rng);
+    
+    GuardedOutput refOut(rows), optOut(rows);
+    Deep2::gemv_q4_k_scalar(w.data(), x.data(), refOut.y, rows, cols);
+    if (!refOut.guardsIntact()) {
+        m.guardCorruption++;
+        m.parity = false;
+    }
+    opt(w.data(), x.data(), optOut.y, rows, cols);
+    if (!optOut.guardsIntact()) {
+        m.guardCorruption++;
+        m.parity = false;
+    }
+    for (size_t r = 0; r < rows; ++r)
+        compareRow("Q4_K", caseNo, r, optOut.y[r], refOut.y[r],
+                   kQ4Atol, kQ4Rtol, m);
+    m.cases++;
+}
+
+// ------------- Q8_K parity: gemv_q8_k_avx512 vs scalar -------------
+// Uses the Q8_K hot path (cols % 256 == 0).
+void runQ8KCase(size_t rows, size_t cols, Deep2::GEMVKernelFn opt,
+               size_t caseNo, std::mt19937& rng, KernelMetrics& m) {
+    if (cols % 256 != 0) return; // Only test hot path
+    
+    const size_t blocksPerRow = cols / 256;
+    std::vector<uint8_t> w(rows * blocksPerRow * sizeof(Deep2::block_q8_K));
+    std::uniform_real_distribution<float> dDist(0.001f, 0.1f);
+    std::uniform_int_distribution<int> qDist(-128, 127);
+    std::uniform_int_distribution<int> bsumDist(-1000, 1000);
+    
+    for (size_t r = 0; r < rows; ++r) {
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            auto* blk = reinterpret_cast<Deep2::block_q8_K*>(
+                w.data() + (r * blocksPerRow + b) * sizeof(Deep2::block_q8_K));
+            blk->d = Deep2::f32_to_f16(dDist(rng));
+            for (int i = 0; i < 256; ++i)
+                blk->qs[i] = (int8_t)qDist(rng);
+            for (int i = 0; i < 16; ++i)
+                blk->bsums[i] = (int16_t)bsumDist(rng);
+        }
+    }
+    
+    std::vector<float> x(cols);
+    std::uniform_real_distribution<float> xDist(-1.0f, 1.0f);
+    for (auto& v : x) v = xDist(rng);
+    
+    GuardedOutput refOut(rows), optOut(rows);
+    Deep2::gemv_q8_k_scalar(w.data(), x.data(), refOut.y, rows, cols);
+    if (!refOut.guardsIntact()) {
+        m.guardCorruption++;
+        m.parity = false;
+    }
+    opt(w.data(), x.data(), optOut.y, rows, cols);
+    if (!optOut.guardsIntact()) {
+        m.guardCorruption++;
+        m.parity = false;
+    }
+    for (size_t r = 0; r < rows; ++r)
+        compareRow("Q8_K", caseNo, r, optOut.y[r], refOut.y[r],
+                   kQ8KAtol, kQ8KRtol, m);
+    m.cases++;
+}
+
 int main() {
     const GateCpu cpu = probeCpu();
 
@@ -275,14 +373,20 @@ int main() {
     const int tF16 = static_cast<int>(Deep2::GGMLType::GGML_TYPE_F16);
     const int tQ8  = static_cast<int>(Deep2::GGMLType::GGML_TYPE_Q8_0);
     const int tQ5  = static_cast<int>(Deep2::GGMLType::GGML_TYPE_Q5_K);
+    const int tQ4  = static_cast<int>(Deep2::GGMLType::GGML_TYPE_Q4_K);
+    const int tQ8K = static_cast<int>(Deep2::GGMLType::GGML_TYPE_Q8_K);
 
     Deep2::GEMVKernelFn f16fn = reg.GetGEMV(tF16);
     Deep2::GEMVKernelFn q8fn  = reg.GetGEMV(tQ8);
     Deep2::GEMVKernelFn q5fn  = reg.GetGEMV(tQ5);
+    Deep2::GEMVKernelFn q4fn  = reg.GetGEMV(tQ4);
+    Deep2::GEMVKernelFn q8kfn = reg.GetGEMV(tQ8K);
 
     const char* regF16 = Deep2::KernelImplName(tF16, f16fn);
     const char* regQ8  = Deep2::KernelImplName(tQ8, q8fn);
     const char* regQ5  = Deep2::KernelImplName(tQ5, q5fn);
+    const char* regQ4  = Deep2::KernelImplName(tQ4, q4fn);
+    const char* regQ8K = Deep2::KernelImplName(tQ8K, q8kfn);
 
     // Mirror RegisterBuiltins() capability gating exactly.
     const bool hasAVX512 = cpu.avx512f && cpu.avx512bw;
@@ -291,10 +395,14 @@ int main() {
                        : (hasAVX2   && cpu.f16c) ? "avx2"
                        : "scalar";
     const char* expQ8  = hasAVX2 ? "avx2" : "scalar";
+    const char* expQ4  = hasAVX2 ? "avx2" : "scalar";
+    const char* expQ8K = hasAVX512 ? "avx512" : "scalar";
     const char* expQ5  = "scalar";  // fail-closed law until Q5K_AVX2_PARITY_001
 
     const bool implOk = std::strcmp(regF16, expF16) == 0 &&
                         std::strcmp(regQ8,  expQ8)  == 0 &&
+                        std::strcmp(regQ4,  expQ4)  == 0 &&
+                        std::strcmp(regQ8K, expQ8K) == 0 &&
                         std::strcmp(regQ5,  expQ5)  == 0;
 
     // Pointer-identity assertions of the registered kernels.
@@ -304,6 +412,10 @@ int main() {
     else                            ptrOk = ptrOk && (f16fn == Deep2::gemv_f16_scalar);
     if (hasAVX2)                    ptrOk = ptrOk && (q8fn  == Deep2::gemv_q8_0_avx2);
     else                            ptrOk = ptrOk && (q8fn  == Deep2::gemv_q8_0_scalar);
+    if (hasAVX2)                    ptrOk = ptrOk && (q4fn  == Deep2::gemv_q4_k_avx2);
+    else                            ptrOk = ptrOk && (q4fn  == Deep2::gemv_q4_k_scalar);
+    if (hasAVX512)                  ptrOk = ptrOk && (q8kfn == Deep2::gemv_q8_k_avx512);
+    else                            ptrOk = ptrOk && (q8kfn == Deep2::gemv_q8_k_scalar);
     ptrOk = ptrOk && (q5fn == Deep2::gemv_q5_k_scalar);
 
     // Q5_K macro-shield tripwire: while the defective vector body exists,
@@ -341,16 +453,44 @@ int main() {
                 runQ8Case(rows, cols, q8Opt, q8CaseNo++, rng, q8m);
     }
 
-    const size_t totalCases = f16m.cases + q8m.cases;
-    const uint64_t totalNonfinite = f16m.nonfinite() + q8m.nonfinite();
-    const uint64_t totalGuard = f16m.guardCorruption + q8m.guardCorruption;
+    // Q4_K AVX2 parity (hot path only: cols % 256 == 0)
+    Deep2::GEMVKernelFn q4Opt = hasAVX2 ? Deep2::gemv_q4_k_avx2 : nullptr;
+    const char* q4Reason = hasAVX2 ? "" : "NO_AVX2_FMA_CAPABILITY";
+
+    KernelMetrics q4m;
+    size_t q4CaseNo = 0;
+    if (q4Opt) {
+        for (size_t rows : kRowsAll)
+            for (size_t cols : kColsQ4)
+                runQ4Case(rows, cols, q4Opt, q4CaseNo++, rng, q4m);
+    }
+
+    // Q8_K AVX512 parity (hot path only: cols % 256 == 0)
+    Deep2::GEMVKernelFn q8kOpt = (hasAVX512) ? Deep2::gemv_q8_k_avx512 : nullptr;
+    const char* q8kReason = hasAVX512 ? "" : "NO_AVX512_CAPABILITY";
+
+    KernelMetrics q8km;
+    size_t q8kCaseNo = 0;
+    if (q8kOpt) {
+        for (size_t rows : kRowsAll)
+            for (size_t cols : kColsQ8K)
+                runQ8KCase(rows, cols, q8kOpt, q8kCaseNo++, rng, q8km);
+    }
+
+    const size_t totalCases = f16m.cases + q8m.cases + q4m.cases + q8km.cases;
+    const uint64_t totalNonfinite = f16m.nonfinite() + q8m.nonfinite() + q4m.nonfinite() + q8km.nonfinite();
+    const uint64_t totalGuard = f16m.guardCorruption + q8m.guardCorruption + q4m.guardCorruption + q8km.guardCorruption;
 
     const bool f16Pass = !f16Opt ||
         (f16m.parity && f16m.nonfinite() == 0 && f16m.guardCorruption == 0);
     const bool q8Pass = !q8Opt ||
         (q8m.parity && q8m.nonfinite() == 0 && q8m.guardCorruption == 0);
+    const bool q4Pass = !q4Opt ||
+        (q4m.parity && q4m.nonfinite() == 0 && q4m.guardCorruption == 0);
+    const bool q8kPass = !q8kOpt ||
+        (q8km.parity && q8km.nonfinite() == 0 && q8km.guardCorruption == 0);
 
-    const bool pass = f16Pass && q8Pass && implOk && ptrOk &&
+    const bool pass = f16Pass && q8Pass && q4Pass && q8kPass && implOk && ptrOk &&
                       q5Shield && totalNonfinite == 0 && totalGuard == 0;
 
     // ---------------- Machine-readable receipt ----------------
@@ -402,6 +542,42 @@ int main() {
     }
     std::printf("\n");
 
+    if (q4Opt) {
+        std::printf("Q4_K_AVX2_TESTED=1\n");
+        std::printf("Q4_K_AVX2_CASES=%zu\n", q4m.cases);
+        std::printf("Q4_K_AVX2_ATOL=%.6e\n", (double)kQ4Atol);
+        std::printf("Q4_K_AVX2_RTOL=%.6e\n", (double)kQ4Rtol);
+        std::printf("Q4_K_AVX2_MAX_ABS_ERR=%.6e\n", (double)q4m.maxAbs);
+        std::printf("Q4_K_AVX2_MAX_REL_ERR=%.6e\n", (double)q4m.maxRel);
+        std::printf("Q4_K_AVX2_NONFINITE=%llu\n",
+                    (unsigned long long)q4m.nonfinite());
+        std::printf("Q4_K_AVX2_GUARD_CORRUPTION=%llu\n",
+                    (unsigned long long)q4m.guardCorruption);
+        std::printf("Q4_K_AVX2_PARITY=%d\n", q4m.parity ? 1 : 0);
+    } else {
+        std::printf("Q4_K_AVX2_TESTED=0\n");
+        std::printf("Q4_K_REASON=%s\n", q4Reason);
+    }
+    std::printf("\n");
+
+    if (q8kOpt) {
+        std::printf("Q8_K_AVX512_TESTED=1\n");
+        std::printf("Q8_K_AVX512_CASES=%zu\n", q8km.cases);
+        std::printf("Q8_K_AVX512_ATOL=%.6e\n", (double)kQ8KAtol);
+        std::printf("Q8_K_AVX512_RTOL=%.6e\n", (double)kQ8KRtol);
+        std::printf("Q8_K_AVX512_MAX_ABS_ERR=%.6e\n", (double)q8km.maxAbs);
+        std::printf("Q8_K_AVX512_MAX_REL_ERR=%.6e\n", (double)q8km.maxRel);
+        std::printf("Q8_K_AVX512_NONFINITE=%llu\n",
+                    (unsigned long long)q8km.nonfinite());
+        std::printf("Q8_K_AVX512_GUARD_CORRUPTION=%llu\n",
+                    (unsigned long long)q8km.guardCorruption);
+        std::printf("Q8_K_AVX512_PARITY=%d\n", q8km.parity ? 1 : 0);
+    } else {
+        std::printf("Q8_K_AVX512_TESTED=0\n");
+        std::printf("Q8_K_REASON=%s\n", q8kReason);
+    }
+    std::printf("\n");
+
     std::printf("Q5_K_AVX2_TESTED=0\n");
     std::printf("Q5_K_AVX2_REASON=KNOWN_DEFECTIVE_NOT_REGISTERED\n");
     std::printf("Q5_K_AVX2_ALIAS_SHIELD=%d\n", q5Shield ? 1 : 0);
@@ -409,6 +585,8 @@ int main() {
 
     std::printf("REGISTRY_F16_IMPL=%s\n", regF16);
     std::printf("REGISTRY_Q8_0_IMPL=%s\n", regQ8);
+    std::printf("REGISTRY_Q4_K_IMPL=%s\n", regQ4);
+    std::printf("REGISTRY_Q8_K_IMPL=%s\n", regQ8K);
     std::printf("REGISTRY_Q5_K_IMPL=%s\n", regQ5);
     std::printf("REGISTRY_IMPL_MATCH=%d\n", implOk ? 1 : 0);
     std::printf("REGISTRY_PTR_MATCH=%d\n", ptrOk ? 1 : 0);

@@ -99,6 +99,42 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_APP + 100: {
+            // Agent ESP event from recorder thread
+            if (ide) {
+                return ide->handleESPEvent(wParam, lParam);
+            }
+            return 0;
+        }
+        case WM_APP + 101: {
+            // Deep2Bridge token stream (if needed)
+            return 0;
+        }
+        case WM_APP + 102: {
+            // Deep2Bridge generation complete
+            return 0;
+        }
+        case WM_APP + 103: {
+            // Agentic loop progress
+            if (ide) {
+                return ide->handleAgenticLoopProgress(wParam, lParam);
+            }
+            return 0;
+        }
+        case WM_APP + 104: {
+            // Agentic loop tool result
+            if (ide) {
+                return ide->handleAgenticLoopToolResult(wParam, lParam);
+            }
+            return 0;
+        }
+        case WM_APP + 105: {
+            // Agentic loop complete
+            if (ide) {
+                return ide->handleAgenticLoopComplete(wParam, lParam);
+            }
+            return 0;
+        }
         default:
             return DefWindowProcA(hwnd, uMsg, wParam, lParam);
     }

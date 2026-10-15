@@ -191,3 +191,28 @@ evidence/deep2_one_pipeline/pages/
 /_drop/
 _drop/
 build_package_asan/
+
+# ---- 2026-10-15: local machine build trees that slipped past the hyphen rules
+# above (build-*/). These are machine-specific CMake outputs with stale absolute
+# paths, exactly like the trees excluded earlier; they are regenerable and must
+# never be tracked. One of them also carries >100MB generated artifacts. ----
+build_deep2_fix/
+build_ldr_cfg/
+build_production/
+_cert_clean/
+_cert_clean2/
+_cert_clean3/
+_cmake_recovery/
+
+# ---- .NET publish/build outputs for the in-house toolchain (the exe is a
+# 64MB build product; only the C# sources are repo content) ----
+tools/inhouse/bin/
+tools/inhouse/*/bin/
+tools/inhouse/*/obj/
+tools/inhouse/*/*/bin/
+tools/inhouse/*/*/obj/
+
+# ---- vendored upstream reference checkout (nested git repo). The pinned
+# upstream commit is recorded in
+# evidence/deep2_gate_a/ref_llamacpp_commit.txt instead of vendoring it. ----
+/tmp_llama_ref/

@@ -1,0 +1,20 @@
+{
+  "gate": "DEEP2_GGUF_LIFECYCLE_001",
+  "model": "F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "load_passed": true,
+  "generate_passed": true,
+  "cancel_passed": true,
+  "unload_passed": true,
+  "reload_passed": true,
+  "corrupted_rejected": true,
+  "errors": [
+    "EXCEPTION: remove: The process cannot access the file because it is being used by another process.: "F:\rawrxd\evidence\gguf_lifecycle_test4/corrupted_test.gguf""
+  ],
+  "warnings": [
+    "Memory tracking at after load - using engine-reported stats",
+    "Memory tracking at after generate - using engine-reported stats",
+    "Memory tracking at after cancel - using engine-reported stats",
+    "Memory tracking at after unload - using engine-reported stats",
+    "Memory tracking at after reload - using engine-reported stats"
+  ]
+}

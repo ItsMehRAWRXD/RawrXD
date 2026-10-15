@@ -24,6 +24,8 @@
 // ============================================================================
 #pragma once
 
+#include "deep2_execution_trace.hpp"
+
 #include <cstdint>
 #include <cstddef>
 #include <chrono>
@@ -137,11 +139,34 @@ public:
     bool PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos,
                       std::vector<std::vector<float>>* perPosLogits = nullptr);
 
+    // Deep2 flight recorder: opt-in per-token / per-layer progress reporting so
+    // the watchdog can distinguish "long-running kernel" from "stalled".
+    // The path must already exist as a directory.
+    void EnableFlightRecorder(const std::wstring& path);
+    bool IsFlightRecorderEnabled() const;
+
     const std::vector<float>& Logits() const { return logits_; }
     size_t Position() const { return position_; }
     bool Ok() const { return bound_ && !last_error_.empty() == false; }
     const std::string& LastError() const { return last_error_; }
     uint32_t LastToken() const { return last_token_; }
+
+    // ---- Context admission guard --------------------------------------------
+    //
+    // The three counters a host must keep straight, because conflating them is
+    // how a 145-token context ends up reporting "context=1" and then decoding
+    // over KV rows that were never written:
+    //
+    //   rendered_tokens    - tokens the host's prompt renderer produced
+    //   submitted_tokens   - tokens handed to ExecuteToken
+    //   committed_kv_      - tokens whose attention KV rows are written
+    //
+    // Admit() returns false when the requested decode position is not backed by
+    // committed KV. A host must treat that as fatal for the turn, not as a hint.
+    size_t CommittedKvTokens() const { return kv_committed_; }
+    bool AdmitDecode(size_t position) const {
+        return kv_committed_ >= position + 1;
+    }
 
     // Diagnostics for activation health (prefill/decode gates).
     size_t NonFiniteLogits() const { return nonfinite_logits_; }
@@ -157,6 +182,26 @@ public:
     // Force the CPU path for quantised projections (differential testing).
     void SetForceCpu(bool force) { force_cpu_ = force; }
     bool ForceCpu() const { return force_cpu_; }
+
+    // ---- Execution Trace -----------------------------------------------------
+    // Enable/disable execution tracing
+    void SetExecutionTrace(bool enable) { trace_active_ = enable; }
+    bool ExecutionTraceEnabled() const { return trace_active_; }
+    
+    // Get the execution trace (valid after trace is enabled and inference runs)
+    const rawrxd::deep2::trace::ExecutionTrace& GetExecutionTrace() const { 
+        return execution_trace_; 
+    }
+    
+    // Clear the execution trace
+    void ClearExecutionTrace() { 
+        execution_trace_ = rawrxd::deep2::trace::ExecutionTrace{}; 
+    }
+    
+    // Set model fingerprint for KV cache validation
+    void SetModelFingerprint(const std::string& fp) { 
+        execution_trace_.model_fingerprint = fp; 
+    }
 
     // ---- RAWRXD_DEEP2_STRATA_S01..S08: MoE expert residency observation -----
     // The backend VRAM weight cache is observed and steered through this
@@ -387,6 +432,10 @@ private:
 
     // quantised dispatch counters (mirrored into stats_ at bind/first run)
     uint64_t gpu_calls_ = 0, cpu_calls_ = 0;
+    // RAWRXD_DEEP2_BATCH_ACCOUNTING_001: batched-prefill accounting. One
+    // submission can carry many kernel invocations; both are recorded so a
+    // receipt cannot claim "0 dispatches" for a pass that submitted work.
+    uint64_t gpu_batch_submissions_ = 0, gpu_batch_dots_ = 0;
     // Per-executor CPU pin. It MUST stay per-executor: the parity harness binds a
     // second "reference" executor with this set, and the earlier implementation
     // forwarded it to the PROCESS-WIDE QuantDot switch, which the harness then
@@ -443,6 +492,16 @@ private:
     // RAWRXD_DEEP2_SPEC_VERIFY_001: recurrent-state detection for the
     // speculative-verification fail-closed gate. Set once at bind time.
     bool has_ssm_ = false;
+
+    // Execution trace
+    rawrxd::deep2::trace::ExecutionTrace execution_trace_;
+    bool trace_active_ = false;
+    uint64_t trace_request_id_ = 0;
+
+    // Number of attention KV rows actually committed. Incremented only after a
+    // token's attention has written its K/V, never when a token is merely
+    // submitted. See AdmitDecode().
+    size_t kv_committed_ = 0;
 };
 
 } } }  // namespace

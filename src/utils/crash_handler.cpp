@@ -402,9 +402,92 @@ void writeMiniDump(EXCEPTION_POINTERS* ep, const char* name, const char* reason,
     } catch (...) {}
 }
 
+// --------------------------------------------------------------------
+// Stack-overflow capture on a fresh thread
+// --------------------------------------------------------------------
+//
+// Why this exists (established empirically by tests/crash_probe.cpp):
+//
+//   On StackOverflow the faulting thread's stack is exhausted. The SEH filter
+//   IS entered, but _resetstkoflw() does NOT make the CRT/heap usable again -
+//   the very next nested call re-faults and the process dies before any
+//   artifact is written. Verified: filter ran, wrote its first marker, then
+//   died silently; zero .dmp and zero .json produced.
+//
+//   The only reliable way to capture a stack overflow is to do the capture
+//   work on a thread that still has a real stack. This spawns a capture thread
+//   with a large dedicated stack, performs the reporting there, and waits for
+//   it. The exception pointers are passed through for the minidump.
+//
+//   Everything here is allocation-free in the fault path so the thread can be
+//   created from a nearly-dead stack.
+// --------------------------------------------------------------------
+
+/// Fixed-size, allocation-free context for the capture thread.
+struct SehCaptureContext {
+    char name[64];          ///< human-readable exception name
+    char codeHex[32];       ///< hex-encoded exception code
+    EXCEPTION_POINTERS* ep; ///< valid for the duration of the capture
+};
+
+/// Capture thread body: writes the crash record + minidump and returns.
+static DWORD WINAPI sehCaptureThread(LPVOID param)
+{
+    auto* ctx = static_cast<SehCaptureContext*>(param);
+    if (!ctx) return 0;
+
+    CrashHandler& h = CrashHandler::instance();
+
+    // reportFatal() has its own re-entrancy guard and is exception-safe.
+    h.reportFatal("Seh", ctx->name, ctx->codeHex, ctx->name);
+    writeMiniDump(ctx->ep, ctx->name, "seh.stackoverflow", h.dumpDirectory());
+    return 0;
+}
+
+/**
+ * @brief Capture a stack-overflow fault from a fresh-thread stack.
+ *
+ * @return true if the capture thread completed within the timeout.
+ */
+static bool captureStackOverflow(EXCEPTION_POINTERS* ep, const char* name,
+                                  const char* codeHex)
+{
+    // The context must live in static storage: the caller's (dead) stack cannot
+    // hold it safely, and the thread must be able to read it after return.
+    static SehCaptureContext ctx;
+
+    const size_t nlen = ::lstrlenA(name);
+    for (size_t i = 0; i < sizeof(ctx.name) - 1; ++i) {
+        ctx.name[i] = (i < nlen) ? name[i] : '\0';
+    }
+    ctx.name[sizeof(ctx.name) - 1] = '\0';
+
+    const size_t clen = ::lstrlenA(codeHex);
+    for (size_t i = 0; i < sizeof(ctx.codeHex) - 1; ++i) {
+        ctx.codeHex[i] = (i < clen) ? codeHex[i] : '\0';
+    }
+    ctx.codeHex[sizeof(ctx.codeHex) - 1] = '\0';
+
+    ctx.ep = ep;
+
+    // A dedicated, generously sized stack: 1 MB is enough for the ofstream /
+    // filesystem work reportFatal() performs.
+    constexpr SIZE_T kCaptureStackBytes = 1024u * 1024u;
+    const HANDLE hThread = ::CreateThread(
+        nullptr, kCaptureStackBytes, sehCaptureThread, &ctx,
+        STACK_SIZE_PARAM_IS_A_RESERVATION, nullptr);
+
+    if (!hThread) return false;   // cannot capture; caller still terminates
+
+    const DWORD wait = ::WaitForSingleObject(hThread, 15000);
+    ::CloseHandle(hThread);
+    return wait == WAIT_OBJECT_0;
+}
+
 extern "C" LONG WINAPI rawrxdSehFilter(EXCEPTION_POINTERS* ep)
 {
     const DWORD code = ep ? ep->ExceptionRecord->ExceptionCode : 0;
+
     const char* name = "EXCEPTION_UNKNOWN";
     switch (code) {
         case EXCEPTION_ACCESS_VIOLATION:      name = "EXCEPTION_ACCESS_VIOLATION"; break;
@@ -418,9 +501,18 @@ extern "C" LONG WINAPI rawrxdSehFilter(EXCEPTION_POINTERS* ep)
     }
 
     CrashHandler& h = CrashHandler::instance();
-    h.reportFatal("Seh", name, "0x" + std::to_string(code), name);
 
-    // Reuse the standard capture path for the text record as well, then dump.
+    if (code == EXCEPTION_STACK_OVERFLOW) {
+        // A stack overflow kills the faulting thread's stack, so _resetstkoflw()
+        // is NOT sufficient (the next nested call re-faults). Capture on a
+        // fresh-thread stack instead. See captureStackOverflow() for evidence.
+        char codeHex[32] = {};
+        std::snprintf(codeHex, sizeof(codeHex), "0x%lX", static_cast<unsigned long>(code));
+        captureStackOverflow(ep, name, codeHex);
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
+    h.reportFatal("Seh", name, "0x" + std::to_string(code), name);
     writeMiniDump(ep, name, "seh", h.dumpDirectory());
 
     // A crash must terminate: do not let the process limp on with corrupted

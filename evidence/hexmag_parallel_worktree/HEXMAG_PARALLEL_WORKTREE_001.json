@@ -1,0 +1,49 @@
+{
+  "gate": "HEXMAG_PARALLEL_WORKTREE_001",
+  "passed": false,
+  "criteria": {
+    "concurrent_agents_in_worktrees": false,
+    "task_ownership": false,
+    "dependency_scheduling": false,
+    "conflict_resolution": false,
+    "safe_merge_certification": false
+  },
+  "evidence": {
+    "cmake_infrastructure_present": true,
+    "hexmag_masm_sources_exist": true,
+    "hexmag_cert_targets_defined": 3,
+    "test_files_created": 3,
+    "swarm_asm_exists": "src/asm/RawrXD_HexMag_Swarm.asm",
+    "repeat_tuner_asm_exists": "src/asm/RawrXD_HexMag_RepeatTuner.asm",
+    "runtime_controller_exists": "src/core/hexmag_runtime_controller.cpp",
+    "control_plane_exists": "src/core/hexmag_control_plane.cpp",
+    "oracle_binder_exists": "src/core/hexmag_oracle_binder.cpp",
+    "agent_client_exists": false,
+    "finalize_policy_header_only": true,
+    "masm_common_inc_copied": true,
+    "cert_targets_build": {
+      "hexmag_repeat_tuner_cert": "BUILD_PASS",
+      "hexmag_ide_e2e_cert": "NOT_BUILT",
+      "hexmag_runtime_controller_cert": "NOT_BUILT"
+    },
+    "repeat_tuner_cert_run": {
+      "verdict": "FAIL",
+      "pass": 2,
+      "fail": 6,
+      "failing_tests": [
+        "init (returns 0, expected non-zero)",
+        "reset (returns 0, expected 1)",
+        "initial_profile (returns 0, expected 1)",
+        "next_mutation (returns 0, expected 2)",
+        "generation_advances (returns 0, expected 2)",
+        "exhaustion (returns 0, expected 5)"
+      ],
+      "passing_tests": [
+        "weight_delta_zero (returns 0, expected 0)",
+        "fingerprint_changes (returns different values)"
+      ]
+    }
+  },
+  "notes": "CMake infrastructure for HexMag parallel swarm execution is complete with 3 certification targets defined. MASM sources (Swarm, RepeatTuner) and Common.inc are in place. The repeat_tuner_cert target builds successfully but the MASM implementation returns 0 for most functions instead of expected values. The HexMag runtime controller, control plane, and oracle binder C++ sources are available. The hexmag_finalize_policy is header-only (inline). The hexmag_client is not yet implemented. MASM implementation needs to be completed to match the test expectations.",
+  "source_gate": "HEXMAG_PARALLEL_WORKTREE_001"
+}

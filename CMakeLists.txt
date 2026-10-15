@@ -2114,6 +2114,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_fused_lmhead_verify.cpp" AND Vulkan_F
     add_executable(deep2_fused_lmhead_verify
         tests/deep2_fused_lmhead_verify.cpp
         src/deep2/Deep2Engine.cpp
+        # Logf_() is defined exactly once, in Deep2Log.cpp.
+        src/deep2/Deep2Log.cpp
         src/deep2/deep2_speculative.cpp
         "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp"
         src/deep2/QuantKernelRegistry.cpp
@@ -2186,6 +2188,8 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_agentic_loop
         tools/deep2_agentic_loop.cpp
+        # Logf_() is defined exactly once, in Deep2Log.cpp, for this target too.
+        src/deep2/Deep2Log.cpp
         src/deep2/runtime_graph_executor.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
@@ -2580,6 +2584,11 @@ endforeach()
         # same implementation instead of re-listing sources and risking ODR violations.
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            # Deep2Log.cpp defines Logf_() EXACTLY ONCE and is shared by
+            # Deep2Engine.cpp and tools/deep2_agentic_loop.cpp. Every target
+            # that compiles either of those needs this in the link, or Logf_
+            # is unresolved.
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Log.cpp
             # DEEP2_MODEL_FIT_AUTHORITY_001 / DEEP2_EXECUTION_AUTHORITY_001 /
             # DEEP2_BATCHED_PREFILL_001: admission-to-execution contract.
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_ModelFit.cpp

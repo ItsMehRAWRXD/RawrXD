@@ -1,0 +1,44 @@
+// ============================================================================
+// runtime_graph_executor.cpp — MoE Expert Telemetry Integration (P0-C)
+// Connects router expert_ids to Deep2Engine::recordExpertAccess for Strata ledger
+// ============================================================================
+
+// In Executor::OpMoEExecute, after successful expert selection and execution:
+
+bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
+                            const std::vector<uint32_t>& expert_ids,
+                            const std::vector<float>& expert_w,
+                            std::vector<float>& y, std::string& error) {
+    // ... existing implementation ...
+
+    // P0-C: Record expert access for Strata residency telemetry
+    if (engine_ && !expert_ids.empty()) {
+        for (size_t i = 0; i < expert_ids.size(); ++i) {
+            uint32_t expert_id = expert_ids[i];
+            float weight = (i < expert_w.size()) ? expert_w[i] : 1.0f;
+            engine_->recordExpertAccess(static_cast<int>(moe.block), expert_id, weight);
+        }
+    }
+
+    // ... rest of existing implementation ...
+    return true;
+}
+
+// Also in the single-expert path (if any):
+bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
+                            const std::vector<float>& logits,
+                            std::vector<uint32_t>& expert_ids,
+                            std::vector<float>& expert_w) {
+    // ... existing implementation ...
+
+    // P0-C: Record router top-k selections (even before MoEExecute)
+    if (engine_ && !expert_ids.empty()) {
+        for (size_t i = 0; i < expert_ids.size(); ++i) {
+            float weight = (i < expert_w.size()) ? expert_w[i] : 1.0f;
+            // Record with lower weight for router-only observation
+            engine_->recordExpertAccess(static_cast<int>(router.block), expert_ids[i], weight * 0.5f);
+        }
+    }
+
+    return true;
+}

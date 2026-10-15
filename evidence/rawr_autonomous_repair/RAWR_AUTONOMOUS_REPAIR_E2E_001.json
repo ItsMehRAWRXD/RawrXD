@@ -1,0 +1,26 @@
+{
+  "gate": "RAWR_AUTONOMOUS_REPAIR_E2E_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "passed": false,
+  "criteria": {
+    "undisclosed_defect_provided": true,
+    "genuine_model_inspection": false,
+    "model_driven_editing": false,
+    "build_test_execution": false,
+    "self_correction": false,
+    "independent_final_verification": false
+  },
+  "evidence": {
+    "source_tool": "deep2_agentic_loop",
+    "defect_provided": "CMakeLists.txt duplicate MASM subdirectory and Vulkan SDK fallback",
+    "model_capability": "TinyLlama 1.1B - insufficient for complex code repair",
+    "attempt_result": "Model generated generic C++ code instead of performing repair",
+    "infrastructure_verified": true,
+    "agentic_loop_executes": true,
+    "vulkan_gpu_works": true,
+    "speculative_decoding_works": true
+  },
+  "notes": "Autonomous repair challenge infrastructure (deep2_agentic_loop) is functional and executes on GPU with speculative decoding. However, the TinyLlama 1.1B model lacks the capability for complex repository-level code repair. A larger model (e.g., Qwen2.5-Coder 7B+ or Nemotron 30B) would be required for genuine autonomous repair. The gate infrastructure is certified; model capability is the limiting factor.",
+  "source_gate": "RAWR_AUTONOMOUS_REPAIR_E2E_001"
+}

@@ -1,0 +1,49 @@
+GATE_A_NUMERICAL_PARITY_RECEIPT
+============================================================
+model=llama3.2-3b-Q2_K.gguf
+token_count=21 (5 milestone + 16 extended)
+
+Corrections applied:
+  1. Q2_K GEMV: ported ggml_vec_dot_q2_K_q8_K_generic (integer dot)
+  2. Q3_K GEMV: ported ggml_vec_dot_q3_K_q8_K_generic (integer dot)
+  3. Reference stage selection: use stage1 (post-GEMV capture point)
+
+pos= 0 [MILESTONE] logits_cos=0.999871 maxabs=7.5584e-02 argmax=MATCH
+pos= 1 [MILESTONE] logits_cos=0.999885 maxabs=3.2385e-01 argmax=MATCH
+pos= 2 [MILESTONE] logits_cos=0.999159 maxabs=8.0278e-01 argmax=MATCH
+pos= 3 [MILESTONE] logits_cos=0.999615 maxabs=6.0243e-01 argmax=MATCH
+pos= 4 [MILESTONE] logits_cos=0.999425 maxabs=7.0042e-01 argmax=MATCH
+pos= 5 [extended ] logits_cos=0.999526 maxabs=6.9479e-01 argmax=MATCH
+pos= 6 [extended ] logits_cos=0.999203 maxabs=6.0960e-01 argmax=MATCH
+pos= 7 [extended ] logits_cos=0.999284 maxabs=6.5540e-01 argmax=MATCH
+pos= 8 [extended ] logits_cos=0.999472 maxabs=6.4681e-01 argmax=MATCH
+pos= 9 [extended ] logits_cos=0.999263 maxabs=5.7705e-01 argmax=MATCH
+pos=10 [extended ] logits_cos=0.998801 maxabs=6.3203e-01 argmax=MATCH
+pos=11 [extended ] logits_cos=0.999571 maxabs=4.3273e-01 argmax=MATCH
+pos=12 [extended ] logits_cos=0.999231 maxabs=6.6944e-01 argmax=MATCH
+pos=13 [extended ] logits_cos=0.999154 maxabs=6.5943e-01 argmax=MATCH
+pos=14 [extended ] logits_cos=0.999409 maxabs=5.8215e-01 argmax=MATCH
+pos=15 [extended ] logits_cos=0.998796 maxabs=7.2240e-01 argmax=MATCH
+pos=16 [extended ] logits_cos=0.998609 maxabs=6.4569e-01 argmax=MATCH
+pos=17 [extended ] logits_cos=0.999116 maxabs=6.0984e-01 argmax=MATCH
+pos=18 [extended ] logits_cos=0.998367 maxabs=8.4895e-01 argmax=MATCH
+pos=19 [extended ] logits_cos=0.994042 maxabs=1.2536e+00 argmax=MATCH
+pos=20 [extended ] logits_cos=0.998230 maxabs=8.4590e-01 argmax=MATCH
+
+Intermediate tensor parity (pos 9+10, 28 layers, 10 tensors each):
+  253/560 tensors >= 0.999 cosine (45.2%)
+  Q/K/V projections: PASS (Q2_K/Q3_K integer dot ported from llama.cpp)
+  RMSNorm: PASS
+  gate/up: PASS at L0-L19, slight accumulation at L20+
+  ffn_out/swiglu: 0.995-0.999 (accumulated quantization noise)
+
+VERDICT:
+  Argmax agreement (all 21 positions): PASS 21/21
+  Milestone (5 positions) logits cosine: min=0.999159
+  Extended (21 positions) logits cosine: min=0.994042
+  First divergence: pos10 logits cosine=0.998801 (threshold 0.999)
+
+GATE_A_VERDICT=PARTIAL_PASS
+  Q3_K GEMV fix confirmed: Q/K/V projections match llama.cpp exactly.
+  Milestone 5-position cosine: PASS.
+  Extended cosine: remaining FFN-path accumulation at deeper layers.

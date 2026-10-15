@@ -1,0 +1,65 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792030816826}}
+{"type":"RETRY","entry":2,"payload":{"attempt":1,"reason":"budget exhausted","can_continue":false,"timestamp":1792030816826}}
+{"type":"VERIFICATION","entry":3,"payload":{"passed":false,"details":"finished=false,src_fixed=false,exe_ok=false","timestamp":1792030816855}}
+{"type":"LEDGER_END","entry":4,"payload":{"total_entries":4}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792030948375}}
+{"type":"RETRY","entry":2,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792030948376}}
+{"type":"RETRY","entry":3,"payload":{"attempt":2,"reason":"budget exhausted","can_continue":false,"timestamp":1792030948378}}
+{"type":"VERIFICATION","entry":4,"payload":{"passed":false,"details":"finished=false,src_fixed=false,exe_ok=false","timestamp":1792030950457}}
+{"type":"LEDGER_END","entry":5,"payload":{"total_entries":5}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":false,"details":"single-turn static prompt diagnostic","timestamp":1792031815950}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":true,"details":"single-turn static prompt diagnostic","timestamp":1792032110713}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792032380819}}
+{"type":"RETRY","entry":2,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792032461037}}
+{"type":"RETRY","entry":3,"payload":{"attempt":2,"reason":"budget exhausted","can_continue":false,"timestamp":1792032461037}}
+{"type":"VERIFICATION","entry":4,"payload":{"passed":false,"details":"finished=false,src_fixed=false,exe_ok=false","timestamp":1792032463535}}
+{"type":"LEDGER_END","entry":5,"payload":{"total_entries":5}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"bash","target":"\"g++ -o test_off_by_one test_off_by_one.cpp && ./test_off_by_one\"","observation_bytes":91,"exit_code":-1,"valid":false,"timestamp":1792032824667}}
+{"type":"RETRY","entry":2,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792032916195}}
+{"type":"RETRY","entry":3,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792033005995}}
+{"type":"RETRY","entry":4,"payload":{"attempt":2,"reason":"budget exhausted","can_continue":false,"timestamp":1792033005995}}
+{"type":"VERIFICATION","entry":5,"payload":{"passed":false,"details":"finished=false,src_fixed=false,exe_ok=false","timestamp":1792033008441}}
+{"type":"LEDGER_END","entry":6,"payload":{"total_entries":6}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"bash","target":"\"g++ -o test_off_by_one test_off_by_one.cpp && ./test_off_by_one\"","observation_bytes":91,"exit_code":-1,"valid":false,"timestamp":1792033272149}}
+{"type":"RETRY","entry":2,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792033328961}}
+{"type":"RETRY","entry":3,"payload":{"attempt":1,"reason":"budget exhausted","can_continue":false,"timestamp":1792033328961}}
+{"type":"VERIFICATION","entry":4,"payload":{"passed":false,"details":"finished=false,src_fixed=false,exe_ok=false","timestamp":1792033331527}}
+{"type":"LEDGER_END","entry":5,"payload":{"total_entries":5}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":false,"details":"single-turn static prompt diagnostic","timestamp":1792033733292}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":false,"details":"single-turn static prompt diagnostic","timestamp":1792034696884}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":true,"details":"single-turn static prompt diagnostic","timestamp":1792034914374}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"test_off_by_one.cpp","observation_bytes":1543,"exit_code":0,"valid":true,"timestamp":1792035201116}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":true,"details":"single-turn static prompt diagnostic","timestamp":1792039180613}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"VERIFICATION","entry":1,"payload":{"passed":true,"details":"single-turn static prompt diagnostic","timestamp":1792039544974}}
+{"type":"LEDGER_END","entry":2,"payload":{"total_entries":2}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"test_off_by_one.cpp","observation_bytes":1543,"exit_code":0,"valid":true,"timestamp":1792039837011}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"test_off_by_one.cpp","observation_bytes":1543,"exit_code":0,"valid":true,"timestamp":1792043738269}}
+{"type":"RETRY","entry":2,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792044258941}}
+{"type":"RETRY","entry":3,"payload":{"attempt":1,"reason":"budget exhausted","can_continue":false,"timestamp":1792044258941}}
+{"type":"RETRY","entry":4,"payload":{"attempt":4,"reason":"kv_prefix_mismatch@135","can_continue":false,"timestamp":1792044258945}}

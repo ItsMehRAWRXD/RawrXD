@@ -1,0 +1,100 @@
+=== Gate A independent numerical parity (llama.cpp external reference vs Deep2) ===
+model: llama3.2-3b-Q2_K.gguf (sha256 EE1CA8B716933587127F6FEB9FF5A247F1E4460E72DCF6293331B9617F8A8AA2)
+vocab: 128256 logits x f32 = 513024 bytes per position
+cosine gate >= 0.999 | argmax 100% | max-abs calibrated bound 5% of |logit| scale
+
+--- dataset: milestone (5 certification positions) ---
+[milestone/cpu] argmax agreement: 5/5
+[milestone/cpu] worst cosine: 0.9992058370 (pos 2)
+[milestone/cpu] worst max-abs: 0.795248 (pos 4, 4.532% of scale 17.549)
+[milestone/cpu] worst rmse: 0.143201 (pos 2)
+[milestone/cpu] nonfinite logits: 0
+[milestone/cpu] first divergence: none
+[milestone/cpu] positions below cosine gate: 0
+[milestone/cpu] positions over calibrated max-abs bound: 2 (recorded, informational)
+[milestone/cpu] verdict: PASS
+    pos  0: cos=0.9998713005 maxabs=0.075584 rmse=0.014017 argmax ref=14924 d2=14924 
+    pos  1: cos=0.9999075023 maxabs=0.247739 rmse=0.057627 argmax ref=2768 d2=2768 
+    pos  2: cos=0.9992058370 maxabs=0.656289 rmse=0.143201 argmax ref=323 d2=323 
+    pos  3: cos=0.9995686163 maxabs=0.753861 rmse=0.132318 argmax ref=39935 d2=39935 
+    pos  4: cos=0.9994918686 maxabs=0.795248 rmse=0.136836 argmax ref=35308 d2=35308 
+
+[milestone/gpu] argmax agreement: 5/5
+[milestone/gpu] worst cosine: 0.9992058370 (pos 2)
+[milestone/gpu] worst max-abs: 0.795248 (pos 4, 4.532% of scale 17.549)
+[milestone/gpu] worst rmse: 0.143201 (pos 2)
+[milestone/gpu] nonfinite logits: 0
+[milestone/gpu] first divergence: none
+[milestone/gpu] positions below cosine gate: 0
+[milestone/gpu] positions over calibrated max-abs bound: 2 (recorded, informational)
+[milestone/gpu] verdict: PASS
+    pos  0: cos=0.9998713005 maxabs=0.075584 rmse=0.014017 argmax ref=14924 d2=14924 
+    pos  1: cos=0.9999075023 maxabs=0.247739 rmse=0.057627 argmax ref=2768 d2=2768 
+    pos  2: cos=0.9992058370 maxabs=0.656289 rmse=0.143201 argmax ref=323 d2=323 
+    pos  3: cos=0.9995686163 maxabs=0.753861 rmse=0.132318 argmax ref=39935 d2=39935 
+    pos  4: cos=0.9994918686 maxabs=0.795248 rmse=0.136836 argmax ref=35308 d2=35308 
+
+--- dataset: extended (21 certification positions) ---
+[extended/cpu] argmax agreement: 21/21
+[extended/cpu] worst cosine: 0.9950880336 (pos 19)
+[extended/cpu] worst max-abs: 1.300514 (pos 19, 7.288% of scale 17.845)
+[extended/cpu] worst rmse: 0.242044 (pos 19)
+[extended/cpu] nonfinite logits: 0
+[extended/cpu] first divergence: pos 10
+[extended/cpu] positions below cosine gate: 6
+[extended/cpu] positions over calibrated max-abs bound: 6 (recorded, informational)
+[extended/cpu] verdict: FAIL
+    pos  0: cos=0.9998713005 maxabs=0.075584 rmse=0.014017 argmax ref=14924 d2=14924 
+    pos  1: cos=0.9999075023 maxabs=0.247739 rmse=0.057627 argmax ref=2768 d2=2768 
+    pos  2: cos=0.9992058370 maxabs=0.656289 rmse=0.143201 argmax ref=323 d2=323 
+    pos  3: cos=0.9995686163 maxabs=0.753861 rmse=0.132318 argmax ref=39935 d2=39935 
+    pos  4: cos=0.9994918686 maxabs=0.795248 rmse=0.136836 argmax ref=35308 d2=35308 
+    pos  5: cos=0.9995253549 maxabs=0.657518 rmse=0.114544 argmax ref=927 d2=927 
+    pos  6: cos=0.9990791331 maxabs=0.601529 rmse=0.119366 argmax ref=279 d2=279 
+    pos  7: cos=0.9993215961 maxabs=0.795593 rmse=0.117276 argmax ref=16053 d2=16053 
+    pos  8: cos=0.9995083166 maxabs=0.789234 rmse=0.123313 argmax ref=5679 d2=5679 
+    pos  9: cos=0.9993508844 maxabs=0.448843 rmse=0.097988 argmax ref=627 d2=627 
+    pos 10: cos=0.9987777141 maxabs=0.707478 rmse=0.129288 argmax ref=320 d2=320 
+    pos 11: cos=0.9995904118 maxabs=0.445219 rmse=0.085231 argmax ref=7160 d2=7160 
+    pos 12: cos=0.9990745399 maxabs=0.680527 rmse=0.123614 argmax ref=14198 d2=14198 
+    pos 13: cos=0.9993999196 maxabs=0.623018 rmse=0.126598 argmax ref=39935 d2=39935 
+    pos 14: cos=0.9994666683 maxabs=0.503503 rmse=0.111611 argmax ref=35308 d2=35308 
+    pos 15: cos=0.9988126912 maxabs=0.608959 rmse=0.119955 argmax ref=927 d2=927 
+    pos 16: cos=0.9981292150 maxabs=0.681929 rmse=0.150075 argmax ref=279 d2=279 
+    pos 17: cos=0.9991825532 maxabs=0.700449 rmse=0.127203 argmax ref=16053 d2=16053 
+    pos 18: cos=0.9983532043 maxabs=0.911497 rmse=0.169718 argmax ref=5679 d2=5679 
+    pos 19: cos=0.9950880336 maxabs=1.300514 rmse=0.242044 argmax ref=382 d2=382 
+    pos 20: cos=0.9981282386 maxabs=0.660273 rmse=0.146430 argmax ref=578 d2=578 
+
+[extended/gpu] argmax agreement: 21/21
+[extended/gpu] worst cosine: 0.9940417971 (pos 19)
+[extended/gpu] worst max-abs: 1.253554 (pos 19, 7.025% of scale 17.845)
+[extended/gpu] worst rmse: 0.272789 (pos 19)
+[extended/gpu] nonfinite logits: 0
+[extended/gpu] first divergence: pos 10
+[extended/gpu] positions below cosine gate: 6
+[extended/gpu] positions over calibrated max-abs bound: 3 (recorded, informational)
+[extended/gpu] verdict: FAIL
+    pos  0: cos=0.9998713004 maxabs=0.075584 rmse=0.014017 argmax ref=14924 d2=14924 
+    pos  1: cos=0.9998850767 maxabs=0.323850 rmse=0.071434 argmax ref=2768 d2=2768 
+    pos  2: cos=0.9991587491 maxabs=0.802776 rmse=0.151335 argmax ref=323 d2=323 
+    pos  3: cos=0.9996147529 maxabs=0.602434 rmse=0.120683 argmax ref=39935 d2=39935 
+    pos  4: cos=0.9994254520 maxabs=0.700424 rmse=0.148263 argmax ref=35308 d2=35308 
+    pos  5: cos=0.9995260814 maxabs=0.694787 rmse=0.115162 argmax ref=927 d2=927 
+    pos  6: cos=0.9992030851 maxabs=0.609604 rmse=0.109171 argmax ref=279 d2=279 
+    pos  7: cos=0.9992843840 maxabs=0.655401 rmse=0.134001 argmax ref=16053 d2=16053 
+    pos  8: cos=0.9994724644 maxabs=0.646811 rmse=0.126939 argmax ref=5679 d2=5679 
+    pos  9: cos=0.9992629291 maxabs=0.577045 rmse=0.104426 argmax ref=627 d2=627 
+    pos 10: cos=0.9988011626 maxabs=0.632028 rmse=0.140142 argmax ref=320 d2=320 
+    pos 11: cos=0.9995713872 maxabs=0.432733 rmse=0.089506 argmax ref=7160 d2=7160 
+    pos 12: cos=0.9992307512 maxabs=0.669441 rmse=0.112920 argmax ref=14198 d2=14198 
+    pos 13: cos=0.9991542294 maxabs=0.659434 rmse=0.164356 argmax ref=39935 d2=39935 
+    pos 14: cos=0.9994089741 maxabs=0.582151 rmse=0.114169 argmax ref=35308 d2=35308 
+    pos 15: cos=0.9987957704 maxabs=0.722401 rmse=0.119697 argmax ref=927 d2=927 
+    pos 16: cos=0.9986092546 maxabs=0.645693 rmse=0.127062 argmax ref=279 d2=279 
+    pos 17: cos=0.9991160131 maxabs=0.609841 rmse=0.129991 argmax ref=16053 d2=16053 
+    pos 18: cos=0.9983667924 maxabs=0.848950 rmse=0.172753 argmax ref=5679 d2=5679 
+    pos 19: cos=0.9940417971 maxabs=1.253554 rmse=0.272789 argmax ref=382 d2=382 
+    pos 20: cos=0.9982301096 maxabs=0.845898 rmse=0.146123 argmax ref=578 d2=578 
+
+GATE_A_VERDICT=FAIL

@@ -1,0 +1,6 @@
+{"time_ms":56655171,"type":"begin","id":1,"thread":5164,"name":"prefill/layer_0","elapsed_ms":0,"units":0}
+{"time_ms":56655296,"type":"no_operation_progress","id":1,"thread":5164,"name":"prefill/layer_0","elapsed_ms":125,"units":0}
+{"time_ms":56655296,"type":"global_no_progress","id":0,"thread":0,"name":"inference","elapsed_ms":125,"units":0}
+{"time_ms":56655328,"type":"progress","id":1,"thread":5164,"name":"prefill/layer_0","elapsed_ms":157,"units":1}
+{"time_ms":56655328,"type":"counter","id":0,"thread":5164,"name":"gpu_dispatches","elapsed_ms":0,"units":0}
+{"time_ms":56655328,"type":"end","id":1,"thread":5164,"name":"prefill/layer_0","elapsed_ms":157,"units":1}

@@ -875,3 +875,158 @@ void Win32IDE::detectLanguageFromFile(const std::string& filePath)
         m_statusBarInfo.languageMode = "Plain Text";
     }
 }
+
+// ============================================================================
+// Agent ESP Panel - Live telemetry dashboard
+// ============================================================================
+
+void Win32IDE::createESPPanel(HWND hwndParent)
+{
+    // Create ESP panel container
+    m_hwndESPPanel = CreateWindowExA(
+        0, "STATIC", "",
+        WS_CHILD | WS_VISIBLE,
+        0, 0, 400, 300,
+        hwndParent, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1500)), m_hInstance, nullptr);
+
+    // Create toolbar
+    HWND hwndESPToolbar = CreateWindowExA(
+        0, "STATIC", "",
+        WS_CHILD | WS_VISIBLE,
+        0, 0, 400, 28,
+        m_hwndESPPanel, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1501)), m_hInstance, nullptr);
+
+    // Toolbar buttons
+    HWND btnClear = CreateWindowExA(
+        0, "BUTTON", "Clear",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 3, 60, 22,
+        hwndESPToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1502)), m_hInstance, nullptr);
+
+    HWND btnPause = CreateWindowExA(
+        0, "BUTTON", "Pause",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        70, 3, 60, 22,
+        hwndESPToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1503)), m_hInstance, nullptr);
+
+    HWND btnFilter = CreateWindowExA(
+        0, "BUTTON", "Filter",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        135, 3, 60, 22,
+        hwndESPToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1504)), m_hInstance, nullptr);
+
+    // Create list view for ESP events
+    m_hwndESPList = CreateWindowExA(
+        WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
+        WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS,
+        0, 30, 400, 270,
+        m_hwndESPPanel, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(1505)), m_hInstance, nullptr);
+
+    // Add columns
+    LVCOLUMNA lvc = { 0 };
+    lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+
+    lvc.pszText = const_cast<char*>("#");
+    lvc.cx = 40;
+    lvc.iSubItem = 0;
+    ListView_InsertColumn(m_hwndESPList, 0, &lvc);
+
+    lvc.pszText = const_cast<char*>("Time");
+    lvc.cx = 80;
+    lvc.iSubItem = 1;
+    ListView_InsertColumn(m_hwndESPList, 1, &lvc);
+
+    lvc.pszText = const_cast<char*>("Kind");
+    lvc.cx = 100;
+    lvc.iSubItem = 2;
+    ListView_InsertColumn(m_hwndESPList, 2, &lvc);
+
+    lvc.pszText = const_cast<char*>("Message");
+    lvc.cx = 180;
+    lvc.iSubItem = 3;
+    ListView_InsertColumn(m_hwndESPList, 3, &lvc);
+
+    // Initialize ESP recorder
+    std::string espLogPath = m_currentDirectory + "\\agentic_live.jsonl";
+    m_espRecorder = std::make_unique<rawrxd::esp::Recorder>(m_espBus, espLogPath,
+        [this](const rawrxd::esp::Event& event) {
+            // Post to UI thread
+            PostMessageA(m_hwndMain, WM_APP + 100, 0, reinterpret_cast<LPARAM>(new rawrxd::esp::Event(event)));
+        });
+    m_espRecorder->start();
+    m_espActive = true;
+    m_espRequestId = 1;
+}
+
+void Win32IDE::toggleESPPanel()
+{
+    if (!m_hwndESPPanel) {
+        createESPPanel(m_hwndMain);
+    }
+    bool visible = IsWindowVisible(m_hwndESPPanel);
+    ShowWindow(m_hwndESPPanel, visible ? SW_HIDE : SW_SHOW);
+}
+
+void Win32IDE::updateESPPanel()
+{
+    // This is called from the UI thread via WM_APP+100
+    // Events are processed in onESPEvent
+}
+
+void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
+{
+    std::lock_guard<std::mutex> lock(m_espEventsMutex);
+    m_espEvents.push_back(event);
+    if (m_espEvents.size() > MAX_ESP_EVENTS) {
+        m_espEvents.erase(m_espEvents.begin());
+    }
+
+    if (!m_hwndESPList) return;
+
+    // Add to list view
+    LVITEMA lvi = { 0 };
+    lvi.mask = LVIF_TEXT;
+    lvi.iItem = ListView_GetItemCount(m_hwndESPList);
+    lvi.iSubItem = 0;
+
+    // Sequence number
+    char seqBuf[32];
+    std::snprintf(seqBuf, sizeof(seqBuf), "%llu", (unsigned long long)event.sequence);
+    lvi.pszText = seqBuf;
+    ListView_InsertItem(m_hwndESPList, &lvi);
+
+    // Timestamp (relative to start or just HH:MM:SS.mmm)
+    auto ns = event.timestamp_ns;
+    auto sec = static_cast<std::time_t>(ns / 1000000000ULL);
+    auto ms = (ns % 1000000000ULL) / 1000000ULL;
+    std::tm tm_buf;
+    localtime_s(&tm_buf, &sec);
+    char timeBuf[32];
+    std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &tm_buf);
+    char fullTimeBuf[48];
+    std::snprintf(fullTimeBuf, sizeof(fullTimeBuf), "%s.%03llu", timeBuf, (unsigned long long)ms);
+    ListView_SetItemText(m_hwndESPList, lvi.iItem, 1, fullTimeBuf);
+
+    // Kind
+    std::string kindStr = rawrxd::esp::kind_name(event.kind);
+    ListView_SetItemText(m_hwndESPList, lvi.iItem, 2, const_cast<LPSTR>(kindStr.c_str()));
+
+    // Message (truncated)
+    std::string msg = event.message;
+    if (msg.size() > 120) msg = msg.substr(0, 117) + "...";
+    ListView_SetItemText(m_hwndESPList, lvi.iItem, 3, const_cast<LPSTR>(msg.c_str()));
+
+    // Auto-scroll to bottom
+    ListView_EnsureVisible(m_hwndESPList, lvi.iItem, FALSE);
+}
+
+// Handle ESP events posted from recorder thread
+LRESULT Win32IDE::handleESPEvent(WPARAM wParam, LPARAM lParam)
+{
+    if (lParam) {
+        rawrxd::esp::Event* event = reinterpret_cast<rawrxd::esp::Event*>(lParam);
+        onESPEvent(*event);
+        delete event;
+    }
+    return 0;
+}

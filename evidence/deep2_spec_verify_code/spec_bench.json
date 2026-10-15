@@ -1,0 +1,28 @@
+{
+  "tool": "deep2_spec_bench",
+  "tag": "RAWRXD_DEEP2_SPEC_VERIFY_001",
+  "model": "F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf",
+  "model_sha256": "6a77366395772462c84f0c4d226ac404674327cbe78c01e4391cc7e0c698851e",
+  "gamma": 4,
+  "ngram": 3,
+  "draft_policy": "prompt",
+  "tokens": 20,
+  "force_cpu": false,
+  "lines": [
+    "      model=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf",
+    "== [P] REAL MODEL (universal GGUF ingest)",
+    "      arch=qwen2 name=Qwen2.5 Coder 1.5B sha256=6a77366395772462c84f0c4d226ac404674327cbe78c01e4391cc7e0c698851e",
+    "      layers=28 embd=1536 heads=12 vocab=151936 ctx=32768",
+    "== [code] workload",
+    "      prompt: 64 tokens, generate=20, gamma=4, ngram=3, draft=prompt",
+    "      serial: prefill=17991.1 ms decode=6811.6 ms gpu_calls=16288 cpu_calls=0",
+    "      spec: prefill=15331.0 ms decode=12955.3 ms gpu_calls=20819 cpu_calls=0",
+    "      serial TPS=2.94  spec TPS=1.54  speedup=0.53x",
+    "      acceptance[code]: rounds=7 proposed=28 accepted=6 rate=21.4% tokens/round=1.86 bonus=0 replacements=7 zero_accept=4 serial_steps=7",
+    "PASS  spec stream identical to serial greedy stream (greedy equivalence)",
+    "PASS  no non-finite logits on the spec arm",
+    "PASS  no non-finite logits on the serial arm",
+    "== VERDICT",
+    "      pass=3 fail=0 na=0 spec_ran=1"
+  ]
+}

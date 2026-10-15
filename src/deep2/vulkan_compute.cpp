@@ -731,6 +731,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
     recordComputeBarrier(cmd);
     ++q4kBatch8RowOps_;
     q4kBatchWeightBytes_+=weightBytes;
+    increment_dispatch_count();
     if(!own) return true;
     GpuWorkInterval wi{};
     const bool ok=endSubmitWait(
@@ -814,6 +815,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch4Row(
     recordComputeBarrier(cmd);
     ++q4kBatch4RowOps_;
     q4kBatchWeightBytes_+=weightBytes;
+    increment_dispatch_count();
     if(!own) return true;
 
     GpuWorkInterval wi{};

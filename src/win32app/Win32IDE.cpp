@@ -7,6 +7,7 @@
 
 #include "Win32IDE.h"
 #include "Win32IDE_CommandIDs.h"
+#include "Win32IDE_Deep2Bridge.h"
 #include <regex>
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -279,12 +280,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     , m_hwndModelSelector(nullptr), m_hwndMaxTokensSlider(nullptr), m_hwndMaxTokensLabel(nullptr)
     , m_currentMaxTokens(512)
 {
-    // DIAGNOSTIC: Constructor entry
-    {
-        std::ofstream diag("C:\\Users\\HiH8e\\Desktop\\CONSTRUCTOR_START.txt");
-        diag << "Win32IDE constructor entered" << std::endl;
-    }
-
     // Initialize Native Fallback Engine
     try {
         m_nativeEngine = new RawrXD::CPUInferenceEngine();
@@ -295,11 +290,11 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
         OutputDebugStringA("ERROR: Failed to initialize Native CPU Inference Engine\n");
     }
 
-    // Initialize logger ABSOLUTELY FIRST - with fallback error handling
+    // Initialize logger
     try {
-        IDELogger::getInstance().initialize("C:\\RawrXD_IDE.log");
-
-
+        IDELogger::getInstance().initialize("");
+        IDELogger::getInstance().setLevel(IDELogger::Level::DEBUG);
+        LOG_INFO("Win32IDE constructor started");
     } catch (const std::exception& e) {
         OutputDebugStringA("FATAL: Logger initialization failed: ");
         OutputDebugStringA(e.what());
@@ -312,12 +307,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     // Initialize Agentic Bridge (Native)
     initializeAgenticBridge();
 
-    
-    // DIAGNOSTIC: After logger section
-    {
-        std::ofstream diag("C:\\Users\\HiH8e\\Desktop\\AFTER_LOGGER.txt");
-        diag << "Logger section skipped" << std::endl;
-    }
     
     // Prepare DirectX renderer with safety wrapper
     try {
@@ -336,12 +325,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
         m_renderer = nullptr;
     }
     
-    // DIAGNOSTIC: After renderer
-    {
-        std::ofstream diag("C:\\Users\\HiH8e\\Desktop\\AFTER_RENDERER.txt");
-        diag << "Renderer created: " << (m_renderer ? "SUCCESS" : "NULL") << std::endl;
-    }
-    
     // Initialize PowerShell state with safety
     try {
 
@@ -355,12 +338,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
         OutputDebugStringA("ERROR: PowerShell init failed\n");
     }
     
-    // DIAGNOSTIC: After PowerShell
-    {
-        std::ofstream diag("C:\\Users\\HiH8e\\Desktop\\AFTER_POWERSHELL.txt");
-        diag << "PowerShell state initialized" << std::endl;
-    }
-    
     // Initialize default theme
     try {
 
@@ -371,12 +348,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
         OutputDebugStringA("ERROR: Theme reset failed\n");
     }
     
-    // DIAGNOSTIC: After theme
-    {
-        std::ofstream diag("C:\\Users\\HiH8e\\Desktop\\AFTER_THEME.txt");
-        diag << "Theme reset complete" << std::endl;
-    }
-    
     // Load code snippets
     try {
 
@@ -385,12 +356,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     } catch (...) {
 
         OutputDebugStringA("ERROR: Code snippets loading failed\n");
-    }
-    
-    // DIAGNOSTIC: After snippets
-    {
-        std::ofstream diag("C:\\Users\\HiH8e\\Desktop\\AFTER_SNIPPETS.txt");
-        diag << "Code snippets loaded" << std::endl;
     }
     
     // Initialize profiling frequency
@@ -410,10 +375,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     // Default Ollama configuration
     m_ollamaBaseUrl = "http://localhost:11434"; // default
     m_ollamaModelOverride = "";
-
-    // Initialize Native Fallback Engine
-    m_nativeEngine = new RawrXD::CPUInferenceEngine();
-    m_nativeEngineLoaded = false;
     
     // Initialize Enhanced Status Bar info
     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Ready");
@@ -5934,6 +5895,13 @@ Win32IDE::~Win32IDE() {
         m_nativeEngine = nullptr;
     }
     m_nativeEngineLoaded = false;
+
+    // Deep2Bridge cleanup
+    if (m_deep2Bridge) {
+        m_deep2Bridge->Stop();
+        delete m_deep2Bridge;
+        m_deep2Bridge = nullptr;
+    }
 
     // Terminal cleanup. Win32TerminalManager has no static cleanup() entry
     // point; each pane owns its manager through a unique_ptr, so tear the

@@ -1,0 +1,16 @@
+{
+  "gate": "RAWR_H01_AUTONOMOUS_REPAIR_001",
+  "model": "deepseek-coder-v2_16b",
+  "test": "H01-05",
+  "initial_source_sha256": "0E0F13CB0640D09D7B80CD43656E932262F3D5FDD31273F257A5F65DF17D3FA3",
+  "final_source_sha256": "883081580B520F9DBA20A8B446D524F1D35DB4889751036703331F52E6ED167A",
+  "model_generated_patch": true,
+  "host_applied_patch": true,
+  "compiler_exit_code": 0,
+  "test_exit_code": 0,
+  "regression_exit_code": 0,
+  "tools_executed": 4,
+  "verified": true,
+  "verdict": "PASS",
+  "notes": "Model correctly identified and fixed all type mismatches (return type, parameter type, vector element type, template deduction, struct member assignments, callback signature). Agent infrastructure verified; independent host compilation and execution confirmed."
+}

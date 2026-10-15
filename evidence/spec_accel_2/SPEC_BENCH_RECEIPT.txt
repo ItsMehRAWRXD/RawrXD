@@ -1,0 +1,25 @@
+      model=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+== [P] REAL MODEL (universal GGUF ingest)
+      arch=qwen2 name=Qwen2.5 Coder 1.5B sha256=6a77366395772462c84f0c4d226ac404674327cbe78c01e4391cc7e0c698851e
+      layers=28 embd=1536 heads=12 vocab=151936 ctx=32768
+== [code] workload
+      prompt: 64 tokens, generate=50, gamma=4, ngram=3, draft=prompt
+      serial: prefill=18674.5 ms decode=18202.2 ms gpu_calls=22198 cpu_calls=0
+      spec: prefill=15513.8 ms decode=34808.4 ms gpu_calls=33821 cpu_calls=0
+      serial TPS=2.75  spec TPS=1.44  speedup=0.52x
+      acceptance[code]: rounds=17 proposed=68 accepted=9 rate=13.2% tokens/round=1.53 bonus=0 replacements=17 zero_accept=11 serial_steps=24
+PASS  spec stream identical to serial greedy stream (greedy equivalence)
+PASS  no non-finite logits on the spec arm
+PASS  no non-finite logits on the serial arm
+== [prose] workload
+      prompt: 82 tokens, generate=50, gamma=4, ngram=3, draft=prompt
+      serial: prefill=19883.8 ms decode=17763.9 ms gpu_calls=25726 cpu_calls=0
+      spec: prefill=19886.5 ms decode=34446.5 ms gpu_calls=37349 cpu_calls=0
+      serial TPS=2.81  spec TPS=1.45  speedup=0.52x
+      acceptance[prose]: rounds=16 proposed=64 accepted=5 rate=7.8% tokens/round=1.31 bonus=0 replacements=16 zero_accept=12 serial_steps=29
+PASS  spec stream identical to serial greedy stream (greedy equivalence)
+PASS  no non-finite logits on the spec arm
+PASS  no non-finite logits on the serial arm
+== VERDICT
+      pass=6 fail=0 na=0 spec_ran=1
+VERDICT=PASS

@@ -1,0 +1,16 @@
+{
+  "gate": "RAWR_H01_AUTONOMOUS_REPAIR_001",
+  "model": "deepseek-coder-v2_16b",
+  "test": "H01-04",
+  "initial_source_sha256": "EE3045FA3AAA284B26E17FCDCB45507B51E449D9A78E09E6187F077B08F5DFF4",
+  "final_source_sha256": "9699BA602FAA4BC866E29449C200ADD3BFB6BE1CBE94E2A37424A416F6DC182F",
+  "model_generated_patch": true,
+  "host_applied_patch": true,
+  "compiler_exit_code": 0,
+  "test_exit_code": 0,
+  "regression_exit_code": 0,
+  "tools_executed": 4,
+  "verified": true,
+  "verdict": "PASS",
+  "notes": "Model correctly identified missing RAII cleanup and replaced raw pointers with unique_ptr for automatic resource management. Agent infrastructure verified; independent host compilation and execution confirmed."
+}

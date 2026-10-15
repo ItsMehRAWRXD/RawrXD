@@ -1,6 +1,6 @@
 #include <cstdio>
 int add(int a, int b) {
-    return a - b;
+    return a + b;
 }
 int main() {
     if (add(2, 3) == 5) { printf("PASS\n"); return 0; }

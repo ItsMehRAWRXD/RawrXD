@@ -39,6 +39,11 @@
 #include "cpu_inference_engine.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Autonomy.h"
+#include "Win32IDE_AgenticLoopBridge.h"
+#include "agent_esp.hpp"
+
+// Forward declaration for Deep2Bridge
+class Deep2Bridge;
 
 // Define LOG_FUNCTION macro if not already defined
 #ifndef LOG_FUNCTION
@@ -180,6 +185,22 @@ public:
     void onAgentViewTools();
     void onAgentViewStatus();
     void onAgentStop();
+
+    // Deep2 Inference Bridge (GPU-accelerated)
+    Deep2Bridge* m_deep2Bridge = nullptr;
+    void initializeDeep2Bridge();
+    void onDeep2LoadModel();
+    void onDeep2Generate();
+    void onDeep2Cancel();
+    void onDeep2ModelInfo();
+    void onDeep2Configure();
+
+    // Agentic Loop Bridge (connects to deep2_agentic_loop.exe)
+    std::unique_ptr<AgenticLoopBridge> m_agenticLoopBridge;
+    void initializeAgenticLoopBridge();
+    void onAgenticLoopRunTask();
+    void onAgenticLoopCancel();
+    void onAgenticLoopStatus();
 
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager; // high-level autonomous orchestrator
@@ -1083,6 +1104,12 @@ private:
     void createPanel(HWND hwndParent);
     void createEnhancedStatusBar(HWND hwndParent);
     
+    // Agent ESP Panel
+    void createESPPanel(HWND hwndParent);
+    void updateESPPanel();
+    void onESPEvent(const rawrxd::esp::Event& event);
+    void toggleESPPanel();  // Ctrl+Shift+E
+
     void updateActivityBarState();
     void updateSecondarySidebarContent();
     void updatePanelContent();
@@ -1293,8 +1320,23 @@ private:
     bool isBreakpointAtLine(const std::string& file, int line) const;
     void highlightDebuggerLine(const std::string& file, int line);
     void clearDebuggerHighlight();
+    LRESULT handleESPEvent(WPARAM wParam, LPARAM lParam);
+    LRESULT handleAgenticLoopProgress(WPARAM wParam, LPARAM lParam);
+    LRESULT handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam);
+    LRESULT handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam);
 
 private:
+    // Agent ESP Telemetry
+    rawrxd::esp::Bus m_espBus;
+    std::unique_ptr<rawrxd::esp::Recorder> m_espRecorder;
+    std::atomic<bool> m_espActive{false};
+    HWND m_hwndESPPanel = nullptr;
+    HWND m_hwndESPList = nullptr;
+    std::vector<rawrxd::esp::Event> m_espEvents; // Recent events for display
+    static constexpr size_t MAX_ESP_EVENTS = 1000;
+    std::mutex m_espEventsMutex;
+    uint64_t m_espRequestId = 1;
+
     // Debugger UI Components
     HWND m_hwndDebuggerContainer = nullptr;
     HWND m_hwndDebuggerTabs = nullptr;
