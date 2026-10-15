@@ -40,6 +40,194 @@ if(MSVC)
     )
 endif()
 
+# ============================================================
+# SECURITY HARDENING - Compiler & Linker Flags
+# ============================================================
+# Enable production hardening by default. Can be disabled with -DRAWRXD_ENABLE_HARDENING=OFF
+option(RAWRXD_ENABLE_HARDENING "Enable production security hardening (compiler/linker flags)" ON)
+
+if(RAWRXD_ENABLE_HARDENING)
+    message(STATUS "Security hardening ENABLED")
+    
+    if(MSVC)
+        # MSVC Security Hardening Flags
+        # /GS - Buffer Security Check (stack cookie)
+        # /guard:cf - Control Flow Guard (CFG)
+        # /guard:ehcont - Export Suppression (EH Continuation)
+        # /DYNAMICBASE - ASLR (Address Space Layout Randomization)
+        # /NXCOMPAT - DEP (Data Execution Prevention)
+        # /SAFESEH - Safe Exception Handlers (x86 only, implicit for x64)
+        # /HIGHENTROPYVA - High Entropy ASLR (64-bit)
+        # /VOLATILE:ISO - ISO C++ volatile semantics
+        # /SDL - Security Development Lifecycle (recommended subset of warnings)
+        # /W4 - Warning Level 4
+        # /WX - Treat warnings as errors (optional, can be strict)
+        # /FC - Full source file paths in diagnostics
+        # /Zc:strictStrings - Strict string literal type checking
+        # /Zc:throwingNew - Standard conforming operator new
+        # /permissive- - Standards conformance mode
+        
+        add_compile_options(
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/GS>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:cf>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:ehcont>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/DYNAMICBASE>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/NXCOMPAT>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/HIGHENTROPYVA>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/VOLATILE:ISO>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/SDL>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/W4>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/FC>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/Zc:strictStrings>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/Zc:throwingNew>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/permissive->
+        )
+        
+        add_link_options(
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/DYNAMICBASE>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/NXCOMPAT>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/HIGHENTROPYVA>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:cf>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:ehcont>
+        )
+        
+        # Define security hardening macros
+        add_compile_definitions(
+            RAWRXD_HARDENING=1
+            _FORTIFY_SOURCE=2
+            FORTIFY_SOURCE=2
+        )
+        
+    elseif(MINGW OR UNIX)
+        # GCC/Clang Security Hardening Flags
+        # -fstack-protector-strong - Stack smashing protector (strong)
+        # -fstack-clash-protection - Stack clash protection
+        # -fcf-protection=full - Control Flow Integrity (CET)
+        # -D_FORTIFY_SOURCE=2 - Fortify source (buffer overflow detection)
+        # -fPIE - Position Independent Executable
+        # -pie - Link as PIE
+        # -Wl,-z,relro - Read-only relocations (RELRO)
+        # -Wl,-z,now - Immediate binding (BIND_NOW)
+        # -Wl,-z,noexecstack - Non-executable stack
+        # -fno-plt - Disable PLT for performance/security
+        # -Wformat -Wformat-security - Format string warnings
+        # -Werror=format-security - Treat format security as error
+        # -Wall -Wextra -Wpedantic - Comprehensive warnings
+        # -Wconversion -Wsign-conversion - Implicit conversion warnings
+        # -Wnull-dereference - Null pointer dereference warnings
+        # -Warray-bounds - Array bounds warnings
+        # -Wstringop-overflow - String operation overflow warnings
+        # -Walloc-zero - Zero-size allocation warnings
+        
+        add_compile_options(
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fstack-protector-strong>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fstack-clash-protection>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fcf-protection=full>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-D_FORTIFY_SOURCE=2>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wformat>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wformat-security>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Werror=format-security>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wall>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wextra>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wpedantic>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wconversion>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wsign-conversion>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wnull-dereference>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Warray-bounds>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wstringop-overflow>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Walloc-zero>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wimplicit-fallthrough>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wshadow>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wduplicated-cond>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wduplicated-branches>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wlogical-op>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wrestrict>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wnull-dereference>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wdouble-promotion>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wformat=2>
+        )
+        
+        add_link_options(
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fPIE>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-pie>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,relro>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,now>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,-z,noexecstack>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-Wl,--no-copy-dt-needed-entries>
+            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:-fno-plt>
+        )
+        
+        add_compile_definitions(
+            RAWRXD_HARDENING=1
+            _FORTIFY_SOURCE=2
+            FORTIFY_SOURCE=2
+        )
+    endif()
+    
+    # Enable sanitizers in Debug builds (optional, requires -DRAWRXD_ENABLE_SANITIZERS=ON)
+    option(RAWRXD_ENABLE_SANITIZERS "Enable Address/Thread/Undefined sanitizers in Debug builds" OFF)
+    if(RAWRXD_ENABLE_SANITIZERS AND NOT MSVC)
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            add_compile_options(
+                $<$<CONFIG:Debug>:-fsanitize=address>
+                $<$<CONFIG:Debug>:-fsanitize=undefined>
+                $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+            )
+            add_link_options(
+                $<$<CONFIG:Debug>:-fsanitize=address>
+                $<$<CONFIG:Debug>:-fsanitize=undefined>
+            )
+            message(STATUS "Sanitizers ENABLED for Debug builds (ASan + UBSan)")
+        endif()
+    elseif(RAWRXD_ENABLE_SANITIZERS AND MSVC)
+        # MSVC AddressSanitizer (available in VS 2019 16.9+)
+        add_compile_options($<$<CONFIG:Debug>:/fsanitize=address>)
+        add_link_options($<$<CONFIG:Debug>:/fsanitize=address>)
+        message(STATUS "MSVC AddressSanitizer ENABLED for Debug builds")
+    endif()
+    
+else()
+    message(STATUS "Security hardening DISABLED (RAWRXD_ENABLE_HARDENING=OFF)")
+    add_compile_definitions(RAWRXD_HARDENING=0)
+endif()
+
+# ============================================================
+# PRODUCTION RELEASE OPTIMIZATION FLAGS
+# ============================================================
+# Enable LTO, whole program optimization, and aggressive inlining for Release builds
+# These are set globally so all targets benefit without per-target duplication
+option(RAWRXD_ENABLE_LTO "Enable Link Time Optimization (LTO) for Release builds" ON)
+
+if(MSVC AND RAWRXD_ENABLE_LTO)
+    # MSVC LTO: /GL (whole program optimization) + /LTCG (link-time code generation)
+    # /Ob2 - Inline any suitable function
+    # /Ot - Favor fast code
+    # /Oy - Frame pointer omission (x86 only, implicit for x64)
+    # /GF - String pooling
+    # /Gy - Function-level linking
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Ob2 /Ot /GF /Gy")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /GL /Ob2 /Ot /GF /Gy")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /OPT:REF /OPT:ICF")
+    set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /LTCG /OPT:REF /OPT:ICF")
+    message(STATUS "MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF")
+elseif(MINGW OR UNIX)
+    if(RAWRXD_ENABLE_LTO)
+        # GCC/Clang LTO: -flto
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto -fwhole-program-vtables")
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -flto -fwhole-program-vtables")
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto -Wl,-O2")
+        set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto -Wl,-O2")
+        set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} -flto -Wl,-O2")
+        message(STATUS "GCC/Clang LTO enabled: -flto -Wl,-O2")
+    endif()
+endif()
+
+# Disable C++ extensions for strict standard conformance
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_C_EXTENSIONS OFF)
+
 # Detect compiler and set output directory suffix
 if(MINGW)
     set(COMPILER_SUFFIX "mingw")
@@ -275,11 +463,20 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/3rdparty/ggml/CMakeLists.txt")
     
 add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
 
-    # Add ~dev/rawrxd for HexMag and agentic cert targets
-    # DISABLED: ~dev is a user-specific development tree with its own CMake config
-    # if(EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/CMakeLists.txt")
-    #     add_subdirectory(~dev/rawrxd EXCLUDE_FROM_ALL)
-    # endif()
+    # Deep2 SNAP: dependency-free event-driven tool protocol + stop controller.
+    # Provides the deep2_snap INTERFACE target and deep2_snap_test executable.
+    add_subdirectory(tools/deep2_snap/deep2_snap EXCLUDE_FROM_ALL)
+
+    # SNAP Process Guard: dependency-free process enumeration, verification, job object,
+    # and termination. Provides the snap_process_guard library and CLI.
+    add_subdirectory(tools/snap_process_guard EXCLUDE_FROM_ALL)
+
+    # SNAP Supervisor: production-grade process supervisor with Job Object lifecycle,
+    # ownership receipts, orphan scanning, and JSONL lifecycle events.
+    add_subdirectory(tools/snap_supervisor EXCLUDE_FROM_ALL)
+
+    # Deep2 Flight Recorder: self-logging inference debugger for performance diagnosis.
+    add_subdirectory(tools/deep2_debugger EXCLUDE_FROM_ALL)
 
     # Create ggml interface library for clean linking
     add_library(ggml_interface INTERFACE)
@@ -442,6 +639,12 @@ if(WIN32)
         add_subdirectory(tools/deep2_autotune)
     else()
         message(STATUS "deep2_autotune EXCLUDED: tools/deep2_autotune/CMakeLists.txt not present")
+    endif()
+    # Agent ESP — native C++20 event telemetry (Windows-only, no Qt)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp/CMakeLists.txt")
+        add_subdirectory(tools/agent_esp/rawrxd_agent_esp)
+    else()
+        message(STATUS "agent_esp EXCLUDED: tools/agent_esp/rawrxd_agent_esp/CMakeLists.txt not present")
     endif()
 endif()
 
@@ -1942,14 +2145,32 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AN
         ${CMAKE_SOURCE_DIR}/tools
         ${CMAKE_SOURCE_DIR}/src/deep2
         ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/tools/deep2_snap/deep2_snap
+        ${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp
+        ${CMAKE_SOURCE_DIR}/tools/snap_process_guard
+        ${CMAKE_SOURCE_DIR}/tools/snap_supervisor
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${_rawrxd_vk_sdk_inc}
     )
+    if(TARGET deep2_snap)
+        target_link_libraries(deep2_agentic_loop PRIVATE deep2_snap)
+    endif()
     if(TARGET ggml_interface)
         target_link_libraries(deep2_agentic_loop PRIVATE ggml_interface)
     endif()
+    if(TARGET rawrxd_agent_esp)
+        target_link_libraries(deep2_agentic_loop PRIVATE rawrxd_agent_esp)
+    endif()
+    if(TARGET snap_process_guard)
+        target_link_libraries(deep2_agentic_loop PRIVATE snap_process_guard)
+    endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_agentic_loop PRIVATE Vulkan::Vulkan)
+    endif()
+    # Link the real Deep2Engine so the agent uses batched prefill and GPU kernels
+    if(TARGET deep2_engine_lib)
+        target_link_libraries(deep2_agentic_loop PRIVATE deep2_engine_lib)
+        target_compile_definitions(deep2_agentic_loop PRIVATE HAVE_DEEP2_ENGINE=1)
     endif()
     if(MSVC)
         target_compile_options(deep2_agentic_loop PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
@@ -1960,6 +2181,152 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AN
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
     message(STATUS "deep2_agentic_loop enabled (Gate 9 agentic E2E harness)")
+endif()
+
+# ============================================================================
+# H01/H02: Host-driven autonomous repair loop (RAWR_AUTONOMOUS_REPAIR_E2E_001)
+# Host controls: read -> present to model -> get patch -> apply -> build -> test -> retry
+# Model only outputs fixed source code. No TOOL protocol, no free-form commands.
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_agentic_repair
+        tools/deep2_agentic_repair.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_agentic_repair PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_agentic_repair PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_agentic_repair PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_agentic_repair PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_agentic_repair PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_agentic_repair PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_agentic_repair PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)")
+endif()
+
+# ============================================================================
+# RAWRXD_EXEC_TRUTH: authoritative inference execution trace.
+# Answers "one pass per layer" vs "one pass per token per layer", and proves
+# which backend actually executes each tensor op (with fallback reasons).
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_exec_trace
+        tools/deep2_exec_trace.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_exec_trace PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_exec_trace PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_exec_trace PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_exec_trace PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_exec_trace PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_exec_trace PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_exec_trace PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_exec_trace enabled (RAWRXD_EXEC_TRUTH authoritative trace)")
+endif()
+
+# ============================================================================
+# H11-P1..P4: batched-prefill numerical parity vs the serial reference.
+# Gate 5 (command fusion) may only be optimised after this passes.
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_prefill_parity
+        tools/deep2_prefill_parity.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_prefill_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_prefill_parity PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_prefill_parity PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_prefill_parity PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_prefill_parity PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_prefill_parity PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_prefill_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)")
 endif()
 
 # ============================================================================
@@ -2155,6 +2522,9 @@ endforeach()
         # same implementation instead of re-listing sources and risking ODR violations.
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            # DEEP2_MODEL_FIT_AUTHORITY_001 / DEEP2_EXECUTION_AUTHORITY_001 /
+            # DEEP2_BATCHED_PREFILL_001: admission-to-execution contract.
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_ModelFit.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/engine_subsystems.cpp
@@ -2164,6 +2534,7 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/deep2
             ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/tools/deep2_debugger
             ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
             ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
         )
@@ -2196,6 +2567,96 @@ endforeach()
 
 message(STATUS "deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable disabled pending real entry point)")
     endif()
+endif()
+
+# ---------------------------------------------------------------------------
+# Quantization correctness + CPU-state gates (DEEP2_Q5_0_SIGNED_OFFSET_001,
+# DEEP2_OS_XSAVE_STATE_001). Both build without Vulkan and must pass BEFORE any
+# kernel optimisation is trusted: a "faster" kernel that dequantizes wrongly is
+# worse than a slow one.
+# ---------------------------------------------------------------------------
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_q5_0_parity.cpp")
+    add_executable(deep2_q5_0_parity
+        tests/deep2_q5_0_parity.cpp
+        ${CMAKE_SOURCE_DIR}/src/deep2/QuantKernelRegistry.cpp
+        ${CMAKE_SOURCE_DIR}/src/deep2/asm_stubs.cpp
+    )
+    target_include_directories(deep2_q5_0_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    target_compile_features(deep2_q5_0_parity PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_q5_0_parity PRIVATE /EHsc /std:c++20)
+    else()
+        target_compile_options(deep2_q5_0_parity PRIVATE -std=c++20)
+    endif()
+    enable_testing()
+    add_test(NAME deep2_q5_0_parity COMMAND deep2_q5_0_parity)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_cpu_state_probe.cpp")
+    add_executable(deep2_cpu_state_probe
+        tests/deep2_cpu_state_probe.cpp
+        ${CMAKE_SOURCE_DIR}/src/deep2/QuantKernelRegistry.cpp
+        ${CMAKE_SOURCE_DIR}/src/deep2/asm_stubs.cpp
+    )
+    target_include_directories(deep2_cpu_state_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    target_compile_features(deep2_cpu_state_probe PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_cpu_state_probe PRIVATE /EHsc /std:c++20)
+    else()
+        target_compile_options(deep2_cpu_state_probe PRIVATE -std=c++20)
+    endif()
+    enable_testing()
+    add_test(NAME deep2_cpu_state_probe COMMAND deep2_cpu_state_probe)
+endif()
+
+# ---------------------------------------------------------------------------
+# H11 prefill parity gate (H11-P1..P4).  Runs the real engine on a real GGUF
+# and compares the chunked-causal prefill against the faithful serial path for
+# chunk sizes 1, 2, 16 and 128 — KV bytes and logits.
+#
+# This gate exists to make GPU command fusion (H11-P5) safe: submission-count
+# optimisation must not land while any parity gate fails, because a fused path
+# that changes numerics is a silent model-corruption bug, not a speedup.
+#
+# Requires a model; skipped (not failed) when no GGUF is supplied via
+# DEEP2_H11_MODEL.
+# ---------------------------------------------------------------------------
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_h11_prefill_parity.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_h11_prefill_parity
+        tests/deep2_h11_prefill_parity.cpp
+    )
+    target_include_directories(deep2_h11_prefill_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/tools/deep2_debugger
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc}
+    )
+    target_link_libraries(deep2_h11_prefill_parity PRIVATE
+        deep2_engine_lib
+        ggml
+        Vulkan::Vulkan
+    )
+    target_compile_features(deep2_h11_prefill_parity PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_h11_prefill_parity PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_h11_prefill_parity PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    enable_testing()
+    add_test(NAME deep2_h11_prefill_parity
+             COMMAND deep2_h11_prefill_parity $ENV{DEEP2_H11_MODEL})
 endif()
 
 # Gate 8 — GPU Decode Roofline Profiling (DEEP2_GPU_DECODE_ROOFLINE_001).
@@ -2261,6 +2722,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/Win32IDE_Deep2Bridge.cpp
+        src/win32app/Win32IDE_AgenticLoopBridge.cpp
         # Lifecycle methods declared in Win32IDE.h but defined in their own
         # translation unit (createWindow/showWindow/runMessageLoop/onSize/
         # editor surface/Ollama bridge + the WindowProc dispatch chain).
@@ -2294,8 +2757,13 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             ${CMAKE_SOURCE_DIR}/src/win32app
             ${CMAKE_SOURCE_DIR}/src/utils
             ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src/snap
+            ${CMAKE_SOURCE_DIR}/src/deep2/perf_fix
+            ${CMAKE_SOURCE_DIR}/src/deep2/watchdog
             # ggml.h / ggml_type_traits for the CPU executor's quant geometry.
             ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+            # Agent ESP telemetry
+            ${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp
             # gguf_loader.h includes vulkan_compute.h -> vulkan/vulkan.h, so the
             # Vulkan SDK include path is required even when GPU compute is off.
             ${Vulkan_INCLUDE_DIRS}
@@ -2343,6 +2811,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             # DCompositionCreateDevice and DwmEnableBlurBehindWindow were all
             # unresolved at link time.
             d2d1 dwrite dxguid dwmapi dcomp
+            # PSAPI for process enumeration in SNAP detectors
+            psapi
         )
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -2354,6 +2824,14 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         if(TARGET ggml)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE ggml)
             target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_GGML=1)
+        endif()
+        if(TARGET rawrxd_agent_esp)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_agent_esp)
+        endif()
+        # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
+        if(TARGET deep2_engine_lib)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE deep2_engine_lib)
+            target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_DEEP2_ENGINE=1)
         endif()
         message(STATUS "RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled")
     else()
