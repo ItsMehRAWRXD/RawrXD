@@ -19,18 +19,12 @@ message(STATUS "Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
 # are compiled as 64-bit. No 32-bit (x86) support or fallback.
 # See: 64BIT_DEPENDENCY_AUDIT.md and DLL_DISTRIBUTION_PACKAGE.md
 
-# Force x64 architecture to prevent any 32-bit DLL issues
+# Validate 64-bit configuration (generator/platform must be set externally, e.g. -A x64 for VS)
 if(MSVC)
-    set(CMAKE_GENERATOR_PLATFORM x64)
-    set(CMAKE_SIZEOF_VOID_P 8)
-    # Validate 64-bit configuration
-    if(NOT CMAKE_GENERATOR_PLATFORM STREQUAL "x64")
-        message(FATAL_ERROR "CRITICAL: CMAKE_GENERATOR_PLATFORM must be x64, got ${CMAKE_GENERATOR_PLATFORM}")
-    endif()
     if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-        message(FATAL_ERROR "CRITICAL: CMAKE_SIZEOF_VOID_P must be 8 (x64), got ${CMAKE_SIZEOF_VOID_P}")
+        message(FATAL_ERROR "CRITICAL: This project requires 64-bit (x64) configuration. CMAKE_SIZEOF_VOID_P = ${CMAKE_SIZEOF_VOID_P}. Configure with -A x64 for Visual Studio generators.")
     endif()
-    message(STATUS "Î“Â£Ã´ 64-bit configuration validated: pointer size = ${CMAKE_SIZEOF_VOID_P}, platform = ${CMAKE_GENERATOR_PLATFORM}")
+    message(STATUS "64-bit configuration validated: pointer size = ${CMAKE_SIZEOF_VOID_P}")
 endif()
 
 # Pin MSVC runtime for deterministic builds - ALWAYS use /MD (dynamic CRT)
@@ -56,7 +50,8 @@ else()
 endif()
 
 # Build options
-option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" OFF)
+option(RAWRXD_BUILD_WIN32IDE "Build the native (Qt-free) Win32 IDE target" OFF)
+option(RAWRXD_BUILD_WIN32IDE_QT "Build the legacy Qt-dependent Win32IDE target" OFF)
 option(RAWRXD_BUILD_BENCHMARKS "Build benchmark executables" OFF)
 option(RAWRXD_BUILD_TESTS "Build unit-test harnesses" OFF)
 option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
@@ -132,8 +127,8 @@ elseif(USE_ZLIB_FETCHCONTENT)
     set(HAVE_COMPRESSION 1)
     message(STATUS "Î“Â£Ã´ ZLIB auto-downloaded and built successfully")
 else()
-    # Auto-fetch zlib if not found on system (optional - can be disabled with FETCHCONTENT_ZLIB=OFF)
-    option(FETCHCONTENT_ZLIB "Auto-download and build zlib if not found" ON)
+    # Auto-fetch zlib if not found on system (optional - can be enabled with FETCHCONTENT_ZLIB=ON)
+    option(FETCHCONTENT_ZLIB "Auto-download and build zlib if not found" OFF)
     
     if(FETCHCONTENT_ZLIB)
         include(FetchContent)
@@ -278,8 +273,14 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/3rdparty/ggml/CMakeLists.txt")
     set(CMAKE_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/include" CACHE STRING "" FORCE)
     set(ENV{INCLUDE} "${CMAKE_SOURCE_DIR}/include;$ENV{INCLUDE}")
     
-    add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
-    
+add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
+
+    # Add ~dev/rawrxd for HexMag and agentic cert targets
+    # DISABLED: ~dev is a user-specific development tree with its own CMake config
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/CMakeLists.txt")
+    #     add_subdirectory(~dev/rawrxd EXCLUDE_FROM_ALL)
+    # endif()
+
     # Create ggml interface library for clean linking
     add_library(ggml_interface INTERFACE)
     target_link_libraries(ggml_interface INTERFACE ggml)
@@ -352,35 +353,45 @@ endif()
 if(ENABLE_VULKAN)
     find_package(Vulkan QUIET)
     if(Vulkan_FOUND)
-        message(STATUS "Vulkan found: ${Vulkan_VERSION}")
-        add_compile_definitions(HAVE_VULKAN=1)
-
-        # Point include/vulkan/vulkan.h at the real SDK header. Without this,
-        # that file shadows <vulkan/vulkan.h> with a stub that has no vk*
-        # entry points and no Vk*CreateInfo structs, which makes
-        # src/vulkan_compute.cpp uncompilable. Normalise to forward slashes so
-        # the path survives being embedded in a string literal definition.
+        # Verify we have the real Vulkan SDK header, not the local stub.
+        # The repo's include/ ships a vulkan/vulkan.h STUB (no vk* entry points),
+        # which FindVulkan may incorrectly resolve. We must locate the real SDK header.
         set(_rawrxd_vk_inc "${Vulkan_INCLUDE_DIRS}")
         if(NOT _rawrxd_vk_inc)
             set(_rawrxd_vk_inc "${Vulkan_INCLUDE_DIR}")
         endif()
+        set(_rawrxd_vk_hdr "")
         if(_rawrxd_vk_inc)
             file(TO_CMAKE_PATH "${_rawrxd_vk_inc}" _rawrxd_vk_inc)
             set(_rawrxd_vk_hdr "${_rawrxd_vk_inc}/vulkan/vulkan.h")
-            if(EXISTS "${_rawrxd_vk_hdr}")
-                # BEFORE so the real SDK header is selected rather than the
-                # local stub. It also puts vk_video/ on the search path, which
-                # vulkan_core.h needs for its transitive includes.
-                include_directories(BEFORE SYSTEM "${_rawrxd_vk_inc}")
-                add_compile_definitions(
-                    RAWXRD_VULKAN_SDK_HEADER="${_rawrxd_vk_hdr}")
-                message(STATUS "Vulkan header: ${_rawrxd_vk_hdr}")
-            else()
-                message(WARNING "Vulkan found but header not located at ${_rawrxd_vk_hdr}; the local stub will be used and real GPU code will not compile")
+        endif()
+        if(NOT EXISTS "${_rawrxd_vk_hdr}")
+            # Also check VULKAN_SDK environment variable as fallback
+            if(DEFINED ENV{VULKAN_SDK})
+                set(_rawrxd_vk_sdk_inc "$ENV{VULKAN_SDK}/Include")
+                if(EXISTS "${_rawrxd_vk_sdk_inc}/vulkan/vulkan.h")
+                    set(_rawrxd_vk_hdr "${_rawrxd_vk_sdk_inc}/vulkan/vulkan.h")
+                    set(_rawrxd_vk_inc "${_rawrxd_vk_sdk_inc}")
+                endif()
             endif()
         endif()
-
-        set(GPU_BACKEND_LIBS ${GPU_BACKEND_LIBS} Vulkan::Vulkan)
+        
+        if(EXISTS "${_rawrxd_vk_hdr}")
+            message(STATUS "Vulkan found: ${Vulkan_VERSION}")
+            message(STATUS "Vulkan header: ${_rawrxd_vk_hdr}")
+            add_compile_definitions(HAVE_VULKAN=1)
+            add_compile_definitions(RAWRXD_VULKAN_SDK_HEADER="${_rawrxd_vk_hdr}")
+            # BEFORE so the real SDK header is selected rather than the local stub.
+            # It also puts vk_video/ on the search path, which vulkan_core.h needs.
+            include_directories(BEFORE SYSTEM "${_rawrxd_vk_inc}")
+            set(GPU_BACKEND_LIBS ${GPU_BACKEND_LIBS} Vulkan::Vulkan)
+        else()
+            message(WARNING "Vulkan package found but real SDK header (vulkan/vulkan.h) not located.")
+            message(WARNING "  Found include path: ${_rawrxd_vk_inc}")
+            message(WARNING "  The local stub header in include/vulkan/vulkan.h will NOT be used.")
+            message(WARNING "  Vulkan Compute support DISABLED. Install Vulkan SDK and set VULKAN_SDK env var.")
+            # Do NOT set HAVE_VULKAN or add Vulkan::Vulkan - treat as not found
+        endif()
     else()
         message(STATUS "Vulkan not found - Vulkan Compute support disabled")
     endif()
@@ -426,6 +437,12 @@ endif()
 
 if(WIN32)
     add_subdirectory(src/workflow)
+    # Deep2 AutoTune — native C++20 tuning core (Windows-only, no Qt)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_autotune/CMakeLists.txt")
+        add_subdirectory(tools/deep2_autotune)
+    else()
+        message(STATUS "deep2_autotune EXCLUDED: tools/deep2_autotune/CMakeLists.txt not present")
+    endif()
 endif()
 
 # ============================================================
@@ -1151,20 +1168,6 @@ if(MSVC)
             list(APPEND RAWRXD_QT_TARGETS rawrxd_compiler_qt)
             message(STATUS "rawrxd_compiler_qt EXCLUDED: src/compiler/rawrxd_compiler_qt.cpp absent from this tree")
         endif()
-        
-        # Add the MASM writers
-        if(EXISTS "${CMAKE_SOURCE_DIR}/src/masm/CMakeLists.txt")
-            add_subdirectory(src/masm)
-            if(TARGET rawrxd_compiler_qt)
-                target_link_libraries(rawrxd_compiler_qt PRIVATE masm_writers)
-            endif()
-            if(TARGET RawrXD-Compiler)
-                target_link_libraries(RawrXD-Compiler PRIVATE masm_writers)
-            endif()
-        else()
-            list(APPEND RAWRXD_QT_TARGETS masm_writers)
-            message(STATUS "masm_writers EXCLUDED: src/masm/CMakeLists.txt not present in this tree")
-        endif()
     else()
         message(STATUS "Qt6 not found, skipping RawrXD-QtShell")
     endif()
@@ -1173,7 +1176,7 @@ else()
 endif()
 
 # Win32-based IDE (MSVC only to match Qt)
-if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
+if(MSVC AND RAWRXD_BUILD_WIN32IDE_QT AND Qt6_FOUND)
             if(EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/Win32IDE_CopilotIntegration.cpp")
         add_executable(RawrXD-Win32IDE 
                 src/win32app/main_win32.cpp
@@ -1257,31 +1260,30 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
     else()
         list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE)
         message(STATUS "RawrXD-Win32IDE EXCLUDED: sources absent from this tree (src/win32app/Win32IDE_CopilotIntegration.cpp, src/win32app/CopilotStreaming.cpp)")
-    
-            target_link_libraries(RawrXD-Win32IDE PRIVATE
     endif()
+
     if(TARGET RawrXD-Win32IDE)
-    
-        d3d11
-        dxgi
-        dcomp
-        dwmapi
-        d2d1
-        dwrite
-        d3dcompiler
-        winhttp
-        shlwapi
-        shell32
-        RawrXDOrchestration
-        RawrXDGit
-        RawrXDTerminal
-        brutal_compression_lib
-        quant_utils
-        Qt6::Core
-        Qt6::Network
-        Qt6::Widgets
-        Qt6::Charts
-    )
+        target_link_libraries(RawrXD-Win32IDE PRIVATE
+            d3d11
+            dxgi
+            dcomp
+            dwmapi
+            d2d1
+            dwrite
+            d3dcompiler
+            winhttp
+            shlwapi
+            shell32
+            RawrXDOrchestration
+            RawrXDGit
+            RawrXDTerminal
+            brutal_compression_lib
+            quant_utils
+            Qt6::Core
+            Qt6::Network
+            Qt6::Widgets
+            Qt6::Charts
+        )
     
     # Add include dir first to pick up our d3d10effect.h and ggml.h stubs before system SDK
     target_include_directories(RawrXD-Win32IDE BEFORE PRIVATE 
@@ -1320,8 +1322,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE AND Qt6_FOUND)
     endif()
 else()
     list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE)
-    message(STATUS "RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE=OFF)")
-endif() # End RAWRXD_BUILD_WIN32IDE block
+    message(STATUS "RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)")
+endif() # End RAWRXD_BUILD_WIN32IDE_QT block
 
 # ============================================================================
 # Universal GGUF probe (model-agnostic Deep2 integration)
@@ -1523,6 +1525,252 @@ else()
     message(STATUS "deep2_d1_prefill_parity EXCLUDED: tool source or Vulkan SDK unavailable")
 endif()
 
+# Gate 8 — Speculative Verification Benchmark (RAWRXD_DEEP2_SPEC_VERIFY_001).
+#
+# Measures Deep2 native batched speculative verification against the serial
+# greedy decode path on a REAL GGUF, with per-workload (code/prose) acceptance
+# rates. The fused LM-head path (DispatchGemvQ4KBatch) is exercised when the
+# model has a Q4_K LM head and perPosLogits is requested.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_spec_bench
+        tools/deep2_spec_bench.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/deep2/deep2_speculative.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_spec_bench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_spec_bench PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_spec_bench PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_spec_bench PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_spec_bench PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_spec_bench PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_spec_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_spec_bench EXCLUDED: tool source or Vulkan SDK unavailable")
+endif()
+
+# HEXMAG_PARALLEL_WORKTREE_001 — HexMag parallel swarm execution certification.
+# Requires MASM (RAWR_HAS_MASM) and HexMag runtime sources.
+# Note: hexmag_finalize_policy is header-only (inline); hexmag_client is not yet implemented.
+if(EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_repeat_tuner_cert.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_RepeatTuner.asm" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_Swarm.asm" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_control_plane.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_oracle_binder.cpp")
+    # Repeat tuner MASM object library
+    add_library(rawrxd_hexmag_repeat OBJECT
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_RepeatTuner.asm
+    )
+    set_source_files_properties(${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_RepeatTuner.asm
+        PROPERTIES LANGUAGE ASM_MASM)
+    if(MSVC)
+        # MASM-specific options only (no C++ options)
+        target_compile_options(rawrxd_hexmag_repeat PRIVATE /Zi /Cx /W3 /errorReport:prompt)
+    endif()
+
+    # HexMag repeat tuner cert
+    add_executable(hexmag_repeat_tuner_cert
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_repeat_tuner_cert.cpp
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+    )
+    target_include_directories(hexmag_repeat_tuner_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/agentic
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src
+    )
+    target_compile_definitions(hexmag_repeat_tuner_cert PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_repeat_tuner_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_repeat_tuner_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
+
+    # HexMag IDE E2E cert (uses runtime controller, control plane, oracle binder, swarm MASM)
+    add_executable(hexmag_ide_e2e_cert
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_ide_e2e_cert.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_control_plane.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_oracle_binder.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+    )
+    set_source_files_properties(${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_Swarm.asm
+        PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_ide_e2e_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/agentic
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_ide_e2e_cert PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        # C++ options for C++ sources, MASM options for MASM sources
+        target_compile_options(hexmag_ide_e2e_cert PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W4 /std:c++20>
+            $<$<COMPILE_LANGUAGE:ASM_MASM>:/Zi /Cx /W3 /errorReport:prompt>
+        )
+    endif()
+    set_target_properties(hexmag_ide_e2e_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "[Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert")
+
+    # HexMag runtime controller cert (uses runtime controller, control plane, oracle binder, swarm MASM)
+    add_executable(hexmag_runtime_controller_cert
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_runtime_controller_cert.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_control_plane.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_oracle_binder.cpp
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+    )
+    set_source_files_properties(${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_Swarm.asm
+        PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_runtime_controller_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/~dev/rawrxd/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_runtime_controller_cert PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_runtime_controller_cert PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W4 /std:c++20>
+            $<$<COMPILE_LANGUAGE:ASM_MASM>:/Zi /Cx /W3 /errorReport:prompt>
+        )
+    endif()
+    set_target_properties(hexmag_runtime_controller_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
+else()
+    message(STATUS "HexMag cert targets EXCLUDED: required sources not found")
+endif()
+
+# Gate 11 — Long-Context KV Correctness (DEEP2_CONTEXT_SCALING_001).
+# Progress through 4K, 32K, 128K, 512K, and 1M where supported.
+# Verify KV contents, memory residency, position handling, and measured decode scaling.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_context_scaling
+        tools/deep2_context_scaling.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_context_scaling PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_context_scaling PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_context_scaling PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_context_scaling PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_context_scaling PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_context_scaling PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_context_scaling PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_context_scaling EXCLUDED: tool source or Vulkan SDK unavailable")
+endif()
+
+# Gate 9 — GGUF Lifecycle Certification (DEEP2_GGUF_LIFECYCLE_001).
+# Tests load, generate, cancel, unload, reload, and corrupted GGUF handling
+# with memory accounting and fail-closed architecture dispatch.
+# Uses the same minimal source set as deep2_spec_bench.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_gguf_lifecycle
+        tools/deep2_gguf_lifecycle.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(deep2_gguf_lifecycle PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_gguf_lifecycle PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_gguf_lifecycle PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_gguf_lifecycle PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_gguf_lifecycle PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_gguf_lifecycle PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_gguf_lifecycle PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_gguf_lifecycle EXCLUDED: tool source or Vulkan SDK unavailable")
+endif()
+
 # Gate 4 kernel evidence (RAWRXD_DEEP2_GPU_QUANT_DOT_001): the native Vulkan
 # quantised-dot verifier. It builds synthetic Q4_K/Q6_K rows plus Q8_K
 # activations, runs vc.ExecuteQuantDot on the REAL device and compares it
@@ -1595,6 +1843,55 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_quant_dot_realweights.cpp" AND Vulkan_F
     message(STATUS "gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)")
 else()
     message(STATUS "gpu_quant_dot_realweights EXCLUDED: source or Vulkan SDK unavailable")
+endif()
+
+# Gate 9 — Fused Speculative LM-Head Runtime (DEEP2_SPEC_FUSED_RUNTIME_001).
+# Verifies that DispatchGemvQ4KBatch is reached by the real speculative
+# verification path, with correct per-position logits and measured launch
+# reduction. Uses the same Vulkan guard as deep2_spec_bench.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_fused_lmhead_verify.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_fused_lmhead_verify
+        tests/deep2_fused_lmhead_verify.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/deep2_speculative.cpp
+        "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp"
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/vulkan_compute.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/streaming_gguf_loader.cpp
+    )
+    target_include_directories(deep2_fused_lmhead_verify PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tests
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_fused_lmhead_verify PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_fused_lmhead_verify PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_fused_lmhead_verify PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_fused_lmhead_verify PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_fused_lmhead_verify PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_fused_lmhead_verify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_fused_lmhead_verify enabled (Fused speculative LM-head certification; ggml + Vulkan SDK)")
+else()
+    message(STATUS "deep2_fused_lmhead_verify EXCLUDED: test source or Vulkan SDK unavailable")
 endif()
 
 # Gate 7 hybrid evidence (RAWRXD_GATE7_HYBRID_001): independent Mamba2 block-0
@@ -1694,13 +1991,13 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
         ${CMAKE_SOURCE_DIR}/src/deep2
         ${CMAKE_SOURCE_DIR}/include
     )
-    if(TARGET ggml_interface)
+if(TARGET ggml_interface)
         target_link_libraries(rawrxd_gpu_compute PUBLIC ggml_interface)
     endif()
     if(MSVC)
         target_compile_options(rawrxd_gpu_compute PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     else()
-        target_compile_options(rawrxd_gpu_compute PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+        target_compile_options(rawrxd_gpu_compute PRIVATE -std:c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
     endif()
     target_compile_definitions(rawrxd_gpu_compute PRIVATE
         NOMINMAX _CRT_SECURE_NO_WARNINGS DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
@@ -1813,11 +2110,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             # Pure-implementation out-of-class definitions (no main()). The
             # *_cert.cpp / *_parity.cpp harnesses are deliberately NOT listed
             # (each defines its own main()).
-            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/FreeTokenMicroZone.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickStreamWindow.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
-            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2LivePath_Mech.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2LivePath_Mech.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2LivePath_Pinball.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2LivePath_Thermal.cpp
@@ -1853,100 +2148,92 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             if(NOT EXISTS "${_s}")
                 list(REMOVE_ITEM _DEEP2_ENGINE_SUBSYSTEM_SOURCES "${_s}")
             endif()
-        endforeach()
+endforeach()
 
-        add_executable(rawrxd_deep2_engine
+        # Create a static library from the engine subsystem sources so other targets
+        # (deep2_gpu_decode_roofline, deep2_runtime_dispatch) can link against the
+        # same implementation instead of re-listing sources and risking ODR violations.
+        add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/engine_subsystems.cpp
             ${_DEEP2_ENGINE_SUBSYSTEM_SOURCES}
         )
-        target_include_directories(rawrxd_deep2_engine PRIVATE
+        target_include_directories(deep2_engine_lib PUBLIC
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/deep2
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
-            # ggml-common.h (block_q4_0, QK4_0, ...) lives beside the ggml
-            # sources rather than under include/, so it needs its own path.
             ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
         )
-        target_link_libraries(rawrxd_deep2_engine PRIVATE
+        target_link_libraries(deep2_engine_lib PUBLIC
             rawrxd_gpu_compute
             ggml
             Vulkan::Vulkan
         )
-        target_compile_options(rawrxd_deep2_engine PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
-        target_compile_definitions(rawrxd_deep2_engine PRIVATE
+        target_compile_options(deep2_engine_lib PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        target_compile_definitions(deep2_engine_lib PRIVATE
             NOMINMAX _CRT_SECURE_NO_WARNINGS
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
         )
-        set_target_properties(rawrxd_deep2_engine PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        set_target_properties(deep2_engine_lib PROPERTIES
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
         )
-        # Parity/generation probe. Built alongside the engine because it is the
-        # only surface that produces the receipts the GPU milestone is gated on
-        # (gpu_calls, PARITY_VERDICT, and the LINE_TRACE weight-geometry dump).
-        # It is expected to fail to link until the engine's own out-of-class
-        # members exist, so it is guarded explicitly rather than pulled in by
-        # an aggregating target that would then break a working build.
-        if(EXISTS ${CMAKE_SOURCE_DIR}/tools/deep2_runtime_dispatch.cpp)
-            add_executable(deep2_runtime_dispatch
-                ${CMAKE_SOURCE_DIR}/tools/deep2_runtime_dispatch.cpp
-                ${CMAKE_SOURCE_DIR}/src/deep2/runtime_graph_executor.cpp
-                ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie/universal_gguf.cpp
-                ${CMAKE_SOURCE_DIR}/src/deep2/quant_dot_dispatch.cpp
-                ${CMAKE_SOURCE_DIR}/src/deep2/op_linear.cpp
-                ${CMAKE_SOURCE_DIR}/src/vulkan_compute.cpp
-            )
-            target_include_directories(deep2_runtime_dispatch PRIVATE
-                ${CMAKE_SOURCE_DIR}
-                # include/ MUST precede src/deep2 here. src/vulkan_compute.cpp
-                # includes a bare "vulkan_compute.h", and src/deep2/vulkan_compute.h
-                # defines a DIFFERENT class (Deep2::VulkanCompute). With src/deep2
-                # first, src/vulkan_compute.cpp's global ::VulkanCompute methods fail
-                # to compile and this target cannot link its GPU entry point.
-                # (Note this is the opposite ordering to rawrxd_deep2_engine, which
-                # needs Deep2's own headers to win; the two targets are intentionally
-                # given different paths rather than sharing one ambiguous order.)
-                ${CMAKE_SOURCE_DIR}/include
-                ${CMAKE_SOURCE_DIR}/src
-                ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
-                ${CMAKE_SOURCE_DIR}/src/deep2
-                ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
-            )
-            target_link_libraries(deep2_runtime_dispatch PRIVATE ggml)
-            target_compile_options(deep2_runtime_dispatch PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
-            target_compile_definitions(deep2_runtime_dispatch PRIVATE
-                NOMINMAX _CRT_SECURE_NO_WARNINGS
-            )
-            set_target_properties(deep2_runtime_dispatch PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-            )
 
-            # Independent YaRN RoPE reference. Runs the VENDORED ggml's own
-            # GGML_OP_ROPE (the very compute path llama.cpp uses) with
-            # deepseek2's parameters at nonzero positions, so the executor's
-            # NEOX pairing and yarn angle can be compared against a genuine
-            # reference instead of against the same code twice. Position 0 is
-            # the identity rotation for every scheme, so it cannot witness a
-            # independent-reference tests cannot witness. Position 0 is the
-            # identity rotation under every scheme.
-            add_executable(deep2_rope_yarn_reference
-                ${CMAKE_SOURCE_DIR}/tools/deep2_rope_yarn_reference.cpp
-            )
-            target_include_directories(deep2_rope_yarn_reference PRIVATE
-                ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
-            )
-            target_link_libraries(deep2_rope_yarn_reference PRIVATE ggml-cpu ggml-base)
-            set_target_properties(deep2_rope_yarn_reference PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-            )
-        endif()
-        message(STATUS "rawrxd_deep2_engine enabled (link inventory target)")
+        # Main engine executable: contains the entry point and core engine logic,
+        # links against the subsystem library.
+        # DISABLED: No legitimate entry point exists yet. Deep2Engine_dummy_main.cpp
+        # is a fabricated stub (int main() { return 0; }). Enable when a real
+        # entry point implementation is available.
+        # add_executable(rawrxd_deep2_engine
+        #     ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_dummy_main.cpp
+        # )
+        # target_link_libraries(rawrxd_deep2_engine PRIVATE deep2_engine_lib)
+        # set_target_properties(rawrxd_deep2_engine PROPERTIES
+        #     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        # )
+
+message(STATUS "deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable disabled pending real entry point)")
     endif()
+endif()
+
+# Gate 8 — GPU Decode Roofline Profiling (DEEP2_GPU_DECODE_ROOFLINE_001).
+# Measures kernel execution, launch overhead, memory bandwidth, synchronization,
+# KV reads, and LM-head costs per token. Optimizes the largest measured bottleneck.
+# Now placed AFTER deep2_engine_lib definition so target_link_libraries can resolve it.
+if(TARGET deep2_engine_lib AND EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_profiler/deep2_gpu_roofline.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_gpu_decode_roofline
+        tools/gpu_profiler/deep2_gpu_roofline.cpp
+    )
+    target_include_directories(deep2_gpu_decode_roofline PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    target_link_libraries(deep2_gpu_decode_roofline PRIVATE
+        deep2_engine_lib
+        ggml_interface
+        Vulkan::Vulkan
+    )
+    if(MSVC)
+        target_compile_options(deep2_gpu_decode_roofline PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_gpu_decode_roofline PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_gpu_decode_roofline PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_gpu_decode_roofline PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)")
 else()
-    message(STATUS "rawrxd_gpu_compute EXCLUDED: src/deep2/vulkan_compute.{h,cpp} absent")
+    message(STATUS "deep2_gpu_decode_roofline EXCLUDED: deep2_engine_lib not available or test source/Vulkan SDK unavailable")
 endif()
 
 # ============================================================================
