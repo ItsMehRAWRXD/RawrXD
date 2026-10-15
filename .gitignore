@@ -92,7 +92,16 @@ _eval_harness/
 # ---- machine build trees ----
 build_vs/
 build_fresh/
+build_cmake/
 vs_validation/
+build_agent_esp/
+build_snap_process_guard/
+_build/
+
+# CMake machine state inside build trees (nested caches reference absolute
+# generator/compiler paths from the machine that produced them)
+_build/*.cmake
+CMakeFiles/
 
 # ---- local backups ----
 /.backups/
@@ -159,3 +168,9 @@ evidence/deep2_one_pipeline/pages/
 # ---- 2026-10-14: regenerable parity/logit dump blobs stay local; the receipts,
 # comparators and run transcripts that regenerate them remain versioned. ----
 *.bin
+
+# ---- 2026-10-15 parity finalization drop: the build tree and the persisted
+# evidence workspace are regenerable outputs, not repo content. The C++ runner,
+# the e2e fixture, the gate and the evidence harness ARE versioned. ----
+/tools/rawrxd_parity_final/build/
+/tools/rawrxd_parity_final/parity_evidence_ws/

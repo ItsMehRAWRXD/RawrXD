@@ -51,13 +51,12 @@ if(RAWRXD_ENABLE_HARDENING)
     
     if(MSVC)
         # MSVC Security Hardening Flags
+        # COMPILE-TIME options below. /DYNAMICBASE, /NXCOMPAT and /HIGHENTROPYVA
+        # are LINKER-only: MSVC rejects them as compile arguments with D8021
+        # ("invalid numeric argument"), so they live in add_link_options() only.
         # /GS - Buffer Security Check (stack cookie)
         # /guard:cf - Control Flow Guard (CFG)
         # /guard:ehcont - Export Suppression (EH Continuation)
-        # /DYNAMICBASE - ASLR (Address Space Layout Randomization)
-        # /NXCOMPAT - DEP (Data Execution Prevention)
-        # /SAFESEH - Safe Exception Handlers (x86 only, implicit for x64)
-        # /HIGHENTROPYVA - High Entropy ASLR (64-bit)
         # /VOLATILE:ISO - ISO C++ volatile semantics
         # /SDL - Security Development Lifecycle (recommended subset of warnings)
         # /W4 - Warning Level 4
@@ -66,14 +65,11 @@ if(RAWRXD_ENABLE_HARDENING)
         # /Zc:strictStrings - Strict string literal type checking
         # /Zc:throwingNew - Standard conforming operator new
         # /permissive- - Standards conformance mode
-        
+
         add_compile_options(
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/GS>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:cf>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/guard:ehcont>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/DYNAMICBASE>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/NXCOMPAT>
-            $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/HIGHENTROPYVA>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/VOLATILE:ISO>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/SDL>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/W4>
@@ -82,7 +78,7 @@ if(RAWRXD_ENABLE_HARDENING)
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/Zc:throwingNew>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/permissive->
         )
-        
+
         add_link_options(
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/DYNAMICBASE>
             $<$<CONFIG:Release,RelWithDebInfo,MinSizeRel>:/NXCOMPAT>
@@ -508,6 +504,18 @@ add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
 
     # Deep2 Flight Recorder: self-logging inference debugger for performance diagnosis.
     add_subdirectory(tools/deep2_debugger EXCLUDE_FROM_ALL)
+
+    # RawrXD parity finalization runner: dependency-free C++20 autonomous
+    # execution loop (rawr run <model> <task>) with guarded file editing,
+    # bounded retries, process timeouts, tool-name integrity (rejects gash/
+    # bash etc.) and a JSONL evidence ledger. Its --self-test is registered
+    # with CTest so the guarded-edit/JSON/frame/path-guard contracts are
+    # enforced on every build, not just on manual invocation.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawrxd_parity_final/CMakeLists.txt")
+        add_subdirectory(tools/rawrxd_parity_final EXCLUDE_FROM_ALL)
+    else()
+        message(STATUS "rawrxd_parity_final EXCLUDED: tools/rawrxd_parity_final/CMakeLists.txt not present")
+    endif()
 
     # Create ggml interface library for clean linking
     add_library(ggml_interface INTERFACE)

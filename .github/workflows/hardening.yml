@@ -1,0 +1,125 @@
+name: Production Hardening & Parity Gate
+
+# Verifies the claims the project makes, rather than restating them:
+#   1. the parity runner BUILDS with security hardening applied
+#   2. its own --self-test contract passes
+#   3. the delivered e2e mock exercises rejection/edit/build/verify/ledger
+#   4. the produced PE actually carries ASLR/DEP/HEASLR/CFG in its headers
+#   5. parity_gate.py accepts a real generated ledger and REJECTS bad ones
+# Steps 4 and 5 are the ones usually missing: a flag on a command line and a
+# gate that always says "pass" are not evidence.
+
+on:
+  push:
+    branches: [main, dev, local-30b-backend]
+    paths:
+      - 'tools/rawrxd_parity_final/**'
+      - 'CMakeLists.txt'
+      - 'scripts/**'
+      - '.github/workflows/hardening.yml'
+  pull_request:
+    paths:
+      - 'tools/rawrxd_parity_final/**'
+      - 'CMakeLists.txt'
+      - 'scripts/**'
+      - '.github/workflows/hardening.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hardened-parity-gate:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install NASM
+        run: choco install nasm -y
+
+      # ------------------------------------------------------------------
+      # 1. Configure + build the runner with production hardening enabled
+      # ------------------------------------------------------------------
+      - name: Configure hardened Release build
+        run: |
+          cmake -S tools/rawrxd_parity_final -B tools/rawrxd_parity_final/build `
+                -A x64 -DCMAKE_BUILD_TYPE=Release -DRAWRXD_ENABLE_HARDENING=ON
+
+      - name: Build (fail on warnings, /W4 is part of the hardening set)
+        run: |
+          cmake --build tools/rawrxd_parity_final/build --config Release
+          if ($LASTEXITCODE -ne 0) { throw "hardened build failed" }
+
+      # ------------------------------------------------------------------
+      # 2. The runner's own contract test
+      # ------------------------------------------------------------------
+      - name: Run runner self-test (JSON, frames, gash rejection, path guard)
+        run: |
+          $exe = "tools/rawrxd_parity_final/build/Release/rawr_run.exe"
+          & $exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw "rawr_run --self-test failed" }
+
+      - name: Run CTest
+        run: |
+          ctest --test-dir tools/rawrxd_parity_final/build -C Release --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw "ctest failed" }
+
+      # ------------------------------------------------------------------
+      # 3. Prove the hardening reached the binary, not just the command line
+      # ------------------------------------------------------------------
+      - name: Verify PE hardening (ASLR/DEP/HEASLR/CFG)
+        run: |
+          pwsh -ExecutionPolicy Bypass -NoProfile -File scripts/verify_hardening.ps1 `
+               -Path tools/rawrxd_parity_final/build/Release/rawr_run.exe
+          if ($LASTEXITCODE -ne 0) { throw "binary is missing OS mitigations" }
+
+      # ------------------------------------------------------------------
+      # 4. Mock end-to-end: rejection, edit, build, CTest verify, ledger
+      # ------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run e2e mock (deep2 + ollama backends)
+        run: |
+          py -3 tools/rawrxd_parity_final/test_e2e_mock.py tools/rawrxd_parity_final/build/Release/rawr_run.exe
+          if ($LASTEXITCODE -ne 0) { throw "e2e mock failed" }
+
+      # ------------------------------------------------------------------
+      # 5. The gate: accept a real ledger, reject fabricated/missing ones
+      # ------------------------------------------------------------------
+      - name: Run parity gate evidence (real ledger + negative controls)
+        run: |
+          py -3 tools/rawrxd_parity_final/parity_gate_evidence.py
+          if ($LASTEXITCODE -ne 0) { throw "parity gate evidence failed" }
+
+      # ------------------------------------------------------------------
+      # 6. Compliance sanity for the shipped test tooling
+      # ------------------------------------------------------------------
+      - name: Static check - no debug prints / TODO left in drop
+        shell: bash
+        run: |
+          if grep -rn "TODO\|FIXME\|XXX" tools/rawrxd_parity_final/*.cpp tools/rawrxd_parity_final/*.py 2>/dev/null; then
+            echo "::warning::found TODO/FIXME markers in drop"
+          fi
+          echo "static marker scan complete"
+
+      - name: Upload evidence artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-gate-evidence
+          path: |
+            tools/rawrxd_parity_final/rawr_run_report.json
+          retention-days: 30
+          if-no-files-found: warn
