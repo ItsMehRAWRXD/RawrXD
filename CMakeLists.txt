@@ -671,6 +671,15 @@ if(NOT TARGET nlohmann_json)
 endif()
 
 if(WIN32)
+    # Production-hardening runtime (dependency-free: Windows stdlib + CNG).
+    # Built unconditionally on Windows because it has no external dependency,
+    # so CI and shipped binaries get the same hardened layer.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/production/CMakeLists.txt")
+        add_subdirectory(src/production)
+    else()
+        message(STATUS "rawrxd_production_hardening EXCLUDED: src/production not present")
+    endif()
+
     add_subdirectory(src/workflow)
     # Deep2 AutoTune — native C++20 tuning core (Windows-only, no Qt)
     if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_autotune/CMakeLists.txt")
@@ -1541,6 +1550,17 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE_QT AND Qt6_FOUND)
     if(TARGET ggml)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ggml)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAVE_GGML=1)
+    endif()
+
+    # Production-hardening runtime. Qt6::link finds the dependency, so this is
+    # linked unconditionally for both IDE flavours, matching the native target.
+    if(TARGET rawrxd_production_hardening)
+        target_link_libraries(RawrXD-Win32IDE PRIVATE
+            rawrxd_production_hardening
+        )
+        target_include_directories(RawrXD-Win32IDE PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/production
+        )
     endif()
     
     # Compiler options - MSVC only now
@@ -2852,6 +2872,22 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             # PSAPI for process enumeration in SNAP detectors
             psapi
         )
+        # Production-hardening runtime: configuration, structured logging,
+        # metrics, security (AES-GCM + hash-chained audit) and readiness gates.
+        # main_win32.cpp calls ProductionRuntime::init()/shutdown() and
+        # exposes --health-check, so this is a hard dependency of the IDE
+        # rather than an optional extra.
+        if(TARGET rawrxd_production_hardening)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
+                rawrxd_production_hardening
+            )
+            target_include_directories(RawrXD-Win32IDE-Native PRIVATE
+                ${CMAKE_SOURCE_DIR}/src/production
+            )
+            message(STATUS "RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening")
+        else()
+            message(WARNING "RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the IDE will start without hardening")
+        endif()
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE

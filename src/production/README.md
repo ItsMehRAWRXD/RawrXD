@@ -1,329 +1,230 @@
-# Phase D.10: Production Hardening & Certification (Complete)
+# Production Hardening Runtime
 
-Final phase ensuring the Sovereign distributed system is production-ready with enterprise-grade reliability, security, and compliance.
+The operational layer for RawrXD: configuration, observability, reliability,
+security and readiness gates that a production deployment needs and a
+development build did not have.
 
-## Overview
+Everything in this directory is a **static library with no external
+dependency** beyond the Windows C runtime and CNG (`bcrypt`). It does not link
+Qt, ggml or Vulkan, so it can be built and verified on its own, and any failure
+inside it cannot be caused by a subsystem it does not use.
 
-Phase D.10 provides the final production hardening layer including:
-- **Performance Optimization**: Profiling, memory/CPU/network/I/O optimization
-- **Security Hardening**: Policy engine, vulnerability scanning, IDS, encryption
-- **Reliability & Fault Tolerance**: Circuit breakers, bulkheads, retry policies
-- **Compliance & Certification**: SOC2, ISO27001, PCI-DSS, HIPAA, GDPR support
-- **Production Readiness**: Deployment gates, pipelines, canary/blue-green deployments
-
-## Components
-
-### 1. SovereignPerformanceOptimization.hpp
-Production performance tuning:
-- **Performance Profiler**: CPU profiling, flame graphs, Chrome tracing export
-- **Memory Optimizer**: Pool allocators, defragmentation, leak detection
-- **CPU Optimizer**: Thread affinity, load balancing, priority management
-- **Network Optimizer**: TCP tuning, connection pooling, zero-copy
-- **I/O Optimizer**: Async I/O, io_uring, batch operations
-- **Cache Optimizer**: LRU/LFU hybrid caching with configurable eviction
-
-### 2. SovereignSecurityHardening.hpp
-Enterprise security hardening:
-- **Security Policy Engine**: CIS, NIST, PCI-DSS, HIPAA policies
-- **Vulnerability Scanner**: CVE database, dependency scanning, auto-fix
-- **Intrusion Detection System**: Network, file, process monitoring
-- **Encryption Manager**: AES-256-GCM, ChaCha20-Poly1305, key rotation
-- **Secure Communication**: TLS 1.3, mTLS, certificate pinning
-- **Audit Logger**: Immutable logs, integrity verification
-
-### 3. SovereignReliabilityFaultTolerance.hpp
-Production reliability patterns:
-- **Circuit Breaker**: Automatic failure detection and recovery
-- **Bulkhead**: Resource isolation and containment
-- **Retry Executor**: Configurable backoff strategies
-- **Timeout Manager**: Cancellation tokens, async timeouts
-- **Graceful Degradation**: Fallback chains, static fallbacks
-- **Chaos Engineering**: Fault injection, automated experiments
-
-### 4. SovereignComplianceCertification.hpp
-Enterprise compliance frameworks:
-- **Compliance Framework**: SOC2, ISO27001, PCI-DSS, HIPAA, GDPR, NIST
-- **Audit Manager**: Continuous auditing, audit scheduling
-- **Policy Manager**: Security policy lifecycle management
-- **Risk Manager**: Risk assessment and mitigation tracking
-- **Evidence Collector**: Automated evidence collection and storage
-- **Certification Manager**: Certificate tracking and renewal
-
-### 5. SovereignProductionReadiness.hpp
-Production deployment automation:
-- **Readiness Gate**: Pre-deployment validation checks
-- **Deployment Pipeline**: CI/CD with stages and approvals
-- **Canary Deployment**: Gradual rollout with automatic analysis
-- **Feature Flags**: Progressive rollout and A/B testing
-- **Blue-Green Deployment**: Zero-downtime deployments
+```
+src/production/
+  SovereignProductionConfig.hpp/.cpp        typed, validated, env-overridable config
+  SovereignObservability.hpp/.cpp           JSON logs + rotation, metrics, tracing, health
+  SovereignReliabilityFaultTolerance.hpp/.cpp  circuit breakers, retry, bulkheads, fallbacks
+  SovereignSecurityHardening.hpp/.cpp       AES-256-GCM, validation, hash-chained audit log
+  ProductionRuntime.hpp/.cpp                the single init/shutdown entry point
+  CMakeLists.txt                            library + tests + probe binary
+  tests/production_hardening_tests.cpp      77 behavioural checks
+  tools/health_probe.cpp                    standalone liveness/readiness probe
+```
 
 ## Usage
 
-### Performance Optimization
+One call boots the whole hardened surface, one call tears it down.
+
 ```cpp
-#include "SovereignPerformanceOptimization.hpp"
+#include "ProductionRuntime.hpp"
 
 using namespace Sovereign::Production;
 
-// Initialize performance runtime
-PerformanceRuntime::Config config;
-PerformanceRuntime runtime(config);
-runtime.Initialize();
-
-// Profile a function
-auto profiler = runtime.GetProfiler();
-profiler->BeginProfile("process_request", __FILE__, __LINE__);
-// ... code to profile ...
-profiler->EndProfile("process_request");
-
-// Generate flame graph
-profiler->ExportToFlameGraph("/tmp/profile.svg");
-
-// Optimize memory
-auto memory = runtime.GetMemoryOptimizer();
-void* ptr = memory->Allocate(1024);
-// ... use memory ...
-memory->Deallocate(ptr, 1024);
-```
-
-### Security Hardening
-```cpp
-#include "SovereignSecurityHardening.hpp"
-
-using namespace Sovereign::Production;
-
-// Initialize security runtime
-SecurityHardeningRuntime::Config config;
-SecurityHardeningRuntime runtime(config);
-runtime.Initialize();
-
-// Apply security policy
-runtime.ApplySecurityPolicy(SecurityLevel::RESTRICTIVE);
-
-// Run vulnerability scan
-auto scanner = runtime.GetVulnerabilityScanner();
-auto vulnerabilities = scanner->RunFullScan();
-for (const auto& vuln : vulnerabilities) {
-    if (vuln.severity == VulnerabilitySeverity::CRITICAL) {
-        // Handle critical vulnerability
-    }
-}
-
-// Encrypt data
-auto encryption = runtime.GetEncryptionManager();
-auto key = encryption->GenerateKey(32);
-auto encrypted = encryption->Encrypt(plaintext, key, 
-                                      EncryptionAlgorithm::AES_256_GCM);
-```
-
-### Reliability Patterns
-```cpp
-#include "SovereignReliabilityFaultTolerance.hpp"
-
-using namespace Sovereign::Production;
-
-// Initialize reliability runtime
-ReliabilityRuntime::Config config;
-ReliabilityRuntime runtime(config);
-runtime.Initialize();
-
-// Circuit breaker
-auto cb = runtime.CreateCircuitBreaker("api_calls", {
-    .failure_threshold = 5,
-    .timeout = std::chrono::seconds(30)
-});
-
-if (cb->AllowRequest()) {
-    try {
-        // Make API call
-        cb->RecordSuccess();
-    } catch (...) {
-        cb->RecordFailure();
-    }
-}
-
-// Retry with backoff
-auto retry = runtime.GetRetryExecutor();
-retry->Execute([&]() {
-    // Operation that might fail
-    return api_client.Call();
-});
-
-// Bulkhead isolation
-auto bulkhead = runtime.CreateBulkhead("database", {
-    .max_concurrent_calls = 10
-});
-bulkhead->TryExecute([&]() {
-    // Database operation
-});
-```
-
-### Compliance Management
-```cpp
-#include "SovereignComplianceCertification.hpp"
-
-using namespace Sovereign::Production;
-
-// Initialize compliance runtime
-ComplianceRuntime::Config config;
-ComplianceRuntime runtime(config);
-runtime.Initialize();
-
-// Load compliance controls
-auto framework = runtime.GetFramework();
-framework->LoadControls("SOC2");
-framework->LoadControls("ISO27001");
-
-// Run assessment
-runtime.RunComplianceAssessment("SOC2");
-double score = runtime.GetOverallComplianceScore();
-
-// Generate report
-runtime.GenerateExecutiveReport("/tmp/compliance_report.pdf");
-```
-
-### Production Deployment
-```cpp
-#include "SovereignProductionReadiness.hpp"
-
-using namespace Sovereign::Production;
-
-// Initialize production runtime
-ProductionRuntime::Config config;
-ProductionRuntime runtime(config);
-runtime.Initialize();
-
-// Run readiness checks
-if (!runtime.RunReadinessChecks()) {
-    std::cerr << "System not ready for production" << std::endl;
-    return 1;
-}
-
-// Deploy with canary
-DeploymentConfig deploy_config;
-deploy_config.name = "api-service";
-deploy_config.version = "2.0.0";
-deploy_config.strategy = DeploymentStrategy::CANARY;
-deploy_config.auto_rollback = true;
-
-std::string deployment_id = runtime.Deploy(deploy_config);
-
-// Monitor deployment
-auto pipeline = runtime.GetDeploymentPipeline();
-while (true) {
-    auto status = pipeline->GetStatus(deployment_id);
-    if (status.state == "completed") {
-        break;
-    }
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+// main() guard: initialises, runs the body, shuts down cleanly, and returns
+// 2 when a readiness gate blocked startup.
+int wmain() {
+    return production_main_guard({}, [] { return run_the_ide(); });
 }
 ```
 
-## Architecture
+Or call the pieces directly when the embedding application owns `main`:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Production Runtime                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  Readiness  │  │  Deployment │  │   Feature Flags     │  │
-│  │    Gates    │  │  Pipeline   │  │                     │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌───────────────┐   ┌───────────────────┐   ┌───────────────┐
-│   Security    │   │   Reliability     │   │   Compliance  │
-│   Hardening   │   │   & Fault Tol.    │   │   & Cert      │
-│               │   │                   │   │               │
-│ • Policies    │   │ • Circuit Breaker │   │ • SOC2        │
-│ • Vuln Scan   │   │ • Bulkhead        │   │ • ISO27001    │
-│ • IDS         │   │ • Retry/Timeout   │   │ • PCI-DSS     │
-│ • Encryption  │   │ • Chaos Eng       │   │ • HIPAA       │
-└───────────────┘   └───────────────────┘   └───────────────┘
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Performance Optimization                        │
-│  • Profiler  • Memory Opt  • CPU Opt  • Network  • I/O      │
-└─────────────────────────────────────────────────────────────┘
+```cpp
+ProductionRuntime::Options opts;
+opts.enforce_gates = true;
+opts.install_signal_handlers = true;
+if (!ProductionRuntime::init(opts)) return 3;   // a gate failed; do not serve
+// ... run ...
+ProductionRuntime::shutdown();
 ```
 
-## Compliance Standards Supported
+## Configuration
 
-- **SOC 2 Type II**: Security, availability, processing integrity
-- **ISO 27001**: Information security management
-- **PCI DSS**: Payment card industry data security
-- **HIPAA**: Healthcare data protection
-- **GDPR**: EU data protection regulation
-- **NIST 800-53**: Security and privacy controls
-- **CIS**: Center for Internet Security benchmarks
-- **FedRAMP**: Federal Risk and Authorization Management
-
-## Deployment Strategies
-
-### Canary Deployment
-1. Deploy new version to 5% of traffic
-2. Monitor metrics and error rates
-3. Gradually increase traffic percentage
-4. Auto-promote if healthy, rollback if issues
-
-### Blue-Green Deployment
-1. Deploy to green environment
-2. Run health checks
-3. Switch traffic from blue to green
-4. Keep blue as instant rollback option
-
-### Feature Flags
-- Progressive rollout by percentage
-- User targeting by attributes
-- A/B testing support
-- Instant enable/disable
-
-## Integration
-
-### With Previous Phases
-- **D.3-D.9**: All previous phases benefit from production hardening
-- **D.9 Unified Runtime**: Production runtime integrates with unified orchestration
-- **D.8 DevTools**: Deployment pipelines use CLI and monitoring
-- **D.7 Security**: Security hardening extends zero-trust architecture
-- **D.6 Intelligence**: ML models inform canary analysis
-
-## Build
+Every setting resolves in priority order:
+**default -> config file -> environment variable -> CLI override**.
 
 ```bash
-# Build production hardening
-mkdir build && cd build
-cmake .. -DSOVEREIGN_BUILD_PRODUCTION=ON
-make -j$(nproc)
+# Disable a subsystem entirely
+set RAWRXD_METRICS_ENABLED=false
+# Widen a timeout
+set RAWRXD_DEFAULT_TIMEOUT_MS=60000
+# Point at a config file
+set RAWRXD_CONFIG=C:\etc\rawrxd.json
+# Override a single field on the command line
+rawrxd_health_probe --general.environment=production
 
-# Run production tests
-ctest --output-on-failure
-
-# Install
-sudo make install
+# Ask the process for its effective configuration fingerprint
+# (a stable hash, so two builds can be compared without diffing secrets)
 ```
 
-## Complete System
+A value that fails a declared rule (range, enum, emptiness) **blocks
+startup** with a message naming the offending field, rather than silently
+becoming a zero or empty timeout:
 
-With Phase D.10 complete, the Sovereign distributed system now includes:
-- **D.3**: Distributed Runtime
-- **D.4**: Cloud-Native Deployment
-- **D.5**: Multi-Region Federation
-- **D.6**: Intelligent Operations
-- **D.7**: Security & Compliance
-- **D.8**: Developer Experience
-- **D.9**: Unified Runtime & Integration
-- **D.10**: Production Hardening & Certification
+```
+RawrXD: invalid configuration (2 problem(s)):
+  - logging.level: value 'loud' is not permitted
+  - reliability.cb_failure_threshold: below the allowed minimum
+```
 
-**Total**: 50+ header files, 25,000+ lines of production-ready enterprise distributed system code.
+Secrets are never read from a source file. `RAWRXD_SECURITY_KEY_FILE` names a
+256-bit key file generated on first use.
 
-## Certification Ready
+## Observability
 
-The system is now ready for:
-- SOC 2 Type II audit
-- ISO 27001 certification
-- PCI DSS compliance assessment
-- HIPAA security evaluation
-- GDPR compliance verification
+**Logging.** JSON records with a stable field set (`ts`, `service`,
+`instance`, `level`, `category`, `message`, `file`, plus `trace_id`/`span_id`
+when a span is active), rotated by size with retention, mirrored to the
+console. Warnings and errors go to stderr so `> file` still shows them.
+
+```json
+{"ts":1792054183123,"thread":"2716","service":"rawrxd","instance":"local",
+ "level":"error","category":"deepload","message":"GGUF load failed",
+ "error_code":"GGUF_MISSING_KV","error_what":"header field absent"}
+```
+
+Records below the configured level are counted, not silently discarded, so a
+mute process is measurable. Sink failures are counted too, so a sink that
+throws on every write cannot look configured while delivering nothing.
+
+**Metrics.** Counters, gauges and histograms with labels, exposed in
+Prometheus text format:
+
+```
+rawrxd_circuit_state_transitions_total{circuit="deepload",from="closed",to="open"} 1
+rawrxd_fallback_tier_seconds{tier="gpu"} 1.42
+rawrxd_log_records_total 1481
+```
+
+Series identity is `(kind, name, canonical labels)`, so two call sites with
+different labels never merge into one corrupt series.
+
+**Tracing.** `ScopedTrace` records spans, links them through a trace id
+inherited from the caller, and logs anything slower than
+`trace_slow_operation_ms` even when no waterfall was requested.
+
+**Health.** Named component checks with liveness, readiness and deep variants,
+rendered as JSON for probes.
+
+## Reliability
+
+**Circuit breakers** stop hammering a dependency that is already down, and
+recover on their own after the cooldown (open -> half-open -> closed) so no
+operator action is needed. Rejected calls are never recorded as failures,
+because a busy system would otherwise keep its own breaker open forever.
+
+**Retry** uses bounded exponential backoff with jitter (so retries do not
+synchronise into a second thundering herd), an optional global retry budget,
+and classifier-based permanent-failure short-circuit. Backoff treats a
+reversed `min > max` range as a configuration error, not as a zero delay.
+
+**Bulkheads** cap concurrency per resource and reject immediately when
+saturated, so one slow dependency surfaces as a fast error instead of a slow
+death by queue backlog.
+
+**Fallback chains** record which tier served and count escalations, so "we
+silently fell back to CPU for a week" is visible in the metrics instead of
+inferred.
+
+## Security
+
+**Encryption at rest.** AES-256-GCM through the Windows CNG provider, so
+persisted state is not plaintext without pulling in OpenSSL. Every
+`encrypt()` uses a fresh random nonce (verified by test), and authentication
+failure is always reported as a failure — there is no code path that returns
+plaintext from a bad tag.
+
+**Audit log.** Append-only, hash-chained records: each record commits to the
+previous one, so a truncated or edited trail is detectable after the fact.
+Verified by the startup readiness gate (full walk) and by health probes
+(tail walk). Two related invariants are enforced and tested:
+
+- An unreadable trailing record **stops the log** instead of being written
+  past, because a chain that skips a link is indistinguishable from an untampered one.
+- An audit log is only encrypted when the key **survives a restart**. Writing
+  ciphertext with an in-memory key would produce a log the next process
+  cannot read, which turns tamper detection into noise. When no key file is
+  configured the log is written plaintext with a warning instead.
+
+**Input validation** rejects device/UNC paths, non-whitelisted extensions,
+oversized inputs and control characters (which is how terminal and log
+injection are performed).
+
+**Redaction** masks `token=`, `password:`, `api_key=` style pairs so a
+configuration dump can be logged or attached to a bug report safely.
+
+## Readiness gates
+
+Ordered, named checks evaluated at startup. A blocking failure refuses to
+serve unless explicitly opted into degraded startup
+(`RAWRXD_FAIL_FAST_GATES=false`), and a gate that throws is a failure rather
+than an unknown state.
+
+```
+config_valid           effective configuration passes every declared rule
+logging_operational    a sink is attached and nothing has been silently dropped
+metrics_operational    series can be created and rendered
+security_primitives    encryption/audit controls report ready, chain intact
+reliability_primitives breakers, bulkheads and retry executor are constructed
+health_components      every registered component reports healthy
+```
+
+## Crash handling
+
+`enable_crash_dumps()` installs an unhandled-exception filter that writes a
+minidump and a breadcrumb file (including the config fingerprint) to
+`%LOCALAPPDATA%\RawrXD\crashes`, so a release build can still be diagnosed.
+
+## Building and running
+
+```bash
+cmake -S . -B build -A x64 -DRAWRXD_BUILD_TESTS=ON
+cmake --build build --config Release --target rawrxd_production_hardening -- /m
+cmake --build build --config Release --target rawrxd_production_tests      -- /m
+cmake --build build --config Release --target rawrxd_health_probe          -- /m
+
+ctest -C Release -R rawrxd_production --output-on-failure
+```
+
+## Command-line interface
+
+```
+rawrxd_health_probe                 # "healthy (liveness=true readiness=true)"
+rawrxd_health_probe --json          # full per-component report
+
+RawrXD-Win32IDE.exe --health-check
+RawrXD-Win32IDE.exe --health-check-json
+```
+
+Exit codes: `0` healthy, `1` degraded/not ready, `2` the probe itself failed.
+
+Compatible with the convention already present in the repository: exit 0 on
+success, non-zero with the reason written to stderr otherwise.
+
+## Test suite
+
+`rawrxd_production_tests` asserts **observable behaviour**, not compilation:
+encryption round-trip with tamper rejection and per-call randomisation, audit
+chain verification, chain-continuation across a reopen, refusal to append
+into a broken chain, circuit breaker state transitions including half-open
+recovery, retry exhaustion vs permanent-failure short-circuit, bulkhead
+saturation, labelled metric identity, range/enum validation, health override
+behaviour, and the runtime's init/record-failure/shutdown cycle.
+
+```
+77/77 checks passed
+```
+
+The suite runs three consecutive times with the same result, which is what
+caught the cross-restart audit-log defect: an in-memory key on the second run
+made run one's records unreadable.
