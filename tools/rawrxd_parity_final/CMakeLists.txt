@@ -82,3 +82,65 @@ enable_testing()
 # The runner's own contract test: JSON codec, framed-tool parsing, gash/unknown
 # tool rejection, guarded file write/read/edit, and PATH_GUARD protection.
 add_test(NAME rawr_run_self_test COMMAND rawr_run --self-test)
+
+# ---------------------------------------------------------------------------
+# Fuzz harness for the security-critical parsers and path guards
+# ---------------------------------------------------------------------------
+# Links the shipped implementation directly (RAWRXD_RUN_EMBEDDED suppresses the
+# drop's main()) so it exercises the real code, not a copy. Deterministic by
+# default (fixed seeds) so CI is reproducible; pass a larger iteration count to
+# widen the search. Run the fuzz target with sanitizers enabled to turn "no
+# crash" into "no memory error".
+option(RAWRXD_BUILD_FUZZ "Build the fuzz harness for the security-critical parsers" ON)
+
+if(RAWRXD_BUILD_FUZZ)
+  add_executable(rawr_fuzz_parsers EXCLUDE_FROM_ALL rawr_fuzz_parsers.cpp)
+  target_compile_features(rawr_fuzz_parsers PRIVATE cxx_std_20)
+
+  # The harness #includes the drop, so it must inherit the same hardening flags
+  # rather than relying on the parent directory options.
+  if(RAWRXD_ENABLE_HARDENING)
+    if(MSVC)
+      target_compile_options(rawr_fuzz_parsers PRIVATE
+        /GS /guard:cf /guard:ehcont /VOLATILE:ISO /permissive-
+        /W4 /FC /Zc:strictStrings
+      )
+      target_link_options(rawr_fuzz_parsers PRIVATE
+        /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA /guard:cf /guard:ehcont
+      )
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(rawr_fuzz_parsers PRIVATE
+        -fstack-protector-strong -fstack-clash-protection -fPIE
+        -Wall -Wextra -Wpedantic
+      )
+      target_link_options(rawr_fuzz_parsers PRIVATE -fPIE -pie)
+    endif()
+  endif()
+
+  if(MSVC)
+    target_compile_options(rawr_fuzz_parsers PRIVATE
+      "$<$<CONFIG:Release>:/O2>"
+      "$<$<CONFIG:Debug>:/fsanitize=address>"
+    )
+    target_link_options(rawr_fuzz_parsers PRIVATE
+      "$<$<CONFIG:Debug>:/fsanitize=address>"
+    )
+  else()
+    target_compile_options(rawr_fuzz_parsers PRIVATE
+      "$<$<CONFIG:Release>:-O2>"
+      "$<$<CONFIG:Debug>:-fsanitize=address;-fsanitize=undefined>"
+    )
+    target_link_options(rawr_fuzz_parsers PRIVATE
+      "$<$<CONFIG:Debug>:-fsanitize=address;-fsanitize=undefined>"
+    )
+  endif()
+
+  if(WIN32)
+    target_link_libraries(rawr_fuzz_parsers PRIVATE winhttp)
+  endif()
+
+  # Registered so a plain `cmake --build .` / ctest run covers the parsers.
+  add_test(NAME rawr_fuzz_parsers COMMAND rawr_fuzz_parsers 20000)
+  set_tests_properties(rawr_fuzz_parsers PROPERTIES TIMEOUT 120)
+  message(STATUS "rawr_fuzz_parsers: fuzz harness enabled (build with RAWRXD_BUILD_FUZZ=ON)")
+endif()

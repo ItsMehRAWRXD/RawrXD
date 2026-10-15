@@ -83,6 +83,36 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "binary is missing OS mitigations" }
 
       # ------------------------------------------------------------------
+      # 3b. Fuzz the security-critical parsers and path guards under ASan
+      # ------------------------------------------------------------------
+      - name: Build fuzz harness with AddressSanitizer (Debug)
+        run: |
+          cmake -S tools/rawrxd_parity_final -B tools/rawrxd_parity_final/build_asan `
+                -A x64 -DCMAKE_BUILD_TYPE=Debug -DRAWRXD_ENABLE_HARDENING=ON
+          cmake --build tools/rawrxd_parity_final/build_asan --config Debug `
+                --target rawr_fuzz_parsers
+          if ($LASTEXITCODE -ne 0) { throw "fuzz build failed" }
+
+      - name: Run fuzz harness (JSON codec, tool validator, path guards)
+        run: |
+          # MSVC's ASan runtime lives in the VC toolset; put it on PATH so the
+          # instrumented binary can start.
+          $rt = Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio" -Recurse `
+                 -Filter clang_rt.asan_dynamic-x86_64.dll -ErrorAction SilentlyContinue |
+                 Select-Object -First 1
+          if ($rt) { $env:PATH = "$($rt.DirectoryName);$env:PATH" }
+          $env:ASAN_OPTIONS = "detect_leaks=0:halt_on_error=0"
+          & tools/rawrxd_parity_final/build_asan/Debug/rawr_fuzz_parsers.exe 20000
+          if ($LASTEXITCODE -ne 0) { throw "fuzz harness failed (parser or path guard invariant violated)" }
+
+      - name: Run fuzz harness in Release (hardened flags)
+        run: |
+          cmake --build tools/rawrxd_parity_final/build --config Release `
+                --target rawr_fuzz_parsers
+          & tools/rawrxd_parity_final/build/Release/rawr_fuzz_parsers.exe 20000
+          if ($LASTEXITCODE -ne 0) { throw "fuzz harness (Release) failed" }
+
+      # ------------------------------------------------------------------
       # 4. Mock end-to-end: rejection, edit, build, CTest verify, ledger
       # ------------------------------------------------------------------
       - name: Set up Python
