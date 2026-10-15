@@ -7,15 +7,15 @@
     and verify. The package is only assembled if every verification stage
     passes -- a drop that cannot prove its own claims is not shipped.
 
-    Stages:
-      1. Clean hardened Release build (fails on any warning)
-      2. Contract self-test + CTest
-      3. Fuzz harness (ASan Debug build when available)
-      4. PE-header hardening verification of every produced binary
-      5. Mocked end-to-end, both backends
-      6. Real-ledger gate + negative controls
-      7. SBOM (SHA-256 of every artifact) + evidence bundle
-      8. ZIP of the source tree plus the verifier and the evidence
+   Stages:
+     1. Clean hardened Release build (fails on any warning)
+     2. Contract self-test + CTest
+     3. Production-hardening runtime tests + health probe
+     4. Fuzz harness (ASan Debug build when available)
+     5. PE-header hardening verification of every produced binary
+     6. Mocked end-to-end, both backends
+     7. Real-ledger gate + negative controls
+     8. SBOM (SHA-256 of every artifact) + evidence bundle + ZIP
 
 .PARAMETER Configuration
     Release (default) or RelWithDebInfo.
@@ -53,6 +53,8 @@ try {
     $verifyScript = Join-Path $repoRoot 'scripts\verify_hardening.ps1'
 
     $failures = New-Object System.Collections.Generic.List[string]
+    # Set by stage 3 once the hardening runtime has been built and verified.
+    $hardeningBinDir = $null
 
     function Invoke-Stage {
         param([string]$Name, [scriptblock]$Body)
@@ -85,7 +87,7 @@ try {
         Remove-Item -LiteralPath $buildDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    Write-Host "=== [1/7] hardened $Configuration build ===" -ForegroundColor Cyan
+    Write-Host "=== [1/8] hardened $Configuration build ===" -ForegroundColor Cyan
     cmake -S $dropDir -B $buildDir -A x64 `
           -DCMAKE_BUILD_TYPE=$Configuration -DRAWRXD_ENABLE_HARDENING=ON
     if ($LASTEXITCODE -ne 0) { throw "configure failed" }
@@ -108,18 +110,55 @@ try {
     if (-not (Test-Path -LiteralPath $binDir)) { $binDir = $buildDir }
 
     # ------------------------------------------------- 2. contract + ctest
-    Invoke-Stage '[2/7] contract self-test + CTest' {
+    Invoke-Stage '[2/8] contract self-test + CTest' {
         & (Join-Path $binDir 'rawr_run.exe') --self-test
         if ($LASTEXITCODE -ne 0) { throw "self-test failed" }
         ctest --test-dir $buildDir -C $Configuration --output-on-failure
     }
 
-    # ------------------------------------------------------------- 3. fuzz
+    # ------------------------------------------------ 3. hardening runtime
+    # Verifies the production-hardening runtime itself: behavioural tests for
+    # encryption with tamper rejection, the hash-chained audit log, circuit
+    # breakers, retry and bulkhead behaviour. This is the component the IDE
+    # links, so a regression here is not caught by any other stage.
+    Invoke-Stage '[3/8] production hardening runtime + health probe' {
+        $hardeningDir = Join-Path $buildDir 'hardening'
+        cmake -S (Join-Path $repoRoot 'src\production') -B $hardeningDir -A x64 `
+              -DCMAKE_BUILD_TYPE=$Configuration
+        if ($LASTEXITCODE -ne 0) { throw "hardening configure failed" }
+        cmake --build $hardeningDir --config $Configuration `
+              --target rawrxd_production_tests rawrxd_health_probe
+        if ($LASTEXITCODE -ne 0) { throw "hardening build failed" }
+
+        # The two binaries do not share an output directory (the probe sets
+        # RUNTIME_OUTPUT_DIRECTORY), so locate them instead of assuming a path.
+        # A hardcoded path is exactly how a verifier ends up testing a stale
+        # binary that happens to still be on disk.
+        $hTest = Get-ChildItem -LiteralPath $hardeningDir -Filter 'rawrxd_production_tests.exe' -Recurse -ErrorAction SilentlyContinue |
+                 Select-Object -First 1
+        $hExe  = Get-ChildItem -LiteralPath $hardeningDir -Filter 'rawrxd_health_probe.exe' -Recurse -ErrorAction SilentlyContinue |
+                 Select-Object -First 1
+        if (-not $hTest) { throw "hardening tests not produced" }
+        if (-not $hExe)  { throw "health probe not produced" }
+
+        & $hTest.FullName
+        if ($LASTEXITCODE -ne 0) { throw "hardening behavioural tests failed" }
+
+        # The probe must agree with the tests: it exits 0 only when liveness
+        # and readiness both pass, so a "healthy" answer here is claimed, not
+        # assumed.
+        & $hExe.FullName --json | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "health probe did not report healthy" }
+        $hardeningBinDir = $hExe.Directory.FullName
+        Write-Host "  hardening tests passed, probe healthy" -ForegroundColor Green
+    }
+
+    # ------------------------------------------------ 4. fuzz
     if ($SkipFuzz) {
         Write-Host ""
-        Write-Host "=== [3/7] fuzz harness SKIPPED (-SkipFuzz) ===" -ForegroundColor Yellow
+        Write-Host "=== [4/8] fuzz harness SKIPPED (-SkipFuzz) ===" -ForegroundColor Yellow
     } else {
-        Invoke-Stage '[3/7] fuzz harness (ASan Debug)' {
+        Invoke-Stage '[4/8] fuzz harness (ASan Debug)' {
             $asanDir = Join-Path $dropDir 'build_package_asan'
             if (Test-Path -LiteralPath $asanDir) {
                 Remove-Item -LiteralPath $asanDir -Recurse -Force -ErrorAction SilentlyContinue
@@ -143,27 +182,27 @@ try {
     }
 
     # --------------------------------------------------- 4. PE hardening
-    Invoke-Stage '[4/7] PE header hardening verification' {
+    Invoke-Stage '[5/8] PE header hardening verification' {
         $exe = Join-Path $binDir 'rawr_run.exe'
         & pwsh -ExecutionPolicy Bypass -NoProfile -File $verifyScript -Path $exe
         if ($LASTEXITCODE -ne 0) { throw "binary is missing OS mitigations" }
     }
 
     # --------------------------------------------------------- 5. e2e mock
-    Invoke-Stage '[5/7] mocked end-to-end (both backends)' {
+    Invoke-Stage '[6/8] mocked end-to-end (both backends)' {
         & py -3 (Join-Path $dropDir 'test_e2e_mock.py') (Join-Path $binDir 'rawr_run.exe')
         if ($LASTEXITCODE -ne 0) { throw "e2e mock failed" }
     }
 
     # ------------------------------------------------------- 6. real gate
-    Invoke-Stage '[6/7] real-ledger gate + negative controls' {
+    Invoke-Stage '[7/8] real-ledger gate + negative controls' {
         & py -3 (Join-Path $dropDir 'parity_gate_evidence.py')
         if ($LASTEXITCODE -ne 0) { throw "parity gate evidence failed" }
     }
 
     # ----------------------------------------------------- 7. sbom + zip
     Write-Host ""
-    Write-Host "=== [7/7] SBOM and package ===" -ForegroundColor Cyan
+    Write-Host "=== [8/8] SBOM and package ===" -ForegroundColor Cyan
 
     New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
     $stageDir = Join-Path $OutputRoot "RawrXD_Production_Hardening_Source"
@@ -183,6 +222,22 @@ try {
         Copy-Item -LiteralPath (Join-Path $dropDir $f) -Destination (Join-Path $stageDir $f) -Force
     }
 
+    # The production-hardening runtime the IDE links: configuration,
+    # observability, reliability, security and the runtime entry point. Built
+    # from the *repo* tree (not $dropDir), because it is a separate module.
+    # The vendored nlohmann/json headers come with it, laid out exactly as the
+    # repo does, so the staged copy configures standalone without a network or
+    # an installed package.
+    New-Item -ItemType Directory -Path (Join-Path $stageDir 'src\production') -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'src\production') -Destination `
+                  (Join-Path $stageDir 'src') -Recurse -Force
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'include\nlohmann') -Destination `
+                  (Join-Path $stageDir 'include\nlohmann') -Recurse -Force
+    # Build trees and scratch artifacts are never part of a source drop.
+    Get-ChildItem -Path (Join-Path $stageDir 'src\production') -Directory -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -in @('obj_prod_tests','obj','build','build_*') } |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+
     # Self-contained hardening verifier so the drop needs no parent repo.
     Copy-Item -LiteralPath $verifyScript -Destination (Join-Path $stageDir 'verify_hardening.ps1') -Force
 
@@ -196,6 +251,31 @@ try {
                 sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
             }
         }
+    # The hardening runtime binaries are built by stage 3 and are part of the
+    # shipped surface, so their hashes belong in the SBOM too. Only when the
+    # stage actually ran: a skipped or failed stage must not silently claim
+    # otherwise.
+    if ($hardeningBinDir -and (Test-Path -LiteralPath $hardeningBinDir)) {
+        Get-ChildItem -LiteralPath $hardeningBinDir -Include *.exe -File -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $sbomEntries += [PSCustomObject]@{
+                    name = $_.Name; role = 'hardening-artifact'
+                    size = $_.Length
+                    sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
+                }
+            }
+        # The test binary lives in a different output directory; include it so
+        # the SBOM covers every executable the stage verified.
+        $siblingTest = Join-Path (Split-Path -Parent $hardeningBinDir) "$Configuration\rawrxd_production_tests.exe"
+        if (Test-Path -LiteralPath $siblingTest) {
+            $ti = Get-Item -LiteralPath $siblingTest
+            $sbomEntries += [PSCustomObject]@{
+                name = $ti.Name; role = 'hardening-artifact'
+                size = $ti.Length
+                sha256 = (Get-FileHash -LiteralPath $ti.FullName -Algorithm SHA256).Hash
+            }
+        }
+    }
     Get-ChildItem -LiteralPath $stageDir -File -Recurse -ErrorAction SilentlyContinue |
         Where-Object { $_.Extension -in '.cpp','.py','.ps1','.txt','.md','.json' } |
         ForEach-Object {

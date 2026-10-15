@@ -16,7 +16,40 @@
 # Every consumer links this and calls ProductionRuntime::init() once. Nothing
 # in here depends on Qt, ggml, or any subsystem outside src/production, so it
 # can be built and tested on its own.
+#
+# This file is deliberately self-sufficient: it works both as a subdirectory of
+# the root project and as a standalone CMake tree, because the drop packaging
+# verifies it in isolation before anything else claims to be ready.
 # ============================================================================
+
+# Declared before any target so the module can be configured on its own. The
+# root project supplies the same minimum, which is why this was not previously
+# required.
+cmake_minimum_required(VERSION 3.24)
+
+# Building standalone is supported, so guard the include path that normally
+# comes from the parent scope. In-tree use keeps the root's include/ either
+# way, so the fallback only fires when this directory is the top of the tree.
+if(NOT DEFINED CMAKE_SOURCE_DIR OR CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(RAWRXD_PRODUCTION_STANDALONE ON)
+endif()
+
+# nlohmann/json is vendored at include/ in the repository. When this directory
+# is built as a subdirectory the root tree provides it; when built standalone
+# (which the drop packaging does, to verify the module in isolation) it is
+# found in one of the layouts a drop can use. Discovery happens here, but the
+# result is only applied once the target exists, because a target_* command
+# before add_library is a configure error.
+set(RAWRXD_JSON_INCLUDE_DIR)
+foreach(_candidate
+    "${CMAKE_SOURCE_DIR}/include"                    # in-tree: root project
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../include"      # repo (or drop) root from src/production
+    "${CMAKE_CURRENT_SOURCE_DIR}/include")           # fully self-contained module
+    if(EXISTS "${_candidate}/nlohmann/json.hpp")
+        set(RAWRXD_JSON_INCLUDE_DIR "${_candidate}")
+        break()
+    endif()
+endforeach()
 
 # Pin the CRT explicitly instead of relying on the parent scope. This library
 # is linked into an executable that also links ggml and the IDE sources, and a
@@ -37,8 +70,19 @@ set_property(TARGET rawrxd_production_hardening
 
 target_include_directories(rawrxd_production_hardening PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/include        # vendored nlohmann/json
 )
+if(RAWRXD_JSON_INCLUDE_DIR)
+    target_include_directories(rawrxd_production_hardening PUBLIC
+        ${RAWRXD_JSON_INCLUDE_DIR}
+    )
+elseif(RAWRXD_PRODUCTION_STANDALONE)
+    # Standalone with no vendored header anywhere means the module cannot be
+    # built as shipped. Fail now, not on the first #include in a .cpp file.
+    message(FATAL_ERROR
+        "rawrxd_production_hardening needs nlohmann/json.hpp but found no vendored "
+        "copy in any of the expected locations. In-tree builds use <root>/include; "
+        "a standalone drop must ship include/nlohmann alongside src/production.")
+endif()
 
 target_compile_definitions(rawrxd_production_hardening PUBLIC
     NOMINMAX
@@ -78,8 +122,12 @@ target_link_libraries(rawrxd_production_tests PRIVATE
 )
 target_include_directories(rawrxd_production_tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/include
 )
+if(RAWRXD_JSON_INCLUDE_DIR)
+    target_include_directories(rawrxd_production_tests PRIVATE
+        ${RAWRXD_JSON_INCLUDE_DIR}
+    )
+endif()
 if(MSVC)
     target_compile_options(rawrxd_production_tests PRIVATE /EHsc /std:c++20 /W4)
 endif()
@@ -105,8 +153,12 @@ target_link_libraries(rawrxd_health_probe PRIVATE
 )
 target_include_directories(rawrxd_health_probe PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/include
 )
+if(RAWRXD_JSON_INCLUDE_DIR)
+    target_include_directories(rawrxd_health_probe PRIVATE
+        ${RAWRXD_JSON_INCLUDE_DIR}
+    )
+endif()
 if(MSVC)
     target_compile_options(rawrxd_health_probe PRIVATE /EHsc /std:c++20 /W4)
 endif()
