@@ -2502,6 +2502,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/ReverseHotpatchEngine.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/BP16Streamer.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/SovereignOutOfCoreRuntime.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/OutOfCoreRuntime.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Chamber.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/PlasmaGovernor.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2GlobalTensorIndex.cpp
