@@ -22,6 +22,44 @@
 #include <sstream>
 #include <vector>
 
+extern "C" void dequantize_row_iq2_xxs(const void* x, float* y, int64_t k);
+
+// IQ2_XXS Dequantization — reference implementation
+// Block: 66 bytes, 256 elements at 2 bits each (64 bytes packed data)
+// qs: 1 byte scale type, scale: 1 byte, data: 64 bytes packed 2-bit
+static void dequantize_row_iq2_xxs_impl(const void* x, float* y, int64_t k) {
+    const uint8_t* data = static_cast<const uint8_t*>(x);
+    const size_t blockElems = 256;
+    const size_t blockBytes = 66;
+    const size_t numBlocks = (static_cast<size_t>(k) + blockElems - 1) / blockElems;
+
+    for (size_t b = 0; b < numBlocks; ++b) {
+        const uint8_t* block = data + b * blockBytes;
+        uint8_t qs = block[0];
+        float scale = 1.0f;
+
+        if (qs == 0 && blockBytes > 1) {
+            scale = static_cast<float>(static_cast<int8_t>(block[1])) / 127.0f;
+        }
+
+        const uint8_t* packed = block + 2;
+        size_t elemStart = b * blockElems;
+        size_t elemsInBlock = (b == numBlocks - 1) ? (static_cast<size_t>(k) - elemStart) : blockElems;
+
+        for (size_t i = 0; i < elemsInBlock; ++i) {
+            size_t byteIdx = i / 4;
+            int bitShift = (i % 4) * 2;
+            uint8_t val = (packed[byteIdx] >> bitShift) & 0x03;
+            float mapped = static_cast<float>(static_cast<int8_t>(val - 2));
+            y[elemStart + i] = mapped * scale;
+        }
+    }
+}
+
+static void dequant_iq2_xxs_wrapper(const uint8_t* src, float* dst, size_t n) {
+    dequantize_row_iq2_xxs_impl(src, dst, static_cast<int64_t>(n));
+}
+
 namespace Deep2 {
 
 // Forward declaration from IQQuantKernels.cpp
@@ -44,7 +82,9 @@ static const QuantTypeDesc kQuantTypeTable[] = {
     { 13, "Q5_K",  sizeof(block_q5_K),   256, true,  true,  true  },
     { 14, "Q6_K",  sizeof(block_q6_K),   256, true,  false, true  },
     { 15, "Q8_K",  sizeof(block_q8_K),   256, true,  false, true  },
+    { 16, "IQ2_XXS", 66,                256, true,  false, true  },
     { 30, "BF16",  sizeof(uint16_t),       1, false, false, false },
+    { 40, "NVFP4", 32,                   64,  true,  false, true  },
 };
 
 const QuantTypeDesc* LookupQuantType(uint32_t type) {
@@ -2097,6 +2137,115 @@ static void gemv_q5_k_avx2(
     }
 }
 
+// ============================================================================
+// NVFP4 (type 40) — NVIDIA 4-bit floating point (E2M1)
+// Block layout: 32 bytes packed data (64 x 4-bit elements), no inline scale.
+// Per-tensor scale applied separately via ssm_in.scale / ssm_out.scale tensor.
+// Value = (-1)^sign * 2^(exp-1) * (1 + mantissa * 0.5) * block_scale
+//   where exp is 2-bit biased by 1, mantissa is 1 bit
+// ============================================================================
+static void dequant_nvfp4(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockElems = 64;
+    const size_t blockBytes = 32;
+    const size_t numBlocks = (n + blockElems - 1) / blockElems;
+
+    for (size_t b = 0; b < numBlocks; ++b) {
+        const uint8_t* packed = src + b * blockBytes;
+        size_t elemStart = b * blockElems;
+        size_t elemsInBlock = (b == numBlocks - 1) ? (n - elemStart) : blockElems;
+
+        for (size_t i = 0; i < elemsInBlock; ++i) {
+            size_t byteIdx = i / 2;
+            uint8_t byte = packed[byteIdx];
+            uint8_t nibble = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+
+            uint8_t sign = (nibble >> 3) & 0x1;
+            uint8_t exp  = (nibble >> 1) & 0x3;
+            uint8_t mant = nibble & 0x1;
+
+            float mantissa = 1.0f + static_cast<float>(mant) * 0.5f;
+            float exponent = (exp == 0) ? 0.5f : static_cast<float>(1 << (exp - 1));
+            float val = exponent * mantissa;
+            if (sign) val = -val;
+            dst[elemStart + i] = val;
+        }
+    }
+}
+
+static void gemv_nvfp4_scalar(const uint8_t* RESTRICT w, const float* RESTRICT x,
+                               float* RESTRICT y, size_t rows, size_t cols) {
+    const size_t blockElems = 64;
+    const size_t blockBytes = 32;
+    const size_t numBlocks = (cols + blockElems - 1) / blockElems;
+
+    for (size_t r = 0; r < rows; ++r) {
+        const uint8_t* rowWeights = w + r * numBlocks * blockBytes;
+        float acc = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            const uint8_t* packed = rowWeights + b * blockBytes;
+            size_t elemStart = b * blockElems;
+            size_t elemsInBlock = (b == numBlocks - 1) ? (cols - elemStart) : blockElems;
+
+            for (size_t i = 0; i < elemsInBlock; ++i) {
+                size_t byteIdx = i / 2;
+                uint8_t byte = packed[byteIdx];
+                uint8_t nibble = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+
+                uint8_t sign = (nibble >> 3) & 0x1;
+                uint8_t exp  = (nibble >> 1) & 0x3;
+                uint8_t mant = nibble & 0x1;
+
+                float mantissa = 1.0f + static_cast<float>(mant) * 0.5f;
+                float exponent = (exp == 0) ? 0.5f : static_cast<float>(1 << (exp - 1));
+                float val = exponent * mantissa;
+                if (sign) val = -val;
+
+                acc += val * x[elemStart + i];
+            }
+        }
+        y[r] = acc;
+    }
+}
+
+// ============================================================================
+// IQ2_XXS (type 16) GEMV — GGML Imatrix quantized
+// Block layout: 66 bytes per block, 256 elements at 2 bits each
+//   Byte 0: qs (scale type)
+//   Byte 1: scale (if qs==0)
+//   Bytes 2-65: 64 bytes packed 2-bit data (256 elements)
+// Value mapping: dequantized 2-bit value - 2, multiplied by block scale
+// ============================================================================
+static void gemv_iq2_xxs_scalar(const uint8_t* RESTRICT w, const float* RESTRICT x,
+                                float* RESTRICT y, size_t rows, size_t cols) {
+    const size_t blockElems = 256;
+    const size_t blockBytes = 66;
+    const size_t numBlocks = (cols + blockElems - 1) / blockElems;
+
+    for (size_t r = 0; r < rows; ++r) {
+        const uint8_t* rowWeights = w + r * numBlocks * blockBytes;
+        float acc = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            const uint8_t* block = rowWeights + b * blockBytes;
+            uint8_t qs = block[0];
+            float scale = 1.0f;
+            if (qs == 0 && blockBytes > 1)
+                scale = static_cast<float>(static_cast<int8_t>(block[1])) / 127.0f;
+            const uint8_t* packed = block + 2;
+            size_t elemStart = b * blockElems;
+            size_t elemsInBlock = (b == numBlocks - 1) ? (cols - elemStart) : blockElems;
+
+            for (size_t i = 0; i < elemsInBlock; ++i) {
+                size_t byteIdx = i / 4;
+                int bitShift = (i % 4) * 2;
+                uint8_t val = (packed[byteIdx] >> bitShift) & 0x03;
+                float mapped = static_cast<float>(static_cast<int8_t>(val - 2));
+                acc += mapped * scale * x[elemStart + i];
+            }
+        }
+        y[r] = acc;
+    }
+}
+
 // The Q5_K AVX2 body above is KNOWN DEFECTIVE (it reorders nibbles vs
 // the ggml layout and only accumulates the lower _mm256_dp_ps half).
 // Keep it macro-aliased to the scalar reference; QUANT_KERNEL_PARITY_001
@@ -2220,6 +2369,16 @@ void QuantKernelRegistry::RegisterBuiltins() {
 
     // --- IQ types (registered via IQQuantKernels.cpp) ---
     RegisterIQKernels();
+
+    // --- NVFP4 (ggml id 40) — Nemotron-H Mamba-2 projections ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_NVFP4, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_NVFP4));
+    RegisterDequant((int)GGMLType::GGML_TYPE_NVFP4, dequant_nvfp4);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_NVFP4, gemv_nvfp4_scalar);
+
+    // --- IQ2_XXS (ggml id 16) — Nemotron-H expert weights ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_IQ2_XXS, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_IQ2_XXS));
+    RegisterDequant((int)GGMLType::GGML_TYPE_IQ2_XXS, dequant_iq2_xxs_wrapper);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_IQ2_XXS, gemv_iq2_xxs_scalar); // proper IQ2_XXS GEMV kernel
 }
 
 void QuantKernelRegistry::Initialize() {

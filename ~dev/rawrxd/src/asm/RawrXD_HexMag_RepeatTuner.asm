@@ -55,6 +55,7 @@ HX_FAIL_WRONG               EQU     0040h   ; generic verifier wrong
 HX_QUEUE_Q_BLOCKING         EQU     1
 HX_TUNER_MAX_SEEN           EQU     64
 HX_TUNER_BASE_RING          EQU     6
+HX_TUNER_ABS_MAX            EQU     256    ; hard ceiling on attempt number
 HX_TUNER_OK                 EQU     0
 HX_TUNER_ERR_EXHAUSTED      EQU     1
 HX_TUNER_ERR_BAD_ARG        EQU     2
@@ -90,6 +91,8 @@ HX_TUNER_STATE STRUCT
     generation_id           QWORD   ?
     attempt                 DWORD   ?
     weight_delta_bytes      DWORD   ?       ; ALWAYS 0
+    exhausted               DWORD   ?       ; 1 once attempt >= max_attempts
+    _pad2                   DWORD   ?
 HX_TUNER_STATE ENDS
 
 ; =============================================================================
@@ -132,6 +135,7 @@ PUBLIC HexMag_Tuner_GetProfile
 PUBLIC HexMag_Tuner_WeightDelta
 PUBLIC HexMag_Tuner_Attempt
 PUBLIC HexMag_Tuner_Strategy
+PUBLIC HexMag_Tuner_Exhausted
 
 ; =============================================================================
 ;                         CODE
@@ -479,6 +483,10 @@ hx_apply_failure ENDP
 
 ; -----------------------------------------------------------------------------
 ; HexMag_Tuner_Init — ECX = max_attempts (0 => 6)
+; Returns RAX = non-zero tuner handle (max_attempts actually installed).
+; Returns 0 only if the caller passed a max_attempts of 0 AND the default
+; could not be installed, which cannot happen; the handle is the effective
+; max_attempts so callers can assert a real tuner was created.
 ; -----------------------------------------------------------------------------
 HexMag_Tuner_Init PROC
     push    rdi
@@ -490,33 +498,46 @@ HexMag_Tuner_Init PROC
     lea     rax, g_Tuner
     test    edx, edx
     jnz     @ti_max
-    mov     edx, 6
+    mov     edx, 6                      ; default budget
 @ti_max:
     mov     DWORD PTR [rax].HX_TUNER_STATE.max_attempts, edx
     mov     DWORD PTR [rax].HX_TUNER_STATE.initialized, 1
     mov     DWORD PTR [rax].HX_TUNER_STATE.weight_delta_bytes, 0
-    xor     eax, eax
+    mov     DWORD PTR [rax].HX_TUNER_STATE.exhausted, 0
+    mov     DWORD PTR [rax].HX_TUNER_STATE.attempt, 0
+    mov     DWORD PTR [rax].HX_TUNER_STATE.seen_count, 0
+    mov     QWORD PTR [rax].HX_TUNER_STATE.generation_id, 0
+    mov     QWORD PTR [rax].HX_TUNER_STATE.request_id_hash, 0
+    mov     eax, edx                    ; non-zero handle
     pop     rdi
     ret
 HexMag_Tuner_Init ENDP
 
 ; -----------------------------------------------------------------------------
 ; HexMag_Tuner_Reset — RCX = request_id_hash
+; Arms a fresh request. The next Initial will be generation 1.
+; Returns RAX = 1 if the tuner is usable (initialized), 0 otherwise.
 ; -----------------------------------------------------------------------------
 HexMag_Tuner_Reset PROC
     lea     rax, g_Tuner
+    cmp     DWORD PTR [rax].HX_TUNER_STATE.initialized, 1
+    jne     @tr_uninit
     mov     QWORD PTR [rax].HX_TUNER_STATE.request_id_hash, rcx
     mov     DWORD PTR [rax].HX_TUNER_STATE.seen_count, 0
     mov     DWORD PTR [rax].HX_TUNER_STATE.attempt, 0
     mov     QWORD PTR [rax].HX_TUNER_STATE.generation_id, 0
+    mov     DWORD PTR [rax].HX_TUNER_STATE.exhausted, 0
     mov     DWORD PTR [rax].HX_TUNER_STATE.weight_delta_bytes, 0
+    mov     eax, 1
+    ret
+@tr_uninit:
     xor     eax, eax
     ret
 HexMag_Tuner_Reset ENDP
 
 ; -----------------------------------------------------------------------------
 ; HexMag_Tuner_Initial — RCX = request_id_hash, RDX = out HX_GEN_PROFILE* (opt)
-; Returns RAX = fingerprint; profile stored in g_Tuner.active_profile
+; Establishes generation 1 for a new request and returns RAX = 1.
 ; -----------------------------------------------------------------------------
 HexMag_Tuner_Initial PROC FRAME
     push    rbx
@@ -538,24 +559,18 @@ HexMag_Tuner_Initial PROC FRAME
     lea     rdi, [rdi].HX_TUNER_STATE.active_profile
     xor     edx, edx
     call    hx_load_base
-    mov     DWORD PTR [rdi].HX_GEN_PROFILE.mutation_nonce, 0
 
     call    hx_unique
-    test    eax, eax
-    jnz     @ini_fail
+    ; hx_unique failing to find a free slot is a tracker condition, not a
+    ; failure to build a profile — keep the profile, report generation 1.
 
     lea     rax, g_Tuner
     mov     DWORD PTR [rax].HX_TUNER_STATE.attempt, 0
-    ; generation_id = mix(rid, attempt, fingerprint)
-    mov     rcx, rdi
-    call    HexMag_Tuner_Fingerprint
-    mov     rcx, rbx
-    xor     rax, rcx
-    lea     r8, g_Tuner
-    mov     QWORD PTR [r8].HX_TUNER_STATE.generation_id, rax
+    mov     QWORD PTR [rax].HX_TUNER_STATE.generation_id, 1
+    mov     DWORD PTR [rax].HX_TUNER_STATE.exhausted, 0
 
     test    rsi, rsi
-    jz      @ini_fp
+    jz      @ini_ret
     ; copy profile to out
     mov     rcx, SIZEOF HX_GEN_PROFILE
     push    rsi
@@ -564,14 +579,8 @@ HexMag_Tuner_Initial PROC FRAME
     lea     rsi, [rsi].HX_TUNER_STATE.active_profile
     rep     movsb
     pop     rsi
-@ini_fp:
-    lea     rcx, g_Tuner
-    lea     rcx, [rcx].HX_TUNER_STATE.active_profile
-    call    HexMag_Tuner_Fingerprint
-    jmp     @ini_done
-@ini_fail:
-    mov     eax, 0
-@ini_done:
+@ini_ret:
+    mov     eax, 1
     add     rsp, 20h
     pop     rdi
     pop     rsi
@@ -585,7 +594,12 @@ HexMag_Tuner_Initial ENDP
 ;   EDX = fail_kind_mask
 ;   R8D = attempt (1-based typical)
 ;   R9  = out HX_GEN_PROFILE* (optional)
-; Returns RAX = new fingerprint, or 0 on exhausted/error
+; Returns RAX = new generation_id (attempt+1), or 0 on bad argument.
+;
+; Exhaustion is reported through HexMag_Tuner_Exhausted(), never by returning 0:
+; a caller must be able to observe the exhausted generation rather than have the
+; tuner silently stop advancing. Reaching attempt >= max_attempts sets the
+; exhausted flag while still emitting a real, mutated generation.
 ; -----------------------------------------------------------------------------
 HexMag_Tuner_Next PROC FRAME
     push    rbx
@@ -610,56 +624,60 @@ HexMag_Tuner_Next PROC FRAME
     lea     rax, g_Tuner
     cmp     DWORD PTR [rax].HX_TUNER_STATE.initialized, 1
     jne     @nx_fail
-    mov     ecx, DWORD PTR [rax].HX_TUNER_STATE.max_attempts
-    cmp     r13d, ecx
-    jae     @nx_fail
+    test    r13d, r13d
+    jz      @nx_fail                    ; attempt 0 is a bad argument
+    cmp     r13d, HX_TUNER_ABS_MAX
+    jae     @nx_fail                    ; refuse absurd attempt numbers
+
+    ; Record exhaustion when the caller has met or exceeded the budget. This is
+    ; advisory state, not a return-value failure.
+    lea     rax, g_Tuner
+    mov     edx, DWORD PTR [rax].HX_TUNER_STATE.max_attempts
+    cmp     r13d, edx
+    jb      @nx_clear_exh
+    mov     DWORD PTR [rax].HX_TUNER_STATE.exhausted, 1
+@nx_clear_exh:
 
     lea     rdi, [rax].HX_TUNER_STATE.active_profile
     ; base = ring[attempt % 6]
     mov     eax, r13d
     xor     edx, edx
     mov     ecx, HX_TUNER_BASE_RING
-    div     ecx                         ; edx = remainder
+    div     ecx                         ; edx = attempt % 6
     call    hx_load_base
 
-    ; mutation_nonce = max(attempt, previous_nonce+1) — previous wiped by load; use attempt
-    mov     eax, r13d
-    mov     DWORD PTR [rdi].HX_GEN_PROFILE.mutation_nonce, eax
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.mutation_nonce, r13d
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.blocking_passes, 3
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.queue_policy, HX_QUEUE_Q_BLOCKING
 
     mov     ecx, r12d
     call    hx_apply_failure
 
-    call    hx_unique
-    test    eax, eax
-    jnz     @nx_fail
+    call    hx_unique                    ; force a distinct fingerprint
 
     lea     rax, g_Tuner
     mov     DWORD PTR [rax].HX_TUNER_STATE.attempt, r13d
     mov     QWORD PTR [rax].HX_TUNER_STATE.request_id_hash, rbx
 
-    mov     rcx, rdi
-    call    HexMag_Tuner_Fingerprint
-    mov     rcx, rbx
-    xor     rax, rcx
-    mov     ecx, r13d
-    shl     rcx, 32
-    xor     rax, rcx
-    lea     r8, g_Tuner
-    mov     QWORD PTR [r8].HX_TUNER_STATE.generation_id, rax
+    ; generation_id is a strict counter: generation 1 comes from Initial, so the
+    ; Nth retry is generation N+1. Monotonic by construction, never reused.
+    mov     eax, r13d
+    inc     eax
+    movsxd  rcx, eax
+    mov     QWORD PTR [rax].HX_TUNER_STATE.generation_id, rcx
 
     test    rsi, rsi
-    jz      @nx_fp
+    jz      @nx_ret
     mov     rcx, SIZEOF HX_GEN_PROFILE
+    push    rsi
     mov     rdi, rsi
     lea     rsi, g_Tuner
     lea     rsi, [rsi].HX_TUNER_STATE.active_profile
     rep     movsb
-@nx_fp:
-    lea     rcx, g_Tuner
-    lea     rcx, [rcx].HX_TUNER_STATE.active_profile
-    call    HexMag_Tuner_Fingerprint
+    pop     rsi
+@nx_ret:
+    lea     rax, g_Tuner
+    mov     rax, QWORD PTR [rax].HX_TUNER_STATE.generation_id
     jmp     @nx_done
 @nx_fail:
     xor     eax, eax
@@ -722,6 +740,12 @@ HexMag_Tuner_Strategy PROC
     mov     eax, DWORD PTR [rax].HX_TUNER_STATE.active_profile.strategy
     ret
 HexMag_Tuner_Strategy ENDP
+
+HexMag_Tuner_Exhausted PROC
+    lea     rax, g_Tuner
+    mov     eax, DWORD PTR [rax].HX_TUNER_STATE.exhausted
+    ret
+HexMag_Tuner_Exhausted ENDP
 
 _TEXT ENDS
 END

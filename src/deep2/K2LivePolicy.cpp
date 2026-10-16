@@ -85,6 +85,16 @@ K2LivePolicyDecision K2LivePolicy_DecideRaw(uint32_t layerDepth, uint32_t tokens
     return d;
 }
 
+K2LivePolicyDecision K2LivePolicy_Decide(uint32_t layerDepth, uint32_t tokens) {
+    // Default decision: delegate to raw decision, allowing sticky overrides
+    // to be applied by K2LivePolicy_Apply.
+    return K2LivePolicy_DecideRaw(layerDepth, tokens);
+}
+
+void K2LivePolicy_SetStickyArm(K2LivePolicyMode mode, const char* name) {
+    (void)mode; (void)name;
+}
+
 void K2LivePolicy_ApplyMode(K2LivePolicyMode mode) {
     K2LivePolicy_ApplyMode(mode, /*fullDepthPromo=*/false);
 }

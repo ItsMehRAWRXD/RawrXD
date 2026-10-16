@@ -102,7 +102,8 @@ void Deep2Engine::enableVulkan(bool enable) {
         if (d.deviceId == 0x747E) found747E = true;
     }
 
-    if (!found7551 || !found747E) {
+    // Require at least one native AMD GPU. Dual-stick is preferred but not mandatory.
+    if (!found7551 && !found747E) {
         std::fprintf(stderr,
             "DEEP2_REQUIRED_DUAL_AMD_PAIR_MISSING r9700=%d rx7800xt=%d\n",
             (int)found7551, (int)found747E);

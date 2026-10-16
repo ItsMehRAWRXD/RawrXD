@@ -23,8 +23,11 @@ static bool Eq(const char* a, const char* b) { return a && b && strcasecmp(a, b)
 K2LivePolicyDecision K2LivePolicy_Last() { return g_last; }
 
 K2LivePolicyDecision K2LivePolicy_Apply(uint32_t layerDepth, uint32_t tokens) {
+    std::printf("[K2_DBG] entry depth=%u tokens=%u\n", layerDepth, tokens); std::fflush(stdout);
     K2LivePolicy_ResetSwitches();
+    std::printf("[K2_DBG] after ResetSwitches\n"); std::fflush(stdout);
     K2LivePolicyDecision d = K2LivePolicy_Decide(layerDepth, tokens);
+    std::printf("[K2_DBG] after Decide mode=%d arm=%s\n", (int)d.mode, d.arm ? d.arm : "(null)"); std::fflush(stdout);
     const char* pol = std::getenv("DEEP2_LIVE_POLICY");
     // Production default: unset/empty POLICY → AUTO (manual arms are cert-only).
     const bool defaultAuto = !pol || !pol[0];

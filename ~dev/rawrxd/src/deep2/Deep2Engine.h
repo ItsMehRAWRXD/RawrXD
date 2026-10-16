@@ -145,13 +145,21 @@ struct LayerWeights {
     WeightTensor ssmAlpha;      // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
     WeightTensor ssmBeta;       // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
     WeightTensor ssmIn;         // Nemotron-H: blk.N.ssm_in.weight
+    WeightTensor ssmInScale;    // Nemotron-H: blk.N.ssm_in.scale (F32, per-tensor scale)
     WeightTensor ssmD;          // Nemotron-H: blk.N.ssm_d skip scale
     WeightTensor ssmConv1d;     // [convKernelSize, channels] — causal conv1d weights
     WeightTensor ssmConv1dBias; // Nemotron-H: blk.N.ssm_conv1d.bias
     WeightTensor ssmDtBias;     // [ssmStateDim] — delta_t bias (F32)
     WeightTensor ssmNorm;       // SSM path RMSNorm
     WeightTensor ssmOut;        // SSM output projection
+    WeightTensor ssmOutScale;   // Nemotron-H: blk.N.ssm_out.scale (F32, per-tensor scale)
     bool         hasSSM = false; // true when SSM tensors are populated
+
+    // LatentMoE (Nemotron-H) expert projections
+    WeightTensor ffnLatentUp;    // [moeLatentSize, hiddenDim] — project input to latent space
+    WeightTensor ffnLatentDown;  // [hiddenDim, moeLatentSize] — project back from latent space
+    size_t       moeLatentSize = 0;
+    bool         isLatentMoE = false;
 };
 
 // ============================================================================
@@ -301,6 +309,24 @@ enum class ModelState : uint8_t {
 
 using TokenCallback =
     std::function<bool(int32_t tokenId, const std::string& token)>;
+
+// ============================================================================
+// Per-layer topology descriptor — classifies each layer by its actual
+// mixer (SSM vs attention) and FFN configuration (dense vs MoE).
+// ============================================================================
+enum class LayerMixer { Attention, SSM, Unknown };
+
+struct LayerTopology {
+    LayerMixer mixer = LayerMixer::Unknown;
+    bool hasMoE = false;
+    bool hasSSM = false;
+    size_t ssmInnerSize = 0;
+    size_t ssmStateSize = 0;
+    size_t ssmConvDim = 0;
+    size_t moeNumExperts = 0;
+    size_t moeExpertsPerToken = 0;
+    size_t moeIntermediateDim = 0;
+};
 
 // ============================================================================
 // Production Deep2 Engine
@@ -667,6 +693,15 @@ public:
     // Linear using WeightTensor directly
     void LinearW(const WeightTensor& wt, const float* input, const float* bias,
                  float* output, size_t outDim);
+    
+    // Linear using WeightTensor directly, transposed: output = W^T * input
+    void LinearWT(const WeightTensor& wt, const float* input, const float* bias,
+                  float* output, size_t outDim);
+    
+    // Linear using WeightTensor directly in GGUF layout: output = W * input
+    void LinearW_GGUF(const WeightTensor& wt, const float* input, const float* bias,
+                      float* output, size_t outDim);
+    
     void LinearWBatch4(const WeightTensor& wt,
                        const float* inputBatch, size_t count,
                        const float* bias, float* outputBatch,
@@ -865,6 +900,12 @@ private:
     // Real model weights
     ModelWeights modelWeights;
 
+    // Per-layer topology descriptors — classifies each layer's mixer and FFN config
+    std::vector<LayerTopology> layerTopology_;
+
+    // Per-layer expert counts (top-K) from GGUF metadata array
+    std::vector<size_t> moeExpertsPerLayer_;
+
     // Immutable session geometry from GGUF metadata (ONE_LOCAL_MODEL_AUTHORITY)
     GgufDynamicGeometry sessionGeometry_{};
     rawr::olma::AuthorityBundle sessionAuth_{};
@@ -981,7 +1022,7 @@ private:
     MultiGpuLayerPlan multiGpuLayerPlan_{};
     bool vulkanEnabled_ = false;
     bool vulkanInitialized_ = false;
-    bool vulkanStrictNoCpuFallback_ = true;  // GPU required; CPU only if HOST_DECODE
+    bool vulkanStrictNoCpuFallback_ = false;  // CPU fallback enabled when GPU path fails
     bool vulkanStrictViolation_ = false;
     uint64_t vulkanGemvOk_ = 0;
     uint64_t vulkanGemvFail_ = 0;
@@ -1098,6 +1139,9 @@ private:
     
     // MoE FFN - real routed expert execution (no dense fallback)
     void computeMoEFFN(size_t layer, const float* input, float* output);
+    
+    // LatentMoE FFN - Nemotron-H latent-space routed experts
+    void computeLatentMoEFFN(size_t layer, const float* input, float* output);
     
     // MoE expert FFN via streamed weights (gate/up/down projections)
     void computeExpertFFN(const MoEWeightHandle& handle,

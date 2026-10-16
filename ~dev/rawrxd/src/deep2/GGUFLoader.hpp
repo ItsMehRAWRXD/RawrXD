@@ -51,12 +51,14 @@ enum class GGMLType : uint32_t {
     GGML_TYPE_Q5_K    = 13,
     GGML_TYPE_Q6_K    = 14,
     GGML_TYPE_Q8_K    = 15,
+    GGML_TYPE_IQ2_XXS = 16,
     GGML_TYPE_I8      = 24,
     GGML_TYPE_I16     = 25,
     GGML_TYPE_I32     = 26,
     GGML_TYPE_I64     = 27,
     GGML_TYPE_F64     = 28,
     GGML_TYPE_BF16    = 30,
+    GGML_TYPE_NVFP4   = 40,
 };
 
 enum class GGUFMetaType : uint32_t {
@@ -535,12 +537,14 @@ private:
             case 13: blockElems = 256; blockBytes = 176; return true; // Q5_K
             case 14: blockElems = 256; blockBytes = 210; return true; // Q6_K
             case 15: blockElems = 256; blockBytes = 292; return true; // Q8_K
+            case 16: blockElems = 256; blockBytes = 66;  return true; // IQ2_XXS
             case 24: blockElems = 1;   blockBytes = 1;   return true; // I8
             case 25: blockElems = 1;   blockBytes = 2;   return true; // I16
             case 26: blockElems = 1;   blockBytes = 4;   return true; // I32
             case 27: blockElems = 1;   blockBytes = 8;   return true; // I64
             case 28: blockElems = 1;   blockBytes = 8;   return true; // F64
             case 30: blockElems = 1;   blockBytes = 2;   return true; // BF16
+            case 40: blockElems = 64;  blockBytes = 32;  return true; // NVFP4: 32B packed data (64 elements x 4-bit), per-tensor scale applied separately
             default: blockElems = blockBytes = 0; return false;
         }
     }

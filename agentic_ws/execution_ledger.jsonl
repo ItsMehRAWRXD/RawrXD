@@ -30,3 +30,13 @@
 {"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792043437274}}
 {"type":"RETRY","entry":2,"payload":{"attempt":1,"reason":"invalid_tool_format","can_continue":false,"timestamp":1792043461336}}
 {"type":"LEDGER_END","entry":3,"payload":{"total_entries":3}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792109749330}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792110767250}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792111294580}}
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1792111966456}}

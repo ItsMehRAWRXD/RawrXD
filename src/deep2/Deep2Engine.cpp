@@ -2933,8 +2933,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             if (!lw.hasSSM) continue;
             size_t rows = lw.ssmIn.rows;
             size_t outCols = lw.ssmOut.cols;
-            size_t convRows = lw.ssmConv1d.rows;
-            size_t convCols = lw.ssmConv1d.cols;
+            size_t convRows = lw.ssmConv1d.cols;   // d_conv (kernel size)
+            size_t convCols = lw.ssmConv1d.rows;   // d_conv_dim
             size_t dState = lw.ssmA.rows > 0 ? lw.ssmA.rows : lw.ssmA.cols;
             if (rows > maxProjRows) maxProjRows = rows;
             if (outCols > maxDInner) maxDInner = outCols;
@@ -2950,6 +2950,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         if (maxProjRows > 0)
         {
             ssmMambaProj = alignedAlloc(maxProjRows);
+            std::printf("[SSM_DBG] allocated ssmMambaProj=%p rows=%zu\n", (void*)ssmMambaProj, maxProjRows);
+            std::fflush(stdout);
             memset(ssmMambaProj, 0, maxProjRows * sizeof(float));
         }
         if (modelWeights.numLayers > 0 && maxDInner > 0 && maxDState > 0)
@@ -2968,6 +2970,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                static_cast<size_t>(modelWeights.numLayers) * maxDInner * maxDState,
                static_cast<size_t>(modelWeights.numLayers) * maxDConv * maxDConvDim,
                maxDConv, maxDConvDim);
+        std::printf("[SSM_DBG] maxProjRows=%zu maxDInner=%zu maxDConvDim=%zu maxDConv=%zu maxDState=%zu ssmLayers=%zu\n",
+                    maxProjRows, maxDInner, maxDConvDim, maxDConv, maxDState, ssmLayers);
+        std::fflush(stdout);
+
+    // Resize SSM scratch buffers (ssmY, ssmTemp) to accommodate dConvDim and dInner,
+    // which may exceed hiddenDim for Mamba-2 hybrid layers.
+    size_t ssmScratchSize = std::max(maxDConvDim, maxDInner);
+    if (ssmScratchSize > 0)
+    {
+        alignedFree(ssmY);
+        alignedFree(ssmTemp);
+        ssmY = alignedAlloc(ssmScratchSize);
+        ssmTemp = alignedAlloc(ssmScratchSize);
+        if (ssmY) memset(ssmY, 0, ssmScratchSize * sizeof(float));
+        if (ssmTemp) memset(ssmTemp, 0, ssmScratchSize * sizeof(float));
+    }
     }
 
     // ─── DEEP2_MODEL_FIT_AUTHORITY_001: bind the admitted plan ─────────────
@@ -5601,15 +5619,27 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     try
     {
         B3_ResetFirstBad();
-    emitHotpathWitnesses();
-    resetGpuForwardCounters();
-    gpuFwdCommitted_ = false;
-    clearCancel();
+        std::printf("[GEN_DBG] after B3_ResetFirstBad\n"); std::fflush(stdout);
+        emitHotpathWitnesses();
+        std::printf("[GEN_DBG] after emitHotpathWitnesses\n"); std::fflush(stdout);
+        resetGpuForwardCounters();
+        std::printf("[GEN_DBG] after resetGpuForwardCounters\n"); std::fflush(stdout);
+        gpuFwdCommitted_ = false;
+        clearCancel();
 
     // ── Reset KV cache and sampler state for fresh generation ──────
     reset();
+    std::printf("[GEN_DBG] after reset()\n"); std::fflush(stdout);
+    std::printf("[GEN_DBG] config.maxSeqLen=%zu config.hiddenDim=%zu config.vocabSize=%zu\n",
+                config.maxSeqLen, config.hiddenDim, config.vocabSize);
+    std::fflush(stdout);
 
     const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
+    if (remainingContext == 0)
+    {
+        return 0;
+    }
+    maxOutputLen = std::min(maxOutputLen, remainingContext);
     if (remainingContext == 0)
     {
         return 0;
@@ -5636,8 +5666,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
 
     // Live-path: AUTO workload policy is the normal path (MANUAL = cert arms).
     {
+        std::printf("[GEN_DBG] before K2LivePolicy_Apply depth=%u maxOutputLen=%zu\n",
+                    static_cast<uint32_t>(config.numLayers ? config.numLayers : modelWeights.numLayers),
+                    maxOutputLen);
+        std::fflush(stdout);
         const uint32_t depth = static_cast<uint32_t>(config.numLayers ? config.numLayers : modelWeights.numLayers);
         auto pol = K2LivePolicy_Apply(depth, static_cast<uint32_t>(maxOutputLen));
+        std::printf("[GEN_DBG] after K2LivePolicy_Apply\n"); std::fflush(stdout);
         K2LivePolicy_Emit(stdout, pol);
     }
     CycloneScheduler* liveCyclone = nullptr;
@@ -5760,9 +5795,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         prefill_scope_id = flight_recorder_->begin("prefill");
     }
 
-    // Process prompt tokens (prefill)
+        // Process prompt tokens (prefill)
     for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
     {
+        std::printf("[GEN_DBG] prefill token %zu/%zu\n", t, promptLen); std::fflush(stdout);
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
         ResidencyCounters::BeginEmbed();
@@ -6701,18 +6737,10 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         LivePath_OnLayerStart(cycloneEnabled_ ? cyclone_.get() : nullptr, static_cast<uint32_t>(layer), liveSeq);
 
     const auto& lw = modelWeights.layers[layer];
+    std::printf("[GEN_DBG] layer %zu: hasAttn=%d hasSSM=%d wq=%p wk=%p ssmIn=%p\n",
+                layer, !!lw.wq.data, !!lw.ssmIn.data, (void*)lw.wq.data, (void*)lw.wk.data, (void*)lw.ssmIn.data);
+    std::fflush(stdout);
     size_t hiddenDim = config.hiddenDim;
-
-    // ── Diagnostic: print layer weight info for layer 0 ────────────────
-    static bool printedLayerInfo = false;
-    if (!printedLayerInfo && layer == 0)
-    {
-        printf("[Deep2Engine] Layer 0 weights: wq.data=%p type=%d wk.data=%p wv.data=%p wo.data=%p wqkv.data=%p "
-               "attnO.data=%p\n",
-               lw.wq.data, lw.wq.type, lw.wk.data, lw.wv.data, lw.wo.data, lw.wqkv.data, lw.attnO.data);
-        printf("[Deep2Engine] Layer 0 weights: attnNorm.data=%p ffnNorm.data=%p\n", lw.attnNorm.data, lw.ffnNorm.data);
-        printedLayerInfo = true;
-    }
 
     // MARS: Place layer weights on GPU before compute
     // Skip aggregate lease when placeAllModelTensorsMARS already inventoried weights.
@@ -7966,7 +7994,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     if (!lw.hasSSM || !lw.ssmIn.data || !lw.ssmOut.data || !lw.ssmA.data ||
         !lw.ssmD.data || !lw.ssmConv1d.data || !lw.ssmConv1dBias.data ||
-        !lw.ssmDtBias.data || !lw.ssmNorm.data)
+        !lw.ssmNorm.data)
     {
         fprintf(stderr,
                 "[SSM_FATAL] layer=%zu missing required Mamba-2 SSM tensors "
@@ -7992,8 +8020,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const size_t ssmInCols = lw.ssmIn.cols;   // hiddenDim
     const size_t ssmOutRows = lw.ssmOut.rows; // hiddenDim
     const size_t ssmOutCols = lw.ssmOut.cols; // d_inner
-    const size_t convRows = lw.ssmConv1d.rows;   // d_conv
-    const size_t convCols = lw.ssmConv1d.cols;   // d_conv_dim = d_inner + 2*groupState
+    const size_t convRows = lw.ssmConv1d.cols;   // d_conv (kernel size — GGUF dim[1])
+    const size_t convCols = lw.ssmConv1d.rows;   // d_conv_dim — GGUF dim[0]
 
     if (ssmInCols != hiddenDim || ssmOutCols == 0 || convCols == 0 || convRows == 0 ||
         ssmInRows < ssmOutCols + convCols)
@@ -8056,23 +8084,12 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         throw std::runtime_error("SSM dInner not divisible by heads");
     }
 
-    // Bounds checks for scratch buffers (ssmY, ssmTemp are [hiddenDim])
-    if (dConvDim > hiddenDim)
-    {
-        fprintf(stderr,
-                "[SSM_FATAL] layer=%zu dConvDim=%zu > hiddenDim=%zu, ssmY/ssmTemp buffer overflow\n",
-                layer, dConvDim, hiddenDim);
-        throw std::runtime_error("SSM conv output exceeds scratch buffer");
-    }
-    if (dInner > hiddenDim)
-    {
-        fprintf(stderr,
-                "[SSM_FATAL] layer=%zu dInner=%zu > hiddenDim=%zu, ssmTemp buffer overflow\n",
-                layer, dInner, hiddenDim);
-        throw std::runtime_error("SSM dInner exceeds scratch buffer");
-    }
+    // Scratch buffers ssmY/ssmTemp are sized at max(dConvDim, dInner) across
+    // all layers during model load, so no per-layer overflow check is needed.
     if (!ssmMambaProj)
     {
+        std::printf("[SSM_DBG] forwardLayer: ssmMambaProj=nullptr at layer=%zu\n", layer);
+        std::fflush(stdout);
         fprintf(stderr, "[SSM_FATAL] layer=%zu ssmMambaProj not allocated\n", layer);
         throw std::runtime_error("SSM proj buffer not allocated");
     }

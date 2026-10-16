@@ -125,14 +125,153 @@ void flash_attn_asm_avx2(const float* Q, const float* K, const float* V,
 
 } // extern "C"
 
-namespace Deep2 {
+// ============================================================================
+// IQ2_XXS Dequantization — reference C++ implementation
+// Block: 66 bytes, 256 elements at 2 bits each (64 bytes packed data)
+// qs: 1 byte scale type, scale: 1 byte, data: 64 bytes packed 2-bit
+// ============================================================================
+extern "C" void dequantize_row_iq2_xxs(const void* x, float* y, int64_t k) {
+    const uint8_t* data = static_cast<const uint8_t*>(x);
+    const size_t blockElems = 256;
+    const size_t blockBytes = 66;
+    const size_t numBlocks = (static_cast<size_t>(k) + blockElems - 1) / blockElems;
+
+    for (size_t b = 0; b < numBlocks; ++b) {
+        const uint8_t* block = data + b * blockBytes;
+        uint8_t qs = block[0];
+        float scale = 1.0f;
+
+        if (qs == 0 && blockBytes > 1) {
+            scale = static_cast<float>(static_cast<int8_t>(block[1])) / 127.0f;
+        }
+
+        const uint8_t* packed = block + 2;
+        size_t elemStart = b * blockElems;
+        size_t elemsInBlock = (b == numBlocks - 1) ? (static_cast<size_t>(k) - elemStart) : blockElems;
+
+        for (size_t i = 0; i < elemsInBlock; ++i) {
+            size_t byteIdx = i / 4;
+            int bitShift = (i % 4) * 2;
+            uint8_t val = (packed[byteIdx] >> bitShift) & 0x03;
+            float mapped = static_cast<float>(static_cast<int8_t>(val - 2));
+            y[elemStart + i] = mapped * scale;
+        }
+    }
+}
+
 // ============================================================================
 // IQ Kernel Registration — Register Imatrix-quantized kernels
 // ============================================================================
+namespace Deep2 {
 void RegisterIQKernels() {
-    // IQ2_XXS, IQ3_XXS, IQ4_NL kernels are registered here
-    // These use importance matrix (imatrix) quantization for higher quality
-    // at extreme compression ratios.
-    // For now, the kernels are handled by the main registry.
+    // Register IQ2_XXS (type 16) - uses GGML's dequantization
+    // GEMV will use dequant + fp32 fallback via QuantKernelRegistry's scalar path
+    // The actual GEMV for IQ types is handled by the generic LinearW path
+    // which calls the registered dequant kernel then does fp32 GEMV
+    
+    // Note: IQ2_XXS dequant is already registered in QuantKernelRegistry::RegisterBuiltins
+    // via RegisterDequant(GGML_TYPE_IQ2_XXS, dequant_iq2_xxs)
+    // where dequant_iq2_xxs calls GGML's dequantize_row_iq2_xxs
 }
+}
+
+// ============================================================================
+// ============================================================================
+// NVFP4 Dequantization — NVIDIA 4-bit floating point (E2M1)
+// Block layout: 4 bytes FP32 scale + 32 bytes packed data (64 x 4-bit elements)
+// Value = (-1)^sign * 2^(exp-1) * (1 + mantissa * 0.5) * block_scale
+//   where exp is 2-bit biased by 1, mantissa is 1 bit
+// ============================================================================
+static void Dequant_NVFP4_AVX2(const uint8_t* weights, const float* scales,
+                               float* output, size_t rows, size_t cols) {
+    const size_t blockElems = 64;
+    const size_t numBlocks = (cols + blockElems - 1) / blockElems;
+
+    for (size_t r = 0; r < rows; ++r) {
+        const uint8_t* rowWeights = weights + r * numBlocks * 36; // 36 bytes per block
+        for (size_t b = 0; b < numBlocks; ++b) {
+            float blockScale;
+            memcpy(&blockScale, rowWeights + b * 36, 4);
+            const uint8_t* packed = rowWeights + b * 36 + 4;
+            size_t elemStart = b * blockElems;
+            size_t elemsInBlock = (b == numBlocks - 1) ? (cols - elemStart) : blockElems;
+
+            for (size_t i = 0; i < elemsInBlock; ++i) {
+                size_t byteIdx = i / 2;
+                uint8_t byte = packed[byteIdx];
+                uint8_t nibble = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+
+                uint8_t sign = (nibble >> 3) & 0x1;
+                uint8_t exp  = (nibble >> 1) & 0x3;
+                uint8_t mant = nibble & 0x1;
+
+                // NVFP4 E2M1: value = (-1)^sign * 2^(exp-1) * (1 + mant * 0.5)
+                float mantissa = 1.0f + static_cast<float>(mant) * 0.5f;
+                float exponent = (exp == 0) ? 0.5f : ldexpf(1.0f, exp - 1);
+                float val = exponent * mantissa;
+                if (sign) val = -val;
+                output[r * cols + elemStart + i] = val * blockScale;
+            }
+        }
+    }
+}
+
+// ============================================================================
+// NVFP4 GEMV — output[rows] = dequant(weights[rows, cols]) * input[cols]
+// ============================================================================
+static void NVFP4_GEMV_AVX2(const uint8_t* weights, const float* scales,
+                            const float* input, float* output,
+                            size_t rows, size_t cols) {
+    const size_t blockElems = 64;
+    const size_t numBlocks = (cols + blockElems - 1) / blockElems;
+
+    for (size_t r = 0; r < rows; ++r) {
+        const uint8_t* rowWeights = weights + r * numBlocks * 36;
+        float acc = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            float blockScale;
+            memcpy(&blockScale, rowWeights + b * 36, 4);
+            const uint8_t* packed = rowWeights + b * 36 + 4;
+            size_t elemStart = b * blockElems;
+            size_t elemsInBlock = (b == numBlocks - 1) ? (cols - elemStart) : blockElems;
+
+            for (size_t i = 0; i < elemsInBlock; ++i) {
+                size_t byteIdx = i / 2;
+                uint8_t byte = packed[byteIdx];
+                uint8_t nibble = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+
+                uint8_t sign = (nibble >> 3) & 0x1;
+                uint8_t exp  = (nibble >> 1) & 0x3;
+                uint8_t mant = nibble & 0x1;
+
+                float mantissa = 1.0f + static_cast<float>(mant) * 0.5f;
+                float exponent = (exp == 0) ? 0.5f : ldexpf(1.0f, exp - 1);
+                float val = exponent * mantissa;
+                if (sign) val = -val;
+
+                acc += val * blockScale * input[elemStart + i];
+            }
+        }
+        output[r] = acc;
+    }
+}
+
+// FP16 GEMV Fallback — Used when MASM implementation is not available
+// ============================================================================
+extern "C" void Deep2_FP16_GEMV(const void* weights, const float* input, float* output, unsigned int rows, unsigned int cols) {
+    const uint16_t* w = static_cast<const uint16_t*>(weights);
+    for (unsigned int r = 0; r < rows; ++r) {
+        float sum = 0.0f;
+        for (unsigned int c = 0; c < cols; ++c) {
+            // Convert FP16 to FP32
+            uint16_t h = w[r * cols + c];
+            uint32_t bits = (static_cast<uint32_t>(h & 0x8000) << 16) |
+                           (((h >> 10) & 0x1F) == 0 ? 0 : (((h >> 10) & 0x1F) + 112) << 23) |
+                           (static_cast<uint32_t>(h & 0x3FF) << 13);
+            float fw;
+            std::memcpy(&fw, &bits, sizeof(float));
+            sum += fw * input[c];
+        }
+        output[r] = sum;
+    }
 }

@@ -1621,10 +1621,47 @@ static int PlainPromptRun(const Args& args)
             Logf_("[plain] STOP: non-finite logits (%zu)\n", ex.NonFiniteLogits());
             break;
         }
-        const std::vector<float>& lg = ex.Logits();
-        uint32_t next = 0;
-        for (uint32_t i = 1; i < lg.size(); ++i)
-            if (lg[i] > lg[next]) next = i;
+            const std::vector<float>& lg = ex.Logits();
+            next = 0;
+            for (uint32_t i = 1; i < lg.size(); ++i)
+                if (lg[i] > lg[next]) next = i;
+
+            // Token integrity diagnostic
+            if (t < 5 || t % 10 == 0)
+            {
+                float maxLogit = lg[next];
+                float minLogit = lg[next];
+                bool finite = true;
+                for (float v : lg)
+                {
+                    if (v > maxLogit) maxLogit = v;
+                    if (v < minLogit) minLogit = v;
+                    if (!std::isfinite(v)) finite = false;
+                }
+                Logf_("[TOKEN_DIAG] t=%d selected=%d argmax=%d vocab=%zu finite=%d "
+                      "sel_logit=%.9g max=%.9g min=%.9g\n",
+                      t, next, next, lg.size(), finite ? 1 : 0,
+                      lg[next], maxLogit, minLogit);
+            }
+
+        // Token integrity diagnostic
+        if (t < 5 || t % 10 == 0)
+        {
+            float maxLogit = lg[next];
+            float minLogit = lg[next];
+            bool finite = true;
+            for (float v : lg)
+            {
+                if (v > maxLogit) maxLogit = v;
+                if (v < minLogit) minLogit = v;
+                if (!std::isfinite(v)) finite = false;
+            }
+            Logf_("[TOKEN_DIAG] t=%d selected=%d argmax=%d vocab=%zu finite=%d "
+                  "sel_logit=%.9g max=%.9g min=%.9g\n",
+                  t, next, next, lg.size(), finite ? 1 : 0,
+                  lg[next], maxLogit, minLogit);
+        }
+
         if (next == (uint32_t)GetTokenizer().eos_id)
         {
             Logf_("[plain] STOP: EOS after %d generated tokens\n", produced);

@@ -434,6 +434,79 @@ void dequantize_row_mxfp4(const block_mxfp4 * GGML_RESTRICT x, float * GGML_REST
     }
 }
 
+// NVFP4 dequantization: E2M1 values with E4M3 scale per 16 elements
+// block_nvfp4 has 64 elements: 32 bytes packed E2M1 (2 per byte) + 4 bytes E4M3 scales (per 16)
+// Note: GGML to_float callback has 3-arg signature. Per-row global scale (row_div) is
+// applied in the GEMV kernel, not here. This dequantizes to E2M1 * E4M3_scale.
+static inline float ggml_e4m3_to_fp32(uint8_t x) {
+    // E4M3: 1 sign bit, 4 exponent bits (bias 7), 3 mantissa bits
+    // Value = (-1)^sign * 2^(exponent - 7) * (1 + mantissa/8)
+    // Special: exponent=0 is subnormal, exponent=15 is inf/NaN
+    int sign = (x & 0x80) ? -1 : 1;
+    int exp = (x >> 3) & 0x0F;
+    int mant = x & 0x07;
+
+    if (exp == 0) {
+        // Subnormal: 2^(-6) * mantissa/8
+        return sign * (float)mant * 0.015625f; // 2^(-6) / 8
+    } else if (exp == 15) {
+        // Inf/NaN - return 0
+        return 0.0f;
+    } else {
+        // Normal: 2^(exp - 7) * (1 + mantissa/8)
+        float val = (1.0f + mant * 0.125f) * ldexpf(1.0f, exp - 7);
+        return sign * val;
+    }
+}
+
+void dequantize_row_nvfp4(const block_nvfp4 * GGML_RESTRICT x, float * GGML_RESTRICT y, int64_t k) {
+    static const int qk = QK_NVFP4;
+
+    assert(k % qk == 0);
+
+    const int nb = k / qk;
+
+    for (int i = 0; i < nb; i++) {
+        for (int j = 0; j < qk; ++j) {
+            // Extract E2M1 value from packed bytes (2 elements per byte)
+            uint8_t packed = x[i].qs[j / 2];
+            int8_t e2m1 = (j % 2 == 0) ? (packed & 0x0F) : (packed >> 4);
+            
+            // Get E4M3 scale for this 16-element group
+            int scale_idx = j / 16;
+            float scale = ggml_e4m3_to_fp32(x[i].scales[scale_idx]);
+            
+            // Dequantize: E2M1 * E4M3_scale (per-row global scale applied in GEMV)
+            y[i*qk + j] = kvalues_mxfp4[e2m1] * 0.5f * scale;
+        }
+    }
+}
+
+    const int nb = k / qk;
+
+    for (int i = 0; i < nb; i++) {
+        const float div = row_div[i];
+
+        for (int j = 0; j < qk/2; ++j) {
+            // Each byte contains 2 E2M1 values (4 bits each)
+            uint8_t packed = x[i].qs[j];
+            int8_t e2m1_0 = packed & 0x0F;
+            int8_t e2m1_1 = packed >> 4;
+
+            // Get scale for this group of 16 elements (j/8 gives group index within 64-element block)
+            int scale_idx = j / 8;
+            float scale = ggml_e4m3_to_fp32(x[i].scales[scale_idx]);
+
+            // E2M1 lookup (same as MXFP4 but need to divide by 2 since MXFP4 stores doubled values)
+            float v0 = kvalues_mxfp4[e2m1_0] * 0.5f * scale / div;
+            float v1 = kvalues_mxfp4[e2m1_1] * 0.5f * scale / div;
+
+            y[i*qk + j + 0   ] = v0;
+            y[i*qk + j + qk/2] = v1;
+        }
+    }
+}
+
 //
 // 2-6 bit quantization in super-blocks
 //

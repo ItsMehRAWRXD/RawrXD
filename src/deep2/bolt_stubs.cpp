@@ -87,21 +87,6 @@ void MLA_QPathDevice_Emit(FILE* f) { (void)f; }
 void Fused_LawResetDepth() {}
 } // namespace Deep2
 
-// K2LivePolicy stubs
-namespace Deep2 {
-struct K2LivePolicyDecision { int action = 0; float weight = 0.0f; };
-enum class K2LivePolicyMode { Auto = 0, PreferGPU = 1, PreferCPU = 2 };
-
-K2LivePolicyDecision K2LivePolicy_Decide(unsigned int a, unsigned int b) {
-    (void)a; (void)b;
-    return K2LivePolicyDecision{};
-}
-
-void K2LivePolicy_SetStickyArm(K2LivePolicyMode mode, const char* name) {
-    (void)mode; (void)name;
-}
-} // namespace Deep2
-
 // Device manager stubs
 extern "C" int Deep2Device_PickBestIndex(const unsigned* scores,
                                           const unsigned long long* vram,

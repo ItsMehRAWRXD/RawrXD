@@ -48,17 +48,24 @@ static_assert(sizeof(HxGenProfile) == 48, "HxGenProfile size");
 
 #ifdef RAWR_HAS_MASM
 extern "C" {
+    // Returns a non-zero tuner handle (the effective max_attempts), never 0.
     uint64_t HexMag_Tuner_Init(uint32_t max_attempts);
+    // Arms a fresh request; returns 1 if the tuner is usable, 0 otherwise.
     uint64_t HexMag_Tuner_Reset(uint64_t request_id_hash);
+    // Establishes generation 1 for the request; returns 1.
     uint64_t HexMag_Tuner_Initial(uint64_t request_id_hash, HxGenProfile* out_opt);
+    // Advances to generation (attempt+1). Returns 0 only for a bad argument.
+    // Exhaustion is reported via HexMag_Tuner_Exhausted(), never as a 0 return,
+    // so a caller can always observe the exhausted generation it was handed.
     uint64_t HexMag_Tuner_Next(uint64_t request_id_hash, uint32_t fail_kind_mask,
                                uint32_t attempt, HxGenProfile* out_opt);
     uint64_t HexMag_Tuner_Fingerprint(const HxGenProfile* profile);
     uint64_t HexMag_Tuner_GenerationId();
     uint64_t HexMag_Tuner_GetProfile(HxGenProfile* out);
     uint32_t HexMag_Tuner_WeightDelta();  // always 0
-    uint32_t HexMag_Tuner_Attempt();
-    uint32_t HexMag_Tuner_Strategy();
+    uint32_t HexMag_Tuner_Attempt();      // last attempted generation index
+    uint32_t HexMag_Tuner_Strategy();     // active strategy
+    uint32_t HexMag_Tuner_Exhausted();    // 1 once attempt >= max_attempts
 }
 #endif
 

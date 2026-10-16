@@ -310,10 +310,12 @@ struct Reader {
             // type 40 when GGML_TYPE_COUNT == 40). GGML does not recognise these
             // types; Deep2 handles them with its own kernels. Preserve the record
             // for the histogram but skip GGML dequantisation.
-            // Map to Q4_0 (type 2) purely to avoid GGML_ASSERT on the enum value;
-            // has_dequant stays false so Deep2's own kernels handle the data.
+            // Map to GGML_TYPE_COUNT purely to avoid GGML_ASSERT on the enum value;
+            // has_dequant stays false so Deep2's own NVFP4 kernels handle the data.
+            // Q4_0 was previously used but produced garbage because Q4_0 block
+            // geometry (32 elems/2 bytes) is incompatible with NVFP4 (64 elems/36 bytes).
             if (static_cast<uint32_t>(t.gguf_type) >= GGML_TYPE_COUNT) {
-                t.ggml_type = GGML_TYPE_Q4_0;
+                t.ggml_type = GGML_TYPE_COUNT;
                 t.has_dequant = false;
                 ordered.push_back(t);
                 continue;
