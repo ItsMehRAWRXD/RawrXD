@@ -106,6 +106,8 @@ private:
     std::atomic<bool> is_running_;
     uint16_t port_;
     std::unique_ptr<std::thread> server_thread_;
+    bool deep2Initialized_ = false;
+    std::string deep2ModelPath_;
     
     // Connection management
     std::queue<HttpRequest> pending_requests_;

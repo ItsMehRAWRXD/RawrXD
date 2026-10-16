@@ -38,7 +38,7 @@
 #include "deep2_resource_governor.hpp"
 #include "StrataExpertResidency.hpp"
 #include "StrataInt8KVCache.hpp"
-#include "universal_gguf.hpp"
+#include "modelgenie/universal_gguf.hpp"
 
 // Short alias for the governor's move-only lease handle. The resource
 // governor itself owns the accounting; the executor holds only leases.

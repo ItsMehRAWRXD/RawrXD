@@ -1,0 +1,92 @@
+---
+description: Continue-ensure: recover the latest unfinished task and run one worker to E2E completion
+agent: code
+---
+# StreamerAgenticContinueEnsure
+
+Continue-ensure command for the RawrXD repository. Invoked via the exact triggers:
+
+- `Please continue ensuring`
+- `Please continue ensuring that the streamer is complete and can run agentic`
+
+## Gate (per turn)
+
+1. `MOTD_ACK=0` at turn start. Read `.cursor/rules/PassiveRoleNotRoleplay.md` (the MOTD) before any gated operation. After a successful read this turn: `MOTD_ACK=1`.
+2. `WORKER_COUNT_MAX=1` — only one active continue-ensure worker per task; never create a duplicate.
+3. `PARENT_EXECUTES_DELEGATED_WORK=0` — the parent is a passive coordinator; it does not perform the delegated engineering work.
+4. `PROMOTE=0`, `TIP_CLIMB=HOLD`.
+
+## Workflow
+
+1. Validate MOTD acknowledgment (bound to session_id, turn_id, motd hash).
+2. Load `StreamerAgenticContinueEnsure.mdc` (this file) and `MultitaskMode.mdc`.
+3. Recover the latest unfinished task and evidence ledger.
+4. Identify the real implementation owner.
+5. Check for an existing active worker for the task; reuse it when appropriate.
+6. Otherwise dispatch exactly one worker and require acknowledgment with a real `worker_id`.
+7. Persist a handoff receipt.
+8. End the parent execution turn.
+
+## Worker completion criteria (Deep2 engineering)
+
+1. Source changes exist in the intended repository.
+2. Required components are integrated.
+3. The product builds.
+4. Regression tests pass.
+5. The actual runtime path executes.
+6. Real model tokens are generated when applicable.
+7. SNAP tool calls execute when applicable.
+8. Tool outputs are verified.
+9. Failure and cancellation paths are tested.
+10. Evidence receipts identify the tested revision.
+
+## Completion law
+
+`HANDOFF_TO_AGENT != DONE` — agent handoff is delegation, not completion.
+
+`SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS`
+
+`NOT_RUN != PASS`, `BUILD_PASS != E2E_PASS`, `SMOKE_PASS != PRODUCTION_PASS`.
+
+Documentation, source presence, and agent messages are not substitutes for executable evidence.
+
+## Recovery
+
+When work is gapped/incomplete/partially implemented/unverified/delegated-but-not-landed/landed-but-not-wired/wired-but-not-exercised/exercised-but-not-E2E/E2E-but-not-dispositioned:
+
+`RESUME_IT → TRACE_TO_REAL_OWNER → IMPLEMENT_MISSING_PIECES → WIRE_REAL_PRODUCT_PATH → BUILD → RUN → VERIFY → CLOSE_END_TO_END`
+
+If the worker fails: preserve the last successful checkpoint, record the actual failure, release/expire the worker lease, keep the task OPEN, resume via a subsequent authorized dispatch. No infinite retry loop.
+
+## Coordinator output (only after runtime confirms dispatch)
+
+```
+CONTINUE_ENSURE=DISPATCHED
+BACKGROUND_WORKERS=1
+PARENT_MODE=PASSIVE_COORDINATOR
+PARENT_EXECUTES_DELEGATED_WORK=0
+MOTD_ACK=1
+TASK_ID=<actual task id>
+WORKER_ID=<actual worker id>
+HANDOFF_STATUS=ACKNOWLEDGED
+```
+
+On failure:
+```
+CONTINUE_ENSURE=DISPATCH_BLOCKED
+BACKGROUND_WORKERS=0
+HANDOFF_STATUS=FAILED
+BLOCKER=<actual reason>
+```
+
+## Forbidden
+
+- Character roleplay or persona improvisation
+- Claiming an unconfirmed worker dispatch
+- Multiple active workers for the same continue-ensure task
+- Parent execution of delegated work
+- Inventing PASS, completion, or performance results
+- Modifying sealed certification evidence
+- Silently converting failure into fallback success
+- Treating worker handoff as task completion
+- Destructive cleanup outside explicitly authorized scope

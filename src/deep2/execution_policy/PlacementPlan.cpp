@@ -5,7 +5,6 @@
 #include "ExecutionPolicy.hpp"
 #include "AutoPlanner.hpp"
 #include "LearnedProfileStore.hpp"
-#include "HardwareSnapshot.hpp"
 #include <algorithm>
 #include <cctype>
 #include <string>
@@ -190,9 +189,9 @@ void RunAutoPlanner(ExecutionPolicy& policy, int nLayers,
                     uint64_t detectedRam) {
     AutoPlanHints hints;
     hints.gpuCount = (detectedVram1 > 0) ? 2 : 1;
-    hints.gpu0Vram = detectedVram0;
-    hints.gpu1Vram = detectedVram1;
-    hints.ram = detectedRam;
+    hints.gpu0VramBytes = detectedVram0;
+    hints.gpu1VramBytes = detectedVram1;
+    hints.ramBytes = detectedRam;
     hints.totalLayers = nLayers;
 
     auto planned = AutoPlan(policy, hints);

@@ -564,13 +564,81 @@ bool InferenceEngine::LoadTransformerWeights()
 
 int32_t InferenceEngine::SampleNextToken(const std::vector<float>& logits)
 {
-    // Greedy sampling - select highest probability token
+    // Temperature-based sampling with nucleus (top-p) support
+    // Greedy decoding only when temperature is explicitly <= 0.0
     if (logits.empty()) {
         return 0; // Return padding token
     }
+
+    // If temperature <= 0, use greedy argmax (deterministic)
+    if (m_temperature <= 0.0f) {
+        auto max_it = std::max_element(logits.begin(), logits.end());
+        return static_cast<int32_t>(std::distance(logits.begin(), max_it));
+    }
+
+    // Apply temperature scaling
+    float temp = m_temperature;
+    float maxLogit = *std::max_element(logits.begin(), logits.end());
     
-    auto max_it = std::max_element(logits.begin(), logits.end());
-    return static_cast<int32_t>(std::distance(logits.begin(), max_it));
+    std::vector<float> probs(logits.size());
+    float sum = 0.0f;
+    for (size_t i = 0; i < logits.size(); ++i) {
+        probs[i] = std::exp((logits[i] - maxLogit) / temp);
+        sum += probs[i];
+    }
+    for (auto& p : probs) p /= sum;
+
+    // Apply top-p (nucleus) filtering
+    float topP = (m_topP > 0.0f && m_topP < 1.0f) ? m_topP : 1.0f;
+    
+    // Create indexed probabilities for sorting
+    std::vector<std::pair<float, int32_t>> indexed_probs;
+    indexed_probs.reserve(probs.size());
+    for (size_t i = 0; i < probs.size(); ++i) {
+        if (probs[i] > 1e-6f) {
+            indexed_probs.emplace_back(probs[i], static_cast<int32_t>(i));
+        }
+    }
+    
+    // Sort by probability descending
+    std::sort(indexed_probs.begin(), indexed_probs.end(),
+              [](const auto& a, const auto& b) { return a.first > b.first; });
+    
+    // Find nucleus (top-p)
+    float cumulative = 0.0f;
+    size_t nucleus_size = 0;
+    for (const auto& p : indexed_probs) {
+        cumulative += p.first;
+        nucleus_size++;
+        if (cumulative >= topP) break;
+    }
+    
+    if (nucleus_size == 0) {
+        // Fallback: greedy
+        return indexed_probs.empty() ? 0 : indexed_probs.front().second;
+    }
+    
+    indexed_probs.resize(nucleus_size);
+    
+    // Renormalize and sample from nucleus
+    float nucleus_sum = 0.0f;
+    for (const auto& p : indexed_probs) nucleus_sum += p.first;
+    
+    // Use thread-local RNG for sampling
+    static thread_local std::mt19937 gen(std::random_device{}());
+    std::uniform_real_distribution<float> dist(0.0f, nucleus_sum);
+    float threshold = dist(gen);
+    
+    float cumsum = 0.0f;
+    for (const auto& p : indexed_probs) {
+        cumsum += p.first;
+        if (cumsum >= threshold) {
+            return p.second;
+        }
+    }
+    
+    // Fallback: last in nucleus
+    return indexed_probs.back().second;
 }
 
 void InferenceEngine::Cleanup()

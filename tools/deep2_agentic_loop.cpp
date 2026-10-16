@@ -65,6 +65,8 @@
 #include "esp_metrics.hpp"
 #include "esp_cli.hpp"
 
+#include "../cloud_api_client.h"
+
 using namespace RawrXD::Deep2;
 using RawrXD::Deep2::RuntimeGraph::Executor;
 using RawrXD::Deep2::Universal::GetTokenizer;
@@ -116,6 +118,12 @@ struct Args
     float temperature = 0.8f;
     // CONTEXT: minuscule context sizes for local models (e.g. 128 tokens)
     int context_size = 128;
+    // CLOUD ROUTING: --provider selects inference backend
+    //   deep2 = local GGUF via Deep2Engine (default)
+    //   kilo = Kilo Gateway (free models)
+    //   openrouter = OpenRouter (free models)
+    std::string provider = "deep2";
+    std::string api_key;  // Read from env if not set
 };
 
 Args Parse(int argc, char* argv[])
@@ -187,6 +195,15 @@ Args Parse(int argc, char* argv[])
             a.temperature = static_cast<float>(std::atof(argv[++i]));
         else if (s == "--context-size" && i + 1 < argc)
             a.context_size = std::atoi(argv[++i]);
+        else if (s == "--provider" && i + 1 < argc)
+            a.provider = argv[++i];
+        else if (s == "--api-key" && i + 1 < argc)
+            a.api_key = argv[++i];
+        else if (s == "--env-api-key" && i + 1 < argc)
+        {
+            const char* env_val = std::getenv(argv[++i]);
+            if (env_val) a.api_key = env_val;
+        }
     }
     return a;
 }
@@ -1630,6 +1647,7 @@ static int PlainPromptRun(const Args& args)
             break;
         }
             const std::vector<float>& lg = ex.Logits();
+            uint32_t next = 0;
             // Sampling with configurable temperature; temperature <= 0 means greedy
             if (args.temperature <= 0.0f)
             {
@@ -2657,6 +2675,61 @@ int main(int argc, char* argv[])
     if (!args.plain_prompt.empty())
         return PlainPromptRun(args);
 
+    // ============================================================================
+    // CLOUD PROVIDER MODE (--provider kilo | openrouter)
+    // Routes inference through a free cloud model instead of local Deep2.
+    // Used for autonomous self-development while Deep2 is being repaired.
+    // ============================================================================
+    if (args.provider == "kilo" || args.provider == "openrouter")
+    {
+        // Resolve API key from env if not provided via --api-key
+        std::string api_key = args.api_key;
+        if (api_key.empty())
+        {
+            if (args.provider == "kilo")
+            {
+                const char* ek = std::getenv("KILO_API_KEY");
+                if (ek) api_key = ek;
+            }
+            else if (args.provider == "openrouter")
+            {
+                const char* ek = std::getenv("OPENROUTER_API_KEY");
+                if (ek) api_key = ek;
+            }
+        }
+
+        ModelConfig cfg;
+        cfg.backend = (args.provider == "kilo") ? ModelBackend::KILO_GATEWAY : ModelBackend::OPENROUTER;
+        cfg.model_id = args.model.empty() ? (args.provider == "kilo" ? "kilo-auto/free" : "openrouter/free")
+                                          : args.model;
+        cfg.parameters["max_tokens"] = std::to_string(args.max_new);
+        cfg.parameters["temperature"] = std::to_string(args.temperature);
+        if (args.provider == "openrouter")
+        {
+            cfg.parameters["http_referer"] = "https://rawrxd.local/self-repair";
+            cfg.parameters["x_title"] = "RawrXD Self-Repair Agent";
+        }
+
+        CloudApiClient cloud;
+        std::string prompt = args.task.empty() ? "You are a helpful coding assistant." : args.task;
+
+        Logf_("[cloud] provider=%s model=%s temperature=%.2f max_tokens=%d task_length=%zu\n",
+              args.provider.c_str(), cfg.model_id.c_str(), args.temperature, args.max_new,
+              prompt.size());
+        Logf_("[cloud] task: %s\n", prompt.c_str());
+
+        std::string result = cloud.generate(prompt, cfg);
+        if (result.empty())
+        {
+            Logf_("[cloud] ERROR: cloud generation failed\n");
+            return 1;
+        }
+
+        Logf_("[cloud] response:\n%s\n", result.c_str());
+        Logf_("[cloud] COMPLETE\n");
+        return 0;
+    }
+
     Logf_("[stage] loading model %s\n", args.model.c_str());
     const auto t_load0 = std::chrono::steady_clock::now();
     const IngestReport& rep = Ingest(args.model, false);
@@ -2983,8 +3056,9 @@ const std::string task = args.task.empty()
                 final_stop_reason = deep2::agent::StopReason::NonFinite;
                 Logf_("[diag] non-finite logits (%zu); failing closed\n", ex.NonFiniteLogits());
                 break;
-            }
+        }
             const std::vector<float>& lg = ex.Logits();
+            uint32_t next = 0;
             // Sampling with configurable temperature; temperature <= 0 means greedy
             if (args.temperature <= 0.0f)
             {

@@ -83,4 +83,8 @@ private:
     // Pre-initialized RNG (avoid repeated initialization overhead - Bottleneck #13 fix)
     static std::mt19937 m_rng;
     static std::uniform_real_distribution<float> m_embedding_dist;
+
+    // Sampling configuration (non-greedy default: temperature=0.7, top_p=0.9)
+    float m_temperature = 0.7f;
+    float m_topP = 0.9f;
 };

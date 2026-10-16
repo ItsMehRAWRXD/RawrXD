@@ -36,6 +36,10 @@
 #endif
 
 #include "deep2/Deep2CLIBridge.hpp"
+#include "project_wizard/project_spec.hpp"
+#include "project_wizard/project_state_manager.hpp"
+#include "project_wizard/project_wizard.hpp"
+#include "project_wizard/project_workflow.hpp"
 #include <functional>
 
 #include <iostream>
@@ -157,7 +161,12 @@ static std::string RunGit(const std::string& args) {
 // ---------------------------------------------------------------------------
 static bool InitBackend(BackendMode mode, const std::string& model) {
     // Direct Deep2Engine (in-process GGUF inference) takes priority — no HTTP router needed.
-    if (mode == BackendMode::Deep2) {
+    // In Auto mode, try Deep2 when a model path is provided and looks like a GGUF file.
+    bool tryDeep2 = (mode == BackendMode::Deep2) ||
+                    (mode == BackendMode::Auto && !model.empty() &&
+                     (model.rfind(".gguf") == model.size() - 5 ||
+                      model.rfind(".GGUF") == model.size() - 5));
+    if (tryDeep2) {
         if (localEngine) {
             deep2_free(localEngine);
             localEngine = nullptr;
@@ -179,10 +188,26 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
                      deep2_num_layers(localEngine));
 
         deep2CompleteFn = [](const std::vector<ChatMessage>& msgs, int maxTokens) {
-            std::string prompt;
-            for (const auto& m : msgs) {
-                if (!prompt.empty()) prompt += "\n\n";
-                prompt += m.role + ": " + m.content;
+            // Apply TinyLlama-compatible chat template so the base model
+            // interprets the user turn as an instruction rather than text
+            // to continue. Without this, TinyLlama generates training-data
+            // style QA content instead of following instructions.
+            std::string prompt = "<|system|>\n"
+                                 "You are a helpful assistant. Follow the user's instructions directly and concisely.\n"
+                                 "<|user|>\n";
+            for (size_t i = 0; i < msgs.size(); ++i) {
+                const auto& m = msgs[i];
+                if (m.role == "user") {
+                    prompt += m.content;
+                    prompt += "\n<|assistant|>\n";
+                } else if (m.role == "assistant") {
+                    prompt += m.content;
+                    if (i + 1 < msgs.size() && msgs[i + 1].role == "user") {
+                        prompt += "<|user|>\n";
+                    }
+                } else if (m.role == "system") {
+                    // System content already emitted above; skip duplicates.
+                }
             }
             std::string text;
             if (!deep2_generate(localEngine, prompt.c_str(), static_cast<size_t>(maxTokens), text)) {
@@ -393,6 +418,12 @@ static void CheckpointLedger(const std::string& label) {
 // ---------------------------------------------------------------------------
 // rawr run — the universal interactive agent session
 // ---------------------------------------------------------------------------
+namespace {
+int CmdProjectWizard(const std::string& model, const std::string& goal,
+                     const std::map<std::string, std::string>& flags,
+                     const std::string& workspace_root);
+}
+
 static int CmdRun(const std::vector<std::string>& args) {
     // args = [model, mode?, --flag ...]
     std::string model;
@@ -420,6 +451,21 @@ static int CmdRun(const std::vector<std::string>& args) {
         }
     }
 
+    // Resolve model alias → actual GGUF path before backend initialization.
+    // This lets `rawr run nemotron-3.5-bolt` resolve to F:\rawrxd\nemotron-bolt.gguf.
+    {
+        static const struct { const char* name; const char* path; } kAliases[] = {
+            {"nemotron-3.5-bolt", "F:\\rawrxd\\nemotron-bolt.gguf"},
+            {"nemotron-bolt", "F:\\rawrxd\\nemotron-bolt.gguf"},
+        };
+        for (const auto& a : kAliases) {
+            if (_stricmp(model.c_str(), a.name) == 0) {
+                model = a.path;
+                break;
+            }
+        }
+    }
+
     // Workspace override from --workspace/--root.
     {
         Options opt;
@@ -427,29 +473,52 @@ static int CmdRun(const std::vector<std::string>& args) {
         g_workspace = DiscoverWorkspace(opt);
     }
 
-    // Resolve mode: --mode wins, then a bare positional, else Code.
-    AgentMode mode = AgentMode::Code;
-    if (flags.count("mode")) {
-        mode_str = flags["mode"];
-        if (!AgentModeParse(mode_str, mode)) {
-            std::cerr << "Unknown mode: " << mode_str << "\n";
-            std::cerr << "Known modes:\n";
-            for (auto m : ModeRegistry::Instance().AllModes()) {
-                std::cerr << "  " << std::left << std::setw(12) << AgentModeName(m)
-                          << ModeRegistry::Instance().Describe(m) << "\n";
-            }
-            return 2;
-        }
+    // ---- Project Wizard workflow detection --------------------------------
+    // `rawr run <model> "new project"` starts the interactive project builder.
+    // Follow-ups ("add a GUI", "switch to C++", "add tests", "continue
+    // building") resume an existing project instead of starting over. The goal
+    // may come from the bare positional (mode_str), --task, or --prompt.
+    std::string workflow_goal;
+    if (!mode_str.empty()) {
+        workflow_goal = mode_str;
+    } else if (flags.count("task")) {
+        workflow_goal = flags.at("task");
+    } else if (flags.count("prompt")) {
+        workflow_goal = flags.at("prompt");
     }
-    else if (!mode_str.empty()) {
-        if (!AgentModeParse(mode_str, mode)) {
-            std::cerr << "Unknown mode: " << mode_str << "\n";
-            std::cerr << "Known modes:\n";
-            for (auto m : ModeRegistry::Instance().AllModes()) {
-                std::cerr << "  " << std::left << std::setw(12) << AgentModeName(m)
-                          << ModeRegistry::Instance().Describe(m) << "\n";
+    bool is_wizard_goal = false;
+    if (!workflow_goal.empty()) {
+        rawrxd::project::FollowUp fu = rawrxd::project::DetectFollowUp(workflow_goal);
+        is_wizard_goal = (rawrxd::project::detail::StrLower(workflow_goal) == "new project") ||
+                         (fu.kind != rawrxd::project::FollowUpKind::kNone);
+    }
+
+    // Resolve mode: --mode wins, then a bare positional, else Code.
+    // Skipped entirely for wizard goals (they are not agent modes).
+    AgentMode mode = AgentMode::Code;
+    if (!is_wizard_goal) {
+        if (flags.count("mode")) {
+            mode_str = flags["mode"];
+            if (!AgentModeParse(mode_str, mode)) {
+                std::cerr << "Unknown mode: " << mode_str << "\n";
+                std::cerr << "Known modes:\n";
+                for (auto m : ModeRegistry::Instance().AllModes()) {
+                    std::cerr << "  " << std::left << std::setw(12) << AgentModeName(m)
+                              << ModeRegistry::Instance().Describe(m) << "\n";
+                }
+                return 2;
             }
-            return 2;
+        }
+        else if (!mode_str.empty()) {
+            if (!AgentModeParse(mode_str, mode)) {
+                std::cerr << "Unknown mode: " << mode_str << "\n";
+                std::cerr << "Known modes:\n";
+                for (auto m : ModeRegistry::Instance().AllModes()) {
+                    std::cerr << "  " << std::left << std::setw(12) << AgentModeName(m)
+                              << ModeRegistry::Instance().Describe(m) << "\n";
+                }
+                return 2;
+            }
         }
     }
 
@@ -497,6 +566,11 @@ static int CmdRun(const std::vector<std::string>& args) {
 
     g_gate = std::make_unique<PermissionGate>(mode);
     g_gate->SetPlanDirectory(g_workspace + "/.rawrxd/plans");
+
+    // ---- Project Wizard: intercept before the normal agent session ------
+    if (is_wizard_goal) {
+        return CmdProjectWizard(model, workflow_goal, flags, g_workspace);
+    }
 
     // Driver-owned ledger, initialized before anything executes.
     g_ledger = std::make_unique<AgentSession>(
@@ -657,7 +731,25 @@ static int CmdRun(const std::vector<std::string>& args) {
             messages.push_back(cm);
         }
 
-        InferenceResult result = g_router->ChatSync(messages, json::array());
+        InferenceResult result;
+        try {
+            if (deep2CompleteFn) {
+                // Use in-process Deep2Engine directly — no HTTP router needed.
+                result = deep2CompleteFn(messages, 4096);
+            } else if (g_router) {
+                result = g_router->ChatSync(messages, json::array());
+            } else {
+                result = InferenceResult::Error("No inference backend available");
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[error] Deep2 exception: " << e.what() << "\n";
+            g_ledger->RecordFailure("inference exception: " + std::string(e.what()));
+            continue;
+        } catch (...) {
+            std::cerr << "[error] Deep2 unknown exception\n";
+            g_ledger->RecordFailure("inference unknown exception");
+            continue;
+        }
         if (!result.success) {
             std::cerr << "[error] " << result.error_message << "\n";
             g_ledger->RecordFailure("inference failed: " + result.error_message);
@@ -676,6 +768,213 @@ static int CmdRun(const std::vector<std::string>& args) {
     std::cout << "\nSession ledger: " << g_ledger->LedgerPath() << "\n";
     return 0;
 }
+
+// =============================================================================
+// rawr project wizard — `rawr run <model> "new project"` and follow-ups
+// =============================================================================
+namespace {
+
+// Adapts the CLI's inference backend to the project workflow's InferenceFn.
+rawrxd::project::InferenceResult MakeInferenceAdapter(
+    const std::vector<json>& messages, int max_tokens) {
+    std::vector<RawrXD::Agent::ChatMessage> cmsgs;
+    for (const auto& m : messages) {
+        RawrXD::Agent::ChatMessage cm;
+        cm.role = m.value("role", std::string());
+        cm.content = m.value("content", std::string());
+        cmsgs.push_back(cm);
+    }
+    RawrXD::Agent::InferenceResult r;
+    if (deep2CompleteFn) {
+        r = deep2CompleteFn(cmsgs, max_tokens);
+    } else if (g_router) {
+        r = g_router->ChatSync(cmsgs, json::array());
+    } else {
+        return rawrxd::project::InferenceResult{false, "", "no inference backend available", 0, 0, 0};
+    }
+    return rawrxd::project::InferenceResult{
+        r.success, r.response, r.error_message,
+        static_cast<int>(r.completion_tokens),
+        static_cast<int>(r.prompt_tokens),
+        static_cast<int64_t>(r.total_duration_ms)};
+}
+
+// Adapts the CLI's tool registry to the project workflow's ToolFn. Autonomy
+// from the project spec gates mutations: ask-before-changes requires an
+// explicit env opt-in, generate-and-verify and autonomous allow them.
+rawrxd::project::ToolResult MakeToolAdapter(
+    const rawrxd::project::ProjectSpec& spec,
+    const std::string& name, const std::string& args_json) {
+    rawrxd::tools::Tool tool;
+    if (!g_tools || !g_tools->find(name, tool))
+        return rawrxd::project::ToolResult{false, "", "unknown tool: " + name};
+    rawrxd::tools::Request req;
+    req.name = name;
+    try {
+        auto j = json::parse(args_json);
+        for (auto& kv : j.items()) req.args[kv.key()] = kv.value().get<std::string>();
+    } catch (const std::exception&) {
+        return rawrxd::project::ToolResult{false, "", "invalid tool arguments JSON"};
+    }
+    auto approve = [&](const rawrxd::tools::Tool& t, const rawrxd::tools::Request&) -> bool {
+        if (t.risk == rawrxd::tools::Risk::ReadOnly) return true;
+        if (spec.autonomy == rawrxd::project::AutonomyLevel::kAskBeforeChanges) {
+            const char* env = std::getenv("RAWRXD_TOOLS_APPROVE_MUTATIONS");
+            return env && std::string(env) == "YES";
+        }
+        return true; // generate-and-verify / autonomous-with-checkpoints
+    };
+    if (tool.risk != rawrxd::tools::Risk::ReadOnly && !approve(tool, req))
+        return rawrxd::project::ToolResult{false, "", "mutation denied by autonomy policy"};
+    auto res = g_tools->call(req, approve);
+    return rawrxd::project::ToolResult{res.ok, res.output, res.error};
+}
+
+static int CmdProjectWizard(const std::string& model, const std::string& goal,
+                            const std::map<std::string, std::string>& flags,
+                            const std::string& workspace_root) {
+    using namespace rawrxd::project;
+
+    ProjectStateManager store(workspace_root);
+    std::cout << "\n";
+    std::cout << "RawrXD Project Wizard\n";
+    std::cout << "Model: " << model << "\n";
+    std::cout << "Root:  " << workspace_root << "\n";
+    std::cout << "\n";
+
+    FollowUp fu = DetectFollowUp(goal);
+    bool is_new = (detail::StrLower(goal) == "new project") ||
+                  (fu.kind == FollowUpKind::kNewProject);
+
+    ProjectSpec spec;
+    std::string project_id;
+
+    if (is_new) {
+        // Noninteractive when all required wizard flags are supplied;
+        // otherwise run the interactive interview on stdin.
+        bool has_required = flags.count("wizard-name") && flags.count("wizard-idea") &&
+                            flags.count("wizard-type") && flags.count("wizard-language") &&
+                            flags.count("wizard-build-system") && flags.count("wizard-autonomy");
+        if (has_required) {
+            spec = Wizard::BuildFromFlags(flags);
+        } else {
+            Wizard wiz(workspace_root, nullptr, flags);
+            spec = wiz.Run();
+            if (spec.project_id.empty()) {
+                std::cout << "Wizard cancelled. No project created.\n";
+                return 0;
+            }
+        }
+        project_id = store.CreateProject(spec);
+        if (project_id.empty()) {
+            // A project with that name already exists: resume it instead.
+            std::string dir;
+            if (!ResolveProject(workspace_root, spec.name, project_id, dir)) {
+                std::cerr << "ERROR: a project named '" << spec.name
+                          << "' already exists and could not be resumed.\n";
+                return 1;
+            }
+            std::cout << "Resuming existing project: " << spec.name << " (" << project_id << ")\n";
+        } else {
+            std::cout << "Created project: " << spec.name << " (" << project_id << ")\n";
+        }
+    } else {
+        // Follow-up to an existing project (resume most recent when unnamed).
+        std::string dir;
+        if (!ResolveProject(workspace_root, std::string(), project_id, dir)) {
+            std::cerr << "ERROR: no existing project to apply follow-up to. "
+                      << "Start one with: rawr run " << model << " \"new project\"\n";
+            return 1;
+        }
+        std::cout << "Applying follow-up to project: " << project_id << "\n";
+    }
+
+    ProjectSpec loaded_spec;
+    ProjectState loaded_state;
+    if (!store.LoadProject(project_id, loaded_spec, loaded_state)) {
+        std::cerr << "ERROR: could not load project " << project_id << "\n";
+        return 1;
+    }
+    spec = loaded_spec;
+
+    // For follow-ups, mutate the spec per the detected intent.
+    if (!is_new && fu.kind != FollowUpKind::kNone) {
+        json hist;
+        hist["kind"] = "follow_up";
+        hist["detail"] = fu.detail;
+        hist["raw"] = fu.raw;
+        hist["at"] = detail::NowIso8601();
+        store.AppendHistory(project_id, hist);
+
+        switch (fu.kind) {
+            case FollowUpKind::kAddGui:
+                spec.framework = fu.detail.empty() ? "GUI framework" : fu.detail;
+                spec.idea += " [follow-up: add GUI]";
+                break;
+            case FollowUpKind::kSwitchLanguage:
+                if (!fu.detail.empty()) spec.language = LanguageFromString(fu.detail);
+                spec.idea += " [follow-up: switch language]";
+                break;
+            case FollowUpKind::kSetOffline:
+                spec.architecture += " [follow-up: offline mode]";
+                break;
+            case FollowUpKind::kAddTests:
+                if (!fu.detail.empty()) spec.tests.push_back(fu.detail);
+                break;
+            case FollowUpKind::kChangeAutonomy:
+                if (!fu.detail.empty()) spec.autonomy = AutonomyFromString(fu.detail);
+                break;
+            case FollowUpKind::kUpdateIdea:
+                if (!fu.detail.empty()) spec.idea = fu.detail;
+                break;
+            default: break;
+        }
+        spec.updated_at = detail::NowIso8601();
+        ++spec.model_rotation_count;
+        store.SaveSpec(project_id, spec);
+        std::cout << "Follow-up applied (" << StageName(ProjectStage::kPlanning) << ").\n";
+    }
+
+    Wizard::PrintPreview(spec);
+
+    // Run the Plan -> Scaffold -> Implement -> Build -> Verify loop.
+    ProjectWorkflow workflow(store, project_id, MakeInferenceAdapter,
+                             std::bind(MakeToolAdapter, std::cref(spec),
+                                       std::placeholders::_1, std::placeholders::_2),
+                             1);
+    WorkflowResult res = workflow.Run();
+
+    std::cout << "\n";
+    std::cout << "=== RawrXD Project Wizard: handoff ===\n";
+    std::cout << "Project: " << spec.name << " (" << project_id << ")\n";
+    std::cout << "Stage:   " << StageName(res.stage) << "\n";
+    if (!res.executable_path.empty())
+        std::cout << "Executable: " << res.executable_path << "\n";
+    if (res.build_result.tool_ok || res.build_result.process_exit_code != -1) {
+        std::cout << "Build:   exit=" << res.build_result.process_exit_code
+                  << " errors=" << res.build_result.compiler_errors
+                  << " warnings=" << res.build_result.compiler_warnings
+                  << " artifacts=" << (res.build_result.artifacts_verified ? "verified" : "missing")
+                  << "\n";
+    }
+    if (res.test_result.tool_ok || res.test_result.process_exit_code != -1) {
+        std::cout << "Tests:   exit=" << res.test_result.process_exit_code
+                  << " passed=" << res.test_result.tests_passed
+                  << " failed=" << res.test_result.tests_failed
+                  << " total=" << res.test_result.tests_total << "\n";
+    }
+    std::cout << "TPS:     " << res.tokens_per_second << "\n";
+    std::cout << "Tokens:  " << res.total_tokens
+              << " | inference_ms=" << res.total_inference_ms << "\n";
+    std::cout << "Ledger:  " << project_id << "/esp.jsonl, state.json\n";
+    if (!res.error.empty()) std::cout << "Error:   " << res.error << "\n";
+    std::cout << "Summary: " << res.summary << "\n";
+    std::cout << "====================================\n";
+
+    return res.ok ? 0 : 1;
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // rawr modes / models / tools / backend / doctor / self-audit
@@ -837,17 +1136,19 @@ int main(int argc, char** argv) {
     g_workspace = fs::current_path().string();
 
     if (argc < 2) {
-        std::cout << "RawrXD CLI v2\n\n"
-                  << "Usage:\n"
-                  << "  rawr run <model> [mode] [--backend b] [--workspace d]   interactive agent\n"
-                  << "  rawr modes                                                  list agent modes\n"
-                  << "  rawr tools list|describe <name>|run <name> [k=v ...]       tool interface\n"
-                  << "  rawr models                                                 list models\n"
-                  << "  rawr backend [auto|deep2|ollama]                            backend status/switch\n"
-                  << "  rawr doctor                                                 environment health\n"
-                  << "  rawr self-audit                                             run the audit checklist\n"
-                  << "  rawr build [--config Release] [--target t]                  build project\n"
-                  << "  rawr test [--filter f]                                      run tests\n";
+    std::cout << "RawrXD CLI v2\n\n"
+              << "Usage:\n"
+              << "  rawr run <model> [mode] [--backend b] [--workspace d]   interactive agent\n"
+              << "  rawr run <model> \"new project\"                          project wizard\n"
+              << "  rawr run <model> \"add a GUI\"                            follow-up wizard\n"
+              << "  rawr modes                                                  list agent modes\n"
+              << "  rawr tools list|describe <name>|run <name> [k=v ...]       tool interface\n"
+              << "  rawr models                                                 list models\n"
+              << "  rawr backend [auto|deep2|ollama]                            backend status/switch\n"
+              << "  rawr doctor                                                 environment health\n"
+              << "  rawr self-audit                                             run the audit checklist\n"
+              << "  rawr build [--config Release] [--target t]                  build project\n"
+              << "  rawr test [--filter f]                                      run tests\n";
         return 0;
     }
 

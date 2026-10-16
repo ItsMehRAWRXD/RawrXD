@@ -1,0 +1,38 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "default_agent": "code",
+  "instructions": [
+    "AGENTS.md",
+    ".cursor/rules/PassiveRoleNotRoleplay.md"
+  ],
+  "permission": {
+    "read": "allow",
+    "edit": {
+      "src/**": "allow",
+      "*.asm": "allow",
+      "*.ps1": "allow",
+      "*.bat": "allow",
+      "*.cmd": "allow",
+      "*.md": "allow",
+      "*.json": "allow",
+      "*.yaml": "allow",
+      ".kilo/**": "allow",
+      "kilo.json": "ask",
+      "AGENTS.md": "ask",
+      "*": "ask"
+    },
+    "bash": "allow",
+    "task": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "skill": "allow",
+    "external_directory": "deny"
+  },
+  "snapshot": true,
+  "share": "manual",
+  "compaction": {
+    "auto": true,
+    "prune": true
+  }
+}

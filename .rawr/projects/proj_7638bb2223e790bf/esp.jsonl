@@ -1,0 +1,7 @@
+{"ts_ns":1792118296376613800,"seq":1,"request":1,"agent":1,"kind":"model_load","value":0,"message":"deep2-local"}
+{"ts_ns":1792118296376616000,"seq":2,"request":1,"agent":1,"kind":"tokenizer_check","value":0,"message":"PASS"}
+{"ts_ns":1792118296376616100,"seq":3,"request":1,"agent":1,"kind":"model_load","value":0,"message":"E2EDemo"}
+{"ts_ns":1792118296376639800,"seq":4,"request":1,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":1,\"agent\":1,\"phase\":\"load\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":0.005,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1792118296384500100,"seq":5,"request":1,"agent":1,"kind":"agent_step","value":0,"message":"planning"}
+{"ts_ns":1792118296384549300,"seq":6,"request":1,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":1,\"agent\":1,\"phase\":\"load\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":7.895,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1792118296384581000,"seq":7,"request":1,"agent":1,"kind":"prefill_start","value":0,"message":"tokens=221 ctx=221"}

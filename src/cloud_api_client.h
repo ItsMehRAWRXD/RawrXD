@@ -1,154 +1,106 @@
 // cloud_api_client.h - Universal Cloud API Client for Multiple Providers
+// Pure Windows native implementation using WinHTTP (no Qt dependency)
 #ifndef CLOUD_API_CLIENT_H
 #define CLOUD_API_CLIENT_H
 
-#include <QString>
-#include <QObject>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+#include <string>
+#include <map>
+#include <vector>
 #include <memory>
 #include <functional>
-#include <map>
+#include <chrono>
+#include <cstdint>
 
-class UniversalModelRouter;
-struct ModelConfig;
+#include "universal_model_router.h"
 
 // Structured logging
 struct ApiCallLog {
-    QString timestamp;
-    QString provider;
-    QString model;
-    QString endpoint;
-    QString request_body;
-    QString response_body;
+    std::string timestamp;
+    std::string provider;
+    std::string model;
+    std::string endpoint;
+    std::string request_body;
+    std::string response_body;
     int status_code;
-    qint64 latency_ms;
+    int64_t latency_ms;
     bool success;
-    QString error_message;
+    std::string error_message;
 };
 
 // API response structure
 struct ApiResponse {
-    bool success;
-    QString content;
-    int status_code;
-    QString raw_body;
-    qint64 latency_ms;
-    QString error_message;
-    QJsonObject metadata;
+    bool success = false;
+    std::string content;
+    int status_code = 0;
+    std::string raw_body;
+    int64_t latency_ms = 0;
+    std::string error_message;
+    std::map<std::string, std::string> metadata;
 };
 
-// Streaming response structure
-struct StreamingResponse {
-    QString chunk;
-    bool is_final;
-    QString error;
-};
-
-// Cloud API Client
-class CloudApiClient : public QObject {
-    Q_OBJECT
-
+// Cloud API Client - dependency-free Windows native implementation
+class CloudApiClient {
 public:
-    explicit CloudApiClient(QObject* parent = nullptr);
+    explicit CloudApiClient();
     ~CloudApiClient();
 
     // Synchronous generation (blocking)
-    QString generate(const QString& prompt, const ModelConfig& config);
-    
+    std::string generate(const std::string& prompt, const ModelConfig& config);
+
     // Asynchronous generation
-    void generateAsync(const QString& prompt, 
-                      const ModelConfig& config,
-                      std::function<void(const ApiResponse&)> callback);
-    
-    // Streaming generation
-    void generateStream(const QString& prompt,
+    void generateAsync(const std::string& prompt,
                        const ModelConfig& config,
-                       std::function<void(const QString&)> chunk_callback,
-                       std::function<void(const QString&)> error_callback = nullptr);
-    
+                       std::function<void(const ApiResponse&)> callback);
+
     // Provider health check
     bool checkProviderHealth(const ModelConfig& config);
-    void checkProviderHealthAsync(const ModelConfig& config,
-                                 std::function<void(bool)> callback);
-    
+
     // Model listing
-    QStringList listModels(const ModelConfig& config);
-    void listModelsAsync(const ModelConfig& config,
-                        std::function<void(const QStringList&)> callback);
-    
-    // Request building (for debugging/logging)
-    QJsonObject buildRequestBody(const QString& prompt, const ModelConfig& config);
-    
+    std::vector<std::string> listModels(const ModelConfig& config);
+
     // Logging and metrics
-    QVector<ApiCallLog> getCallHistory() const;
+    std::vector<ApiCallLog> getCallHistory() const;
     void clearCallHistory();
     ApiCallLog getLastCall() const;
     double getAverageLatency() const;
     int getSuccessRate() const;  // 0-100
 
-signals:
-    void generationCompleted(const ApiResponse& response);
-    void generationFailed(const QString& error);
-    void streamChunkReceived(const QString& chunk);
-    void streamingCompleted();
-    void streamingFailed(const QString& error);
-    void healthCheckCompleted(bool healthy);
-    void modelListReceived(const QStringList& models);
-
-private slots:
-    void onNetworkReplyFinished(QNetworkReply* reply);
-
 private:
-    // API request execution
-    ApiResponse executeRequest(const QString& endpoint,
-                             const QString& method,
-                             const QJsonObject& body,
-                             const QString& api_key,
-                             const QMap<QString, QString>& headers = {});
-    
-    // Response parsing by backend
-    QString parseAnthropicResponse(const QJsonObject& response);
-    QString parseOpenAIResponse(const QJsonObject& response);
-    QString parseGoogleResponse(const QJsonObject& response);
-    QString parseMoonshotResponse(const QJsonObject& response);
-    QString parseAzureOpenAIResponse(const QJsonObject& response);
-    QString parseAwsBedrockResponse(const QJsonObject& response);
-    
+    // API request execution using WinHTTP
+    ApiResponse executeRequest(const std::string& endpoint,
+                               const std::string& method,
+                               const std::string& body,
+                               const std::string& api_key,
+                               const std::map<std::string, std::string>& headers = {});
+
     // Request building by backend
-    QJsonObject buildAnthropicRequest(const QString& prompt, const ModelConfig& config);
-    QJsonObject buildOpenAIRequest(const QString& prompt, const ModelConfig& config);
-    QJsonObject buildGoogleRequest(const QString& prompt, const ModelConfig& config);
-    QJsonObject buildMoonshotRequest(const QString& prompt, const ModelConfig& config);
-    QJsonObject buildAzureOpenAIRequest(const QString& prompt, const ModelConfig& config);
-    QJsonObject buildAwsBedrockRequest(const QString& prompt, const ModelConfig& config);
-    
-    // Endpoint mapping
+    std::string buildOpenAICompatibleRequest(const std::string& prompt, const ModelConfig& config);
+    std::string buildOpenRouterRequest(const std::string& prompt, const ModelConfig& config);
+
+    // Response parsing
+    std::string parseOpenAIResponse(const std::string& raw_body);
+
+    // Endpoint definitions
     struct ApiEndpoint {
-        QString base_url;
-        QString chat_endpoint;
-        QString model_list_endpoint;
-        std::function<QJsonObject(const QString&, const ModelConfig&)> request_builder;
-        std::function<QString(const QJsonObject&)> response_parser;
+        std::string base_url;
+        std::string chat_endpoint;
+        std::string model_list_endpoint;
     };
-    
-    // API endpoint definitions
+
+    // API endpoint definitions keyed by ModelBackend enum value
+    std::map<int, ApiEndpoint> api_endpoints;
+
+    // Initialize endpoint table
     void initializeApiEndpoints();
-    std::map<int, ApiEndpoint> api_endpoints;  // keyed by ModelBackend enum
-    
-    // Network management
-    std::unique_ptr<QNetworkAccessManager> network_manager;
-    QMap<QNetworkReply*, std::function<void(const QString&)>> pending_callbacks;
-    
+
     // Call history and metrics
-    QVector<ApiCallLog> call_history;
+    std::vector<ApiCallLog> call_history;
     static const int MAX_HISTORY_SIZE = 1000;
-    
+
     // Error handling
-    QString formatErrorResponse(int status_code, const QString& body);
+    std::string formatErrorResponse(int status_code, const std::string& body);
     void logApiCall(const ApiCallLog& log);
+    std::string currentTimestamp();
 };
 
 #endif // CLOUD_API_CLIENT_H

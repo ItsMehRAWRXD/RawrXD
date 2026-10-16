@@ -1,0 +1,43 @@
+{
+  "build_attempts": 0,
+  "build_result": {
+    "artifact_paths": [],
+    "artifacts_verified": false,
+    "build_configuration": "",
+    "build_target": "",
+    "command": "",
+    "compiler_errors": 0,
+    "compiler_warnings": 0,
+    "elapsed_seconds": 0.0,
+    "log_path": "",
+    "process_exit_code": -1,
+    "succeeded": false,
+    "tool_ok": false
+  },
+  "completed_steps": [],
+  "current_step": "",
+  "executable_path": "",
+  "file_list": [],
+  "last_error": "",
+  "plan_path": "",
+  "project_id": "proj_a66154bdb6a1ed87",
+  "repair_attempts": 0,
+  "scaffold_dir": "",
+  "stage": "planning",
+  "test_result": {
+    "command": "",
+    "elapsed_seconds": 0.0,
+    "failures": [],
+    "log_path": "",
+    "process_exit_code": -1,
+    "succeeded": false,
+    "tests_failed": 0,
+    "tests_passed": 0,
+    "tests_total": 0,
+    "tool_ok": false
+  },
+  "tokens_per_second": 0.6607305792404744,
+  "total_inference_ms": 31783,
+  "total_tokens": 21,
+  "updated_at": "2026-10-16T14:38:03"
+}

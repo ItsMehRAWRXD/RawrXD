@@ -811,10 +811,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         modelWeights.tieEmbeddings = true;
     }
 
-    if (!modelWeights.finalNorm.data || !modelWeights.lmHead.data ||
-        modelWeights.lmHead.rows != modelWeights.vocabSize || modelWeights.lmHead.cols != modelWeights.hiddenDim)
+    if (!modelWeights.finalNorm.data || !modelWeights.lmHead.data)
     {
         std::fprintf(stderr, "[Deep2Engine] final norm / LM-head topology invalid\n");
+        return false;
+    }
+    // LM head may be [vocabSize, hiddenDim] (separate) or [hiddenDim, vocabSize] (tied to embedding)
+    const bool lmHeadOK =
+        (modelWeights.lmHead.rows == modelWeights.vocabSize && modelWeights.lmHead.cols == modelWeights.hiddenDim) ||
+        (modelWeights.lmHead.rows == modelWeights.hiddenDim && modelWeights.lmHead.cols == modelWeights.vocabSize);
+    if (!lmHeadOK)
+    {
+        std::fprintf(stderr,
+            "[Deep2Engine] final norm / LM-head topology invalid: "
+            "lmHead=[%zu,%zu] vocab=%zu hidden=%zu\n",
+            modelWeights.lmHead.rows, modelWeights.lmHead.cols,
+            modelWeights.vocabSize, modelWeights.hiddenDim);
         return false;
     }
 
@@ -895,9 +907,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             WeightTensor& wt = dst[e];
             wt.data = const_cast<uint8_t*>(t->data + byteOffset);
             wt.type = static_cast<int>(t->type);
-            // GGUF shape[0] = matrix rows, shape[1] = matrix cols (row-major).
-            wt.rows = static_cast<size_t>(t->shape[0]);
-            wt.cols = static_cast<size_t>(t->shape[1]);
+            // Same convention as bindTensor: wt.cols = shape[0], wt.rows = product(shape[1:])
+            wt.cols = static_cast<size_t>(t->shape[0]);
+            wt.rows = static_cast<size_t>(t->shape[1]);
             wt.sizeBytes = sliceBytes;
                 wt.name = t->name + "#expert=" + std::to_string(e);
                 wt.shape = {t->shape[0], t->shape[1]};
@@ -978,7 +990,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     std::fprintf(stderr, "[Deep2Engine] layer %zu missing LatentMoE latent projections\n", layer);
                     return false;
                 }
-                // bindTensor sets wt.cols=shape[0]=L, wt.rows=shape[1]=H for [L,H] tensors
+                // bindTensor: wt.cols = shape[0] = latent dim L, wt.rows = shape[1] = hidden dim H
                 lw.moeLatentSize = lw.ffnLatentUp.cols;
 
                 // Expert weights: ffn_up_exps [moeLatentSize, expertIntermediate, numExperts]
@@ -2017,11 +2029,6 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
 // =================== FORWARD LAYER ====================
 void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen)
 {
-    if (deep2ForwardTraceEnabled())
-    {
-        std::fprintf(stderr, "FWD_LAYER layer=%zu seqLen=%zu\n", layer, seqLen);
-        std::fflush(stderr);
-    }
     if (!input || !output || config.hiddenDim == 0)
     {
         throw std::runtime_error("forwardLayer: invalid buffers/geometry");
@@ -2070,21 +2077,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             }
             parityEmit(ParityCheckpoint::LayerResidual, output, H);
             parityEmitLayer(static_cast<int>(layer), "LAYER_RESIDUAL", output, H);
-            if (deep2ForwardTraceEnabled())
-            {
-                std::fprintf(stderr, "FWD_LAYER layer=%zu DONE (SSM-only)\n", layer);
-                std::fflush(stderr);
-            }
             return;
         }
     }
     else if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
     {
-        if (deep2ForwardTraceEnabled())
-        {
-            std::fprintf(stderr, "FWD_LAYER layer=%zu ATTENTION\n", layer);
-            std::fflush(stderr);
-        }
         computeAttention(layer, layerTemp, attentionOutput, seqLen);
 
         for (size_t i = 0; i < H; ++i)
@@ -2097,11 +2094,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     else
     {
         // Pure MoE / LatentMoE layer — no attention, copy normed input to output
-        if (deep2ForwardTraceEnabled())
-        {
-            std::fprintf(stderr, "FWD_LAYER layer=%zu MOE_ONLY\n", layer);
-            std::fflush(stderr);
-        }
         std::memcpy(output, input, H * sizeof(float));
     }
 
@@ -2115,11 +2107,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     // FFN/MoE body — only when FFN weights exist (attention-only layers skip FFN)
     const bool hasFFN = lw.wGate.data || lw.wUp.data || lw.wDown.data || lw.moeRouter.data;
-    if (deep2ForwardTraceEnabled())
-    {
-        std::fprintf(stderr, "FWD_LAYER layer=%zu FFN_ENTER hasFFN=%d\n", layer, hasFFN ? 1 : 0);
-        std::fflush(stderr);
-    }
     if (hasFFN)
     {
         if (lw.moeRouter.data)
@@ -2146,11 +2133,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
     parityEmit(ParityCheckpoint::LayerResidual, output, H);
     parityEmitLayer(static_cast<int>(layer), "LAYER_RESIDUAL", output, H);
-    if (deep2ForwardTraceEnabled())
-    {
-        std::fprintf(stderr, "FWD_LAYER layer=%zu DONE\n", layer);
-        std::fflush(stderr);
-    }
 }
 
 // =================== ATTENTION (REAL MHA/GQA) ====================
@@ -2441,28 +2423,12 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
     const size_t E = lw.moeRouter.rows;                   // per-layer expert count (240)
     const size_t K = layer < moeExpertsPerLayer_.size() ? moeExpertsPerLayer_[layer] : modelWeights.numExpertsPerToken;
     const size_t L = lw.moeLatentSize;                    // 1024 (= ffnLatentUp.cols = shape[0])
-    // moeGate holds ffn_up_exps expert slices: wt.rows=L=1024, wt.cols=I=2048
-    const size_t I = lw.moeGate.empty() ? 0 : lw.moeGate[0].cols;  // expert intermediate dim (2048)
-
-    // Check input finite
-    {
-        bool inputFinite = true;
-        size_t inputNaN = 0;
-        float inputMaxAbs = 0.0f;
-        for (size_t i = 0; i < H && inputFinite; ++i)
-        {
-            if (!std::isfinite(input[i])) { inputFinite = false; inputNaN = i; }
-            float a = std::fabs(input[i]);
-            if (a > inputMaxAbs) inputMaxAbs = a;
-        }
-        std::fprintf(stderr,
-            "[LATENT_DBG_IN] layer=%zu inputFinite=%d firstNaN=%zu maxAbs=%.6g\n",
-            layer, inputFinite ? 1 : 0, inputNaN, inputMaxAbs);
-    }
+    // moeGate holds ffn_up_exps expert slices: wt.cols=L=1024, wt.rows=I=2048
+    const size_t I = lw.moeGate.empty() ? 0 : lw.moeGate[0].rows;  // expert intermediate dim (2048)
 
     if (H == 0 || E == 0 || K == 0 || K > E || L == 0 || I == 0)
         throw std::runtime_error("LatentMoE: invalid model geometry");
-    // Router weight: rows=E (experts), cols=H (input features) — standard GEMV layout
+    // Router weight: rows=E (experts), cols=H (input features) — stored as [H, E] in GGUF
     if (!lw.moeRouter.data || lw.moeRouter.rows != E || lw.moeRouter.cols != H)
         throw std::runtime_error("LatentMoE: router tensor not bound");
     if (!lw.ffnLatentUp.data || !lw.ffnLatentDown.data)
@@ -2472,9 +2438,9 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
     if (layer >= moeRouters_.size() || !moeRouters_[layer])
         throw std::runtime_error("LatentMoE: router runtime not initialized");
 
-    // Step 1: Router logits — standard GEMV layout [E, H]
+    // Step 1: Router logits — weight stored as [H, E]; compute W^T × input[H] → logits[E]
     std::vector<float> routerLogits(E, 0.0f);
-    LinearW(lw.moeRouter, input, nullptr, routerLogits.data(), E);
+    LinearWT(lw.moeRouter, input, nullptr, routerLogits.data(), E);
 
     // Step 2: Top-K routing
     TokenRoute route = moeRouters_[layer]->RouteFromLogits(routerLogits.data(), E);
@@ -2485,18 +2451,6 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
     // ffn_latent_up.weight [L=1024][H=4096]: W * input[H] → latent[L]
     std::vector<float> latent(L, 0.0f);
     LinearW_GGUF(lw.ffnLatentUp, input, nullptr, latent.data(), L);
-
-    {
-        float latentMaxAbs = 0.0f;
-        for (size_t i = 0; i < L; ++i) {
-            float a = std::fabs(latent[i]);
-            if (a > latentMaxAbs) latentMaxAbs = a;
-            if (!std::isfinite(latent[i])) {
-                std::fprintf(stderr, "[LATENT_DBG_INTER] layer=%zu latent[%zu]=%g NONFINITE\n", layer, i, latent[i]);
-            }
-        }
-        std::fprintf(stderr, "[LATENT_DBG_INTER] layer=%zu latentMaxAbs=%.6g\n", layer, latentMaxAbs);
-    }
 
     // Step 4: Expert computation
     std::vector<float> expertLatent(L, 0.0f);
@@ -2512,24 +2466,10 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
         std::vector<float> temp(I, 0.0f);
         LinearWT(lw.moeGate[static_cast<size_t>(expertId)], latent.data(), nullptr, temp.data(), I);
 
-        float tempMaxAbs = 0.0f;
-        for (size_t i = 0; i < I; ++i) {
-            float a = std::fabs(temp[i]);
-            if (a > tempMaxAbs) tempMaxAbs = a;
-        }
-        std::fprintf(stderr, "[LATENT_DBG_INTER] layer=%zu expert=%zu tempMaxAbs=%.6g\n", layer, expertId, tempMaxAbs);
-
         // temp[I] -> expert_down[I, L] -> expert_out[L]
         // ffn_down_exps.weight[e] is stored as [I, L]: W^T * temp[I] → expert_out[L]
         std::vector<float> expertOut(L, 0.0f);
         LinearWT(lw.moeDown[static_cast<size_t>(expertId)], temp.data(), nullptr, expertOut.data(), L);
-
-        float expertOutMaxAbs = 0.0f;
-        for (size_t i = 0; i < L; ++i) {
-            float a = std::fabs(expertOut[i]);
-            if (a > expertOutMaxAbs) expertOutMaxAbs = a;
-        }
-        std::fprintf(stderr, "[LATENT_DBG_INTER] layer=%zu expert=%zu expertOutMaxAbs=%.6g\n", layer, expertId, expertOutMaxAbs);
 
         // Accumulate weighted expert output
         for (size_t i = 0; i < L; ++i)
@@ -2545,13 +2485,9 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
     std::vector<float> sharedOutput(H, 0.0f);
     if (lw.moeSharedGate.data && lw.moeSharedDown.data)
     {
-        // bindTensor: wt.rows = GGUF shape[0], wt.cols = GGUF shape[1]
-        // ffn_up_shexp.weight [H=4096][S=5376]: W^T * input[H] → sharedTemp[S]
-        // S = wt.cols = shape[1] = 5376 (the shared latent dimension)
-        const size_t sharedDim = lw.moeSharedGate.cols;  // 5376
+        const size_t sharedDim = lw.moeSharedGate.rows;  // 5376
         std::vector<float> sharedTemp(sharedDim, 0.0f);
         LinearWT(lw.moeSharedGate, input, nullptr, sharedTemp.data(), sharedDim);
-        // ffn_down_shexp.weight [S=5376][H=4096]: W^T * sharedTemp[S] → sharedOutput[H]
         LinearWT(lw.moeSharedDown, sharedTemp.data(), nullptr, sharedOutput.data(), H);
     }
 
@@ -2560,6 +2496,7 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
         float expertOutMaxAbs = 0.0f;
         float sharedOutMaxAbs = 0.0f;
         bool expertFinite = true;
+
         size_t expertNaN = 0;
         bool sharedFinite = true;
         size_t sharedNaN = 0;
@@ -2572,29 +2509,13 @@ void Deep2Engine::computeLatentMoEFFN(size_t layer, const float* input, float* o
             if (a > sharedOutMaxAbs) sharedOutMaxAbs = a;
             if (!std::isfinite(sharedOutput[i])) { sharedFinite = false; sharedNaN = i; }
         }
-        std::fprintf(stderr,
-            "[LATENT_DBG_COMBINE] layer=%zu expertOutMaxAbs=%.6g sharedOutMaxAbs=%.6g "
-            "expertFinite=%d sharedFinite=%d\n",
-            layer, expertOutMaxAbs, sharedOutMaxAbs,
-            expertFinite ? 1 : 0, sharedFinite ? 1 : 0);
     }
     for (size_t i = 0; i < H; ++i)
         output[i] = expertOutput[i] + sharedOutput[i];
 
-    {
-        bool outFinite = true;
-        size_t outNaN = 0;
-        float outMaxAbs = 0.0f;
-        for (size_t i = 0; i < H && outFinite; ++i)
-        {
-            if (!std::isfinite(output[i])) { outFinite = false; outNaN = i; }
-            float a = std::fabs(output[i]);
-            if (a > outMaxAbs) outMaxAbs = a;
-        }
-        std::fprintf(stderr,
-            "[LATENT_DBG] layer=%zu outFinite=%d firstNaN=%zu outMaxAbs=%.6g\n",
-            layer, outFinite ? 1 : 0, outNaN, outMaxAbs);
-    }
+    // Post-MoE RMSNorm to prevent activation explosion across hybrid layers.
+    // LatentMoE layers share attn_norm as both pre- and post-mixer norm.
+    RMSNormW(lw.attnNorm, output, output, H, modelWeights.normEps);
 
     if (!finiteVector(output, H))
         throw std::runtime_error("LatentMoE: non-finite output");
@@ -2717,28 +2638,29 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
 // =================== LinearW GGUF layout ====================
 // Computes output = W * input where W is stored in GGUF layout as
-// [wt.shape[0]=output_dim, wt.shape[1]=input_dim] row-major with
-// per-row block quantization.  Output has outDim = wt.shape[0]
-// elements; input has wt.shape[1] elements.
+// [shape[0]=output_dim, shape[1]=input_dim] row-major with per-row block
+// quantization.  bindTensor stores: wt.cols = shape[0], wt.rows = shape[1].
+// Output has outDim = wt.cols elements; input has wt.rows elements.
 void Deep2Engine::LinearW_GGUF(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
     if (!wt.data || !input || !output || outDim == 0)
         throw std::runtime_error("LinearW_GGUF: null tensor/input/output");
 
-    if (wt.shape.size() < 2)
+    if (wt.rows == 0 || wt.cols == 0)
         throw std::runtime_error("LinearW_GGUF: tensor must be 2D");
 
-    const size_t ggufRows = static_cast<size_t>(wt.shape[0]);
-    const size_t ggufCols = static_cast<size_t>(wt.shape[1]);
-    if (outDim != ggufRows)
+    // bindTensor convention: wt.cols = shape[0] (output rows), wt.rows = shape[1] (input columns)
+    const size_t M = wt.cols;   // output dimension
+    const size_t N = wt.rows;   // input dimension
+    if (outDim != M)
     {
         std::fprintf(stderr,
-            "[LinearW_GGUF_DEBUG] name=%s ggufRows=%zu ggufCols=%zu outDim=%zu type=%d\n",
-            wt.name.empty() ? "null" : wt.name.c_str(), ggufRows, ggufCols, outDim, wt.type);
+            "[LinearW_GGUF_DEBUG] name=%s M=%zu N=%zu outDim=%zu type=%d\n",
+            wt.name.empty() ? "null" : wt.name.c_str(), M, N, outDim, wt.type);
         throw std::runtime_error("LinearW_GGUF: invalid matrix geometry");
     }
 
-    const size_t numElems = ggufRows * ggufCols;
+    const size_t numElems = M * N;
     std::vector<float> W_fp32(numElems);
     const uint8_t* data = static_cast<const uint8_t*>(wt.data);
 
@@ -2749,48 +2671,51 @@ void Deep2Engine::LinearW_GGUF(const WeightTensor& wt, const float* input, const
     dequant(data, W_fp32.data(), numElems);
 
     // output[r] = sum_c W[r][c] * input[c]  (i.e. W * input)
-    for (size_t r = 0; r < ggufRows; ++r)
+    // W is stored as M rows of N elements each, row-major
+    for (size_t r = 0; r < M; ++r)
     {
         float acc = bias ? bias[r] : 0.0f;
-        for (size_t c = 0; c < ggufCols; ++c)
-            acc += W_fp32[r * ggufCols + c] * input[c];
+        for (size_t c = 0; c < N; ++c)
+            acc += W_fp32[r * N + c] * input[c];
         output[r] = acc;
     }
 }
 
 // =================== LinearW Transposed ====================
 // Computes output = W^T * input where W is stored in GGUF layout as
-// [wt.shape[0]=rows, wt.shape[1]=cols] row-major with per-row block
-// quantization.  Output has outDim = wt.shape[1] elements; input has
-// wt.shape[0] elements.  Used for LatentMoE projections stored transposed
+// [shape[0]=rows, shape[1]=cols] row-major with per-row block
+// quantization.  Output has outDim = wt.rows elements; input has
+// wt.cols elements.  Used for LatentMoE projections stored transposed
 // relative to GEMV's conventional [rows, cols] convention.
 void Deep2Engine::LinearWT(const WeightTensor& wt, const float* input, const float* bias, float* output, size_t outDim)
 {
     if (!wt.data || !input || !output || outDim == 0)
         throw std::runtime_error("LinearWT: null tensor/input/output");
 
-    if (wt.shape.size() < 2)
+    if (wt.rows == 0 || wt.cols == 0)
         throw std::runtime_error("LinearWT: tensor must be 2D");
 
-    const size_t ggufRows = static_cast<size_t>(wt.shape[0]);
-    const size_t ggufCols = static_cast<size_t>(wt.shape[1]);
-    if (outDim != ggufCols)
+    // bindTensor convention: wt.cols = shape[0] (matrix rows), wt.rows = shape[1] (matrix cols)
+    const size_t M = wt.cols;   // matrix rows
+    const size_t N = wt.rows;   // matrix cols
+    if (outDim != N)
     {
         std::fprintf(stderr,
-            "[LinearWT_DEBUG] name=%s ggufRows=%zu ggufCols=%zu outDim=%zu\n",
-            wt.name.empty() ? "null" : wt.name.c_str(), ggufRows, ggufCols, outDim);
+            "[LinearWT_DEBUG] name=%s M=%zu N=%zu outDim=%zu\n",
+            wt.name.empty() ? "null" : wt.name.c_str(), M, N, outDim);
         throw std::runtime_error("LinearWT: invalid matrix geometry");
     }
 
     // Inline IQ2_XXS dequantization (type 16): 66-byte blocks, 256 elements at 2 bits each
     const size_t blockElems = 256;
     const size_t blockBytes = 66;
-    const size_t blocksPerRow = (ggufCols + blockElems - 1) / blockElems;
-    const size_t numElems = ggufRows * ggufCols;
+    const size_t blocksPerRow = (N + blockElems - 1) / blockElems;
+    const size_t numElems = M * N;
 
     std::vector<float> W_fp32(numElems);
     const uint8_t* data = static_cast<const uint8_t*>(wt.data);
-    for (size_t r = 0; r < ggufRows; ++r)
+    float wMin = 1e9f, wMax = -1e9f, wScaleMin = 1e9f, wScaleMax = -1e9f;
+    for (size_t r = 0; r < M; ++r)
     {
         const uint8_t* rowData = data + r * blocksPerRow * blockBytes;
         for (size_t b = 0; b < blocksPerRow; ++b)
@@ -2800,9 +2725,11 @@ void Deep2Engine::LinearWT(const WeightTensor& wt, const float* input, const flo
             float scale = 1.0f;
             if (qs == 0 && blockBytes > 1)
                 scale = static_cast<float>(static_cast<int8_t>(block[1])) / 127.0f;
+            if (scale < wScaleMin) wScaleMin = scale;
+            if (scale > wScaleMax) wScaleMax = scale;
             const uint8_t* packed = block + 2;
             size_t elemStart = b * blockElems;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (ggufCols - elemStart) : blockElems;
+            size_t elemsInBlock = (b == blocksPerRow - 1) ? (N - elemStart) : blockElems;
 
             for (size_t i = 0; i < elemsInBlock; ++i)
             {
@@ -2810,33 +2737,19 @@ void Deep2Engine::LinearWT(const WeightTensor& wt, const float* input, const flo
                 int bitShift = (i % 4) * 2;
                 uint8_t val = (packed[byteIdx] >> bitShift) & 0x03;
                 float mapped = static_cast<float>(static_cast<int8_t>(val - 2));
-                W_fp32[r * ggufCols + elemStart + i] = mapped * scale;
-                if (!std::isfinite(W_fp32[r * ggufCols + elemStart + i]))
-                {
-                    std::fprintf(stderr,
-                        "[LINEARWT_DEBUG] name=%s NONFINITE_WEIGHT row=%zu block=%zu elem=%zu scale=%g mapped=%g\n",
-                        wt.name.empty() ? "null" : wt.name.c_str(), r, b, elemStart + i,
-                        (double)scale, (double)mapped);
-                }
+                float wval = mapped * scale;
+                W_fp32[r * N + elemStart + i] = wval;
             }
         }
     }
 
     // output[c] = sum_r W[r][c] * input[r]  (i.e. W^T * input)
-    for (size_t c = 0; c < ggufCols; ++c)
+    // W is [M rows, N cols]; input has M elements; output has N elements
+    for (size_t c = 0; c < N; ++c)
     {
         float acc = bias ? bias[c] : 0.0f;
-        for (size_t r = 0; r < ggufRows; ++r)
-        {
-            acc += input[r] * W_fp32[r * ggufCols + c];
-            if (!std::isfinite(acc))
-            {
-                std::fprintf(stderr,
-                    "[LINEARWT_DEBUG] name=%s NONFINITE_ACC col=%zu row=%zu input=%g W=%g acc=%g\n",
-                        wt.name.empty() ? "null" : wt.name.c_str(), c, r,
-                        (double)input[r], (double)W_fp32[r * ggufCols + c], (double)acc);
-            }
-        }
+        for (size_t r = 0; r < M; ++r)
+            acc += input[r] * W_fp32[r * N + c];
         output[c] = acc;
     }
 }
@@ -2968,8 +2881,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const size_t dDt = lw.ssmDtBias.rows * lw.ssmDtBias.cols;  // 128
 
     // Sanity-check geometry
-    std::fprintf(stderr, "[SSM_DBG] layer=%zu ssmInOut=%zu dInner=%zu dConv=%zu dDt=%zu sum=%zu\n",
-        layer, ssmInOut, dInner, dConv, dDt, dInner + dConv + dDt);
     if (dInner + dConv + dDt != ssmInOut)
         throw std::runtime_error("computeSSM: ssm_in geometry mismatch");
     if (dInner != H * 2)  // 8192 = 2 * 4096
@@ -3007,18 +2918,14 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
                 layerTempNaN = i;
             }
         }
-        std::fprintf(stderr, "[SSM_DBG] layer=%zu layerTempFinite=%d firstNaN=%zu ssmInScale=%g\n",
-            layer, layerTempFinite ? 1 : 0, layerTempNaN, ssmInScale);
     }
 
     bool ssmInFinite = true;
     for (size_t i = 0; i < ssmInOut && ssmInFinite; ++i)
         ssmInFinite = std::isfinite(ssmX[i]);
-    std::fprintf(stderr, "[SSM_DBG] layer=%zu ssmInFinite=%d scale=%g\n", layer, ssmInFinite ? 1 : 0, ssmInScale);
 
     // ------------------------------------------------------------------
     // 2. Split ssmInOut: x_in [dInner], conv_in [dConv], dt [dDt]
-    // ------------------------------------------------------------------
     float* xIn = ssmX;                              // [0, dInner)
     float* convIn = ssmX + dInner;                  // [dInner, dInner+dConv)
     float* dtParam = ssmX + dInner + dConv;         // [dInner+dConv, ssmInOut)
@@ -3060,7 +2967,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         bool convFinite = true;
         for (size_t i = 0; i < dConv && convFinite; ++i)
             convFinite = std::isfinite(convIn[i]);
-        std::fprintf(stderr, "[SSM_DBG] layer=%zu convFinite=%d\n", layer, convFinite ? 1 : 0);
     }
 
     // ------------------------------------------------------------------
@@ -3151,7 +3057,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         bool normFinite = true;
         for (size_t i = 0; i < dInner && normFinite; ++i)
             normFinite = std::isfinite(scanOut[i]);
-        std::fprintf(stderr, "[SSM_DBG] layer=%zu normFinite=%d\n", layer, normFinite ? 1 : 0);
     }
 
     // ------------------------------------------------------------------
@@ -3170,10 +3075,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
                 firstNaN = i;
             }
         }
-        std::fprintf(stderr, "[SSM_DBG] layer=%zu scanFinite=%d cols=%zu firstNaN=%zu type=%d\n",
-            layer, scanFinite ? 1 : 0, lw.ssmOut.cols, firstNaN, lw.ssmOut.type);
-        for (size_t i = 0; i < 8 && i < lw.ssmOut.cols; ++i)
-            std::fprintf(stderr, "[SSM_DBG] scanOut[%zu]=%g\n", i, double(scanOut[i]));
     }
 
     // Fail-fast: validate input activation before GEMV
@@ -3187,7 +3088,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
             }
         }
         if (!actFinite) {
-            std::fprintf(stderr, "[SSM_DBG] layer=%zu ACTIVATION_NAN at %zu\n", layer, actNaN);
             throw std::runtime_error("computeSSM: NaN activation before output projection");
         }
     }
@@ -3207,7 +3107,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         bool outFinite = true;
         for (size_t i = 0; i < H && outFinite; ++i)
             outFinite = std::isfinite(output[i]);
-        std::fprintf(stderr, "[SSM_DBG] layer=%zu outFinite=%d scale=%g\n", layer, outFinite ? 1 : 0, ssmOutScale);
     }
 }
 

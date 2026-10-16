@@ -1,4 +1,5 @@
 #include "api_server.h"
+#include "Deep2Engine.h"
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -8,6 +9,7 @@
 #include <iomanip>
 #include <ctime>
 #include <array>
+#include <cstdlib>
 
 // Structured logging helper with timestamp and severity
 static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
@@ -52,6 +54,31 @@ bool APIServer::Start(uint16_t port) {
             
             // Production HTTP Server Implementation
             InitializeHttpServer();
+            
+            // Initialize Deep2 inference engine via shared service and load model if configured
+            const char* modelPathEnv = std::getenv("RAWRXD_MODEL_PATH");
+            if (modelPathEnv && !std::string(modelPathEnv).empty()) {
+                LogApiOperation("INFO", "DEEP2_INIT", "Initializing shared Deep2 inference service");
+                Deep2::EngineConfig cfg;
+                cfg.numThreads = std::thread::hardware_concurrency();
+                cfg.useKVCache = true;
+                cfg.useThreadPool = true;
+                
+                if (RawrXD::Deep2InferenceService::instance().initialize(cfg)) {
+                    LogApiOperation("INFO", "DEEP2_INIT", "Deep2 inference service initialized successfully");
+                    if (RawrXD::Deep2InferenceService::instance().loadModel(modelPathEnv)) {
+                        LogApiOperation("INFO", "DEEP2_LOAD", "Model loaded: " + std::string(modelPathEnv));
+                        deep2Initialized_ = true;
+                        deep2ModelPath_ = modelPathEnv;
+                    } else {
+                        LogApiOperation("ERROR", "DEEP2_LOAD", "Failed to load model: " + std::string(modelPathEnv));
+                    }
+                } else {
+                    LogApiOperation("ERROR", "DEEP2_INIT", "Failed to initialize Deep2 inference service");
+                }
+            } else {
+                LogApiOperation("WARN", "DEEP2_INIT", "RAWRXD_MODEL_PATH not set - API inference will be unavailable");
+            }
             
             LogApiOperation("INFO", "STATUS", "Server ready to accept connections");
             
@@ -264,13 +291,12 @@ void APIServer::HandlePullRequest(const std::string& request, std::string& respo
             return;
         }
         
-        // Start HuggingFace download simulation
-        LogApiOperation("INFO", "PULL_REQUEST", "Starting download for model: " + model_name);
-        response = R"({"status":"downloading","model":")" + model_name + R"("})";
+        // HuggingFace model pull/download not implemented
+        LogApiOperation("WARN", "PULL_REQUEST", "Model download not implemented: " + model_name);
+        response = R"({"status":"error","error":"model_download_not_implemented","model":")" + model_name + R"("})";
         
-        LogApiOperation("INFO", "PULL_REQUEST", "Download initiated");
         total_requests_++;
-        successful_requests_++;
+        failed_requests_++;
         
     } catch (const std::exception& e) {
         response = CreateErrorResponse(std::string("Pull request error: ") + e.what());
@@ -284,22 +310,27 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
     try {
         LogApiOperation("DEBUG", "INFERENCE", "Generating completion for prompt (" + std::to_string(prompt.length()) + " chars)");
         
-        if (!app_state_.loaded_model || !app_state_.gpu_context) {
-            LogApiOperation("WARN", "INFERENCE", "No model loaded or GPU context unavailable");
-            return "Error: No model loaded";
+        if (!deep2Initialized_) {
+            LogApiOperation("WARN", "INFERENCE", "Deep2 engine not initialized - model may not be loaded");
+            return "Error: inference_engine_not_available";
         }
         
-        // Simulate inference with timing
-        auto start = std::chrono::steady_clock::now();
+        if (prompt.empty()) {
+            LogApiOperation("WARN", "INFERENCE", "Empty prompt provided");
+            return "Error: empty_prompt";
+        }
         
-        // Production inference logic would interface with GGML/GGUF loader here
-        std::string completion = "This is a generated response from the model";
+        // Real inference via shared Deep2 engine
+        Deep2::GenerationOptions opts;
+        opts.maxTokens = 256;
+        opts.temperature = 0.8f;
+        opts.topP = 0.95f;
+        opts.topK = 40;
         
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
-        LogApiOperation("DEBUG", "INFERENCE", 
-            "Completion generated in " + std::to_string(duration.count()) + "ms");
+        RawrXD::Deep2InferenceService::instance().configureGeneration(opts);
+        std::string completion = RawrXD::Deep2InferenceService::instance().generateText(prompt, 256);
         
+        LogApiOperation("INFO", "INFERENCE", "Completion generated (" + std::to_string(completion.length()) + " chars)");
         return completion;
         
     } catch (const std::exception& e) {
@@ -312,29 +343,36 @@ std::string APIServer::GenerateChatCompletion(const std::vector<ChatMessage>& me
     try {
         LogApiOperation("DEBUG", "CHAT_INFERENCE", "Generating chat completion for " + std::to_string(messages.size()) + " messages");
         
-        if (!app_state_.loaded_model || !app_state_.gpu_context) {
-            LogApiOperation("WARN", "CHAT_INFERENCE", "No model loaded or GPU context unavailable");
-            return "Error: No model loaded";
+        if (!deep2Initialized_) {
+            LogApiOperation("WARN", "CHAT_INFERENCE", "Deep2 engine not initialized - model may not be loaded");
+            return "Error: inference_engine_not_available";
         }
         
-        // Log message summary
-        for (size_t i = 0; i < messages.size(); ++i) {
-            LogApiOperation("DEBUG", "CHAT_INFERENCE", 
-                "Message[" + std::to_string(i) + "]: role=" + messages[i].role + 
-                " length=" + std::to_string(messages[i].content.length()));
+        if (messages.empty()) {
+            LogApiOperation("WARN", "CHAT_INFERENCE", "Empty messages provided");
+            return "Error: empty_messages";
         }
         
-        // Simulate inference with timing
-        auto start = std::chrono::steady_clock::now();
+        // Build chat prompt from messages
+        std::string prompt;
+        for (const auto& msg : messages) {
+            prompt += msg.role + ": " + msg.content + "\n";
+        }
+        prompt += "assistant: ";
         
-        // Production inference logic would interface with GGML/GGUF loader here
-        std::string completion = "Assistant response to the conversation.";
+        LogApiOperation("DEBUG", "CHAT_INFERENCE", "Built prompt (" + std::to_string(prompt.length()) + " chars)");
         
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
-        LogApiOperation("DEBUG", "CHAT_INFERENCE", 
-            "Chat completion generated in " + std::to_string(duration.count()) + "ms");
+        // Real inference via shared Deep2 engine
+        Deep2::GenerationOptions opts;
+        opts.maxTokens = 256;
+        opts.temperature = 0.8f;
+        opts.topP = 0.95f;
+        opts.topK = 40;
         
+        RawrXD::Deep2InferenceService::instance().configureGeneration(opts);
+        std::string completion = RawrXD::Deep2InferenceService::instance().generateText(prompt, 256);
+        
+        LogApiOperation("INFO", "CHAT_INFERENCE", "Chat completion generated (" + std::to_string(completion.length()) + " chars)");
         return completion;
         
     } catch (const std::exception& e) {

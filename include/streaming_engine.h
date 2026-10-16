@@ -9,6 +9,12 @@
 #include <condition_variable>
 #include <thread>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+#endif
+
 #include "logging/logger.h"
 #include "metrics/metrics.h"
 #include "response_parser.h"
@@ -157,6 +163,9 @@ private:
     // Connection state
     bool m_isConnected = false;
     std::string m_lastError;
+#ifdef _WIN32
+    SOCKET m_socket = INVALID_SOCKET;
+#endif
 
 public:
     HTTPStreamingClient(

@@ -12,8 +12,8 @@ param(
     [switch]$Clean
 )
 
-$buildDir = "D:\rawrxd\build\texteditor-editorwindow"
-$sourcesDir = "D:\rawrxd"
+$buildDir = "F:\rawrxd\build\texteditor-editorwindow"
+$sourcesDir = "F:\rawrxd"
 $timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
 
 # ============================================================================
@@ -41,6 +41,7 @@ function Ensure-Directory {
 
 function Get-VSPath {
     $paths = @(
+        "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools",
         "C:\Program Files\Microsoft Visual Studio\2022\BuildTools",
         "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools",
         "C:\Program Files\Microsoft Visual Studio\2022\Community",
@@ -69,7 +70,7 @@ if (!$vsPath) {
     exit 1
 }
 
-$vcPath = Get-ChildItem "$vsPath\VC\Tools\MSVC" | Select-Object -Last 1
+$vcPath = (Get-ChildItem "$vsPath\VC\Tools\MSVC" | Select-Object -Last 1).FullName
 $ml64Path = "$vcPath\bin\Hostx64\x64\ml64.exe"
 $linkPath = "$vcPath\bin\Hostx64\x64\link.exe"
 
@@ -93,11 +94,8 @@ Write-Status "link.exe: $linkPath" "OK"
 Write-Status "=== STAGE 1: ASSEMBLE COMPONENTS ===" "INFO"
 
 $modules = @(
-    ("RawrXD_EditorWindow_Complete_v2", "EditorWindow core procedures"),
-    ("RawrXD_TextBuffer", "Text buffer management (from previous phase)"),
-    ("RawrXD_CursorTracker", "Cursor position tracking (from previous phase)"),
-    ("RawrXD_TextEditor_FileIO", "File I/O operations (from previous phase)"),
-    ("RawrXD_TextEditor_Integration", "Coordinator (from previous phase)")
+    ("RawrXD_TextEditorGUI", "Main text editor GUI (2,227 lines)"),
+    ("RawrXD_TextEditorGUI_hardened", "Hardened text editor GUI variant")
 )
 
 $objFiles = @()
@@ -138,7 +136,7 @@ $libFile = "$buildDir\texteditor-editorwindow.lib"
 $libArgs = "/LIB /SUBSYSTEM:WINDOWS /OUT:$libFile $($objFiles -join ' ')"
 
 Write-Status "Linking library..." "INFO"
-& cmd /c "$linkPath $libArgs" | Out-Null
+cmd /c """$linkPath"" $libArgs" | Out-Null
 
 if ($LASTEXITCODE -eq 0 -and (Test-Path $libFile)) {
     $libSize = (Get-Item $libFile).Length
@@ -154,7 +152,7 @@ if ($LASTEXITCODE -eq 0 -and (Test-Path $libFile)) {
 
 Write-Status "=== STAGE 3: VALIDATE ===" "INFO"
 
-$expectedObjs = @("RawrXD_EditorWindow_Complete_v2", "RawrXD_TextBuffer", "RawrXD_CursorTracker", "RawrXD_TextEditor_FileIO", "RawrXD_TextEditor_Integration")
+$expectedObjs = @("RawrXD_TextEditorGUI", "RawrXD_TextEditorGUI_hardened")
 $foundCount = 0
 
 foreach ($name in $expectedObjs) {

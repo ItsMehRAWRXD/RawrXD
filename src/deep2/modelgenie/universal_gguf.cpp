@@ -307,16 +307,15 @@ struct Reader {
             t.rel_offset = U64();
 
             // Guard against GGUF types that exceed GGML_TYPE_COUNT (e.g. NVFP4
-            // type 40 when GGML_TYPE_COUNT == 43). GGML does not recognise these
+            // type 40 when GGML_TYPE_COUNT == 40). GGML does not recognise these
             // types; Deep2 handles them with its own kernels. Preserve the raw
-            // GGUF type id in gguf_type and mark deep2_native so all GGML
-            // tensor-construction, type-size and graph operations are bypassed.
-            // Assign ggml_type = GGML_TYPE_NVFP4 (40) so downstream GetDequant(40)
-            // finds dequant_nvfp4 and DispatchGEMVQuant(40) finds gemv_nvfp4_scalar.
-            // Q4_0 was previously used but produced garbage because Q4_0 block
-            // geometry (32 elems/2 bytes) is incompatible with NVFP4 (64 elems/36 bytes).
+            // GGUF type id in gguf_type and set ggml_type to the same value so
+            // downstream code can identify the type. Mark deep2_native so all
+            // GGML tensor-construction, type-size and graph operations are
+            // bypassed; has_dequant stays false so Deep2's own NVFP4 kernels
+            // handle the data directly from raw bytes.
             if (static_cast<uint32_t>(t.gguf_type) >= 40u) {
-                t.ggml_type = static_cast<ggml_type>(40);
+                t.ggml_type = static_cast<ggml_type>(t.gguf_type);  // keep raw type (40 = NVFP4)
                 t.deep2_native = true;
                 t.has_dequant = false;
                 t.gpu_quant_capable = false;

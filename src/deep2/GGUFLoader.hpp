@@ -947,6 +947,20 @@ private:
                     reason = "row_not_block_aligned";
                 else
                     reason = "byte_size_overflow";
+                /* Detailed per-tensor rejection diagnostics. */
+                std::fprintf(stderr,
+                    "[GGUF_TENSOR_REJECT] name=%s type=%u(%s) ndims=%u "
+                    "shape=[", t.name.c_str(),
+                    static_cast<unsigned>(t.type),
+                    Deep2::QuantTypeName(static_cast<uint32_t>(t.type)),
+                    static_cast<unsigned>(t.shape.size()));
+                for (size_t d = 0; d < t.shape.size(); ++d) {
+                    if (d) std::fprintf(stderr, ",");
+                    std::fprintf(stderr, "%lld",
+                        (long long)t.shape[d]);
+                }
+                std::fprintf(stderr, "] blockElems=%zu blockBytes=%zu "
+                    "reason=%s\n", be, bb, reason.c_str());
                 fprintf(stderr,
                     "[GGUF_REJECT] name=%s type=%u "
                     "shape=[%lld%s] blockElems=%zu blockBytes=%zu reason=%s\n",

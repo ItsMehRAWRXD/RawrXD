@@ -161,9 +161,10 @@ bool AgenticCopilotIntegration::validateNavigationTarget(const std::string& targ
 }
 
 bool AgenticCopilotIntegration::confirmCriticalAction(const std::string& action) {
-    // For now, simulate user confirmation
-    // In real implementation, this would show a confirmation dialog
-    return true; // Auto-confirm for testing
+    // Fail-closed: no real confirmation dialog is implemented, so deny
+    // all critical actions rather than auto-confirming (simulated acceptance).
+    (void)action;
+    return false;
 }
 
 void AgenticCopilotIntegration::logNavigationPerformance(const NavigationResult& result) {
@@ -239,9 +240,10 @@ NavigationResult AgenticCopilotIntegration::executeTerminalCommand(const std::st
 // Context management
 void AgenticCopilotIntegration::updateContextFromIDE() {
     if (m_ideInstance) {
-        // Extract current context from IDE state
-        // This would integrate with actual IDE state access
-        m_currentContext = "IDE Context Updated";
+        // Extract current context from IDE state.
+        // No real IDE state access is implemented, so leave context empty
+        // rather than fabricating a simulated context string.
+        m_currentContext.clear();
     }
 }
 

@@ -1,0 +1,124 @@
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-MKDIR.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -Dcfgdir=/Release -P F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/tmp/vulkan-shaders-gen-mkdirs.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-DOWNLOAD.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-UPDATE.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-update
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-PATCH.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-CONFIGURE.RULE
+setlocal
+cd F:\rawrxd\build_qt_free\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_PREFIX=F:/rawrxd/build_qt_free/Release -DCMAKE_INSTALL_BINDIR=. -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=/I D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include" "-DCMAKE_C_FLAGS=/I D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include" -DGGML_VULKAN_COOPMAT_GLSLC_SUPPORT=ON -DGGML_VULKAN_COOPMAT2_GLSLC_SUPPORT=ON -DGGML_VULKAN_INTEGER_DOT_GLSLC_SUPPORT=ON -DGGML_VULKAN_BFLOAT16_GLSLC_SUPPORT=ON "-GVisual Studio 17 2022" -Ax64 "-DCMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools" -S F:/rawrxd/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders -B F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-BUILD.RULE
+setlocal
+cd F:\rawrxd\build_qt_free\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" --build . --config Release
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\1CE4FB02B6C3DC99B5EC4128AEE618E1\VULKAN-SHADERS-GEN-INSTALL.RULE
+setlocal
+cd F:\rawrxd\build_qt_free\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+F:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E env --unset=DESTDIR "C:/Program Files/CMake/bin/cmake.exe" --install . --config Release
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\961B7B804D7276477B0F89B6CB1EC1AD\VULKAN-SHADERS-GEN-COMPLETE.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/Release
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/Release/vulkan-shaders-gen-complete
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\B2EBF542531ED6DFFE2895536193E653\VULKAN-SHADERS-GEN.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^F:\RAWRXD\3RDPARTY\GGML\SRC\GGML-VULKAN\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_qt_free --check-stamp-file F:/rawrxd/build_qt_free/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

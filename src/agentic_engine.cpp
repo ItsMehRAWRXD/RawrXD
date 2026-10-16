@@ -27,14 +27,598 @@
 #include <QFileInfo>
 #include <algorithm>
 
-// Stub for initializeAllTools when tool_registry_init.cpp is disabled
+// Tool registry initialization - Real implementation with filesystem,
+// terminal, build, test, and Git capabilities with workspace boundaries.
 #ifndef TOOL_REGISTRY_INIT_IMPLEMENTED
+
+#include <nlohmann/json.hpp>
+#include <filesystem>
+#include <cstdlib>
+#include <cstdio>
+#include <fstream>
+#include <sstream>
+#include <array>
+
+using json = nlohmann::json;
+
+namespace {
+// Workspace root for authorization boundaries
+std::string g_workspaceRoot;
+std::filesystem::path g_workspaceRootCanonical;
+
+// Maximum output size for subprocess commands (prevents resource exhaustion)
+constexpr size_t kMaxOutputBytes = 1024 * 1024; // 1 MB
+
+// Default subprocess timeout in milliseconds
+constexpr int kDefaultTimeoutMs = 30000; // 30 seconds
+
+// Resolve a path to its canonical form and validate it is within workspace.
+// Handles symlinks, reparse points, and ".." traversal.
+bool resolveAndValidatePath(const std::string& path, std::filesystem::path& outCanonical) {
+    try {
+        std::error_code ec;
+        auto wsCanon = std::filesystem::canonical(g_workspaceRoot, ec);
+        if (ec) return false;
+
+        auto pCanon = std::filesystem::canonical(path, ec);
+        if (ec) return false;
+
+        // Reject symlinks/reparse points that point outside workspace
+        if (std::filesystem::is_symlink(path, ec) && !ec) {
+            auto linkTarget = std::filesystem::read_symlink(path, ec);
+            if (!ec) {
+                auto linkResolved = std::filesystem::canonical(linkTarget, ec);
+                if (!ec) {
+                    auto rel = std::filesystem::relative(linkResolved, wsCanon);
+                    if (!rel.empty() && rel.native().find("..") == 0) {
+                        return false; // symlink points outside workspace
+                    }
+                }
+            }
+        }
+
+        auto rel = std::filesystem::relative(pCanon, wsCanon);
+        if (rel.empty()) {
+            outCanonical = pCanon;
+            return true; // path is workspace root itself
+        }
+        if (rel.native().find("..") == 0) {
+            return false; // path escapes workspace
+        }
+        outCanonical = pCanon;
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+// Execute a shell command with timeout and output limits.
+// Uses a Windows Job Object (kill-on-close) so that TerminateProcess/Job
+// close also terminates any descendant processes spawned by the command.
+// Returns captured stdout. On timeout, terminates the entire process tree.
+std::string execCommandWithTimeout(const std::string& cmd, int timeoutMs) {
+    std::string result;
+    result.reserve(4096);
+
+    // Create a Job Object with kill-on-close so descendant processes are
+    // terminated when the job handle is closed.
+    HANDLE hJob = nullptr;
+#ifdef _WIN32
+    hJob = CreateJobObjectA(nullptr, nullptr);
+    if (hJob) {
+        JOBOBJECT_BASIC_LIMIT_INFORMATION jbli = {};
+        jbli.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        if (!SetInformationJobObject(hJob, JobObjectBasicLimitInformation,
+                                      &jbli, sizeof(jbli))) {
+            CloseHandle(hJob);
+            hJob = nullptr;
+        }
+    }
+#endif
+
+    // Create the process with redirected output
+    SECURITY_ATTRIBUTES saAttr = {};
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = nullptr;
+
+    HANDLE hChildStdOutRd = nullptr, hChildStdOutWr = nullptr;
+    if (!CreatePipe(&hChildStdOutRd, &hChildStdOutWr, &saAttr, 0)) {
+#ifdef _WIN32
+        if (hJob) CloseHandle(hJob);
+#endif
+        return "";
+    }
+    SetHandleInformation(hChildStdOutRd, HANDLE_FLAG_INHERIT, 0);
+
+    PROCESS_INFORMATION piProcInfo = {};
+    STARTUPINFOA siStartInfo = {};
+    siStartInfo.cb = sizeof(STARTUPINFOA);
+    siStartInfo.hStdError = hChildStdOutWr;
+    siStartInfo.hStdOutput = hChildStdOutWr;
+    siStartInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+    std::string cmdLine = cmd;
+
+    if (!CreateProcessA(
+            nullptr,
+            &cmdLine[0],
+            nullptr,
+            nullptr,
+            TRUE,
+            CREATE_NO_WINDOW,
+            nullptr,
+            nullptr,
+            &siStartInfo,
+            &piProcInfo)) {
+        CloseHandle(hChildStdOutRd);
+        CloseHandle(hChildStdOutWr);
+#ifdef _WIN32
+        if (hJob) CloseHandle(hJob);
+#endif
+        return "";
+    }
+
+    // Assign process to the Job Object for descendant-process containment
+#ifdef _WIN32
+    if (hJob) {
+        AssignProcessToJobObject(hJob, piProcInfo.hProcess);
+    }
+#endif
+
+    CloseHandle(hChildStdOutWr);
+    CloseHandle(piProcInfo.hThread);
+
+    // Read output with timeout
+    const DWORD kReadChunk = 4096;
+    char buf[kReadChunk];
+    DWORD startTime = GetTickCount64();
+    DWORD elapsed = 0;
+
+    while (true) {
+        elapsed = GetTickCount64() - startTime;
+        if (elapsed >= static_cast<DWORD>(timeoutMs)) {
+            // Timeout - terminate process and all descendants via Job Object
+            TerminateProcess(piProcInfo.hProcess, 1);
+            break;
+        }
+
+        DWORD remaining = static_cast<DWORD>(timeoutMs) - elapsed;
+        DWORD waitResult = WaitForSingleObject(piProcInfo.hProcess, 
+                                               std::min(remaining, 100u));
+        if (waitResult == WAIT_OBJECT_0) {
+            break; // Process exited
+        }
+
+        // Read available output
+        DWORD bytesAvailable = 0;
+        if (!PeekNamedPipe(hChildStdOutRd, nullptr, 0, nullptr, &bytesAvailable, nullptr)) {
+            break;
+        }
+
+        while (bytesAvailable > 0) {
+            DWORD bytesRead = 0;
+            if (!ReadFile(hChildStdOutRd, buf, kReadChunk, &bytesRead, nullptr) || bytesRead == 0) {
+                break;
+            }
+            size_t spaceLeft = kMaxOutputBytes - result.size();
+            if (spaceLeft == 0) break;
+            size_t toAppend = std::min(static_cast<size_t>(bytesRead), spaceLeft);
+            result.append(buf, toAppend);
+            if (result.size() >= kMaxOutputBytes) break;
+            if (!PeekNamedPipe(hChildStdOutRd, nullptr, 0, nullptr, &bytesAvailable, nullptr)) {
+                break;
+            }
+        }
+
+        if (result.size() >= kMaxOutputBytes) break;
+    }
+
+    // Read any remaining output after process exit
+    DWORD bytesAvailable = 0;
+    if (PeekNamedPipe(hChildStdOutRd, nullptr, 0, nullptr, &bytesAvailable, nullptr)) {
+        while (bytesAvailable > 0 && result.size() < kMaxOutputBytes) {
+            DWORD bytesRead = 0;
+            if (!ReadFile(hChildStdOutRd, buf, kReadChunk, &bytesRead, nullptr) || bytesRead == 0) {
+                break;
+            }
+            size_t spaceLeft = kMaxOutputBytes - result.size();
+            size_t toAppend = std::min(static_cast<size_t>(bytesRead), spaceLeft);
+            result.append(buf, toAppend);
+            if (result.size() >= kMaxOutputBytes) break;
+            if (!PeekNamedPipe(hChildStdOutRd, nullptr, 0, nullptr, &bytesAvailable, nullptr)) {
+                break;
+            }
+        }
+    }
+
+    CloseHandle(hChildStdOutRd);
+    CloseHandle(piProcInfo.hProcess);
+
+    // Close the Job Object handle — this triggers kill-on-close for any
+    // remaining descendant processes.
+#ifdef _WIN32
+    if (hJob) CloseHandle(hJob);
+#endif
+
+    return result;
+}
+
+} // anonymous namespace
+
 bool initializeAllTools(ToolRegistry* registry) {
     if (!registry) return false;
-    qInfo() << "[AgenticEngine] Tool registry stub - basic tools available";
+
+    // Determine workspace root from environment or current directory
+    const char* wsEnv = std::getenv("RAWRXD_WORKSPACE_ROOT");
+    if (wsEnv && !std::string(wsEnv).empty()) {
+        g_workspaceRoot = wsEnv;
+    } else {
+        g_workspaceRoot = std::filesystem::current_path().string();
+    }
+
+    qInfo() << "[AgenticEngine] Workspace root:" << QString::fromStdString(g_workspaceRoot);
+
+    // ========================================================================
+    // FileSystem Tools
+    // ========================================================================
+
+    // read_file
+    {
+        ToolDefinition def;
+        def.name = "read_file";
+        def.description = "Read contents of a file within the workspace";
+        def.category = ToolCategory::FileSystem;
+        def.handler = [](const json& params) -> json {
+            json result;
+            if (!params.contains("path") || !params["path"].is_string()) {
+                result["success"] = false;
+                result["error"] = "Missing required parameter: path (string)";
+                return result;
+            }
+            std::string path = params["path"].get<std::string>();
+            std::filesystem::path canonicalPath;
+            if (!resolveAndValidatePath(path, canonicalPath)) {
+                result["success"] = false;
+                result["error"] = "Path outside workspace: " + path;
+                return result;
+            }
+            std::ifstream file(canonicalPath, std::ios::binary);
+            if (!file) {
+                result["success"] = false;
+                result["error"] = "Cannot open file: " + path;
+                return result;
+            }
+            std::stringstream ss;
+            ss << file.rdbuf();
+            result["success"] = true;
+            result["content"] = ss.str();
+            result["path"] = path;
+            result["canonical_path"] = canonicalPath.string();
+            return result;
+        };
+        def.inputValidation.requiredFields = {"path"};
+        def.inputValidation.blockedPaths = {};
+        registry->registerTool(def);
+    }
+
+    // write_file
+    {
+        ToolDefinition def;
+        def.name = "write_file";
+        def.description = "Write content to a file within the workspace";
+        def.category = ToolCategory::FileSystem;
+        def.handler = [](const json& params) -> json {
+            json result;
+            if (!params.contains("path") || !params["path"].is_string()) {
+                result["success"] = false;
+                result["error"] = "Missing required parameter: path (string)";
+                return result;
+            }
+            if (!params.contains("content") || !params["content"].is_string()) {
+                result["success"] = false;
+                result["error"] = "Missing required parameter: content (string)";
+                return result;
+            }
+            std::string path = params["path"].get<std::string>();
+            std::string content = params["content"].get<std::string>();
+            std::filesystem::path canonicalPath;
+            if (!resolveAndValidatePath(path, canonicalPath)) {
+                result["success"] = false;
+                result["error"] = "Path outside workspace: " + path;
+                return result;
+            }
+            std::ofstream file(canonicalPath, std::ios::binary | std::ios::trunc);
+            if (!file) {
+                result["success"] = false;
+                result["error"] = "Cannot open file for writing: " + path;
+                return result;
+            }
+            file.write(content.data(), content.size());
+            file.close();
+            result["success"] = true;
+            result["path"] = path;
+            result["canonical_path"] = canonicalPath.string();
+            result["bytes_written"] = static_cast<int64_t>(content.size());
+            return result;
+        };
+        def.inputValidation.requiredFields = {"path", "content"};
+        registry->registerTool(def);
+    }
+
+    // grep_files
+    {
+        ToolDefinition def;
+        def.name = "grep_files";
+        def.description = "Search for a pattern in files within the workspace";
+        def.category = ToolCategory::FileSystem;
+        def.handler = [](const json& params) -> json {
+            json result;
+            if (!params.contains("pattern") || !params["pattern"].is_string()) {
+                result["success"] = false;
+                result["error"] = "Missing required parameter: pattern (string)";
+                return result;
+            }
+            std::string pattern = params["pattern"].get<std::string>();
+            std::string path = params.value("path", g_workspaceRoot);
+            std::filesystem::path canonicalPath;
+            if (!resolveAndValidatePath(path, canonicalPath)) {
+                result["success"] = false;
+                result["error"] = "Path outside workspace: " + path;
+                return result;
+            }
+            // Use system grep/findstr on canonical path
+            std::string cmd;
+#ifdef _WIN32
+            cmd = "findstr /S /N /C:\"" + pattern + "\" \"" + canonicalPath.string() + "\\*\" 2>&1";
+#else
+            cmd = "grep -rn \"" + pattern + "\" \"" + canonicalPath.string() + "\" 2>&1";
+#endif
+            std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs);
+            result["success"] = true;
+            result["pattern"] = pattern;
+            result["path"] = path;
+            result["matches"] = output;
+            result["match_count"] = static_cast<int64_t>(output.empty() ? 0 : std::count(output.begin(), output.end(), '\n'));
+            return result;
+        };
+        def.inputValidation.requiredFields = {"pattern"};
+        registry->registerTool(def);
+    }
+
+    // search_files
+    {
+        ToolDefinition def;
+        def.name = "search_files";
+        def.description = "Search for files by name pattern within the workspace";
+        def.category = ToolCategory::FileSystem;
+        def.handler = [](const json& params) -> json {
+            json result;
+            std::string pattern = params.value("pattern", "*");
+            std::string path = params.value("path", g_workspaceRoot);
+            std::filesystem::path canonicalPath;
+            if (!resolveAndValidatePath(path, canonicalPath)) {
+                result["success"] = false;
+                result["error"] = "Path outside workspace: " + path;
+                return result;
+            }
+            json matches = json::array();
+            try {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(canonicalPath)) {
+                    if (entry.is_regular_file()) {
+                        std::string name = entry.path().filename().string();
+                        // Simple glob match
+                        if (pattern == "*" || name.find(pattern) != std::string::npos) {
+                            matches.push_back(entry.path().string());
+                        }
+                    }
+                }
+            } catch (const std::exception& e) {
+                result["success"] = false;
+                result["error"] = e.what();
+                return result;
+            }
+            result["success"] = true;
+            result["pattern"] = pattern;
+            result["path"] = path;
+            result["files"] = matches;
+            result["count"] = static_cast<int64_t>(matches.size());
+            return result;
+        };
+        registry->registerTool(def);
+    }
+
+    // ========================================================================
+    // Execution Tools (Terminal)
+    // ========================================================================
+
+    // run_command
+    {
+        ToolDefinition def;
+        def.name = "run_command";
+        def.description = "Execute a shell command within the workspace";
+        def.category = ToolCategory::Execution;
+        def.handler = [](const json& params) -> json {
+            json result;
+            if (!params.contains("command") || !params["command"].is_string()) {
+                result["success"] = false;
+                result["error"] = "Missing required parameter: command (string)";
+                return result;
+            }
+            std::string command = params["command"].get<std::string>();
+            std::string cwd = params.value("cwd", g_workspaceRoot);
+            std::filesystem::path canonicalCwd;
+            if (!resolveAndValidatePath(cwd, canonicalCwd)) {
+                result["success"] = false;
+                result["error"] = "Working directory outside workspace: " + cwd;
+                return result;
+            }
+            // Change to workspace and execute
+            std::string fullCmd;
+#ifdef _WIN32
+            fullCmd = "cd /D \"" + canonicalCwd.string() + "\" && " + command;
+#else
+            fullCmd = "cd \"" + canonicalCwd.string() + "\" && " + command;
+#endif
+            std::string output = execCommandWithTimeout(fullCmd, kDefaultTimeoutMs);
+            result["success"] = true;
+            result["command"] = command;
+            result["cwd"] = cwd;
+            result["output"] = output;
+            return result;
+        };
+        def.inputValidation.requiredFields = {"command"};
+        registry->registerTool(def);
+    }
+
+    // ========================================================================
+    // Build Tools
+    // ========================================================================
+
+    // run_build
+    {
+        ToolDefinition def;
+        def.name = "run_build";
+        def.description = "Run the build system (cmake/build) within the workspace";
+        def.category = ToolCategory::Build;
+        def.handler = [](const json& params) -> json {
+            json result;
+            std::string cwd = params.value("cwd", g_workspaceRoot);
+            std::filesystem::path canonicalCwd;
+            if (!resolveAndValidatePath(cwd, canonicalCwd)) {
+                result["success"] = false;
+                result["error"] = "Working directory outside workspace: " + cwd;
+                return result;
+            }
+            std::string target = params.value("target", "");
+            std::string config = params.value("config", "Release");
+            
+            std::string cmd;
+#ifdef _WIN32
+            cmd = "cd /D \"" + canonicalCwd.string() + "\" && cmake --build . --config " + config;
+            if (!target.empty()) cmd += " --target " + target;
+#else
+            cmd = "cd \"" + canonicalCwd.string() + "\" && cmake --build . --config " + config;
+            if (!target.empty()) cmd += " --target " + target;
+#endif
+            std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs);
+            result["success"] = true;
+            result["command"] = cmd;
+            result["cwd"] = cwd;
+            result["output"] = output;
+            return result;
+        };
+        registry->registerTool(def);
+    }
+
+    // ========================================================================
+    // Testing Tools
+    // ========================================================================
+
+    // run_tests
+    {
+        ToolDefinition def;
+        def.name = "run_tests";
+        def.description = "Run tests via ctest within the workspace";
+        def.category = ToolCategory::Testing;
+        def.handler = [](const json& params) -> json {
+            json result;
+            std::string cwd = params.value("cwd", g_workspaceRoot);
+            std::filesystem::path canonicalCwd;
+            if (!resolveAndValidatePath(cwd, canonicalCwd)) {
+                result["success"] = false;
+                result["error"] = "Working directory outside workspace: " + cwd;
+                return result;
+            }
+            std::string config = params.value("config", "Release");
+            std::string cmd;
+#ifdef _WIN32
+            cmd = "cd /D \"" + canonicalCwd.string() + "\" && ctest --config " + config + " --output-on-failure";
+#else
+            cmd = "cd \"" + canonicalCwd.string() + "\" && ctest --config " + config + " --output-on-failure";
+#endif
+            std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs);
+            result["success"] = true;
+            result["command"] = cmd;
+            result["cwd"] = cwd;
+            result["output"] = output;
+            return result;
+        };
+        registry->registerTool(def);
+    }
+
+    // ========================================================================
+    // Version Control Tools (Git)
+    // ========================================================================
+
+    // git_status
+    {
+        ToolDefinition def;
+        def.name = "git_status";
+        def.description = "Show git working tree status within the workspace";
+        def.category = ToolCategory::VersionControl;
+        def.handler = [](const json& params) -> json {
+            json result;
+            std::string cwd = params.value("cwd", g_workspaceRoot);
+            std::filesystem::path canonicalCwd;
+            if (!resolveAndValidatePath(cwd, canonicalCwd)) {
+                result["success"] = false;
+                result["error"] = "Working directory outside workspace: " + cwd;
+                return result;
+            }
+            std::string cmd;
+#ifdef _WIN32
+            cmd = "cd /D \"" + canonicalCwd.string() + "\" && git status --porcelain";
+#else
+            cmd = "cd \"" + canonicalCwd.string() + "\" && git status --porcelain";
+#endif
+            std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs);
+            result["success"] = true;
+            result["command"] = cmd;
+            result["cwd"] = cwd;
+            result["output"] = output;
+            return result;
+        };
+        registry->registerTool(def);
+    }
+
+    // git_diff
+    {
+        ToolDefinition def;
+        def.name = "git_diff";
+        def.description = "Show git diff within the workspace";
+        def.category = ToolCategory::VersionControl;
+        def.handler = [](const json& params) -> json {
+            json result;
+            std::string cwd = params.value("cwd", g_workspaceRoot);
+            std::filesystem::path canonicalCwd;
+            if (!resolveAndValidatePath(cwd, canonicalCwd)) {
+                result["success"] = false;
+                result["error"] = "Working directory outside workspace: " + cwd;
+                return result;
+            }
+            std::string cmd;
+#ifdef _WIN32
+            cmd = "cd /D \"" + canonicalCwd.string() + "\" && git diff";
+#else
+            cmd = "cd \"" + canonicalCwd.string() + "\" && git diff";
+#endif
+            std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs);
+            result["success"] = true;
+            result["command"] = cmd;
+            result["cwd"] = cwd;
+            result["output"] = output;
+            return result;
+        };
+        registry->registerTool(def);
+    }
+
+    qInfo() << "[AgenticEngine] All built-in tools registered successfully";
     return true;
 }
-#endif
+
+#endif // TOOL_REGISTRY_INIT_IMPLEMENTED
 
 AgenticEngine::AgenticEngine(QObject* parent) 
     : QObject(parent), 

@@ -26,6 +26,7 @@
 #include <cstring>
 #include <exception>
 #include <stdexcept>
+#include <windows.h>
 
 // ----------------------------------------------------------------------------
 // Deep2Engine lives in namespace Deep2 (src/Deep2Engine.h:66); every definition
@@ -91,13 +92,20 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             }
         }
 
-        auto layerT0 = std::chrono::high_resolution_clock::now();
-        try {
-            forwardLayer(layer, layerInput, layerOutput, seqLen);
-        } catch (const std::exception& ex) {
-            fprintf(stderr, "[B3_ABORT] forwardTokenAllLayers layer=%zu: %s\n",
-                    layer, ex.what());
+        // Heap validation before each layer: catch silent buffer overflows
+        // from previous operations that corrupt heap metadata without raising
+        // an immediate access violation.
+        if (!HeapValidate(GetProcessHeap(), 0, NULL))
+        {
+            fprintf(stderr,
+                    "[HEAP_CORRUPT] detected before layer=%zu, stopping generation\n",
+                    layer);
             fflush(stderr);
+            return false;
+        }
+
+        auto layerT0 = std::chrono::high_resolution_clock::now();
+        if (!safeForwardLayer(layer, layerInput, layerOutput, seqLen)) {
             return false;
         }
         auto layerT1 = std::chrono::high_resolution_clock::now();
@@ -138,6 +146,31 @@ void Deep2Engine::emitHotpathWitnesses() {
 void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
     Deep2GpuForward_Emit(f, gpuFwd_, Deep2CpuFallbackTotal(gpuFwd_));
     fflush(stdout);
+}
+
+// ----------------------------------------------------------------------------
+// safeForwardLayer — SEH-safe wrapper around forwardLayer.  Catches access
+// violations from buffer overflows during inference so the engine can return
+// false and shut down cleanly instead of corrupting the heap and crashing
+// during teardown.  This function has no local objects with destructors so
+// __try/__except compiles here (unlike in forwardTokenAllLayers, which uses
+// std::chrono::time_point and other RAII types).
+// ----------------------------------------------------------------------------
+bool Deep2Engine::safeForwardLayer(size_t layer, float* input, float* output, size_t seqLen)
+{
+    __try
+    {
+        forwardLayer(layer, input, output, seqLen);
+        return true;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        fprintf(stderr,
+                "[B3_ABORT] forwardLayer access violation at layer=%zu, "
+                "stopping generation\n", layer);
+        fflush(stderr);
+        return false;
+    }
 }
 
 } // namespace Deep2

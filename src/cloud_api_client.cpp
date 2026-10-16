@@ -1,485 +1,453 @@
 // cloud_api_client.cpp - Implementation of Cloud API Client
+// Pure Windows native implementation using WinHTTP (no Qt dependency)
 #include "cloud_api_client.h"
-#include "universal_model_router.h"
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QUrl>
-#include <QUrlQuery>
-#include <QDateTime>
-#include <QDebug>
-#include <QEventLoop>
-#include <QTimer>
+#include <windows.h>
+#include <winhttp.h>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
+#include <algorithm>
+#include <codecvt>
 
-CloudApiClient::CloudApiClient(QObject* parent)
-    : QObject(parent),
-      network_manager(std::make_unique<QNetworkAccessManager>(this))
-{
+#pragma comment(lib, "winhttp.lib")
+
+#ifndef WINHTTP_NO_REQUEST_HEADERS
+#define WINHTTP_NO_REQUEST_HEADERS NULL
+#endif
+#ifndef WINHTTP_FLAG_NUMBER
+#define WINHTTP_FLAG_NUMBER 0x40000000
+#endif
+
+// Helper: UTF-8 to wide string
+static std::wstring utf8ToWide(const std::string& s) {
+    if (s.empty()) return L"";
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), (int)s.size(), NULL, 0);
+    std::wstring wstr(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), (int)s.size(), &wstr[0], size_needed);
+    return wstr;
+}
+
+// Helper: wide string to UTF-8
+static std::string wideToUtf8(const std::wstring& ws) {
+    if (ws.empty()) return "";
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, ws.c_str(), (int)ws.size(), NULL, 0, NULL, NULL);
+    std::string str(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, ws.c_str(), (int)ws.size(), &str[0], size_needed, NULL, NULL);
+    return str;
+}
+
+// Helper: current ISO timestamp
+std::string CloudApiClient::currentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    std::tm tm;
+    localtime_s(&tm, &time_t_now);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    return oss.str();
+}
+
+CloudApiClient::CloudApiClient() {
     initializeApiEndpoints();
-    
-    connect(network_manager.get(), &QNetworkAccessManager::finished,
-            this, &CloudApiClient::onNetworkReplyFinished);
 }
 
 CloudApiClient::~CloudApiClient() = default;
 
-void CloudApiClient::initializeApiEndpoints()
-{
+void CloudApiClient::initializeApiEndpoints() {
+    // KILO GATEWAY API - OpenAI-compatible, free model catalog
+    api_endpoints[static_cast<int>(ModelBackend::KILO_GATEWAY)] = {
+        "https://api.kilo.ai",
+        "/api/gateway/chat/completions",
+        "/api/gateway/models"
+    };
+
+    // OPENROUTER API - OpenAI-compatible, free models
+    api_endpoints[static_cast<int>(ModelBackend::OPENROUTER)] = {
+        "https://openrouter.ai",
+        "/api/v1/chat/completions",
+        "/api/v1/models"
+    };
+
     // ANTHROPIC API
     api_endpoints[static_cast<int>(ModelBackend::ANTHROPIC)] = {
         "https://api.anthropic.com",
         "/v1/messages",
-        "/v1/models",
-        [this](const QString& prompt, const ModelConfig& config) {
-            return buildAnthropicRequest(prompt, config);
-        },
-        [this](const QJsonObject& response) {
-            return parseAnthropicResponse(response);
-        }
+        "/v1/models"
     };
-    
+
     // OPENAI API
     api_endpoints[static_cast<int>(ModelBackend::OPENAI)] = {
         "https://api.openai.com",
         "/v1/chat/completions",
-        "/v1/models",
-        [this](const QString& prompt, const ModelConfig& config) {
-            return buildOpenAIRequest(prompt, config);
-        },
-        [this](const QJsonObject& response) {
-            return parseOpenAIResponse(response);
-        }
+        "/v1/models"
     };
-    
+
     // GOOGLE GEMINI API
     api_endpoints[static_cast<int>(ModelBackend::GOOGLE)] = {
         "https://generativelanguage.googleapis.com",
-        "/v1beta/models/{model}:generateContent",
         "/v1beta/models",
-        [this](const QString& prompt, const ModelConfig& config) {
-            return buildGoogleRequest(prompt, config);
-        },
-        [this](const QJsonObject& response) {
-            return parseGoogleResponse(response);
-        }
-    };
-    
-    // MOONSHOT (KIMI) API
-    api_endpoints[static_cast<int>(ModelBackend::MOONSHOT)] = {
-        "https://api.moonshot.cn",
-        "/v1/chat/completions",
-        "/v1/models",
-        [this](const QString& prompt, const ModelConfig& config) {
-            return buildMoonshotRequest(prompt, config);
-        },
-        [this](const QJsonObject& response) {
-            return parseMoonshotResponse(response);
-        }
-    };
-    
-    // AZURE OPENAI API
-    api_endpoints[static_cast<int>(ModelBackend::AZURE_OPENAI)] = {
-        "", // Azure uses custom endpoint
-        "/chat/completions",
-        "/models",
-        [this](const QString& prompt, const ModelConfig& config) {
-            return buildAzureOpenAIRequest(prompt, config);
-        },
-        [this](const QJsonObject& response) {
-            return parseAzureOpenAIResponse(response);
-        }
-    };
-    
-    // AWS BEDROCK API
-    api_endpoints[static_cast<int>(ModelBackend::AWS_BEDROCK)] = {
-        "", // Bedrock uses regional endpoints
-        "/model/invoke",
-        "/foundation-models",
-        [this](const QString& prompt, const ModelConfig& config) {
-            return buildAwsBedrockRequest(prompt, config);
-        },
-        [this](const QJsonObject& response) {
-            return parseAwsBedrockResponse(response);
-        }
+        "/v1beta/models"
     };
 }
 
-QString CloudApiClient::generate(const QString& prompt, const ModelConfig& config)
-{
+std::string CloudApiClient::generate(const std::string& prompt, const ModelConfig& config) {
     if (!config.isValid()) {
-        emit generationFailed("Invalid model configuration");
         return "";
     }
-    
-    ApiResponse response = executeRequest(
-        api_endpoints[static_cast<int>(config.backend)].chat_endpoint,
-        "POST",
-        buildRequestBody(prompt, config),
-        config.api_key
-    );
-    
+
+    // Prepare headers
+    std::map<std::string, std::string> headers;
+
+    if (config.backend == ModelBackend::ANTHROPIC) {
+        headers["x-api-key"] = config.api_key;
+        headers["anthropic-version"] = "2023-06-01";
+    } else if (config.backend == ModelBackend::OPENROUTER) {
+        if (config.parameters.count("http_referer")) {
+            headers["HTTP-Referer"] = config.parameters.at("http_referer");
+        }
+        if (config.parameters.count("x_title")) {
+            headers["X-Title"] = config.parameters.at("x_title");
+        }
+    }
+
+    std::string full_endpoint =
+        api_endpoints[static_cast<int>(config.backend)].base_url +
+        api_endpoints[static_cast<int>(config.backend)].chat_endpoint;
+
+    std::string body = buildOpenAICompatibleRequest(prompt, config);
+
+    // Anthropic uses a different request format
+    if (config.backend == ModelBackend::ANTHROPIC) {
+        // Build Anthropic-format request
+        std::ostringstream oss;
+        oss << "{";
+        oss << "\"model\":\"" << config.model_id << "\",";
+        oss << "\"max_tokens\":" << (config.parameters.count("max_tokens") ? config.parameters.at("max_tokens") : "4096") << ",";
+        if (config.parameters.count("temperature")) {
+            oss << "\"temperature\":" << config.parameters.at("temperature") << ",";
+        }
+        oss << "\"messages\":[{\"role\":\"user\",\"content\":\"" << prompt << "\"}";
+        oss << "]}";
+        body = oss.str();
+    }
+
+    ApiResponse response = executeRequest(full_endpoint, "POST", body, config.api_key, headers);
+
     if (!response.success) {
-        emit generationFailed(response.error_message);
+        std::fprintf(stderr,
+                     "[CLOUD_ERROR] provider=%s model=%s endpoint=%s "
+                     "status=%d latency_ms=%lld error=%s\n",
+                     config.backend == ModelBackend::KILO_GATEWAY ? "kilo" :
+                     config.backend == ModelBackend::OPENROUTER ? "openrouter" :
+                     config.backend == ModelBackend::ANTHROPIC ? "anthropic" : "unknown",
+                     config.model_id.c_str(),
+                     full_endpoint.c_str(),
+                     response.status_code,
+                     response.latency_ms,
+                     response.error_message.c_str());
+        if (!response.raw_body.empty()) {
+            std::string body_preview = response.raw_body.substr(0, 500);
+            std::fprintf(stderr,
+                         "[CLOUD_ERROR] response_body=%s\n", body_preview.c_str());
+        }
+        std::fflush(stderr);
         return "";
     }
-    
-    emit generationCompleted(response);
-    return response.content;
+
+    // Parse response using the appropriate parser
+    std::string content = parseOpenAIResponse(response.raw_body);
+
+    // If parser didn't extract content, use raw body
+    if (content.empty() && !response.raw_body.empty()) {
+        content = response.raw_body;
+    }
+
+    logApiCall({currentTimestamp(),
+                config.backend == ModelBackend::KILO_GATEWAY ? "kilo" :
+                config.backend == ModelBackend::OPENROUTER ? "openrouter" :
+                config.backend == ModelBackend::ANTHROPIC ? "anthropic" : "unknown",
+                config.model_id,
+                full_endpoint,
+                body,
+                response.raw_body,
+                response.status_code,
+                response.latency_ms,
+                response.success,
+                response.error_message});
+
+    return content;
 }
 
-void CloudApiClient::generateAsync(const QString& prompt,
+void CloudApiClient::generateAsync(const std::string& prompt,
                                    const ModelConfig& config,
-                                   std::function<void(const ApiResponse&)> callback)
-{
-    // Implementation for async generation
-    // In a real implementation, this would queue requests and use signals/slots
+                                   std::function<void(const ApiResponse&)> callback) {
     auto result = generate(prompt, config);
     ApiResponse response;
     response.content = result;
-    response.success = !result.isEmpty();
+    response.success = !result.empty();
     callback(response);
 }
 
-void CloudApiClient::generateStream(const QString& prompt,
-                                   const ModelConfig& config,
-                                   std::function<void(const QString&)> chunk_callback,
-                                   std::function<void(const QString&)> error_callback)
-{
-    // For now, implement as non-streaming (collect all then emit chunks)
-    // In production, use SSE (Server-Sent Events) support
-    QString result = generate(prompt, config);
-    
-    if (!result.isEmpty()) {
-        // Split result into chunks (simulate streaming)
-        int chunk_size = 50;
-        for (int i = 0; i < result.length(); i += chunk_size) {
-            chunk_callback(result.mid(i, chunk_size));
-        }
-        emit streamingCompleted();
-    } else {
-        if (error_callback) {
-            error_callback("Generation failed");
-        }
-        emit streamingFailed("Generation failed");
-    }
-}
+bool CloudApiClient::checkProviderHealth(const ModelConfig& config) {
+    auto models = listModels(config);
+    bool healthy = !models.empty();
 
-bool CloudApiClient::checkProviderHealth(const ModelConfig& config)
-{
-    // Simple health check by attempting to list models
-    QStringList models = listModels(config);
-    bool healthy = !models.isEmpty();
-    
-    ApiCallLog log;
-    log.timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
-    log.provider = QString::number(static_cast<int>(config.backend));
-    log.endpoint = api_endpoints[static_cast<int>(config.backend)].model_list_endpoint;
-    log.success = healthy;
-    logApiCall(log);
-    
-    emit healthCheckCompleted(healthy);
+    logApiCall({currentTimestamp(),
+                config.backend == ModelBackend::KILO_GATEWAY ? "kilo" : "openrouter",
+                config.model_id,
+                api_endpoints[static_cast<int>(config.backend)].model_list_endpoint,
+                "",
+                "",
+                healthy ? 200 : 0,
+                0,
+                healthy,
+                healthy ? "" : "no models returned"});
+
     return healthy;
 }
 
-void CloudApiClient::checkProviderHealthAsync(const ModelConfig& config,
-                                              std::function<void(bool)> callback)
-{
-    bool result = checkProviderHealth(config);
-    callback(result);
-}
+std::vector<std::string> CloudApiClient::listModels(const ModelConfig& config) {
+    std::string full_endpoint =
+        api_endpoints[static_cast<int>(config.backend)].base_url +
+        api_endpoints[static_cast<int>(config.backend)].model_list_endpoint;
 
-QStringList CloudApiClient::listModels(const ModelConfig& config)
-{
-    // This would need implementation for each provider
-    // For now, return empty list
-    return QStringList();
-}
+    ApiResponse response = executeRequest(full_endpoint, "GET", "", config.api_key, {});
 
-void CloudApiClient::listModelsAsync(const ModelConfig& config,
-                                     std::function<void(const QStringList&)> callback)
-{
-    auto models = listModels(config);
-    callback(models);
-}
-
-QJsonObject CloudApiClient::buildRequestBody(const QString& prompt, const ModelConfig& config)
-{
-    return api_endpoints[static_cast<int>(config.backend)].request_builder(prompt, config);
-}
-
-// ============ REQUEST BUILDERS ============
-
-QJsonObject CloudApiClient::buildAnthropicRequest(const QString& prompt, const ModelConfig& config)
-{
-    QJsonObject request;
-    request["model"] = config.model_id;
-    request["max_tokens"] = config.parameters.value("max_tokens", "4096").toInt();
-    
-    if (config.parameters.contains("temperature")) {
-        request["temperature"] = config.parameters.value("temperature").toDouble();
+    if (!response.success) {
+        return {};
     }
-    
-    QJsonArray messages;
-    QJsonObject userMessage;
-    userMessage["role"] = "user";
-    userMessage["content"] = prompt;
-    messages.append(userMessage);
-    
-    request["messages"] = messages;
-    
-    return request;
-}
 
-QJsonObject CloudApiClient::buildOpenAIRequest(const QString& prompt, const ModelConfig& config)
-{
-    QJsonObject request;
-    request["model"] = config.model_id;
-    
-    if (config.parameters.contains("max_tokens")) {
-        request["max_tokens"] = config.parameters.value("max_tokens").toInt();
+    // Parse model IDs from response
+    std::vector<std::string> models;
+    // Simple JSON parsing - look for "id" fields
+    size_t pos = 0;
+    while ((pos = response.raw_body.find("\"id\"", pos)) != std::string::npos) {
+        size_t colon = response.raw_body.find(':', pos);
+        if (colon == std::string::npos) break;
+        size_t quote = response.raw_body.find('"', colon + 1);
+        if (quote == std::string::npos) break;
+        size_t end_quote = response.raw_body.find('"', quote + 1);
+        if (end_quote == std::string::npos) break;
+        std::string model_id = response.raw_body.substr(quote + 1, end_quote - quote - 1);
+        models.push_back(model_id);
+        pos = end_quote + 1;
     }
-    
-    if (config.parameters.contains("temperature")) {
-        request["temperature"] = config.parameters.value("temperature").toDouble();
+
+    return models;
+}
+
+std::string CloudApiClient::buildOpenAICompatibleRequest(const std::string& prompt, const ModelConfig& config) {
+    std::ostringstream oss;
+    oss << "{";
+    oss << "\"model\":\"" << config.model_id << "\",";
+    oss << "\"max_tokens\":" << (config.parameters.count("max_tokens") ? config.parameters.at("max_tokens") : "4096") << ",";
+    if (config.parameters.count("temperature")) {
+        oss << "\"temperature\":" << config.parameters.at("temperature") << ",";
     }
-    
-    QJsonArray messages;
-    QJsonObject userMessage;
-    userMessage["role"] = "user";
-    userMessage["content"] = prompt;
-    messages.append(userMessage);
-    
-    request["messages"] = messages;
-    
-    return request;
+    oss << "\"messages\":[{\"role\":\"user\",\"content\":\"" << prompt << "\"}";
+    oss << "]}";
+    return oss.str();
 }
 
-QJsonObject CloudApiClient::buildGoogleRequest(const QString& prompt, const ModelConfig& config)
-{
-    QJsonObject request;
-    
-    QJsonArray contents;
-    QJsonObject content;
-    content["role"] = "user";
-    
-    QJsonArray parts;
-    QJsonObject part;
-    part["text"] = prompt;
-    parts.append(part);
-    
-    content["parts"] = parts;
-    contents.append(content);
-    
-    request["contents"] = contents;
-    
-    return request;
+std::string CloudApiClient::buildOpenRouterRequest(const std::string& prompt, const ModelConfig& config) {
+    std::string body = buildOpenAICompatibleRequest(prompt, config);
+    // OpenRouter-specific headers are applied in executeRequest via the headers map
+    return body;
 }
 
-QJsonObject CloudApiClient::buildMoonshotRequest(const QString& prompt, const ModelConfig& config)
-{
-    QJsonObject request;
-    request["model"] = config.model_id;
-    
-    if (config.parameters.contains("max_tokens")) {
-        request["max_tokens"] = config.parameters.value("max_tokens").toInt();
-    }
-    
-    QJsonArray messages;
-    QJsonObject userMessage;
-    userMessage["role"] = "user";
-    userMessage["content"] = prompt;
-    messages.append(userMessage);
-    
-    request["messages"] = messages;
-    
-    return request;
+std::string CloudApiClient::parseOpenAIResponse(const std::string& raw_body) {
+    // Simple extraction of choices[0].message.content
+    size_t choices_pos = raw_body.find("\"choices\"");
+    if (choices_pos == std::string::npos) return "";
+
+    size_t content_pos = raw_body.find("\"content\"", choices_pos);
+    if (content_pos == std::string::npos) return "";
+
+    size_t colon = raw_body.find(':', content_pos);
+    if (colon == std::string::npos) return "";
+
+    size_t quote = raw_body.find('"', colon + 1);
+    if (quote == std::string::npos) return "";
+
+    size_t end_quote = raw_body.find('"', quote + 1);
+    if (end_quote == std::string::npos) return "";
+
+    return raw_body.substr(quote + 1, end_quote - quote - 1);
 }
 
-QJsonObject CloudApiClient::buildAzureOpenAIRequest(const QString& prompt, const ModelConfig& config)
-{
-    // Azure uses OpenAI format but different endpoint
-    return buildOpenAIRequest(prompt, config);
-}
-
-QJsonObject CloudApiClient::buildAwsBedrockRequest(const QString& prompt, const ModelConfig& config)
-{
-    QJsonObject request;
-    
-    // Bedrock uses provider-specific formats
-    // This is a generic wrapper
-    QJsonObject messages;
-    messages["prompt"] = prompt;
-    
-    if (config.parameters.contains("max_tokens")) {
-        messages["max_tokens_to_sample"] = config.parameters.value("max_tokens").toInt();
-    }
-    
-    request["body"] = messages;
-    
-    return request;
-}
-
-// ============ RESPONSE PARSERS ============
-
-QString CloudApiClient::parseAnthropicResponse(const QJsonObject& response)
-{
-    if (!response.contains("content") || response["content"].toArray().isEmpty()) {
-        return "";
-    }
-    
-    QJsonArray content = response["content"].toArray();
-    if (content[0].toObject().contains("text")) {
-        return content[0].toObject()["text"].toString();
-    }
-    
-    return "";
-}
-
-QString CloudApiClient::parseOpenAIResponse(const QJsonObject& response)
-{
-    if (!response.contains("choices") || response["choices"].toArray().isEmpty()) {
-        return "";
-    }
-    
-    QJsonArray choices = response["choices"].toArray();
-    QJsonObject choice = choices[0].toObject();
-    
-    if (choice.contains("message")) {
-        return choice["message"].toObject()["content"].toString();
-    }
-    
-    return "";
-}
-
-QString CloudApiClient::parseGoogleResponse(const QJsonObject& response)
-{
-    if (!response.contains("candidates") || response["candidates"].toArray().isEmpty()) {
-        return "";
-    }
-    
-    QJsonArray candidates = response["candidates"].toArray();
-    QJsonObject candidate = candidates[0].toObject();
-    
-    if (candidate.contains("content") && candidate["content"].toObject().contains("parts")) {
-        QJsonArray parts = candidate["content"].toObject()["parts"].toArray();
-        if (!parts.isEmpty()) {
-            return parts[0].toObject()["text"].toString();
-        }
-    }
-    
-    return "";
-}
-
-QString CloudApiClient::parseMoonshotResponse(const QJsonObject& response)
-{
-    // Moonshot uses same format as OpenAI
-    return parseOpenAIResponse(response);
-}
-
-QString CloudApiClient::parseAzureOpenAIResponse(const QJsonObject& response)
-{
-    // Azure uses same format as OpenAI
-    return parseOpenAIResponse(response);
-}
-
-QString CloudApiClient::parseAwsBedrockResponse(const QJsonObject& response)
-{
-    if (response.contains("body")) {
-        QString body = response["body"].toString();
-        // Parse Bedrock-specific response format
-        return body;
-    }
-    
-    return "";
-}
-
-// ============ UTILITY METHODS ============
-
-ApiResponse CloudApiClient::executeRequest(const QString& endpoint,
-                                          const QString& method,
-                                          const QJsonObject& body,
-                                          const QString& api_key,
-                                          const QMap<QString, QString>& headers)
-{
+ApiResponse CloudApiClient::executeRequest(const std::string& endpoint,
+                                           const std::string& method,
+                                           const std::string& body,
+                                           const std::string& api_key,
+                                           const std::map<std::string, std::string>& headers) {
     ApiResponse response;
     response.success = false;
     response.status_code = 0;
-    response.error_message = "Not implemented in blocking mode";
-    
+    response.latency_ms = 0;
+
+    HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0",
+                                     WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                     WINHTTP_NO_PROXY_NAME,
+                                     WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) {
+        response.error_message = "WinHttpOpen failed";
+        return response;
+    }
+
+    std::wstring wEndpoint = utf8ToWide(endpoint);
+    // Parse URL to get host and path
+    // Simple parse: https://host/path
+    std::wstring scheme = L"https";
+    std::wstring host;
+    std::wstring path = L"/";
+
+    size_t scheme_sep = wEndpoint.find(L"://");
+    if (scheme_sep != std::wstring::npos) {
+        scheme = wEndpoint.substr(0, scheme_sep);
+        size_t path_start = wEndpoint.find(L"/", scheme_sep + 3);
+        if (path_start != std::wstring::npos) {
+            host = wEndpoint.substr(scheme_sep + 3, path_start - scheme_sep - 3);
+            path = wEndpoint.substr(path_start);
+        } else {
+            host = wEndpoint.substr(scheme_sep + 3);
+        }
+    }
+
+    INTERNET_PORT port = (scheme == L"https") ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
+
+    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        response.error_message = "WinHttpConnect failed";
+        return response;
+    }
+
+    DWORD flags = WINHTTP_FLAG_SECURE;
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect,
+                                            method == "POST" ? L"POST" : L"GET",
+                                            path.c_str(),
+                                            NULL, WINHTTP_NO_REFERER,
+                                            WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                            flags);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        response.error_message = "WinHttpOpenRequest failed";
+        return response;
+    }
+
+    // Set headers
+    std::wstring all_headers;
+    for (const auto& kv : headers) {
+        all_headers += utf8ToWide(kv.first) + L": " + utf8ToWide(kv.second) + L"\r\n";
+    }
+    if (!api_key.empty()) {
+        all_headers += L"Authorization: Bearer " + utf8ToWide(api_key) + L"\r\n";
+    }
+    all_headers += L"Content-Type: application/json\r\n";
+    all_headers += L"Accept: application/json\r\n";
+
+    // Set timeouts
+    WinHttpSetTimeouts(hRequest, 10000, 10000, 30000, 30000);
+
+    auto t_start = std::chrono::steady_clock::now();
+
+    BOOL sent = WinHttpSendRequest(hRequest,
+                                   all_headers.empty() ? WINHTTP_NO_REQUEST_HEADERS : all_headers.c_str(),
+                                   (DWORD)-1L,  // -1L means headers are null-terminated
+                                   (LPVOID)body.c_str(),
+                                   (DWORD)body.size(),
+                                   (DWORD)body.size(),
+                                   0);
+
+    if (!sent) {
+        response.error_message = "WinHttpSendRequest failed";
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return response;
+    }
+
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        response.error_message = "WinHttpReceiveResponse failed";
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return response;
+    }
+
+    DWORD status_code = 0;
+    DWORD status_size = sizeof(status_code);
+    WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_FLAG_NUMBER,
+                        WINHTTP_HEADER_NAME_BY_INDEX, &status_code, &status_size, WINHTTP_NO_HEADER_INDEX);
+    response.status_code = (int)status_code;
+
+    // Read response
+    std::string response_body;
+    char buffer[4096];
+    DWORD bytes_read = 0;
+    while (WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytes_read) && bytes_read > 0) {
+        response_body.append(buffer, bytes_read);
+    }
+    response.raw_body = response_body;
+
+    auto t_end = std::chrono::steady_clock::now();
+    response.latency_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+
+    if (status_code >= 200 && status_code < 300) {
+        response.success = true;
+    } else {
+        response.error_message = "HTTP " + std::to_string(status_code);
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
     return response;
 }
 
-QString CloudApiClient::formatErrorResponse(int status_code, const QString& body)
-{
-    return QString("HTTP %1: %2").arg(status_code).arg(body);
+std::string CloudApiClient::formatErrorResponse(int status_code, const std::string& body) {
+    return "HTTP " + std::to_string(status_code) + ": " + body;
 }
 
-void CloudApiClient::logApiCall(const ApiCallLog& log)
-{
-    call_history.append(log);
-    
-    // Keep history size bounded
+void CloudApiClient::logApiCall(const ApiCallLog& log) {
+    call_history.push_back(log);
     if (call_history.size() > MAX_HISTORY_SIZE) {
-        call_history.removeFirst();
+        call_history.erase(call_history.begin());
     }
 }
 
-void CloudApiClient::onNetworkReplyFinished(QNetworkReply* reply)
-{
-    // Handle completed network requests
-    if (reply->error() != QNetworkReply::NoError) {
-        emit generationFailed(reply->errorString());
-    }
-    
-    reply->deleteLater();
-}
-
-QVector<ApiCallLog> CloudApiClient::getCallHistory() const
-{
+std::vector<ApiCallLog> CloudApiClient::getCallHistory() const {
     return call_history;
 }
 
-void CloudApiClient::clearCallHistory()
-{
+void CloudApiClient::clearCallHistory() {
     call_history.clear();
 }
 
-ApiCallLog CloudApiClient::getLastCall() const
-{
-    if (call_history.isEmpty()) {
+ApiCallLog CloudApiClient::getLastCall() const {
+    if (call_history.empty()) {
         return ApiCallLog();
     }
-    return call_history.last();
+    return call_history.back();
 }
 
-double CloudApiClient::getAverageLatency() const
-{
-    if (call_history.isEmpty()) {
-        return 0.0;
-    }
-    
-    double total = 0.0;
+double CloudApiClient::getAverageLatency() const {
+    if (call_history.empty()) return 0.0;
+    int64_t total = 0;
     for (const auto& log : call_history) {
         total += log.latency_ms;
     }
-    
-    return total / call_history.size();
+    return (double)total / (double)call_history.size();
 }
 
-int CloudApiClient::getSuccessRate() const
-{
-    if (call_history.isEmpty()) {
-        return 0;
-    }
-    
+int CloudApiClient::getSuccessRate() const {
+    if (call_history.empty()) return 0;
     int successful = 0;
     for (const auto& log : call_history) {
-        if (log.success) {
-            successful++;
-        }
+        if (log.success) successful++;
     }
-    
-    return (successful * 100) / call_history.size();
+    return (successful * 100) / (int)call_history.size();
 }

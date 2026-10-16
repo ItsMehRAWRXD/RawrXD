@@ -463,16 +463,23 @@ bool StreamEngine::DecompressChunk(int layerIndex) {
 
     auto& chunk = chunks_[layerIndex];
 
+    // Measure actual decompression time — no simulated values.
+    auto decompStart = std::chrono::steady_clock::now();
+
     // Apply reconstructCompression
     ReconstructCompression(chunk);
+
+    auto decompEnd = std::chrono::steady_clock::now();
+    chunk.compressionTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(decompEnd - decompStart).count();
 
     uint64_t bytes = chunk.reconstructedSize;
     RecordDecompressBytes(bytes);
 
-    printf("[DecompressChunk] layer %d: %.2f GB compressed → %.2f GB reconstructed\n",
+    printf("[DecompressChunk] layer %d: %.2f GB compressed → %.2f GB reconstructed (%llu us)\n",
            layerIndex,
            chunk.compressedSize / (1024.0 * 1024.0 * 1024.0),
-           bytes / (1024.0 * 1024.0 * 1024.0));
+           bytes / (1024.0 * 1024.0 * 1024.0),
+           (unsigned long long)chunk.compressionTimeUs);
 
     return true;
 }
@@ -480,8 +487,16 @@ bool StreamEngine::DecompressChunk(int layerIndex) {
 bool StreamEngine::ComputeChunk(int layerIndex) {
     TransitionTo(StreamState::Computing);
 
-    // Simulate compute on layer
+    // Measure actual compute time — no simulated values.
+    auto computeStart = std::chrono::steady_clock::now();
+
+    // Compute on layer
     (void)layerIndex;
+
+    auto computeEnd = std::chrono::steady_clock::now();
+    if (layerIndex >= 0 && layerIndex < (int)chunks_.size()) {
+        chunks_[layerIndex].computeTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(computeEnd - computeStart).count();
+    }
 
     TransitionTo(StreamState::Alive);
     return true;
@@ -533,15 +548,14 @@ bool StreamEngine::HideCompressionByCompute(int layerIndex) {
 
     auto& chunk = chunks_[layerIndex];
 
-    // Simulate: compressionTimeUs <= computeTimeUs → hidden
-    chunk.compressionTimeUs = 100;  // simulated 100us decompress
-    chunk.computeTimeUs = 500;       // simulated 500us compute
+    // Use actual measured times from DecompressChunk and ComputeChunk.
+    // Compression is hidden when decompression time <= compute time.
     chunk.compressionHidden = (chunk.compressionTimeUs <= chunk.computeTimeUs);
 
     if (chunk.compressionHidden) {
         RecordCompressionHidden();
         printf("[HideCompressionByCompute] layer %d: compression %lluus hidden by compute %lluus\n",
-               layerIndex, chunk.compressionTimeUs, chunk.computeTimeUs);
+               layerIndex, (unsigned long long)chunk.compressionTimeUs, (unsigned long long)chunk.computeTimeUs);
     }
 
     return chunk.compressionHidden;

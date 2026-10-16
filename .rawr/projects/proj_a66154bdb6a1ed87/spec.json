@@ -1,0 +1,20 @@
+{
+  "acceptance_criteria": [],
+  "architecture": "",
+  "autonomy": "Unknown",
+  "build_system": "Unknown",
+  "created_at": "2026-10-16T00:26:06",
+  "dependencies": [],
+  "framework": "",
+  "idea": "",
+  "language": "Unknown",
+  "model_rotation_count": 1,
+  "name": "",
+  "platform": "",
+  "project_id": "proj_a66154bdb6a1ed87",
+  "tests": [
+    "tests"
+  ],
+  "type": "Unknown",
+  "updated_at": "2026-10-16T14:38:03"
+}

@@ -1,0 +1,36 @@
+# CMake generated Testfile for 
+# Source directory: F:/rawrxd/tools/rawrxd_parity_final
+# Build directory: F:/rawrxd/build_qt_free/tools/rawrxd_parity_final
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+if(CTEST_CONFIGURATION_TYPE MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
+  add_test("rawr_run_self_test" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/Debug/rawr_run.exe" "--self-test")
+  set_tests_properties("rawr_run_self_test" PROPERTIES  _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;84;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+elseif(CTEST_CONFIGURATION_TYPE MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
+  add_test("rawr_run_self_test" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/Release/rawr_run.exe" "--self-test")
+  set_tests_properties("rawr_run_self_test" PROPERTIES  _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;84;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+elseif(CTEST_CONFIGURATION_TYPE MATCHES "^([Mm][Ii][Nn][Ss][Ii][Zz][Ee][Rr][Ee][Ll])$")
+  add_test("rawr_run_self_test" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/MinSizeRel/rawr_run.exe" "--self-test")
+  set_tests_properties("rawr_run_self_test" PROPERTIES  _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;84;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+elseif(CTEST_CONFIGURATION_TYPE MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
+  add_test("rawr_run_self_test" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/RelWithDebInfo/rawr_run.exe" "--self-test")
+  set_tests_properties("rawr_run_self_test" PROPERTIES  _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;84;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+else()
+  add_test("rawr_run_self_test" NOT_AVAILABLE)
+endif()
+if(CTEST_CONFIGURATION_TYPE MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
+  add_test("rawr_fuzz_parsers" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/Debug/rawr_fuzz_parsers.exe" "20000")
+  set_tests_properties("rawr_fuzz_parsers" PROPERTIES  TIMEOUT "120" _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;146;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+elseif(CTEST_CONFIGURATION_TYPE MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
+  add_test("rawr_fuzz_parsers" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/Release/rawr_fuzz_parsers.exe" "20000")
+  set_tests_properties("rawr_fuzz_parsers" PROPERTIES  TIMEOUT "120" _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;146;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+elseif(CTEST_CONFIGURATION_TYPE MATCHES "^([Mm][Ii][Nn][Ss][Ii][Zz][Ee][Rr][Ee][Ll])$")
+  add_test("rawr_fuzz_parsers" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/MinSizeRel/rawr_fuzz_parsers.exe" "20000")
+  set_tests_properties("rawr_fuzz_parsers" PROPERTIES  TIMEOUT "120" _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;146;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+elseif(CTEST_CONFIGURATION_TYPE MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
+  add_test("rawr_fuzz_parsers" "F:/rawrxd/build_qt_free/tools/rawrxd_parity_final/RelWithDebInfo/rawr_fuzz_parsers.exe" "20000")
+  set_tests_properties("rawr_fuzz_parsers" PROPERTIES  TIMEOUT "120" _BACKTRACE_TRIPLES "F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;146;add_test;F:/rawrxd/tools/rawrxd_parity_final/CMakeLists.txt;0;")
+else()
+  add_test("rawr_fuzz_parsers" NOT_AVAILABLE)
+endif()

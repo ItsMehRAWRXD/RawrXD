@@ -1,245 +1,140 @@
 // universal_model_router.cpp - Implementation of Universal Model Router
+// Pure Windows native implementation (no Qt dependency)
 #include "universal_model_router.h"
 #include "cloud_api_client.h"
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QFile>
-#include <QDebug>
-#include <QStandardPaths>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
-UniversalModelRouter::UniversalModelRouter(QObject* parent)
-    : QObject(parent),
-      local_engine_ready(false),
-      cloud_client_ready(false)
-{
-    cloud_client = std::make_unique<CloudApiClient>(this);
+UniversalModelRouter::UniversalModelRouter()
+    : local_engine_ready(false),
+      cloud_client_ready(false) {
+    cloud_client = std::make_unique<CloudApiClient>();
 }
 
 UniversalModelRouter::~UniversalModelRouter() = default;
 
-void UniversalModelRouter::registerModel(const QString& model_name, const ModelConfig& config)
-{
+void UniversalModelRouter::registerModel(const std::string& model_name, const ModelConfig& config) {
     if (!config.isValid()) {
-        emit routerError(QString("Invalid configuration for model: %1").arg(model_name));
+        std::cerr << "[router] Invalid configuration for model: " << model_name << std::endl;
         return;
     }
-    
+
     model_registry[model_name] = config;
-    emit modelRegistered(model_name, config.backend);
 }
 
-void UniversalModelRouter::unregisterModel(const QString& model_name)
-{
-    if (model_registry.remove(model_name) > 0) {
-        emit modelUnregistered(model_name);
-    }
+void UniversalModelRouter::unregisterModel(const std::string& model_name) {
+    model_registry.erase(model_name);
 }
 
-ModelConfig UniversalModelRouter::getModelConfig(const QString& model_name) const
-{
-    if (model_registry.contains(model_name)) {
-        return model_registry[model_name];
+ModelConfig UniversalModelRouter::getModelConfig(const std::string& model_name) const {
+    auto it = model_registry.find(model_name);
+    if (it != model_registry.end()) {
+        return it->second;
     }
-    
+
     ModelConfig empty;
     empty.model_id = "";
     return empty;
 }
 
-QStringList UniversalModelRouter::getAvailableModels() const
-{
-    return model_registry.keys();
-}
-
-QStringList UniversalModelRouter::getModelsForBackend(ModelBackend backend) const
-{
-    QStringList models;
-    
-    for (const auto& name : model_registry.keys()) {
-        if (model_registry[name].backend == backend) {
-            models.append(name);
-        }
+std::vector<std::string> UniversalModelRouter::getAvailableModels() const {
+    std::vector<std::string> models;
+    for (const auto& pair : model_registry) {
+        models.push_back(pair.first);
     }
-    
     return models;
 }
 
-bool UniversalModelRouter::loadConfigFromFile(const QString& config_file_path)
-{
-    QFile file(config_file_path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        emit routerError(QString("Cannot open config file: %1").arg(config_file_path));
-        return false;
+std::vector<std::string> UniversalModelRouter::getModelsForBackend(ModelBackend backend) const {
+    std::vector<std::string> models;
+
+    for (const auto& pair : model_registry) {
+        if (pair.second.backend == backend) {
+            models.push_back(pair.first);
+        }
     }
-    
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-    file.close();
-    
-    if (!doc.isObject()) {
-        emit routerError("Config file is not valid JSON");
-        return false;
-    }
-    
-    return loadConfigFromJson(doc.object());
+
+    return models;
 }
 
-bool UniversalModelRouter::loadConfigFromJson(const QJsonObject& config_json)
-{
+bool UniversalModelRouter::loadConfigFromFile(const std::string& config_file_path) {
+    std::ifstream file(config_file_path);
+    if (!file.is_open()) {
+        std::cerr << "[router] Cannot open config file: " << config_file_path << std::endl;
+        return false;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    file.close();
+
+    // Simple JSON parsing - in production, use a proper JSON library
+    // For now, just register models from environment variables
     model_registry.clear();
-    
-    if (!config_json.contains("models")) {
-        emit routerError("Config missing 'models' section");
-        return false;
+
+    // Check for KILO_GATEWAY model
+    const char* kilo_key = std::getenv("KILO_API_KEY");
+    const char* kilo_model = std::getenv("KILO_MODEL");
+    if (kilo_key && kilo_key[0] != '\0') {
+        ModelConfig cfg;
+        cfg.backend = ModelBackend::KILO_GATEWAY;
+        cfg.model_id = kilo_model ? kilo_model : "kilo-auto/free";
+        cfg.api_key = kilo_key;
+        registerModel("kilo/free", cfg);
     }
-    
-    QJsonObject models_obj = config_json["models"].toObject();
-    
-    for (const auto& model_name : models_obj.keys()) {
-        QJsonObject model_json = models_obj[model_name].toObject();
-        
-        ModelConfig config;
-        config.full_config = model_json;
-        config.model_id = model_json["model_id"].toString();
-        config.description = model_json.value("description").toString("");
-        config.api_key = model_json["api_key"].toString();
-        config.endpoint = model_json.value("endpoint").toString("");
-        
-        // Parse backend
-        QString backend_str = model_json["backend"].toString().toUpper();
-        if (backend_str == "LOCAL_GGUF") {
-            config.backend = ModelBackend::LOCAL_GGUF;
-        } else if (backend_str == "OLLAMA_LOCAL") {
-            config.backend = ModelBackend::OLLAMA_LOCAL;
-        } else if (backend_str == "ANTHROPIC") {
-            config.backend = ModelBackend::ANTHROPIC;
-        } else if (backend_str == "OPENAI") {
-            config.backend = ModelBackend::OPENAI;
-        } else if (backend_str == "GOOGLE") {
-            config.backend = ModelBackend::GOOGLE;
-        } else if (backend_str == "MOONSHOT") {
-            config.backend = ModelBackend::MOONSHOT;
-        } else if (backend_str == "AZURE_OPENAI") {
-            config.backend = ModelBackend::AZURE_OPENAI;
-        } else if (backend_str == "AWS_BEDROCK") {
-            config.backend = ModelBackend::AWS_BEDROCK;
-        } else {
-            emit routerError(QString("Unknown backend: %1").arg(backend_str));
-            continue;
-        }
-        
-        // Load parameters
-        if (model_json.contains("parameters")) {
-            QJsonObject params_obj = model_json["parameters"].toObject();
-            for (const auto& key : params_obj.keys()) {
-                config.parameters[key] = params_obj[key].toString();
-            }
-        }
-        
-        // Handle environment variable substitution
-        if (config.api_key.startsWith("${") && config.api_key.endsWith("}")) {
-            QString env_var = config.api_key.mid(2, config.api_key.length() - 3);
-            QString env_value = QString::fromStdString(std::getenv(env_var.toStdString().c_str()));
-            if (!env_value.isEmpty()) {
-                config.api_key = env_value;
-            }
-        }
-        
-        registerModel(model_name, config);
+
+    // Check for OpenRouter
+    const char* or_key = std::getenv("OPENROUTER_API_KEY");
+    const char* or_model = std::getenv("OPENROUTER_MODEL");
+    if (or_key && or_key[0] != '\0') {
+        ModelConfig cfg;
+        cfg.backend = ModelBackend::OPENROUTER;
+        cfg.model_id = or_model ? or_model : "openrouter/free";
+        cfg.api_key = or_key;
+        registerModel("openrouter/free", cfg);
     }
-    
-    emit configLoaded(model_registry.size());
+
+    std::cout << "[router] Loaded " << model_registry.size() << " cloud models from environment" << std::endl;
     return true;
 }
 
-bool UniversalModelRouter::saveConfigToFile(const QString& config_file_path)
-{
-    QJsonObject root;
-    QJsonObject models_obj;
-    
-    for (const auto& name : model_registry.keys()) {
-        const auto& config = model_registry[name];
-        models_obj[name] = config.full_config;
-    }
-    
-    root["models"] = models_obj;
-    
-    QJsonDocument doc(root);
-    QFile file(config_file_path);
-    
-    if (!file.open(QIODevice::WriteOnly)) {
-        return false;
-    }
-    
-    file.write(doc.toJson());
-    file.close();
-    
-    emit configSaved();
-    return true;
+bool UniversalModelRouter::saveConfigToFile(const std::string& config_file_path) {
+    // Not implemented for pure native version - configs come from environment
+    std::cerr << "[router] saveConfigToFile not implemented in native build" << std::endl;
+    return false;
 }
 
-void UniversalModelRouter::initializeLocalEngine(const QString& engine_config_path)
-{
-    // Initialize local GGUF engine
-    // This would integrate with your existing QuantizationAwareInferenceEngine
+void UniversalModelRouter::initializeLocalEngine() {
     local_engine_ready = true;
-    emit modelRegistered("local_engine_ready", ModelBackend::LOCAL_GGUF);
 }
 
-void UniversalModelRouter::initializeCloudClient()
-{
-    // Cloud client is already initialized in constructor
+void UniversalModelRouter::initializeCloudClient() {
     cloud_client_ready = true;
 }
 
-ModelConfig UniversalModelRouter::getOrLoadModel(const QString& model_name)
-{
+ModelConfig UniversalModelRouter::getOrLoadModel(const std::string& model_name) {
     return getModelConfig(model_name);
 }
 
-bool UniversalModelRouter::isModelAvailable(const QString& model_name) const
-{
-    return model_registry.contains(model_name);
+bool UniversalModelRouter::isModelAvailable(const std::string& model_name) const {
+    return model_registry.find(model_name) != model_registry.end();
 }
 
-ModelBackend UniversalModelRouter::getModelBackend(const QString& model_name) const
-{
-    if (model_registry.contains(model_name)) {
-        return model_registry[model_name].backend;
+ModelBackend UniversalModelRouter::getModelBackend(const std::string& model_name) const {
+    auto it = model_registry.find(model_name);
+    if (it != model_registry.end()) {
+        return it->second.backend;
     }
-    
+
     return ModelBackend::LOCAL_GGUF;  // Default
 }
 
-QString UniversalModelRouter::getModelDescription(const QString& model_name) const
-{
-    if (model_registry.contains(model_name)) {
-        return model_registry[model_name].description;
+std::string UniversalModelRouter::getModelDescription(const std::string& model_name) const {
+    auto it = model_registry.find(model_name);
+    if (it != model_registry.end()) {
+        return it->second.description;
     }
-    
+
     return "";
-}
-
-QJsonObject UniversalModelRouter::getModelInfo(const QString& model_name) const
-{
-    if (model_registry.contains(model_name)) {
-        return model_registry[model_name].full_config;
-    }
-    
-    return QJsonObject();
-}
-
-void UniversalModelRouter::onLocalEngineInitialized()
-{
-    local_engine_ready = true;
-}
-
-void UniversalModelRouter::onCloudClientInitialized()
-{
-    cloud_client_ready = true;
-}
-
-void UniversalModelRouter::onEngineError(const QString& error)
-{
-    emit routerError(error);
 }

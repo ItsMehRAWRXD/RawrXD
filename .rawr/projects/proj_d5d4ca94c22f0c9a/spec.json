@@ -1,0 +1,18 @@
+{
+  "acceptance_criteria": [],
+  "architecture": "",
+  "autonomy": "Generate and verify",
+  "build_system": "CMake",
+  "created_at": "2026-10-15T22:35:52",
+  "dependencies": [],
+  "framework": "",
+  "idea": "a small CLI calculator",
+  "language": "C++20",
+  "model_rotation_count": 0,
+  "name": "ProjWizardDemo",
+  "platform": "",
+  "project_id": "proj_d5d4ca94c22f0c9a",
+  "tests": [],
+  "type": "CLI tool",
+  "updated_at": "2026-10-15T22:35:52"
+}

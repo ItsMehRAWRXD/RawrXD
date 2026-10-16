@@ -584,6 +584,87 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
             if (!c.completed) r.output += "\nTESTS_DID_NOT_COMPLETE (timeout)";
             return r;
         });
+
+    // â”€â”€ edit_files â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    reg.registerTool(
+        "edit_files", "Replace exact unique text in a workspace file",
+        R"({"path":{"type":"string"},"old":{"type":"string"},"new":{"type":"string"}})",
+        CAP_WRITE,
+        [&ws](const json& args, const ToolContext& ctx) -> ToolResult {
+            ToolResult r;
+            r.tool = "edit_files";
+            std::string rel = args.value("path", std::string());
+            std::string oldStr = args.value("old", std::string());
+            std::string newStr = args.value("new", std::string());
+
+            if (rel.empty() || oldStr.empty()) {
+                r.output = "ERROR: path and old are required";
+                return r;
+            }
+            std::string abs = ws.resolve(rel, false);
+            if (abs.empty()) {
+                r.output = "ERROR: path escapes the workspace: " + rel;
+                return r;
+            }
+            if (ctx.mode && !ctx.mode->sourceEditsAllowed) {
+                std::string l = toLower(rel);
+                bool isSource = l.find("src/") == 0 || l.find("src\\") == 0 ||
+                                l.find("include/") == 0 || (l.size() > 4 &&
+                                (l.substr(l.size() - 4) == ".cpp" ||
+                                 l.substr(l.size() - 4) == ".hpp"));
+                if (isSource) {
+                    r.denied = true;
+                    r.output = "DENIED: mode '" + std::string(ctx.mode->name) +
+                               "' does not permit editing project source: " + rel;
+                    return r;
+                }
+            }
+            try {
+                std::string content, enc;
+                if (!readTextUtf8(abs, content, enc)) {
+                    r.output = "ERROR: cannot read " + rel;
+                    return r;
+                }
+                size_t pos = content.find(oldStr);
+                if (pos == std::string::npos) {
+                    r.output = "ERROR: old text not found in " + rel;
+                    return r;
+                }
+                if (content.find(oldStr, pos + oldStr.size()) != std::string::npos) {
+                    r.output = "ERROR: old text occurs more than once in " + rel;
+                    return r;
+                }
+                content.replace(pos, oldStr.size(), newStr);
+                std::ofstream f(abs, std::ios::binary | std::ios::trunc);
+                if (!f) { r.output = "ERROR: cannot write " + rel; return r; }
+                f.write(content.data(), content.size());
+                f.close();
+                r.output = "EDITED " + rel + " (" + std::to_string(newStr.size()) +
+                           " bytes replacement)";
+                r.ok = true;
+                return r;
+            } catch (const std::exception& e) {
+                r.output = std::string("ERROR: edit failed ") + e.what();
+                return r;
+            }
+        });
+
+    // â”€â”€ git_diff â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    reg.registerTool(
+        "git_diff", "Show git diff for the workspace",
+        R"({})",
+        CAP_EXEC,
+        [&ws](const json&, const ToolContext&) -> ToolResult {
+            ToolResult r;
+            r.tool = "git_diff";
+            CommandResult c = runBoundedCommand("git diff",
+                                                ws.root(), 60000);
+            r.output = c.output;
+            r.ok = c.launched && c.completed;
+            r.exitCode = c.exitCode;
+            if (!c.error.empty()) r.output += "\nERROR: " + c.error;
+            return r;
+        });
 }
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

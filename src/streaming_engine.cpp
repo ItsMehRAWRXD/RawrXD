@@ -2,6 +2,12 @@
 #include <chrono>
 #include <sstream>
 #include <algorithm>
+#include <cstring>
+#include <cstdlib>
+
+#ifdef _WIN32
+#include <iostream>
+#endif
 
 // StreamingEngine Implementation
 StreamingEngine::StreamingEngine(
@@ -254,6 +260,13 @@ void HTTPStreamingClient::closeStream() {
         m_logger->info("HTTPStreamingClient", "Closing stream");
     }
     m_isConnected = false;
+#ifdef _WIN32
+    if (m_socket != INVALID_SOCKET) {
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
+    }
+    WSACleanup();
+#endif
 }
 
 void HTTPStreamingClient::setConnectionTimeout(int timeoutMs) {
@@ -261,29 +274,266 @@ void HTTPStreamingClient::setConnectionTimeout(int timeoutMs) {
         m_logger->debug("HTTPStreamingClient", "Set timeout to " + std::to_string(timeoutMs) + "ms");
     }
 }
-
-bool HTTPStreamingClient::setupConnection(const std::string& url) {
+bool HTTPStreamingClient::setupConnection(const std::string& url)
+{
+#ifdef _WIN32
     if (m_logger) {
-        m_logger->debug("HTTPStreamingClient", "Setting up connection");
+        m_logger->debug("HTTPStreamingClient", "Setting up socket connection to: " + url);
     }
-    // Real implementation would use socket/libcurl here
+
+    // Parse URL: http://host:port/path or https://host:port/path
+    std::string scheme, host, path;
+    int port = 80;
+
+    size_t schemeEnd = url.find("://");
+    if (schemeEnd != std::string::npos) {
+        scheme = url.substr(0, schemeEnd);
+        size_t restStart = schemeEnd + 3;
+        size_t pathStart = url.find('/', restStart);
+        if (pathStart != std::string::npos) {
+            host = url.substr(restStart, pathStart - restStart);
+            path = url.substr(pathStart);
+        } else {
+            host = url.substr(restStart);
+            path = "/";
+        }
+        size_t portPos = host.find(':');
+        if (portPos != std::string::npos) {
+            port = std::atoi(host.substr(portPos + 1).c_str());
+            host = host.substr(0, portPos);
+        }
+        if (scheme == "https") port = 443;
+    } else {
+        host = url;
+        path = "/";
+    }
+
+    if (m_logger) {
+        m_logger->debug("HTTPStreamingClient", "Resolving host: " + host + " port: " + std::to_string(port));
+    }
+
+    // Initialize Winsock
+    WSADATA wsaData;
+    int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (wsaResult != 0) {
+        m_lastError = "WSAStartup failed: " + std::to_string(wsaResult);
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
+    }
+
+    // Resolve host
+    struct addrinfo hints = {}, *result = nullptr;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    std::string portStr = std::to_string(port);
+    int resolveResult = getaddrinfo(host.c_str(), portStr.c_str(), &hints, &result);
+    if (resolveResult != 0) {
+        m_lastError = "getaddrinfo failed: " + std::to_string(resolveResult);
+        WSACleanup();
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
+    }
+
+    // Create socket
+    m_socket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (m_socket == INVALID_SOCKET) {
+        m_lastError = "socket failed: " + std::to_string(WSAGetLastError());
+        freeaddrinfo(result);
+        WSACleanup();
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
+    }
+
+    // Set socket timeout
+    int timeout = 10000; // 10 seconds
+    setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+    setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timeout, sizeof(timeout));
+
+    // Connect
+    int connectResult = connect(m_socket, result->ai_addr, (int)result->ai_addrlen);
+    freeaddrinfo(result);
+    if (connectResult == SOCKET_ERROR) {
+        m_lastError = "connect failed: " + std::to_string(WSAGetLastError());
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
+        WSACleanup();
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
+    }
+
+    if (m_logger) {
+        m_logger->info("HTTPStreamingClient", "Connected to " + host + ":" + std::to_string(port));
+    }
+
+    // Send HTTP POST request
+    std::string request =
+        "POST " + path + " HTTP/1.1\r\n"
+        "Host: " + host + "\r\n"
+        "Connection: keep-alive\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: " + std::to_string(body.size()) + "\r\n"
+        "\r\n" + body;
+
+    int sendResult = send(m_socket, request.c_str(), (int)request.size(), 0);
+    if (sendResult == SOCKET_ERROR) {
+        m_lastError = "send failed: " + std::to_string(WSAGetLastError());
+        closesocket(m_socket);
+        m_socket = INVALID_SOCKET;
+        WSACleanup();
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
+    }
+
+    if (m_logger) {
+        m_logger->debug("HTTPStreamingClient", "Request sent, waiting for response");
+    }
+
     return true;
+#else
+    m_lastError = "Socket streaming not supported on this platform";
+    if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+    return false;
+#endif
 }
-
-bool HTTPStreamingClient::readChunkedResponse() {
+bool HTTPStreamingClient::readChunkedResponse()
+{
+#ifdef _WIN32
     if (m_logger) {
-        m_logger->debug("HTTPStreamingClient", "Reading chunked response");
+        m_logger->debug("HTTPStreamingClient", "Reading chunked response from socket");
     }
-    
-    // Simulate receiving chunks
-    // In real implementation, this would read from socket
-    for (int i = 0; i < 5; i++) {
-        std::string chunk = "simulated chunk " + std::to_string(i) + "\n";
-        m_streamingEngine->feedChunk(chunk);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    if (m_socket == INVALID_SOCKET) {
+        m_lastError = "Socket not connected";
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
     }
-    
+
+    // Read HTTP response status line and headers
+    std::string response;
+    char buffer[4096];
+    bool headersComplete = false;
+    bool chunkedEncoding = false;
+
+    // Read until we have complete headers (double CRLF)
+    while (!headersComplete) {
+        int bytes = recv(m_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytes <= 0) {
+            if (bytes == 0) {
+                m_lastError = "Server closed connection";
+            } else {
+                m_lastError = "recv failed: " + std::to_string(WSAGetLastError());
+            }
+            if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+            return false;
+        }
+        buffer[bytes] = '\0';
+        response.append(buffer, bytes);
+
+        size_t headerEnd = response.find("\r\n\r\n");
+        if (headerEnd != std::string::npos) {
+            headersComplete = true;
+            // Check for chunked transfer encoding
+            std::string headers = response.substr(0, headerEnd);
+            if (headers.find("Transfer-Encoding: chunked") != std::string::npos ||
+                headers.find("transfer-encoding: chunked") != std::string::npos) {
+                chunkedEncoding = true;
+            }
+            // Remove headers from response body
+            response = response.substr(headerEnd + 4);
+        }
+    }
+
+    if (!chunkedEncoding) {
+        m_lastError = "Response is not chunked transfer encoding";
+        if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+        return false;
+    }
+
+    // Read and process chunks
+    while (true) {
+        // Read chunk size line
+        std::string sizeLine;
+        while (true) {
+            // Look for CRLF in existing response data
+            size_t crlf = response.find("\r\n");
+            if (crlf != std::string::npos) {
+                sizeLine = response.substr(0, crlf);
+                response = response.substr(crlf + 2);
+                break;
+            }
+            // Need more data
+            int bytes = recv(m_socket, buffer, sizeof(buffer) - 1, 0);
+            if (bytes <= 0) {
+                m_lastError = "Connection closed while reading chunk size";
+                if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+                return false;
+            }
+            buffer[bytes] = '\0';
+            response.append(buffer, bytes);
+        }
+
+        // Parse chunk size (hex)
+        size_t chunkSize = 0;
+        try {
+            chunkSize = std::stoul(sizeLine, nullptr, 16);
+        } catch (...) {
+            m_lastError = "Invalid chunk size: " + sizeLine;
+            if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+            return false;
+        }
+
+        if (chunkSize == 0) {
+            // Terminal chunk - read trailing CRLF and end
+            if (m_logger) m_logger->debug("HTTPStreamingClient", "Received terminal chunk");
+            break;
+        }
+
+        // Read chunk data
+        while (response.size() < chunkSize) {
+            int bytes = recv(m_socket, buffer, sizeof(buffer) - 1, 0);
+            if (bytes <= 0) {
+                m_lastError = "Connection closed while reading chunk data";
+                if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+                return false;
+            }
+            buffer[bytes] = '\0';
+            response.append(buffer, bytes);
+        }
+
+        std::string chunkData = response.substr(0, chunkSize);
+        response = response.substr(chunkSize);
+
+        // Read trailing CRLF after chunk data
+        while (response.size() < 2) {
+            int bytes = recv(m_socket, buffer, sizeof(buffer) - 1, 0);
+            if (bytes <= 0) {
+                m_lastError = "Connection closed after chunk data";
+                if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+                return false;
+            }
+            buffer[bytes] = '\0';
+            response.append(buffer, bytes);
+        }
+        response = response.substr(2); // Skip CRLF
+
+        // Feed chunk to streaming engine
+        m_streamingEngine->feedChunk(chunkData);
+    }
+
+    // Read trailing headers after terminal chunk (optional)
+    // Consume remaining data until connection closes or we have enough
+    if (m_logger) {
+        m_logger->debug("HTTPStreamingClient", "Chunked response complete");
+    }
+
     return true;
+#else
+    m_lastError = "Socket streaming not supported on this platform";
+    if (m_logger) m_logger->error("HTTPStreamingClient", m_lastError);
+    return false;
+#endif
 }
 
 std::string HTTPStreamingClient::parseChunkSize(const std::string& line) {

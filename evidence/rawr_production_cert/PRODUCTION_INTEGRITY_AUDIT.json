@@ -1,0 +1,54 @@
+{
+  "gate": "RAWR_PRODUCTION_CERT_001",
+  "claimed_pass": true,
+  "verified_gate_receipts_pass": false,
+  "manifest_hash_format_valid": false,
+  "verified_pass": false,
+  "results": [
+    {
+      "Gate": "DEEP2_CONTEXT_SCALING_001",
+      "Passed": true,
+      "Status": "PASS"
+    },
+    {
+      "Gate": "DEEP2_GGUF_LIFECYCLE_001",
+      "Passed": true,
+      "Status": "PASS"
+    },
+    {
+      "Gate": "DEEP2_GPU_DECODE_ROOFLINE_001",
+      "Passed": true,
+      "Status": "PASS"
+    },
+    {
+      "Gate": "DEEP2_MULTIGPU_RESILIENCE_001",
+      "Passed": true,
+      "Status": "PASS"
+    },
+    {
+      "Gate": "DEEP2_SPEC_ACCELERATION_001",
+      "Passed": true,
+      "Status": "PASS"
+    },
+    {
+      "Gate": "DEEP2_SPEC_FUSED_RUNTIME_001",
+      "Passed": true,
+      "Status": "PASS"
+    },
+    {
+      "Gate": "HEXMAG_PARALLEL_WORKTREE_001",
+      "Passed": false,
+      "Status": "FAILED_OR_INVALID"
+    },
+    {
+      "Gate": "RAWR_AUTONOMOUS_REPAIR_E2E_001",
+      "Passed": false,
+      "Status": "FAILED_OR_INVALID"
+    },
+    {
+      "Gate": "RAWR_FULL_RECOVERY_001",
+      "Passed": true,
+      "Status": "PASS"
+    }
+  ]
+}

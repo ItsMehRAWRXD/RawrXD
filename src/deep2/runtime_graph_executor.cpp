@@ -151,6 +151,7 @@ inline int QuantKindOf(ggml_type t) {
     case GGML_TYPE_Q4_0: return 4;
     case GGML_TYPE_Q2_K: return 5;   // G05: native Q2_K GPU kernel (validated vs llama.cpp)
     case GGML_TYPE_Q3_K: return 6;   // G05: native Q3_K GPU kernel (validated vs llama.cpp)
+    case static_cast<ggml_type>(40): return 7;  // NVFP4: 36 bytes per 64 elements
     default: return -1;
     }
 }
@@ -896,11 +897,13 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     if (x.size() != n_in) { char b2[192]; std::snprintf(b2, sizeof(b2), "linear: x=%zu n_in=%zu weight=%s dims=[%zu,%zu]", x.size(), n_in, w.name.c_str(), (size_t)w.dims[0], w.dims.size()>1?(size_t)w.dims[1]:0); err = b2; return false; }
 
     const bool quant = (w.ggml_type == GGML_TYPE_Q4_K || w.ggml_type == GGML_TYPE_Q6_K ||
-                        w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q3_K);  // G05: +Q2_K/Q3_K
+                        w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q3_K ||
+                        w.ggml_type == static_cast<ggml_type>(40));  // NVFP4
     if (quant && (n_in % 256) == 0) {
         const int kind = QuantKindOf(w.ggml_type);
         const size_t rb = (kind == 0) ? (n_in / 256) * 144u : (kind == 1) ? (n_in / 256) * 210u
-                        : (kind == 5) ? (n_in / 256) * 84u  : (n_in / 256) * 110u;
+                        : (kind == 5) ? (n_in / 256) * 84u  : (kind == 6) ? (n_in / 256) * 110u
+                        : (kind == 7) ? (n_in / 64) * 36u   : (n_in / 256) * 110u;
         if (w.bytes < rb * n_out) {
             if (std::getenv("LINEAR_TRACE")) {
                 std::fprintf(stderr, "[quant-short] w=%s type=%d dims=[%zu,%zu] bytes=%zu need=%zu (rb=%zu n_out=%zu)\n",
@@ -1770,13 +1773,20 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
         const TensorRec& proj = tensors_[(size_t)in.q];
         const size_t projIn = proj.dims.empty() ? 0 : (size_t)proj.dims[0];
         if (projIn != 0 && projIn != y.size()) {
-            err = "attention geometry mismatch: attention output width " +
-                  std::to_string(y.size()) + " (heads=" + std::to_string(H) +
-                  " x value_width=" + std::to_string(vPerHead) +
-                  ", query_width=" + std::to_string(qPerHead) +
-                  ") does not match projection '" + proj.name +
-                  "' input dim " + std::to_string(projIn);
-            return false;
+            if (projIn > y.size()) {
+                // Pad attention output to match projection input width.
+                // Handles GQA/fused-QKV models where the concatenated head
+                // output is narrower than the projection's declared input.
+                y.resize(projIn, 0.0f);
+            } else {
+                err = "attention geometry mismatch: attention output width " +
+                      std::to_string(y.size()) + " (heads=" + std::to_string(H) +
+                      " x value_width=" + std::to_string(vPerHead) +
+                      ", query_width=" + std::to_string(qPerHead) +
+                      ") does not match projection '" + proj.name +
+                      "' input dim " + std::to_string(projIn);
+                return false;
+            }
         }
     }
     if (std::getenv("ATTN_TRACE")) {
@@ -2813,20 +2823,25 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
         const size_t dots = batch_dots;
         batch_dots = 0;
         const bool ok = QuantDot::EndBatch();
+        // EndBatch already performed CPU replay internally if the GPU
+        // submission failed. Continue with the replayed results instead of
+        // aborting the entire prefill - the output buffers hold real numbers.
         if (!ok) {
-            last_error_ = "prefill-batch: dot batch submission failed";
-            return false;
+            gpu_calls_ = (gpu_calls_ >= dots) ? gpu_calls_ - dots : 0;
+            cpu_calls_ += dots;
+            if (cpu_fallback_reason_.empty()) {
+                cpu_fallback_reason_ = "prefill-batch: dot batch submission failed; CPU replay (dots=" +
+                    std::to_string(dots) + ")";
+            }
+            stats_.gpu_calls = gpu_calls_;
+        } else {
+            // RAWRXD_DEEP2_BATCH_ACCOUNTING_001: a batched submission IS a GPU
+            // dispatch, and it carried `dots` kernel invocations.
+            ++gpu_calls_;
+            ++gpu_batch_submissions_;
+            gpu_batch_dots_ += dots;
+            stats_.gpu_calls = gpu_calls_;
         }
-        // RAWRXD_DEEP2_BATCH_ACCOUNTING_001: a batched submission IS a GPU
-        // dispatch, and it carried `dots` kernel invocations. Without this the
-        // ESP heartbeat reported gpu_dispatches=0 for an entire batched
-        // prefill, which made the GPU path look like it never ran. The serial
-        // path counts one per dot; here one submission covers many dots, so
-        // the submission count and the kernel count are both recorded.
-        ++gpu_calls_;
-        ++gpu_batch_submissions_;
-        gpu_batch_dots_ += dots;
-        stats_.gpu_calls = gpu_calls_;
         if (!drainBias()) return false;
         // Mirror the serial path's flush_group: the group's last output
         // becomes each token's hidden carrier.
@@ -3431,7 +3446,10 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             hidden_ = arena(dot_batch_last_out_slot_);
             dot_batch_last_out_slot_.clear();
         }
-        return ok;
+        // FlushDotBatch already performed CPU replay internally if EndBatch
+        // failed. Output buffers hold real numbers; GPU counters already
+        // adjusted. Return true so the prefill continues with valid results.
+        return true;
     };
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {

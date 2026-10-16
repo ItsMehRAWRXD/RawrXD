@@ -31,6 +31,10 @@
 #include <condition_variable>
 #include <iostream>
 #include <chrono>
+#include <cstdlib>
+
+// Deep2 inference backend
+#include "Deep2Engine.h"
 
 /**
  * Production LLM Model Caller
@@ -396,24 +400,58 @@ private:
      */
     static std::string callModel(const std::string& prompt, const GenerationParams& params) {
         try {
-            // TODO: Implement actual model calls
-            // 
-            // Option 1: Local GGUF (GGML)
-            // std::string response = inferenceEngine.generate(prompt, params);
-            //
-            // Option 2: Ollama API
-            // auto response = ollamaClient.generate("llama2", prompt, params);
-            //
-            // Option 3: OpenAI API
-            // auto response = openaiClient.createCompletion(
-            //     "gpt-3.5-turbo",
-            //     prompt,
-            //     { "temperature": params.temperature, "max_tokens": params.max_tokens }
-            // );
+            // Deep2 inference engine via shared service
+            static bool serviceInitialized = false;
+            static bool modelLoaded = false;
 
-            // Placeholder: return mock response
-            std::string response = "std::cout << \"Hello, World!\" << std::endl;";
-            return response;
+            if (!serviceInitialized) {
+                Deep2::EngineConfig cfg;
+                cfg.numThreads = std::thread::hardware_concurrency();
+                cfg.useKVCache = true;
+                cfg.useThreadPool = true;
+                
+                if (!RawrXD::Deep2InferenceService::instance().initialize(cfg)) {
+                    std::cerr << "❌ Failed to initialize Deep2 inference service" << std::endl;
+                    return "";
+                }
+                serviceInitialized = true;
+            }
+
+            if (!modelLoaded) {
+                const char* modelPathEnv = std::getenv("RAWRXD_MODEL_PATH");
+                if (!modelPathEnv || std::string(modelPathEnv).empty()) {
+                    std::cerr << "❌ RAWRXD_MODEL_PATH not set - cannot load model" << std::endl;
+                    return "";
+                }
+                
+                if (!RawrXD::Deep2InferenceService::instance().loadModel(modelPathEnv)) {
+                    std::cerr << "❌ Failed to load model: " << modelPathEnv << std::endl;
+                    return "";
+                }
+                modelLoaded = true;
+                std::cout << "✅ Model loaded via shared service: " << modelPathEnv << std::endl;
+            }
+
+            // Configure generation options
+            Deep2::GenerationOptions opts;
+            opts.maxTokens = static_cast<uint32_t>(params.max_tokens);
+            opts.temperature = params.temperature;
+            opts.topP = params.top_p;
+            opts.topK = static_cast<uint32_t>(params.top_k);
+            opts.seed = 0;
+            
+            RawrXD::Deep2InferenceService::instance().configureGeneration(opts);
+            
+            // Generate real output via shared Deep2 engine
+            std::string result = RawrXD::Deep2InferenceService::instance().generateText(
+                prompt, static_cast<size_t>(params.max_tokens));
+            
+            if (result.empty()) {
+                std::cerr << "❌ Model returned empty response" << std::endl;
+                return "";
+            }
+            
+            return result;
 
         } catch (const std::exception& e) {
             std::cerr << "❌ Model call error: " << e.what() << std::endl;

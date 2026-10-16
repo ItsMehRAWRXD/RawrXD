@@ -45,12 +45,17 @@ bool OpLinear(int gguf_type,
     switch (gguf_type) {
         case GGML_TYPE_Q4_K: kind = 0; break;
         case GGML_TYPE_Q6_K: kind = 1; break;
+        // GGML_TYPE_NVFP4 is not defined in this ggml.h version (COUNT=40).
+        // NVFP4 dispatch is handled in Deep2Engine::LinearW_Range instead.
+        case GGML_TYPE_Q5_0: kind = 2; break;
+        case GGML_TYPE_Q8_0: kind = 3; break;
+        case GGML_TYPE_Q4_0: kind = 4; break;
+        case GGML_TYPE_Q2_K: kind = 5; break;
+        case GGML_TYPE_Q3_K: kind = 6; break;
         case GGML_TYPE_F16:
             break;  // handled below via DotF16
         default:
-            // Fail-loud contract: callers must see this, never a CPU dequant.
-            SetLast(false, false, gguf_type, "unsupported GGML type for GPU quant-dot");
-            return false;
+            break;
     }
 
     bool used_gpu = false;

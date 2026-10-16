@@ -1,23 +1,15 @@
 // universal_model_router.h - Unified Interface for Local GGUF + Cloud Models
+// Pure Windows native implementation (no Qt dependency)
 #ifndef UNIVERSAL_MODEL_ROUTER_H
 #define UNIVERSAL_MODEL_ROUTER_H
 
-#include <QString>
-#include <QObject>
-#include <QHash>
-#include <QMap>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
+#include <string>
+#include <map>
+#include <vector>
 #include <memory>
 #include <functional>
 #include <stdexcept>
-
-class QuantizationAwareInferenceEngine;
-struct QuantizationEngineNoopDeleter {
-    void operator()(QuantizationAwareInferenceEngine*) const noexcept {}
-};
-class CloudApiClient;
+#include <cstdint>
 
 // Model backend enumeration
 enum class ModelBackend {
@@ -28,88 +20,69 @@ enum class ModelBackend {
     GOOGLE,            // Gemini (Google)
     MOONSHOT,          // Kimi (Moonshot)
     AZURE_OPENAI,      // OpenAI through Azure
-    AWS_BEDROCK        // Claude/Mistral through AWS
+    AWS_BEDROCK,       // Claude/Mistral through AWS
+    KILO_GATEWAY,      // Kilo Gateway (OpenAI-compatible, free catalog)
+    OPENROUTER,        // OpenRouter (OpenAI-compatible, free models)
 };
 
 // Model configuration structure
 struct ModelConfig {
     ModelBackend backend;
-    QString model_id;                               // Model identifier (e.g., "gpt-4", "claude-3-opus")
-    QString api_key;                                // API key (may be empty for local models)
-    QString endpoint;                               // Custom endpoint URL
-    QMap<QString, QString> parameters;              // Additional parameters
-    QString description;                            // Human-readable description
-    QJsonObject full_config;                        // Full JSON configuration
-    
+    std::string model_id;                               // Model identifier
+    std::string api_key;                                // API key
+    std::string endpoint;                               // Custom endpoint URL
+    std::map<std::string, std::string> parameters;      // Additional parameters
+    std::string description;                            // Human-readable description
+
     // Validation
     bool isValid() const {
-        if (model_id.isEmpty()) return false;
-        
+        if (model_id.empty()) return false;
+
         // Cloud models require API key
-        if (backend != ModelBackend::LOCAL_GGUF && 
-            backend != ModelBackend::OLLAMA_LOCAL && 
-            api_key.isEmpty()) {
+        if (backend != ModelBackend::LOCAL_GGUF &&
+            backend != ModelBackend::OLLAMA_LOCAL &&
+            api_key.empty()) {
             return false;
         }
-        
+
         return true;
     }
 };
 
-// Streaming callback type
-using StreamCallback = std::function<void(const QString&)>;
-
-// Error callback type
-using ErrorCallback = std::function<void(const QString&)>;
+// Cloud API Client forward declaration
+class CloudApiClient;
 
 // Universal Model Router - Routes requests to appropriate backend
-class UniversalModelRouter : public QObject {
-    Q_OBJECT
-
+class UniversalModelRouter {
 public:
-    explicit UniversalModelRouter(QObject* parent = nullptr);
+    explicit UniversalModelRouter();
     ~UniversalModelRouter();
 
     // Model registration and management
-    void registerModel(const QString& model_name, const ModelConfig& config);
-    void unregisterModel(const QString& model_name);
-    ModelConfig getModelConfig(const QString& model_name) const;
-    QStringList getAvailableModels() const;
-    QStringList getModelsForBackend(ModelBackend backend) const;
-    
+    void registerModel(const std::string& model_name, const ModelConfig& config);
+    void unregisterModel(const std::string& model_name);
+    ModelConfig getModelConfig(const std::string& model_name) const;
+    std::vector<std::string> getAvailableModels() const;
+    std::vector<std::string> getModelsForBackend(ModelBackend backend) const;
+
     // Model configuration loading
-    bool loadConfigFromFile(const QString& config_file_path);
-    bool loadConfigFromJson(const QJsonObject& config_json);
-    bool saveConfigToFile(const QString& config_file_path);
-    
+    bool loadConfigFromFile(const std::string& config_file_path);
+    bool saveConfigToFile(const std::string& config_file_path);
+
     // Backend initialization
-    void initializeLocalEngine(const QString& engine_config_path);
+    void initializeLocalEngine();
     void initializeCloudClient();
-    
+
     // Direct model access
-    ModelConfig getOrLoadModel(const QString& model_name);
-    bool isModelAvailable(const QString& model_name) const;
-    ModelBackend getModelBackend(const QString& model_name) const;
-    
+    ModelConfig getOrLoadModel(const std::string& model_name);
+    bool isModelAvailable(const std::string& model_name) const;
+    ModelBackend getModelBackend(const std::string& model_name) const;
+
     // Model info retrieval
-    QString getModelDescription(const QString& model_name) const;
-    QJsonObject getModelInfo(const QString& model_name) const;
-
-signals:
-    void modelRegistered(const QString& model_name, ModelBackend backend);
-    void modelUnregistered(const QString& model_name);
-    void configLoaded(int model_count);
-    void configSaved();
-    void routerError(const QString& error_message);
-
-private slots:
-    void onLocalEngineInitialized();
-    void onCloudClientInitialized();
-    void onEngineError(const QString& error);
+    std::string getModelDescription(const std::string& model_name) const;
 
 private:
-    QMap<QString, ModelConfig> model_registry;
-    std::unique_ptr<QuantizationAwareInferenceEngine, QuantizationEngineNoopDeleter> local_engine;
+    std::map<std::string, ModelConfig> model_registry;
     std::unique_ptr<CloudApiClient> cloud_client;
     bool local_engine_ready;
     bool cloud_client_ready;

@@ -428,7 +428,9 @@ foreach (target ggml-base ggml)
     if(NOT MSVC)
         target_compile_features   (${target} PRIVATE c_std_11 cxx_std_17) # don't bump
     else()
-        target_compile_options   (${target} PRIVATE /std:c++17 /std:c11)
+        target_compile_options   (${target} PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/std:c++17>
+            $<$<COMPILE_LANGUAGE:C>:/std:c11>)
     endif()
 endforeach()
 

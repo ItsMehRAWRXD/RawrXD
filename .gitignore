@@ -84,6 +84,7 @@ RawrXD-ModelLoader/build/
 RawrXD-ModelLoader/build-arm64/
 build/
 build-*/
+build_ninja/
 
 # ---- evaluation harness artifacts (rebuilt binaries + intermediates) ----
 /_eval_harness/
@@ -216,3 +217,10 @@ tools/inhouse/*/*/obj/
 # upstream commit is recorded in
 # evidence/deep2_gate_a/ref_llamacpp_commit.txt instead of vendoring it. ----
 /tmp_llama_ref/
+
+# Local build tree (machine-specific, must never be tracked)
+build_ninja/
+
+__run_output*.txt
+build_qt_free/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp
+

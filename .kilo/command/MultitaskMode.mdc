@@ -1,0 +1,45 @@
+---
+description: Multitask mode — coordinate multiple independent task tracks with one active continue-ensure worker per task
+agent: code
+---
+# MultitaskMode
+
+Multitask mode for the RawrXD repository. Governs how multiple task tracks are tracked and dispatched while respecting the continue-ensure invariants.
+
+## Invariants (always in force)
+
+- `WORKER_COUNT_MAX=1` per task — a single task may not have more than one active continue-ensure worker.
+- `PARENT_EXECUTES_DELEGATED_WORK=0` — the parent stays a passive coordinator; it never performs delegated engineering work.
+- `PROMOTE=0`, `TIP_CLIMB=HOLD`.
+- `MOTD_ACK` must be re-validated each turn (bound to session_id, turn_id, motd hash) before gated operations.
+
+## Mode behavior
+
+1. Each task track keeps its own ownership record: task_id, parent_session_id, worker_id, repository, baseline_commit, task_scope, allowed_paths, allowed_tools, expected_deliverables, evidence_directory, completion_criteria.
+2. A worker cannot silently expand its authority beyond its declared task_scope and allowed_paths.
+3. Only one continue-ensure worker may be active across the entire task at any time (WORKER_COUNT_MAX=1 global for continue-ensure tasks).
+4. When a trigger fires for a task with an existing active worker, reuse that worker; do not dispatch a duplicate.
+5. When no worker exists, dispatch exactly one and require a real `worker_id` acknowledgment before the parent turn ends.
+6. Persist a handoff receipt for every dispatch.
+7. Cross-track dependencies must be declared explicitly; implicit coupling between tracks is forbidden.
+
+## Handoff output (continue-ensure tasks only)
+
+```
+CONTINUE_ENSURE=DISPATCHED
+BACKGROUND_WORKERS=1
+PARENT_MODE=PASSIVE_COORDINATOR
+PARENT_EXECUTES_DELEGATED_WORK=0
+MOTD_ACK=1
+TASK_ID=<actual task id>
+WORKER_ID=<actual worker id>
+HANDOFF_STATUS=ACKNOWLEDGED
+```
+
+## Forbidden
+
+- Character roleplay or persona improvisation
+- Claiming an unconfirmed worker dispatch
+- Multiple active workers for the same continue-ensure task
+- Parent execution of delegated work
+- Treating worker handoff as task completion

@@ -2195,7 +2195,7 @@ endif()
 # inference -> tool-call -> real execution -> observation -> resumed inference
 # loop over the native Deep2 executor, and prints a tool receipt (every
 # invocation, its observation size, and the final verdict) as its conclusion.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp")
     add_executable(deep2_agentic_loop
         tools/deep2_agentic_loop.cpp
         # Logf_() is defined exactly once, in Deep2Log.cpp, for this target too.
@@ -2212,6 +2212,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AN
         src/utils/input_sanitizer.cpp
         src/utils/secure_buffer.cpp
         src/utils/crash_handler.cpp
+        # Cloud API client (Qt-free, WinHTTP native)
+        src/cloud_api_client.cpp
+        src/universal_model_router.cpp
     )
     target_include_directories(deep2_agentic_loop PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -2246,6 +2249,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AN
     if(TARGET deep2_engine_lib)
         target_link_libraries(deep2_agentic_loop PRIVATE deep2_engine_lib)
         target_compile_definitions(deep2_agentic_loop PRIVATE HAVE_DEEP2_ENGINE=1)
+    endif()
+    # Link WinHTTP for cloud API client
+    if(MSVC)
+        target_link_libraries(deep2_agentic_loop PRIVATE winhttp.lib)
     endif()
     if(MSVC)
         target_compile_options(deep2_agentic_loop PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
@@ -2433,8 +2440,11 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
         ${CMAKE_SOURCE_DIR}/src/deep2
         ${CMAKE_SOURCE_DIR}/include
     )
-if(TARGET ggml_interface)
-        target_link_libraries(rawrxd_gpu_compute PUBLIC ggml_interface)
+    if(TARGET ggml_interface)
+            target_link_libraries(rawrxd_gpu_compute PUBLIC ggml_interface)
+        endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(rawrxd_gpu_compute PUBLIC Vulkan::Vulkan)
     endif()
     if(MSVC)
         target_compile_options(rawrxd_gpu_compute PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -2477,6 +2487,7 @@ if(TARGET ggml_interface)
             ${CMAKE_SOURCE_DIR}/src/deep2/CompressedKVCache.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/NVMeStream.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/ResidencyManager.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/VwaResolveBlocks.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/CycloneScheduler.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/SlidingWindowEngine.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/WarmupScheduler.cpp
@@ -2526,6 +2537,7 @@ if(TARGET ggml_interface)
             ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/ExecutionPolicy.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/ExecutionPolicyApply.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/ExecutionPolicyStore.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/PlacementPlan.cpp
             # Ollama blob ingestion (declared in src/deep2/ollama_blob_parser.h)
             ${CMAKE_SOURCE_DIR}/src/deep2/ollama_blob_parser.cpp
             # Deep2Engine's own out-of-class members
@@ -2598,6 +2610,8 @@ endforeach()
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
+            ${CMAKE_SOURCE_DIR}/src/agentic/AgentOrchestrator.cpp
+            ${CMAKE_SOURCE_DIR}/src/agentic/tool_call_parser.cpp
             # Deep2Log.cpp defines Logf_() EXACTLY ONCE and is shared by
             # Deep2Engine.cpp and tools/deep2_agentic_loop.cpp. Every target
             # that compiles either of those needs this in the link, or Logf_
@@ -2635,18 +2649,15 @@ endforeach()
 
         # Main engine executable: contains the entry point and core engine logic,
         # links against the subsystem library.
-        # DISABLED: No legitimate entry point exists yet. Deep2Engine_dummy_main.cpp
-        # is a fabricated stub (int main() { return 0; }). Enable when a real
-        # entry point implementation is available.
-        # add_executable(rawrxd_deep2_engine
-        #     ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_dummy_main.cpp
-        # )
-        # target_link_libraries(rawrxd_deep2_engine PRIVATE deep2_engine_lib)
-        # set_target_properties(rawrxd_deep2_engine PROPERTIES
-        #     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-        # )
+        add_executable(rawrxd_deep2_engine
+            ${CMAKE_SOURCE_DIR}/src/deep2/engine_main.cpp
+        )
+        target_link_libraries(rawrxd_deep2_engine PRIVATE deep2_engine_lib)
+        set_target_properties(rawrxd_deep2_engine PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
 
-message(STATUS "deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable disabled pending real entry point)")
+message(STATUS "deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)")
     endif()
 endif()
 
@@ -4471,7 +4482,10 @@ endif()
 #
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
-        src/deep2/bolt_stubs.cpp
+        src/project_wizard/project_spec.cpp
+        src/project_wizard/project_state_manager.cpp
+        src/project_wizard/project_wizard.cpp
+        src/project_wizard/project_workflow.cpp
     )
     target_link_libraries(RawrXD-CLI-V2 PRIVATE
         rawrxd_agentic_backend
@@ -4673,6 +4687,24 @@ else()
     add_compile_definitions(RAWRXD_SECURITY_DISABLED=1)
     message(WARNING "rawrxd_security DISABLED: input validation and crash containment "
                     "will NOT be linked. Do not ship this configuration.")
+endif()
+
+# ============================================================
+# HEADLESS DEEP2 INFERENCE TEST
+# ============================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/test_deep2_inference.cpp" AND TARGET deep2_engine_lib)
+    add_executable(test_deep2_inference test_deep2_inference.cpp)
+    target_include_directories(test_deep2_inference PRIVATE
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/src"
+        "${CMAKE_SOURCE_DIR}/src/deep2")
+    target_link_libraries(test_deep2_inference PRIVATE deep2_engine_lib ggml_interface rawrxd_agentic_backend rawrxd_security snap_process_guard)
+    target_compile_options(test_deep2_inference PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    set_target_properties(test_deep2_inference PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    message(STATUS "test_deep2_inference enabled (headless Deep2 inference harness)")
+else()
+    message(STATUS "test_deep2_inference EXCLUDED: source or deep2_engine_lib unavailable")
 endif()
 
 # ============================================================

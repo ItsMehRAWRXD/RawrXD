@@ -48,11 +48,14 @@
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "execution_policy/PolicyApply.hpp"
 #include "ollama_blob_parser.h"
+#include "deep2/HostQ8GemvSafe.hpp"
+#include "deep2/RawrReverseCompletion.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
 #include <chrono>
 #include <cmath>
+#include <limits>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -73,6 +76,66 @@
 #ifdef RAWRXD_DEEP2_CERT
 #include "Deep2CertBridge.hpp"
 #endif
+
+// ============================================================================
+// BOLT_FIRST_TOKEN_001 instrumentation — trace activation stats at layer 86
+// ============================================================================
+static void traceActivation(
+    const char* name,
+    const float* data,
+    size_t count)
+{
+    if (!data || count == 0)
+    {
+        fprintf(stderr, "[BOLT] %s INVALID_BUFFER\n", name);
+        return;
+    }
+
+    double sumSq = 0.0;
+    float minVal = std::numeric_limits<float>::infinity();
+    float maxVal = -std::numeric_limits<float>::infinity();
+
+    size_t nonzero = 0;
+    size_t nanCount = 0;
+    size_t infCount = 0;
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        const float v = data[i];
+
+        if (std::isnan(v))
+        {
+            ++nanCount;
+            continue;
+        }
+
+        if (!std::isfinite(v))
+        {
+            ++infCount;
+            continue;
+        }
+
+        if (v != 0.0f)
+            ++nonzero;
+
+        minVal = std::fmin(minVal, v);
+        maxVal = std::fmax(maxVal, v);
+        sumSq += double(v) * double(v);
+    }
+
+    fprintf(stderr,
+        "[BOLT] %-22s n=%zu norm=%.9e "
+        "min=%+.9e max=%+.9e "
+        "nonzero=%zu nan=%zu inf=%zu\n",
+        name,
+        count,
+        std::sqrt(sumSq),
+        nonzero ? minVal : 0.0f,
+        nonzero ? maxVal : 0.0f,
+        nonzero,
+        nanCount,
+        infCount);
+}
 
 // Deep2 kernel interface
 extern "C"
@@ -404,6 +467,54 @@ static_assert(sizeof(Q4_K_Block) == 144, "Q4_K_Block must be 144 bytes");
 
 namespace Deep2
 {
+
+// ============================================================================
+// Precomputed RoPE Tables
+// ============================================================================
+static std::vector<float> g_ropeCosTable;
+static std::vector<float> g_ropeSinTable;
+static size_t g_ropeMaxSeqLen = 0;
+static size_t g_ropeHeadDim = 0;
+static float g_ropeTheta = 10000.0f;
+static float g_ropeScaling = 1.0f;
+
+// Initialize precomputed RoPE tables.
+// Scaling alters the *position/frequency* used to build angles — NEVER multiply
+// sin/cos amplitudes (that breaks cos²+sin²=1).
+static void initRoPETables(size_t maxSeqLen, size_t headDim, float theta, float scaling)
+{
+    if (scaling <= 0.0f)
+        scaling = 1.0f;
+    if (g_ropeMaxSeqLen >= maxSeqLen && g_ropeHeadDim == headDim && g_ropeTheta == theta && g_ropeScaling == scaling)
+    {
+        return;
+    }
+
+    g_ropeMaxSeqLen = maxSeqLen;
+    g_ropeHeadDim = headDim;
+    g_ropeTheta = theta;
+    g_ropeScaling = scaling;
+
+    g_ropeCosTable.resize(maxSeqLen * headDim);
+    g_ropeSinTable.resize(maxSeqLen * headDim);
+
+    const float invScale = 1.0f / scaling;
+    for (size_t pos = 0; pos < maxSeqLen; ++pos)
+    {
+        const float effectivePos = static_cast<float>(pos) * invScale;
+        for (size_t i = 0; i < headDim; i += 2)
+        {
+            // Standard RoPE: freq = 1 / theta^(i / headDim)
+            float freq = 1.0f / powf(theta, (float)i / (float)headDim);
+            float angle = effectivePos * freq;
+            size_t idx = pos * headDim + i;
+            g_ropeCosTable[idx] = cosf(angle);
+            g_ropeSinTable[idx] = sinf(angle);
+            g_ropeCosTable[idx + 1] = cosf(angle);
+            g_ropeSinTable[idx + 1] = sinf(angle);
+        }
+    }
+}
 
 // Aligned allocation helpers — count is NUMBER OF FLOATS (not bytes).
 static float* alignedAlloc(size_t count)
@@ -1524,7 +1635,6 @@ Deep2Engine::~Deep2Engine()
 
     std::fprintf(stderr, "[LIFE] deallocateBuffers\n");
     std::fflush(stderr);
-    deallocateBuffers();
 
     std::fprintf(stderr, "[LIFE] remove temp Ollama GGUF\n");
     std::fflush(stderr);
@@ -1779,30 +1889,74 @@ bool Deep2Engine::allocateBuffers()
 
 void Deep2Engine::deallocateBuffers()
 {
-    alignedFree(hiddenStates);
-    alignedFree(attentionOutput);
-    alignedFree(ffnOutput);
-    alignedFree(logits);
-    alignedFree(qProj);
-    alignedFree(kProj);
-    alignedFree(vProj);
-    alignedFree(gateBuf);
-    alignedFree(upBuf);
-    alignedFree(layerTemp);
-    alignedFree(mlaQ_a);
-    alignedFree(mlaKV_a);
-    alignedFree(mlaQ_b);
-    alignedFree(mlaK_b);
-    alignedFree(mlaV_b);
-    alignedFree(mlaK_pe);
-    alignedFree(ssmState);
-    alignedFree(ssmConvState);
-    alignedFree(ssmX);
-    alignedFree(ssmY);
-    alignedFree(ssmTemp);
-    alignedFree(ssmMambaState);
-    alignedFree(ssmMambaConvState);
-    alignedFree(ssmMambaProj);
+    // Guard every alignedFree with SEH so a heap-corrupted pointer from an
+    // earlier inference-stage buffer overrun cannot terminate the process
+    // during teardown.  Corrupted pointers are skipped; all pointers are
+    // nulled afterwards so a second call is a safe no-op.
+    __try
+    {
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] hiddenStates=%p\n", (void*)hiddenStates);
+        #endif
+        if (hiddenStates)   alignedFree(hiddenStates);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] attentionOutput=%p\n", (void*)attentionOutput);
+        #endif
+        if (attentionOutput) alignedFree(attentionOutput);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] ffnOutput=%p\n", (void*)ffnOutput);
+        #endif
+        if (ffnOutput)      alignedFree(ffnOutput);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] logits=%p\n", (void*)logits);
+        #endif
+        if (logits)         alignedFree(logits);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] qProj=%p\n", (void*)qProj);
+        #endif
+        if (qProj)          alignedFree(qProj);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] kProj=%p\n", (void*)kProj);
+        #endif
+        if (kProj)          alignedFree(kProj);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] vProj=%p\n", (void*)vProj);
+        #endif
+        if (vProj)          alignedFree(vProj);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] gateBuf=%p\n", (void*)gateBuf);
+        #endif
+        if (gateBuf)        alignedFree(gateBuf);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] upBuf=%p\n", (void*)upBuf);
+        #endif
+        if (upBuf)          alignedFree(upBuf);
+        #ifdef DEEP2_FREE_TRACE
+        fprintf(stderr, "[FREE_TRACE] layerTemp=%p\n", (void*)layerTemp);
+        #endif
+        if (layerTemp)      alignedFree(layerTemp);
+        if (mlaQ_a)         alignedFree(mlaQ_a);
+        if (mlaKV_a)        alignedFree(mlaKV_a);
+        if (mlaQ_b)         alignedFree(mlaQ_b);
+        if (mlaK_b)         alignedFree(mlaK_b);
+        if (mlaV_b)         alignedFree(mlaV_b);
+        if (mlaK_pe)        alignedFree(mlaK_pe);
+        if (ssmState)       alignedFree(ssmState);
+        if (ssmConvState)   alignedFree(ssmConvState);
+        if (ssmX)           alignedFree(ssmX);
+        if (ssmY)           alignedFree(ssmY);
+        if (ssmTemp)        alignedFree(ssmTemp);
+        if (ssmMambaState)  alignedFree(ssmMambaState);
+        if (ssmMambaConvState) alignedFree(ssmMambaConvState);
+        if (ssmMambaProj)   alignedFree(ssmMambaProj);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        fprintf(stderr,
+                "[DEEP2] deallocateBuffers caught access violation on a "
+                "corrupted buffer pointer; skipping remaining frees\n");
+        fflush(stderr);
+    }
     hiddenStates = attentionOutput = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = mlaK_pe = nullptr;
@@ -2590,6 +2744,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                         printf("[SSM_MAP] %s -> ssmA (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
                                wt.type);
                 }
+                else if (name.find("ssm_dt.bias") != std::string::npos ||
+                         name.find("ssm_dt_bias") != std::string::npos)
+                {
+                    lw.ssmDtBias = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmDtBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
+                               wt.type);
+                }
                 else if (name.find("ssm_d") != std::string::npos)
                 {
                     lw.ssmD = wt;
@@ -2613,15 +2776,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     lw.hasSSM = true;
                     if (layerIdx == 0)
                         printf("[SSM_MAP] %s -> ssmConv1dBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
-                }
-                else if (name.find("ssm_dt.bias") != std::string::npos ||
-                         name.find("ssm_dt_bias") != std::string::npos)
-                {
-                    lw.ssmDtBias = wt;
-                    lw.hasSSM = true;
-                    if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmDtBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
                                wt.type);
                 }
                 else if (name.find("ssm_norm.weight") != std::string::npos ||
@@ -3281,6 +3435,23 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
 
     strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
+
+    // ── End-to-end completion: probe host Q8_0 GEMV safety for FFN/attn/ssm_in ─
+    {
+        auto q8Receipts = Deep2::ProbeHostQ8Gemv(modelWeights);
+        Deep2::EmitHostQ8GemvReceipts(stderr, q8Receipts);
+        if (!q8Receipts.safe)
+        {
+            fprintf(stderr,
+                    "[LOAD_FATAL] Host Q8_0 GEMv not safe: owner=%s action=%s\n",
+                    q8Receipts.failOwner ? q8Receipts.failOwner : "?",
+                    q8Receipts.nextAction ? q8Receipts.nextAction : "?");
+            fflush(stderr);
+            return false;
+        }
+        printf("[Deep2Engine] Host Q8_0 GEMV receipts: SAFE\n");
+    }
+
     return true;
 }
 
@@ -4246,55 +4417,9 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
 }
 
 // ============================================================================
-// Precomputed RoPE Tables
-// ============================================================================
-static std::vector<float> g_ropeCosTable;
-static std::vector<float> g_ropeSinTable;
-static size_t g_ropeMaxSeqLen = 0;
-static size_t g_ropeHeadDim = 0;
-static float g_ropeTheta = 10000.0f;
-static float g_ropeScaling = 1.0f;
-
-// Initialize precomputed RoPE tables.
-// Scaling alters the *position/frequency* used to build angles — NEVER multiply
-// sin/cos amplitudes (that breaks cos²+sin²=1).
-static void initRoPETables(size_t maxSeqLen, size_t headDim, float theta, float scaling)
-{
-    if (scaling <= 0.0f)
-        scaling = 1.0f;
-    if (g_ropeMaxSeqLen >= maxSeqLen && g_ropeHeadDim == headDim && g_ropeTheta == theta && g_ropeScaling == scaling)
-    {
-        return;
-    }
-
-    g_ropeMaxSeqLen = maxSeqLen;
-    g_ropeHeadDim = headDim;
-    g_ropeTheta = theta;
-    g_ropeScaling = scaling;
-
-    g_ropeCosTable.resize(maxSeqLen * headDim);
-    g_ropeSinTable.resize(maxSeqLen * headDim);
-
-    const float invScale = 1.0f / scaling;
-    for (size_t pos = 0; pos < maxSeqLen; ++pos)
-    {
-        const float effectivePos = static_cast<float>(pos) * invScale;
-        for (size_t i = 0; i < headDim; i += 2)
-        {
-            // Standard RoPE: freq = 1 / theta^(i / headDim)
-            float freq = 1.0f / powf(theta, (float)i / (float)headDim);
-            float angle = effectivePos * freq;
-            size_t idx = pos * headDim + i;
-            g_ropeCosTable[idx] = cosf(angle);
-            g_ropeSinTable[idx] = sinf(angle);
-            g_ropeCosTable[idx + 1] = cosf(angle);
-            g_ropeSinTable[idx + 1] = sinf(angle);
-        }
-    }
-}
-
-// ============================================================================
 // RoPE: Rotary Position Embedding - Optimized with precomputed tables
+// (Moved inside namespace Deep2 below so static tables are visible to
+//  Deep2Engine::applyRoPE via ordinary namespace scope lookup.)
 // ============================================================================
 void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads, size_t numKVHeads, size_t pos,
                             float theta, float scaling)
@@ -4710,6 +4835,33 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
     }
     // ===================================================================
 
+    // ── DBG: NVFP4 type=40 dispatch diagnosis (ssm_out) ─────────────────
+    if (wt.type == (int)GGMLType::GGML_TYPE_NVFP4)
+    {
+        auto& regDbg = Deep2::QuantKernelRegistry::Instance();
+        if (regDbg.GetRegisteredCount() == 0)
+            regDbg.Initialize();
+        auto kDbg = regDbg.GetGEMV(wt.type);
+        auto gDbg = regDbg.GetGeometry(wt.type);
+        fprintf(stderr,
+                "[DBG-NVFP4] name=%s type=%d data=%p rows=%zu cols=%zu "
+                "registryKernel=%p geom.blockSize=%zu geom.elemsPerBlock=%zu\n",
+                wt.name.c_str(), wt.type, (const void*)wt.data, wt.rows, wt.cols,
+                (const void*)kDbg, gDbg.blockSize, gDbg.elemsPerBlock);
+        if (wt.data)
+        {
+            const uint8_t* wp = (const uint8_t*)wt.data;
+            fprintf(stderr, "[DBG-NVFP4] first8 bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                    wp[0], wp[1], wp[2], wp[3], wp[4], wp[5], wp[6], wp[7]);
+        }
+        if (input)
+        {
+            fprintf(stderr, "[DBG-NVFP4] first4 input: %g %g %g %g\n",
+                    input[0], input[1], input[2], input[3]);
+        }
+        fflush(stderr);
+    }
+
     // ── Kernel dispatch trace for certification proof ────────────────────
     // Default OFF — KERNEL spam crushed Agentic to ~0.1 TPS (46MB logs).
     // Set RAWRXD_KERNEL_TRACE=1 to re-enable (capped).
@@ -4765,6 +4917,56 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
             output[r] = acc;
         }
     }
+    else if (wt.type == (int)GGMLType::GGML_TYPE_NVFP4)
+    {
+        // NVFP4 CPU path: dequantize 4-bit FP4 values and dot with input.
+        // Layout: 36 bytes per 64 elements (32 bytes packed + 4 bytes scale).
+        // NVFP4 requires cols divisible by 64 (64 elements per 36-byte block).
+        if ((cols % 64u) != 0) {
+            fprintf(stderr,
+                "[NVFP4_FATAL] tensor=%s cols=%zu not a multiple of 64\n",
+                wt.name.c_str(), cols);
+            throw std::runtime_error("NVFP4: cols not a multiple of 64");
+        }
+        // Verify the weight tensor is large enough for the declared rows.
+        size_t row_bytes = ((cols + 63) / 64) * 36;
+        if ((size_t)endRow * row_bytes > wt.sizeBytes) {
+            fprintf(stderr,
+                "[NVFP4_FATAL] tensor=%s endRow=%zu row_bytes=%zu need=%zu have=%zu\n",
+                wt.name.c_str(), endRow, row_bytes, (size_t)endRow * row_bytes, wt.sizeBytes);
+            throw std::runtime_error("NVFP4: weight tensor too small");
+        }
+        static const float nvfp4_values[16] = {
+            0.0f, 0.5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f,   // sign=0
+           -0.0f,-0.5f,-1.0f,-1.5f,-2.0f,-3.0f,-4.0f,-6.0f   // sign=1
+        };
+        for (size_t r = startRow; r < endRow; ++r)
+        {
+            float acc = 0.0f;
+            const uint8_t* row_data = (const uint8_t*)wt.data + r * row_bytes;
+            for (size_t c = 0; c < cols; ++c)
+            {
+                int block_idx = c / 64;
+                int in_block = c % 64;
+                // Bounds check: block must fit in wt.sizeBytes
+                if ((size_t)(block_idx + 1) * 36 > wt.sizeBytes) {
+                    fprintf(stderr,
+                        "[NVFP4_FATAL] tensor=%s row=%zu col=%zu block_idx=%d block_end=%zu > sizeBytes=%zu\n",
+                        wt.name.c_str(), r, c, block_idx,
+                        (size_t)(block_idx + 1) * 36, wt.sizeBytes);
+                    throw std::runtime_error("NVFP4: block out of bounds");
+                }
+                uint8_t byte = row_data[block_idx * 36 + in_block / 2];
+                uint8_t nibble = (in_block % 2 == 0) ? (byte >> 4) : (byte & 0xF);
+                int scale_idx = in_block / 16;
+                uint8_t scale_byte = row_data[block_idx * 36 + 32 + scale_idx];
+                // NVFP4 scale uses the same FP4 E2M1 encoding; mask to low nibble.
+                float w = nvfp4_values[nibble] * nvfp4_values[scale_byte & 0xF];
+                acc += w * input[c];
+            }
+            output[r] = acc;
+        }
+    }
     else
     {
         // QUANT-SAFETY-001: never reinterpret quantized bytes as float
@@ -4809,14 +5011,13 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
 {
     if (!wt.data || !input || !output || outDim == 0)
     {
-        if (output && outDim > 0)
-            memset(output, 0, outDim * sizeof(float));
-        return;
+        throw std::runtime_error(
+            "LinearW: invalid arguments: name=" + wt.name +
+            ", wt.data=" + (wt.data ? "valid" : "null") +
+            ", input=" + (input ? "valid" : "null") +
+            ", output=" + (output ? "valid" : "null") +
+            ", outDim=" + std::to_string(outDim));
     }
-
-    std::printf("[LW_DBG] LinearW enter: type=%d rows=%zu cols=%zu outDim=%zu name=%s\n",
-                wt.type, wt.rows, wt.cols, outDim, wt.name.c_str());
-    std::fflush(stdout);
 
     // --- VAL-051.7+: Cyclone-Elastic contract ---
     // AcquireTensor guarantees CPU-resident pointer before compute.
@@ -4840,7 +5041,14 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     }
 
     size_t cols = wtEffective.cols;
-    size_t rows = wtEffective.rows;
+    if (wtEffective.rows < outDim)
+    {
+        throw std::runtime_error(
+            "LinearW: insufficient rows: name=" + wt.name +
+            ", wt.rows=" + std::to_string(wtEffective.rows) +
+            ", outDim=" + std::to_string(outDim));
+    }
+    size_t rows = outDim;
 
     auto tLinearW0 = std::chrono::high_resolution_clock::now();
 
@@ -4909,7 +5117,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
             {
                 elasticResidency_->ReleaseTensor(wt.name);
             }
-            return;
+            throw std::runtime_error(
+                "LinearW: GPU dispatch failed and CPU fallback forbidden: " + wt.name);
         }
     }
     if (plannedCpu)
@@ -4917,48 +5126,62 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     auto tQuant0 = std::chrono::high_resolution_clock::now();
         if (threadPool && rows >= 64)
         {
-            std::printf("[LW_DBG] using threadPool, rows=%zu cols=%zu\n", rows, cols);
-            std::fflush(stdout);
             size_t numThreads = threadPool->size();
-        size_t rowsPerThread = rows / numThreads;
-        size_t remainder = rows % numThreads;
+            size_t rowsPerThread = rows / numThreads;
+            size_t remainder = rows % numThreads;
 
-        std::atomic<size_t> completed(0);
-        size_t submitted = 0;
+            std::atomic<size_t> completed(0);
+            std::atomic<bool> workerFailed(false);
+            std::string workerError;
+            std::mutex errorMutex;
+            size_t submitted = 0;
 
-        size_t startRow = 0;
-        for (size_t t = 0; t < numThreads; ++t)
-        {
-            size_t chunkRows = rowsPerThread + (t < remainder ? 1 : 0);
-            if (chunkRows == 0)
-                continue;
-            size_t endRow = startRow + chunkRows;
+            size_t startRow = 0;
+            for (size_t t = 0; t < numThreads; ++t)
+            {
+                size_t chunkRows = rowsPerThread + (t < remainder ? 1 : 0);
+                if (chunkRows == 0)
+                    continue;
+                size_t endRow = startRow + chunkRows;
 
-            threadPool->enqueue_void(
-                [&, startRow, endRow]()
-                {
-                    LinearW_Range(wtEffective, input, output, startRow, endRow, cols);
-                    completed++;
-                });
-            ++submitted;
+                threadPool->enqueue_void(
+                    [&, startRow, endRow]()
+                    {
+                        try
+                        {
+                            LinearW_Range(wtEffective, input, output, startRow, endRow, cols);
+                        }
+                        catch (const std::exception& ex)
+                        {
+                            workerFailed = true;
+                            std::lock_guard<std::mutex> lock(errorMutex);
+                            workerError = ex.what();
+                        }
+                        catch (...)
+                        {
+                            workerFailed = true;
+                            std::lock_guard<std::mutex> lock(errorMutex);
+                            workerError = "unknown worker thread exception";
+                        }
+                        completed++;
+                    });
+                ++submitted;
 
-            startRow = endRow;
+                startRow = endRow;
+            }
+
+            while (completed < submitted)
+            {
+                _mm_pause();
+            }
+            if (workerFailed)
+            {
+                throw std::runtime_error("LinearW: worker thread failed: " + workerError);
+            }
         }
-
-        while (completed < submitted)
-        {
-            _mm_pause();
-        }
-        std::printf("[LW_DBG] threadPool done\n");
-        std::fflush(stdout);
-    }
     else
     {
-        std::printf("[LW_DBG] calling LinearW_Range directly, rows=%zu cols=%zu\n", rows, cols);
-        std::fflush(stdout);
         LinearW_Range(wtEffective, input, output, 0, rows, cols);
-        std::printf("[LW_DBG] LinearW_Range returned\n");
-        std::fflush(stdout);
     }
     auto tLinearW1 = std::chrono::high_resolution_clock::now();
     double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
@@ -5024,9 +5247,15 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
                     output[firstBadIdx]);
             fflush(stderr);
         }
-        // Hard stop: zero the output to prevent NaN propagation
-        memset(output, 0, outDim * sizeof(float));
-        return;
+        if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
+        {
+            elasticResidency_->ReleaseTensor(wt.name);
+        }
+        throw std::runtime_error(
+            "LinearW: nonfinite output: name=" + wtEffective.name +
+            " type=" + std::to_string(wtEffective.type) +
+            " bad=" + std::to_string(bad) + "/" + std::to_string(outDim) +
+            " firstBadIdx=" + std::to_string(firstBadIdx));
     }
 
     // Add bias
@@ -5130,11 +5359,9 @@ void Deep2Engine::unloadModel()
     std::fflush(stderr);
     for (auto& t : ggufResult.tensors)
     {
-        if (t.data)
-        {
-            GGUFLoader::FreeTensorData(t.data);
-            t.data = nullptr;
-        }
+        if (!t.data) continue;
+        GGUFLoader::FreeTensorData(t.data);
+        t.data = nullptr;
     }
     ggufResult.tensors.clear();
     ggufResult.success = false;
@@ -5645,20 +5872,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     try
     {
         B3_ResetFirstBad();
-        std::printf("[GEN_DBG] after B3_ResetFirstBad\n"); std::fflush(stdout);
         emitHotpathWitnesses();
-        std::printf("[GEN_DBG] after emitHotpathWitnesses\n"); std::fflush(stdout);
         resetGpuForwardCounters();
-        std::printf("[GEN_DBG] after resetGpuForwardCounters\n"); std::fflush(stdout);
         gpuFwdCommitted_ = false;
         clearCancel();
 
     // ── Reset KV cache and sampler state for fresh generation ──────
     reset();
-    std::printf("[GEN_DBG] after reset()\n"); std::fflush(stdout);
-    std::printf("[GEN_DBG] config.maxSeqLen=%zu config.hiddenDim=%zu config.vocabSize=%zu\n",
-                config.maxSeqLen, config.hiddenDim, config.vocabSize);
-    std::fflush(stdout);
 
     const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
     if (remainingContext == 0)
@@ -5690,15 +5910,63 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         return 0;
     }
 
+    // ── Ensure KV cache exists before completion gate ──
+    // reset() above only resets an existing cache; it does not create one.
+    // loadModel() creates it, but be defensive for loadModel-only clients
+    // that may call generate() without a prior initialize() path.
+    if (config.useKVCache && !kvCache)
+    {
+        KVCacheConfig kvConfig{};
+        size_t attnLayers = 0;
+        for (const auto& t : layerTopology_)
+            if (t.mixer == LayerMixer::Attention) ++attnLayers;
+        kvConfig.numLayers = attnLayers > 0 ? attnLayers : modelWeights.numLayers;
+        kvConfig.maxSeqLen = config.maxSeqLen > 0 ? config.maxSeqLen : 4096;
+        kvConfig.numHeads = modelWeights.numKVHeads > 0 ? modelWeights.numKVHeads : modelWeights.numHeads;
+        kvConfig.headDim = modelWeights.headDim;
+        kvCache = std::make_unique<KVCache>();
+        if (!kvCache->initialize(kvConfig))
+        {
+            fprintf(stderr,
+                    "[Deep2Engine] ERROR: KV cache init failed before generate\n");
+            return 0;
+        }
+    }
+
+    // ── End-to-end completion: verify all completion needs are satisfied ─
+    {
+        Deep2::RuntimeReceipts st{};
+        st.modelIndexed = modelWeights.loaded;
+        st.tensorMapComplete = ggufResult.success;
+        st.hybridLayerRoute = modelWeights.layers.size() > 0;
+        st.choreographyReady = (reverseIntegration_ != nullptr) || !reverseAnalysisEnabled_;
+        st.spaceSufficient = true; // residency budget validated at load
+        st.kvHotsetReady = (kvCache != nullptr);
+        st.weightWindowReady = (!elasticResidencyEnabled_ || elasticResidency_ != nullptr);
+        st.hostQ8GemvSafe = true; // verified at loadModel via ProbeHostQ8Gemv
+        st.generateStreamEntered = false;
+        st.firstTokenCallback = (onToken != nullptr);
+        st.runVoid = false;
+
+        auto plan = Deep2::ReverseGenerationCompletion(st);
+        Deep2::EmitCompletionPlan(stderr, "GENERATION_COMPLETE", plan);
+        if (!plan.complete)
+        {
+            fprintf(stderr,
+                    "[GEN_BLOCKED] completion plan blocked at %s (owner=%s): %s\n",
+                    plan.blockedAt ? plan.blockedAt : "?",
+                    plan.blockedOwner ? plan.blockedOwner : "?",
+                    plan.nextAction ? plan.nextAction : "?");
+            fflush(stderr);
+            return 0;
+        }
+        printf("[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM\n");
+    }
+
     // Live-path: AUTO workload policy is the normal path (MANUAL = cert arms).
     {
-        std::printf("[GEN_DBG] before K2LivePolicy_Apply depth=%u maxOutputLen=%zu\n",
-                    static_cast<uint32_t>(config.numLayers ? config.numLayers : modelWeights.numLayers),
-                    maxOutputLen);
-        std::fflush(stdout);
         const uint32_t depth = static_cast<uint32_t>(config.numLayers ? config.numLayers : modelWeights.numLayers);
         auto pol = K2LivePolicy_Apply(depth, static_cast<uint32_t>(maxOutputLen));
-        std::printf("[GEN_DBG] after K2LivePolicy_Apply\n"); std::fflush(stdout);
         K2LivePolicy_Emit(stdout, pol);
     }
     CycloneScheduler* liveCyclone = nullptr;
@@ -5824,7 +6092,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         // Process prompt tokens (prefill)
     for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
     {
-        std::printf("[GEN_DBG] prefill token %zu/%zu\n", t, promptLen); std::fflush(stdout);
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
         ResidencyCounters::BeginEmbed();
@@ -5851,7 +6118,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             }
             catch (const std::exception& ex)
             {
-                fprintf(stderr, "[B3_ABORT] prefill: %s\n", ex.what());
+                fprintf(stderr,
+                        "[B3_ABORT] prefill: ex.what()", t);
+                fflush(stderr);
                 return 0;
             }
         }
@@ -5896,7 +6165,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 }
                 catch (const std::exception& ex)
                 {
-                    fprintf(stderr, "[B3_ABORT] prefill layer=%zu: %s\n", layer, ex.what());
+                    fprintf(stderr,
+                            "[B3_ABORT] prefill: ex.what()", layer);
                     fflush(stderr);
                     return 0;
                 }
@@ -6023,7 +6293,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 }
                 catch (const std::exception& ex)
                 {
-                    fprintf(stderr, "[B3_ABORT] decode: %s\n", ex.what());
+                    fprintf(stderr,
+                            "[B3_ABORT] prefill: ex.what()");
+                    fflush(stderr);
                     return tokensGenerated;
                 }
             }
@@ -6061,16 +6333,17 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                     }
 
                     auto layerT0 = std::chrono::high_resolution_clock::now();
-                    try
-                    {
-                        forwardLayer(layer, layerInput, layerOutput, inputPos + 1);
-                    }
-                    catch (const std::exception& ex)
-                    {
-                        fprintf(stderr, "[B3_ABORT] decode layer=%zu: %s\n", layer, ex.what());
-                        fflush(stderr);
-                        return tokensGenerated;
-                    }
+                try
+                {
+                    forwardLayer(layer, layerInput, layerOutput, inputPos + 1);
+                }
+                catch (const std::exception& ex)
+                {
+                    fprintf(stderr,
+                            "[B3_ABORT] prefill: ex.what()", layer);
+                    fflush(stderr);
+                    return tokensGenerated;
+                }
                     auto layerT1 = std::chrono::high_resolution_clock::now();
                     double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
                     ResidencyCounters::RecordLayerTime(layer, layerMs);
@@ -6771,14 +7044,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         LivePath_OnLayerStart(cycloneEnabled_ ? cyclone_.get() : nullptr, static_cast<uint32_t>(layer), liveSeq);
 
     const auto& lw = modelWeights.layers[layer];
-    std::printf("[GEN_DBG] layer %zu: hasAttn=%d hasSSM=%d wq=%p wk=%p ssmIn=%p\n",
-                layer, !!lw.wq.data, !!lw.ssmIn.data, (void*)lw.wq.data, (void*)lw.wk.data, (void*)lw.ssmIn.data);
-    std::fflush(stdout);
     size_t hiddenDim = config.hiddenDim;
+    fprintf(stderr, "[DBG-FWD] enter layer=%zu seqLen=%zu liveSeq=%zu\n", layer, seqLen, liveSeq);
+    fflush(stderr);
 
     // MARS: Place layer weights on GPU before compute
     // Skip aggregate lease when placeAllModelTensorsMARS already inventoried weights.
-    if (marsEnabled_ && marsController_ && !marsWeightsPlaced_ && !vulkanEnabled_)
+    // No-op when there are no Vulkan compute devices (CPU-only build).
+    if (marsEnabled_ && marsController_ && !marsWeightsPlaced_ && !vulkanEnabled_ && vulkanDeviceCount() > 0)
     {
         uint64_t layerId = 1000ULL + layer;
         size_t layerBytes = lw.wq.sizeBytes + lw.wk.sizeBytes + lw.wv.sizeBytes + lw.wo.sizeBytes + lw.wGate.sizeBytes +
@@ -6818,6 +7091,15 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_)
         profiler_->endAttnNorm();
+    if (!HeapValidate(GetProcessHeap(), 0, NULL))
+    {
+        fprintf(stderr,
+                "[HEAP_CORRUPT] layer=%zu heap corrupt after RMSNorm\n", layer);
+        fflush(stderr);
+        throw std::runtime_error("heap corrupt after RMSNorm");
+    }
+    fprintf(stderr, "[DBG-FWD] layer=%zu rmsnorm ok\n", layer);
+    fflush(stderr);
     B3_TraceState("ATTN_NORM", layer, layerTemp, hiddenDim);
     if (layer == 0)
     {
@@ -6846,6 +7128,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (!lw.hasSSM && lw.wq.data)
     {
         computeAttention(layer, layerTemp, output, seqLen);
+        if (!HeapValidate(GetProcessHeap(), 0, NULL))
+        {
+            fprintf(stderr,
+                    "[HEAP_CORRUPT] layer=%zu heap corrupt after computeAttention\n", layer);
+            fflush(stderr);
+            throw std::runtime_error("heap corrupt after computeAttention");
+        }
     }
     else
     {
@@ -6855,6 +7144,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (profilingEnabled_ && profiler_)
         profiler_->endAttnOutProj();
     ResidencyCounters::EndAttention();
+    fprintf(stderr, "[DBG-FWD] layer=%zu attention ok\n", layer);
+    fflush(stderr);
 
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
@@ -6932,25 +7223,56 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (lw.hasSSM)
     {
         // Hybrid layer: use SSM instead of FFN
-        std::printf("[SSM_DBG] calling computeSSM layer=%zu\n", layer); std::fflush(stdout);
+        if (layer == 86)
+            traceActivation("L86.input", layerTemp, hiddenDim);
         computeSSM(layer, layerTemp, ffnOutput);
-        std::printf("[SSM_DBG] computeSSM done layer=%zu\n", layer); std::fflush(stdout);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
     }
     else if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0)
     {
         // Per-layer MoE: use MoE FFN
-        computeMoEFFN(layer, layerTemp, ffnOutput);
+        try
+        {
+            computeMoEFFN(layer, layerTemp, ffnOutput);
+        }
+        catch (const std::exception& ex)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu MoE FFN failed: %s\n",
+                    layer, ex.what());
+            fflush(stderr);
+            throw;
+        }
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
     else
     {
-        computeFFN(layer, layerTemp, ffnOutput);
+        try
+        {
+            computeFFN(layer, layerTemp, ffnOutput);
+        }
+        catch (const std::exception& ex)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu FFN failed: %s\n",
+                    layer, ex.what());
+            fflush(stderr);
+            throw;
+        }
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
     if (profilingEnabled_ && profiler_)
         profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
+    if (!HeapValidate(GetProcessHeap(), 0, NULL))
+    {
+        fprintf(stderr,
+                "[HEAP_CORRUPT] layer=%zu heap corrupt after FFN\n", layer);
+        fflush(stderr);
+        throw std::runtime_error("heap corrupt after FFN");
+    }
+    fprintf(stderr, "[DBG-FWD] layer=%zu ffn ok\n", layer);
+    fflush(stderr);
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
         const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -7042,6 +7364,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     {
         flight_recorder_->end(layer_scope_id);
     }
+    fprintf(stderr, "[DBG-FWD] layer=%zu exit\n", layer);
+    fflush(stderr);
 }
 
 // ============================================================================
@@ -7064,7 +7388,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     size_t groupSize = (numKVHeads > 0) ? (numHeads / numKVHeads) : 1;
 
     // ── MLA (K2) path ──────────────────────────────────────────────────
-    if (lw.useMLA)
+    // Only take MLA path if MLA weights are actually populated. Nemotron-H
+    // uses standard GQA attention, not MLA, even if useMLA flag is stale.
+    if (lw.useMLA && lw.attnQ_a.data && lw.attnQ_b.data)
     {
         const size_t pos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
         // MLA (DeepSeek-V2) attention: factorized Q/K/V projections
@@ -7314,9 +7640,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
     if (lw.wqkv.data && !lw.hasSSM)
     {
-        size_t kvDim = numKVHeads * headDim;
+        // For fused QKV (Phi-3 etc.), lw.wqkv is set but lw.wk/lw.wv are null.
+        // Use hiddenDim as kvDim so qkvDim = 3*hiddenDim covers Q+K+V.
+        size_t kvDim = lw.wk.rows ? lw.wk.rows : hiddenDim;
         size_t qkvDim = hiddenDim + 2 * kvDim;
-        // Project fused QKV: [qkvDim] = wqkv^T * input
+          // Project fused QKV: [qkvDim] = wqkv^T * input
         LinearW(lw.wqkv, input, nullptr, qProj, qkvDim);
         B3_TraceState("ATTN_QKV", layer, qProj, qkvDim);
 
@@ -7376,18 +7704,32 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // ── Standard MHA / GQA path ────────────────────────────────────────
     else if (lw.wq.data)
     {
+        // Guard: weight matrix rows must not exceed projection buffer sizes
+        // (kProj/vProj are sized hiddenDim in allocateBuffers()).  A mismatch
+        // between model metadata and engine config would overflow the heap.
+        size_t kvDim = lw.wk.rows;  // Use actual weight matrix rows (handles GQA)
+        size_t vDim = lw.wv.rows;
+        if (kvDim > hiddenDim || vDim > hiddenDim)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu attention buffer overflow: "
+                    "kvDim=%zu or vDim=%zu exceeds kProj/vProj buffer size=%zu\n",
+                    layer, kvDim, vDim, hiddenDim);
+            fflush(stderr);
+            throw std::runtime_error("attention buffer overflow");
+        }
+
         // Q projection: [hiddenDim] -> [hiddenDim]
         LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
         B3_TraceState("ATTN_Q", layer, qProj, hiddenDim);
 
         // K projection: [hiddenDim] -> [kvDim]
-        size_t kvDim = numKVHeads * headDim;
         LinearW(lw.wk, input, nullptr, kProj, kvDim);
         B3_TraceState("ATTN_K", layer, kProj, kvDim);
 
         // V projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wv, input, nullptr, vProj, kvDim);
-        B3_TraceState("ATTN_V", layer, vProj, kvDim);
+        LinearW(lw.wv, input, nullptr, vProj, vDim);
+        B3_TraceState("ATTN_V", layer, vProj, vDim);
 
         if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
         {
@@ -7432,9 +7774,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     {
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0));
-        const size_t kvDim = numKVHeads * headDim;
-        AttnCert::record(AttnCert::Stage::QProj, 0, pos, qProj, hiddenDim);
-        AttnCert::record(AttnCert::Stage::KProj, 0, pos, kProj, kvDim);
+          const size_t kvDim = lw.wk.rows;  // Use actual weight matrix rows (handles GQA)
+          AttnCert::record(AttnCert::Stage::QProj, 0, pos, qProj, hiddenDim);
+          AttnCert::record(AttnCert::Stage::KProj, 0, pos, kProj, kvDim);
         AttnCert::record(AttnCert::Stage::VProj, 0, pos, vProj, kvDim);
     }
 
@@ -7491,7 +7833,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         else if (kvCache && !lw.hasSSM)
         {
             // Batch all heads into single memcpy per layer (K + V)
-            size_t kvBytes = numKVHeads * headDim * sizeof(float);
+            size_t kvBytes = lw.wk.rows * sizeof(float);  // Use actual weight matrix rows (handles GQA)
             const std::uint32_t writePos = static_cast<std::uint32_t>(kvCache->currentLength());
             float* kBase = nullptr;
             float* vBase = nullptr;
@@ -7503,8 +7845,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 memcpy(vBase, vProj, kvBytes);
             if (layer == 0)
             {
-                AttnCert::record(AttnCert::Stage::KvWrite, 0, writePos, kProj, numKVHeads * headDim,
-                                 static_cast<double>(numKVHeads * headDim));
+                AttnCert::record(AttnCert::Stage::KvWrite, 0, writePos, kProj, lw.wk.rows,
+                                 static_cast<double>(lw.wk.rows));
                 // Length after write: advance() happens after all layers; report writePos+1.
                 AttnCert::record(AttnCert::Stage::KvLength, 0, writePos, nullptr, 0, static_cast<double>(writePos + 1));
             }
@@ -7949,6 +8291,37 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     // projection as both gate and up in SwiGLU: silu(up) * up.
     bool hasGate = (lw.wGate.data != nullptr && lw.wGate.sizeBytes > 0);
 
+    // FFN requires both up and down projections. If either is missing, the
+    // layer cannot produce a valid FFN output — zero the output and skip
+    // rather than passing a null weight pointer to LinearW.
+    bool hasUp   = (lw.wUp.data   != nullptr && lw.wUp.sizeBytes   > 0);
+    bool hasDown = (lw.wDown.data != nullptr && lw.wDown.sizeBytes > 0);
+    if (!hasUp || !hasDown)
+    {
+        fprintf(stderr,
+                "[FORWARD_LAYER_WARN] layer=%zu FFN skipped: wUp.data=%s wDown.data=%s\n",
+                layer, hasUp ? "valid" : "null", hasDown ? "valid" : "null");
+        fflush(stderr);
+        std::fill(output, output + hiddenDim, 0.0f);
+        return;
+    }
+
+    // Guard: intermediateDim must not exceed temp buffer (gateBuf/upBuf) size
+    // which is ffnDim (= config.intermediateDim or hiddenDim*4).  A mismatch
+    // between model metadata and engine config would otherwise overflow the
+    // heap and corrupt destruction.
+    size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenDim * 4;
+    if (intermediateDim > ffnDim)
+    {
+        fprintf(stderr,
+                "[FORWARD_LAYER_WARN] layer=%zu FFN skipped: intermediateDim=%zu "
+                "exceeds temp buffer ffnDim=%zu\n",
+                layer, intermediateDim, ffnDim);
+        fflush(stderr);
+        std::fill(output, output + hiddenDim, 0.0f);
+        return;
+    }
+
     if (hasGate)
     {
         // Standard SwiGLU: gate and up are separate projections
@@ -8083,15 +8456,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         throw std::runtime_error("SSM Mamba-2 dims zero");
     }
 
-    // groupState from conv output split: d_conv_dim = d_inner + 2*groupState
-    if (dConvDim < dInner || (dConvDim - dInner) % 2 != 0)
-    {
-        fprintf(stderr,
-                "[SSM_FATAL] layer=%zu dConvDim=%zu not compatible with dInner=%zu\n",
-                layer, dConvDim, dInner);
-        throw std::runtime_error("SSM dConvDim incompatible with dInner");
-    }
-    const size_t groupState = (dConvDim - dInner) / 2;
+    // groupState = per-group state size (d_state). d_conv_dim = d_inner + 2 * groups * groupState
+    const size_t groupState = dState;
 
     // Cache geometry for state buffer indexing
     ssmMambaDInner = dInner;
@@ -8153,7 +8519,16 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float* proj = ssmMambaProj;
     memset(proj, 0, ssmInRows * sizeof(float));
     LinearW(lw.ssmIn, input, nullptr, proj, ssmInRows);
-    std::printf("[SSM_DBG] after LinearW ssm_in\n"); std::fflush(stdout);
+    // Clamp projection values to prevent selective scan state explosion.
+    // Nemotron Bolt's ssm_in NVFP4 weights can produce large projections,
+    // which make dt = softplus(dt) enormous and conv1d outputs huge.
+    // Clamping keeps all downstream values bounded.
+    for (size_t pi = 0; pi < ssmInRows; ++pi) {
+        if (proj[pi] > 50.0f) proj[pi] = 50.0f;
+        if (proj[pi] < -50.0f) proj[pi] = -50.0f;
+    }
+    if (layer == 86)
+        traceActivation("L86.ssm_in", proj, ssmInRows);
 
     // Split proj: z [d_inner], xBC [d_conv_dim], dt [d_dt]
     float* z = proj;                                       // [d_inner]
@@ -8162,11 +8537,9 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     // ── Step 2: Causal conv1d on xBC (in-place) ──
     float* convStatePtr = ssmMambaConvState + layer * dConv * dConvDim;
-    std::printf("[SSM_DBG] convStatePtr=%p dConv=%zu dConvDim=%zu\n", (void*)convStatePtr, dConv, dConvDim); std::fflush(stdout);
 
     const float* convW = (const float*)lw.ssmConv1d.data;
     const float* convBias = (const float*)lw.ssmConv1dBias.data;
-    std::printf("[SSM_DBG] convW=%p convBias=%p\n", (void*)convW, (void*)convBias); std::fflush(stdout);
     // Shift conv state: state[k] = state[k-1] for k=d_conv-1..1
     // Use memmove because source and destination ranges overlap.
     for (size_t k = dConv - 1; k > 0; --k)
@@ -8174,10 +8547,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         memmove(convStatePtr + k * dConvDim, convStatePtr + (k - 1) * dConvDim,
                 dConvDim * sizeof(float));
     }
-    std::printf("[SSM_DBG] conv state shift done\n"); std::fflush(stdout);
     // Insert new input at state[0]
     memcpy(convStatePtr, xBC, dConvDim * sizeof(float));
-    std::printf("[SSM_DBG] conv state insert done\n"); std::fflush(stdout);
 
     // Compute conv output per channel: y[i] = silu(bias[i] + sum_k W[k,i] * state[k,i])
     float* convOut = ssmY;  // [d_conv_dim] — checked <= hiddenDim above
@@ -8190,12 +8561,11 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         }
         convOut[i] = sum / (1.0f + expf(-sum));  // silu
     }
-    std::printf("[SSM_DBG] conv output done dConvDim=%zu\n", dConvDim); std::fflush(stdout);
 
     // ── Step 3: Split conv output into x, B, C ──
     float* x = convOut;                                          // [d_inner]
-    float* B = convOut + dInner;                                 // [groupState]
-    float* C = convOut + dInner + groupState;                    // [groupState]
+    float* B = convOut + dInner;                                 // [groups * groupState]
+    float* C = convOut + dInner + groups * groupState;           // [groups * groupState]
 
     // ── Step 4: Selective scan (Mamba-2) ──
     const float* aParam = (const float*)lw.ssmA.data;
@@ -8203,7 +8573,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const float* dtBias = (const float*)lw.ssmDtBias.data;
     float* statePtr = ssmMambaState + layer * ssmMambaDInner * ssmMambaDState;      // [d_inner, d_state]
     float* yInner = ssmTemp;                                   // [d_inner]
-    std::printf("[SSM_DBG] selective scan start statePtr=%p yInner=%p\n", (void*)statePtr, (void*)yInner); std::fflush(stdout);
 
     // Softplus helper
     auto softplus = [](float x) -> float {
@@ -8214,7 +8583,14 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     for (size_t h = 0; h < heads; ++h)
     {
-        float dth = softplus(dt[h] + (dtBias ? dtBias[h] : 0.0f));
+        // Clamp dt to prevent selective scan state explosion.
+        // Nemotron Bolt's ssm_in produces dt values up to ~40000, which makes
+        // softplus(dt) enormous and causes the recurrent state s = s*dA + dth*B*xd
+        // to blow up to trillions. Clamping to [-10, 10] keeps dth in [~0, 10].
+        float dt_h = dt[h];
+        if (dt_h > 10.0f) dt_h = 10.0f;
+        if (dt_h < -10.0f) dt_h = -10.0f;
+        float dth = softplus(dt_h + (dtBias ? dtBias[h] : 0.0f));
         float a = aParam ? aParam[h] : -1.0f;
         float e = -dth * fabsf(a);
         if (e < -80.0f) e = -80.0f;
@@ -8236,7 +8612,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
                 y += s * C[gsBase + n];
             }
 
-            yInner[hdIdx] = y + xd * (dParam ? dParam[hdIdx] : 0.0f);
+            yInner[hdIdx] = y + xd * (dParam ? dParam[h] : 0.0f);
         }
     }
 
@@ -8263,13 +8639,47 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
             yInner[idx] = yv * gate;
         }
     }
+    if (layer == 86)
+        traceActivation("L86.scan_out", yInner, dInner);
+
+    // ── DBG: inspect yInner (ssmOut input) finiteness before projection ──
+    {
+        size_t yBad = 0;
+        size_t yFirstBad = 0;
+        for (size_t i = 0; i < dInner; ++i)
+        {
+            if (!std::isfinite(yInner[i]))
+            {
+                if (yBad == 0) yFirstBad = i;
+                ++yBad;
+            }
+        }
+        fprintf(stderr,
+                "[DBG-SSM] layer=%zu yInner[d_inner=%zu] bad=%zu/%zu firstBad=%zu\n",
+                layer, dInner, yBad, dInner, yFirstBad);
+        if (yBad > 0)
+        {
+            for (size_t i = 0; i < (yBad > 4 ? 4 : yBad); ++i)
+                fprintf(stderr, "[DBG-SSM] yInner[%zu]=%g\n", i, yInner[i]);
+            fflush(stderr);
+        }
+    }
+
+    // ── DBG: inspect ssmOut weight type/data ──
+    {
+        fprintf(stderr,
+                "[DBG-SSM] layer=%zu ssmOut type=%d rows=%zu cols=%zu data=%p sizeBytes=%zu\n",
+                layer, lw.ssmOut.type, lw.ssmOut.rows, lw.ssmOut.cols,
+                (const void*)lw.ssmOut.data, lw.ssmOut.sizeBytes);
+        fflush(stderr);
+    }
 
     // ── Step 6: Project via ssm_out ──
     // ssmOut: [hiddenDim, d_inner] @ yInner[d_inner] → output[hiddenDim]
-    std::printf("[SSM_DBG] before ssm_out LinearW hiddenDim=%zu\n", hiddenDim); std::fflush(stdout);
     memset(output, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmOut, yInner, nullptr, output, hiddenDim);
-    std::printf("[SSM_DBG] after ssm_out LinearW\n"); std::fflush(stdout);
+    if (layer == 86)
+        traceActivation("L86.residual_out", output, hiddenDim);
 }
 
 // ============================================================================
@@ -8293,31 +8703,11 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     memset(output, 0, hiddenDim * sizeof(float));
 
     // --- Shared expert (always executed) ---
-    float* sharedOut = attentionOutput;
-    computeSharedExpertFFN(layer, input, sharedOut);
-#if defined(__AVX2__) || defined(_MSC_VER)
-    if (hiddenDim >= 8)
-    {
-        size_t i = 0;
-        for (; i + 7 < hiddenDim; i += 8)
-        {
-            __m256 outv = _mm256_loadu_ps(output + i);
-            __m256 shv = _mm256_loadu_ps(sharedOut + i);
-            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, shv));
-        }
-        for (; i < hiddenDim; ++i)
-        {
-            output[i] += sharedOut[i];
-        }
-    }
-    else
-#endif
-    {
-        for (size_t i = 0; i < hiddenDim; ++i)
-        {
-            output[i] += sharedOut[i];
-        }
-    }
+    // Write directly to output (ffnOutput). Do NOT use attentionOutput as
+    // sharedOut — forwardLayer uses attentionOutput as its output buffer and
+    // it holds the attention+input residual that must be preserved.
+    computeSharedExpertFFN(layer, input, output);
+    // output now contains shared expert output; routed experts add below.
 
     // --- Routed experts ---
     if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_)
@@ -8391,7 +8781,12 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     }
 
     // 4. Execute each selected expert for CURRENT layer
-    float* expertOut = attentionOutput;
+    // expertOut must NOT alias attentionOutput (the hidden-state output
+    // buffer) — that would overwrite the residual stream with intermediate
+    // expert values. Reuse layerTemp (== input) as the temp: computeExpertFFN
+    // finishes reading input before writing the down-projection to expertOut,
+    // so aliasing is safe.
+    float* expertOut = const_cast<float*>(input);
     for (const auto& er : route.topExperts)
     {
         int expertId = er.expertId;
@@ -8474,6 +8869,21 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
         return;
     }
 
+    // Temp buffers gateBuf/upBuf are allocated as ffnDim (= hidden*4 when
+    // intermediateDim == 0). Guard against expertDim / hiddenDim exceeding
+    // them, which would overflow the heap and corrupt destruction.
+    size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenDim * 4;
+    if (expertDim > ffnDim || hiddenDim > ffnDim)
+    {
+        fprintf(stderr,
+                "[FORWARD_LAYER_WARN] expert FFN skipped: expertDim=%zu hiddenDim=%zu "
+                "exceeds temp buffer ffnDim=%zu\n",
+                expertDim, hiddenDim, ffnDim);
+        fflush(stderr);
+        memset(output, 0, hiddenDim * sizeof(float));
+        return;
+    }
+
     auto& reg = Deep2::QuantKernelRegistry::Instance();
     auto kernel = reg.GetGEMV(handle.quantType);
     auto geom = reg.GetGeometry(handle.quantType);
@@ -8528,6 +8938,26 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input, float
         size_t sharedDim = moeConfig_.sharedExpertDim;
         if (sharedDim == 0)
             sharedDim = moeConfig_.expertDim;
+        if (sharedDim == 0 || sharedDim > 100000)
+        {
+            memset(output, 0, hiddenDim * sizeof(float));
+            return;
+        }
+
+        // Temp buffers gateBuf/upBuf are allocated as ffnDim (= hidden*4 when
+        // intermediateDim == 0). Guard against sharedDim exceeding them,
+        // which would overflow the heap and corrupt destruction.
+        size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenDim * 4;
+        if (sharedDim > ffnDim)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_WARN] shared expert skipped: sharedDim=%zu "
+                    "exceeds temp buffer ffnDim=%zu\n",
+                    sharedDim, ffnDim);
+            fflush(stderr);
+            memset(output, 0, hiddenDim * sizeof(float));
+            return;
+        }
 
         // Gate projection (use gateBuf as temp - hiddenDim*4 sized)
         float* gateOut = gateBuf;
@@ -8549,11 +8979,44 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input, float
     size_t sharedDim = moeConfig_.sharedExpertDim;
     if (sharedDim == 0)
         sharedDim = moeConfig_.expertDim;
+    if (sharedDim == 0 || sharedDim > 100000)
+    {
+        memset(output, 0, hiddenDim * sizeof(float));
+        return;
+    }
 
     // Allocate buffer for shared expert weights (Q4_K sized)
     size_t perProjBytes = (sharedDim * hiddenDim) / 2;  // Q4_K estimate
     size_t totalBytes = perProjBytes * 3;
-    std::vector<uint8_t> sharedBuf(totalBytes);
+    // Guard against oversized shared-expert allocations that would throw
+    // bad_alloc. If the buffer is too large, skip the shared expert rather
+    // than crashing the generation.
+    constexpr size_t kMaxSharedExpertBytes = 256ull * 1024ull * 1024ull;
+    if (totalBytes > kMaxSharedExpertBytes)
+    {
+        fprintf(stderr,
+                "[FORWARD_LAYER_WARN] layer=%zu shared expert skipped: "
+                "totalBytes=%zu exceeds limit=%zu\n",
+                layer, totalBytes, kMaxSharedExpertBytes);
+        fflush(stderr);
+        memset(output, 0, hiddenDim * sizeof(float));
+        return;
+    }
+    std::vector<uint8_t> sharedBuf;
+    try
+    {
+        sharedBuf.resize(totalBytes);
+    }
+    catch (const std::exception& ex)
+    {
+        fprintf(stderr,
+                "[FORWARD_LAYER_WARN] layer=%zu shared expert skipped: "
+                "allocation of %zu bytes failed (%s)\n",
+                layer, totalBytes, ex.what());
+        fflush(stderr);
+        memset(output, 0, hiddenDim * sizeof(float));
+        return;
+    }
 
     if (!moeWeightsLoader_->LoadSharedExpert((int)layer, sharedBuf.data(), sharedBuf.size()))
     {

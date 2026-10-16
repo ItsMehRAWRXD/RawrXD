@@ -1,0 +1,119 @@
+#version 450
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+// Batch 9 packed GGUF GEMV — NVFP4 (type 40).
+//
+// 64 elements per block, 36 bytes per block:
+//   qs[32]   : packed E2M1, 2 elements per byte
+//   scales[4]: E4M3 scale per 16 elements
+//
+// one workgroup = one output row
+// 256 lanes cooperatively consume input columns
+layout(local_size_x = 256) in;
+
+layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
+
+layout(push_constant) uniform Push {
+    uint type;
+    uint rows;
+    uint cols;
+    uint weightBytes;
+} pc;
+
+shared float subgroupSums[8];
+
+uint getb(uint byteIndex) {
+    uint word = w[byteIndex >> 2u];
+    return (word >> ((byteIndex & 3u) * 8u)) & 255u;
+}
+
+// E4M3 -> FP32: 1 sign, 4 exponent (bias 7), 3 mantissa
+float e4m3_to_fp32(uint x) {
+    int sign = int(x & 0x80u) ? -1 : 1;
+    int exp = int((x >> 3u) & 0x0Fu);
+    int mant = int(x & 0x07u);
+    if (exp == 0) return float(sign) * float(mant) * 0.015625f;
+    if (exp == 15) return 0.0f;
+    return float(sign) * (1.0f + float(mant) * 0.125f) * ldexp(1.0f, exp - 7);
+}
+
+// NVFP4 E2M1 -> FP32: S E E M
+// exp biased by 1; exp_field==0 subnormal; exp_field==3 reserved -> 0
+float e2m1_to_fp32(uint nibble) {
+    uint sign = (nibble >> 3u) & 1u;
+    uint exp = (nibble >> 1u) & 3u;
+    uint mant = nibble & 1u;
+    float mantissa = 1.0f + float(mant) * 0.5f;
+    float exponent;
+    if (exp == 0u) {
+        exponent = 0.25f;           // subnormal: 2^(-2)
+        mantissa = float(mant) * 0.5f;
+    } else if (exp == 3u) {
+        return 0.0f;
+    } else {
+        exponent = ldexp(1.0f, int(exp) - 1);
+    }
+    float val = exponent * mantissa;
+    if (sign == 1u) val = -val;
+    return val;
+}
+
+float nvfp4_weight(uint rowBase, uint col) {
+    uint block = col / 64u;
+    uint idx = col % 64u;
+    uint b = rowBase + block * 36u;
+
+    // Extract E2M1 nibble (2 elements per byte)
+    uint byteIdx = b + idx / 2u;
+    uint packed = getb(byteIdx);
+    uint nibble = (idx % 2u == 0u) ? (packed & 15u) : (packed >> 4u);
+
+    // E4M3 scale for this 16-element group
+    uint scaleIdx = b + 32u + (idx / 16u);
+    float scale = e4m3_to_fp32(getb(scaleIdx));
+
+    return e2m1_to_fp32(nibble) * scale;
+}
+
+void main() {
+    uint row = gl_WorkGroupID.x;
+    uint lane = gl_LocalInvocationID.x;
+    if (row >= pc.rows) return;
+
+    if (pc.type != 40u) {
+        y[row] = uintBitsToFloat(0x7fc00000u);
+        return;
+    }
+
+    uint blocksPerRow = (pc.cols + 63u) / 64u;
+    uint rowBytes = blocksPerRow * 36u;
+    uint rb = row * rowBytes;
+    if (rb + rowBytes > pc.weightBytes) {
+        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
+        return;
+    }
+
+    float acc = 0.0;
+    // Each lane processes every 256th element (strided access)
+    for (uint j = lane; j < pc.cols; j += 256u) {
+        float ww = nvfp4_weight(rb, j);
+        acc += ww * x[j];
+    }
+
+    // Subgroup reduction
+    float wave = subgroupAdd(acc);
+    if (subgroupElect())
+        subgroupSums[gl_SubgroupID] = wave;
+    barrier();
+
+    if (gl_SubgroupID == 0u) {
+        float v = gl_SubgroupInvocationID < gl_NumSubgroups
+            ? subgroupSums[gl_SubgroupInvocationID]
+            : 0.0;
+        float total = subgroupAdd(v);
+        if (subgroupElect())
+            y[row] = total;
+    }
+}

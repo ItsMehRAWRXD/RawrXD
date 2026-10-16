@@ -436,9 +436,10 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
  */
 bool ActionExecutor::handleRecursiveAgent(Action& action)
 {
-    // Placeholder for recursive agent call
-    // Would invoke ModelInvoker again with new wish
-    action.result = "Recursive agent invocation not yet implemented";
+    // Not implemented: recursive agent invocation requires ModelInvoker
+    // integration that is not yet wired. Fail-closed: deny rather than
+    // fabricate a successful recursive call.
+    action.result = "Recursive agent invocation not implemented";
     return false;
 }
 

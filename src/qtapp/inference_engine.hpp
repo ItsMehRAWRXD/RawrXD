@@ -366,8 +366,8 @@ private:
     QString m_modelPath;
     qint64 m_memoryUsageMB{0};
     double m_tokensPerSecond{0.0};
-    double m_temperature{0.0};   // Enterprise deterministic default
-    double m_topP{1.0};          // Enterprise deterministic default (full nucleus)
+    double m_temperature{0.7};   // Non-greedy default (was 0.0 = greedy/deterministic)
+    double m_topP{0.9};          // Nucleus sampling default (was 1.0 = no nucleus filtering)
     QString m_quantMode{"Q4_0"};  // Default quantization
     QHash<QString, CachedTensorData> m_tensorCache;  // Cached quantized tensors with type info
     QHash<QString, QString> m_perLayerQuant;  // Tensor-specific quants

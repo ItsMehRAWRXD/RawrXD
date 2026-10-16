@@ -723,7 +723,6 @@ void AgenticCopilotBridge::onEditorContentChanged() {
         debounceTimer->setInterval(300);
         QObject::connect(debounceTimer, &QTimer::timeout, this, [this]() {
             qDebug() << "[AgenticCopilotBridge] Triggering background analysis after debounce";
-            // Placeholder: could call analyzeActiveFile() or suggestion generation
             QString analysis = analyzeActiveFile();
             emit editorAnalysisReady(analysis);
         });

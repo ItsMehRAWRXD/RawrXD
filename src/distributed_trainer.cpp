@@ -173,35 +173,31 @@ bool DistributedTrainer::initializeNCCL()
     // NCCL_DEBUG=INFO    (verbose logging)
     // NCCL_SOCKET_IFNAME=eth0  (network interface)
     
-    // In production, we would initialize NCCL communicator here
-    // For now, we log the initialization and mark as successful
-    qInfo() << "[DistributedTrainer] NCCL backend initialized (stub - real NCCL integration pending)";
+    // NCCL backend not implemented. Fail-closed: return false rather than
+    // fabricating a successful initialization.
+    qWarning() << "[DistributedTrainer] NCCL backend not implemented";
     
-    return true;
+    return false;
 }
 
 bool DistributedTrainer::initializeGloo()
 {
     qInfo() << "[DistributedTrainer] Initializing Gloo backend...";
     
-    // Gloo supports both CPU and GPU, and is useful for multi-node training
-    // It requires setting up a rendezvous point (typically TCP)
+    // Gloo backend not implemented. Fail-closed: return false.
+    qWarning() << "[DistributedTrainer] Gloo backend not implemented";
     
-    qInfo() << "[DistributedTrainer] Gloo backend initialized (stub - real Gloo integration pending)";
-    
-    return true;
+    return false;
 }
 
 bool DistributedTrainer::initializeMPI()
 {
     qInfo() << "[DistributedTrainer] Initializing MPI backend...";
     
-    // MPI is used in HPC environments
-    // Typically initialized via mpirun/mpiexec
+    // MPI backend not implemented. Fail-closed: return false.
+    qWarning() << "[DistributedTrainer] MPI backend not implemented";
     
-    qInfo() << "[DistributedTrainer] MPI backend initialized (stub - real MPI integration pending)";
-    
-    return true;
+    return false;
 }
 
 void DistributedTrainer::cleanupBackend()
@@ -257,21 +253,9 @@ void DistributedTrainer::detectCUDADevices()
 {
     qInfo() << "[DistributedTrainer] Detecting CUDA devices...";
     
-    // In production, we would use CUDA API to enumerate devices
-    // For now, we create a dummy GPU device
-    
-    DeviceInfo gpuDevice;
-    gpuDevice.deviceId = m_config.pgConfig.localRank;
-    gpuDevice.deviceType = "cuda";
-    gpuDevice.name = QString("GPU %1 (Simulated)").arg(m_config.pgConfig.localRank);
-    gpuDevice.totalMemory = 24ULL * 1024 * 1024 * 1024; // 24GB placeholder
-    gpuDevice.availableMemory = 20ULL * 1024 * 1024 * 1024;
-    gpuDevice.computeCapability = 7.5f; // Turing
-    gpuDevice.currentLoad = 0.0f;
-    gpuDevice.temperature = 45.0f;
-    m_devices.push_back(gpuDevice);
-    
-    qInfo() << "[DistributedTrainer] CUDA device detection complete (stub)";
+    // CUDA device detection not implemented - no simulated devices are created.
+    // Real CUDA enumeration would use cudaGetDeviceCount() here.
+    qWarning() << "[DistributedTrainer] CUDA device detection not implemented";
 }
 
 // ==================== PROCESS GROUP SETUP ====================
@@ -288,16 +272,10 @@ bool DistributedTrainer::setupProcessGroup()
     qInfo() << "  Rank:" << pgConfig.rank;
     qInfo() << "  Local rank:" << pgConfig.localRank;
     
-    // In production, we would initialize the distributed process group here
-    // This typically involves:
-    // 1. Connect to master node
-    // 2. Exchange rank information
-    // 3. Set up communication channels
-    // 4. Perform barrier synchronization
+    // Process group setup not implemented. Fail-closed: return false.
+    qWarning() << "[DistributedTrainer] Process group setup not implemented";
     
-    qInfo() << "[DistributedTrainer] Process group setup complete (stub)";
-    
-    return true;
+    return false;
 }
 
 void DistributedTrainer::cleanupProcessGroup()
@@ -524,37 +502,27 @@ bool DistributedTrainer::TrainStep(const QJsonObject& batchData, float* lossOut)
 
 bool DistributedTrainer::forwardPass(const QJsonObject& batchData)
 {
-    // In production, this would:
-    // 1. Load batch data onto device
-    // 2. Run forward pass through model
-    // 3. Compute loss
+    // Forward pass not implemented - no model loaded, no compute backend.
+    // Fail-closed: return false rather than simulating a decreasing loss.
+    qWarning() << "[DistributedTrainer] Forward pass not implemented";
     
-    // Placeholder: simulate computation
-    m_currentLoss = 2.5f * std::exp(-0.001f * m_globalStep);  // Decreasing loss
-    
-    return true;
+    return false;
 }
 
 bool DistributedTrainer::backwardPass()
 {
-    // In production, this would:
-    // 1. Compute loss gradient
-    // 2. Run backward pass through model
-    // 3. Store gradients in buffer
+    // Backward pass not implemented - no autograd engine.
+    qWarning() << "[DistributedTrainer] Backward pass not implemented";
     
-    // Placeholder
-    return true;
+    return false;
 }
 
 bool DistributedTrainer::optimizerStep()
 {
-    // In production, this would:
-    // 1. Apply optimizer (SGD, Adam, etc.)
-    // 2. Update model weights
-    // 3. Clear gradient buffers
+    // Optimizer step not implemented - no optimizer backend.
+    qWarning() << "[DistributedTrainer] Optimizer step not implemented";
     
-    // Placeholder
-    return true;
+    return false;
 }
 
 // ==================== GRADIENT SYNCHRONIZATION ====================
@@ -594,15 +562,11 @@ bool DistributedTrainer::synchronizeGradients()
 
 bool DistributedTrainer::allReduceGradients()
 {
-    // In production, this would call the backend's all-reduce primitive
-    // NCCL: ncclAllReduce()
-    // Gloo: allreduce()
-    // MPI: MPI_Allreduce()
+    // All-reduce not implemented - no communication backend (NCCL/Gloo/MPI).
+    // Fail-closed: return false rather than simulating communication.
+    qWarning() << "[DistributedTrainer] All-reduce not implemented";
     
-    // Placeholder: simulate communication latency
-    QThread::msleep(5); // 5ms simulated latency
-    
-    return true;
+    return false;
 }
 
 void DistributedTrainer::compressGradients()

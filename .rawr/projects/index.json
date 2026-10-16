@@ -1,0 +1,38 @@
+[
+  {
+    "build_system": "CMake",
+    "language": "C++20",
+    "name": "E2EComplete",
+    "path": "F:\\rawrxd\\.rawr\\projects\\proj_a734734ebe405bdb",
+    "project_id": "proj_a734734ebe405bdb",
+    "stage": "interview",
+    "updated_at": "2026-10-15T23:11:16"
+  },
+  {
+    "build_system": "CMake",
+    "language": "C++20",
+    "name": "E2EDemo",
+    "path": "F:\\rawrxd\\.rawr\\projects\\proj_7638bb2223e790bf",
+    "project_id": "proj_7638bb2223e790bf",
+    "stage": "interview",
+    "updated_at": "2026-10-15T22:38:16"
+  },
+  {
+    "build_system": "CMake",
+    "language": "C++20",
+    "name": "ProjWizardDemo",
+    "path": "F:\\rawrxd\\.rawr\\projects\\proj_d5d4ca94c22f0c9a",
+    "project_id": "proj_d5d4ca94c22f0c9a",
+    "stage": "interview",
+    "updated_at": "2026-10-15T22:35:52"
+  },
+  {
+    "build_system": "Unknown",
+    "language": "Unknown",
+    "name": "",
+    "path": "F:\\rawrxd\\.rawr\\projects\\proj_a66154bdb6a1ed87",
+    "project_id": "proj_a66154bdb6a1ed87",
+    "stage": "interview",
+    "updated_at": "2026-10-16T00:26:06"
+  }
+]

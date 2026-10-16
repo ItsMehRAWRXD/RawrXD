@@ -111,10 +111,10 @@ bool InferenceEngine::loadModel(const QString& path)
         m_modelPath = path;
         QString modelName = extractModelName(path);
 
-        // Enterprise deterministic defaults for coherent responses
-        m_temperature = 0.0;
-        m_topP = 1.0;
-        qInfo() << "[InferenceEngine] Sampler pinned to deterministic defaults (temperature=0.0, top_p=1.0)";
+        // Sampling defaults (non-greedy): temperature + nucleus sampling
+        m_temperature = 0.7;
+        m_topP = 0.9;
+        qInfo() << "[InferenceEngine] Sampler defaults: temperature=0.7, top_p=0.9 (non-greedy sampling)";
         
         // ========== CHECK FOR UNSUPPORTED QUANTIZATION TYPES ==========
         // This is the key detection point for the IDE conversion workflow

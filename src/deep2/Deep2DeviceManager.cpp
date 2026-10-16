@@ -2,6 +2,7 @@
 #include "Deep2DeviceManager.hpp"
 #include <cstring>
 #include <cstdlib>
+#include <algorithm>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -10,6 +11,7 @@
 #include <dxgi.h>
 #pragma comment(lib, "dxgi.lib")
 #endif
+#include "deep2/quant_dot_dispatch.hpp"
 
 namespace Deep2 {
 namespace {
@@ -349,6 +351,48 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         scores[i] = snap.devices[i].score;
         vram[i] = snap.devices[i].dedicatedVram;
     }
+
+    // AUTOMATIC DUAL-GPU: when policy is Auto and two or more discrete GPUs
+    // are available, engage DualLane without requiring any environment flag.
+    // This makes dual-GPU work out of the box on systems like the R9700 + iGPU
+    // or two discrete cards, maximizing throughput with zero user configuration.
+    if (plan.policy == GpuPolicy::Auto) {
+        unsigned discreteN = 0;
+        int discreteIdx[2] = {-1, -1};
+        unsigned long long discreteVram[2] = {0, 0};
+        for (unsigned i = 0; i < snap.deviceCount && discreteN < 2; ++i) {
+            const DeviceIdentity& d = snap.devices[i];
+            if (d.integrated || d.score < 10 || d.dedicatedVram < (1ull << 30)) continue;
+            discreteIdx[discreteN] = (int)i;
+            discreteVram[discreteN] = d.dedicatedVram;
+            ++discreteN;
+        }
+        if (discreteN >= 2) {
+            // Sort by VRAM (descending) so primary gets the larger card.
+            if (discreteVram[0] < discreteVram[1]) {
+                std::swap(discreteIdx[0], discreteIdx[1]);
+                std::swap(discreteVram[0], discreteVram[1]);
+            }
+            plan.openIndexes[0] = snap.devices[discreteIdx[0]].index;
+            plan.openIndexes[1] = snap.devices[discreteIdx[1]].index;
+            plan.openCount = 2;
+            plan.opened = 2;
+            SetPrimary(plan, snap.devices[discreteIdx[0]]);
+            plan.mode = ExecMode::DualSovereign;
+            plan.backend = "DUAL_SOVEREIGN";
+            plan.policy = GpuPolicy::DualLane;
+            plan.reason = "auto_dual_gpu_detected";
+            snap.devices[discreteIdx[0]].duty = DeviceDuty::ComputePrimary;
+            snap.devices[discreteIdx[1]].duty = DeviceDuty::ComputeSecondary;
+            printf("[Deep2Engine] Auto dual-GPU: GPU0=%s (%llu MB) GPU1=%s (%llu MB)\n",
+                   snap.devices[discreteIdx[0]].name,
+                   discreteVram[0] / (1024ull * 1024ull),
+                   snap.devices[discreteIdx[1]].name,
+                   discreteVram[1] / (1024ull * 1024ull));
+            return true;
+        }
+    }
+
     const int best = Deep2Device_PickBestIndex(scores, vram, snap.deviceCount, 10u);
     if (best < 0) {
         plan.reason = "no_discrete_gpu";

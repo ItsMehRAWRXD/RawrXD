@@ -22,9 +22,11 @@
 #include "rawr_core.hpp"
 #include "rawr_reasoning.hpp"
 #include "Deep2Engine.h"
+#include "agentic/tool_call_parser.h"
 
 #include <csignal>
 #include <functional>
+#include <regex>
 
 using namespace rawr;
 
@@ -207,7 +209,7 @@ static bool resolveRunToolCall(const json& obj, RunToolCall& t) {
 
     static const std::set<std::string> known = {
         "list_repo", "read_file", "search_text", "git_status",
-        "write_file", "run_build", "run_tests"};
+        "write_file", "run_build", "run_tests", "edit_files", "git_diff"};
     if (known.count(fromAction)) t.tool = fromAction;
     else if (known.count(fromTool)) t.tool = fromTool;
     else t.tool = fromAction.empty() ? fromTool : fromAction;
@@ -296,6 +298,20 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
     };
 
     bool finalOnly = false;
+    // Agent state machine for autonomous repair (auto-inject when model
+    // doesn't emit tool calls - e.g. TinyLlama):
+    //  read → edit → build → test → final
+    enum class AgentState { Read, Edit, Build, Test, Final };
+    AgentState agentState = AgentState::Read;
+    bool fileRead = false, fileEdited = false, buildDone = false, testsDone = false;
+    std::string targetFile = "H01-01/test_off_by_one.cpp";  // extract from goal
+    // Extract target file from goal if it mentions a .cpp path
+    {
+        std::regex extRe("([\\w\\/\\\\.-]+\\.cpp)");
+        std::smatch m;
+        if (std::regex_search(goal, m, extRe)) targetFile = m[1].str();
+    }
+
     for (int turn = 1; turn <= maxTurns; ++turn) {
         if (InterlockedCompareExchange(&g_interrupted, 0, 0) != 0) {
             ro.canceled = true;
@@ -319,6 +335,204 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
         pendingAssistant = r.content;
 
         std::vector<json> objects = extractJsonObjectsForRun(r.content);
+
+        // State-driven fallback for models that cannot emit structured tool
+        // calls (e.g. TinyLlama). Every fallback-originated action is marked
+        // origin=orchestrator_fallback in telemetry and executed through the
+        // existing tool registry — never auto-injected arbitrarily.
+        //
+        // States: CONTEXT → DIAGNOSIS → PATCH → BUILD → TEST → VERIFY → COMPLETE
+        // Puppeteering controls WHICH tools run and WHEN; the MODEL provides
+        // the actual repair content. The fallback never fabricates edits.
+        enum class FallbackState { CONTEXT, DIAGNOSIS, PATCH, BUILD, TEST, VERIFY, COMPLETE };
+        FallbackState fs = FallbackState::CONTEXT;
+        std::string fbTargetFile;
+        std::string fbFileContents;
+        bool fbReadDone = false, fbEditDone = false, fbBuildDone = false;
+        bool fbTestDone = false, fbVerifyDone = false;
+        bool fbAskedDiagnosis = false, fbAskedPatch = false;
+
+        // Extract target file from goal
+        {
+            std::regex extRe("([\\w\\/\\\\.-]+\\.cpp)");
+            std::smatch m;
+            if (std::regex_search(goal, m, extRe)) fbTargetFile = m[1].str();
+        }
+
+        // Sync state from actual tool results (model may have dispatched tools
+        // outside the fallback path)
+        for (const auto& res : ro.results) {
+            if (res.tool == "read_file" && res.ok) fbReadDone = true;
+            if (res.tool == "edit_files" && res.ok) fbEditDone = true;
+            if (res.tool == "run_build" && res.ok) fbBuildDone = true;
+            if (res.tool == "run_tests" && res.ok) fbTestDone = true;
+            if (res.tool == "git_diff" && res.ok) fbVerifyDone = true;
+            if (res.tool == "read_file" && res.ok) {
+                // Capture file contents for diagnosis
+                fbFileContents = res.output;
+            }
+        }
+
+        // Advance state based on what's already done
+        if (fbReadDone && fs == FallbackState::CONTEXT) fs = FallbackState::DIAGNOSIS;
+        if (fbEditDone && fs == FallbackState::PATCH) fs = FallbackState::BUILD;
+        if (fbBuildDone && fs == FallbackState::BUILD) fs = FallbackState::TEST;
+        if (fbTestDone && fs == FallbackState::TEST) fs = FallbackState::VERIFY;
+        if (fbVerifyDone && fs == FallbackState::VERIFY) fs = FallbackState::COMPLETE;
+
+        if (objects.empty()) {
+            std::string fbTool;
+            json fbArgs = json::object();
+
+            switch (fs) {
+                case FallbackState::CONTEXT: {
+                    // NEED_CONTEXT → read the specified source file
+                    if (!fbTargetFile.empty() && !fbReadDone) {
+                        fbTool = "read_file";
+                        fbArgs["path"] = fbTargetFile;
+                        logLine("run: orchestrator_fallback tool=read_file state=CONTEXT");
+                    } else if (!fbTargetFile.empty()) {
+                        fs = FallbackState::DIAGNOSIS;
+                    } else {
+                        commit("No source file identified. Please specify a file to inspect "
+                               "(e.g. H01-01/test_off_by_one.cpp).");
+                        continue;
+                    }
+                    break;
+                }
+
+                case FallbackState::DIAGNOSIS: {
+                    // NEED_DIAGNOSIS → model analyzes actual file contents
+                    if (!fbAskedDiagnosis && !fbFileContents.empty()) {
+                        // Ask model to identify defects and propose edit
+                        std::string diagPrompt =
+                            "You are analyzing this source file for defects.\n\n"
+                            "FILE: " + fbTargetFile + "\n\n"
+                            "CONTENTS:\n" + fbFileContents + "\n\n"
+                            "Identify any defects and propose a fix. Reply with exactly one JSON object:\n"
+                            "{\"action\":\"tool\",\"tool\":\"edit_files\",\"args\":{"
+                            "\"path\":\"" + fbTargetFile + "\","
+                            "\"old\":\"<exact text to replace>\","
+                            "\"new\":\"<replacement text>\"}}";
+                        pendingAssistant = "";
+                        commit(diagPrompt);
+                        fbAskedDiagnosis = true;
+                        continue;
+                    }
+                    // Already asked diagnosis - check if model responded with edit
+                    // (edit_files would be in objects or ro.results)
+                    if (!fbFileContents.empty()) {
+                        fs = FallbackState::PATCH;
+                    }
+                    break;
+                }
+
+                case FallbackState::PATCH: {
+                    // NEED_PATCH → validated edit via tool registry
+                    if (!fbEditDone && !fbAskedPatch && !fbFileContents.empty()) {
+                        // Ask model to propose concrete edit
+                        std::string patchPrompt =
+                            "Based on the file contents above, propose a concrete edit "
+                            "to fix the defect. Reply with exactly one JSON object:\n"
+                            "{\"action\":\"tool\",\"tool\":\"edit_files\",\"args\":{"
+                            "\"path\":\"" + fbTargetFile + "\","
+                            "\"old\":\"<exact text to replace>\","
+                            "\"new\":\"<replacement text>\"}}";
+                        pendingAssistant = "";
+                        commit(patchPrompt);
+                        fbAskedPatch = true;
+                        continue;
+                    }
+                    if (!fbEditDone) {
+                        // Model hasn't produced a valid edit - stay in PATCH,
+                        // wait for next turn or report inability
+                        logLine("run: orchestrator_fallback waiting for model edit proposal state=PATCH");
+                        commit("Please propose the exact edit as a JSON edit_files call.");
+                        continue;
+                    }
+                    fs = FallbackState::BUILD;
+                    break;
+                }
+
+                case FallbackState::BUILD: {
+                    // NEED_BUILD → execute build command
+                    if (!fbBuildDone) {
+                        fbTool = "run_build";
+                        fbArgs = json::object();
+                        logLine("run: orchestrator_fallback tool=run_build state=BUILD");
+                    } else {
+                        fs = FallbackState::TEST;
+                    }
+                    break;
+                }
+
+                case FallbackState::TEST: {
+                    // NEED_TEST → run actual tests
+                    if (!fbTestDone) {
+                        fbTool = "run_tests";
+                        fbArgs = json::object();
+                        logLine("run: orchestrator_fallback tool=run_tests state=TEST");
+                    } else {
+                        fs = FallbackState::VERIFY;
+                    }
+                    break;
+                }
+
+                case FallbackState::VERIFY: {
+                    // NEED_VERIFICATION → inspect diff
+                    if (!fbVerifyDone) {
+                        fbTool = "git_diff";
+                        fbArgs = json::object();
+                        logLine("run: orchestrator_fallback tool=git_diff state=VERIFY");
+                    } else {
+                        fs = FallbackState::COMPLETE;
+                    }
+                    break;
+                }
+
+                case FallbackState::COMPLETE: {
+                    // COMPLETE → only if all stages succeeded
+                    if (fbReadDone && fbEditDone && fbBuildDone && fbTestDone && fbVerifyDone) {
+                        json finalObj;
+                        finalObj["action"] = "final";
+                        finalObj["summary"] = "Autonomous repair completed via orchestrator fallback: "
+                                              + fbTargetFile + " read, patched, built, tested, verified.";
+                        finalObj["findings"] = json::array({
+                            {{"id",1},{"title","Autonomous repair"},
+                             {"priority","P0"},
+                             {"evidence","All pipeline stages executed through tool registry (origin=orchestrator_fallback)"},
+                             {"files",{fbTargetFile}}}
+                        });
+                        finalObj["next_actions"] = json::array();
+                        objects.push_back(finalObj);
+                    } else {
+                        // Not all stages succeeded - report what's missing
+                        std::ostringstream oss;
+                        oss << "Repair incomplete. Stages: read=" << (fbReadDone?"ok":"missing")
+                            << ", edit=" << (fbEditDone?"ok":"missing")
+                            << ", build=" << (fbBuildDone?"ok":"missing")
+                            << ", test=" << (fbTestDone?"ok":"missing")
+                            << ", verify=" << (fbVerifyDone?"ok":"missing");
+                        json finalObj;
+                        finalObj["action"] = "final";
+                        finalObj["summary"] = oss.str();
+                        finalObj["findings"] = json::array();
+                        finalObj["next_actions"] = json::array();
+                        objects.push_back(finalObj);
+                    }
+                    break;
+                }
+            }
+
+            if (!fbTool.empty()) {
+                json obj;
+                obj["action"] = "tool";
+                obj["tool"] = fbTool;
+                obj["args"] = fbArgs;
+                objects.push_back(obj);
+            }
+        }
+
         if (objects.empty()) {
             commit("I could not parse that. Reply with exactly one JSON object: "
                    "either {\"action\":\"tool\",\"tool\":\"...\",\"args\":{...}} or "
@@ -379,6 +593,11 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             ToolResult tr = reg.dispatch(nextTool, nextArgs, ctx);
             ro.results.push_back(tr);
             if (tr.denied) ++ro.denied;
+
+            // Capture read_file output for orchestrator fallback diagnosis
+            if (nextTool == "read_file" && tr.ok) {
+                fallbackFileContents = tr.output;
+            }
 
             std::string firstLine = tr.output.substr(0, tr.output.find('\n'));
             if (firstLine.size() > 140) firstLine = firstLine.substr(0, 140);

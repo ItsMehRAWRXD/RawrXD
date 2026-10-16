@@ -92,11 +92,12 @@ VulkanCompute& GpuFor(int32_t device_index)
 // 0=Q4_K(144) 1=Q6_K(210) 5=Q2_K(84) 6=Q3_K(110); 2..4 = legacy 32-value.
 size_t RowBytesForKind(int kind, size_t n_in)
 {
-    if (kind == 5) return (n_in / 256u) * 84u;    // Q2_K
-    if (kind == 6) return (n_in / 256u) * 110u;   // Q3_K
+    if (kind == 5) return ((n_in + 255u) / 256u) * 84u;    // Q2_K
+    if (kind == 6) return ((n_in + 255u) / 256u) * 110u;   // Q3_K
+    if (kind == 7) return ((n_in + 63u) / 64u) * 36u;      // NVFP4: 64 elems per 36-byte block
     switch (kind) {
-    case 0: return (n_in / 256u) * 144u;               // Q4_K
-    case 1: return (n_in / 256u) * 210u;               // Q6_K
+    case 0: return ((n_in + 255u) / 256u) * 144u;               // Q4_K
+    case 1: return ((n_in + 255u) / 256u) * 210u;               // Q6_K
     case 2: return ((n_in + 31u) / 32u) * 22u;         // Q5_0
     case 3: return ((n_in + 31u) / 32u) * 34u;         // Q8_0
     default: return ((n_in + 31u) / 32u) * 18u;        // Q4_0
@@ -454,10 +455,8 @@ bool DotBlocked(int kind,
                 size_t q8_bytes,
                 bool force_cpu)
 {
-    g_receipt = Receipt{};
-
-    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K.
-    if (kind < 0 || kind > 6) {
+    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K, 7 = NVFP4
+    if (kind < 0 || kind > 7) {
         g_receipt.fallback_reason = "unsupported kind";
         return false;
     }
@@ -467,6 +466,11 @@ bool DotBlocked(int kind,
     }
     if (cpu == nullptr) {
         g_receipt.fallback_reason = "no CPU fallback supplied";
+        return false;
+    }
+    // NVFP4 requires 64 elements per block (36-byte block: 32 packed + 4 scale).
+    if (kind == 7 && (n_in % 64u) != 0) {
+        g_receipt.fallback_reason = "nvfp4: n_in not a multiple of 64";
         return false;
     }
     // Packed row stride and activation super-block count per kind. The legacy
@@ -563,6 +567,38 @@ bool DotBlocked(int kind,
     // It decodes the same interleaved Q8 layout the shader was handed, so the
     // two paths stay numerically comparable.
     if (!q8_interleaved) {
+        // NVFP4 (kind 7): decode packed FP4 weights directly without Q8 activation buffer.
+        if (kind == 7) {
+            static const float nvfp4_values[16] = {
+                0.0f, 0.5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f,   // sign=0
+               -0.0f,-0.5f,-1.0f,-1.5f,-2.0f,-3.0f,-4.0f,-6.0f   // sign=1
+            };
+            for (size_t j = 0; j < n_out; ++j) {
+                const uint8_t* row = static_cast<const uint8_t*>(wBytes) + j * row_bytes;
+                float acc = 0.0f;
+                for (size_t c = 0; c < n_in; ++c) {
+                    int block_idx = c / 64;
+                    int in_block = c % 64;
+                    // Bounds check: block must fit in wBytes
+                    if ((size_t)(block_idx + 1) * 36 > wBytesCount) {
+                        g_receipt.fallback_reason = "nvfp4: block index out of bounds";
+                        return false;
+                    }
+                    uint8_t byte = row[block_idx * 36 + in_block / 2];
+                    uint8_t nibble = (in_block % 2 == 0) ? (byte >> 4) : (byte & 0xF);
+                    int scale_idx = in_block / 16;
+                    uint8_t scale_byte = row[block_idx * 36 + 32 + scale_idx];
+                    // NVFP4 scale uses the same FP4 E2M1 encoding; mask to low nibble.
+                    float w = nvfp4_values[nibble] * nvfp4_values[scale_byte & 0xF];
+                    acc += w * x[c];
+                }
+                y[j] = acc;
+            }
+            g_receipt.used_gpu = false;
+            g_receipt.cpu_rows = n_out;
+            g_receipt.fallback_reason = "nvfp4 cpu fallback";
+            return false;
+        }
         g_receipt.fallback_reason = "gpu unavailable and no Q8 activation buffer";
         return false;
     }
@@ -595,7 +631,7 @@ bool DotBlockedOn(int32_t device, int kind,
                   bool force_cpu)
 {
     g_receipt = Receipt{};
-    if (kind < 0 || kind > 6) { g_receipt.fallback_reason = "unsupported kind"; return false; }
+    if (kind < 0 || kind > 7) { g_receipt.fallback_reason = "unsupported kind"; return false; }
     if (!wBytes || !x || !y || n_in == 0 || n_out == 0) { g_receipt.fallback_reason = "bad arguments"; return false; }
     if (cpu == nullptr) { g_receipt.fallback_reason = "no CPU fallback supplied"; return false; }
     const bool legacy = (kind >= 2);

@@ -1,0 +1,10 @@
+^F:\RAWRXD\BUILD_QT_FREE\CMAKEFILES\0ADE68AB3BE21B14DB58E49887BCFF34\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SF:/rawrxd -BF:/rawrxd/build_qt_free --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/rawrxd/build_qt_free/RawrXD-ModelLoader.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

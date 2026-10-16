@@ -1,0 +1,18 @@
+{
+  "acceptance_criteria": [],
+  "architecture": "",
+  "autonomy": "Generate and verify",
+  "build_system": "CMake",
+  "created_at": "2026-10-15T22:38:16",
+  "dependencies": [],
+  "framework": "",
+  "idea": "a tiny CLI greeter",
+  "language": "C++20",
+  "model_rotation_count": 0,
+  "name": "E2EDemo",
+  "platform": "",
+  "project_id": "proj_7638bb2223e790bf",
+  "tests": [],
+  "type": "CLI tool",
+  "updated_at": "2026-10-15T22:38:16"
+}
