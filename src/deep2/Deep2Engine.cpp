@@ -4835,31 +4835,29 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
     }
     // ===================================================================
 
-    // ── DBG: NVFP4 type=40 dispatch diagnosis (ssm_out) ─────────────────
+    // ── DBG: NVFP4 type=40 dispatch diagnosis (minimal) ─────────────────
     if (wt.type == (int)GGMLType::GGML_TYPE_NVFP4)
     {
-        auto& regDbg = Deep2::QuantKernelRegistry::Instance();
-        if (regDbg.GetRegisteredCount() == 0)
-            regDbg.Initialize();
-        auto kDbg = regDbg.GetGEMV(wt.type);
-        auto gDbg = regDbg.GetGeometry(wt.type);
-        fprintf(stderr,
-                "[DBG-NVFP4] name=%s type=%d data=%p rows=%zu cols=%zu "
-                "registryKernel=%p geom.blockSize=%zu geom.elemsPerBlock=%zu\n",
-                wt.name.c_str(), wt.type, (const void*)wt.data, wt.rows, wt.cols,
-                (const void*)kDbg, gDbg.blockSize, gDbg.elemsPerBlock);
-        if (wt.data)
+        static int nvfp4DbgCount = 0;
+        if (nvfp4DbgCount < 4)
         {
-            const uint8_t* wp = (const uint8_t*)wt.data;
-            fprintf(stderr, "[DBG-NVFP4] first8 bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
-                    wp[0], wp[1], wp[2], wp[3], wp[4], wp[5], wp[6], wp[7]);
+            ++nvfp4DbgCount;
+            fprintf(stderr,
+                    "[DBG-NVFP4] name=%s type=%d data=%p rows=%zu cols=%zu sizeBytes=%zu\n",
+                    wt.name.c_str(), wt.type, (const void*)wt.data, wt.rows, wt.cols, wt.sizeBytes);
+            if (wt.data)
+            {
+                const uint8_t* wp = (const uint8_t*)wt.data;
+                fprintf(stderr, "[DBG-NVFP4] first8 bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                        wp[0], wp[1], wp[2], wp[3], wp[4], wp[5], wp[6], wp[7]);
+            }
+            if (input)
+            {
+                fprintf(stderr, "[DBG-NVFP4] first4 input: %g %g %g %g\n",
+                        input[0], input[1], input[2], input[3]);
+            }
+            fflush(stderr);
         }
-        if (input)
-        {
-            fprintf(stderr, "[DBG-NVFP4] first4 input: %g %g %g %g\n",
-                    input[0], input[1], input[2], input[3]);
-        }
-        fflush(stderr);
     }
 
     // ── Kernel dispatch trace for certification proof ────────────────────
@@ -4880,7 +4878,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
     auto kernel = reg.GetGEMV(wt.type);
     auto geom = reg.GetGeometry(wt.type);
 
-    if (kernel && geom.blockSize > 0)
+    // NVFP4 is routed to the inline CPU path below (registry dispatch isolated separately)
+    if (kernel && geom.blockSize > 0 && wt.type != (int)GGMLType::GGML_TYPE_NVFP4)
     {
         reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
         reg.GetBatch21Counters().kernelInvocations.fetch_add(1, std::memory_order_relaxed);
@@ -8657,20 +8656,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         fprintf(stderr,
                 "[DBG-SSM] layer=%zu yInner[d_inner=%zu] bad=%zu/%zu firstBad=%zu\n",
                 layer, dInner, yBad, dInner, yFirstBad);
-        if (yBad > 0)
-        {
-            for (size_t i = 0; i < (yBad > 4 ? 4 : yBad); ++i)
-                fprintf(stderr, "[DBG-SSM] yInner[%zu]=%g\n", i, yInner[i]);
-            fflush(stderr);
-        }
-    }
-
-    // ── DBG: inspect ssmOut weight type/data ──
-    {
-        fprintf(stderr,
-                "[DBG-SSM] layer=%zu ssmOut type=%d rows=%zu cols=%zu data=%p sizeBytes=%zu\n",
-                layer, lw.ssmOut.type, lw.ssmOut.rows, lw.ssmOut.cols,
-                (const void*)lw.ssmOut.data, lw.ssmOut.sizeBytes);
         fflush(stderr);
     }
 
@@ -8678,6 +8663,30 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // ssmOut: [hiddenDim, d_inner] @ yInner[d_inner] → output[hiddenDim]
     memset(output, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmOut, yInner, nullptr, output, hiddenDim);
+
+    // ── DBG: inspect ssmOut output finiteness after projection ──
+    {
+        size_t oBad = 0;
+        size_t oFirstBad = 0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+        {
+            if (!std::isfinite(output[i]))
+            {
+                if (oBad == 0) oFirstBad = i;
+                ++oBad;
+            }
+        }
+        fprintf(stderr,
+                "[DBG-SSM] layer=%zu ssmOut output[hiddenDim=%zu] bad=%zu/%zu firstBad=%zu\n",
+                layer, hiddenDim, oBad, hiddenDim, oFirstBad);
+        if (oBad > 0)
+        {
+            for (size_t i = 0; i < (oBad > 4 ? 4 : oBad); ++i)
+                fprintf(stderr, "[DBG-SSM] output[%zu]=%g\n", i, output[i]);
+            fflush(stderr);
+        }
+    }
+
     if (layer == 86)
         traceActivation("L86.residual_out", output, hiddenDim);
 }

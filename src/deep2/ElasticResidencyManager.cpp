@@ -320,8 +320,29 @@ const void* ElasticResidencyManager::AcquireForCpu(const std::string& name,
 }
 
 void ElasticResidencyManager::ReleaseFromCpu(const std::string& name) {
-    // For now, CPU release is a no-op; LRU eviction handles cleanup.
-    (void)name;
+    std::lock_guard<std::mutex> lock(tensorsMutex_);
+    auto t = FindTensor(name);
+    if (!t) return;
+
+    // Release CPU-side staging buffer and reclaim RAM. The native quantized
+    // compressedData is retained so the tensor can be re-staged without a
+    // NVMe reload. State returns to WarmCompressed so the next AcquireForCpu
+    // with a dequantized format re-stages rather than returning a dangling ptr.
+    if (t->stagedData) {
+#ifdef _WIN32
+        VirtualFree(t->stagedData, 0, MEM_RELEASE);
+#else
+        free(t->stagedData);
+#endif
+        ReleaseWarmStaged(t->stagedAllocated);
+        t->stagedData = nullptr;
+        t->stagedBytes = 0;
+        t->stagedAllocated = 0;
+        t->stagedFormat = TensorFormat::Unknown;
+        t->state.store(ResidencyState::WarmCompressed);
+    }
+
+    telemetry_.cpuReleaseCount.fetch_add(1, std::memory_order_relaxed);
 }
 
 // ============================================================================

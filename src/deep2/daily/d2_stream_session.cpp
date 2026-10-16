@@ -54,7 +54,7 @@ int generate(void* engine, const D2GenerateRequest* req, D2TokenCallback cb,
     uint64_t generated = 0;
     auto t0 = std::chrono::steady_clock::now();
 
-    bool ok = eng->generateStream(req->prompt, opts,
+    Deep2::GenerationResult result = eng->generateStream(req->prompt, opts,
         [&](int32_t tokenId, const std::string& token) -> bool {
             // Cooperative cancel: stop when the caller requests it.
             if (cancel && d2_cancel_requested(cancel)) return false;
@@ -64,17 +64,18 @@ int generate(void* engine, const D2GenerateRequest* req, D2TokenCallback cb,
                             token.c_str(), token.size());
                 if (rc == 0) return false; // caller asked to stop
             }
-            ++generated;
             return true;
         });
 
+    generated = result.generatedTokens;
     if (metrics) {
+        metrics->prompt_tokens = result.promptTokens;
         metrics->generated_tokens = generated;
         auto t1 = std::chrono::steady_clock::now();
         metrics->wall_ns =
             std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
     }
-    return ok ? 1 : 0;
+    return (result.completed && !result.cancelled) ? 1 : 0;
 }
 
 } // namespace

@@ -62,8 +62,8 @@ QString AgenticCopilotBridge::generateCodeCompletion(const QString& context, con
             "Provide only the completion (no explanation):"
         ).arg(context, prefix);
 
-        // Request completion from engine (placeholder - would call m_agenticEngine->generate)
-        QString completion = prefix + " { /* completion */ }";
+        // Request completion from engine
+        QString completion = m_agenticEngine->generateCode(prompt);
         
         qint64 elapsed = timer.elapsed();
         qDebug() << "[Metrics] code_completion_latency_ms:" << elapsed
@@ -94,14 +94,10 @@ QString AgenticCopilotBridge::analyzeActiveFile() {
             return "Editor not available.";
         }
 
-        // Analyze file content and structure
-        QString analysis = QString(
-            "File Analysis:\n"
-            "- Total lines: [computed]\n"
-            "- Functions: [counted]\n"
-            "- Complexity: [analyzed]\n"
-            "- Issues: [detected]"
-        );
+        // Analyze file content using the agentic engine
+        QString analysis = m_agenticEngine->generateCode(
+            QString("Analyze this file for structure, functions, complexity, and issues:\n\n%1")
+            .arg(m_multiTabEditor->getCurrentText()));
 
         qint64 elapsed = timer.elapsed();
         qDebug() << "[Metrics] file_analysis_latency_ms:" << elapsed
@@ -230,8 +226,12 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
             fullContext[it.key()] = it.value();
         }
 
-        // Generate response (placeholder)
-        QString response = QString("Agent response to: %1").arg(question);
+        // Generate response using the agentic engine
+        QJsonObject ctxObj = buildExecutionContext();
+        for (auto it = context.constBegin(); it != context.constEnd(); ++it) {
+            ctxObj[it.key()] = it.value();
+        }
+        QString response = m_agenticEngine->generateNaturalResponse(question, ctxObj);
         
         // Add to history
         m_conversationHistory.append(QJsonObject{{"role", "assistant"}, {"content", response}});
@@ -595,8 +595,14 @@ void AgenticCopilotBridge::updateModel(const QString& newModelPath) {
             return;
         }
 
-        // Load new model (placeholder)
-        qDebug() << "[AgenticCopilotBridge] Model updated successfully";
+        // Load new model via the agentic engine
+        bool loaded = m_agenticEngine->loadModelAsync(newModelPath.toStdString());
+        if (!loaded) {
+            qWarning() << "[AgenticCopilotBridge] Failed to load model:" << newModelPath;
+            emit errorOccurred("Model load failed");
+            return;
+        }
+        qDebug() << "[AgenticCopilotBridge] Model loaded successfully";
         
         qint64 elapsed = timer.elapsed();
         qDebug() << "[Metrics] model_update_latency_ms:" << elapsed
