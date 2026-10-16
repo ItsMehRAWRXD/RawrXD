@@ -112,6 +112,10 @@ struct Args
     // FIRST-TOKEN PARITY certification: compare two raw float32 logit dumps
     // produced by --plain (one per backend) and emit the parity verdict.
     std::string diff_a, diff_b;
+    // SAMPLING: configurable temperature instead of hard-coded greedy (temp=0)
+    float temperature = 0.8f;
+    // CONTEXT: minuscule context sizes for local models (e.g. 128 tokens)
+    int context_size = 128;
 };
 
 Args Parse(int argc, char* argv[])
@@ -179,6 +183,10 @@ Args Parse(int argc, char* argv[])
             a.quiet = true;
         else if (s == "--batched-prefill" && i + 1 < argc)
             a.batched_prefill = std::atoi(argv[++i]) != 0;
+        else if (s == "--temperature" && i + 1 < argc)
+            a.temperature = static_cast<float>(std::atof(argv[++i]));
+        else if (s == "--context-size" && i + 1 < argc)
+            a.context_size = std::atoi(argv[++i]);
     }
     return a;
 }
@@ -1622,9 +1630,37 @@ static int PlainPromptRun(const Args& args)
             break;
         }
             const std::vector<float>& lg = ex.Logits();
-            next = 0;
-            for (uint32_t i = 1; i < lg.size(); ++i)
-                if (lg[i] > lg[next]) next = i;
+            // Sampling with configurable temperature; temperature <= 0 means greedy
+            if (args.temperature <= 0.0f)
+            {
+                next = 0;
+                for (uint32_t i = 1; i < lg.size(); ++i)
+                    if (lg[i] > lg[next]) next = i;
+            }
+            else
+            {
+                // Temperature-scaled softmax sampling
+                const float inv_t = 1.0f / args.temperature;
+                float max_logit = lg[0];
+                for (uint32_t i = 1; i < lg.size(); ++i)
+                    if (lg[i] > max_logit) max_logit = lg[i];
+                float sum = 0.0f;
+                static thread_local std::vector<float> probs;
+                probs.resize(lg.size());
+                for (uint32_t i = 0; i < lg.size(); ++i)
+                {
+                    probs[i] = std::exp((lg[i] - max_logit) * inv_t);
+                    sum += probs[i];
+                }
+                float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * sum;
+                float acc = 0.0f;
+                next = lg.size() - 1;
+                for (uint32_t i = 0; i < lg.size(); ++i)
+                {
+                    acc += probs[i];
+                    if (r <= acc) { next = i; break; }
+                }
+            }
 
             // Token integrity diagnostic
             if (t < 5 || t % 10 == 0)
@@ -2949,9 +2985,37 @@ const std::string task = args.task.empty()
                 break;
             }
             const std::vector<float>& lg = ex.Logits();
-            next = 0;
-            for (uint32_t i = 1; i < lg.size(); ++i)
-                if (lg[i] > lg[next]) next = i;
+            // Sampling with configurable temperature; temperature <= 0 means greedy
+            if (args.temperature <= 0.0f)
+            {
+                next = 0;
+                for (uint32_t i = 1; i < lg.size(); ++i)
+                    if (lg[i] > lg[next]) next = i;
+            }
+            else
+            {
+                // Temperature-scaled softmax sampling
+                const float inv_t = 1.0f / args.temperature;
+                float max_logit = lg[0];
+                for (uint32_t i = 1; i < lg.size(); ++i)
+                    if (lg[i] > max_logit) max_logit = lg[i];
+                float sum = 0.0f;
+                static thread_local std::vector<float> probs;
+                probs.resize(lg.size());
+                for (uint32_t i = 0; i < lg.size(); ++i)
+                {
+                    probs[i] = std::exp((lg[i] - max_logit) * inv_t);
+                    sum += probs[i];
+                }
+                float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * sum;
+                float acc = 0.0f;
+                next = lg.size() - 1;
+                for (uint32_t i = 0; i < lg.size(); ++i)
+                {
+                    acc += probs[i];
+                    if (r <= acc) { next = i; break; }
+                }
+            }
 
             const Action probe = ParseAction(gen);
             const deep2::agent::StopReason reason =

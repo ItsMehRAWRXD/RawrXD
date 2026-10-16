@@ -4,7 +4,7 @@
 // universal_gguf.cpp  --  RAWRXD_DEEP2_UNIVERSAL_INGEST
 // ============================================================================
 #include "universal_gguf.hpp"
-
+#include "../QuantTypeTable.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -307,16 +307,16 @@ struct Reader {
             t.rel_offset = U64();
 
             // Guard against GGUF types that exceed GGML_TYPE_COUNT (e.g. NVFP4
-            // type 40 when GGML_TYPE_COUNT == 40). GGML does not recognise these
+            // type 40 when GGML_TYPE_COUNT == 43). GGML does not recognise these
             // types; Deep2 handles them with its own kernels. Preserve the raw
             // GGUF type id in gguf_type and mark deep2_native so all GGML
             // tensor-construction, type-size and graph operations are bypassed.
-            // Do NOT assign GGML_TYPE_COUNT to ggml_type — it is a sentinel,
-            // not a valid tensor storage type, and passing it into ggml_get_type_traits
-            // or block-size math can trigger assertions.
+            // Assign ggml_type = GGML_TYPE_NVFP4 (40) so downstream GetDequant(40)
+            // finds dequant_nvfp4 and DispatchGEMVQuant(40) finds gemv_nvfp4_scalar.
             // Q4_0 was previously used but produced garbage because Q4_0 block
             // geometry (32 elems/2 bytes) is incompatible with NVFP4 (64 elems/36 bytes).
-            if (static_cast<uint32_t>(t.gguf_type) >= GGML_TYPE_COUNT) {
+            if (static_cast<uint32_t>(t.gguf_type) >= 40u) {
+                t.ggml_type = static_cast<ggml_type>(40);
                 t.deep2_native = true;
                 t.has_dequant = false;
                 t.gpu_quant_capable = false;

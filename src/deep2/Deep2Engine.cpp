@@ -4684,6 +4684,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
                         return ((c + 255) / 256) * sizeof(block_q8_K);
                     case (int)GGMLType::GGML_TYPE_Q6_K:
                         return ((c + 255) / 256) * sizeof(block_q6_K);
+                    case (int)GGMLType::GGML_TYPE_NVFP4:
+                        return ((c + 63) / 64) * 36;
                     default:
                         return 0;
                 }
@@ -6143,6 +6145,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
 
         // Hard gate: reject invalid hidden state
         const double stateNorm = B3_L2Norm(h, config.hiddenDim);
+        std::printf("[DBG] stateNorm=%.6e finite=%d pos=%zu\n", stateNorm, std::isfinite(stateNorm) ? 1 : 0, position);
+        std::fflush(stdout);
         if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm))
         {
             fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n", position, stateNorm);
@@ -6155,7 +6159,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         }
 
         // Hard gate: reject invalid logits
-        if (config.vocabSize == 0 || B3_CountNonFinite(logits, config.vocabSize) != 0)
+        int nonFinite = B3_CountNonFinite(logits, config.vocabSize);
+        std::printf("[DBG] nonFiniteLogits=%d vocabSize=%zu\n", nonFinite, config.vocabSize);
+        std::fflush(stdout);
+        if (config.vocabSize == 0 || nonFinite != 0)
         {
             fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n", position, config.vocabSize);
             return tokensGenerated;
@@ -6168,6 +6175,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             fflush(stdout);
         }
         int nextToken = sampleToken(logits);
+        std::printf("[DBG] sampled token=%d eosId=%d\n", nextToken, tokenizer ? tokenizer->GetSpecialTokens().eosId : -1);
+        std::fflush(stdout);
         if (B3_LogitsTraceEnabled())
         {
             printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
@@ -6834,13 +6843,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     ResidencyCounters::BeginAttention();
     if (profilingEnabled_ && profiler_)
         profiler_->beginQKVProj();
-    if (!lw.hasSSM)
+    if (!lw.hasSSM && lw.wq.data)
     {
         computeAttention(layer, layerTemp, output, seqLen);
     }
     else
     {
-        // SSM/Mamba layer: pass attention norm output through as-is
+        // SSM/Mamba layer or MoE-only layer without attention: pass attention norm output through as-is
         memcpy(output, layerTemp, hiddenDim * sizeof(float));
     }
     if (profilingEnabled_ && profiler_)
@@ -6923,7 +6932,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (lw.hasSSM)
     {
         // Hybrid layer: use SSM instead of FFN
+        std::printf("[SSM_DBG] calling computeSSM layer=%zu\n", layer); std::fflush(stdout);
         computeSSM(layer, layerTemp, ffnOutput);
+        std::printf("[SSM_DBG] computeSSM done layer=%zu\n", layer); std::fflush(stdout);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
     }
     else if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0)
@@ -8113,10 +8124,28 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // all layers during model load, so no per-layer overflow check is needed.
     if (!ssmMambaProj)
     {
-        // Lazy allocation safety net: if loadModel() did not allocate the
-        // projection buffer (e.g. reset() freed it), allocate it now.
         ssmMambaProj = alignedAlloc(ssmInRows);
         memset(ssmMambaProj, 0, ssmInRows * sizeof(float));
+    }
+    if (!ssmMambaConvState)
+    {
+        ssmMambaConvState = alignedAlloc(modelWeights.numLayers * dConv * dConvDim);
+        memset(ssmMambaConvState, 0, modelWeights.numLayers * dConv * dConvDim * sizeof(float));
+    }
+    if (!ssmY)
+    {
+        ssmY = alignedAlloc(std::max(dConvDim, dInner));
+        memset(ssmY, 0, std::max(dConvDim, dInner) * sizeof(float));
+    }
+    if (!ssmTemp)
+    {
+        ssmTemp = alignedAlloc(std::max(dConvDim, dInner));
+        memset(ssmTemp, 0, std::max(dConvDim, dInner) * sizeof(float));
+    }
+    if (!ssmMambaState)
+    {
+        ssmMambaState = alignedAlloc(modelWeights.numLayers * dInner * dState);
+        memset(ssmMambaState, 0, modelWeights.numLayers * dInner * dState * sizeof(float));
     }
 
     // ── Step 1: Project input via ssm_in ──
@@ -8124,37 +8153,31 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float* proj = ssmMambaProj;
     memset(proj, 0, ssmInRows * sizeof(float));
     LinearW(lw.ssmIn, input, nullptr, proj, ssmInRows);
-    std::printf("[SSM_DBG] after LinearW: proj[0]=%f proj[100]=%f proj[18559]=%f\n",
-                proj[0], proj[100], proj[ssmInRows-1]);
-    std::fflush(stdout);
+    std::printf("[SSM_DBG] after LinearW ssm_in\n"); std::fflush(stdout);
 
     // Split proj: z [d_inner], xBC [d_conv_dim], dt [d_dt]
     float* z = proj;                                       // [d_inner]
     float* xBC = proj + dInner;                            // [d_conv_dim]
     float* dt = proj + dInner + dConvDim;                  // [d_dt]
-    std::printf("[SSM_DBG] proj split: dInner=%zu dConvDim=%zu dDt=%zu z=%p xBC=%p dt=%p\n",
-                dInner, dConvDim, dDt, (void*)z, (void*)xBC, (void*)dt);
-    std::fflush(stdout);
 
     // ── Step 2: Causal conv1d on xBC (in-place) ──
     float* convStatePtr = ssmMambaConvState + layer * dConv * dConvDim;
-    std::printf("[SSM_DBG] convStatePtr=%p ssmMambaConvState=%p layer=%zu dConv=%zu dConvDim=%zu\n",
-                (void*)convStatePtr, (void*)ssmMambaConvState, layer, dConv, dConvDim);
-    std::fflush(stdout);
+    std::printf("[SSM_DBG] convStatePtr=%p dConv=%zu dConvDim=%zu\n", (void*)convStatePtr, dConv, dConvDim); std::fflush(stdout);
 
     const float* convW = (const float*)lw.ssmConv1d.data;
     const float* convBias = (const float*)lw.ssmConv1dBias.data;
-    std::printf("[SSM_DBG] convW=%p convBias=%p ssmMambaConvState=%p\n",
-                (void*)convW, (void*)convBias, (void*)ssmMambaConvState);
-    std::fflush(stdout);
+    std::printf("[SSM_DBG] convW=%p convBias=%p\n", (void*)convW, (void*)convBias); std::fflush(stdout);
     // Shift conv state: state[k] = state[k-1] for k=d_conv-1..1
+    // Use memmove because source and destination ranges overlap.
     for (size_t k = dConv - 1; k > 0; --k)
     {
-        memcpy(convStatePtr + k * dConvDim, convStatePtr + (k - 1) * dConvDim,
-               dConvDim * sizeof(float));
+        memmove(convStatePtr + k * dConvDim, convStatePtr + (k - 1) * dConvDim,
+                dConvDim * sizeof(float));
     }
+    std::printf("[SSM_DBG] conv state shift done\n"); std::fflush(stdout);
     // Insert new input at state[0]
     memcpy(convStatePtr, xBC, dConvDim * sizeof(float));
+    std::printf("[SSM_DBG] conv state insert done\n"); std::fflush(stdout);
 
     // Compute conv output per channel: y[i] = silu(bias[i] + sum_k W[k,i] * state[k,i])
     float* convOut = ssmY;  // [d_conv_dim] — checked <= hiddenDim above
@@ -8167,6 +8190,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         }
         convOut[i] = sum / (1.0f + expf(-sum));  // silu
     }
+    std::printf("[SSM_DBG] conv output done dConvDim=%zu\n", dConvDim); std::fflush(stdout);
 
     // ── Step 3: Split conv output into x, B, C ──
     float* x = convOut;                                          // [d_inner]
@@ -8179,6 +8203,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const float* dtBias = (const float*)lw.ssmDtBias.data;
     float* statePtr = ssmMambaState + layer * ssmMambaDInner * ssmMambaDState;      // [d_inner, d_state]
     float* yInner = ssmTemp;                                   // [d_inner]
+    std::printf("[SSM_DBG] selective scan start statePtr=%p yInner=%p\n", (void*)statePtr, (void*)yInner); std::fflush(stdout);
 
     // Softplus helper
     auto softplus = [](float x) -> float {
@@ -8241,8 +8266,10 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     // ── Step 6: Project via ssm_out ──
     // ssmOut: [hiddenDim, d_inner] @ yInner[d_inner] → output[hiddenDim]
+    std::printf("[SSM_DBG] before ssm_out LinearW hiddenDim=%zu\n", hiddenDim); std::fflush(stdout);
     memset(output, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmOut, yInner, nullptr, output, hiddenDim);
+    std::printf("[SSM_DBG] after ssm_out LinearW\n"); std::fflush(stdout);
 }
 
 // ============================================================================
@@ -9686,7 +9713,7 @@ void Deep2Engine::enableVulkan(bool enable)
         }
         else
         {
-            vulkanStrictNoCpuFallback_ = true;
+            vulkanStrictNoCpuFallback_ = false;
         }
         if (multiGpuLayerPlan_.active)
         {
