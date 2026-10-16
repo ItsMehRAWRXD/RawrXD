@@ -1695,6 +1695,7 @@ bool Deep2Engine::allocateBuffers()
     size_t hiddenSize = config.hiddenDim;
     size_t vocabSize = config.vocabSize;
     size_t maxSeq = config.maxSeqLen;
+    if (maxSeq == 0) maxSeq = 4096;  // safe default before model metadata is loaded
     size_t headDim = config.headDim > 0 ? config.headDim : (hiddenSize / config.numHeads);
     size_t kvHeads = config.numKVHeads > 0 ? config.numKVHeads : config.numHeads;
 
@@ -2244,6 +2245,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     config.qkRopeHeadDim = modelWeights.qkRopeHeadDim;
     config.vHeadDim = modelWeights.vHeadDim;
     config.useMLA = modelWeights.useMLA;
+
+    // Resolve context length from model metadata (e.g. llama.context_length,
+    // nemotron_h_moe.context_length). Do not hard-code 2048 — a model may
+    // advertise 1M+ tokens. Cap by what the KV cache and hardware can
+    // actually admit; the model-fit estimator below will reject if the
+    // requested context cannot be placed.
+    if (meta.maxPositionEmbeddings > 0)
+    {
+        config.maxSeqLen = meta.maxPositionEmbeddings;
+        printf("[Deep2Engine] Context length from metadata: %zu tokens\n", config.maxSeqLen);
+    }
+    else if (config.maxSeqLen == 0)
+    {
+        config.maxSeqLen = 4096;  // conservative default when metadata is absent
+        printf("[Deep2Engine] Context length: no metadata; defaulting to %zu tokens\n", config.maxSeqLen);
+    }
 
     // Guard: refuse to allocate with invalid dimensions
     if (config.vocabSize == 0 || config.hiddenDim == 0 || config.numLayers == 0)
@@ -2950,8 +2967,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         if (maxProjRows > 0)
         {
             ssmMambaProj = alignedAlloc(maxProjRows);
-            std::printf("[SSM_DBG] allocated ssmMambaProj=%p rows=%zu\n", (void*)ssmMambaProj, maxProjRows);
-            std::fflush(stdout);
             memset(ssmMambaProj, 0, maxProjRows * sizeof(float));
         }
         if (modelWeights.numLayers > 0 && maxDInner > 0 && maxDState > 0)
@@ -2969,23 +2984,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                maxProjRows,
                static_cast<size_t>(modelWeights.numLayers) * maxDInner * maxDState,
                static_cast<size_t>(modelWeights.numLayers) * maxDConv * maxDConvDim,
-               maxDConv, maxDConvDim);
-        std::printf("[SSM_DBG] maxProjRows=%zu maxDInner=%zu maxDConvDim=%zu maxDConv=%zu maxDState=%zu ssmLayers=%zu\n",
-                    maxProjRows, maxDInner, maxDConvDim, maxDConv, maxDState, ssmLayers);
-        std::fflush(stdout);
+                maxDConv, maxDConvDim);
 
-    // Resize SSM scratch buffers (ssmY, ssmTemp) to accommodate dConvDim and dInner,
-    // which may exceed hiddenDim for Mamba-2 hybrid layers.
-    size_t ssmScratchSize = std::max(maxDConvDim, maxDInner);
-    if (ssmScratchSize > 0)
-    {
-        alignedFree(ssmY);
-        alignedFree(ssmTemp);
-        ssmY = alignedAlloc(ssmScratchSize);
-        ssmTemp = alignedAlloc(ssmScratchSize);
-        if (ssmY) memset(ssmY, 0, ssmScratchSize * sizeof(float));
-        if (ssmTemp) memset(ssmTemp, 0, ssmScratchSize * sizeof(float));
-    }
+        // Resize SSM scratch buffers (ssmY, ssmTemp) to accommodate dConvDim and dInner,
+        // which may exceed hiddenDim for Mamba-2 hybrid layers.
+        size_t ssmScratchSize = std::max(maxDConvDim, maxDInner);
+        if (ssmScratchSize > 0)
+        {
+            alignedFree(ssmY);
+            alignedFree(ssmTemp);
+            ssmY = alignedAlloc(ssmScratchSize);
+            ssmTemp = alignedAlloc(ssmScratchSize);
+            if (ssmY) memset(ssmY, 0, ssmScratchSize * sizeof(float));
+            if (ssmTemp) memset(ssmTemp, 0, ssmScratchSize * sizeof(float));
+        }
     }
 
     // ─── DEEP2_MODEL_FIT_AUTHORITY_001: bind the admitted plan ─────────────
@@ -3061,7 +3073,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         for (const auto& t : layerTopology_)
             if (t.mixer == LayerMixer::Attention) ++attnLayers;
         kvConfig.numLayers = attnLayers > 0 ? attnLayers : modelWeights.numLayers;
-        kvConfig.maxSeqLen = config.maxSeqLen > 0 ? config.maxSeqLen : 2048;
+        kvConfig.maxSeqLen = config.maxSeqLen > 0 ? config.maxSeqLen : 4096;
         kvConfig.numHeads = modelWeights.numKVHeads > 0 ? modelWeights.numKVHeads : modelWeights.numHeads;
         kvConfig.headDim = modelWeights.headDim;
         if (!kvCache->initialize(kvConfig))
@@ -4800,6 +4812,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         return;
     }
 
+    std::printf("[LW_DBG] LinearW enter: type=%d rows=%zu cols=%zu outDim=%zu name=%s\n",
+                wt.type, wt.rows, wt.cols, outDim, wt.name.c_str());
+    std::fflush(stdout);
+
     // --- VAL-051.7+: Cyclone-Elastic contract ---
     // AcquireTensor guarantees CPU-resident pointer before compute.
     // No fallback to wt.data — eliminates silent page-fault escape hatch.
@@ -4897,9 +4913,11 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     if (plannedCpu)
         ++plannedCpuGemvOps_;
     auto tQuant0 = std::chrono::high_resolution_clock::now();
-    if (threadPool && rows >= 64)
-    {
-        size_t numThreads = threadPool->size();
+        if (threadPool && rows >= 64)
+        {
+            std::printf("[LW_DBG] using threadPool, rows=%zu cols=%zu\n", rows, cols);
+            std::fflush(stdout);
+            size_t numThreads = threadPool->size();
         size_t rowsPerThread = rows / numThreads;
         size_t remainder = rows % numThreads;
 
@@ -4929,10 +4947,16 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         {
             _mm_pause();
         }
+        std::printf("[LW_DBG] threadPool done\n");
+        std::fflush(stdout);
     }
     else
     {
+        std::printf("[LW_DBG] calling LinearW_Range directly, rows=%zu cols=%zu\n", rows, cols);
+        std::fflush(stdout);
         LinearW_Range(wtEffective, input, output, 0, rows, cols);
+        std::printf("[LW_DBG] LinearW_Range returned\n");
+        std::fflush(stdout);
     }
     auto tLinearW1 = std::chrono::high_resolution_clock::now();
     double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
@@ -5147,8 +5171,8 @@ bool Deep2Engine::switchModel(const std::string& ggufPath)
     cfg.headDim = mw.headDim;
     cfg.vocabSize = mw.vocabSize;
     cfg.intermediateDim = mw.intermediateDim;
-    if (cfg.maxSeqLen == 0)
-        cfg.maxSeqLen = 2048;
+      if (cfg.maxSeqLen == 0)
+          cfg.maxSeqLen = 4096;
     strncpy_s(cfg.modelPath, ggufPath.c_str(), _TRUNCATE);
     if (!initialize(cfg))
     {
@@ -6548,8 +6572,9 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
     if (agentFirstToken)
     {
         opts.maxTokens = 1;
-        opts.temperature = 0.0f;
-        opts.topK = 1;
+        opts.temperature = 0.7f;
+        opts.topK = 40;
+        opts.topP = 0.95f;
         configureGeneration(opts);
     }
 
@@ -8088,10 +8113,10 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // all layers during model load, so no per-layer overflow check is needed.
     if (!ssmMambaProj)
     {
-        std::printf("[SSM_DBG] forwardLayer: ssmMambaProj=nullptr at layer=%zu\n", layer);
-        std::fflush(stdout);
-        fprintf(stderr, "[SSM_FATAL] layer=%zu ssmMambaProj not allocated\n", layer);
-        throw std::runtime_error("SSM proj buffer not allocated");
+        // Lazy allocation safety net: if loadModel() did not allocate the
+        // projection buffer (e.g. reset() freed it), allocate it now.
+        ssmMambaProj = alignedAlloc(ssmInRows);
+        memset(ssmMambaProj, 0, ssmInRows * sizeof(float));
     }
 
     // ── Step 1: Project input via ssm_in ──
@@ -8099,18 +8124,29 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float* proj = ssmMambaProj;
     memset(proj, 0, ssmInRows * sizeof(float));
     LinearW(lw.ssmIn, input, nullptr, proj, ssmInRows);
+    std::printf("[SSM_DBG] after LinearW: proj[0]=%f proj[100]=%f proj[18559]=%f\n",
+                proj[0], proj[100], proj[ssmInRows-1]);
+    std::fflush(stdout);
 
     // Split proj: z [d_inner], xBC [d_conv_dim], dt [d_dt]
     float* z = proj;                                       // [d_inner]
     float* xBC = proj + dInner;                            // [d_conv_dim]
     float* dt = proj + dInner + dConvDim;                  // [d_dt]
+    std::printf("[SSM_DBG] proj split: dInner=%zu dConvDim=%zu dDt=%zu z=%p xBC=%p dt=%p\n",
+                dInner, dConvDim, dDt, (void*)z, (void*)xBC, (void*)dt);
+    std::fflush(stdout);
 
     // ── Step 2: Causal conv1d on xBC (in-place) ──
-    // Conv state: [d_conv, d_conv_dim] per layer
     float* convStatePtr = ssmMambaConvState + layer * dConv * dConvDim;
+    std::printf("[SSM_DBG] convStatePtr=%p ssmMambaConvState=%p layer=%zu dConv=%zu dConvDim=%zu\n",
+                (void*)convStatePtr, (void*)ssmMambaConvState, layer, dConv, dConvDim);
+    std::fflush(stdout);
+
     const float* convW = (const float*)lw.ssmConv1d.data;
     const float* convBias = (const float*)lw.ssmConv1dBias.data;
-
+    std::printf("[SSM_DBG] convW=%p convBias=%p ssmMambaConvState=%p\n",
+                (void*)convW, (void*)convBias, (void*)ssmMambaConvState);
+    std::fflush(stdout);
     // Shift conv state: state[k] = state[k-1] for k=d_conv-1..1
     for (size_t k = dConv - 1; k > 0; --k)
     {
