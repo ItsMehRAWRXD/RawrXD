@@ -88,6 +88,7 @@ struct TensorRec {
     int32_t block = -1;
     Role role = Role::Other;
     ggml_type ggml_type = GGML_TYPE_COUNT;
+    bool deep2_native = false;    // Deep2 handles this type natively; bypass GGML tensor construction
     bool has_dequant = false;     // ggml can dequantise this type
     bool gpu_quant_capable = false;  // Q4_K / Q6_K: GPU dispatcher can consume raw bytes
 };

@@ -308,15 +308,18 @@ struct Reader {
 
             // Guard against GGUF types that exceed GGML_TYPE_COUNT (e.g. NVFP4
             // type 40 when GGML_TYPE_COUNT == 40). GGML does not recognise these
-            // types; Deep2 handles them with its own kernels. Preserve the record
-            // for the histogram but skip GGML dequantisation.
-            // Map to GGML_TYPE_COUNT purely to avoid GGML_ASSERT on the enum value;
-            // has_dequant stays false so Deep2's own NVFP4 kernels handle the data.
+            // types; Deep2 handles them with its own kernels. Preserve the raw
+            // GGUF type id in gguf_type and mark deep2_native so all GGML
+            // tensor-construction, type-size and graph operations are bypassed.
+            // Do NOT assign GGML_TYPE_COUNT to ggml_type — it is a sentinel,
+            // not a valid tensor storage type, and passing it into ggml_get_type_traits
+            // or block-size math can trigger assertions.
             // Q4_0 was previously used but produced garbage because Q4_0 block
             // geometry (32 elems/2 bytes) is incompatible with NVFP4 (64 elems/36 bytes).
             if (static_cast<uint32_t>(t.gguf_type) >= GGML_TYPE_COUNT) {
-                t.ggml_type = GGML_TYPE_COUNT;
+                t.deep2_native = true;
                 t.has_dequant = false;
+                t.gpu_quant_capable = false;
                 ordered.push_back(t);
                 continue;
             }
@@ -1228,7 +1231,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
 
     for (auto& t : g_last.tensors) {
         t.role = ClassifyRole(t.name, t.block);
-        if (t.ggml_type == GGML_TYPE_COUNT) {
+        if (t.deep2_native) {
             // NVFP4 etc. — Deep2 handles these natively; GGML cannot dequantise.
             t.has_dequant = false;
             t.gpu_quant_capable = false;
@@ -1291,7 +1294,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
                     }
                 }
             } else {
-                if (t.ggml_type == GGML_TYPE_COUNT) continue;  // NVFP4 etc. — Deep2 handles
+                if (t.deep2_native) continue;  // NVFP4 etc. — Deep2 handles
                 const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
                 if (!tr || !tr->to_float) continue;
                 const size_t n = t.bytes / static_cast<size_t>(tr->type_size) *
@@ -1324,7 +1327,7 @@ const IngestReport& IngestWeights(const std::string& path,
         if (g_last.weights.count(name)) continue;
         for (const auto& t : g_last.tensors) {
             if (t.name != name) continue;
-            if (t.ggml_type == GGML_TYPE_COUNT) break;
+            if (t.deep2_native) break;
             const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
             if (!tr || !tr->to_float || !t.data) break;
             const size_t n = t.bytes / static_cast<size_t>(tr->type_size) *

@@ -1379,6 +1379,8 @@ private:
                      GpuWorkKind kind = GpuWorkKind::ModelCompute);
     bool dispatchQuant(DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
                        const QPush& push);
+    bool dispatchQuantNvfp4(DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
+                            const QPush& push);
 
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
@@ -1431,8 +1433,10 @@ private:
     VkDescriptorSetLayout qSetLayout_ = VK_NULL_HANDLE;
     VkPipelineLayout opsPipelineLayout_ = VK_NULL_HANDLE;
     VkPipelineLayout qPipelineLayout_ = VK_NULL_HANDLE;
+    VkPipelineLayout qNvfp4PipelineLayout_ = VK_NULL_HANDLE;
     VkPipeline opsPipeline_ = VK_NULL_HANDLE;
     VkPipeline qPipeline_ = VK_NULL_HANDLE;
+    VkPipeline qNvfp4Pipeline_ = VK_NULL_HANDLE;
 
     bool calibratedAvailable_ = false;
     VkTimeDomainEXT hostTimeDomain_ = VK_TIME_DOMAIN_DEVICE_EXT;

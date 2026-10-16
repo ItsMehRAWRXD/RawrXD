@@ -644,25 +644,27 @@ bool VulkanCompute::createPipelines() {
     const std::string qb = shaderPath("deep2_qgemv_batch.spv");
     const std::string q4r = shaderPath("deep2_qgemv_batch4row.spv");
     const std::string q8r = shaderPath("deep2_qgemv_batch8row.spv");
+    const std::string qn = shaderPath("deep2_qgemv_nvfp4.spv");
     const std::string am = shaderPath("deep2_argmax.spv");
     const std::string so = shaderPath("deep2_spec_ops.spv");
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
 
     std::fprintf(stderr,
-        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s am=%s so=%s sa=%s ac=%s\n",
+        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s\n",
         ops.empty()?"NOTFOUND":ops.c_str(),
         q.empty()?"NOTFOUND":q.c_str(),
         qb.empty()?"NOTFOUND":qb.c_str(),
         q4r.empty()?"NOTFOUND":q4r.c_str(),
         q8r.empty()?"NOTFOUND":q8r.c_str(),
+        qn.empty()?"NOTFOUND":qn.c_str(),
         am.empty()?"NOTFOUND":am.c_str(),
         so.empty()?"NOTFOUND":so.c_str(),
         sa.empty()?"NOTFOUND":sa.c_str(),
         ac.empty()?"NOTFOUND":ac.c_str());
     std::fflush(stderr);
 
-    bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false;
+    bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false, okQn=false;
     if (!ops.empty())
         okOps=createPipelineFromFile(
             ops, opsSetLayout_, sizeof(OpsPush), opsPipelineLayout_, opsPipeline_);
@@ -681,6 +683,10 @@ bool VulkanCompute::createPipelines() {
         okQ8r=createPipelineFromFile(
             q8r,qSetLayout_,sizeof(QBatchPush),
             qBatch8RowPipelineLayout_,qBatch8RowPipeline_);
+    if(!qn.empty())
+        okQn=createPipelineFromFile(
+            qn,qSetLayout_,sizeof(QPush),
+            qNvfp4PipelineLayout_,qNvfp4Pipeline_);
     if(!am.empty())
         (void)createPipelineFromFile(
             am,qSetLayout_,sizeof(ArgmaxPush),
@@ -695,8 +701,8 @@ bool VulkanCompute::createPipelines() {
             specAttnPipelineLayout_,specAttnPipeline_);
 
     std::fprintf(stderr,
-        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u\n",
-        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u);
+        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u\n",
+        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u, okQn?1u:0u);
     std::fflush(stderr);
 
     return opsPipeline_ != VK_NULL_HANDLE;
@@ -1819,6 +1825,35 @@ bool VulkanCompute::dispatchQuant(
                          push.weightBytes, workEpoch_, nullptr);
 }
 
+bool VulkanCompute::dispatchQuantNvfp4(
+    DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
+    const QPush& push)
+{
+    if (!qNvfp4Pipeline_ || !weights || !input || !output) return false;
+
+    VkCommandBuffer cmd = fusedCmd_;
+    VkQueryPool query = fusedQuery_;
+    const bool own = !fused_;
+    if (own) {
+        if (!beginCommand(cmd, query, true)) return false;
+    }
+
+    VkDescriptorSet set = getQuantDescriptor(weights, input, output);
+    if (set == VK_NULL_HANDLE) return false;
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qNvfp4Pipeline_);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                            qNvfp4PipelineLayout_, 0, 1, &set, 0, nullptr);
+    vkCmdPushConstants(cmd, qNvfp4PipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                       0, sizeof(push), &push);
+    vkCmdDispatch(cmd, push.rows, 1, 1);
+    recordComputeBarrier(cmd);
+
+    if (!own) return true;
+    return endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                         push.weightBytes, workEpoch_, nullptr);
+}
+
 bool VulkanCompute::RunComputeProbe(
     size_t elements, float scale, float bias, std::vector<float>* out)
 {
@@ -1962,7 +1997,7 @@ bool VulkanCompute::SubmitWeightPrimeAsync(
 {
     (void)cacheKey;
     if (!src || !bytes) return false;
-    if (type != 0 && type != 8 && type != 10 && type != 12 && type != 14)
+    if (type != 0 && type != 8 && type != 10 && type != 12 && type != 14 && type != 40)
         return false;
     return SubmitMaterialUploadAsync(src, bytes, epoch, ticket);
 }
@@ -3103,7 +3138,7 @@ bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
 {
-    if(type!=8 && type!=10 && type!=12 && type!=14) return false;
+    if(type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;
@@ -3115,7 +3150,12 @@ bool VulkanCompute::DispatchGemvQuant(
     p.rows=rows; p.cols=cols;
     if(weightBytes>std::numeric_limits<uint32_t>::max()) return false;
     p.weightBytes=static_cast<uint32_t>(weightBytes);
-    bool ok=dispatchQuant(*w,input,output,p);
+    bool ok;
+    if(type==40) {
+        ok=dispatchQuantNvfp4(*w,input,output,p);
+    } else {
+        ok=dispatchQuant(*w,input,output,p);
+    }
     if(ok) ++gemvSuccess_;
     return ok;
 }
@@ -3343,13 +3383,18 @@ bool VulkanCompute::SubmitGemvPrefetch(
     if(slot>=prefetch_.size()||!prefetch_[slot].valid) return false;
     auto& e=prefetch_[slot];
     if(packedBytes && quantType) {
-        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=14) return false;
+        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=14&&quantType!=40) return false;
         QPush p{};
         p.type=static_cast<uint32_t>(quantType);
         p.rows=rows;p.cols=cols;
         if(e.bytes>std::numeric_limits<uint32_t>::max()) return false;
         p.weightBytes=static_cast<uint32_t>(e.bytes);
-        bool ok=dispatchQuant(e.buffer,input,output,p);
+        bool ok;
+        if(quantType==40) {
+            ok=dispatchQuantNvfp4(e.buffer,input,output,p);
+        } else {
+            ok=dispatchQuant(e.buffer,input,output,p);
+        }
         if(ok) ++gemvSuccess_;
         return ok;
     }
@@ -3899,7 +3944,9 @@ bool VulkanCompute::DispatchWeightResident(
     p.rows = weight.rows;
     p.cols = weight.cols;
     p.weightBytes = static_cast<uint32_t>(weight.bytes);
-    const bool ok = dispatchQuant(residentWeight, input, output, p);
+    const bool ok = weight.type == 40
+        ? dispatchQuantNvfp4(residentWeight, input, output, p)
+        : dispatchQuant(residentWeight, input, output, p);
     if (ok) ++gemvSuccess_;
     return ok;
 }
