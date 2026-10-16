@@ -1090,11 +1090,10 @@ struct TensorInfo {
     uint64_t dataOffset = 0;
 
     // ---- Payload ----
-    // Null until the tensor is materialised. Load() only DESCRIBES tensors and
-    // never populates this pointer, so a caller must not assume it is set.
-    // Release it only via GGUFLoader::FreeTensorData, which owns the allocation
-    // ABI (VirtualAlloc on Windows). Using free()/delete here is undefined
-    // behaviour rather than a leak.
+    // Pointer into the GGUFLoader's mapped shard memory. Populated by
+    // GGUFLoader::Load() from gt->data. Remains valid for the lifetime of the
+    // GGUFLoader (or GGUFLoadResult, which holds the loader internally).
+    // Do NOT free directly — the loader owns the mapping via RAII.
     void* data = nullptr;
 
     // Number of addressable units in the payload. Deep2Engine uses this to size
@@ -1435,6 +1434,7 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
             ti.offset = gt->tensorOffset;
             ti.size = gt->sizeBytes;
             ti.dataOffset = gt->fileOffset;
+            ti.data = const_cast<void*>(static_cast<const void*>(gt->data));  // data pointer from mapped shard
             result.tensors.push_back(std::move(ti));
         }
     } else {
@@ -1507,6 +1507,7 @@ inline bool load_gguf(const std::string& path, void* out) {
             ti.offset = gt->tensorOffset;
             ti.size = gt->sizeBytes;
             ti.dataOffset = gt->fileOffset;
+            ti.data = const_cast<void*>(static_cast<const void*>(gt->data));  // data pointer from mapped shard
             tensors.push_back(std::move(ti));
         }
     }

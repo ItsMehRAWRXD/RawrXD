@@ -306,6 +306,19 @@ struct Reader {
             t.gguf_type = U32();
             t.rel_offset = U64();
 
+            // Guard against GGUF types that exceed GGML_TYPE_COUNT (e.g. NVFP4
+            // type 40 when GGML_TYPE_COUNT == 40). GGML does not recognise these
+            // types; Deep2 handles them with its own kernels. Preserve the record
+            // for the histogram but skip GGML dequantisation.
+            // Map to Q4_0 (type 2) purely to avoid GGML_ASSERT on the enum value;
+            // has_dequant stays false so Deep2's own kernels handle the data.
+            if (static_cast<uint32_t>(t.gguf_type) >= GGML_TYPE_COUNT) {
+                t.ggml_type = GGML_TYPE_Q4_0;
+                t.has_dequant = false;
+                ordered.push_back(t);
+                continue;
+            }
+
             t.ggml_type = static_cast<ggml_type>(t.gguf_type);
             const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
             if (!tr || tr->blck_size == 0) {
@@ -1213,10 +1226,15 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
 
     for (auto& t : g_last.tensors) {
         t.role = ClassifyRole(t.name, t.block);
+        if (t.ggml_type == GGML_TYPE_COUNT) {
+            // NVFP4 etc. — Deep2 handles these natively; GGML cannot dequantise.
+            t.has_dequant = false;
+            t.gpu_quant_capable = false;
+            g_last.type_histogram[t.gguf_type]++;
+            g_last.no_dequant++;
+            continue;
+        }
         const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
-        // F32/F16/BF16 have no to_float in ggml because they need no
-        // dequantisation - they are raw-loadable. Everything else must be
-        // dequantised, so a missing to_float is a genuine gap.
         const bool raw_loadable =
             (t.ggml_type == GGML_TYPE_F32 || t.ggml_type == GGML_TYPE_F16 ||
              t.ggml_type == GGML_TYPE_BF16);
@@ -1271,6 +1289,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
                     }
                 }
             } else {
+                if (t.ggml_type == GGML_TYPE_COUNT) continue;  // NVFP4 etc. — Deep2 handles
                 const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
                 if (!tr || !tr->to_float) continue;
                 const size_t n = t.bytes / static_cast<size_t>(tr->type_size) *
@@ -1303,6 +1322,7 @@ const IngestReport& IngestWeights(const std::string& path,
         if (g_last.weights.count(name)) continue;
         for (const auto& t : g_last.tensors) {
             if (t.name != name) continue;
+            if (t.ggml_type == GGML_TYPE_COUNT) break;
             const ggml_type_traits* tr = ggml_get_type_traits(t.ggml_type);
             if (!tr || !tr->to_float || !t.data) break;
             const size_t n = t.bytes / static_cast<size_t>(tr->type_size) *

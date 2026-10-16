@@ -2209,6 +2209,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND Vulkan_FOUND AN
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
+        src/utils/secure_buffer.cpp
+        src/utils/crash_handler.cpp
     )
     target_include_directories(deep2_agentic_loop PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -4467,7 +4470,9 @@ endif()
 # build, test, parity, git, and autonomous development. No Qt dependency.
 #
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
-    add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp)
+    add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
+        src/deep2/bolt_stubs.cpp
+    )
     target_link_libraries(RawrXD-CLI-V2 PRIVATE
         rawrxd_agentic_backend
         deep2_engine_lib
@@ -4491,6 +4496,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
         ${CMAKE_SOURCE_DIR}/src/deep2
     )
     target_compile_options(RawrXD-CLI-V2 PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_link_options(RawrXD-CLI-V2 PRIVATE /LTCG:OFF)
     target_compile_definitions(RawrXD-CLI-V2 PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
     set_target_properties(RawrXD-CLI-V2 PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}"

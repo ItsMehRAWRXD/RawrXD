@@ -361,12 +361,12 @@ std::string GGUFLoader::GetTypeString(GGMLType type) const {
 bool GGUFLoader::LoadTensorRange(size_t start_idx, size_t count,
                                  std::vector<uint8_t>& data) {
     if (start_idx >= tensors_.size()) return false;
-    const size_t end = std::min(tensors_.size(), start_idx + count);
+    const size_t range_end = (tensors_.size() < start_idx + count) ? tensors_.size() : start_idx + count;
     uint64_t total = 0;
-    for (size_t i = start_idx; i < end; ++i) total += tensors_[i].size;
+    for (size_t i = start_idx; i < range_end; ++i) total += tensors_[i].size;
     data.clear();
     data.reserve(static_cast<size_t>(total));
-    for (size_t i = start_idx; i < end; ++i) {
+    for (size_t i = start_idx; i < range_end; ++i) {
         std::vector<uint8_t> chunk;
         if (!LoadTensorZone(tensors_[i].name, chunk)) return false;
         data.insert(data.end(), chunk.begin(), chunk.end());

@@ -538,16 +538,34 @@ const std::vector<std::string>& StreamingGGUFLoader::GetVocabulary() const {
 
 std::string StreamingGGUFLoader::GetTypeString(GGMLType type) const {
     switch (type) {
-        case GGMLType::F32: return "F32 (float32)";
-        case GGMLType::F16: return "F16 (float16)";
-        case GGMLType::Q4_0: return "Q4_0 (quantized 4-bit, zero point)";
-        case GGMLType::Q4_1: return "Q4_1 (quantized 4-bit with delta)";
-        case GGMLType::Q2_K: return "Q2_K (gguf2 quantized 2-bit)";
-        case GGMLType::Q3_K: return "Q3_K (gguf2 quantized 3-bit)";
-        case GGMLType::Q4_K: return "Q4_K (gguf2 quantized 4-bit)";
-        case GGMLType::Q5_K: return "Q5_K (gguf2 quantized 5-bit)";
-        case GGMLType::Q6_K: return "Q6_K (gguf2 quantized 6-bit)";
-        case GGMLType::Q8_0: return "Q8_0 (quantized 8-bit, zero point)";
+        case GGMLType::F32:   return "F32 (float32)";
+        case GGMLType::F16:   return "F16 (float16)";
+        case GGMLType::Q4_0:  return "Q4_0 (quantized 4-bit, zero point)";
+        case GGMLType::Q4_1:  return "Q4_1 (quantized 4-bit with delta)";
+        case GGMLType::Q5_0:  return "Q5_0 (quantized 5-bit)";
+        case GGMLType::Q5_1:  return "Q5_1 (quantized 5-bit with delta)";
+        case GGMLType::Q8_0:  return "Q8_0 (quantized 8-bit, zero point)";
+        case GGMLType::Q8_1:  return "Q8_1 (quantized 8-bit)";
+        case GGMLType::Q2_K:  return "Q2_K (quantized 2-bit K-quant)";
+        case GGMLType::Q3_K:  return "Q3_K (quantized 3-bit K-quant)";
+        case GGMLType::Q4_K:  return "Q4_K (quantized 4-bit K-quant)";
+        case GGMLType::Q5_K:  return "Q5_K (quantized 5-bit K-quant)";
+        case GGMLType::Q6_K:  return "Q6_K (quantized 6-bit K-quant)";
+        case GGMLType::Q8_K:  return "Q8_K (quantized 8-bit K-quant)";
+        case GGMLType::IQ2_XXS: return "IQ2_XXS (imatrix 2-bit)";
+        case GGMLType::IQ2_XS:  return "IQ2_XS (imatrix 2-bit)";
+        case GGMLType::IQ3_XXS: return "IQ3_XXS (imatrix 3-bit)";
+        case GGMLType::IQ1_S:   return "IQ1_S (imatrix 1-bit)";
+        case GGMLType::IQ4_NL:  return "IQ4_NL (imatrix 4-bit non-linear)";
+        case GGMLType::IQ3_S:   return "IQ3_S (imatrix 3-bit)";
+        case GGMLType::IQ2_S:   return "IQ2_S (imatrix 2-bit)";
+        case GGMLType::IQ4_XS:  return "IQ4_XS (imatrix 4-bit)";
+        case GGMLType::IQ1_M:   return "IQ1_M (imatrix 1-bit)";
+        case GGMLType::I8:      return "I8 (int8)";
+        case GGMLType::I16:     return "I16 (int16)";
+        case GGMLType::I32:     return "I32 (int32)";
+        case GGMLType::I64:     return "I64 (int64)";
+        case GGMLType::F64:     return "F64 (float64)";
         default: return "Unknown";
     }
 }
@@ -574,22 +592,57 @@ uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& s
     for (uint64_t dim : shape) {
         num_elements *= dim;
     }
-    
-    float bytes_per_element = 4.0f;  // Default F32
+
+    // Helper lambda for block-aligned size calculation
+    // Formula: block_size × ceil(num_elements / block_elements)
+    // Block geometries match ggml.h and include/gguf_loader.h (canonical IDs).
+    auto block_aligned_size = [num_elements](uint64_t block_elements, uint64_t block_size) -> uint64_t {
+        uint64_t num_blocks = (num_elements + block_elements - 1) / block_elements;  // Ceiling division
+        return num_blocks * block_size;
+    };
+
     switch (type) {
-        case GGMLType::F32: bytes_per_element = 4.0f; break;
-        case GGMLType::F16: bytes_per_element = 2.0f; break;
-        case GGMLType::Q4_0:
-        case GGMLType::Q4_1: bytes_per_element = 0.5f; break;
-        case GGMLType::Q2_K: bytes_per_element = 0.3125f; break;
-        case GGMLType::Q3_K: bytes_per_element = 0.4375f; break;
-        case GGMLType::Q4_K: bytes_per_element = 0.5f; break;
-        case GGMLType::Q5_K: bytes_per_element = 0.625f; break;
-        case GGMLType::Q6_K: bytes_per_element = 0.75f; break;
-        case GGMLType::Q8_0: bytes_per_element = 1.0f; break;
+        // --- Non-block types: one stored value per element ------------------
+        case GGMLType::F32:   return num_elements * 4;
+        case GGMLType::F16:   return num_elements * 2;
+        case GGMLType::I8:    return num_elements * 1;
+        case GGMLType::I16:   return num_elements * 2;
+        case GGMLType::I32:   return num_elements * 4;
+        case GGMLType::I64:   return num_elements * 8;
+        case GGMLType::F64:   return num_elements * 8;
+
+        // --- Q quants (32 elements / block) ---------------------------------
+        case GGMLType::Q4_0:  return block_aligned_size(32,  18);
+        case GGMLType::Q4_1:  return block_aligned_size(32,  20);
+        case GGMLType::Q5_0:  return block_aligned_size(32,  22);
+        case GGMLType::Q5_1:  return block_aligned_size(32,  24);
+        case GGMLType::Q8_0:  return block_aligned_size(32,  34);
+
+        // --- K-quants (256 elements / super-block) --------------------------
+        case GGMLType::Q2_K:  return block_aligned_size(256, 84);
+        case GGMLType::Q3_K:  return block_aligned_size(256, 110);
+        case GGMLType::Q4_K:  return block_aligned_size(256, 144);
+        case GGMLType::Q5_K:  return block_aligned_size(256, 176);
+        case GGMLType::Q6_K:  return block_aligned_size(256, 210);
+        case GGMLType::Q8_K:  return block_aligned_size(256, 292);
+
+        // --- Imatrix (IQ) quants --------------------------------------------
+        case GGMLType::IQ2_XXS: return block_aligned_size(256,  66);
+        case GGMLType::IQ2_XS:  return block_aligned_size(256,  74);
+        case GGMLType::IQ3_XXS: return block_aligned_size(256,  98);
+        case GGMLType::IQ1_S:   return block_aligned_size(256,  50);
+        case GGMLType::IQ4_NL:  return block_aligned_size( 32,  18);
+        case GGMLType::IQ3_S:   return block_aligned_size(256, 110);
+        case GGMLType::IQ2_S:   return block_aligned_size(256,  82);
+        case GGMLType::IQ4_XS:  return block_aligned_size(256, 136);
+        case GGMLType::IQ1_M:   return block_aligned_size(256,  56);
+
+        default:
+            std::cerr << "⚠️  StreamingGGUFLoader: No size geometry for GGMLType "
+                      << static_cast<uint32_t>(type)
+                      << "; assuming F32 size" << std::endl;
+            return num_elements * 4;
     }
-    
-    return static_cast<uint64_t>(num_elements * bytes_per_element);
 }
 
 // ============================================================================

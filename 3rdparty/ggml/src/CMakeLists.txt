@@ -417,7 +417,7 @@ ggml_add_backend(METAL)
 ggml_add_backend(MUSA)
 ggml_add_backend(RPC)
 ggml_add_backend(SYCL)
-ggml_add_backend(Vulkan)
+# ggml_add_backend(Vulkan) — DISABLED: Vulkan SDK header incompatibility
 ggml_add_backend(WebGPU)
 ggml_add_backend(zDNN)
 ggml_add_backend(OpenCL)

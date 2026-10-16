@@ -761,6 +761,18 @@ void Deep2Engine::resetInferenceState() {
     if (hiddenStates)
         std::memset(hiddenStates, 0,
                     config.maxSeqLen * config.hiddenDim * sizeof(float));
+
+    // Reset SSM / Mamba-2 recurrent and conv state
+    if (ssmMambaState)
+    {
+        size_t stateBytes = config.numLayers * ssmMambaDInner * ssmMambaDState * sizeof(float);
+        std::memset(ssmMambaState, 0, stateBytes);
+    }
+    if (ssmMambaConvState)
+    {
+        size_t convBytes = config.numLayers * ssmMambaDConvKernel * ssmMambaDConvDim * sizeof(float);
+        std::memset(ssmMambaConvState, 0, convBytes);
+    }
 }
 
 // ===========================================================================

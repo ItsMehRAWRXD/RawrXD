@@ -2160,6 +2160,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         printf("[Deep2Engine] Nemotron-H MoE/Bolt architecture detected: %s\n", meta.architecture.c_str());
         // Nemotron uses Llama-family base with hybrid SSM/MoE layers.
         // SSM tensor binding happens later in the per-layer tensor mapping loop.
+        // Nemotron-H uses standard multi-head attention with
+        // headDim = hiddenDim / numHeads.
+        modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
+        modelWeights.useMLA = false;
     }
     else
     {
@@ -2960,8 +2964,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
 
         printf("[Deep2Engine] Mamba-2 state buffers: proj=%zu state=%zux%zu conv=%zux%zu dConvDim=%zu\n",
-               maxProjRows, modelWeights.numLayers * maxDInner * maxDState,
-               modelWeights.numLayers * maxDConv * maxDConvDim, maxDConv, maxDConvDim);
+               maxProjRows,
+               static_cast<size_t>(modelWeights.numLayers) * maxDInner * maxDState,
+               static_cast<size_t>(modelWeights.numLayers) * maxDConv * maxDConvDim,
+               maxDConv, maxDConvDim);
     }
 
     // ─── DEEP2_MODEL_FIT_AUTHORITY_001: bind the admitted plan ─────────────
@@ -5042,31 +5048,6 @@ void Deep2Engine::reset()
     }
 }
 
-void Deep2Engine::resetInferenceState()
-{
-    reset();
-
-    // Reset SSM recurrent and conv state
-    if (ssmState)
-    {
-        memset(ssmState, 0, config.numLayers * ssmStateDim * sizeof(float));
-    }
-    if (ssmConvState)
-    {
-        memset(ssmConvState, 0, config.numLayers * ssmConvKernel * config.hiddenDim * sizeof(float));
-    }
-    if (ssmMambaState)
-    {
-        size_t stateBytes = config.numLayers * ssmMambaDInner * ssmMambaDState * sizeof(float);
-        memset(ssmMambaState, 0, stateBytes);
-    }
-    if (ssmMambaConvState)
-    {
-        size_t convBytes = config.numLayers * ssmMambaDConvKernel * ssmMambaDConvDim * sizeof(float);
-        memset(ssmMambaConvState, 0, convBytes);
-    }
-}
-
 // ============================================================================
 // Unload Model
 // ============================================================================
@@ -5617,7 +5598,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         return 0;
     }
 
-    B3_ResetFirstBad();
+    try
+    {
+        B3_ResetFirstBad();
     emitHotpathWitnesses();
     resetGpuForwardCounters();
     gpuFwdCommitted_ = false;
@@ -6318,6 +6301,17 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     }
 
     return tokensGenerated;
+    }
+    catch (const std::exception& e)
+    {
+        fprintf(stderr, "[Deep2Engine] generate() exception: %s\n", e.what());
+        return 0;
+    }
+    catch (...)
+    {
+        fprintf(stderr, "[Deep2Engine] generate() unknown exception\n");
+        return 0;
+    }
 }
 
 // ============================================================================
@@ -6556,6 +6550,9 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
     std::printf("[AGENT] PREFILL_BEGIN prompt_tokens=%zu\n", promptTokens.size());
     std::fflush(stdout);
 
+    std::printf("[AGENT] PRE_GENERATE calling generate()\n");
+    std::fflush(stdout);
+
     size_t generated = generate(promptTokens.data(), promptTokens.size(), outputTokens.data(), maxTokens, nullptr,
                                 [&](int tokenId) -> bool
                                 {
@@ -6584,6 +6581,8 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
                                     }
                                     return true;
                                 });
+    std::printf("[AGENT] POST_GENERATE generated=%zu tokens\n", generated);
+    std::fflush(stdout);
 
     GenerationResult result;
     result.promptTokens = promptTokens.size();

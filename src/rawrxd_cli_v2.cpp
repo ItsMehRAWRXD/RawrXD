@@ -178,7 +178,7 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
                      deep2_vocab_size(localEngine),
                      deep2_num_layers(localEngine));
 
-        deep2CompleteFn = [localEngine](const std::vector<ChatMessage>& msgs, int maxTokens) {
+        deep2CompleteFn = [](const std::vector<ChatMessage>& msgs, int maxTokens) {
             std::string prompt;
             for (const auto& m : msgs) {
                 if (!prompt.empty()) prompt += "\n\n";
@@ -523,7 +523,25 @@ static int CmdRun(const std::vector<std::string>& args) {
             messages.push_back(cm);
         }
 
-        InferenceResult result = g_router->ChatSync(messages, json::array());
+        InferenceResult result;
+        try {
+            if (deep2CompleteFn) {
+                // Use in-process Deep2Engine directly — no HTTP router needed.
+                result = deep2CompleteFn(messages, 4096);
+            } else if (g_router) {
+                result = g_router->ChatSync(messages, json::array());
+            } else {
+                result = InferenceResult::Error("No inference backend available");
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[error] Deep2 exception: " << e.what() << "\n";
+            g_ledger->RecordFailure("inference exception: " + std::string(e.what()));
+            return 1;
+        } catch (...) {
+            std::cerr << "[error] Deep2 unknown exception\n";
+            g_ledger->RecordFailure("inference unknown exception");
+            return 1;
+        }
         if (!result.success) {
             std::cerr << "[error] " << result.error_message << "\n";
             g_ledger->RecordFailure("inference failed: " + result.error_message);

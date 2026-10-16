@@ -36,6 +36,7 @@ namespace brutal {
 #endif
 
 // Forward declaration for unsupported type name lookup (defined later in file)
+static bool IsRemovedGGMLType(uint32_t type_val);
 static std::string GetUnsupportedTypeNameByValue(uint32_t type_val);
 
 GGUFLoader::GGUFLoader() 
@@ -381,10 +382,12 @@ bool GGUFLoader::ParseMetadata() {
         }
         
         // ========== UNSUPPORTED TYPE DETECTION ==========
-        // Check if tensor type is outside the supported GGML enum range (0-24)
-        // Types 39, 40, 41, etc. are newer quantization types (IQ4_NL, IQ4_XS, IQ3_S)
-        // that require newer GGML versions. This triggers IDE conversion workflow.
-        if (type_val > 24) {
+        // A tensor type is unsupported when it is a removed ggml id (Q4_2/Q4_3,
+        // Q4_0_x_x, IQ4_NL_x_x) or outside the defined GGML_TYPE_COUNT range.
+        // All canonical quant types Ollama produces (Q2_K..Q8_K, IQ2_XXS..IQ4_XS,
+        // IQ1_M, BF16, TQ1_0/TQ2_0, MXFP4, NVFP4, Q1_0/Q2_0, F16/F32, I8..F64)
+        // now have defined geometry and parse correctly.
+        if (type_val > static_cast<uint32_t>(GGMLType::COUNT) - 1 || IsRemovedGGMLType(type_val)) {
             // Log the unsupported type for the user
             std::string type_name = GetUnsupportedTypeNameByValue(type_val);
             std::cerr << "WARNING: Tensor '" << tensor.name 
@@ -528,17 +531,41 @@ size_t GGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {
 
 std::string GGUFLoader::GetTypeString(GGMLType type) const {
     switch (type) {
-        case GGMLType::F32: return "F32";
-        case GGMLType::F16: return "F16";
-        case GGMLType::Q4_0: return "Q4_0";
-        case GGMLType::Q4_1: return "Q4_1";
-        case GGMLType::Q5_1: return "Q5_1";
-        case GGMLType::Q8_0: return "Q8_0";
-        case GGMLType::Q2_K: return "Q2_K";
-        case GGMLType::Q3_K: return "Q3_K";
-        case GGMLType::Q4_K: return "Q4_K";
-        case GGMLType::Q5_K: return "Q5_K";
-        case GGMLType::Q6_K: return "Q6_K";
+        case GGMLType::F32:   return "F32";
+        case GGMLType::F16:   return "F16";
+        case GGMLType::BF16:  return "BF16";
+        case GGMLType::Q4_0:  return "Q4_0";
+        case GGMLType::Q4_1:  return "Q4_1";
+        case GGMLType::Q5_0:  return "Q5_0";
+        case GGMLType::Q5_1:  return "Q5_1";
+        case GGMLType::Q8_0:  return "Q8_0";
+        case GGMLType::Q8_1:  return "Q8_1";
+        case GGMLType::Q2_K:  return "Q2_K";
+        case GGMLType::Q3_K:  return "Q3_K";
+        case GGMLType::Q4_K:  return "Q4_K";
+        case GGMLType::Q5_K:  return "Q5_K";
+        case GGMLType::Q6_K:  return "Q6_K";
+        case GGMLType::Q8_K:  return "Q8_K";
+        case GGMLType::IQ2_XXS: return "IQ2_XXS";
+        case GGMLType::IQ2_XS:  return "IQ2_XS";
+        case GGMLType::IQ3_XXS: return "IQ3_XXS";
+        case GGMLType::IQ1_S:   return "IQ1_S";
+        case GGMLType::IQ4_NL:  return "IQ4_NL";
+        case GGMLType::IQ3_S:   return "IQ3_S";
+        case GGMLType::IQ2_S:   return "IQ2_S";
+        case GGMLType::IQ4_XS:  return "IQ4_XS";
+        case GGMLType::IQ1_M:   return "IQ1_M";
+        case GGMLType::I8:      return "I8";
+        case GGMLType::I16:     return "I16";
+        case GGMLType::I32:     return "I32";
+        case GGMLType::I64:     return "I64";
+        case GGMLType::F64:     return "F64";
+        case GGMLType::TQ1_0:   return "TQ1_0";
+        case GGMLType::TQ2_0:   return "TQ2_0";
+        case GGMLType::MXFP4:   return "MXFP4";
+        case GGMLType::NVFP4:   return "NVFP4";
+        case GGMLType::Q1_0:    return "Q1_0";
+        case GGMLType::Q2_0:    return "Q2_0";
         default: return "UNKNOWN";
     }
 }
@@ -584,72 +611,70 @@ uint64_t GGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& shape, GGM
     for (uint64_t dim : shape) {
         num_elements *= dim;
     }
-    
+
     // Helper lambda for block-aligned size calculation
     // Formula: block_size × ceil(num_elements / block_elements)
     auto block_aligned_size = [num_elements](uint64_t block_elements, uint64_t block_size) -> uint64_t {
         uint64_t num_blocks = (num_elements + block_elements - 1) / block_elements;  // Ceiling division
         return num_blocks * block_size;
     };
-    
+
     // Calculate the size in bytes based on the GGML type
     // Reference: https://github.com/ggerganov/ggml/blob/master/include/ggml.h
+    // Block geometries (elements, bytes) match src/deep2/QuantTypeTable.hpp.
     switch (type) {
-        case GGMLType::F32: 
-            return num_elements * 4;
-        case GGMLType::F16: 
-            return num_elements * 2;
-        
-        // Q4_0: 32 elements per block, 18 bytes per block (2 bytes FP16 scale + 16 bytes data)
-        case GGMLType::Q4_0: 
-            return block_aligned_size(32, 18);
-        
-        // Q4_1: 32 elements per block, 20 bytes per block (2 bytes FP16 scale + 2 bytes FP16 min + 16 bytes data)
-        case GGMLType::Q4_1: 
-            return block_aligned_size(32, 20);
-        
-        // Q8_0: 32 elements per block, 34 bytes per block (2 bytes FP16 scale + 32 bytes data)
-        case GGMLType::Q8_0: 
-            return block_aligned_size(32, 34);
-        
-        // Q5_1: 32 elements per block, 24 bytes per block
-        case GGMLType::Q5_1:
-            return block_aligned_size(32, 24);
-        
-        // K-quantization (256 elements per super-block)
-        // Q2_K: 256 elements, 84 bytes per super-block
-        case GGMLType::Q2_K: 
-            return block_aligned_size(256, 84);
-        
-        // Q3_K: 256 elements, 110 bytes per super-block
-        case GGMLType::Q3_K: 
-            return block_aligned_size(256, 110);
-        
-        // Q4_K: 256 elements, 144 bytes per super-block
-        case GGMLType::Q4_K: 
-            return block_aligned_size(256, 144);
-        
-        // Q5_K: 256 elements, 176 bytes per super-block
-        case GGMLType::Q5_K: 
-            return block_aligned_size(256, 176);
-        
-        // Q6_K: 256 elements, 210 bytes per super-block
-        case GGMLType::Q6_K: 
-            return block_aligned_size(256, 210);
-        
-        // F16_HALF
-        case GGMLType::F16_HALF:
-            return num_elements * 2;
-        
+        // --- Non-block types: one stored value per element ------------------
+        case GGMLType::F32:   return num_elements * 4;
+        case GGMLType::F16:   return num_elements * 2;
+        case GGMLType::BF16:  return num_elements * 2;
+        case GGMLType::I8:    return num_elements * 1;
+        case GGMLType::I16:   return num_elements * 2;
+        case GGMLType::I32:   return num_elements * 4;
+        case GGMLType::I64:   return num_elements * 8;
+        case GGMLType::F64:   return num_elements * 8;
+
+        // --- Q quants (32 elements / block) ---------------------------------
+        case GGMLType::Q4_0:  return block_aligned_size(32,  18);  // d(fp16) + qs[16]
+        case GGMLType::Q4_1:  return block_aligned_size(32,  20);  // d + m + qs[16]
+        case GGMLType::Q5_0:  return block_aligned_size(32,  22);  // d + qh[4] + qs[16]
+        case GGMLType::Q5_1:  return block_aligned_size(32,  24);  // d + m + qh[4] + qs[16]
+        case GGMLType::Q8_0:  return block_aligned_size(32,  34);  // d(fp16) + qs[32] int8
+
+        // --- K-quants (256 elements / super-block) --------------------------
+        case GGMLType::Q2_K:  return block_aligned_size(256, 84);  // scales[16] + qs[64] + d + dmin
+        case GGMLType::Q3_K:  return block_aligned_size(256, 110); // hmask[32] + qs[64] + scales[12] + d
+        case GGMLType::Q4_K:  return block_aligned_size(256, 144); // d + dmin + scales[12] + qs[128]
+        case GGMLType::Q5_K:  return block_aligned_size(256, 176); // d + dmin + scales[12] + qh[32] + qs[128]
+        case GGMLType::Q6_K:  return block_aligned_size(256, 210); // ql[128] + qh[64] + scales[16] + d
+        case GGMLType::Q8_K:  return block_aligned_size(256, 292); // d(fp32) + qs[256] + bsums[16]
+
+        // --- Imatrix (IQ) quants --------------------------------------------
+        case GGMLType::IQ2_XXS: return block_aligned_size(256,  66); // d(fp16) + qs[32] uint16
+        case GGMLType::IQ2_XS:  return block_aligned_size(256,  74);
+        case GGMLType::IQ3_XXS: return block_aligned_size(256,  98);
+        case GGMLType::IQ1_S:   return block_aligned_size(256,  50);
+        case GGMLType::IQ4_NL:  return block_aligned_size( 32,  18);
+        case GGMLType::IQ3_S:   return block_aligned_size(256, 110);
+        case GGMLType::IQ2_S:   return block_aligned_size(256,  82);
+        case GGMLType::IQ4_XS:  return block_aligned_size(256, 136);
+        case GGMLType::IQ1_M:   return block_aligned_size(256,  56);
+
+        // --- TQ / MXFP4 / NVFP4 / Q1_0 / Q2_0 -------------------------------
+        case GGMLType::TQ1_0: return block_aligned_size(256, 54);
+        case GGMLType::TQ2_0: return block_aligned_size(256, 66);
+        case GGMLType::MXFP4: return block_aligned_size( 32,  17);
+        case GGMLType::NVFP4: return block_aligned_size( 64,  36);
+        case GGMLType::Q1_0:  return block_aligned_size(128,  18);
+        case GGMLType::Q2_0:  return block_aligned_size( 32,  17);
+
         default:
-            // Type 14 is Q8_K (256 elements, 128 bytes per super-block)
-            // We handle it here as a fallback case since it's not in the enum
-            if (static_cast<uint32_t>(type) == 14) {
-                return block_aligned_size(256, 128);  // Q8_K: 256 elements, 128 bytes per block
-            }
-            // In production, log the unsupported type and use a safe default
-            std::cerr << "[GGUFLoader] WARNING: Unsupported GGMLType " << static_cast<uint32_t>(type) 
-                     << " encountered, assuming F32 size" << std::endl;
+            // Types with no defined block geometry (removed ggml IDs such as
+            // Q4_2/Q4_3, Q4_0_x_x, IQ4_NL_x_x) are fail-closed here: we cannot
+            // safely size the tensor, so report and fall back to F32 rather than
+            // silently truncating a model.
+            std::cerr << "[GGUFLoader] WARNING: No size geometry for GGMLType "
+                     << static_cast<uint32_t>(type)
+                     << "; assuming F32 size" << std::endl;
             return num_elements * 4;  // Default to F32 size
     }
 }
@@ -797,14 +822,28 @@ std::string GGUFLoader::GetRecommendedConversionType() const {
 }
 
 // Helper function to map unsupported type values to human-readable names
+static bool IsRemovedGGMLType(uint32_t type_val) {
+    switch (type_val) {
+        case 4:  case 5:   // Q4_2, Q4_3 removed in ggml
+        case 31: case 32: case 33:  // Q4_0_x_x variants removed
+        case 36: case 37: case 38:  // IQ4_NL_x_x variants removed
+            return true;
+        default:
+            return false;
+    }
+}
+
 static std::string GetUnsupportedTypeNameByValue(uint32_t type_val) {
     switch (type_val) {
-        case 39:  return "IQ4_NL";
-        case 40:  return "IQ4_XS";
-        case 41:  return "IQ3_S";
-        case 42:  return "IQ2_S";
-        case 43:  return "IQ2_M";
-        default:  return "IQ" + std::to_string(type_val);  // Generic fallback
+        case 4:   return "Q4_2 (removed)";
+        case 5:   return "Q4_3 (removed)";
+        case 31:  return "Q4_0_4_4 (removed)";
+        case 32:  return "Q4_0_4_8 (removed)";
+        case 33:  return "Q4_0_8_8 (removed)";
+        case 36:  return "IQ4_NL_4_4 (removed)";
+        case 37:  return "IQ4_NL_4_8 (removed)";
+        case 38:  return "IQ4_NL_8_8 (removed)";
+        default:  return "GGML_TYPE_" + std::to_string(type_val) + " (unknown)";
     }
 }
 

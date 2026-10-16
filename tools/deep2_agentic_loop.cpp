@@ -2855,6 +2855,7 @@ const std::string task = args.task.empty()
 
     // ---- Test A diagnostic: one static turn, no loop, no retry -----------------
     // Correctness before optimization.
+    std::string gen;
     if (args.single_turn)
     {
         Logf_("[diag] TEST A: static prompt, single turn, %s\n",
@@ -2893,7 +2894,6 @@ const std::string task = args.task.empty()
               prompt_tokens.size() - start, fed.size());
 
         stop.reset();
-        std::string gen;
         uint32_t next = 0;
         const auto t_gen = std::chrono::steady_clock::now();
         profiler.start_phase("generation", 0);
@@ -2964,6 +2964,7 @@ const std::string task = args.task.empty()
             Logf_("TARGET           %s\n", act.arg1.c_str());
             if (act.tool == "read")
             {
+                const auto t_gen_b = std::chrono::steady_clock::now();
                 const auto t_dispatch = std::chrono::steady_clock::now();
                 const std::string content = ReadFile(args.workdir + "/" + act.arg1);
                 Logf_("SNAP_TRANSITION_MS %.4f\n",
@@ -3015,13 +3016,13 @@ const std::string task = args.task.empty()
         {
             const auto t_dispatch = std::chrono::steady_clock::now();
             const std::string target = args.workdir + "/" + act.arg1;
-            if (WriteFile(target, act.content))
+            if (WriteFile(target, act.arg2))
             {
                 const double snap_ms = std::chrono::duration<double, std::milli>(
                     t_dispatch - t_gen_b).count();
                 Logf_("SNAP_TRANSITION_MS %.4f\n", snap_ms);
-                Logf_("WRITE_BYTES      %zu\n", act.content.size());
-                Logf_("WRITE_PREVIEW    %s\n", act.content.substr(0, 200).c_str());
+                Logf_("WRITE_BYTES      %zu\n", act.arg2.size());
+                Logf_("WRITE_PREVIEW    %s\n", act.arg2.substr(0, 200).c_str());
 
                 // Compile
                 Logf_("[build] %s\n", build_cmd);
@@ -3079,6 +3080,7 @@ const std::string task = args.task.empty()
             Logf_("UNKNOWN_TOOL     %s\n", act.tool.c_str());
         }
 
+        std::string gen;
         Logf_("RAW_OUTPUT       >>>%s<<<\n", Trim(gen).c_str());
         Logf_("TEST_B_VERDICT   %s\n", step_ok ? "PASS" : "FAIL");
         ledger.log_verification(step_ok, "single-turn repair");
