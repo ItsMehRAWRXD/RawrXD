@@ -50,8 +50,52 @@ Location LanguageServerIntegration::goToDefinition(
     location.column = column;
     location.found = false;
     
-    // Placeholder: would use symbol table or LSP server
-    // For now, return empty location
+    // Real implementation: parse the source file to find symbol definitions
+    // Look for function/class/struct definitions near the cursor position
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        return location;
+    }
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Extract token at cursor position
+    std::string token = extractTokenAtPosition(content, line, column);
+    if (token.empty()) {
+        return location;
+    }
+    
+    // Search for definition patterns: "type tokenName(" or "class tokenName" or "struct tokenName"
+    std::vector<std::string> patterns = {
+        R"((?:(?:void|int|float|double|char|bool|auto|std::string|class|struct|enum)\s+)" + token + R"(\s*\())",
+        R"((?:class|struct|enum)\s+)" + token + R"(\b)",
+        R"((?:void|int|float|double|char|bool|auto)\s+)" + token + R"(\s*[\(;])"
+    };
+    
+    for (const auto& pattern : patterns) {
+        std::regex re(pattern);
+        std::smatch match;
+        std::string::const_iterator searchStart(content.cbegin());
+        
+        while (std::regex_search(searchStart, content.cend(), match, re)) {
+            // Calculate line number of the match
+            size_t matchPos = match.position() + (searchStart - content.cbegin());
+            size_t lineNum = 1;
+            for (size_t i = 0; i < matchPos && i < content.size(); ++i) {
+                if (content[i] == '\n') lineNum++;
+            }
+            
+            location.found = true;
+            location.line = static_cast<int>(lineNum);
+            location.column = static_cast<int>(matchPos - content.rfind('\n', matchPos - 1) - 1);
+            if (location.column < 0) location.column = 0;
+            
+            return location;
+        }
+    }
+    
     return location;
 }
 
@@ -61,8 +105,60 @@ std::vector<Location> LanguageServerIntegration::findReferences(
     
     std::vector<Location> references;
     
-    // Placeholder: would search codebase for symbol references
-    // For now return empty vector
+    // Real implementation: search the source file for all references to the token at cursor
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        return references;
+    }
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Extract token at cursor position
+    std::string token = extractTokenAtPosition(content, line, column);
+    if (token.empty() || token.length() < 2) {
+        return references;
+    }
+    
+    // Search for all occurrences of the token (as whole word)
+    std::regex re("\\b" + token + "\\b");
+    std::sregex_iterator it(content.begin(), content.end(), re);
+    std::sregex_iterator end;
+    
+    size_t cursorPos = 0;
+    // Calculate cursor position in the content
+    size_t pos = 0;
+    for (int l = 1; l < line && pos < content.size(); ++l) {
+        pos = content.find('\n', pos);
+        if (pos == std::string::npos) break;
+        pos++;
+    }
+    cursorPos = pos + column;
+    
+    while (it != end) {
+        size_t matchPos = it->position();
+        // Skip the cursor position itself
+        if (matchPos != cursorPos) {
+            Location loc;
+            loc.filePath = filePath;
+            
+            // Calculate line number
+            size_t lineNum = 1;
+            for (size_t i = 0; i < matchPos && i < content.size(); ++i) {
+                if (content[i] == '\n') lineNum++;
+            }
+            loc.line = static_cast<int>(lineNum);
+            
+            // Calculate column
+            size_t lastNewline = content.rfind('\n', matchPos);
+            loc.column = static_cast<int>(matchPos - (lastNewline == std::string::npos ? 0 : lastNewline + 1));
+            
+            references.push_back(loc);
+        }
+        ++it;
+    }
+    
     return references;
 }
 
@@ -104,8 +200,53 @@ std::vector<TextEdit> LanguageServerIntegration::rename(
     
     std::vector<TextEdit> edits;
     
-    // Placeholder: would rename all references
-    // For now return empty edit list
+    // Real implementation: find all references to the old token and create text edits
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        return edits;
+    }
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Extract old token at cursor position
+    std::string oldToken = extractTokenAtPosition(content, line, column);
+    if (oldToken.empty() || oldToken == newName) {
+        return edits;
+    }
+    
+    // Search for all whole-word occurrences of oldToken
+    std::regex re("\\b" + oldToken + "\\b");
+    std::sregex_iterator it(content.begin(), content.end(), re);
+    std::sregex_iterator end;
+    
+    while (it != end) {
+        size_t matchPos = it->position();
+        
+        // Calculate line and column
+        size_t lineNum = 1;
+        size_t lastNewline = 0;
+        for (size_t i = 0; i < matchPos && i < content.size(); ++i) {
+            if (content[i] == '\n') {
+                lineNum++;
+                lastNewline = i;
+            }
+        }
+        int col = static_cast<int>(matchPos - lastNewline - 1);
+        
+        TextEdit edit;
+        edit.filePath = filePath;
+        edit.startLine = static_cast<int>(lineNum);
+        edit.startColumn = col;
+        edit.endLine = static_cast<int>(lineNum);
+        edit.endColumn = col + static_cast<int>(oldToken.length());
+        edit.newText = newName;
+        
+        edits.push_back(edit);
+        ++it;
+    }
+    
     return edits;
 }
 
@@ -407,18 +548,216 @@ std::vector<std::string> LanguageServerIntegration::getJsCompletions(
 }
 
 std::string LanguageServerIntegration::formatCppCode(const std::string& code) {
-    // Simplified formatting: normalize indentation
-    return code;
+    // Real C++ formatting: normalize indentation to 4 spaces, fix brace placement
+    std::string result;
+    int indentLevel = 0;
+    bool inString = false;
+    bool inChar = false;
+    bool inLineComment = false;
+    bool inBlockComment = false;
+    
+    for (size_t i = 0; i < code.size(); ++i) {
+        char c = code[i];
+        char next = (i + 1 < code.size()) ? code[i + 1] : '\0';
+        
+        // Handle comments
+        if (!inString && !inChar && !inBlockComment) {
+            if (!inLineComment && c == '/' && next == '/') {
+                inLineComment = true;
+            }
+            if (!inLineComment && c == '/' && next == '*') {
+                inBlockComment = true;
+                i++;
+                continue;
+            }
+        }
+        
+        if (inLineComment && c == '\n') {
+            inLineComment = false;
+        }
+        
+        if (inBlockComment && c == '*' && next == '/') {
+            inBlockComment = false;
+            i++;
+            continue;
+        }
+        
+        if (inLineComment || inBlockComment) {
+            result += c;
+            continue;
+        }
+        
+        // Handle strings
+        if (!inChar && c == '"') {
+            inString = !inString;
+            result += c;
+            continue;
+        }
+        if (!inString && c == '\'') {
+            inChar = !inChar;
+            result += c;
+            continue;
+        }
+        
+        if (inString || inChar) {
+            result += c;
+            continue;
+        }
+        
+        // Handle whitespace and indentation
+        if (c == '{') {
+            result += c;
+            result += '\n';
+            indentLevel++;
+            for (int j = 0; j < indentLevel * 4; ++j) result += ' ';
+        } else if (c == '}') {
+            result += '\n';
+            if (indentLevel > 0) indentLevel--;
+            for (int j = 0; j < indentLevel * 4; ++j) result += ' ';
+            result += c;
+        } else if (c == ';' || c == ':' || c == ',') {
+            result += c;
+            // If next char is not whitespace, add space after
+            if (next != '\0' && next != ' ' && next != '\n' && next != '\t' && next != ';' && next != '}' && next != ')') {
+                result += ' ';
+            }
+        } else if (c == '\n') {
+            result += c;
+            // Write indentation for next line
+            for (int j = 0; j < indentLevel * 4; ++j) result += ' ';
+        } else if (c == ' ' || c == '\t') {
+            // Normalize whitespace: skip multiple spaces
+            bool needSpace = false;
+            if (!result.empty() && result.back() != ' ' && result.back() != '\n' && result.back() != '{') {
+                needSpace = true;
+            }
+            if (next != '\0' && next != ' ' && next != '\n' && next != '\t' && next != '}' && next != ';' && next != ',' && next != ':' && next != ')') {
+                needSpace = true;
+            }
+            if (needSpace) result += ' ';
+        } else {
+            result += c;
+        }
+    }
+    
+    return result;
 }
 
 std::string LanguageServerIntegration::formatPythonCode(const std::string& code) {
-    // Simplified formatting
-    return code;
+    // Real Python formatting: normalize indentation to 4 spaces
+    std::string result;
+    int indentLevel = 0;
+    bool inString = false;
+    bool inTripleString = false;
+    
+    for (size_t i = 0; i < code.size(); ++i) {
+        char c = code[i];
+        
+        // Handle triple-quoted strings
+        if (i + 2 < code.size() && code[i] == '"' && code[i+1] == '"' && code[i+2] == '"') {
+            inTripleString = !inTripleString;
+            result += "'''";
+            i += 2;
+            continue;
+        }
+        
+        if (!inTripleString && c == '"') {
+            inString = !inString;
+            result += c;
+            continue;
+        }
+        
+        if (inString || inTripleString) {
+            result += c;
+            continue;
+        }
+        
+        if (c == ':') {
+            result += c;
+            // Check if next non-space is newline (block starter)
+            size_t j = i + 1;
+            while (j < code.size() && (code[j] == ' ' || code[j] == '\t')) j++;
+            if (j < code.size() && code[j] == '\n') {
+                indentLevel++;
+            }
+        } else if (c == '\n') {
+            result += c;
+            for (int j = 0; j < indentLevel * 4; ++j) result += ' ';
+        } else if (c == ' ' || c == '\t') {
+            bool needSpace = false;
+            if (!result.empty() && result.back() != ' ' && result.back() != '\n') {
+                needSpace = true;
+            }
+            if (needSpace) result += ' ';
+        } else {
+            result += c;
+        }
+    }
+    
+    return result;
 }
 
 std::string LanguageServerIntegration::formatJsCode(const std::string& code) {
-    // Simplified formatting
-    return code;
+    // Real JavaScript formatting: normalize indentation to 2 spaces, fix braces
+    std::string result;
+    int indentLevel = 0;
+    bool inString = false;
+    bool inTemplateLiteral = false;
+    bool inLineComment = false;
+    bool inBlockComment = false;
+    
+    for (size_t i = 0; i < code.size(); ++i) {
+        char c = code[i];
+        char next = (i + 1 < code.size()) ? code[i + 1] : '\0';
+        
+        if (!inString && !inTemplateLiteral && !inBlockComment) {
+            if (!inLineComment && c == '/' && next == '/') {
+                inLineComment = true;
+            }
+            if (!inLineComment && c == '/' && next == '*') {
+                inBlockComment = true;
+                i++;
+                continue;
+            }
+        }
+        
+        if (inLineComment && c == '\n') inLineComment = false;
+        if (inBlockComment && c == '*' && next == '/') { inBlockComment = false; i++; continue; }
+        
+        if (inLineComment || inBlockComment) { result += c; continue; }
+        
+        if (!inTemplateLiteral && c == '"') { inString = !inString; result += c; continue; }
+        if (!inString && c == '`') { inTemplateLiteral = !inTemplateLiteral; result += c; continue; }
+        
+        if (inString || inTemplateLiteral) { result += c; continue; }
+        
+        if (c == '{') {
+            result += c;
+            result += '\n';
+            indentLevel++;
+            for (int j = 0; j < indentLevel * 2; ++j) result += ' ';
+        } else if (c == '}') {
+            result += '\n';
+            if (indentLevel > 0) indentLevel--;
+            for (int j = 0; j < indentLevel * 2; ++j) result += ' ';
+            result += c;
+        } else if (c == ';' || c == ',') {
+            result += c;
+        } else if (c == '\n') {
+            result += c;
+            for (int j = 0; j < indentLevel * 2; ++j) result += ' ';
+        } else if (c == ' ' || c == '\t') {
+            bool needSpace = false;
+            if (!result.empty() && result.back() != ' ' && result.back() != '\n' && result.back() != '{') {
+                needSpace = true;
+            }
+            if (needSpace) result += ' ';
+        } else {
+            result += c;
+        }
+    }
+    
+    return result;
 }
 
 std::string LanguageServerIntegration::extractCodeRange(

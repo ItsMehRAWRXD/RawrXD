@@ -160,12 +160,17 @@ size_t TensorHotpatch::VerifyAll() {
 
     size_t failures = 0;
     // Iterate all leases via snapshot, verifying each one is in a consistent state.
-    // A lease is a failure if it is hotpatchable but not pinned and has no backing
-    // allocation, or if it is resident on a GPU that reports it as not present.
     auto leases = vramManager_->SnapshotLeases();
     for (VRAMLease* lease : leases) {
         if (!lease) continue;
-        if (!lease->backing && lease->hotpatchable && !lease->pinned) {
+        // Inconsistent states: RESIDENT but no GPU, or EVICTED but on a GPU.
+        if ((lease->state == VRAMLease::RESIDENT && lease->currentGPU < 0) ||
+            (lease->state == VRAMLease::EVICTED && lease->currentGPU >= 0)) {
+            ++failures;
+        }
+        // UNASSIGNED and hotpatchable but not pinned is a latent failure.
+        if (lease->state == VRAMLease::UNASSIGNED &&
+            lease->hotpatchable && !lease->pinned) {
             ++failures;
         }
     }
