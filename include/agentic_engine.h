@@ -1,13 +1,16 @@
 #pragma once
 
-#include <QObject>
-#include <QString>
-#include <QJsonObject>
-#include <QJsonArray>
+#include <string>
 #include <vector>
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <cstdint>
+#include <functional>
+
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 /**
  * @class AgenticEngine
@@ -21,69 +24,68 @@
  * 5. Learning - Feedback collection and model adaptation
  * 6. Security - Input validation and sandboxed execution
  */
-class AgenticEngine : public QObject {
-    Q_OBJECT
+class AgenticEngine {
 public:
-    explicit AgenticEngine(QObject* parent = nullptr);
+    AgenticEngine();
     virtual ~AgenticEngine();
     
     void initialize();
     
     // AI Core Component 1: Code Analysis
-    QString analyzeCode(const QString& code);
-    QJsonObject analyzeCodeQuality(const QString& code);
-    QJsonArray detectPatterns(const QString& code);
-    QJsonObject calculateMetrics(const QString& code);
-    QString suggestImprovements(const QString& code);
+    std::string analyzeCode(const std::string& code);
+    json analyzeCodeQuality(const std::string& code);
+    json detectPatterns(const std::string& code);
+    json calculateMetrics(const std::string& code);
+    std::string suggestImprovements(const std::string& code);
     
     // AI Core Component 2: Code Generation
-    QString generateCode(const QString& prompt);
-    QString generateFunction(const QString& signature, const QString& description);
-    QString generateClass(const QString& className, const QJsonObject& spec);
-    QString generateTests(const QString& code);
-    QString refactorCode(const QString& code, const QString& refactoringType);
+    std::string generateCode(const std::string& prompt);
+    std::string generateFunction(const std::string& signature, const std::string& description);
+    std::string generateClass(const std::string& className, const json& spec);
+    std::string generateTests(const std::string& code);
+    std::string refactorCode(const std::string& code, const std::string& refactoringType);
     
     // AI Core Component 3: Task Planning
-    QJsonArray planTask(const QString& goal);
-    QJsonObject decomposeTask(const QString& task);
-    QJsonArray generateWorkflow(const QString& project);
-    QString estimateComplexity(const QString& task);
+    json planTask(const std::string& goal);
+    json decomposeTask(const std::string& task);
+    json generateWorkflow(const std::string& project);
+    std::string estimateComplexity(const std::string& task);
     
     // AI Core Component 4: NLP - Natural Language Processing
-    QString understandIntent(const QString& userInput);
-    QJsonObject extractEntities(const QString& text);
-    QString generateNaturalResponse(const QString& query, const QJsonObject& context);
-    QString summarizeCode(const QString& code);
-    QString explainError(const QString& errorMessage);
+    std::string understandIntent(const std::string& userInput);
+    json extractEntities(const std::string& text);
+    std::string generateNaturalResponse(const std::string& query, const json& context);
+    std::string summarizeCode(const std::string& code);
+    std::string explainError(const std::string& errorMessage);
     
     // AI Core Component 5: Learning and Improvement
-    void collectFeedback(const QString& responseId, bool positive, const QString& comment);
+    void collectFeedback(const std::string& responseId, bool positive, const std::string& comment);
     void trainFromFeedback();
-    QJsonObject getLearningStats() const;
-    void adaptToUserPreferences(const QJsonObject& preferences);
+    json getLearningStats() const;
+    void adaptToUserPreferences(const json& preferences);
     
     // AI Core Component 6: Security and Validation
-    bool validateInput(const QString& input);
-    QString sanitizeCode(const QString& code);
-    bool isCommandSafe(const QString& command);
+    bool validateInput(const std::string& input);
+    std::string sanitizeCode(const std::string& code);
+    bool isCommandSafe(const std::string& command);
     
     // Agent tool capabilities (file system operations)
-    QString grepFiles(const QString& pattern, const QString& path = ".");
-    QString readFile(const QString& filepath, int startLine = -1, int endLine = -1);
-    QString searchFiles(const QString& query, const QString& path = ".");
-    QString referenceSymbol(const QString& symbol);
+    std::string grepFiles(const std::string& pattern, const std::string& path = ".");
+    std::string readFile(const std::string& filepath, int startLine = -1, int endLine = -1);
+    std::string searchFiles(const std::string& query, const std::string& path = ".");
+    std::string referenceSymbol(const std::string& symbol);
     
     // Model management
     bool isModelLoaded() const { return m_modelLoaded; }
-    QString currentModelPath() const { return QString::fromStdString(m_currentModelPath); }
-    QString generateResponse(const QString& message);
+    std::string currentModelPath() const { return m_currentModelPath; }
+    std::string generateResponse(const std::string& message);
     void setInferenceEngine(class InferenceEngine* engine) { m_inferenceEngine = engine; }
     
-    // CRITICAL: Mark model as loaded after external load (for MainWindow->AgenticEngine sync)
-    void markModelAsLoaded(const QString& modelPath) { 
+    // CRITICAL: Mark model as loaded after external load
+    void markModelAsLoaded(const std::string& modelPath) { 
         m_modelLoaded = true; 
-        m_currentModelPath = modelPath.toStdString(); 
-        qDebug() << "[AgenticEngine::markModelAsLoaded] Model flagged:" << modelPath;
+        m_currentModelPath = modelPath; 
+        std::clog << "[AgenticEngine::markModelAsLoaded] Model flagged:" << modelPath << std::endl;
     }
     
     // Generation configuration
@@ -95,48 +97,55 @@ public:
     void setGenerationConfig(const GenerationConfig& config);
     GenerationConfig generationConfig() const { return m_genConfig; }
     
-public slots:
-    void setModel(const QString& modelPath);
-    void setModelName(const QString& modelName);
-    void processMessage(const QString& message, const QString& editorContext = QString());
+    // Callbacks (replaces Qt signals)
+    using ResponseCallback = std::function<void(const std::string&)>;
+    using ModelLoadingCallback = std::function<void(bool, const std::string&)>;
+    using ModelReadyCallback = std::function<void(bool)>;
+    using FeedbackCallback = std::function<void(const std::string&)>;
+    using LearningCallback = std::function<void()>;
+    using SecurityCallback = std::function<void(const std::string&)>;
+    using TokenCallback = std::function<void(int)>;
+    using RefactorCallback = std::function<void(const std::string&, const std::string&)>;
     
-signals:
-    void responseReady(const QString& response);
-    void modelLoadingFinished(bool success, const QString& modelPath);
-    void modelReady(bool success);
-    void feedbackCollected(const QString& responseId);
-    void learningCompleted();
-    void securityWarning(const QString& warning);
+    void setOnResponseReady(ResponseCallback cb) { m_onResponseReady = cb; }
+    void setOnModelLoadingFinished(ModelLoadingCallback cb) { m_onModelLoadingFinished = cb; }
+    void setOnModelReady(ModelReadyCallback cb) { m_onModelReady = cb; }
+    void setOnFeedbackCollected(FeedbackCallback cb) { m_onFeedbackCollected = cb; }
+    void setOnLearningCompleted(LearningCallback cb) { m_onLearningCompleted = cb; }
+    void setOnSecurityWarning(SecurityCallback cb) { m_onSecurityWarning = cb; }
+    void setOnTokenGenerated(TokenCallback cb) { m_onTokenGenerated = cb; }
+    void setOnRefactorSuggested(RefactorCallback cb) { m_onRefactorSuggested = cb; }
     
-    // Phase 2: Streaming and refactoring signals
-    void tokenGenerated(int delta);  // Emitted for each token during generation
-    void refactorSuggested(const QString& original, const QString& suggested);  // Emitted when refactor is ready
+    // Methods previously slots
+    void setModel(const std::string& modelPath);
+    void setModelName(const std::string& modelName);
+    void processMessage(const std::string& message, const std::string& editorContext = "");
     
 private:
-    QString generateTokenizedResponse(const QString& message);
-    QString generateFallbackResponse(const QString& message);
+    std::string generateTokenizedResponse(const std::string& message);
+    std::string generateFallbackResponse(const std::string& message);
     bool loadModelAsync(const std::string& modelPath);
-    QString resolveGgufPath(const QString& modelName);
+    std::string resolveGgufPath(const std::string& modelName);
     
     // Internal AI processing
-    QString processWithContext(const QString& input, const QJsonObject& context);
-    QJsonObject buildCodeContext(const QString& code);
-    QString applyTemplate(const QString& templateName, const QJsonObject& params);
+    std::string processWithContext(const std::string& input, const json& context);
+    json buildCodeContext(const std::string& code);
+    std::string applyTemplate(const std::string& templateName, const json& params);
     
     // Learning data structures
     struct FeedbackEntry {
-        QString responseId;
-        QString input;
-        QString output;
+        std::string responseId;
+        std::string input;
+        std::string output;
         bool positive;
-        QString comment;
-        qint64 timestamp;
+        std::string comment;
+        int64_t timestamp;
     };
     std::vector<FeedbackEntry> m_feedbackHistory;
-    std::unordered_map<QString, int> m_responseRatings;
+    std::unordered_map<std::string, int> m_responseRatings;
     
     // User preferences and adaptation
-    QJsonObject m_userPreferences;
+    json m_userPreferences;
     int m_totalInteractions = 0;
     int m_positiveResponses = 0;
     
@@ -145,4 +154,14 @@ private:
     std::string m_currentModelPath;
     class InferenceEngine* m_inferenceEngine = nullptr;
     GenerationConfig m_genConfig;
+    
+    // Callbacks
+    ResponseCallback m_onResponseReady;
+    ModelLoadingCallback m_onModelLoadingFinished;
+    ModelReadyCallback m_onModelReady;
+    FeedbackCallback m_onFeedbackCollected;
+    LearningCallback m_onLearningCompleted;
+    SecurityCallback m_onSecurityWarning;
+    TokenCallback m_onTokenGenerated;
+    RefactorCallback m_onRefactorSuggested;
 };
