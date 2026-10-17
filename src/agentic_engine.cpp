@@ -32,7 +32,6 @@ using json = nlohmann::json;
 
 // Tool registry initialization - Real implementation with filesystem,
 // terminal, build, test, and Git capabilities with workspace boundaries.
-#ifndef TOOL_REGISTRY_INIT_IMPLEMENTED
 
 namespace {
 // Workspace root for authorization boundaries
@@ -489,8 +488,6 @@ bool initializeAllTools(ToolRegistry* registry) {
 
     return true;
 }
-
-#endif // TOOL_REGISTRY_INIT_IMPLEMENTED
 
 // ============================================================================
 // AgenticEngine Implementation
