@@ -128,7 +128,38 @@ bool ApplyGpuClockOffsetMhz(int offset) {
         return true;
     }
     if (ExistsOne({"C:/Windows/System32/amd-smi.exe", "C:/Program Files/AMD/amd-smi.exe", "amd-smi"})) {
-        std::cout << "[vendor] AMD SMI present - clock offset application not implemented (sysctl varies)" << std::endl;
+        // amd-smi supports setting clock offsets via CLI
+        // Try common command patterns for AMD SMI
+        std::vector<std::string> amdCommands = {
+            "amd-smi set --gpu 0 --clock-offset " + std::to_string(offset),
+            "amd-smi set --gpu 0 --mem-clock-offset " + std::to_string(offset),
+            "amd-smi --set-clock-offset " + std::to_string(offset)
+        };
+
+        bool anySucceeded = false;
+        for (const auto& cmd : amdCommands) {
+            FILE* pipe = _popen(cmd.c_str(), "r");
+            if (!pipe) continue;
+
+            std::array<char, 256> buf{};
+            std::string out;
+            while (fgets(buf.data(), (int)buf.size(), pipe)) out += buf.data();
+            int rc = _pclose(pipe);
+
+            if (rc == 0) {
+                anySucceeded = true;
+                break;
+            }
+        }
+
+        if (!anySucceeded) {
+            std::lock_guard<std::mutex> guard(g_lock);
+            g_lastError = "amd_smi_clock_offset_failed";
+            std::cerr << "[vendor] AMD SMI clock offset application failed" << std::endl;
+            return false;
+        }
+
+        { std::lock_guard<std::mutex> guard(g_lock); g_lastError.clear(); }
         return true;
     }
     // No real tool; simulation.

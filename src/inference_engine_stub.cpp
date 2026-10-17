@@ -35,15 +35,93 @@ InferenceEngine::~InferenceEngine()
 }
 
 void InferenceEngine::processCommand(const QString& command) {
-    // Process terminal command
+    // Real command execution using QProcess
+    QProcess process;
+    process.start(command);
+    if (!process.waitForStarted(5000)) {
+        qWarning() << "[InferenceEngine] Failed to start command:" << command;
+        return;
+    }
+
+    if (!process.waitForFinished(30000)) {
+        process.kill();
+        process.waitForFinished();
+        qWarning() << "[InferenceEngine] Command timed out:" << command;
+        return;
+    }
+
+    QByteArray output = process.readAllStandardOutput();
+    QByteArray errorOutput = process.readAllStandardError();
+
+    if (!output.isEmpty()) {
+        qInfo() << "[InferenceEngine] Command output:" << output;
+    }
+    if (!errorOutput.isEmpty()) {
+        qWarning() << "[InferenceEngine] Command error:" << errorOutput;
+    }
+
+    int exitCode = process.exitCode();
+    if (exitCode != 0) {
+        qWarning() << "[InferenceEngine] Command exited with code:" << exitCode;
+    }
 }
 
 QString InferenceEngine::processChat(const QString& message) {
-    return "Response: " + message;
+    // Real AI inference using the engine's own generation pipeline
+    if (!m_initialized) {
+        qWarning() << "[InferenceEngine] Engine not initialized, cannot process chat";
+        return "Error: Inference engine not initialized. Load a model first.";
+    }
+
+    // Tokenize the input message
+    auto tokens = tokenize(message);
+    if (tokens.empty()) {
+        return "Error: Could not tokenize input message";
+    }
+
+    // Generate response using the real transformer pipeline
+    auto generated = generate(tokens, 128); // Max 128 tokens for chat response
+    QString response = detokenize(generated);
+
+    if (response.isEmpty()) {
+        return "Error: Model generated empty response";
+    }
+
+    return response;
 }
 
 QString InferenceEngine::analyzeCode(const QString& code) {
-    return "Analysis: " + code;
+    // Real code analysis using the engine's inference pipeline
+    if (!m_initialized) {
+        qWarning() << "[InferenceEngine] Engine not initialized, cannot analyze code";
+        return "Error: Inference engine not initialized. Load a model first.";
+    }
+
+    // Construct an analysis prompt
+    QString analysisPrompt = QString(
+        "Analyze the following code for bugs, security issues, and improvements:\n\n"
+        "%1\n\n"
+        "Provide a concise analysis covering:\n"
+        "1. Potential bugs\n"
+        "2. Security vulnerabilities\n"
+        "3. Performance issues\n"
+        "4. Suggested improvements"
+    ).arg(code);
+
+    // Tokenize and generate analysis
+    auto tokens = tokenize(analysisPrompt);
+    if (tokens.empty()) {
+        return "Error: Could not tokenize code for analysis";
+    }
+
+    auto generated = generate(tokens, 256); // More tokens for detailed analysis
+    QString analysis = detokenize(generated);
+
+    if (analysis.isEmpty()) {
+        return "Error: Model generated empty analysis";
+    }
+
+    return analysis;
 }
 
 bool InferenceEngine::Initialize(const std::string& model_path)
