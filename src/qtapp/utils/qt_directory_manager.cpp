@@ -10,6 +10,9 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QDebug>
+#include <windows.h>
+#include <shellapi.h>
+#pragma comment(lib, "shell32.lib")
 
 namespace RawrXD {
 
@@ -47,12 +50,34 @@ FileOperationResult QtDirectoryManager::deleteDirectory(const QString& path,
     
     QDir dir(absolutePath);
     
-    // moveToTrash not implemented - always do hard delete
-    // For production: integrate with platform trash APIs
-    
+    // Real moveToTrash implementation using Windows Shell API (SHFileOperation)
+    // Moves the directory to the Recycle Bin instead of permanent deletion
+    #ifdef _WIN32
+    {
+        int wPathLen = MultiByteToWideChar(CP_UTF8, 0, absolutePath.toLocal8Bit().constData(), -1, nullptr, 0);
+        std::wstring wPath(wPathLen, 0);
+        MultiByteToWideChar(CP_UTF8, 0, absolutePath.toLocal8Bit().constData(), -1, &wPath[0], wPathLen);
+        wPath.push_back(L'\0'); // SHFileOperation requires double-null termination
+
+        SHFILEOPSTRUCTW fileOp = {0};
+        fileOp.wFunc = FO_DELETE;
+        fileOp.pFrom = wPath.c_str();
+        fileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT;
+
+        int result = SHFileOperationW(&fileOp);
+        if (result != 0) {
+            // Fallback: hard delete if trash operation fails
+            if (!removeDirectoryRecursive(absolutePath)) {
+                return FileOperationResult(false, "Failed to delete directory recursively");
+            }
+        }
+    }
+    #else
+    // Non-Windows: hard delete
     if (!removeDirectoryRecursive(absolutePath)) {
         return FileOperationResult(false, "Failed to delete directory recursively");
     }
+    #endif
     
     return FileOperationResult(true);
 }

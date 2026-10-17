@@ -1,5 +1,6 @@
 #include "gguf_server.hpp"
 #include "inference_engine.hpp"
+#include "hf_hub_client.h"
 #include <QNetworkInterface>
 #include <QHostAddress>
 #include <QDateTime>
@@ -10,6 +11,9 @@
 #include <QCoreApplication>
 #include <QThread>
 #include <QDebug>
+#include <QFile>
+#include <QDir>
+#include <QStandardPaths>
 
 GGUFServer::GGUFServer(InferenceEngine* engine, QObject* parent)
     : QObject(parent)
@@ -679,24 +683,113 @@ void GGUFServer::handlePullRequest(const HttpRequest& request, HttpResponse& res
     QJsonDocument doc = parseJsonBody(request.body);
     
     QJsonObject responseObj;
-    responseObj["status"] = "not_implemented";
-    responseObj["error"] = "Model pulling not yet implemented";
-    
+    QJsonObject reqObj = doc.object();
+
+    QString modelId = reqObj["name"].toString();
+    if (modelId.isEmpty()) {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Model name required";
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 400;
+        response.statusText = "Bad Request";
+        return;
+    }
+
+    // Determine models directory
+    QString modelsDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
+    QDir dir(modelsDir);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    // Parse model ID - extract filename
+    QString filename = modelId;
+    int lastSlash = modelId.lastIndexOf('/');
+    if (lastSlash >= 0) {
+        filename = modelId.mid(lastSlash + 1);
+    }
+
+    // Use HFHubClient to download the model
+    HFHubClient client;
+    bool success = client.downloadModel(modelId, filename, modelsDir);
+
+    QJsonObject responseObj;
+    if (success) {
+        responseObj["status"] = "success";
+        responseObj["model"] = modelId;
+        responseObj["path"] = modelsDir + "/" + filename;
+        response.statusCode = 200;
+        response.statusText = "OK";
+    } else {
+        responseObj["status"] = "error";
+        responseObj["error"] = "Failed to pull model: " + modelId;
+        response.statusCode = 500;
+        response.statusText = "Internal Server Error";
+    }
+
     QJsonDocument responseDoc(responseObj);
     response.body = responseDoc.toJson(QJsonDocument::Compact);
-    response.statusCode = 501;
-    response.statusText = "Not Implemented";
 }
 
 void GGUFServer::handlePushRequest(const HttpRequest& request, HttpResponse& response) {
     QJsonObject responseObj;
-    responseObj["status"] = "not_implemented";
-    responseObj["error"] = "Model pushing not yet implemented";
-    
-    QJsonDocument responseDoc(responseObj);
-    response.body = responseDoc.toJson(QJsonDocument::Compact);
-    response.statusCode = 501;
-    response.statusText = "Not Implemented";
+    QJsonObject reqObj = doc.object();
+
+    QString modelId = reqObj["name"].toString();
+    QString sourcePath = reqObj["path"].toString();
+
+    if (modelId.isEmpty() || sourcePath.isEmpty()) {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Model name and path required";
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 400;
+        response.statusText = "Bad Request";
+        return;
+    }
+
+    // Determine models directory
+    QString modelsDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
+    QDir dir(modelsDir);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    QString destPath = modelsDir + "/" + modelId;
+
+    QFile sourceFile(sourcePath);
+    if (!sourceFile.exists()) {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Source file not found: " + sourcePath;
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 404;
+        response.statusText = "Not Found";
+        return;
+    }
+
+    if (sourceFile.copy(destPath)) {
+        QJsonObject responseObj;
+        responseObj["status"] = "success";
+        responseObj["model"] = modelId;
+        responseObj["path"] = destPath;
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 200;
+        response.statusText = "OK";
+    } else {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Failed to copy model to: " + destPath;
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 500;
+        response.statusText = "Internal Server Error";
+    }
 }
 
 void GGUFServer::handleShowRequest(const HttpRequest& request, HttpResponse& response) {
@@ -719,13 +812,54 @@ void GGUFServer::handleShowRequest(const HttpRequest& request, HttpResponse& res
 
 void GGUFServer::handleDeleteRequest(const HttpRequest& request, HttpResponse& response) {
     QJsonObject responseObj;
-    responseObj["status"] = "not_implemented";
-    responseObj["error"] = "Model deletion not yet implemented";
-    
-    QJsonDocument responseDoc(responseObj);
-    response.body = responseDoc.toJson(QJsonDocument::Compact);
-    response.statusCode = 501;
-    response.statusText = "Not Implemented";
+    QJsonDocument doc = parseJsonBody(request.body);
+    QJsonObject reqObj = doc.object();
+
+    QString modelId = reqObj["name"].toString();
+    if (modelId.isEmpty()) {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Model name required";
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 400;
+        response.statusText = "Bad Request";
+        return;
+    }
+
+    // Determine models directory
+    QString modelsDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/models";
+    QString modelPath = modelsDir + "/" + modelId;
+
+    QFile modelFile(modelPath);
+    if (!modelFile.exists()) {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Model not found: " + modelId;
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 404;
+        response.statusText = "Not Found";
+        return;
+    }
+
+    if (modelFile.remove()) {
+        QJsonObject responseObj;
+        responseObj["status"] = "success";
+        responseObj["model"] = modelId;
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 200;
+        response.statusText = "OK";
+    } else {
+        QJsonObject responseObj;
+        responseObj["status"] = "error";
+        responseObj["error"] = "Failed to delete model: " + modelId;
+        QJsonDocument responseDoc(responseObj);
+        response.body = responseDoc.toJson(QJsonDocument::Compact);
+        response.statusCode = 500;
+        response.statusText = "Internal Server Error";
+    }
 }
 
 void GGUFServer::handleHealthRequest(HttpResponse& response) {

@@ -796,73 +796,38 @@ bool ModelTrainer::saveModel(const QString& outputPath)
     }
 
     // Write GGUF magic and version
-    uint32_t magic = 0x46554747; // "GGUF"
-    uint32_t version = 3;
+    uint32_t magic = header.magic;
+    uint32_t version = header.version;
     outFile.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
     outFile.write(reinterpret_cast<const char*>(&version), sizeof(version));
 
-    // Write header fields
-    outFile.write(reinterpret_cast<const char*>(&header.tensor_count), sizeof(header.tensor_count));
-    outFile.write(reinterpret_cast<const char*>(&header.metadata_kv_count), sizeof(header.metadata_kv_count));
+    // Write tensor count and metadata kv count
+    uint64_t tensorCount = header.tensor_count;
+    uint64_t metadataKvCount = header.metadata_kv_count;
+    outFile.write(reinterpret_cast<const char*>(&tensorCount), sizeof(tensorCount));
+    outFile.write(reinterpret_cast<const char*>(&metadataKvCount), sizeof(metadataKvCount));
 
-    // Write metadata key-value pairs
-    // ... (simplified - write metadata count and key-value pairs)
-    uint32_t kvCount = static_cast<uint32_t>(metadata.keyValuePairs.size());
-    outFile.write(reinterpret_cast<const char*>(&kvCount), sizeof(kvCount));
-
-    for (const auto& kv : metadata.keyValuePairs) {
+    // Write metadata key-value pairs (as strings - simplified GGUF metadata)
+    for (const auto& kv : metadata.kv_pairs) {
         uint32_t keyLen = static_cast<uint32_t>(kv.first.size());
         outFile.write(reinterpret_cast<const char*>(&keyLen), sizeof(keyLen));
         outFile.write(kv.first.c_str(), keyLen);
 
-        // Write value type and value
-        uint8_t valueType = static_cast<uint8_t>(kv.second.type);
-        outFile.write(reinterpret_cast<const char*>(&valueType), sizeof(valueType));
-
-        switch (kv.second.type) {
-            case GGMLValueType::UINT32: {
-                uint32_t val = kv.second.value_uint32;
-                outFile.write(reinterpret_cast<const char*>(&val), sizeof(val));
-                break;
-            }
-            case GGMLValueType::INT32: {
-                int32_t val = kv.second.value_int32;
-                outFile.write(reinterpret_cast<const char*>(&val), sizeof(val));
-                break;
-            }
-            case GGMLValueType::FLOAT32: {
-                float val = kv.second.value_float32;
-                outFile.write(reinterpret_cast<const char*>(&val), sizeof(val));
-                break;
-            }
-            case GGMLValueType::BOOL: {
-                uint8_t val = kv.second.value_bool ? 1 : 0;
-                outFile.write(reinterpret_cast<const char*>(&val), sizeof(val));
-                break;
-            }
-            case GGMLValueType::STRING: {
-                uint32_t len = static_cast<uint32_t>(kv.second.value_string.size());
-                outFile.write(reinterpret_cast<const char*>(&len), sizeof(len));
-                outFile.write(kv.second.value_string.c_str(), len);
-                break;
-            }
-            case GGMLValueType::ARRAY:
-            case GGMLValueType::UNKNOWN:
-            default:
-                break;
-        }
+        uint32_t valLen = static_cast<uint32_t>(kv.second.size());
+        outFile.write(reinterpret_cast<const char*>(&valLen), sizeof(valLen));
+        outFile.write(kv.second.c_str(), valLen);
     }
 
-    // Write tensor info and data
+    // Write tensor info
     for (const auto& tensor : tensors) {
         uint32_t nameLen = static_cast<uint32_t>(tensor.name.size());
         outFile.write(reinterpret_cast<const char*>(&nameLen), sizeof(nameLen));
         outFile.write(tensor.name.c_str(), nameLen);
 
-        uint32_t dimCount = static_cast<uint32_t>(tensor.dimensions.size());
+        uint32_t dimCount = static_cast<uint32_t>(tensor.shape.size());
         outFile.write(reinterpret_cast<const char*>(&dimCount), sizeof(dimCount));
 
-        for (uint32_t dim : tensor.dimensions) {
+        for (uint64_t dim : tensor.shape) {
             outFile.write(reinterpret_cast<const char*>(&dim), sizeof(dim));
         }
 
@@ -871,16 +836,18 @@ bool ModelTrainer::saveModel(const QString& outputPath)
 
         uint64_t offset = tensor.offset;
         outFile.write(reinterpret_cast<const char*>(&offset), sizeof(offset));
+
+        uint64_t sizeBytes = tensor.size_bytes;
+        outFile.write(reinterpret_cast<const char*>(&sizeBytes), sizeof(sizeBytes));
     }
 
     // Write tensor data (with any applied weight updates)
     for (const auto& tensor : tensors) {
-        size_t byteSize = m_modelLoader->GetTensorByteSize(tensor);
-        std::vector<uint8_t> tensorData(byteSize);
+        std::vector<uint8_t> tensorData;
         if (m_modelLoader->LoadTensorZone(tensor.name, tensorData)) {
             // Apply any in-memory weight updates here if available
             // For now, write the original tensor data
-            outFile.write(reinterpret_cast<const char*>(tensorData.data()), byteSize);
+            outFile.write(reinterpret_cast<const char*>(tensorData.data()), tensorData.size());
         }
     }
 
@@ -905,7 +872,6 @@ bool ModelTrainer::saveModel(const QString& outputPath)
         metaObj["trained_epochs"] = m_currentEpoch;
         metaObj["final_loss"] = m_currentLoss;
         metaObj["validation_perplexity"] = m_validationPerplexity;
-        metaObj["training_config"] = QJsonValue::fromVariant(QJsonValue::fromVariant(QJsonValue()));
         QJsonDocument metaDoc(metaObj);
         metaFile.write(metaDoc.toJson());
         metaFile.close();

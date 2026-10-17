@@ -836,9 +836,37 @@ void MainWindow::startRemoteSession(const std::string& remoteHost) {
 }
 
 void MainWindow::handleCommand(const std::string& cmd) {
-    // Stub implementation - prints command to console
-    std::cout << "Command: " << cmd << std::endl;
-    // TODO: Implement actual command execution
+    // Real command execution using QProcess
+    std::cout << "Executing: " << cmd << std::endl;
+
+    QProcess process;
+    process.start(QString::fromStdString(cmd));
+    if (!process.waitForStarted()) {
+        std::cerr << "Failed to start command: " << cmd << std::endl;
+        return;
+    }
+
+    if (!process.waitForFinished(30000)) { // 30 second timeout
+        process.kill();
+        process.waitForFinished();
+        std::cerr << "Command timed out: " << cmd << std::endl;
+        return;
+    }
+
+    QByteArray output = process.readAllStandardOutput();
+    QByteArray errorOutput = process.readAllStandardError();
+
+    if (!output.isEmpty()) {
+        std::cout << output.toStdString();
+    }
+    if (!errorOutput.isEmpty()) {
+        std::cerr << errorOutput.toStdString();
+    }
+
+    int exitCode = process.exitCode();
+    if (exitCode != 0) {
+        std::cerr << "Command exited with code: " << exitCode << std::endl;
+    }
 }
 
 // Editor Settings (10 features)

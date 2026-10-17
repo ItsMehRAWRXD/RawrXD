@@ -12,26 +12,19 @@
 
 InferenceEngine* ComponentFactory::createInferenceEngine(const QString& ggufPath, QObject* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating InferenceEngine...";
-        auto engine = new InferenceEngine(parent);
+        auto engine = new InferenceEngine(ggufPath, parent);
         qDebug() << "ComponentFactory: InferenceEngine created successfully";
         return engine;
     } catch (const std::exception& e) {
         qCritical() << "ComponentFactory: Failed to create InferenceEngine:" << e.what();
         return nullptr;
     }
-    */
 }
 
 GGUFServer* ComponentFactory::createGGUFServer(InferenceEngine* engine, QObject* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating GGUFServer...";
         auto server = new GGUFServer(engine, parent);
@@ -41,14 +34,10 @@ GGUFServer* ComponentFactory::createGGUFServer(InferenceEngine* engine, QObject*
         qCritical() << "ComponentFactory: Failed to create GGUFServer:" << e.what();
         return nullptr;
     }
-    */
 }
 
 StreamingInference* ComponentFactory::createStreamingInference(QPlainTextEdit* outputEdit, QObject* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating StreamingInference...";
         auto streaming = new StreamingInference(outputEdit, parent);
@@ -58,14 +47,10 @@ StreamingInference* ComponentFactory::createStreamingInference(QPlainTextEdit* o
         qCritical() << "ComponentFactory: Failed to create StreamingInference:" << e.what();
         return nullptr;
     }
-    */
 }
 
 CommandPalette* ComponentFactory::createCommandPalette(QWidget* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating CommandPalette...";
         auto palette = new CommandPalette(parent);
@@ -75,14 +60,10 @@ CommandPalette* ComponentFactory::createCommandPalette(QWidget* parent)
         qCritical() << "ComponentFactory: Failed to create CommandPalette:" << e.what();
         return nullptr;
     }
-    */
 }
 
 AIChatPanel* ComponentFactory::createAIChatPanel(QWidget* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating AIChatPanel...";
         auto panel = new AIChatPanel(parent);
@@ -92,14 +73,10 @@ AIChatPanel* ComponentFactory::createAIChatPanel(QWidget* parent)
         qCritical() << "ComponentFactory: Failed to create AIChatPanel:" << e.what();
         return nullptr;
     }
-    */
 }
 
 LayerQuantWidget* ComponentFactory::createLayerQuantWidget(QWidget* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating LayerQuantWidget...";
         auto widget = new LayerQuantWidget(parent);
@@ -109,14 +86,10 @@ LayerQuantWidget* ComponentFactory::createLayerQuantWidget(QWidget* parent)
         qCritical() << "ComponentFactory: Failed to create LayerQuantWidget:" << e.what();
         return nullptr;
     }
-    */
 }
 
 ModelMonitor* ComponentFactory::createModelMonitor(InferenceEngine* engine, QWidget* parent)
 {
-    // STUBBED FOR DEBUGGING
-    return nullptr;
-    /*
     try {
         qDebug() << "ComponentFactory: Creating ModelMonitor...";
         auto monitor = new ModelMonitor(engine, parent);
@@ -126,7 +99,6 @@ ModelMonitor* ComponentFactory::createModelMonitor(InferenceEngine* engine, QWid
         qCritical() << "ComponentFactory: Failed to create ModelMonitor:" << e.what();
         return nullptr;
     }
-    */
 }
 
 // Helper functions to convert components to QObject for signal connections

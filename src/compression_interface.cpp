@@ -223,6 +223,50 @@ std::string DeflateWrapper::GetDecompressionStats() const {
 }
 
 // =====================================================================
+// RLEFallbackWrapper — Simple RLE compression fallback (no deps)
+// =====================================================================
+
+class RLEFallbackWrapper : public ICompressionProvider {
+public:
+    bool IsSupported() const override { return true; }
+    
+    bool Compress(const std::vector<uint8_t>& input, std::vector<uint8_t>& output) override {
+        output.clear();
+        output.reserve(input.size());
+        
+        size_t i = 0;
+        while (i < input.size()) {
+            uint8_t value = input[i];
+            size_t count = 1;
+            while (i + count < input.size() && input[i + count] == value && count < 255) {
+                count++;
+            }
+            output.push_back(static_cast<uint8_t>(count));
+            output.push_back(value);
+            i += count;
+        }
+        return true;
+    }
+    
+    bool Decompress(const std::vector<uint8_t>& input, std::vector<uint8_t>& output) override {
+        output.clear();
+        
+        for (size_t i = 0; i + 1 < input.size(); i += 2) {
+            uint8_t count = input[i];
+            uint8_t value = input[i + 1];
+            for (uint8_t j = 0; j < count; j++) {
+                output.push_back(value);
+            }
+        }
+        return true;
+    }
+    
+    std::string GetStats() const override {
+        return "RLEFallback: run-length encoding (no deps)";
+    }
+};
+
+// =====================================================================
 // CompressionFactory Implementation
 // =====================================================================
 
@@ -248,9 +292,9 @@ std::shared_ptr<ICompressionProvider> CompressionFactory::Create(uint32_t prefer
         return deflate_provider;
     }
     
-    // All providers failed - return null
-    std::cerr << "No compression provider available!" << std::endl;
-    return nullptr;
+    // All providers failed - use RLE fallback instead of returning nullptr
+    std::cerr << "No compression provider available! Using RLE fallback." << std::endl;
+    return std::make_shared<RLEFallbackWrapper>();
 }
 
 bool CompressionFactory::IsSupported(uint32_t type) {

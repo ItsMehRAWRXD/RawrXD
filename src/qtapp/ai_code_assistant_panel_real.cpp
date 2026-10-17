@@ -16,6 +16,9 @@
 #include <QApplication>
 #include <QDebug>
 #include <QDateTime>
+#include <QFileDialog>
+#include <QFile>
+#include <QTextStream>
 
 AICodeAssistantPanel::AICodeAssistantPanel(QWidget *parent)
     : QDockWidget("AI Code Assistant", parent),
@@ -300,9 +303,29 @@ void AICodeAssistantPanel::onCopyToClipboard() {
 
 void AICodeAssistantPanel::onExportSuggestion() {
     if (current_suggestion_.suggested_code.isEmpty()) return;
-    
-    // TODO: Export to file
-    qDebug() << "[AICodeAssistantPanel] Exporting suggestion - TODO: implement file export";
+
+    // Real file export: open file save dialog and write the suggestion
+    QString defaultName = "suggestion_" + QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".txt";
+    QString filePath = QFileDialog::getSaveFileName(
+        this,
+        "Export Code Suggestion",
+        defaultName,
+        "Text Files (*.txt);;C++ Files (*.cpp *.h);;All Files (*)"
+    );
+
+    if (filePath.isEmpty()) return; // User cancelled
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "[AICodeAssistantPanel] Cannot open file for writing:" << filePath;
+        return;
+    }
+
+    QTextStream out(&file);
+    out << current_suggestion_.suggested_code;
+    file.close();
+
+    qDebug() << "[AICodeAssistantPanel] Exported suggestion to:" << filePath;
 }
 
 void AICodeAssistantPanel::onTemperatureChanged(int value) {
