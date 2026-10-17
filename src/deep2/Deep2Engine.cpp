@@ -2792,16 +2792,32 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     lw.ssmAlpha = wt;
                     lw.hasSSM = true;
                     if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmAlpha (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
+                        printf("[SSM_MAP] %s -> ssmAlpha (dims=%zux%zu type=%d)\n", name.c_str(),
+                               wt.rows, wt.cols, wt.type);
                 }
                 else if (name.find("ssm_beta.weight") != std::string::npos)
                 {
                     lw.ssmBeta = wt;
                     lw.hasSSM = true;
                     if (layerIdx == 0)
-                        printf("[SSM_MAP] %s -> ssmBeta (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols,
-                               wt.type);
+                        printf("[SSM_MAP] %s -> ssmBeta (dims=%zux%zu type=%d)\n", name.c_str(),
+                               wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_in.scale") != std::string::npos)
+                {
+                    lw.ssmInScale = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmInScale (dims=%zux%zu type=%d)\n", name.c_str(),
+                               wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_out.scale") != std::string::npos)
+                {
+                    lw.ssmOutScale = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0)
+                        printf("[SSM_MAP] %s -> ssmOutScale (dims=%zux%zu type=%d)\n", name.c_str(),
+                               wt.rows, wt.cols, wt.type);
                 }
                 else if (name.find("ssm_") != std::string::npos && layerIdx == 0)
                 {
@@ -2857,9 +2873,51 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             ++attnLayers;
             ++topologySsmLayers;
         }
+        else if (hasSsm && !hasAttn)
+        {
+            topo.mixer = LayerMixer::SSM;
+            topo.hasSSM = true;
+            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
+            topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
+                                (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
+            topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
+            ++topologySsmLayers;
+        }
+        else if (hasAttn && hasSsm)
+        {
+            // Hybrid layer: both attention and SSM (e.g. some Nemotron variants)
+            topo.mixer = LayerMixer::Attention;
+            topo.hasSSM = true;
+            topo.hasMoE = lw.moeRouter.data != nullptr;
+            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
+            topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
+                                (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
+            topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
+            kvLayerMap_[i] = kvLayer++;
+            ++attnLayers;
+            ++topologySsmLayers;
+        }
         else
         {
-            topo.mixer = LayerMixer::Unknown;
+            // Unknown mixer: classify based on available tensor types
+            if (lw.moeRouter.data)
+            {
+                topo.mixer = LayerMixer::MoE;
+                topo.hasMoE = true;
+                topo.moeNumExperts = lw.moeRouter.rows;
+                topo.moeExpertsPerToken = modelWeights.numExpertsPerToken;
+                topo.moeIntermediateDim = lw.wGate.rows > 0 ? lw.wGate.rows : 0;
+                ++topologySsmLayers;  // count as non-attention layer
+            }
+            else if (lw.wGate.data || lw.wUp.data || lw.wDown.data)
+            {
+                topo.mixer = LayerMixer::DenseFFN;
+                topo.hasMoE = false;
+            }
+            else
+            {
+                topo.mixer = LayerMixer::Unknown;
+            }
         }
         if (lw.moeRouter.data)
         {
