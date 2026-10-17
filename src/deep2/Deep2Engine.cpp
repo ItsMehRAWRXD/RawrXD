@@ -4940,13 +4940,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input, float* out
     {
         // NVFP4 CPU path: dequantize 4-bit FP4 values and dot with input.
         // Layout: 36 bytes per 64 elements (32 bytes packed + 4 bytes scale).
-        // NVFP4 requires cols divisible by 64 (64 elements per 36-byte block).
-        if ((cols % 64u) != 0) {
-            fprintf(stderr,
-                "[NVFP4_FATAL] tensor=%s cols=%zu not a multiple of 64\n",
-                wt.name.c_str(), cols);
-            throw std::runtime_error("NVFP4: cols not a multiple of 64");
-        }
+        // Partial blocks in the final row are padded per GGUF spec; ceiling
+        // division in row_bytes below sizes them correctly.
         // Verify the weight tensor is large enough for the declared rows.
         size_t row_bytes = ((cols + 63) / 64) * 36;
         if ((size_t)endRow * row_bytes > wt.sizeBytes) {
