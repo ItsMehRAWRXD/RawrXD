@@ -10,6 +10,7 @@
 #include <ctime>
 #include <array>
 #include <cstdlib>
+#include <filesystem>
 
 // Structured logging helper with timestamp and severity
 static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
@@ -291,12 +292,71 @@ void APIServer::HandlePullRequest(const std::string& request, std::string& respo
             return;
         }
         
-        // HuggingFace model pull/download not implemented
-        LogApiOperation("WARN", "PULL_REQUEST", "Model download not implemented: " + model_name);
-        response = R"({"status":"error","error":"model_download_not_implemented","model":")" + model_name + R"("})";
-        
+        // Resolve model path locally (no external download dependency)
+        // Check common model directories and the exact name provided
+        std::string resolvedPath;
+        std::vector<std::string> searchDirs = {
+            "./models/",
+            "../models/",
+            "models/",
+            std::getenv("HOME") ? (std::string(std::getenv("HOME")) + "/.rawrxd/models/") : "",
+            std::getenv("RAWRXD_MODELS_DIR") ? std::string(std::getenv("RAWRXD_MODELS_DIR")) : ""
+        };
+
+        for (const auto& dir : searchDirs) {
+            if (dir.empty()) continue;
+            std::filesystem::path candidate = dir;
+            candidate /= model_name;
+            if (std::filesystem::exists(candidate) && std::filesystem::is_regular_file(candidate)) {
+                resolvedPath = candidate.string();
+                break;
+            }
+            // Also try with .gguf extension
+            candidate = dir;
+            candidate /= (model_name + ".gguf");
+            if (std::filesystem::exists(candidate) && std::filesystem::is_regular_file(candidate)) {
+                resolvedPath = candidate.string();
+                break;
+            }
+        }
+
+        if (resolvedPath.empty()) {
+            LogApiOperation("WARN", "PULL_REQUEST", "Model not found locally: " + model_name);
+            response = R"({"status":"error","error":"model_not_found_locally","model":")" + model_name + R"("})";
+            total_requests_++;
+            failed_requests_++;
+            return;
+        }
+
+        // Load model via shared Deep2 inference service
+        Deep2::EngineConfig cfg;
+        cfg.numThreads = std::thread::hardware_concurrency();
+        cfg.useKVCache = true;
+        cfg.useThreadPool = true;
+
+        if (!RawrXD::Deep2InferenceService::instance().initialize(cfg)) {
+            LogApiOperation("ERROR", "PULL_REQUEST", "Failed to initialize Deep2 inference service");
+            response = R"({"status":"error","error":"deep2_init_failed","model":")" + model_name + R"("})";
+            total_requests_++;
+            failed_requests_++;
+            return;
+        }
+
+        if (!RawrXD::Deep2InferenceService::instance().loadModel(resolvedPath)) {
+            LogApiOperation("ERROR", "PULL_REQUEST", "Failed to load model: " + resolvedPath);
+            response = R"({"status":"error","error":"model_load_failed","model":")" + model_name + R"("})";
+            total_requests_++;
+            failed_requests_++;
+            return;
+        }
+
+        deep2Initialized_ = true;
+        deep2ModelPath_ = resolvedPath;
+
+        LogApiOperation("INFO", "PULL_REQUEST", "Model loaded successfully: " + resolvedPath);
+        response = R"({"status":"success","model":")" + model_name + R"(","path":")" + resolvedPath + R"("})";
         total_requests_++;
-        failed_requests_++;
+        successful_requests_++;
         
     } catch (const std::exception& e) {
         response = CreateErrorResponse(std::string("Pull request error: ") + e.what());

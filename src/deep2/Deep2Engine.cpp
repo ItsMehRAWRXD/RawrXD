@@ -3682,13 +3682,33 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
     return true;
 }
 
-bool Deep2Engine::loadWeights(const void* weightData, size_t size)
+bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize)
 {
-    (void)weightData;
-    (void)size;
-    fprintf(stderr, "[Deep2Engine] ERROR: loadWeights() is not implemented — "
-                    "use loadModel(ggufPath). Returning failure (no false success).\n");
-    return false;
+    if (!weightData || weightSize == 0) {
+        fprintf(stderr, "[Deep2Engine] ERROR: loadWeights() called with null data or zero size\n");
+        return false;
+    }
+
+    // Free any previously loaded legacy weights
+    if (weights) {
+        free(weights);
+        weights = nullptr;
+        weightSize = 0;
+    }
+
+    // Allocate and copy the raw weight data into the engine's internal buffer.
+    // The caller retains ownership of the source buffer; we take a private copy.
+    weights = static_cast<float*>(malloc(weightSize));
+    if (!weights) {
+        fprintf(stderr, "[Deep2Engine] ERROR: loadWeights() failed to allocate %zu bytes\n", weightSize);
+        return false;
+    }
+    memcpy(weights, weightData, weightSize);
+    this->weightSize = weightSize;
+
+    fprintf(stderr, "[Deep2Engine] loadWeights() loaded %zu bytes (%zu floats) into legacy weight buffer\n",
+            weightSize, weightSize / sizeof(float));
+    return true;
 }
 
 // ============================================================================

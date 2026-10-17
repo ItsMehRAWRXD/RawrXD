@@ -602,23 +602,133 @@ Code:
 
     static std::vector<std::string> extractTestCases(const std::string& response) {
         std::vector<std::string> tests;
-        // TODO: Parse test functions from response
-        tests.push_back(response);
+
+        // Parse test functions from response
+        // Look for patterns like: void test_name() { ... } or TEST(test_name) { ... }
+        std::regex testPattern(
+            R"((?:void\s+(\w+)\s*\([^)]*\)\s*\{)|(?:TEST\s*\(\s*\w+\s*,\s*(\w+)\s*\)\s*\{)|(?:TEST_F\s*\(\s*\w+\s*,\s*(\w+)\s*\)\s*\{))",
+            std::regex_constants::icase);
+
+        std::sregex_iterator it(response.begin(), response.end(), testPattern);
+        std::sregex_iterator end;
+
+        while (it != end) {
+            std::smatch match = *it;
+            std::string testName;
+            if (!match[1].str().empty()) testName = match[1].str();
+            else if (!match[2].str().empty()) testName = match[2].str();
+            else if (!match[3].str().empty()) testName = match[3].str();
+
+            if (!testName.empty()) {
+                // Find the matching closing brace
+                size_t startPos = match.position();
+                size_t bracePos = response.find('{', startPos);
+                if (bracePos != std::string::npos) {
+                    int depth = 1;
+                    size_t endPos = bracePos + 1;
+                    while (endPos < response.size() && depth > 0) {
+                        if (response[endPos] == '{') depth++;
+                        else if (response[endPos] == '}') depth--;
+                        endPos++;
+                    }
+                    if (depth == 0) {
+                        tests.push_back(response.substr(startPos, endPos - startPos));
+                    }
+                }
+            }
+            ++it;
+        }
+
+        // If no test functions found with braces, look for TEST macros without body
+        if (tests.empty()) {
+            std::regex simpleTestPattern(R"((?:TEST|TEST_F)\s*\(\s*\w+\s*,\s*(\w+)\s*\))");
+            std::sregex_iterator it2(response.begin(), response.end(), simpleTestPattern);
+            std::sregex_iterator end2;
+            while (it2 != end2) {
+                tests.push_back(it2->str(1));
+                ++it2;
+            }
+        }
+
+        // If still no tests, treat whole response as one test
+        if (tests.empty() && !response.empty()) {
+            tests.push_back(response);
+        }
+
         return tests;
     }
 
     static std::string extractTestName(const std::string& test) {
-        // Extract test function name
+        // Extract test function name from test code
+        // Patterns: void test_name() { ... } or TEST(suite, test_name) { ... }
+        std::regex namePattern(
+            R"(?:void\s+(\w+)\s*\(|TEST\s*\(\s*\w+\s*,\s*(\w+)\s*\)|TEST_F\s*\(\s*\w+\s*,\s*(\w+)\s*\))",
+            std::regex_constants::icase);
+
+        std::smatch match;
+        if (std::regex_search(test, match, namePattern)) {
+            if (!match[1].str().empty()) return match[1].str();
+            if (!match[2].str().empty()) return match[2].str();
+            if (!match[3].str().empty()) return match[3].str();
+        }
+
         return "test_case";
     }
 
     static std::string extractTestDescription(const std::string& test) {
+        // Extract description from test comments or function name
+        // Look for comments before the test function
+        size_t commentPos = test.find("//");
+        if (commentPos != std::string::npos) {
+            size_t endPos = test.find('\n', commentPos);
+            if (endPos == std::string::npos) endPos = test.size();
+            std::string comment = test.substr(commentPos + 2, endPos - commentPos - 2);
+            // Trim
+            size_t start = comment.find_first_not_of(" \t");
+            size_t end = comment.find_last_not_of(" \t");
+            if (start != std::string::npos && end != std::string::npos) {
+                return comment.substr(start, end - start + 1);
+            }
+        }
+
+        // Try to extract from test name
+        std::regex namePattern(
+            R"(?:void\s+(\w+)\s*\(|TEST\s*\(\s*\w+\s*,\s*(\w+)\s*\))",
+            std::regex_constants::icase);
+        std::smatch match;
+        if (std::regex_search(test, match, namePattern)) {
+            std::string name = match[1].str().empty() ? match[2].str() : match[1].str();
+            if (!name.empty()) {
+                // Convert snake_case or camelCase to readable description
+                std::string desc;
+                for (size_t i = 0; i < name.size(); ++i) {
+                    if (isupper(name[i]) && i > 0) desc += ' ';
+                    desc += static_cast<char>(tolower(name[i]));
+                }
+                return desc;
+            }
+        }
+
         return "Auto-generated test";
     }
 
     static std::vector<std::string> extractAssertions(const std::string& test) {
         std::vector<std::string> assertions;
-        // TODO: Parse assertions from test code
+
+        // Parse assertions from test code
+        // Look for patterns like: ASSERT_EQ, ASSERT_TRUE, EXPECT_EQ, CHECK, assert
+        std::regex assertPattern(
+            R"((?:ASSERT_\w+|EXPECT_\w+|CHECK|assert)\s*\([^)]*\))",
+            std::regex_constants::icase);
+
+        std::sregex_iterator it(test.begin(), test.end(), assertPattern);
+        std::sregex_iterator end;
+
+        while (it != end) {
+            assertions.push_back(it->str());
+            ++it;
+        }
+
         return assertions;
     }
 

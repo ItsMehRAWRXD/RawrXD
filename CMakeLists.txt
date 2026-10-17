@@ -270,6 +270,7 @@ option(RAWRXD_BUILD_BENCHMARKS "Build benchmark executables" OFF)
 option(RAWRXD_BUILD_TESTS "Build unit-test harnesses" OFF)
 option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
 option(ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
+option(RAWRXD_BUILD_SECURITY_LIB "Build the rawrxd_security hardening library" ON)
 
 # Force Windows SDK version that ships all required headers
 set(CMAKE_SYSTEM_VERSION "10.0.22621.0")
@@ -2924,7 +2925,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             )
             message(STATUS "RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening")
         endif()
-        if(TARGET rawrxd_security)
+        if(RAWRXD_BUILD_SECURITY_LIB)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
                 rawrxd_security
             )

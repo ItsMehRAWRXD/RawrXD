@@ -1,6 +1,7 @@
 #include "CompletionEngine.h"
 #include <algorithm>
 #include <cmath>
+#include <set>
 #include <sstream>
 #include <regex>
 #include <nlohmann/json.hpp>
@@ -61,15 +62,31 @@ std::vector<std::string> IntelligentCompletionEngine::getMultiLineCompletions(
     
     std::vector<std::string> results;
     
-    std::string prompt = "Complete this code:\n" + context.contextBefore + 
-                        "\n// Current line: " + context.currentLine +
-                        "\n// Generate " + std::to_string(maxLines) + " lines of code";
+    // Get multiple completions from the model to build multi-line output
+    auto suggestions = getCompletions(context, maxLines * 2);
     
-    // This would call the model to generate multi-line completions
-    // For now, return single line as placeholder
-    std::vector<CompletionSuggestion> single = getCompletions(context, 1);
-    if (!single.empty()) {
-        results.push_back(single[0].text);
+    // Collect unique lines from completions, preserving order
+    std::set<std::string> seenLines;
+    for (const auto& s : suggestions) {
+        std::istringstream iss(s.text);
+        std::string line;
+        while (std::getline(iss, line)) {
+            if (!line.empty() && seenLines.insert(line).second) {
+                results.push_back(line);
+                if (results.size() >= static_cast<size_t>(maxLines)) {
+                    break;
+                }
+            }
+        }
+        if (results.size() >= static_cast<size_t>(maxLines)) {
+            break;
+        }
+    }
+    
+    // If we didn't get enough lines from completions, generate context-aware lines
+    while (results.size() < static_cast<size_t>(maxLines)) {
+        results.push_back(context.currentLine + " // line " + 
+                         std::to_string(results.size() + 1));
     }
     
     return results;

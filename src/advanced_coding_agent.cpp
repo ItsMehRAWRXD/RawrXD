@@ -28,19 +28,143 @@ std::vector<GeneratedFeature> AdvancedCodingAgentIntegration::generateImplementa
     m_logger->info("Generating implementation options");
 
     std::vector<GeneratedFeature> options;
-    
-    GeneratedFeature opt1;
-    opt1.code = "// Option 1";
-    opt1.explanation = "First implementation option";
-    opt1.confidence = 0.80;
-    options.push_back(opt1);
-    
-    GeneratedFeature opt2;
-    opt2.code = "// Option 2";
-    opt2.explanation = "Second implementation option";
-    opt2.confidence = 0.75;
-    options.push_back(opt2);
+    std::string descLower = description;
+    std::transform(descLower.begin(), descLower.end(), descLower.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
 
+    // Option 1: Class-based implementation (detect class-like requests)
+    {
+        GeneratedFeature opt;
+        opt.explanation = "Class-based implementation with encapsulation";
+        opt.confidence = 0.80;
+
+        std::string className = "GeneratedClass";
+        // Try to extract a class name from description
+        size_t classPos = descLower.find("class ");
+        if (classPos != std::string::npos) {
+            size_t endPos = descLower.find_first_of(" \t\n:", classPos + 6);
+            if (endPos != std::string::npos) {
+                className = descLower.substr(classPos + 6, endPos - classPos - 6);
+            }
+        }
+
+        opt.code = "// Option 1: Class-based implementation\n"
+                   "class " + className + " {\n"
+                   "public:\n"
+                   "    " + className + "();\n"
+                   "    ~" + className + "();\n"
+                   "\n"
+                   "    void initialize();\n"
+                   "    void process();\n"
+                   "    std::string getStatus() const;\n"
+                   "\n"
+                   "private:\n"
+                   "    bool m_initialized = false;\n"
+                   "};\n"
+                   "\n"
+                   + className + "::" + className + "() : m_initialized(false) {}\n"
+                   + className + "::~" + className + "() {}\n"
+                   "\n"
+                   "void " + className + "::initialize() {\n"
+                   "    m_initialized = true;\n"
+                   "}\n"
+                   "\n"
+                   "void " + className + "::process() {\n"
+                   "    if (!m_initialized) initialize();\n"
+                   "    // Implementation logic based on: " + description + "\n"
+                   "}\n"
+                   "\n"
+                   "std::string " + className + "::getStatus() const {\n"
+                   "    return m_initialized ? \"initialized\" : \"not initialized\";\n"
+                   "}\n";
+
+        options.push_back(opt);
+    }
+
+    // Option 2: Function-based implementation
+    {
+        GeneratedFeature opt;
+        opt.explanation = "Function-based implementation with clear separation of concerns";
+        opt.confidence = 0.75;
+
+        std::string funcName = "implementFeature";
+        size_t fnPos = descLower.find("function ");
+        if (fnPos != std::string::npos) {
+            size_t endPos = descLower.find_first_of(" \t\n(", fnPos + 9);
+            if (endPos != std::string::npos) {
+                funcName = descLower.substr(fnPos + 9, endPos - fnPos - 9);
+            }
+        }
+
+        opt.code = "// Option 2: Function-based implementation\n"
+                   "#include <string>\n"
+                   "#include <vector>\n"
+                   "\n"
+                   "std::string " + funcName + "(const std::string& input) {\n"
+                   "    // Validate input\n"
+                   "    if (input.empty()) return {};\n"
+                   "\n"
+                   "    // Process based on: " + description + "\n"
+                   "    std::string result = input;\n"
+                   "    // Transformation logic goes here\n"
+                   "\n"
+                   "    return result;\n"
+                   "}\n"
+                   "\n"
+                   "bool " + funcName + "_validate(const std::string& input) {\n"
+                   "    return !input.empty();\n"
+                   "}\n";
+
+        options.push_back(opt);
+    }
+
+    // Option 3: Module-based implementation (if context suggests modular design)
+    {
+        GeneratedFeature opt;
+        opt.explanation = "Module-based implementation with interface/implementation split";
+        opt.confidence = 0.70;
+
+        opt.code = "// Option 3: Module-based implementation\n"
+                   "// Module interface\n"
+                   "#pragma once\n"
+                   "\n"
+                   "#include <string>\n"
+                   "\n"
+                   "namespace feature_module {\n"
+                   "\n"
+                   "class Interface {\n"
+                   "public:\n"
+                   "    virtual ~Interface() = default;\n"
+                   "    virtual std::string execute(const std::string& input) = 0;\n"
+                   "};\n"
+                   "\n"
+                   "std::unique_ptr<Interface> create();\n"
+                   "\n"
+                   "} // namespace feature_module\n"
+                   "\n"
+                   "// Module implementation\n"
+                   "#include \"feature_module.h\"\n"
+                   "\n"
+                   "namespace feature_module {\n"
+                   "\n"
+                   "class Implementation : public Interface {\n"
+                   "public:\n"
+                   "    std::string execute(const std::string& input) override {\n"
+                   "        // Implementation based on: " + description + "\n"
+                   "        return input;\n"
+                   "    }\n"
+                   "};\n"
+                   "\n"
+                   "std::unique_ptr<Interface> create() {\n"
+                   "    return std::make_unique<Implementation>();\n"
+                   "}\n"
+                   "\n"
+                   "} // namespace feature_module\n";
+
+        options.push_back(opt);
+    }
+
+    m_metrics->incrementCounter("implementation_options_generated");
     return options;
 }
 
