@@ -9,9 +9,8 @@
 #include <mutex>
 #include <thread>
 #include "agent_esp.hpp"
-#ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
-#endif
+#include "cpu_inference_engine.h"
 
 // Forward declarations
 class Win32IDE;
@@ -96,11 +95,8 @@ private:
     void OnGenerationComplete(bool cancelled = false);
 
     Win32IDE* m_ide = nullptr;
-#ifdef HAVE_DEEP2_ENGINE
     Deep2::Deep2Engine* m_engine = nullptr;
-#else
     RawrXD::CPUInferenceEngine* m_cpuEngine = nullptr;
-#endif
     
     std::atomic<bool> m_initialized{false};
     std::atomic<bool> m_generating{false};
@@ -123,6 +119,11 @@ private:
     // Streaming state
     std::string m_accumulatedResponse;
     bool m_generationComplete = false;
+    
+    // Performance tracking
+    std::chrono::high_resolution_clock::time_point m_generationStartTime;
+    size_t m_tokenCount = 0;
+    double m_tokensPerSecond = 0.0;
     
     // ESP Telemetry
     rawrxd::esp::Bus* m_espBus = nullptr;

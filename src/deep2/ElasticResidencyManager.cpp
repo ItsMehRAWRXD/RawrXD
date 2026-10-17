@@ -694,8 +694,36 @@ const void* ElasticResidencyManager::BindForGpuCompute(const std::string& name) 
 }
 
 void ElasticResidencyManager::UnbindFromGpuCompute(const std::string& name) {
-    (void)name;
-    // No-op for now; eviction is lazy/LRU-driven
+    std::lock_guard<std::mutex> lock(tensorsMutex_);
+    auto it = tensors_.find(name);
+    if (it == tensors_.end()) return;
+    auto& t = *it->second;
+
+    // Only evict if currently Hot (in VRAM); other states need no GPU unbinding.
+    ResidencyState expected = ResidencyState::Hot;
+    if (!t.state.compare_exchange_strong(expected, ResidencyState::WarmCompressed)) {
+        // Not Hot or transition blocked (e.g., in-flight op) — nothing to unbind.
+        return;
+    }
+    stateCv_.notify_all();
+
+    // Free GPU memory and release VRAM budget.
+    if (t.gpuData) {
+#ifdef _WIN32
+        VirtualFree(t.gpuData, 0, MEM_RELEASE);
+#else
+        free(t.gpuData);
+#endif
+        t.gpuData = nullptr;
+    }
+    ReleaseHot(t.gpuBytes);
+    t.gpuBytes = 0;
+
+    // G04: advance generation so any leases on the old VRAM mapping go stale.
+    AdvanceGeneration(t);
+    t.leasedGeneration.store(t.generation.load());
+
+    telemetry_.cpuReleaseCount.fetch_add(1, std::memory_order_relaxed);
 }
 
 // ============================================================================

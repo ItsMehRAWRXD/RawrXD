@@ -7,6 +7,22 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include <fstream>
+#include <cstdio>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
+#ifdef __APPLE__
+#include <mach/mach_host.h>
+#include <mach/mach.h>
+#include <mach/vm_statistics.h>
+#endif
 
 PerformanceMonitor::PerformanceMonitor(QObject* parent)
     : QObject(parent),
@@ -492,33 +508,198 @@ PerformanceSnapshot PerformanceMonitor::capturePerformanceSnapshot() {
 }
 
 double PerformanceMonitor::getCPUUsageWindows() const {
-    // Simplified - would use Windows Performance Counters
-    return 0.0;
+    FILETIME idleTime, kernelTime, userTime;
+    if (!GetSystemTimes(&idleTime, &kernelTime, &userTime)) {
+        return 0.0;
+    }
+
+    ULARGE_INTEGER idle, kernel, user;
+    idle.LowPart = idleTime.dwLowDateTime;
+    idle.HighPart = idleTime.dwHighDateTime;
+    kernel.LowPart = kernelTime.dwLowDateTime;
+    kernel.HighPart = kernelTime.dwHighDateTime;
+    user.LowPart = userTime.dwLowDateTime;
+    user.HighPart = userTime.dwHighDateTime;
+
+    static ULARGE_INTEGER prevIdle = {0}, prevKernel = {0}, prevUser = {0};
+    static bool firstCall = true;
+
+    if (firstCall) {
+        prevIdle = idle;
+        prevKernel = kernel;
+        prevUser = user;
+        firstCall = false;
+        return 0.0;
+    }
+
+    ULONGLONG idleDelta = idle.QuadPart - prevIdle.QuadPart;
+    ULONGLONG kernelDelta = kernel.QuadPart - prevKernel.QuadPart;
+    ULONGLONG userDelta = user.QuadPart - prevUser.QuadPart;
+
+    prevIdle = idle;
+    prevKernel = kernel;
+    prevUser = user;
+
+    ULONGLONG totalDelta = kernelDelta + userDelta;
+    if (totalDelta == 0) return 0.0;
+
+    ULONGLONG busyDelta = totalDelta - idleDelta;
+    double cpuUsage = (static_cast<double>(busyDelta) / static_cast<double>(totalDelta)) * 100.0;
+
+    return cpuUsage > 100.0 ? 100.0 : cpuUsage;
 }
 
 double PerformanceMonitor::getMemoryUsageWindows() const {
-    // Simplified - would use GlobalMemoryStatusEx
-    return 0.0;
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(MEMORYSTATUSEX);
+    if (!GlobalMemoryStatusEx(&memStatus)) {
+        return 0.0;
+    }
+
+    return static_cast<double>(memStatus.dwMemoryLoad);
 }
 
 double PerformanceMonitor::getCPUUsageLinux() const {
-    // Simplified - would parse /proc/stat
-    return 0.0;
+    std::ifstream statFile("/proc/stat");
+    if (!statFile.is_open()) {
+        return 0.0;
+    }
+
+    std::string line;
+    if (!std::getline(statFile, line)) {
+        return 0.0;
+    }
+
+    // Parse first line of /proc/stat: cpu  user nice system idle iowait irq softirq steal guest guest_nice
+    unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
+    if (sscanf(line.c_str(), "cpu %llu %llu %llu %llu %llu %llu %llu %llu",
+               &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) < 4) {
+        return 0.0;
+    }
+
+    static unsigned long long prevUser = 0, prevNice = 0, prevSystem = 0, prevIdle = 0;
+    static bool firstCall = true;
+
+    unsigned long long total1 = user + nice + system + idle;
+    unsigned long long idle1 = idle;
+
+    if (firstCall) {
+        prevUser = user;
+        prevNice = nice;
+        prevSystem = system;
+        prevIdle = idle;
+        firstCall = false;
+        return 0.0;
+    }
+
+    unsigned long long totalDiff = total1 - (prevUser + prevNice + prevSystem + prevIdle);
+    unsigned long long idleDiff = idle1 - prevIdle;
+
+    prevUser = user;
+    prevNice = nice;
+    prevSystem = system;
+    prevIdle = idle;
+
+    if (totalDiff == 0) return 0.0;
+
+    double cpuUsage = (static_cast<double>(totalDiff - idleDiff) / static_cast<double>(totalDiff)) * 100.0;
+    return cpuUsage > 100.0 ? 100.0 : cpuUsage;
 }
 
 double PerformanceMonitor::getMemoryUsageLinux() const {
-    // Simplified - would parse /proc/meminfo
-    return 0.0;
+    std::ifstream meminfo("/proc/meminfo");
+    if (!meminfo.is_open()) {
+        return 0.0;
+    }
+
+    unsigned long long memTotal = 0, memAvailable = 0;
+    std::string line;
+
+    while (std::getline(meminfo, line)) {
+        if (line.compare(0, 9, "MemTotal:") == 0) {
+            sscanf(line.c_str(), "MemTotal: %llu kB", &memTotal);
+        } else if (line.compare(0, 13, "MemAvailable:") == 0) {
+            sscanf(line.c_str(), "MemAvailable: %llu kB", &memAvailable);
+        }
+        if (memTotal > 0 && memAvailable > 0) break;
+    }
+
+    if (memTotal == 0) return 0.0;
+
+    double memUsedPercent = (static_cast<double>(memTotal - memAvailable) / static_cast<double>(memTotal)) * 100.0;
+    return memUsedPercent > 100.0 ? 100.0 : memUsedPercent;
 }
 
 double PerformanceMonitor::getCPUUsageMac() const {
-    // Simplified - would use host_statistics
-    return 0.0;
+    mach_port_t hostPort = mach_host_self();
+    mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+    host_cpu_load_info_data_t cpuLoad;
+    
+    kern_return_t kr = host_statistics(hostPort, HOST_CPU_LOAD_INFO,
+                                       reinterpret_cast<host_info_t>(&cpuLoad), &count);
+    mach_port_deallocate(mach_task_self(), hostPort);
+    
+    if (kr != KERN_SUCCESS) {
+        return 0.0;
+    }
+
+    unsigned long long totalTicks = 0;
+    for (int i = 0; i < CPU_STATE_MAX; i++) {
+        totalTicks += cpuLoad.cpu_ticks[i];
+    }
+
+    static unsigned long long prevTotal = 0;
+    static unsigned long long prevIdle = 0;
+    static bool firstCall = true;
+
+    unsigned long long idleTicks = cpuLoad.cpu_ticks[CPU_STATE_IDLE];
+
+    if (firstCall) {
+        prevTotal = totalTicks;
+        prevIdle = idleTicks;
+        firstCall = false;
+        return 0.0;
+    }
+
+    unsigned long long totalDiff = totalTicks - prevTotal;
+    unsigned long long idleDiff = idleTicks - prevIdle;
+
+    prevTotal = totalTicks;
+    prevIdle = idleTicks;
+
+    if (totalDiff == 0) return 0.0;
+
+    double cpuUsage = (static_cast<double>(totalDiff - idleDiff) / static_cast<double>(totalDiff)) * 100.0;
+    return cpuUsage > 100.0 ? 100.0 : cpuUsage;
 }
 
 double PerformanceMonitor::getMemoryUsageMac() const {
-    // Simplified - would use host_statistics
-    return 0.0;
+    mach_port_t hostPort = mach_host_self();
+    mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
+    vm_statistics_data_t vmStat;
+    
+    kern_return_t kr = host_statistics(hostPort, HOST_VM_INFO,
+                                       reinterpret_cast<host_info_t>(&vmStat), &count);
+    mach_port_deallocate(mach_task_self(), hostPort);
+    
+    if (kr != KERN_SUCCESS) {
+        return 0.0;
+    }
+
+    mach_port_t hostPort2 = mach_host_self();
+    natural_t pageSize = 0;
+    host_page_size(hostPort2, &pageSize);
+    mach_port_deallocate(mach_task_self(), hostPort2);
+
+    unsigned long long memUsed = static_cast<unsigned long long>(vmStat.active_count +
+                                                                  vmStat.wire_count) * pageSize;
+    unsigned long long memTotal = static_cast<unsigned long long>(
+        vmStat.active_count + vmStat.inactive_count + vmStat.wire_count + vmStat.free_count) * pageSize;
+
+    if (memTotal == 0) return 0.0;
+
+    double memUsedPercent = (static_cast<double>(memUsed) / static_cast<double>(memTotal)) * 100.0;
+    return memUsedPercent > 100.0 ? 100.0 : memUsedPercent;
 }
 
 QVector<PerformanceSnapshot> PerformanceMonitor::getPerformanceHistory(int minutes) const {

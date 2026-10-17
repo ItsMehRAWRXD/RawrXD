@@ -15,21 +15,21 @@
 #endif
 
 Deep2Bridge::Deep2Bridge(Win32IDE* ide)
-    : m_ide(ide)
-#ifdef HAVE_DEEP2_ENGINE
-    , m_engine(nullptr)
-#else
-    , m_cpuEngine(nullptr)
-#endif
-{
-    LOG_INFO("Deep2Bridge constructed" 
-#ifdef HAVE_DEEP2_ENGINE
-        " (Deep2Engine mode)"
-#else
-        " (CPU fallback mode)"
-#endif
-    );
-}
+     : m_ide(ide)
+ #ifdef HAVE_DEEP2_ENGINE
+     , m_engine(nullptr)
+ #else
+     , m_cpuEngine(nullptr)
+ #endif
+     , m_tokenCount(0)
+     , m_tokensPerSecond(0.0)
+ {
+ #if HAVE_DEEP2_ENGINE
+     LOG_INFO("Deep2Bridge constructed (Deep2Engine mode)");
+ #else
+     LOG_INFO("Deep2Bridge constructed (CPU fallback mode)");
+ #endif
+ }
 
 Deep2Bridge::~Deep2Bridge()
 {
@@ -226,6 +226,9 @@ bool Deep2Bridge::GenerateStream(const std::string& prompt,
     m_cancelRequested.store(false);
     m_stopRequested.store(false);
     m_generating.store(true);
+    m_tokenCount = 0;
+    m_tokensPerSecond = 0.0;
+    m_generationStartTime = std::chrono::high_resolution_clock::now();
 
     if (m_espBus) {
         m_espBus->publish(rawrxd::esp::Kind::PrefillStart, "prompt_len=" + std::to_string(prompt.size()), m_espRequestId);
@@ -265,29 +268,32 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
         
         std::string fullResponse;
         
-        // Use streaming generation
-        auto result = m_engine->generateStream(
-            prompt,
-            options,
-            [this, &fullResponse](int32_t tokenId, const std::string& token) {
-                fullResponse += token;
-                m_accumulatedResponse += token;
-                
-                if (m_espBus) {
-                    m_espBus->publish(rawrxd::esp::Kind::TokenGenerated, token, m_espRequestId, 0, tokenId);
-                }
-                
-                std::lock_guard<std::mutex> lock(m_callbackMutex);
-                if (m_tokenCallback) {
-                    bool continueGen = m_tokenCallback(token, false);
-                    if (!continueGen) {
-                        m_cancelRequested.store(true);
-                        m_engine->requestCancel();
-                    }
-                }
-                return !m_cancelRequested.load();
-            }
-        );
+         // Use streaming generation
+         auto result = m_engine->generateStream(
+             prompt,
+             options,
+             [this, &fullResponse](int32_t tokenId, const std::string& token) {
+                 fullResponse += token;
+                 m_accumulatedResponse += token;
+                 
+                 // Update token count for performance tracking
+                 m_tokenCount++;
+                 
+                 if (m_espBus) {
+                     m_espBus->publish(rawrxd::esp::Kind::TokenGenerated, token, m_espRequestId, 0, tokenId);
+                 }
+                 
+                 std::lock_guard<std::mutex> lock(m_callbackMutex);
+                 if (m_tokenCallback) {
+                     bool continueGen = m_tokenCallback(token, false);
+                     if (!continueGen) {
+                         m_cancelRequested.store(true);
+                         m_engine->requestCancel();
+                     }
+                 }
+                 return !m_cancelRequested.load();
+             }
+         );
         
         OnGenerationComplete(m_cancelRequested.load());
 #else
@@ -304,37 +310,40 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
         
         std::string fullResponse;
         
-        // Use streaming generation
-        m_cpuEngine->GenerateStreaming(
-            m_cpuEngine->Tokenize(prompt),
-            maxTokens,
-            [this, &fullResponse](const std::string& token) {
-                fullResponse += token;
-                m_accumulatedResponse += token;
-                
-                if (m_espBus) {
-                    m_espBus->publish(rawrxd::esp::Kind::TokenGenerated, token, m_espRequestId);
-                }
-                
-                std::lock_guard<std::mutex> lock(m_callbackMutex);
-                if (m_tokenCallback) {
-                    bool continueGen = m_tokenCallback(token, false);
-                    if (!continueGen) {
-                        m_cancelRequested.store(true);
-                    }
-                }
-            },
-            [this]() {
-                // Completion callback
-                OnGenerationComplete(m_cancelRequested.load());
-            },
-            [this](int32_t tokenId) {
-                // Token ID callback - can be used for more detailed telemetry
-                if (m_espBus) {
-                    m_espBus->publish(rawrxd::esp::Kind::TokenGenerated, "id=" + std::to_string(tokenId), m_espRequestId, 0, tokenId);
-                }
-            }
-        );
+         // Use streaming generation
+         m_cpuEngine->GenerateStreaming(
+             m_cpuEngine->Tokenize(prompt),
+             maxTokens,
+             [this, &fullResponse](const std::string& token) {
+                 fullResponse += token;
+                 m_accumulatedResponse += token;
+                 
+                 // Update token count for performance tracking
+                 m_tokenCount++;
+                 
+                 if (m_espBus) {
+                     m_espBus->publish(rawrxd::esp::Kind::TokenGenerated, token, m_espRequestId);
+                 }
+                 
+                 std::lock_guard<std::mutex> lock(m_callbackMutex);
+                 if (m_tokenCallback) {
+                     bool continueGen = m_tokenCallback(token, false);
+                     if (!continueGen) {
+                         m_cancelRequested.store(true);
+                     }
+                 }
+             },
+             [this]() {
+                 // Completion callback
+                 OnGenerationComplete(m_cancelRequested.load());
+             },
+             [this](int32_t tokenId) {
+                 // Token ID callback - can be used for more detailed telemetry
+                 if (m_espBus) {
+                     m_espBus->publish(rawrxd::esp::Kind::TokenGenerated, "id=" + std::to_string(tokenId), m_espRequestId, 0, tokenId);
+                 }
+             }
+         );
 #endif
     }
     catch (const std::exception& e) {
@@ -365,6 +374,15 @@ void Deep2Bridge::OnGenerationComplete(bool cancelled)
 {
     m_generating.store(false);
     m_generationComplete = true;
+
+    // Calculate tokens per second if we generated any tokens
+    if (m_tokenCount > 0) {
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - m_generationStartTime);
+        if (duration.count() > 0) {
+            m_tokensPerSecond = (m_tokenCount * 1000.0) / duration.count();
+        }
+    }
 
     if (m_espBus) {
         if (cancelled) {
@@ -526,13 +544,21 @@ std::string Deep2Bridge::GetStatus() const
 
 double Deep2Bridge::GetTokensPerSecond() const
 {
-    return 0.0;
+    return m_tokensPerSecond;
 }
 
 size_t Deep2Bridge::GetContextLength() const
 {
-    if (!m_cpuEngine) return 8192;
-    return m_cpuEngine->GetContextLimit();
+    #ifdef HAVE_DEEP2_ENGINE
+        if (m_engine) {
+            return m_engine->getConfig().maxSeqLen;
+        }
+    #else
+        if (m_cpuEngine) {
+            return m_cpuEngine->GetContextLimit();
+        }
+    #endif
+    return 8192; // default fallback
 }
 
 bool Deep2Bridge::IsModelLoaded() const
