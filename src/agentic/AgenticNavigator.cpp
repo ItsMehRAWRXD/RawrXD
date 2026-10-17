@@ -385,12 +385,55 @@ NavigationResult AgenticNavigator::navigateDirectAPI(const std::string& target) 
     return createResult(success, message);
 }
 
+namespace {
+// Enumerate child windows of a top-level window, recording real UI element
+// metadata via the Win32 API (no Qt dependency).
+BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam) {
+    auto* elements = reinterpret_cast<std::vector<RawrXD::Agentic::UIElement>*>(lParam);
+    if (!elements || !IsWindow(hwnd)) {
+        return TRUE;
+    }
+
+    RawrXD::Agentic::UIElement elem;
+    elem.handle = hwnd;
+    elem.controlId = GetDlgCtrlID(hwnd);
+
+    char className[256] = {0};
+    GetClassNameA(hwnd, className, sizeof(className));
+    elem.className = className;
+
+    char text[1024] = {0};
+    GetWindowTextA(hwnd, text, sizeof(text));
+    elem.text = text;
+    elem.name = text;
+
+    RECT rc = {0};
+    GetWindowRect(hwnd, &rc);
+    elem.bounds = rc;
+
+    elem.visible = IsWindowVisible(hwnd) != FALSE;
+    elem.enabled = IsWindowEnabled(hwnd) != FALSE;
+
+    elements->push_back(elem);
+    return TRUE;
+}
+
+// Enumerate top-level windows and recurse into their children.
+BOOL CALLBACK EnumTopProc(HWND hwnd, LPARAM lParam) {
+    if (!IsWindow(hwnd)) {
+        return TRUE;
+    }
+    EnumChildWindows(hwnd, EnumChildProc, lParam);
+    return TRUE;
+}
+} // namespace
+
 std::vector<UIElement> AgenticNavigator::detectElementsDirectAPI() {
     std::vector<UIElement> elements;
-    
-    // This would implement actual Win32 API element detection
-    // For now, return empty vector as placeholder
-    
+    // Real Win32 API element detection: enumerate every top-level window and
+    // its child controls, filling in handle, class, text, bounds, visibility
+    // and enabled state. Replaces the previous empty placeholder.
+    EnumWindows(EnumTopProc, reinterpret_cast<LPARAM>(&elements));
     return elements;
 }
 

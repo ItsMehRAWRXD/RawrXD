@@ -452,31 +452,24 @@ QJsonObject AgenticExecutor::compileProject(const QString& projectPath, const QS
     qInfo() << "[AgenticExecutor] Compiling project:" << projectPath << "with" << compiler;
     emit logMessage("Compiling with " + compiler + "...");
 
-    QProcess process;
-    process.setWorkingDirectory(projectPath);
+    // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+    std::vector<std::string> nativeArgs = {".."};
+    NativeProcessResult result = NativeProcess::execute(
+        "cmake",
+        nativeArgs,
+        projectPath + "/build",
+        -1  // no timeout
+    );
 
-    // Detect build system and compile
-    if (QFile::exists(projectPath + "/CMakeLists.txt")) {
-        // CMake project
-        emit logMessage("Detected CMake project");
-        
-        // Create build directory
-        createDirectory(projectPath + "/build");
-        process.setWorkingDirectory(projectPath + "/build");
-        
-        // Run cmake
-        process.start("cmake", QStringList() << "..");
-        process.waitForFinished(-1);
-        
-        QString cmakeOutput = process.readAllStandardOutput();
-        QString cmakeError = process.readAllStandardError();
-        
-        if (process.exitCode() != 0) {
-            result["success"] = false;
-            result["error"] = "CMake configuration failed: " + cmakeError;
-            qWarning() << "[AgenticExecutor]" << result["error"].toString();
-            return result;
-        }
+    QString cmakeOutput = QString::fromStdString(result.stdoutOutput);
+    QString cmakeError = QString::fromStdString(result.stderrOutput);
+
+    if (result.exitCode() != 0) {
+        result["success"] = false;
+        result["error"] = "CMake configuration failed: " + cmakeError;
+        qWarning() << "[AgenticExecutor]" << result["error"].toString();
+        return result;
+    }
         
         // Run make
         process.start("cmake", QStringList() << "--build" << ".");
@@ -540,27 +533,28 @@ QJsonObject AgenticExecutor::runExecutable(const QString& executablePath, const 
     qInfo() << "[AgenticExecutor] Running executable:" << executablePath;
     emit logMessage("Running: " + executablePath);
 
-    QProcess process;
-    process.start(executablePath, args);
-    
-    if (!process.waitForStarted()) {
-        result["success"] = false;
-        result["error"] = "Failed to start process";
-        return result;
+    // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+    std::vector<std::string> nativeArgs;
+    for (const auto& arg : args) {
+        nativeArgs.push_back(arg.toStdString());
     }
+    NativeProcessResult procResult = NativeProcess::execute(
+        executablePath.toStdString(),
+        nativeArgs,
+        "",
+        -1  // no timeout
+    );
 
-    process.waitForFinished(-1);
-
-    result["stdout"] = QString::fromUtf8(process.readAllStandardOutput());
-    result["stderr"] = QString::fromUtf8(process.readAllStandardError());
-    result["exit_code"] = process.exitCode();
-    result["success"] = (process.exitCode() == 0);
+    result["stdout"] = QString::fromStdString(procResult.stdoutOutput);
+    result["stderr"] = QString::fromStdString(procResult.stderrOutput);
+    result["exit_code"] = procResult.exitCode();
+    result["success"] = (procResult.exitCode() == 0);
 
     if (result["success"].toBool()) {
         qInfo() << "[AgenticExecutor] Execution completed successfully";
         emit logMessage("Execution completed");
     } else {
-        qWarning() << "[AgenticExecutor] Execution failed with code" << process.exitCode();
+        qWarning() << "[AgenticExecutor] Execution failed with code" << procResult.exitCode();
     }
 
     addToMemory("last_execution", result);

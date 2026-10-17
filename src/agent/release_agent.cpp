@@ -1,13 +1,13 @@
 #include "release_agent.hpp"
 #include "self_test_gate.hpp"
-#include <QProcess>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QFile>
 #include <QDir>
 #include <QDateTime>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QEventLoop>
@@ -80,23 +80,22 @@ bool ReleaseAgent::tagAndUpload() {
     // Step 1: Git tag (skip gracefully if not a git repo)
     bool inGitRepo = false;
     if (!devMode) {
-        QProcess probe;
-        probe.start("git", {"rev-parse", "--is-inside-work-tree"});
-        if (probe.waitForFinished(3000) && probe.exitCode() == 0) {
-            QByteArray out = probe.readAllStandardOutput().trimmed();
-            inGitRepo = (out == "true");
-        }
+        // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+        std::vector<std::string> nativeArgs = {"rev-parse", "--is-inside-work-tree"};
+        NativeProcessResult probeResult = NativeProcess::execute(
+            "git", nativeArgs, "", 3000
+        );
+        inGitRepo = (probeResult.success && probeResult.stdoutOutput.trimmed() == "true");
     }
     if (inGitRepo) {
         qDebug() << "Creating git tag" << m_version;
-        QProcess tagProc;
-        tagProc.start("git", {"tag", "-a", m_version, "-m", "Auto-release " + m_version});
-        if (!tagProc.waitForFinished(10000)) {
-            emit error("Git tag timeout");
-            return false;
-        }
-        if (tagProc.exitCode() != 0) {
-            qWarning() << "Git tag failed (may already exist):" << tagProc.readAllStandardError();
+        // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+        std::vector<std::string> tagArgs = {"tag", "-a", m_version.toStdString(), "-m", "Auto-release " + m_version.toStdString()};
+        NativeProcessResult tagResult = NativeProcess::execute(
+            "git", tagArgs, "", 10000
+        );
+        if (tagResult.exitCode() != 0) {
+            qWarning() << "Git tag failed (may already exist):" << QString::fromStdString(tagResult.stderrOutput);
             // Continue anyway - tag might already exist
         }
     } else {
@@ -105,18 +104,22 @@ bool ReleaseAgent::tagAndUpload() {
     
     // Step 2: Build
     qDebug() << "Building release binary (RawrXD-QtShell target)...";
-    QProcess buildProc;
-    buildProc.start("cmake", {"--build", "build", "--config", "Release", "--target", "RawrXD-QtShell"});
-    if (!buildProc.waitForFinished(120000)) {
+    // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+    std::vector<std::string> buildArgs = {"--build", "build", "--config", "Release", "--target", "RawrXD-QtShell"};
+    NativeProcessResult buildResult = NativeProcess::execute(
+        "cmake", buildArgs, "", 120000
+    );
+
+    if (!buildResult.success) {
         emit error("Build timeout");
         return false;
     }
-    
-    if (buildProc.exitCode() != 0) {
-        emit error(QString("Build failed: %1").arg(QString::fromUtf8(buildProc.readAllStandardError())));
+
+    if (buildResult.exitCode() != 0) {
+        emit error(QString("Build failed: %1").arg(QString::fromStdString(buildResult.stderrOutput)));
         return false;
     }
-    
+
     qDebug() << "Build successful";
 
     qInfo() << "Running self-test gate...";

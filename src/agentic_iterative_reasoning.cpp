@@ -373,7 +373,9 @@ QString AgenticIterativeReasoning::executeReflectionPhase(
         "2. What could improve\n"
         "3. Patterns observed\n"
         "4. Suggested adjustments"
-    ).arg(QString::number(iterationNumber), goal, QString::fromUtf8(QJsonDocument(iterationData).toJson()));
+    ).arg(QString::number(iterationNumber), goal, QString::fromUtf8(
+        QJsonDocument::fromJson(QString::fromStdString(NativeJson::toJson(iterationData)).toUtf8()).toJson()
+    ));
 
     return callModelForReasoning(prompt);
 }

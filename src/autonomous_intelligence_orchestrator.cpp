@@ -91,7 +91,15 @@ bool AutonomousIntelligenceOrchestrator::initialize(const QString& projectPath) 
     QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/orchestrator_config.json";
     QFile configFile(configPath);
     if (configFile.exists() && configFile.open(QIODevice::ReadOnly)) {
-        QJsonDocument doc = QJsonDocument::fromJson(configFile.readAll());
+        // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+        json nativeDoc = NativeJson::fromJson(configFile.readAll().toStdString());
+        if (nativeDoc.is_null() || !nativeDoc.is_object()) {
+            qWarning() << "[AutonomousOrchestrator] Invalid JSON config";
+            configFile.close();
+            return true;
+        }
+        QJsonDocument doc = QJsonDocument::fromJson(
+            QString::fromStdString(NativeJson::toJson(nativeDoc)).toUtf8());
         loadConfiguration(doc.object());
         configFile.close();
     }
@@ -139,8 +147,9 @@ bool AutonomousIntelligenceOrchestrator::saveConfiguration() {
     QFile configFile(configPath);
     
     if (configFile.open(QIODevice::WriteOnly)) {
-        QJsonDocument doc(config);
-        configFile.write(doc.toJson());
+        // Use NativeJson for real serialization (fixes QJsonDocument::toJson)
+        QByteArray data = QString::fromStdString(NativeJson::toJson(config)).toUtf8();
+        configFile.write(data);
         configFile.close();
         return true;
     }
@@ -164,9 +173,10 @@ bool AutonomousIntelligenceOrchestrator::startAutonomousMode(const QString& proj
     }
     
     // Start continuous optimization
-    QTimer* optimizationTimer = new QTimer(this);
-    connect(optimizationTimer, &QTimer::timeout, this, &AutonomousIntelligenceOrchestrator::performAutomaticOptimization);
-    optimizationTimer->start(60000); // Every minute
+    NativeTimer* optimizationTimer = new NativeTimer();
+    optimizationTimer->start(60000, false, [this]() {
+        performAutomaticOptimization();
+    }); // Every minute
     
     emit autonomousModeStarted();
     

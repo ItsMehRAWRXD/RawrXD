@@ -1,6 +1,7 @@
 #include "autonomous_model_manager.h"
 #include <QNetworkRequest>
-#include <QJsonDocument>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
@@ -23,8 +24,7 @@ AutonomousModelManager::AutonomousModelManager(QObject* parent)
 }
 
 AutonomousModelManager::~AutonomousModelManager() {
-    if (autoUpdateTimer) autoUpdateTimer->stop();
-    if (optimizationTimer) optimizationTimer->stop();
+    // NativeTimer destructor handles stop/join automatically
 }
 
 void AutonomousModelManager::setupNetworkManager() {
@@ -33,21 +33,19 @@ void AutonomousModelManager::setupNetworkManager() {
 }
 
 void AutonomousModelManager::setupTimers() {
-    // Auto-update timer
-    autoUpdateTimer = new QTimer(this);
-    autoUpdateTimer->setInterval(autoUpdateInterval);
-    connect(autoUpdateTimer, &QTimer::timeout, this, &AutonomousModelManager::autoUpdateModels);
-    autoUpdateTimer->start();
+    // Auto-update timer (NativeTimer replaces QTimer stub)
+    autoUpdateTimer = new NativeTimer();
+    autoUpdateTimer->start(autoUpdateInterval, false, [this]() {
+        autoUpdateModels();
+    });
     
-    // Optimization timer
-    optimizationTimer = new QTimer(this);
-    optimizationTimer->setInterval(optimizationInterval);
-    connect(optimizationTimer, &QTimer::timeout, [this]() {
+    // Optimization timer (NativeTimer replaces QTimer stub)
+    optimizationTimer = new NativeTimer();
+    optimizationTimer->start(optimizationInterval, false, [this]() {
         for (const QJsonValue& value : installedModels) {
             autoOptimizeModel(value.toObject()["id"].toString());
         }
     });
-    optimizationTimer->start();
 }
 
 void AutonomousModelManager::loadAvailableModels() {

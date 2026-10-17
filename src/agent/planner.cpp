@@ -1,5 +1,5 @@
 #include "planner.hpp"
-#include <QJsonDocument>
+#include "qt_block.h"
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QRegularExpression>

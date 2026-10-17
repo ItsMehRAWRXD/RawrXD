@@ -3,18 +3,12 @@
 #include "release_agent.hpp"
 #include "meta_learn.hpp"
 #include "self_test_gate.hpp"
-#include <QCoreApplication>
-#include <QCommandLineParser>
-#include <QDebug>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QStringList>
-#include <memory>
 #include "qt_block.h"
+#include "core/qt_elimination.h"
+#include <memory>
 
 int main(int argc, char *argv[]) {
-    QCoreApplication app(argc, argv);
+    NativeCoreApplication app(argc, argv);
     app.setApplicationName("RawrXD-Agent");
     app.setApplicationVersion("1.0.0");
     
