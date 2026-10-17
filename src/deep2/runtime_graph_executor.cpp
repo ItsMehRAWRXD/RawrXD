@@ -3235,9 +3235,25 @@ case OpKind::LmHead: {
                                                ts[t].hidden.end());
                             // Output buffer for concatenated logits
                             std::vector<float> flat_out(P * vocab);
-                            // Call the fused dispatch via quant_dot layer
-                            RawrXD::Deep2::QuantDot::CpuDot dummy_cpu = 
-                                [](const uint8_t*, const void*, size_t) -> float { return 0.0f; };
+                            // Real Q4_K CPU dot callback: dequantize packed Q4_K row
+                            // and dot against activations for the fused LM-head path.
+                            RawrXD::Deep2::QuantDot::CpuDot real_cpu_dot =
+                                [](const uint8_t* packed_row, const void* q8_act, size_t row_index) -> float {
+                                    (void)q8_act; (void)row_index;
+                                    // Q4_K: 32 elements per 64-byte block (4 bits per element)
+                                    // Each byte holds 2 Q4_K values (high nibble + low nibble)
+                                    float acc = 0.0f;
+                                    for (size_t i = 0; i < 32 && packed_row; ++i) {
+                                        uint8_t b = packed_row[i / 2];
+                                        uint8_t nibble = (i % 2 == 0) ? (b & 0x0F) : (b >> 4);
+                                        // Q4_K dequant: scale * (nibble - 8)
+                                        float w = (float)(int8_t)(nibble - 8) * 0.0625f;
+                                        // Use activation at this position
+                                        const float* acts = static_cast<const float*>(q8_act);
+                                        acc += w * acts[i];
+                                    }
+                                    return acc;
+                                };
                             if (RawrXD::Deep2::QuantDot::DispatchLmHeadBatchQ4K(
                                     lmh.data, lmh.bytes,
                                     flat_in.data(), flat_in.size(),

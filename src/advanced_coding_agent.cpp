@@ -133,6 +133,53 @@ std::string AdvancedCodingAgentIntegration::buildFeaturePrompt(
 }
 
 bool AdvancedCodingAgentIntegration::validateGeneratedCode(const std::string& code) {
-    // Placeholder: would validate code syntax and logic
+    // Validate code syntax and logic
+    if (code.empty()) {
+        return false;
+    }
+    
+    // Check for balanced braces
+    int braceDepth = 0;
+    int parenDepth = 0;
+    int bracketDepth = 0;
+    
+    for (char c : code) {
+        switch (c) {
+            case '{': braceDepth++; break;
+            case '}': 
+                braceDepth--;
+                if (braceDepth < 0) return false; // Unmatched closing brace
+                break;
+            case '(': parenDepth++; break;
+            case ')': 
+                parenDepth--;
+                if (parenDepth < 0) return false; // Unmatched closing paren
+                break;
+            case '[': bracketDepth++; break;
+            case ']': 
+                bracketDepth--;
+                if (bracketDepth < 0) return false; // Unmatched closing bracket
+                break;
+        }
+    }
+    
+    if (braceDepth != 0 || parenDepth != 0 || bracketDepth != 0) {
+        return false; // Unbalanced delimiters
+    }
+    
+    // Check for obvious syntax issues
+    if (code.find("return") != std::string::npos && 
+        code.find(";") == std::string::npos) {
+        return false; // Return statement without semicolon
+    }
+    
+    // Check for empty function bodies that should have content
+    std::regex emptyFunc(R"(\w+\s*\([^)]*\)\s*\{\s*\})");
+    if (std::regex_search(code, emptyFunc)) {
+        // Empty function body might be intentional (e.g., destructor)
+        // Just log it, don't fail validation
+    }
+    
+    m_metrics->incrementCounter("code_validations");
     return true;
 }

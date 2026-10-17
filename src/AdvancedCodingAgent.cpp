@@ -1,5 +1,7 @@
 #include "AdvancedCodingAgent.h"
 #include <algorithm>
+#include <map>
+#include <regex>
 #include <sstream>
 
 namespace RawrXD {
@@ -317,8 +319,42 @@ std::vector<Vulnerability> AdvancedCodingAgent::performStaticAnalysis(
 std::string AdvancedCodingAgent::replaceStringConcatenation(
     const std::string& code) {
     
-    // Placeholder: would actually rewrite concatenations
-    return code;
+    std::string result = code;
+    
+    // Replace patterns like: str = "part1" + "part2" + variable
+    // with: std::stringstream ss; ss << "part1" << "part2" << variable; str = ss.str();
+    
+    // Find string concatenation assignments: identifier = "..." + ...
+    std::regex concatAssign(R"((\w+)\s*=\s*"([^"]*)"\s*\+\s*(.+))");
+    std::smatch match;
+    std::string::const_iterator searchStart(result.cbegin());
+    
+    while (std::regex_search(searchStart, result.cend(), match, concatAssign)) {
+        std::string varName = match[1].str();
+        std::string firstPart = match[2].str();
+        std::string rest = match[3].str();
+        
+        // Build stringstream replacement
+        std::stringstream ss;
+        ss << "std::stringstream _ss_" << varName << ";\n";
+        ss << "_ss_" << varName << " << \"" << firstPart << "\";\n";
+        
+        // Handle chained concatenations in the rest
+        std::string remaining = rest;
+        size_t pos = 0;
+        while ((pos = remaining.find(" + ")) != std::string::npos) {
+            std::string part = remaining.substr(0, pos);
+            ss << "_ss_" << varName << " << " << part << ";\n";
+            remaining = remaining.substr(pos + 3);
+        }
+        ss << "_ss_" << varName << " << " << remaining << ";\n";
+        ss << varName << " = _ss_" << varName << ".str();\n";
+        
+        result.replace(match.position(), match.length(), ss.str());
+        searchStart = result.cbegin() + match.position() + ss.str().length();
+    }
+    
+    return result;
 }
 
 std::vector<Vulnerability> AdvancedCodingAgent::scanSecurityIssues(
@@ -354,22 +390,191 @@ std::vector<Vulnerability> AdvancedCodingAgent::scanSecurityIssues(
 std::string AdvancedCodingAgent::extractMethodRefactoring(
     const std::string& code, const std::string& language) {
     
-    // Placeholder implementation
-    return code;
+    std::string result = code;
+    
+    // Detect long functions and suggest extraction
+    // Look for functions with many lines or nested blocks
+    
+    // Count braces to estimate function complexity
+    int braceDepth = 0;
+    int maxDepth = 0;
+    int braceCount = 0;
+    for (char c : code) {
+        if (c == '{') {
+            braceDepth++;
+            braceCount++;
+            if (braceDepth > maxDepth) maxDepth = braceDepth;
+        } else if (c == '}') {
+            braceDepth--;
+        }
+    }
+    
+    // If function has high nesting, suggest extraction
+    if (maxDepth > 3) {
+        // Insert a comment suggesting method extraction
+        std::stringstream suggestion;
+        suggestion << "// Refactoring suggestion: Consider extracting nested logic (max depth: "
+                   << maxDepth << ") into separate methods\n";
+        result = suggestion.str() + result;
+    }
+    
+    // Look for repeated code blocks that could be extracted
+    // Simple heuristic: find duplicated lines of 5+ chars
+    std::istringstream iss(code);
+    std::string line;
+    std::map<std::string, int> lineCounts;
+    while (std::getline(iss, line)) {
+        // Trim whitespace
+        size_t start = line.find_first_not_of(" \t");
+        size_t end = line.find_last_not_of(" \t");
+        if (start != std::string::npos && end != std::string::npos) {
+            std::string trimmed = line.substr(start, end - start + 1);
+            if (trimmed.length() >= 10 && trimmed.find("//") == std::string::npos) {
+                lineCounts[trimmed]++;
+            }
+        }
+    }
+    
+    for (const auto& [line, count] : lineCounts) {
+        if (count > 1) {
+            std::stringstream suggestion;
+            suggestion << "// Refactoring suggestion: Repeated block (\"" << line.substr(0, 40) 
+                       << "\") appears " << count << " times - consider extracting to method\n";
+            result = suggestion.str() + result;
+            break; // Only add one suggestion at top
+        }
+    }
+    
+    return result;
 }
 
 std::string AdvancedCodingAgent::reduceComplexity(
     const std::string& code, const std::string& language) {
     
-    // Placeholder implementation
-    return code;
+    std::string result = code;
+    
+    // Reduce cyclomatic complexity by:
+    // 1. Converting nested if-else to early returns
+    // 2. Replacing switch with map/lookup where applicable
+    // 3. Simplifying boolean expressions
+    
+    // Track complexity metrics
+    int ifCount = 0;
+    int elseCount = 0;
+    int switchCount = 0;
+    int loopCount = 0;
+    
+    size_t pos = 0;
+    while ((pos = result.find("if (", pos)) != std::string::npos) {
+        ifCount++;
+        pos += 3;
+    }
+    
+    pos = 0;
+    while ((pos = result.find("else", pos)) != std::string::npos) {
+        elseCount++;
+        pos += 4;
+    }
+    
+    pos = 0;
+    while ((pos = result.find("switch (", pos)) != std::string::npos) {
+        switchCount++;
+        pos += 7;
+    }
+    
+    pos = 0;
+    while ((pos = result.find("for (", pos)) != std::string::npos ||
+           (pos = result.find("while (", pos)) != std::string::npos) {
+        loopCount++;
+        pos += 1;
+    }
+    
+    int complexity = ifCount + elseCount + switchCount + loopCount;
+    
+    // Add complexity reduction suggestions at top
+    std::stringstream suggestion;
+    suggestion << "// Complexity analysis: if=" << ifCount << ", else=" << elseCount
+               << ", switch=" << switchCount << ", loops=" << loopCount
+               << ", estimated cyclomatic complexity: " << (complexity + 1) << "\n";
+    
+    if (complexity > 10) {
+        suggestion << "// Refactoring suggestion: High complexity detected - consider "
+                   << "splitting into smaller functions or using early returns\n";
+    }
+    
+    result = suggestion.str() + result;
+    
+    // Convert deep nested if-else chains to early returns where possible
+    // Pattern: if (cond) { ... } else { ... } -> if (!cond) return/continue; ...
+    std::regex nestedIfElse(R"(if\s*\(([^)]+)\)\s*\{[^}]*\}\s*else\s*\{)");
+    result = std::regex_replace(result, nestedIfElse, 
+        "if (!($1)) { /* early return */ }\n    if ($1) {");
+    
+    return result;
 }
 
 std::string AdvancedCodingAgent::improveNaming(
     const std::string& code, const std::string& language) {
     
-    // Placeholder implementation
-    return code;
+    std::string result = code;
+    
+    // Detect and suggest improvements for poor variable names
+    // Common bad patterns: single-letter names (except loop vars), abbreviations, etc.
+    
+    std::vector<std::pair<std::string, std::string>> nameSuggestions;
+    
+    // Find single-letter variable declarations (excluding common loop variables i, j, k)
+    std::regex singleLetterDecl(R"((int|float|double|std::string|auto)\s+([a-h,l-zA-H,L-Z])\s*[=;])");
+    std::smatch match;
+    std::string::const_iterator searchStart(result.cbegin());
+    
+    while (std::regex_search(searchStart, result.cend(), match, singleLetterDecl)) {
+        std::string type = match[1].str();
+        std::string var = match[2].str();
+        nameSuggestions.push_back({var, type + " " + var + " // Consider: " + type + " descriptive_" + var});
+        searchStart = match.suffix().first;
+    }
+    
+    // Find common abbreviation patterns
+    std::vector<std::pair<std::string, std::string>> abbreviations = {
+        {"tmp", "temporary"}, {"cnt", "count"}, {"idx", "index"},
+        {"num", "number"}, {"str", "string"}, {"ptr", "pointer"},
+        {"buf", "buffer"}, {"sz", "size"}, {"len", "length"},
+        {"val", "value"}, {"ret", "return"}, {"dst", "destination"},
+        {"src", "source"}, {"msg", "message"}, {"ctx", "context"},
+        {"cfg", "config"}, {"data", "dataValue"}, {"obj", "object"},
+        {"arr", "array"}, {"lst", "list"}, {"map", "mapValue"}
+    };
+    
+    for (const auto& [abbr, full] : abbreviations) {
+        size_t pos = 0;
+        while ((pos = result.find(abbr, pos)) != std::string::npos) {
+            // Check if it's a word boundary
+            bool isWord = true;
+            if (pos > 0 && std::isalnum(result[pos - 1])) isWord = false;
+            if (pos + abbr.length() < result.length() && std::isalnum(result[pos + abbr.length()])) isWord = false;
+            
+            if (isWord) {
+                nameSuggestions.push_back({abbr, full});
+                pos += abbr.length();
+            } else {
+                pos++;
+            }
+        }
+    }
+    
+    // Add naming suggestions at top
+    if (!nameSuggestions.empty()) {
+        std::stringstream suggestion;
+        suggestion << "// Naming suggestions:\n";
+        for (const auto& [oldName, newName] : nameSuggestions) {
+            suggestion << "//   " << oldName << " -> " << newName << "\n";
+        }
+        suggestion << "\n";
+        result = suggestion.str() + result;
+    }
+    
+    return result;
 }
 
 } // namespace IDE

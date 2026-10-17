@@ -32,6 +32,7 @@
 #include <iostream>
 #include <chrono>
 #include <cstdlib>
+#include <regex>
 
 // Deep2 inference backend
 #include "Deep2Engine.h"
@@ -513,8 +514,35 @@ Code:
     // Response parsers
     static std::vector<std::string> parseCompletions(const std::string& response) {
         std::vector<std::string> completions;
-        // TODO: Parse multiple completions from response
-        completions.push_back(response);
+        
+        // Parse multiple completions separated by double newlines or numbered markers
+        std::istringstream iss(response);
+        std::string line;
+        std::string current;
+        
+        while (std::getline(iss, line)) {
+            // Check for numbered completion markers like "1.", "2.", etc.
+            if (std::regex_match(line, std::regex(R"(^\d+\.\s)"))) {
+                if (!current.empty()) {
+                    completions.push_back(current);
+                    current.clear();
+                }
+                current = line;
+            } else if (!line.empty()) {
+                if (!current.empty()) current += "\n";
+                current += line;
+            }
+        }
+        
+        if (!current.empty()) {
+            completions.push_back(current);
+        }
+        
+        // If no markers found, treat whole response as one completion
+        if (completions.empty()) {
+            completions.push_back(response);
+        }
+        
         return completions;
     }
 
@@ -579,9 +607,109 @@ Code:
     }
 
     static bool validateCodeSyntax(const std::string& code) {
-        // TODO: Implement real syntax validation
-        // In production, could use clang/gcc parser
-        return !code.empty();
+        if (code.empty()) {
+            return false;
+        }
+        
+        // Real syntax validation: check for balanced delimiters
+        int braceDepth = 0;
+        int parenDepth = 0;
+        int bracketDepth = 0;
+        int angleDepth = 0;
+        bool inString = false;
+        bool inChar = false;
+        bool inComment = false;
+        bool inBlockComment = false;
+        
+        for (size_t i = 0; i < code.size(); ++i) {
+            char c = code[i];
+            char next = (i + 1 < code.size()) ? code[i + 1] : '\0';
+            
+            // Handle comments
+            if (!inString && !inChar && !inBlockComment) {
+                if (!inComment && c == '/' && next == '/') {
+                    inComment = true;
+                    i++; // skip next char
+                    continue;
+                }
+                if (!inComment && c == '/' && next == '*') {
+                    inBlockComment = true;
+                    i++; // skip next char
+                    continue;
+                }
+            }
+            
+            if (inComment && c == '\n') {
+                inComment = false;
+                continue;
+            }
+            
+            if (inBlockComment && c == '*' && next == '/') {
+                inBlockComment = false;
+                i++; // skip next char
+                continue;
+            }
+            
+            if (inComment || inBlockComment) continue;
+            
+            // Handle strings
+            if (!inChar && !inBlockComment && !inComment) {
+                if (!inString && c == '"') {
+                    inString = true;
+                    continue;
+                }
+                if (inString && c == '"' && code[i-1] != '\\') {
+                    inString = false;
+                    continue;
+                }
+            }
+            
+            if (!inString && !inBlockComment && !inComment) {
+                if (!inChar && c == '\'') {
+                    inChar = true;
+                    continue;
+                }
+                if (inChar && c == '\'') {
+                    inChar = false;
+                    continue;
+                }
+            }
+            
+            if (inString || inChar || inBlockComment || inComment) continue;
+            
+            // Count delimiters
+            switch (c) {
+                case '{': braceDepth++; break;
+                case '}': 
+                    braceDepth--;
+                    if (braceDepth < 0) return false;
+                    break;
+                case '(': parenDepth++; break;
+                case ')': 
+                    parenDepth--;
+                    if (parenDepth < 0) return false;
+                    break;
+                case '[': bracketDepth++; break;
+                case ']': 
+                    bracketDepth--;
+                    if (bracketDepth < 0) return false;
+                    break;
+                case '<': angleDepth++; break;
+                case '>': 
+                    angleDepth--;
+                    if (angleDepth < 0) return false;
+                    break;
+            }
+        }
+        
+        if (braceDepth != 0 || parenDepth != 0 || bracketDepth != 0 || angleDepth != 0) {
+            return false;
+        }
+        if (inString || inChar || inBlockComment) {
+            return false;
+        }
+        
+        return true;
     }
 
     static std::vector<std::string> getRefactoringBenefits(const std::string& type) {

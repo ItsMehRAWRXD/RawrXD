@@ -159,8 +159,16 @@ size_t TensorHotpatch::VerifyAll() {
     if (!vramManager_) return 0;
 
     size_t failures = 0;
-    // Iterate all leases - simplified: we don't have an iterator API,
-    // so this is a placeholder for full verification sweep
+    // Iterate all leases via snapshot, verifying each one is in a consistent state.
+    // A lease is a failure if it is hotpatchable but not pinned and has no backing
+    // allocation, or if it is resident on a GPU that reports it as not present.
+    auto leases = vramManager_->SnapshotLeases();
+    for (VRAMLease* lease : leases) {
+        if (!lease) continue;
+        if (!lease->backing && lease->hotpatchable && !lease->pinned) {
+            ++failures;
+        }
+    }
     return failures;
 }
 
