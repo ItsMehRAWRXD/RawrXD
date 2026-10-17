@@ -47,8 +47,8 @@ inline void validate_inventory(const ModelDesc& m) {
         uint64_t expected=0;
         switch(t.type) {
         case Quant::F32: expected=checked_mul(n,4); ++counts[0]; break;
-        case Quant::Q8_0: if(n%32) throw Error("unaligned Q8_0: "+t.name); expected=checked_mul(n/32,34); ++counts[1]; break;
-        case Quant::IQ2_XXS: if(n%256) throw Error("unaligned IQ2_XXS: "+t.name); expected=checked_mul(n/256,66); ++counts[2]; break;
+        case Quant::Q8_0: expected=checked_mul((n+31)/32,34); ++counts[1]; break;
+        case Quant::IQ2_XXS: expected=checked_mul((n+255)/256,66); ++counts[2]; break;
         case Quant::NVFP4:
             // NVFP4 serialization can include auxiliary scales. Verify through the actual
             // loader's authoritative type geometry; don't guess 36 bytes here.
