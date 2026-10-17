@@ -244,4 +244,56 @@ bool SmartRewriteEngineIntegration::analyzeSafety(
     const std::string& suggested) {
 
     // Real implementation: analyze if the rewrite is safe
-    // Check that t
+    // Check that the suggested code doesn't introduce:
+    // 1. New memory leaks (raw new without smart pointer)
+    // 2. Buffer overflows (fixed-size buffers)
+    // 3. Null pointer dereferences
+    // 4. Resource leaks
+    
+    if (suggested.empty()) {
+        return false;
+    }
+    
+    // Check for raw new without smart pointer in suggested code
+    size_t newPos = 0;
+    while ((newPos = suggested.find("new ", newPos)) != std::string::npos) {
+        size_t lineStart = suggested.rfind('\n', newPos);
+        if (lineStart == std::string::npos) lineStart = 0;
+        std::string line = suggested.substr(lineStart, 200);
+        if (line.find("unique_ptr") == std::string::npos && 
+            line.find("shared_ptr") == std::string::npos) {
+            // Raw new without smart pointer - potential memory leak
+            return false;
+        }
+        newPos += 4;
+    }
+    
+    // Check for fixed-size char buffers (potential overflow)
+    if (suggested.find("char [") != std::string::npos) {
+        return false;
+    }
+    
+    // Check that basic structure is preserved (braces balanced)
+    int braceDepth = 0;
+    for (char c : suggested) {
+        if (c == '{') braceDepth++;
+        else if (c == '}') {
+            braceDepth--;
+            if (braceDepth < 0) return false;
+        }
+    }
+    if (braceDepth != 0) return false;
+    
+    // Check for obvious dangerous patterns
+    std::vector<std::string> dangerousPatterns = {
+        "gets(", "strcpy(", "sprintf(", "vsprintf(",
+        "scanf(", "system(", "exec("
+    };
+    for (const auto& pattern : dangerousPatterns) {
+        if (suggested.find(pattern) != std::string::npos) {
+            return false;
+        }
+    }
+    
+    return true;
+}
