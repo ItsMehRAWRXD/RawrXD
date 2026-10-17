@@ -1,5 +1,6 @@
 #include "code_signer.hpp"
-#include <QProcess>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QDebug>
 #include <QFileInfo>
 #include <QStandardPaths>
@@ -241,33 +242,25 @@ bool CodeSigner::notarizeMacOSApp(const QString& bundlePath,
 }
 
 bool CodeSigner::executeCommand(const QString& command, const QStringList& args) {
-    QProcess process;
-    process.setProgram(command);
-    process.setArguments(args);
-    
-    // PRODUCTION-READY: Resource guard - ensure process cleanup
-    process.start();
-    
-    if (!process.waitForStarted(5000)) {
-        qWarning().noquote() << QString("[CodeSigner] Failed to start command: %1").arg(command);
-        return false;
+    // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+    std::vector<std::string> nativeArgs;
+    for (const auto& arg : args) {
+        nativeArgs.push_back(arg.toStdString());
     }
-    
-    if (!process.waitForFinished(300000)) {  // 5 minute timeout
-        qWarning().noquote() << QString("[CodeSigner] Command timeout: %1").arg(command);
-        process.kill();
-        return false;
-    }
-    
-    int exitCode = process.exitCode();
-    
-    if (exitCode != 0) {
-        QString errorOutput = QString::fromUtf8(process.readAllStandardError());
+
+    NativeProcessResult result = NativeProcess::execute(
+        command.toStdString(),
+        nativeArgs,
+        "",
+        300000  // 5 minute timeout
+    );
+
+    if (!result.success) {
         qWarning().noquote() << QString("[CodeSigner] Command failed | Exit code: %1 | Error: %2")
-            .arg(exitCode)
-            .arg(errorOutput);
+            .arg(result.exitCode)
+            .arg(QString::fromStdString(result.stderrOutput));
         return false;
     }
-    
+
     return true;
 }
