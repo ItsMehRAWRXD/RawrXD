@@ -126,38 +126,10 @@ void flash_attn_asm_avx2(const float* Q, const float* K, const float* V,
 } // extern "C"
 
 // ============================================================================
-// IQ2_XXS Dequantization — reference C++ implementation
-// Block: 66 bytes, 256 elements at 2 bits each (64 bytes packed data)
-// qs: 1 byte scale type, scale: 1 byte, data: 64 bytes packed 2-bit
+// IQ2_XXS Dequantization — uses GGML's authoritative implementation
+// Defined in ggml-quants.c and declared in ggml-quants.h; NOT redefined here
+// to avoid duplicate symbol conflicts at link time.
 // ============================================================================
-extern "C" void dequantize_row_iq2_xxs(const void* x, float* y, int64_t k) {
-    const uint8_t* data = static_cast<const uint8_t*>(x);
-    const size_t blockElems = 256;
-    const size_t blockBytes = 66;
-    const size_t numBlocks = (static_cast<size_t>(k) + blockElems - 1) / blockElems;
-
-    for (size_t b = 0; b < numBlocks; ++b) {
-        const uint8_t* block = data + b * blockBytes;
-        uint8_t qs = block[0];
-        float scale = 1.0f;
-
-        if (qs == 0 && blockBytes > 1) {
-            scale = static_cast<float>(static_cast<int8_t>(block[1])) / 127.0f;
-        }
-
-        const uint8_t* packed = block + 2;
-        size_t elemStart = b * blockElems;
-        size_t elemsInBlock = (b == numBlocks - 1) ? (static_cast<size_t>(k) - elemStart) : blockElems;
-
-        for (size_t i = 0; i < elemsInBlock; ++i) {
-            size_t byteIdx = i / 4;
-            int bitShift = (i % 4) * 2;
-            uint8_t val = (packed[byteIdx] >> bitShift) & 0x03;
-            float mapped = static_cast<float>(static_cast<int8_t>(val - 2));
-            y[elemStart + i] = mapped * scale;
-        }
-    }
-}
 
 // ============================================================================
 // IQ Kernel Registration — Register Imatrix-quantized kernels

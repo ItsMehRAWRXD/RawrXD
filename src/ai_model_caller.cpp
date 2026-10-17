@@ -368,8 +368,44 @@ public:
             }
 
             // Parse diagnostics from response
-            auto diagnosticLines = response;
-            // TODO: Parse structured diagnostics from model response
+            // Expected format: "Line N: severity: message" or similar structured text
+            std::istringstream diagStream(response);
+            std::string diagLine;
+            while (std::getline(diagStream, diagLine)) {
+                // Trim whitespace
+                size_t start = diagLine.find_first_not_of(" \t");
+                size_t end = diagLine.find_last_not_of(" \t");
+                if (start == std::string::npos) continue;
+                diagLine = diagLine.substr(start, end - start + 1);
+                if (diagLine.empty()) continue;
+
+                Diagnostic diag;
+
+                // Try to parse "Line N: severity: message" format
+                std::regex linePattern(R"(^Line\s+(\d+)\s*:\s*(error|warning|info)\s*:\s*(.+)$)", std::regex_constants::icase);
+                std::smatch match;
+                if (std::regex_match(diagLine, match, linePattern)) {
+                    diag.line = std::stoi(match[1].str());
+                    diag.severity = match[2].str();
+                    diag.message = match[3].str();
+                    diag.column = 0;
+                } else {
+                    // Fallback: treat whole line as a message
+                    diag.line = 0;
+                    diag.column = 0;
+                    diag.severity = "info";
+                    diag.message = diagLine;
+                }
+
+                // Try to extract suggested fix from message
+                size_t fixPos = diag.message.find("fix:");
+                if (fixPos != std::string::npos) {
+                    diag.code_action = diag.message.substr(fixPos + 4);
+                    diag.message = diag.message.substr(0, fixPos);
+                }
+
+                results.push_back(diag);
+            }
 
             std::cout << "✅ Found " << results.size() << " diagnostics" << std::endl;
 

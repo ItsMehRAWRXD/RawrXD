@@ -2934,7 +2934,6 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE
-            LINK_FLAGS "/FORCE:MULTIPLE /FORCE"
         )
         # The CPU executor's row_geom()/row_dot()/dequant_all() read block size,
         # type size and the to_float converter from ggml's authoritative type
@@ -2952,7 +2951,6 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_DEEP2_ENGINE=1)
         endif()
         message(STATUS "RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled")
-        target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_security)
     else()
         list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE-Native)
         message(STATUS "RawrXD-Win32IDE-Native EXCLUDED: Win32 IDE sources absent from this tree")
