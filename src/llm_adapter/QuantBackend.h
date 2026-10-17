@@ -38,6 +38,9 @@ public:
     );
     
     // Quantize weights from F32 to current mode
+    // Q4_0: dst buffer must be at least blocks * 20 bytes (blocks = ceil(count/32))
+    // Q8_0: dst buffer must be at least blocks * 36 bytes (blocks = ceil(count/32))
+    // Returns false if mode is FALLBACK/F32 or if src/dst is null
     bool quantizeWeights(
         const float* src, 
         void* dst, 

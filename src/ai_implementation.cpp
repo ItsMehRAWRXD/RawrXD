@@ -258,8 +258,10 @@ CompletionResponse AIImplementation::agenticLoop(
         }
 
         finalResponse = response;
-        break;
         iteration++;
+        if (response.completion.empty()) {
+            break;
+        }
     }
 
     if (iteration >= maxIterations && m_logger) {

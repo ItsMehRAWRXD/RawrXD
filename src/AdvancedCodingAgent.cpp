@@ -24,7 +24,12 @@ AgentTaskResult AdvancedCodingAgent::implementFeature(
     
     // Step 2: Generate code
     std::string generatedCode = "// Feature: " + specification + "\n";
-    generatedCode += "// Generated code placeholder\n";
+    generatedCode += "// Language: " + language + "\n";
+    generatedCode += "// Requirements:\n";
+    for (const auto& req : requirements) {
+        generatedCode += "//   - " + req + "\n";
+    }
+    generatedCode += "// Context:\n//   " + codeContext + "\n\n";
     generatedCode += generateFeatureBoilerplate(specification, language);
     
     result.steps.push_back("Code generation complete");
