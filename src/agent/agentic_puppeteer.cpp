@@ -367,11 +367,12 @@ FormatEnforcerPuppeteer::FormatEnforcerPuppeteer(QObject* parent)
 
 CorrectionResult FormatEnforcerPuppeteer::enforceJsonFormat(const QString& response)
 {
-    QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeDoc = NativeJson::fromJson(response.toStdString());
     
-    if (!doc.isNull()) {
+    if (!nativeDoc.is_null()) {
         // Already valid JSON
-        return CorrectionResult::ok(response, FailureType::None);
+        return CorrectionResult::ok(QString::fromStdString(NativeJson::toJson(nativeDoc)), FailureType::None);
     }
     
     // Try to fix common JSON issues
@@ -383,10 +384,10 @@ CorrectionResult FormatEnforcerPuppeteer::enforceJsonFormat(const QString& respo
         corrected.append('}');
     }
     
-    // Verify it's now valid
-    QJsonDocument fixedDoc = QJsonDocument::fromJson(corrected.toUtf8());
-    if (!fixedDoc.isNull()) {
-        return CorrectionResult::ok(corrected, FailureType::FormatViolation);
+    // Verify it's now valid using NativeJson
+    json fixedNative = NativeJson::fromJson(corrected.toStdString());
+    if (!fixedNative.is_null()) {
+        return CorrectionResult::ok(QString::fromStdString(NativeJson::toJson(fixedNative)), FailureType::FormatViolation);
     }
     
     return CorrectionResult::error(FailureType::FormatViolation, "Could not repair JSON");

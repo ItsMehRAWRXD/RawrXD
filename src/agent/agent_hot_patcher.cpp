@@ -62,8 +62,15 @@ QJsonObject AgentHotPatcher::interceptModelOutput(const QString& modelOutput, co
     QMutexLocker locker(&m_mutex);
     
     // Parse model output as JSON
-    QJsonDocument doc = QJsonDocument::fromJson(modelOutput.toUtf8());
-    QJsonObject output = doc.object();
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeDoc = NativeJson::fromJson(modelOutput.toStdString());
+    if (nativeDoc.is_null() || !nativeDoc.is_object()) {
+        qWarning() << "[AgentHotPatcher] Model output is not valid JSON";
+        return;
+    }
+    QJsonObject output = QJsonDocument::fromJson(
+        QString::fromStdString(NativeJson::toJson(nativeDoc)).toUtf8()
+    ).object();
     
     // Check if output has reasoning we can analyze
     if (output.contains("reasoning") || output.contains("thinking")) {
