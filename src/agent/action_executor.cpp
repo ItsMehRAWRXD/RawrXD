@@ -8,16 +8,14 @@
 
 #include "action_executor.hpp"
 #include "model_invoker.hpp"
+#include "qt_block.h"
 
 #include <QFile>
 #include <QDir>
 #include <QFileInfo>
-#include <QProcess>
 #include <QStandardPaths>
 #include <QDateTime>
-#include <QJsonDocument>
 #include <QDebug>
-#include <QTimer>
 #include <QtConcurrent>
 #include <QFuture>
 
@@ -26,7 +24,7 @@
  */
 ActionExecutor::ActionExecutor(QObject* parent)
     : QObject(parent)
-    , m_process(std::make_unique<QProcess>(this))
+    , m_process(std::make_unique<NativeProcess>())
 {
     m_context.projectRoot = QDir::currentPath();
 }
@@ -42,7 +40,7 @@ ActionExecutor::~ActionExecutor() = default;
 void ActionExecutor::setContext(const ExecutionContext& context)
 {
     m_context = context;
-    qDebug() << "[ActionExecutor] Context set - projectRoot:" << m_context.projectRoot;
+    qInfo() << "[ActionExecutor] Context set - projectRoot:" << m_context.projectRoot;
 }
 
 /**
@@ -50,7 +48,7 @@ void ActionExecutor::setContext(const ExecutionContext& context)
  */
 bool ActionExecutor::executeAction(Action& action)
 {
-    qDebug() << "[ActionExecutor] Executing action:" << action.description;
+    qInfo() << "[ActionExecutor] Executing action:" << action.description;
 
     switch (action.type) {
     case ActionType::FileEdit:
@@ -153,11 +151,8 @@ void ActionExecutor::executePlan(const QJsonArray& actions, bool stopOnError)
 void ActionExecutor::cancelExecution()
 {
     m_cancelled = true;
-    if (m_process->state() == QProcess::Running) {
-        m_process->terminate();
-        m_process->waitForFinished(5000);
-    }
-    qDebug() << "[ActionExecutor] Execution cancelled";
+    // NativeProcess is synchronous - no running process to terminate
+    qInfo() << "[ActionExecutor] Execution cancelled";
 }
 
 /**
@@ -339,7 +334,7 @@ bool ActionExecutor::handleSearchFiles(Action& action)
     result["matches"] = matchCount;
     result["results"] = results;
 
-    action.result = QJsonDocument(result).toJson(QJsonDocument::Compact);
+    action.result = QString::fromStdString(NativeJson::toJson(result));
     return true;
 }
 
@@ -358,7 +353,7 @@ bool ActionExecutor::handleRunBuild(Action& action)
 
     QJsonObject result = executeCommand("cmake", args, m_context.timeoutMs);
 
-    action.result = QJsonDocument(result).toJson(QJsonDocument::Compact);
+    action.result = QString::fromStdString(NativeJson::toJson(result));
     return result.value("exitCode").toInt() == 0;
 }
 
@@ -376,7 +371,7 @@ bool ActionExecutor::handleExecuteTests(Action& action)
 
     QJsonObject result = executeCommand("ctest", args, m_context.timeoutMs);
 
-    action.result = QJsonDocument(result).toJson(QJsonDocument::Compact);
+    action.result = QString::fromStdString(NativeJson::toJson(result));
     return result.value("exitCode").toInt() == 0;
 }
 
@@ -404,7 +399,7 @@ bool ActionExecutor::handleCommitGit(Action& action)
 
     QJsonObject result = executeCommand("git", args, m_context.timeoutMs);
 
-    action.result = QJsonDocument(result).toJson(QJsonDocument::Compact);
+    action.result = QString::fromStdString(NativeJson::toJson(result));
     return result.value("exitCode").toInt() == 0;
 }
 
@@ -428,7 +423,7 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
 
     QJsonObject result = executeCommand(command, args, m_context.timeoutMs);
 
-    action.result = QJsonDocument(result).toJson(QJsonDocument::Compact);
+    action.result = QString::fromStdString(NativeJson::toJson(result));
     return result.value("exitCode").toInt() == 0;
 }
 
@@ -488,7 +483,7 @@ bool ActionExecutor::handleRecursiveAgent(Action& action)
         resultObj["parsedPlan"] = response.parsedPlan;
         resultObj["invoked"] = true;
 
-        action.result = QJsonDocument(resultObj).toJson(QJsonDocument::Compact);
+        action.result = QString::fromStdString(NativeJson::toJson(resultObj));
         qInfo() << "[ActionExecutor] Recursive agent invocation completed for:" << wish;
         return true;
 
@@ -585,7 +580,13 @@ QJsonObject ActionExecutor::executeCommand(const QString& command,
 {
     QJsonObject result;
     result["command"] = command;
-    result["args"] = QJsonArray::fromStringList(args);
+    
+    // Convert QStringList to JSON array
+    QJsonArray argsArray;
+    for (const auto& arg : args) {
+        argsArray.append(arg);
+    }
+    result["args"] = argsArray;
 
     if (m_context.dryRun) {
         result["exitCode"] = 0;
@@ -593,19 +594,27 @@ QJsonObject ActionExecutor::executeCommand(const QString& command,
         return result;
     }
 
-    m_process->setWorkingDirectory(m_context.projectRoot);
-    m_process->start(command, args);
-
-    if (!m_process->waitForFinished(timeoutMs)) {
-        m_process->kill();
-        result["exitCode"] = -1;
-        result["error"] = "Command timed out after " + QString::number(timeoutMs) + "ms";
-        return result;
+    // Convert QStringList to vector<string> for NativeProcess
+    std::vector<std::string> nativeArgs;
+    for (const auto& arg : args) {
+        nativeArgs.push_back(arg.toStdString());
     }
 
-    result["exitCode"] = m_process->exitCode();
-    result["stdout"] = QString::fromUtf8(m_process->readAllStandardOutput());
-    result["stderr"] = QString::fromUtf8(m_process->readAllStandardError());
+    // Execute using NativeProcess (real CreateProcessW, not QProcess stub)
+    NativeProcessResult procResult = NativeProcess::execute(
+        command.toStdString(),
+        nativeArgs,
+        m_context.projectRoot.toStdString(),
+        timeoutMs
+    );
+
+    result["exitCode"] = procResult.exitCode;
+    result["success"] = procResult.success;
+    result["stdout"] = QString::fromStdString(procResult.stdoutOutput);
+    result["stderr"] = QString::fromStdString(procResult.stderrOutput);
+    if (!procResult.success) {
+        result["error"] = "Command failed with exit code " + QString::number(procResult.exitCode);
+    }
 
     return result;
 }

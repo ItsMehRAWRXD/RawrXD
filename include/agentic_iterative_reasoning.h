@@ -1,9 +1,7 @@
 #pragma once
 
-#include <QString>
-#include <QObject>
-#include <QJsonObject>
-#include <QJsonArray>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <memory>
 #include <vector>
 

@@ -1,5 +1,5 @@
 #include "ide_window.h"
-#include <richedit.h>
+#include <richededit.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shellapi.h>
@@ -12,9 +12,11 @@
 #include <set>
 #include <cstdio>
 #include <winhttp.h>
+#include <ole2.h>
+#include <oleidl.h>
 
 #pragma comment(lib, "winhttp.lib")
-
+#pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "comdlg32.lib")
 #pragma comment(lib, "shell32.lib")

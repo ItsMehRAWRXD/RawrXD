@@ -1,8 +1,7 @@
 // agentic_puppeteer.cpp - Implementation of response correction
 #include "agentic_puppeteer.hpp"
-#include <QRegularExpression>
-#include <QJsonDocument>
-#include <QDebug>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <algorithm>
 
 // Base AgenticPuppeteer Implementation

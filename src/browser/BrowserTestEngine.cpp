@@ -3453,8 +3453,7 @@ std::future<BrowserTestResult> BrowserTestAgentImpl::runTestCode(const std::stri
     return std::async(std::launch::async, [this, testCode, url]() -> BrowserTestResult {
         BrowserTestResult result;
         result.success = false;
-        result.summary = "Test code execution not yet implemented";
-        
+
         // Basic validation: check test code has expected structure
         if (testCode.find("test(") == std::string::npos) {
             result.summary = "Invalid test code: missing test() declaration";
@@ -3468,11 +3467,72 @@ std::future<BrowserTestResult> BrowserTestAgentImpl::runTestCode(const std::stri
             result.summary = "Invalid test code: missing target URL";
             return result;
         }
-        
-        result.success = true;
-        result.summary = "Test code validated successfully";
-        result.testsRun = 1;
-        result.testsPassed = 1;
+
+        try {
+            // Real test execution: launch browser and run the test code
+            auto browser = m_playwright->launch(BrowserType::WEBVIEW2, json()).get();
+            if (!browser) {
+                result.error = "Failed to launch browser";
+                result.summary = "Browser launch failed";
+                return result;
+            }
+
+            auto context = browser->newContext().get();
+            auto page = context->newPage().get();
+            if (!page) {
+                result.error = "Failed to create page";
+                result.summary = "Page creation failed";
+                browser->close().get();
+                return result;
+            }
+
+            // Navigate to URL
+            NavigateOptions navOpts;
+            navOpts.timeoutMs = 30000;
+            page->gotoURL(url, navOpts).get();
+            result.stepsExecuted.push_back("Navigate to " + url);
+
+            // Take initial screenshot
+            ScreenshotOptions ssOpts;
+            ssOpts.path = "screenshot_test_initial.png";
+            ssOpts.fullPage = true;
+            page->screenshot(ssOpts).get();
+            result.screenshots.push_back("screenshot_test_initial.png");
+
+            // Execute the test code as JavaScript on the page
+            auto jsResult = page->evaluateJavaScript(testCode).get();
+            result.stepsExecuted.push_back("Execute test code");
+
+            // Parse JavaScript result for pass/fail
+            if (jsResult.contains("passed") || jsResult.contains("true")) {
+                result.success = true;
+                result.summary = "Test code executed successfully";
+                result.testsRun = 1;
+                result.testsPassed = 1;
+            } else {
+                result.summary = "Test code execution returned non-pass result";
+                result.testsRun = 1;
+                result.testsPassed = 0;
+            }
+
+            // Take final screenshot
+            ssOpts.path = "screenshot_test_final.png";
+            page->screenshot(ssOpts).get();
+            result.screenshots.push_back("screenshot_test_final.png");
+
+            // Cleanup
+            page->close().get();
+            browser->close().get();
+
+            result.findings["url"] = url;
+            result.findings["stepsExecuted"] = result.stepsExecuted;
+            result.findings["jsResult"] = jsResult;
+
+        } catch (const std::exception& e) {
+            result.error = e.what();
+            result.summary = "Test execution exception: " + std::string(e.what());
+        }
+
         return result;
     });
 }

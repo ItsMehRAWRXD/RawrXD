@@ -3,11 +3,8 @@
 #include "agentic_loop_state.h"
 #include "agentic_engine.h"
 #include "../src/qtapp/inference_engine.hpp"
-#include <QDebug>
-#include <QDateTime>
-#include <QElapsedTimer>
-#include <QJsonDocument>
-#include <QJsonArray>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <algorithm>
 
 AgenticIterativeReasoning::AgenticIterativeReasoning(QObject* parent)

@@ -1,11 +1,6 @@
 #include "agentic_copilot_bridge.hpp"
-#include <QDebug>
-#include <QDateTime>
-#include <QJsonDocument>
-#include <QElapsedTimer>
-#include <QTimer>
-#include <QThread>
-#include <QCoreApplication>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <algorithm>
 #include <exception>
 

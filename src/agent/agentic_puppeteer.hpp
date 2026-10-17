@@ -1,13 +1,8 @@
 // agentic_puppeteer.hpp - Response correction via pattern matching
 #pragma once
 
-#include <QObject>
-#include <QString>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QStringList>
-#include <QMutex>
-#include <QHash>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <memory>
 
 // Failure types the puppeteer can correct

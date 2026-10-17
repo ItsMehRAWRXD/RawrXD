@@ -4492,6 +4492,7 @@ endif()
 #
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
+        src/core/qt_elimination.cpp
         src/project_wizard/project_spec.cpp
         src/project_wizard/project_state_manager.cpp
         src/project_wizard/project_wizard.cpp
@@ -4515,6 +4516,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     endif()
     target_include_directories(RawrXD-CLI-V2 PRIVATE
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${CMAKE_SOURCE_DIR}/src/deep2

@@ -12,6 +12,11 @@
 #include <fstream>
 #include <cstring>
 
+// Forward declaration for codec::inflate (from inflate_deflate_cpp.cpp / codec/compression.cpp)
+namespace codec {
+    extern QByteArray inflate(const QByteArray& in, bool* ok);
+}
+
 EnhancedModelLoader::EnhancedModelLoader(QObject* parent)
     : QObject(parent)
     , m_engine(nullptr)
@@ -176,11 +181,54 @@ bool EnhancedModelLoader::loadHFModel(const QString& repoId) {
         qInfo() << "Downloading HF model:" << QString::fromStdString(repo_name) << "revision:" << QString::fromStdString(revision);
         emit loadingProgress(10);
 
-        // TODO: Implement HF download with cache logic
-        // For now, return error to prevent silent failure
-        m_lastError = "HuggingFace downloads not yet implemented";
-        emit error(m_lastError);
-        return false;
+        // Real HF download using existing HFDownloader (curl-based, no new deps)
+        QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/hf_models";
+        QDir cacheDirObj(cacheDir);
+        if (!cacheDirObj.exists()) {
+            cacheDirObj.mkpath(".");
+        }
+
+        std::string outputDir = cacheDir.toStdString();
+
+        // Detect available GGUF files in the repo
+        auto formats = m_hfDownloader->ParseAvailableFormats(repo_name);
+        std::string ggufFilename;
+        for (const auto& fmt : formats) {
+            if (fmt.find(".gguf") != std::string::npos) {
+                ggufFilename = fmt;
+                break;
+            }
+        }
+
+        if (ggufFilename.empty()) {
+            m_lastError = "No GGUF files found in repository: " + repo_name;
+            emit error(m_lastError);
+            return false;
+        }
+
+        qInfo() << "Downloading GGUF file:" << QString::fromStdString(ggufFilename);
+        emit loadingProgress(30);
+
+        bool downloadOk = m_hfDownloader->DownloadModel(
+            repo_name, ggufFilename, outputDir,
+            [this](const DownloadProgress& progress) {
+                int pct = static_cast<int>(progress.progress_percent);
+                emit loadingProgress(30 + pct / 3); // 30% to 60% for download
+            }
+        );
+
+        if (!downloadOk) {
+            m_lastError = "Failed to download model from HuggingFace: " + repo_name;
+            emit error(m_lastError);
+            return false;
+        }
+
+        std::string downloadedPath = outputDir + "/" + ggufFilename;
+        qInfo() << "HF download complete:" << QString::fromStdString(downloadedPath);
+        emit loadingProgress(60);
+
+        // Load the downloaded GGUF model
+        return loadGGUFLocal(QString::fromStdString(downloadedPath));
 
     } catch (const std::exception& e) {
         m_lastError = QString("HF download exception: %1").arg(e.what());
@@ -279,17 +327,42 @@ bool EnhancedModelLoader::decompressAndLoad(const QString& compressedPath, Compr
 
         std::vector<uint8_t> decompressed_data;
 
-        // For now, just copy the data (real decompression would use zstd/gzip libraries)
-        // This is a placeholder that prevents silent failure
+        // Real decompression using existing codec::inflate() (zlib-based, no new deps)
+        // and platform-native APIs where available
         if (compression == CompressionType::GZIP) {
-            qWarning() << "GZIP decompression not yet implemented - using stored data as-is";
-            decompressed_data = compressed_data;
+            // Use codec::inflate() which wraps zlib uncompress()
+            QByteArray input(reinterpret_cast<const char*>(compressed_data.data()),
+                             static_cast<int>(compressed_data.size()));
+            bool ok = false;
+            QByteArray output = codec::inflate(input, &ok);
+            if (!ok || output.isEmpty()) {
+                m_lastError = "GZIP decompression failed - codec::inflate returned empty";
+                return false;
+            }
+            decompressed_data.assign(output.constData(), output.constData() + output.size());
+            qInfo() << "GZIP decompressed" << compressed_data.size() << "->" << decompressed_data.size() << "bytes";
         } else if (compression == CompressionType::ZSTD) {
-            qWarning() << "ZSTD decompression not yet implemented - using stored data as-is";
-            decompressed_data = compressed_data;
+            // ZSTD decompression - check magic bytes first
+            if (compressed_data.size() >= 4) {
+                uint32_t magic = *reinterpret_cast<const uint32_t*>(compressed_data.data());
+                if (magic == 0xFD2FB528) { // ZSTD magic number
+                    m_lastError = "ZSTD decompression requires libzstd - not available without new dependency";
+                    return false;
+                }
+            }
+            m_lastError = "ZSTD decompression not supported - missing ZSTD magic header";
+            return false;
         } else if (compression == CompressionType::LZ4) {
-            qWarning() << "LZ4 decompression not yet implemented - using stored data as-is";
-            decompressed_data = compressed_data;
+            // LZ4 decompression - check magic bytes first
+            if (compressed_data.size() >= 4) {
+                uint32_t magic = *reinterpret_cast<const uint32_t*>(compressed_data.data());
+                if (magic == 0x184D2204) { // LZ4 magic number
+                    m_lastError = "LZ4 decompression requires liblz4 - not available without new dependency";
+                    return false;
+                }
+            }
+            m_lastError = "LZ4 decompression not supported - missing LZ4 magic header";
+            return false;
         } else {
             m_lastError = "Unknown compression type";
             return false;

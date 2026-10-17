@@ -13,12 +13,15 @@
 
 #pragma once
 
-#include <QObject>
+#include "qt_block.h"
+
 #include <QString>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QProcess>
 #include <memory>
+#include <vector>
+#include <map>
 
 /**
  * @enum ActionType
@@ -352,7 +355,8 @@ private:
     bool m_stopOnError = true;
     bool m_cancelled = false;
 
-    QVector<Action> m_executedActions;      ///< History of executed actions
-    QMap<QString, QString> m_backups;       ///< Backup file mappings
-    std::unique_ptr<QProcess> m_process;    ///< Current subprocess
+    NativeSignalSlot m_signalSlot;          ///< Working signal/slot dispatch (replaces QObject::connect)
+    std::vector<Action> m_executedActions;  ///< History of executed actions
+    std::map<std::string, std::string> m_backups;  ///< Backup file mappings
+    std::unique_ptr<NativeProcess> m_process;   ///< Current subprocess (native, no QT dependency)
 };
