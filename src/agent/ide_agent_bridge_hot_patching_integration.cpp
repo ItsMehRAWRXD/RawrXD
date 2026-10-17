@@ -15,13 +15,11 @@
 #include <QFile>
 #include <QDir>
 #include <QMutex>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
-#include <QTimer>
 #include <QTextStream>
 #include <memory>
 

@@ -2,7 +2,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QStandardPaths>
 #include <QDateTime>
@@ -13,6 +12,7 @@
 #include <QDebug>
 #include <QtGlobal>
 #include <QStringList>
+#include "qt_block.h"
 #include <QVariant>
 #include <algorithm>
 #include <numeric>
@@ -90,8 +90,9 @@ QJsonArray MetaLearn::loadDB(bool* ok) {
         return {};
     }
 
-    const QJsonDocument doc = QJsonDocument::fromJson(raw);
-    if (!doc.isArray()) {
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeDoc = NativeJson::fromJson(raw.toStdString());
+    if (nativeDoc.is_null() || !nativeDoc.is_array()) {
         qWarning() << "MetaLearn: invalid database format";
         if (ok) {
             *ok = false;
@@ -99,6 +100,9 @@ QJsonArray MetaLearn::loadDB(bool* ok) {
         return {};
     }
 
+    // Round-trip through string to get QJsonArray for QT API compatibility
+    QString jsonStr2 = QString::fromStdString(NativeJson::toJson(nativeDoc));
+    QJsonDocument doc = QJsonDocument::fromJson(jsonStr2.toUtf8());
     return doc.array();
 }
 
@@ -309,7 +313,10 @@ bool MetaLearn::saveDatabase() const {
     }
 
     const QJsonDocument doc(arr);
-    if (f.write(doc.toJson(QJsonDocument::Compact)) == -1) {
+    // Use NativeJson for real serialization (fixes QJsonDocument::toJson)
+    QString jsonStr = QString::fromStdString(NativeJson::toJson(arr));
+    QByteArray data = jsonStr.toUtf8();
+    if (f.write(data) == -1) {
         qWarning() << "MetaLearn: failed to flush database";
         f.close();
         return false;
