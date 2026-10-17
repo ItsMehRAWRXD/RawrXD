@@ -1,9 +1,7 @@
 #include "autonomous_intelligence_orchestrator.h"
 #include "cpu_inference_engine.h"
-#include <QTimer>
-#include <QJsonDocument>
-#include <QFile>
-#include <QStandardPaths>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <iostream>
 
 AutonomousIntelligenceOrchestrator::AutonomousIntelligenceOrchestrator(QObject* parent)

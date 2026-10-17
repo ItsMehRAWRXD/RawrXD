@@ -8,7 +8,7 @@
 #pragma once
 
 #include <QPlainTextEdit>
-#include <QTimer>
+#include "qt_block.h"
 #include "lsp_client.h"
 #include "ghost_text_renderer.h"
 
@@ -126,7 +126,7 @@ private:
     QString m_languageId = "cpp";
     int m_documentVersion = 0;
     
-    QTimer* m_completionTimer{};
+    NativeTimer* m_completionTimer{};
     int m_completionDelay = 300;  // 300ms debounce
     bool m_autoCompletionsEnabled = true;
     

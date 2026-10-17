@@ -10,6 +10,7 @@
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QDebug>
+#include "qt_block.h"
 
 namespace RawrXD {
 
@@ -24,22 +25,22 @@ void AgenticTextEdit::initialize() {
     m_ghostRenderer = new GhostTextRenderer(this, this);
     m_ghostRenderer->initialize();
     
-    // Create completion timer
-    m_completionTimer = new QTimer(this);
-    m_completionTimer->setSingleShot(true);
-    m_completionTimer->setInterval(m_completionDelay);
+    // Create completion timer (native, replaces QTimer stub)
+    m_completionTimer = new NativeTimer();
+    m_completionTimer->start(m_completionDelay, true, [this]() {
+        onCompletionTimeout();
+    });
     
     // Connect signals
     connect(this, &QPlainTextEdit::textChanged, this, &AgenticTextEdit::onTextChanged);
     connect(this, &QPlainTextEdit::cursorPositionChanged, this, &AgenticTextEdit::onCursorPositionChanged);
-    connect(m_completionTimer, &QTimer::timeout, this, &AgenticTextEdit::onCompletionTimeout);
     
     connect(m_ghostRenderer, &GhostTextRenderer::ghostTextAccepted,
             this, &AgenticTextEdit::onGhostTextAccepted);
     connect(m_ghostRenderer, &GhostTextRenderer::ghostTextDismissed,
             this, &AgenticTextEdit::onGhostTextDismissed);
     
-    qDebug() << "[AgenticTextEdit] Initialized with ghost text renderer";
+    qInfo() << "[AgenticTextEdit] Initialized with ghost text renderer";
 }
 
 void AgenticTextEdit::setLSPClient(LSPClient* client) {

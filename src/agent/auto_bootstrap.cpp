@@ -6,7 +6,6 @@
 #include "zero_touch.hpp"
 #include <QCoreApplication>
 #include <QApplication>
-#include <QTimer>
 #include <QProcessEnvironment>
 #include <QInputDialog>
 #include <QMessageBox>
@@ -14,8 +13,8 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QtConcurrent>
-#include <QProcess>
 #include <QDebug>
+#include "qt_block.h"
 
 AutoBootstrap* AutoBootstrap::s_instance = nullptr;
 

@@ -59,6 +59,18 @@ public:
         m_thread = std::thread(&NativeTimer::runLoop, this);
     }
 
+    // Restart timer with previously set interval and callback
+    void start() {
+        if (m_callback) {
+            start(m_intervalMs, m_singleShot, m_callback);
+        }
+    }
+
+    // Change the timer interval (in milliseconds)
+    void setInterval(int intervalMs) {
+        m_intervalMs = intervalMs;
+    }
+
     // Stop the timer and join the worker thread
     void stop() {
         m_stopRequested = true;

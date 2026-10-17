@@ -9,15 +9,8 @@
 
 #pragma once
 
-#include <QString>
-#include <QStringList>
-#include <QObject>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QDateTime>
-#include <QMutex>
-#include <QMetaType>
-#include <QUuid>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <vector>
 #include <atomic>
 
@@ -75,8 +68,7 @@ struct BehaviorPatch {
  * - Full statistics tracking
  * - Non-copyable (Q_DISABLE_COPY)
  */
-class AgentHotPatcher : public QObject {
-    Q_OBJECT
+class AgentHotPatcher : public NativeObject {
     Q_DISABLE_COPY(AgentHotPatcher)
 
 public:

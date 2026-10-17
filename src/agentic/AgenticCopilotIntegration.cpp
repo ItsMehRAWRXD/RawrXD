@@ -20,12 +20,13 @@ void AgenticCopilotIntegration::handleCopilotSendWithNavigation() {
     // Navigate to Copilot chat if not already focused
     auto navResult = m_navigator->navigateToCopilotChat();
     if (!navResult.success) {
-        // Log navigation failure but continue with send operation
         logNavigationPerformance(navResult);
     }
     
     // Execute standard Copilot send with enhanced context
-    // This would integrate with existing HandleCopilotSend()
+    if (m_ideInstance) {
+        m_ideInstance->sendCopilotMessage(m_currentContext);
+    }
     
     logNavigationPerformance(navResult);
 }
@@ -34,8 +35,10 @@ void AgenticCopilotIntegration::handleCopilotClearWithNavigation() {
     // Navigate to Copilot chat
     auto navResult = m_navigator->navigateToCopilotChat();
     if (navResult.success) {
-        // Execute standard Copilot clear
-        // This would integrate with existing HandleCopilotClear()
+        // Execute standard Copilot clear via IDE
+        if (m_ideInstance) {
+            m_ideInstance->clearCopilotChat();
+        }
     }
     
     logNavigationPerformance(navResult);
@@ -53,8 +56,10 @@ void AgenticCopilotIntegration::appendCopilotResponseWithContext(const std::stri
     // Navigate to output area if needed
     auto navResult = m_navigator->navigateToPanel(PanelTab::Output);
     if (navResult.success) {
-        // Append to Copilot chat output
-        // This would integrate with existing AppendCopilotResponse()
+        // Append to Copilot chat output via IDE
+        if (m_ideInstance) {
+            m_ideInstance->appendCopilotResponse(enhancedResponse);
+        }
     }
     
     logNavigationPerformance(navResult);
@@ -64,8 +69,10 @@ void AgenticCopilotIntegration::handleCopilotStreamUpdateWithNavigation(const st
     // Ensure we're in the right context for streaming updates
     auto navResult = m_navigator->navigateToCopilotChat();
     if (navResult.success) {
-        // Handle streaming token update
-        // This would integrate with existing HandleCopilotStreamUpdate()
+        // Handle streaming token update via IDE
+        if (m_ideInstance) {
+            m_ideInstance->streamCopilotToken(token);
+        }
     }
     
     logNavigationPerformance(navResult);
@@ -132,8 +139,19 @@ NavigationResult AgenticCopilotIntegration::navigateAndExecute(const std::string
     }
     
     if (navResult.success) {
-        // Execute the action after successful navigation
-        // This would integrate with actual IDE command execution
+        // Execute the action after successful navigation via IDE
+        if (m_ideInstance) {
+            if (target == "FileExplorer") {
+                m_ideInstance->focusFileExplorer();
+            } else if (target == "Editor") {
+                m_ideInstance->focusEditor();
+            } else if (target == "Terminal") {
+                m_ideInstance->focusTerminal();
+            } else if (target == "CopilotChat") {
+                m_ideInstance->focusCopilotChat();
+            }
+            m_ideInstance->executeAction(action);
+        }
         navResult.message += ", Action: " + action + " executed";
     }
     
@@ -142,6 +160,10 @@ NavigationResult AgenticCopilotIntegration::navigateAndExecute(const std::string
 
 void AgenticCopilotIntegration::setCurrentContext(const std::string& context) {
     m_currentContext = context;
+}
+
+void AgenticCopilotIntegration::setIDEInstance(Win32IDE* ide) {
+    m_ideInstance = ide;
 }
 
 std::string AgenticCopilotIntegration::getCurrentContext() const {
@@ -161,16 +183,17 @@ bool AgenticCopilotIntegration::validateNavigationTarget(const std::string& targ
 }
 
 bool AgenticCopilotIntegration::confirmCriticalAction(const std::string& action) {
-    // Fail-closed: no real confirmation dialog is implemented, so deny
-    // all critical actions rather than auto-confirming (simulated acceptance).
-    (void)action;
-    return false;
+    // Real Win32 confirmation dialog instead of fail-closed denial
+    std::string message = "Confirm critical action:\n\n" + action;
+    int result = MessageBoxA(nullptr, message.c_str(), "RawrXD Agentic Confirmation",
+                             MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+    return result == IDYES;
 }
 
 void AgenticCopilotIntegration::logNavigationPerformance(const NavigationResult& result) {
-    // Log navigation performance for optimization
+    // Log navigation performance using IDE logger or stdout
     std::stringstream log;
-    log << "Navigation Performance - Success: " << result.success
+    log << "[AgenticCopilot] Navigation Performance - Success: " << result.success
           << ", Time: " << result.executionTimeMs << "ms"
           << ", Message: " << result.message;
     
@@ -178,8 +201,12 @@ void AgenticCopilotIntegration::logNavigationPerformance(const NavigationResult&
         log << ", Fallback: " << result.fallbackUsed;
     }
     
-    // This would integrate with existing logging system
-    // m_ideInstance->logInfo(log.str());
+    std::clog << log.str() << std::endl;
+    
+    // Also notify IDE logger if available
+    if (m_ideInstance) {
+        m_ideInstance->logInfo(log.str());
+    }
 }
 
 void AgenticCopilotIntegration::optimizeNavigationStrategy() {
@@ -200,8 +227,9 @@ void AgenticCopilotIntegration::optimizeNavigationStrategy() {
 NavigationResult AgenticCopilotIntegration::executeFileOperation(const std::string& operation) {
     // Navigate to appropriate area for file operations
     auto navResult = m_navigator->navigateToFileExplorer();
-    if (navResult.success) {
-        // Execute file operation
+    if (navResult.success && m_ideInstance) {
+        // Execute file operation via IDE
+        m_ideInstance->performFileOperation(operation);
         navResult.message += ", File operation: " + operation;
     }
     return navResult;
@@ -210,8 +238,9 @@ NavigationResult AgenticCopilotIntegration::executeFileOperation(const std::stri
 NavigationResult AgenticCopilotIntegration::executeCodeGeneration(const std::string& prompt) {
     // Navigate to editor for code generation
     auto navResult = m_navigator->navigateToEditor();
-    if (navResult.success) {
-        // Execute code generation
+    if (navResult.success && m_ideInstance) {
+        // Execute code generation via IDE
+        m_ideInstance->generateCode(prompt);
         navResult.message += ", Code generation: " + prompt;
     }
     return navResult;
@@ -220,8 +249,9 @@ NavigationResult AgenticCopilotIntegration::executeCodeGeneration(const std::str
 NavigationResult AgenticCopilotIntegration::executeDebugOperation(const std::string& operation) {
     // Navigate to debug panel
     auto navResult = m_navigator->navigateToPanel(PanelTab::DebugConsole);
-    if (navResult.success) {
-        // Execute debug operation
+    if (navResult.success && m_ideInstance) {
+        // Execute debug operation via IDE
+        m_ideInstance->performDebugOperation(operation);
         navResult.message += ", Debug operation: " + operation;
     }
     return navResult;
@@ -230,8 +260,9 @@ NavigationResult AgenticCopilotIntegration::executeDebugOperation(const std::str
 NavigationResult AgenticCopilotIntegration::executeTerminalCommand(const std::string& command) {
     // Navigate to terminal
     auto navResult = m_navigator->navigateToTerminal();
-    if (navResult.success) {
-        // Execute terminal command
+    if (navResult.success && m_ideInstance) {
+        // Execute terminal command via IDE
+        m_ideInstance->executeTerminalCommand(command);
         navResult.message += ", Terminal command: " + command;
     }
     return navResult;
@@ -240,10 +271,17 @@ NavigationResult AgenticCopilotIntegration::executeTerminalCommand(const std::st
 // Context management
 void AgenticCopilotIntegration::updateContextFromIDE() {
     if (m_ideInstance) {
-        // Extract current context from IDE state.
-        // No real IDE state access is implemented, so leave context empty
-        // rather than fabricating a simulated context string.
-        m_currentContext.clear();
+        // Extract current context from IDE state using real IDE API
+        // Get active file, cursor position, selection, etc.
+        std::string activeFile = m_ideInstance->getActiveFile();
+        std::string selection = m_ideInstance->getSelection();
+        std::string cursorPos = m_ideInstance->getCursorPosition();
+        
+        std::stringstream ctx;
+        ctx << "ActiveFile=" << activeFile
+            << " | Selection=" << selection
+            << " | Cursor=" << cursorPos;
+        m_currentContext = ctx.str();
     }
 }
 
@@ -295,7 +333,7 @@ std::unique_ptr<AgenticCopilotIntegration> CreateAgenticCopilotIntegration(Win32
     auto integration = std::make_unique<AgenticCopilotIntegration>(std::move(navigator));
     
     // Set IDE instance for context access
-    // integration->setIDEInstance(ide); // This would require additional method
+    integration->setIDEInstance(ide);
     
     return integration;
 }

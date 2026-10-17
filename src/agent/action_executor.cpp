@@ -9,15 +9,7 @@
 #include "action_executor.hpp"
 #include "model_invoker.hpp"
 #include "qt_block.h"
-
-#include <QFile>
-#include <QDir>
-#include <QFileInfo>
-#include <QStandardPaths>
-#include <QDateTime>
-#include <QDebug>
-#include <QtConcurrent>
-#include <QFuture>
+#include "core/qt_elimination.h"
 
 /**
  * @brief Constructor
@@ -546,7 +538,7 @@ bool ActionExecutor::createBackup(const QString& filePath)
     bool success = QFile::copy(filePath, backupPath);
     if (success) {
         m_backups[filePath] = backupPath;
-        qDebug() << "[ActionExecutor] Backup created:" << backupPath;
+        qInfo() << "[ActionExecutor] Backup created:" << backupPath;
     }
 
     return success;

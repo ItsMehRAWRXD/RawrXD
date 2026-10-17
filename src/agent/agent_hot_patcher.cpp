@@ -1,11 +1,6 @@
 #include "agent_hot_patcher.hpp"
-#include <QDebug>
-#include <QDateTime>
-#include <QJsonArray>
-#include <QJsonValue>
-#include <QRegularExpression>
-#include <QFile>
-#include <QDir>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <algorithm>
 
 AgentHotPatcher::AgentHotPatcher(QObject* parent)

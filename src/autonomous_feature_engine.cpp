@@ -3,10 +3,8 @@
 #include "hybrid_cloud_manager.h"
 #include "intelligent_codebase_engine.h"
 #include "cpu_inference_engine.h" // Add include
-#include <QFile>
-#include <QTextStream>
-#include <QCryptographicHash>
-#include <QRegularExpression>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <iostream>
 #include <algorithm>
 

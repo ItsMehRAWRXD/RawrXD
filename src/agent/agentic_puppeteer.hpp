@@ -32,12 +32,10 @@ struct CorrectionResult {
 };
 
 // Base puppeteer for general response correction
-class AgenticPuppeteer : public QObject
+class AgenticPuppeteer : public NativeObject
 {
-    Q_OBJECT
-
 public:
-    explicit AgenticPuppeteer(QObject* parent = nullptr);
+    explicit AgenticPuppeteer(NativeObject* parent = nullptr);
     ~AgenticPuppeteer() override;
 
     // Main correction API

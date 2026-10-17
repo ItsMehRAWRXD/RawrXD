@@ -14,10 +14,7 @@
 #pragma once
 
 #include "qt_block.h"
-
-#include <QString>
-#include <QJsonObject>
-#include <QJsonArray>
+#include "core/qt_elimination.h"
 #include <QProcess>
 #include <memory>
 #include <vector>

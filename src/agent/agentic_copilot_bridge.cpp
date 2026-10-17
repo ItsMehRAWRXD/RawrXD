@@ -717,18 +717,12 @@ void AgenticCopilotBridge::onEditorContentChanged() {
     qDebug() << "[AgenticCopilotBridge]" << QDateTime::currentDateTime().toString(Qt::ISODate)
              << "Editor content changed";
     // Debounce rapid changes using a single-shot timer (300ms)
-    static QTimer* debounceTimer = nullptr;
-    if (!debounceTimer) {
-        debounceTimer = new QTimer(this);
-        debounceTimer->setSingleShot(true);
-        debounceTimer->setInterval(300);
-        QObject::connect(debounceTimer, &QTimer::timeout, this, [this]() {
-            qDebug() << "[AgenticCopilotBridge] Triggering background analysis after debounce";
-            QString analysis = analyzeActiveFile();
-            emit editorAnalysisReady(analysis);
-        });
-    }
-    debounceTimer->start();
+    static NativeTimer debounceTimer;
+    debounceTimer.start(300, true, [this]() {
+        qInfo() << "[AgenticCopilotBridge] Triggering background analysis after debounce";
+        QString analysis = analyzeActiveFile();
+        emit editorAnalysisReady(analysis);
+    });
 }
 
 void AgenticCopilotBridge::onTrainingProgress(int epoch, int totalEpochs, float loss, float perplexity) {
@@ -795,12 +789,18 @@ void AgenticCopilotBridge::onTrainingCompleted(const QString& modelPath, float f
 QString AgenticCopilotBridge::correctHallucinations(const QString& response, const QJsonObject& context) {
     QElapsedTimer timer;
     timer.start();
-    qDebug() << "[AgenticCopilotBridge]" << QDateTime::currentDateTime().toString(Qt::ISODate)
+    qInfo() << "[AgenticCopilotBridge]" << QDateTime::currentDateTime().toString(Qt::ISODate)
              << "Correcting hallucinations in response";
-    // Attempt to parse response as JSON; if not JSON, return unchanged
-    QJsonDocument respDoc = QJsonDocument::fromJson(response.toUtf8());
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeResp = NativeJson::fromJson(response.toStdString());
+    if (nativeResp.is_null() || !nativeResp.is_object()) {
+        qWarning() << "[AgenticCopilotBridge] Response not JSON, skipping correction";
+        return response;
+    }
+    // Convert to QJsonDocument for QT API compatibility in rest of function
+    QJsonDocument respDoc = QJsonDocument::fromJson(QString::fromStdString(NativeJson::toJson(nativeResp)).toUtf8());
     if (respDoc.isNull() || !respDoc.isObject()) {
-        qDebug() << "[AgenticCopilotBridge] Response not JSON, skipping correction";
+        qWarning() << "[AgenticCopilotBridge] Response not JSON, skipping correction";
         return response;
     }
     QJsonObject respObj = respDoc.object();
@@ -844,10 +844,10 @@ QString AgenticCopilotBridge::enforceResponseFormat(const QString& response, con
         
         if (format == "json") {
             // Try to parse as JSON, fix if needed
-            QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
-            if (!doc.isNull()) {
-                formatted = doc.toJson(QJsonDocument::Compact);
-                qDebug() << "[AgenticCopilotBridge] Successfully formatted response as JSON";
+            json nativeDoc = NativeJson::fromJson(response.toStdString());
+            if (!nativeDoc.is_null()) {
+                formatted = QString::fromStdString(NativeJson::toJson(nativeDoc));
+                qInfo() << "[AgenticCopilotBridge] Successfully formatted response as JSON";
             } else {
                 qWarning() << "[AgenticCopilotBridge] Response is not valid JSON, returning unchanged";
             }
