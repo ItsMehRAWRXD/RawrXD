@@ -67,10 +67,14 @@ bool AutoUpdate::checkAndInstall() {
         return false;
     }
 
-    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-    reply->deleteLater();  // Resource guard
-    
-    QJsonObject root = doc.object();
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeDoc = NativeJson::fromJson(reply->readAll().toStdString());
+    if (nativeDoc.is_null() || !nativeDoc.is_object()) {
+        logUpdateEvent("PARSE_FAILED", "Invalid JSON response", checkLatency);
+        reply->deleteLater();
+        return false;
+    }
+    QJsonObject root = QJsonDocument::fromJson(QString::fromStdString(NativeJson::toJson(nativeDoc)).toUtf8()).object();
     QString remoteVer = root["version"].toString();
     QString remoteURL = root["url"].toString();
     QString remoteSHA = root["sha256"].toString();
@@ -150,10 +154,9 @@ bool AutoUpdate::checkAndInstall() {
         f.close();
         logUpdateEvent("DOWNLOAD_COMPLETE", QString("Path: %1, Size: %2 bytes").arg(localPath).arg(data.size()), downloadLatency);
         
-        // PRODUCTION-READY: Safe restart with delay for graceful shutdown
-        logUpdateEvent("RESTART_SCHEDULED", QString("New version: %1, Delay: 3s").arg(remoteVer));
-        QStringList args = {"/C", "timeout", "/t", "3", "&&", localPath};
-        QProcess::startDetached("cmd.exe", args);
+        // Use native process execution instead of QProcess::startDetached stub
+        std::vector<std::string> args = {"/C", "timeout", "/t", "3", "&&", localPath.toStdString()};
+        NativeProcess::execute("cmd.exe", args, "", 5000);
         QCoreApplication::quit();
     });
 

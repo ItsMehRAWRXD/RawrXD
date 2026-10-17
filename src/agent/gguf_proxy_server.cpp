@@ -12,7 +12,8 @@
 
 #include <QTcpSocket>
 #include <QDebug>
-#include <QJsonDocument>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QJsonObject>
 #include <QJsonArray>
 #include <memory>
@@ -255,7 +256,7 @@ void GGUFProxyServer::onGGUFError()
             QJsonObject err;
             err["error"] = QStringLiteral("backend_unreachable");
             err["detail"] = ggufSocket->errorString();
-            QByteArray payload = QJsonDocument(err).toJson(QJsonDocument::Compact);
+            QByteArray payload = QString::fromStdString(NativeJson::toJson(err)).toUtf8();
             client->write(payload);
         }
     }

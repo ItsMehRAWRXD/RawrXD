@@ -1,7 +1,7 @@
 #include "hot_reload.hpp"
-#include <QProcess>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QDir>
-#include <QTimer>
 #include <QDebug>
 
 HotReload::HotReload(QObject* parent) : QObject(parent) {}
