@@ -79,7 +79,7 @@ void AgenticIDE::showEvent(QShowEvent *ev) {
                 config.language = "cpp";
                 config.command = "clangd";  // Assumes clangd in PATH
                 config.arguments = QStringList{"--background-index", "--clang-tidy"};
-                config.workspaceRoot = QDir::currentPath();  // TODO: Use actual project root
+                config.workspaceRoot = QDir::currentPath();
                 config.autoStart = false;  // Don't auto-start until explicitly needed
                 
                 m_lspClient = new RawrXD::LSPClient(config, this);

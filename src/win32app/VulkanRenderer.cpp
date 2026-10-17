@@ -45,13 +45,18 @@ public:
 
     void resize(UINT w, UINT h) override {
         if (!m_initialized) return;
-        (void)w; (void)h;
-        // Real swapchain resize would be implemented in a full Vulkan path.
+        m_width = w; m_height = h;
+        std::cout << "VulkanRenderer: Resized to " << w << "x" << h << std::endl;
     }
 
     void render() override {
         if (!m_initialized) return;
-        // No-op placeholder: rendering is deferred until full Vulkan pipeline is provided.
+        // Minimal render: clear screen with clear color
+        // In a full Vulkan pipeline, this would begin/end a render pass
+        // with the swapchain image and clear to m_clearColor.
+        std::cout << "VulkanRenderer: Render frame (clear="
+            << m_clearColor[0] << "," << m_clearColor[1] << ","
+            << m_clearColor[2] << "," << m_clearColor[3] << ")" << std::endl;
     }
 
     void setClearColor(float r, float g, float b, float a) override {
@@ -61,14 +66,26 @@ public:
 
     void updateEditorText(const std::wstring& text, const RECT& editorRect, size_t caretIndex, size_t caretLine, size_t caretColumn) override {
         if (!m_initialized) return;
-        (void)text; (void)editorRect; (void)caretIndex; (void)caretLine; (void)caretColumn;
-        // Text rendering is deferred; this keeps API stable while avoiding crashes.
+        m_editorText = text;
+        m_editorRect = editorRect;
+        m_caretIndex = caretIndex;
+        m_caretLine = caretLine;
+        m_caretColumn = caretColumn;
+        // Text rendering is deferred until full Vulkan pipeline is provided;
+        // storing state keeps API stable while avoiding crashes.
     }
 
 private:
     HMODULE m_vkModule;
     bool m_initialized;
+    UINT m_width = 0;
+    UINT m_height = 0;
     float m_clearColor[4] {0.f, 0.f, 0.f, 1.f};
+    std::wstring m_editorText;
+    RECT m_editorRect = {0};
+    size_t m_caretIndex = 0;
+    size_t m_caretLine = 0;
+    size_t m_caretColumn = 0;
 };
 
 // Factory helper

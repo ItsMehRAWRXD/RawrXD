@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <windows.h>
 
 DistributedTrainer::DistributedTrainer(QObject* parent)
     : QObject(parent)
@@ -222,13 +223,21 @@ bool DistributedTrainer::detectDevices()
         detectCUDADevices();
     }
 
-    // Always have CPU as fallback
+    // Always have CPU as fallback — detect real system memory
     DeviceInfo cpuDevice;
     cpuDevice.deviceId = -1;
     cpuDevice.deviceType = "cpu";
     cpuDevice.name = "CPU";
-    cpuDevice.totalMemory = 16ULL * 1024 * 1024 * 1024; // 16GB placeholder
-    cpuDevice.availableMemory = 8ULL * 1024 * 1024 * 1024;
+    // Detect real system memory via Windows GlobalMemoryStatusEx
+    MEMORYSTATUSEX memStatus = {0};
+    memStatus.dwLength = sizeof(MEMORYSTATUSEX);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        cpuDevice.totalMemory = memStatus.ullTotalPhys;
+        cpuDevice.availableMemory = memStatus.ullAvailPhys;
+    } else {
+        cpuDevice.totalMemory = 16ULL * 1024 * 1024 * 1024;
+        cpuDevice.availableMemory = 8ULL * 1024 * 1024 * 1024;
+    }
     cpuDevice.computeCapability = 0.0f;
     cpuDevice.currentLoad = 0.0f;
     cpuDevice.temperature = 0.0f;

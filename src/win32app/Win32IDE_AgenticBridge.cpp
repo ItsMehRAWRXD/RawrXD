@@ -8,6 +8,8 @@
 #include <sstream>
 #include <algorithm>
 #include <regex>
+#include <thread>
+#include <chrono>
 
 AgenticBridge::AgenticBridge(Win32IDE* ide)
     : m_ide(ide)
@@ -168,19 +170,206 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     return response;
 }
 
-// Deprecated Stubs
-bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const std::string& arguments) { return true; }
-bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs) { return true; }
-void AgenticBridge::KillPowerShellProcess() {}
-std::string AgenticBridge::ResolveFrameworkPath() { return ""; }
-std::string AgenticBridge::ResolveToolsModulePath() { return ""; }
-std::vector<std::string> AgenticBridge::GetAvailableTools() { return {}; }
-std::string AgenticBridge::GetAgentStatus() { return m_initialized ? "Ready (Native)" : "Not Initialized"; }
-void AgenticBridge::SetModel(const std::string& modelName) { m_modelName = modelName; }
-void AgenticBridge::SetOllamaServer(const std::string& serverUrl) { m_ollamaServer = serverUrl; }
-void AgenticBridge::SetOutputCallback(OutputCallback callback) { m_outputCallback = callback; }
-bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations) { return false; }
-void AgenticBridge::StopAgentLoop() {}
-AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) { return {}; }
-bool AgenticBridge::IsToolCall(const std::string& line) { return false; }
-bool AgenticBridge::IsAnswer(const std::string& line) { return true; }
+// Deprecated Stubs — replaced with real implementations
+bool AgenticBridge::SpawnPowerShellProcess(const std::string& scriptPath, const std::string& arguments) {
+    LOG_INFO("SpawnPowerShellProcess: " + scriptPath + " " + arguments);
+    
+    // Kill any existing process first
+    KillPowerShellProcess();
+    
+    // Build command line
+    std::string cmdLine = "powershell.exe -ExecutionPolicy Bypass -File \"" + scriptPath + "\"";
+    if (!arguments.empty()) {
+        cmdLine += " " + arguments;
+    }
+    
+    // Set up pipes for stdout
+    SECURITY_ATTRIBUTES saAttr = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+    if (!CreatePipe(&m_hStdoutRead, &m_hStdoutWrite, &saAttr, 0)) {
+        LOG_ERROR("SpawnPowerShellProcess: CreatePipe failed");
+        return false;
+    }
+    if (!SetHandleInformation(m_hStdoutRead, HANDLE_FLAG_INHERIT, 0)) {
+        LOG_ERROR("SpawnPowerShellProcess: SetHandleInformation failed");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        m_hStdoutRead = m_hStdoutWrite = nullptr;
+        return false;
+    }
+    
+    // Set up pipe for stdin
+    if (!CreatePipe(&m_hStdinRead, &m_hStdinWrite, &saAttr, 0)) {
+        LOG_ERROR("SpawnPowerShellProcess: CreatePipe(stdin) failed");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        m_hStdoutRead = m_hStdoutWrite = nullptr;
+        return false;
+    }
+    if (!SetHandleInformation(m_hStdinWrite, HANDLE_FLAG_INHERIT, 0)) {
+        LOG_ERROR("SpawnPowerShellProcess: SetHandleInformation(stdin) failed");
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        CloseHandle(m_hStdinRead);
+        CloseHandle(m_hStdinWrite);
+        m_hStdoutRead = m_hStdoutWrite = m_hStdinRead = m_hStdinWrite = nullptr;
+        return false;
+    }
+    
+    PROCESS_INFORMATION piProcInfo = {0};
+    STARTUPINFOW siStartInfo = {0};
+    siStartInfo.cb = sizeof(STARTUPINFO);
+    siStartInfo.hStdError = m_hStdoutWrite;
+    siStartInfo.hStdOutput = m_hStdoutWrite;
+    siStartInfo.hStdInput = m_hStdinRead;
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+    
+    std::wstring wcmdLine(cmdLine.begin(), cmdLine.end());
+    
+    BOOL success = CreateProcessW(
+        NULL,               // No module name (use command line)
+        &wcmdLine[0],       // Command line
+        NULL,               // Process handle not inheritable
+        NULL,               // Thread handle not inheritable
+        TRUE,               // Set handle inheritance to TRUE
+        CREATE_NO_WINDOW,   // No window
+        NULL,               // Use parent's environment block
+        NULL,               // Use parent's starting directory
+        &siStartInfo,       // Pointer to STARTUPINFO
+        &piProcInfo         // Pointer to PROCESS_INFORMATION
+    );
+    
+    if (!success) {
+        LOG_ERROR("SpawnPowerShellProcess: CreateProcessW failed: " + std::to_string(GetLastError()));
+        CloseHandle(m_hStdoutRead);
+        CloseHandle(m_hStdoutWrite);
+        CloseHandle(m_hStdinRead);
+        CloseHandle(m_hStdinWrite);
+        m_hStdoutRead = m_hStdoutWrite = m_hStdinRead = m_hStdinWrite = nullptr;
+        return false;
+    }
+    
+    m_hProcess = piProcInfo.hProcess;
+    CloseHandle(piProcInfo.hThread);
+    
+    LOG_INFO("SpawnPowerShellProcess: Process started (PID=" + std::to_string(GetProcessId(m_hProcess)) + ")");
+    return true;
+}
+
+bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs) {
+    if (!m_hStdoutRead) return false;
+    
+    output.clear();
+    CHAR buffer[4096];
+    DWORD bytesRead = 0;
+    
+    // Read available output with timeout
+    BOOL result = ReadFile(m_hStdoutRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL);
+    if (result && bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        output = buffer;
+        return true;
+    }
+    
+    return false;
+}
+
+void AgenticBridge::KillPowerShellProcess() {
+    if (m_hProcess) {
+        TerminateProcess(m_hProcess, 1);
+        CloseHandle(m_hProcess);
+        m_hProcess = nullptr;
+    }
+    if (m_hStdoutRead) { CloseHandle(m_hStdoutRead); m_hStdoutRead = nullptr; }
+    if (m_hStdoutWrite) { CloseHandle(m_hStdoutWrite); m_hStdoutWrite = nullptr; }
+    if (m_hStdinRead) { CloseHandle(m_hStdinRead); m_hStdinRead = nullptr; }
+    if (m_hStdinWrite) { CloseHandle(m_hStdinWrite); m_hStdinWrite = nullptr; }
+}
+
+std::string AgenticBridge::ResolveFrameworkPath() {
+    // Return the directory containing the executable
+    char path[MAX_PATH];
+    if (GetModuleFileNameA(NULL, path, MAX_PATH) > 0) {
+        std::string fullPath(path);
+        size_t pos = fullPath.find_last_of("\\/");
+        if (pos != std::string::npos) {
+            return fullPath.substr(0, pos);
+        }
+    }
+    return ".";
+}
+
+std::string AgenticBridge::ResolveToolsModulePath() {
+    std::string frameworkPath = ResolveFrameworkPath();
+    return frameworkPath + "\\tools";
+}
+
+std::vector<std::string> AgenticBridge::GetAvailableTools() {
+    std::vector<std::string> tools = {
+        "list_dir", "read_file", "write_file", "run_command", "search_text"
+    };
+    return tools;
+}
+
+std::string AgenticBridge::GetAgentStatus() {
+    if (!m_initialized) return "Not Initialized";
+    if (m_agentLoopRunning) return "Running (Native)";
+    if (m_hProcess) return "Process Active";
+    return "Ready (Native)";
+}
+
+void AgenticBridge::SetModel(const std::string& modelName) {
+    m_modelName = modelName;
+}
+
+void AgenticBridge::SetOllamaServer(const std::string& serverUrl) {
+    m_ollamaServer = serverUrl;
+}
+
+void AgenticBridge::SetOutputCallback(OutputCallback callback) {
+    m_outputCallback = callback;
+}
+
+bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations) {
+    if (!m_initialized || !m_nativeAgent) return false;
+    if (m_agentLoopRunning) return true;
+    
+    m_agentLoopRunning = true;
+    m_agentThread = std::thread([this, initialPrompt, maxIterations]() {
+        int iteration = 0;
+        while (m_agentLoopRunning && iteration < maxIterations) {
+            // Process one agent iteration
+            m_nativeAgent->Ask(initialPrompt);
+            ++iteration;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        m_agentLoopRunning = false;
+    });
+    m_agentThread.detach();
+    
+    return true;
+}
+
+void AgenticBridge::StopAgentLoop() {
+    m_agentLoopRunning = false;
+}
+
+AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
+    AgentResponse response;
+    response.type = AgentResponseType::ANSWER;
+    response.content = rawOutput;
+    
+    // Simple heuristic: if output starts with "TOOL:", treat as tool call
+    if (rawOutput.rfind("TOOL:", 0) == 0) {
+        response.type = AgentResponseType::TOOL_CALL;
+        response.content = rawOutput.substr(5);
+    }
+    return response;
+}
+
+bool AgenticBridge::IsToolCall(const std::string& line) {
+    return line.rfind("TOOL:", 0) == 0 || line.rfind("tool:", 0) == 0;
+}
+
+bool AgenticBridge::IsAnswer(const std::string& line) {
+    return !IsToolCall(line) && !line.empty();
+}

@@ -11,6 +11,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <thread>
 #include "../native_agent.hpp"
 #include "../cpu_inference_engine.h"
 
@@ -99,4 +100,5 @@ private:
     HANDLE m_hStdinWrite;
     
     OutputCallback m_outputCallback;
+    std::thread m_agentThread;
 };
