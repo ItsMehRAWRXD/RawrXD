@@ -264,7 +264,7 @@ else()
 endif()
 
 # Build options
-option(RAWRXD_BUILD_WIN32IDE "Build the native (Qt-free) Win32 IDE target" OFF)
+option(RAWRXD_BUILD_WIN32IDE "Build the native (Qt-free) Win32 IDE target" ON)
 option(RAWRXD_BUILD_WIN32IDE_QT "Build the legacy Qt-dependent Win32IDE target" OFF)
 option(RAWRXD_BUILD_BENCHMARKS "Build benchmark executables" OFF)
 option(RAWRXD_BUILD_TESTS "Build unit-test harnesses" OFF)
@@ -2857,6 +2857,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
             # Agent ESP telemetry
             ${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp
+            # deep2_snap (deep2_snap.hpp, snap_process_guard.hpp) used by Win32IDE_Deep2Bridge.cpp
+            ${CMAKE_SOURCE_DIR}/tools/deep2_snap/deep2_snap
+            ${CMAKE_SOURCE_DIR}/tools/snap_process_guard
             # gguf_loader.h includes vulkan_compute.h -> vulkan/vulkan.h, so the
             # Vulkan SDK include path is required even when GPU compute is off.
             ${Vulkan_INCLUDE_DIRS}
@@ -2920,12 +2923,18 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
                 ${CMAKE_SOURCE_DIR}/src/production
             )
             message(STATUS "RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening")
-        else()
-            message(WARNING "RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the IDE will start without hardening")
         endif()
+        if(TARGET rawrxd_security)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
+                rawrxd_security
+            )
+            message(STATUS "RawrXD-Win32IDE-Native: linked against rawrxd_security")
+        endif()
+            message(WARNING "RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the IDE will start without hardening")
         set_target_properties(RawrXD-Win32IDE-Native PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE
+            LINK_FLAGS "/FORCE:MULTIPLE /FORCE"
         )
         # The CPU executor's row_geom()/row_dot()/dequant_all() read block size,
         # type size and the to_float converter from ggml's authoritative type
@@ -2943,6 +2952,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_DEEP2_ENGINE=1)
         endif()
         message(STATUS "RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled")
+        target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_security)
     else()
         list(APPEND RAWRXD_QT_TARGETS RawrXD-Win32IDE-Native)
         message(STATUS "RawrXD-Win32IDE-Native EXCLUDED: Win32 IDE sources absent from this tree")

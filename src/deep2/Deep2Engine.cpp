@@ -8428,8 +8428,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     const size_t ssmInCols = lw.ssmIn.cols;   // hiddenDim
     const size_t ssmOutRows = lw.ssmOut.rows; // hiddenDim
     const size_t ssmOutCols = lw.ssmOut.cols; // d_inner
-    const size_t convRows = lw.ssmConv1d.cols;   // d_conv (kernel size — GGUF dim[1])
-    const size_t convCols = lw.ssmConv1d.rows;   // d_conv_dim — GGUF dim[0]
+    const size_t convRows = lw.ssmConv1d.cols;   // d_conv (kernel size — GGUF dim[0] → WeightTensor.cols)
+    const size_t convCols = lw.ssmConv1d.rows;   // d_conv_dim — GGUF dim[1] → WeightTensor.rows
 
     if (ssmInCols != hiddenDim || ssmOutCols == 0 || convCols == 0 || convRows == 0 ||
         ssmInRows < ssmOutCols + convCols)
@@ -8497,15 +8497,29 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         ssmMambaConvState = alignedAlloc(modelWeights.numLayers * dConv * dConvDim);
         memset(ssmMambaConvState, 0, modelWeights.numLayers * dConv * dConvDim * sizeof(float));
     }
-    if (!ssmY)
+    // Scratch buffers ssmY/ssmTemp must be sized for Mamba-2:
+    //   ssmY holds convOut split into x[d_inner] + B[groups*groupState] + C[groups*groupState]
+    //      → needs dInner + 2 * groups * groupState floats
+    //   ssmTemp holds yInner[d_inner] → needs dInner floats
+    // The constructor pre-allocates with hiddenSize (4096), which is too small
+    // for layers with dConvDim=10240 / dInner=8192. Track capacity and reallocate.
+    static size_t ssmYCapacity = 0;
+    static size_t ssmTempCapacity = 0;
+
+    const size_t ssmYNeeded = dInner + 2 * groups * groupState;
+    if (!ssmY || ssmYCapacity < std::max(dConvDim, ssmYNeeded))
     {
-        ssmY = alignedAlloc(std::max(dConvDim, dInner));
-        memset(ssmY, 0, std::max(dConvDim, dInner) * sizeof(float));
+        if (ssmY) alignedFree(ssmY);
+        ssmY = alignedAlloc(std::max(dConvDim, ssmYNeeded));
+        ssmYCapacity = std::max(dConvDim, ssmYNeeded);
+        if (ssmY) memset(ssmY, 0, ssmYCapacity * sizeof(float));
     }
-    if (!ssmTemp)
+    if (!ssmTemp || ssmTempCapacity < dInner)
     {
-        ssmTemp = alignedAlloc(std::max(dConvDim, dInner));
-        memset(ssmTemp, 0, std::max(dConvDim, dInner) * sizeof(float));
+        if (ssmTemp) alignedFree(ssmTemp);
+        ssmTemp = alignedAlloc(dInner);
+        ssmTempCapacity = dInner;
+        if (ssmTemp) memset(ssmTemp, 0, ssmTempCapacity * sizeof(float));
     }
     if (!ssmMambaState)
     {
