@@ -982,9 +982,126 @@ bool LLMHttpClient::isTokenExpired() const {
 }
 
 bool LLMHttpClient::refreshOAuth2Token() {
-    // Placeholder for OAuth2 token refresh
-    std::cout << "[LLMHttpClient] OAuth2 token refresh not yet implemented" << std::endl;
-    return false;
+    // Real OAuth2 token refresh using client credentials or refresh token grant
+    if (m_credentials.type != AuthType::OAUTH2) {
+        std::cerr << "[LLMHttpClient] OAuth2 refresh called but auth type is not OAUTH2"
+                  << std::endl;
+        return false;
+    }
+
+    if (m_credentials.oauthTokenUrl.empty()) {
+        std::cerr << "[LLMHttpClient] No OAuth2 token URL configured" << std::endl;
+        return false;
+    }
+
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "[LLMHttpClient] Failed to initialize CURL for OAuth2 refresh"
+                  << std::endl;
+        return false;
+    }
+
+    bool success = false;
+    try {
+        // Build form data for token refresh
+        std::string postData;
+        if (!m_credentials.refreshToken.empty() && m_credentials.clientId.empty()) {
+            // Refresh token grant
+            postData = "grant_type=refresh_token&refresh_token=" + urlEncode(m_credentials.refreshToken);
+        } else if (!m_credentials.clientId.empty() && !m_credentials.clientSecret.empty()) {
+            // Client credentials grant
+            postData = "grant_type=client_credentials&client_id=" + urlEncode(m_credentials.clientId) +
+                       "&client_secret=" + urlEncode(m_credentials.clientSecret);
+        } else {
+            std::cerr << "[LLMHttpClient] Insufficient OAuth2 credentials for refresh"
+                      << std::endl;
+            curl_easy_cleanup(curl);
+            return false;
+        }
+
+        // Setup request
+        curl_easy_setopt(curl, CURLOPT_URL, m_credentials.oauthTokenUrl.c_str());
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData.c_str());
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)m_config.timeoutMs);
+
+        // Headers
+        struct curl_slist* headers = nullptr;
+        headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        // SSL options
+        if (!m_config.validateSSL) {
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        }
+
+        // Capture response
+        CurlWriteContext writeContext;
+        writeContext.client = this;
+        writeContext.backend = m_backend;
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeContext);
+
+        // Perform request
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "[LLMHttpClient] OAuth2 refresh curl error: "
+                      << curl_easy_strerror(res) << std::endl;
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+            return false;
+        }
+
+        // Get response code
+        long responseCode = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+
+        if (responseCode != 200) {
+            std::cerr << "[LLMHttpClient] OAuth2 refresh returned HTTP " << responseCode
+                      << ": " << writeContext.data << std::endl;
+            return false;
+        }
+
+        // Parse JSON response
+        try {
+            json tokenResp = json::parse(writeContext.data);
+
+            if (tokenResp.contains("access_token")) {
+                m_credentials.token = tokenResp["access_token"].get<std::string>();
+
+                // Update expiry: use expires_in if provided, otherwise default to 1 hour
+                int64_t expiresIn = 3600; // default 1 hour
+                if (tokenResp.contains("expires_in")) {
+                    expiresIn = tokenResp["expires_in"].get<int64_t>();
+                }
+
+                int64_t now = getCurrentTimestampMs();
+                m_credentials.tokenExpiresAt = now + (expiresIn * 1000) - (5 * 60 * 1000); // 5 min buffer
+
+                std::cout << "[LLMHttpClient] OAuth2 token refreshed successfully, expires in "
+                          << expiresIn << " seconds" << std::endl;
+                success = true;
+            } else {
+                std::cerr << "[LLMHttpClient] OAuth2 response missing access_token: "
+                          << writeContext.data << std::endl;
+            }
+        } catch (const json::parse_error& e) {
+            std::cerr << "[LLMHttpClient] Failed to parse OAuth2 response: " << e.what()
+                      << std::endl;
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "[LLMHttpClient] OAuth2 refresh exception: " << e.what() << std::endl;
+        curl_easy_cleanup(curl);
+        return false;
+    }
+
+    return success;
 }
 
 std::vector<std::string> LLMHttpClient::splitSSELines(const std::string& data) {

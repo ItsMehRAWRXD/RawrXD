@@ -105,8 +105,26 @@ bool ApplyGpuClockOffsetMhz(int offset) {
     }
     // If AMD SMI is present, a limited command may be possible; nvidia-smi can also set clocks on NVIDIA GPUs.
     if (ExistsOne({"C:/Windows/System32/nvidia-smi.exe", "nvidia-smi"})) {
-        // We don't apply a direct offset using nvidia-smi here; it's a noop for now with a log.
-        std::cout << "[vendor] NVIDIA SMI present - clock offset application not implemented" << std::endl;
+        // nvidia-smi supports locking graphics clock: nvidia-smi -lgc <mhz>
+        // or setting application clocks: nvidia-smi -ac <mem_mhz>,<graphics_mhz>
+        std::string cmd = "nvidia-smi -lgc " + std::to_string(offset);
+        FILE* pipe = _popen(cmd.c_str(), "r");
+        if (!pipe) {
+            std::lock_guard<std::mutex> guard(g_lock);
+            g_lastError = "failed_to_execute_nvidia_smi";
+            return false;
+        }
+        std::array<char, 256> buf{};
+        std::string out;
+        while (fgets(buf.data(), (int)buf.size(), pipe)) out += buf.data();
+        int rc = _pclose(pipe);
+        if (rc != 0) {
+            std::lock_guard<std::mutex> guard(g_lock);
+            g_lastError = "nvidia_smi_failed:" + std::to_string(rc);
+            std::cerr << out;
+            return false;
+        }
+        { std::lock_guard<std::mutex> guard(g_lock); g_lastError.clear(); }
         return true;
     }
     if (ExistsOne({"C:/Windows/System32/amd-smi.exe", "C:/Program Files/AMD/amd-smi.exe", "amd-smi"})) {

@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <sstream>
+#include <thread>
+#include "deep2/Deep2InferenceService.hpp"
 
 // Forward declaration - would be replaced with actual InferenceEngine integration
 // extern InferenceEngine* g_inferenceEngine;
@@ -315,52 +318,60 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::generateCompletionsWithMod
         // m_logger->info("Generated {} completions", completions.size());
         // m_metrics->recordHistogram("completions_per_call", completions.size());
 
-        // TEMPORARY: Until InferenceEngine is wired, return realistic mock data
-        // This demonstrates the structure and flow of real completions
-        
-        m_logger->warn("Using mock completions - InferenceEngine not yet integrated");
+        // Real completions via Deep2InferenceService
+        if (!RawrXD::Deep2InferenceService::instance().isInitialized()) {
+            Deep2::EngineConfig cfg;
+            cfg.numThreads = std::thread::hardware_concurrency();
+            cfg.useKVCache = true;
+            cfg.useThreadPool = true;
+            if (!RawrXD::Deep2InferenceService::instance().initialize(cfg)) {
+                m_logger->error("Failed to initialize Deep2 inference service");
+                return {};
+            }
+        }
 
-        // These would be REAL completions from the model
-        CodeCompletion completion1;
-        completion1.text = "push_back(item);";
-        completion1.detail = "Add element to vector";
-        completion1.confidence = 0.94;
-        completion1.kind = "method";
-        completion1.insertTextLength = 16;
-        completion1.cursorOffset = 10;
-        completions.push_back(completion1);
+        const char* modelPathEnv = std::getenv("RAWRXD_MODEL_PATH");
+        if (modelPathEnv && !std::string(modelPathEnv).empty() &&
+            !RawrXD::Deep2InferenceService::instance().isModelLoaded()) {
+            RawrXD::Deep2InferenceService::instance().loadModel(modelPathEnv);
+        }
 
-        CodeCompletion completion2;
-        completion2.text = "size()";
-        completion2.detail = "Get vector size";
-        completion2.confidence = 0.91;
-        completion2.kind = "method";
-        completion2.insertTextLength = 6;
-        completion2.cursorOffset = 5;
-        completions.push_back(completion2);
+        if (!RawrXD::Deep2InferenceService::instance().isModelLoaded()) {
+            m_logger->warn("No model loaded - returning empty completions");
+            return {};
+        }
 
-        CodeCompletion completion3;
-        completion3.text = "empty()";
-        completion3.detail = "Check if vector is empty";
-        completion3.confidence = 0.88;
-        completion3.kind = "method";
-        completion3.insertTextLength = 7;
-        completion3.cursorOffset = 6;
-        completions.push_back(completion3);
+        std::string prompt = buildCompletionPrompt(prefix, suffix, context);
+        std::string modelOutput = RawrXD::Deep2InferenceService::instance().generateText(prompt, 64);
 
-        CodeCompletion completion4;
-        completion4.text = "clear();";
-        completion4.detail = "Remove all elements from vector";
-        completion4.confidence = 0.85;
-        completion4.kind = "method";
-        completion4.insertTextLength = 8;
-        completion4.cursorOffset = 5;
-        completions.push_back(completion4);
+        if (modelOutput.empty()) {
+            m_logger->warn("Model returned empty output");
+            return {};
+        }
+
+        auto parsedCompletions = postProcessCompletions(modelOutput, prefix);
+        for (auto& comp : parsedCompletions) {
+            comp.confidence = calculateConfidence(comp.text, context);
+            completions.push_back(comp);
+        }
+
+        // Sort by confidence
+        std::sort(completions.begin(), completions.end(),
+                 [](const CodeCompletion& a, const CodeCompletion& b) {
+                     return a.confidence > b.confidence;
+                 });
+
+        // Limit to max completions
+        if (completions.size() > static_cast<size_t>(m_maxCompletions)) {
+            completions.resize(m_maxCompletions);
+        }
 
         m_logger->info("Generated {} completions", completions.size());
         m_metrics->recordHistogram("completions_per_call", completions.size());
-        m_metrics->recordHistogram("completion_confidence", 
-                                  completions[0].confidence * 100);
+        if (!completions.empty()) {
+            m_metrics->recordHistogram("completion_confidence",
+                                      static_cast<double>(completions[0].confidence * 100));
+        }
 
         return completions;
 
@@ -401,16 +412,35 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::postProcessCompletions(
 
     std::vector<CodeCompletion> processed;
 
-    // Filter and rank completions based on:
-    // - Syntax validity
-    // - Relevance to context
-    // - Popularity patterns
-    // - Confidence score
+    // Parse model output line by line into CodeCompletion objects
+    std::istringstream iss(modelOutput);
+    std::string line;
+    while (std::getline(iss, line)) {
+        // Trim whitespace
+        size_t start = line.find_first_not_of(" \t\r\n");
+        size_t end = line.find_last_not_of(" \t\r\n");
+        if (start == std::string::npos) continue;
+        std::string trimmed = line.substr(start, end - start + 1);
 
-    // Keep only completions above minimum confidence threshold
-    for (const auto& completion : processed) {
-        if (completion.confidence >= (m_minConfidence / 100.0)) {
-            processed.push_back(completion);
+        // Skip empty lines and comments
+        if (trimmed.empty() || trimmed[0] == '/') continue;
+
+        // Skip lines that look like the original prefix
+        if (trimmed == prefix) continue;
+
+        CodeCompletion comp;
+        comp.text = trimmed;
+        comp.detail = "Generated completion: " + trimmed.substr(0, std::min(trimmed.size(), size_t(30)));
+        comp.kind = "text";
+        comp.insertTextLength = static_cast<int>(trimmed.size());
+        comp.cursorOffset = 0;
+
+        // Calculate confidence
+        comp.confidence = calculateConfidence(comp.text, prefix);
+
+        // Only keep completions above minimum threshold
+        if (comp.confidence >= (m_minConfidence / 100.0)) {
+            processed.push_back(comp);
         }
     }
 

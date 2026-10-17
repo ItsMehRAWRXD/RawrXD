@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <nlohmann/json.hpp>
 
 UniversalModelRouter::UniversalModelRouter()
     : local_engine_ready(false),
@@ -100,9 +101,52 @@ bool UniversalModelRouter::loadConfigFromFile(const std::string& config_file_pat
 }
 
 bool UniversalModelRouter::saveConfigToFile(const std::string& config_file_path) {
-    // Not implemented for pure native version - configs come from environment
-    std::cerr << "[router] saveConfigToFile not implemented in native build" << std::endl;
-    return false;
+    using json = nlohmann::json;
+
+    try {
+        json config;
+
+        // Serialize all registered models
+        json models = json::array();
+        for (const auto& [name, cfg] : model_registry) {
+            json modelEntry;
+            modelEntry["name"] = name;
+            modelEntry["backend"] = static_cast<int>(cfg.backend);
+            modelEntry["model_id"] = cfg.model_id;
+            modelEntry["api_key"] = cfg.api_key;
+            modelEntry["endpoint"] = cfg.endpoint;
+            modelEntry["description"] = cfg.description;
+
+            // Serialize parameters map
+            json params = json::object();
+            for (const auto& [k, v] : cfg.parameters) {
+                params[k] = v;
+            }
+            modelEntry["parameters"] = params;
+
+            models.push_back(modelEntry);
+        }
+        config["models"] = models;
+
+        // Write to file
+        std::ofstream file(config_file_path, std::ios::binary | std::ios::trunc);
+        if (!file.is_open()) {
+            std::cerr << "[router] Cannot open config file for writing: "
+                      << config_file_path << std::endl;
+            return false;
+        }
+
+        file << config.dump(2);  // Pretty-print with 2-space indentation
+        file.close();
+
+        std::cout << "[router] Saved " << model_registry.size()
+                  << " model configs to: " << config_file_path << std::endl;
+        return true;
+
+    } catch (const std::exception& e) {
+        std::cerr << "[router] Failed to save config: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void UniversalModelRouter::initializeLocalEngine() {

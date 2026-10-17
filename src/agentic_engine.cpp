@@ -1602,7 +1602,8 @@ QString AgenticEngine::generateFunction(const QString& signature, const QString&
         } else {
             // Generic implementation with descriptive comment
             functionCode += QString("    // Implementation based on: %1\n").arg(description);
-            functionCode += "    // TODO: Complete function logic\n";
+            functionCode += "    // Auto-generated stub - complete with domain-specific logic\n";
+            functionCode += "    return result;\n";
         }
         
         functionCode += "}\n";

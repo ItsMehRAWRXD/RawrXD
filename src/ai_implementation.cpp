@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <nlohmann/json.hpp>
 
 AIImplementation::AIImplementation(
     std::shared_ptr<Logger> logger,
@@ -29,22 +30,171 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
     CompletionResponse response;
 
     try {
+        using json = nlohmann::json;
+
         if (m_config.backend == "ollama") {
-            // Build Ollama request (simplified)
-            std::string ollamaBody = "{\"model\":\"" + m_config.modelName + "\",\"prompt\":\"" + request.prompt + "\",\"stream\":false}";
+            // Build Ollama request
+            json ollamaBody;
+            ollamaBody["model"] = m_config.modelName;
+            ollamaBody["prompt"] = request.prompt;
+            ollamaBody["stream"] = false;
+            ollamaBody["options"] = json::object();
+            ollamaBody["options"]["temperature"] = m_config.temperature;
+            ollamaBody["options"]["top_p"] = m_config.topP;
+            ollamaBody["options"]["top_k"] = m_config.topK;
+            ollamaBody["options"]["num_predict"] = m_config.maxTokens;
+
+            if (!request.messages.empty()) {
+                json messages = json::array();
+                for (const auto& [role, content] : request.messages) {
+                    json msg;
+                    msg["role"] = role;
+                    msg["content"] = content;
+                    messages.push_back(msg);
+                }
+                ollamaBody["messages"] = messages;
+            }
 
             HTTPRequest httpReq;
             httpReq.method = "POST";
             httpReq.url = m_config.endpoint + "/api/generate";
-            httpReq.body = ollamaBody;
+            httpReq.body = ollamaBody.dump();
             httpReq.headers.push_back({"Content-Type", "application/json"});
+            httpReq.timeoutSeconds = m_config.maxTokens / 10 + 30; // Estimate based on tokens
 
             auto httpResp = m_httpClient->sendRequest(httpReq);
 
             if (httpResp.success) {
-                response.completion = "AI response from Ollama backend";
-                response.totalTokens = 100;
-                response.success = true;
+                try {
+                    json respJson = json::parse(httpResp.body);
+                    response.completion = respJson.value("response", std::string(""));
+                    response.totalTokens = respJson.value("eval_count", 0);
+                    response.promptTokens = respJson.value("prompt_eval_count", 0);
+                    response.completionTokens = respJson.value("eval_count", 0);
+                    response.success = true;
+                } catch (const json::parse_error& e) {
+                    response.success = false;
+                    response.errorMessage = "Failed to parse Ollama response: " + std::string(e.what());
+                }
+            } else {
+                response.success = false;
+                response.errorMessage = httpResp.errorMessage;
+            }
+        } else if (m_config.backend == "openai") {
+            // Build OpenAI chat completion request
+            json openaiBody;
+            openaiBody["model"] = m_config.modelName;
+            openaiBody["temperature"] = m_config.temperature;
+            openaiBody["top_p"] = m_config.topP;
+            openaiBody["max_tokens"] = m_config.maxTokens;
+            openaiBody["stream"] = false;
+
+            json messages = json::array();
+            if (!request.messages.empty()) {
+                for (const auto& [role, content] : request.messages) {
+                    json msg;
+                    msg["role"] = role;
+                    msg["content"] = content;
+                    messages.push_back(msg);
+                }
+            } else {
+                json sysMsg;
+                sysMsg["role"] = "system";
+                sysMsg["content"] = "You are a helpful assistant.";
+                messages.push_back(sysMsg);
+                json userMsg;
+                userMsg["role"] = "user";
+                userMsg["content"] = request.prompt;
+                messages.push_back(userMsg);
+            }
+            openaiBody["messages"] = messages;
+
+            HTTPRequest httpReq;
+            httpReq.method = "POST";
+            httpReq.url = m_config.endpoint + "/v1/chat/completions";
+            httpReq.body = openaiBody.dump();
+            httpReq.headers.push_back({"Content-Type", "application/json"});
+            if (!m_config.apiKey.empty()) {
+                httpReq.headers.push_back({"Authorization", "Bearer " + m_config.apiKey});
+            }
+            httpReq.timeoutSeconds = m_config.maxTokens / 10 + 30;
+
+            auto httpResp = m_httpClient->sendRequest(httpReq);
+
+            if (httpResp.success) {
+                try {
+                    json respJson = json::parse(httpResp.body);
+                    if (respJson.contains("choices") && respJson["choices"].is_array() &&
+                        !respJson["choices"].empty()) {
+                        response.completion = respJson["choices"][0].value("message", json::object()).value("content", std::string(""));
+                    }
+                    if (respJson.contains("usage")) {
+                        response.totalTokens = respJson["usage"].value("total_tokens", 0);
+                        response.promptTokens = respJson["usage"].value("prompt_tokens", 0);
+                        response.completionTokens = respJson["usage"].value("completion_tokens", 0);
+                    }
+                    response.success = true;
+                } catch (const json::parse_error& e) {
+                    response.success = false;
+                    response.errorMessage = "Failed to parse OpenAI response: " + std::string(e.what());
+                }
+            } else {
+                response.success = false;
+                response.errorMessage = httpResp.errorMessage;
+            }
+        } else if (m_config.backend == "anthropic") {
+            // Build Anthropic Messages API request
+            json anthropicBody;
+            anthropicBody["model"] = m_config.modelName;
+            anthropicBody["temperature"] = m_config.temperature;
+            anthropicBody["top_p"] = m_config.topP;
+            anthropicBody["max_tokens"] = m_config.maxTokens;
+
+            json messages = json::array();
+            if (!request.messages.empty()) {
+                for (const auto& [role, content] : request.messages) {
+                    json msg;
+                    msg["role"] = role;
+                    msg["content"] = content;
+                    messages.push_back(msg);
+                }
+            } else {
+                json userMsg;
+                userMsg["role"] = "user";
+                userMsg["content"] = request.prompt;
+                messages.push_back(userMsg);
+            }
+            anthropicBody["messages"] = messages;
+
+            HTTPRequest httpReq;
+            httpReq.method = "POST";
+            httpReq.url = m_config.endpoint + "/v1/messages";
+            httpReq.body = anthropicBody.dump();
+            httpReq.headers.push_back({"Content-Type", "application/json"});
+            httpReq.headers.push_back({"x-api-key", m_config.apiKey});
+            httpReq.headers.push_back({"anthropic-version", "2023-06-01"});
+            httpReq.timeoutSeconds = m_config.maxTokens / 10 + 30;
+
+            auto httpResp = m_httpClient->sendRequest(httpReq);
+
+            if (httpResp.success) {
+                try {
+                    json respJson = json::parse(httpResp.body);
+                    if (respJson.contains("content") && respJson["content"].is_array() &&
+                        !respJson["content"].empty()) {
+                        response.completion = respJson["content"][0].value("text", std::string(""));
+                    }
+                    if (respJson.contains("usage")) {
+                        response.totalTokens = respJson["usage"].value("output_tokens", 0) +
+                                                respJson["usage"].value("input_tokens", 0);
+                        response.promptTokens = respJson["usage"].value("input_tokens", 0);
+                        response.completionTokens = respJson["usage"].value("output_tokens", 0);
+                    }
+                    response.success = true;
+                } catch (const json::parse_error& e) {
+                    response.success = false;
+                    response.errorMessage = "Failed to parse Anthropic response: " + std::string(e.what());
+                }
             } else {
                 response.success = false;
                 response.errorMessage = httpResp.errorMessage;
@@ -70,7 +220,7 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
         }
 
         if (m_logger && response.success) {
-            m_logger->info("AIImplementation", 
+            m_logger->info("AIImplementation",
                 "Completion successful: " + std::to_string(response.latencyMs) + "ms, " +
                 std::to_string(response.totalTokens) + " tokens");
         }
