@@ -413,8 +413,12 @@ QJsonArray AgenticIterativeReasoning::extractStructuredResponse(const QString& m
 
     if (match.hasMatch()) {
         QString jsonStr = match.captured(0);
-        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
-        if (doc.isArray()) {
+        // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+        json nativeDoc = NativeJson::fromJson(jsonStr.toStdString());
+        if (nativeDoc.is_array()) {
+            // Round-trip through string to get QJsonArray for QT API compatibility
+            QString jsonStr2 = QString::fromStdString(NativeJson::toJson(nativeDoc));
+            QJsonDocument doc = QJsonDocument::fromJson(jsonStr2.toUtf8());
             result = doc.array();
         }
     }
