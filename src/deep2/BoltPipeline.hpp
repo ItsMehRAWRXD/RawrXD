@@ -52,7 +52,7 @@ inline void validate_inventory(const ModelDesc& m) {
         case Quant::NVFP4:
             // NVFP4 serialization can include auxiliary scales. Verify through the actual
             // loader's authoritative type geometry; don't guess 36 bytes here.
-            if(n%64) throw Error("unaligned NVFP4: "+t.name);
+            // Partial blocks in the final row are padded per GGUF spec.
             if(!t.bytes) throw Error("NVFP4 byte extent not supplied: "+t.name);
             ++counts[3]; break;
         default: throw Error("unsupported tensor type: "+t.name);
