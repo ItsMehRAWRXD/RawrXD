@@ -200,8 +200,18 @@ void AutoBootstrap::executePlan(const QString& wish, const QJsonArray& plan) {
                 if (!target.isEmpty()) {
                     args << "--target" << target;
                 }
-                int rc = QProcess::execute("cmake", args);
-                success = (rc == 0);
+                // Use NativeProcess (real CreateProcessW) instead of QProcess stub
+                std::vector<std::string> nativeArgs;
+                for (const auto& arg : args) {
+                    nativeArgs.push_back(arg.toStdString());
+                }
+                NativeProcessResult procResult = NativeProcess::execute(
+                    "cmake",
+                    nativeArgs,
+                    "",
+                    120000
+                );
+                success = procResult.success;
             } 
             else if (type == "hot_reload") {
                 success = patch.hotReload();

@@ -11,8 +11,8 @@
 #include <QFileInfo>
 #include <QDateTime>
 #include <QRegularExpression>
-#include <QJsonDocument>
 #include <QDebug>
+#include "qt_block.h"
 
 // ============================================================================
 // Workflow bridge integration (nlohmann::json <-> QJson conversion)
@@ -237,8 +237,12 @@ QJsonArray AgenticExecutor::decomposeTask(const QString& goal)
     
     if (match.hasMatch()) {
         QString jsonStr = match.captured(0);
-        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
-        if (doc.isArray()) {
+        // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+        json nativeDoc = NativeJson::fromJson(jsonStr.toStdString());
+        if (nativeDoc.is_array()) {
+            // Round-trip through string to get QJsonArray for QT API compatibility
+            QString jsonStr2 = QString::fromStdString(NativeJson::toJson(nativeDoc));
+            QJsonDocument doc = QJsonDocument::fromJson(jsonStr2.toUtf8());
             qInfo() << "[AgenticExecutor] Task decomposed into" << doc.array().size() << "steps";
             return doc.array();
         }
