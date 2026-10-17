@@ -392,12 +392,17 @@ QString AgenticIterativeReasoning::callModelForReasoning(
     }
 
     // Call inference engine for reasoning
-    // This would use the actual model loaded in inference engine
+    // This uses the actual model loaded in inference engine
     QString fullPrompt = context.isEmpty() ? prompt : context + "\n\n" + prompt;
 
-    // In production, this would call m_inferenceEngine->infer(fullPrompt)
-    // For now, return a placeholder
-    return "Reasoning output from model";
+    // Use the inference engine's processChat for reasoning
+    QString reasoningResult = m_inferenceEngine->processChat(fullPrompt);
+
+    if (reasoningResult.isEmpty()) {
+        return "Model returned empty response";
+    }
+
+    return reasoningResult;
 }
 
 QJsonArray AgenticIterativeReasoning::extractStructuredResponse(const QString& modelResponse)

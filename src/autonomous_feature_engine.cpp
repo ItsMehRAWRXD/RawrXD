@@ -176,44 +176,81 @@ AutonomousSuggestion AutonomousFeatureEngine::generateTestSuggestion(
     QString testCode;
     if (language == "cpp" || language == "c++") {
         testCode = QString(
-            "TEST(FunctionTest, Test_%1) {\n"
+            "#include <gtest/gtest.h>\n"
+            "#include \"%1.h\"\n"
+            "\n"
+            "TEST(FunctionTest, Test_%1_ValidInput) {\n"
             "    // Arrange\n"
-            "    // TODO: Setup test data\n"
+            "    %1 obj;\n"
             "    \n"
             "    // Act\n"
-            "    // TODO: Call %1\n"
+            "    auto result = obj.%1();\n"
             "    \n"
             "    // Assert\n"
-            "    // EXPECT_EQ(expected, actual);\n"
+            "    EXPECT_TRUE(result.isValid());\n"
+            "}\n"
+            "\n"
+            "TEST(FunctionTest, Test_%1_EdgeCase) {\n"
+            "    // Arrange\n"
+            "    %1 obj;\n"
+            "    \n"
+            "    // Act\n"
+            "    auto result = obj.%1(QVariant());\n"
+            "    \n"
+            "    // Assert\n"
+            "    EXPECT_FALSE(result.isValid());\n"
             "}\n").arg(funcName);
-        suggestion.explanation = "Generated Google Test unit test template";
+        suggestion.explanation = "Generated Google Test unit test with valid input and edge case tests";
     } else if (language == "python") {
         testCode = QString(
-            "def test_%1():\n"
-            "    # Arrange\n"
-            "    # TODO: Setup test data\n"
+            "import unittest\n"
+            "\n"
+            "class Test%1(unittest.TestCase):\n"
+            "    def setUp(self):\n"
+            "        self.obj = %1()\n"
             "    \n"
-            "    # Act\n"
-            "    result = %1()\n"
-            "    \n"
-            "    # Assert\n"
-            "    assert result is not None\n").arg(funcName);
-        suggestion.explanation = "Generated pytest unit test template";
+            "    def test_valid_input(self):\n"
+            "        # Arrange & Act\n"
+            "        result = self.obj.%1()\n"
+            "        \n"
+            "        # Assert\n"
+            "        self.assertTrue(result)\n"
+            "\n"
+            "    def test_edge_case(self):\n"
+            "        # Arrange & Act\n"
+            "        result = self.obj.%1(None)\n"
+            "        \n"
+            "        # Assert\n"
+            "        self.assertFalse(result)\n"
+            "\n"
+            "if __name__ == '__main__':\n"
+            "    unittest.main()\n").arg(funcName);
+        suggestion.explanation = "Generated pytest unit test with valid input and edge case tests";
     } else if (language == "javascript" || language == "typescript") {
         testCode = QString(
             "describe('%1', () => {\n"
-            "    it('should work correctly', () => {\n"
-            "        // Arrange\n"
-            "        // TODO: Setup test data\n"
-            "        \n"
-            "        // Act\n"
-            "        const result = %1();\n"
+            "    let obj;\n"
+            "    \n"
+            "    beforeEach(() => {\n"
+            "        obj = new %1();\n"
+            "    });\n"
+            "    \n"
+            "    it('should handle valid input', () => {\n"
+            "        // Arrange & Act\n"
+            "        const result = obj.%1();\n"
             "        \n"
             "        // Assert\n"
             "        expect(result).toBeDefined();\n"
             "    });\n"
+    "    it('should handle edge case', () => {\n"
+            "        // Arrange & Act\n"
+            "        const result = obj.%1(null);\n"
+            "        \n"
+            "        // Assert\n"
+            "        expect(result).toBeNull();\n"
+            "    });\n"
             "});\n").arg(funcName);
-        suggestion.explanation = "Generated Jest unit test template";
+        suggestion.explanation = "Generated Jest unit test with valid input and edge case tests";
     }
     
     suggestion.suggestedCode = testCode;
@@ -577,8 +614,24 @@ int AutonomousFeatureEngine::calculateComplexity(const QString& code) {
 }
 
 int AutonomousFeatureEngine::calculateDuplication(const QString& code) {
-    // Simplified duplication detection
-    return 0;
+    // Real duplication detection: count repeated line patterns
+    QStringList lines = code.split('\n');
+    QMap<QString, int> lineCounts;
+    int duplicationCount = 0;
+
+    for (const QString& line : lines) {
+        QString trimmed = line.trimmed();
+        // Skip empty lines, braces, and single-char lines
+        if (trimmed.length() < 5 || trimmed == "{" || trimmed == "}") continue;
+
+        int count = lineCounts.value(trimmed, 0) + 1;
+        lineCounts[trimmed] = count;
+        if (count > 1) {
+            duplicationCount++;
+        }
+    }
+
+    return duplicationCount;
 }
 
 int AutonomousFeatureEngine::countCodeSmells(const QString& code) {
@@ -743,8 +796,24 @@ QString AutonomousFeatureEngine::generateDocumentation(const QString& symbolCode
     doc += " *\n";
     
     if (symbolType == "function") {
-        doc += " * @param TODO: Add parameter descriptions\n";
-        doc += " * @return TODO: Add return value description\n";
+        // Extract parameter names from the symbol code
+        QStringList paramNames;
+        QRegularExpression paramRegex(R"((\w+)\s+(?:\*|&)?(\w+)\s*[,)])");
+        QRegularExpressionMatchIterator it = paramRegex.globalMatch(symbolCode);
+        while (it.hasNext()) {
+            QRegularExpressionMatch match = it.next();
+            paramNames << match.captured(2);
+        }
+
+        doc += " * @brief Automatically generated documentation for function: " + symbolCode.left(50) + "\n";
+        for (const QString& param : paramNames) {
+            doc += QString(" * @param %1 Parameter description needed\n").arg(param);
+        }
+        doc += " * @return Return value description needed\n";
+    } else if (symbolType == "class") {
+        doc += QString(" * @brief Class: %1\n").arg(symbolCode.left(50));
+        doc += " * @author Auto-generated\n";
+        doc += " * @version 1.0\n";
     }
     
     doc += " */\n";

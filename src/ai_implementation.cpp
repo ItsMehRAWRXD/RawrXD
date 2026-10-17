@@ -90,9 +90,117 @@ CompletionResponse AIImplementation::streamComplete(
     const CompletionRequest& request,
     std::function<void(const ParsedCompletion&)> chunkCallback
 ) {
+    auto startTime = std::chrono::high_resolution_clock::now();
     CompletionResponse response;
-    response.success = false;
-    response.errorMessage = "Streaming not yet implemented";
+
+    try {
+        // Get the full completion first
+        auto fullResp = complete(request);
+
+        if (!fullResp.success) {
+            response.success = false;
+            response.errorMessage = fullResp.errorMessage;
+            return response;
+        }
+
+        // Parse the completion into chunks using statement/line/token boundaries
+        std::string text = fullResp.completion;
+        if (text.empty()) {
+            response.success = true;
+            response.completion = "";
+            response.totalTokens = 0;
+            return response;
+        }
+
+        // Chunk the response by statement boundaries first, then by lines
+        std::vector<ParsedCompletion> chunks;
+        size_t pos = 0;
+
+        while (pos < text.size()) {
+            // Find the next statement boundary
+            size_t boundaryPos = text.size();
+            std::string boundary = "END_OF_STREAM";
+            bool foundBoundary = false;
+
+            // Check for statement boundaries (;, }, {, ), ])
+            for (char c : {';', '}', '{', ')', ']'}) {
+                size_t found = text.find(c, pos);
+                if (found != std::string::npos && found < boundaryPos) {
+                    boundaryPos = found;
+                    boundary = std::string(1, c);
+                    foundBoundary = true;
+                }
+            }
+
+            // Check for newline
+            size_t newlinePos = text.find('\n', pos);
+            if (newlinePos != std::string::npos && newlinePos < boundaryPos) {
+                boundaryPos = newlinePos;
+                boundary = "LINE";
+                foundBoundary = true;
+            }
+
+            // Extract the chunk
+            size_t chunkEnd = foundBoundary ? boundaryPos + 1 : text.size();
+            std::string chunkText = text.substr(pos, chunkEnd - pos);
+
+            // Skip empty chunks
+            if (!chunkText.empty() && chunkText.find_first_not_of(" \t\n") != std::string::npos) {
+                ParsedCompletion chunk;
+                chunk.text = chunkText;
+                chunk.tokenCount = static_cast<int>(chunkText.size() / 4); // rough estimate
+                chunk.confidence = 0.9;
+                chunk.boundary = boundary;
+                chunk.isComplete = foundBoundary && (boundary == ";" || boundary == "}" || boundary == ")");
+
+                chunks.push_back(chunk);
+
+                // Call the callback for this chunk
+                if (chunkCallback) {
+                    chunkCallback(chunk);
+                }
+            }
+
+            pos = chunkEnd;
+        }
+
+        // Build the response
+        response.completion = fullResp.completion;
+        response.chunks = chunks;
+        response.totalTokens = fullResp.totalTokens;
+        response.completionTokens = fullResp.completionTokens;
+        response.promptTokens = fullResp.promptTokens;
+        response.success = true;
+
+        // Track metrics
+        auto endTime = std::chrono::high_resolution_clock::now();
+        response.latencyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            endTime - startTime
+        ).count();
+
+        m_totalLatency += response.latencyMs;
+        m_totalTokensUsed += response.totalTokens;
+
+        if (m_metrics) {
+            m_metrics->recordHistogram("ai_stream_completion_latency_ms", static_cast<double>(response.latencyMs));
+            m_metrics->incrementCounter("ai_stream_requests", 1);
+            m_metrics->incrementCounter("ai_stream_tokens", static_cast<int>(chunks.size()));
+        }
+
+        if (m_logger) {
+            m_logger->info("AIImplementation",
+                "Stream completion successful: " + std::to_string(response.latencyMs) + "ms, " +
+                std::to_string(chunks.size()) + " chunks");
+        }
+
+    } catch (const std::exception& e) {
+        response.success = false;
+        response.errorMessage = std::string("Exception: ") + e.what();
+        if (m_logger) {
+            m_logger->error("AIImplementation", "Stream complete failed: " + response.errorMessage);
+        }
+    }
+
     return response;
 }
 

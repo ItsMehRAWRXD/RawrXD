@@ -7,6 +7,7 @@
  */
 
 #include "action_executor.hpp"
+#include "model_invoker.hpp"
 
 #include <QFile>
 #include <QDir>
@@ -436,11 +437,65 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
  */
 bool ActionExecutor::handleRecursiveAgent(Action& action)
 {
-    // Not implemented: recursive agent invocation requires ModelInvoker
-    // integration that is not yet wired. Fail-closed: deny rather than
-    // fabricate a successful recursive call.
-    action.result = "Recursive agent invocation not implemented";
-    return false;
+    // Extract the wish/prompt from action parameters
+    QString wish;
+    if (action.params.contains("wish")) {
+        wish = action.params["wish"].toString();
+    } else if (action.params.contains("prompt")) {
+        wish = action.params["prompt"].toString();
+    } else if (action.params.contains("query")) {
+        wish = action.params["query"].toString();
+    } else if (action.params.contains("message")) {
+        wish = action.params["message"].toString();
+    } else {
+        action.result = "Recursive agent invocation: no wish/prompt provided";
+        return false;
+    }
+
+    if (wish.isEmpty()) {
+        action.result = "Recursive agent invocation: empty wish";
+        return false;
+    }
+
+    try {
+        // Create ModelInvoker for recursive agent invocation
+        ModelInvoker invoker;
+
+        // Build invocation parameters
+        InvocationParams params;
+        params.wish = wish;
+
+        // Add context from action params if available
+        if (action.params.contains("context")) {
+            params.context = action.params["context"].toString();
+        }
+        if (action.params.contains("codebase")) {
+            params.codebase = action.params["codebase"].toString();
+        }
+
+        // Invoke the model to get a structured plan
+        LLMResponse response = invoker.invoke(params);
+
+        if (response.rawOutput.isEmpty() && response.parsedPlan.isEmpty()) {
+            action.result = "Recursive agent invocation: model returned empty response";
+            return false;
+        }
+
+        // Store the structured plan as result
+        QJsonObject resultObj;
+        resultObj["wish"] = wish;
+        resultObj["rawOutput"] = response.rawOutput;
+        resultObj["parsedPlan"] = response.parsedPlan;
+        resultObj["invoked"] = true;
+
+        action.result = QJsonDocument(resultObj).toJson(QJsonDocument::Compact);
+        qInfo() << "[ActionExecutor] Recursive agent invocation completed for:" << wish;
+        return true;
+
+    } catch (const std::exception& e) {
+        action.result = QString("Recursive agent invocation error: %1").arg(e.what());
+        return false;
+    }
 }
 
 /**

@@ -1804,6 +1804,7 @@ void PrintGate12Contract(const Result& result) {
 
 namespace K2NativeStreamGate {
 uint32_t ModelKvCurrentLength() noexcept {
+    if (g_prodKvLast) return static_cast<uint32_t>(g_prodKvLast->currentLength());
     return 0;
 }
 } // namespace K2NativeStreamGate
