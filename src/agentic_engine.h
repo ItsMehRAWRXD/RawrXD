@@ -142,7 +142,14 @@ private:
     QString processWithContext(const QString& input, const QJsonObject& context);
     QJsonObject buildCodeContext(const QString& code);
     QString applyTemplate(const QString& templateName, const QJsonObject& params);
-    
+
+    // Agent execution loop - tool calling and execution
+    bool extractToolCall(const std::string& response,
+                         std::string& toolName,
+                         std::string& toolParams);
+    std::string executeTool(const std::string& toolName,
+                            const std::string& paramsJson);
+
     // Keep/Undo file operations
     AgenticFileOperations* m_fileOperations;
     AgenticErrorHandler* m_errorHandler;

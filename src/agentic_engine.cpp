@@ -904,9 +904,231 @@ void AgenticEngine::setModelName(const std::string& modelName) {
     m_modelLoaded = true;
 }
 
-void AgenticEngine::processMessage(const std::string& message, const std::string& editorContext) {
-    std::string response = generateResponse(message);
-    if (m_onResponseReady) m_onResponseReady(response);
+// ── Tool system prompt ─────────────────────────────────────────────────
+const char* kToolSystemPrompt = R"__TOOLS_PROMPT__(
+You are an autonomous software engineering agent. You have access to the following tools:
+
+1. read_file(path) - Read contents of a file within the workspace
+2. write_file(path, content) - Write content to a file within the workspace
+3. list_directory(path) - List contents of a directory within the workspace
+4. run_command(command, timeout_ms) - Execute a shell command within the workspace
+5. build_project(build_dir, config, target) - Build the project using cmake
+6. run_tests(build_dir, target) - Run tests using ctest
+7. git_command(command, args, timeout_ms) - Execute a git command within the workspace
+
+To use a tool, respond with exactly: TOOL:<name>:<json parameters>
+Example: TOOL:read_file:{"path":"src/main.cpp"}
+
+When you have completed the task, provide your final answer without any tool calls.
+All file paths must be within the workspace directory.
+)__TOOLS_PROMPT__";
+
+std::string AgenticEngine::processMessage(const std::string& message, const std::string& editorContext) {
+    if (!m_inferenceEngine || !m_modelLoaded) {
+        std::string response = "Error: Inference engine not available or model not loaded";
+        if (m_onResponseReady) m_onResponseReady(QString::fromStdString(response));
+        return response;
+    }
+
+    m_totalInteractions++;
+
+    // ── Build system prompt with available tools ─────────────────────────
+    std::string toolPrompt = kToolSystemPrompt;
+
+    // ── Build full prompt with context ──────────────────────────────────
+    std::string fullPrompt = toolPrompt + "\n\nUser: " + message;
+    if (!editorContext.empty()) {
+        fullPrompt += "\n\nEditor context:\n" + editorContext;
+    }
+    fullPrompt += "\n\nAssistant:";
+
+    // ── Agent execution loop ── model → tools → results → retry ──
+    const int kMaxIterations = 10;
+    std::string conversation = fullPrompt;
+    std::string finalAnswer;
+
+    for (int iteration = 0; iteration < kMaxIterations; ++iteration) {
+        // Call the model
+        QString qPrompt = QString::fromStdString(conversation);
+        QString qResponse = m_inferenceEngine->processChat(qPrompt);
+        std::string response = qResponse.toStdString();
+
+        if (response.empty()) {
+            finalAnswer = "Error: Model returned empty response";
+            break;
+        }
+
+        // Check for tool calls (format: TOOL:<name>:<json>)
+        std::string toolName, toolParams;
+        if (extractToolCall(response, toolName, toolParams)) {
+            // Execute the tool
+            std::string toolResult = executeTool(toolName, toolParams);
+
+            // Add model's tool request and tool result to conversation
+            conversation += "\n" + response;
+            conversation += "\nTool result: " + toolResult;
+
+            if (m_onResponseReady) {
+                m_onResponseReady(QString::fromStdString("Tool call: " + toolName));
+            }
+            continue;
+        }
+
+        // No tool call - this is the final answer
+        finalAnswer = response;
+        conversation += "\n" + response;
+        break;
+    }
+
+    if (finalAnswer.empty()) {
+        finalAnswer = "Maximum tool iterations reached without final answer";
+    }
+
+    if (m_onResponseReady) m_onResponseReady(QString::fromStdString(finalAnswer));
+    return finalAnswer;
+}
+
+// ── Tool call parsing (format: TOOL:<name>:<json) ──────────────────────
+bool AgenticEngine::extractToolCall(const std::string& response,
+                                     std::string& toolName,
+                                     std::string& toolParams) {
+    auto pos = response.find("TOOL:");
+    if (pos == std::string::npos) return false;
+    auto after = response.substr(pos + 5);
+    auto colon = after.find(':');
+    if (colon == std::string::npos) return false;
+    toolName = after.substr(0, colon);
+    // Trim whitespace from tool name
+    size_t start = toolName.find_first_not_of(" \t");
+    size_t end = toolName.find_last_not_of(" \t");
+    if (start != std::string::npos && end != std::string::npos)
+        toolName = toolName.substr(start, end - start + 1);
+    auto brace = after.find('{', colon);
+    if (brace == std::string::npos) return false;
+    auto endBrace = after.rfind('}');
+    if (endBrace == std::string::npos || endBrace < brace) return false;
+    toolParams = after.substr(brace, endBrace - brace + 1);
+    return true;
+}
+
+// ── Tool execution ─────────────────────────────────────────────────────
+std::string AgenticEngine::executeTool(const std::string& toolName,
+                                        const std::string& paramsJson) {
+    using json = nlohmann::json;
+
+    json params;
+    try {
+        params = json::parse(paramsJson);
+    } catch (...) {
+        return "Error: Invalid JSON parameters for tool " + toolName;
+    }
+
+    if (toolName == "read_file") {
+        if (!params.contains("path") || !params["path"].is_string())
+            return "Error: read_file requires 'path' parameter";
+        std::string path = params["path"].get<std::string>();
+        std::filesystem::path canonicalPath;
+        if (!resolveAndValidatePath(path, canonicalPath))
+            return "Error: Path outside workspace: " + path;
+        std::ifstream file(canonicalPath, std::ios::binary);
+        if (!file) return "Error: Cannot open file: " + path;
+        std::stringstream ss;
+        ss << file.rdbuf();
+        return ss.str();
+    }
+
+    if (toolName == "write_file") {
+        if (!params.contains("path") || !params["path"].is_string())
+            return "Error: write_file requires 'path' parameter";
+        if (!params.contains("content") || !params["content"].is_string())
+            return "Error: write_file requires 'content' parameter";
+        std::string path = params["path"].get<std::string>();
+        std::string content = params["content"].get<std::string>();
+        std::filesystem::path canonicalPath;
+        if (!resolveAndValidatePath(path, canonicalPath))
+            return "Error: Path outside workspace: " + path;
+        std::ofstream file(canonicalPath, std::ios::binary | std::ios::trunc);
+        if (!file) return "Error: Cannot write file: " + path;
+        file.write(content.data(), static_cast<std::streamsize>(content.size()));
+        file.close();
+        return "OK: Wrote " + std::to_string(content.size()) + " bytes to " + path;
+    }
+
+    if (toolName == "list_directory") {
+        std::string path = params.value("path", ".");
+        std::filesystem::path canonicalPath;
+        if (!resolveAndValidatePath(path, canonicalPath))
+            return "Error: Path outside workspace: " + path;
+        if (!std::filesystem::is_directory(canonicalPath))
+            return "Error: Not a directory: " + path;
+        std::stringstream ss;
+        ss << "Directory: " << path << "\n";
+        for (const auto& entry : std::filesystem::directory_iterator(canonicalPath)) {
+            ss << "  " << (entry.is_directory() ? "[DIR] " : "[FILE] ")
+               << entry.path().filename().string();
+            if (entry.is_regular_file())
+                ss << " (" << entry.file_size() << " bytes)";
+            ss << "\n";
+        }
+        return ss.str();
+    }
+
+    if (toolName == "run_command") {
+        if (!params.contains("command") || !params["command"].is_string())
+            return "Error: run_command requires 'command' parameter";
+        std::string command = params["command"].get<std::string>();
+        int timeoutMs = params.value("timeout_ms", kDefaultTimeoutMs);
+        if (!isCommandSafe(command))
+            return "Error: Command blocked by safety policy: " + command;
+        std::string output = execCommandWithTimeout(command, timeoutMs);
+        return output.empty() ? "(no output)" : output;
+    }
+
+    if (toolName == "build_project") {
+        std::string buildDir = params.value("build_dir", "build");
+        std::string config = params.value("config", "Release");
+        std::string target = params.value("target", "all");
+        std::filesystem::path canonicalPath;
+        if (!resolveAndValidatePath(buildDir, canonicalPath))
+            return "Error: Build directory outside workspace: " + buildDir;
+        std::string cmd = "cmake --build \"" + canonicalPath.string() +
+                          "\" --config " + config;
+        if (target != "all") cmd += " --target " + target;
+        if (!isCommandSafe(cmd))
+            return "Error: Build command blocked by safety policy";
+        std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs * 4);
+        return output.empty() ? "(no output)" : output;
+    }
+
+    if (toolName == "run_tests") {
+        std::string buildDir = params.value("build_dir", "build");
+        std::string target = params.value("target", "");
+        std::filesystem::path canonicalPath;
+        if (!resolveAndValidatePath(buildDir, canonicalPath))
+            return "Error: Build directory outside workspace: " + buildDir;
+        std::string cmd = "ctest --test-dir \"" + canonicalPath.string() + "\"";
+        if (!target.empty()) cmd += " -R " + target;
+        if (!isCommandSafe(cmd))
+            return "Error: Test command blocked by safety policy";
+        std::string output = execCommandWithTimeout(cmd, kDefaultTimeoutMs * 4);
+        return output.empty() ? "(no output)" : output;
+    }
+
+    if (toolName == "git_command") {
+        if (!params.contains("command") || !params["command"].is_string())
+            return "Error: git_command requires 'command' parameter";
+        std::string gitCmd = params["command"].get<std::string>();
+        std::string args = params.value("args", "");
+        int timeoutMs = params.value("timeout_ms", kDefaultTimeoutMs);
+        std::string cmd = "git " + gitCmd;
+        if (!args.empty()) cmd += " " + args;
+        if (!isCommandSafe(cmd))
+            return "Error: Git command blocked by safety policy: " + cmd;
+        std::string output = execCommandWithTimeout(cmd, timeoutMs);
+        return output.empty() ? "(no output)" : output;
+    }
+
+    return "Error: Unknown tool: " + toolName;
 }
 
 std::string AgenticEngine::generateTokenizedResponse(const std::string& message) {
