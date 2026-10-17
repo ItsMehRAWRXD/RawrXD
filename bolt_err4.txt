@@ -1,0 +1,17 @@
+Unknown mode: is
+Known modes:
+  code        code — Inspect, modify, build and test projects (authority: controlled)
+  ask         ask — Answer questions and explain code without changing it (authority: read-only)
+  debug       debug — Diagnose crashes, apply and verify fixes (authority: controlled)
+  plan        plan — Research and create implementation plans (authority: plan-files)
+  swarm       swarm — Coordinate specialized subagents on parallel tasks (authority: controlled)
+  review      review — Review code, diffs, architecture and security (authority: read-only)
+  test        test — Discover, generate and execute tests (authority: controlled)
+  repair      repair — Fix build failures and failing tests (authority: controlled)
+  refactor    refactor — Restructure implementations preserving behavior (authority: controlled)
+  research    research — Investigate local sources and approved documentation (authority: read-only)
+  architect   architect — Design components and interfaces (authority: plan-files)
+  benchmark   benchmark — Measure inference and system performance (authority: controlled)
+  audit       audit — Check implementation completeness and write audit artifacts (authority: plan-files)
+  autonomous  autonomous — Execute a persistent engineering backlog across sessions (authority: full)
+[StreamEngine] Shutdown

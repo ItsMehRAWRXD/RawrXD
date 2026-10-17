@@ -9,16 +9,16 @@
     "tool_calls": 0,
     "tool_calls_succeeded": 0
   },
-  "agent_mode": "ask",
+  "agent_mode": "code",
   "agent_turns": 1,
   "build_results": [],
   "checkpoints": [],
   "commits": [],
   "conversation": [
     {
-      "content": "What is 2+2?",
+      "content": "2+2",
       "role": "user",
-      "timestamp": 1792213032
+      "timestamp": 1792216547
     }
   ],
   "driver_exit_code": -1,
@@ -34,10 +34,10 @@
   },
   "final_verdict": "",
   "git_branch": "local-30b-backend",
-  "git_revision": "41a6e7a498eea044b2a9ec9a5784c65020d7bc2c",
+  "git_revision": "42652d304188f775ee7aac306930f944b6acacc6",
   "model_identity": "unknown",
   "schema": "RAWRXD_AGENT_LEDGER/1.0",
-  "session_start": 1792213031,
+  "session_start": 1792216547,
   "task_id": "",
   "termination_reason": "running",
   "tests_executed": [],

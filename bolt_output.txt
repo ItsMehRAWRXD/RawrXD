@@ -1,0 +1,60 @@
+[Deep2Engine] Loading model from: F:\rawrxd\nemotron-bolt.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\nemotron-bolt.gguf mode=GPU_MULTI devices=2 kv_per_token=405504 max_ctx_est=11368
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'nemotron_h_moe'  hidden=4096 layers=88 heads=32 kvHeads=32 inter=0 vocab=131072
+[Deep2Engine] Nemotron-H MoE/Bolt architecture detected: nemotron_h_moe
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=131072 bos=1 eos=11 (Spm::encode)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=128x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.bias -> ssmConv1dBias (dims=1x10240 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=10240x4 type=0)
+[SSM_MAP] blk.0.ssm_d -> ssmD (dims=128x1 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=1x128 type=0)
+[SSM_UNKNOWN] Unmatched SSM tensor: blk.0.ssm_in.scale (rows=1 cols=1 type=0)
+[SSM_MAP] blk.0.ssm_in.weight -> ssmIn (dims=18560x4096 type=40)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=8x1024 type=0)
+[SSM_UNKNOWN] Unmatched SSM tensor: blk.0.ssm_out.scale (rows=1 cols=1 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=4096x8192 type=40)
+[Deep2Engine] Layer topology: 8 attention, 40 SSM, 40 unknown of 88 total
+[Deep2Engine] KV cache sized for 8 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001818B4DF880  Registered 'blk.0.attn_norm.weight': shard=0 offset=0 bytes=16384  |  registry_size=1  registeredBytes=16384  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000001818B4DF880  Registered 'blk.18.ssm_a': shard=0 offset=0 bytes=512  |  registry_size=100  registeredBytes=604631552  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000001818B4DF880  Registered 'blk.35.ssm_d': shard=0 offset=0 bytes=512  |  registry_size=200  registeredBytes=1246856704  zeroOffset=200  maxResidentBytes=536870912
+[ResidencyManager] this=000001818B4DF880  Registered 'blk.54.ffn_gate_inp.weight': shard=0 offset=0 bytes=6029312  |  registry_size=300  registeredBytes=1874294272  zeroOffset=300  maxResidentBytes=536870912
+[ResidencyManager] this=000001818B4DF880  Registered 'blk.73.ssm_a': shard=0 offset=0 bytes=512  |  registry_size=400  registeredBytes=2484168704  zeroOffset=400  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001818B4DF880  registered=483 tensors  bytes=4146868224  max=536870912
+[Deep2Engine] Mamba-2 state buffers: proj=18560 state=92274688x3604480 conv=4x10240 dConvDim=1791001362432
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7B7FA2830 dequant=00007FF7B7F9F6A0 GetGEMV(12)=00007FF7B7FA2830 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=8 page=8 virtualMax=11368 heads=32 dim=128
+[KVCache] HOT_BYTES=2097152 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 8 layers x 11368 positions x 32 heads x 128 dim = 2842.00 MB
+[Deep2Engine] Model loaded successfully (843 tensors)
+[Deep2Engine] MoE model: 496 experts, top-1, 1 shared
+[Deep2Engine] MoE streaming loader ready
+[Deep2Engine] Injected router weights for 88 layers
+[Deep2Engine] RouterPrefetchTelemetry initialized: 88 layers x 496 experts
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+
+RawrXD Local Agent
+Model:   unknown
+Backend: auto
+Mode:    ask
+Root:    F:\rawrxd
+
+Type /help for commands.
+rawr> 
+Session ledger: F:\rawrxd/.rawrxd/ledger/agent_session.json
