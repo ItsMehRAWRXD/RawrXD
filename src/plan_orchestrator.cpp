@@ -495,12 +495,20 @@ bool PlanOrchestrator::applyRename(const EditTask& task, bool dryRun) {
         // m_lspClient->requestRename(task.filePath, task.startLine, task.symbolName, task.newSymbolName);
     }
     
-    // Fallback: simple text replacement
+    // Fallback: smart whole-word text replacement (no LSP dependency)
     QString content = readFileContent(task.filePath);
     if (content.isNull()) return false;
-    
-    QString newContent = content.replace(task.symbolName, task.newSymbolName);
-    
+
+    // Build regex for whole-word replacement of the symbol
+    QRegExp symbolRegex("\\b" + QRegExp::escape(task.symbolName) + "\\b");
+    QString newContent = content.replace(symbolRegex, task.newSymbolName);
+
+    // Verify replacement actually happened
+    if (newContent == content) {
+        qWarning() << "[PlanOrchestrator] Symbol" << task.symbolName << "not found in" << task.filePath;
+        return false;
+    }
+
     return writeFileContent(task.filePath, newContent);
 }
 

@@ -1,14 +1,16 @@
 #pragma once
 
-#include <QString>
-#include <QObject>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QDateTime>
+#include <string>
 #include <memory>
 #include <vector>
 #include <unordered_map>
 #include <deque>
+#include <chrono>
+#include <cstdint>
+
+#include "nlohmann/json.hpp"
+
+using json = nlohmann::json;
 
 /**
  * @class AgenticMemorySystem
@@ -28,10 +30,7 @@
  * - Experience scoring
  * - Strategy effectiveness tracking
  */
-class AgenticMemorySystem : public QObject
-{
-    Q_OBJECT
-
+class AgenticMemorySystem {
 public:
     enum class MemoryType {
         Episodic,   // Specific events and interactions
@@ -41,159 +40,151 @@ public:
     };
 
     struct MemoryEntry {
-        QString id;
+        std::string id;
         MemoryType type;
-        QString content;
-        QJsonObject metadata;
-        QDateTime timestamp;
+        std::string content;
+        json metadata;
+        std::chrono::system_clock::time_point timestamp;
         float relevanceScore;
         int accessCount;
-        QString tags;
+        std::string tags;
         bool isPinned;
     };
 
     struct Experience {
-        QString experienceId;
-        QString taskDescription;
-        QJsonObject goalState;
-        QJsonObject resultState;
+        std::string experienceId;
+        std::string taskDescription;
+        json goalState;
+        json resultState;
         bool successful;
         float successRate;
-        QStringList strategiesUsed;
+        std::vector<std::string> strategiesUsed;
         int iterationsNeeded;
         float similarityToCurrentTask;
         int usageCount;
-        QDateTime timestamp;
+        std::chrono::system_clock::time_point timestamp;
     };
 
     struct Pattern {
-        QString patternId;
-        QString description;
-        QJsonArray examples;
+        std::string patternId;
+        std::string description;
+        json examples;
         float confidence;
-        QString category;
+        std::string category;
         int occurrences;
-        QDateTime firstObserved;
-        QDateTime lastObserved;
+        std::chrono::system_clock::time_point firstObserved;
+        std::chrono::system_clock::time_point lastObserved;
     };
 
 public:
-    explicit AgenticMemorySystem(QObject* parent = nullptr);
+    AgenticMemorySystem();
     ~AgenticMemorySystem();
 
     // ===== MEMORY STORAGE =====
-    QString storeMemory(
+    std::string storeMemory(
         MemoryType type,
-        const QString& content,
-        const QJsonObject& metadata = QJsonObject()
+        const std::string& content,
+        const json& metadata = json::object()
     );
-    void updateMemory(const QString& memoryId, const QString& content);
-    void deleteMemory(const QString& memoryId);
-    void pinMemory(const QString& memoryId, bool pinned);
+    void updateMemory(const std::string& memoryId, const std::string& content);
+    void deleteMemory(const std::string& memoryId);
+    void pinMemory(const std::string& memoryId, bool pinned);
     
     // ===== MEMORY RETRIEVAL =====
-    MemoryEntry* getMemory(const QString& memoryId);
+    MemoryEntry* getMemory(const std::string& memoryId);
     std::vector<MemoryEntry*> getMemoriesByType(MemoryType type);
-    std::vector<MemoryEntry*> getMemoriesByTag(const QString& tag);
-    std::vector<MemoryEntry*> searchMemories(const QString& query, int limit = 10);
-    std::vector<MemoryEntry*> getRelevantMemories(const QString& context, int limit = 5);
+    std::vector<MemoryEntry*> getMemoriesByTag(const std::string& tag);
+    std::vector<MemoryEntry*> searchMemories(const std::string& query, int limit = 10);
+    std::vector<MemoryEntry*> getRelevantMemories(const std::string& context, int limit = 5);
     
     // ===== EXPERIENCE MANAGEMENT =====
-    QString recordExperience(
-        const QString& taskDescription,
-        const QJsonObject& goalState,
-        const QJsonObject& resultState,
+    std::string recordExperience(
+        const std::string& taskDescription,
+        const json& goalState,
+        const json& resultState,
         bool successful,
-        const QStringList& strategiesUsed
+        const std::vector<std::string>& strategiesUsed
     );
     std::vector<Experience> findSimilarExperiences(
-        const QString& currentTask,
+        const std::string& currentTask,
         float minSimilarity = 0.6f
     );
-    Experience* getExperience(const QString& experienceId);
-    void recordExperienceUsage(const QString& experienceId);
+    Experience* getExperience(const std::string& experienceId);
+    void recordExperienceUsage(const std::string& experienceId);
     std::vector<Experience> getMostSuccessfulExperiences(int limit = 10);
 
     // ===== PATTERN RECOGNITION =====
-    QString recordPattern(
-        const QString& description,
-        const QString& category,
-        const QJsonArray& examples
+    std::string recordPattern(
+        const std::string& description,
+        const std::string& category,
+        const json& examples
     );
-    std::vector<Pattern> detectPatterns(const QString& context);
-    std::vector<Pattern> getPatternsForCategory(const QString& category);
-    Pattern* getPattern(const QString& patternId);
-    float getPatternConfidence(const QString& patternId);
+    std::vector<Pattern> detectPatterns(const std::string& context);
+    std::vector<Pattern> getPatternsForCategory(const std::string& category);
+    Pattern* getPattern(const std::string& patternId);
+    float getPatternConfidence(const std::string& patternId);
     
     // ===== LEARNING AND ADAPTATION =====
     void recordSuccess(
-        const QString& taskDescription,
-        const QString& strategy,
+        const std::string& taskDescription,
+        const std::string& strategy,
         float effectiveness
     );
     void recordFailure(
-        const QString& taskDescription,
-        const QString& strategy,
-        const QString& failureReason
+        const std::string& taskDescription,
+        const std::string& strategy,
+        const std::string& failureReason
     );
     
     // Get strategy effectiveness
-    float getStrategyEffectiveness(const QString& strategy) const;
-    QStringList getRankedStrategies(const QString& taskType);
+    float getStrategyEffectiveness(const std::string& strategy) const;
+    std::vector<std::string> getRankedStrategies(const std::string& taskType);
     
     // ===== MEMORY CONSOLIDATION =====
     void consolidateMemories();
     void pruneOldMemories(int ageInDays = 30);
-    void forgetMemory(const QString& memoryId);
+    void forgetMemory(const std::string& memoryId);
     float getMemoryDecayFactor(const MemoryEntry& entry) const;
     
     // ===== STATISTICAL ANALYSIS =====
-    QJsonObject getMemoryStatistics() const;
-    int getTotalMemories() const { return m_memories.size(); }
-    int getExperienceCount() const { return m_experiences.size(); }
-    int getPatternCount() const { return m_patterns.size(); }
+    json getMemoryStatistics() const;
+    int getTotalMemories() const { return (int)m_memories.size(); }
+    int getExperienceCount() const { return (int)m_experiences.size(); }
+    int getPatternCount() const { return (int)m_patterns.size(); }
     float getAverageSuccessRate() const;
-    QString getMostCommonSuccessStrategy() const;
+    std::string getMostCommonSuccessStrategy() const;
     
     // ===== EXPORT/IMPORT =====
-    QString exportMemories() const;
-    bool importMemories(const QString& jsonData);
-    QString exportExperiences() const;
-    bool importExperiences(const QString& jsonData);
+    std::string exportMemories() const;
+    bool importMemories(const std::string& jsonData);
+    std::string exportExperiences() const;
+    bool importExperiences(const std::string& jsonData);
     
     // ===== CONFIGURATION =====
     void setRetentionPolicy(int maxMemories);
     void setDecayRate(float rate);
     void setAccessWeightFactor(float factor);
 
-signals:
-    void memoryStored(const QString& memoryId);
-    void memoryRetrieved(const QString& memoryId);
-    void experienceRecorded(const QString& experienceId);
-    void patternDetected(const QString& patternId);
-    void memoriesConsolidated();
-    void memoryPruned(int prunedCount);
-
 private:
     // Calculate similarity between strings
-    float calculateSimilarity(const QString& str1, const QString& str2);
+    float calculateSimilarity(const std::string& str1, const std::string& str2);
     
     // Decay calculation
     void updateMemoryDecay();
     float calculateRelevanceScore(
         const MemoryEntry& entry,
-        const QString& context
+        const std::string& context
     );
     
     // Pattern extraction
     void extractPatterns();
-    QString hashContent(const QString& content);
+    std::string hashContent(const std::string& content);
 
     // Memory stores
     std::unordered_map<std::string, std::unique_ptr<MemoryEntry>> m_memories;
     std::unordered_map<std::string, std::unique_ptr<Experience>> m_experiences;
     std::unordered_map<std::string, std::unique_ptr<Pattern>> m_patterns;
-    std::deque<QString> m_accessHistory;
+    std::deque<std::string> m_accessHistory;
     
     // Configuration
     int m_maxMemories = 1000;
@@ -202,7 +193,7 @@ private:
     int m_contextWindowSize = 10;
     
     // Metrics
-    QDateTime m_systemStartTime;
+    std::chrono::system_clock::time_point m_systemStartTime;
     int m_totalStored = 0;
     int m_totalRetrieved = 0;
 };

@@ -2,6 +2,7 @@
 #include "model_interface.h"
 #include "universal_model_router.h"
 #include "cloud_api_client.h"
+#include "deep2/Deep2InferenceService.hpp"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -9,6 +10,7 @@
 #include <QDebug>
 #include <QTimer>
 #include <algorithm>
+#include <thread>
 
 ModelInterface::ModelInterface(QObject* parent)
     : QObject(parent),
@@ -482,10 +484,40 @@ void ModelInterface::generateStreamInternal(const QString& prompt,
                                            const GenerationOptions& options)
 {
     auto config = getModelConfigOrThrow(model_name);
-    
+
     if (isLocalModel(model_name)) {
-        // Use local engine streaming
-        on_chunk("Local streaming not yet implemented");
+        // Use local engine streaming via Deep2InferenceService
+        if (!RawrXD::Deep2InferenceService::instance().isInitialized()) {
+            Deep2::EngineConfig cfg;
+            cfg.numThreads = std::thread::hardware_concurrency();
+            cfg.useKVCache = true;
+            cfg.useThreadPool = true;
+            if (!RawrXD::Deep2InferenceService::instance().initialize(cfg)) {
+                on_error("Failed to initialize Deep2 inference service");
+                return;
+            }
+        }
+
+        const char* modelPathEnv = std::getenv("RAWRXD_MODEL_PATH");
+        if (modelPathEnv && !std::string(modelPathEnv).empty() &&
+            !RawrXD::Deep2InferenceService::instance().isModelLoaded()) {
+            RawrXD::Deep2InferenceService::instance().loadModel(modelPathEnv);
+        }
+
+        if (!RawrXD::Deep2InferenceService::instance().isModelLoaded()) {
+            on_error("No model loaded for local streaming");
+            return;
+        }
+
+        std::string promptStr = prompt.toStdString();
+        std::string fullOutput = RawrXD::Deep2InferenceService::instance().generateText(promptStr, options.maxTokens);
+
+        // Stream output in chunks
+        size_t chunkSize = 16;
+        for (size_t i = 0; i < fullOutput.size(); i += chunkSize) {
+            size_t end = std::min(i + chunkSize, fullOutput.size());
+            on_chunk(QString::fromStdString(fullOutput.substr(i, end - i)));
+        }
     } else {
         // Use cloud client streaming
         cloud_client->generateStream(prompt, config, on_chunk, on_error);

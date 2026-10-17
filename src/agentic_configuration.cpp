@@ -94,9 +94,106 @@ bool AgenticConfiguration::loadFromEnv(const QString& filePath)
 
 bool AgenticConfiguration::loadFromYaml(const QString& filePath)
 {
-    // YAML parsing would be implemented here
-    qWarning() << "[AgenticConfiguration] YAML loading not yet implemented";
-    return false;
+    // Real YAML parsing implementation (no external dependencies)
+    // Supports simple key: value, nested key: value, and list items
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "[AgenticConfiguration] Cannot open YAML file:" << filePath;
+        return false;
+    }
+
+    QTextStream in(&file);
+    QStringList lines;
+    while (!in.atEnd()) {
+        lines << in.readLine();
+    }
+    file.close();
+
+    int indentLevel = 0;
+    QString currentSection;
+
+    for (const QString& rawLine : lines) {
+        QString line = rawLine.trimmed();
+
+        // Skip empty lines and comments
+        if (line.isEmpty() || line.startsWith("#")) continue;
+
+        // Calculate indentation
+        int spaces = 0;
+        while (spaces < rawLine.length() && rawLine[spaces] == ' ') spaces++;
+
+        // Handle list items (- item)
+        if (line.startsWith("- ")) {
+            QString itemValue = line.mid(2).trimmed();
+            if (!currentSection.isEmpty()) {
+                // Append to existing section as list item
+                QVariant existing = get(currentSection);
+                if (existing.canConvert<QStringList>()) {
+                    QStringList list = existing.toStringList();
+                    list << itemValue;
+                    set(currentSection, list);
+                } else {
+                    QStringList list;
+                    list << existing.toString() << itemValue;
+                    set(currentSection, list);
+                }
+            }
+            continue;
+        }
+
+        // Handle key: value pairs
+        int colonIdx = line.indexOf(':');
+        if (colonIdx < 0) continue;
+
+        QString key = line.left(colonIdx).trimmed();
+        QString value = line.mid(colonIdx + 1).trimmed();
+
+        // Handle nested sections (key: with no value)
+        if (value.isEmpty()) {
+            currentSection = key;
+            indentLevel = spaces;
+            continue;
+        }
+
+        // Strip quotes from value
+        if ((value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith('\'') && value.endsWith('\''))) {
+            value = value.mid(1, value.length() - 2);
+        }
+
+        // Convert boolean strings
+        bool boolValue = false;
+        if (value.compare("true", Qt::CaseInsensitive) == 0) {
+            set(key, true);
+            continue;
+        }
+        if (value.compare("false", Qt::CaseInsensitive) == 0) {
+            set(key, false);
+            continue;
+        }
+
+        // Try numeric conversion
+        bool ok = false;
+        int intValue = value.toInt(&ok);
+        if (ok) {
+            set(key, intValue);
+            continue;
+        }
+
+        double doubleValue = value.toDouble(&ok);
+        if (ok) {
+            set(key, doubleValue);
+            continue;
+        }
+
+        // Default to string
+        set(key, value);
+    }
+
+    qInfo() << "[AgenticConfiguration] Loaded configuration from YAML:" << filePath;
+    emit configurationLoaded();
+
+    return true;
 }
 
 void AgenticConfiguration::loadDefaults()

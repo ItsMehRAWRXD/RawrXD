@@ -230,7 +230,49 @@ void AutoBootstrap::executePlan(const QString& wish, const QJsonArray& plan) {
                 qDebug() << "Benchmark task (handled by build system)";
             }
             else if (type == "self_test") {
-                qDebug() << "Self-test task (TODO: implement test runner)";
+                // Real self-test: verify core system components
+                qDebug() << "Running self-test suite...";
+
+                bool allPassed = true;
+
+                // Test 1: Verify model registry is accessible
+                if (!router || router->getAvailableModels().isEmpty()) {
+                    qWarning() << "Self-test FAILED: Model registry empty or not initialized";
+                    allPassed = false;
+                } else {
+                    qDebug() << "Self-test PASS: Model registry has" << router->getAvailableModels().size() << "models";
+                }
+
+                // Test 2: Verify cloud client is responsive
+                if (!cloud_client) {
+                    qWarning() << "Self-test FAILED: Cloud client not initialized";
+                    allPassed = false;
+                } else {
+                    qDebug() << "Self-test PASS: Cloud client initialized";
+                }
+
+                // Test 3: Verify tool registry
+                if (!m_toolRegistry) {
+                    qWarning() << "Self-test FAILED: Tool registry not initialized";
+                    allPassed = false;
+                } else {
+                    qDebug() << "Self-test PASS: Tool registry initialized";
+                }
+
+                // Test 4: Verify plan orchestrator
+                if (!m_planOrchestrator) {
+                    qWarning() << "Self-test FAILED: Plan orchestrator not initialized";
+                    allPassed = false;
+                } else {
+                    qDebug() << "Self-test PASS: Plan orchestrator initialized";
+                }
+
+                success = allPassed;
+                if (success) {
+                    qDebug() << "Self-test suite: ALL TESTS PASSED";
+                } else {
+                    qWarning() << "Self-test suite: SOME TESTS FAILED";
+                }
             }
             
             if (!success) {

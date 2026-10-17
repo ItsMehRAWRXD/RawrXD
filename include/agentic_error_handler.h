@@ -1,15 +1,19 @@
 #pragma once
 
-#include <QString>
-#include <QObject>
-#include <QJsonObject>
-#include <QJsonArray>
+#include <string>
 #include <memory>
 #include <vector>
 #include <functional>
+#include <map>
+#include <unordered_map>
+#include <chrono>
+
+#include "nlohmann/json.hpp"
 
 class AgenticObservability;
 class AgenticLoopState;
+
+using json = nlohmann::json;
 
 /**
  * @class AgenticErrorHandler
@@ -23,10 +27,7 @@ class AgenticLoopState;
  * - Error classification and metrics
  * - Retry policies with exponential backoff
  */
-class AgenticErrorHandler : public QObject
-{
-    Q_OBJECT
-
+class AgenticErrorHandler {
 public:
     enum class ErrorType {
         ValidationError,
@@ -50,12 +51,12 @@ public:
     };
 
     struct ErrorContext {
-        QString errorId;
+        std::string errorId;
         ErrorType type;
-        QString message;
-        QString stackTrace;
-        QString component;
-        QJsonObject systemState;
+        std::string message;
+        std::string stackTrace;
+        std::string component;
+        json systemState;
         int retryCount;
         RecoveryStrategy strategy;
         bool recoverySucceeded = false;
@@ -71,7 +72,7 @@ public:
     };
 
 public:
-    explicit AgenticErrorHandler(QObject* parent = nullptr);
+    explicit AgenticErrorHandler();
     ~AgenticErrorHandler();
 
     // Initialize with observability system
@@ -80,38 +81,38 @@ public:
     // ===== ERROR CAPTURE AND HANDLING =====
     
     // Main error handler (high-level exception capture)
-    QJsonObject handleError(
+    json handleError(
         const std::exception& e,
-        const QString& component,
-        const QJsonObject& context
+        const std::string& component,
+        const json& context = json::object()
     );
 
     // Explicit error recording
-    QString recordError(
+    std::string recordError(
         ErrorType type,
-        const QString& message,
-        const QString& component,
-        const QString& stackTrace = "",
-        const QJsonObject& context = QJsonObject()
+        const std::string& message,
+        const std::string& component,
+        const std::string& stackTrace = "",
+        const json& context = json::object()
     );
 
     // ===== RECOVERY EXECUTION =====
     
-    bool executeRecovery(const QString& errorId);
+    bool executeRecovery(const std::string& errorId);
     bool retry(
-        const QString& errorId,
+        const std::string& errorId,
         std::function<bool()> operation,
         int maxAttempts = 3
     );
     
     // Backtrack to previous known good state
-    bool backtrack(const QString& targetStateId);
+    bool backtrack(const std::string& targetStateId);
     
     // Fallback to alternative execution path
-    bool fallback(const QString& errorId, const QString& fallbackPlan);
+    bool fallback(const std::string& errorId, const std::string& fallbackPlan);
     
     // Escalate error to higher level
-    void escalate(const QString& errorId, const QString& reason);
+    void escalate(const std::string& errorId, const std::string& reason);
 
     // ===== RESOURCE GUARDS (RAII) =====
     
@@ -146,34 +147,25 @@ public:
     // ===== RECOVERY POLICIES =====
     void setRecoveryPolicy(const RecoveryPolicy& policy);
     RecoveryPolicy getRecoveryPolicy(ErrorType type) const;
-    QJsonArray getAllRecoveryPolicies() const;
+    json getAllRecoveryPolicies() const;
 
     // ===== ERROR CLASSIFICATION =====
-    ErrorType classifyError(const QString& errorMessage);
+    ErrorType classifyError(const std::string& errorMessage);
     bool isRetryable(ErrorType type) const;
     bool isFallbackable(ErrorType type) const;
 
     // ===== MONITORING AND METRICS =====
-    QJsonObject getErrorStatistics() const;
+    json getErrorStatistics() const;
     int getErrorCount(ErrorType type) const;
     float getErrorRate() const;
     std::vector<ErrorContext> getRecentErrors(int limit = 10);
-    QJsonObject getRecoverySuccess() const;
+    json getRecoverySuccess() const;
 
     // ===== CONFIGURATION =====
     void setGracefulDegradation(bool enabled) { m_enableGracefulDegradation = enabled; }
     void setMaxErrorMemory(int size) { m_maxErrorMemory = size; }
     void setErrorThreshold(int count) { m_errorThreshold = count; }
-    void enableCircuitBreaker(const QString& component, int failureThreshold);
-
-signals:
-    void errorRecorded(const QString& errorId, const QString& message);
-    void recoveryStarted(const QString& errorId);
-    void recoverySucceeded(const QString& errorId);
-    void recoveryFailed(const QString& errorId);
-    void errorThresholdExceeded(const QString& component);
-    void circuitBreakerTripped(const QString& component);
-    void gracefulDegradation(const QString& reason);
+    void enableCircuitBreaker(const std::string& component, int failureThreshold);
 
 private:
     // Recovery execution helpers
@@ -186,21 +178,21 @@ private:
     void executeEscalateStrategy(const ErrorContext& context);
 
     // Error analysis
-    QString analyzeError(const std::exception& e);
-    QString extractStackTrace();
+    std::string analyzeError(const std::exception& e);
+    std::string extractStackTrace();
     void recordMetrics(const ErrorContext& context);
 
     // Circuit breaker
     struct CircuitBreaker {
-        QString component;
+        std::string component;
         int failureCount;
         int failureThreshold;
         bool isTripped;
-        QDateTime tripTime;
+        std::chrono::system_clock::time_point tripTime;
     };
     
-    CircuitBreaker* getOrCreateCircuitBreaker(const QString& component);
-    void checkCircuitBreaker(const QString& component);
+    CircuitBreaker* getOrCreateCircuitBreaker(const std::string& component);
+    void checkCircuitBreaker(const std::string& component);
 
     // Storage
     std::vector<ErrorContext> m_errorHistory;
@@ -226,8 +218,8 @@ class ErrorSafeOperation {
 public:
     ErrorSafeOperation(
         AgenticErrorHandler* handler,
-        const QString& operationName,
-        const QString& component
+        const std::string& operationName,
+        const std::string& component
     );
     ~ErrorSafeOperation();
 
@@ -245,6 +237,6 @@ public:
 
 private:
     AgenticErrorHandler* m_handler;
-    QString m_operationName;
-    QString m_component;
+    std::string m_operationName;
+    std::string m_component;
 };

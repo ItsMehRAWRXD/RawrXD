@@ -8,8 +8,7 @@
 
 /**
  * Enterprise-grade streaming GGUF loader with memory-mapped file access
- * Fixes metadata parsing bugs in original GGUFLoaderQt
- * Supports models from 3GB to 70GB without loading entire file into RAM
+ * QT-free build: pure C++ with standard library and Windows API only
  */
 
 // GGUF format constants
@@ -96,7 +95,7 @@ struct GGUFTensorInfo {
     bool is_loaded = false;
 };
 
-class StreamingGGUFLoaderQt {
+class StreamingGGUFLoader {
 private:
     MemoryMappedFile mappedFile;
     GGUFHeader header;

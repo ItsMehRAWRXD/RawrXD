@@ -481,18 +481,79 @@ ExecutionResult HybridCloudManager::executeOnHuggingFace(const ExecutionRequest&
 }
 
 ExecutionResult HybridCloudManager::executeOnAWS(const ExecutionRequest& request, 
-                                                 const QString& modelId) {
+                                                  const QString& modelId) {
     ExecutionResult result;
     result.requestId = request.requestId;
     result.executionLocation = "aws";
-    result.modelUsed = modelId;
+    result.modelUsed = modelId.isEmpty() ? "meta-llama/Llama-2-7b-chat-hf" : modelId;
     result.success = false;
-    result.errorMessage = "AWS SageMaker integration not yet implemented";
+
+    CloudProvider aws = providers["aws"];
+
+    if (aws.endpoint.isEmpty()) {
+        result.errorMessage = "AWS endpoint not configured";
+        result.completedAt = QDateTime::currentDateTime();
+        return result;
+    }
+
+    // Build AWS SageMaker Runtime InvokeEndpoint request
+    QString apiUrl = aws.endpoint + "/endpoints/" + result.modelUsed + "/invocations";
+
+    QJsonObject requestBody;
+    requestBody["inputs"] = request.prompt;
+    requestBody["parameters"] = QJsonObject{
+        {"max_new_tokens", request.maxTokens},
+        {"temperature", request.temperature},
+        {"return_full_text", false}
+    };
+
+    QUrl requestUrl(apiUrl);
+    QNetworkRequest netRequest(requestUrl);
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    netRequest.setRawHeader("Authorization", ("Bearer " + aws.apiKey).toUtf8());
+    netRequest.setRawHeader("X-Amz-Target", "SageMakerRuntime.InvokeEndpoint");
+
+    QByteArray requestData = QJsonDocument(requestBody).toJson();
+
+    QElapsedTimer timer;
+    timer.start();
+
+    QNetworkReply* reply = networkManager->post(netRequest, requestData);
+
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    result.latencyMs = timer.elapsed();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+
+        if (responseDoc.isObject()) {
+            QJsonObject responseObj = responseDoc.object();
+            result.response = responseObj["generated_text"].toString();
+            if (result.response.isEmpty()) {
+                result.response = responseObj["completion"].toString();
+            }
+            result.tokensUsed = responseObj["eval_count"].toInt();
+            result.cost = 0.0; // AWS cost tracked externally
+            result.success = true;
+            std::cout << "[HybridCloudManager] AWS execution successful - Model: "
+                      << result.modelUsed.toStdString() << ", Tokens: " << result.tokensUsed
+                      << ", Latency: " << result.latencyMs << "ms" << std::endl;
+        } else {
+            result.errorMessage = "Unexpected AWS response format";
+        }
+    } else {
+        result.errorMessage = reply->errorString();
+        std::cout << "[HybridCloudManager] AWS execution failed: "
+                  << result.errorMessage.toStdString() << std::endl;
+    }
+
+    reply->deleteLater();
     result.completedAt = QDateTime::currentDateTime();
-    
-    // TODO: Implement AWS SageMaker Runtime API integration
-    // Requires AWS SDK or manual signing of requests
-    
+
     return result;
 }
 
@@ -501,28 +562,159 @@ ExecutionResult HybridCloudManager::executeOnAzure(const ExecutionRequest& reque
     ExecutionResult result;
     result.requestId = request.requestId;
     result.executionLocation = "azure";
-    result.modelUsed = modelId;
+    result.modelUsed = modelId.isEmpty() ? "meta-llama/Llama-2-7b-chat-hf" : modelId;
     result.success = false;
-    result.errorMessage = "Azure ML integration not yet implemented";
+
+    CloudProvider azure = providers["azure"];
+
+    if (azure.endpoint.isEmpty()) {
+        result.errorMessage = "Azure endpoint not configured";
+        result.completedAt = QDateTime::currentDateTime();
+        return result;
+    }
+
+    // Build Azure ML Online Endpoint invocation request
+    QString apiUrl = azure.endpoint + "/score";
+
+    QJsonObject requestBody;
+    requestBody["input_data"] = QJsonObject{
+        {"columns", QJsonArray{"prompt"}},
+        {"data", QJsonArray{QJsonArray{request.prompt}}}
+    };
+    requestBody["params"] = QJsonObject{
+        {"max_new_tokens", request.maxTokens},
+        {"temperature", request.temperature}
+    };
+
+    QUrl requestUrl(apiUrl);
+    QNetworkRequest netRequest(requestUrl);
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    netRequest.setRawHeader("Authorization", ("Bearer " + azure.apiKey).toUtf8());
+    netRequest.setRawHeader("azureml-model-deployment", result.modelUsed.toUtf8());
+
+    QByteArray requestData = QJsonDocument(requestBody).toJson();
+
+    QElapsedTimer timer;
+    timer.start();
+
+    QNetworkReply* reply = networkManager->post(netRequest, requestData);
+
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    result.latencyMs = timer.elapsed();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+
+        if (responseDoc.isArray()) {
+            QJsonArray responseArray = responseDoc.array();
+            if (!responseArray.isEmpty()) {
+                QJsonObject firstResult = responseArray.first().toObject();
+                result.response = firstResult.value("result").toString();
+                result.tokensUsed = request.maxTokens;
+                result.cost = 0.0;
+                result.success = true;
+                std::cout << "[HybridCloudManager] Azure execution successful - Model: "
+                          << result.modelUsed.toStdString() << ", Latency: " << result.latencyMs << "ms" << std::endl;
+            } else {
+                result.errorMessage = "Empty Azure response";
+            }
+        } else {
+            result.errorMessage = "Unexpected Azure response format";
+        }
+    } else {
+        result.errorMessage = reply->errorString();
+        std::cout << "[HybridCloudManager] Azure execution failed: "
+                  << result.errorMessage.toStdString() << std::endl;
+    }
+
+    reply->deleteLater();
     result.completedAt = QDateTime::currentDateTime();
-    
-    // TODO: Implement Azure ML REST API integration
-    
+
     return result;
 }
 
 ExecutionResult HybridCloudManager::executeOnGCP(const ExecutionRequest& request, 
-                                                 const QString& modelId) {
+                                                  const QString& modelId) {
     ExecutionResult result;
     result.requestId = request.requestId;
     result.executionLocation = "gcp";
-    result.modelUsed = modelId;
+    result.modelUsed = modelId.isEmpty() ? "text-bison@001" : modelId;
     result.success = false;
-    result.errorMessage = "GCP Vertex AI integration not yet implemented";
+
+    CloudProvider gcp = providers["gcp"];
+
+    if (gcp.endpoint.isEmpty()) {
+        result.errorMessage = "GCP endpoint not configured";
+        result.completedAt = QDateTime::currentDateTime();
+        return result;
+    }
+
+    // Build GCP Vertex AI Prediction request
+    QString apiUrl = gcp.endpoint + ":predict";
+
+    QJsonObject instances;
+    instances["prompt"] = request.prompt;
+    instances["max_new_tokens"] = request.maxTokens;
+    instances["temperature"] = request.temperature;
+
+    QJsonObject requestBody;
+    requestBody["instances"] = QJsonArray{instances};
+
+    QUrl requestUrl(apiUrl);
+    QNetworkRequest netRequest(requestUrl);
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    netRequest.setRawHeader("Authorization", ("Bearer " + gcp.apiKey).toUtf8());
+
+    QByteArray requestData = QJsonDocument(requestBody).toJson();
+
+    QElapsedTimer timer;
+    timer.start();
+
+    QNetworkReply* reply = networkManager->post(netRequest, requestData);
+
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    result.latencyMs = timer.elapsed();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+
+        if (responseDoc.isObject()) {
+            QJsonObject responseObj = responseDoc.object();
+            QJsonArray predictions = responseObj["predictions"].toArray();
+            if (!predictions.isEmpty()) {
+                QJsonObject pred = predictions.first().toObject();
+                result.response = pred.value("generated_text").toString();
+                if (result.response.isEmpty()) {
+                    result.response = pred.value("content").toString();
+                }
+                result.tokensUsed = pred.value("tokensUsed", request.maxTokens).toInt();
+                result.cost = 0.0;
+                result.success = true;
+                std::cout << "[HybridCloudManager] GCP execution successful - Model: "
+                          << result.modelUsed.toStdString() << ", Latency: " << result.latencyMs << "ms" << std::endl;
+            } else {
+                result.errorMessage = "Empty GCP predictions";
+            }
+        } else {
+            result.errorMessage = "Unexpected GCP response format";
+        }
+    } else {
+        result.errorMessage = reply->errorString();
+        std::cout << "[HybridCloudManager] GCP execution failed: "
+                  << result.errorMessage.toStdString() << std::endl;
+    }
+
+    reply->deleteLater();
     result.completedAt = QDateTime::currentDateTime();
-    
-    // TODO: Implement GCP Vertex AI REST API integration
-    
+
     return result;
 }
 
