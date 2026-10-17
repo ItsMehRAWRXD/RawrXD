@@ -1,5 +1,6 @@
 #include "LanguageServerIntegration.h"
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 
 namespace RawrXD {

@@ -164,12 +164,12 @@ size_t TensorHotpatch::VerifyAll() {
     for (VRAMLease* lease : leases) {
         if (!lease) continue;
         // Inconsistent states: RESIDENT but no GPU, or EVICTED but on a GPU.
-        if ((lease->state == VRAMLease::RESIDENT && lease->currentGPU < 0) ||
-            (lease->state == VRAMLease::EVICTED && lease->currentGPU >= 0)) {
+        if ((lease->state == LeaseState::RESIDENT && lease->currentGPU < 0) ||
+            (lease->state == LeaseState::EVICTED && lease->currentGPU >= 0)) {
             ++failures;
         }
         // UNASSIGNED and hotpatchable but not pinned is a latent failure.
-        if (lease->state == VRAMLease::UNASSIGNED &&
+        if (lease->state == LeaseState::UNASSIGNED &&
             lease->hotpatchable && !lease->pinned) {
             ++failures;
         }

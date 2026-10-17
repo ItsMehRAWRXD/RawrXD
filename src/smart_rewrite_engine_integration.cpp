@@ -17,15 +17,91 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::getRewriteSuggesti
     try {
         m_logger->debug("Getting rewrite suggestions for {} chars", code.length());
 
-        // Placeholder: would analyze code and generate suggestions
-        RewriteSuggestion s1;
-        s1.originalCode = code;
-        s1.suggestedCode = "// Optimized code";
-        s1.explanation = "This can be optimized";
-        s1.type = type;
-        s1.confidence = 0.85;
-        s1.isSafe = true;
-        suggestions.push_back(s1);
+        // Real implementation: analyze code patterns and generate specific suggestions
+        
+        // Check for string concatenation that could use stringstream
+        if (type == RewriteType::OPTIMIZE || type == RewriteType::REFACTOR) {
+            size_t plusPos = 0;
+            while ((plusPos = code.find(" + ", plusPos)) != std::string::npos) {
+                size_t lineStart = code.rfind('\n', plusPos);
+                if (lineStart == std::string::npos) lineStart = 0;
+                std::string line = code.substr(lineStart, 80);
+                if (line.find('"') != std::string::npos) {
+                    RewriteSuggestion s;
+                    s.originalCode = line;
+                    s.suggestedCode = "// Use std::stringstream for string concatenation in loops";
+                    s.explanation = "String concatenation with + operator in loops causes multiple allocations. Use std::stringstream instead.";
+                    s.type = type;
+                    s.confidence = 0.75f;
+                    s.isSafe = true;
+                    suggestions.push_back(s);
+                    break;
+                }
+                plusPos += 3;
+            }
+        }
+
+        // Check for raw new/delete that could use smart pointers
+        if (type == RewriteType::MODERNIZE || type == RewriteType::REFACTOR) {
+            size_t newPos = 0;
+            while ((newPos = code.find("new ", newPos)) != std::string::npos) {
+                size_t lineStart = code.rfind('\n', newPos);
+                if (lineStart == std::string::npos) lineStart = 0;
+                std::string line = code.substr(lineStart, 200);
+                if (line.find("unique_ptr") == std::string::npos && 
+                    line.find("shared_ptr") == std::string::npos &&
+                    line.find("delete") == std::string::npos) {
+                    RewriteSuggestion s;
+                    s.originalCode = line.substr(0, std::min(line.size(), size_t(80)));
+                    s.suggestedCode = "// Use std::unique_ptr or std::shared_ptr instead of raw new";
+                    s.explanation = "Raw new/delete can lead to memory leaks. Use smart pointers for automatic memory management.";
+                    s.type = type;
+                    s.confidence = 0.8f;
+                    s.isSafe = true;
+                    suggestions.push_back(s);
+                    break;
+                }
+                newPos += 4;
+            }
+        }
+
+        // Check for missing const references
+        if (type == RewriteType::OPTIMIZE) {
+            std::regex byValRegex(R"((\w+)\s+(\w+)\s*\(\s*std::string\s+\w+\s*\))");
+            std::smatch match;
+            if (std::regex_search(code, match, byValRegex)) {
+                RewriteSuggestion s;
+                s.originalCode = match.str(0);
+                s.suggestedCode = match.str(1) + " " + match.str(2) + "(const std::string& " + match.str(2) + ")";
+                s.explanation = "Pass std::string by const reference to avoid unnecessary copies.";
+                s.type = type;
+                s.confidence = 0.85f;
+                s.isSafe = true;
+                suggestions.push_back(s);
+            }
+        }
+
+        // Check for vector push_back without reserve
+        if (type == RewriteType::OPTIMIZE) {
+            size_t pushPos = 0;
+            while ((pushPos = code.find("push_back", pushPos)) != std::string::npos) {
+                size_t lineStart = code.rfind('\n', pushPos);
+                if (lineStart == std::string::npos) lineStart = 0;
+                std::string line = code.substr(lineStart, 200);
+                if (line.find("reserve") == std::string::npos) {
+                    RewriteSuggestion s;
+                    s.originalCode = line.substr(0, std::min(line.size(), size_t(80)));
+                    s.suggestedCode = "// Call vec.reserve(n) before push_back in loops";
+                    s.explanation = "vector::push_back without reserve may cause multiple reallocations. Reserve capacity upfront.";
+                    s.type = type;
+                    s.confidence = 0.7f;
+                    s.isSafe = true;
+                    suggestions.push_back(s);
+                    break;
+                }
+                pushPos += 9;
+            }
+        }
 
         m_metrics->recordHistogram("rewrite_suggestions_generated", suggestions.size());
 
@@ -167,6 +243,5 @@ bool SmartRewriteEngineIntegration::analyzeSafety(
     const std::string& original,
     const std::string& suggested) {
 
-    // Placeholder: would analyze if the rewrite is safe
-    return true;
-}
+    // Real implementation: analyze if the rewrite is safe
+    // Check that t
