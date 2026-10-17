@@ -3134,11 +3134,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             memset(ssmMambaConvState, 0, modelWeights.numLayers * maxDConv * maxDConvDim * sizeof(float));
         }
 
-        printf("[Deep2Engine] Mamba-2 state buffers: proj=%zu state=%zux%zu conv=%zux%zu dConvDim=%zu\n",
+        printf("[Deep2Engine] Mamba-2 state buffers: proj=%zu state=%zux%zu conv=%zux%zu\n",
                maxProjRows,
                static_cast<size_t>(modelWeights.numLayers) * maxDInner * maxDState,
                static_cast<size_t>(modelWeights.numLayers) * maxDConv * maxDConvDim,
-                maxDConv, maxDConvDim);
+               maxDConv, maxDConvDim);
 
         // Resize SSM scratch buffers (ssmY, ssmTemp) to accommodate dConvDim and dInner,
         // which may exceed hiddenDim for Mamba-2 hybrid layers.
@@ -8637,6 +8637,14 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
             {
                 float& s = statePtr[hdIdx * dState + n];
                 s = s * dA + (dth * B[gsBase + n]) * xd;
+                // Clamp state to prevent runaway accumulation.
+                // Nemotron Bolt NVFP4 weights can produce dA ≈ 1 for some heads
+                // (dt very negative → dth ≈ 0 → dA = exp(0) = 1), causing the
+                // recurrent state to grow without bound over long sequences.
+                // At position 627+, unclamped state reaches millions, blowing up
+                // the residual norm (observed: 10,999,402 vs input norm 64).
+                if (s > 100.0f) s = 100.0f;
+                if (s < -100.0f) s = -100.0f;
                 y += s * C[gsBase + n];
             }
 
