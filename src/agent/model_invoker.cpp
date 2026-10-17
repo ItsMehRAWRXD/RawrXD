@@ -5,16 +5,15 @@
  * Provides synchronous and asynchronous wish→plan transformation
  * with support for Ollama (local) and cloud LLMs.
  */
-
 #include "model_invoker.hpp"
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QUrl>
-#include <QJsonDocument>
 #include <QJsonValue>
 #include <QRegularExpression>
-#include <QTimer>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QEventLoop>
 #include <QDebug>
 #include <QStandardPaths>
@@ -314,8 +313,8 @@ QJsonObject ModelInvoker::sendOllamaRequest(const QString& model,
     payload["num_predict"] = maxTokens;
     payload["stream"] = false;
 
-    QJsonDocument doc(payload);
-    QByteArray data = doc.toJson();
+    // Use NativeJson for real serialization (fixes QJsonDocument::toJson)
+    QByteArray data = QString::fromStdString(NativeJson::toJson(payload)).toUtf8();
 
     qDebug() << "[ModelInvoker] Sending request to Ollama:" << url.toString();
 
@@ -325,7 +324,8 @@ QJsonObject ModelInvoker::sendOllamaRequest(const QString& model,
 
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 
-    QTimer::singleShot(30000, &loop, &QEventLoop::quit); // 30s timeout
+    // Use NativeSingleShotTimer instead of QTimer::singleShot stub
+    NativeSingleShotTimer::run(30000, [&loop]() { loop.quit(); });
 
     loop.exec();
 
@@ -338,7 +338,14 @@ QJsonObject ModelInvoker::sendOllamaRequest(const QString& model,
     QByteArray responseData = reply->readAll();
     reply->deleteLater();
 
-    QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeResp = NativeJson::fromJson(responseData.toStdString());
+    if (nativeResp.is_null() || !nativeResp.is_object()) {
+        qWarning() << "[ModelInvoker] Invalid JSON response";
+        return QJsonObject();
+    }
+    QJsonDocument responseDoc = QJsonDocument::fromJson(
+        QString::fromStdString(NativeJson::toJson(nativeResp)).toUtf8());
     return responseDoc.object();
 }
 
@@ -385,7 +392,14 @@ QJsonObject ModelInvoker::sendClaudeRequest(const QString& prompt,
     QByteArray responseData = reply->readAll();
     reply->deleteLater();
 
-    QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeResp = NativeJson::fromJson(responseData.toStdString());
+    if (nativeResp.is_null() || !nativeResp.is_object()) {
+        qWarning() << "[ModelInvoker] Invalid JSON response";
+        return QJsonObject();
+    }
+    QJsonDocument responseDoc = QJsonDocument::fromJson(
+        QString::fromStdString(NativeJson::toJson(nativeResp)).toUtf8());
     return responseDoc.object();
 }
 
@@ -453,7 +467,14 @@ QJsonObject ModelInvoker::sendOpenAIRequest(const QString& prompt,
     QByteArray responseData = reply->readAll();
     reply->deleteLater();
 
-    QJsonDocument responseDoc = QJsonDocument::fromJson(responseData);
+    // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+    json nativeResp = NativeJson::fromJson(responseData.toStdString());
+    if (nativeResp.is_null() || !nativeResp.is_object()) {
+        qWarning() << "[ModelInvoker] Invalid JSON response";
+        return QJsonObject();
+    }
+    QJsonDocument responseDoc = QJsonDocument::fromJson(
+        QString::fromStdString(NativeJson::toJson(nativeResp)).toUtf8());
     return responseDoc.object();
 }
 
