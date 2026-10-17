@@ -25,6 +25,10 @@
 #include <sstream>
 #include <regex>
 #include <algorithm>
+#include <windows.h>
+#include <winhttp.h>
+
+#pragma comment(lib, "winhttp.lib")
 
 // Simplified JSON parsing (would use nlohmann/json in production)
 class SimpleJsonParser {
@@ -365,34 +369,115 @@ private:
      */
     std::string fetchJSON(const std::string& url, const std::string& token) {
         try {
-            // TODO: Implement with libcurl
-            // CURL* curl = curl_easy_init();
-            // if (!curl) return "";
-            // 
-            // std::string response;
-            // curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            // 
-            // // Add authentication header if token provided
-            // if (!token.empty()) {
-            //     std::string auth_header = "Authorization: Bearer " + token;
-            //     struct curl_slist* headers = nullptr;
-            //     headers = curl_slist_append(headers, auth_header.c_str());
-            //     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-            // }
-            //
-            // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-            // curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-            // curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
-            //
-            // CURLcode res = curl_easy_perform(curl);
-            // curl_slist_free_all(headers);
-            // curl_easy_cleanup(curl);
-            //
-            // return response;
+            // Real implementation using WinHTTP (no external dependencies)
+            HINTERNET hSession = WinHttpOpen(L"RawrXD-HFHubClient/1.0",
+                                              WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                              WINHTTP_NO_PROXY_NAME,
+                                              WINHTTP_NO_PROXY_BYPASS, 0);
+            if (!hSession) {
+                std::cerr << "   [WinHTTP] Failed to open session" << std::endl;
+                return "";
+            }
 
-            // Placeholder: mock response for testing
-            std::cout << "   [Mock] Fetching from: " << url << std::endl;
-            return R"({"id": "mock/model", "downloads": 1000})";
+            // Parse URL to extract host and path
+            // URL format: https://host.com/path?query
+            std::string scheme = "https://";
+            size_t schemePos = url.find(scheme);
+            if (schemePos == std::string::npos) {
+                WinHttpCloseHandle(hSession);
+                return "";
+            }
+
+            size_t hostStart = schemePos + scheme.length();
+            size_t pathStart = url.find('/', hostStart);
+            std::string host, path;
+            if (pathStart == std::string::npos) {
+                host = url.substr(hostStart);
+                path = "/";
+            } else {
+                host = url.substr(hostStart, pathStart - hostStart);
+                path = url.substr(pathStart);
+            }
+
+            // Convert host to wide string
+            int hostLen = MultiByteToWideChar(CP_UTF8, 0, host.c_str(), -1, nullptr, 0);
+            std::wstring wHost(hostLen, 0);
+            MultiByteToWideChar(CP_UTF8, 0, host.c_str(), -1, &wHost[0], hostLen);
+
+            int pathLen = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, nullptr, 0);
+            std::wstring wPath(pathLen, 0);
+            MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wPath[0], pathLen);
+
+            HINTERNET hConnect = WinHttpConnect(hSession, wHost.c_str(),
+                                                 INTERNET_DEFAULT_HTTPS_PORT, 0);
+            if (!hConnect) {
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to connect to " << host << std::endl;
+                return "";
+            }
+
+            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wPath.c_str(),
+                                                     nullptr, WINHTTP_NO_REFERER,
+                                                     WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                                     WINHTTP_FLAG_SECURE);
+            if (!hRequest) {
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to open request" << std::endl;
+                return "";
+            }
+
+            // Add authorization header if token provided
+            if (!token.empty()) {
+                std::string authHeader = "Authorization: Bearer " + token;
+                int authLen = MultiByteToWideChar(CP_UTF8, 0, authHeader.c_str(), -1, nullptr, 0);
+                std::wstring wAuth(authLen, 0);
+                MultiByteToWideChar(CP_UTF8, 0, authHeader.c_str(), -1, &wAuth[0], authLen);
+                WinHttpAddRequestHeaders(hRequest, wAuth.c_str(), (DWORD)-1L,
+                                          WINHTTP_ADDREQ_FLAG_ADD);
+            }
+
+            // Set timeouts
+            WinHttpSetTimeouts(hRequest, 10000, 10000, 30000, 30000);
+
+            if (!WinHttpSendRequest(hRequest, WINHTTP_NO_REQUEST_DATA, 0,
+                                     WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+                WinHttpCloseHandle(hRequest);
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to send request" << std::endl;
+                return "";
+            }
+
+            if (!WinHttpReceiveResponse(hRequest, nullptr)) {
+                WinHttpCloseHandle(hRequest);
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to receive response" << std::endl;
+                return "";
+            }
+
+            // Read response
+            std::string response;
+            DWORD dwSize = 0;
+            DWORD dwDownloaded = 0;
+            do {
+                dwSize = 0;
+                if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) break;
+                if (dwSize == 0) break;
+
+                std::vector<char> buffer(dwSize + 1);
+                if (!WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded)) break;
+                buffer[dwDownloaded] = '\0';
+                response.append(buffer.data(), dwDownloaded);
+            } while (dwSize > 0);
+
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+
+            std::cout << "   [WinHTTP] Fetched " << response.size() << " bytes from: " << url << std::endl;
+            return response;
 
         } catch (...) {
             return "";
@@ -408,39 +493,164 @@ private:
      * - Automatic retry on failure
      */
     bool downloadFile(const std::string& url,
-                     const std::string& outputPath,
-                     std::function<void(uint64_t, uint64_t)> progressCallback,
-                     const std::string& token) {
+                      const std::string& outputPath,
+                      std::function<void(uint64_t, uint64_t)> progressCallback,
+                      const std::string& token) {
         try {
-            // TODO: Implement with libcurl
-            // CURL* curl = curl_easy_init();
-            // if (!curl) return false;
-            //
-            // // Check if file already exists (resume)
-            // uint64_t resumeFrom = 0;
-            // std::ifstream existing(outputPath);
-            // if (existing) {
-            //     existing.seekg(0, std::ios::end);
-            //     resumeFrom = existing.tellg();
-            //     existing.close();
-            // }
-            //
-            // // Setup download
-            // std::ofstream outFile(outputPath, std::ios::binary | std::ios::app);
-            // curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            // curl_easy_setopt(curl, CURLOPT_RESUME_FROM_LARGE, resumeFrom);
-            // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-            // curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outFile);
-            // curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-            // curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progressFunc);
-            // curl_easy_setopt(curl, CURLOPT_XFERINFODATA, progressCallback.target<void*>());
-            //
-            // CURLcode res = curl_easy_perform(curl);
-            // curl_easy_cleanup(curl);
-            // return res == CURLE_OK;
+            // Real implementation using WinHTTP (no external dependencies)
+            HINTERNET hSession = WinHttpOpen(L"RawrXD-HFHubClient/1.0",
+                                              WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                              WINHTTP_NO_PROXY_NAME,
+                                              WINHTTP_NO_PROXY_BYPASS, 0);
+            if (!hSession) {
+                std::cerr << "   [WinHTTP] Failed to open session" << std::endl;
+                return false;
+            }
 
-            std::cout << "   ✅ Downloaded successfully (mock)" << std::endl;
-            return true;
+            // Parse URL to extract host and path
+            std::string scheme = "https://";
+            size_t schemePos = url.find(scheme);
+            if (schemePos == std::string::npos) {
+                WinHttpCloseHandle(hSession);
+                return false;
+            }
+
+            size_t hostStart = schemePos + scheme.length();
+            size_t pathStart = url.find('/', hostStart);
+            std::string host, path;
+            if (pathStart == std::string::npos) {
+                host = url.substr(hostStart);
+                path = "/";
+            } else {
+                host = url.substr(hostStart, pathStart - hostStart);
+                path = url.substr(pathStart);
+            }
+
+            int hostLen = MultiByteToWideChar(CP_UTF8, 0, host.c_str(), -1, nullptr, 0);
+            std::wstring wHost(hostLen, 0);
+            MultiByteToWideChar(CP_UTF8, 0, host.c_str(), -1, &wHost[0], hostLen);
+
+            int pathLen = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, nullptr, 0);
+            std::wstring wPath(pathLen, 0);
+            MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wPath[0], pathLen);
+
+            HINTERNET hConnect = WinHttpConnect(hSession, wHost.c_str(),
+                                                 INTERNET_DEFAULT_HTTPS_PORT, 0);
+            if (!hConnect) {
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to connect to " << host << std::endl;
+                return false;
+            }
+
+            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wPath.c_str(),
+                                                     nullptr, WINHTTP_NO_REFERER,
+                                                     WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                                     WINHTTP_FLAG_SECURE);
+            if (!hRequest) {
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to open request" << std::endl;
+                return false;
+            }
+
+            // Add authorization header if token provided
+            if (!token.empty()) {
+                std::string authHeader = "Authorization: Bearer " + token;
+                int authLen = MultiByteToWideChar(CP_UTF8, 0, authHeader.c_str(), -1, nullptr, 0);
+                std::wstring wAuth(authLen, 0);
+                MultiByteToWideChar(CP_UTF8, 0, authHeader.c_str(), -1, &wAuth[0], authLen);
+                WinHttpAddRequestHeaders(hRequest, wAuth.c_str(), (DWORD)-1L,
+                                          WINHTTP_ADDREQ_FLAG_ADD);
+            }
+
+            // Set timeouts
+            WinHttpSetTimeouts(hRequest, 10000, 10000, 300000, 300000);
+
+            if (!WinHttpSendRequest(hRequest, WINHTTP_NO_REQUEST_DATA, 0,
+                                     WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+                WinHttpCloseHandle(hRequest);
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to send request" << std::endl;
+                return false;
+            }
+
+            if (!WinHttpReceiveResponse(hRequest, nullptr)) {
+                WinHttpCloseHandle(hRequest);
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to receive response" << std::endl;
+                return false;
+            }
+
+            // Get content length for resume support
+            uint64_t resumeFrom = 0;
+            std::ifstream existing(outputPath);
+            if (existing) {
+                existing.seekg(0, std::ios::end);
+                resumeFrom = existing.tellg();
+                existing.close();
+            }
+
+            // Open output file for appending (resume support)
+            std::ofstream outFile(outputPath, std::ios::binary | std::ios::app);
+            if (!outFile.is_open()) {
+                WinHttpCloseHandle(hRequest);
+                WinHttpCloseHandle(hConnect);
+                WinHttpCloseHandle(hSession);
+                std::cerr << "   [WinHTTP] Failed to open output file: " << outputPath << std::endl;
+                return false;
+            }
+
+            uint64_t totalDownloaded = resumeFrom;
+            uint64_t totalContentLength = 0;
+
+            // Query content length
+            DWORD dwContentLen = sizeof(DWORD);
+            DWORD contentLength = 0;
+            if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CONTENT_LENGTH,
+                                     WINHTTP_HEADER_NAME_BY_INDEX, &contentLength, &dwContentLen, nullptr)) {
+                totalContentLength = contentLength;
+            }
+
+            // Read and write response data
+            DWORD dwSize = 0;
+            DWORD dwDownloaded = 0;
+            char buffer[8192];
+            bool success = true;
+
+            do {
+                dwSize = 0;
+                if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) break;
+                if (dwSize == 0) break;
+
+                DWORD toRead = dwSize;
+                if (toRead > sizeof(buffer)) toRead = sizeof(buffer);
+
+                if (!WinHttpReadData(hRequest, buffer, toRead, &dwDownloaded)) break;
+                if (dwDownloaded == 0) break;
+
+                outFile.write(buffer, dwDownloaded);
+                totalDownloaded += dwDownloaded;
+
+                // Call progress callback
+                if (progressCallback) {
+                    progressCallback(totalDownloaded, totalContentLength);
+                }
+            } while (dwSize > 0);
+
+            outFile.close();
+
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+
+            if (success) {
+                std::cout << "   ✅ Downloaded " << totalDownloaded << " bytes to: " << outputPath << std::endl;
+                return true;
+            }
+
+            return false;
 
         } catch (...) {
             return false;
