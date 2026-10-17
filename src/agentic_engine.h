@@ -150,6 +150,10 @@ private:
     std::string executeTool(const std::string& toolName,
                             const std::string& paramsJson);
 
+    // Rollback support
+    bool rollback();
+    int rollbackStackSize() const;
+
     // Keep/Undo file operations
     AgenticFileOperations* m_fileOperations;
     AgenticErrorHandler* m_errorHandler;
@@ -168,7 +172,13 @@ private:
         QString comment;
         qint64 timestamp;
     };
+    struct RollbackEntry {
+        QString filePath;
+        QString backupContent;
+        bool existed;
+    };
     std::vector<FeedbackEntry> m_feedbackHistory;
+    std::vector<RollbackEntry> m_rollbackStack;
     std::unordered_map<QString, int> m_responseRatings;
     
     // User preferences and adaptation

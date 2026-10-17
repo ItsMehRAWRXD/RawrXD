@@ -915,6 +915,7 @@ You are an autonomous software engineering agent. You have access to the followi
 5. build_project(build_dir, config, target) - Build the project using cmake
 6. run_tests(build_dir, target) - Run tests using ctest
 7. git_command(command, args, timeout_ms) - Execute a git command within the workspace
+8. rollback_changes() - Rollback all file changes made in this session
 
 To use a tool, respond with exactly: TOOL:<name>:<json parameters>
 Example: TOOL:read_file:{"path":"src/main.cpp"}
@@ -1047,6 +1048,21 @@ std::string AgenticEngine::executeTool(const std::string& toolName,
         std::filesystem::path canonicalPath;
         if (!resolveAndValidatePath(path, canonicalPath))
             return "Error: Path outside workspace: " + path;
+
+        // Create backup before overwriting (for rollback support)
+        RollbackEntry entry;
+        entry.filePath = QString::fromStdString(canonicalPath.string());
+        entry.existed = std::filesystem::exists(canonicalPath);
+        if (entry.existed) {
+            std::ifstream bakFile(canonicalPath, std::ios::binary);
+            if (bakFile) {
+                std::stringstream ss;
+                ss << bakFile.rdbuf();
+                entry.backupContent = QString::fromStdString(ss.str());
+            }
+        }
+        m_rollbackStack.push_back(std::move(entry));
+
         std::ofstream file(canonicalPath, std::ios::binary | std::ios::trunc);
         if (!file) return "Error: Cannot write file: " + path;
         file.write(content.data(), static_cast<std::streamsize>(content.size()));
@@ -1128,7 +1144,56 @@ std::string AgenticEngine::executeTool(const std::string& toolName,
         return output.empty() ? "(no output)" : output;
     }
 
+    if (toolName == "rollback_changes") {
+        bool ok = rollback();
+        return ok ? "OK: Rollback completed successfully"
+                  : "Error: Rollback completed with errors";
+    }
+
     return "Error: Unknown tool: " + toolName;
+}
+
+// ── Rollback ───────────────────────────────────────────────────────────
+bool AgenticEngine::rollback() {
+    if (m_rollbackStack.empty()) {
+        std::clog << "[AgenticEngine] Rollback stack empty" << std::endl;
+        return false;
+    }
+
+    bool allOk = true;
+    while (!m_rollbackStack.empty()) {
+        auto entry = m_rollbackStack.back();
+        m_rollbackStack.pop_back();
+
+        std::filesystem::path path(entry.filePath.toStdString());
+
+        if (entry.existed) {
+            // Restore original content
+            std::ofstream file(path, std::ios::binary | std::ios::trunc);
+            if (!file) {
+                allOk = false;
+                continue;
+            }
+            file.write(entry.backupContent.toStdString().data(),
+                       static_cast<std::streamsize>(entry.backupContent.size()));
+            file.close();
+        } else {
+            // File didn't exist before - remove it
+            std::error_code ec;
+            std::filesystem::remove(path, ec);
+            if (ec) {
+                allOk = false;
+            }
+        }
+    }
+
+    std::clog << "[AgenticEngine] Rollback " << (allOk ? "completed" : "completed with errors")
+              << std::endl;
+    return allOk;
+}
+
+int AgenticEngine::rollbackStackSize() const {
+    return static_cast<int>(m_rollbackStack.size());
 }
 
 std::string AgenticEngine::generateTokenizedResponse(const std::string& message) {
