@@ -199,6 +199,24 @@ public:
             &pi                // process information
         );
 
+        // Shell built-ins (ver, echo, dir, etc.) need cmd /c prefix
+        if (!created) {
+            std::string shellCmdLine = "cmd /c " + cmdLine;
+            std::wstring wShellCmdLine = toWide(shellCmdLine);
+            created = CreateProcessW(
+                nullptr,           // application name
+                &wShellCmdLine[0], // command line
+                nullptr,           // process security
+                nullptr,           // thread security
+                TRUE,              // inherit handles
+                CREATE_NO_WINDOW,  // creation flags
+                nullptr,           // environment
+                wWorkDir.empty() ? nullptr : wWorkDir.c_str(), // working directory
+                &si,               // startup info
+                &pi                // process information
+            );
+        }
+
         // Close write ends of pipes (we only read)
         CloseHandle(hStdOutWrite);
         CloseHandle(hStdErrWrite);
@@ -248,9 +266,16 @@ public:
 
     // Check if a program exists in PATH
     static bool exists(const std::string& program) {
-        // Simple check: try to find the executable
-        std::string cmd = "where " + program;
-        auto result = execute(cmd, {}, "", 5000);
+        // Split "where cmd" into command + args
+        std::string cmdLine = "where " + program;
+        // Find first space to split command from args
+        auto spacePos = cmdLine.find(' ');
+        std::string cmd = (spacePos != std::string::npos) ? cmdLine.substr(0, spacePos) : cmdLine;
+        std::vector<std::string> args;
+        if (spacePos != std::string::npos) {
+            args.push_back(cmdLine.substr(spacePos + 1));
+        }
+        auto result = execute(cmd, args, "", 5000);
         return result.success && !result.stdoutOutput.empty();
     }
 };
@@ -481,9 +506,15 @@ public:
     bool create(HWND parent, int x, int y, int width, int height,
                 const std::string& className, const std::string& title,
                 DWORD style = WS_CHILD | WS_VISIBLE) {
+        // Child windows require a valid parent HWND; when none is given,
+        // upgrade to an overlapped top-level window so creation succeeds.
+        DWORD effectiveStyle = style;
+        if (parent == nullptr && (style & WS_CHILD)) {
+            effectiveStyle = (style & ~WS_CHILD) | WS_OVERLAPPED | WS_VISIBLE;
+        }
         m_hwnd = CreateWindowExA(
             0, className.c_str(), title.c_str(),
-            style, x, y, width, height,
+            effectiveStyle, x, y, width, height,
             parent, nullptr, GetModuleHandle(nullptr), this
         );
         return m_hwnd != nullptr;
