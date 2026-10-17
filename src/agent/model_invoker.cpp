@@ -374,13 +374,13 @@ QJsonObject ModelInvoker::sendClaudeRequest(const QString& prompt,
     messages.append(message);
     payload["messages"] = messages;
 
-    QJsonDocument doc(payload);
-    QByteArray data = doc.toJson();
+    // Use NativeJson for real serialization (fixes QJsonDocument::toJson)
+    QByteArray data = QString::fromStdString(NativeJson::toJson(payload)).toUtf8();
 
     QEventLoop loop;
     QNetworkReply* reply = m_networkManager->post(request, data);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QTimer::singleShot(30000, &loop, &QEventLoop::quit);
+    NativeSingleShotTimer::run(30000, [&loop]() { loop.quit(); });
     loop.exec();
 
     if (reply->error() != QNetworkReply::NoError) {
@@ -449,13 +449,13 @@ QJsonObject ModelInvoker::sendOpenAIRequest(const QString& prompt,
     messages.append(message);
     payload["messages"] = messages;
 
-    QJsonDocument doc(payload);
-    QByteArray data = doc.toJson();
+    // Use NativeJson for real serialization (fixes QJsonDocument::toJson)
+    QByteArray data = QString::fromStdString(NativeJson::toJson(payload)).toUtf8();
 
     QEventLoop loop;
     QNetworkReply* reply = m_networkManager->post(request, data);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QTimer::singleShot(30000, &loop, &QEventLoop::quit);
+    NativeSingleShotTimer::run(30000, [&loop]() { loop.quit(); });
     loop.exec();
 
     if (reply->error() != QNetworkReply::NoError) {
@@ -490,15 +490,21 @@ QJsonArray ModelInvoker::parsePlan(const QString& llmOutput)
 
     if (match.hasMatch()) {
         QString jsonStr = match.captured(1);
-        QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
-        if (doc.isArray()) {
+        // Use NativeJson for real parsing (fixes QJsonDocument::fromJson returning empty)
+        json nativeDoc = NativeJson::fromJson(jsonStr.toStdString());
+        if (nativeDoc.is_array()) {
+            QJsonDocument doc = QJsonDocument::fromJson(
+                QString::fromStdString(NativeJson::toJson(nativeDoc)).toUtf8());
             return doc.array();
         }
     }
 
     // Strategy 2: Try parsing entire output as JSON
-    QJsonDocument doc = QJsonDocument::fromJson(llmOutput.toUtf8());
-    if (doc.isArray()) {
+    // Use NativeJson for real parsing
+    json nativeDoc2 = NativeJson::fromJson(llmOutput.toStdString());
+    if (nativeDoc2.is_array()) {
+        QJsonDocument doc = QJsonDocument::fromJson(
+            QString::fromStdString(NativeJson::toJson(nativeDoc2)).toUtf8());
         return doc.array();
     }
 
