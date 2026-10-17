@@ -1,12 +1,7 @@
 #include "auto_update.hpp"
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QJsonDocument>
-#include <QJsonObject>
+#include "qt_block.h"
+#include "core/qt_elimination.h"
 #include <QCryptographicHash>
-#include <QProcess>
-#include <QEventLoop>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -16,7 +11,6 @@
 #include <QDebug>
 #include <QUrl>
 #include <QElapsedTimer>
-#include <QSettings>
 
 // PRODUCTION-READY: External configuration via environment variables
 static QString getUpdateURL() {
@@ -42,9 +36,9 @@ bool AutoUpdate::checkAndInstall() {
     QElapsedTimer timer;
     timer.start();
     
-    // PRODUCTION-READY: Feature toggle check
-    QSettings settings;
-    if (!settings.value("AutoUpdate/Enabled", true).toBool()) {
+    // PRODUCTION-READY: Feature toggle check (native settings, no QSettings stub)
+    NativeSettings settings;
+    if (!settings.boolValue("AutoUpdate/Enabled", true)) {
         logUpdateEvent("SKIPPED", "Auto-update disabled in settings");
         return true;
     }
