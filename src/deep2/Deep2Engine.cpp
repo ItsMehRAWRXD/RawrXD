@@ -6896,20 +6896,6 @@ Deep2::GenerationReceipt Deep2Engine::generateStreamReceipt(
     receipt.telemetry.modelLoadMs = 0.0; // Captured at model load time
     receipt.telemetry.prefillMs = r.promptTimeMs;
     receipt.telemetry.decodeMs = r.generationTimeMs;
-    
-    // Capture internal performance counters if available
-    if (profilingEnabled_ && profiler_) {
-        const auto& history = profiler_->getProfileHistory();
-        if (!history.empty()) {
-            const auto& last = history.back();
-            // TokenProfile has per-phase microsecond timings
-            receipt.telemetry.tensorLoadMs = last.embedUs / 1000.0;
-            receipt.telemetry.weightLoadMs = (last.qkvProjUs + last.attnOutProjUs + 
-                                               last.ffnGateUs + last.ffnUpUs + last.ffnDownUs) / 1000.0;
-            receipt.telemetry.gpuSyncMs = 0.0; // Not directly measured
-            receipt.telemetry.diagnosticLoggingMs = 0.0; // Not directly measured
-        }
-    }
 
     return receipt;
 }
@@ -7073,16 +7059,14 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 auto pt = tokenize(runtimePrompt);
                 if (!pt.empty()) promptTokCount = (uint32_t)pt.size();
             }
-{
-                uint32_t rem = 1u;
-                if (config.maxSeqLen > promptTokCount)
-                    rem = (uint32_t)(config.maxSeqLen - promptTokCount);
-                const uint32_t cap =
-                    rawr::unlimited::ResolveCap(options.maxTokens, rem);
-                kc.streamTokens = cap ? cap : rem;
-                // Track which limit was binding for K2 path
-                const bool k2ContextLimited = (options.maxTokens == 0 || options.maxTokens > rem) && rem < options.maxTokens;
-            }
+            uint32_t rem = 1u;
+            if (config.maxSeqLen > promptTokCount)
+                rem = (uint32_t)(config.maxSeqLen - promptTokCount);
+            const uint32_t cap =
+                rawr::unlimited::ResolveCap(options.maxTokens, rem);
+            kc.streamTokens = cap ? cap : rem;
+            // Track which limit was binding for K2 path
+            const bool k2ContextLimited = (options.maxTokens == 0 || options.maxTokens > rem) && rem < options.maxTokens;
             // k2ContextLimited needs to be accessible later for stop reason
             const bool k2ContextLimitedForStop = k2ContextLimited;
             uint32_t depth = config.numLayers ? (uint32_t)config.numLayers : 61u;

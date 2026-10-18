@@ -94,6 +94,10 @@ struct LayerWeights {
     WeightTensor wk;          // [kvDim, hiddenDim]
     WeightTensor wv;          // [kvDim, hiddenDim]
     WeightTensor wo;          // [hiddenDim, hiddenDim]
+    WeightTensor bo;          // [hiddenDim] output bias (if present)
+    WeightTensor bq;          // [hiddenDim] Q bias (Qwen2.5, etc.)
+    WeightTensor bk;          // [kvDim] K bias
+    WeightTensor bv;          // [kvDim] V bias
     WeightTensor wqkv;        // [hiddenDim + 2*kvDim, hiddenDim] fused QKV (Phi-3, etc.)
     WeightTensor attnNorm;    // [hiddenDim] RMSNorm weights
     WeightTensor attnQNorm;   // [headDim] per-head Q RMSNorm (Qwen3.5)
@@ -277,6 +281,81 @@ struct GenerationResult {
 
     bool cancelled = false;
     bool completed = false;
+
+    // Authoritative stop reason reported by the decoder, not inferred by the
+    // caller. The decoder knows why it stopped: EOS token, max-tokens budget,
+    // callback cancellation, context limit, or engine error.
+    enum class StopReason : uint8_t {
+        Unknown = 0,
+        Eos,            // sampled EOS/EOG token
+        MaxTokens,      // generation budget exhausted
+        CallbackCancel, // callback returned false
+        ContextLimit,   // context window limit
+        EngineError,    // no tokens / internal failure
+    } stopReason = StopReason::Unknown;
+};
+
+// ============================================================================
+// GenerationTelemetry — execution and timing telemetry collected during
+// the same request as the GenerationReceipt. Populated by
+// generateStreamReceipt() so callers can diagnose performance without
+// separate logging systems.
+// ============================================================================
+struct GenerationTelemetry {
+    uint64_t forwardCalls = 0;
+    uint64_t layerExecutions = 0;
+    uint64_t matmulCalls = 0;
+    uint64_t weightCacheMisses = 0;
+    uint64_t remapBytes = 0;
+
+    double modelLoadMs = 0.0;
+    double prefillMs = 0.0;
+    double decodeMs = 0.0;
+    double weightLoadMs = 0.0;
+    double gpuSyncMs = 0.0;
+    double tensorLoadMs = 0.0;
+    double weightRemapMs = 0.0;
+    double diagnosticLoggingMs = 0.0;
+};
+
+// ============================================================================
+// GenerationReceipt — shared termination receipt used by both CLI and agent
+// entry points. Every field is populated by generateStreamReceipt() and
+// generateStream() so callers can distinguish EOS from cancel, observe the
+// actual sampled token IDs, and fail closed on engine errors.
+// ============================================================================
+struct GenerationReceipt {
+    bool modelLoaded = false;
+    bool completed = false;
+    bool callbackCancelled = false;
+    bool eosObserved = false;
+    bool engineError = false;
+
+    uint64_t promptTokens = 0;
+    uint64_t generatedTokens = 0;
+    uint64_t committedTokens = 0;
+
+    double promptTimeMs = 0.0;
+    double generationTimeMs = 0.0;
+
+    std::vector<int32_t> tokenIds;
+    std::string output;
+    GenerationResult::StopReason stopReason = GenerationResult::StopReason::Unknown;
+
+    // Phase-by-phase execution telemetry (populated by generateStreamReceipt)
+    GenerationTelemetry telemetry;
+
+    const char* stopReasonStr() const noexcept {
+        switch (stopReason) {
+            case GenerationResult::StopReason::Eos: return "eos";
+            case GenerationResult::StopReason::MaxTokens: return "max_tokens";
+            case GenerationResult::StopReason::CallbackCancel: return "cancel";
+            case GenerationResult::StopReason::ContextLimit: return "context_limit";
+            case GenerationResult::StopReason::EngineError: return "error";
+            case GenerationResult::StopReason::Unknown:
+            default: return "unknown";
+        }
+    }
 };
 
 enum class ModelState : uint8_t {
@@ -331,6 +410,13 @@ public:
 
     // Native streaming generation — token-by-token with cancellation
     GenerationResult generateStream(
+        const std::string& prompt,
+        const GenerationOptions& options,
+        TokenCallback callback);
+
+    // Native streaming generation — returns GenerationReceipt with full
+    // termination diagnostics (stopReason, telemetry, tokenIds, output, etc.)
+    GenerationReceipt generateStreamReceipt(
         const std::string& prompt,
         const GenerationOptions& options,
         TokenCallback callback);
@@ -604,6 +690,10 @@ public:
     void setTemperature(float temperature);
     void setTopP(float topP);
     void setSampling(float temperature, float topP);
+
+    // Debug logging gate — verbose per-layer diagnostics
+    void enableDebugLogging(bool enable);
+    bool isDebugLoggingEnabled() const { return debugLogging_; }
 
     // Token embedding lookup (public for tree speculative decoding)
     // Returns false on FATAL_EMBED (zero/nonfinite row). Callers must abort inference.
@@ -887,6 +977,7 @@ private:
     size_t ssmMambaDtRank_ = 0;
 
     bool initialized = false;
+    bool debugLogging_ = false;
     ModelState modelState_ = ModelState::Closed;
     bool hostQ8GemvSafe_ = true;
     bool hostDecodeSanitize_ = false;
