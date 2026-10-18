@@ -32,6 +32,12 @@ CMakeCache.txt
 cmake_install.cmake
 install_manifest.txt
 
+# Build artifacts & test outputs
+move10_output.txt
+run_converter.bat
+run_move10.bat
+shaders/
+
 # IDE
 .idea/
 .vscode/
