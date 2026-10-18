@@ -1,0 +1,14 @@
+BATCH 65 — DEEPSEEK-V4-FLASH 284B-A13B CONTRACT
+
+Reference architecture envelope:
+  284B total / 13B active
+  1M context
+  64 attention heads / 1 KV head where exposed by GGUF metadata
+  hybrid compressed-attention family
+
+Fields not fixed by this preset remain runtime-GGUF authoritative.
+
+Initial short-context contract:
+  p10 raw TPS >= 10
+  median raw TPS >= 12
+  target must have >=3% physical roofline headroom

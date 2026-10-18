@@ -1,0 +1,30 @@
+#version 450
+layout(local_size_x=32) in;
+layout(set=0,binding=0,std430) readonly buffer T0 { uint target[]; };
+layout(set=0,binding=1,std430) readonly buffer P0 { uint proposal[]; };
+layout(set=0,binding=2,std430) writeonly buffer O0 { uint outv[]; };
+layout(set=0,binding=3,std430) buffer D0 { uint dummy[]; };
+layout(push_constant) uniform Push {
+    uint count;
+} pc;
+
+shared uint mismatch[32];
+void main() {
+    uint lane=gl_LocalInvocationID.x;
+    uint bad=0xffffffffu;
+    if(lane<pc.count && target[lane]!=proposal[lane])
+        bad=lane;
+    mismatch[lane]=bad;
+    barrier();
+    for(uint s=16u;s>0u;s>>=1u) {
+        if(lane<s) mismatch[lane]=min(mismatch[lane],mismatch[lane+s]);
+        barrier();
+    }
+    if(lane==0u) {
+        uint first=mismatch[0];
+        uint accepted=(first==0xffffffffu)?pc.count:first;
+        outv[0]=accepted;
+        outv[1]=(accepted<pc.count)?target[accepted]:0xffffffffu;
+        outv[2]=target[pc.count-1u]; // all-accepted bonus predictor
+    }
+}

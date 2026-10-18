@@ -1,0 +1,65 @@
+DEEP2_RESIDENT_FORWARD_PREEMPTION_001 — Routing Experiment Receipt
+==========================================================
+Date: 2026-09-18
+Commits: f643d31f8 (telemetry seal) → c10484bb2 (env-gated experiment)
+
+GATE=DEEP2_RESIDENT_FORWARD_PREEMPTION_001
+VERDICT=HOLD (both configurations below baseline; experiment NOT promoted)
+
+SEALED BASELINE (dual-row default, 256 tokens, evidence/DENSE_ROW_TIMING):
+  DECODE_TPS_ENGINE=5.142206
+  DENSE_ROW_WALL_PCT=87.599
+  DENSE_ROW_GPU0_COMPUTE_NS=12485799149   (first-ever GPU-side authority)
+  DENSE_ROW_GPU1_COMPUTE_NS=19831745147
+  DENSE_ROW_GPUx_TIMED_OPS=71936
+  DUAL_ROW_SINGLE=36096 DUAL_ROW_GROUP=35840
+  CLASSIFIED=TOTAL=71936 ACCOUNTING_MATCH=1
+  MATERIALIZATIONS_PER_TOKEN=281.000
+  GPU-vs-envelope: ~32.3s true GPU compute of 48.4s dense wall (~60%);
+  remainder is per-op submit/fence overhead. GPU1 kernels ~1.6x slower/op
+  than GPU0.
+
+EXPERIMENT A (DEEP2_RESIDENT_FIRST=1, tryGpuTokenForward first claim):
+  256-token: DECODE_TPS_ENGINE=4.166646  HOLD (baseline 5.142)
+    DENSE_ROW_WALL_PCT=87.599 → 1.744   (routing flip WORKS structurally)
+    DUAL_ROW_DENSE_TOKENS=0              (dual-row fully preempted)
+    TOTAL_MATERIALIZATIONS=71936 → 816  (88x reduction)
+    ACCOUNTING_MATCH=1 UNPLANNED_FALLBACKS=0 STRICT_VIOLATIONS=0
+    SLOT1_UPLOAD_DELTA=280               (per-token cross-device handoff churn)
+    CROSS_DEVICE_HANDOFF_MATERIALIZATIONS=280
+    FINAL_OUTPUT_MATERIALIZATIONS=280   (per-token DownloadHidden)
+    FULL_RESIDENT_GPU=0                  (materializations > 0)
+    avgTokenWall=254.48ms; dense-row only ~4.4ms/token → ~150ms/token
+    now UNATTRIBUTED (resident lane).
+  64-token:  DECODE_TPS_ENGINE=4.839732  HOLD
+    SLOT1_UPLOAD_DELTA=88 CROSS_DEVICE_HANDOFF=88 DENSE_ROW_WALL_PCT=1.715
+
+KEY FINDINGS (honest):
+  1. Case A routing correction is structurally proven (dense-row envelope
+     collapses 88%→1.7%; materializations 88x fewer) but is NOT a TPS win
+     on current code — the resident multi-map lane carries its own costs
+     that now dominate: per-token cross-device handoff (CopyArenaHiddenTo
+     GPU0→GPU1), per-token final DownloadHidden, device-KV attention
+     growth with sequence length, slot-1 upload churn.
+  2. The b3 receipt's 5.59 TPS (LAYER_SPLIT, 64 tokens, older code) does
+     NOT reproduce on current source: 4.84 measured. Do not cite 5.59 as
+     a resident-path lower bound anymore.
+  3. Instrumentation-first discipline prevented promoting a regression:
+     both runs HOLD against the sealed 5.14 baseline.
+  4. Default product behavior unchanged (env-gated experiment, default
+     remains dual-row dense lane).
+
+NEXT GATE (locked order — measurement before optimization):
+  DEEP2_RESIDENT_LANE_TIMING_AUTHORITY_001
+    RESIDENT_GPU0_COMPUTE_NS>0 / RESIDENT_GPU1_COMPUTE_NS>0
+    (EndFusedLayer intervals from forwardLayerGpuResident currently
+     accumulate NOWHERE — instrumentation gap #2)
+    + per-kind subdivision: norm/qkv/rope/attention/ffn/residual
+    + handoff wall, final-download wall, per-token upload wall
+    Then: subdivide the resident lane's 254ms/token and attack the
+    largest measured owner (candidates: cross-device handoff via B5
+    shared-host-import transport (PROVEN PASS), final-only materialization
+    boundary, layer-range KV residency, slot-1 weight churn).
+
+TPS LADDER STATUS: 5.14 current authority. 25+ TPS remains the target;
+no artificial ceiling. The next unlock is resident-lane measurement.

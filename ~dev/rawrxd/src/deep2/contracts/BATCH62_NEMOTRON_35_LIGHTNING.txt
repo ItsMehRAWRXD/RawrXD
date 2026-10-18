@@ -1,0 +1,14 @@
+BATCH 62 — NEMOTRON 3.5 LIGHTNING 30B-A3B CONTRACT
+
+Reference architecture envelope:
+  30B total / 3B active
+  52 layers
+  hidden 2688
+  128 routed experts top-6 + 1 shared
+  hybrid Mamba/Transformer sparse-MoE
+  long-context capable
+
+Initial short-context contract:
+  p10 raw TPS >= 60
+  median raw TPS >= 70
+  target must have >=3% physical roofline headroom

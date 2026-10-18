@@ -1,0 +1,26 @@
+Recommended stdout:
+
+CONTRACT=<name>
+MODEL=<resolved-model>
+SAMPLES=<n>
+P10_TPS=<x>
+MEDIAN_TPS=<x>
+PHYSICAL_ROOFLINE_TPS=<x>
+P10_ROOFLINE_FRACTION=<x>
+GPU0_FORWARDS=<n>
+GPU1_FORWARDS=<n>
+RELOAD_BYTES=<n>
+HOST_MATERIALIZATIONS=<n>
+HOST_TOKEN_COPIES=<n>
+PEER_COPY_BYTES=<n>
+PARITY_ALL=<0|1>
+OUTPUT_STABLE_ALL=<0|1>
+CERT=<PASS|HOLD>
+FAILURE=<reason>
+RECEIPT_SHA256=<hash>
+
+Exit:
+  0 = contract PASS
+  2 = valid run, contract HOLD
+  3 = model/metadata/contract mismatch
+  4 = runtime/measurement failure

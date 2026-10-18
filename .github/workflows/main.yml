@@ -1,0 +1,64 @@
+name: HexMag Swarm & IDE Build Test
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+  workflow_dispatch:   # allows the "Run workflow" button
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    env:
+      # Windows console cp1252 cannot encode the smoke-test's unicode output
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install NASM
+        shell: pwsh
+        run: |
+          choco install nasm -y
+          $env:PATH += ";C:\Program Files\NASM"
+
+      # RawrXD is dependency-free and native: this workflow builds the native
+      # root project (no Qt, no GPU SDK). Qt-dependent surfaces are excluded
+      # by the build system and reported, never silently skipped.
+      - name: Build native project
+        run: .\scripts\build.ps1 -Config Release -A x64 -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: services
+        run: pip install -r requirements.txt
+
+      # The swarm and its smoke test run in ONE step: the runner terminates
+      # the process tree after each step, so a background service started in a
+      # previous step is already gone by the time the next step runs
+      # (connection refused errors).
+      - name: HexMag swarm smoke test (/ask + /agent)
+        working-directory: services
+        shell: pwsh
+        run: |
+          Start-Process python -ArgumentList @('hexmag\hexmag_engine.py', '--port', '8001') -NoNewWindow
+          try {
+            do {
+              Start-Sleep -Seconds 1
+              $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
+            } while ($r -ne 200)
+            Write-Host "Swarm healthy on :8001"
+            python test_smoke.py
+            if ($LASTEXITCODE -ne 0) { throw "HexMag smoke tests failed" }
+          } finally {
+            Get-Process python -ErrorAction SilentlyContinue |
+              Stop-Process -Force -ErrorAction SilentlyContinue
+            Write-Host "Swarm cleanup done"
+          }

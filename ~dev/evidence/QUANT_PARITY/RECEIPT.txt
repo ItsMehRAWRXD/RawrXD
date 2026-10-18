@@ -1,0 +1,127 @@
+QUANT_KERNEL_PARITY_001 — Receipt
+==================================
+Date: 2026-09-18
+Scope: RawrXD autonomous audit — QuantKernelRegistry promotion
+authority, per the external differential review.
+
+VERDICTS
+--------
+QUANT_KERNEL_PARITY_001=PASS          (exit 0, receipt: parity_receipt.txt)
+DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001=PASS  (qwen40_256tok_stderr.txt)
+B5_SHARED_HOST_IMPORT_001=PASS        (unchanged, re-probed during run)
+
+KERNEL PROMOTIONS (parity-certified)
+------------------------------------
+F16  -> gemv_f16_avx512  (AVX512F+BW+F16C; was AVX2-only)
+        MAX_ABS_ERR=1.403809e-03  MAX_REL_ERR=8.514019e-05
+        ATOL=1e-3 RTOL=2e-4 (elementwise mixed; 52 cases)
+        NONFINITE=0 GUARD_CORRUPTION=0 PARITY=1
+Q8_0 -> gemv_q8_0_avx2   (REPAIRED first; AVX2+FMA)
+        Old body dropped lanes 8..15/24..31 per block
+        (_mm256_cvtepi8_epi32 expands 8 int8, not 16).
+        New body: 34-byte GGUF block stride, 8-lane chunks,
+        partial final block, scalar tail.
+        MAX_ABS_ERR=2.593994e-04  MAX_REL_ERR=1.672542e-05
+        ATOL=2e-3 RTOL=3e-4 (52 cases)
+        NONFINITE=0 GUARD_CORRUPTION=0 PARITY=1
+
+DELIBERATE NON-PROMOTIONS (fail-closed law)
+-------------------------------------------
+Q5_K  -> stays scalar. Vector body KNOWN DEFECTIVE:
+        (a) nibble-split reorders weights vs ggml interleaved layout;
+        (b) only the lower 128-bit half of _mm256_dp_ps is read.
+        Macro alias #define gemv_q5_k_avx2 gemv_q5_k_scalar is the
+        active shield; QUANT_KERNEL_PARITY_001 trips (Q5_K_AVX2_ALIAS_SHIELD)
+        if it is removed. Promotion requires Q5K_AVX2_PARITY_001.
+Q4_K/Q8_0 avx512/avx2 wrappers -> scalar delegates, unregistered by
+        RegisterBuiltins (confirmed no dispatch regression; the
+        "false AVX512" impression came from telemetry, not dispatch).
+
+TELEMETRY FIX
+-------------
+DumpTable() previously labeled impl from CPU capability (scalar
+registrations printed "avx512" on AVX512 CPUs). Now KernelImplName()
+labels by registered function-pointer identity. No gemv_*_masm
+comparisons (they would drag link-absent Deep2_Q*_K_GEMV externals
+into all targets; masm prints "unknown", fail-closed).
+
+GATE INFRASTRUCTURE
+-------------------
+tests/quant_kernel_parity_gate.cpp — standalone fail-closed authority.
+Unity-includes QuantKernelRegistry.cpp (file-static kernels testable).
+Rows {1,2,7,31} x cols F16 {1..129,5120} / Q8_0 {1..65,5120}.
+Canary guards 0x7FC01234 before/after every output buffer.
+Tripwires: REGISTRY_IMPL_MATCH, REGISTRY_PTR_MATCH, Q5_K alias shield.
+Deterministic seed 0x52415752.
+
+REGRESSION VERIFICATION (Qwen2.5-Coder-32B Q4_K, dual AMD)
+----------------------------------------------------------
+DECODE_TPS_ENGINE=5.081287 (256 measured tokens)
+DENSE_ROW_WALL_PCT=88.439   (in the established 83.6–89.8 band)
+RESIDENT_REUSE=1  BOUNDED_UPLOADS=1  CALL_PARITY=1
+UNPLANNED_FALLBACKS=0  STRICT_GPU_VIOLATIONS=0  REAL_DUAL_ROW_GPU=1
+NO REGRESSION: prior 256-tok receipts measure 4.675–5.136 TPS
+(baseline b2=5.136, B4 ladder=5.088/5.001, canonical=4.675).
+The 186–198 TPS figures in evidence are MEASURED_TOKENS=1 probes.
+TOTAL_MATERIALIZATIONS=71936 (281/token) — unchanged envelope;
+the host-materialization bottleneck is the next performance layer
+(see ROADMAP_batch_primitives.md), NOT these CPU fallback kernels.
+F16/Q8_0 promotions do not affect the Q4_K GPU product decode lane.
+
+MEMORY-SAFETY AUDIT (same audit thread)
+---------------------------------------
+Deep2Engine.cpp + KVCache.h: PASS, no bugs.
+- allocateBuffers: 11x new(nothrow)+nullcheck+memset.
+- loadWeights/unloadModel: safe delete[]/nullptr; checked memcpy.
+- Fused QKV split: fusedDim = H + 2*kvDim, offsets in-bounds.
+- KV writes: keyPtr/valuePtr null -> throw.
+- KVCache indexOf: full bounds + overflow-checked strides.
+
+GATE RECEIPTS
+-------------
+parity_receipt.txt          QUANT_KERNEL_PARITY_001=PASS
+qwen40_256tok_stderr.txt    DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001=PASS
+ROADMAP_batch_primitives.md post-parity runtime roadmap (15 primitives)
+
+QUANT_KERNEL_PROMOTION_PRODUCT_REGRESSION_001
+---------------------------------------------
+GATE=QUANT_KERNEL_PROMOTION_PRODUCT_REGRESSION_001
+VERDICT=PASS
+
+MEASURED_TOKENS=256
+DECODE_TPS_ENGINE=5.081287
+
+REFERENCE_BAND_MIN_TPS=5.001
+REFERENCE_BAND_MAX_TPS=5.136
+WITHIN_REFERENCE_BAND=1
+PRODUCT_REGRESSION=0
+
+EARLIER_186P8_CONTEXT=MEASURED_TOKENS_1
+EARLIER_186P8_SUSTAINED_COMPARABLE=0
+
+QUANT_KERNEL_PARITY=1
+REAL_DUAL_ROW_GPU=1
+UNPLANNED_FALLBACKS=0
+RESIDENT_REUSE=1
+BOUNDED_UPLOADS=1
+DENSE_ROW_TIMING_CALL_PARITY=1
+
+PROMOTION_SAFE=1
+
+NEXT OWNER (post-promotion state classification)
+--------------------------------------------------
+quant correctness: GREEN
+generation correctness: GREEN
+throughput instrumentation: GREEN
+40 TPS target: HOLD
+owner: dense-row residency/materialization path
+
+Next gate concept: DEEP2_DENSE_ROW_RESIDENCY_001
+  targets: HOST_MATERIALIZATIONS_PER_TOKEN -> near 0
+           DENSE_ROW_WALL_PCT -> sharply lower (currently 88.439)
+           SLOT*_Q4K_BATCH_WEIGHT_BYTES > 0 (currently 0)
+           SLOT*_RECORDED_GROUP_SUBMITS > 0 (currently 0)
+           SLOT*_TIMELINE_COMPUTE_TRANSFER_CHAINS > 0 (currently 0)
+           ACCOUNTING_COMPLETE=1 (currently 0)
+           ACCOUNTING_MATCH=1 (currently 0)
+Quant kernel work is DONE for this layer; do not optimize F16/Q8 further.

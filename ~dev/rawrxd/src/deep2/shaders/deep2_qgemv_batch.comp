@@ -1,0 +1,108 @@
+#version 450
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
+// X layout: [batch][cols]
+layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
+// Y layout: [batch][rows]
+layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
+
+layout(push_constant) uniform Push {
+    uint type;
+    uint rows;
+    uint cols;
+    uint weightBytes;
+    uint batch;
+} pc;
+
+shared float wave0[8];
+shared float wave1[8];
+shared float wave2[8];
+shared float wave3[8];
+
+uint getb(uint byteIndex) {
+    uint word=w[byteIndex>>2u];
+    return (word>>((byteIndex&3u)*8u))&255u;
+}
+float geth(uint byteIndex) {
+    uint h=getb(byteIndex)|(getb(byteIndex+1u)<<8u);
+    return unpackHalf2x16(h).x;
+}
+void q4kScaleMin(uint base,uint sb,out uint sc,out uint mn) {
+    if(sb<4u){
+        sc=getb(base+4u+sb)&63u;
+        mn=getb(base+8u+sb)&63u;
+    }else{
+        uint j=sb-4u;
+        sc=(getb(base+12u+j)&15u)|((getb(base+4u+j)>>6u)<<4u);
+        mn=(getb(base+12u+j)>>4u)|((getb(base+8u+j)>>6u)<<4u);
+    }
+}
+float q4k(uint rb,uint col) {
+    uint block=col/256u;
+    uint idx=col%256u;
+    uint b=rb+block*144u;
+    float ds=geth(b);
+    float dm=geth(b+2u);
+    uint sb=idx/32u;
+    uint l=idx%32u;
+    uint sc,mn;
+    q4kScaleMin(b,sb,sc,mn);
+    uint pair=sb/2u;
+    uint packed=getb(b+16u+pair*32u+l);
+    uint q=(sb&1u)==0u ? (packed&15u) : (packed>>4u);
+    return ds*float(sc)*float(q)-dm*float(mn);
+}
+
+void main() {
+    uint row=gl_WorkGroupID.x;
+    uint lane=gl_LocalInvocationID.x;
+    if(row>=pc.rows||pc.batch==0u||pc.batch>4u) return;
+    if(pc.type!=12u) {
+        if(lane==0u) {
+            for(uint b=0u;b<pc.batch;++b)
+                y[b*pc.rows+row]=uintBitsToFloat(0x7fc00000u);
+        }
+        return;
+    }
+
+    uint rowBytes=((pc.cols+255u)/256u)*144u;
+    uint rb=row*rowBytes;
+    if(rb+rowBytes>pc.weightBytes) return;
+
+    float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
+    for(uint j=lane;j<pc.cols;j+=256u) {
+        float ww=q4k(rb,j); // one packed weight decode, up to 4 FMAs
+        a0+=ww*x[j];
+        if(pc.batch>1u) a1+=ww*x[pc.cols+j];
+        if(pc.batch>2u) a2+=ww*x[2u*pc.cols+j];
+        if(pc.batch>3u) a3+=ww*x[3u*pc.cols+j];
+    }
+
+    float s0=subgroupAdd(a0);
+    float s1=subgroupAdd(a1);
+    float s2=subgroupAdd(a2);
+    float s3=subgroupAdd(a3);
+    if(subgroupElect()) {
+        uint sg=gl_SubgroupID;
+        wave0[sg]=s0; wave1[sg]=s1; wave2[sg]=s2; wave3[sg]=s3;
+    }
+    barrier();
+    if(gl_SubgroupID==0u) {
+        uint li=gl_SubgroupInvocationID;
+        float v0=li<gl_NumSubgroups?wave0[li]:0.0;
+        float v1=li<gl_NumSubgroups?wave1[li]:0.0;
+        float v2=li<gl_NumSubgroups?wave2[li]:0.0;
+        float v3=li<gl_NumSubgroups?wave3[li]:0.0;
+        v0=subgroupAdd(v0); v1=subgroupAdd(v1);
+        v2=subgroupAdd(v2); v3=subgroupAdd(v3);
+        if(subgroupElect()) {
+            y[row]=v0;
+            if(pc.batch>1u) y[pc.rows+row]=v1;
+            if(pc.batch>2u) y[2u*pc.rows+row]=v2;
+            if(pc.batch>3u) y[3u*pc.rows+row]=v3;
+        }
+    }
+}

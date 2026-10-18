@@ -1,0 +1,77 @@
+DEEP2_RESIDENT_OPS_BREAKDOWN_001 — Receipt
+===========================================
+Date: 2026-09-19
+Runs: resident_ops_64.txt (v1, contaminated — warmup samples included,
+RETRACTED as authority), resident_ops_64_v2.txt (v2, clean —
+vulkanResetQ4kParityStats() between warmup and measurement).
+Config: DEEP2_RESIDENT_FIRST=1, Qwen2.5-Coder-32B Q4_K_M, 64 tokens.
+
+GATE=DEEP2_RESIDENT_OPS_BREAKDOWN_001
+VERDICT=HOLD (resident-first still under dual-row baseline at 256; but
+see TPS note below — 64-token resident-first measured 5.550 TPS, ABOVE
+the 5.142 256-token dual-row baseline and the prior 4.84 resident mark)
+
+HARNESS INCIDENTS (honest record):
+1. v1 run DIED silently during warmup: my parity-pool
+   vkCmdResetQueryPool was recorded BEFORE vkBeginCommandBuffer —
+   recording into a non-recording command buffer is undefined
+   behavior (VUID-vkCmdResetQueryPool-commandBuffer-00081). The
+   Q4K-parity arms survived it by driver luck. FIXED: reset moved
+   after vkBeginCommandBuffer, alongside the existing
+   reusableFusedQuery_ reset. Also hardened: meta cleared in
+   BeginFusedLayer (stale-entry OOB guard), sampling fused-only
+   (own=true dispatches never collected — meta/ticks desync guard).
+2. v1 receipt contaminated: parity/ops counters accumulated during
+   the 32-token warmup (weight-admission transfers contending with
+   compute) because nothing reset them. FIXED: ResetQ4kParityStats()
+   added; gate calls vulkanResetQ4kParityStats() between warmup and
+   measurement. v1's RESIDUAL=45.5ms/token is RETRACTED.
+
+CLEAN MEASURED OPS COMPOSITION (resident lane, 64 tokens, 1-in-4
+sampled, x4 extrapolation; sampled-only, excludes Q4K GEMVs):
+  RMSNORM    1.470 ms/token
+  RESIDUAL  28.508 ms/token   <- still dominant within ops pipeline
+  SWIGLU     0.115 ms/token
+  ROPE       0.447 ms/token
+  ATTN       1.124 ms/token   <- attention is a rounding error at
+                                short context; MoE-fear unfounded here
+  TOTAL     31.664 ms/token
+
+TPS RESULT (single run, resident-first, 64 tokens):
+  DECODE_TPS_ENGINE=5.550439
+  (prior resident 64-tok: 4.840, 4.941; dual-row 256-tok authority:
+  5.142; v1 ops run: 5.234). Run-to-run variance is material (~4-7%);
+  the ops sampling overhead is negligible but variance must be
+  respected — promotion comparisons require the same 256-token scope.
+
+RESIDENT RANGE COMPOSITION (combined authorities):
+  Q4K GEMVs (quant pipeline, parity receipt): ~82 ms/token
+  Ops pipeline (this receipt):               ~32 ms/token
+  Range walls (attribution receipt):        ~250 ms/token (64-tok)
+  => ~135 ms/token UNACCOUNTED between kernels+ranges. Candidates:
+  dispatch bubbles between the ~450 dispatches/range (recordCompute-
+  Barrier stalls, wave scheduling gaps between the tiny ops kernels
+  and the GEMVs), the RESIDUAL anomaly below, and idle inside ranges.
+
+RESIDUAL ANOMALY (OPEN, next measurement):
+  RESIDUAL samples at ~890us/pair for a 5120-element add (~20KB) —
+  ~30,000x slower than pure arithmetic. RMSNorm, same tensor size,
+  samples at ~6.6us/pair. Suspects: (a) the sampled pair brackets
+  barrier stalls + inter-dispatch bubbles (GPU idle counted as op
+  time), (b) wave scheduling gaps after the preceding GEMV's tail,
+  (c) descriptor-cache miss stalls. NEXT: bracket-aware sampling or a
+  range-internal dispatch-granularity accounting pass to separate
+  true kernel time from inter-dispatch idle. Do NOT conclude the
+  residual shader is slow — conclude the residual SLOT is expensive.
+
+NEXT ORDER (updated):
+  1. Attribute the ~135ms unaccounted range interior + residual-slot
+     anomaly (inter-dispatch bubbles) — single largest measured gap.
+  2. DEEP2_RESIDENT_TENSOR_PARALLEL_001 (same-token dual-GPU row
+     split inside the resident path) per prior plan.
+  3. Shared Q4K shader bandwidth (~17 ns/row both lanes).
+  4. Long-context attention (only ~1.1ms/token at 64 — confirmed low
+     priority).
+PRODUCT_DEFAULT=DUAL_ROW unchanged (5.142 @256 sealed).
+Single-run resident 5.550 @64 recorded but NOT an authority claim —
+needs a 256-token rerun before any promotion discussion.

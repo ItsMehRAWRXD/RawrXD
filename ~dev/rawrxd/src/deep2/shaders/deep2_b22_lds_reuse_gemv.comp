@@ -1,0 +1,31 @@
+#version 460
+// Batch 22: x-vector LDS reuse. Weight format intentionally generic.
+layout(local_size_x=256) in;
+layout(set=0,binding=0,std430) readonly buffer W { float w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; uint tile; } pc;
+
+shared float sx[512];
+shared float red[256];
+
+void main() {
+    uint row=gl_WorkGroupID.x;
+    uint lid=gl_LocalInvocationID.x;
+    if(row>=pc.rows) return;
+    float sum=0.0;
+    for(uint base=0;base<pc.cols;base+=pc.tile) {
+        for(uint i=lid;i<pc.tile && base+i<pc.cols;i+=256u)
+            sx[i]=x[base+i];
+        barrier();
+        for(uint i=lid;i<pc.tile && base+i<pc.cols;i+=256u)
+            sum += w[row*pc.cols+base+i]*sx[i];
+        barrier();
+    }
+    red[lid]=sum; barrier();
+    for(uint stride=128u;stride>0u;stride>>=1u) {
+        if(lid<stride) red[lid]+=red[lid+stride];
+        barrier();
+    }
+    if(lid==0u) y[row]=red[0];
+}

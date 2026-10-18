@@ -1,0 +1,55 @@
+#version 460
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+layout(local_size_x=256) in;
+
+// Reference native-block Q4 path. Exact Q4_K min/scale packing must be
+// substituted with Deep2's canonical GGUF block decoder in production.
+
+layout(set=0,binding=0,std430) readonly buffer W { uint packed[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) readonly buffer S { float scales[]; };
+layout(set=0,binding=3,std430) writeonly buffer Y { float y[]; };
+
+layout(push_constant) uniform PC {
+    uint rows;
+    uint cols;
+    uint wordsPerRow;
+    uint groupsPerRow;
+    uint groupSize;
+} pc;
+
+shared float subgroupSums[8];
+
+float decode4(uint word,uint nib) {
+    return float(int((word>>(nib*4u))&15u)-8);
+}
+
+void main() {
+    uint row=gl_WorkGroupID.x;
+    if(row>=pc.rows) return;
+
+    uint lid=gl_LocalInvocationID.x;
+    float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
+
+    for(uint c=lid;c<pc.cols;c+=1024u) {
+        for(uint k=0u;k<4u;++k) {
+            uint cc=c+k*256u;
+            if(cc>=pc.cols) continue;
+            uint wi=row*pc.wordsPerRow+(cc>>3u);
+            uint gi=row*pc.groupsPerRow+(cc/pc.groupSize);
+            float v=decode4(packed[wi],cc&7u)*scales[gi]*x[cc];
+            if(k==0u)a0+=v;else if(k==1u)a1+=v;else if(k==2u)a2+=v;else a3+=v;
+        }
+    }
+
+    float sg=subgroupAdd(a0+a1+a2+a3);
+    if(subgroupElect()) subgroupSums[gl_SubgroupID]=sg;
+    barrier();
+
+    if(gl_SubgroupID==0u) {
+        float v=gl_SubgroupInvocationID<gl_NumSubgroups ?
+                subgroupSums[gl_SubgroupInvocationID] : 0.0;
+        float total=subgroupAdd(v);
+        if(subgroupElect()) y[row]=total;
+    }
+}

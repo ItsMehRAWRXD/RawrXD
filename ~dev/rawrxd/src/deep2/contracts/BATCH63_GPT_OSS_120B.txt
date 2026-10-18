@@ -1,0 +1,14 @@
+BATCH 63 — GPT-OSS-120B CONTRACT
+
+Reference architecture envelope:
+  117B total / 5.1B active
+  36 layers
+  128 experts / top-4
+  128K context
+  grouped multi-query attention
+  alternating dense / locally banded attention
+
+Initial short-context contract:
+  p10 raw TPS >= 25
+  median raw TPS >= 30
+  target must have >=3% physical roofline headroom

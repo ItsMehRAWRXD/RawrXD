@@ -1,0 +1,420 @@
+   1:     bool DispatchGemvQ4KBatch(
+   2:         const void* weights,size_t weightBytes,
+   3:         DeviceBuf& inputBatch,DeviceBuf& outputBatch,
+   4:         uint32_t rows,uint32_t cols,uint32_t batch);
+   5:     struct QBatchPush {
+   6:         uint32_t type=12;
+   7:         uint32_t rows=0;
+   8:         uint32_t cols=0;
+   9:         uint32_t weightBytes=0;
+  10:         uint32_t batch=1;
+  11:     };
+  12:     VkPipeline qBatchPipeline_ = VK_NULL_HANDLE;
+  13:     VkPipelineLayout qBatchPipelineLayout_ = VK_NULL_HANDLE;
+  14:     bool RunWeightHostBatchQ4K(
+  15:         const GpuWeightView& weight,
+  16:         const float* inputBatch,float* outputBatch,
+  17:         uint32_t batch,uint64_t epoch);
+  18:     bool RunWeightBatchQ4KTop1(
+  19:         const float* inputBatch,uint32_t batch,
+  20:         uint32_t rowBase,uint32_t* outIndex,float* outValue,
+  21:         uint64_t epoch);
+  22:     VkPipeline argmaxPipeline_ = VK_NULL_HANDLE;
+  23:     VkPipelineLayout argmaxPipelineLayout_ = VK_NULL_HANDLE;
+  24:     struct ArgmaxPush { uint32_t rows=0,batch=0; };
+  25:     bool DispatchArgmaxBatch(
+  26:         DeviceBuf& logits,DeviceBuf& values,DeviceBuf& indices,
+  27:         uint32_t rows,uint32_t batch);
+  28:     bool RunSpecRmsNormHostBatch(
+  29:         const float* input,const float* weight,float* output,
+  30:         uint32_t width,uint32_t batch,float eps,uint64_t epoch);
+  31:     bool RunSpecSwiGLUHostBatch(
+  32:         const float* gate,const float* up,float* output,
+  33:         uint32_t width,uint32_t batch,uint64_t epoch);
+  34:     VkPipeline specOpsPipeline_ = VK_NULL_HANDLE;
+  35:     VkPipelineLayout specOpsPipelineLayout_ = VK_NULL_HANDLE;
+  36:     struct SpecOpsPush {
+  37:         uint32_t op=0,width=0,batch=0,reserved=0;
+  38:         float eps=0.0f;
+  39:     bool dispatchSpecOps(
+  40:         DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d,
+  41:         const SpecOpsPush& p);
+  42:     bool RunSpecAttentionHostBatch(
+  43:         const float* q,const float* k,const float* v,float* output,
+  44:         uint32_t heads,uint32_t kvHeads,uint32_t headDim,
+  45:         uint32_t seqLen,uint32_t basePos,uint32_t batch,
+  46:     VkPipeline specAttnPipeline_ = VK_NULL_HANDLE;
+  47:     VkPipelineLayout specAttnPipelineLayout_ = VK_NULL_HANDLE;
+  48:     struct SpecAttnPush {
+  49:         uint32_t headDim=0,heads=0,kvHeads=0,seqLen=0;
+  50:         uint32_t basePos=0,batch=0;
+  51:         float scale=1.0f;
+  52:     bool EnsureSpecKvMirror(uint32_t layers,uint32_t kvHeads,
+  53:                             uint32_t headDim,uint32_t maxSeq);
+  54:     bool UploadSpecKvRange(uint32_t layer,uint32_t start,uint32_t count,
+  55:                            const float* kTokenMajor,const float* vTokenMajor);
+  56:     bool RunSpecAttentionResident(
+  57:         uint32_t layer,const float* q,float* output,
+  58:     void ResetSpecKvMirror();
+  59:         uint32_t capacity=0,basePos=0,batch=0;
+  60:     std::vector<DeviceBuf> specKMirror_;
+  61:     std::vector<DeviceBuf> specVMirror_;
+  62:     uint32_t specKvLayers_=0,specKvHeads_=0,specKvHeadDim_=0;
+  63:     uint32_t specKvCapacity_=0;
+  64:     bool uploadToBufferRange(DeviceBuf& dst,const void* src,size_t bytes,
+  65:                              VkDeviceSize dstOffset);
+  66:     bool RunWeightGroupHostBatchQ4K(
+  67:         const GpuWeightView* weights,float* const* outputs,size_t weightCount,
+  68:         const float* inputBatch,uint32_t batch,uint64_t epoch);
+  69:     struct SpecBatchArena {
+  70:         DeviceBuf hidden{}, norm{}, q{}, k{}, v{}, attn{}, proj{};
+  71:         DeviceBuf gate{}, up{}, act{}, down{}, tmp{};
+  72:         uint32_t hiddenWidth=0;
+  73:         uint32_t kvWidth=0;
+  74:         uint32_t intermediate=0;
+  75:         uint32_t batchCapacity=0;
+  76:         bool valid() const noexcept {
+  77:             return hidden&&norm&&q&&k&&v&&attn&&proj&&gate&&up&&act&&down;
+  78:         }
+  79:     bool EnsureSpecBatchArena(uint32_t hidden,uint32_t kvWidth,
+  80:                               uint32_t intermediate,uint32_t batch);
+  81:     SpecBatchArena& SpecArena() noexcept { return specArena_; }
+  82:     void ResetSpecBatchArena();
+  83:     bool UploadSpecHidden(const float* src,uint32_t hidden,uint32_t batch);
+  84:     bool DownloadSpecHidden(float* dst,uint32_t hidden,uint32_t batch);
+  85:     SpecBatchArena specArena_{};
+  86:     bool SpecBatchRmsNorm(DeviceBuf& input,DeviceBuf& weight,DeviceBuf& output,
+  87:                           uint32_t width,uint32_t batch,float eps);
+  88:     bool SpecBatchSwiGLU(DeviceBuf& gate,DeviceBuf& up,DeviceBuf& output,
+  89:                          uint32_t width,uint32_t batch);
+  90:     bool SpecBatchResidual(DeviceBuf& a,DeviceBuf& b,DeviceBuf& output,
+  91:                            uint32_t width,uint32_t batch);
+  92:     bool ReduceHostPartialInto(
+  93:         DeviceBuf& primary,const float* partial,uint32_t count);
+  94:     bool EnsureResidentBatchInput(uint32_t cols,uint32_t batch);
+  95:     bool UploadResidentBatchInput(const float* input,uint32_t cols,
+  96:                                   uint32_t batch,uint64_t epoch);
+  97:     DeviceBuf& ResidentBatchInput() noexcept { return residentBatchInput_; }
+  98:     uint64_t ResidentBatchInputUploads() const noexcept {
+  99:         return residentBatchInputUploads_;
+ 100:     }
+ 101:     DeviceBuf residentBatchInput_{};
+ 102:     uint32_t residentBatchCols_=0;
+ 103:     uint32_t residentBatchCapacity_=0;
+ 104:     uint64_t residentBatchInputUploads_=0;
+ 105:         bool pinned = false;
+ 106:         uint64_t lastUse = 0;
+ 107:     bool PinWeightView(const GpuWeightView& view);
+ 108:     void UnpinAllWeights();
+ 109:     uint64_t PinnedWeightBytes() const noexcept { return pinnedWeightBytes_; }
+ 110:     uint64_t PinnedWeightEntries() const noexcept { return pinnedWeightEntries_; }
+ 111:     uint64_t weightUseClock_=0;
+ 112:     uint64_t pinnedWeightBytes_=0;
+ 113:     uint64_t pinnedWeightEntries_=0;
+ 114:     bool RunWeightGroupResidentInputQ4K(
+ 115:         uint32_t cols,uint32_t batch,uint64_t epoch);
+ 116:     struct DownloadTicket {
+ 117:         DeviceBuf staging{};
+ 118:         void* mapped=nullptr;
+ 119:         VkCommandBuffer cmd=VK_NULL_HANDLE;
+ 120:         VkFence fence=VK_NULL_HANDLE;
+ 121:         VkQueryPool query=VK_NULL_HANDLE;
+ 122:         size_t bytes=0;
+ 123:         bool active=false;
+ 124:     bool SubmitDownloadAsync(
+ 125:         DeviceBuf& src,size_t bytes,DownloadTicket& ticket);
+ 126:     bool WaitDownloadAsync(
+ 127:         DownloadTicket& ticket,void* dst,size_t bytes);
+ 128:     void CancelDownloadTicket(DownloadTicket& ticket);
+ 129:     bool EnsureResidentGroupOutputs(const GpuWeightView* weights,
+ 130:                                     size_t weightCount,uint32_t batch);
+ 131:     DeviceBuf& ResidentGroupOutput(size_t index) noexcept {
+ 132:         return residentGroupOutputs_[index];
+ 133:     uint64_t ResidentGroupOutputReallocs() const noexcept {
+ 134:         return residentGroupOutputReallocs_;
+ 135:     DeviceBuf residentGroupOutputs_[3]{};
+ 136:     size_t residentGroupOutputFloats_[3]{};
+ 137:     uint64_t residentGroupOutputReallocs_=0;
+ 138:     bool RunWeightGroupResidentInputQ4KSingleReturn(
+ 139:         const GpuWeightView* weights,float* contiguousOutput,
+ 140:         size_t* outputOffsets,size_t weightCount,
+ 141:     bool AppendSpecKvFromDevice(
+ 142:         uint32_t layer,uint32_t start,uint32_t count,
+ 143:         DeviceBuf& kTokenMajor,DeviceBuf& vTokenMajor);
+ 144:     uint64_t DirectSpecKvAppends() const noexcept {
+ 145:         return directSpecKvAppends_;
+ 146:     uint64_t directSpecKvAppends_=0;
+ 147:     bool EnsureResidentFullOutput(uint32_t rows,uint32_t batch);
+ 148:     DeviceBuf& ResidentFullOutput() noexcept { return residentFullOutput_; }
+ 149:     bool CopyDeviceSliceIntoFullOutput(
+ 150:         DeviceBuf& src,uint32_t srcRows,uint32_t rowBegin,
+ 151:         uint32_t fullRows,uint32_t batch);
+ 152:     uint64_t ResidentFullOutputCopies() const noexcept {
+ 153:         return residentFullOutputCopies_;
+ 154:     DeviceBuf residentFullOutput_{};
+ 155:     uint32_t residentFullOutputRows_=0;
+ 156:     uint32_t residentFullOutputBatch_=0;
+ 157:     uint64_t residentFullOutputCopies_=0;
+ 158:     bool ImportHostRowsIntoFullOutput(
+ 159:         const float* rows,uint32_t rowCount,uint32_t rowBegin,
+ 160:     uint64_t SecondaryImportBytes() const noexcept {
+ 161:         return secondaryImportBytes_;
+ 162:     uint64_t secondaryImportBytes_=0;
+ 163:     bool DownloadResidentFullOutput(
+ 164:         float* dst,uint32_t rows,uint32_t batch);
+ 165:     uint64_t FullOutputBoundaryBytes() const noexcept {
+ 166:         return fullOutputBoundaryBytes_;
+ 167:     uint64_t fullOutputBoundaryBytes_=0;
+ 168:     bool BeginSpecLayerGraph(uint64_t epoch);
+ 169:     bool EndSpecLayerGraph();
+ 170:     bool SpecLayerGraphActive() const noexcept { return specLayerGraphActive_; }
+ 171:     uint64_t SpecLayerGraphSubmits() const noexcept {
+ 172:         return specLayerGraphSubmits_;
+ 173:     bool specLayerGraphActive_=false;
+ 174:     uint64_t specLayerGraphSubmits_=0;
+ 175:     bool DispatchGemvQ4KBatch4Row(
+ 176:     VkPipeline qBatch4RowPipeline_ = VK_NULL_HANDLE;
+ 177:     VkPipelineLayout qBatch4RowPipelineLayout_ = VK_NULL_HANDLE;
+ 178:     uint64_t Q4KBatchWeightBytes() const noexcept {
+ 179:         return q4kBatchWeightBytes_;
+ 180:     uint64_t Q4KBatchGpuNs() const noexcept { return q4kBatchGpuNs_; }
+ 181:     uint64_t Q4KBatch4RowOps() const noexcept { return q4kBatch4RowOps_; }
+ 182:     uint64_t q4kBatchWeightBytes_=0;
+ 183:     uint64_t q4kBatchGpuNs_=0;
+ 184:     uint64_t q4kBatch4RowOps_=0;
+ 185:     SpecBatchArena& SpecArena() noexcept {
+ 186:         return specArenas_[specArenaIndex_&1u];
+ 187:     SpecBatchArena& InactiveSpecArena() noexcept {
+ 188:         return specArenas_[(specArenaIndex_^1u)&1u];
+ 189:     void FlipSpecArena() noexcept { specArenaIndex_^=1u; }
+ 190:     uint64_t SpecArenaFlips() const noexcept { return specArenaFlips_; }
+ 191:     SpecBatchArena specArenas_[2]{};
+ 192:     uint32_t specArenaIndex_=0;
+ 193:     uint64_t specArenaFlips_=0;
+ 194:     enum class Q4KBatchTile : uint8_t { Four=4, Eight=8 };
+ 195:     struct Q4KTileKey {
+ 196:         uint32_t rows=0,cols=0,batch=0;
+ 197:         bool operator==(const Q4KTileKey& o) const noexcept {
+ 198:             return rows==o.rows&&cols==o.cols&&batch==o.batch;
+ 199:     struct Q4KTileKeyHash {
+ 200:         size_t operator()(const Q4KTileKey& k) const noexcept {
+ 201:             return ((size_t)k.rows<<32)^((size_t)k.cols<<5)^k.batch;
+ 202:     struct Q4KTileChoice {
+ 203:         Q4KBatchTile tile=Q4KBatchTile::Four;
+ 204:         uint64_t fourNs=0,eightNs=0;
+ 205:     bool DispatchGemvQ4KBatch8Row(
+ 206:     Q4KBatchTile SelectQ4KBatchTile(
+ 207:         DeviceBuf& inputBatch,DeviceBuf& scratchOutput,
+ 208:     VkPipeline qBatch8RowPipeline_ = VK_NULL_HANDLE;
+ 209:     VkPipelineLayout qBatch8RowPipelineLayout_ = VK_NULL_HANDLE;
+ 210:     std::unordered_map<Q4KTileKey,Q4KTileChoice,Q4KTileKeyHash>
+ 211:         q4kTileChoices_;
+ 212:     uint64_t Q4KBatch8RowOps() const noexcept { return q4kBatch8RowOps_; }
+ 213:     uint64_t Q4KAutotuneRuns() const noexcept { return q4kAutotuneRuns_; }
+ 214:     uint64_t q4kBatch8RowOps_=0;
+ 215:     uint64_t q4kAutotuneRuns_=0;
+ 216:     struct RecordedQ4KKey {
+ 217:         VkBuffer weight=VK_NULL_HANDLE;
+ 218:         VkBuffer input=VK_NULL_HANDLE;
+ 219:         VkBuffer output=VK_NULL_HANDLE;
+ 220:         uint32_t rows=0,cols=0,batch=0,tile=4;
+ 221:         bool operator==(const RecordedQ4KKey& o) const noexcept {
+ 222:             return weight==o.weight&&input==o.input&&output==o.output&&
+ 223:                    rows==o.rows&&cols==o.cols&&batch==o.batch&&tile==o.tile;
+ 224:     struct RecordedQ4KKeyHash {
+ 225:         size_t operator()(const RecordedQ4KKey& k) const noexcept {
+ 226:             size_t h=(size_t)(uintptr_t)k.weight;
+ 227:             h^=(size_t)(uintptr_t)k.input>>4;
+ 228:             h^=(size_t)(uintptr_t)k.output<<3;
+ 229:             h^=((size_t)k.rows<<32)^((size_t)k.cols<<7)^k.batch^k.tile;
+ 230:             return h;
+ 231:     struct RecordedQ4K {
+ 232:         VkDescriptorSet set=VK_NULL_HANDLE;
+ 233:     bool SubmitRecordedResidentQ4K(
+ 234:         const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
+ 235:     uint64_t RecordedQ4KSubmits() const noexcept {
+ 236:         return recordedQ4KSubmits_;
+ 237:     uint64_t RecordedQ4KBuilds() const noexcept {
+ 238:         return recordedQ4KBuilds_;
+ 239:     std::unordered_map<
+ 240:         RecordedQ4KKey,RecordedQ4K,RecordedQ4KKeyHash> recordedQ4K_;
+ 241:     uint64_t recordedQ4KSubmits_=0;
+ 242:     uint64_t recordedQ4KBuilds_=0;
+ 243:     void clearRecordedQ4K();
+ 244:     struct Q4KAsyncTicket {
+ 245:         uint64_t submitNs=0;
+ 246:         uint64_t completeNs=0;
+ 247:         uint64_t weightBytes=0;
+ 248:     bool BeginQ4KResidentAsync(
+ 249:         uint32_t batch,uint64_t epoch,Q4KAsyncTicket& ticket);
+ 250:     bool WaitQ4KResidentAsync(Q4KAsyncTicket& ticket,uint64_t* gpuNs=nullptr);
+ 251:     void CancelQ4KAsync(Q4KAsyncTicket& ticket);
+ 252:     uint64_t Q4KAsyncSubmits() const noexcept { return q4kAsyncSubmits_; }
+ 253:     uint64_t Q4KAsyncWaitNs() const noexcept { return q4kAsyncWaitNs_; }
+ 254:     uint64_t q4kAsyncSubmits_=0;
+ 255:     uint64_t q4kAsyncWaitNs_=0;
+ 256:     struct TransferRingSlot {
+ 257:         size_t capacity=0;
+ 258:         bool inFlight=false;
+ 259:     bool EnsureDownloadRing(size_t bytes);
+ 260:     bool SubmitDownloadRing(DeviceBuf& src,size_t bytes,uint32_t& slotOut);
+ 261:     bool WaitDownloadRing(uint32_t slot,void* dst,size_t bytes);
+ 262:     void ResetDownloadRing();
+ 263:     uint64_t DownloadRingSubmits() const noexcept {
+ 264:         return downloadRingSubmits_;
+ 265:     uint64_t DownloadRingWaitNs() const noexcept {
+ 266:         return downloadRingWaitNs_;
+ 267:     TransferRingSlot downloadRing_[3]{};
+ 268:     uint32_t downloadRingHead_=0;
+ 269:     uint64_t downloadRingSubmits_=0;
+ 270:     uint64_t downloadRingWaitNs_=0;
+ 271:     bool HasDedicatedTransferQueue() const noexcept {
+ 272:         return transferQueue_!=VK_NULL_HANDLE &&
+ 273:                (transferQueue_!=queue_ ||
+ 274:                 transferQueueFamilyIndex_!=queueFamilyIndex_);
+ 275:     uint32_t ComputeQueueFamily() const noexcept { return queueFamilyIndex_; }
+ 276:     uint32_t TransferQueueFamily() const noexcept {
+ 277:         return transferQueueFamilyIndex_;
+ 278:     uint64_t TransferQueueSubmits() const noexcept {
+ 279:         return transferQueueSubmits_;
+ 280:     VkQueue transferQueue_ = VK_NULL_HANDLE;
+ 281:     uint32_t transferQueueFamilyIndex_ = UINT32_MAX;
+ 282:     uint32_t transferQueueIndex_ = 0;
+ 283:     VkCommandPool transferCommandPool_ = VK_NULL_HANDLE;
+ 284:     uint64_t transferQueueSubmits_ = 0;
+ 285:     bool discoverTransferQueue(
+ 286:         VkPhysicalDevice physical,
+ 287:         uint32_t computeFamily,
+ 288:         uint32_t& transferFamily,
+ 289:         uint32_t& transferQueueIndex) const;
+ 290:     bool createTransferCommandPool();
+ 291:     uint64_t TransferRingOverlapNs() const noexcept {
+ 292:         return transferRingOverlapNs_;
+ 293:     uint64_t transferRingOverlapNs_=0;
+ 294:     VkDevice DeviceHandle() const noexcept { return device_; }
+ 295:     bool TimelineSemaphoreEnabled() const noexcept {
+ 296:         return timelineEnabled_ && timelineSemaphore_!=VK_NULL_HANDLE;
+ 297:     uint64_t NextTimelineValue() noexcept { return ++timelineNextValue_; }
+ 298:     uint64_t TimelineSignals() const noexcept { return timelineSignals_; }
+ 299:     uint64_t TimelineWaits() const noexcept { return timelineWaits_; }
+ 300:     VkSemaphore TimelineSemaphore() const noexcept { return timelineSemaphore_; }
+ 301:     bool WaitTimelineValue(uint64_t value,uint64_t timeoutNs=UINT64_MAX);
+ 302:     bool timelineEnabled_=false;
+ 303:     VkSemaphore timelineSemaphore_=VK_NULL_HANDLE;
+ 304:     uint64_t timelineNextValue_=0;
+ 305:     uint64_t timelineSignals_=0;
+ 306:     uint64_t timelineWaits_=0;
+ 307:     bool createTimelineSemaphore();
+ 308:     struct TimelineTicket {
+ 309:         uint64_t computeDone=0;
+ 310:         uint64_t transferDone=0;
+ 311:         uint32_t ringSlot=UINT32_MAX;
+ 312:     bool SubmitQ4KThenDownloadTimeline(
+ 313:         uint32_t batch,uint64_t epoch,TimelineTicket& ticket);
+ 314:     bool WaitTimelineDownload(
+ 315:         TimelineTicket& ticket,void* dst,size_t bytes);
+ 316:     uint64_t TimelineComputeTransferChains() const noexcept {
+ 317:         return timelineComputeTransferChains_;
+ 318:     uint64_t timelineComputeTransferChains_=0;
+ 319:     struct AsyncCmdSlot {
+ 320:     bool EnsureAsyncCmdRing();
+ 321:     void ResetAsyncCmdRing();
+ 322:     uint64_t AsyncCmdRingReuses() const noexcept { return asyncCmdRingReuses_; }
+ 323:     AsyncCmdSlot asyncCmdRing_[4]{};
+ 324:     uint32_t asyncCmdRingHead_=0;
+ 325:     uint64_t asyncCmdRingReuses_=0;
+ 326:     struct RecordedGroupKey {
+ 327:         VkBuffer weight[3]{VK_NULL_HANDLE,VK_NULL_HANDLE,VK_NULL_HANDLE};
+ 328:         VkBuffer output[3]{VK_NULL_HANDLE,VK_NULL_HANDLE,VK_NULL_HANDLE};
+ 329:         uint32_t rows[3]{};
+ 330:         uint32_t cols=0,batch=0,count=0;
+ 331:         bool operator==(const RecordedGroupKey& o) const noexcept {
+ 332:             if(input!=o.input||cols!=o.cols||batch!=o.batch||count!=o.count)
+ 333:                 return false;
+ 334:             for(uint32_t i=0;i<count;++i)
+ 335:                 if(weight[i]!=o.weight[i]||output[i]!=o.output[i]||
+ 336:                    rows[i]!=o.rows[i]) return false;
+ 337:             return true;
+ 338:     struct RecordedGroupKeyHash {
+ 339:         size_t operator()(const RecordedGroupKey& k) const noexcept {
+ 340:             size_t h=(size_t)(uintptr_t)k.input;
+ 341:             h^=((size_t)k.cols<<17)^((size_t)k.batch<<3)^k.count;
+ 342:             for(uint32_t i=0;i<k.count;++i) {
+ 343:                 h^=(size_t)(uintptr_t)k.weight[i]>>4;
+ 344:                 h^=(size_t)(uintptr_t)k.output[i]<<5;
+ 345:                 h^=(size_t)k.rows[i]<<(i+7);
+ 346:             }
+ 347:     struct RecordedGroup {
+ 348:         VkDescriptorSet set[3]{VK_NULL_HANDLE,VK_NULL_HANDLE,VK_NULL_HANDLE};
+ 349:     bool SubmitRecordedResidentGroupQ4K(
+ 350:         const GpuWeightView* weights,size_t weightCount,
+ 351:     uint64_t RecordedGroupBuilds() const noexcept {
+ 352:         return recordedGroupBuilds_;
+ 353:     uint64_t RecordedGroupSubmits() const noexcept {
+ 354:         return recordedGroupSubmits_;
+ 355:         RecordedGroupKey,RecordedGroup,RecordedGroupKeyHash> recordedGroups_;
+ 356:     uint64_t recordedGroupBuilds_=0;
+ 357:     uint64_t recordedGroupSubmits_=0;
+ 358:     void clearRecordedGroups();
+ 359:     struct SpecAcceptResult {
+ 360:         uint32_t accepted=0;
+ 361:         uint32_t replacement=UINT32_MAX;
+ 362:         uint32_t bonus=UINT32_MAX;
+ 363:     bool RunSpecAcceptPrefix(
+ 364:         const uint32_t* target,const uint32_t* proposal,
+ 365:         uint32_t count,SpecAcceptResult& result);
+ 366:     uint64_t SpecAcceptGpuOps() const noexcept { return specAcceptGpuOps_; }
+ 367:     VkPipeline specAcceptPipeline_=VK_NULL_HANDLE;
+ 368:     VkPipelineLayout specAcceptPipelineLayout_=VK_NULL_HANDLE;
+ 369:     uint64_t specAcceptGpuOps_=0;
+ 370:     bool CaptureVerifiedHidden(
+ 371:         DeviceBuf& hiddenBatch,uint32_t tokenIndex,
+ 372:         uint32_t hiddenWidth,uint32_t batch);
+ 373:     bool RestoreVerifiedHiddenToArena(uint32_t hiddenWidth);
+ 374:     bool DownloadVerifiedHidden(float* dst,uint32_t hiddenWidth);
+ 375:     uint64_t VerifiedHiddenHandoffs() const noexcept {
+ 376:         return verifiedHiddenHandoffs_;
+ 377:     DeviceBuf verifiedHidden_{};
+ 378:     uint32_t verifiedHiddenWidth_=0;
+ 379:     uint64_t verifiedHiddenHandoffs_=0;
+ 380:     struct LayerTimelineState {
+ 381:         uint64_t qkvDone=0;
+ 382:         uint64_t attnDone=0;
+ 383:         uint64_t gateUpDone=0;
+ 384:         uint64_t layerDone=0;
+ 385:     bool SubmitTimelineCommand(
+ 386:         VkCommandBuffer cmd,VkQueue q,
+ 387:         uint64_t waitValue,uint64_t signalValue,
+ 388:         VkPipelineStageFlags waitStage);
+ 389:     uint64_t LayerTimelineChains() const noexcept {
+ 390:         return layerTimelineChains_;
+ 391:     uint64_t layerTimelineChains_=0;
+ 392:     uint64_t RecordedGroupAsyncSubmits() const noexcept {
+ 393:         return recordedGroupAsyncSubmits_;
+ 394:     uint64_t RecordedGroupSyncWaits() const noexcept {
+ 395:         return recordedGroupSyncWaits_;
+ 396:     uint64_t RecordedGroupLastSignal() const noexcept {
+ 397:         return recordedGroupLastSignal_;
+ 398:     uint64_t recordedGroupAsyncSubmits_=0;
+ 399:     uint64_t recordedGroupSyncWaits_=0;
+ 400:     uint64_t recordedGroupLastSignal_=0;
+ 401:     bool RunSpecAcceptPrefixResident(
+ 402:         DeviceBuf& targetIds,DeviceBuf& proposalIds,
+ 403:     uint64_t SpecAcceptResidentOps() const noexcept {
+ 404:         return specAcceptResidentOps_;
+ 405:     uint64_t SpecAcceptInputUploadBytes() const noexcept {
+ 406:         return specAcceptInputUploadBytes_;
+ 407:     uint64_t specAcceptResidentOps_=0;
+ 408:     uint64_t specAcceptInputUploadBytes_=0;
+ 409:     struct HiddenCopyTicket {
+ 410:         uint64_t signalValue=0;
+ 411:     bool CaptureVerifiedHiddenTimeline(
+ 412:         uint32_t hiddenWidth,uint32_t batch,
+ 413:         uint64_t waitValue,HiddenCopyTicket& ticket);
+ 414:     bool RestoreVerifiedHiddenTimeline(
+ 415:         uint32_t hiddenWidth,uint64_t waitValue,
+ 416:         HiddenCopyTicket& ticket);
+ 417:     bool WaitHiddenCopy(HiddenCopyTicket& ticket);
+ 418:     uint64_t HiddenTimelineSubmits() const noexcept {
+ 419:         return hiddenTimelineSubmits_;
+ 420:     uint64_t hiddenTimelineSubmits_=0;

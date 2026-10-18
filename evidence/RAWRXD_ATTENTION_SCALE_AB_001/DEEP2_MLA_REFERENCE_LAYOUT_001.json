@@ -1,0 +1,44 @@
+{
+  "certificate_id": "DEEP2_MLA_REFERENCE_LAYOUT_001",
+  "date": "2026-10-10",
+  "layer": 0,
+  "reference_step": "step01 (position 1)",
+  "native_differential": "diff_20pos_kvcache (position 1)",
+  "components": {
+    "V_RECONSTRUCTED": {
+      "position_1_all_16_heads": "PASS - cos=1.00000012, rmse=1.10e-08",
+      "position_0_heads_0_2": "PASS - cos=0.99999988, rmse=8.96e-09",
+      "concatenated_pos1_2048_elements": "PASS - cos=1.00000012, rmse=1.10e-08"
+    },
+    "KV_KNOPE_CACHED": {
+      "position_1": "PASS - cos=1.00000012, rmse=2.41e-08",
+      "position_0": "PASS - cos=0.99999994, rmse=1.91e-08"
+    },
+    "KV_KNOPE_READ": {
+      "position_1": "PASS - cos=1.00000012, rmse=2.41e-08",
+      "position_0": "PASS - cos=0.99999994, rmse=1.91e-08"
+    },
+    "KV_VALUE_CACHED": {
+      "position_1": "PASS - cos=1.00000012, rmse=1.10e-08",
+      "position_0": "PASS - cos=0.99999988, rmse=8.96e-09"
+    },
+    "KV_VALUE_READ": {
+      "position_1": "PASS - cos=1.00000012, rmse=1.10e-08",
+      "position_0": "PASS - cos=0.99999988, rmse=8.96e-09"
+    },
+    "KV_LATENT_CACHED": {
+      "position_1": "PASS - cos=1.00000012, rmse=1.69e-08",
+      "position_0": "NOT_COMPARED - reference only captured position 1 at step01"
+    },
+    "K_ROPE_RAW_CACHED": {
+      "position_1": "PASS - cos=1.00000000, rmse=2.63e-06",
+      "position_0": "NOT_COMPARED - reference only captured position 1 at step01"
+    },
+    "K_ROPE_RAW_READ": {
+      "position_1": "PASS - cos=1.00000000, rmse=2.63e-06",
+      "position_0": "NOT_COMPARED - reference only captured position 1 at step01"
+    }
+  },
+  "note": "All MLA cache components (V, K_noRope, KV latent, K_rope) match reference at position 1 where reference data exists. Position 0 reference captures are absent from step01 dump. No numerical defects found in MLA cache reconstruction path at Layer 0.",
+  "verdict": "PARTIAL_PASS - Full certification requires reference captures for all positions"
+}
