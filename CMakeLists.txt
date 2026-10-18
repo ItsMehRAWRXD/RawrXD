@@ -104,19 +104,19 @@ endif()
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
-        PRIVATE Deep2EngineCore
+        PRIVATE Vulkan::Vulkan
         kernel32.lib user32.lib advapi32.lib
     )
     target_link_libraries(production_smoke_test
-        PRIVATE Deep2EngineCore
+        PRIVATE Vulkan::Vulkan
         kernel32.lib user32.lib advapi32.lib
     )
 elseif(UNIX AND NOT APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl)
-    target_link_libraries(production_smoke_test pthread dl)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 elseif(APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl)
-    target_link_libraries(production_smoke_test pthread dl)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
 # Install target
