@@ -32,6 +32,25 @@ struct Deep2GatewayGenerateResult {
     bool success = false;
     std::string text;
     std::string error;
+    Deep2::GenerationResult::StopReason stopReason =
+        Deep2::GenerationResult::StopReason::Unknown;
+    bool eosObserved = false;
+    bool callbackCancelled = false;
+    bool engineError = false;
+    uint64_t promptTokens = 0;
+    uint64_t generatedTokens = 0;
+
+    const char* stopReasonStr() const noexcept {
+        switch (stopReason) {
+            case Deep2::GenerationResult::StopReason::Eos: return "eos";
+            case Deep2::GenerationResult::StopReason::MaxTokens: return "max_tokens";
+            case Deep2::GenerationResult::StopReason::CallbackCancel: return "cancel";
+            case Deep2::GenerationResult::StopReason::ContextLimit: return "context_limit";
+            case Deep2::GenerationResult::StopReason::EngineError: return "error";
+            case Deep2::GenerationResult::StopReason::Unknown:
+            default: return "unknown";
+        }
+    }
 };
 
 class SovereignModelResolver final {
@@ -89,6 +108,8 @@ public:
         Deep2GatewayGenerateResult out;
         if (!loaded_) {
             out.error = "model not loaded";
+            out.engineError = true;
+            out.stopReason = Deep2::GenerationResult::StopReason::EngineError;
             return out;
         }
         try {
@@ -99,19 +120,32 @@ public:
             opts.topK = static_cast<uint32_t>(cfg.topK > 0 ? cfg.topK : 1);
             opts.seed = static_cast<uint64_t>(cfg.seed);
             std::string text;
-            auto r = engine_.generateStream(
+            auto r = engine_.generateStreamReceipt(
                 prompt, opts,
                 [&](int32_t, const std::string& tok) -> bool {
                     text += tok;
                     return true;
                 });
             out.text = std::move(text);
+            out.promptTokens = r.promptTokens;
+            out.generatedTokens = r.generatedTokens;
+            out.eosObserved = r.eosObserved;
+            out.callbackCancelled = r.callbackCancelled;
+            out.engineError = r.engineError;
+            out.stopReason = r.stopReason;
+            // EOS is a normal model-driven stop, not a failure.
             out.success = r.completed && !out.text.empty();
-            if (!out.success)
-                out.error = r.cancelled ? "cancelled" : "empty generation";
+            if (!out.success) {
+                if (r.engineError) out.error = "engine error";
+                else if (r.callbackCancelled) out.error = "cancelled";
+                else if (r.eosObserved) out.error = "eos";
+                else out.error = "empty generation";
+            }
         } catch (const std::exception& ex) {
             out.error = ex.what();
             out.success = false;
+            out.engineError = true;
+            out.stopReason = Deep2::GenerationResult::StopReason::EngineError;
         }
         return out;
     }

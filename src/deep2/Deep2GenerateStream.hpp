@@ -28,18 +28,17 @@ inline ProductStreamResult Deep2ProductGenerateStream(
     e.clearCancel();
     ProductStreamResult r{};
     const auto t0 = std::chrono::steady_clock::now();
-    e.generateStream(prompt, opts,
-                     [&](int32_t, const std::string& piece) -> bool {
-                         r.text += piece;
-                         ++r.tokensCommitted;
-                         return true;
-                     });
+    GenerationReceipt gr = e.generateStreamReceipt(prompt, opts,
+        [&](int32_t, const std::string& piece) -> bool {
+            r.text += piece;
+            ++r.tokensCommitted;
+            return true;
+        });
     const auto t1 = std::chrono::steady_clock::now();
     r.wallNs = (uint64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
                    t1 - t0)
                    .count();
     r.textBytes = (uint64_t)r.text.size();
-    /* Seal emits inside Deep2Engine::generateStream — do not double-seal. */
     return r;
 }
 

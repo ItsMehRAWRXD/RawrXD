@@ -64,7 +64,7 @@ int main() {
     std::string text;
     uint32_t n = 0;
     const auto t0 = std::chrono::steady_clock::now();
-    auto gr = e.generateStream(formatted, opts,
+    auto gr = e.generateStreamReceipt(formatted, opts,
                                [&](int32_t, const std::string& piece) -> bool {
                                    text += piece;
                                    ++n;
@@ -87,6 +87,18 @@ int main() {
         std::fprintf(g, "PATH=%s\n", w.modelPath.c_str());
         std::fprintf(g, "REAL_GENERATE_STREAM=%d\n", n > 0 ? 1 : 0);
         std::fprintf(g, "GENERATED_TOKENS=%u\n", n);
+        std::fprintf(g, "RECEIPT_TOKENS=%llu\n",
+                     (unsigned long long)gr.generatedTokens);
+        std::fprintf(g, "PROMPT_TOKENS=%llu\n",
+                     (unsigned long long)gr.promptTokens);
+        std::fprintf(g, "COMMITTED_TOKENS=%llu\n",
+                     (unsigned long long)gr.committedTokens);
+        std::fprintf(g, "EOS_OBSERVED=%d\n", gr.eosObserved ? 1 : 0);
+        std::fprintf(g, "CALLBACK_CANCELLED=%d\n",
+                     gr.callbackCancelled ? 1 : 0);
+        std::fprintf(g, "ENGINE_ERROR=%d\n", gr.engineError ? 1 : 0);
+        std::fprintf(g, "MODEL_LOADED=%d\n", gr.modelLoaded ? 1 : 0);
+        std::fprintf(g, "STOP_REASON=%s\n", gr.stopReasonStr());
         std::fprintf(g, "WALL_MS=%.3f\n", wallMs);
         std::fprintf(g, "WALL_TPS=%.3f\n", wallTps);
         std::fprintf(g, "COMPLETED=%d\n", gr.completed ? 1 : 0);
@@ -94,8 +106,9 @@ int main() {
         std::fprintf(g, "--- POEM ---\n%s\n--- END ---\n", text.c_str());
         std::fclose(g);
     }
-    std::printf("WALL_TPS=%.3f TOKENS=%u\n--- POEM ---\n%s\n--- END ---\n",
-                wallTps, n, text.c_str());
+    std::printf("WALL_TPS=%.3f TOKENS=%u STOP=%s EOS=%d\n--- POEM ---\n%s\n--- END ---\n",
+                wallTps, n, gr.stopReasonStr(), gr.eosObserved ? 1 : 0,
+                text.c_str());
     e.unloadModel();
     return n > 0 ? 0 : 1;
 }

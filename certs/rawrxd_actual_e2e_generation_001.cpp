@@ -39,7 +39,7 @@ int main() {
         const std::string prompt =
             rawr_run::FormatChatPrompt(eng, "Say hi in one short sentence.",
                                        &wit);
-        auto gr = eng.generateStream(
+        auto gr = eng.generateStreamReceipt(
             prompt, opt, [&](int32_t, const std::string& piece) {
                 ++nTok;
                 text += piece;

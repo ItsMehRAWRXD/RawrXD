@@ -60,14 +60,15 @@ int d2_adapt::generate(void* engine, const D2GenerateRequest* req,
         metrics->sealed_logits_reuse = 0;
         return cb(user, (uint32_t)tokenId, text.c_str(), text.size()) != 0;
     };
-    GenerationResult r = e->generateStream(req->prompt, opt, bridge);
+    GenerationReceipt r = e->generateStreamReceipt(req->prompt, opt, bridge);
     metrics->prompt_tokens = r.promptTokens;
+    metrics->generated_tokens = r.generatedTokens;
     metrics->wall_ns = (uint64_t)(r.generationTimeMs * 1e6);
-    if (r.cancelled) metrics->cancelled = 1;
+    if (r.callbackCancelled) metrics->cancelled = 1;
     atr("PROMPT_TOKENIZE_REAL=1 PREFILL_REAL=1\n");
     atr("STREAM_CALLBACK_TOKENS=%llu TOKEN_COMMIT_REAL=1\n",
         (unsigned long long)metrics->generated_tokens);
     atr("REAL_AUTOREGRESSIVE_DECODE=1 DEVICE_LOST=0\n");
-    return (metrics->generated_tokens > 0 && (r.completed || r.cancelled)) ? 1
+    return (r.generatedTokens > 0 && (r.completed || r.callbackCancelled)) ? 1
                                                                            : 0;
 }

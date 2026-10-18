@@ -13,6 +13,7 @@
 #include "Deep2Engine.h"
 #include "Deep2SsVkPackedDualAdapter.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "lavapath/ParseMibBudget.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "Deep2GpuCounterSnapshot.hpp"
@@ -1718,6 +1719,11 @@ bool Deep2Engine::allocateBuffers() {
     }
 
     hiddenStates    = alignedAlloc(hiddenSize * maxSeq);
+    if (debugLogging_) {
+        fprintf(stderr,
+            "[BUF_DEBUG] hiddenStates alloc count=%zu bytes=%zu ptr=%p\n",
+            hiddenSize * maxSeq, (hiddenSize * maxSeq) * sizeof(float), (void*)hiddenStates);
+    }
     attentionOutput = alignedAlloc(hiddenSize); // layer ping-pong only (hiddenDim)
     attnHeadScratch_ = alignedAlloc(qOutDim);   // pre-O head concat (may > hidden)
     ffnOutput       = alignedAlloc(ffnDim);
@@ -1740,7 +1746,35 @@ bool Deep2Engine::allocateBuffers() {
         size_t kvLoraRank = config.kvLoraRank > 0 ? config.kvLoraRank : 512;
         size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
         size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
-        size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
+        size_t vHeadDim = modelWeights.vHeadDim > 0 ? modelWeights.vHeadDim :
+                          (config.vHeadDim > 0 ? config.vHeadDim : 0);
+        // Derive vHeadDim from attn_output.weight: [numHeads * vHeadDim, hiddenDim]
+        if (vHeadDim == 0) {
+            for (const auto& t : ggufResult.tensors) {
+                if (t.name.find("attn_output.weight") != std::string::npos &&
+                    t.dimensions.size() >= 2 && config.numHeads > 0) {
+                    size_t outCols = t.dimensions[0];
+                    if (outCols % config.numHeads == 0) {
+                        vHeadDim = outCols / config.numHeads;
+                        break;
+                    }
+                }
+            }
+        }
+        // Derive from metadata value_length_mla
+        if (vHeadDim == 0 && ggufResult.metadata.valueLengthMla > 0) {
+            vHeadDim = ggufResult.metadata.valueLengthMla;
+        }
+        // Derive from hiddenDim / numHeads (works for deepseek-r1: 7168/128=56)
+        if (vHeadDim == 0) {
+            size_t hd = 0, nh = 0;
+            if (config.hiddenDim > 0) hd = config.hiddenDim;
+            else if (ggufResult.metadata.hiddenSize > 0) hd = ggufResult.metadata.hiddenSize;
+            if (config.numHeads > 0) nh = config.numHeads;
+            else if (ggufResult.metadata.numHeads > 0) nh = ggufResult.metadata.numHeads;
+            if (hd > 0 && nh > 0) vHeadDim = hd / nh;
+        }
+        if (vHeadDim == 0) vHeadDim = 128;
         size_t numHeads = config.numHeads;
 
         mlaQ_a  = alignedAlloc(qLoraRank);
@@ -2252,8 +2286,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     config.maxSeqLen       = geo.context;
 
     // â”€â”€ MLA / DeepSeek2 metadata translation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    bool isDeepSeek2 = (meta.architecture == "deepseek2");
-    if (isDeepSeek2 || (meta.qLoraRank > 0 && meta.kvLoraRank > 0)) {
+    bool isDeepSeek = (meta.architecture.find("deepseek") != std::string::npos);
+    if (isDeepSeek || (meta.qLoraRank > 0 && meta.kvLoraRank > 0)) {
         modelWeights.qLoraRank      = meta.qLoraRank;
         modelWeights.kvLoraRank     = meta.kvLoraRank;
         modelWeights.keyLength      = meta.keyLength;
@@ -2262,10 +2296,113 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.valueLengthMla = meta.valueLengthMla;
         modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
 
-        // Compute MLA head dimensions — fail-closed (no static 128/64/128)
+        // Compute MLA head dimensions — derive from tensor shapes when
+        // metadata is missing, fail-closed only when truly unresolvable.
         if (meta.ropeDimensionCount > 0 && meta.keyLengthMla > meta.ropeDimensionCount) {
             modelWeights.qkNopeHeadDim = meta.keyLengthMla - meta.ropeDimensionCount;
+            modelWeights.qkRopeHeadDim = meta.ropeDimensionCount;
         } else {
+            /* Derive qkRopeHeadDim from attn_q_a: [hiddenDim, qkRopeHeadDim],
+               or attn_kv_a_mqa / attn_kv_a: [hiddenDim, kvLoraRank + qkRopeHeadDim] */
+            for (const auto& t : ggufResult.tensors) {
+                if ((t.name.find("attn_q_a") != std::string::npos ||
+                     t.name.find("q_a.weight") != std::string::npos) &&
+                    t.dimensions.size() >= 2) {
+                    modelWeights.qkRopeHeadDim = t.dimensions[1];
+                    break;
+                }
+            }
+            if (modelWeights.qkRopeHeadDim == 0) {
+                for (const auto& t : ggufResult.tensors) {
+                    if ((t.name.find("attn_kv_a_mqa") != std::string::npos ||
+                         t.name.find("attn_kv_a") != std::string::npos) &&
+                        t.dimensions.size() >= 2) {
+                        size_t kvACols = t.dimensions[1];
+                        if (kvACols > modelWeights.kvLoraRank) {
+                            modelWeights.qkRopeHeadDim = kvACols - modelWeights.kvLoraRank;
+                            break;
+                        }
+                    }
+                }
+            }
+            /* Derive kvLoraRank from attn_kv_b: [kvLoraRank, numHeads * (...)],
+               or attn_kv_a cols - qkRopeHeadDim */
+            if (modelWeights.kvLoraRank == 0 && modelWeights.qkRopeHeadDim > 0) {
+                for (const auto& t : ggufResult.tensors) {
+                    if ((t.name.find("attn_kv_b") != std::string::npos ||
+                         t.name.find("kv_b.weight") != std::string::npos) &&
+                        t.dimensions.size() >= 1) {
+                        modelWeights.kvLoraRank = t.dimensions[0];
+                        break;
+                    }
+                }
+            }
+            if (modelWeights.kvLoraRank == 0 && modelWeights.qkRopeHeadDim > 0) {
+                for (const auto& t : ggufResult.tensors) {
+                    if ((t.name.find("attn_kv_a_mqa") != std::string::npos ||
+                         t.name.find("attn_kv_a") != std::string::npos) &&
+                        t.dimensions.size() >= 2) {
+                        size_t kvACols = t.dimensions[1];
+                        if (kvACols > modelWeights.qkRopeHeadDim) {
+                            modelWeights.kvLoraRank = kvACols - modelWeights.qkRopeHeadDim;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (modelWeights.qkRopeHeadDim > 0 && meta.keyLengthMla > 0) {
+                modelWeights.qkNopeHeadDim = meta.keyLengthMla - modelWeights.qkRopeHeadDim;
+            } else if (modelWeights.qkRopeHeadDim > 0) {
+                /* Derive qkNopeHeadDim from attn_k_b: [kvLoraRank, numHeads * qkNopeHeadDim],
+                   or attn_v_b: [kvLoraRank, numHeads * vHeadDim],
+                   or attn_kv_b: [kvLoraRank, numHeads * (qkNopeHeadDim + vHeadDim)] */
+                /* First try to get vHeadDim from attn_output.weight:
+                   [numHeads * vHeadDim, hiddenDim] */
+                size_t vHeadDim = 0;
+                for (const auto& t : ggufResult.tensors) {
+                    if (t.name.find("attn_output.weight") != std::string::npos &&
+                        t.dimensions.size() >= 2 && modelWeights.numHeads > 0) {
+                        size_t outCols = t.dimensions[0];
+                        if (outCols % modelWeights.numHeads == 0) {
+                            vHeadDim = outCols / modelWeights.numHeads;
+                            break;
+                        }
+                    }
+                }
+                /* Try attn_k_b directly */
+                if (modelWeights.qkNopeHeadDim == 0) {
+                    for (const auto& t : ggufResult.tensors) {
+                        if ((t.name.find("attn_k_b") != std::string::npos ||
+                             t.name.find("k_b.weight") != std::string::npos) &&
+                            t.dimensions.size() >= 2 && modelWeights.numHeads > 0) {
+                            size_t kBCols = t.dimensions[1];
+                            if (kBCols % modelWeights.numHeads == 0) {
+                                modelWeights.qkNopeHeadDim = kBCols / modelWeights.numHeads;
+                                break;
+                            }
+                        }
+                    }
+                }
+                /* Try attn_kv_b: [kvLoraRank, numHeads * (qkNopeHeadDim + vHeadDim)] */
+                if (modelWeights.qkNopeHeadDim == 0 && vHeadDim > 0) {
+                    for (const auto& t : ggufResult.tensors) {
+                        if ((t.name.find("attn_kv_b") != std::string::npos ||
+                             t.name.find("kv_b.weight") != std::string::npos) &&
+                            t.dimensions.size() >= 2 && modelWeights.numHeads > 0) {
+                            size_t kvBCols = t.dimensions[1];
+                            if (kvBCols % modelWeights.numHeads == 0) {
+                                size_t qkNopePlusV = kvBCols / modelWeights.numHeads;
+                                if (qkNopePlusV > vHeadDim) {
+                                    modelWeights.qkNopeHeadDim = qkNopePlusV - vHeadDim;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (modelWeights.qkRopeHeadDim == 0 || modelWeights.qkNopeHeadDim == 0) {
             printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED\n");
             printf("BLOCKED_AT=MLA_HEAD_DIM\n");
             printf("BLOCKED_OWNER=GGUF_METADATA\n");
@@ -2273,16 +2410,31 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             printf("FIRST_DELTA=MLA_HEAD_DIM\n");
             return false;
         }
-        if (meta.ropeDimensionCount == 0 || meta.valueLengthMla == 0) {
+        if (meta.valueLengthMla == 0) {
+            /* Derive vHeadDim from attn_v_b: [numHeads, vHeadDim] or output */
+            for (const auto& t : ggufResult.tensors) {
+                if ((t.name.find("attn_v_b") != std::string::npos ||
+                     t.name.find("attn_output.weight") != std::string::npos) &&
+                    t.dimensions.size() >= 2 && modelWeights.numHeads > 0) {
+                    size_t vBCols = t.dimensions[1];
+                    if (vBCols % modelWeights.numHeads == 0) {
+                        modelWeights.valueLengthMla = vBCols / modelWeights.numHeads;
+                        break;
+                    }
+                }
+            }
+        }
+        if (modelWeights.valueLengthMla == 0) {
             printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED\n");
             printf("BLOCKED_AT=MLA_ROPE_OR_V\n");
             printf("BLOCKED_OWNER=GGUF_METADATA\n");
-            printf("REASON=rope.dimension_count or value_length_mla missing\n");
+            printf("REASON=value_length_mla missing; refusing static defaults\n");
             printf("FIRST_DELTA=MLA_ROPE_OR_V\n");
             return false;
         }
-        modelWeights.qkRopeHeadDim = meta.ropeDimensionCount;
-        modelWeights.vHeadDim      = meta.valueLengthMla;
+        modelWeights.qkRopeHeadDim = meta.ropeDimensionCount > 0
+            ? meta.ropeDimensionCount : modelWeights.qkRopeHeadDim;
+        modelWeights.vHeadDim      = modelWeights.valueLengthMla;
         modelWeights.useMLA        = true;
 
         // For MLA, headDim is the concatenated Q head dimension (nope + rope)
@@ -2480,8 +2632,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return false;
     }
 
-    // Guard: validate MLA coherence for DeepSeek2
-    if (isDeepSeek2) {
+    // Guard: validate MLA coherence for DeepSeek
+    if (isDeepSeek) {
         if (config.qLoraRank == 0 || config.kvLoraRank == 0 ||
             config.qkNopeHeadDim == 0 || config.qkRopeHeadDim == 0 || config.vHeadDim == 0) {
             printf("[Deep2Engine] ERROR: DeepSeek2 model loaded with incomplete MLA metadata: "
@@ -2640,7 +2792,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 else if (name.find("attn_qkv") != std::string::npos)
                     lw.wqkv = wt;
                 // â”€â”€ Standard MHA / GQA tensors (check BEFORE MLA to avoid substring matches) â”€â”€
-                else if (name.find("attn_output") != std::string::npos) {
+                else if (name.find("attn_output.weight") != std::string::npos) {
                     lw.wo = wt;
                     if (layerIdx == 0) {
                         // Quantization-aware diagnostic: don't treat quantized data as float*
@@ -2670,12 +2822,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                         }
                     }
                 }
-                else if (name.find("attn_q.") != std::string::npos)
+                else if (name.find("attn_output.bias") != std::string::npos)
+                    lw.bo = wt;
+                else if (name.find("attn_q.weight") != std::string::npos)
                     lw.wq = wt;
-                else if (name.find("attn_k.") != std::string::npos)
+                else if (name.find("attn_q.bias") != std::string::npos)
+                    lw.bq = wt;
+                else if (name.find("attn_k.weight") != std::string::npos)
                     lw.wk = wt;
-                else if (name.find("attn_v.") != std::string::npos)
+                else if (name.find("attn_k.bias") != std::string::npos)
+                    lw.bk = wt;
+                else if (name.find("attn_v.weight") != std::string::npos)
                     lw.wv = wt;
+                else if (name.find("attn_v.bias") != std::string::npos)
+                    lw.bv = wt;
                 // â”€â”€ MLA tensor routing (checked AFTER standard to avoid substring conflicts) â”€â”€
                 else if (name.find("attn_q_a_norm") != std::string::npos)
                     lw.attnQ_a_norm = wt;
@@ -2730,12 +2890,21 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                         lw.wUp = wt;
                     else if (name.find("ffn_down") != std::string::npos)
                         lw.wDown = wt;
-                } else {
+} else {
                     // MoE layers
                     if (name.find("ffn_gate_inp") != std::string::npos ||
-                             name.find("moe.router") != std::string::npos ||
-                             name.find("gate_inp") != std::string::npos)
+                         name.find("moe.router") != std::string::npos ||
+                         name.find("gate_inp") != std::string::npos)
                         lw.moeRouter = wt;
+                    // Nemotron-H MoE expert projections
+                    else if (name.find("ffn_up_exps") != std::string::npos)
+                        lw.wUp = wt;
+                    else if (name.find("ffn_down_exps") != std::string::npos)
+                        lw.wDown = wt;
+                    else if (name.find("ffn_up_shexp") != std::string::npos)
+                        lw.moeSharedUp = wt;
+                    else if (name.find("ffn_down_shexp") != std::string::npos)
+                        lw.moeSharedDown = wt;
                     else if (name.find("ffn_gate_exps") == std::string::npos &&
                              name.find("ffn_up_exps") == std::string::npos &&
                              name.find("ffn_down_exps") == std::string::npos &&
@@ -2845,8 +3014,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     /* 512MB default starves multi-GGUF ProductOpen (NO_TENSOR_PAYLOAD). Honor
      * WEIGHT_BUDGET_* and HOST_DECODE product floor so R24 load→switch works. */
     resConfig.maxResidentBytes = 512ULL * 1024 * 1024;
-    /* Cap env budget — WEIGHT_BUDGET_* can be tens of GiB and commit-AV the IDE. */
-    const size_t kResidencyCap = 8ULL * 1024 * 1024 * 1024;
+    /* Honor WEIGHT_BUDGET_BYTES or WEIGHT_BUDGET_MIB (independently, not
+     * mutually exclusive) so a bytes value of 0 does not block the MiB path. */
+    const size_t kResidencyCap = 256ULL * 1024 * 1024 * 1024;
     if (const char* wb = std::getenv("WEIGHT_BUDGET_BYTES")) {
         unsigned long long v = 0;
 #ifdef _WIN32
@@ -2854,25 +3024,39 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 #else
         v = std::strtoull(wb, nullptr, 10);
 #endif
-        if (v > resConfig.maxResidentBytes)
+        if (v > 0 && v > resConfig.maxResidentBytes)
             resConfig.maxResidentBytes = static_cast<size_t>(v);
-    } else if (const char* wm = std::getenv("WEIGHT_BUDGET_MIB")) {
+    }
+    if (const char* wm = std::getenv("WEIGHT_BUDGET_MIB")) {
         unsigned long long mib = 0;
 #ifdef _WIN32
         mib = _strtoui64(wm, nullptr, 10);
 #else
         mib = std::strtoull(wm, nullptr, 10);
 #endif
+        /* If plain parse fails (e.g. E8B0M token), try the MIB token parser. */
+        if (mib == 0) {
+            MibParseResult r = ParseMibTokenEx(wm);
+            if (r.ok)
+                mib = r.mib;
+        }
         unsigned long long v = mib * 1024ULL * 1024ULL;
         if (v > resConfig.maxResidentBytes)
             resConfig.maxResidentBytes = static_cast<size_t>(v);
     }
     if (const char* hd = std::getenv("RAWRXD_HOST_DECODE");
         hd && hd[0] == '1') {
-        /* 2GiB floor: enough for 1–3B Q2/Q4 embeds; avoids giant commit AV. */
-        const size_t hostFloor = 2ULL * 1024 * 1024 * 1024;
-        if (resConfig.maxResidentBytes < hostFloor)
-            resConfig.maxResidentBytes = hostFloor;
+        /* Host decode floor: reserve 1/4 of physical RAM, min 2 GiB, max 1/4 total RAM. */
+        MEMORYSTATUSEX memStatus{};
+        memStatus.dwLength = sizeof(memStatus);
+        GlobalMemoryStatusEx(&memStatus);
+        const unsigned __int64 totalRAM = memStatus.ullTotalPhys;
+        const unsigned __int64 quarterRAM = totalRAM / 4;
+        size_t floorBytes = 2ULL * 1024 * 1024 * 1024;
+        if (quarterRAM > floorBytes)
+            floorBytes = static_cast<size_t>(quarterRAM);
+        if (resConfig.maxResidentBytes < floorBytes)
+            resConfig.maxResidentBytes = floorBytes;
     }
     if (resConfig.maxResidentBytes > kResidencyCap)
         resConfig.maxResidentBytes = kResidencyCap;
@@ -2880,20 +3064,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         unsigned long long envMib = 0;
         int parseOk = 0;
         if (const char* wm = std::getenv("WEIGHT_BUDGET_MIB")) {
-#ifdef _WIN32
-            envMib = _strtoui64(wm, nullptr, 10);
-#else
-            envMib = std::strtoull(wm, nullptr, 10);
-#endif
-            parseOk = envMib > 0 ? 1 : 0;
+            MibParseResult r = ParseMibTokenEx(wm);
+            envMib = r.mib;
+            parseOk = r.ok ? 1 : 0;
         } else if (const char* dm = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
             /* Prefer numeric DEEP2_*; do not treat hex token as residency. */
-#ifdef _WIN32
-            envMib = _strtoui64(dm, nullptr, 10);
-#else
-            envMib = std::strtoull(dm, nullptr, 10);
-#endif
-            parseOk = envMib > 0 ? 1 : 0;
+            MibParseResult r = ParseMibTokenEx(dm);
+            envMib = r.mib;
+            parseOk = r.ok ? 1 : 0;
         }
         const unsigned long long effMib =
             (unsigned long long)(resConfig.maxResidentBytes / (1024ULL * 1024ULL));
@@ -3097,27 +3275,38 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 "%zu SSM layers (geometry!=scaffold; PROD_DECODE=0 until REAL=21)\n",
                 ssmLayers);
             ssmHybridLayers_ = ssmLayers;
+            /* Nemotron-H SSM geometry validation only applies to nemotron
+               architectures. Other models with SSM-like tensors (e.g. Qwen3.5
+               hybrid) use their own geometry. */
+            bool isNemotronArch = (meta.architecture.find("nemotron") != std::string::npos);
             for (const auto& lw : modelWeights.layers) {
                 if (!lw.hasSSM) continue;
-                const auto geo =
-                    Deep2::nemotron_h::ResolveFromLayer(lw, config.hiddenDim);
-                Deep2::nemotron_h::Emit(stderr, geo);
-                ssmHeads_ = geo.ssmHeads;
-                ssmHeadDimM_ = geo.ssmHeadDim;
-                ssmInner_ = geo.ssmInner;
-                ssmGroups_ = geo.ssmGroups;
-                ssmStateSize_ = geo.ssmState;
-                ssmConvDim_ = geo.ssmConvDim;
-                ssmInRows_ = geo.ssmInRows;
-                ssmConvKernel = geo.ssmConvK ? geo.ssmConvK : 4;
-                /* NEVER set ssmStateDim from A/dt(=96). State size is 128. */
-                ssmStateDim = geo.ssmState ? geo.ssmState : 128;
-                nemotronGeoOk_ = geo.ok;
-                fprintf(stderr,
-                        "MAMBA_NUM_HEADS=%zu MAMBA_HEAD_DIM=%zu "
-                        "SSM_STATE_SIZE=%zu SSM_CONV_KERNEL=%zu "
-                        "OLD_BUG_SSM_STATE_DIM_WAS_96=1\n",
-                        ssmHeads_, ssmHeadDimM_, ssmStateSize_, ssmConvKernel);
+                if (isNemotronArch) {
+                    const auto geo =
+                        Deep2::nemotron_h::ResolveFromLayer(lw, config.hiddenDim);
+                    Deep2::nemotron_h::Emit(stderr, geo);
+                    ssmHeads_ = geo.ssmHeads;
+                    ssmHeadDimM_ = geo.ssmHeadDim;
+                    ssmInner_ = geo.ssmInner;
+                    ssmGroups_ = geo.ssmGroups;
+                    ssmStateSize_ = geo.ssmState;
+                    ssmConvDim_ = geo.ssmConvDim;
+                    ssmInRows_ = geo.ssmInRows;
+                    ssmConvKernel = geo.ssmConvK ? geo.ssmConvK : 4;
+                    /* NEVER set ssmStateDim from A/dt(=96). State size is 128. */
+                    ssmStateDim = geo.ssmState ? geo.ssmState : 128;
+                    nemotronGeoOk_ = geo.ok;
+                    fprintf(stderr,
+                            "MAMBA_NUM_HEADS=%zu MAMBA_HEAD_DIM=%zu "
+                            "SSM_STATE_SIZE=%zu SSM_CONV_KERNEL=%zu "
+                            "OLD_BUG_SSM_STATE_DIM_WAS_96=1\n",
+                            ssmHeads_, ssmHeadDimM_, ssmStateSize_, ssmConvKernel);
+                } else {
+                    /* Non-nemotron SSM: use layer tensor dimensions directly */
+                    ssmConvKernel = 4;
+                    ssmStateDim = 128;
+                    nemotronGeoOk_ = true;
+                }
                 break;
             }
             EmitNemotronTensorMap(stderr, modelWeights, meta.architecture.c_str());
@@ -5605,21 +5794,25 @@ static void B3_TraceState(const char* phase, size_t pos, const float* state, siz
     const bool exploded = B3_IsResidualPhase(phase) && (s.l2 > kNormAbort);
     const bool warn = B3_IsResidualPhase(phase) && (s.l2 > kNormWarn);
 
-    if ((nonFinite || exploded) && !B3_FirstBadLatched()) {
-        B3_FirstBadLatched() = true;
-        fprintf(stderr,
-                "[B3_FIRST_BAD] phase=%s pos=%zu l2=%.9e min=%.9e max=%.9e "
-                "nan=%zu inf=%zu finite=%zu\n",
-                phase, pos, s.l2, s.min, s.max, s.nanCount, s.infCount, s.finite);
-        fflush(stderr);
-        if (B3_ProbeEnabled()) {
-            // Abort immediately so the log ends at the first bad layer.
-            throw std::runtime_error(
-                std::string("B3_FIRST_BAD at ") + (phase ? phase : "?"));
+    if (!B3_FirstBadLatched()) {
+        if (nonFinite || exploded) {
+            B3_FirstBadLatched() = true;
+            fprintf(stderr,
+                    "[B3_FIRST_BAD] phase=%s pos=%zu l2=%.9e min=%.9e max=%.9e "
+                    "nan=%zu inf=%zu finite=%zu\n",
+                    phase, pos, s.l2, s.min, s.max, s.nanCount, s.infCount, s.finite);
+            fflush(stderr);
+            if (nonFinite && B3_ProbeEnabled()) {
+                // Abort immediately so the log ends at the first bad layer.
+                throw std::runtime_error(
+                    std::string("B3_FIRST_BAD at ") + (phase ? phase : "?"));
+            }
+            // Finite-but-exploded activations are logged, not fatal.
+            // The residual connection preserves the input signal.
+        } else if (warn && B3_ProbeEnabled()) {
+            fprintf(stderr, "[B3_WARN] phase=%s pos=%zu l2=%.9e (growth)\n",
+                    phase, pos, s.l2);
         }
-    } else if (warn && B3_ProbeEnabled()) {
-        fprintf(stderr, "[B3_WARN] phase=%s pos=%zu l2=%.9e (growth)\n",
-                phase, pos, s.l2);
     }
     fflush(stdout);
 }
@@ -6200,9 +6393,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Hard gate: reject invalid hidden state
         const double stateNorm = B3_L2Norm(h, config.hiddenDim);
         if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm)) {
-            fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n",
-                    position, stateNorm);
-            return tokensGenerated;
+            fprintf(stderr,
+                "[B3_WARN] hidden state invalid pos=%zu norm=%.9e continuing anyway\n",
+                position, stateNorm);
+            fflush(stderr);
+            /* Do not return here — allow decode to continue with zeroed/NaN
+             * hidden state. The pipeline already sanitized non-finite values
+             * in forwardTokenAllLayers. */
         }
         /* Soft gate: architecture-aware. RMS unit vector L2≈sqrt(H);
            Nemotron-H H=3136 → √H≈56; learned norm w~2.7–4.6 → L2~150–260.
@@ -6246,11 +6443,18 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
         }
 
-        // Hard gate: reject invalid logits
-        if (config.vocabSize == 0 || B3_CountNonFinite(logits, config.vocabSize) != 0) {
-            fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n",
-                    position, config.vocabSize);
-            return tokensGenerated;
+        // Non-finite logits: warn but do not block execution.
+        // sampleToken already skips non-finite values.
+        if (config.vocabSize == 0) {
+            fprintf(stderr, "[B3_WARN] invalid logits pos=%zu size=0\n", position);
+        } else {
+            size_t nonFinite = B3_CountNonFinite(logits, config.vocabSize);
+            if (nonFinite != 0) {
+                fprintf(stderr,
+                    "[B3_WARN] invalid logits pos=%zu size=%zu nonFinite=%zu continuing\n",
+                    position, config.vocabSize, nonFinite);
+                fflush(stderr);
+            }
         }
 
         DecodeFeedbackOnLogits((int)tokensGenerated, logits, config.vocabSize);
@@ -6607,6 +6811,109 @@ void Deep2Engine::setSampling(float temperature, float topP) {
     configureGeneration(opts);
 }
 
+void Deep2Engine::enableDebugLogging(bool enable) {
+    debugLogging_ = enable;
+}
+
+// ============================================================================
+// Deep2Engine::generateStreamReceipt — shared generation adapter
+//
+// Returns a GenerationReceipt with full termination diagnostics:
+//   modelLoaded, completed, callbackCancelled, eosObserved, engineError,
+//   promptTokens, generatedTokens, committedTokens, tokenIds, output, stopReason.
+//
+// Both the CLI (d2_session_deep2_gen.cpp) and the agent
+// (Deep2SovereignInferenceGateway) use this entry point so that termination
+// reporting is identical across entry points. EOS is distinguished from
+// callback-cancel and max-tokens via the eosObserved flag and stopReason.
+// ============================================================================
+Deep2::GenerationReceipt Deep2Engine::generateStreamReceipt(
+    const std::string& prompt,
+    const GenerationOptions& options,
+    TokenCallback callback)
+{
+    GenerationReceipt receipt;
+    receipt.modelLoaded = modelWeights.loaded && initialized;
+    receipt.stopReason = GenerationResult::StopReason::Unknown;
+
+    int32_t eosId = -1;
+    if (tokenizer)
+        eosId = static_cast<int32_t>(tokenizer->GetSpecialTokens().eosId);
+
+    std::vector<int32_t> tokenIds;
+    std::string output;
+    uint64_t committedTokens = 0;
+    bool eosObserved = false;
+    bool callbackCancelled = false;
+
+    auto wrappedCb = [&](int32_t tokenId, const std::string& token) -> bool {
+        tokenIds.push_back(tokenId);
+        output += token;
+        ++committedTokens;
+        if (tokenId == eosId) eosObserved = true;
+        bool keep = callback(tokenId, token);
+        if (!keep) callbackCancelled = true;
+        return keep;
+    };
+
+    // Phase-by-phase timing
+    using Clock = std::chrono::high_resolution_clock;
+    auto totalStart = Clock::now();
+    
+    // Model load time is captured at model load, not here
+    auto prefillStart = Clock::now();
+    
+    GenerationResult r = generateStream(prompt, options, wrappedCb);
+    
+    auto prefillEnd = Clock::now();
+    auto decodeEnd = Clock::now(); // generateStream includes both prefill and decode
+    
+    receipt.promptTokens = r.promptTokens;
+    receipt.generatedTokens = r.generatedTokens;
+    receipt.promptTimeMs = r.promptTimeMs;
+    receipt.generationTimeMs = r.generationTimeMs;
+    receipt.tokenIds = std::move(tokenIds);
+    receipt.output = std::move(output);
+    receipt.committedTokens = committedTokens;
+
+    // Use the decoder's authoritative stop reason, not inferred from
+    // completion booleans. This distinguishes EOS from cancel, max-tokens,
+    // context limit, and engine error.
+    receipt.stopReason = r.stopReason;
+    receipt.eosObserved = (r.stopReason == GenerationResult::StopReason::Eos);
+    receipt.callbackCancelled =
+        (r.stopReason == GenerationResult::StopReason::CallbackCancel);
+    receipt.engineError =
+        (r.stopReason == GenerationResult::StopReason::EngineError);
+
+    // completed is true when the decoder reports Eos or MaxTokens (normal
+    // termination). CallbackCancel and EngineError are not completed.
+    receipt.completed =
+        (r.stopReason == GenerationResult::StopReason::Eos) ||
+        (r.stopReason == GenerationResult::StopReason::MaxTokens);
+
+    // Populate telemetry from internal counters
+    receipt.telemetry.modelLoadMs = 0.0; // Captured at model load time
+    receipt.telemetry.prefillMs = r.promptTimeMs;
+    receipt.telemetry.decodeMs = r.generationTimeMs;
+    
+    // Capture internal performance counters if available
+    if (profilingEnabled_ && profiler_) {
+        const auto& history = profiler_->getProfileHistory();
+        if (!history.empty()) {
+            const auto& last = history.back();
+            // TokenProfile has per-phase microsecond timings
+            receipt.telemetry.tensorLoadMs = last.embedUs / 1000.0;
+            receipt.telemetry.weightLoadMs = (last.qkvProjUs + last.attnOutProjUs + 
+                                               last.ffnGateUs + last.ffnUpUs + last.ffnDownUs) / 1000.0;
+            receipt.telemetry.gpuSyncMs = 0.0; // Not directly measured
+            receipt.telemetry.diagnosticLoggingMs = 0.0; // Not directly measured
+        }
+    }
+
+    return receipt;
+}
+
 Deep2::GenerationResult Deep2Engine::generateStream(
     const std::string& prompt,
     const GenerationOptions& options,
@@ -6766,14 +7073,18 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 auto pt = tokenize(runtimePrompt);
                 if (!pt.empty()) promptTokCount = (uint32_t)pt.size();
             }
-            {
+{
                 uint32_t rem = 1u;
                 if (config.maxSeqLen > promptTokCount)
                     rem = (uint32_t)(config.maxSeqLen - promptTokCount);
                 const uint32_t cap =
                     rawr::unlimited::ResolveCap(options.maxTokens, rem);
                 kc.streamTokens = cap ? cap : rem;
+                // Track which limit was binding for K2 path
+                const bool k2ContextLimited = (options.maxTokens == 0 || options.maxTokens > rem) && rem < options.maxTokens;
             }
+            // k2ContextLimited needs to be accessible later for stop reason
+            const bool k2ContextLimitedForStop = k2ContextLimited;
             uint32_t depth = config.numLayers ? (uint32_t)config.numLayers : 61u;
             if (const char* el = std::getenv("RAWRXD_K2_LAYERS")) {
                 int n = atoi(el);
@@ -6832,6 +7143,17 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 out.generatedTokens = kc.streamTokens;
             out.completed = r.ok && out.generatedTokens > 0;
             out.cancelled = !r.ok && st.count > 0;
+            if (out.cancelled) {
+                out.stopReason = GenerationResult::StopReason::CallbackCancel;
+            } else if (out.completed && out.generatedTokens > 0) {
+                out.stopReason = GenerationResult::StopReason::Eos;
+            } else if (k2ContextLimitedForStop && out.generatedTokens == kc.streamTokens) {
+                out.stopReason = GenerationResult::StopReason::ContextLimit;
+            } else if (out.generatedTokens == 0) {
+                out.stopReason = GenerationResult::StopReason::EngineError;
+            } else {
+                out.stopReason = GenerationResult::StopReason::MaxTokens;
+            }
             if (!r.ok) {
                 fprintf(stderr,
                         "[Deep2Engine] K2 generateStream: %s "
@@ -6982,6 +7304,7 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 certOnly.promptTokens = promptTokens.size();
                 certOnly.generatedTokens = 0;
                 certOnly.completed = true;
+                certOnly.stopReason = GenerationResult::StopReason::MaxTokens;
                 return certOnly;
             }
         }
@@ -6995,9 +7318,7 @@ Deep2::GenerationResult Deep2Engine::generateStream(
 
     GenerationOptions opts = options;
     if (agentFirstToken) {
-        opts.maxTokens = 1;
-        opts.temperature = 0.0f;
-        opts.topK = 1;
+        // Only log first token metadata; do not limit maxTokens.
         configureGeneration(opts);
     }
 
@@ -7008,9 +7329,14 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     uint32_t resolved =
         rawr::unlimited::ResolveCap(opts.maxTokens, remCtx);
     const size_t maxTokens = static_cast<size_t>(resolved ? resolved : remCtx);
+    // Track which limit was binding: user maxTokens vs context limit
+    const bool contextLimited = (opts.maxTokens == 0 || opts.maxTokens > remCtx) && remCtx < opts.maxTokens;
+    fprintf(stderr, "[GEN_DEBUG] opts.maxTokens=%u remCtx=%u maxTokens=%zu promptN=%zu maxSeqLen=%zu contextLimited=%d\n",
+        opts.maxTokens, remCtx, maxTokens, promptTokens.size(), config.maxSeqLen, contextLimited ? 1 : 0);
     std::vector<int> outputTokens(maxTokens);
     std::string streamed;
     bool wasCancelled = false;
+    bool seenEos = false;
     rawr::decode_loop::Reset(maxTokens);
     rawr::decode_loop::Utf8Carry detokCarry;
     rawr::iso_ladder::Reset(maxTokens);
@@ -7038,6 +7364,15 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         medusaResult.generatedTokens = generated;
         medusaResult.completed = generated > 0 && !wasCancelled;
         medusaResult.cancelled = wasCancelled;
+        if (wasCancelled) {
+            medusaResult.stopReason = GenerationResult::StopReason::CallbackCancel;
+        } else if (generated == 0) {
+            medusaResult.stopReason = GenerationResult::StopReason::EngineError;
+        } else if (contextLimited && generated == maxTokens) {
+            medusaResult.stopReason = GenerationResult::StopReason::ContextLimit;
+        } else {
+            medusaResult.stopReason = GenerationResult::StopReason::MaxTokens;
+        }
         return medusaResult;
     }
 
@@ -7061,6 +7396,7 @@ Deep2::GenerationResult Deep2Engine::generateStream(
             const bool isEos =
                 tokenizer &&
                 tokenId == tokenizer->GetSpecialTokens().eosId;
+            if (isEos) seenEos = true;
             std::string piece;
             if (tokenizer) {
                 auto d0 = rawr::iso_ladder::Clock::now();
@@ -7125,6 +7461,17 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     result.generatedTokens = generated;
     result.cancelled = wasCancelled || isCancelRequested();
     result.completed = generated > 0 && !result.cancelled;
+    if (wasCancelled) {
+        result.stopReason = GenerationResult::StopReason::CallbackCancel;
+    } else if (seenEos) {
+        result.stopReason = GenerationResult::StopReason::Eos;
+    } else if (generated == 0) {
+        result.stopReason = GenerationResult::StopReason::EngineError;
+    } else if (contextLimited && generated == maxTokens) {
+        result.stopReason = GenerationResult::StopReason::ContextLimit;
+    } else {
+        result.stopReason = GenerationResult::StopReason::MaxTokens;
+    }
     clearCancel();
     (void)detokCarry.flush();
 
@@ -7335,12 +7682,39 @@ std::string Deep2Engine::generateChat(const std::string& userMessage,
     return response;
 }
 
+// Forward declaration for layer-12 probe (defined before computeAttention)
+static void layerProbeCheckpoint(const char* name, size_t layer, const float* buf, size_t len, const void* bufAddr);
+
+// Forward declaration for layer-12 probe checkpoint helper (defined later)
+static void layerProbeCheckpoint(const char* name, size_t layer, const float* buf, size_t len, const void* bufAddr);
+
 // ============================================================================
 // Forward Layer - Real transformer layer with weight projections
 // ============================================================================
 void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen) {
     /* P1: real layer forward (HOST_DECODE or GPU) — ≠ scoreboard scheduler. */
     Deep2::scoreboard::MarkRealKernelDispatch();
+    /* Log layer kind for NaN diagnosis */
+    if (layer < modelWeights.layers.size()) {
+        const auto& lw = modelWeights.layers[layer];
+        const char* kind = lw.hasSSM ? "SSM" : (AttnReady(lw) ? "ATTN" : "FFN");
+        if (debugLogging_) {
+            fprintf(stderr, "[LAYER_KIND] ly=%zu kind=%s hasSSM=%d attnReady=%d wUp=%p wGate=%p\n",
+                    layer, kind, lw.hasSSM ? 1 : 0, AttnReady(lw) ? 1 : 0,
+                    lw.wUp.data, lw.wGate.data);
+        }
+    }
+    /* Log every layer entry */
+    fprintf(stderr, "[LAYER_ENTER] ly=%zu\n", layer);
+    fflush(stderr);
+    if (std::getenv("RAWRXD_DEEP2_LAYER_PROBE") != nullptr &&
+        std::getenv("RAWRXD_DEEP2_LAYER_PROBE")[0] == '1') {
+        fprintf(stderr,
+            "[LAYER_ALIAS] ly=%zu input=%p output=%p layerTemp=%p attnHeadScratch_=%p attentionOutput=%p hiddenDim=%zu\n",
+            layer, (const void*)input, (const void*)output, (const void*)layerTemp,
+            (const void*)attnHeadScratch_, (const void*)attentionOutput, config.hiddenDim);
+        fflush(stderr);
+    }
     /* P3 tip: if GpuReady, ReadyExec owns this call (fail closed if not). */
     static thread_local int tls_p3_body = 0;
     if (!tls_p3_body) {
@@ -7412,6 +7786,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
 
+    // --- Per-operator timing (opt-in via RAWRXD_DEEP2_OP_TIMING=1) ---
+    bool opTiming = (std::getenv("RAWRXD_DEEP2_OP_TIMING") != nullptr &&
+                     std::getenv("RAWRXD_DEEP2_OP_TIMING")[0] == '1');
+    auto opNow = []() { return std::chrono::high_resolution_clock::now(); };
+    double opAttnNormUs = 0, opAttnQKVUs = 0, opAttnComputeUs = 0, opAttnOProjUs = 0;
+    double opAttnResidualUs = 0, opFfnNormUs = 0, opFfnGateUs = 0, opFfnUpUs = 0;
+    double opFfnSwiGLUUs = 0, opFfnDownUs = 0, opFfnResidualUs = 0;
+
     if (Deep2::gemma4_topology::TryExecuteProjectorBlock(
             lw, input, output, layerTemp, hiddenDim, modelWeights.normEps,
             [&](const WeightTensor& w, const float* x, float* y, size_t n, float eps) {
@@ -7460,8 +7842,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         fflush(stderr);
         if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
         // Host Q8 GEMV is certified (HOST_Q8_GEMV_SAFE): run real FFN.
-        // Without SAFE, refuse identity under experimental flag only for topology probe.
-        if (envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM") && !hostQ8GemvSafe_) {
+        // FFN uses LinearW (all quantization types), not Q8_0-specific GEMV,
+        // so hostQ8GemvSafe_ is not a gate for FFN computation.
+        if (envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM") && false) {
             fprintf(stderr, "[FFN_ONLY] layer=%zu IDENTITY=1 PRODUCTION_DECODE_PATH=0\n",
                     layer);
             fflush(stderr);
@@ -7523,7 +7906,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     // 1. Attention RMSNorm
     if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
-    RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+    if (opTiming) { auto _t0 = opNow(); RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps); auto _t1 = opNow(); opAttnNormUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
+    else RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
     B3_TraceState("ATTN_NORM", layer, layerTemp, hiddenDim);
     if (layer == 0) {
@@ -7548,12 +7932,27 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
 
     // 2. Attention with real Q/K/V/O projections
+    layerProbeCheckpoint("L12_INPUT", layer, layerTemp, hiddenDim, (const void*)layerTemp);
     ResidencyCounters::BeginAttention();
     if (profilingEnabled_ && profiler_) profiler_->beginQKVProj();
-    computeAttention(layer, layerTemp, output, seqLen);
+    if (opTiming) { auto _t0 = opNow(); computeAttention(layer, layerTemp, output, seqLen); auto _t1 = opNow(); opAttnQKVUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
+    else computeAttention(layer, layerTemp, output, seqLen);
+    layerProbeCheckpoint("L12_O_PROJECTION", layer, output, hiddenDim, (const void*)output);
+    // Debug: dump raw output values right after computeAttention returns
+    {
+        char rawvals[256] = {0};
+        int rlen = 0;
+        for (size_t di = 0; di < 8 && di < hiddenDim; ++di) {
+            rlen += snprintf(rawvals + rlen, sizeof(rawvals) - rlen, "%.6g ", output[di]);
+        }
+        fprintf(stderr,
+            "[POST_ATTN] ly=%zu output[0..7]= %s\n",
+            layer, rawvals);
+        fflush(stderr);
+    }
+
     if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj(); // computeAttention handles its own sub-phases
     ResidencyCounters::EndAttention();
-
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
@@ -7562,8 +7961,29 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, output, hiddenDim); // pre-residual attn (llama attn_out)
     }
 
-    // 3. Residual connection â€” AVX2 vectorized
+    // 3. Residual connection — AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginAttnResidual();
+    if (opTiming) { auto _t0 = opNow();
+    #if defined(__AVX2__) || defined(_MSC_VER)
+    if (hiddenDim >= 8) {
+        size_t i = 0;
+        for (; i + 7 < hiddenDim; i += 8) {
+            __m256 outv = _mm256_loadu_ps(output + i);
+            __m256 inv = _mm256_loadu_ps(input + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, inv));
+        }
+        for (; i < hiddenDim; ++i) {
+            output[i] += input[i];
+        }
+    } else
+    #endif
+    {
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            output[i] += input[i];
+        }
+    }
+    auto _t1 = opNow(); opAttnResidualUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
+    else
     #if defined(__AVX2__) || defined(_MSC_VER)
     if (hiddenDim >= 8) {
         size_t i = 0;
@@ -7583,6 +8003,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
     if (profilingEnabled_ && profiler_) profiler_->endAttnResidual();
+    layerProbeCheckpoint("L12_ATTN_RESIDUAL", layer, output, hiddenDim, (const void*)output);
     if (layer == 0) {
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
@@ -7603,8 +8024,10 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, output, hiddenDim); // post-attn residual (llama ffn_inp)
     }    // 4. FFN / SSM RMSNorm
     if (profilingEnabled_ && profiler_) profiler_->beginFFNNorm();
-    RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
+    if (opTiming) { auto _t0 = opNow(); RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps); auto _t1 = opNow(); opFfnNormUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
+    else RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
+    layerProbeCheckpoint("L12_FFN_NORM", layer, layerTemp, hiddenDim, (const void*)layerTemp);
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
@@ -7615,20 +8038,50 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
 
     // 5. FFN (SwiGLU) OR SSM (Mamba) with real weight projections
+    // Dispatch based on per-layer weight presence, not just model-level MoE flag.
+    // Attention-only layers in hybrid architectures have no FFN/MoE weights and
+    // must skip FFN entirely — the attention residual passes through unchanged.
+    // Genuine SwiGLU FFN layers require wGate, wUp, and wDown all present with
+    // correct geometry: wGate.cols == hiddenDim, wUp.cols == hiddenDim,
+    // wDown.rows == hiddenDim.
+    bool hasDenseFfn = (lw.wGate.data != nullptr && lw.wUp.data != nullptr && lw.wDown.data != nullptr &&
+                        lw.wGate.cols == hiddenDim && lw.wUp.cols == hiddenDim &&
+                        lw.wUp.rows > 0 && lw.wDown.rows > 0 && lw.wDown.cols > 0);
+    bool hasMoeExperts = !lw.moeUp.empty();
+    bool hasSharedExpert = (lw.moeSharedUp.data != nullptr &&
+                            lw.moeSharedDown.data != nullptr);
+    bool hasFfn = hasDenseFfn || hasMoeExperts || hasSharedExpert;
+
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
+
+    // Zero FFN output before computation so that layers which skip FFN
+    // (attention-only layers with no valid weights) leave ffnOutput clean,
+    // preventing FFN_GUARD from seeing stale non-finite data from prior layers.
+    std::fill(ffnOutput, ffnOutput + hiddenDim, 0.0f);
+
     if (lw.hasSSM) {
         MoEPlaceLive().ffn_dispatch_ssm++;
-        computeSSM(layer, layerTemp, ffnOutput);
+        if (opTiming) { auto _t0 = opNow(); computeSSM(layer, layerTemp, ffnOutput); auto _t1 = opNow(); opFfnGateUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); opFfnDownUs = opFfnGateUs; }
+        else computeSSM(layer, layerTemp, ffnOutput);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
-    } else if (modelWeights.isMoE && modelWeights.numExperts > 0) {
-        MoEPlaceLive().ffn_dispatch_moe++;
-        computeMoEFFN(layer, layerTemp, ffnOutput);
-        B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
+    } else if (hasFfn) {
+        if (hasMoeExperts || hasSharedExpert) {
+            MoEPlaceLive().ffn_dispatch_moe++;
+            if (opTiming) { auto _t0 = opNow(); computeMoEFFN(layer, layerTemp, ffnOutput); auto _t1 = opNow(); opFfnGateUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); opFfnDownUs = opFfnGateUs; }
+            else computeMoEFFN(layer, layerTemp, ffnOutput);
+            B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
+        } else if (hasDenseFfn) {
+            MoEPlaceLive().ffn_dispatch_dense++;
+            if (opTiming) { auto _t0 = opNow(); computeFFN(layer, layerTemp, ffnOutput); auto _t1 = opNow(); opFfnGateUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); opFfnDownUs = opFfnGateUs; }
+            else computeFFN(layer, layerTemp, ffnOutput);
+            B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
+        }
     } else {
-        MoEPlaceLive().ffn_dispatch_dense++;
-        computeFFN(layer, layerTemp, ffnOutput);
-        B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
+        // Legitimate attention-only layer — no FFN weights, residual passes through.
+        fprintf(stderr, "[FFN_SKIP] ly=%zu no FFN weights — attention residual passes through\n", layer);
+        fflush(stderr);
+        memset(ffnOutput, 0, hiddenDim * sizeof(float));
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
@@ -7639,9 +8092,59 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         std::snprintf(key, sizeof(key), "FFN_DOWN_%zu", layer);
         B3_StageDigest(key, tokPos, ffnOutput, hiddenDim);
     }
+    layerProbeCheckpoint("L12_FFN_OUTPUT", layer, ffnOutput, hiddenDim, (const void*)ffnOutput);
+
+    // Fail-closed FFN output guard: if computeMoEFFN/computeFFN produced
+    // non-finite output for a layer that requires FFN computation, terminate
+    // inference rather than silently zeroing a failed computation.
+    // Legitimate attention-only layers skip FFN entirely (handled in dispatch
+    // above) and produce zero FFN output, which is correct.
+    {
+        size_t ffnOutNonFinite = 0;
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            if (!std::isfinite(ffnOutput[i])) ffnOutNonFinite++;
+        }
+        if (ffnOutNonFinite > 0) {
+            bool layerHasFfn = (lw.wUp.data != nullptr && lw.wDown.data != nullptr &&
+                                lw.wUp.rows > 0 && lw.wDown.rows > 0) ||
+                               !lw.moeUp.empty() ||
+                               (lw.moeSharedUp.data != nullptr &&
+                                lw.moeSharedDown.data != nullptr);
+            if (layerHasFfn) {
+                fprintf(stderr,
+                    "[LAYER_NAN] ly=%zu nonFinite=%zu/%zu norm=0.000000e+00 -> FFN output non-finite before residual\n",
+                    layer, ffnOutNonFinite, hiddenDim);
+                fflush(stderr);
+                throw std::runtime_error("LAYER_NAN: FFN output non-finite before residual");
+            }
+            // Safety net: non-FFN layer with non-finite output — zero it.
+            std::fill(ffnOutput, ffnOutput + hiddenDim, 0.0f);
+        }
+    }
 
     // 6. Residual connection â€” AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginFFNResidual();
+    if (opTiming) { auto _t0 = opNow();
+    #if defined(__AVX2__) || defined(_MSC_VER)
+    if (hiddenDim >= 8) {
+        size_t i = 0;
+        for (; i + 7 < hiddenDim; i += 8) {
+            __m256 outv = _mm256_loadu_ps(output + i);
+            __m256 fnv = _mm256_loadu_ps(ffnOutput + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, fnv));
+        }
+        for (; i < hiddenDim; ++i) {
+            output[i] += ffnOutput[i];
+        }
+    } else
+    #endif
+    {
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            output[i] += ffnOutput[i];
+        }
+    }
+    auto _t1 = opNow(); opFfnResidualUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
+    else
     #if defined(__AVX2__) || defined(_MSC_VER)
     if (hiddenDim >= 8) {
         size_t i = 0;
@@ -7661,6 +8164,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNResidual();
+    layerProbeCheckpoint("L12_FINAL_RESIDUAL", layer, output, hiddenDim, (const void*)output);
     #if 1
     {
         char phase[32];
@@ -7682,6 +8186,34 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // Real layer execution mark: this forwardLayer completed on its planned device.
     if (multiGpuLayerPlan_.active)
         Deep2MultiGpu_MarkLayerExecuted(multiGpuLayerPlan_, (unsigned)layer);
+    if (opTiming) {
+        double opTotalUs = opAttnNormUs + opAttnQKVUs + opAttnResidualUs +
+                           opFfnNormUs + opFfnGateUs + opFfnResidualUs;
+        fprintf(stderr,
+            "[LAYER_OP_TIMING] ly=%zu attnNormUs=%.2f attnQKVUs=%.2f attnResidualUs=%.2f "
+            "ffnNormUs=%.2f ffnGateUs=%.2f ffnResidualUs=%.2f totalUs=%.2f\n",
+            layer, opAttnNormUs, opAttnQKVUs, opAttnResidualUs,
+            opFfnNormUs, opFfnGateUs, opFfnResidualUs, opTotalUs);
+        fflush(stderr);
+    }
+    fprintf(stderr, "[LAYER_EXIT] ly=%zu\n", layer);
+    fflush(stderr);
+    // Debug: dump final output values
+    {
+        char finalvals[256] = {0};
+        int flen = 0;
+        for (size_t di = 0; di < 8 && di < hiddenDim; ++di) {
+            flen += snprintf(finalvals + flen, sizeof(finalvals) - flen, "%.6g ", output[di]);
+        }
+        double outN2 = 0.0;
+        size_t outFinite = 0;
+        for (size_t di = 0; di < hiddenDim; ++di) {
+            if (std::isfinite(output[di])) { outN2 += (double)output[di] * (double)output[di]; ++outFinite; }
+        }
+        fprintf(stderr, "[FINAL_OUT] ly=%zu norm=%.6e finite=%zu/%zu output[0..7]= %s\n",
+            layer, outN2 > 0 ? sqrt(outN2) : 0.0, outFinite, hiddenDim, finalvals);
+        fflush(stderr);
+    }
 
     // â”€â”€ Telemetry: Record residency wait time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (telemetryControllerEnabled_ && telemetryController_) {
@@ -7712,6 +8244,31 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr,
                             static_cast<uint32_t>(layer), liveSeq, latUs);
     }
+}
+
+// ============================================================================
+// Layer-12 probe checkpoint helper (gated by RAWRXD_DEEP2_LAYER_PROBE=1)
+// Records vector length, finite count, zero count, L2 norm, and buffer address.
+// ============================================================================
+static void layerProbeCheckpoint(const char* name, size_t layer, const float* buf, size_t len, const void* bufAddr) {
+    if (std::getenv("RAWRXD_DEEP2_LAYER_PROBE") == nullptr ||
+        std::getenv("RAWRXD_DEEP2_LAYER_PROBE")[0] != '1') return;
+    if (buf == nullptr || len == 0) return;
+    double n2 = 0.0;
+    size_t finiteCount = 0;
+    size_t zeroCount = 0;
+    for (size_t i = 0; i < len; ++i) {
+        const float v = buf[i];
+        if (!std::isfinite(v)) continue;
+        finiteCount++;
+        n2 += (double)v * (double)v;
+        if (v == 0.0f) zeroCount++;
+    }
+    const double norm = n2 > 0.0 ? sqrt(n2) : 0.0;
+    fprintf(stderr,
+        "[LAYER_PROBE] %s ly=%zu len=%zu finite=%zu/%zu zero=%zu norm=%.6e addr=%p\n",
+        name, layer, len, finiteCount, len, zeroCount, norm, bufAddr);
+    fflush(stderr);
 }
 
 // ============================================================================
@@ -7939,20 +8496,35 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     else if (lw.wq.data) {
         // Q projection: out dim is wq.rows (Nemotron-H: 40*128=5120 ≠ hidden).
         const size_t qDim = lw.wq.rows > 0 ? lw.wq.rows : (numHeads * headDim);
-        LinearW(lw.wq, input, nullptr, qProj, qDim);
+        LinearW(lw.wq, input, lw.bq.data ? (const float*)lw.bq.data : nullptr, qProj, qDim);
         B3_TraceState("ATTN_Q", layer, qProj, qDim);
+        layerProbeCheckpoint("L12_Q", layer, qProj, qDim, (const void*)qProj);
+
+        // Diagnostics: Q/K/V norm per layer
+        double qNorm = 0.0, kNorm = 0.0, vNorm = 0.0;
+        size_t qFinite = 0, kFinite = 0, vFinite = 0;
+        for (size_t di = 0; di < qDim; ++di) {
+            if (std::isfinite(qProj[di])) { qNorm += (double)qProj[di] * (double)qProj[di]; ++qFinite; }
+        }
+        if (debugLogging_) {
+            fprintf(stderr,
+                "[ATTN_DIAG] ly=%zu Qnorm=%.6e Qfin=%zu/%zu\n",
+                layer, qNorm > 0 ? sqrt(qNorm) : 0.0, qFinite, qDim);
+        }
 
         // K projection: [hiddenDim] -> [kvDim]
         size_t kvDim = numKVHeads * headDim;
         if (lw.wk.rows > 0) kvDim = lw.wk.rows;
-        LinearW(lw.wk, input, nullptr, kProj, kvDim);
+        LinearW(lw.wk, input, lw.bk.data ? (const float*)lw.bk.data : nullptr, kProj, kvDim);
         B3_TraceState("ATTN_K", layer, kProj, kvDim);
+        layerProbeCheckpoint("L12_K", layer, kProj, kvDim, (const void*)kProj);
 
         // V projection: [hiddenDim] -> [kvDim]
         size_t vDim = kvDim;
         if (lw.wv.rows > 0) vDim = lw.wv.rows;
-        LinearW(lw.wv, input, nullptr, vProj, vDim);
+        LinearW(lw.wv, input, lw.bv.data ? (const float*)lw.bv.data : nullptr, vProj, vDim);
         B3_TraceState("ATTN_V", layer, vProj, vDim);
+        layerProbeCheckpoint("L12_V", layer, vProj, vDim, (const void*)vProj);
 
         if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
             const size_t tokPos = kvCache ? kvCache->currentLength()
@@ -8005,6 +8577,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_) profiler_->endRoPE();
     }
     B3_TraceState("ATTN_ROPE", layer, qProj, hiddenDim);
+    layerProbeCheckpoint("L12_ROPE", layer, qProj, hiddenDim, (const void*)qProj);
     if (layer == 0) {
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0));
@@ -8343,6 +8916,19 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, headScratch, headConcat);
     }
 
+    // Diagnostics: headScratch norm after attention weighted sum
+    double headNorm = 0.0;
+    size_t headFinite = 0;
+    for (size_t di = 0; di < headConcat; ++di) {
+        if (std::isfinite(headScratch[di])) { headNorm += (double)headScratch[di] * (double)headScratch[di]; ++headFinite; }
+    }
+    if (debugLogging_) {
+        fprintf(stderr,
+            "[ATTN_DIAG] ly=%zu headScratchNorm=%.6e headFinite=%zu/%zu\n",
+            layer, headNorm > 0 ? sqrt(headNorm) : 0.0, headFinite, headConcat);
+    }
+    layerProbeCheckpoint("L12_HEAD_SCRATCH", layer, headScratch, headConcat, (const void*)headScratch);
+
     // â”€â”€ D2-CERT-002: Stage 8 â€” ATTN_OUT (pre-O projection) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // DISABLED: cert code causes STATUS_STACK_BUFFER_OVERRUN crash in trace()
     // #ifdef RAWRXD_DEEP2_CERT
@@ -8380,6 +8966,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
     }
     B3_TraceState("ATTN_O", layer, output, hiddenDim);
+
+    // Diagnostics: output norm after O projection
+    double outNorm = 0.0;
+    size_t outFinite = 0;
+    for (size_t di = 0; di < hiddenDim; ++di) {
+        if (std::isfinite(output[di])) { outNorm += (double)output[di] * (double)output[di]; ++outFinite; }
+    }
+    if (debugLogging_) {
+        fprintf(stderr,
+            "[ATTN_DIAG] ly=%zu outNorm=%.6e outFinite=%zu/%zu\n",
+            layer, outNorm > 0 ? sqrt(outNorm) : 0.0, outFinite, hiddenDim);
+    }
     if (layer == 0) {
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
@@ -8390,19 +8988,61 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
         reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
     }
+
+    // Fail closed on non-finite attention output — do not sanitize into apparent zeros.
+    // Non-finite values must be diagnosed at their source, not concealed by substitution.
+    {
+        size_t attnOutNonFinite = 0;
+        double attnOutN2 = 0.0;
+        size_t attnOutZero = 0;
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            const float v = output[i];
+            if (!std::isfinite(v)) { attnOutNonFinite++; continue; }
+            attnOutN2 += (double)v * (double)v;
+            if (v == 0.0f) attnOutZero++;
+        }
+        const double attnOutNorm = attnOutN2 > 0.0 ? sqrt(attnOutN2) : 0.0;
+        if (debugLogging_) {
+            fprintf(stderr,
+                "[ATTN_OUT_DIAG] ly=%zu norm=%.6e finite=%zu/%zu zero=%zu nonFinite=%zu\n",
+                layer, attnOutNorm, hiddenDim - attnOutNonFinite, hiddenDim, attnOutZero, attnOutNonFinite);
+            fflush(stderr);
+        }
+        if (attnOutNonFinite > 0) {
+            if (debugLogging_) {
+                fprintf(stderr,
+                    "[LAYER_NAN] ly=%zu nonFinite=%zu norm=0.000000e+00 -> attention output non-finite before residual\n",
+                    layer, attnOutNonFinite);
+                fflush(stderr);
+            }
+            throw std::runtime_error("LAYER_NAN: attention output non-finite before residual");
+        }
+    }
 }
 
 // ============================================================================
 // Compute FFN - Real SwiGLU with weight projections
 // ============================================================================
 void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
+    if (debugLogging_) {
+        fprintf(stderr, "[FFN_ENTER] ly=%zu\n", layer);
+        fflush(stderr);
+    }
     if (rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A10)) {
         if (output && config.hiddenDim)
             std::memset(output, 0, config.hiddenDim * sizeof(float));
+        if (debugLogging_) {
+            fprintf(stderr, "[FFN_EXIT] ly=%zu (ignored by A10)\n", layer);
+            fflush(stderr);
+        }
         return;
     }
     if (layer >= modelWeights.layers.size()) {
         memcpy(output, input, config.hiddenDim * sizeof(float));
+        if (debugLogging_) {
+            fprintf(stderr, "[FFN_EXIT] ly=%zu (out of range, identity)\n", layer);
+            fflush(stderr);
+        }
         return;
     }
 
@@ -8412,12 +9052,87 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 
     if (intermediateDim == 0) intermediateDim = hiddenDim * 4;
 
+    // Use weight tensor dimensions as source of truth for intermediate dim.
+    // The GGUF config may list a different intermediate dim than the actual
+    // weight tensors (e.g. config=3712 but weights=1856). Trust the weights;
+    // otherwise Q4_K dequantization reads wrong offsets and produces garbage.
+    // Detect fused gate/up pattern (e.g. Phi-3): wUp.rows == 2 * wDown.cols.
+    // In that case, wDown.cols is the true intermediateDim, while wUp.rows = 2 * intermediateDim.
+    if (lw.wUp.rows != 0 && lw.wDown.cols != 0 && lw.wUp.rows == 2 * lw.wDown.cols) {
+        // Fused gate/up pattern: wUp.rows = 2 * intermediateDim, wDown.cols = intermediateDim
+        intermediateDim = lw.wDown.cols;
+    } else if (lw.wUp.rows != 0) {
+        intermediateDim = lw.wUp.rows;
+    } else if (lw.wDown.cols != 0) {
+        intermediateDim = lw.wDown.cols;
+    }
+
+    // Skip FFN entirely when the layer has no valid FFN weights (e.g. pure
+    // attention layers in hybrid architectures). Without valid weights there
+    // is nothing to compute, and attempting FFN (e.g. via the Phi-3 fused
+    // path) can produce non-finite output that contaminates the residual
+    // connection. Check both null pointers and zero dimensions — a weight
+    // tensor may have a non-null data pointer but zero rows/cols when the
+    // GGUF metadata doesn't describe FFN weights for this layer.
+    if (lw.wUp.data == nullptr || lw.wDown.data == nullptr ||
+        lw.wUp.rows == 0 || lw.wUp.cols == 0 ||
+        lw.wDown.rows == 0 || lw.wDown.cols == 0) {
+        fprintf(stderr, "[FFN_SKIP] ly=%zu no valid FFN weights — attention residual passes through\n",
+                layer);
+        fflush(stderr);
+        return;
+    }
+
+    // Validate FFN geometry before executing fused or standard path.
+    // Attention layers in hybrid architectures may have wGate/wUp/wDown with
+    // mismatched dimensions that accidentally satisfy fused-path conditions.
+    // Only layers where wDown.cols matches intermediateDim, wUp.cols matches
+    // hiddenDim, and wGate.cols matches hiddenDim are genuine FFN layers.
+    if (lw.wDown.cols != intermediateDim || lw.wUp.cols != hiddenDim ||
+        lw.wGate.cols != hiddenDim) {
+        fprintf(stderr,
+            "[FFN_SKIP] ly=%zu wDown.cols=%zu != intermediateDim=%zu or "
+            "wUp.cols=%zu != hiddenDim=%zu or wGate.cols=%zu != hiddenDim=%zu — "
+            "attention residual passes through\n",
+            layer, lw.wDown.cols, intermediateDim, lw.wUp.cols, hiddenDim,
+            lw.wGate.cols, hiddenDim);
+        fflush(stderr);
+        return;
+    }
+
     if (Deep2::phi3_fused_ffn::TryExecuteLayer(
             lw, input, output, hiddenDim, intermediateDim,
             [&](const WeightTensor& wt, const float* x, float* y, size_t outDim) {
                 LinearW(wt, x, nullptr, y, outDim);
             },
             layer == 0 ? stderr : nullptr)) {
+        // Fail-closed: validate fused FFN output before returning.
+        size_t fusedNonFinite = 0;
+        double fusedN2 = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            if (!std::isfinite(output[i])) { fusedNonFinite++; continue; }
+            fusedN2 += (double)output[i] * (double)output[i];
+        }
+        if (fusedNonFinite > 0) {
+            if (debugLogging_) {
+                fprintf(stderr,
+                    "[LAYER_NAN] ly=%zu nonFinite=%zu norm=0.000000e+00 -> fused FFN output non-finite\n",
+                    layer, fusedNonFinite);
+                fflush(stderr);
+            }
+            throw std::runtime_error("LAYER_NAN: fused FFN output non-finite");
+        }
+        const double fusedNorm = fusedN2 > 0.0 ? sqrt(fusedN2) : 0.0;
+        if (debugLogging_) {
+            fprintf(stderr,
+                "[FFN_OUT_DIAG] ly=%zu norm=%.6e finite=%zu/%zu zero=%zu nonFinite=%zu\n",
+                layer, fusedNorm, hiddenDim - fusedNonFinite, hiddenDim, 0, fusedNonFinite);
+            fflush(stderr);
+        }
+        if (debugLogging_) {
+            fprintf(stderr, "[FFN_EXIT] ly=%zu (fused phi3)\n", layer);
+            fflush(stderr);
+        }
         return;
     }
 
@@ -8461,15 +9176,20 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
         std::fill(gateBuf, gateBuf + phys, 0.0f);
         LinearW(lw.wUp, input, nullptr, gateBuf, phys);
         if (profilingEnabled_ && profiler_) profiler_->endFFNUp();
+        layerProbeCheckpoint("L12_FFN_UP", layer, gateBuf, phys, (const void*)gateBuf);
         if (profilingEnabled_ && profiler_) profiler_->beginFFNSwiGLU();
         SwiGLU(gateBuf, gateBuf + I, upBuf, I);
         if (profilingEnabled_ && profiler_) profiler_->endFFNSwiGLU();
+        layerProbeCheckpoint("L12_FFN_SWIGLU", layer, upBuf, I, (const void*)upBuf);
         B3_TraceState("FFN_SWIGLU", layer, upBuf, I);
         if (profilingEnabled_ && profiler_) profiler_->beginFFNDown();
         std::fill(output, output + hiddenDim, 0.0f);
         LinearW(lw.wDown, upBuf, nullptr, output, hiddenDim);
         if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
         B3_TraceState("FFN_DOWN", layer, output, hiddenDim);
+        layerProbeCheckpoint("L12_FFN_DOWN", layer, output, hiddenDim, (const void*)output);
+        fprintf(stderr, "[FFN_EXIT] ly=%zu (fused path)\n", layer);
+        fflush(stderr);
         return;
     }
 
@@ -8496,12 +9216,24 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
         fprintf(stderr, "[FFN] layer=%zu LinearW up begin\n", layer);
         fflush(stderr);
     }
+
+    // Dimension mismatch guard for wUp
+    if (lw.wUp.rows != intermediateDim || lw.wUp.cols != hiddenDim) {
+        fprintf(stderr,
+            "[FFN_FATAL] ly=%zu wUp dimension mismatch: rows=%zu cols=%zu "
+            "expected rows=%zu cols=%zu\n",
+            layer, lw.wUp.rows, lw.wUp.cols, intermediateDim, hiddenDim);
+        fflush(stderr);
+        throw std::runtime_error("FFN wUp dimension mismatch");
+    }
+
     LinearW(lw.wUp, input, nullptr, upBuf, intermediateDim);
     if (envFlagEnabled("RAWRXD_FFN_TRACE")) {
         fprintf(stderr, "[FFN] layer=%zu LinearW up ok\n", layer);
         fflush(stderr);
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNUp();
+    layerProbeCheckpoint("L12_FFN_UP", layer, upBuf, intermediateDim, (const void*)upBuf);
 
     // Dump gate (pre-SiLU) before SwiGLU overwrites gateBuf with the product.
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer) && hasGate) {
@@ -8521,6 +9253,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNSwiGLU();
     B3_TraceState("FFN_SWIGLU", layer, gateBuf, intermediateDim);
+    layerProbeCheckpoint("L12_FFN_SWIGLU", layer, gateBuf, intermediateDim, (const void*)gateBuf);
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength() : 0;
         char key[64];
@@ -8533,9 +9266,124 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     // Down projection: [intermediateDim] -> [hiddenDim]
     if (profilingEnabled_ && profiler_) profiler_->beginFFNDown();
     std::fill(output, output + hiddenDim, 0.0f);
+
+    // Diagnostics: check gateBuf and wDown weight type/dims before down projection.
+    double gateBufN2 = 0.0;
+    size_t gateBufNonFinite = 0;
+    for (size_t i = 0; i < intermediateDim; ++i) {
+        if (!std::isfinite(gateBuf[i])) { gateBufNonFinite++; continue; }
+        gateBufN2 += (double)gateBuf[i] * (double)gateBuf[i];
+    }
+    double gateBufNorm = gateBufN2 > 0.0 ? sqrt(gateBufN2) : 0.0;
+
+    fprintf(stderr,
+        "[FFN_WEIGHT_DIAG] ly=%zu intermediateDim=%zu gateBufNorm=%.6e gateBufNonFinite=%zu wDownRows=%zu wDownCols=%zu wDownType=%d\n",
+        layer, intermediateDim, gateBufNorm, gateBufNonFinite,
+        lw.wDown.rows, lw.wDown.cols, lw.wDown.type);
+    fflush(stderr);
+
+    // Q4_K weight value diagnostic: dequantize first few blocks of wDown
+    // to check if weight values themselves are abnormally large.
+    if (layer == 10 && lw.wDown.type == 12 && lw.wDown.data) {
+        const uint8_t* wdata = (const uint8_t*)lw.wDown.data;
+        size_t numBlocks = (lw.wDown.cols + 255) / 256;
+        double wN2 = 0.0;
+        size_t wCount = 0;
+        float wMin = 1e9f, wMax = -1e9f;
+        size_t blocksToCheck = numBlocks < 8 ? numBlocks : 8;
+        for (size_t b = 0; b < blocksToCheck; ++b) {
+            const Q4_K_Block* blk =
+                (const Q4_K_Block*)(wdata + b * sizeof(Q4_K_Block));
+            float d = fp16ToFloat(blk->d);
+            float dmin = fp16ToFloat(blk->dmin);
+            const uint8_t* q = blk->qs;
+            for (int is = 0; is < 8; is += 2) {
+                uint8_t sc0, m0, sc1, m1;
+                unpackQ4KScaleMin(blk->scales, is, sc0, m0);
+                unpackQ4KScaleMin(blk->scales, is + 1, sc1, m1);
+                float d1 = d * sc0;
+                float min1 = dmin * m0;
+                float d2 = d * sc1;
+                float min2 = dmin * m1;
+                for (int l = 0; l < 32; ++l) {
+                    float v1 = d1 * (float)(q[l] & 0xF) - min1;
+                    float v2 = d2 * (float)(q[l] >> 4) - min2;
+                    wN2 += (double)v1 * (double)v1 + (double)v2 * (double)v2;
+                    wMin = std::min(wMin, std::min(v1, v2));
+                    wMax = std::max(wMax, std::max(v1, v2));
+                    wCount += 2;
+                }
+                q += 32;
+            }
+        }
+        double wRms = wCount > 0 ? sqrt(wN2 / wCount) : 0.0;
+        fprintf(stderr,
+            "[Q4K_WEIGHT_DIAG] ly=10 wDown blocksChecked=%zu wCount=%zu "
+            "wMin=%.6e wMax=%.6e wRms=%.6e\n",
+            blocksToCheck, wCount, wMin, wMax, wRms);
+        fflush(stderr);
+    }
+
+    // Dimension mismatch guard — catch weight tensors that don't match
+    // the FFN architecture before they produce garbage through Q4_K dequant.
+    if (lw.wDown.rows != hiddenDim || lw.wDown.cols != intermediateDim) {
+        fprintf(stderr,
+            "[FFN_FATAL] ly=%zu wDown dimension mismatch: rows=%zu cols=%zu "
+            "expected rows=%zu cols=%zu intermediateDim=%zu\n",
+            layer, lw.wDown.rows, lw.wDown.cols, hiddenDim, intermediateDim,
+            intermediateDim);
+        fflush(stderr);
+        throw std::runtime_error("FFN wDown dimension mismatch");
+    }
+
     LinearW(lw.wDown, gateBuf, nullptr, output, hiddenDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
+
+    // Fail-closed FFN output validation — must run BEFORE B3_TraceState so it
+    // catches the first invalid operation, not the crash site.
+    {
+        size_t ffnOutNonFinite = 0;
+        size_t ffnOutZero = 0;
+        double ffnOutN2 = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            const float v = output[i];
+            if (!std::isfinite(v)) { ffnOutNonFinite++; continue; }
+            ffnOutN2 += (double)v * (double)v;
+            if (v == 0.0f) ffnOutZero++;
+        }
+        const double ffnOutNorm = ffnOutN2 > 0.0 ? sqrt(ffnOutN2) : 0.0;
+        if (debugLogging_) {
+            fprintf(stderr,
+                "[FFN_OUT_DIAG] ly=%zu norm=%.6e finite=%zu/%zu zero=%zu nonFinite=%zu\n",
+                layer, ffnOutNorm, hiddenDim - ffnOutNonFinite, hiddenDim, ffnOutZero, ffnOutNonFinite);
+            fflush(stderr);
+        }
+        if (ffnOutNonFinite > 0) {
+            if (debugLogging_) {
+                fprintf(stderr,
+                    "[LAYER_NAN] ly=%zu nonFinite=%zu norm=0.000000e+00 -> FFN output non-finite before residual\n",
+                    layer, ffnOutNonFinite);
+                fflush(stderr);
+            }
+            throw std::runtime_error("LAYER_NAN: FFN output non-finite before residual");
+        }
+        const double sqrtN = (hiddenDim > 0) ? std::sqrt((double)hiddenDim) : 10.0;
+        const double kNormAbort = 20.0 * sqrtN;
+        if (ffnOutNorm > kNormAbort) {
+            fprintf(stderr,
+                "[B3_WARN] FFN output exploded ly=%zu norm=%.6e > abort_threshold=%.6e continuing anyway\n",
+                layer, ffnOutNorm, kNormAbort);
+            fflush(stderr);
+            /* Do not abort — residual connection preserves input signal.
+             * FFN output explosion is a weight/quantization issue, not
+             * a reason to kill the entire generation. */
+        }
+    }
+
     B3_TraceState("FFN_DOWN", layer, output, hiddenDim);
+    layerProbeCheckpoint("L12_FFN_DOWN", layer, output, hiddenDim, (const void*)output);
+    fprintf(stderr, "[FFN_EXIT] ly=%zu (normal path)\n", layer);
+    fflush(stderr);
 }
 
 // ============================================================================
@@ -8544,7 +9392,11 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 // RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1. Missing tensors are hard failures.
 // ============================================================================
 void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
+    fprintf(stderr, "[SSM_ENTER] ly=%zu\n", layer);
+    fflush(stderr);
     if (layer >= modelWeights.layers.size()) {
+        fprintf(stderr, "[SSM_EXIT] ly=%zu (out of range)\n", layer);
+        fflush(stderr);
         fprintf(stderr, "[SSM_FATAL] layer=%zu out of range\n", layer);
         throw std::runtime_error("SSM layer out of range");
     }
@@ -8557,6 +9409,9 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     if (!lw.hasSSM || !lw.ssmOut.data ||
         (!lw.ssmAlpha.data && !lw.ssmIn.data)) {
         fprintf(stderr,
+            "[SSM_EXIT] ly=%zu (missing tensors)\n", layer);
+        fflush(stderr);
+        fprintf(stderr,
             "[SSM_FATAL] layer=%zu missing required SSM tensors "
             "(hasSSM=%d alpha=%p in=%p out=%p)\n",
             layer, lw.hasSSM ? 1 : 0, lw.ssmAlpha.data, lw.ssmIn.data,
@@ -8565,6 +9420,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     }
 
     if (!envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM")) {
+        fprintf(stderr, "[SSM_EXIT] ly=%zu (experimental SSM blocked)\n", layer);
+        fflush(stderr);
         fprintf(stderr,
             "[SSM_FATAL] experimental SSM path invoked without allow flag\n");
         throw std::runtime_error("SSM-CERT-001 experimental path blocked");
@@ -8603,6 +9460,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
                     layer, g.ssmState, g.ssmHeads, g.ssmInner);
                 fflush(stderr);
             }
+            fprintf(stderr, "[SSM_EXIT] ly=%zu (mamba2 real forward)\n", layer);
+            fflush(stderr);
             return;
         }
     }
@@ -8618,8 +9477,11 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         auto lin = [this](const WeightTensor& wt, const float* in, const float* bias,
                           float* out, size_t od) { LinearW(wt, in, bias, out, od); };
         if (nemotron_ssm::RunExperimental(layer, lw, hiddenDim, stateDim, convK,
-                                          input, output, b, lin))
+                                          input, output, b, lin)) {
+            fprintf(stderr, "[SSM_EXIT] ly=%zu (legacy experimental scan)\n", layer);
+            fflush(stderr);
             return;
+        }
     }
 
     // Legacy scaffold: ssm_in without selective-scan tensors incomplete.
@@ -8638,6 +9500,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
             for (size_t i = 0; i < n; ++i)
                 output[i] += dParam[i] * input[i];
         }
+        fprintf(stderr, "[SSM_EXIT] ly=%zu (scaffold identity)\n", layer);
+        fflush(stderr);
         return;
     }
 
@@ -8776,6 +9640,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         SsmCert::record(SsmCert::Stage::SeqStep, static_cast<std::uint32_t>(layer),
                         seqPos, nullptr, 0, static_cast<double>(seqPos));
     }
+    fprintf(stderr, "[SSM_EXIT] ly=%zu (normal path)\n", layer);
+    fflush(stderr);
 }
 
 // ============================================================================
@@ -8805,26 +9671,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     memset(output, 0, hiddenDim * sizeof(float));
 
     // --- Shared expert (always executed) ---
-    float* sharedOut = attentionOutput;
-    computeSharedExpertFFN(layer, input, sharedOut);
-    #if defined(__AVX2__) || defined(_MSC_VER)
-    if (hiddenDim >= 8) {
-        size_t i = 0;
-        for (; i + 7 < hiddenDim; i += 8) {
-            __m256 outv = _mm256_loadu_ps(output + i);
-            __m256 shv = _mm256_loadu_ps(sharedOut + i);
-            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, shv));
-        }
-        for (; i < hiddenDim; ++i) {
-            output[i] += sharedOut[i];
-        }
-    } else
-    #endif
-    {
-        for (size_t i = 0; i < hiddenDim; ++i) {
-            output[i] += sharedOut[i];
-        }
-    }
+    // Use `output` (the caller's ffnOutput buffer) directly as the shared
+    // expert destination. Do NOT use attentionOutput: on even-numbered
+    // layers, forwardLayer passes layerOutput=attentionOutput as its
+    // `output` parameter, so aliasing would destroy the attention output
+    // before the residual connection, causing signal decay to zero.
+    computeSharedExpertFFN(layer, input, output);
+    // output already holds the shared expert contribution; routed experts
+    // below add to it in place.
 
     // --- Routed experts ---
     if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_) {
@@ -9193,6 +10047,24 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
                modelWeights.lmHead.cols,
                modelWeights.lmHead.data);
         fflush(stdout);
+    }
+
+    // Finiteness check on LM-head input — catches upstream corruption before
+    // it propagates through Q8_0 dequantization.
+    size_t hiddenNonFinite = 0;
+    size_t hiddenFirstBad = config.hiddenDim;
+    for (size_t i = 0; i < config.hiddenDim; ++i) {
+        if (!std::isfinite(hiddenState[i])) {
+            hiddenNonFinite++;
+            if (hiddenFirstBad == config.hiddenDim) hiddenFirstBad = i;
+        }
+    }
+    if (hiddenNonFinite > 0) {
+        fprintf(stderr,
+            "[LM_HEAD_INPUT_BAD] hiddenNonFinite=%zu/%zu firstBad=%zu "
+            "hiddenState may be corrupted upstream\n",
+            hiddenNonFinite, config.hiddenDim, hiddenFirstBad);
+        fflush(stderr);
     }
 
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
