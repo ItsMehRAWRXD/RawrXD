@@ -3,6 +3,7 @@
 #include "../PerformanceProfiler.hpp"
 #include <iostream>
 #include <cassert>
+#include <unordered_map>
 
 using namespace Deep2Engine::Emulator;
 using namespace Deep2Rom;
@@ -22,10 +23,10 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
 
     // 2. Instantiate and fill out the shard handle file table
     MultiShardFlickerManager flicker;
+    std::unordered_map<uint32_t, uint64_t> shard_file_sizes;
     for (uint32_t i = 0; i < shards; ++i) {
         wchar_t current_shard[MAX_PATH];
         swprintf_s(current_shard, L"%s.gguf.%02d", base_shard_path.c_str(), i);
-        // Get file size for registration
         uint64_t file_size = 0;
         {
             HANDLE h = ::CreateFileW(current_shard, GENERIC_READ, FILE_SHARE_READ,
@@ -36,6 +37,7 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
                 ::CloseHandle(h);
             }
         }
+        shard_file_sizes[i] = file_size;
         if (!flicker.register_shard(i, current_shard, file_size)) {
             std::wcout << L"[-] CRITICAL: Shard file missing or locked: " << current_shard << L"\n";
             std::exit(1);
@@ -43,16 +45,28 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     }
     std::cout << "[✓] Gate 2: Shard Handle Map Allocation -> PASS (" << shards << " files linked)\n";
 
-    // 3. Initialize lookahead background prefetch infrastructure
+    // 3. Register tensor descriptors with the prefetch queue for real shard resolution
     PrefetchQueue prefetch(flicker);
+    const auto* tensors = loader.get_tensors();
+    size_t tensor_count = loader.get_tensor_count();
+    for (size_t i = 0; i < tensor_count; ++i) {
+        const auto& desc = tensors[i];
+        TensorPrefetchInfo info;
+        info.shard_id = desc.shard_id;
+        info.absolute_offset = desc.absolute_offset;
+        info.tensor_bytes = desc.tensor_bytes;
+        auto sit = shard_file_sizes.find(desc.shard_id);
+        info.file_size = (sit != shard_file_sizes.end()) ? sit->second : 0;
+        prefetch.register_tensor_info(i, info);
+    }
     std::cout << "[✓] Gate 3: Background Prefetch Worker Engine Thread spawned -> PASS\n";
+    std::cout << "    Tensor descriptors registered: " << tensor_count << "\n";
 
     // 4. Fire high-frequency virtual memory operations to assert structural bounds stability
     std::cout << "[*] Injecting localized memory-mapping lease bursts...\n";
     size_t test_iterations = 500;
     bool memory_leaks_detected = false;
 
-    size_t tensor_count = loader.get_tensor_count();
     if (tensor_count == 0) {
         std::cout << "[!] No tensors in ROM manifest, skipping page lease stress test.\n";
     } else {
@@ -60,21 +74,24 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
             size_t target_idx = iter % tensor_count;
             prefetch.submit_prefetch(target_idx, true);
 
-            // Acquire via flicker manager using descriptor info
-            const auto* tensors = loader.get_tensors();
             if (target_idx < tensor_count) {
                 const auto& desc = tensors[target_idx];
-                // We need file size for acquire_tensor - use the registered shard's file size
+                auto sit = shard_file_sizes.find(desc.shard_id);
+                uint64_t file_size = (sit != shard_file_sizes.end()) ? sit->second : 0;
                 auto view = flicker.acquire_tensor(
                     desc.shard_id, target_idx,
                     desc.absolute_offset, desc.tensor_bytes,
-                    0 // file_size - validation is done inside map_tensor
-                );
+                    file_size);
                 if (!view.valid()) {
+                    std::cerr << "[-] Gate 4 FAIL at iter " << iter
+                              << " tensor " << target_idx
+                              << " (shard " << desc.shard_id
+                              << ", offset " << desc.absolute_offset
+                              << ", bytes " << desc.tensor_bytes
+                              << ", file_size " << file_size << ")\n";
                     memory_leaks_detected = true;
                     break;
                 }
-                // view auto-releases on destruction (RAII ScopedView)
             }
         }
     }
