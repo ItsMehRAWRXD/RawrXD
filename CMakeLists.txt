@@ -14,19 +14,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# Compile the multi-shard object library target
-add_library(Deep2EngineCore STATIC
-    src/core/MultiShardFlickerManager.cpp
-    src/core/VulkanStagingPipeline.cpp
-    src/core/UniversalRunner.cpp
-    src/core/MasmCoreKernels.cpp
-    src/core/PrefetchQueue.cpp
-    src/core/PerformanceProfiler.cpp
-    src/core/HereticWeightModifier.cpp
-)
-
-target_link_libraries(Deep2EngineCore PUBLIC Vulkan::Vulkan)
-
 add_executable(Deep2Engine_Benchmark
     src/main.cpp
     src/Deep2Engine.cpp
@@ -57,12 +44,10 @@ add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
 )
 
-target_link_libraries(Deep2EngineCore PUBLIC Vulkan::Vulkan)
-
-target_include_directories(Deep2EngineCore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
 # Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)

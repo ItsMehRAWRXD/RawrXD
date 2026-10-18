@@ -1,6 +1,5 @@
 #include "PrefetchQueue.hpp"
 #include "MultiShardFlickerManager.hpp"
-#include <iostream>
 
 namespace Deep2Rom::Compute {
 
@@ -27,7 +26,7 @@ namespace Deep2Rom::Compute {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 m_cv.wait(lock, [this]() { return !m_queue.empty() || m_shutdown; });
                 if (m_shutdown) break;
-                task = m_queue.front();
+                task = std::move(m_queue.front());
                 m_queue.pop();
             }
 

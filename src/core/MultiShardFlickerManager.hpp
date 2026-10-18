@@ -1,6 +1,7 @@
 #pragma once
 #include "Deep2Types.hpp"
 #include <vulkan/vulkan.h>
+#include <windows.h>
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -43,8 +44,9 @@ namespace Deep2Rom::Compute {
             return true;
         }
 
-        MultiShardTensorView acquire_tensor_view(size_t tensor_id) {
+        struct MultiShardTensorView acquire_tensor_view(size_t tensor_id) {
             std::lock_guard<std::mutex> lock(m_mutex);
+            if (tensor_id >= m_tensors.size()) return { nullptr, 0, nullptr, nullptr, 0 };
             const auto& desc = m_tensors[tensor_id];
             auto it = m_shard_files.find(desc.shard_id);
             if (it == m_shard_files.end() || it->second == INVALID_HANDLE_VALUE) return { nullptr, 0, nullptr, nullptr, 0 };
@@ -67,8 +69,7 @@ namespace Deep2Rom::Compute {
             return { static_cast<const uint8_t*>(base_ptr) + delta, desc.tensor_bytes, h_map, base_ptr, desc.shard_id };
         }
 
-        void release_tensor_view(const MultiShardTensorView& view) {
-            std::lock_guard<std::mutex> lock(m_mutex);
+        void release_tensor_view(const struct MultiShardTensorView& view) {
             if (view.view_base_ptr) ::UnmapViewOfFile(view.view_base_ptr);
             if (view.mapping_handle) ::CloseHandle(view.mapping_handle);
         }
@@ -99,7 +100,7 @@ namespace Deep2Rom::Compute {
             if (::vkAllocateMemory(m_device, &alloc_info, nullptr, &memory) != VK_SUCCESS) return false;
 
             ::vkBindBufferMemory(m_device, buffer, memory, 0);
-            ::vkMapMemory(m_device, memory, 0, size, 0, &mapped_ptr);
+            ::vkMapMemory(m_device, memory, 0, size, 0, &out_mapped_ptr);
             return true;
         }
 

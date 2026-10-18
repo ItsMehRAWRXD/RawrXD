@@ -50,20 +50,19 @@ void dequantize_q2_k_avx512(
         const uint8_t* qs = block; // 64 bytes of 2-bit packed values
         float* out = dst_fp32 + b * 256;
 
-        // Process 256 values per block, 16 at a time with AVX-512
-        for (uint64_t k = 0; k < 256; k += 16) {
-            // Dequantize 16 values into a temporary array
-            alignas(64) float vals[16];
-            for (int i = 0; i < 16; ++i) {
+        // Process 256 values per block, 8 at a time with AVX2 YMM
+        for (uint64_t k = 0; k < 256; k += 8) {
+            alignas(32) float vals[8];
+            for (int i = 0; i < 8; ++i) {
                 uint64_t valIdx = k + i;
                 uint64_t j = valIdx / 4;            // byte index in qs
-                uint64_t bshift = (3 - (valIdx % 4)) * 2; // bit offset: first value = high bits
+                uint64_t bshift = (3 - (valIdx % 4)) * 2; // bit offset
                 uint8_t q = (qs[j] >> bshift) & 0x03u;
                 int g = static_cast<int>(j >> 2);   // 4 bytes per 16-value group
                 vals[i] = (static_cast<float>(q) - 1.5f) * group_scale[g];
             }
-            __m512 v = _mm512_load_ps(vals);
-            _mm512_storeu_ps(out + k, v);
+            __m256 v = _mm256_load_ps(vals);
+            _mm256_storeu_ps(out + k, v);
         }
     }
 }
@@ -73,20 +72,19 @@ float vec_dot_prod_fp32_avx512(
     const float* __restrict vec_b,
     uint64_t num_elements
 ) {
-    __m512 acc = _mm512_setzero_ps();
+    __m256 acc = _mm256_setzero_ps();
     uint64_t i = 0;
 
-    for (; i + 15 < num_elements; i += 16) {
-        __m512 a = _mm512_loadu_ps(vec_a + i);
-        __m512 b = _mm512_loadu_ps(vec_b + i);
-        acc = _mm512_fmadd_ps(a, b, acc);
+    for (; i + 7 < num_elements; i += 8) {
+        __m256 a = _mm256_loadu_ps(vec_a + i);
+        __m256 b = _mm256_loadu_ps(vec_b + i);
+        acc = _mm256_fmadd_ps(a, b, acc);
     }
 
-    // Horizontal reduction
-    float tmp[16];
-    _mm512_storeu_ps(tmp, acc);
-    float sum = 0.0f;
-    for (int k = 0; k < 16; ++k) sum += tmp[k];
+    // Horizontal reduction using haddp
+    __m256 hsum = _mm256_hadd_ps(acc, acc);
+    hsum = _mm256_hadd_ps(hsum, hsum);
+    float sum = _mm256_cvtss_f32(_mm256_permute2f128_ps(hsum, hsum, 1));
 
     // Remainder
     for (; i < num_elements; ++i) {

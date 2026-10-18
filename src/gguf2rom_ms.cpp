@@ -43,6 +43,9 @@ namespace Deep2Engine::Emulator {
                 uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
                 f.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
             }
+        } else if (type == 10 || type == 11 || type == 12) {
+            // UINT64 / INT64 / FLOAT64: simple 8-byte value
+            f.seekg(8, std::ios::cur);
         } else {
             uint32_t sub = 0;
             uint64_t len = 0;

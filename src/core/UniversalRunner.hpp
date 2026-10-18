@@ -1,5 +1,8 @@
 #pragma once
 #include "Deep2Types.hpp"
+#include "MasmCoreKernels.hpp"
+#include "PerformanceProfiler.hpp"
+#include "HereticWeightModifier.hpp"
 #include <vector>
 #include <thread>
 
@@ -19,5 +22,6 @@ namespace Deep2Rom::Engine {
     private:
         size_t m_hidden_dim;
         size_t m_routed_rows;
+        Diagnostics::HardwareProfiler m_profiler;
     };
 }

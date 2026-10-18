@@ -38,7 +38,14 @@ struct ShardManifest {
 };
 
 // Master architecture/geometry metadata, merged from shard 0 key-value pairs.
+enum class ModelArch : uint8_t {
+    Unknown = 0,
+    Phi3    = 1,
+    DeepSeek2 = 2,
+};
+
 struct ModelGeometry {
+    ModelArch arch = ModelArch::Unknown;
     uint64_t hiddenDim = 0;
     uint64_t numLayers = 0;
     uint64_t numHeads = 0;

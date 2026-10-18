@@ -341,6 +341,60 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
 }
 
 // ==================================================================================
+// ORACLE-TRACE: LAYER BOUNDARY INTEGRITY INSPECTOR
+// ==================================================================================
+
+void inspect_layer_boundary_tensors(uint32_t layer_idx, const float* hidden_states, size_t element_count) {
+    // Intercept exactly at the layer exit threshold of Layer 3 (4th block) and entrance of Layer 4 (5th block)
+    if (layer_idx == 3 || layer_idx == 4) {
+        std::cout << "\n[ORACLE-TRACE] --- CRITICAL BOUNDARY AUDIT: LAYER " << layer_idx << " ---\n";
+
+        float max_val = -1e9f;
+        float min_val = 1e9f;
+        float sum = 0.0f;
+        size_t nan_count = 0;
+        size_t inf_count = 0;
+        size_t exact_zero_count = 0;
+
+        for (size_t i = 0; i < element_count; ++i) {
+            float v = hidden_states[i];
+            
+            if (std::isnan(v)) {
+                nan_count++;
+                continue;
+            }
+            if (std::isinf(v)) {
+                inf_count++;
+                continue;
+            }
+            if (v == 0.0f) {
+                exact_zero_count++;
+            }
+
+            sum += v;
+            if (v > max_val) max_val = v;
+            if (v < min_val) min_val = v;
+        }
+
+        float mean = element_count ? (sum / element_count) : 0.0f;
+
+        std::cout << "  Tensor Address     : 0x" << std::hex << reinterpret_cast<uintptr_t>(hidden_states) << std::dec << "\n";
+        std::cout << "  Value Range        : [" << max_val << " to " << min_val << "]\n";
+        std::cout << "  Mathematical Mean  : " << mean << "\n";
+        std::cout << "  Zero Elements Count: " << exact_zero_count << " / " << element_count << "\n";
+        std::cout << "  NaN Exceptions     : " << nan_count << "\n";
+        std::cout << "  Inf Explosions     : " << inf_count << "\n";
+        std::cout << "---------------------------------------------------------\n";
+
+        // Assert code protection to hard-stop the execution the moment numbers disintegrate
+        if (nan_count > 0 || inf_count > 0 || std::abs(mean) > 1e4f) {
+            std::cerr << "[!] CRITICAL MATH EXPLOSION CONFIRMED AT BLOCK BOUNDARY " << layer_idx << "! HALTING LOOP.\n";
+            __debugbreak(); // Win32 intrinsic trap to pause execution precisely at the point of failure
+        }
+    }
+}
+
+// ==================================================================================
 // MOVE 10: FULL PHI-3 ROM-PATH FORWARD PASS WITH LOGITS PARITY VALIDATION
 // ==================================================================================
 
@@ -497,6 +551,9 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             for (size_t i = 0; i < hiddenDim; ++i) {
                 hiddenStates[i] += downOut[i];
             }
+
+            // ORACLE-TRACE: Layer boundary audit at blocks 3↔4
+            inspect_layer_boundary_tensors(static_cast<uint32_t>(layer), hiddenStates.data(), hiddenDim);
         }
 
         // After all layers, apply final layer norm and output projection
