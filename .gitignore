@@ -1,0 +1,43 @@
+# MSVC / Visual Studio Artifacts
+.vs/
+build/
+out/
+x64/
+*.user
+*.suo
+*.db
+*.opendb
+
+# Compiled Binaries (Stored in Release Archive)
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.lib
+
+# --- CRITICAL: MODEL BLOCK LIST ---
+# Prevents massive weights from accidentally being pushed to the remote
+*.gguf
+*.rom
+*.bin
+*_shards/
+_r1_named/
+deepseek*/
+kimi*/
+phi3*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
