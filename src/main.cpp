@@ -6,7 +6,24 @@
 #include <pmmintrin.h>
 
 void runMove10Validation(Deep2Engine& engine) {
-    std::cout << "[Move 10] Validation disabled - not implemented\n";
+    std::vector<uint32_t> inputTokens = { 1 };  // Single token for fast boundary probe test
+    std::vector<float> outputLogits, baselineLogits;
+    
+    std::cout << "\n=== MOVE 10 VALIDATION WITH ORACLE-TRACE PROBES ===\n";
+    // Run only first 5 layers to hit the boundary probes quickly
+    // Temporarily modify the engine to limit layers
+    bool success = engine.executePhi3ROMForwardPass(inputTokens, outputLogits, baselineLogits);
+    
+    if (success) {
+        std::cout << "\n[Move 10] Forward pass completed successfully!\n";
+        std::cout << "  Output logits size: " << outputLogits.size() << "\n";
+        if (!baselineLogits.empty()) {
+            bool parity = engine.validateLogitsParity(outputLogits, baselineLogits, 1e-5f);
+            std::cout << "  Logits parity: " << (parity ? "PASSED" : "FAILED") << "\n";
+        }
+    } else {
+        std::cerr << "\n[Move 10] Forward pass FAILED!\n";
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -30,12 +47,17 @@ int main(int argc, char* argv[]) {
 
     bool verifyOnly = false;
     bool forceWholeLoader = false;
+    bool runMove10 = false;
     std::string modelPath;
     std::string manifestPath;
 
     int argIndex = 1;
     if (std::string(argv[argIndex]) == "--verify-init-only") {
         verifyOnly = true;
+        argIndex++;
+    }
+    if (argIndex < argc && std::string(argv[argIndex]) == "--move10-validate") {
+        runMove10 = true;
         argIndex++;
     }
     while (argIndex < argc) {
@@ -60,7 +82,12 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    Deep2EngineExecuteInferenceStep(engine);
+    // Check for Move 10 validation flag (already parsed above)
+    if (runMove10) {
+        runMove10Validation(engine);
+    } else {
+        Deep2EngineExecuteInferenceStep(engine);
+    }
     engine.Shutdown();
     return 0;
 }

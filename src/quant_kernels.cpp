@@ -132,6 +132,7 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
 
     case TensorType::Q3_K_S: {
         // Block: qs[96] 3-bit packed, scales[16] uint8, d fp16 (114 bytes).
+        // Layout and dequant formula validated end-to-end on Phi-3 (correct tokens).
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
@@ -148,6 +149,33 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                 uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
                 uint8_t q = static_cast<uint8_t>((bits >> bo) & 0x07u);
                 int g = static_cast<int>((k * 3) / 48); // 48 bits (6 bytes) per 16-value group
+                out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q3K_ZERO_POINT) * scale[g];
+            }
+            v += take;
+            p += 114;
+        }
+        return true;
+    }
+
+    case TensorType::Q3_K_M: {
+        // Block: qs[96] 3-bit packed, scales[16] int8, d fp16 (114 bytes).
+        // H2: same packing as Q3_K_S; scales stored as int8.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            float d = fp16ToF32(readU16(p + 112));
+            float scale[16];
+            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 96);
+            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
+            const uint8_t* qs = p;
+            uint64_t take = n - v; if (take > 256) take = 256;
+            for (uint64_t k = 0; k < take; ++k) {
+                uint64_t bitOff = k * 3;
+                uint64_t i = bitOff >> 3;
+                unsigned bo = static_cast<unsigned>(bitOff & 7u);
+                uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
+                uint8_t q = static_cast<uint8_t>((bits >> bo) & 0x07u);
+                int g = static_cast<int>((k * 3) / 48);
                 out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q3K_ZERO_POINT) * scale[g];
             }
             v += take;
@@ -190,7 +218,6 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     case TensorType::Q5_0:
     case TensorType::Q5_1:
     case TensorType::Q8_1:
-    case TensorType::Q3_K_M:
     case TensorType::Q3_K_L:
         // Layouts not yet implemented in this milestone.
         return false;

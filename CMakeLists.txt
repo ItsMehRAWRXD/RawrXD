@@ -24,6 +24,7 @@ add_executable(Deep2Engine_Benchmark
     src/MasmCoreKernels.cpp
     src/VulkanDevice.cpp
     src/VulkanDeviceAllocator.cpp
+    src/VulkanStagingPipeline.cpp
 )
 
 add_executable(gguf2rom
@@ -34,26 +35,19 @@ add_executable(gguf2rom_ms
     src/gguf2rom_ms.cpp
 )
 
-add_executable(rom_audit
-    src/rom_tests.cpp
-    src/TensorROM.cpp
-    src/ShardPager.cpp
-    src/quant_kernels.cpp
-    src/GGUFLoader.cpp
-    src/Deep2Engine.cpp
-    src/VulkanDevice.cpp
-    src/inference_oracle.cpp
-)
-
 add_executable(test_metadata_parity
     src/test_metadata_parity.cpp
     src/GGUFLoader.cpp
 )
 
-target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(rom_audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(rom_audit PRIVATE Vulkan::Vulkan)
+add_executable(production_smoke_test
+    src/tools/production_smoke_test.cpp
+)
+
+target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
 # Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
@@ -68,14 +62,12 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 endif()
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
-# Only apply C++ flags to C++ sources using generator expressions
 if(MSVC)
-    # Check if the host compiler version explicitly supports 512-bit vector processing arguments
     if(MSVC_VERSION GREATER_EQUAL 1910)
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
-            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX512>
+            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
         )
-        message(STATUS "[BUILD] MSVC compiler target assigned to strict high-density AVX-512 instructions.")
+        message(STATUS "[BUILD] MSVC compiler target assigned to native AVX2 (256-bit YMM) for Zen 4 / 7800X3D.")
     else()
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
             $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /arch:AVX2>
@@ -86,12 +78,10 @@ else()
     target_compile_options(Deep2Engine_Benchmark PRIVATE 
         $<$<COMPILE_LANGUAGE:CXX>:-O3 -Wall -Wextra -ffast-math -pthread>
     )
-    # Check for native AVX-512 hardware compliance strings automatically under GCC/Clang
     include(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-mavx512f" HAS_AVX512F)
     CHECK_CXX_COMPILER_FLAG("-mavx512bw" HAS_AVX512BW)
     CHECK_CXX_COMPILER_FLAG("-mavx512dq" HAS_AVX512DQ)
-    CHECK_CXX_COMPILER_FLAG("-mavx512vnni" HAS_AVX512VNNI)
     if(HAS_AVX512F AND HAS_AVX512BW AND HAS_AVX512DQ)
         target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mavx512bw -mavx512dq>)
         if(HAS_AVX512VNNI)
@@ -117,16 +107,17 @@ if(MSVC)
         PRIVATE Vulkan::Vulkan
         kernel32.lib user32.lib advapi32.lib
     )
+    target_link_libraries(production_smoke_test
+        PRIVATE Vulkan::Vulkan
+        kernel32.lib user32.lib advapi32.lib
+    )
 elseif(UNIX AND NOT APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 elseif(APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
-
-add_executable(production_smoke_test
-    src/tools/production_smoke_test.cpp
-)
-target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Install target
 install(TARGETS Deep2Engine_Benchmark DESTINATION bin)

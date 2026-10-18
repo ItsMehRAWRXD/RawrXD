@@ -226,6 +226,48 @@ bool TensorROM::finalizeIndex() {
     if (auto* s = lookup("general.rope.freq_base")) parseF64(s, m_geom.ropeTheta);
     if (auto* s = lookup("phi3.context_length")) parseU64(s, m_geom.maxSeqLen);
 
+    // DeepSeek2 architecture detection + MLA/MoE geometry (Move 7).
+    bool isDeepSeek2 = false;
+    for (const auto& kv : m_kvStrings) {
+        if (kv.first.rfind("deepseek2.", 0) == 0) { isDeepSeek2 = true; break; }
+    }
+    if (isDeepSeek2) {
+        m_geom.arch = ModelArch::DeepSeek2;
+        m_geom.hasMla = true;
+        auto gU64 = [&](const std::string& key, uint64_t& out) {
+            if (auto* s = lookup(key)) {
+                try { out = std::stoull(*s); return true; } catch (...) {}
+            }
+            return false;
+        };
+        gU64("deepseek2.block_count", m_geom.numLayers);
+        gU64("deepseek2.embedding_length", m_geom.hiddenDim);
+        gU64("deepseek2.attention.head_count", m_geom.numHeads);
+        gU64("deepseek2.attention.head_count_kv", m_geom.numKVHeads);
+        gU64("deepseek2.feed_forward_length", m_geom.intermediateDim);
+        gU64("deepseek2.vocab_size", m_geom.vocabSize);
+        gU64("deepseek2.context_length", m_geom.maxSeqLen);
+        if (auto* s = lookup("deepseek2.rope.freq_base")) {
+            try { m_geom.ropeTheta = std::stod(*s); } catch (...) {}
+        }
+        {
+            uint64_t tmp = 0;
+            if (gU64("deepseek2.attention.kv_lora_rank", tmp)) m_geom.kvLoraRank = static_cast<uint32_t>(tmp);
+            if (gU64("deepseek2.rope.dimension_count", tmp)) m_geom.qkRopeHeadDim = static_cast<uint32_t>(tmp);
+            uint64_t keyLen = 0;
+            if (gU64("deepseek2.attention.key_length", keyLen))
+                m_geom.qkNopeHeadDim = static_cast<uint32_t>(keyLen - m_geom.qkRopeHeadDim);
+            if (gU64("deepseek2.attention.value_length", tmp)) m_geom.vHeadDim = static_cast<uint32_t>(tmp);
+            if (gU64("deepseek2.expert_count", tmp)) m_geom.nRoutedExperts = static_cast<uint32_t>(tmp);
+            if (gU64("deepseek2.expert_shared_count", tmp)) m_geom.nSharedExperts = static_cast<uint32_t>(tmp);
+            if (gU64("deepseek2.expert_used_count", tmp)) m_geom.moeTopK = static_cast<uint32_t>(tmp);
+        }
+        uint64_t leadDense = 0;
+        gU64("deepseek2.leading_dense_block_count", leadDense);
+        for (uint64_t l = leadDense; l < m_geom.numLayers; ++l)
+            m_geom.moeLayerIndex.push_back(static_cast<uint32_t>(l));
+    }
+
     // Vocabulary from tokenizer array length.
     if (auto* s = lookup("tokenizer.ggml.tokens")) {
         try { m_geom.vocabSize = std::stoull(*s); } catch (...) {}
@@ -259,14 +301,23 @@ bool TensorROM::finalizeIndex() {
         });
     }
 
-    fprintf(stderr, "[ROM] index complete: %zu shard(s), %zu tensor(s), geometry: "
+    fprintf(stderr, "[ROM] index complete: %zu shard(s), %zu tensor(s), arch=%s geometry: "
                     "hidden=%llu layers=%llu heads=%llu kvHeads=%llu ffn=%llu vocab=%llu "
                     "ctx=%llu theta=%.2f\n",
             m_shards.size(), m_nameIndex.size(),
+            m_geom.arch == ModelArch::DeepSeek2 ? "deepseek2" : (m_geom.arch == ModelArch::Phi3 ? "phi3" : "unknown"),
             (unsigned long long)m_geom.hiddenDim, (unsigned long long)m_geom.numLayers,
             (unsigned long long)m_geom.numHeads, (unsigned long long)m_geom.numKVHeads,
             (unsigned long long)m_geom.intermediateDim, (unsigned long long)m_geom.vocabSize,
             (unsigned long long)m_geom.maxSeqLen, m_geom.ropeTheta);
+    if (m_geom.arch == ModelArch::DeepSeek2) {
+        fprintf(stderr, "[ROM] deepseek2 MLA/MoE: qLora=%u kvLora=%u qkNope=%u qkRope=%u vHead=%u "
+                        "experts=%u shared=%u topK=%u firstMoeLayer=%llu moeLayers=%llu hasMla=%d\n",
+                m_geom.qLoraRank, m_geom.kvLoraRank, m_geom.qkNopeHeadDim, m_geom.qkRopeHeadDim,
+                m_geom.vHeadDim, m_geom.nRoutedExperts, m_geom.nSharedExperts, m_geom.moeTopK,
+                m_geom.moeLayerIndex.empty() ? 0 : (unsigned long long)m_geom.moeLayerIndex.front(),
+                (unsigned long long)m_geom.moeLayerIndex.size(), m_geom.hasMla ? 1 : 0);
+    }
     return true;
 }
 

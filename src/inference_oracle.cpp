@@ -176,6 +176,26 @@ struct LayerW {
     std::vector<float> ffnDownW;    // [hidden, intermediate]
 };
 
+// RMSNorm: out = w * x / sqrt(mean(x^2) + eps), in-place on x.
+static void rmsNorm(float* x, const float* w, uint32_t dim, float eps) {
+    float mean = 0.0f;
+    for (uint32_t i = 0; i < dim; ++i) mean += x[i] * x[i];
+    mean /= (float)dim;
+    float scale = 1.0f / std::sqrtf(mean + eps);
+    for (uint32_t i = 0; i < dim; ++i) x[i] *= scale * w[i];
+}
+
+static void rope(float* x, uint32_t pos, uint32_t dim, float theta) {
+    for (uint32_t i = 0; i < dim; i += 2) {
+        float freq = 1.0f / std::powf(theta, (float)i / (float)dim);
+        float ang = (float)pos * freq;
+        float s = std::sinf(ang), c = std::cosf(ang);
+        float x0 = x[i], x1 = x[i + 1];
+        x[i] = x0 * c - x1 * s;
+        x[i + 1] = x0 * s + x1 * c;
+    }
+}
+
 struct Phi3Model {
     uint32_t hidden = 0, layers = 0, heads = 0, intermediate = 0, vocab = 0;
     uint32_t headDim = 0;
@@ -230,26 +250,6 @@ struct Phi3Model {
                   << " heads=" << heads << " headDim=" << headDim
                   << " ffn=" << intermediate << " vocab=" << vocab << "\n";
         return true;
-    }
-
-    // RMSNorm: out = w * x / sqrt(mean(x^2) + eps), in-place on x.
-    static void rmsNorm(float* x, const float* w, uint32_t dim, float eps) {
-        float mean = 0.0f;
-        for (uint32_t i = 0; i < dim; ++i) mean += x[i] * x[i];
-        mean /= (float)dim;
-        float scale = 1.0f / std::sqrtf(mean + eps);
-        for (uint32_t i = 0; i < dim; ++i) x[i] *= scale * w[i];
-    }
-
-    static void rope(float* x, uint32_t pos, uint32_t dim, float theta) {
-        for (uint32_t i = 0; i < dim; i += 2) {
-            float freq = 1.0f / std::powf(theta, (float)i / (float)dim);
-            float ang = (float)pos * freq;
-            float s = std::sinf(ang), c = std::cosf(ang);
-            float x0 = x[i], x1 = x[i + 1];
-            x[i] = x0 * c - x1 * s;
-            x[i + 1] = x0 * s + x1 * c;
-        }
     }
 
     // Logits for the last token of `tokens` (full recompute each step; KV cache holds K/V).
@@ -352,6 +352,208 @@ struct Phi3Model {
 };
 
 // ---------------------------------------------------------------------------
+// DeepSeek-V2-Lite forward pass (Move 8: MLA + dense FFN, layer 0 diagnostic).
+// Layer 0 is the single dense layer (leading_dense_block_count=1); layers 1-26
+// are MoE and handled in Move 9.
+// ---------------------------------------------------------------------------
+struct DeepSeek2Model {
+    uint32_t hidden = 0, layers = 0, heads = 0, intermediate = 0, vocab = 0;
+    uint32_t qkNope = 0, qkRope = 0, vHead = 0, kvLora = 0;
+    float eps = 1e-6f, theta = 10000.0f;
+    uint32_t seqCap = 0;
+
+    std::vector<float> tokenEmbdW;   // [vocab, hidden]
+    std::vector<float> outputNormW;  // [hidden]
+    std::vector<float> outputW;      // [vocab, hidden]
+
+    struct LayerW {
+        std::vector<float> attnNormW;    // [hidden]
+        std::vector<float> qW;           // [3*? , hidden] -> logical [3072, hidden]: q_nope[heads][qkNope] + q_rope[heads][qkRope]
+        std::vector<float> kvANormW;     // [kvLora]
+        std::vector<float> kvAMqaW;      // [kvLora + qkRope, hidden]
+        std::vector<float> kvBW;         // [(qkNope + vHead)*heads, kvLora]
+        std::vector<float> attnOutW;     // [hidden, hidden]
+        std::vector<float> ffnNormW;     // [hidden]
+        std::vector<float> ffnUpW;       // [intermediate, hidden]
+        std::vector<float> ffnGateW;     // [intermediate, hidden]
+        std::vector<float> ffnDownW;     // [hidden, intermediate]
+    };
+    std::vector<LayerW> layersW;
+
+    // KV caches: kNope [layers][heads][seq][qkNope], v [layers][heads][seq][vHead], kRope [layers][seq][qkRope] (shared across heads)
+    std::vector<float> kNopeCache, vCache, kRopeCache;
+
+    bool loadRom(const TensorROM& rom) {
+        auto get = [&](const std::string& name) { return rom.findTensor(name); };
+        auto readF32 = [&](const TensorEntry* e, std::vector<float>& out) -> bool {
+            if (!e) { std::cerr << "[DS2] missing tensor: " << (e ? e->name : std::string("null")) << "\n"; return false; }
+            uint64_t size = e->byteSize();
+            std::vector<uint8_t> raw(size);
+            if (!rom.readTensor(*e, raw.data())) { std::cerr << "[DS2] readTensor failed: " << e->name << "\n"; return false; }
+            TensorView view{ e->type, raw.data(), size, e->dims, true };
+            DequantizedTensor dq;
+            if (!dequantizeTensor(view, dq)) { std::cerr << "[DS2] dequant failed: " << e->name << " type=" << tensorTypeName(e->type) << "\n"; return false; }
+            out = std::move(dq.data);
+            return true;
+        };
+
+        const TensorEntry* te;
+        te = get("token_embd.weight");   if (!readF32(te, tokenEmbdW)) return false;
+        float me = 0.0f, mx = -1e30f, mn = 1e30f;
+        int nz = 0;
+        const uint32_t peek = std::min<uint32_t>(2048, tokenEmbdW.size());
+        for (uint32_t i = 0; i < peek; ++i) {
+            float v = tokenEmbdW[i];
+            me += v;
+            if (v > mx) mx = v;
+            if (v < mn) mn = v;
+            if (v != 0.0f) ++nz;
+        }
+        me /= (float)peek;
+        std::cerr << "[DS2-DBG] token_embd row0: mean=" << me << " min=" << mn
+                  << " max=" << mx << " nz=" << nz << "/" << peek << "\n";
+        te = get("output_norm.weight");  if (!readF32(te, outputNormW)) return false;
+        te = get("output.weight");       if (!readF32(te, outputW)) return false;
+
+        const auto& g = rom.geometry();
+        hidden = (uint32_t)g.hiddenDim; layers = (uint32_t)g.numLayers; heads = (uint32_t)g.numHeads;
+        intermediate = (uint32_t)g.intermediateDim; vocab = (uint32_t)g.vocabSize;
+        theta = (float)g.ropeTheta;
+        qkNope = g.qkNopeHeadDim; qkRope = g.qkRopeHeadDim; vHead = g.vHeadDim; kvLora = g.kvLoraRank;
+        seqCap = 256;
+
+        layersW.resize(1);
+        LayerW& lw = layersW[0];
+        if (!readF32(get("blk.0.attn_norm.weight"), lw.attnNormW)) return false;
+        if (!readF32(get("blk.0.attn_q.weight"), lw.qW)) return false;
+        if (!readF32(get("blk.0.attn_kv_a_norm.weight"), lw.kvANormW)) return false;
+        if (!readF32(get("blk.0.attn_kv_a_mqa.weight"), lw.kvAMqaW)) return false;
+        if (!readF32(get("blk.0.attn_kv_b.weight"), lw.kvBW)) return false;
+        if (!readF32(get("blk.0.attn_output.weight"), lw.attnOutW)) return false;
+        if (!readF32(get("blk.0.ffn_norm.weight"), lw.ffnNormW)) return false;
+        if (!readF32(get("blk.0.ffn_up.weight"), lw.ffnUpW)) return false;
+        if (!readF32(get("blk.0.ffn_gate.weight"), lw.ffnGateW)) return false;
+        if (!readF32(get("blk.0.ffn_down.weight"), lw.ffnDownW)) return false;
+
+        kNopeCache.assign(layers * heads * seqCap * qkNope, 0.0f);
+        vCache.assign(layers * heads * seqCap * vHead, 0.0f);
+        kRopeCache.assign(layers * seqCap * qkRope, 0.0f);
+
+        std::cerr << "[DS2] model resident: hidden=" << hidden << " layers=" << layers
+                  << " heads=" << heads << " qkNope=" << qkNope << " qkRope=" << qkRope
+                  << " vHead=" << vHead << " kvLora=" << kvLora << " ffn=" << intermediate
+                  << " vocab=" << vocab << "\n";
+        return true;
+    }
+
+    static float silu(float x) { return x / (1.0f + std::expf(-x)); }
+
+    // Logits for the last token of `tokens` (layer 0 only, full recompute with KV cache).
+    std::vector<float> forwardLayer0(const std::vector<uint32_t>& tokens) {
+        const uint32_t seq = (uint32_t)tokens.size();
+        std::vector<float> h(seq * hidden, 0.0f);
+        for (uint32_t t = 0; t < seq; ++t)
+            std::memcpy(&h[t * hidden], &tokenEmbdW[tokens[t] * hidden], hidden * sizeof(float));
+
+        LayerW& lw = layersW[0];
+        const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
+
+        for (uint32_t t = 0; t < seq; ++t) {
+            float* ht = &h[t * hidden];
+
+            float normIn[2048];
+            std::memcpy(normIn, ht, hidden * sizeof(float));
+            rmsNorm(normIn, lw.attnNormW.data(), hidden, 1e-6f);
+
+            // Q projection: [3072] = q_nope[heads][qkNope] + q_rope[heads][qkRope]
+            std::vector<float> qAll(heads * (qkNope + qkRope));
+            gemvFloat(lw.qW.data(), normIn, qAll.data(), heads * (qkNope + qkRope), hidden);
+
+            // KV-A projection: [kvLora + qkRope]
+            std::vector<float> kvA(kvLora + qkRope);
+            gemvFloat(lw.kvAMqaW.data(), normIn, kvA.data(), kvLora + qkRope, hidden);
+
+            // KV-B projection: [(qkNope+vHead)*heads]
+            std::vector<float> kAll(heads * (qkNope + vHead));
+            gemvFloat(lw.kvBW.data(), kvA.data(), kAll.data(), heads * (qkNope + vHead), kvLora);
+
+            float* kNopeT = &kNopeCache[t * heads * qkNope];
+            float* vT = &vCache[t * heads * vHead];
+            float* kRopeT = &kRopeCache[t * qkRope];
+
+            for (uint32_t hh = 0; hh < heads; ++hh) {
+                const float* qRow = &qAll[hh * (qkNope + qkRope)];
+                for (uint32_t d = 0; d < qkNope; ++d) kNopeT[hh * qkNope + d] = qRow[d];
+                for (uint32_t d = 0; d < qkRope; ++d) kRopeT[d] = qRow[qkNope + d];
+                const float* kRow = &kAll[hh * (qkNope + vHead)];
+                for (uint32_t d = 0; d < qkNope; ++d) { /* k_nope stored below with cache index (hh, t) */ }
+                // store k_nope at (hh, t): index = hh*seqCap*qkNope + t*qkNope + d
+                for (uint32_t d = 0; d < qkNope; ++d) kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = qRow[d];
+                for (uint32_t d = 0; d < vHead; ++d) vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
+            }
+            // k_rope shared across heads: from kvA tail
+            for (uint32_t d = 0; d < qkRope; ++d) kRopeT[d] = kvA[kvLora + d];
+
+            // RoPE on q_rope and k_rope (position t)
+            for (uint32_t hh = 0; hh < heads; ++hh) {
+                float* qR = &qAll[hh * (qkNope + qkRope) + qkNope];
+                rope(qR, t, qkRope, theta);
+            }
+            rope(kRopeT, t, qkRope, theta);
+
+            // Causal softmax attention per head
+            float attnOut[2048] = {0};
+            for (uint32_t hh = 0; hh < heads; ++hh) {
+                float* outH = attnOut + hh * vHead;
+                float scores[256];
+                float maxSc = -1e30f;
+                for (uint32_t tt = 0; tt <= t; ++tt) {
+                    float s = 0.0f;
+                    for (uint32_t d = 0; d < qkNope; ++d)
+                        s += qAll[hh * (qkNope + qkRope) + d] * kNopeCache[hh * seqCap * qkNope + tt * qkNope + d];
+                    for (uint32_t d = 0; d < qkRope; ++d)
+                        s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
+                    scores[tt] = s * invSqrtD;
+                    if (scores[tt] > maxSc) maxSc = scores[tt];
+                }
+                float sum = 0.0f;
+                for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
+                for (uint32_t d = 0; d < vHead; ++d) {
+                    float acc = 0.0f;
+                    for (uint32_t tt = 0; tt <= t; ++tt) acc += scores[tt] * vCache[hh * seqCap * vHead + tt * vHead + d];
+                    outH[d] = acc / sum;
+                }
+            }
+
+            // residual: h += attn_output @ attn_out
+            float attnProj[2048];
+            gemvFloat(lw.attnOutW.data(), attnOut, attnProj, hidden, hidden);
+            for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
+
+            // FFN (dense, layer 0): down(silu(gate(x)) * up(x))
+            std::memcpy(normIn, ht, hidden * sizeof(float));
+            rmsNorm(normIn, lw.ffnNormW.data(), hidden, 1e-6f);
+
+            std::vector<float> fup(intermediate);
+            gemvFloat(lw.ffnUpW.data(), normIn, fup.data(), intermediate, hidden);
+            std::vector<float> fgate(intermediate);
+            gemvFloat(lw.ffnGateW.data(), normIn, fgate.data(), intermediate, hidden);
+            for (uint32_t i = 0; i < intermediate; ++i) fup[i] *= silu(fgate[i]);
+
+            std::vector<float> fdown(hidden);
+            gemvFloat(lw.ffnDownW.data(), fup.data(), fdown.data(), hidden, intermediate);
+            for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
+        }
+
+        float* last = &h[(seq - 1) * hidden];
+        rmsNorm(last, outputNormW.data(), hidden, 1e-6f);
+        std::vector<float> logits(vocab);
+        gemvFloat(outputW.data(), last, logits.data(), vocab, hidden);
+        return logits;
+    }
+};
+
+// ---------------------------------------------------------------------------
 // Oracle driver
 // ---------------------------------------------------------------------------
 int cmdOracle(int argc, char** argv) {
@@ -399,6 +601,39 @@ int cmdOracle(int argc, char** argv) {
         return 0;
     }
 
+    if (rom.geometry().arch == ModelArch::DeepSeek2) {
+        // ---- Move 8: DeepSeek-V2-Lite layer-0 (dense MLA) diagnostic ----
+        DeepSeek2Model model;
+        if (!model.loadRom(rom)) return 1;
+
+        std::vector<uint32_t> tokens = tok.encode(prompt);
+        std::vector<uint32_t> run;
+        run.push_back(tok.bosId);
+        run.insert(run.end(), tokens.begin(), tokens.end());
+
+        std::cout << "[ORACLE] prompt tokens: " << run.size() << " -> ";
+        for (uint32_t id : tokens) std::cout << tok.decode(id);
+        std::cout << "\n[ORACLE] DeepSeek-V2-Lite layer-0 forward pass...\n";
+
+        std::vector<float> logits = model.forwardLayer0(run);
+        // top-8 candidates
+        std::vector<std::pair<float, uint32_t>> cand;
+        cand.reserve(model.vocab);
+        for (uint32_t i = 0; i < model.vocab; ++i) cand.emplace_back(logits[i], i);
+        std::sort(cand.begin(), cand.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+        float sum = 0.0f;
+        for (auto& c : cand) sum += std::expf(c.first - cand[0].first);
+        std::cout << "[ORACLE] top-8 next-token candidates:\n";
+        for (int i = 0; i < 8 && i < (int)cand.size(); ++i) {
+            float p = std::expf(cand[i].first - cand[0].first) / sum;
+            std::cout << "  " << i + 1 << ") id=" << cand[i].second << " \"" << tok.decode(cand[i].second)
+                      << "\" logit=" << cand[i].first << " p=" << p << "\n";
+        }
+        std::cout << "[ORACLE] layer-0 forward complete\n";
+        return 0;
+    }
+
+    // ---- Phi-3 full autoregressive oracle (Move 6) ----
     Phi3Model model;
     if (!model.loadRom(rom)) return 1;
 
