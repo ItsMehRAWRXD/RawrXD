@@ -2,11 +2,14 @@
 // Validates quantized dequant scale factors end-to-end: wrong dequant => garbage tokens instantly.
 //
 // Usage:
-//   rom_audit oracle <model.gguf> "<prompt>" [max_tokens]
+//   rom_audit oracle  <model.gguf> "<prompt>" [max_tokens]
+//   rom_audit tokenize <model.gguf> "<prompt>"
+//   rom_audit info    <model.gguf>
 
 #include "TensorROM.hpp"
 #include "Deep2Engine.hpp"
 #include "quant_kernels.hpp"
+#include "core/GgufTokenizer.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -27,114 +30,15 @@ using namespace deep2;
 // (tokenizer.ggml.tokens / tokenizer.ggml.merges / tokenizer.ggml.bos_token_id / ...).
 // Self-contained; does not depend on the whole-model GGUFLoader path.
 // ---------------------------------------------------------------------------
-struct GgufTokenizer {
-    std::vector<std::string> vocab;   // id -> token string
-    std::vector<std::pair<std::string, std::string>> merges; // in GGUF order
-    uint32_t bosId = 1, eosId = 2, unkId = 0;
-
-    bool loadFromGguf(const std::string& path) {
-        std::ifstream f(path, std::ios::binary);
-        if (!f) return false;
-        uint32_t magic = 0, version = 0;
-        f.read(reinterpret_cast<char*>(&magic), 4);
-        f.read(reinterpret_cast<char*>(&version), 4);
-        if (magic != 0x46554747u) return false;
-        uint64_t tensorCount = 0, kvCount = 0;
-        f.read(reinterpret_cast<char*>(&tensorCount), 8);
-        f.read(reinterpret_cast<char*>(&kvCount), 8);
-
-        auto readStr = [&](std::string& out) -> bool {
-            uint64_t len = 0;
-            f.read(reinterpret_cast<char*>(&len), 8);
-            if (!f || len > (1u << 20)) return false;
-            out.resize(static_cast<size_t>(len));
-            f.read(out.data(), len);
-            return static_cast<bool>(f);
-        };
-        auto skipValue = [&](uint32_t type) -> bool {
-            if (type <= 7) {
-                static const uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
-                f.seekg(sz[type & 7], std::ios::cur);
-                return static_cast<bool>(f);
-            }
-            if (type == 8) { std::string s; return readStr(s); }
-            if (type == 9) {
-                uint32_t at = 0;
-                uint64_t al = 0;
-                f.read(reinterpret_cast<char*>(&at), 4);
-                f.read(reinterpret_cast<char*>(&al), 8);
-                if (at == 8) {
-                    for (uint64_t i = 0; i < al; ++i) { std::string s; if (!readStr(s)) return false; }
-                } else {
-                    static const uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                    f.seekg(static_cast<std::streamoff>(al * sz[at & 7]), std::ios::cur);
-                }
-                return static_cast<bool>(f);
-            }
-            if (type == 10 || type == 11 || type == 12) { f.seekg(8, std::ios::cur); return static_cast<bool>(f); }
-            return false;
-        };
-
-        for (uint64_t i = 0; i < kvCount; ++i) {
-            std::string key;
-            if (!readStr(key)) return false;
-            uint32_t type = 0;
-            f.read(reinterpret_cast<char*>(&type), 4);
-            if (!f) return false;
-
-            if (key == "tokenizer.ggml.tokens") {
-                uint32_t at = 0; uint64_t al = 0;
-                f.read(reinterpret_cast<char*>(&at), 4);
-                f.read(reinterpret_cast<char*>(&al), 8);
-                if (at != 8) return false;
-                vocab.reserve(al);
-                for (uint64_t j = 0; j < al; ++j) { std::string t; if (!readStr(t)) return false; vocab.push_back(std::move(t)); }
-            } else if (key == "tokenizer.ggml.token_type") {
-                if (type != 9) return false;
-                uint32_t at = 0; uint64_t al = 0;
-                f.read(reinterpret_cast<char*>(&at), 4);
-                f.read(reinterpret_cast<char*>(&al), 8);
-                for (uint64_t j = 0; j < al; ++j) { uint32_t v = 0; f.read(reinterpret_cast<char*>(&v), 4); }
-            } else if (key == "tokenizer.ggml.merges") {
-                uint32_t at = 0; uint64_t al = 0;
-                f.read(reinterpret_cast<char*>(&at), 4);
-                f.read(reinterpret_cast<char*>(&al), 8);
-                std::cerr << "[ORACLE-DBG] merges arrayLen=" << al << " elementType=" << at << "\n";
-                if (at != 8) return false;
-                merges.reserve(al);
-                for (uint64_t j = 0; j < al; ++j) { std::string m; if (!readStr(m)) return false; auto sp = m.find(' '); if (sp != std::string::npos) merges.emplace_back(m.substr(0, sp), m.substr(sp + 1)); }
-            } else if (key == "tokenizer.ggml.bos_token_id") { uint32_t v = 0; f.read(reinterpret_cast<char*>(&v), 4); bosId = v; }
-            else if (key == "tokenizer.ggml.eos_token_id") { uint32_t v = 0; f.read(reinterpret_cast<char*>(&v), 4); eosId = v; }
-            else if (key == "tokenizer.ggml.unknown_token_id") { uint32_t v = 0; f.read(reinterpret_cast<char*>(&v), 4); unkId = v; }
-            else { if (!skipValue(type)) return false; }
-        }
-        if (vocab.empty()) return false;
-        std::cerr << "[ORACLE] tokenizer: vocab=" << vocab.size() << " merges=" << merges.size()
-                  << " bos=" << bosId << " eos=" << eosId << "\n";
-        return true;
-    }
-
-    std::vector<uint32_t> encode(const std::string& text) const {
-        // Byte-level tokenizer: each byte maps to token_id = 256 + byte_value.
-        // Token IDs 256-511 are valid indices into the embedding matrix
-        // (vocab_size = 102400). This is a placeholder tokenizer; the GGUF
-        // does not embed tokenizer metadata.
-        std::vector<uint32_t> ids;
-        ids.reserve(text.size());
-        for (unsigned char c : text) ids.push_back(256u + c);
-        return ids;
-    }
-
-    std::string decodeRaw(uint32_t id) const {
-        // Reverse of byte-level encoding: token_id - 256 = byte_value.
-        if (id >= 256 && id < 512) {
-            return std::string(1, static_cast<char>(id - 256));
-        }
-        return "";
-    }
-
-    std::string decode(uint32_t id) const { return decodeRaw(id); }
-};
+// ---------------------------------------------------------------------------
+// GGUF tokenizer.
+//
+// The implementation lives in src/core/GgufTokenizer.hpp and is shared with
+// the production inference path. It reproduces llama.cpp's SentencePiece
+// (Phi-3, TinyLlama) and byte-level BPE (DeepSeek-V2, Qwen) behaviour, and
+// is verified against the reference HuggingFace tokenizers.
+// ---------------------------------------------------------------------------
+using GgufTokenizer = Deep2Rom::Inference::GgufTokenizer;
 
 // ---------------------------------------------------------------------------
 // Phi-3 weights resident in host RAM (paged once from ROM at startup).
@@ -198,9 +102,35 @@ struct Phi3Model {
         te = get("output_norm.weight");  if (!readF32(te, outputNormW)) return false;
         te = get("output.weight");       if (!readF32(te, outputW)) return false;
 
-        // Geometry from GGUF metadata-like fixed Phi-3 values (validated against shard index).
-        hidden = 3072; layers = 32; heads = 32; intermediate = 8192; vocab = 32064;
+        // Geometry comes from the shard metadata, cross-checked against the
+        // tensor shapes. GGUF stores weight dims as [in, out], so the logical
+        // matrix is [out, in].
+        const auto& g = rom.geometry();
+        hidden  = static_cast<uint32_t>(g.hiddenDim);
+        layers  = static_cast<uint32_t>(g.numLayers);
+        heads   = static_cast<uint32_t>(g.numHeads);
+        intermediate = static_cast<uint32_t>(g.intermediateDim);
+        vocab   = static_cast<uint32_t>(g.vocabSize);
+        if (hidden == 0 || layers == 0 || heads == 0 || vocab == 0) {
+            std::cerr << "[ORACLE] incomplete geometry in shard metadata\n";
+            return false;
+        }
         headDim = hidden / heads;
+
+        // ffn_up holds both halves of the gated MLP (gate then up), so it has
+        // 2 * intermediate rows. Derive it from the tensor rather than assume.
+        {
+            const TensorEntry* fu = get("blk.0.ffn_up.weight");
+            if (!fu) { std::cerr << "[ORACLE] missing blk.0.ffn_up.weight\n"; return false; }
+            if (fu->dims.size() != 2) { std::cerr << "[ORACLE] unexpected ffn_up rank\n"; return false; }
+            const uint64_t ffnUpRows = fu->dims[1];   // GGUF [in, out]
+            if (ffnUpRows != static_cast<uint64_t>(intermediate) * 2) {
+                std::cerr << "[ORACLE] ffn_up rows=" << ffnUpRows
+                          << " expected 2*intermediate=" << (intermediate * 2) << "\n";
+                return false;
+            }
+        }
+
         seqCap = 1536;
         kCache.assign(layers * heads * seqCap * headDim, 0.0f);
         vCache.assign(layers * heads * seqCap * headDim, 0.0f);
@@ -301,15 +231,22 @@ struct Phi3Model {
                 for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
 
                 // ---- ffn branch ----
+                // Phi-3 uses a gated SwiGLU: ffn_up produces 2*intermediate
+                // values, the first half is the gate and the second half is
+                // the up projection. The activation is silu(gate) * up.
                 std::memcpy(normIn, ht, hidden * sizeof(float));
                 rmsNorm(normIn, lw.ffnNormW.data(), hidden, eps);
 
-                float fup[8192];
-                gemvFloat(lw.ffnUpW.data(), normIn, fup, intermediate, hidden);
-                for (uint32_t i = 0; i < intermediate; ++i) fup[i] = fup[i] > 0.0f ? fup[i] : 0.0f; // ReLU
+                std::vector<float> fup(2 * intermediate);
+                gemvFloat(lw.ffnUpW.data(), normIn, fup.data(), 2 * intermediate, hidden);
+                for (uint32_t i = 0; i < intermediate; ++i) {
+                    const float gate = fup[i];
+                    const float up   = fup[intermediate + i];
+                    fup[i] = (gate / (1.0f + std::expf(-gate))) * up;  // silu(gate) * up
+                }
 
-                float fdown[3072];
-                gemvFloat(lw.ffnDownW.data(), fup, fdown, hidden, intermediate);
+                std::vector<float> fdown(hidden);
+                gemvFloat(lw.ffnDownW.data(), fup.data(), fdown.data(), hidden, intermediate);
                 for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
             }
         }
@@ -580,7 +517,7 @@ struct DeepSeek2Model {
 
         const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
 
-        const uint32_t layersToRun = std::min<uint32_t>(layers, 2u);
+        const uint32_t layersToRun = layers;
         for (uint32_t layer = 0; layer < layersToRun; ++layer) {
             LayerW& lw = layersW[layer];
             bool isMoE = (layer > 0);
@@ -1010,34 +947,12 @@ int cmdOracle(int argc, char** argv) {
     if (!rom.finalizeIndex()) return 1;
 
     GgufTokenizer tok;
-    if (!tok.loadFromGguf(modelPath)) return 1;
+    if (!tok.loadFromGGUF(modelPath)) return 1;
 
-    // Tokenizer diagnostics
-    std::cerr << "[ORACLE-DBG] vocab[0..5]:";
-    for (size_t i = 0; i < std::min<size_t>(6, tok.vocab.size()); ++i)
-        std::cerr << " [" << i << "]=" << tok.vocab[i];
-    std::cerr << "\n[ORACLE-DBG] merges=" << tok.merges.size();
-    for (size_t i = 0; i < std::min<size_t>(5, tok.merges.size()); ++i)
-        std::cerr << " [" << tok.merges[i].first << "][" << tok.merges[i].second << "]";
-    std::cerr << "\n[ORACLE-DBG] raw-printable single-char tokens:";
-    int nPrint = 0;
-    for (size_t i = 0; i < tok.vocab.size() && nPrint < 12; ++i) {
-        const auto& t = tok.vocab[i];
-        if (t.size() == 1 && ((unsigned char)t[0] >= 32) && ((unsigned char)t[0] < 127)) {
-            std::cerr << " [" << i << "]=" << t;
-            ++nPrint;
-        }
-    }
-    std::cerr << "\n[ORACLE-DBG] vocab has \"The\"=";
-    bool hasThe = false;
-    for (const auto& t : tok.vocab) { if (t == "The") { hasThe = true; break; } }
-    std::cerr << hasThe << " vocab has \" \"=";
-    bool hasSpace = false;
-    for (const auto& t : tok.vocab) { if (t == " ") { hasSpace = true; break; } }
-    std::cerr << hasSpace << " unkId=" << tok.unkId << " has<0x20>=";
-    bool has0x20 = false;
-    for (const auto& t : tok.vocab) { if (t == "<0x20>") { has0x20 = true; break; } }
-    std::cerr << has0x20 << "\n";
+    std::cerr << "[ORACLE] tokenizer: family="
+              << (tok.type() == Deep2Rom::Inference::GgufTokenizerType::Spm ? "spm" : "bpe")
+              << " vocab=" << tok.vocabSize() << " bos=" << tok.bosTokenId()
+              << " eos=" << tok.eosTokenId() << " unk=" << tok.unkTokenId() << "\n";
 
     if (maxTokens == 0) {
         std::cout << "[ORACLE] load-only mode: tokenizer+weights OK, skipping generation\n";
@@ -1051,7 +966,7 @@ int cmdOracle(int argc, char** argv) {
 
         std::vector<uint32_t> tokens = tok.encode(prompt);
         std::vector<uint32_t> run;
-        run.push_back(tok.bosId);
+        run.push_back(tok.bosTokenId());
         run.insert(run.end(), tokens.begin(), tokens.end());
 
         std::cout << "[ORACLE] prompt tokens: " << run.size() << " -> ";
@@ -1067,7 +982,7 @@ int cmdOracle(int argc, char** argv) {
             run.push_back(next);
             std::cout << tok.decode(next);
             std::cout.flush();
-            if (next == tok.eosId) break;
+            if (next == tok.eosTokenId()) break;
             if ((uint32_t)run.size() >= model.seqCap) break;
         }
         std::cout << "\n[ORACLE] generation complete (" << run.size() << " total tokens)\n";
@@ -1080,7 +995,7 @@ int cmdOracle(int argc, char** argv) {
 
     std::vector<uint32_t> tokens = tok.encode(prompt);
     std::vector<uint32_t> run;
-    run.push_back(tok.bosId);
+    run.push_back(tok.bosTokenId());
     run.insert(run.end(), tokens.begin(), tokens.end());
 
     std::cout << "[ORACLE] prompt tokens: " << run.size() << " -> ";
@@ -1091,12 +1006,159 @@ int cmdOracle(int argc, char** argv) {
         std::vector<float> logits = model.forward(run);
         uint32_t next = 0; float best = -1e30f;
         for (uint32_t i = 0; i < model.vocab; ++i) if (logits[i] > best) { best = logits[i]; next = i; }
+
+        // Report the top candidates. A working model puts a real word at the
+        // top; a broken dequant scatters probability over unrelated tokens.
+        {
+            const size_t kTop = 5;
+            std::vector<std::pair<float, uint32_t>> ranked;
+            ranked.reserve(model.vocab);
+            for (uint32_t i = 0; i < model.vocab; ++i) ranked.emplace_back(logits[i], i);
+            std::partial_sort(ranked.begin(),
+                              ranked.begin() + (std::min)(kTop, ranked.size()),
+                              ranked.end(),
+                              [](const auto& a, const auto& b) { return a.first > b.first; });
+
+            float maxLogit = ranked.front().first;
+            double sumExp = 0.0;
+            for (size_t i = 0; i < kTop && i < ranked.size(); ++i)
+                sumExp += std::exp((double)(ranked[i].first - maxLogit));
+
+            std::cout << "\n[ORACLE] step " << step << " top-" << kTop << ":";
+            for (size_t i = 0; i < kTop && i < ranked.size(); ++i) {
+                const double p = std::exp((double)(ranked[i].first - maxLogit)) / sumExp;
+                std::cout << " [" << tok.piece(ranked[i].second) << ":" << ranked[i].second
+                          << " p=" << p << "]";
+            }
+            std::cout << "\n";
+        }
+
         run.push_back(next);
         std::string piece = tok.decode(next);
         std::cout << piece << std::flush;
-        if (next == tok.eosId) break;
+        if (next == tok.eosTokenId()) break;
         if ((uint32_t)run.size() >= model.seqCap) break;
     }
     std::cout << "\n[ORACLE] done (" << run.size() << " tokens total)\n";
     return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Tensor dump: dequantize a named tensor and print the first N values.
+// Used to cross-check the dequant kernels against a reference implementation.
+// ---------------------------------------------------------------------------
+int cmdDumpTensor(int argc, char** argv) {
+    if (argc < 4) {
+        std::cerr << "usage: rom_audit dump-tensor <model.gguf> <tensor.name> [count]\n";
+        return 1;
+    }
+    const size_t count = (argc >= 5) ? static_cast<size_t>(std::atoll(argv[4])) : 32;
+
+    TensorROM rom;
+    if (!rom.addShard(argv[2])) return 1;
+    if (!rom.finalizeIndex()) return 1;
+
+    const TensorEntry* te = rom.findTensor(argv[3]);
+    if (!te) {
+        std::cerr << "[ORACLE] tensor not found: " << argv[3] << "\n";
+        return 1;
+    }
+
+    std::vector<uint8_t> raw;
+    raw.resize(TensorROM::tensorStorageBytes(*te));
+    if (!rom.readTensor(*te, raw.data())) {
+        std::cerr << "[ORACLE] failed to read tensor bytes\n";
+        return 1;
+    }
+
+    TensorView view;
+    view.type = te->type;
+    view.data = raw.data();
+    view.byteSize = raw.size();
+    view.dims = te->dims;
+
+    DequantizedTensor dq;
+    if (!dequantizeTensor(view, dq)) {
+        std::cerr << "[ORACLE] dequant failed for " << argv[3]
+                  << " type=" << tensorTypeName(te->type) << "\n";
+        return 1;
+    }
+
+    std::cout << "# tensor=" << argv[3] << " type=" << tensorTypeName(te->type)
+              << " elements=" << dq.data.size() << "\n";
+    const size_t n = (std::min)(count, dq.data.size());
+    for (size_t i = 0; i < n; ++i) {
+        std::cout << i << "\t" << dq.data[i] << "\n";
+    }
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Tokenizer diagnostics: print the ids and pieces a prompt encodes to.
+// ---------------------------------------------------------------------------
+int cmdTokenize(int argc, char** argv) {
+    if (argc < 4) {
+        std::cerr << "usage: rom_audit tokenize <model.gguf> \"<prompt>\"\n";
+        return 1;
+    }
+    GgufTokenizer tok;
+    if (!tok.loadFromGGUF(argv[2])) return 1;
+
+    std::vector<uint32_t> ids = tok.encode(argv[3]);
+    std::cout << ids.size() << " tokens\n";
+    for (uint32_t id : ids) {
+        std::cout << id << "\t" << tok.piece(id) << "\t" << tok.decode(id) << "\n";
+    }
+    std::cout << "[decoded] " << tok.decode(ids) << "\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Model metadata
+// ---------------------------------------------------------------------------
+int cmdInfo(int argc, char** argv) {
+    if (argc < 3) {
+        std::cerr << "usage: rom_audit info <model.gguf>\n";
+        return 1;
+    }
+    TensorROM rom;
+    if (!rom.addShard(argv[2])) return 1;
+    if (!rom.finalizeIndex()) return 1;
+
+    const auto& g = rom.geometry();
+    const char* archName = "unknown";
+    switch (g.arch) {
+        case ModelArch::Phi3:     archName = "phi3"; break;
+        case ModelArch::DeepSeek2: archName = "deepseek2"; break;
+        default: break;
+    }
+    std::cout << "arch         = " << archName << "\n";
+    std::cout << "layers       = " << g.numLayers << "\n";
+    std::cout << "hidden       = " << g.hiddenDim << "\n";
+    std::cout << "heads        = " << g.numHeads << " (kv " << g.numKVHeads << ")\n";
+    std::cout << "intermediate = " << g.intermediateDim << "\n";
+    std::cout << "vocab        = " << g.vocabSize << "\n";
+    std::cout << "max_seq_len  = " << g.maxSeqLen << "\n";
+    std::cout << "rope_theta   = " << g.ropeTheta << "\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "usage: rom_audit <oracle|tokenize|info> <model.gguf> [args]\n";
+        return 2;
+    }
+
+    const std::string cmd = argv[1];
+    if (cmd == "oracle")       return cmdOracle(argc, argv);
+    if (cmd == "tokenize")     return cmdTokenize(argc, argv);
+    if (cmd == "info")         return cmdInfo(argc, argv);
+    if (cmd == "dump-tensor")  return cmdDumpTensor(argc, argv);
+
+    std::cerr << "unknown command: " << cmd << "\n";
+    std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor> <model.gguf> [args]\n";
+    return 2;
 }

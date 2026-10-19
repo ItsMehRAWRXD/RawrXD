@@ -17,8 +17,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-add_executable(Deep2Engine_Benchmark
-    src/main.cpp
+# Engine sources shared by every executable that links the inference core.
+set(DEEP2_ENGINE_CORE_SOURCES
     src/Deep2Engine.cpp
     src/GGUFLoader.cpp
     src/TensorROM.cpp
@@ -30,19 +30,40 @@ add_executable(Deep2Engine_Benchmark
     src/VulkanStagingPipeline.cpp
     src/core/VulkanComputeEngine.cpp
     src/core/Tokenizer.cpp
+    src/core/GgufTokenizer.cpp
     src/core/KVCache.cpp
     src/core/Sampling.cpp
     src/core/GenerationLoop.cpp
     src/core/InferenceEngine.cpp
 )
 
+add_executable(Deep2Engine_Benchmark
+    src/main.cpp
+    ${DEEP2_ENGINE_CORE_SOURCES}
+)
+
+# Multi-shard GGUF -> TensorROM converter.
 add_executable(gguf2rom
     src/gguf2rom.cpp
+)
+
+# Real-token autoregressive oracle. Runs the paged ROM path end-to-end so a
+# wrong quantized dequant surfaces immediately as garbage tokens.
+add_executable(rom_audit
+    src/inference_oracle.cpp
+    ${DEEP2_ENGINE_CORE_SOURCES}
 )
 
 add_executable(test_metadata_parity
     src/test_metadata_parity.cpp
     src/GGUFLoader.cpp
+)
+
+# Standalone tokenizer check: encode/decode round-trip plus a golden token-id
+# vector captured from the reference HuggingFace tokenizer.
+add_executable(tokenizer_test
+    src/tools/tokenizer_test.cpp
+    src/core/GgufTokenizer.cpp
 )
 
 add_executable(production_smoke_test
@@ -63,6 +84,8 @@ add_executable(production_smoke_test
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+target_include_directories(rom_audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+target_include_directories(tokenizer_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
@@ -75,6 +98,10 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
             COMMAND ${CMAKE_COMMAND} -E copy "${shader}"
                      $<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/${shaderName}
             COMMENT "Deploying shader ${shaderName}")
+        add_custom_command(TARGET rom_audit POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${shader}"
+                     $<TARGET_FILE_DIR:rom_audit>/shaders/${shaderName}
+            COMMENT "Deploying shader ${shaderName}")
     endforeach()
 endif()
 
@@ -82,18 +109,18 @@ endif()
 if(MSVC)
     # Check if the host compiler version explicitly supports 512-bit vector processing arguments
     if(MSVC_VERSION GREATER_EQUAL 1910)
-        target_compile_options(Deep2Engine_Benchmark PRIVATE 
+        target_compile_options(Deep2Engine_Benchmark PRIVATE
             $<$<CXX_COMPILER_ID:MSVC>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
         )
         message(STATUS "[BUILD] MSVC compiler target assigned to native AVX2 (256-bit YMM) for Zen 4 / 7800X3D.")
     else()
-        target_compile_options(Deep2Engine_Benchmark PRIVATE 
+        target_compile_options(Deep2Engine_Benchmark PRIVATE
             $<$<CXX_COMPILER_ID:MSVC>:/O2 /Oi /Ot /EHsc /W4 /arch:AVX2>
         )
         message(STATUS "[BUILD] Standard AVX2 micro-architectural fallbacks configured.")
     endif()
 else()
-    target_compile_options(Deep2Engine_Benchmark PRIVATE 
+    target_compile_options(Deep2Engine_Benchmark PRIVATE
         $<$<CXX_COMPILER_ID:GNU>:-O3 -Wall -Wextra -ffast-math -pthread>
     )
     # Check for native AVX-512 hardware compliance strings automatically under GCC/Clang
@@ -109,24 +136,28 @@ else()
         endif()
         message(STATUS "[BUILD] GCC/Clang: AVX-512 vectorization enabled (F, BW, DQ, VNNI)")
     else()
-        message(STATUS "[BUILD] GCC/Clang: AVX-512 not fully supported, using AVX2 fallback")
         target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<CXX_COMPILER_ID:GNU>:-mavx2 -mfma>)
+        message(STATUS "[BUILD] GCC/Clang: AVX-512 not fully supported, using AVX2 fallback")
     endif()
 endif()
 
 # Vulkan linkage for multi-GPU support
-option(ENABLE_VULKAN "Enable Vulkan support" ON)
 if(ENABLE_VULKAN)
     find_package(Vulkan REQUIRED)
     if(Vulkan_FOUND)
         target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_include_directories(rom_audit PRIVATE ${Vulkan_INCLUDE_DIRS})
         message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
     endif()
 endif()
 
 # Link libraries
 if(MSVC)
-    target_link_libraries(Deep2Engine_Benchmark 
+    target_link_libraries(Deep2Engine_Benchmark
+        PRIVATE Vulkan::Vulkan
+        kernel32 user32 advapi32
+    )
+    target_link_libraries(rom_audit
         PRIVATE Vulkan::Vulkan
         kernel32 user32 advapi32
     )
@@ -136,9 +167,11 @@ if(MSVC)
     )
 elseif(UNIX AND NOT APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(rom_audit pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 elseif(APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(rom_audit pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
