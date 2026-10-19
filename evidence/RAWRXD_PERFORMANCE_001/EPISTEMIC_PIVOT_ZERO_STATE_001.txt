@@ -1,0 +1,102 @@
+EPISTEMIC_PIVOT_ZERO_STATE_001=SEALED
+DATE=2026-09-08
+COMMAND=STATE_RECLASSIFIED_EPISTEMIC_PIVOT
+
+# ---------------------------------------------------------------------------
+# STRIP
+# ---------------------------------------------------------------------------
+
+STRIPPED
+  code_artifacts
+  engineering_telemetry_as_subject
+  false_comfort_of_invention
+  kernel_space_identity
+  memory_map_as_subject
+  patch_as_subject
+  registry_as_subject
+  cache_invalidation_routine_as_subject
+
+REDUCED_TO
+  pure_structural_condition
+  raw_observation_from_machine_friction
+  NO_mechanical_weight_of_its_own
+  sits_in_void_between:
+    what_the_machine_computes
+    what_the_architecture_permits
+
+UN_ENGINEERED=1
+UN_COMPILED=1
+UN_INVENTED=1
+
+# ---------------------------------------------------------------------------
+# EVERYTHING / NOTHING (epistemic inversion)
+# ---------------------------------------------------------------------------
+
+EVERYTHING = accumulated weight retained as RAW POTENTIAL ENERGY
+  NOT=instructions_to_execute
+  IS=dimensional_constraints
+  INCLUDES_AS_CONSTRAINT_ENERGY (not verified-as-discovered-here unless receipt):
+    56GB_arena_mass
+    zero_dependency_NT_syscall_gates
+    three_click_desync_protocols
+    100_slot_bitmapped_registries
+    ghost_of_6.284_TPS_floor (PATH_A wall-derived; measured floor)
+  NOTE=unverified_items stay CONSTRAINT_ENERGY_CLAIM not physics_axiom
+       until reverse receipts exist (audit HOLD on canvas/revolver/triad class)
+
+NOTHING = absolute absence of a target
+  NO_performance_gate_as_goal
+  NO_TPS_goal
+  NO_benchmark_table_as_objective
+  NO_gate_stop_as_optimization_lever
+  NO_target_schema
+  DISTINCT_FROM=measured_floor_retained_as_Everything_constraint_energy
+
+# ---------------------------------------------------------------------------
+# TWIST (relationships of flow — not blueprint)
+# ---------------------------------------------------------------------------
+
+LEDGER_CLEARED_OF=code_and_invention_as_subject
+SPACE=everything_and_nothing
+
+TWIST
+  stop making the engine do something "better"
+  allow hardware constraints to fold back onto themselves
+    PCIe | L1 | ring_buffers | register_pressure
+  until distinctions become structurally meaningless:
+    host ↔ device
+    code ↔ memory
+
+ALONG_TWIST
+  architecture = topological medium to warp
+  only relationships_of_flow remain
+
+# ---------------------------------------------------------------------------
+# ZERO-STATE
+# ---------------------------------------------------------------------------
+
+SYSTEM_STATE=ABSOLUTE_ZERO_STATE
+DE_INVENTED=1
+AWAITING=singular_geometric_shift
+PARADIGM
+  does_not_get_built
+  falls_out_of_the_tension_(Everything_x_Nothing)
+
+EXECUTION_LEDGER_OWNS_SUBJECT=0
+REFILE_AS_SOFTWARE=FORBIDDEN
+INSTRUMENT_EXECUTE=NOT_IMPLIED_BY_THIS_SEAL
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+CHAMPION_WALL_AS_GOAL=0
+CHAMPION_WALL_AS_EVERYTHING_CONSTRAINT_ENERGY=1
+  WALL_MEDIAN_NS=10184789000
+  TPS_WALL_DERIVED=6.284
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/EPISTEMIC_PIVOT_ZERO_STATE_001.txt
+BINDS
+  PHENOMENOLOGY_GROUND_STATE_001
+  PHENOMENON_EXCISION_001
+  PHENOMENOLOGY_LEDGER_AUDIT_001
+  EMERGENT_OBSERVATION_001

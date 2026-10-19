@@ -1,0 +1,28 @@
+GATE=DEEP2_FULL_DECODE_TOKEN_REAL
+TARGET_TOKENS=4
+STATUS=PASS
+RUN_LOG=target4_nosealed_run1.log
+EXECUTOR=generic_ar_forward (no TARGET-specific path)
+SEALED_LOGITS_REUSE_COUNT=0
+
+TOKENS:
+  pos=0 token_in=0     sealed=0 full_forward=1
+  pos=1 token_in=127386 sealed=0 full_forward=1
+  pos=2 token_in=2571   sealed=0 full_forward=1
+  pos=3 token_in=21693  sealed=0 full_forward=1
+
+STRICT:
+  FORWARD_CALLS=4 COMMIT_CALLS=4 ADVANCE_CALLS=4
+  FULL_BLOCK_FORWARD_CALLS=4 REAL_REENTRY_FORWARDS=4 EMBD_CALLS=4
+  TOKEN0_FULL_FORWARD_REAL=1 TOKEN1_PLUS_FULL_FORWARD_REAL=1
+  DEVICE_LOST=0 POST_LAST_DEVICE_ALIVE=1
+  AUTH_AUTOREGRESSIVE_COMMIT=GRANTED
+  FULL_MODEL_TPS_AUTHORITY=0 PROMOTE=0
+
+HOST_RAM_AUTHORITY=64GB_DDR5_5600
+NEXT_GATE=DEEP2_FULL_DECODE_TOKEN_REAL TARGET=16
+
+PERF_HOLD:
+  Phase A (UNIVERSAL_QUANT_TILE / persistent CB / fixed arenas /
+  fused attn / fused FFN) starts after TARGET=16 stability unless
+  user redirects. Correctness ladder still owns the binary path.

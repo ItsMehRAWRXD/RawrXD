@@ -1,0 +1,50 @@
+﻿GATE=G3_IDE_RESIDUAL_R11_001
+ASOF=2026-09-10T14:15
+KIND=LIVE_LOCALSERVER_NATIVE_PREPARE
+PARENT=G3_IDE_RESIDUAL_AUDIT_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPEN=0
+R01_REOPEN=0
+
+## Scope
+R11 — /api/native/* (generation/prepare + capabilities) on LocalServer
+(not HeadlessIDE). Prove GUI LocalServer identity + TryHandle path.
+
+## Source fixes
+1) Win32IDE_LocalServer.cpp — RAWR_HAS_NATIVE_E2E TryHandle already present;
+   health/status were setting `response` then falling through to 404 else —
+   fixed sendAll+return (LocalServer identity witness).
+2) Win32IDE_Core.cpp showWindow — RAWRXD_EARLY_LOCAL_SERVER=1 starts
+   LocalServer before deferredHeavyInit (GUI DHI crash path bypass for smoke).
+3) Win32IDE_LocalServer.cpp — RAWRXD_LOCAL_SERVER_PORT env overrides bind port.
+
+## Live proof
+EXE=build-fd/bin/smoke_bin/RawrXD-Win32IDE_r11.exe
+EXE_SHA256=E823725A99511F93… (see META.txt full)
+PORT=11450
+ENV=RAWRXD_EARLY_LOCAL_SERVER=1 RAWRXD_LOCAL_SERVER_PORT=11450
+     RAWRXD_HOST_DECODE=1 RAWRXD_DISABLE_VULKAN=1
+     RAWRXD_SKIP_INTEGRATED_RUNTIME=1
+MODEL=models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+HEALTH=200 {"status":"ok","server":"RawrXD-Win32IDE"}  (≠ HeadlessIDE)
+CAPS=200 native_bridge=true
+PREPARE=200 ok=true profile_source=model_metadata profile_id=9537 num_layers=22
+
+ARTIFACTS=HEALTH.txt CAPS.txt PREPARE.txt HTTP_PREPARE.txt META.txt
+
+## Law
+SOURCE_WIRED ≠ RUNTIME_REACHED ≠ TOKEN_SURVIVED ≠ PERFORMANCE_PASS
+This gate = LocalServer HTTP native prepare RUNTIME_REACHED
+≠ generate tokens ≠ PROMOTE ≠ TIP_CLIMB ≠ DualStick
+R09 matrix line "LocalServer: no /api/native" SUPERSEDED by this live proof
+(source TryHandle was already present; health fall-through + live LocalServer
+boot were the executable gaps).
+
+## Verdict
+VERDICT=R11_CLOSED
+R11=LOCALSERVER_NATIVE_PREPARE_PASS
+NEXT=R13 agents wire-vs-hold OR R09 already CLOSED
+DO_NOT_REOPEN=R01-R06 R10 R26 DualStick
+PROMOTE=0 TIP_CLIMB=HOLD

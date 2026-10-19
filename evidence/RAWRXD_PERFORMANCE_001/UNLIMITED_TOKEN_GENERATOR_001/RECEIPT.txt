@@ -1,0 +1,37 @@
+UNLIMITED_TOKEN_GENERATOR=SEALED
+DATE=2026-09-09
+CHRONO=LUKEWARM
+HOT=0
+STUB_STYLE=1
+NUMBER_SIDED_ONLY=0
+
+SEMANTICS
+  GenerationOptions.maxTokens=0 → unlimited (context-bounded)
+  UINT32_MAX sentinel → same
+  Stop = EOS | cancel | remainingContext
+  ARTIFICIAL_CAP=0
+  UNDEP_LOOP=IGNORE_ARTIFICIAL_CAP
+
+SCHED_LAW
+  IF=TPS_READY
+  ELSE=*
+  ELSE_IF=UNDEP_LOOP(*) → WaitDep only when * empty
+  POLICY_LEGALITY_REQUIRED=0
+  VIOLATE_DEPENDENCIES=0
+  DEPENDENCY_CORRECTNESS_REQUIRED=1
+  IDLE_WHILE_RUNNABLE_EXISTS=0
+  FILE=lavapath/TpsElseUndepSchedulerLaw.hpp
+  DEP=DepStamp.hpp
+  CANARY=FORCE_REVERSE_DEP_CORRUPTION_001
+
+LAND
+  UnlimitedTokenGenerator.hpp (Deep2:: canonical)
+  lavapath/UnlimitedTokenLaw.hpp
+  lavapath/ProductTokenBudget.hpp (0=unlimited)
+  Deep2Engine generateStream + K2 streamTokens ResolveCap
+  DualLaneChoreographer maxTokensA/B=0
+
+ARM
+  DEEP2_UNLIMITED_TOKENS=1
+  RAWR_MAX_TOKENS=0
+  or opts.maxTokens=0 / UnlimitedTokenGenerator

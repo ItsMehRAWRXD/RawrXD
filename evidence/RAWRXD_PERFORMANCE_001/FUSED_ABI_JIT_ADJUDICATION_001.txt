@@ -1,0 +1,23 @@
+FUSED_ABI_JIT_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  XR_Kernel_Fuse_Contract (R10 transfer)
+  XR_JIT_Safe_Emit + cpuid/wbinvd fence after promote
+
+REVERSE
+  Proposed symbols not found as live product braid in src search
+  Live XR surfaces elsewhere ≠ authorize this fused-ABI invent
+
+ADJUDICATION
+  cpuid fence after JIT promote = REFUSED under STOP
+  Fused ABI contract asm = NEW_STACK = REFUSED
+  wbinvd = privileged; not a casual "elite" fence for user-mode JIT invent
+
+LIVE_AUTHORITY=PATH_A / deep2_benchmark.exe
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

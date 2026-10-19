@@ -1,0 +1,80 @@
+diff --git a/src/deep2/ModelOpenCompat.hpp b/src/deep2/ModelOpenCompat.hpp
+new file mode 100644
+index 0000000..source-drop
+--- /dev/null
++++ b/src/deep2/ModelOpenCompat.hpp
+@@
++Use /mnt/data/ModelOpenCompat.hpp as the full new file body.
++
++Header-only source drop. No CMake edit required.
++
++Deep2Engine.cpp integration snippets:
++
++1) Add include near GGUFLoader.hpp:
++
++    #include "GGUFLoader.hpp"
++    #include "ModelOpenCompat.hpp"
++
++2) At the start of Deep2Engine::loadModel, after resolvedPath/inputPath are known
++   and before the existing directory/file split resolver mutates firstShard/shardDir,
++   replace or short-circuit the duplicated resolver with:
++
++    ModelOpenCompat::ResolvedModelOpenPath compatPath;
++    if (!ModelOpenCompat::ResolveModelOpenPath(resolvedPath, compatPath)) {
++        fprintf(stderr, "[Deep2Engine] ERROR: model open path rejected: %s\n",
++                compatPath.error.c_str());
++        return false;
++    }
++    firstShard   = compatPath.firstShard;
++    shardDir     = compatPath.shardDir;
++    isDirectory  = compatPath.isDirectory;
++    isMultiShard = compatPath.isMultiShard;
++    fprintf(stderr, "[Deep2Engine] ModelOpenCompat path=%s first=%s note=%s\n",
++            resolvedPath.c_str(), firstShard.string().c_str(), compatPath.note.c_str());
++
++3) After GGUFLoader::Load succeeds and after `ggufResult = std::move(result);`,
++   before copying `const auto& meta = ggufResult.metadata`, insert:
++
++    auto compatMeta = ModelOpenCompat::RepairMetadataFromTensors(
++        firstShard.string(), ggufResult, stderr);
++    (void)compatMeta;
++    std::string openWhy;
++    if (!ModelOpenCompat::OpenFactsSufficient(ggufResult, &openWhy)) {
++        fprintf(stderr, "[Deep2Engine] ERROR: ModelOpenCompat insufficient open facts: %s\n",
++                openWhy.c_str());
++        return false;
++    }
++
++4) Rebuild only the already-valid target path. Do not force a full InferenceEngine rebuild:
++
++    cmake --build build-fd --target deep2_streamer_parity -j 1
++
++5) Resmoke failed-open models separately from streamer PASS models:
++
++    $exe = "g:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe"
++    $models = @(
++      "F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf",
++      "F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf",
++      "F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"
++    )
++    foreach ($m in $models) {
++      & $exe --model $m --prompt "Say hello in one short sentence." --max-tokens 1 `
++        1> "open_$(Split-Path $m -Leaf).out" 2> "open_$(Split-Path $m -Leaf).err"
++    }
++EOF
+
+cat > /mnt/data/MODEL_OPEN_COMPAT_RECEIPT.txt <<'EOF'
+MODEL_OPEN_COMPAT_DROP_001
+DATE=2026-09-09
+BRANCH_TARGET=cert/p1pra-rc1
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+TARGET_FAILED_OPEN=phi3|gemma3|deepseek-r1-8b
+CLAIM_SCOPE=OPEN_COMPAT_ONLY
+PROMOTE=0
+RUNTIME_REQUIRED_FOR_PASS=1
+
+GitHub write attempt failed with 403 Resource not accessible by integration, so the source drop is provided as files here instead of committed directly.

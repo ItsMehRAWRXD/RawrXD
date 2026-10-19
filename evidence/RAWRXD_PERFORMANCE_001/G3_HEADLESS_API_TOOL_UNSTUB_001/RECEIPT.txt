@@ -1,0 +1,45 @@
+GATE=G3_HEADLESS_API_TOOL_UNSTUB_001
+PURPOSE=Reverse HeadlessIDE public_command_and_file_routes_disabled (/api/tool 403) and unstub sibling tool/file/command routes for local product E2E
+PARENT=G3_STREAMER_AGENTIC_SESSION_VERIFY_001
+ASOF=2026-09-10T00:30
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+EXE=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+EXE_SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+EXE_MTIME=2026-09-10T00:28:54
+EXE_SIZE=329302016
+ALSO=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE_toolunstub.exe (same image; manual link after ninja_deps lock)
+
+REVERSED=
+  HeadlessIDE routeHttpRequest no longer returns 403 public_command_and_file_routes_disabled
+  POST /api/tool, /run-tool, /api/read-file, /api/write-file, /api/list-dir, /api/cli, /api/file*, /api/command*
+  Tool exec is real: read_motd/read_file/list_directory/write_file/execute_command/git_status
+  MOTD ack + reset-on-generate parity with Win32IDE LocalServer
+
+HELD=
+  motd_required 403 until PassiveRoleNotRoleplay.md read (safety)
+  Directory traversal 403 (path component ..)
+  LOCAL_ONLY_NO_OLLAMA / Ollama refuse (ImportSpace68)
+  origin_denied / origin_required / auth gates
+
+E2E=
+  PORT=11441 bind=127.0.0.1 Origin:null
+  FAIL_COUNT=0 (see SMOKE.txt)
+  PRE_MOTD list_directory → 403 motd_required
+  read_motd → 200 PassiveRoleNotRoleplay content
+  read_file abs + /api/read-file → 200
+  list_directory / execute_command echo / write+read / run-tool git_status → 200
+
+CODE=
+  src/win32app/HeadlessIDE_ToolRoutes.cpp (new)
+  src/win32app/HeadlessIDE.cpp (route wire + motdResetOnGenerate)
+  src/win32app/HeadlessIDE.h (decls)
+  CMakeLists.txt (add ToolRoutes.cpp to rawrxd + Win32IDE)
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+FOLLOWUP=G3_MOTD_PER_TURN_ENFORCEMENT_001 E2E_PASS=1 (MOTD per-turn authorization sealed; public tool unstub remains PASS)

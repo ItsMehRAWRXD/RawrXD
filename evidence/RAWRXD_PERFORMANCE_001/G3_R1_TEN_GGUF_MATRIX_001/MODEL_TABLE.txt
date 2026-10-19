@@ -1,0 +1,11 @@
+﻿ID	FAMILY	QUANT	MB	SHA12	PATH	EXISTS
+M01_tinyllama_Q4_K_M	TinyLlama-1.1B	Q4_K_M	637.8	9FECC3B3CD76	G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf	True
+M02_gemma3_1b_Q2_K	Gemma3-1B	Q2_K	666.7	ADBD048B1738	G:\~dev\rawrxd\gemma3-1b-Q2_K.gguf	True
+M03_phi3_mini_Q2_K	Phi-3-mini	Q2_K	1440	548A67A6B39C	G:\~dev\rawrxd\phi3-mini-Q2_K.gguf	True
+M04_llama32_3b_Q2_K	Llama-3.2-3B	Q2_K	1300.8	EE1CA8B71693	G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf	True
+M05_llama32_3b_Q3_K_S	Llama-3.2-3B	Q3_K_S	1471.4	87D059B6BDD1	G:\~dev\rawrxd\llama3.2-3b-Q3_K_S.gguf	True
+M06_phi3_mini_Q8_0	Phi-3-mini-4k	Q8_0	2075.4	633FC5BE925F	F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf	True
+M07_nemotron_4b_Q8_0	Nemotron-3-Nano-4B	Q8_0	4037.5	F872B1BEC0AE	F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf	True
+M08_deepseek_r1_qwen3_8b_Q4	DeepSeek-R1-Qwen3-8B	Q4_K_M	4794.9	713D3A7A93F3	F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf	True
+M09_gemma4_E4B_Q4_K_M	Gemma-4-E4B	Q4_K_M	5088.1	3F72A20A06F6	F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf	True
+M10_ministral3_Q4_0	Ministral-3	Q4_0	4960.4	E73056A56A02	G:\~dev\ministral3_q4_0.gguf	True

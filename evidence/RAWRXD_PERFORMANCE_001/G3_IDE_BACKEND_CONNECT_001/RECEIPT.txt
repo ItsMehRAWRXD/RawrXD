@@ -1,0 +1,58 @@
+GATE=G3_IDE_BACKEND_CONNECT_001
+SUPERSEDED_BY=G3_IDE_BACKEND_FULLFIX_001
+STATUS=SUPERSEDED — CORS proxy workaround retired; use real HeadlessIDE on :11435
+PURPOSE=diagnose file:// IDE reconnect loop; restore live :11435 path; fix connect probe logging
+ASOF=2026-09-09T22:52
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+
+ROOT_CAUSE=
+  1) Nothing was listening on :11435 / :8080. Only Ollama on :11434.
+  2) connectBackend DID probe State.backend.url (:11435) first, but failures were
+     swallowed (empty catch) so Debug Panel only showed logged Try 1.5 :8080 and
+     Try 2 Ollama :11434 — looked like 11435 was skipped.
+  3) Even with HeadlessIDE up, file:// sends Origin: null and HeadlessIDE
+     localOriginAllowed() returns 403 origin_denied (empty origin OK; literal "null" denied).
+     Ollama also 403s Origin:null → browser "Failed to fetch".
+  4) GUI RawrXD-Win32IDE LocalServer has CORS * + bunnyhop but heap-crashed
+     (0xC0000374) in this environment; not relied on for this seal.
+
+STARTED=
+  RawrXD-Win32IDE.exe --headless --port 11436 --bind 127.0.0.1
+    EXE=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+  CORS loopback proxy :11435 -> :11436 (Access-Control-Allow-Origin: *)
+    SCRIPT=evidence/RAWRXD_PERFORMANCE_001/G3_IDE_BACKEND_CONNECT_001/cors_proxy_11435.ps1
+
+FIXED=
+  gui/ide_chatbot_standalone.html
+  gui/ide_chatbot_standalone_e2e.html
+  gui/ide_chatbot_engine.js
+    - sync dbgBackendUrl into State.backend.url before probe
+    - log "Probing configured backend at <url>..."
+    - accept HeadlessIDE /api/status shape; /health healthy|ok; /api/engine/capabilities fallback
+    - log primary failure instead of silent fallthrough
+    - engine.js default URL 8080 → 11435; scanPorts lead with 11435
+  src/win32app/HeadlessIDE.cpp
+    - localOriginAllowed: allow Origin literal "null" (file://)
+    - HeadlessIDE.cpp.obj rebuilt; FULL RawrXD-Win32IDE.exe relink BLOCKED by unrelated
+      Win32IDE_Session.cpp ProductSession member errors — patch not in running EXE yet.
+      Runtime workaround = CORS proxy above until EXE relinks.
+
+WORKING_URL_NOW=
+  http://127.0.0.1:11435/status
+  http://127.0.0.1:11435/health
+  http://127.0.0.1:11435/api/engine/capabilities
+  http://127.0.0.1:11435/api/tags
+  (CORS * via proxy; upstream HeadlessIDE on :11436)
+
+NOT_ON_HEADLESS=
+  /api/nvme/bunnyhop/* → 404 (lives on Win32IDE LocalServer GUI path)
+
+USER_ACTION=
+  Reload ide_chatbot_standalone.html / e2e from disk (or click reconnect).
+  Keep proxy + headless running; or open HTML after they are up.
+  Do not expect bunnyhop until GUI LocalServer is stable or headless gains routes.
+
+PROMOTE=0

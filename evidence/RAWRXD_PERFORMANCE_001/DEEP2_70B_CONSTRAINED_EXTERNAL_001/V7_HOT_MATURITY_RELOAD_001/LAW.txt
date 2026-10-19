@@ -1,0 +1,56 @@
+GATE=V7_HOT_MATURITY_RELOAD_001
+DATE=2026-09-13
+KIND=NEXT_OWNER
+MODE=OBSERVE_ONLY
+ASSIGN=V6_FULLCOST
+BLEND_W=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+NOT_RUN!=PASS
+
+PARENT_HOLD=V7_MATRIX_COVERAGE_ATTRIBUTION_001 0a201c0f4
+  CELL=100 HOT=49 MIN_HOT=2 RELOAD≈1170MiB v7_kernel_cells=0 v7_xfer>0
+# Attribution alive to inspect; not mature to control placement
+# Do NOT run V7_BLEND_05 until PASS_IF below
+
+SEPARATE_TRUTHS=
+  V7_XFER_MODEL_MATURE = hot coverage + samples + reload pass
+  V7_FULL_COST_MATURE  = XFER_MATURE && v7_kernel_cells>0 && kernel hot trained
+# kernel_cells>0 NOT required for transfer-estimator maturity
+
+# Immediate problem = RELOAD (~5.15× 227→1170), not 49% coverage alone
+# Do not jump to huge gen depth first — can worsen reload while "training"
+
+STEP1=V7_RELOAD_AB_ATTRIBUTION_001
+  RUN_A: L61t8 V7_OBSERVE=0 BLEND_W=0 ASSIGN=V6
+  RUN_B: L61t8 V7_OBSERVE=1 BLEND_W=0 ASSIGN=V6
+  COMPARE: assign reload miss SEL/EXE stick split join wall
+  REQUIRE: ASSIGN_A==ASSIGN_B
+  IDEAL: RELOAD_B ~= RELOAD_A
+  IF B alone ~1170: observer perturbs locality — fix before more training
+  IF A and B ~1170: upstream/placement regression — not observe artifact
+
+STEP2=V7_HOT_MATURITY_32_001
+  after reload inside envelope: observe-only TARGET=32
+  V7_OBSERVE=1 BLEND_W=0 ASSIGN=V6
+STEP3=V7_HOT_MATURITY_64_001 only if needed for MIN_HOT_SAMPLES>=4
+
+REQUIRE_PASS_IF=
+  EXIT=0 PARITY=1 ACQUIRE_FAIL=0 SUBMITS=2 WAITS=2
+  CELL_COVERAGE=100 HOT_CELL_COVERAGE>=95 MIN_HOT_CELL_SAMPLES>=4
+  V7_XFER_CELLS>0 ATTRIBUTABLE=1 SPLIT=1
+  RELOAD_MIB<=227
+# v7_kernel_cells>0 not required for THIS gate PASS
+
+THEN_ONLY=V7_BLEND_05_001 experimental/non-authority
+  # note: user formula 0.50/0.50 for first experimental blend;
+  # prior law had 0.95/0.05 — use EXPERIMENTAL_BLEND receipt; PROMOTE=0
+  rollback on parity/reload/skew/predict/join/wall regression
+
+LADDER=
+  COVERAGE_ATTRIBUTION HOLD
+  → RELOAD_AB_ATTRIBUTION
+  → HOT_MATURITY_32 (+64 if needed)
+  → PASS_IF=1 only
+  → BLEND_05 (nonauth)

@@ -1,0 +1,19 @@
+GATE=G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001
+PROMOTE=0 TIP_CLIMB=HOLD LOCAL_ONLY=1 PORT=11435 OLLAMA_REOPEN=0
+
+KEY_LINES=
+  profile_source=model_metadata for BigDaddyG-Q2_K-ULTRA.gguf (HTTP 200; layers=80 from KV)
+  profile_source=model_metadata for tinyllama…Q4_K_M.gguf (HTTP 200; layers=22 from KV)
+  profile_source=seed_compat for qwen + rawrxd-e2e (compat retained; not admission authority)
+  NopeMissing.gguf → HTTP 404 model_profile_not_found (fail-closed)
+  ProductOpen TinyLlama → prepare model_metadata → /api/generate HTTP 200 PROCESS_SURVIVED=1
+  EXE_SHA256=C3BE946E0764AC565470994905923141DEC57FCA0EE7FB87DF0F388675498F06
+
+PASS_IF=
+  MODEL_PROFILE_NOT_FOUND_FOR_VALID_OPEN_MODEL=0
+  PROFILE_SOURCE=MODEL_METADATA
+  PREPARE_PASS=1
+  PRODUCT_GENERATION_REGRESSION=0
+
+NEXT_NOTE=
+  generate-without-model HTTP 503 health/API-semantics (do not start unless this PASS sealed)

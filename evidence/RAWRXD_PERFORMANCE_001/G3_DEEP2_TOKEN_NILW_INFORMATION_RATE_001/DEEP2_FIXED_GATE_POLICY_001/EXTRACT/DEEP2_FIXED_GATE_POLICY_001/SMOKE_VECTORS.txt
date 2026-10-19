@@ -1,0 +1,37 @@
+DEEP2_FIXED_GATE_POLICY_001 deterministic vectors
+
+PASS_EXACT:
+  bytesPerToken=100000000
+  bytesPerSec=1000000000
+  tpsMilli=10000
+  windowTokens=128
+  nilwNum=1
+  nilwDen=1250
+  expected passMask=0x1F failMask=0x00 return=1
+
+FAIL_BYTES_PER_TOKEN_PLUS1:
+  bytesPerToken=100000001 => bit0 fail
+
+FAIL_BYTES_PER_SEC_PLUS1:
+  bytesPerSec=1000000001 => bit1 fail
+
+FAIL_TPS_MINUS_001:
+  tpsMilli=9999 => bit2 fail
+
+FAIL_WINDOW_MINUS1:
+  windowTokens=127 => bit3 fail
+
+PASS_NILW_EXACT:
+  nilwNum=1 nilwDen=1250 => bit4 pass
+
+FAIL_NILW_PLUS_EPSILON:
+  nilwNum=2 nilwDen=2499 => 2/2499 > 1/1250 => bit4 fail
+
+FAIL_NILW_ZERO_DEN:
+  nilwDen=0 => bit4 fail closed
+
+Q4_WITNESS:
+  4.0 * 0.005 * 0.04 = 0.0008 => witness return=1
+
+POLICY_INDEPENDENCE:
+  Codec metadata is absent from GatePolicy and RuntimeSample by construction.

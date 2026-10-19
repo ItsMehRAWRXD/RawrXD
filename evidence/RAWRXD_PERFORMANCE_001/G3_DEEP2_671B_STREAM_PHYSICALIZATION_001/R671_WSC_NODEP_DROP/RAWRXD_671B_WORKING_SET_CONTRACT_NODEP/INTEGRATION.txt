@@ -1,0 +1,46 @@
+INTEGRATION WITH RAWRXD_671B_STREAM_PHYSICALIZATION_NODEP
+
+At runtime, populate wsc15_raw directly from the byte-stream layer counters.
+
+Per acquire:
+  request_observed=1
+  request_offset/request_bytes
+  current_mapped_bytes
+  peak_mapped_bytes
+  cache_hits/cache_misses
+  reused_bytes/newly_mapped_bytes
+  evictions
+  evictions_while_pinned
+  non_lru_evictions
+  leases_acquired
+
+Per release:
+  leases_released
+  invalid_release_count
+
+At token begin:
+  token_observed=1
+  token_id
+  token_begin_mapped_bytes
+
+During token:
+  token_peak_mapped_bytes
+  token_newly_mapped_bytes
+  token_reused_bytes
+
+At token end:
+  token_end_mapped_bytes
+
+Forbidden behavior:
+  - Do not synthesize witness PASS states in the caller.
+  - Do not silently materialize a complete tensor on acquire failure.
+  - Do not let this module set scheduler ownership, NILW authorization, decode authorization, or PROMOTE.
+  - Do not treat NOT_RUN as PASS.
+
+For the 671B product ladder:
+  1. real DeepSeek GGUF metadata
+  2. one expert tensor slice
+  3. 8 routed experts
+  4. one layer
+  5. one complete token with WSC15=PASS
+  6. 2 -> 8 -> 32 -> 128 tokens with NILW/traffic counters

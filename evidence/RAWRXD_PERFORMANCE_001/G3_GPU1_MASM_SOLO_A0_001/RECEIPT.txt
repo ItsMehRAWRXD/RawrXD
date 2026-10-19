@@ -1,0 +1,45 @@
+GATE=G3_GPU1_MASM_SOLO_A0_001
+PURPOSE=pure x64 MASM solo A0 on RX7800XT + DXGI VRAM (no pwsh probe body)
+PARENT=G3_GPU1_SOLO_CREATE_DISC_001
+STREAMER_EXE=FROZEN
+BEHAVIOR_PATCH=0
+PROMOTE=0
+
+IMPL=pure_x64_masm
+SOURCES=tools/g3_masm_gpu1/{g3_masm_io,g3_masm_dxgi,g3_masm_vk_a0,g3_masm_main}.asm
+BUILD=build_masm_solo_a0.cmd (ml64 + link; not PowerShell)
+
+# --- deps ---
+STATIC_DEP=masm+ucrt+vulkan-1_iat DYNAMIC=dxgi
+KERNEL32_ONLY_DXGI=PASS (when vulkan not linked)
+NOTE=LARGEADDRESSAWARE_REQUIRED_FOR_AMDVLK
+  /LARGEADDRESSAWARE:NO → amdvlk snmalloc init aborts; CreateInstance never returns
+  default LARGEADDRESSAWARE → CreateInstance OK
+
+# --- MASM solo A0 (7800 only) ---
+VK_CREATE_INSTANCE=0
+SOLO_NAME=AMD Radeon RX 7800 XT
+SOLO_VK_DEVICE_LOCAL_HEAP=17163091968
+SOLO_A0_VK_RESULT=-13
+SOLO_A0_CREATE=FAIL
+
+# --- DXGI (no WMI AdapterRAM) ---
+R9700_DXGI_DedicatedVideoMemory=34054242304
+RX7800XT_DXGI_DedicatedVideoMemory=16963137536
+
+# --- cross-check vs prior C++ disc ---
+INPROC_CROSS_ADAPTER=DISPROVEN (reconfirmed in MASM solo)
+A0_FAIL_MATCHES_CPP_PROBE=1
+HARNESS_LANGUAGE_DEPENDENT=0
+
+BLOCKER_A=RX7800XT_AMDVLK_ICD_CREATE_PATH
+WMI_AVAILABILITY_CAUSAL=UNPROVEN
+CHILD=G3_AMDVLK_ICD_BOUNDARY_001
+APPLICATION_POLICY_DEPENDENT=0
+DUALSTICK_DEPENDENT=0
+PROMOTE=0
+
+DISPOSITION=
+  MASM freestanding path reproduces solo 7800 A0 = VK_ERROR_UNKNOWN (-13).
+  Confirms failure is not C++/pwsh harness artifact.
+  DXGI DedicatedVideoMemory matches prior disc; WMI AdapterRAM unused.

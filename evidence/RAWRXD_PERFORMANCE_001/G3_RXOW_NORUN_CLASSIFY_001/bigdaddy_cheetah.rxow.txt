@@ -1,0 +1,9 @@
+RXOW stage=NONE br=BR_NOT_PREPARED layers=0 tensors=0 graph=0 decode0=0 note=product_run_before_prepared
+[GGUF] WARNING: TensRXOW stage=NONE br=BR_OPEN_FAILED layers=0 tensors=0 graph=0 decode0=0 note=RAW_RUN_OPEN_FAIL
+GENERATED_TOKENS=0
+PRODUCT_PASS=0
+PRODUCT_PATH=rawr?ProductRun?generateStream MAX_TOKENS=8 PRODUCT_PASS=0
+rawr: PRODUCT_PASS=0 stage=LOAD owner=GGUF_OPEN
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified

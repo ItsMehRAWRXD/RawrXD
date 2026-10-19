@@ -1,0 +1,186 @@
+﻿{
+    "generated":  "2026-09-08T10:37:41.4821633-04:00",
+    "profile":  "QB_KERNEL_CUT_001 forced_off",
+    "forced_off":  [
+                       "TOKEN_PACING=OFF",
+                       "DEEP2_CERT_STEP_LOG=0",
+                       "DEEP2_LOGITS_GPU_SPLIT=0",
+                       "QKV_OWNER_RESI_LOG=0",
+                       "TOK_RESIDUAL_SPAM=0"
+                   ],
+    "count_ok":  17,
+    "count_skip":  0,
+    "count_fail":  0,
+    "manifests":  [
+                      {
+                          "receipt_id":  "QB_KERNEL_CUT_001",
+                          "result":  "PASS",
+                          "promote":  1,
+                          "decode_tps_real":  5.904,
+                          "generation_wall_ns":  10673060000,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_dev64_20260908-093751.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/QB_KERNEL_CUT_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "QB_KERNEL_UPLOAD_CUT_001",
+                          "result":  "PASS",
+                          "promote":  1,
+                          "decode_tps_real":  5.796,
+                          "generation_wall_ns":  10869063000,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern64_20260908-093456.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/QB_KERNEL_UPLOAD_CUT_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "LOGITS_OWNER_RESIDUAL_001",
+                          "result":  "PASS_CUT_PROMOTE",
+                          "promote":  1,
+                          "decode_tps_real":  5.667,
+                          "generation_wall_ns":  11128287000,
+                          "witness":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/wall64_logits_residual_20260908-093520.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/LOGITS_OWNER_RESIDUAL_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "LOGITS_SPLIT_CUT_001",
+                          "result":  "PASS_CUT_PROMOTE",
+                          "promote":  1,
+                          "decode_tps_real":  3.742,
+                          "generation_wall_ns":  16918677000,
+                          "witness":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/wall64_logits_20260908-092804.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/LOGITS_SPLIT_CUT_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "QKV_READBACK_EXPOSURE_001",
+                          "result":  "PASS_CUT_NO_PROMOTE",
+                          "promote":  0,
+                          "decode_tps_real":  3.512,
+                          "generation_wall_ns":  18045807000,
+                          "witness":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/wall64_qkv_rb_20260908-091138.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/QKV_READBACK_EXPOSURE_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "QKV_EXPOSURE_CUT_001",
+                          "result":  "PASS_CUT_NO_PROMOTE",
+                          "promote":  0,
+                          "decode_tps_real":  3.512,
+                          "generation_wall_ns":  18045807000,
+                          "witness":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/wall64_qkv_rb_20260908-091138.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/QKV_EXPOSURE_CUT_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "XR_WALL_WITNESS_001",
+                          "result":  "VALID_NEGATIVE",
+                          "promote":  0,
+                          "decode_tps_real":  2.567,
+                          "generation_wall_ns":  24758109000,
+                          "witness":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/wall64_xr_20260908-083020.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/XR_WALL_WITNESS_001/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "HOTPATH64_CHAMPION_BASELINE",
+                          "result":  "BASELINE",
+                          "promote":  0,
+                          "decode_tps_real":  3.556,
+                          "generation_wall_ns":  17997131700,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/hotpath64_latest_qkv.txt",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/HOTPATH64_CHAMPION_BASELINE/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE8_CHAMPION_SEAL",
+                          "result":  "SMOKE_PASS",
+                          "promote":  0,
+                          "decode_tps_real":  1.458,
+                          "generation_wall_ns":  5487875700,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/champion_seal_smoke8.txt",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE8_CHAMPION_SEAL/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE8_ACTUAL_E2E",
+                          "result":  "SMOKE_PASS",
+                          "promote":  0,
+                          "decode_tps_real":  1.768,
+                          "generation_wall_ns":  4524960500,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/ACTUAL_E2E_LATEST.txt",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE8_ACTUAL_E2E/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE64",
+                          "result":  "INCOMPLETE",
+                          "promote":  0,
+                          "decode_tps_real":  0,
+                          "generation_wall_ns":  0,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke64.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE64/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE8",
+                          "result":  "INCOMPLETE",
+                          "promote":  0,
+                          "decode_tps_real":  0,
+                          "generation_wall_ns":  0,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke8.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE8/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE8_GPU",
+                          "result":  "INCOMPLETE",
+                          "promote":  0,
+                          "decode_tps_real":  0,
+                          "generation_wall_ns":  0,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke8_gpu.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE8_GPU/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE32_7800",
+                          "result":  "INCOMPLETE",
+                          "promote":  0,
+                          "decode_tps_real":  0,
+                          "generation_wall_ns":  0,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke32_7800.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE32_7800/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE_QDEV1_PROMO",
+                          "result":  "INCOMPLETE",
+                          "promote":  0,
+                          "decode_tps_real":  0,
+                          "generation_wall_ns":  0,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke_qdev1_promo.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE_QDEV1_PROMO/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "SMOKE_LOGITS_SPLIT",
+                          "result":  "INCOMPLETE",
+                          "promote":  0,
+                          "decode_tps_real":  0,
+                          "generation_wall_ns":  0,
+                          "witness":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke_logits_split.log",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/SMOKE_LOGITS_SPLIT/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      },
+                      {
+                          "receipt_id":  "KVA64_LIVE_RUN",
+                          "result":  "PASS_CLIMB_MEASURED",
+                          "promote":  0,
+                          "decode_tps_real":  1.174,
+                          "generation_wall_ns":  54500032600,
+                          "witness":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/kva64_live_run.txt",
+                          "manifest":  "evidence/RAWRXD_PERFORMANCE_001/PASS_MANIFESTS/KVA64_LIVE_RUN/PASS_MANIFEST.json",
+                          "forced_off":  "TOKEN_PACING|CERT_STEP_LOG|LOGITS_GPU_SPLIT|QKV_OWNER_RESI_LOG|TOK_RESIDUAL_SPAM"
+                      }
+                  ]
+}

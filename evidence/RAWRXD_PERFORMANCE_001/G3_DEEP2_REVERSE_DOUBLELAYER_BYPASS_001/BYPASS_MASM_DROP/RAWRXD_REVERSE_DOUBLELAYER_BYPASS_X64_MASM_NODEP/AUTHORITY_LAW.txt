@@ -1,0 +1,30 @@
+REVERSE DOUBLELAYER BYPASS AUTHORITY LAW
+
+Two legal final-authority paths:
+
+NORMAL:
+  normal_owner_ready = 1
+  generation_coherent = 1
+  product_closure = 1
+  stale_generation_faults = 0
+
+BYPASS:
+  bypass_request = 1
+  bypass_epoch == generation_id != 0
+  bypass_live_generation = 1
+  generated_tokens > 0
+  bypass_token_commit_count == generated_tokens
+  bypass_decode_commit_count == generated_tokens
+  bypass_fault_count = 0
+  stale_generation_faults = 0
+
+ABSOLUTE LAW:
+  stale_generation_faults != 0
+      => stale_generation_veto = 1
+      => bypass_authorized = 0
+      => final_authority = 0
+
+A bypass epoch mismatch also cannot authorize.
+
+The bypass can skip the normal positive-owner aggregation.
+It cannot skip generation identity or exact live token/decode closure.

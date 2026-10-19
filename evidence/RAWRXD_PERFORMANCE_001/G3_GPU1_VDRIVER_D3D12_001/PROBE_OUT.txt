@@ -1,0 +1,17 @@
+IMPL=pure_x64_masm_vdriver
+STATIC_DEP=masm+ucrt DYNAMIC=dxgi,d3d12 NO_VULKAN=1
+BEHAVIOR_PATCH=0
+PROMOTE=0
+UMD_ROLE=WDDM_display_vdriver_not_amdvlk_ICD
+UMD_AMDXC64_LOAD=PASS
+UMD_AMDXC64_MODULE=C:\Windows\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxc64.dll
+GATE=G3_GPU1_VDRIVER_D3D12_001
+VDRIVER_PATH=WDDM_UMD_via_D3D12_no_vulkan
+VULKAN_USED=0
+R9700_DXGI_DedicatedVideoMemory=34054242304
+D3D12CreateDevice_HRESULT=0
+D3D12CreateDevice=PASS
+RX7800XT_DXGI_DedicatedVideoMemory=16963137536
+D3D12CreateDevice_HRESULT=0
+D3D12CreateDevice=PASS
+STAGE=complete

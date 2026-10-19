@@ -1,0 +1,35 @@
+R671 OPEN DIAGNOSTIC INTERPRETATION
+
+open_stage=1  CREATEFILE
+  Typical errors:
+    2   ERROR_FILE_NOT_FOUND
+    3   ERROR_PATH_NOT_FOUND
+    5   ERROR_ACCESS_DENIED
+    32  ERROR_SHARING_VIOLATION
+    123 ERROR_INVALID_NAME
+
+open_stage=2  GETFILESIZE
+  win32_last_error is meaningful only when GetFileSizeEx returned zero.
+  A zero-length file is reported as:
+    open_rc=R671_E_SIZE
+    win32_last_error=0
+
+open_stage=3  CREATEFILEMAPPING
+  Typical errors:
+    5    ERROR_ACCESS_DENIED
+    6    ERROR_INVALID_HANDLE
+    8    ERROR_NOT_ENOUGH_MEMORY
+    87   ERROR_INVALID_PARAMETER
+    1455 ERROR_COMMITMENT_LIMIT
+
+open_stage=5  READY
+  open_rc=0
+  win32_last_error=0
+
+Important:
+  [rsp+38h] was not overlapping CreateFileA's required stack arguments.
+  CreateFileA uses +20h, +28h, +30h for args 5,6,7.
+  +38h is the next 8-byte slot and is inside the allocated local frame.
+
+GetLastError must be called immediately after the failing Win32 API.
+Do not call CloseHandle, zero_ctx, logging APIs, or another Win32 API first.

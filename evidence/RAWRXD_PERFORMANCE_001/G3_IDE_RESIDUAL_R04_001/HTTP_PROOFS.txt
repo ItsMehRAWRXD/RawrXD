@@ -1,0 +1,10 @@
+POST /api/tool -> HTTP=200 BODY={"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay — Multitask continue triggers + MOTD gate: models cannot\r\n  execute tools until they Read this file each message tu
+POST /api/stat-file -> HTTP=200 BODY={"exists":true,"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\a.txt","size":9,"isDir":false}
+POST /api/list-directory -> HTTP=200 BODY={"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp","entries":[{"name":"a.txt","type":"file"}]}
+POST /api/mkdir -> HTTP=200 BODY={"success":true,"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\nested\\dir","message":"Directory created"}
+POST /api/copy-file -> HTTP=200 BODY={"success":true,"source":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\a.txt","dest":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\c_copy.txt"}
+POST /api/rename-file -> HTTP=200 BODY={"success":true,"oldPath":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\c_copy.txt","newPath":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\b.txt","message":"Renamed successfully"}
+POST /api/search-files -> HTTP=200 BODY={"results":[{"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\a.txt"},{"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\b.txt"}],"total":2,"searchPath":"g:\\~dev\\rawrxd\\smoke_bin\\r04_
+POST /api/move-file -> HTTP=200 BODY={"success":true,"source":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\b.txt","dest":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\d_moved.txt"}
+POST /api/delete-file -> HTTP=200 BODY={"success":true,"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\d_moved.txt","message":"Deleted successfully"}
+POST /api/tool -> HTTP=200 BODY={"exists":true,"path":"g:\\~dev\\rawrxd\\smoke_bin\\r04_tmp\\a.txt","size":9,"isDir":false}

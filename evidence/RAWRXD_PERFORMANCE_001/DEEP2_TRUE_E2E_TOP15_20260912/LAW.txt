@@ -1,0 +1,56 @@
+GATE=DEEP2_TRUE_E2E_TOP15_20260912
+STATUS=LAW_ONLY
+PRODUCT_LINKED=0
+GOVERNING_E2E_LADDER=1
+FULL_MODEL_TPS_AUTHORITY=1
+AGGREGATE_BW_AUTHORITY=0
+DAILY_STREAMER_READY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+TPS_AUTHORITY_UNTOUCHED=1
+
+TOP15_TO_TRUE_E2E=
+  01 stage_timing_authority
+  02 packed_Q2K_execution FULL_DEQUANT_BUFFER=0
+  03 universal_tiled_quant_kernels
+  04 D2DeviceIo→SsVk live bind
+  05 real_dual_lane_submit
+  06 measured_overlap_authority OVERLAP_NS>0
+  07 compact_dual_GPU_reduction
+  08 residency_budget_solver
+  09 predictive_range_prefetch CRITICAL_PATH_NVME=0
+  10 MoE_expert_residency_predictor
+  11 persistent_adaptive_KV
+  12 daily_streamer_product_bind
+  13 IDE_live_SSE_cancel
+  14 production_endurance_fault_recovery
+  15 final_promotion_gate
+
+SHORTEST_CRITICAL_PATH=
+  TIMING → PACKED_Q2K → D2DEVICEIO→SSVK → DUAL_SUBMIT
+  → OVERLAP_AUTHORITY → COMPACT_REDUCE → RESIDENCY/PREFETCH
+  → KV+MOE → DAILY_STREAMER_REAL → IDE_SSE/CANCEL
+  → ENDURANCE → PROMOTE
+
+IMMEDIATE_P0_ENGINEERING=
+  d2_deviceio_ssvk_bind
+  → d2_fabric_submit
+  → d2_overlap_authority
+  → d2_compact_reduce
+  → DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
+  (does not revoke sealed TPS; AGGREGATE_BW stays 0 until live proof)
+
+PRESERVE=
+  FULL_MODEL_TPS_AUTHORITY=1
+  AGGREGATE_BW_AUTHORITY=0 until live OVERLAP proof
+  PROMOTE=0 until final conjunction (#15)
+  TIP_CLIMB=HOLD until #15
+
+PROMOTE_REQUIRES=
+  packed execution PASS
+  live streamer PASS (two real gens same process)
+  dual-GPU aggregate authority PASS
+  endurance PASS
+  regression PASS
+  then PROMOTE=1 / TIP_CLIMB may lift

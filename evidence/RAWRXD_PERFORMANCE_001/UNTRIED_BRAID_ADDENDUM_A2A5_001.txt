@@ -1,0 +1,48 @@
+UNTRIED_BRAID_ADDENDUM_A2A5_001=SEALED
+DATE=2026-09-08
+ROLE=INVENTORY_ONLY
+PROMOTION=0
+OPTIMIZATION_SPEND=0
+PARENT=evidence/RAWRXD_PERFORMANCE_001/UNTRIED_BRAID_CANDIDATES_001.txt
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+RULE
+  UNTRIED_CANDIDATE ≠ PROMOTED
+  UNTRIED_CANDIDATE ≠ AUTHORITY
+  UNTRIED_CANDIDATE = BRAID_INVENTORY
+
+# Additive untried (not in U01–U15 as distinct spend)
+
+A2_q_b_fence_narrowing
+  CLASS=HOST_CONSUMER_READBACK
+  IDEA=keep q_b bytes; fence only producer span needed by host attention
+  STATUS=BLOCKED_NO_LEGAL_DELTA
+  RECEIPT=evidence/RAWRXD_PERFORMANCE_001/Q_B_FENCE_NARROW_001/RECEIPT.txt
+
+A5_D2H_owner_split
+  CLASS=ATTRIBUTION_ONLY
+  IDEA=split GPU_PRODUCER/D2H/MAP/MEMCPY/HOST_ATTENTION waits
+  STATUS=COMPLETE
+  RECEIPT=evidence/RAWRXD_PERFORMANCE_001/QB_HOST_CROSS_LATENCY_SPLIT_001/RECEIPT.txt
+
+A1_q_b_staged_ring
+A3_q_b_chunked_host_consume
+A4_persistent_mapped_q_b_window
+A6_host_attention_streaming_iterator
+A7_token_step_command_batch
+A8_cold_debug_D2H_hard_gate
+  STATUS=INVENTORY_HELD
+  NOTE=A4 overlaps TRIED QKV_READBACK_PERSISTENT_MAP; A8 mostly done by D2H class
+
+B1..B6 FUTURE_STACK
+  STATUS=BLOCKED
+  NEW_STACKS_ALLOWED=0
+
+MAP_TO_EXISTING
+  D2H_subspan / PATH_A_shrink = U02 TRIED_DEAD_THIS_GEOMETRY
+  GEMV_direct_host = U15 CRASH_BLOCKED
+  dual_slot ≈ A4 / persistent map TRIED
+
+NEXT_NOT_PROMOTE_SPEND=NONE (A5 complete; A2 blocked)
+NEXT_ACTUAL_OPT_IF_AUTHORIZED=PATH_B_DELETE|A3_chunked_host_consume
+DO_NOT_START=device_attention_without_auth|SX|QB_retune|KVA|logits|5.904|fake_fence_narrow

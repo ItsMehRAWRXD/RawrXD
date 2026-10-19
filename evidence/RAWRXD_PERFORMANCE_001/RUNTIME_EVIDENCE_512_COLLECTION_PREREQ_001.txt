@@ -1,0 +1,55 @@
+RUNTIME_EVIDENCE_512_COLLECTION_PREREQ_001=SEALED
+DATE=2026-09-08
+TYPE=COLLECTION_PREREQ_REMAIN
+SPEND=0
+CODE_CHANGE=0
+HOT_GATE=0
+PREREQ_SATISFIED=0
+
+PURPOSE=
+  Serve caller-owned collection prerequisites that remain unmet.
+  Mechanism SOURCE/BUILD is sealed; product collection path is not.
+
+CALLER_OWNED (REQUIRED BEFORE ANY EMIT)=
+  EvidenceState          48 bytes, caller-allocated
+  EvidenceRecord buffer  Capacity * 64 bytes, caller-allocated
+  EvidenceInit512(state, buffer, capacity, runId, seqCap=512)
+    reject if seqCap ≠ 512
+  optional EvidenceResetRun512 between runs (same buffer; seqCap=512)
+
+ABI_REMINDER=
+  Windows x64; XMM0–XMM5 caller-volatile across call
+  spill any live FP across EvidenceEmit*
+
+LINK_REMAIN=
+  ml64 Core+Emit objs exist (SOURCE sealed)
+  CMake / product target includes those objs = OPEN
+  no CRT / no external imports from the ASM module itself
+
+READ_PROTOCOL=
+  ignore record unless Commit == EVREC_COMMIT (XCHG last)
+  capacity full → Dropped++; no fabricated replacement
+  inventory counters (GetCommittedCount / GetDroppedCount) ≠ claim evidence
+
+SEQ_CAP=
+  HARD 512 for Init/Reset/EmitCore
+  measured collection run must use seqCap=512
+
+FLOOR=
+  FLOOR_TPS=5.000 immutable
+  EvidenceEmitDecodeTpsQ32_32: caller passes floor as 5<<32 in r8 when emitting
+
+EXEC_REMAIN=
+  MODE=A HOT_GATE=1 required to spend
+  new evidence id for any collected run
+  PATH_B_N5_003 never backfilled
+
+REMAIN_INDEX=RUNTIME_EVIDENCE_512_COLLECTION_REMAIN_001
+SITE_MAP=RUNTIME_EVIDENCE_512_COLLECTION_SITE_MAP_001
+SOURCE=RUNTIME_EVIDENCE_512_SOURCE_001
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

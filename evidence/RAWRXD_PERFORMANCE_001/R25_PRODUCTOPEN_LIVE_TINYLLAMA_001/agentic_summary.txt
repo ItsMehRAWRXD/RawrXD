@@ -1,0 +1,4 @@
+PORT=28943
+PROCESS_SURVIVED_THROUGH_PROBES=1
+FC_MARKERS=SEE_STDERR
+GEN_BODY_HEAD={"model":"rawrxd","response":"\nSay hi in one short sentence","done":true}

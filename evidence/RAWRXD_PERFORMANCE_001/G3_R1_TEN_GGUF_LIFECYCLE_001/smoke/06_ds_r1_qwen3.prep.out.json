@@ -1,0 +1,1 @@
+{"ok":true,"request_id":1,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9785,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300,"top_p_milli":900,"top_k":40,"stream":true,"flags":39,"safe_prepared":true,"hop_prepared":false,"hop_needs_engine":false,"hop_skip_count":0}}

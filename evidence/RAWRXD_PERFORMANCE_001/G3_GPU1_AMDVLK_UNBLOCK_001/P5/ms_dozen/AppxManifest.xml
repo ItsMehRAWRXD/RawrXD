@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:wincap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/windowscapabilities" IgnorableNamespaces="uap mp wincap">
+  <Identity Name="Microsoft.D3DMappingLayers" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" Version="1.2404.1.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>ms-resource:AppStoreName</DisplayName>
+    <PublisherDisplayName>Microsoft Corporation</PublisherDisplayName>
+    <Logo>Assets\GPUAccelerationStoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.19041.488" MaxVersionTested="10.0.19041.488" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+    <Resource Language="af-ZA" />
+    <Resource Language="ar-SA" />
+    <Resource Language="az-Latn-AZ" />
+    <Resource Language="bg-BG" />
+    <Resource Language="bs-Latn-BA" />
+    <Resource Language="ca-ES" />
+    <Resource Language="cs-CZ" />
+    <Resource Language="cy-GB" />
+    <Resource Language="da-DK" />
+    <Resource Language="de-DE" />
+    <Resource Language="el-GR" />
+    <Resource Language="en-GB" />
+    <Resource Language="es-ES" />
+    <Resource Language="es-MX" />
+    <Resource Language="et-EE" />
+    <Resource Language="eu-ES" />
+    <Resource Language="fa-IR" />
+    <Resource Language="fi-FI" />
+    <Resource Language="fr-CA" />
+    <Resource Language="fr-FR" />
+    <Resource Language="gl-ES" />
+    <Resource Language="he-IL" />
+    <Resource Language="hi-IN" />
+    <Resource Language="hr-HR" />
+    <Resource Language="hu-HU" />
+    <Resource Language="id-ID" />
+    <Resource Language="is-IS" />
+    <Resource Language="it-IT" />
+    <Resource Language="ja-JP" />
+    <Resource Language="ka-GE" />
+    <Resource Language="kk-KZ" />
+    <Resource Language="ko-KR" />
+    <Resource Language="lt-LT" />
+    <Resource Language="lv-LV" />
+    <Resource Language="ms-MY" />
+    <Resource Language="nb-NO" />
+    <Resource Language="nl-NL" />
+    <Resource Language="nn-NO" />
+    <Resource Language="pl-PL" />
+    <Resource Language="pt-BR" />
+    <Resource Language="pt-PT" />
+    <Resource Language="ro-RO" />
+    <Resource Language="ru-RU" />
+    <Resource Language="sk-SK" />
+    <Resource Language="sl-SI" />
+    <Resource Language="sq-AL" />
+    <Resource Language="sr-Cyrl-RS" />
+    <Resource Language="sr-Latn-RS" />
+    <Resource Language="sv-SE" />
+    <Resource Language="th-TH" />
+    <Resource Language="tr-TR" />
+    <Resource Language="uk-UA" />
+    <Resource Language="vi-VN" />
+    <Resource Language="zh-CN" />
+    <Resource Language="zh-TW" />
+  </Resources>
+  <Applications>
+    <Application Id="App">
+      <uap:VisualElements AppListEntry="none" DisplayName="ms-resource:AppStoreName" Square150x150Logo="Assets\GPUAccelerationMedTile.png" Square44x44Logo="Assets\GPUAccelerationAppList.png" Description="ms-resource:AppStoreName" BackgroundColor="white">
+        <uap:DefaultTile Wide310x150Logo="Assets\GPUAccelerationWideTile.png" Square71x71Logo="Assets\GPUAccelerationSmallTile.png" Square310x310Logo="Assets\GPUAccelerationLargeTile.png" />
+        <uap:SplashScreen Image="Assets\GPUAccelerationSplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <wincap:Capability Name="inProcessMediaExtension" />
+  </Capabilities>
+  <mp:PhoneIdentity PhoneProductId="dae88be1-9439-4bfa-886a-61fa9851a04f" PhonePublisherId="95d94207-0c7c-47ed-82db-d75c81153c35" />
+</Package>

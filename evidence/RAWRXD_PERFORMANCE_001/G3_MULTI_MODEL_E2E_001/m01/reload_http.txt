@@ -1,0 +1,2 @@
+﻿{"success":false,"error":"workspace_path_denied"}
+HTTP_CODE=403

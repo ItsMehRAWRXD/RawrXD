@@ -1,0 +1,29 @@
+MARS_SCOPE_LAW_STANDBY_001
+
+MARS_AUTHORITY          = HOST_RESIDENT_DENSE_MODELS
+K2_STREAM_AUTHORITY     = ELASTIC_RESIDENCY + SHARD_IO
+PLACEMENT_INVENTORY     = SHARED:0 (until K2 tensor index bridged)
+CONTROLLER_ON_PLACED_0  = STANDBY
+
+RULE=IF_TRUE_NEVER_USE
+  BOUNDED_STREAM=1  → NEVER MARS (primary; order-independent)
+  DEEP2_K2_SHARD_DIR set → NEVER MARS (belt; set before open)
+  DEEP2_REAL_K2_GENERATE=1 → NEVER MARS (belt)
+  k2ShardIndexOpen_ → NEVER MARS (late belt only)
+  Only when ALL of the above are FALSE → MARS may arm.
+  DEEP2_MARS_FORCE=1 = idle-cost probe hatch only (not live path).
+
+LAW:
+  1. enableMARS hard-refuses when any disqualify predicate is TRUE
+     (standdown + return false; not silent standby-with-controller).
+  2. placeAllModelTensorsMARS with placed==0 → standdownMARSEmptyPlacement.
+  3. DEEP2_MARS=1 on K2 certify path is ignored (scope law, not env).
+  4. Do not rely on k2ShardIndexOpen_ alone — it can lag init.
+
+WHY (from MARS_ON_TPS_PROBE_001):
+  placed=0 measured controller-on overhead only (−3.9% TPS).
+  K2-Q4_K_M is not a MARS candidate.
+
+FLOOR_K2 = 5.323 TPS (OFF leg)
+NEXT_MARS_VEHICLE = dense host-resident (Phi-3-class)
+K2_NEXT_TPS = O_PROJ overlap | QKV readback cut | prefetch arm

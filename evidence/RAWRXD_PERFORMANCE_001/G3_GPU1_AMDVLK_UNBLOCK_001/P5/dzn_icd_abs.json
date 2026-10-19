@@ -1,0 +1,8 @@
+{
+    "file_format_version": "1.0.1",
+    "ICD": {
+        "library_path": "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/G3_GPU1_AMDVLK_UNBLOCK_001/P5/ms_dozen/x64/vulkan_dzn.dll",
+        "api_version": "1.1.217",
+        "library_arch": "64"
+    }
+}

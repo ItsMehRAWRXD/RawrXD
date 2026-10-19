@@ -1,0 +1,36 @@
+STRATEGIC_NEXT_AFTER_CLOSED_WITNESSES
+=====================================
+
+SEALED (do not reopen without live counter contradiction):
+  TOKEN_AUTHORITY=NATIVE_HARNESS_PASS
+  DECODE_AUTHORITY=NATIVE_HARNESS_PASS (ZIP b6515c…; b00f… NON_CANONICAL)
+  DEPLOYED_NILW15=RUN_PASS ZERO_WITNESS=1 AUTHORIZED_PASS=0
+  PUMP_OWNED_N_PLUS_1_INITIATION=PROVEN (LIVE still 0)
+  PROMOTE=0
+
+VALUATION_NOTE (working opinion, not a certification claim):
+  Center ≈ $80M technical-company; floor ≈ $60M; $100M+ needs
+  third-party-reproducible large-model advantage vs competitor baseline.
+  Recent MASM/native + negative-control receipts raise diligence quality,
+  not an automatic multiple step-change.
+
+VALUATION_MULTIPLIER_GATE (not another synthetic witness):
+  same model / hardware / quant / quality threshold
+  RawrXD vs competitor: RAM/VRAM and/or TPS and/or runnable size and/or latency
+
+LANDMARK_DEMO (671B MoE streaming — addressable ≠ interactive TPS):
+  671B_FILE_ADDRESSABLE             = target experiment
+  671B_WITHOUT_FULL_RESIDENCY       = architectural claim under test
+  671B_ONE_TOKEN_RESIDENT_BOUNDED   = next landmark proof
+  then 2/8/32/128 tokens measuring:
+    NEW_WEIGHT_BYTES_PER_TOKEN, EXPERT_CACHE_HIT_RATE,
+    NVME/RAM/GPU_UPLOAD_BYTES_PER_TOKEN, ACTIVE_WEIGHT_VISITS,
+    REUSED_WEIGHT_BITS, TOKEN_NILW, TPS, PEAK_RAM, PEAK_VRAM_GPU0/1
+
+SCHEDULER_REMAINING (orthogonal to 671B product demo):
+  NEXT_GATE=WAIT_FREE_PROGRESS_PLUS_FENCE3_EXERCISE
+  SCOREBOARD_SCHEDULER_LIVE=0 until progress independence proven
+
+AUTHORITY_SPLIT:
+  SCHEDULER | PRODUCT/PROMOTE | PERF/NILW
+  LIVE != PROMOTE

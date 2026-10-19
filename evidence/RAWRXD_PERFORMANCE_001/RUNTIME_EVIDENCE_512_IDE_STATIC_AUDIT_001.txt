@@ -1,0 +1,16 @@
+RUNTIME_EVIDENCE_512_IDE_STATIC_AUDIT_001
+claim_count=PASS value=96
+ids_contiguous=PASS
+names_unique=PASS
+emitters_unique=PASS
+new_emitters_all_in_asm=PASS value=79
+no_public_generic_core=PASS
+no_public_generic_emit=PASS
+claim_inc_max=PASS
+collector_max_96=PASS
+seqcap_512=PASS
+commit_last_xchg=PASS
+drop_increment=PASS
+ASSEMBLY_IN_USER_TREE=UNCLAIMED
+RUNTIME=UNCLAIMED
+MEASUREMENT=UNCLAIMED

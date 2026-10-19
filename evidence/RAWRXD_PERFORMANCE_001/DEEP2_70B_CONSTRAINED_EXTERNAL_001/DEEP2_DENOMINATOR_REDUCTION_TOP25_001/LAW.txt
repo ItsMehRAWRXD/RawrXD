@@ -1,0 +1,56 @@
+GATE=DEEP2_DENOMINATOR_REDUCTION_TOP25_001
+DATE=2026-09-13
+KIND=COMPUTE_DENOMINATOR_LAW
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+PARENT=DEEP2_FULL_MODEL_TPS_PROJECTION_001
+
+DENOMINATOR=
+  effective_active_bytes_per_generated_token
+  + unhidden_wait_time_per_generated_token
+  + serial_runtime_overhead
+# 70+ TPS = ↓ this denom + hide non-GPU costs — not "faster kernels" alone
+
+TOP25=
+  01 Direct Qn→dot (kill ~8× FP16 temp path)
+  02 WTA≈1.0 (≤1.15→≤1.05→≈1.00)
+  03 Permanent native prepack (once; not per token/call)
+  04 Remove FP16 temps (DEQUANT_WRITE/REREAD=0 FP16_TEMP_ALLOC=0)
+  05 Fuse gate+up traversal (activation once)
+  06 Fuse SiLU×mul in regs/LDS
+  07 Fuse down+router reduce
+  08 Grouped selected experts (one stream vs 8 dispatches)
+  09 Persistent expert kernels (enqueue only in decode)
+  10 Device-side expert work queue
+  11 CPU_BOUNDARY_BETWEEN_SELECTED_EXPERTS=0
+  12 Predict residency ahead (N exec ∥ N+1 prefetch)
+  13 NVME_CRITICAL_PATH_BYTES=0 NVME_WAIT_NS_DECODE=0
+  14 Hide PCIe: T_TRANSFER<=T_AVAILABLE_OVERLAP
+  15 Permanent GPU ownership (weights stay; activations move)
+  16 Asymmetric dual-GPU (finish-time not 50/50 count)
+  17 Pin permanent tensors on faster/stabler GPU
+  18 VRAM semantic cache: PERMANENT/HOT/PREDICTED/COLD
+  19 Heterogeneous quant (Q5/Q4/Q3/Q2 by sensitivity)
+  20 Cold experts lower bpw
+  21 Tile-level quant policy
+  22 Structured tile skipping (SKIPPED_BYTES/OPS + parity_risk)
+  23 Activation-aware compute elision
+  24 Multi-token expert tile reuse (TOKENS_PER_WEIGHT_FETCH>1)
+  25 Speculative grouped expert execution (route ahead→group→stream once)
+
+IMPACT_RANK=
+  1–4 bytes/amp/repack/temp · 5–7 async/NVMe/PCIe hide · 8–12 setup/dispatch/sync/owner
+  13–14 pin/cache · 15–21 quant/skip/elision/reuse/speculate · 22–25 fusion + no-CPU
+
+EQUATION=
+  Higher_TPS = ↓eff_bytes/tok + ↓WTA + ↑useful_GB/s + ↓serial + hidden_xfer + ↓cold_stalls
+
+PATH_30_50=
+  18–20GB logical → WTA≈1 → zero temp/repack/reread → hide PCIe/NVMe
+  → hetero quant → tile skip → multi-token reuse → ~10–14GB effective
+  + ~800GB/s-class + 3–5ms serial ≈ 50 TPS shape (NONAUTH until live)
+
+MAP_TO_DROPS=DEEP2_NEXT25_NODEP_SOURCE_DROPS_001
+MAP_TO_MATH=DEEP2_EXPERT_MATH_TOP15_20260913
+MAP_TO_WTA=DEEP2_EXPERT_WEIGHT_STREAM_ROOFLINE_001

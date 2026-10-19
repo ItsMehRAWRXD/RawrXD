@@ -1,0 +1,15 @@
+ANALYSIS.txt
+FRAME=cloud-to-local localisation of Deep2/K2
+SSOT=RECEIPT.txt
+
+Intent: document reverse-engineered blockers that appear when cloud-born
+inference assumptions meet a single-GPU local IDE host.
+
+Honesty rule: CODE_LAND ≠ OBSERVED_WITNESS. Narrative (BufferPool,
+HardwareReflector product port, virtual multi-stream aiming) is marked
+N/A_PRODUCT until product code + evidence exist.
+
+Localisation already sealed elsewhere:
+  MARS_SCOPE_LAW_STANDBY_001
+  BLOCKER_104_93_K2_LAND_001 (code; witness pending)
+  BENCH_HARNESS_EVIDENCE_INTEGRITY_001 (partial VRAM/device honesty)

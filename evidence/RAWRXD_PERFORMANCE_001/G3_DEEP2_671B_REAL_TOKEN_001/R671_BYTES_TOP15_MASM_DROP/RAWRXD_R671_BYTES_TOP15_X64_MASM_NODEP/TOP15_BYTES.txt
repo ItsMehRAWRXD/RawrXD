@@ -1,0 +1,54 @@
+G3_DEEP2_671B_REAL_TOKEN_001 — NEXT TOP 15 BYTES CONTRACT
+
+RB01 GENERATION_BOUND
+  lease_generation_id == generation_id != 0
+
+RB02 FILE_RANGE_VALID
+  file_offset + requested_bytes does not overflow
+  file_offset + requested_bytes <= file_bytes
+
+RB03 BYTE_LENGTH_NONZERO
+  requested_bytes > 0
+
+RB04 LEASE_ACTIVE
+  lease_active == 1
+
+RB05 LEASE_OFFSET_MATCH
+  lease_request_offset == file_offset
+
+RB06 LEASE_BYTE_COVERAGE
+  lease_bytes >= requested_bytes
+
+RB07 POINTER_PROVENANCE
+  lease_ptr == lease_view_base + lease_delta
+  no pointer arithmetic overflow
+  pointer != NULL
+
+RB08 MAPPING_BOUND
+  mapped_bytes_live <= configured_mapped_bound
+  lease_view_bytes <= configured_mapped_bound
+
+RB09 EXACT_BYTE_CONSUMPTION
+  primitive_bytes_consumed == requested_bytes
+
+RB10 NO_FAILED_ACQUIRE
+  acquire_count > 0
+  failed_acquires == 0
+
+RB11 NO_FULL_TENSOR_FALLBACK
+  full_tensor_fallback_count == 0
+
+RB12 CHECKSUM_OBSERVED
+  checksum_observed == 1
+  checksum value may be any uint64
+
+RB13 NONFINITE_FREE
+  nonfinite_count == 0
+
+RB14 RELEASE_CLOSURE
+  release_count == acquire_count
+  live_leases_after_release == 0
+
+RB15 AUTH_DERIVATION
+  RB01..RB14 all PASS
+  FAIL or NOT_RUN => bytes_authorized = 0

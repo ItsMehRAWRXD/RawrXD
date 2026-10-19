@@ -1,0 +1,58 @@
+STREAM_ABORT_POST_T0_ROOT_CAUSES_001=SEALED
+DATE=2026-09-08
+MODE=A
+TYPE=ROOT_CAUSE_LIST + FIX_BIND
+
+# --- ALL ROOT CAUSES --------------------------------------------------------
+
+RC1_POSITION_HARDCODE_0
+  WHERE=K2NativeStreamGate.cpp ForwardMLALayers → RunMlaOnPayloads(..., position=0)
+  FIRST_TOKEN=survives (pos=0==cacheLen=0)
+  AFTER_T0=FAIL PathBAttend pos!=cacheLen; host RoPE also stuck at 0
+  FIX=pass real decode `step` as position
+
+RC2_KV_CLEAR_EVERY_TOKEN
+  WHERE=ForwardMLALayers tlsKv.Clear() on every call
+  FIRST_TOKEN=OK
+  AFTER_T0=KV never accumulates (fake seqLen=1 forever); hides CanAppend
+  FIX=Clear only when position==0 (stream start) or geometry Reset
+
+RC3_KV_MAXSEQ_8
+  WHERE=tlsKv.Reset(testLayers, 8, kvDim)
+  FIRST_TOKEN=OK
+  AFTER_T0=CanAppend fails at t>=8 once Clear removed (64-tok streams)
+  FIX=Reset maxSeq to seqNeed (streamTokens+8)
+
+RC4_GATE12_NULL_KV_MEMCPY_STUB
+  WHERE=MLAForward::Execute if (!kvCache) memcpy(attnOut,q_b) without ropeApplied
+  EFFECT=STREAM_ABORT Gate12 RoPE not applied while tokens still emitted
+  FIX=if stats (Gate12) && !kvCache → hard error (no silent stub)
+
+RC5_PATHB_ERROR_STICKY
+  WHERE=PathBAttend fails → host MlaAttentionComplete succeeds; error string uncleared
+  FIX=error.clear() after successful PathB or host attention
+
+RC6_PATHB_SEQCAP_128
+  WHERE=PathBAttend seqCap=min(maxSeq,128); was ineffective under RC2
+  AFTER_T0=with real KV, cap too small for long streams
+  FIX=seqCap up to 512 (host cache still authoritative)
+
+RC7_STEP_ROPE_OR_FROM_PRIOR
+  WHERE=aggStats ropeApplied OR across tokens hid per-token miss
+  FIX=require stepRope this token; fail loud (no stub true)
+
+RC8_PROMPT_LAST_TOKEN_ONLY (OPEN / not this patch)
+  WHERE=Run() curToken=promptTokens.back() — no full prompt prefill
+  CLASS=correctness/quality; separate from Gate12 STREAM_ABORT
+  STATUS=INVENTORIED_NOT_PATCHED_THIS_TURN
+
+# --- FIXES LANDED -----------------------------------------------------------
+
+  K2NativeStreamGate.cpp ForwardMLALayers(position, seqNeed)
+  Run() passes step + streamTokens+8
+  ForwardHiddenMla passes position=0 seqNeed=8
+  K2MLAWeights.cpp null-KV Gate12 hard fail + error.clear
+  K2MLA_PathB_Attn.cpp seqCap 512
+
+NO=
+  floor waiver / PRODUCT_PASS forgery / eligibility poke / ropeApplied=true stub

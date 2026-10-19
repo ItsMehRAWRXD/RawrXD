@@ -1,0 +1,57 @@
+GATE=G3_STREAMER_AGENTIC_001
+PURPOSE=Wire agentic/product gateway onto sealed Deep2 streamer ArmSpeed stack; prove READY
+PARENT=G3_ARMSPEED_AUTHORIZE_LANE_CLOSE_001
+ASOF=2026-09-09T23:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+INCOMPLETE_BEFORE=
+  ProductDeep2Infer / rawr run|chat forced SemanticSafeApply (LIVE_MECH=none, LIVE_PATH=0, CPU)
+  DualStick/FreeToken/FutureConsumer linked ONLY into deep2_streamer_parity — UNDEF in InferenceEngine
+  Agentic IDE/CLI path could not execute sealed product streamer mechs
+
+COMPLETE_NOW=
+  lavapath/StreamerArmSpeedEnv.hpp — shared ArmSpeed SetEnvIfUnset core
+  lavapath/ProductStreamerPrep.hpp — agentic prep: ArmSpeed + DualStick + FreeToken (SemanticSafe opt-in only)
+  product_deep2_infer.cpp — ProductStreamerPrep (not SemanticSafe)
+  cli/rawr_commands.cpp CmdRun/CmdChat — ProductStreamerPrep
+  DualStick/FT/FC sources moved into InferenceEngine; streamer exe links via IE
+  StreamerParity_Harness thin-wraps StreamerArmSpeedEnvCore
+
+BUILD=
+  ninja InferenceEngine deep2_streamer_parity rawr → exit 0
+  STREAMER_SHA256=3356C51DDD3A535B3C50FBD1447B66506610E13B053B257C89DE5A739EF4EB1F
+  RAWR_SHA256=B382AE17236DC1453AE1400492BA2CDA10700CCE409B090CC638769874466AD6
+
+PROOF_STREAMER=
+  deep2_streamer_parity --model tinyllama --max-tokens 16 → EXIT=0
+  PRODUCT_STREAMER_ARM=1 DUALSTICK_TRUE_RUNTIME=1 FREETOKEN_EXEC=1
+  FUTURE_CONSUMER_EXEC=1 GENERATION_SURVIVED=1 RUNTIME_DISPOSITION=PASS
+  (PRODUCT_DISPOSITION=BLOCKED @64-token gate expected for 16-tok smoke)
+
+PROOF_AGENTIC_PRODUCT=
+  rawr run tinyllama --max-tokens 16 → EXIT=0
+  PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+  HOTPATH_CYCLONE=1 LIVE_PATH_NVME_HOPS=17
+  FREETOKEN_MICROZONE live overwrites>0
+  RAWRXD_PRODUCT_PATH_001=1
+  PRODUCT_PATH=rawr→ProductRun→generateStream PRODUCT_PASS=1
+
+PROOF_AGENT_LOOP=
+  rawr agent tinyllama --workspace ... --auto=full → EXIT=0
+  AGENT_LOOP=PASS AGENT_LOOP_E2E=PASS
+  FILES_READ=1 PATCH_APPLIED=1 BUILD_COMPLETED=1 AGENT_RESULT_EMITTED=1
+
+VERDICT=STREAMER_AGENTIC_READY
+  Product streamer stack is reachable from agentic ProductDeep2 / rawr CLI
+  and deep2_streamer_parity still seals DualStick perfect metrics
+
+OUTSIDE_AUTHORIZE_LANE=
+  Win32IDE.exe not rebuilt this gate (same product_deep2_infer.cpp; rebuild IDE when shipping GUI)
+  TIP_CLIMB / rainbow / PATH_B / TPS floor (PRODUCT_PASS=0 wall-budget seal on short runs) — UNPLAN
+  tool_server Ollama proxy remains non-product (LOCAL_ONLY / LocalGGUF is product surface)
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE SPEND=0
+  PROMOTE=0 TIP_CLIMB=HOLD CANONICAL_NEXT=STOP

@@ -1,0 +1,8 @@
+id=sess_1792347637
+model=library__qwen2.5-coder__1.5b-base
+path=F:\models\gguf\library__qwen2.5-coder__1.5b-base.gguf
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=Fix the add function in src/main.cpp so that it returns a + b instead of a - b. Then build and test.
+patch=patch_1
+turns=0

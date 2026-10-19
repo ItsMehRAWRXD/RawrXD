@@ -1,0 +1,109 @@
+GATE=G3_DEEP2_TOKEN_NILW_INFORMATION_RATE_001
+KIND=REVERSED_INFORMATION_RATE_LAW
+ASOF=2026-09-10T23:54
+PROMOTE=0
+TIP_CLIMB=HOLD
+OWNER=POST_SCHEDULER_PERFORMANCE
+NOTE=Independent of SCOREBOARD_SCHEDULER_LIVE seal; does not reopen ownership.
+NOTE=TOKEN_NILW≤0.0008 does NOT force sub-0.001-bit quantization
+
+###############################################################################
+# HARD ENVELOPE
+###############################################################################
+TARGET_TPS=10
+TOKEN_TIME_BUDGET_NS=100000000
+NEW_PAYLOAD_BUDGET_PER_TOKEN=100000000
+GENERATION_INFORMATION_RATE_CEILING_BPS=1000000000
+TOKEN_NILW_TARGET_1T=0.0008
+FULL_MATERIALIZATION=0
+
+# 1T logical model identity check:
+# TOKEN_NILW=0.0008 → 800e6 new bits/token → 100e6 bytes/token → 100 MB/token
+# at 10 TPS → 1 GB/s new-information rate
+
+###############################################################################
+# TWO EXACT FORMS — NEVER MIX NUMERATORS
+###############################################################################
+
+FORM_A — ACTIVE_CODEC_BPW = total active representation bits / ACTIVE_WEIGHTS
+  (reuse NOT yet folded into the bpw numerator)
+
+  TOKEN_NILW
+    = ACTIVE_CODEC_BPW
+    × PHYSICALIZATION_RATIO
+    × NEW_INFORMATION_FRACTION
+    + OVERHEAD_BITS / TOTAL_WEIGHTS
+
+  Example:
+    ACTIVE_CODEC_BPW=0.8
+    PHYSICALIZATION_RATIO=0.005
+    NEW_INFORMATION_FRACTION=0.20
+    → 0.8 × 0.005 × 0.20 = 0.0008 TOKEN_NILW
+
+FORM_B — ACTIVE_NEW_BPW = NEW_PAYLOAD_BITS / ACTIVE_WEIGHTS
+  (reuse already included in numerator)
+
+  TOKEN_NILW
+    = ACTIVE_NEW_BPW
+    × PHYSICALIZATION_RATIO
+    + OVERHEAD_BITS / TOTAL_WEIGHTS
+
+  Do NOT multiply FORM_B by NEW_INFORMATION_FRACTION again.
+
+DEFINITIONS=
+  PHYSICALIZATION_RATIO = ACTIVE_LOGICAL_WEIGHTS / TOTAL_LOGICAL_WEIGHTS
+  TOKEN_NILW            = NEW_PAYLOAD_BITS / TOTAL_LOGICAL_WEIGHTS
+                        (+ OVERHEAD term when separately accounted)
+  ACTIVE_CODEC_BPW      = representation-density metric (codec)
+  ACTIVE_NEW_BPW        = new-payload density on active subset
+  TOKEN_NILW            = generation-sustainability metric
+
+###############################################################################
+# RUNTIME GATE — prove independently (NOT_RUN != PASS)
+###############################################################################
+TOKEN_NILW <= 0.0008
+NEW_PAYLOAD_BYTES_PER_TOKEN <= 100000000
+GENERATION_INFORMATION_RATE <= 1000000000
+ACTIVE_SUBSET_MEASURED=1
+REUSE_MEASURED=1
+OVERHEAD_ACCOUNTED=1
+QUALITY_GATE_PASS=1
+TOKEN_RATE >= 10 TPS
+FULL_MATERIALIZATION=0
+
+###############################################################################
+# PRIORITY LAW (when budget binds)
+###############################################################################
+1 REUSE ≈0
+2 SKIP =0
+3 BLUEPRINT HIT ≈tiny
+4 SCALE/SELECTOR ≈tiny
+5 SPARSE RESIDUAL
+6 DUAL BASIS
+7 LOW-RANK DELTA
+8 I2 ESCAPE
+9 I4 ESCAPE
+10 I8 only if budget permits
+
+###############################################################################
+# AUTHORITATIVE COUNTERS
+###############################################################################
+TOKEN_NEW_PAYLOAD_BYTES
+TOKEN_PAYLOAD_BUDGET_BYTES=100000000
+TOKEN_PAYLOAD_BUDGET_OVERFLOW
+TOKEN_NILW
+ACTIVE_CODEC_BPW
+ACTIVE_NEW_BPW
+NEW_INFORMATION_FRACTION
+TOKEN_PHYSICALIZATION_RATIO
+OVERHEAD_BITS
+ACTIVE_SUBSET_MEASURED
+REUSE_MEASURED
+OVERHEAD_ACCOUNTED
+QUALITY_GATE_PASS
+PAYLOAD_REUSE_BYTES
+PAYLOAD_SKIP_BYTES
+GENERATION_INFORMATION_RATE_BPS
+TOKEN_TIME_NS
+RUN_GENERATED_TOKENS
+FULL_MATERIALIZATION

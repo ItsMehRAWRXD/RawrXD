@@ -1,0 +1,44 @@
+RAWRXD_671B_STREAM_PHYSICALIZATION_NODEP — Windows native proof
+===============================================================
+
+ZIP:
+  C:\Users\Garrett\Downloads\RAWRXD_671B_STREAM_PHYSICALIZATION_NODEP_SOURCE_DROP.zip
+  SHA-256=a00eceb8dfa4ae2d6bbe8379ab0bb0c80c6fe2e78345516d2f7ae6957a8ba9ad
+
+EXTRACT:
+  …/G3_DEEP2_671B_STREAM_PHYSICALIZATION_001/R671_STREAM_NODEP_DROP/RAWRXD_671B_STREAM_PHYSICALIZATION_NODEP/
+
+LOCAL_FIX (required for Win64 executable proof):
+  NTFS sparse backing via FSCTL_SET_SPARSE + winioctl.h
+  Without sparse, 384 GiB CreateFile/SetEndOfFile hung MapView path for minutes.
+  Probe only — does not change stream mapping API semantics.
+
+RESULTS (build_win64.bat after sparse fix):
+  LOGICAL_FILE_BYTES=412316860416
+  WINDOW_BYTES=67108864
+  SLOT_COUNT=4
+  CACHE_HITS=1
+  CACHE_MISSES=5
+  EVICTIONS=1
+  NEWLY_MAPPED_BYTES=335544320
+  REUSED_BYTES=1
+  PEAK_MAPPED_BYTES=268435456
+  R671_STREAM_PROBE=PASS
+  R671_NODEP_WIN64=PASS
+  BUILD_RC=0
+
+BOUNDED_WINDOW_PROOF:
+  peak 256 MiB <= 4 * 64 MiB hard ceiling
+
+AUTHORITY:
+  byte delivery / residency only
+  SCHEDULER_TOUCHED=0 PROMOTE=0 AUTHORIZED_PASS=0 TOKEN_NILW=0
+
+COMPANION:
+  WSC15_WINDOWS_NATIVE_PROOF_RECEIPT.txt (CONTRACT_PASS=1)
+
+NEXT_GATE:
+  real DeepSeek expert tensor slice via r671_tensor_acquire
+  → 8 routed experts → one layer → one token
+  with live WSC01..WSC15
+  PROMOTE=0

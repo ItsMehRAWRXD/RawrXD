@@ -1,0 +1,6 @@
+﻿# G3_R1_TEN_GGUF_MATRIX_001 INVENTORY
+ASOF=2026-09-10T07:25Z
+DISCOVERY=models/ + rawrxd root + F:\OllamaModels + G:\~dev product GGUFs
+EXE_SHA256=5CBCC0750B481BFE862E7B6367BB006C63440650D79A24185211CC6541F60792
+EXE=G:\~dev\rawrxd\smoke_bin\RawrXD-Win32IDE_r1matrix.exe
+NOTE=tinyllama.gguf and tinyllama_fresh duplicates excluded from N=10

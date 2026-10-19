@@ -1,0 +1,58 @@
+GATE=G3_IDE_GENERATE_AV_FIX_001
+ASOF=2026-09-10T05:30
+OWNER=G3_IDE_GENERATE_AV_SPEND_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+VERDICT=PASS
+
+## R01 — Headless/LocalServer ProductDeep2Infer ACCESS_VIOLATION
+ROOT_CAUSE=
+  1) SharedProductRuntime dual-session / BindExternal nullptr reload (prior spend).
+  2) IDE image linked /LARGEADDRESSAWARE:NO (ADDR32 MASM) → amdvlk snmalloc abort
+     surfaces as dbgcore 0xC0000005 during ProductOpenSession Vulkan ICD load.
+  3) HOST_DECODE=1 + full enhance stack AVd/hung during OpenSession (elastic arm).
+
+FIX=
+  ProductStreamerPrep: if !ProcessIsLargeAddressAware → force RAWRXD_HOST_DECODE=1
+    + DEEP2_MINIMAL_ENHANCE=1 (PRODUCT_LAA=0 HOST_DECODE=1 WHY=AMDVLK_SNMALLOC).
+  Deep2Engine::enableAllEnhancements: HOST_DECODE early return (skip ICD + elastic).
+  ProcessLargeAddressAware.hpp: PE IMAGE_FILE_LARGE_ADDRESS_AWARE probe.
+  Defense: ProductDeep2Infer / Stream SEH retained.
+
+## PERFECT_METRICS
+ACCESS_VIOLATION=0
+PROCESS_DEATH=0
+ONESHOT_DEFAULT_ENV=
+  EXE=smoke_bin/RawrXD-Win32IDE_avfix.exe (LAA=0)
+  MODEL=models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  open=1 INFER_DEEP2_OK bytes=157 PRODUCT_PASS=1
+  WITNESS=witness_oneshot23_default_env_product_pass.txt
+  LOG=witness_oneshot23_log.txt
+  ERR_KEY=PRODUCT_LAA=0 HOST_DECODE=1 MINIMAL_ENHANCE=1; PRODUCT_PASS=1
+HTTP_API_GENERATE=
+  POST http://127.0.0.1:11491/api/generate {"prompt":"hi"}
+  HTTP=200 LEN=211 done=true process ALIVE=1
+  BODY=serve_gen_http_body.txt PRODUCT_PASS=1 in serve_gen.err.txt
+
+## UNCHANGED
+RUNTIME_SEALS (PARITY / MOTD / DualStick ArmSpeed)=UNCHANGED
+PATH_B=NOT_INVENTED
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+## TOOLROUTES
+src/win32app/HeadlessIDE_ToolRoutes.cpp IN_GIT_INDEX=1 STATUS=TRACKED_CLEAN
+INCLUDE_IN_NEXT_IDE_COMMIT=SATISFIED
+
+## FILES
+  src/deep2/lavapath/ProcessLargeAddressAware.hpp (new)
+  src/deep2/lavapath/ProductStreamerPrep.hpp (LAA auto host-decode)
+  src/deep2/Deep2Engine.cpp (HOST_DECODE enhance early-out)
+  src/product/gateway/product_deep2_infer.cpp (prior SharedProductRuntime)
+  src/win32app/HeadlessIDE.cpp (prior breadcrumb / light load / SEH path)
+  CMakeLists.txt (LAA:NO + comment; ADDR32)
+
+## NOTE
+GPU Vulkan product path on IDE remains blocked until ADDR32 MASM is LAA-safe.
+This seal is CPU product floor on LAA:NO IDE — generate returns body, no AV.

@@ -1,0 +1,104 @@
+PROJECT_LOGITS_SOURCE_AUDIT_001=SEALED
+DATE=2026-09-08
+TYPE=SOURCE_AUDIT
+MODE=SOURCE_AUDIT
+SPEND=0
+HOT_GATE=0
+TARGET=ProjectLogitsArgmax
+START_BOUNDARY=FINAL_NORM(step22) → ProjectLogitsArgmax(step22)
+DO_NOT_REOPEN=Gate12|Q-null
+DO_NOT_CLAIM=LOGITS_FAILED
+RUNTIME_RESULT=still UNPROVEN
+
+# --- LOCATION (in-tree; not missing) ---------------------------------------
+
+FILE=src/deep2/K2NativeStreamGate.cpp
+BODY=ProjectLogitsArgmax ~L833-L1013 (anonymous ns)
+CALL_SITE=Run loop ~L1293+ after memcpy(hidden←scratch) post ProduceFinalHidden
+CLIMB=src/deep2/K2LogitsClimb.cpp LogitsClimb_ArgmaxPacked
+SPLIT=src/deep2/K2LogitsSplit.cpp LogitsSplit_ArgmaxPacked
+
+# --- REQUIRED AUDIT (1..10) -----------------------------------------------
+
+1_FUNCTION_BODY=
+  Q6_K only (ggmlType==14). rowBytes from hiddenDim (256-elem blocks, 210 B/block).
+  Guards: vocab==0; type; vocab*rowBytes <= outRef.byteSize; ResolveWeight OOB.
+  Hot path: LogitsSplit_Wanted ? Split : Climb ArgmaxPacked; else legacy threads+DotQ6KRow.
+  Returns bestTok=(int32_t)br; true. No ENTER witness existed pre-this audit.
+
+2_CALL_SITE_STEP=
+  After FinalNorm::ProduceFinalHidden → memcpy(hidden, scratch, hiddenDim*4)
+  → ProjectLogitsArgmax(index, outRef, hiddenDim, vocabSize, hidden.data(), curToken, stepErr)
+  On false: STREAM_ABORT OWNER=LOGITS. On true: ghostTok.push + onToken callback.
+
+3_HIDDEN_PTR_FROM_FINAL_NORM=
+  ProduceFinalHidden writes scratch; then memcpy into hidden vector.
+  Call passes hidden.data() (post-copy), NOT scratch.data().
+  FinalNorm Apply uses src=hidden (pre-norm), dst=scratch; AFTER_L2 proves Apply returned.
+
+4_HIDDEN_DIM=
+  hiddenDim = k2cfg.hiddenDim (Run setup).
+  KimiK2 expectedHidden=7168 (KimiK2Config.cpp). Buffers sized hidden(hiddenDim).
+
+5_VOCAB=
+  vocabSize = k2cfg.vocabSize; expectedVocab=163840 for Kimi K2.
+  outRef from index.Find("output.weight"); require ggmlType==14 before loop.
+
+6_LM_HEAD_TENSOR=
+  Name=output.weight; type=Q6_K (14); ResolveWeight → span.data/bytes.
+  Size guard: vocabSize * rowBytes <= outRef.byteSize AND span.bytes.
+  VirtualTensorDesc mirrors outRef shard/offset/byteLength/type for Split path.
+
+7_LOGITS_DEST_ALLOC=
+  No full vocab float logits buffer on hot path — streaming argmax over packed rows.
+  Destination is bestTok scalar (+ optional bestVal). Lifetime: stack locals / curToken ref.
+
+8_CPU_GPU_SYNC=
+  Climb/legacy are host CPU over ResolveWeight base (borrow or owned hold).
+  Split may GPU-hot via logitsDesc; sync ownership inside LogitsSplit (not audited as fail).
+  No explicit device wait at ProjectLogitsArgmax entry beyond ResolveWeight.
+
+9_ARGMAX_BOUNDS=
+  Climb rejects baseBytes/rowBytes < vocabSize; iterates r in [0,vocab).
+  bestTok cast from bestR; no extra br<vocab assert at ProjectLogitsArgmax return.
+  Parity probe path (DEEP2_LOGITS_PARITY=1) skips p>=vocab.
+
+10_CALLBACK_AFTER_RETURN=
+  callback only if ProjectLogitsArgmax returns true; cfg.onToken(curToken).
+  Abort → OWNER=TOKEN_CALLBACK. ghostTok holds IDs until post-loop materialize.
+
+# --- AUDIT FINDINGS (source facts; not runtime claims) --------------------
+
+FIND_WITNESS_GAP=
+  Pre-instrumentation: no log between FINAL_NORM_AFTER_L2 and LOGITS abort/success.
+  Explains A vs B indistinguishable on PATH_B_N5_003.
+
+FIND_NULL_HIDDEN=
+  Pre-audit: ProjectLogitsArgmax did not null-check hidden; Climb does.
+  Call site always passes hidden.data() of live vector — null unlikely unless moved-from.
+
+FIND_DIM_MISMATCH_CLASS=
+  Historical LinearW dim-mismatch AV is ANALOGY ONLY.
+  This path already has type+byteSize guards; no evidence PATH_B_N5_003 failed those
+  (would have returned false → OWNER=LOGITS line, which was ABSENT).
+
+FIND_SILENT_AV_SURFACE=
+  If crash after ENTER inside ResolveWeight / Climb / Split before return,
+  no OWNER=LOGITS line (matches UNOBSERVED abort). Still UNPROVEN until remasure.
+
+# --- SOURCE ACTION THIS SEAL ----------------------------------------------
+
+INSTRUMENT_LANDED=
+  LOGITS_CALL_SITE STEP=… before call (post-memcpy)
+  LOGITS_ENTER inside ProjectLogitsArgmax
+  LOGITS_LEAVE after successful return
+  null hidden → soft error (not AV claim)
+
+NOT_DONE=
+  RUNTIME remasure (needs MODE=A HOT_GATE=1 TARGET=PATH_B_N5 or exact spend line)
+  No LOGITS_FAILED claim
+  No Gate12/Q-null reopen
+  No dimension “fix” without witness
+
+BUILD_NEXT=ninja deep2_benchmark
+MEASURE_NEXT=exact spend line required

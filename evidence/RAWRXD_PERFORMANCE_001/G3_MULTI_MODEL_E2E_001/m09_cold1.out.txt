@@ -1,0 +1,220 @@
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 03:50:41 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+Loading model: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[ModelSourceResolver] Resolving: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[ModelSourceResolver] Detected source: Local File
+[ModelSourceResolver] ✅ Local file validated: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+Model armed for ProductRun: Qwen3.5-40B-Q4_K_M.gguf
+  Path: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+  GGUF magic: OK
+  Arm latency: 3 ms
+
+Headless IDE initialized successfully.
+HTTP server listening on 127.0.0.1:11492
+Headless IDE running in server mode. Press Ctrl+C to stop.
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\models\_matrix_gdev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[ReverseHotpatch] ERROR: Parse failed for R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf: GGUF file validation failed
+[ReverseHotpatch] FAILED at stage 2 (ReverseUnlayer_Parse)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[Deep2Engine] ERROR: Failed to load GGUF metadata: GGUF file validation failed
+[Deep2Engine] Loading model from: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\models\_matrix_gdev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[ReverseHotpatch] ERROR: Parse failed for R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf: GGUF file validation failed
+[ReverseHotpatch] FAILED at stage 2 (ReverseUnlayer_Parse)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[Deep2Engine] ERROR: Failed to load GGUF metadata: GGUF file validation failed
+[Deep2Engine] Loading model from: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\models\_matrix_gdev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[ReverseHotpatch] ERROR: Parse failed for R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf: GGUF file validation failed
+[ReverseHotpatch] FAILED at stage 2 (ReverseUnlayer_Parse)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[Deep2Engine] ERROR: Failed to load GGUF metadata: GGUF file validation failed
+[Deep2Engine] Loading model from: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\models\_matrix_gdev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[ReverseHotpatch] ERROR: Parse failed for R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf: GGUF file validation failed
+[ReverseHotpatch] FAILED at stage 2 (ReverseUnlayer_Parse)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[Deep2Engine] ERROR: Failed to load GGUF metadata: GGUF file validation failed
+[Deep2Engine] Loading model from: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\models\_matrix_gdev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[ReverseHotpatch] ERROR: Parse failed for R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf: GGUF file validation failed
+[ReverseHotpatch] FAILED at stage 2 (ReverseUnlayer_Parse)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[Deep2Engine] ERROR: Failed to load GGUF metadata: GGUF file validation failed
+[Deep2Engine] Loading model from: R:\models\_matrix_gdev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\models\_matrix_gdev)
+[ReverseHotpatch] === Stage 1: ReverseHop_

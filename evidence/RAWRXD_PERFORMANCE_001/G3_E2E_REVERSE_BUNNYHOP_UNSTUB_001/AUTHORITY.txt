@@ -1,0 +1,18 @@
+GATE=G3_E2E_REVERSE_BUNNYHOP_UNSTUB_001
+AUTHORITY=product reverse-bunnyhop / LIVE_MECH stream unstub (not champion; not TIP climb)
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+CODE=
+  src/deep2/StreamerParity_Harness.cpp  MECH+=stream NVME_REVERSE_BUNNYHOP=1
+  src/deep2/Deep2LivePath.cpp           STREAM no longer vetoes cyclone OnLayerStart
+  src/deep2/Deep2LivePath_Mech.cpp      MechArm/MechToken hopReverseChunk
+  src/deep2/NVMeStream.cpp              force reverse bunnyhop on env
+
+NOT_CLAIMED=
+  TPS/size climb
+  mmap-path superiority over reverse-chunk
+  medusa / pinball / trailbrake / reversal product defaults
+  host→VRAM elastic mover (stays PASSIVE under Vulkan/DualStick)
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700

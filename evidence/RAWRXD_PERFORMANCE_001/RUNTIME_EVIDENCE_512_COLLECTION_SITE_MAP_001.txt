@@ -1,0 +1,81 @@
+RUNTIME_EVIDENCE_512_COLLECTION_SITE_MAP_001=SEALED
+DATE=2026-09-08
+TYPE=COLLECTION_SITE_REMAIN
+SPEND=0
+CODE_CHANGE=0
+HOT_GATE=0
+WIRING_DONE=0
+REQUIRED_YET=0
+
+PURPOSE=
+  Serve real claim sites that must call claim-specific emitters.
+  Inventory only — no call inserted by this receipt.
+  Stream-path wiring MISSING is inventoried; REQUIRED_YET=0 COMPLETE
+  under RUNTIME_EVIDENCE_512_STREAM_PATH_WIRING_NOT_REQUIRED_001.
+
+LAW=
+  call only at the real site that owns the claim
+  EMISSION_X ≠ authority for CLAIM_Y
+  abort path must not manufacture COMPLETE / sibling claims
+
+SITE → EMITTER (WIRING=OPEN)=
+  FinalHiddenWitness actual probe sample
+    → EvidenceEmitHiddenProbe(rcx=state, rdx=probeIndex, r8=valueBits)
+
+  FinalHiddenWitness actual last element
+    → EvidenceEmitHiddenLast(rcx=state, rdx=lastIndex, r8=valueBits)
+
+  real bounds comparison result (0|1)
+    → EvidenceEmitBounds(..., r9d=boundedBool)
+
+  real validity test result (0|1)
+    → EvidenceEmitValid(..., r9d=validBool)
+
+  ProjectLogitsArgmax immediate entry
+    (K2NativeStreamGate.cpp ProjectLogitsArgmax)
+    → EvidenceEmitLogitsEntry(rcx=state, rdx=hiddenPtr, r8=hiddenCount)
+
+  ProjectLogitsArgmax after real argmax completion only
+    → EvidenceEmitLogitsComplete(rcx=state, rdx=token, r8=scoreBits)
+
+  first token boundary (actual)
+    → EvidenceEmitFirstTokenBoundary
+
+  attention complete (actual layer/step)
+    → EvidenceEmitAttnComplete
+
+  Path B complete (actual step)
+    → EvidenceEmitPathBComplete
+
+  stream complete (actual token count + wall)
+    → EvidenceEmitStreamComplete
+
+  stream abort path only (actual abortCode + stageId)
+    (K2NativeStreamGate / Deep2Engine STREAM_ABORT sites)
+    → EvidenceEmitStreamAbort
+    MUST NOT also emit STREAM_COMPLETE / LOGITS_COMPLETE / TEARDOWN_COMPLETE
+
+  teardown entry / complete / fault (actual only)
+    → EvidenceEmitTeardownEntry | Complete | Fault
+
+  wall ns / decode TPS Q32.32 / parity (actual only)
+    → EvidenceEmitWallNs | DecodeTpsQ32_32 | Parity
+
+SEPARATE_EMITTER_FAMILY=
+  current stderr lines (LOGITS_ENTRY / HIDDEN_PROBE / STREAM_ABORT text)
+  are NOT RuntimeEvidence512 Commit records
+  remain a distinct family until each site also fires its EvidenceEmit*
+  stderr print ≠ ASM record authority
+
+PRODUCT_BINARY=
+  PERF_AUTHORITY=build-fd/bin/deep2_benchmark.exe
+  CMake link of RuntimeEvidence512_Core.obj + RuntimeEvidence512_Emit.obj = OPEN
+
+OWNER_MAP=RUNTIME_EVIDENCE_512_CLAIM_EMIT_MAP_001
+REMAIN_INDEX=RUNTIME_EVIDENCE_512_COLLECTION_REMAIN_001
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

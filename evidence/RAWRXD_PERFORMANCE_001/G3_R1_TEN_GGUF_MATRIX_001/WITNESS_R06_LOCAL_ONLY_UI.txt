@@ -1,0 +1,2 @@
+﻿FILE=G:\~dev\rawrxd\gui\ide_chatbot_standalone.html DIRECT_11435=True SCAN_HAS_11434=False FALLBACK_DISABLED=True
+FILE=G:\~dev\rawrxd\gui\ide_chatbot_standalone_e2e.html DIRECT_11435=True SCAN_HAS_11434=False FALLBACK_DISABLED=True

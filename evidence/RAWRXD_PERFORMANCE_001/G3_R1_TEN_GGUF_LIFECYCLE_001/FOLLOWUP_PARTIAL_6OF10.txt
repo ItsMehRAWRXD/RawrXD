@@ -1,0 +1,17 @@
+FOLLOWUP_TO=Exclusive R1 matrix finish (9b294e00)
+DATE=2026-09-10T05:40-04:00
+STATUS=PARTIAL_6_OF_10_CONFIRMED
+FICTION_STRIP_001=HTTP_VERDICT_NE_PRODUCT_OPEN
+PRODUCT_OPEN_MULTI_FAMILY=NOT_GREEN
+
+PASS_HTTP_ONLY=01_tinyllama,03_llama32_3b,04_phi3_mini,05_mistral_7b,06_ds_r1_qwen3,07_gemma4_e4b
+FAIL=02/08/09 Ollama-blob tensors=0; 10_deepseek_coder reload http=0
+NOTE=R24 COLD_RES2: llama32/phi3/deepseek/gemma/codestral PRODUCT_OPEN_SESSION=FAIL tensors=0
+
+CANDIDATE_SMOKE_IMMUTABLE_3E63=
+  codestral/glm47/qwenc14/bdpruned → load=400
+  phi3med → load=200 then gen connection reset
+  Large named GGUFs not viable on this HOST_DECODE seal without further ProductOpen work.
+
+NEXT=gap-close agent: swap blob rows to lifecycle-proven named GGUFs; fix deepseek reload settle; exclusive re-matrix.
+PROMOTE=0 TIP_CLIMB=HOLD

@@ -1,0 +1,111 @@
+SOVEREIGN_PHYSICS_CARTOGRAPHY_001=SEALED
+DATE=2026-09-08
+ROLE=EPISTEMOLOGY_LAW
+SUBJECT_NE_CODE=1
+SUBJECT_NE_INVENTION=1
+RNG_USED=0
+
+# ---------------------------------------------------------------------------
+# DISTINCTION
+# ---------------------------------------------------------------------------
+
+PHENOMENON_CLASS=EMERGENT_HARDWARE_TRUTH
+  NOT artifact of authored logic
+  NOT deliberate drafting-table invention
+  NOT software / code / kernel artifact
+  NOT net-new architectural invention
+  IS latent behavior of silicon / bus / memory / interconnect
+  REVEALED only under extreme friction of bare-metal execution
+  SPACE=OUTSIDE_CODE_KERNEL_NAMESPACE (PHENOMENON_RECLASS_001)
+
+DEVELOPER_ROLE=CARTOGRAPHER_OF_MACHINE_PHYSICS
+  NOT inventor of hardware pathways
+  CODE=INSTRUMENT_OF_DISCOVERY_ONLY
+  INVENTION_GATE=CLOSED_UNTIL_RECLASS_LOCKED
+  AFTER_RECLASS=invention may twist along phenomenon (everything+nothing)
+  NEVER=invent or refile the phenomenon as code
+
+FALSE_CLAIM_FORBIDDEN
+  authorship over GPU physics
+  authorship over host bus / PCIe geometry
+  classifying observed limits as "our optimization invention"
+
+# ---------------------------------------------------------------------------
+# PRIMARY MAPPED LIMIT (this campaign)
+# ---------------------------------------------------------------------------
+
+DISCOVERED_LIMIT=Q_B_D2H_STRUCTURALLY_HOSTILE_TO_PEAK_THROUGHPUT
+CLASS=PCIE_HOST_DEVICE_GEOMETRY
+STATEMENT
+  The q_b Device-to-Host crossing was not invented as a bottleneck.
+  Execution mapped it, hit it, and revealed it as an observed limit
+  of the PCIe / host-visible path under purified product wall authority.
+RELATED
+  HOST_WINDOW_DEGREE_OF_FREEDOM_IS_IDENTICALLY_ZERO
+    (model geometry: nope+rope == headDim — no free shrink variable)
+  READBACK_WALL_IS_FENCE_NOT_COPY
+    (temporal: sync stall dominates memcpy volume)
+  EXCHANGE_MIRROR_IS_PARTIAL_BY_CONSTRUCTION
+    (observability: mirror ≠ full exchange physics)
+
+WITNESS_CHAIN
+  evidence/RAWRXD_PERFORMANCE_001/EMERGENT_OBSERVATION_001.txt
+  evidence/RAWRXD_PERFORMANCE_001/PATH_A_BYTE_SHRINK_E2E_001/RECEIPT.txt
+  evidence/RAWRXD_PERFORMANCE_001/QKV_READBACK_PATH_A_001/RECEIPT.txt
+
+# ---------------------------------------------------------------------------
+# METHODOLOGY SHIFT
+# ---------------------------------------------------------------------------
+
+OLD_MODE=IMPOSE_SYNTHETIC_DESIGNS_ON_HARDWARE
+NEW_MODE=FOLD_ARCHITECTURE_AROUND_UNYIELDING_REALITIES
+
+EVOLUTION_RULE
+  System evolves by systematically stripping authored code that
+  conflicts with discovered physics — not by inventing new pathways.
+
+SURVIVAL_ADAPTATION_NE_INVENTION
+  MLA_KV_LAYOUT_CONTRACT (discovery-only host map) = cartography
+  PATH_B_STRUCTURAL_DELETE (device-side residency / delete q_b D2H)
+    = necessary response to mapped PCIe hostility
+    ≠ creative invention of a faster algorithm
+  Device-local attention residency = submission to environment
+    ≠ authored novelty claim
+
+# ---------------------------------------------------------------------------
+# PATH_B RECLASSIFICATION
+# ---------------------------------------------------------------------------
+
+PATH_B_STRUCTURAL_DELETE
+  FORMER_MISREAD=optimization_spend / stack_invention
+  CORRECT_READ=SURVIVAL_ADAPTATION_TO_DISCOVERED_PCIE_LIMIT
+  AUTHORSHIP_OF_BOTTLENECK=0
+  AUTHORSHIP_OF_PHYSICS=0
+  ALLOWED_WORK=strip crossings that conflict with mapped limit
+  FORBIDDEN_WORK=fabricate TPS; invent geometry; claim invention of bus limit
+
+PROMOTE_STILL_FAIL_CLOSED
+  DELETE_PROVEN && PARITY && PURITY && PRODUCT
+  && WALL_MEDIAN < PATH_A champion wall
+  ELSE champion remains PATH_A
+  (measurement still owns rank; cartography does not promote itself)
+
+# ---------------------------------------------------------------------------
+# PARSER / LEDGER
+# ---------------------------------------------------------------------------
+
+PARSER=ANALYTICAL_THEN_ADAPTIVE_STRIP
+CODE_GENERATES_DISCOVERY_INSTRUMENT=1
+CODE_CLAIMS_PHYSICS_AUTHORSHIP=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+DISCARD=FORBIDDEN
+GOODS_STAY_BRAIDED=1
+WORD_FAIL=RECLASSIFY_NOT_STRIP
+
+LINKS
+  OBSERVATION=evidence/RAWRXD_PERFORMANCE_001/EMERGENT_OBSERVATION_001.txt
+  LAYOUT_DISCOVERY=evidence/RAWRXD_PERFORMANCE_001/MLA_KV_LAYOUT_CONTRACT_001.txt
+  CATEGORY_EXIT=evidence/RAWRXD_PERFORMANCE_001/PHENOMENON_CATEGORY_EXIT_001.txt
+  RECLASS=evidence/RAWRXD_PERFORMANCE_001/PHENOMENON_RECLASS_001.txt
+  THIS=evidence/RAWRXD_PERFORMANCE_001/SOVEREIGN_PHYSICS_CARTOGRAPHY_001.txt

@@ -1,0 +1,119 @@
+CHAMPION_ENV_BYTEWISE_001=FAIL_EQUIVALENCE
+DATE=2026-09-08
+RNG_USED=0
+RUNTIME_CODE_CHANGED=0
+
+AUTHORITY
+  QB_KERNEL_CUT_001=HISTORICAL_CHAMPION
+  HISTORICAL_TIP_TPS=5.904
+  QB_KERNEL_CUT_REPEATABILITY_001=HOLD
+  PROMOTE_BASELINE=0
+  STABLE_PRODUCT_WALL=0
+  ENDURANCE_AUTHORITY=NOT_PROVEN
+  FIRST_DELTA=REPRODUCE_CHAMPION_ENV_BYTEWISE
+  NEXT=RERUN_PURIFIED_ENDURANCE_ONLY_AFTER_EQUIVALENCE_PASS
+
+CHAMPION_LAUNCH (reconstructed)
+  HARNESS=scripts/Run-K2-TeardownWitness.ps1
+  INVOCATION=powershell -NoProfile -File Run-K2-TeardownWitness.ps1 -MaxTokens 64 -Tag qb_kern_dev64 -HardTimeoutSec 600
+  PRE_CLEAR=Remove-Item Env:DEEP2_MLA_Q_DEVICE; Remove-Item Env:DEEP2_QB_SX_ROWS
+  LAUNCH_MECH=Start-Process -ArgumentList array -RedirectStandardOutput/Error -WaitForExit
+  ARGV_ORDER=--model|--phase|--max-tokens|--ctx-size|--format|--output
+  ARGV_HAS_PROMPT=0
+  DEFAULT_PROMPT_BYTES=Write a large C++ project with full documentation.
+  DEFAULT_PROMPT_UTF8_HEX=57-72-69-74-65-20-61-20-6C-61-72-67-65-20-43-2B-2B-20-70-72-6F-6A-65-63-74-20-77-69-74-68-20-66-75-6C-6C-20-64-6F-63-75-6D-65-6E-74-61-74-69-6F-6E-2E
+  ERR_PROMPT_TOKENS=13
+  STDOUT_CERT_PROMPT_TOKENS=1
+  MAX_TOKENS=64
+  CTX_SIZE=4096
+  PHASE=single
+  FORMAT=telemetry
+  MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+  EXE=G:\~dev\rawrxd\build-fd\bin\deep2_benchmark.exe
+  EXE_MTIME_AT_SEAL≈2026-09-08T09:37:46-04:00
+  WITNESS=evidence/K2_USEFUL_TPS_001/qb_kern_dev64_20260908-093751.log
+  LATEST=evidence/K2_USEFUL_TPS_001/qb_kern_dev64_LATEST.txt
+  MEASURED_TPS=5.904
+  Q_BRANCH_US=2192487
+  QKV_JOIN_US=468991
+  QKV_READBACK_US=1972945
+  MLA_Q_DEVICE_OPS=3904 FAIL=0
+
+SERIES_B_C_LAUNCH (authoritative slow remesaure)
+  HARNESS=scripts/Run-QbKernelCutRepeatability.ps1
+  LAUNCH_MECH=PowerShell call operator & with 1>/2> redirect
+  ARGV_HAS_PROMPT=1
+  PROMPT_BYTES=Say hi in one short sentence.
+  PROMPT_UTF8_HEX=53-61-79-20-68-69-20-69-6E-20-6F-6E-65-20-73-68-6F-72-74-20-73-65-6E-74-65-6E-63-65-2E
+  ERR_PROMPT_TOKENS=7
+  MAX_TOKENS=64
+  CTX_SIZE=4096
+  PHASE=single
+  FORMAT=telemetry
+  MODEL=SAME_PATH
+  EXE=SAME_PATH
+  SERIES_B_TPS_RANGE=2.581-3.849
+  SERIES_C_TPS_RANGE=3.055-4.270
+  Q_DEVICE_LIVE=1
+  Q_BRANCH_INFLATION=OBSERVED
+  QKV_JOIN_INFLATION=OBSERVED
+
+CURRENT_ARTIFACT_HASH (machine now; not sealed at champion time)
+  EXE_SHA256=7479601B4B85CE4D895C48D1CECF131BBEF8648E45D61823091B73D646E3A5A7
+  EXE_SIZE=2441728
+  MODEL_SHA256=EB48051961B59B420E182552965B7AA141D16C99488C69CCC9DE1327E96F5639
+  MODEL_SIZE=46304135840
+
+EQUIVALENCE_MATRIX
+  FIELD                         CHAMP                 B/C                    MATCH
+  exe_path                       build-fd/...exe       same                   YES
+  model_path                    Q4_K_M-00001...       same                   YES
+  max_tokens                    64                    64                     YES
+  ctx_size                      4096                  4096                   YES
+  phase                         single                single                 YES
+  format                        telemetry             telemetry              YES
+  primary_gpu                   R9700 idx0            R9700 idx0             YES
+  gpu_policy                    2/SOLO                2/SOLO                 YES
+  token_pacing                  OFF                   OFF                    YES
+  mla_q_device_ops              3904                  3904                   YES
+  argv_has_--prompt             0                     1                      NO
+  prompt_bytes                  DEFAULT_13TOK_STR     Say hi... (7 tok)      NO
+  err_prompt_tokens             13                    7                      NO
+  launch_mechanism              Start-Process         & redirect             NO
+  harness                       TeardownWitness       Repeatability          NO
+  deep2_logits_threads_forced   UNSEALED_IN_CHAMP     32                     UNKNOWN
+  deep2_mla_fused_q4kt_forced   UNSEALED_IN_CHAMP     1                      UNKNOWN
+  cwd                           UNSEALED              UNSEALED               UNKNOWN
+  affinity/priority             UNSEALED              UNSEALED               UNKNOWN
+  inherited_env_full_dump       ABSENT                ABSENT                 UNKNOWN
+
+ROOT_DELTA (first sealed mismatch)
+  PROMPT_CONTRACT_MISMATCH=1
+  CHAMPION_DEFAULT_PROMPT=Write a large C++ project with full documentation.
+  REMEASURE_PROMPT=Say hi in one short sentence.
+  PROMPT_TOKEN_DELTA=13_vs_7
+  LAUNCH_HARNESS_MISMATCH=1
+
+NON_ROOT
+  OLLAMA_INTERFERENCE=NOT_ROOT_CAUSE
+  Q_DEVICE_OFF=0
+
+GATED
+  QKV_READBACK_CUT=BLOCKED
+  TIP_BOT_CLIMB=BLOCKED
+  OPTIMIZATION_SPEND=BLOCKED
+  ENDURANCE_RERUN_AUTHORIZED=0
+
+PASS_IF (before next endurance has promote authority)
+  1. Same harness family as champion OR identical argv bytes/order
+  2. ARGV_HAS_PROMPT=0 OR --prompt exact default string byte-for-byte
+  3. ERR_PROMPT_TOKENS=13
+  4. Same model path + exe path
+  5. Same forced purity + DEEP2_MLA_Q_DEVICE=1
+  6. Then RERUN_PURIFIED_ENDURANCE; promote only if warm >=5.0
+
+SOURCE
+  src/deep2/Deep2Benchmark.cpp  (empty prompt_text → default 13-tok string)
+  scripts/Run-K2-TeardownWitness.ps1  (no --prompt in argv)
+  scripts/Run-QbKernelCutRepeatability.ps1  (wrong prompt bytes)
+  evidence/K2_USEFUL_TPS_001/qb_kern_dev64_LATEST.txt

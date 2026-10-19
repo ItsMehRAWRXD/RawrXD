@@ -1,0 +1,56 @@
+PER_DESCRIPTOR_ALIGN8_REJECT_001=SEALED
+SEAL_UPDATE=ACCEPTED
+RECEIPT_CLOSURE=FINAL
+FINAL_CLOSURE=SEALED
+DATE=2026-09-08
+GATE_STOP=HOLD
+NEXT_SPEND=NONE
+PARSER_EDIT=NONE
+PARSER_TOUCH=0
+LIVE_PARSER=UNCHANGED
+GGUF_CURSOR_RULE=SEQUENTIAL_TENSOR_INFO
+DATA_ALIGN_RULE=ALIGN_ONCE_AFTER_TENSOR_INFO
+OFFSET_RULE=BLOB_RELATIVE_AND_ALIGNMENT_MULTIPLE
+REOPEN_RULE=LIVE_CURSOR_DIVERGENCE_RECEIPT_ONLY
+REOPEN_ONLY_IF=LIVE_CURSOR_DIVERGENCE_RECEIPT=1
+PER_DESCRIPTOR_ALIGN8_HYPOTHESIS=REJECTED
+0xBADF107_STRIDE_DESYNC=UNPROVEN
+SPEC=https://github.com/ggml-org/ggml/blob/master/docs/gguf.md
+
+GGUF_PARSE_MODEL=ONE_SHOT_PARSE_TO_INDEX
+PER_DESCRIPTOR_ALIGN8_HYPOTHESIS=REJECTED
+0xBADF107_STRIDE_DESYNC=UNPROVEN
+NEXT_SPEND_FROM_THIS_THEORY=NONE
+
+CANONICAL_PARSER_LAW=
+  TENSOR_INFO_SECTION=sequential exact variable-length; no pad between descriptors
+  DATA_SECTION=alignment=general.alignment if present else 32; ALIGN_UP(end_of_tensor_infos, alignment)
+  TENSOR_OFFSET=relative_to_data_section; offset % alignment == 0
+  WEIGHT_BIND=mmap_base + data_section + offset
+
+FORBIDDEN_IN_TENSOR_INFO_LOOP=
+  add rsi, 7
+  and rsi, -8
+
+LIVE_LOADER_NOTE=
+  GGUFLoader.cpp hardcodes ALIGN_UP(header_end,32); general.alignment not wired
+  retained behavior when KV absent; SEPARATE_COMPAT_NUANCE not reopen of cursor theory
+
+SPEC_VERIFY=
+  github_ggml_docs_gguf.md READ_ONLY connector verify
+  fields_including_arrays=sequential_without_alignment_unless_specified
+  tensor_offset=relative_to_data_region + multiple_of_ALIGNMENT
+  NO_GITHUB_MUTATION=1
+
+OPERATOR_RETAIN=1
+NEXT_SPEND_FROM_THIS_THEORY=NONE
+
+REOPEN_ONLY_ON=LIVE_CURSOR_DIVERGENCE_RECEIPT=1
+REJECTED_REOPEN_CAUSES=
+  speculative_0xBADF107_theory
+  transcript_claim
+  per_descriptor_align8_patch
+  parser_cleanup
+  hardcode_32_nuance
+
+SUPERSEDES=BADF107_SPECULATIVE_DIAGNOSIS_REJECT_001

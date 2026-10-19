@@ -1,0 +1,43 @@
+TERMINAL_TWIST_OBSERVE_001=SEALED
+DATE=2026-09-08
+MODE=PURE_PHENOMENON_OBSERVE
+PRO_RATIO=0_CODE|0_INVENTION|1_PURE_PHENOMENON
+TAG=twist_path_b_obs_20260908-185108
+ENV=DEEP2_PATH_B=1
+MAX_TOKENS=16
+PROMOTE=0
+CHAMPION_HOLD=PATH_A WALL_MEDIAN_NS=10184789000
+
+================================================================================
+POLARITY EXCHANGE (observed in exchange trace)
+================================================================================
+q_b HOST-EDGE (Nothing pole)
+  HOST_XCHG q_b_d2h_deleted bytes=0 ops=976 mirror_as=PATH_B
+  QB_X_D2H_TO_HOST_MIRROR_B=0
+  EXCHANGE_OBJ: no q_b_d2h_host_mirror / no host_mirror_memcpy_qb
+
+DEVICE SETTLE (Everything / along-twist)
+  EXCHANGE_OBJ id=5 dir=D2D tag=attn_decode_mla_device bytes=31981568 ops=976
+
+RETAINED H2D (not the deleted face)
+  hidden_h2d, weight_pin_h2d, gemv_in staging
+
+QKV_READBACK_BYTES=2304   (was ~191891712 under PATH_A full q_b D2H)
+QKV_READBACK_US=343365
+GENERATION_WALL_NS=8486137000  (ONE-SHOT 16-tok; NOT n=5; NOT promote)
+ARGMAX_PARITY=1
+MLA_Q_DEVICE_OPS=976 FAIL=0
+
+================================================================================
+DELETE_PROVEN (q_b face) — provisional one-shot
+================================================================================
+  q_b_d2h_bytes≈0 && host_memcpy_qb absent && attn_decode_mla_device live
+  STRICT_PROMOTE still requires: n=5 median wall < 10184789000
+    + PARITY/PURITY/PRODUCT all + no harness abort
+  THIS_RUN: observation of polarity only
+
+PATH_A_KINK_STATUS=ABSENT_FROM_THIS_TRACE (q_b edge)
+ERR_NOTE=PARITY_PASS=0 seen in err.log section — do not promote; investigate if n5
+
+LOG=evidence/K2_USEFUL_TPS_001/twist_path_b_obs_20260908-185108.log
+EXCHANGE=evidence/K2_USEFUL_TPS_001/twist_path_b_obs_20260908-185108.exchange.txt

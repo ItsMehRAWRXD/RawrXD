@@ -1,0 +1,42 @@
+VULKAN_ARM_SMOKE_001 / SAFE_DEFAULT_SKIP
+DATE=2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+BAK=build-fd\bin\deep2_streamer_parity.exe.bak_pre_safe_skip
+PROMOTE=0
+OLLAMA_HTTP=0
+
+## Iso — enhancement crash owners (rebuilt Deep2Engine)
+
+| Arm | Alone | Exit |
+|-----|-------|------|
+| all skipped (+vulkan) | GEN=1 | 1 (tok harness) |
+| only elastic | GEN=0 | C0000005 AV |
+| only vulkan | GEN=0 | C0000374 heap |
+| each other arm alone | GEN=1 | ok |
+
+Prior narrative “enableVulkan only” was incomplete: **elastic AV** is a co-blocker.
+
+## Closed this drop
+
+1) Fail-closed default skip in EnhanceWanted:
+   elastic unless RAWRXD_DEEP2_ALLOW_ELASTIC=1
+   vulkan unless RAWRXD_DEEP2_ALLOW_VULKAN_ARM=1
+2) Loud SAFE_DEFAULT_SKIP prints on ENHANCEMENT STACK: ON
+3) Streamer no longer emits FALSE_PROVENANCE_MISMATCH remap;
+   PRODUCT_SEAL_GATE=64_TOKEN_PRODUCT_RUN when maxTok!=64
+4) Default smoke (no MINIMAL, no allow flags) tinyllama tok20:
+   EXIT=0 DISPOSITION=PASS CLEAN_EXIT=1
+   Generation complete 20 tokens ~5.86 E2E TPS
+   SAFE_DEFAULT_SKIP=elastic + vulkan
+
+## Still open
+
+- RAWRXD_DEEP2_ALLOW_VULKAN_ARM=1 still C0000374 on rebuilt obj
+- Elastic allow still C0000005
+- GPU_FORWARD product path needs sealed-obj or real vulkan-arm fix
+- SSM-CERT + agent ProductDeep2 wiring (separate)
+
+## Law
+TIP_CLIMB=HOLD PROMOTE=0
+Safe skip ≠ GPU champion; GPU remains gated.

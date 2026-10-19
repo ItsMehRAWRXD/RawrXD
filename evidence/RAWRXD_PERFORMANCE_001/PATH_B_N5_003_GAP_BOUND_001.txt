@@ -1,0 +1,64 @@
+PATH_B_N5_003_GAP_BOUND_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_ATTRIBUTION
+SPEND=0
+CODE_CHANGE=0
+RERUN=0
+PROMOTE=0
+VALID_WITNESS=0
+DELETE_PROVEN=NOT_ASSESSED
+MEMORY_OVERRIDE=0
+
+RETAIN=
+  PATH_B_N5_003=FAIL
+  PROMOTE=0
+  VALID_WITNESS=0
+  CHAMPION=PATH_A
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+
+LAST_PROVEN=
+  FINAL_NORM_AFTER_L2 ×23
+  (steps 0..22 complete)
+
+FIRST_UNPROVEN_CONSUMER=
+  ProjectLogitsArgmax(step22)
+  NOTE=pipeline-next only; NOT failure attribution
+
+OWNER=UNATTRIBUTED
+
+DOWNSTREAM_UNWITNESSED=
+  LOGITS_SUCCESS
+  LOGITS_ABORT
+  TOKEN_CALLBACK
+  STREAM_HEARTBEAT_STEP32
+  GATE10_FOOTER
+  TEARDOWN_WITNESS
+  EXIT_0
+  STREAM_ABORT_OWNER
+
+INTERVAL=
+  ProduceFinalHidden(step22)
+    → FINAL_NORM_AFTER_L2(step22)   ← last proven boundary
+    → ?????????????????????????????
+    → process termination
+
+NOT_JUSTIFIED_TO_ATTRIBUTE_FAILURE=
+  ProjectLogitsArgmax
+  logits kernel
+  token callback
+  MLA_FORWARD(step23)
+
+ONLY_SUPPORTED_CONCLUSION=
+  terminated after 23rd FINAL_NORM_AFTER_L2
+  and before first downstream observable owner/callback/heartbeat/footer/teardown
+
+EXCLUDED_CLOSED=
+  Gate12 RoPE
+  Q-buffer null path
+
+SSOT_PRIOR=
+  PATH_B_N5_003_LAST_PROVEN_001
+  PATH_B_N5_003_LAST_BOUNDARY_001
+  PATH_B_N5_003_ATTR_SPLIT_001

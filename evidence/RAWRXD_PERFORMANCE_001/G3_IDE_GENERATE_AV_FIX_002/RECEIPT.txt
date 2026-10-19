@@ -1,0 +1,63 @@
+GATE=G3_IDE_GENERATE_AV_FIX_002
+ASOF=2026-09-10T02:15
+OWNER=R01_PRODUCT_GENERATE_AV
+AUTH=IDE_/api/generate_AV_TRIAGE · PRODUCT_GENERATE_PATH_ONLY
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+
+## ROOT_CAUSE
+RawrXD-Win32IDE.exe linked /LARGEADDRESSAWARE:NO (ADDR32 MASM via
+InferenceEngine.lib Telemetry/Pattern). amdvlk snmalloc aborts under
+LAA:NO → Access Violation (WER dbgcore 0xC0000005) during ProductOpenSession
+MultiGPU/Vulkan device open on loaded /api/generate + oneshot.
+CLI rawr.exe is LAA-default → PRODUCT_PASS=1 control.
+Evidence prior: G3_GPU1_MASM_SOLO_A0_001 (LARGEADDRESSAWARE_REQUIRED_FOR_AMDVLK).
+FIX_001 PASS_CONTAINED only proved no-model 503 — insufficient for this spend.
+
+## FIX
+1. POST_BUILD editbin /LARGEADDRESSAWARE on RawrXD-Win32IDE.exe (PE bit flip;
+   ADDR32 already resolved at link under :NO — runtime LAA enables amdvlk).
+2. ProductStreamerPrep: if !ProcessIsLargeAddressAware → HOST_DECODE=1,
+   DUALSTICK_ARM=0, skip ICD enum (safety net if editbin missing).
+3. ProductOpenSession OpenSeh (PRODUCT_DEEP2_OPEN_SEH) — safety net only.
+4. Win32IDE_Core runMessageLoop: BindCurrentThreadAsLane + Drain (HTTP sticky
+   Vulkan lane parity with Headless server).
+5. Interstellar.fragment gated when sources missing (cmake regen unblock).
+
+## SMOKE (LOADED execute)
+ONESHOT=
+  editbin-LAA RawrXD-Win32IDE --headless --oneshot --model tinyllama --prompt "say hi"
+  INFER_OPEN_SESSION_DONE open=1
+  INFER_DEEP2_OK bytes=192
+  GENERATED_TOKENS=48 PRODUCT_PASS=1
+  PROCESS_SURVIVED=1 ACCESS_VIOLATION=0 C0000374=0
+HTTP=
+  editbin-LAA headless --server --port 11448 --model tinyllama
+  POST /api/generate {"prompt":"hello","stream":false} → HTTP 200
+  response bytes=192 done=true
+  GENERATED_TOKENS=48 PRODUCT_PASS=1
+  PROCESS_SURVIVED=1
+IDE_SHA256=89203E703D8ECC32CE9DE5A95FE972CAE7D9021F4AE4FF53E24210D28D96A459
+LAA_PE=Application can handle large (>2GB) addresses
+SMOKE_BIN=evidence/.../G3_IDE_GENERATE_AV_FIX_002/smoke_bin/
+
+## VERDICT
+VERDICT=R01_LOADED_GENERATE_PASS
+HTTP_200=1 TOKENS_EMITTED=48 PROCESS_SURVIVED=1 ACCESS_VIOLATION=0 C0000374=0
+RUNTIME_SEALS=UNCHANGED (CLI_AGENTIC CLOSED, STREAMER_AGENTIC SEALED,
+  DualStick closed, MOTD/parity untouched)
+PROMOTE=0 TIP_CLIMB=HOLD
+
+## FILES_CHANGED
+  CMakeLists.txt (editbin POST_BUILD; LAA:NO retained for link)
+  cmake/Interstellar.fragment.cmake (skip missing sources)
+  src/deep2/lavapath/ProductStreamerPrep.hpp (LAA:NO host-safe arm)
+  src/product/gateway/product_deep2_infer.cpp
+  src/product/gateway/product_deep2_infer_internal.hpp
+  src/product/gateway/product_deep2_infer_open.hpp (new)
+  src/win32app/Win32IDE_Core.cpp (infer lane Bind+Drain)
+
+## UNCHANGED / FORBIDDEN
+  DualStick reopen=NO PATH_B=NO tip-climb=NO Ollama tool_server=NO G4-F/G=NO
+  MOTD/IDE parity seals=UNTOUCHED

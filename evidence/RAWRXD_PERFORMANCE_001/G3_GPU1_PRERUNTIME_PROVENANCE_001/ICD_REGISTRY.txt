@@ -1,0 +1,2 @@
+ICD_REG_MISSING=HKLM:\SOFTWARE\Khronos\Vulkan\Drivers
+ICD_REG_MISSING=HKLM:\SOFTWARE\WOW6432Node\Khronos\Vulkan\Drivers

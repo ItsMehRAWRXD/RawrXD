@@ -1,0 +1,54 @@
+RUNTIME_EVIDENCE_512_CLAIM_EMIT_MAP_001=SEALED
+DATE=2026-09-08
+TYPE=NON_COLLECTION_OWNERSHIP_MAP
+SPEND=0
+CODE_CHANGE=0
+HOT_GATE=0
+COLLECTION=0
+
+PURPOSE=
+  Serve-side authority graph for RuntimeEvidence512 claim-isolated exports.
+  Maps CLAIM → sole owner emitter. Does not collect runtime records.
+
+LAW=
+  source existence ≠ runtime evidence
+  EMISSION_X ≠ authority for CLAIM_Y
+  GENERIC_EMIT=ABSENT
+
+CLAIM_ID  CLAIM_NAME                 SOLE_OWNER_EMITTER
+1         FIRST_TOKEN_BOUNDARY       EvidenceEmitFirstTokenBoundary
+2         HIDDEN_PROBE               EvidenceEmitHiddenProbe
+3         HIDDEN_LAST                EvidenceEmitHiddenLast
+4         BOUNDED                    EvidenceEmitBounds
+5         VALID                      EvidenceEmitValid
+6         LOGITS_ENTRY               EvidenceEmitLogitsEntry
+7         LOGITS_COMPLETE            EvidenceEmitLogitsComplete
+8         ATTN_COMPLETE              EvidenceEmitAttnComplete
+9         PATHB_COMPLETE             EvidenceEmitPathBComplete
+10        STREAM_COMPLETE            EvidenceEmitStreamComplete
+11        STREAM_ABORT               EvidenceEmitStreamAbort
+12        TEARDOWN_ENTRY             EvidenceEmitTeardownEntry
+13        TEARDOWN_COMPLETE          EvidenceEmitTeardownComplete
+14        TEARDOWN_FAULT             EvidenceEmitTeardownFault
+15        WALL_NS                    EvidenceEmitWallNs
+16        DECODE_TPS_Q32_32          EvidenceEmitDecodeTpsQ32_32
+17        PARITY                     EvidenceEmitParity
+
+SHARED_PRIVATE_ONLY=
+  EvidenceEmitCore  — not PUBLIC claim surface; not a claim owner
+
+SOURCE=
+  src/asm/RuntimeEvidence512_Core.asm
+  src/asm/RuntimeEvidence512_Emit.asm
+  RUNTIME_EVIDENCE_512_SOURCE_001
+
+SSOT=
+  OBSERVATION_AUTHORITY_001
+  EMISSION_OWNERSHIP_001
+  RUNTIME_EVIDENCE_512_AUTHORITY_HOLD_001
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

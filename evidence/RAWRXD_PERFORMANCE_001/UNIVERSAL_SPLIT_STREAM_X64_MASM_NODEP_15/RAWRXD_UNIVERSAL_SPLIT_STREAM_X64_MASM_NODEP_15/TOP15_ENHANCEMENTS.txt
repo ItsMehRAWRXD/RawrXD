@@ -1,0 +1,74 @@
+UNIVERSAL_SPLIT_STREAM_X64_MASM_NODEP_15
+
+Frozen:
+  RESIDENCY_STATE_OWNS_MORNING_GROUCH=1
+  LOADING_STRATEGY_NE_RESIDENCY=1
+  MG_REDEFINED=0
+  PROMOTE=0
+
+01 MODEL_NAMESPACE_001
+   ModelId + ModelGeneration + RegionId prevent cross-model aliasing.
+
+02 CURRENT_OP_AUTHORITY_001
+   Begin/validate/end requires exact Ticket + Owner + model generation.
+
+03 CLOSED_REQUEST_PROVENANCE_001
+   Closed reason vocabulary; no architecture or family semantics in core.
+
+04 DYNAMIC_SELECTION_OBSERVED_001
+   Per-op observed dynamic cookie gates demand discovered during execution.
+
+05 ATOMIC_MG_CLAIM_001
+   lock cmpxchg COLD -> MG_IN_PROGRESS; one claim winner.
+
+06 RESIDENCY_JOIN_WAIT_001
+   Waiters observe committed generation; no background worker.
+
+07 FAIL_NOT_WARM_001
+   failed MG returns to COLD and never fabricates WARM.
+
+08 GENERATION_PIN_EVICT_001
+   commit/evict generations + pin blocks eviction + handle invalidation.
+
+09 REGION_ALIAS_COHERENCE_001
+   contained child aliases parent generation and pins parent;
+   partial overlap is explicit rejection.
+
+10 HOST_WARM_BUDGET_001
+   atomic overflow-safe host budget reserve/release.
+
+11 GPU_HOT_BUDGET_001
+   atomic overflow-safe GPU budget reserve/release.
+
+12 HOT_IDENTITY_001
+   model + residency gen + device id + allocation gen + handle + bytes.
+   Residency alone commits HOT.
+
+13 DUPLICATE_GPU_UPLOAD_GUARD_001
+   already-HOT promotion is USR_E_DUP and is counted.
+
+14 SPLIT_REGION_BATCH_001
+   batch prevalidation against one exact current-op authority.
+
+15 OBSERVED_RECEIPT_CORE_001
+   runtime counters reconcile MG_BYTES == PHYSICAL_BYTES,
+   duplicate first touch == 0, stale generation faults == 0.
+
+FORBIDDEN IN CORE:
+  family names
+  expert_count
+  top_k
+  block_count
+  MLA geometry
+  model-specific tensor names
+
+PROVIDER:
+  resolve/read bytes only
+
+DEVICE BACKEND:
+  allocate/copy/wait/free only
+
+RESIDENCY:
+  owns COLD/MG/WARM/HOT, generations, pins, aliases, HOT commit
+
+Native Win64 execution is NOT claimed until build_masm.bat is run with ml64/link.

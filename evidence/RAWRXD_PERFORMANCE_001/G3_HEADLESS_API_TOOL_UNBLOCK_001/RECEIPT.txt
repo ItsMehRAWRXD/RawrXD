@@ -1,0 +1,60 @@
+GATE=G3_HEADLESS_API_TOOL_UNBLOCK_001
+PURPOSE=Reverse HeadlessIDE blanket /api/tool 403; MOTD-gated dispatch E2E (align LocalServer)
+PARENT=G3_STREAMER_AGENTIC_SESSION_VERIFY_001
+ASOF=2026-09-10T00:34
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+NEXT_SPEND=NONE
+SPEND=0
+CONFIRMED=1
+
+BEFORE=
+  HeadlessIDE routeHttpRequest returned 403 public_command_and_file_routes_disabled
+  for /api/tool|/run-tool|/api/file|/api/command (called "by design" in prior verify receipt).
+  That design is REJECTED — blocked agentic even after MOTD.
+
+AFTER=
+  HeadlessIDE_ToolRoutes.cpp: routeToolAndFileRequest + executeToolRepl
+  MOTD gate: motd_required until read_motd / read_file(PassiveRoleNotRoleplay*)
+  MotdReset on /api/generate + /v1/chat/completions + /ask (motdResetOnGenerate)
+  --dir / --working-dir sets tool/MOTD working root (exe CWD otherwise = bin/)
+  Auth/origin still via authorizeHttpRequest (loopback local / hosted API key)
+
+FILES=
+  src/win32app/HeadlessIDE_ToolRoutes.cpp  (new dispatch)
+  src/win32app/HeadlessIDE.cpp             (route → ToolRoutes; --dir; MotdReset call)
+  src/win32app/HeadlessIDE.h               (routeToolAndFileRequest, executeToolRepl, motdResetOnGenerate)
+  CMakeLists.txt                           (HeadlessIDE_ToolRoutes.cpp on rawrxd + Win32IDE)
+
+HOW_TO_HIT=
+  RawrXD-Win32IDE.exe --headless --local --port 11495 --dir G:\~dev\rawrxd
+  POST http://127.0.0.1:11495/api/tool
+    Content-Type: application/json
+    {"tool":"read_motd","args":{}}
+    {"tool":"list_directory","args":{"path":".cursor/rules"}}
+    {"tool":"read_file","args":{"path":".cursor/rules/PassiveRoleNotRoleplay.md"}}
+
+PROOF=
+  BINARY: build-fd/bin/RawrXD-Win32IDE.exe
+    SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+    MTIME=2026-09-10T00:28:54-04:00 SIZE=329302016
+    public_command_and_file_routes_disabled=ABSENT
+    motd_required=PRESENT
+    resolveMotdPath hint PRESENT
+  LIVE (port 11495/11497 + 11949, --dir repo root):
+    BEFORE list_directory → 403 motd_required (NOT public_command_*)
+    read_motd {} / absolute PassiveRoleNotRoleplay.md → 200 content
+    AFTER list_directory → 200 entries (tools unlocked)
+    empty /api/generate {"prompt":""} → 400 invalid_prompt + MOTD reset
+    POST-GEN list_directory → 403 motd_required again
+  Artifacts: SMOKE.json, E2E_RESULTS.txt, KEY_LINES.txt, final_*.body.txt, r2_*.body.txt
+
+RESIDUALS=
+  Full /api/generate with real prompt can still crash headless process (no model /
+    inference path) — MOTD reset itself is proven via empty-prompt early return.
+  Prefer --dir <repo> (or absolute MOTD path); default workingDir follows exe CWD.
+  PassiveRoleNotRoleplay.md not overwritten by this gate.
+
+VERDICT=HEADLESS_API_TOOL_UNBLOCKED
+  Blanket 403 reversed. HeadlessIDE /api/tool is MOTD-gated dispatch E2E.

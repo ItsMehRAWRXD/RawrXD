@@ -1,0 +1,24 @@
+G3_DEEP2_671B_REAL_TOKEN_001 — CANONICAL SOURCE ABI
+
+This drop defines the concrete Win64 no-third-party-dependency ABI because the
+connected RawrXD main branch does not expose an indexed r671 implementation.
+
+Exports:
+  r671_open(path, ctx)
+  r671_tensor_acquire(ctx, file_offset, byte_length, generation_id, lease)
+  r671_release(ctx, lease)
+  r671_close(ctx)
+  Deep2R671TensorPrimitive(lease, desc, out)
+  G3Deep2R671RealTokenEvaluate(raw, result)
+
+Hard properties:
+  * lease.ptr is derived from MapViewOfFile and is the primitive operand source.
+  * offset+length overflow and EOF crossing fail closed.
+  * no full-tensor fallback exists.
+  * acquire/release/mapped-byte counters are internal.
+  * non-F32 tensor data cannot be falsely treated as F32 arithmetic.
+  * nonfinite F32 input is counted and fails primitive authorization.
+  * gate requires exactly one generated/token-commit/decode-commit.
+  * no promotion write or promotion authority exists in this drop.
+
+No third-party libraries. Windows kernel32 is the OS ABI, not a third-party dependency.

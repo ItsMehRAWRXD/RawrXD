@@ -1,0 +1,1 @@
+﻿EXIT=0 WALL_MS=116354 HARNESS=WaitForExit+Refresh

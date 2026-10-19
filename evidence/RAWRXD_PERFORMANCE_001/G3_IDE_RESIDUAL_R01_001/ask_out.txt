@@ -1,0 +1,1 @@
+{"error":"model_not_loaded","message":"Set model/modelPath or load a GGUF"}

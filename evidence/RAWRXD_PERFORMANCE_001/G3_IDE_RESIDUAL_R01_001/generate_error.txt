@@ -1,0 +1,7 @@
+﻿Invoke-WebRequest : {"error":"model_not_loaded","message":"Load a model before generate/chat"}
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-cfe11770-2c2a-4c2a-b35f-e4bb29c26317.ps1:82 char:1175
++ ...  try { $g = Invoke-WebRequest -Uri "http://127.0.0.1:11435/api/genera ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-WebRequest], WebExc 
+   eption
+    + FullyQualifiedErrorId : WebCmdletWebResponseException,Microsoft.PowerShell.Commands.InvokeWebRequestCommand

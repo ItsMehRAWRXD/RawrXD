@@ -1,0 +1,35 @@
+GATE=G3_IDE_RESIDUAL_AUDIT_001
+AUTHORITY=Full residual IDE product audit (Win32IDE + Headless + GUI EngineAPI)
+MODE=AUDIT_ONLY
+ASOF=2026-09-10T01:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN_CLOSED_LANES=1
+NO_FAKE_TPS=1
+NO_PROMOTION_WITHOUT_NEW_EVIDENCE=1
+
+SCOPE=
+  AUDIT_ROOT=G:\~dev\rawrxd
+  Win32IDE product path; GUI→engine→tool loop; model load/unload;
+  /ask /api/generate /v1/chat/completions; backend/router defaults;
+  agent lifecycle; tool execution; file ops; terminal/CLI;
+  model compatibility; persistence/history/replay; LSP/debugger bridges;
+  shutdown/restart; headless vs GUI parity; stubs/dead routes
+
+CLOSED_EXCLUDE_UNTOUCHED=
+  G3_STREAMER_AGENTIC_IDE_PARITY_001 (E2E_SEALED; agenticMode=false HELD_BY_POLICY)
+  HEADLESS_/api/tool_UNSTUB (G3_HEADLESS_API_TOOL_UNSTUB_001 + UNBLOCK_E2E)
+  DUALSTICK_ARMSPEED (streamer DualStick/ArmSpeed closure lane)
+  TIP_CLIMB (HOLD; no climb)
+
+POLICY_HOLDS=
+  agenticMode default must remain false — flipping true is a separate policy event
+  LOCAL_ONLY_NO_OLLAMA — do not reintroduce Ollama for product inference
+  MOTD fail-closed before tools (PassiveRoleNotRoleplay)
+  PROMOTE=0 TIP_CLIMB=HOLD
+
+NOT_CLAIMED=
+  No TPS / size / champion claims
+  No DualStick reopen
+  No Headless tool unstub re-proof
+  No code fixes in this gate (audit-only)

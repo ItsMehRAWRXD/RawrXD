@@ -1,0 +1,26 @@
+﻿PASS_COUNT=0
+FAIL_COUNT=10
+TOTAL=10
+OLLAMA_CONTACT=0
+EXE_SHA16=8B314E74590B0842
+EXE_SHA256=8B314E74590B08420DB5446D7F4EDE30F5BA8DD6BA39F06565C1CC0E2C904B35
+PE_LAA=YES
+HOST_DECODE=1
+OLLAMA=0
+ACCESS_VIOLATION=0
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+## OWNERS (honest; from MATRIX_LIVE.log)
+NOTE=Smoke :11436 tinyllama soft-unload PASS on same SHA 8B314E74…; matrix :11435 collided with foreign RawrXD-Win32IDE_r1cap on same port during run.
+CONTENDED=r1cap.exe also bound :11435 during early rows
+ROW 01_tinyllama FAIL prep=200 load=200 gen=0 tok=1 un=0 rel=0 rg=0 surv=0 owner=process_died_generate
+ROW 02_gemma3_1b FAIL prep=200 load=0 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=model_load
+ROW 03_llama32_3b FAIL prep=200 load=200 gen=0 tok=1 un=0 rel=0 rg=0 surv=0 owner=process_died_generate
+ROW 04_phi3_mini FAIL prep=200 load=200 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=process_died_generate
+ROW 05_mistral_7b FAIL prep=200 load=200 gen=0 tok=1 un=0 rel=0 rg=0 surv=0 owner=process_died_generate
+ROW 06_ds_r1_qwen3 FAIL prep=200 load=200 gen=0 tok=1 un=0 rel=0 rg=0 surv=0 owner=process_died_generate
+ROW 07_gemma4_e4b FAIL prep=200 load=0 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=model_load
+ROW 08_codestral FAIL prep=200 load=0 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=model_load
+ROW 09_qwen_coder FAIL prep=200 load=0 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=model_load
+ROW 10_glm47 FAIL prep=200 load=0 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=model_load

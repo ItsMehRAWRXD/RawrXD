@@ -1,0 +1,31 @@
+Q_B_FENCE_NARROW_001=BLOCKED
+DATE=2026-09-08
+PROMOTE=0
+PROMOTION=NO
+AUTHORITY=QB_HOST_CROSS_LATENCY_SPLIT_001
+
+PASS_ATTEMPTED=0
+REASON=NO_LEGAL_PRODUCER_SPAN_SHRINK
+
+PROOF_FROM_SPLIT
+  FENCE_OWNER=FENCE_WAIT
+  FENCE_WAIT_US=1121273
+  LUMP_US=1240610
+  D2H_COPY_OWNER=INSIDE_FUSED_CB_WITH_FENCE
+  MAP_INVALIDATE_US=20
+  HOST_MEMCPY_US=8895
+
+LAW
+  Host attention requires q_b after Q_B GEMV + D2H.
+  Those ops share one fused CB with required H2D+QA (+norm).
+  vkWaitForFences on that CB cannot drop causal predecessors.
+  Narrowing fence without splitting CB / device attention = theater.
+
+BLOCKED_UNTIL
+  NEW_STACK_PHASE opens PATH_B / fused consume-on-device
+  OR A3 chunked host consume with separate completion signals
+
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+TIP_CLIMB=HOLD
+GOODS_BRAIDED=1
+STRIP=FORBIDDEN

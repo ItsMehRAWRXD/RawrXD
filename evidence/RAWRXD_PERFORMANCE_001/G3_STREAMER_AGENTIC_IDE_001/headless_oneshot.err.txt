@@ -1,0 +1,9 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[WARN]  Instructions: No instruction files found in any search path [2357us]
+[WARN]  Instructions: No instruction files found in any search path
+[ERROR] Bad GGUF magic: 0x46554747 (expected 0x46475547)
+Headless init failed: Failed to load model (code 2)
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+[StreamEngine] Shutdown

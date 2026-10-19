@@ -1,0 +1,41 @@
+RAWRXD TOKEN NILW ACCOUNTING — AUTHORITY BOUNDARY
+
+The module derives NILW sustainability from caller-supplied raw facts. It does
+not generate, infer, or replace token/decode authority.
+
+Exact identity:
+  observed_new_payload_bits = new_codec_bits + overhead_bits
+
+Exact rational factors:
+  ACTIVE_CODEC_BPW         = active_codec_bits / active_logical_weights
+  PHYSICALIZATION_RATIO    = active_logical_weights / total_logical_weights
+  NEW_INFORMATION_FRACTION = new_codec_bits / active_codec_bits
+  OVERHEAD_TERM            = overhead_bits / total_logical_weights
+  TOKEN_NILW               = observed_new_payload_bits / total_logical_weights
+
+Therefore:
+  TOKEN_NILW
+    = ACTIVE_CODEC_BPW * PHYSICALIZATION_RATIO
+      * NEW_INFORMATION_FRACTION
+      + OVERHEAD_TERM
+
+If an upstream ACTIVE_BPW counter already uses new_codec_bits as its numerator,
+set active_codec_bits = new_codec_bits. NEW_INFORMATION_FRACTION then equals 1,
+so reuse is not multiplied into the accounting twice.
+
+NILW_G_SUSTAINABLE requires all structural, payload, bandwidth, TPS, duration,
+no-full-materialization, no-overflow, and no-long-run-failure gates.
+
+NILW_G_RUNTIME_AUTHORIZED additionally requires:
+  live_runtime_witness_count > 0
+  token_authority_agrees = 1
+  decode_authority_agrees = 1
+  superseded_zero_path_used = 0
+
+Those three authority inputs must come from the existing authoritative runtime
+token/decode path. The NILW module cannot manufacture them.
+
+SCHEDULER_TOUCHED=0
+PRODUCT_PROMOTE_TOUCHED=0
+DECODE_AUTHORITY_CREATED=0
+TOKEN_AUTHORITY_CREATED=0

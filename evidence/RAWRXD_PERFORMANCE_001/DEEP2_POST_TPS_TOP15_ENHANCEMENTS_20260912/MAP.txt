@@ -1,0 +1,42 @@
+GATE=DEEP2_POST_TPS_TOP15_ENHANCEMENTS_20260912
+MAP=enhancement → existing source/law (SOURCE≠RUNTIME≠PASS)
+
+01 packed_Q2K
+   MISSING15 #08 d2_packed_q2k_contract + AUDIT P2 d2_packed_q2k_tiled
+   NEXT15 #06/#07 · STATUS=OPEN
+02 persistent_dual_GPU_command_graphs
+   POST_BASELINE #07 persistent 61-block graph · STATUS=OPEN
+03 same_operator_partition
+   dual fabric plan_rows 4148/4044 + MISSING15 #02 partition_planner
+   STATUS=MOCK_SMOKE; live=OPEN
+04 device_local_weight_permanence
+   MISSING15 #03 range_locality + fabric LOCAL_WEIGHT_OWNERSHIP
+   STATUS=SOURCE_SIDE
+05 predictive_next_block_residency
+   model-size #09 compute/transfer overlap · STATUS=OPEN
+06 MoE_expert_lookahead
+   MISSING15 #12 expert_predictor · STATUS=OPEN_MOE
+07 kernel_fusion
+   NEXT15 fused attn/FFN · STATUS=OPEN
+08 persistent_KV_kernels
+   POST_BASELINE permanent device KV · STATUS=OPEN
+09 adaptive_KV_quant
+   MISSING15 #13 adaptive_kv · STATUS=OPEN
+10 LM_head_distributed_vocab
+   dual fabric LM_HEAD + fabric row shard · STATUS=OPEN
+11 async_compact_reduce
+   MISSING15 #07 compact_reduce + fabric reduce fn · STATUS=SOURCE_SIDE
+12 residency_value_cost_compiler
+   MISSING15 #10+#11 residency_budget + fit_class · STATUS=OPEN
+13 stage_timing_authority
+   AUDIT P1 d2_stage_timing_authority · STATUS=SOURCE_WIRED mock
+14 zero_allocation_steady_state
+   endurance arenas + ResidencyGraph run_token zero-heap · PARTIAL
+15 speculative_pipelined_token
+   after single-token critical path fixed · STATUS=OPEN HOLD_AR
+
+IMMEDIATE_P0_ENGINEERING=
+  d2_deviceio_ssvk_bind → d2_fabric_submit
+  → d2_overlap_authority → d2_compact_reduce
+  → DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
+GOVERNING_E2E=DEEP2_TRUE_E2E_TOP15_20260912

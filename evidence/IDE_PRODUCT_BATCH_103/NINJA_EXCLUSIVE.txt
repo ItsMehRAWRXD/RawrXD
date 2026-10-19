@@ -1,0 +1,4 @@
+ninja: Entering directory `g:\~dev\rawrxd\build_p1pra_win32ide'
+[1/168] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[2/168] Linking CXX static library InferenceEngine.lib
+[3/168] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\main_win32.cpp.obj

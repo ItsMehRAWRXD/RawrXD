@@ -1,0 +1,120 @@
+MISSING_IMPL_AUDIT_001=SEALED
+DATE=2026-09-08
+AUTHORITY=IMPLEMENTATION_AUTHORITY_001
+ISSUE=MISSING_IMPL_AUDIT_ISSUE_001
+SPEND=0 HOT_GATE=0 CODE_CHANGE=0
+COMPAT_TEST_ISSUE_001=SUPERSEDED (misread; not this audit)
+VERIFY=SOURCE|SYMBOL|CALLSITE|BUILD|RUNTIME
+
+# --- MATRIX ----------------------------------------------------------------
+
+ITEM=rawr_run_CLI
+  SOURCE=1 (src/deep2/rawr_run.cpp)
+  BUILD=1 (add_executable rawr → InferenceEngine; build-fd/bin/rawr.exe PRESENT)
+  RUNTIME_SURFACE=rawr run <model> [prompt] ONLY
+  ABSENT_CMDS=list|inspect|chat|stop|unload|ps
+  CLASS=PRESENT_UNWIRED (suite incomplete)
+  MISSING=full product CLI surface
+
+ITEM=rawr_vs_PERF_AUTHORITY
+  rawr.exe=NON_AUTHORITY (GATE)
+  deep2_benchmark.exe=PERF_AUTHORITY PRESENT
+  CLASS=IMPLEMENTED_SPLIT
+
+ITEM=Deep2_GGUFLoader_data_align_32
+  SOURCE=1 hardcode ALIGN_UP 32
+  general.alignment_in_GGUFLoader.cpp=0
+  CLASS_LOADER=IMPLEMENTED (hardcode)
+  CLASS_METADATA_WIRE=ABSENT in Deep2 GGUFLoader
+
+ITEM=general.alignment_elsewhere
+  SOURCE=1 in SharedModelRuntime|streaming_gguf_loader|GGUFRunner|gguf.cpp|GGUFShardRouter|…
+  Deep2_perf_path_uses=GGUFLoader hardcode (unwired to KV)
+  CLASS=PRESENT_UNWIRED relative to Deep2 authority loader
+
+ITEM=ALIGN8_per_tensor_info
+  Deep2_GGUFLoader=ABSENT (correct)
+  CLASS=IMPLEMENTED_ABSENT
+
+ITEM=QuadBuffer_Streamer_ALIGN32_before_tensor_info
+  SOURCE=1 asm @gguf_metadata_done align 32
+  BUILD_OBJ=1 build-fd/RawrXD_QuadBuffer_Streamer.obj
+  LINK=MASM_OBJECTS → rawrxd (not proven on deep2_benchmark hot path)
+  RUNTIME_REACHABLE_ON_PERF_EXE=UNKNOWN
+  CLASS=IMPLEMENTATION_PRESENT
+  EDIT=blocked pending LIVE_CURSOR_DIVERGENCE_RECEIPT
+
+ITEM=PATH_B
+  SOURCE=1 K2MLA_PathB.cpp|.hpp|_Attn.cpp
+  BUILD=1 in InferenceEngine sources + vulkan_fwd_attn_mla.cpp
+  GATE=PathBWanted needs DEEP2_PATH_B=1 exact
+  RUNTIME=one-shot observed; n5 FROZEN
+  CLASS=PRESENT_UNWIRED (execution policy off)
+
+ITEM=q_b
+  SOURCE=1 widespread Deep2 MLA
+  PERF_OWNER_EQUIVALENCE=UNPROVEN
+  CLASS=PRESENT
+
+ITEM=BADF107_literal
+  SOURCE_HIT=0
+  CLASS=UNKNOWN/NO_LITERAL
+
+ITEM=TIP_CLIMB_literal
+  SOURCE_HIT=0
+  CLASS=UNKNOWN/NO_LITERAL
+
+ITEM=ACTUAL_PASS_NO_REOPEN_policy
+  BINARY_ENFORCEMENT=0
+  CLASS=POLICY_ONLY
+
+ITEM=COMPAT_SEEDS_B1
+  INVENTORY=1 SEED_COUNT=5
+  OLLAMA_BLOB_RESOLVE=1 all five FROM blobs exist magic=GGUF
+  B1.1 sha256-dde5… 1.88GB
+  B1.1_ONESHOT=MEASURED_SPLIT (local Q3_K_S path; stages PASS floor FAIL 1.387/5)
+  B1.2 sha256-527d… 2.64GB (≠ F: Nemotron Q8 standalone path; blob is Ollama object)
+  B1.3 sha256-aeda… 3.11GB
+  B1.4 sha256-77bc… 4.60GB
+  B1.5 sha256-a3de… 4.87GB
+  E2E_WITNESS=B1.1_ONLY
+  CLASS=B1.1_MEASURED|B1.2-5_RUN_ABSENT
+  NEXT_B1.n_REQUIRES=MODE=COMPAT_TEST HOT_GATE=1 TARGET=B1.n
+
+ITEM=SECURITY_AGENT
+  SOURCE_POLICY=inventoried receipt only
+  SCHEDULE_SCAN=0
+  CLASS=HELD_ABSENT_RUNTIME
+
+ITEM=Codestral_compat_fail
+  MEASURED_PRIOR=1 decode fail
+  FIX_IMPL=not audited as present dedicated fix
+  CLASS=MEASURED_GAP_NO_FIX_CLAIM
+
+# --- MISSING SUMMARY (actionable impl gaps) --------------------------------
+
+MISSING_OR_INCOMPLETE=
+  1 rawr list|inspect|chat|stop|unload|ps
+  2 Deep2 GGUFLoader general.alignment wiring
+  3 COMPAT_TEST Batch1 runtime witnesses (policy-gated)
+  4 PATH_B n5 endurance (policy-gated MODE=A)
+  5 QuadBuffer vs Deep2 loader path attribution (RUNTIME_REACHABLE unknown on bench)
+  6 q_b perf theory equivalence attribution
+  7 SECURITY_AGENT activation surface
+  8 optional B.2 ontology SUPERSEDE / B.3 GE_GATE reconcile (receipt hygiene)
+
+NOT_MISSING=
+  rawr run minimal
+  deep2_benchmark.exe
+  PATH_A champion path
+  PATH_B code in InferenceEngine
+  ALIGN8-in-loop (correctly absent in C++ loader)
+  data-section 32 hardcode in GGUFLoader
+  seed blob files on disk (GGUF magic)
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  ACTIVE_SPEND_ISSUE=0
+  AUDIT_COMPLETE=1

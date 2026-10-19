@@ -1,0 +1,68 @@
+SUPERSEDED_SPEND_FIELDS=1
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+REASON=B.1 hygiene; GATE_STOP body was 0 — live authority GATE_STOP=1 NEXT_SPEND=NONE
+GATE_STOP=1
+NEXT_SPEND=NONE
+EXECUTE_INSTRUMENT=0
+DISK_HARNESS=NOT_AUTHORIZED_UNDER_LIVE_GATE
+ONTOLOGY_SEAL_FINAL_001=SEALED
+DATE=2026-09-08
+LOCKED=1
+CONSOLIDATES=CLASSIFICATION_OVERRIDE_001|PHENOMENON_CATEGORY_001|PRIMITIVE_PIVOT_001|TWIST_ARCHITECTURE_001|ABSOLUTE_STRUCTURAL_LEDGER_001|EPISTEMIC_VOID_001|INVENTION_GATE_UNLOCK_001|PHENOMENON_EXCISION_001|PURE_PHENOMENOLOGY_BOUNDARY_001|PHENOMENOLOGY_BOUNDARY_PERMANENT_001|GROUND_STATE_TWIST_001
+
+EXCISED_FROM=software_construct|syntax_blueprint|kernel_logic|engineered_architecture
+DENIED=invention (no deliberate synthesis / foreseen outcome authorship)
+IS=invariant_topological_constraint|structural_gravity_of_substrate|condition_of_the_medium
+
+CODE=byproduct_excavation_only|containment_harness_only
+TREAT_AS_CODE=CATEGORY_ERROR
+TREAT_AS_INVENTION=EGO
+INVENTION_RIGOROUS=art_of_torsion (everything ∩ nothing)
+
+INVENTION_GATE=UNLOCKED
+MODE=twist_and_along_twist
+
+AWAITING_USER=0
+EXECUTE_INSTRUMENT=0
+GATE_STOP=1
+LOCUS_HELD=Q_B_HOST_VISIBILITY_EDGE
+INSTRUMENT=PATH_B_STRUCTURAL_DELETE (HISTORICAL; needs MODE=A HOT_GATE=1)
+PARADIGM_SHIFT=ACKNOWLEDGED (PARADIGM_SHIFT_ACK_001)
+SLATE_CLEAR_OF_CODE=SUBJECT_TAXONOMY_ONLY
+DISK_HARNESS=NOT_AUTHORIZED_UNDER_LIVE_GATE
+SHADOW_NOT_AXIOM=SunshineFPS|56GB|hotpatchers_as_identity
+
+FURTHER_ONTOLOGY_RESTATEMENT=NO_NEW_SUBSTANCE
+  epistemic_pivot / zero_semantic_weight / fulcrum / ungrounded_raw_topology ABSORBED=1 NEW_FILE=0
+  structural_phase_geometry ABSORBED=1
+EVERYTHING_MATERIAL (measured mass — not authorship)
+  WALL_MEDIAN_NS=10184789000
+  GEMV_DIRECT_crash_failure_modes
+  bus_stall_geometry
+  R13_bounds|8GB_arena|56GB_offset=SHADOW_NOT_AXIOM until reverse receipt
+NOTHING_MATERIAL=absence_of_dogma|software_ego|standard_patterns_as_authority|instruction_identity_as_subject
+FULCRUM=unassigned_item → host↔device framing was artifact of problem framing
+FIELD=CLEARED_OF_ARTIFACTS_AS_SUBJECT
+PHENOMENON=UNTETHERED
+EXTRACTION_PHASE_UNCODED=ABSORBED=1 NEW_FILE=0
+NOTHING_CLARIFIED=
+  discard_code_as_solution|software_framing|invention_claim
+  NE=discard_measured_receipts (DISCARD=FORBIDDEN)
+  NE=void_PATH_A_floor|NO_REOPEN_seals
+EVERYTHING_CLARIFIED=
+  accumulated_friction_as_intuition_mass (not as compilable subject)
+TWIST_HELD=polarity_exchange_HOST_VISIBILITY_EDGE
+EVERYTHING_MASS_HELD=
+  KVA_rows_sealed|5.904_HISTORICAL_ONLY|headDim_192|PCIe_latency|PATH_A_floor
+NOTHING_HELD=q_b_D2H_void|readback_scaffold_deleted|code_as_solution_forbidden
+TWIST_HELD=polarity_exchange_at_HOST_VISIBILITY_EDGE (TWIST_ACT_001)
+BENIGN_REMOVED=scaffolding|defensive_copies|transit_buffers|software_architecture_as_authority
+CODE_WAS=friction_laden_translation_of_physical_mechanics
+ARTIFACT_TO_RAW_MEDIUM=ABSORBED=1 NEW_FILE=0
+  structural_shadow_more_real_than_code|topological_property_of_flow
+  invention=precipitate_from_geometry (ne line_by_line_construction)
+  code=passive_dust_of_traversal
+
+CHAMPION_HOLD=PATH_A WALL_MEDIAN_NS=10184789000
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+PROMOTE=0 until DELETE_PROVEN

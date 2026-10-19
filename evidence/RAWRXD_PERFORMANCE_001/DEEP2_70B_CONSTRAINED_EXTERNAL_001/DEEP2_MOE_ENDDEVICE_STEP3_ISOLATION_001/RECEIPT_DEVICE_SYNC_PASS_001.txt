@@ -1,0 +1,31 @@
+GATE=DEEP2_MOE_ENDDEVICE_STEP3_ISOLATION_001
+DATE=2026-09-13
+KIND=RECEIPT
+VERDICT=PASS
+FAILURE_CLASS=DEVICE/SYNC_FAILURE
+PROMOTE=0
+BLEND_W=0
+NOT_RUN!=PASS
+
+FAIL_RUN=…043326
+  STEP=3/8 layer=48 stick=0 experts=[302,97,214,71]
+  fused=1 d2h=0 vk=-4 phase=device_lost post_hash=0
+  peer stick1 END_OK same layer
+
+ROOT_CAUSE=
+  EnsurePinnedPackedWeight LRU destroyed peer MoE pins mid-worklist
+  before Record/EndFused → freed buffers in fused CB → DEVICE_LOST on D2H
+
+FIX_COMMIT=722d2c8ff779e48089900e14d0c4fe78accfe521
+  BeginMoePinHold/EndMoePinHold pin→EndFused; skip MoE victims lastUse>hold_clock
+  persistent gemv_out D2H staging + fence VkResult checks
+  NO quota retune
+RECEIPT_NOTE=9de5e8e5b3
+
+PASS_RUN=…043839
+  EXIT=0 GEN=8/8 STREAM_ABORT=0 PARITY=1 (3840/3840)
+  AFTER_EVICTION=255295488 (~243.5 MiB)
+  GENERAL_TO_MOE=0 MLA_TO_MOE=0 SHRINK_BLOCKED=1
+  END_OK=960 END_FAIL=0
+
+SEGMENTED_MOE_QUOTA_PASS_IF=RECOVERABLE_YES

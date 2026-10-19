@@ -1,0 +1,13 @@
+﻿STAMP=20260913_010854
+TAG=DUALSTICK_KERNEL_IMBALANCE_L8T8
+RAWRXD_ALLOW_GPU=1
+RAWRXD_HOST_DECODE=0
+DEEP2_DUALSTICK_ARM=1
+RAWRXD_K2_LAYERS=8
+DEEP2_MOE_PLACE_BUDGET_MIB=8192
+WEIGHT_BUDGET=E8B0M
+VK_DRIVER_FILES=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+TOKENS=8
+NOTE=Phase B first-five imbalance L8 probe; PROMOTE=0

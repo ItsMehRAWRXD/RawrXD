@@ -1,0 +1,41 @@
+{
+    "receipt_id":  "QKV_READBACK_CUT_001",
+    "result":  "CUT_MISS",
+    "promote":  0,
+    "attribution_only":  0,
+    "date":  "2026-09-08",
+    "decode_tps_real":  4.665,
+    "generation_wall_ns":  13719874900,
+    "q_branch_us":  3111401,
+    "qkv_readback_us":  2738301,
+    "qkv_readback_bytes":  191891712,
+    "qkv_exposed_us":  3791494,
+    "logits_exposed_us":  1392599,
+    "mla_q_device_ops":  3904,
+    "mla_q_device_fail":  0,
+    "argmax_parity":  1,
+    "actual_e2e":  1,
+    "readback_reduced":  0,
+    "tip_tps":  5.904,
+    "tip_qkv_readback_us":  1972945,
+    "tip_receipt":  "QB_KERNEL_CUT_001",
+    "cut_lever":  "PERSISTENT_HOST_IO_MAP",
+    "witness_log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qkv_rb_cut64_20260908-114246.log",
+    "next_runtime_action":  "QKV_READBACK_CUT",
+    "current_owner":  "QKV_READBACK",
+    "forced_off":  {
+                       "TOKEN_PACING":  "OFF",
+                       "DEEP2_CERT_STEP_LOG":  "0",
+                       "DEEP2_LOGITS_GPU_SPLIT":  "0",
+                       "DEEP2_MLA_Q_DEVICE_FORCE_OFF":  "0",
+                       "QKV_OWNER_RESI_LOG":  "0",
+                       "TOK_RESIDUAL_SPAM":  "0"
+                   },
+    "do_not_reopen":  [
+                          "QB_KERNEL",
+                          "KvaRowsClimb",
+                          "LogitsSplit",
+                          "LogitsOwnerResidual",
+                          "ProductAuthority"
+                      ]
+}

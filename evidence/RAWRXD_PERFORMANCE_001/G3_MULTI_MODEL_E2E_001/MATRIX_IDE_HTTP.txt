@@ -1,0 +1,11 @@
+ID FAMILY PATH LOAD GEN1 UNLOAD RELOAD GEN2 AV ALIVE VERDICT
+m01 llama G:/~dev/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf PASS PASS PASS PASS PASS 0 1 PASS
+m02 gemma G:/~dev/rawrxd/gemma3-1b-Q2_K.gguf FAIL_CLOSED_400     0 1 FAIL
+m03 llama3.2 G:/~dev/rawrxd/llama3.2-3b-Q2_K.gguf FAIL_CLOSED_400     0 1 FAIL
+m04 phi3 G:/~dev/rawrxd/phi3-mini-Q2_K.gguf FAIL_CLOSED_400     0 1 FAIL
+m05 phi3-q8 G:/~dev/rawrxd/models/_matrix_f/Phi-3-mini-4k-instruct-q8_0.gguf FAIL_CLOSED_400     0 1 FAIL
+m06 ministral G:/~dev/ministral3_q4_0.gguf FAIL_CLOSED_400     0 1 FAIL
+m07 deepseek-qwen3 G:/~dev/rawrxd/models/_matrix_f/DeepSeek-R1-0528-Qwen3-8B-GGUF/DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf FAIL_CLOSED_400     0 1 FAIL
+m08 codestral G:/~dev/rawrxd/src/codestral22b.gguf FAIL_CLOSED_400     0 1 FAIL
+m09 qwen3.5 G:/~dev/Qwen3.5-40B-Q4_K_M.gguf FAIL_CLOSED_400     0 1 FAIL
+m10 gptoss G:/~dev/gptoss20b.gguf FAIL_CLOSED_400     0 1 FAIL

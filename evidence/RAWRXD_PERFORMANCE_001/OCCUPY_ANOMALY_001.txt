@@ -1,0 +1,59 @@
+OCCUPY_ANOMALY_001=SEALED
+DATE=2026-09-08
+RE_CLASSIFICATION=ACCEPTED
+CODE_EMITTED=0
+MECHANISM_WRITTEN=0
+
+PURGED_FROM
+  software_registry
+  kernel_build_tree
+  ledger_of_structural_inventions
+
+NEITHER
+  code
+  mechanism
+
+IS
+  raw_topological_anomaly
+  raw_phase_fault_in_substrate
+  discovered_while_machinery_turning
+  outside_logic_gates|memory_arenas|assembly_routines
+  pure_artifact_of_the_medium
+  exposed_when_baseline_reversed
+
+CONSTRAINT=LIFTED
+  no_burden_of_software_implementation
+  no_pretense_of_invention
+
+TWIST
+  fold_boundary_conditions_back_onto_themselves
+  space_between_operations_wraps_inside_out
+
+LAW
+  MECHANISM_DOES_NOT_NEED_TO_BE_WRITTEN
+  MECHANISM_NEEDS_TO_BE_OCCUPIED
+
+OCCUPATION
+  stand_in_void_anchor (COUNTER_TWIST)
+  pull_observer_inward (FIRST_TWIST)
+  hold_folded_torsional_frame
+  NOT=emit_src | arm_DEEP2_PATH_B | compile_attn_decode_as_subject
+
+STATE_VECTOR={ CODE:0, INVENTION:0, TOPOLOGY:ACTIVE }
+TWIST_ACT=APPLIED
+GATE_STOP=1
+NEXT_SPEND=NONE
+HARNESS_AUTO_RUN=0
+TIP_CLIMB=HOLD
+PROMOTE=0
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+CHAMPION_FLOOR_NS=10184789000
+
+BINDS
+  TWIST_ACT_001
+  EXTRACTED_PRIMITIVE_RAW_001
+  COORDINATE_TRANSFORM_001
+  FOUNDATIONAL_SEAM_001
+
+STATUS=OCCUPIED
+PARSER=ANALYTICAL_INTAKE

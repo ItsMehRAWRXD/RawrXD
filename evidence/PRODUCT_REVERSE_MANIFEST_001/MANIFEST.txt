@@ -1,0 +1,1086 @@
+﻿RAWRXD_PRODUCT_REVERSE_MANIFEST_001
+
+ROOT=G:\~dev\rawrxd
+SOURCE_FILES=40679
+
+TOTAL=120
+DONE=4
+PARTIAL=116
+MISSING=0
+
+PRODUCT_PATH_COMPLETE=0
+DUPLICATE_RUNTIME_DOMAINS=5
+
+RULES:
+DONE=strong implementation evidence + dependencies satisfied
+PARTIAL=declaration/stub/dependency-incomplete
+MISSING=no implementation evidence
+MISSING_IF_APPLICABLE=optional product capability absent
+NOT_APPLICABLE=never inferred automatically
+
+001 [PARTIAL              ] Single ProductRun entrypoint
+      EVIDENCE=reverse_product_manifest.ps1
+      EVIDENCE=src\cli\rawr_commands.cpp
+      EVIDENCE=src\deep2\Deep2IDEIntegration.cpp
+      EVIDENCE=src\deep2\Deep2IDEIntegration.hpp
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+002 [PARTIAL              ] CLI wired to production runtime
+      EVIDENCE=build_cli.bat
+      EVIDENCE=build_cli.ps1
+      EVIDENCE=build_cli_complete.ps1
+      EVIDENCE=build_cli_final.bat
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+003 [PARTIAL              ] IDE wired to production runtime
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=benchmark_quick.cpp
+      EVIDENCE=build.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+004 [PARTIAL              ] Agent wired to production runtime
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=bigdaddyg-ide\src\agentic\orchestrator.js
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+005 [PARTIAL              ] Central model resolver
+      EVIDENCE=reverse_product_manifest.ps1
+      EVIDENCE=src\cli\rawr_commands.cpp
+      EVIDENCE=src\cli\rawr_model_registry.hpp
+      EVIDENCE=src\deep2\local_only_001_cert.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+006 [PARTIAL              ] Central GGUF loader
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\04_Testing\RawrXD.SwarmAgent.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\04_Testing\RawrXD.SwarmAgent.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\04_Testing\RawrXD.SwarmAgent.psm1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+007 [PARTIAL              ] Tokenizer construction
+      EVIDENCE=.github\workflows\archive\security-deployment.yml
+      EVIDENCE=.github\workflows\archive\security-hotpatch-ci.yml
+      EVIDENCE=AI_TokenStream.hpp
+      EVIDENCE=audit_orphans.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+008 [PARTIAL              ] KV cache implementation
+      EVIDENCE=_build_and_link_test.bat
+      EVIDENCE=_stub_scan.ps1
+      EVIDENCE=3rdparty\ggml\examples\gpt-2\main-batched.cpp
+      EVIDENCE=asm\kernel_inventory.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+009 [PARTIAL              ] Execution graph builder
+      EVIDENCE=benchmarks\sovereign_vs_ollama\src\batch1_inference_agent_swarm.hpp
+      EVIDENCE=benchmarks\sovereign_vs_ollama\src\batch4_stress_chaos.hpp
+      EVIDENCE=repo_audit\inventory.json
+      EVIDENCE=seg\seg_builder_smoke_test.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+010 [PARTIAL              ] Production GenerateStream
+      EVIDENCE=certs\nemotron_nano_poem_smoke.cpp
+      EVIDENCE=certs\rawrxd_actual_e2e_generation_001.cpp
+      EVIDENCE=certs\rawrxd_autocomplete_e2e_001.cpp
+      EVIDENCE=certs\rawrxd_autocomplete_live_second_001.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+011 [PARTIAL              ] Forward layer implementation
+      EVIDENCE=src\core\inference_pipeline.hpp
+      EVIDENCE=src\core\local_ai_core.cpp
+      EVIDENCE=src\core\local_ai_core.hpp
+      EVIDENCE=src\deep2\Deep2_Elastic_Forward_Test.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+012 [PARTIAL              ] Sampler implementation
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\Powershield_Audit_Report.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\06_Extensions\PoshLLM.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\06_Extensions\PoshLLM.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\06_Extensions\PoshLLM.psm1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+013 [PARTIAL              ] Streaming token emitter
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\vendor\acorn.js
+      EVIDENCE=AI_TokenStream.cpp
+      EVIDENCE=AI_TokenStream.hpp
+      EVIDENCE=AI_TokenStream_Test.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+014 [PARTIAL              ] Unified teardown
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=AI_TokenStream.cpp
+      EVIDENCE=AI_TokenStream.hpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+015 [PARTIAL              ] Canonical product receipt
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\git\resources\emojis.json
+      EVIDENCE=benchmark_end_to_end.cpp
+      EVIDENCE=benchmark_harness.cpp
+      EVIDENCE=benchmarks\deepseek_671b_benchmark.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+016 [PARTIAL              ] Runtime state owner
+      EVIDENCE=reverse_product_manifest.ps1
+      EVIDENCE=src\asm\webview_preload_bridge.asm
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+017 [PARTIAL              ] Architecture dispatch
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\bootloader.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\extension.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\watchdog.js
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+018 [PARTIAL              ] Attention implementation
+      EVIDENCE=asm\benchmark_kernels.cpp
+      EVIDENCE=audit_orphans.ps1
+      EVIDENCE=audit_report.json
+      EVIDENCE=benchmark_avx2.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+019 [PARTIAL              ] FFN implementation
+      EVIDENCE=benchmark_avx2.cpp
+      EVIDENCE=cli_phase7e.cpp
+      EVIDENCE=CodexPro_Sovereign_Profile.asm
+      EVIDENCE=FINAL_GAP_CLOSURE_VERIFICATION.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+020 [PARTIAL              ] SSM implementation
+      EVIDENCE=certs\nemotron_nano_poem_smoke.cpp
+      EVIDENCE=extensions\js\amazonwebservices.amazon-q-vscode\package.nls.json
+      EVIDENCE=extensions\js\amazonwebservices.amazon-q-vscode\resources\endpoints.json
+      EVIDENCE=extensions\js\amazonwebservices.amazon-q-vscode\resources\sagemaker_connect.ps1
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+021 [PARTIAL              ] MoE router
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=audit\cmake_source_target_matrix.json
+      EVIDENCE=audit_build\compile_commands.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+022 [PARTIAL              ] Logits implementation
+      EVIDENCE=benchmark_avx2.cpp
+      EVIDENCE=benchmark_inference.cpp
+      EVIDENCE=benchmark_tps.cpp
+      EVIDENCE=cli_phase7e.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+023 [PARTIAL              ] Prompt prefill
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=AI_TokenStream.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+024 [PARTIAL              ] Autoregressive decode loop
+      EVIDENCE=AI_TokenStream.hpp
+      EVIDENCE=AI_TokenStream_Test.cpp
+      EVIDENCE=AUDIT_TRACKER.json
+      EVIDENCE=benchmark_context_scaling.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+025 [PARTIAL              ] Stop conditions
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\bootloader.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\extension.js
+      EVIDENCE=AI_TokenStream.hpp
+      EVIDENCE=ai-ml\speculative\speculative_decoder.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+026 [PARTIAL              ] Cancellation
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\extension.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\watchdog.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\objective-c\syntaxes\objective-c.tmLanguage.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+027 [PARTIAL              ] First failure ownership
+      EVIDENCE=AUDIT_TRACKER.json
+      EVIDENCE=Build_Amphibious_ML64_Complete.ps1
+      EVIDENCE=Build-PE-Writer-Phase3.ps1
+      EVIDENCE=Build-TextEditor-Complete-ml64.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+028 [PARTIAL              ] Normal completion state
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      REASON=Implementation exists, but required dependencies are not DONE: 24,25
+029 [PARTIAL              ] Generated-token accounting
+      EVIDENCE=__profile.json
+      EVIDENCE=ai-ml\speculative\speculative_decoder.ps1
+      EVIDENCE=B008\manifest.json
+      EVIDENCE=B010\performance\b010_weight_access_metrics.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+030 [PARTIAL              ] Runtime error propagation
+      EVIDENCE=.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\itsmehrawrxd-master\Eon-ASM\compilers\language_templates.asm
+      EVIDENCE=.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\itsmehrawrxd-master\test_full_eon_compiler.asm
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+031 [PARTIAL              ] GGUF metadata parsing
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      EVIDENCE=audit_all_features.ps1
+      EVIDENCE=audit_orphans.ps1
+      EVIDENCE=audit_report.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+032 [PARTIAL              ] Tensor registry
+      EVIDENCE=3rdparty\ggml\examples\gpt-2\main-alloc.cpp
+      EVIDENCE=3rdparty\ggml\examples\gpt-2\main-backend.cpp
+      EVIDENCE=3rdparty\ggml\examples\gpt-2\main-batched.cpp
+      EVIDENCE=3rdparty\ggml\examples\gpt-2\main-ctx.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+033 [PARTIAL              ] Tensor lookup
+      EVIDENCE=cli\model_context.cpp
+      EVIDENCE=cli\model_context.hpp
+      EVIDENCE=cli\model_loader_streaming.cpp
+      EVIDENCE=cli\model_loader_streaming.hpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+034 [PARTIAL              ] Split GGUF
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\php\syntaxes\php.tmLanguage.json
+      EVIDENCE=3rdparty\ggml\examples\mnist\mnist-train.cpp
+      EVIDENCE=3rdparty\ggml\include\ggml-opt.h
+      EVIDENCE=asm-sources\Week2_3_Master_Complete.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+035 [PARTIAL              ] Quant dispatch
+      EVIDENCE=bench_2t_all_q_all_methods_all_compressions.json
+      EVIDENCE=bench_2T_allQ_allMethods_selfcorrecting.json
+      EVIDENCE=benchmark_inference.cpp
+      EVIDENCE=benchmark_quick.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+036 [PARTIAL              ] Q2_K implementation
+      EVIDENCE=3rdparty\ggml\src\ggml.c
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\arch-fallback.h
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\repack.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+037 [PARTIAL              ] Q3_K implementation
+      EVIDENCE=__profile.json
+      EVIDENCE=3rdparty\ggml\examples\common-ggml.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml.c
+      EVIDENCE=3rdparty\ggml\src\ggml-common.h
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+038 [PARTIAL              ] Q4_K implementation
+      EVIDENCE=3rdparty\ggml\src\ggml.c
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\amx\mmq.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\arch-fallback.h
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+039 [PARTIAL              ] Q5_K implementation
+      EVIDENCE=__profile.json
+      EVIDENCE=3rdparty\ggml\examples\common-ggml.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml.c
+      EVIDENCE=3rdparty\ggml\src\ggml-common.h
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+040 [PARTIAL              ] Q6_K implementation
+      EVIDENCE=__profile.json
+      EVIDENCE=3rdparty\ggml\examples\common-ggml.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml.c
+      EVIDENCE=3rdparty\ggml\src\ggml-common.h
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+041 [PARTIAL              ] Q8_0 implementation
+      EVIDENCE=3rdparty\ggml\src\ggml.c
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\amx\mmq.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\arch\arm\repack.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-cpu\arch-fallback.h
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+042 [PARTIAL              ] Model dimension authority
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\06_Extensions\PoshLLM.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\06_Extensions\PoshLLM.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\06_Extensions\PoshLLM.psm1
+      EVIDENCE=3rdparty\ggml\src\ggml-cann\aclnn_ops.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+043 [DONE                 ] Tensor validation
+      EVIDENCE=asm\Sovereign_Transformer_Oracle.cpp
+      EVIDENCE=asm\test_kernels_simple.cpp
+      EVIDENCE=c1_output.json
+      EVIDENCE=Complete-AllImplementations.ps1
+      REASON=Implementation-pattern evidence found.
+044 [PARTIAL              ] Residency/working set
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AUDIT_TRACKER.json
+      EVIDENCE=build_fix5b_residency.bat
+      EVIDENCE=build_fix5b_v2.bat
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+045 [PARTIAL              ] Weight streaming
+      EVIDENCE=ArchitectureEnhancementEngine.psm1
+      EVIDENCE=audit_all_features.ps1
+      EVIDENCE=AUDIT_TRACKER.json
+      EVIDENCE=bench_2T_allQ_allMethods_selfcorrecting.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+046 [PARTIAL              ] CPU backend
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=audit_build\compile_commands.json
+      EVIDENCE=audit_report.json
+      EVIDENCE=bench_2t_all_q_all_methods_all_compressions.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+047 [PARTIAL              ] Vulkan backend
+      EVIDENCE=assemble_and_link.ps1
+      EVIDENCE=audit_orphans.ps1
+      EVIDENCE=audit_report.json
+      EVIDENCE=benchmark_inference.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+048 [PARTIAL              ] Vulkan compute pipeline
+      EVIDENCE=3rdparty\ggml\src\ggml-vulkan\vulkan-shaders\vulkan-shaders-gen.cpp
+      EVIDENCE=ai-ml\quantization\quantization_engine.ps1
+      EVIDENCE=asm\kernel_inventory.ps1
+      EVIDENCE=asm-sources\NEON_VULKAN_FABRIC.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+049 [PARTIAL              ] Device discovery
+      EVIDENCE=3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp
+      EVIDENCE=deploy\docs\AGENTIC_REALITY_MANIFEST.json
+      EVIDENCE=docs\AGENTIC_REALITY_MANIFEST.json
+      EVIDENCE=gpu_dma_clean.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+050 [PARTIAL              ] Capability-based GPU selection
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=3rdparty\ggml\src\ggml-hexagon\htp-utils.c
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=aggressive_qt_purge.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+051 [PARTIAL              ] GPU memory allocator
+      EVIDENCE=asm-sources\NEON_VULKAN_FABRIC.asm
+      EVIDENCE=asm-sources\Phase3_Master_Complete.asm
+      EVIDENCE=asm-sources\Phase4_Master_Complete.asm
+      EVIDENCE=asm-sources\Phase5_Master_Complete.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+052 [PARTIAL              ] Command buffer execution
+      EVIDENCE=3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-webgpu\ggml-webgpu.cpp
+      EVIDENCE=deploy\docs\AGENTIC_REALITY_MANIFEST.json
+      EVIDENCE=docs\AGENTIC_REALITY_MANIFEST.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+053 [PARTIAL              ] GPU synchronization
+      EVIDENCE=audit_report.json
+      EVIDENCE=Compute_Kernel_DMA_Complete.asm
+      EVIDENCE=gpu_dma_clean.asm
+      EVIDENCE=gpu_dma_compact.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+054 [PARTIAL              ] Shader registry
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\shaderlab\package.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\shaderlab\syntaxes\shaderlab.tmLanguage.json
+      EVIDENCE=3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+055 [PARTIAL              ] QKV GPU path
+      EVIDENCE=3rdparty\ggml\examples\sam\sam.cpp
+      EVIDENCE=asm\Sovereign_Transformer_Oracle.cpp
+      EVIDENCE=asm-sources\Phase3_Master_Complete.asm
+      EVIDENCE=B009\ProductionPathTest.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+056 [PARTIAL              ] KVA GPU path
+      EVIDENCE=certs\rawrxd_ge_probe_001.cpp
+      EVIDENCE=certs\rawrxd_kernel_tune_001.cpp
+      EVIDENCE=certs\rawrxd_kva_q4k_spv_001.cpp
+      EVIDENCE=Full_Source\reports\todo-scan-20260126-065921.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+057 [PARTIAL              ] O_PROJ GPU path
+      EVIDENCE=ai-ml\training\training_pipeline.ps1
+      EVIDENCE=benchmark_avx2.cpp
+      EVIDENCE=certs\rawrxd_k2_o_proj_hotpath_001.cpp
+      EVIDENCE=examples\fine_tune_lora.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+058 [PARTIAL              ] Multiple GPU support
+      EVIDENCE=3rdparty\ggml\src\ggml-metal\ggml-metal.cpp
+      EVIDENCE=3rdparty\ggml\src\ggml-sycl\ggml-sycl.cpp
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=audit\cmake_source_target_matrix.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+059 [PARTIAL              ] Backend fallback
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\css\syntaxes\css.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\extension.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\php\syntaxes\php.tmLanguage.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+060 [PARTIAL              ] Backend metrics
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=analyze_link_symbols.ps1
+      EVIDENCE=ArchitectureEnhancementEngine.psm1
+      EVIDENCE=audit_all_features.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+061 [PARTIAL              ] Native IDE main window
+      EVIDENCE=asm\Win32IDE_Sidebar_Core.asm
+      EVIDENCE=asm-sources\ultimate_multilang_ide.asm
+      EVIDENCE=asm-sources\working_assembly_ide.asm
+      EVIDENCE=asm-sources\working_ide.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+062 [PARTIAL              ] Editor component
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=AI_TokenStream.cpp
+      EVIDENCE=AICompletionIntegration.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+063 [PARTIAL              ] Workspace open
+      EVIDENCE=Complete-IDE-Agentic-Comparison.ps1
+      EVIDENCE=EXTENSION_INFRASTRUCTURE_USAGE_EXAMPLE.cpp
+      EVIDENCE=FINAL_COMPLETION_STATUS.ps1
+      EVIDENCE=FinalBuild.bat
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+064 [PARTIAL              ] File explorer
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\Powershield_Audit_Report.json
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\RefactorSuggestions.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD_Manifest.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+065 [PARTIAL              ] File open/save
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\RefactorSuggestions.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\git\package.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+066 [PARTIAL              ] Terminal
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=AI_TokenStream.hpp
+      EVIDENCE=apply-patch-firewall-phase1.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+067 [PARTIAL              ] Chat panel
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\Powershield_Audit_Report.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD_Manifest.json
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AI_TokenStream.hpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+068 [PARTIAL              ] Streaming chat rendering
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\01_Core\RawrXD.UI.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\01_Core\RawrXD.UI.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\01_Core\RawrXD.UI.psm1
+      EVIDENCE=agentic_build\build.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+069 [PARTIAL              ] Cancel generation UI
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\RefactorSuggestions.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\git\package.nls.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+070 [PARTIAL              ] Git integration
+      EVIDENCE=.codex_batch_commit.ps1
+      EVIDENCE=.wiringdigestrules.json
+      EVIDENCE=apply-patch-firewall-phase1.ps1
+      EVIDENCE=Apply-PowerShellPatches.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+071 [PARTIAL              ] Search
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      EVIDENCE=audit_all_features.ps1
+      EVIDENCE=audit_orphans.ps1
+      EVIDENCE=AUDIT_TRACKER.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+072 [PARTIAL              ] Build command
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=.wiringdigestrules.json
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+073 [PARTIAL              ] Diagnostics
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+074 [PARTIAL              ] Session persistence
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\RefactorSuggestions.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AI_Integration.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+075 [PARTIAL              ] IDE runtime status
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD_Manifest.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\markdown-language-features\notebook-out\index.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\simple-browser\media\codicon.css
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\theme-abyss\themes\abyss-color-theme.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+076 [PARTIAL              ] Agent loop
+      EVIDENCE=.github\workflows\archive\throughput-gate.yml
+      EVIDENCE=3rdparty\quickjs\run-test262.c
+      EVIDENCE=3rdparty\quickjs_ng\repl.js
+      EVIDENCE=3rdparty\quickjs_ng\run-test262.c
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+077 [PARTIAL              ] Planner
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\04_Testing\RawrXD.SwarmOrchestrator.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\04_Testing\RawrXD.SwarmOrchestrator.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\04_Testing\RawrXD.SwarmOrchestrator.psm1
+      EVIDENCE=.github\workflows\archive\measurement-framework.yml
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+078 [PARTIAL              ] Tool registry
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=Analyze-Extracted-Source.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+079 [PARTIAL              ] File read tool
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\02_Agentic\RawrXD.Agentic.Autonomy.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\02_Agentic\RawrXD.Agentic.Autonomy.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\02_Agentic\RawrXD.Agentic.Autonomy.psm1
+      EVIDENCE=bigdaddyg-ide\src\agentic\agentic_planning_orchestrator.js
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+080 [PARTIAL              ] File write/edit tool
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\02_Agentic\RawrXD.Agentic.Autonomy.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064313\04_Testing\RawrXD.AgenticCommands.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\02_Agentic\RawrXD.Agentic.Autonomy.psm1
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064319\04_Testing\RawrXD.AgenticCommands.psm1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+081 [PARTIAL              ] Diff engine
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=audit\cmake_source_target_matrix.json
+      EVIDENCE=audit_build\compile_commands.json
+      EVIDENCE=AUDIT_TRACKER.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+082 [PARTIAL              ] Patch application
+      EVIDENCE=Analyze-Extracted-Source.ps1
+      EVIDENCE=apply-patch-firewall-phase1.ps1
+      EVIDENCE=Apply-PowerShellPatches.ps1
+      EVIDENCE=AUDIT_TRACKER.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+083 [PARTIAL              ] Undo
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=AICompletionIntegration.asm
+      EVIDENCE=ArchitectureEnhancementEngine.psm1
+      EVIDENCE=AUDIT_TRACKER.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+084 [PARTIAL              ] Shell/process tool
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=build_agentic_masm.bat
+      EVIDENCE=build_ghost_agent.bat
+      EVIDENCE=Complete-IDE-Agentic-Comparison.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+085 [PARTIAL              ] Agent progress events
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=Analyze-Extracted-Source.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+086 [PARTIAL              ] Agent cancellation
+      EVIDENCE=bigdaddyg-ide\src\agentic\orchestrator.js
+      EVIDENCE=bigdaddyg-ide\src\components\AgentPanel.js
+      EVIDENCE=bigdaddyg-ide\src\contexts\AgentContext.js
+      EVIDENCE=deploy\docs\AGENTIC_REALITY_MANIFEST.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+087 [PARTIAL              ] Agent state persistence
+      EVIDENCE=audit_report.json
+      EVIDENCE=certs\rawrxd_agent_loop_e2e_001.cpp
+      EVIDENCE=certs\rawrxd_agent_steer_resume_001.cpp
+      EVIDENCE=certs\rawrxd_agent_workspace_live_001.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+088 [PARTIAL              ] Autonomous build/test loop
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+089 [PARTIAL              ] Execution policy
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=ArchitectureEnhancementEngine.psm1
+      EVIDENCE=audit_chatbot.ps1
+      EVIDENCE=AUDIT_TRACKER.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+090 [PARTIAL              ] Agent-to-runtime generation
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=asm\MoE_Capability_Recovery\build_moe_dll.bat
+      EVIDENCE=backups\RawrXD_backup_20260123_225535.ps1
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+091 [PARTIAL              ] Markdown rendering
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=audit_orphans.ps1
+      EVIDENCE=Build-CodexReverse.ps1
+      EVIDENCE=code_fix_comparison.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+092 [PARTIAL              ] Code syntax highlighting
+      EVIDENCE=.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\itsmehrawrxd-master\Eon-ASM\compilers\integrated_eon_compiler.asm
+      EVIDENCE=Analyze-RawrXD-Popups.ps1
+      EVIDENCE=Apply-PowerShellPatches.ps1
+      EVIDENCE=ArchitectureEnhancementEngine.psm1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+093 [PARTIAL              ] Context management
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=Analyze-RawrXD-Popups.ps1
+      EVIDENCE=Apply-PowerShellPatches.ps1
+      EVIDENCE=ArchitectureEnhancementEngine.psm1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+094 [PARTIAL              ] Conversation history
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\php\syntaxes\php.tmLanguage.json
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+095 [PARTIAL              ] Model selection UI
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=build_120b_loader.ps1
+      EVIDENCE=build_all_ide.bat
+      EVIDENCE=build_cli_swarm.bat
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+096 [PARTIAL              ] Generation settings UI
+      EVIDENCE=benchmark\quick_profile.cpp
+      EVIDENCE=benchmarks\phase_i1_profile_guided\run_profiler.ps1
+      EVIDENCE=benchmarks\sovereign_vs_ollama\benchmark_suite_v2.cpp
+      EVIDENCE=bigdaddyg-ide\src\agentic\orchestrator.js
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+097 [PARTIAL              ] Workspace context injection
+      EVIDENCE=.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\.archived_orphans\OrganizedPiProject\misc\Desktop\vscode_secure_ide.asm
+      EVIDENCE=bigdaddyg-ide\electron\knowledge_store.js
+      EVIDENCE=bigdaddyg-ide\electron\main.js
+      EVIDENCE=bigdaddyg-ide\src\agentic\orchestrator.js
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+098 [PARTIAL              ] Build output capture
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=build_and_test_marketplace.ps1
+      EVIDENCE=BUILD_COMPILERS_WITH_RUNTIME.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+099 [PARTIAL              ] Crash handling
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=backups\RawrXD_backup_20260123_225535.ps1
+      EVIDENCE=build_sovereign_puppeteer.bat
+      EVIDENCE=build-autocomplete\_deps\googletest-src\googletest\test\googletest-break-on-failure-unittest_.cc
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+100 [PARTIAL              ] Graceful runtime unload
+      EVIDENCE=benchmarks\sovereign_vs_ollama\src\backends\local_gguf_adapter.cpp
+      EVIDENCE=build_120b_loader.ps1
+      EVIDENCE=certs\nemotron_nano_poem_smoke.cpp
+      EVIDENCE=certs\rawrxd_actual_e2e_generation_001.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+101 [DONE                 ] Model reload
+      EVIDENCE=benchmarks\sovereign_vs_ollama\src\mutation_storm_benchmark.hpp
+      EVIDENCE=diagnostic-patch-firewall.ps1
+      EVIDENCE=FixBigDaddyGTypo.ps1
+      EVIDENCE=kv_cache_mgr.asm
+      REASON=Implementation-pattern evidence found.
+102 [PARTIAL              ] Concurrent/busy rejection
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\extension.js
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\php\syntaxes\php.tmLanguage.json
+      EVIDENCE=3rdparty\ggml\src\ggml-hexagon\htp\main.c
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+103 [PARTIAL              ] Local-only execution
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\cpp\syntaxes\platform.tmLanguage.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\package.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\package.nls.json
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\bootloader.js
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+104 [PARTIAL              ] No mandatory Ollama runtime dependency
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=Analyze-Model-Limits.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+105 [PARTIAL              ] 256-token product completion path
+      EVIDENCE=AI_Integration.cpp
+      EVIDENCE=AI_TokenStream.cpp
+      EVIDENCE=AI_TokenStream.hpp
+      EVIDENCE=AICompletionIntegration.asm
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+106 [PARTIAL              ] CMake/project build definition
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeploySupport-Debug.cmake
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeploySupport-MinSizeRel.cmake
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeploySupport-Release.cmake
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeploySupport-RelWithDebInfo.cmake
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+107 [DONE                 ] Rawr CLI executable target
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\Powershield_Audit_Report.json
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\RefactorSuggestions.json
+      EVIDENCE=.github\workflows\archive\release.yml
+      EVIDENCE=asm-sources\Week2_3_Master_Complete.asm
+      REASON=Implementation-pattern evidence found.
+108 [DONE                 ] IDE executable target
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeployTargets-Debug.cmake
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeployTargets-MinSizeRel.cmake
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeployTargets-Release.cmake
+      EVIDENCE=.archive\Full_Source\build_universal\.qt\QtDeployTargets-RelWithDebInfo.cmake
+      REASON=Implementation-pattern evidence found.
+109 [PARTIAL              ] Runtime library target
+      EVIDENCE=_build_and_link_test.bat
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=ArchitecturalEnhancementGenerator.ps1
+      EVIDENCE=audit\cmake_source_target_matrix.json
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+110 [PARTIAL              ] Release build configuration
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=.wiringdigestrules.json
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+111 [PARTIAL              ] Portable configuration
+      EVIDENCE=.archive\Full_Source\auto_generated_methods\RefactorSuggestions.json
+      EVIDENCE=.archive\Full_Source\Consolidated_Modules_20260124_064807\RawrXD.ps1
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\ms-vscode.js-debug\src\extension.js
+      EVIDENCE=3rdparty\ggml\examples\stb_image.h
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+112 [PARTIAL              ] Installer
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=autonomous_orchestrator.cmake
+      EVIDENCE=build.ps1
+      EVIDENCE=build_all_ide.bat
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+113 [PARTIAL              ] Regression tests
+      EVIDENCE=.tmp_pr14_checks.json
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=AGENT-1-source-recovery.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+114 [PARTIAL              ] Runtime tests use production code
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=agentic_test_suite.ps1
+      EVIDENCE=AI_Orchestrator_Test.asm
+      EVIDENCE=AI_TokenStream_Test.cpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+115 [PARTIAL              ] Benchmark uses production decode
+      EVIDENCE=benchmark_avx2.cpp
+      EVIDENCE=benchmark_context_scaling.ps1
+      EVIDENCE=benchmark_deepseek671b.ps1
+      EVIDENCE=benchmark_end_to_end.cpp
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+116 [PARTIAL              ] Evidence/product receipt output
+      EVIDENCE=.archive\Full_Source\Cursor_Source_Extracted\electron_source_app\extensions\git\resources\emojis.json
+      EVIDENCE=.github\workflows\archive\certification-pipeline.yml
+      EVIDENCE=.github\workflows\rawrxd-ci.yml
+      EVIDENCE=benchmark\component_lifecycle_test.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+117 [PARTIAL              ] Version metadata
+      EVIDENCE=AdvancedEditorCore_Production.h
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=agent_tool_bridge.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+118 [PARTIAL              ] Configuration loader
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      EVIDENCE=AGENT-3-BuildConsolidation.ps1
+      EVIDENCE=AI_TokenStream.cpp
+      EVIDENCE=AI_TokenStream.hpp
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+119 [PARTIAL              ] Logging
+      EVIDENCE=.codex_batch_commit.ps1
+      EVIDENCE=3rdparty\spdlog\include\spdlog\logger-inl.h
+      EVIDENCE=3rdparty\spdlog\src\spdlog.cpp
+      EVIDENCE=Advanced-Feature-Testing.ps1
+      REASON=Implementation evidence exists but matched files contain stub/TODO markers.
+120 [PARTIAL              ] Product acceptance receipt
+      EVIDENCE=reverse_product_manifest.ps1
+      EVIDENCE=src\cli\rawr_commands.cpp
+      EVIDENCE=src\deep2\lavapath\E2EBlockers015.hpp
+      EVIDENCE=src\deep2\lavapath\ProductE2EEmit.hpp
+      REASON=Declaration/name/interface evidence exists without strong implementation evidence.
+
+DUPLICATE_IMPLEMENTATION_CANDIDATES
+GenerateStream COUNT=30
+      certs\rawrxd_actual_e2e_generation_001.cpp
+      certs\rawrxd_autocomplete_e2e_001.cpp
+      certs\rawrxd_autocomplete_live_second_001.cpp
+      interstellar\plugins\rawrxd_engine.cpp
+      src\agentic\GgmlEngine.cpp
+      src\agentic\GgmlEngineReal.cpp
+      src\agentic\ide_agent_loop_cert.cpp
+      src\agentic\SovereignInferenceClient.cpp
+      src\cli\rawrxd_infer.cpp
+      src\cloud_api_client.cpp
+      src\cloud_api_client_quarantine.cpp
+      src\core\rawr_streaming_inference_core.hpp
+      src\deep2\deep2_gpu_transfer_overlap_cert.cpp
+      src\deep2\Deep2Bridge.cpp
+      src\deep2\Deep2Discovery.cpp
+      src\deep2\Deep2Engine.cpp
+      src\deep2\Deep2Engine.h
+      src\deep2\Deep2IDEIntegration.cpp
+      src\deep2\Deep2ModelRuntime.cpp
+      src\deep2\lavapath\ProductRun.hpp
+      src\deep2\p1_policy_sha_lifecycle_diag_001.cpp
+      src\egress\Win32IDE_CloudQuarantine.cpp
+      src\generation\integration\Deep2GenerationAdapter.h
+      src\gpu\streaming_inference.cpp
+      src\inference\Deep2Engine.cpp
+      src\inference\rawr_monolith_bridge.cpp
+      src\inference\unified_inference.cpp
+      src\inference_gateway.h
+      src\model_interface.cpp
+      src\prometheus\prometheus_engine.cpp
+ModelResolver COUNT=2
+      src\cli\rawr_model_registry.hpp
+      src\deep2\local_only_001_cert.cpp
+Tokenizer COUNT=100
+      .github\workflows\archive\security-deployment.yml
+      .github\workflows\archive\security-hotpatch-ci.yml
+      benchmark\end_to_end_inference_test.cpp
+      deploy\tests\integration\test_inference_e2e.c
+      deploy\tests\integration\test_rawrxd_e2e.c
+      extensions\js\amazonwebservices.amazon-q-vscode\resources\language-server\clients\amazonq-ui.js
+      Full_Source\itsmehrawrxd-master\07-Scripts\safe_test_environment.ps1
+      Full_Source\itsmehrawrxd-master\ai\enhanced_ai_models.cpp
+      Full_Source\itsmehrawrxd-master\Eon-ASM\tools\eon_ide_cli.js
+      Full_Source\itsmehrawrxd-master\Eon-ASM\tools\eon_ide_hybrid.js
+      Full_Source\itsmehrawrxd-master\Eon-ASM\tools\eon_syntax_detector.js
+      Full_Source\itsmehrawrxd-master\llm\inference_engine.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_10.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_11.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_13.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_14.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_2.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_5.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_6.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_7.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_8.cpp
+      Full_Source\itsmehrawrxd-master\working_cpp_compiler_9.cpp
+      Full_Source\reports\todo-scan-20260126-065921.json
+      generator\schema_parser.cpp
+      itsmehrawrxd-master\07-Scripts\safe_test_environment.ps1
+      itsmehrawrxd-master\ai\enhanced_ai_models.cpp
+      itsmehrawrxd-master\Eon-ASM\tools\eon_ide_cli.js
+      itsmehrawrxd-master\Eon-ASM\tools\eon_ide_hybrid.js
+      itsmehrawrxd-master\Eon-ASM\tools\eon_syntax_detector.js
+      itsmehrawrxd-master\llm\inference_engine.cpp
+      itsmehrawrxd-master\working_cpp_compiler_10.cpp
+      itsmehrawrxd-master\working_cpp_compiler_11.cpp
+      itsmehrawrxd-master\working_cpp_compiler_13.cpp
+      itsmehrawrxd-master\working_cpp_compiler_14.cpp
+      itsmehrawrxd-master\working_cpp_compiler_2.cpp
+      itsmehrawrxd-master\working_cpp_compiler_5.cpp
+      itsmehrawrxd-master\working_cpp_compiler_6.cpp
+      itsmehrawrxd-master\working_cpp_compiler_7.cpp
+      itsmehrawrxd-master\working_cpp_compiler_8.cpp
+      itsmehrawrxd-master\working_cpp_compiler_9.cpp
+      migration_report\migration_report.json
+      RawrXD-ModelLoader\src\syntax_engine.cpp
+      reports\todo-scan-20260126-065921.json
+      security\phase_g1_hotpatch\tools_hotpatch_manager.ps1
+      seg\test_multi_layer_inference.cpp
+      seg\test_real_inference.cpp
+      seg\test_seg_end_to_end.cpp
+      seg\test_sovereign_pipeline.cpp
+      seg\test_tokenizer_integration.cpp
+      sovereign_cli_ide.cpp
+      sovereign_cli_integrated.cpp
+      sovereign_finisher_v2.cpp
+      src\adapter\RawrXDEngineAdapter.cpp
+      src\agentic\AgentToolHandlers.cpp
+      src\agentic\GGMLAgenticEngine.cpp
+      src\agentic\GgmlEngine.cpp
+      src\agentic\GgmlEngineReal.cpp
+      src\agentic\slash_command_parser.cpp
+      src\agentic\SovereignAssembler.cpp
+      src\agentic_model_streamer_bridge.cpp
+      src\ai\ai_inference_real.cpp
+      src\ai\production_inference_engine.cpp
+      src\ai\semantic_code_search.cpp
+      src\ai\symbol_graph_indexer.cpp
+      src\cli\rawrxd_cli_compiler.cpp
+      src\cli\rawrxd_cli_link_shims.cpp
+      src\core\embedding_compute.cpp
+      src\core\model_operations_bridge.cpp
+      src\core\model_trainer.cpp
+      src\core\model_training_pipeline.cpp
+      src\core\rust_parser.cpp
+      src\core\sovereign_context.cpp
+      src\cpu_inference_engine.cpp
+      src\cpu_inference_engine_clean.cpp
+      src\cpu_inference_engine_fixed.cpp
+      src\cpu_inference_engine_production.cpp
+      src\cpu_inference_engine_real.cpp
+      src\cuda_inference_engine.cpp
+      src\deep2\Deep2Engine.cpp
+      src\dml_inference_engine.cpp
+      src\generation\integration\RawrXDEngineAdapter.cpp
+      src\gguf\vocab_resolver.cpp
+      src\hip_inference_engine.cpp
+      src\inference\GGMLBackend.cpp
+      src\inference\inference_engine_real.cpp
+      src\inference\InferenceEngine.cpp
+      src\inference\LegacyInferenceAdapter.cpp
+      src\inference\ultra_fast_inference.cpp
+      src\lsp\cross_file_indexer.cpp
+      src\nevm\nevm_ab_testing.cpp
+      src\nevm\nevm_determinism_validation.cpp
+      src\nevm\nevm_extended_stress_test.cpp
+      src\RawrXD_Final_Unified_Part2.cpp
+      src\rawrxd_inference.h
+      src\RawrXD_Lexer.cpp
+      src\streaming_enhancements.cpp
+      src\syntax_engine.cpp
+      src\titan_inference_engine.cpp
+      src\vulkan_inference_engine.cpp
+      src\vulkan_inference_engine_instrumented.h
+Sampler COUNT=73
+      .archive\Full_Source\Consolidated_Modules_20260124_064313\06_Extensions\PoshLLM.psm1
+      .archive\Full_Source\Consolidated_Modules_20260124_064319\06_Extensions\PoshLLM.psm1
+      .archive\Full_Source\Consolidated_Modules_20260124_064807\06_Extensions\PoshLLM.psm1
+      cli\rawrxd_infer.cpp
+      Consolidated_Modules_20260124_064313\06_Extensions\PoshLLM.psm1
+      Consolidated_Modules_20260124_064319\06_Extensions\PoshLLM.psm1
+      Consolidated_Modules_20260124_064807\06_Extensions\PoshLLM.psm1
+      extensions\PoshLLM.psm1
+      Full_Source\reports\todo-scan-20260126-065921.json
+      interstellar_runtime\decode\reverse_decode_mod.cpp
+      native_inference\native_inference_engine.cpp
+      preprocessed.cpp
+      reports\todo-scan-20260126-065921.json
+      runtime\sovereign_inference_pipeline.cpp
+      runtime\streaming_multi_layer_backend.cpp
+      seg\speculative_bench_micro.cpp
+      seg\speculative_bench_simple.cpp
+      seg\speculative_decoder.cpp
+      seg\test_sovereign_pipeline.cpp
+      seg\token_sampling.cpp
+      seg\transformer_layer_runtime.cpp
+      src\agentic\GgmlEngine.cpp
+      src\agentic\GgmlEngineReal.cpp
+      src\ai\persistent_gpu_loop.cpp
+      src\ai\streaming_inference_engine.cpp
+      src\BraidedQuantizer.hpp
+      src\core\inference_pipeline.cpp
+      src\core\local_ai_core.cpp
+      src\core\rawr_streaming_inference_core.hpp
+      src\core\sovereign_transformer_forward.cpp
+      src\core\sqlite3.c
+      src\deep2\deep2_k2_tps_rainbow_cert.cpp
+      src\deep2\Deep2Engine.cpp
+      src\deep2\ProductionBenchmark.cpp
+      src\deep2\RawrXDSampler.cpp
+      src\dml_inference_engine.cpp
+      src\engine\sampler.cpp
+      src\generation\generation_engine.cpp
+      src\ide\sovereign_speculative_integration.cpp
+      src\inference\ai_model_caller_real.cpp
+      src\inference\Deep2Engine.cpp
+      src\inference\GGMLBackend.cpp
+      src\inference\InferenceEngine.cpp
+      src\inference\medusa_gpu_engine.cpp
+      src\inference\sampling.cpp
+      src\inference\sampling_engine.cpp
+      src\inference\speculative_decoder.hpp
+      src\inference\speculative_pipeline.cpp
+      src\inference\transformer_layer.cpp
+      src\inference\unified_inference.cpp
+      src\memory\neuro_stream.hpp
+      src\model\ModelLoader.cpp
+      src\modules\sampler.cpp
+      src\qtapp\transformer_inference.cpp
+      src\qtapp\transformer_inference_noqt.cpp
+      src\quantization\quantized_transformer_layer.cpp
+      src\rawrxd.cpp
+      src\rawrxd_inference_stubs.hpp
+      src\rawrxd_sampler.cpp
+      src\rawrxd_sampler.hpp
+      src\rkc\rkc_source_smoke.ps1
+      src\runtime\inference_engine.cpp
+      src\sampling\advanced_sampler.cpp
+      src\sampling\advanced_sampler.hpp
+      src\speculative\medusa_heads.cpp
+      src\speculative\spec_dec_realistic.c
+      src\speculative\spec_dec_telemetry.c
+      src\speculative\speculative_execution_engine.cpp
+      src\speculative\speculative_execution_minimal.cpp
+      src\win32app\main_win32.cpp
+      tests\deep2_link_stubs.cpp
+      third_party\vulkan_headers\vulkan\vulkan_structs.hpp
+      tools\inference_witness\inference_witness.cpp
+GGUFLoader COUNT=100
+      .archive\Full_Source\Consolidated_Modules_20260124_064313\04_Testing\RawrXD.SwarmAgent.psm1
+      .archive\Full_Source\Consolidated_Modules_20260124_064319\04_Testing\RawrXD.SwarmAgent.psm1
+      .archive\Full_Source\Consolidated_Modules_20260124_064807\04_Testing\RawrXD.SwarmAgent.psm1
+      auto_generated_methods\RawrXD.SwarmAgent.psm1
+      benchmark\end_to_end_benchmark.cpp
+      benchmark\standardized_benchmark.cpp
+      benchmark_end_to_end.cpp
+      benchmarks\sovereign_vs_ollama\src\backends\local_gguf_adapter.cpp
+      certification\CertificationHarness.cpp
+      Consolidated_Modules_20260124_064313\04_Testing\RawrXD.SwarmAgent.psm1
+      Consolidated_Modules_20260124_064319\04_Testing\RawrXD.SwarmAgent.psm1
+      Consolidated_Modules_20260124_064807\04_Testing\RawrXD.SwarmAgent.psm1
+      CRITICAL_FIXES_BATCH_1.h
+      deploy\docs\AGENTIC_REALITY_MANIFEST.json
+      deploy\tests\test_gui_components.cpp
+      docs\AGENTIC_REALITY_MANIFEST.json
+      fleet\model_fabric.cpp
+      Full_Source\itsmehrawrxd-master\llm\inference_engine.cpp
+      ide\model-server\model-loader.js
+      include\Phase1_Integration_Examples.h
+      include\Phase2_Foundation.h
+      include\Result.h
+      include\sovereign_sdk.hpp
+      itsmehrawrxd-master\llm\inference_engine.cpp
+      migration_report\migration_report.json
+      native\sidecar\src\sovereign_context.cpp
+      native_inference\native_inference_engine.cpp
+      preprocessed.cpp
+      Randomly Failed To Save\Win32IDE.cpp
+      RawRamXD_Phase9_RealWorldIntegration.cpp
+      RawRamXD_Phase9_RealWorldTest.cpp
+      RawrXD-ModelLoader\src\llm_adapter\GGUFRunner.cpp
+      scripts\Show-Token42.ps1
+      Ship\RawrXD_InferenceEngine.c
+      Ship\RawrXD_ModelLoader.cpp
+      Ship\Win32_InferenceEngine.hpp
+      Ship\Win32_InferenceEngine_Integration.hpp
+      sovereign_cli_phase8.cpp
+      sovereign_cli_phase9.cpp
+      SovereignInferenceContext.h
+      src\agentic\AgentRuntime.cpp
+      src\agentic\Deep2SovereignInferenceGateway.hpp
+      src\agentic\GGMLAgenticEngine.cpp
+      src\agentic\GgmlEngine.cpp
+      src\agentic\GgmlEngineReal.cpp
+      src\agentic\OrchestratorBridge.cpp
+      src\agentic\SovereignCodeGenerator.cpp
+      src\agentic\SovereignInferenceClient.cpp
+      src\agentic\SovereignStandaloneClient.cpp
+      src\agentic_model_streamer_bridge.cpp
+      src\ai\ai_assistant_engine.cpp
+      src\ai\ai_completion_provider_real.cpp
+      src\ai\ai_unified_engine.cpp
+      src\ai_integration_hub.cpp
+      src\ai_model_caller_fixed.cpp
+      src\backend_selector.cpp
+      src\BackendOrchestrator.cpp
+      src\benchmark_runner.cpp
+      src\chat_interface.cpp
+      src\chunked_file_loader.cpp
+      src\cpu_inference_engine.cpp
+      src\cpu_inference_engine_fixed.cpp
+      src\cpu_inference_engine_production.cpp
+      src\cpu_inference_engine_real.cpp
+      src\cuda_inference_engine.cpp
+      src\distributed_trainer.cpp
+      src\dml_inference_engine.cpp
+      src\dual_engine_inference.cpp
+      src\dynamic_model_loader.cpp
+      src\enhanced_model_loader.cpp
+      src\GodModule.hpp
+      src\hip_inference_engine.cpp
+      src\ide_integration.cpp
+      src\inference_benchmark.cpp
+      src\inference_main.cpp
+      src\main.cpp
+      src\main_headless_core.cpp
+      src\model_host_client.cpp
+      src\model_router_adapter.cpp
+      src\multi_engine_system.h
+      src\native_ai_integration.cpp
+      src\prometheus_lowmem.cpp
+      src\rawrxd_cli.cpp
+      src\rawrxd_cli_real.cpp
+      src\RawrXD_Final_Unified_Part2.cpp
+      src\RawrXD_IDE_Wrapper.cpp
+      src\rawrxd_inference_entry.cpp
+      src\Sovereign_WeightSync_Production.cpp
+      src\streaming_enhancements.cpp
+      src\stubs.cpp
+      src\titan_inference_engine.cpp
+      src\tool_server.cpp
+      src\unified_engine_coordinator.cpp
+      src\universal_model_router.cpp
+      src\vulkan_inference_engine.cpp
+      src\vulkan_inference_engine_instrumented.h
+      test_end_to_end_real.cpp
+      test_end_to_end_sovereign.cpp
+      test_full_pipeline.cpp
+      test_inference_integration.cpp
+
+PRODUCT_PATH
+005 [PARTIAL] Central model resolver
+006 [PARTIAL] Central GGUF loader
+007 [PARTIAL] Tokenizer construction
+008 [PARTIAL] KV cache implementation
+009 [PARTIAL] Execution graph builder
+010 [PARTIAL] Production GenerateStream
+011 [PARTIAL] Forward layer implementation
+012 [PARTIAL] Sampler implementation
+013 [PARTIAL] Streaming token emitter
+014 [PARTIAL] Unified teardown
+015 [PARTIAL] Canonical product receipt
+024 [PARTIAL] Autoregressive decode loop
+025 [PARTIAL] Stop conditions
+028 [PARTIAL] Normal completion state
+029 [PARTIAL] Generated-token accounting
+105 [PARTIAL] 256-token product completion path
+120 [PARTIAL] Product acceptance receipt
+
+NEXT_15
+024 [PARTIAL] SCORE=330 Autoregressive decode loop
+025 [PARTIAL] SCORE=330 Stop conditions
+028 [PARTIAL] SCORE=330 Normal completion state
+029 [PARTIAL] SCORE=330 Generated-token accounting
+120 [PARTIAL] SCORE=300 Product acceptance receipt
+005 [PARTIAL] SCORE=270 Central model resolver
+006 [PARTIAL] SCORE=270 Central GGUF loader
+007 [PARTIAL] SCORE=270 Tokenizer construction
+008 [PARTIAL] SCORE=270 KV cache implementation
+009 [PARTIAL] SCORE=270 Execution graph builder
+010 [PARTIAL] SCORE=270 Production GenerateStream
+011 [PARTIAL] SCORE=270 Forward layer implementation
+012 [PARTIAL] SCORE=270 Sampler implementation
+013 [PARTIAL] SCORE=270 Streaming token emitter
+014 [PARTIAL] SCORE=270 Unified teardown

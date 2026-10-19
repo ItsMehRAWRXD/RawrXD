@@ -1,0 +1,44 @@
+SEQ_CAP_512_POST_FT_AUDIT_CONTRACT_001=SEALED
+DATE=2026-09-08
+TYPE=AUDIT_ARTIFACT_SSOT
+SPEND=0
+
+TREATED_AS=
+  sealed post-first-token audit artifact for seqCap=512
+
+INCORPORATES=
+  POST_T0_AUDIT_CONTRACT_001
+  SEQ_CAP_512_AUDIT_OWNERSHIP_001
+  OBSERVATION_AUTHORITY_001
+  EMISSION_OWNERSHIP_001
+
+POLICY=
+  SEQ_CAP=512
+  FIRST_TOKEN_BOUNDARY=AUDIT_START
+  POST_FIRST_TOKEN_SKIP=0
+  ZERO_FILL_AS_FIX=0
+  FLOOR_TPS=5.000
+  MANIFESTATION_FLIP=NON_AUTHORITY
+  FIX_POLICY=SOURCE→BUILD→RUNTIME→MEASUREMENT
+
+OWNERSHIP=
+  each claim requires its own emitting authority
+  site must fire its own emitter or emit a disposition
+  absence of emitter ≠ authority transfer
+  no emitter inherits another emitter's authority
+
+PATH_B_N5_003=
+  OUTCOME=FAIL
+  PROMOTE=0
+  STOP_REASON=trial_1_invalid_witness_stream_abort_teardown_av
+  MODE=D
+  CHAMPION=PATH_A
+  FINAL_NORM×23 authority = own emitter/claim scope only
+  STREAM_ABORT / wall / TPS = UNOBSERVED (STOP_REASON is classification only)
+  stream-abort chain ≠ teardown-AV chain
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  PATH_A_WALL_MEDIAN_NS=10184789000

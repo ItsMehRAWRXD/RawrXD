@@ -1,0 +1,42 @@
+GATE=G3_DUALSTICK_E2E_UNSTUB_001
+PHASE=FULLSTACK
+PURPOSE=unstub G3 vetoes; DualStick E2E perfect metrics with max live stack
+PARENT=G3_DUALSTICK_TRUE_RUNTIME_001
+ASOF=2026-09-09T21:20
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+EXE_SHA256=601A8D9A005AA8D20D6637B792A993C2F59F0801148F60D1C35E26CE58162DCE
+
+CODE_UNSTUB=
+  Deep2Engine: no clear-all on multi slot fail (keep opened sticks)
+  Deep2DeviceManager: PCI vendor+deviceId dedupe (fixes VDD duplicate-7800 triple open → prior AV)
+
+OPERATOR_UNSTUB=
+  RAWRXD_ENHANCE_SKIP="" (G3 min-stack dropped)
+  DEEP2_MINIMAL_ENHANCE=0
+  DEEP2_MARS=1 DEEP2_MARS_FORCE=1
+  RAWRXD_DEEP2_ALLOW_ELASTIC=1
+  DualStick MULTI DISCRETE
+
+DISCRIMINATOR=
+  pre-dedupe: MARS|elastic → AV (EXIT=-1073741819) with OPENS=3
+  post-dedupe: mars_only / elastic_only / fullstack → PASS
+
+FULLSTACK_N5=5/5 PASS
+  EXIT=0 TRUE_RUNTIME=1 TOK=16 SURVIVED=1 OPENS=2
+  FWD_G0=290 FWD_G1=348 (every run)
+  MARS_EFFECTIVE=1 ELASTIC_EFFECTIVE=1
+  STACK=vk=1 mars=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=2
+  RAWRXD_NO_MORE_BASELINE_STUBS_001=1
+
+PERFECT_METRICS_GATE=PASS
+STILL_HELD=
+  TIP_CLIMB=HOLD
+  PROMOTE=0 (not 64-token champion seal)
+  Nemotron SSM scaffold (wrong model family; N/A for tinyllama DualStick)
+
+DISPLAY_ADAPTER=RX7800XT
+VDD_POLICY=KEEP_ON_7800
+
+Full: SUMMARY_N5_FULLSTACK.txt runs_n5_fullstack/ KEY_FULLSTACK_R01.txt disc_*.out.txt

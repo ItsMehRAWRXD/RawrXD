@@ -1,0 +1,65 @@
+MISSING_RUNTIME_CONCRETE_ASSERT_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_ASSERTION
+SPEND=0
+RERUN=0
+PROMOTE=0
+NO_ID=1
+
+# --- CONCRETE (existing PATH_B_N5_003 observation) -------------------------
+
+CONCRETE=
+  CURRENT_STEP=22
+  FINAL_NORM_AFTER_L2_COUNT=23
+  ProduceFinalHidden=DONE (steps 0..22)
+  LAST_PROVEN_BOUNDARY=FINAL_NORM(step22)
+  FIRST_UNPROVEN_CONSUMER=ProjectLogitsArgmax(step22)
+  PROCESS_EXIT_CLASS=AV / EXIT=-1 (trial_01.exit)
+  WITNESS_EXIT_VALID=0
+
+# --- MISSING RUNTIME (no emission observed; not invented) ------------------
+
+MISSING_RUNTIME_EMISSION=
+  HIDDEN_PROBE_VALID
+  HIDDEN_LAST_VALID
+  HIDDEN_FULL_SPAN_VALID
+  HIDDEN_COMPLETE
+  HIDDEN_TO_LOGITS
+  LOGITS_ENTRY
+  LOGITS_CONTRACT_OK
+  LOGITS_PROJECT_BEGIN
+  LOGITS_PROJECT_END
+  LOGITS_ARGMAX_END
+  LOGITS_RETURN_OK
+  STREAM_ABORT OWNER=*
+  STREAM_HEARTBEAT STEP=32
+  GATE10_FOOTER
+  TEARDOWN_WITNESS=1
+  EXIT_0
+
+MISSING_CONCRETE_FIELDS=
+  hidden[random#].index
+  hidden[random#].value
+  hidden[last].value
+  ProjectLogitsArgmax.entered
+  ProjectLogitsArgmax.returned
+
+# --- CLASSIFICATION --------------------------------------------------------
+
+CLASS=
+  CONCRETE fields above = observation from PATH_B_N5_003 trial logs
+  MISSING_RUNTIME_*     = UNOBSERVED (developer label)
+  NOT_FAILED            = unobserved ≠ failed
+
+RULE=
+  runtime emits them until developer marks them UNOBSERVED
+  no backfill of MISSING_* from source emitters alone
+  no synthetic ID / zero / manufactured value
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  HOLD=PATH_B_N5_003_ATTRIBUTION_HOLD_001
+  WITNESS_CONTRACT=HIDDEN_PROBE_WITNESS_001

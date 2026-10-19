@@ -1,0 +1,6 @@
+/health CODE=200 ERR= BODY={"status":"ok","mode":"local","authConfigured":false,"uptime":1029}
+/api/backends CODE=200 ERR= BODY={"backends":[{"name":"deep2","type":"local","active":true},{"name":"cpu","type":"local","active":false},{"name":"vulkan"
+/api/agents/status CODE=200 ERR= BODY={"status":"ok","agents":[],"stats":"Agent history: Active (headless)\nSession: headless-1789018125008\nEvents: 0"}
+/api/failures CODE=200 ERR= BODY={"failures":[],"stats":"Failure detector: Active (headless)\nTotal detections: 0\nRetries: 0"}
+/api/chat CODE=405 ERR= BODY=
+/api/tool CODE=405 ERR= BODY=

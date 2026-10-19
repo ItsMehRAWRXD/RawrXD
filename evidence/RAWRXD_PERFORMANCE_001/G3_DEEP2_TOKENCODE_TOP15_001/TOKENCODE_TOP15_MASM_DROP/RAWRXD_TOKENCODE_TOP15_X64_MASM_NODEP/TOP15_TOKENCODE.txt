@@ -1,0 +1,56 @@
+RAWRXD TOKENCODE — NEXT TOP 15 RUNTIME-GENERATOR CONTRACTS
+
+TE01 GENERATION_BOUND
+  generation_id != 0
+  observation_epoch == generation_id
+
+TE02 GENERATED_NONZERO
+  generated > 0
+
+TE03 REQUEST_CLOSURE
+  encode_request_count == generated
+
+TE04 TOKENCODE_CLOSURE
+  tokencode_count == generated
+
+TE05 INPUT_CLOSURE
+  token_input_count == generated
+
+TE06 OUTPUT_CLOSURE
+  token_output_count == generated
+
+TE07 VOCAB_BOUNDS
+  vocab_size > 0
+  out_of_vocab_count == 0
+  min_token_id <= max_token_id < vocab_size
+
+TE08 ENCODE_COMMIT_CLOSURE
+  encode_commit_count == generated
+
+TE09 NO_DUPLICATE_ENCODE
+  duplicate_encode_count == 0
+
+TE10 MONOTONIC_POSITION_SPAN
+  last_position >= first_position
+  last_position - first_position + 1 == generated
+
+TE11 POSITION_OBSERVATION
+  position_observation_count == generated
+
+TE12 DECODE_ROUNDTRIP
+  decode_roundtrip_count == generated
+  roundtrip_mismatch_count == 0
+
+TE13 OUTPUT_BYTES_CLOSURE
+  output_bytes_expected > 0
+  output_bytes_written == output_bytes_expected
+
+TE14 BUFFER_AND_ERROR_FREE
+  buffer_overflow_count == 0
+  encode_error_count == 0
+  stale_generation_faults == 0
+  nonfinite_state_count == 0
+
+TE15 AUTH_DERIVATION
+  TE01..TE14 all PASS
+  FAIL or NOT_RUN => tokencode_authorized = 0

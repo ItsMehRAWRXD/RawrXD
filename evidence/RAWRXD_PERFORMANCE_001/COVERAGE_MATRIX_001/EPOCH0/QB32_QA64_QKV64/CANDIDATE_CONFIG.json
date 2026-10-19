@@ -1,0 +1,8 @@
+﻿{
+    "CONFIG_ID":  "QB32_QA64_QKV64",
+    "DEEP2_QB_SX_ROWS":  32,
+    "DEEP2_QA_SX_ROWS":  64,
+    "DEEP2_QKV_SX_ROWS":  64,
+    "EPOCH":  0,
+    "MEASUREMENT_INDEX_FOR_CONFIG":  1
+}

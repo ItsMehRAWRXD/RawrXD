@@ -1,0 +1,11 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[WARN]  Instructions: No instruction files found in any search path [2526us]
+[WARN]  Instructions: No instruction files found in any search path
+[ModelSourceResolver] ✗ No valid GGUF blobs found in Ollama storage.
+[ModelSourceResolver] No valid GGUF blob found for Ollama model: tinyllama
+[ERROR] Model file not found: tinyllama (No valid GGUF blob found for Ollama model: tinyllama)
+Headless init failed: Failed to load model (code 2)
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+[StreamEngine] Shutdown

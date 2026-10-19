@@ -1,0 +1,48 @@
+DEEP2 V7/V8 BIND NOTES — preserve authority
+
+A. Wire the adapter to existing live functions:
+   api.est    -> DualStickImbalanceEstCost
+   api.assign -> DualStickImbalanceAssign
+   api.resident -> wrapper around DualStickExpertIsResident + StickOf
+   api.prefetch -> existing live expert-prefetch/acquire seam when available.
+
+B. At DeepSeek route completion:
+   PreserveRoute(router_ids, router_weights, expert_bytes, topK, route).
+   Never change selected IDs or weights in this module.
+   BeginLayer(state); AssignRoute(state, layer, route).
+
+C. Execute according to route.x[i].stick using the same two-worker + one-partial-D2H/stick
+   geometry already sealed for Kimi; do not reintroduce per-expert submits/readbacks.
+
+D. ObserveExpert only from individually attributable expert timing.
+   Do not train an individual expert cost from aggregate stick wall time.
+
+E. Shared expert:
+   Execute unconditionally according to model semantics; pin/account separately.
+   This drop deliberately does not modify shared-expert math.
+
+F. MLA:
+   PlanKv returns tier intent only. The live DeepSeek MLA implementation must supply
+   exact latent KV shapes/math; do not reinterpret model tensors in this adapter.
+
+G. MTP:
+   PlanMtp schedules draft/verify sizes only if the loaded model exposes a validated
+   MTP module. enabled=false otherwise.
+
+H. Prefill:
+   PlanPrefill gives chunks; live attention implementation owns exact boundaries,
+   masks, and positional semantics.
+
+I. Quant:
+   QuantPolicy chooses storage safety class only. Bind actual Q2/Q3/Q4/FP8 kernels
+   through existing Deep2 quant dispatch after numerical parity tests.
+
+J. Authority gate after product bind:
+   EXIT=0
+   ROUTER_ID_WEIGHT_PARITY=1
+   SEL==EXE
+   ACQUIRE_FAIL=0
+   RELOAD not worse than baseline
+   Phase-A 2+2 geometry retained
+   NUMERIC_PARITY=1 for DeepSeek-specific MLA/MoE/MTP
+   PROMOTE remains 0 until live receipt.

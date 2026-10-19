@@ -1,0 +1,67 @@
+RUNTIME_EVIDENCE_512_COLLECTION_001=SEALED
+DATE=2026-09-08
+TYPE=COLLECTION_SIDE_ONLY
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+SITE_WIRING=0
+
+FILLS=
+  src/asm/RuntimeEvidence512_Collect.asm
+  src/asm/RuntimeEvidence512_Collect.inc
+  src/asm/RuntimeEvidence512_Collect.obj
+  src/asm/BUILD_RuntimeEvidence512_Collect.txt
+  src/deep2/evidence/RuntimeEvidence512.h
+  src/deep2/evidence/RuntimeEvidence512_Collect.hpp
+  src/deep2/evidence/RuntimeEvidence512_InitC.asm
+
+ASSEMBLY_MASM_COLLECT=
+  LOCAL_OBJ=src/asm/RuntimeEvidence512_Collect.obj (1837 B) non-authority
+  ASSEMBLY_NEW_COLLECTOR=UNCLAIMED
+  LINK_NEW_COLLECTOR=UNCLAIMED
+  SSOT=RUNTIME_EVIDENCE_512_COLLECTION_SOURCE_001
+  WIRING=RUNTIME_EVIDENCE_512_COLLECTION_WIRING_001
+  SERVE=COLLECTION_SERVE_001
+
+SERVES=
+  EvidenceSummarize512 / EvidenceFindClaim512 / EvidenceCopyCommitted512
+  walk COMMITTED records only (Commit==EVREC_COMMIT, seqCap==512)
+  exact Claim-X lookup; missing Claim-X → no fabricated record
+  surface Dropped / Incomplete / Invalid; CLOSED_SNAPSHOT integrity only
+  export RXEV_COLLECT lines (payload from that run's buffer) via C++ helper path
+  report RXEV_UNCOLLECTED = NO_CORRESPONDING_RUNTIME_EVIDENCE
+    for claim IDs with zero committed records
+  EvidenceInit512_C trampoline (seqCap hard 512) for C harnesses
+
+DOES_NOT=
+  invent claim payloads
+  substitute EMISSION_X for CLAIM_Y
+  site-wire ProjectLogitsArgmax / teardown
+  declare run complete (join point is caller's)
+  run PATH_B measurement
+  promote runtime claims from empty buffer
+
+LAW=
+  collection harvests what producers committed
+  uncollected report ≠ observation of failure-to-fire
+    (failure-to-fire still requires disposition emission from producer)
+  source existence ≠ runtime evidence
+  SPEND remains NONE (SPEND_CLAIM_001)
+
+BOUNDARY=
+  SOURCE_COLLECTION=CREATED
+  REAL_SITE_WIRING=NOT_DONE
+  RUNTIME_OBS=NOT_DONE
+  MEASUREMENT=NOT_DONE
+
+BUILD_HINT=
+  ml64 /c RuntimeEvidence512_Core.asm RuntimeEvidence512_Emit.asm
+  ml64 /c RuntimeEvidence512_Collect.asm
+  ml64 /c RuntimeEvidence512_InitC.asm
+  link Core+Emit+Collect (+InitC) beside product when wiring spend opens
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  SSOT=RUNTIME_EVIDENCE_512_SOURCE_001 + RUNTIME_EVIDENCE_512_COLLECTION_SOURCE_001 + OBSERVATION_AUTHORITY_001

@@ -1,0 +1,58 @@
+GATE=G3_STREAMER_AGENTIC_IDE_001
+PURPOSE=Close G3_STREAMER_AGENTIC_001 residual: rebuild Win32IDE/Headless onto ProductStreamerPrep; prove GUI/API wire
+PARENT=G3_STREAMER_AGENTIC_001
+ASOF=2026-09-10T00:20
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+INCOMPLETE_BEFORE=
+  Win32IDE.exe not rebuilt with product_deep2_infer ProductStreamerPrep (SemanticSafe risk on stale GUI binary)
+  HeadlessIDE loadModel rejected valid GGUF (magic typo 0x46475547 vs 0x46554747)
+  HeadlessIDE LocalGGUF route passed basename to ProductOpenSession (not full path)
+
+COMPLETE_NOW=
+  build-fd RawrXD-Win32IDE.exe relinked; binary embeds PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+  product_deep2_infer.cpp (ProductStreamerPrep) linked into Win32IDE (ninja rebuilt .obj + exe)
+  HeadlessIDE.cpp GGUF magic fixed to 0x46554747; model load vocab=32000 on tinyllama
+  HeadlessIDE LocalGGUF uses m_loadedModelPath for ProductOpenSession/RAWRXD_PRODUCT_MODEL
+  Win32IDE_HotpatchWiring.cpp same magic fix (not on Win32IDE link line; kept for parity)
+  GUI bunnyhop panel/helpers remain wired (ide_chatbot_standalone.html + ide_chatbot_engine.js)
+  LocalServer: /api/generate + /ask → ProductDeep2Infer; /api/nvme/bunnyhop/{status,arm,disarm} live
+
+BUILD=
+  ninja -C build-fd RawrXD-Win32IDE → exit 0 (rebuild_win32ide4.txt [8/8] link)
+  IDE_SHA256=4A68211B4FA808211AAE0AE3E6B7101DE2DE09CFEEB18E2146CFB62F326C90FC
+  RAWR_SHA256=B382AE17236DC1453AE1400492BA2CDA10700CCE409B090CC638769874466AD6 (unchanged vs G3_STREAMER_AGENTIC_001)
+  GIT=89b8a1369868662c1a5ba016bb5b69c46ffb9c9c (working tree dirty: HeadlessIDE + HotpatchWiring)
+
+PROOF_WIRE=
+  strings(IDE): PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 expected 0x46554747 m_loadedModelPath
+  LocalServer GET /api/nvme/bunnyhop/status → 200 UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+  LocalServer POST /api/nvme/bunnyhop/arm → 200
+  Headless --model tinyllama: magic PASS, Model loaded tensors=201 vocab=32000 (oneshot4/5 logs)
+  BackendSwitcher/HeadlessIDE/LocalServer source: ProductDeep2Infer / ProductOpenSession
+
+PROOF_AGENTIC_CLI (reaffirmed this gate)=
+  rawr run tinyllama --max-tokens 16 → RC=0
+  PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 HOTPATH_CYCLONE=1 LIVE_PATH_NVME_HOPS=17 PRODUCT_PASS=1
+  (parent gate also sealed rawr agent --auto=full AGENT_LOOP=PASS)
+
+PROOF_IDE_EXECUTE=
+  Headless SingleShot mode=2 armed; process AVs during ProductDeep2Infer (no PRODUCT_STREAMER_PREP line flushed)
+  LocalServer POST /api/generate similarly drops connection (same AV class)
+  WER: Faulting module dbgcore.DLL Exception 0xc0000005 (dump/crash-containment path)
+  NOT SemanticSafe / LIVE_MECH=none — wire is ProductStreamerPrep; execute AV is residual
+
+VERDICT=STREAMER_AGENTIC_IDE_WIRE_READY
+  IDE binary + GUI/API path are on ProductStreamerPrep (gap from parent CLOSED)
+  Live IDE generate/oneshot execute AV remains OUTSIDE authorize lane close criteria for wire seal
+
+OUTSIDE_AUTHORIZE_LANE / UNPLAN=
+  IDE ProductDeep2Infer AV / dbgcore dump crash during oneshot|/api/generate — triage later; do not invent PATH_B
+  TIP_CLIMB / rainbow / TPS floor — UNPLAN
+  tool_server Ollama proxy remains non-product
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE SPEND=0
+  PROMOTE=0 TIP_CLIMB=HOLD CANONICAL_NEXT=STOP

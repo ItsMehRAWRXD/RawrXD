@@ -1,0 +1,24 @@
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 01:34:06 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+Loading model: g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[ModelSourceResolver] Resolving: g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[ModelSourceResolver] Detected source: Local File
+[ModelSourceResolver] ✅ Local file validated: g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+Model loaded: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  GGUF version: 3
+  Tensors: 201
+  Metadata KVs: 23
+  Layers: 22
+  Context length: 2048
+  Embedding dim: 2048
+  Vocab size: 32000
+  File size: 637 MB
+  Load latency: 35 ms
+
+[Scheduler] Shutdown complete

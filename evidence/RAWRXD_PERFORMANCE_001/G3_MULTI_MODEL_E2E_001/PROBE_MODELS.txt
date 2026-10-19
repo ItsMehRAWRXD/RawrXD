@@ -1,0 +1,7 @@
+DIED_LOAD alive=False R:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+PASS alive=True R:\models\tinyllama.gguf
+FAIL alive=True R:\model_solo\tinyllama_fresh.gguf
+PASS alive=True R:\tmp\tinyllama_10layer_v2.gguf
+FAIL alive=True R:\llama3.2-3b-Q2_K.gguf
+FAIL alive=True R:\llama3.2-3b-Q3_K_S.gguf
+FAIL alive=True R:\phi3-mini-Q2_K.gguf

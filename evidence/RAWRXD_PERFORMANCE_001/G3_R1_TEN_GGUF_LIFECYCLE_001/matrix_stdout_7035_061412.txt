@@ -1,0 +1,6 @@
+EXE_SHA16=70352BF3078637BB PE_LAA=YES HOST_DECODE=1 models=10
+ROW 01_tinyllama FAIL prep=200 load=200 gen=0 tok=1 un=0 rel=0 rg=0 surv=0 owner=generate_tokens
+ROW 02_unlock125 FAIL prep=200 load=0 gen=0 tok=0 un=0 rel=0 rg=0 surv=0 owner=model_load
+ROW 03_llama32_3b FAIL prep=200 load=200 gen=200 tok=8 un=200 rel=200 rg=0 surv=0 owner=process_died_reload_gen
+ROW 04_phi3_mini PASS prep=200 load=200 gen=200 tok=8 un=200 rel=200 rg=200 surv=1 owner=
+ROW 05_mistral_7b PASS prep=200 load=200 gen=200 tok=8 un=200 rel=200 rg=200 surv=1 owner=

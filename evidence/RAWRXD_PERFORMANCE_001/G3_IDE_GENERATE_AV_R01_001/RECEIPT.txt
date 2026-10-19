@@ -1,0 +1,86 @@
+GATE=G3_IDE_GENERATE_AV_R01_001
+ASOF=2026-09-10T08:50-04
+AUTH=AUTHORIZED_SPEND_R01 · PRODUCT_GENERATE_PATH_ONLY
+CHAT_LANE=IDE_/api/generate_AV_TRIAGE
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+CONFIRMED=1
+
+## DEFECT
+Headless/LocalServer ProductDeep2Infer AV (dbgcore 0xc0000005) on live
+/api/generate|oneshot AFTER ProductStreamerPrep wire seal
+(G3_STREAMER_AGENTIC_IDE_001: Wire READY; execute NOT READY).
+
+## ROOT_CAUSE (contained; re-confirmed this spend)
+IDE ProductOpenSession / MultiGPU Vulkan ICD path under product generate:
+amdvlk snmalloc abort surfaces as WER dbgcore 0xC0000005.
+CLI rawr.exe PRODUCT_PASS=1 control (different LAA/GPU posture).
+Divergence vs working CLI: IDE generate entered ICD/enhance stack;
+product floor must force HOST_DECODE + block ICD unless RAWRXD_ALLOW_GPU=1.
+
+Prior seals: G3_IDE_GENERATE_AV_FIX_001 / FIX_002 / SPEND_001 CLASSIFICATION.
+This locus = authorized R01 live re-close on current build-fd binary.
+
+## FIX (already on PRODUCT_GENERATE_PATH_ONLY; no new delta this spend)
+1. ProductStreamerPrep.hpp — host floor: HOST_DECODE=1, DUALSTICK_ARM=0,
+   MINIMAL_ENHANCE=1, VK_ICD_FILENAMES blocked, elastic off.
+2. Deep2Engine HOST_DECODE enhance early-out (CPU; skip vulkan/speed).
+3. ProcessLargeAddressAware.hpp PE LAA probe.
+4. Win32IDE link: ADDR32 Telemetry/Pattern ASM removed; /LARGEADDRESSAWARE YES.
+FILES_CHANGED_THIS_SPEND=NONE (fix already landed; verify-only spend)
+
+## LIVE PROBE (measured 2026-09-10)
+EXE=build-fd/bin/RawrXD-Win32IDE.exe
+IDE_SHA256=74FFB40DDED7DD52D24DEC25D2F76EA5CD3BFEA50C2897E5E414A19629CBCA71
+LAA_PE=YES (Application can handle large (>2GB) addresses)
+SMOKE_BIN=evidence/.../G3_IDE_GENERATE_AV_R01_001/smoke_bin/
+MODEL=models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+ENV=RAWRXD_ALLOW_GPU=0 RAWRXD_HOST_DECODE=1
+
+ONESHOT=
+  PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED
+  PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+  ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+  GENERATED_TOKENS=8 PRODUCT_PASS=1
+  CLEAN_EXIT=1 CRASH_OBSERVED=0 EXIT_REASON=COMPLETE
+  ACCESS_VIOLATION=0
+  WITNESS=oneshot.err.txt / oneshot.out.txt / oneshot2.*
+
+HTTP_API_GENERATE=
+  --headless --server --port 11494 --model tinyllama
+  POST /api/generate {"prompt":"hi","stream":false,"options":{"num_predict":16}}
+  BODY={"model":"rawrxd","response":"\nSure, here are some examples","done":true}
+  BODY_LEN=74 done=true
+  ALIVE_AFTER_GEN=1 ACCESS_VIOLATION=0
+  SERVER err: GENERATED_TOKENS=8 PRODUCT_PASS=1
+  WITNESS=http_generate_body.txt http_server.err.txt http_server.out.txt
+
+## PERFECT_METRICS (honest)
+| probe   | alive_after | EXIT/CRASH     | tokens | PRODUCT_PASS | ACCESS_VIOLATION |
+|---------|-------------|----------------|--------|--------------|------------------|
+| oneshot | n/a (exit)  | CLEAN_EXIT=1   | 8      | 1            | 0                |
+| HTTP gen| 1           | process lived  | 8      | 1            | 0                |
+
+PERFORMANCE_PASS=NOT_CLAIMED
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## VERDICT
+VERDICT=R01_LOADED_GENERATE_PASS
+WIRE_READY=1 EXECUTE_READY=1 (HOST_DECODE product floor)
+GPU_VULKAN_IDE=DEFERRED (not this spend)
+
+## UNCHANGED / FORBIDDEN
+DUALSTICK_ARMSPEED=UNTOUCHED DO_NOT_REOPEN
+TIP_CLIMB=HOLD
+PROMOTE=0
+R28_APPLY=HELD ElasticResidency=NOT_REOPENED
+CLI_AGENTIC=KEEP_CLOSED STREAMER_AGENTIC_PARITY=KEEP_SEALED
+tool_server Ollama proxy=NON_PRODUCT
+PATH_B=NOT_INVENTED
+
+## AUTHORITY CROSS
+G3_IDE_RESIDUAL_AUDIT_001 R01=CLOSED (reaffirmed)
+G3_STREAMER_AGENTIC_IDE_001 execute AV residual = CLOSED by this + prior FIX seals
+NEXT_SPEND=NONE for R01 generate AV

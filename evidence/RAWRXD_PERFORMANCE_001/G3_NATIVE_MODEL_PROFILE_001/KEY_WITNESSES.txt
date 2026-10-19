@@ -1,0 +1,22 @@
+GATE=G3_NATIVE_MODEL_PROFILE_001
+ASOF=2026-09-10T01:29
+EXE_SHA=54FEC3E5A5839873F93CD146075DF160E2FBDFE15CA03E46DDAA4745826236DD
+
+LIVE=
+  LIVE_PREPARE_ULTRA.txt — HTTP 200 profile_source=runtime_gguf profile_id=9231
+  LIVE_REGISTER.txt — HTTP 200 register path
+  LIVE_CAPS.txt — runtime_model_count=5 after register
+  LIVE_PREPARE_MISSING.txt — HTTP 404 fail-closed
+
+SMOKE=
+  HTTP_PREPARE_ULTRA.txt HTTP_PREPARE_MISSING.txt
+  HANDLEHTTP_ULTRA.txt HANDLEHTTP_MISSING.txt
+
+SOURCE=
+  native_e2e/rawr_native_http_adapter.cpp — prepare + /api/native/runtime/register
+  native_e2e/runtime_gguf_{roots,disk_resolve,disk_try}.cpp
+  src/win32app/HeadlessIDE.cpp loadModel RegisterRuntimeGgufPath
+  gui/ide_chatbot_standalone.html changeModel + prepareGeneration path
+
+HOLDS=
+  DualStick CLOSED; MOTD sealed; PROMOTE=0; TIP_CLIMB=HOLD

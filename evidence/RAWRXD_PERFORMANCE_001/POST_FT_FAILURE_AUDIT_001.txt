@@ -1,0 +1,86 @@
+POST_FT_FAILURE_AUDIT_001=SEALED
+DATE=2026-09-08
+TYPE=ROOT_CAUSE_AUDIT_PLUS_FIX
+MODE=A
+SPEND=1
+WITNESS=PATH_B_N5_003 (pre-fix symptoms)
+
+# --- ROOT CAUSES (post first-token / end-of-stream) ------------------------
+
+RC1_KVLENGTH_PRE_COMMIT=0
+  WHERE=K2MLAWeights pathBDone stats->kvLength = currentLength()
+  BUG=Write does not advance length; CommitPosition does (later)
+  EFFECT=agg kvLength stays 0 → result.ok fails Gate12 kvLength>=1
+  SYMPTOM="Stream contract not satisfied" (no specific kvLength error before)
+  FIX=kvLength = currentLength()+1 (match MlaAttentionComplete)
+  STATUS=LANDED
+
+RC2_KV_CLEAR_EVERY_TOKEN
+  WHERE=ForwardMLALayers tlsKv.Clear() every call
+  BUG=wipes history; forces position=0 every step
+  EFFECT=PathBAttend only coherent at t0; post-FT attention broken
+  FIX=Clear only when position==0; persist TLS across steps
+  STATUS=LANDED
+
+RC3_KV_MAXSEQ_8
+  WHERE=tlsKv.Reset(..., 8, ...)
+  BUG=max 8 positions; 64-token stream overflows if persisted
+  EFFECT=post-t0 Commit throws or desync
+  FIX=Reset to seqNeed capped at 128 (PathB device seqCap)
+  STATUS=LANDED
+
+RC4_POSITION_HARDCODE_0
+  WHERE=RunMlaOnPayloads(..., position=0) formerly
+  BUG=MLA always told pos=0
+  EFFECT=PathBAttend position!=cacheLen after t0 → fallback/abort
+  FIX=pass stream step as position; desync guard
+  STATUS=LANDED (call site passes step)
+
+RC5_FINALIZE_ZEROS_BLOCKER_104
+  WHERE=Deep2Engine K2 path Finalize(0, maxSeq, 0, ...)
+  BUG=ROPE_POSITION=0 KV_POSITION=0 POSITION_MATCH=0
+  EFFECT=BLOCKER_104_POSITION_COUNTER_AUTHORITY=OPEN
+  FIX=Finalize(r.kvLength|generatedTokens, ..., same)
+  STATUS=LANDED
+
+RC6_OPAQUE_CONTRACT_ERROR
+  WHERE=K2NativeStreamGate result.error else-branch
+  BUG=kvLength<1 / !callback / empty text all map to same string
+  FIX=explicit error strings for each
+  STATUS=LANDED
+
+RC7_MLA_Q_REALLOC_0x0
+  WHERE=EnsureMlaAttn grow(mla_q_) destroyed live PathB Q
+  BUG=VkBuffer null → descriptor offset @ 0x0
+  FIX=EnsureMlaAttn never realloc mla_q_; require pre-size
+  STATUS=LANDED (PATH_B_N5_003)
+
+RC8_GATE12_ROPE_STATS_SKIP
+  WHERE=pathBDone skipped MlaAttentionComplete → ropeApplied never set
+  FIX=set Gate12 stats on pathBDone
+  STATUS=LANDED (PATH_B_N5_003)
+
+RC9_TEARDOWN_AV_0xC0000005
+  WHERE=unload after STREAM_ABORT
+  BUG=dangling PathB Q note / Vulkan teardown race
+  FIX=PathB_ClearQDev() at Run() exit (always)
+  STATUS=LANDED
+  NOTE=remeasure required to confirm AV gone
+
+RC10_WALL_TPS_FLOOR
+  WHERE=measured DECODE_TPS~2.1 WALL~30e9
+  BUG=perf below PATH_A floor / PRODUCT_FLOOR 5.0
+  EFFECT=PROMOTE=0 even if contract passes
+  FIX=NOT a stub — requires real wall reduction (separate)
+  STATUS=OPEN (measurement bar; not contract bug)
+
+# --- NOT SKIPPED / NOT ZEROED ---------------------------------------------
+
+NO_STUB=
+  Finalize no longer passes 0,0
+  kvLength no longer reported as 0 after successful Write
+  KV not Clear()'d to empty between tokens
+  maxSeq not left at 8 for 64-tok streams
+  contract errors not collapsed to one opaque string
+
+NEXT=rebuild deep2_benchmark + PATH_B one-shot remeasure

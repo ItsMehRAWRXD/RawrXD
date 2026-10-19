@@ -1,0 +1,9 @@
+﻿MODEL=BigDaddyG-Q2_K-ULTRA.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\09_bigdaddy_ultra\BigDaddyG-Q2_K-ULTRA.gguf
+SIZE_MB=24283.8 SHA16=D39F8DDB7E54A04E
+HEADLESS_PID=14780
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":2,"model":"BigDaddyG-Q2_K-ULTRA.gguf","profile_source":"runtime_gguf","profile_id":9231,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_
+LOAD=0 
+VERDICT=FAIL OWNER=model_load DETAIL=load_fail

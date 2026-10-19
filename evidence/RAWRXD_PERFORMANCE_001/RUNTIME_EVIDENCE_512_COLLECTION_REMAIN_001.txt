@@ -1,0 +1,70 @@
+RUNTIME_EVIDENCE_512_COLLECTION_REMAIN_001=SEALED
+DATE=2026-09-08
+TYPE=COLLECTION_REMAIN_INDEX
+SPEND=0
+CODE_CHANGE=0
+HOT_GATE=0
+COLLECTION_EXECUTED=0
+MEASUREMENT=UNSPENT
+
+PURPOSE=
+  Serve the collection-side remain only.
+  Inventories what must still happen for runtime evidence to exist.
+  Does not execute wiring, BUILD product-link, run, or MEASUREMENT.
+
+CANONICAL=
+  SOURCE assembled successfully, but runtime claims remain unobserved
+  collection remain = unserved until Mode A / HOT_GATE spend
+
+CHAIN_REMAIN=
+  1 SITE_LOCAL_WIRING     = OPEN  (stream path MISSING; REQUIRED_YET=0 COMPLETE)
+  2 CMAKE_PRODUCT_LINK    = OPEN  (Core+Emit+Collect → deep2_benchmark / InferenceEngine)
+  3 CALLER_OWNED_STATE    = OPEN  (EvidenceState* + EvidenceRecord[N] + Init512 seqCap=512)
+  4 SEQCAP_512_EXEC       = OPEN  (measured run)
+  5 PER_CLAIM_EMIT_FIRE   = OPEN  (each claim's own EvidenceEmit*)
+  6 COMMIT_RECORD_READ    = OPEN  (Collect Summarize/Find/Copy after real join)
+  7 CLAIM_CLASSIFY        = OPEN
+  8 MEASUREMENT           = OPEN
+
+SOURCE_COLLECTION=
+  CREATED=1
+  COLLECTOR_SOURCE=PRESENT
+  ASSEMBLY_NEW_COLLECTOR=UNCLAIMED
+  LINK_NEW_COLLECTOR=UNCLAIMED
+  ORDINAL_SLOT_VALIDATION=1
+  CLOSED_SNAPSHOT=INTEGRITY_ONLY
+  SSOT=RUNTIME_EVIDENCE_512_COLLECTION_SOURCE_001
+  WIRING=RUNTIME_EVIDENCE_512_COLLECTION_WIRING_001
+  SERVE=COLLECTION_SERVE_001
+  NOTE=unpack/inspect/local obj ≠ authority transition
+
+STREAM_PATH_WIRING=
+  MISSING=1
+  REQUIRED_YET=0
+  NON_REQUIREMENT=COMPLETE
+  SSOT=STREAM_PATH_WIRING_HOLD_001
+  ALIAS=RUNTIME_EVIDENCE_512_STREAM_PATH_WIRING_NOT_REQUIRED_001
+
+COMPLEMENT=
+  NON_COLLECTION serve = RUNTIME_EVIDENCE_512_NON_COLLECTION_001
+  UNOBSERVED serve     = RUNTIME_EVIDENCE_512_UNOBSERVED_SERVE_001
+  CLAIM→EMIT map       = RUNTIME_EVIDENCE_512_CLAIM_EMIT_MAP_001
+  this sheet owns collection remain only
+
+NOT_THIS_RECEIPT=
+  fabricating records
+  promoting claims from .obj
+  backfilling PATH_B_N5_003
+  Mode A spend without explicit HOT_GATE=1
+
+NEXT_AUTHORITY_BEARING=
+  requires explicit MODE=A HOT_GATE=1
+  then execute chain 1→8 under new evidence id (never revise PATH_B_N5_003)
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  HOLD=RUNTIME_EVIDENCE_512_AUTHORITY_HOLD_001
+  SPEND_SEAL=SPEND_CLAIM_001

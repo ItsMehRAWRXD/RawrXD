@@ -1,0 +1,21 @@
+MARS_SCOPE_LAW_STANDBY_001=SEALED
+DATE=2026-09-09
+TYPE=SCOPE_LAW
+PROMOTE=0
+TIP_CLIMB=HOLD
+PARENT=MARS_ON_TPS_PROBE_001
+AMEND=IF_TRUE_NEVER_USE + BOUNDED_STREAM primary
+
+RULE=
+  disqualify TRUE → never MARS
+  MARS only when BOUNDED_STREAM|K2_SHARD_DIR|REAL_K2|INDEX_OPEN all FALSE
+  FORCE=1 = idle-cost probe only
+
+IMPL=
+  Deep2Engine::marsHostResidentAuthorityOk (BOUNDED_STREAM primary)
+  Deep2Engine::standdownMARSEmptyPlacement
+  enableMARS hard refuse (not silent controller-on)
+
+SSOT=SCOPE_LAW.txt
+FLOOR_K2_TPS=5.323
+NEXT=O_PROJ overlap | QKV readback | prefetch; dense MARS separate

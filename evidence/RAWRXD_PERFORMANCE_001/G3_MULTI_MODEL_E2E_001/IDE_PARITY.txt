@@ -1,0 +1,5 @@
+0 /api/health
+0 /api/backends
+0 /api/agents
+0 /api/failures
+FAIL /api/generate

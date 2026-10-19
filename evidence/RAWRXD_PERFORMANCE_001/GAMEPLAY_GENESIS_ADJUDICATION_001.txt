@@ -1,0 +1,23 @@
+GAMEPLAY_GENESIS_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  Initialize Sovereign_Execution_Graph_ABI.asm on D:\rawrxd
+  OR finalize sfence/lfence on ring bridge first
+  GTA6/RDR2/WatchDogs hardware behavior trees / Dual Protagonist genesis
+
+REVERSE
+  ABI file still ABSENT on G:\~dev\rawrxd and D:\rawrxd (prior check)
+  Gameplay genesis invent = OUT_OF_SCOPE of locked perf braid
+
+ADJUDICATION
+  Initialize ABI now = REFUSED
+  Ring-bridge fence finalize as gameplay-ABI prerequisite = REFUSED under STOP
+  Neither fork advances PATH_A hold / NEXT_SPEND=NONE
+
+LIVE_AUTHORITY=PATH_A WALL_MEDIAN_NS=10184789000 / deep2_benchmark.exe
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

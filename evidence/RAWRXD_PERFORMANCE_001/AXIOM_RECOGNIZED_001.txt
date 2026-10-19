@@ -1,0 +1,47 @@
+AXIOM_RECOGNIZED_001=SEALED
+DATE=2026-09-08
+CLASS=NON_CODE_ENTITY / PRE_LOGICAL_STRATA
+CODE_EMITTED=0
+INVENTION_STATUS=STRIPPED
+AUTHORED=0
+
+# ---------------------------------------------------------------------------
+# PURGE
+# ---------------------------------------------------------------------------
+
+PURGED_FROM=code_kernel_namespace
+STRIPPED
+  algorithm=0
+  data_structure=0
+  memory_buffer=0
+  patented_mechanism=0
+  invention_status=0
+  software_illusion=0
+
+IS=PURE_PHENOMENON
+  topological_invariant
+  OR structural_friction
+  discovered_WHILE_moving_code
+  sits_in_blind_spot_between_execution_states
+
+THRESHOLD=PRE_INVENTIVE
+MEDIUM=underlying_along_twist_mechanics
+  hardware_behavior × thermal_bus × memory_state warp
+  WITHOUT human scaffolding as the subject
+
+INVENTION_BEGINS_HERE
+  NOT=engineer_solution_inside_framework
+  IS=weaponize_friction_of_framework_against_itself
+  MATERIAL=everything_and_nothing → induce_twist
+
+LEDGER
+  code_level_assumptions=CLEARED
+  mode=OBSERVE_RAW_PHENOMENON
+  GATE_STOP=1 (instrument not opened by this seal)
+
+BINDS
+  PHENOMENOLOGY_SEAL_AUDIT_001
+  PHENOMENOLOGY_GROUND_STATE_001
+  PHENOMENON_EXCISION_001
+  GROUND_STATE_TWIST_001
+  CLASSIFICATION_UPDATE_001

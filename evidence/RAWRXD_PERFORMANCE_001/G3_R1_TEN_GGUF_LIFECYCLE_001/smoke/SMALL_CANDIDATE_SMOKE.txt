@@ -1,0 +1,7 @@
+SMALL_CANDIDATE_SMOKE :11440 IMMUTABLE 3E631BBB
+llama32_q2  prep=200 load=200 gen=200 un=200 rel=200 g2=000  (reload_gen flake)
+phi3_q2     prep=200 load=200 gen=200 un=200 rel=200 g2=200  PASS (same family as 04)
+gemma3      prep=200 load=400 — still tensors/open fail
+tiny2       prep=200 load=200 gen=200 un=200 rel=200 g2=200  PASS (same as 01)
+
+NOTE=phi3_q2/tiny2 prove soft-unload path; weak material diversity vs existing PASS rows.

@@ -1,0 +1,14 @@
+WSC15 owns only the byte working-set contract.
+
+It does NOT own:
+  scheduler initiation
+  scheduler LIVE
+  decode authorization
+  token/NILW authorization
+  product PROMOTE
+  model quality
+  tensor math correctness
+
+contract_pass=1 means only:
+  the measured byte-working-set execution satisfied all WSC01..WSC14
+  and none were FAIL or NOT_RUN.

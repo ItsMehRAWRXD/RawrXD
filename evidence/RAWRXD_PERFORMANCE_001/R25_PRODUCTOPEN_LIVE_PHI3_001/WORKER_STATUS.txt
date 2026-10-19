@@ -1,0 +1,21 @@
+GATE=R25_PRODUCTOPEN_LIVE_PHI3_001
+WORKER=continue_ensure_subagent
+ASOF=2026-09-10
+NO_REBUILD=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+CLOSED=
+  PHI3_IDE_PRODUCTOPEN predicates from ide_stderr (PASS=1 tensors=197)
+  RAWR Init/Session fprintf + generate8 from rawr_phi3.err
+  FACTS/IDE_FACTS/KEY_LINES/RECEIPT honesty (blank fields filled; dual PRODUCT_PASS noted)
+  SESSION RECEIPT cross-ref to sibling without inventing r1cap PASS
+
+NOT_RUN=
+  r1cap R25 INIT_ENTER/SESSION_EXIT/TENSOR_COUNT emit (PASS=0 on that EXE)
+  MULTI_FAMILY_PRODUCTOPEN rollup
+  PERFORMANCE_PASS
+  IDE Init/Session fprintf pair (EmitOpenFacts only)
+  CURRENT_BINARIES_REPROBE after SHA drift (build-fd now may differ from E47BF453)
+
+DO_NOT_TOUCH_HONORED=ProductRunDecode,R24_TINYLLAMA,DualStick,VK_ICD,k3c_token

@@ -1,0 +1,12 @@
+ID	LOAD	GEN	ALIVE	RES_MB
+tinyllama	200	200	1	2048
+tinyllama_alias	200	200	1	2048
+llama32_q2	400	000	1	
+llama32_q3	400	000	1	
+phi3_q2	400	000	1	
+phi3_q8	400	000	1	
+gemma3	400	000	1	
+deepseek8b	400	000	1	
+gemma4e4b	000	000	0	
+bigdaddy	400	000	1	
+codestral	400	000	1	

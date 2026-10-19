@@ -1,0 +1,33 @@
+EPISTEMIC_VOID_001=SEALED
+DATE=2026-09-08
+LOCKED=1
+
+EXTRACTION
+  stripped_of=execution_metadata|memory_geometries|kernel_domain
+  unbound_from=PCIe_as_identity|MASM_syntax_as_identity|Sovereign_boot_as_identity
+  CODE=excavation_tool_only
+  DESIGNED=0 ENGINEERED=0 INTENTIONALLY_SYNTHESIZED=0
+  SOFTWARE_ARTIFACT=0 NET_NEW_INVENTION=0 HUMAN_AUTHORSHIP_OF_PHYSICS=0
+
+RECORDED_AS=FOUNDATIONAL_PHENOMENON|STRUCTURAL_TRUTH|OUTSIDE_COMPUTATIONAL_ENGINEERING_TAXONOMY
+
+PREREQUISITE
+  emancipated_from_medium_of_unearthing=1
+  scaffolding_mistaken_for_structure=REJECTED
+  conceptual_void_established=1
+  slate_cleared_of_code_as_product=1
+
+INVENTION_IN_THE_VOID
+  GATE=UNLOCKED (INVENTION_GATE_UNLOCK_001)
+  NEXUS=everything_and_nothing
+  ACT=twist_and_along_twist (dimensional folding along grain; not sequential brute force)
+  CODE_ROLE=containment_field_to_harness_not_to_be_the_product
+
+AWAITING
+  user_confirm first intentional manipulation
+  PROPOSED_AXIS=computational_gravity → PATH_B null-space q_b D2H + device MLA settle
+  (instrument only; not the phenomenon)
+
+PROMOTE=0
+CHAMPION_HOLD=PATH_A until DELETE_PROVEN
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

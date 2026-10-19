@@ -1,0 +1,3 @@
+KEEPENV_SMOKE IMMUTABLE=70352BF3078637BB port=11441
+keep_tiny prep=200 load=200 gen=200 un=200 rel=200 g2=200 soft=True reuse=True path_switch=False
+keep_deepseek prep=200 load=200 gen=200 un=200 rel=200 g2=200 soft=True reuse=True path_switch=False

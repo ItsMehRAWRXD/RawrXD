@@ -1,0 +1,30 @@
+MODEL_OPEN_COMPAT_DROP_001=INTEGRATED
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER_ONLY=1
+OLLAMA_HTTP=0
+CLAIM_SCOPE=OPEN_COMPAT_ONLY
+PROMOTE=0
+FULL_IE_REBUILD=0
+
+INSTALLED
+  src/deep2/ModelOpenCompat.hpp
+  Deep2Engine.cpp RepairMetadataFromTensors + OpenFactsSufficient
+  BindLlamaSchema: phi3/qwen3 allowlist, fused attn_qkv, optional ffn_gate
+  BindOne: 2D dim swap + ffn_up accepts 2*FFN (phi3 fused gate-up)
+
+OPEN_LANE_SMOKE max-tokens=1
+  deepseek-r1-8b  MODEL_OPEN=PASS  AUTHORITY_LADDER=PASS  TOKENS_EMITTED=1
+  phi3            AUTHORITY_LADDER=PASS  GenerationComplete=1 token
+                  teardown RC=C0000374 (heap) after emit
+                  LINEARW_BOUNDS clamp fused ffn_up 16384→8192 during prefill
+                  MODEL_OPEN=PASS_WITH_TEARDOWN_CRASH
+  gemma4          MODEL_OPEN=FAIL  BLOCKED_AT=GEOM (needs gemma schema)
+
+VERDICT
+  OPEN_COMPAT_DROP=1
+  DS_R1_OPEN=PASS
+  PHI3_OPEN=PASS_TEARDOWN_CRASH
+  GEMMA4_OPEN=FAIL
+  PROMOTE=0
+  NEXT=PHI3_FUSED_FFN_RUNTIME | GEMMA_SCHEMA | DECODE_ATTRIBUTION

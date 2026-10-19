@@ -1,0 +1,52 @@
+RUNTIME_EVIDENCE_512_COLLECTION_CHECKLIST_001=SEALED
+DATE=2026-09-08
+TYPE=COLLECTION_CHECKLIST_REMAIN
+SPEND=0
+CODE_CHANGE=0
+HOT_GATE=0
+STATUS=ALL_OPEN
+
+PURPOSE=
+  Serve ordered collection checklist remain. Tick only after that step's
+  own runtime/product fact exists. This file does not tick itself.
+
+CHECK=
+  [ ] MODE=A HOT_GATE=1 issued (exact catalog line)
+  [ ] EvidenceState + record buffer allocated (caller-owned)
+  [ ] EvidenceInit512 with seqCap=512 accepted
+  [ ] CMake links RuntimeEvidence512_Core.obj + Emit.obj into deep2_benchmark
+  [ ] site wires EvidenceEmitHiddenProbe at real probe
+  [ ] site wires EvidenceEmitHiddenLast at real last
+  [ ] site wires EvidenceEmitBounds / Valid at real comparisons
+  [ ] site wires EvidenceEmitLogitsEntry at ProjectLogitsArgmax entry
+  [ ] site wires EvidenceEmitLogitsComplete only after real argmax
+  [ ] abort sites wire EvidenceEmitStreamAbort only (no COMPLETE siblings)
+  [ ] teardown sites wire Entry/Complete/Fault independently
+  [ ] wall / TPS / parity wire only on actual observations
+  [ ] BUILD product binary
+  [ ] seqCap=512 measured run under new evidence id
+  [ ] read Commit-valid records only; classify per claim isolation
+  [ ] MEASUREMENT receipt sealed
+  [ ] no PATH_B_N5_003 backfill
+
+CURRENT=
+  every box above = OPEN
+  COLLECTION_EXECUTED=0
+  RUNTIME_EVIDENCE=UNPRODUCED
+  STREAM_PATH_WIRING=MISSING
+  STREAM_PATH_WIRING_REQUIRED_YET=0
+  STREAM_PATH_WIRING_NON_REQUIREMENT=COMPLETE
+  (open boxes are future-spend remain, not current Mode D debt)
+
+SSOT=
+  RUNTIME_EVIDENCE_512_COLLECTION_REMAIN_001
+  RUNTIME_EVIDENCE_512_COLLECTION_SITE_MAP_001
+  RUNTIME_EVIDENCE_512_COLLECTION_PREREQ_001
+  RUNTIME_EVIDENCE_512_CLAIM_EMIT_MAP_001
+  SPEND_CLAIM_001
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

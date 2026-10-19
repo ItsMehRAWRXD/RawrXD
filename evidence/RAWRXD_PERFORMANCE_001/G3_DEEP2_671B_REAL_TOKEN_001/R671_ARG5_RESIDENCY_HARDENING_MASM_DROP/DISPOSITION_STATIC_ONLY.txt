@@ -1,0 +1,29 @@
+R671_ARG5_RESIDENCY_HARDENING — disposition (static-only residual)
+=================================================================
+
+ABI_SMOKE_ROOT_CAUSE_CLOSED:
+  R671_ABI_SMOKE=PASS
+  ROOT_CAUSE=PREP_HANDLE_IN_VOLATILE_R10
+  FIX=HANDLE_IN_PRESERVED_RBX+SHAREABLE_CREATE
+  OPEN_DIAG_STAGE=1
+  OPEN_DIAG_WIN32_ERROR=32
+  STAGE3_CREATEFILEMAPPING_FAILURE=0
+  STAGE3_MAPPING_DIAGNOSIS=SUPERSEDED
+
+ARG5_DROP:
+  CANONICAL_SHA256=d5b9bab88596b9726671fc077bb69a236d3bf31f390f1886400661f46dba9387
+  ARG5_STATIC_AUDIT=PASS
+  ARG5_NATIVE_OBJECT_BUILD=NOT_RUN
+  ARG5_NATIVE_HARNESS=ABSENT
+  PATCH_PATTERN=INTEGRATION_PATTERN_NOT_EXECUTABLE_PROOF
+  TU_LINES_r671_arg5_residency_hardening.asm=123  ; exceeds 99-line cap
+
+LIVE_R671_BINDING=NOT_PROVEN
+PROMOTE=0
+
+NEXT_IF_REOPENED (does not reopen Stage3 / stream lock):
+  native ml64 harness for:
+    fifth-arg recovery, gen preserve across clobber,
+    exact-bound pass / +1 reject, aggregate residency CAS,
+    release underflow / double release, counter/peak equality
+  then later: mapper convergence onto locked a00eceb8 stream slots

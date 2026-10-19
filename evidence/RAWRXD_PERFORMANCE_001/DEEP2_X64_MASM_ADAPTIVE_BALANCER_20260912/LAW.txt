@@ -1,0 +1,51 @@
+DEEP2_X64_MASM_ADAPTIVE_BALANCER_20260912
+STATUS=SOURCE_DROP_NOT_RUN
+PRODUCT_LINKED=0
+PROMOTE=0
+
+PURPOSE
+  Minimize same-token dual-GPU critical path by matching lane finish times.
+  Initial policy seeds the measured direction at GPU0/GPU1 ~= 80/20, but the
+  source does not treat 80/20 as truth. It converges from measured lane times.
+
+IMPORTANT ARITHMETIC
+  If GPU1 is exactly 2.0x slower PER ROW and both lanes are perfectly linear
+  with equal fixed overhead, the matched-duration split is about 66.7/33.3,
+  not 80/20.  An 80/20 optimum means the effective end-to-end ratio is nearer
+  4:1 OR fixed launch/dequant/tail overhead makes GPU1 more expensive at the
+  current row count. Therefore lane duration and critical_ns are authoritative.
+
+TOP_15_MECHANICS
+  01  80/20 seed for the current measured direction.
+  02  Same-token lane-duration feedback, not nominal bandwidth.
+  03  Effective ns/row measurement for both GPUs.
+  04  Q16 integer EWMA; no floating point required.
+  05  Single-sample outlier clamp to 0.5x..2.0x prior EWMA.
+  06  Finish-skew deadband to prevent split chatter.
+  07  Skew-proportional bounded step size.
+  08  Alignment-aware row assignment for packed/tiled kernels.
+  09  Minimum/maximum GPU1 share clamps.
+  10  Best-critical-path split retention.
+  11  >5% critical-path regression pullback toward best split.
+  12  Model-based settling only after durations are already near matched.
+  13  Fail-closed evidence gate: timing + parity + device health required.
+  14  Small-work fallback to one lane when a legal dual split is impossible.
+  15  Caller-owned state, zero allocation, zero CRT, zero OS calls.
+
+AUTHORITY
+  SAMPLE_VALID alone is insufficient. D2LbObserve adapts only when:
+    SAMPLE_VALID | SAMPLE_PARITY_OK | SAMPLE_DEVICE_OK
+  are all present.
+
+RECOMMENDED PRODUCT METRICS
+  FINISH_SKEW_NS = abs(duration0_ns-duration1_ns)
+  CRITICAL_NS    = actual same-token critical path
+  OVERLAP_NS     = measured simultaneous execution window
+
+PROMOTION SHOULD REQUIRE
+  OUTPUT_PARITY=1
+  DEVICE_LOST=0
+  SAME_TOKEN_OVERLAP_NS>0
+  FINISH_SKEW_NS reduced versus baseline
+  CRITICAL_NS reduced versus baseline
+  repeated-run median improvement, not one lucky sample

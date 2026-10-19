@@ -1,0 +1,80 @@
+RAWR_RUN_STREAM_WIRING_VALUATION_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_ATTRIBUTION
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+CODE_CHANGE=0
+
+# --- ASSERT: runtime wiring (product stream) -------------------------------
+
+ASSERT_PRODUCT_STREAM=
+  PATH=rawr → ProductRuntime/ProductRun → Deep2Engine::generateStream
+  CLI=rawr run <modelname> [prompt] PRESENT (build-fd/bin/rawr.exe ~2.5 MiB)
+  IDE_BATCH15=01..15 PASS (CLI+IDE adapters on ProductRun)
+  COMPAT_B1.1=MEASURED_SPLIT (stages OPEN→COMPLETE EXIT=0; floor FAIL)
+  SMOKE=rawr run phi3-q8 --max-tokens 4 → PRODUCT_PASS=1 (IDE_PRODUCT_PATH_BATCH15)
+  VERDICT=product stream wiring EXISTS for successful model stream
+  NOT_EQUAL=EV512 LIVE_SITE_WIRING complete
+  NOT_EQUAL=MODE_BATCH_STATE (no HOT_GATE produce this turn)
+
+ASSERT_EV512_RUNTIME_WIRING=
+  SURFACE_1_17=READY_WHEN_FIRED (infra)
+  LIVE_SITE_WIRING_1_17=soft HostEmit under DEEP2_EV512=1 (SOURCE; fire UNCLAIMED)
+  LIVE_SITE_WIRING_18_96=NOT_CLAIMED (IDE emitters designed, sites not inserted)
+  ASSEMBLY/LINK authority=UNCLAIMED
+  RUNTIME_OBSERVATION=NOT_CLAIMED
+  VERDICT=claim-evidence wiring ≠ asserted complete for measured run
+
+# --- UNCLAIMED / MISSING for successful stream + assert wiring ------------
+
+UNCLAIMED_MISSING_DEEP2_INTEGRATION=
+  1 EV512 claim owner sites 18..96 not inserted at real Deep2/IDE owners
+  2 EV512 product-link + rebuild + DEEP2_EV512=1 measured fire (authority)
+  3 CLAIM_6 LOGITS_ENTRY fire witness on seqCap=512 (FIRST_UNPROVEN)
+  4 STREAM_ABORT on all OWNER= paths; TEARDOWN_FAULT on SEH AV
+  5 SoloIDE RXEV surface dock (stderr-only today)
+  6 rawr list|inspect|chat|stop|unload|ps (CLI suite; not required to stream once)
+  7 Deep2 GGUFLoader general.alignment metadata wire
+  8 COMPAT B1.2–B1.5 / BATCH1 HOT_GATE witnesses
+  9 PATH_B_N5 endurance (perf; not required for basic stream)
+ 10 PRODUCT_FLOOR_TPS=5.000 unmet on B1.1 (1.387) — stream works, product floor fail
+ 11 HostSurfaceGuard on every early-return (audit claims closed; rebuild verify UNCLAIMED)
+
+REQUIRED_TO_ASSERT_RUNTIME_WIRING_COMPLETE=
+  SPECIAL_MOMENT=1 EARLY_COMPLETE=EV512_LIVE_SITE_WIRING  (wire only)
+  AND/OR MODE=A|COMPAT_TEST HOT_GATE=1 TARGET=<catalog>
+  → seqCap=512|compat run produces per-claim RXEV_SURFACE / PRODUCT_RUN
+  → MODE_BATCH_STATE (executed and produces)
+
+NOT_REQUIRED_FOR_BASIC_STREAM=
+  full IDE 79 claim sites
+  PATH_B promote
+  floor TPS pass
+  CLI suite beyond run
+
+# --- ESTIMATED PROJECT VALUATION (non-binding, Mode D opinion) ------------
+
+SCOPE_OBSERVED=
+  src_files≈11000
+  src_tree_bytes≈13.8e9 (includes large assets/binaries under src*)
+  domains=MASM x64 + Deep2 LLM + Vulkan MLA + Win32/Solo IDE + evidence law
+  product_stream=functional minimal (rawr run)
+  perf_champion=PATH_A retained; PATH_B FAIL sealed
+  compat=B1.1 MEASURED_SPLIT only
+
+VALUATION_BAND_USD=
+  METHOD=replacement-cost / comparable-stack rough (not appraisal)
+  LOW=2.5e6   (core Deep2+rawr stream+docs as specialized LLM runtime)
+  MID=8e6..15e6 ( + Win32 IDE + Vulkan/MLA + evidence/protocol corpus )
+  HIGH=25e6+  (if treating full HFT/kernel/MASM sovereign stack + IDE as IP)
+  CONFIDENCE=LOW (no revenue, no market comps; engineering-hours proxy only)
+  NOT_A_FINANCIAL_OFFER=1
+  UNCLAIMED_GAPS_ABOVE_DISCOUNT_MID≈15..35% until EV512 fire + floor/compat close
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  MODE_BATCH_STATE=0
+  LAST_PROVEN=FINAL_NORM(step22) unchanged
+  SSOT=MISSING_IMPL_AUDIT_001|PRODUCT_UX_VS_ENG_GAP_001|IDE_PRODUCT_PATH_BATCH15
+    |CLAIM_SURFACE_AUDIT_001|EXECUTED_PRODUCES_MODE_BATCH_001

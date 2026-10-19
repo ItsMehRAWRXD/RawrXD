@@ -1,0 +1,24 @@
+RAWR_NANO_AUTHORITY_001=SEALED
+DATE=2026-09-09
+PATH=src/deep2/nano/RawrNanoAuthority.cpp
+LINES=620
+DEPS=0
+STUBS=0
+FICTIONAL=0
+BIN=build-fd/bin/rawr_nano_authority.exe
+SELF_CHECK=0_FAILS
+
+CONTENTS=
+  MARS IF_TRUE_NEVER_USE (BOUNDED_STREAM primary)
+  FORCE probe disposition
+  K2 geometry + FLOAT_PLANAR KV estimate
+  harness honesty labels (sat sequential / thermal idle)
+  announce audit (prefetch ACCEPTED=0 false-green)
+  Artificial Aim (RAWRXD_AIM) — default correctness-first
+
+AIM=
+  auto → BLOCKER_104
+  force via RAWRXD_AIM=104|93|O_PROJ|QKV|PREFETCH|MARS|PROMPT|EXT
+
+BUILD=
+  vcvars64 && cl /O2 /EHsc /std:c++17 /Fe:rawr_nano_authority.exe RawrNanoAuthority.cpp

@@ -1,0 +1,323 @@
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 04:21:43 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+[EXPERIMENTAL] governor_activated=true (RAWRXD_ENABLE_GOVERNOR=1)
+[MODEL-HOTPATCH] Universal Model Hotpatcher initialized.
+  GPU accel: ENABLED
+  Pressure thresholds: high=70% critical=85% emergency=95%
+  Supported: 120B-800B via streaming quantization
+[EXPERIMENTAL] hotpatch70b_activated=true (RAWRXD_ENABLE_70B_HOTPATCH=1)
+[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)
+Loading model: R:\bench_frag.gguf
+[ModelSourceResolver] Resolving: R:\bench_frag.gguf
+[ModelSourceResolver] Detected source: Local File
+[ModelSourceResolver] ✅ Local file validated: R:\bench_frag.gguf
+Model armed for ProductRun: bench_frag.gguf
+  Path: R:\bench_frag.gguf
+  GGUF magic: OK
+  Arm latency: 1 ms
+
+Headless IDE initialized successfully.
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: R:\bench_frag.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in R:\)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 127  Corruptions: 0
+[Deep2Engine] ReverseHotpatch: 127 repairs, 0 corruptions detected
+[GGUF] WARNING: Tensor 'blk.69.ffn.weight' offset not 64-byte aligned: 2103776
+[GGUF] WARNING: Tensor 'blk.64.attn.weight' offset not 64-byte aligned: 4200928
+[GGUF] WARNING: Tensor 'blk.47.ffn.weight' offset not 64-byte aligned: 6298080
+[GGUF] WARNING: Tensor 'blk.140.attn.weight' offset not 64-byte aligned: 8395232
+[GGUF] WARNING: Tensor 'blk.21.ffn.weight' offset not 64-byte aligned: 10492384
+[GGUF] WARNING: Tensor 'blk.84.attn.weight' offset not 64-byte aligned: 12589536
+[GGUF] WARNING: Tensor 'blk.85.ffn.weight' offset not 64-byte aligned: 14686688
+[GGUF] WARNING: Tensor 'blk.42.attn.weight' offset not 64-byte aligned: 16783840
+[GGUF] WARNING: Tensor 'blk.101.ffn.weight' offset not 64-byte aligned: 18880992
+[GGUF] WARNING: Tensor 'blk.31.ffn.weight' offset not 64-byte aligned: 20978144
+[GGUF] WARNING: Tensor 'blk.116.attn.weight' offset not 64-byte aligned: 23075296
+[GGUF] WARNING: Tensor 'blk.100.attn.weight' offset not 64-byte aligned: 25172448
+[GGUF] WARNING: Tensor 'blk.113.ffn.weight' offset not 64-byte aligned: 27269600
+[GGUF] WARNING: Tensor 'blk.65.ffn.weight' offset not 64-byte aligned: 29366752
+[GGUF] WARNING: Tensor 'blk.128.attn.weight' offset not 64-byte aligned: 31463904
+[GGUF] WARNING: Tensor 'blk.58.attn.weight' offset not 64-byte aligned: 33561056
+[GGUF] WARNING: Tensor 'blk.33.ffn.weight' offset not 64-byte aligned: 35658208
+[GGUF] WARNING: Tensor 'blk.76.attn.weight' offset not 64-byte aligned: 37755360
+[GGUF] WARNING: Tensor 'blk.71.ffn.weight' offset not 64-byte aligned: 39852512
+[GGUF] WARNING: Tensor 'blk.67.ffn.weight' offset not 64-byte aligned: 41949664
+[GGUF] WARNING: Tensor 'blk.45.ffn.weight' offset not 64-byte aligned: 44046816
+[GGUF] WARNING: Tensor 'blk.61.ffn.weight' offset not 64-byte aligned: 46143968
+[GGUF] WARNING: Tensor 'blk.110.attn.weight' offset not 64-byte aligned: 48241120
+[GGUF] WARNING: Tensor 'blk.40.attn.weight' offset not 64-byte aligned: 50338272
+[GGUF] WARNING: Tensor 'blk.43.ffn.weight' offset not 64-byte aligned: 52435424
+[GGUF] WARNING: Tensor 'blk.95.ffn.weight' offset not 64-byte aligned: 54532576
+[GGUF] WARNING: Tensor 'blk.62.attn.weight' offset not 64-byte aligned: 56629728
+[GGUF] WARNING: Tensor 'blk.117.ffn.weight' offset not 64-byte aligned: 58726880
+[GGUF] WARNING: Tensor 'blk.29.ffn.weight' offset not 64-byte aligned: 60824032
+[GGUF] WARNING: Tensor 'blk.32.attn.weight' offset not 64-byte aligned: 62921184
+[GGUF] WARNING: Tensor 'blk.126.attn.weight' offset not 64-byte aligned: 65018336
+[GGUF] WARNING: Tensor 'blk.124.attn.weight' offset not 64-byte aligned: 67115488
+[GGUF] WARNING: Tensor 'blk.122.attn.weight' offset not 64-byte aligned: 69212640
+[GGUF] WARNING: Tensor 'blk.112.attn.weight' offset not 64-byte aligned: 71309792
+[GGUF] WARNING: Tensor 'blk.23.ffn.weight' offset not 64-byte aligned: 73406944
+[GGUF] WARNING: Tensor 'blk.81.ffn.weight' offset not 64-byte aligned: 75504096
+[GGUF] WARNING: Tensor 'blk.7.ffn.weight' offset not 64-byte aligned: 77601248
+[GGUF] WARNING: Tensor 'blk.63.ffn.weight' offset not 64-byte aligned: 79698400
+[GGUF] WARNING: Tensor 'blk.51.ffn.weight' offset not 64-byte aligned: 81795552
+[GGUF] WARNING: Tensor 'blk.59.ffn.weight' offset not 64-byte aligned: 83892704
+[GGUF] WARNING: Tensor 'blk.142.attn.weight' offset not 64-byte aligned: 85989856
+[GGUF] WARNING: Tensor 'blk.107.ffn.weight' offset not 64-byte aligned: 88087008
+[GGUF] WARNING: Tensor 'blk.53.ffn.weight' offset not 64-byte aligned: 90184160
+[GGUF] WARNING: Tensor 'blk.80.attn.weight' offset not 64-byte aligned: 92281312
+[GGUF] WARNING: Tensor 'blk.114.attn.weight' offset not 64-byte aligned: 94378464
+[GGUF] WARNING: Tensor 'blk.68.attn.weight' offset not 64-byte aligned: 96475616
+[GGUF] WARNING: Tensor 'blk.34.attn.weight' offset not 64-byte aligned: 98572768
+[GGUF] WARNING: Tensor 'blk.91.ffn.weight' offset not 64-byte aligned: 100669920
+[GGUF] WARNING: Tensor 'blk.8.attn.weight' offset not 64-byte aligned: 102767072
+[GGUF] WARNING: Tensor 'blk.73.ffn.weight' offset not 64-byte aligned: 104864224
+[GGUF] WARNING: Tensor 'blk.74.attn.weight' offset not 64-byte aligned: 106961376
+[GGUF] WARNING: Tensor 'blk.106.attn.weight' offset not 64-byte aligned: 109058528
+[GGUF] WARNING: Tensor 'blk.129.ffn.weight' offset not 64-byte aligned: 111155680
+[GGUF] WARNING: Tensor 'blk.92.attn.weight' offset not 64-byte aligned: 113252832
+[GGUF] WARNING: Tensor 'blk.35.ffn.weight' offset not 64-byte aligned: 115349984
+[GGUF] WARNING: Tensor 'blk.70.attn.weight' offset not 64-byte aligned: 117447136
+[GGUF] WARNING: Tensor 'blk.138.attn.weight' offset not 64-byte aligned: 119544288
+[GGUF] WARNING: Tensor 'blk.88.attn.weight' offset not 64-byte aligned: 121641440
+[GGUF] WARNING: Tensor 'blk.57.ffn.weight' offset not 64-byte aligned: 123738592
+[GGUF] WARNING: Tensor 'blk.87.ffn.weight' offset not 64-byte aligned: 125835744
+[GGUF] WARNING: Tensor 'blk.120.attn.weight' offset not 64-byte aligned: 127932896
+[GGUF] WARNING: Tensor 'blk.56.attn.weight' offset not 64-byte aligned: 130030048
+[GGUF] WARNING: Tensor 'blk.60.attn.weight' offset not 64-byte aligned: 132127200
+[GGUF] WARNING: Tensor 'blk.103.ffn.weight' offset not 64-byte aligned: 134224352
+[GGUF] WARNING: Tensor 'blk.132.attn.weight' offset not 64-byte aligned: 136321504
+[GGUF] WARNING: Tensor 'blk.52.attn.weight' offset not 64-byte aligned: 138418656
+[GGUF] WARNING: Tensor 'blk.79.ffn.weight' offset not 64-byte aligned: 140515808
+[GGUF] WARNING: Tensor 'blk.109.ffn.weight' offset not 64-byte aligned: 142612960
+[GGUF] WARNING: Tensor 'blk.27.ffn.weight' offset not 64-byte aligned: 144710112
+[GGUF] WARNING: Tensor 'blk.105.ffn.weight' offset not 64-byte aligned: 146807264
+[GGUF] WARNING: Tensor 'blk.115.ffn.weight' offset not 64-byte aligned: 148904416
+[GGUF] WARNING: Tensor 'blk.141.ffn.weight' offset not 64-byte aligned: 151001568
+[GGUF] WARNING: Tensor 'blk.131.ffn.weight' offset not 64-byte aligned: 153098720
+[GGUF] WARNING: Tensor 'blk.38.attn.weight' offset not 64-byte aligned: 155195872
+[GGUF] WARNING: Tensor 'blk.104.attn.weight' offset not 64-byte aligned: 157293024
+[GGUF] WARNING: Tensor 'blk.93.ffn.weight' offset not 64-byte aligned: 159390176
+[GGUF] WARNING: Tensor 'blk.24.attn.weight' offset not 64-byte aligned: 161487328
+[GGUF] WARNING: Tensor 'blk.86.attn.weight' offset not 64-byte aligned: 163584480
+[GGUF] WARNING: Tensor 'blk.55.ffn.weight' offset not 64-byte aligned: 165681632
+[GGUF] WARNING: Tensor 'blk.133.ffn.weight' offset not 64-byte aligned: 167778784
+[GGUF] WARNING: Tensor 'blk.136.attn.weight' offset not 64-byte aligned: 169875936
+[GGUF] WARNING: Tensor 'blk.134.attn.weight' offset not 64-byte aligned: 171973088
+[GGUF] WARNING: Tensor 'blk.49.ffn.weight' offset not 64-byte aligned: 174070240
+[GGUF] WARNING: Tensor 'blk.66.attn.weight' offset not 64-byte aligned: 176167392
+[GGUF] WARNING: Tensor 'blk.96.attn.weight' offset not 64-byte aligned: 178264544
+[GGUF] WARNING: Tensor 'blk.44.attn.weight' offset not 64-byte aligned: 180361696
+[GGUF] WARNING: Tensor 'blk.97.ffn.weight' offset not 64-byte aligned: 182458848
+[GGUF] WARNING: Tensor 'blk.127.ffn.weight' offset not 64-byte aligned: 184556000
+[GGUF] WARNING: Tensor 'blk.130.attn.weight' offset not 64-byte aligned: 186653152
+[GGUF] WARNING: Tensor 'blk.50.attn.weight' offset not 64-byte aligned: 188750304
+[GGUF] WARNING: Tensor 'blk.72.attn.weight' offset not 64-byte aligned: 190847456
+[GGUF] WARNING: Tensor 'blk.82.attn.weight' offset not 64-byte aligned: 192944608
+[GGUF] WARNING: Tensor 'blk.37.ffn.weight' offset not 64-byte aligned: 195041760
+[GGUF] WARNING: Tensor 'blk.135.ffn.weight' offset not 64-byte aligned: 197138912
+[GGUF] WARNING: Tensor 'blk.39.ffn.weight' offset not 64-byte aligned: 199236064
+[GGUF] WARNING: Tensor 'blk.78.attn.weight' offset not 64-byte aligned: 201333216
+[GGUF] WARNING: Tensor 'blk.36.attn.weight' offset not 64-byte aligned: 203430368
+[GGUF] WARNING: Tensor 'blk.20.attn.weight' offset not 64-byte aligned: 205527520
+[GGUF] WARNING: Tensor 'blk.41.ffn.weight' offset not 64-byte aligned: 207624672
+[GGUF] WARNING: Tensor 'blk.119.ffn.weight' offset not 64-byte aligned: 209721824
+[GGUF] WARNING: Tensor 'blk.0.attn.weight' offset not 64-byte aligned: 211818976
+[GGUF] WARNING: Tensor 'blk.123.ffn.weight' offset not 64-byte aligned: 213916128
+[GGUF] WARNING: Tensor 'blk.125.ffn.weight' offset not 64-byte aligned: 216013280
+[GGUF] WARNING: Tensor 'blk.30.attn.weight' offset not 64-byte aligned: 218110432
+[GGUF] WARNING: Tensor 'blk.98.attn.weight' offset not 64-byte aligned: 220207584
+[GGUF] WARNING: Tensor 'token_embd.weight' offset not 64-byte aligned: 222304736
+[GGUF] WARNING: Tensor 'blk.75.ffn.weight' offset not 64-byte aligned: 224401888
+[GGUF] WARNING: Tensor 'blk.118.attn.weight' offset not 64-byte aligned: 226499040
+[GGUF] WARNING: Tensor 'blk.90.attn.weight' offset not 64-byte aligned: 228596192
+[GGUF] WARNING: Tensor 'blk.48.attn.weight' offset not 64-byte aligned: 230693344
+[GGUF] WARNING: Tensor 'blk.25.ffn.weight' offset not 64-byte aligned: 232790496
+[GGUF] WARNING: Tensor 'blk.143.ffn.weight' offset not 64-byte aligned: 234887648
+[GGUF] WARNING: Tensor 'blk.121.ffn.weight' offset not 64-byte aligned: 236984800
+[GGUF] WARNING: Tensor 'blk.28.attn.weight' offset not 64-byte aligned: 239081952
+[GGUF] WARNING: Tensor 'blk.77.ffn.weight' offset not 64-byte aligned: 241179104
+[GGUF] WARNING: Tensor 'blk.26.attn.weight' offset not 64-byte aligned: 243276256
+[GGUF] WARNING: Tensor 'blk.83.ffn.weight' offset not 64-byte aligned: 245373408
+[GGUF] WARNING: Tensor 'blk.137.ffn.weight' offset not 64-byte aligned: 247470560
+[GGUF] WARNING: Tensor 'blk.99.ffn.weight' offset not 64-byte aligned: 249567712
+[GGUF] WARNING: Tensor 'blk.54.attn.weight' offset not 64-byte aligned: 251664864
+[GGUF] WARNING: Tensor 'blk.111.ffn.weight' offset not 64-byte aligned: 253762016
+[GGUF] WARNING: Tensor 'blk.139.ffn.weight' offset not 64-byte aligned: 255859168
+[GGUF] WARNING: Tensor 'blk.89.ffn.weight' offset not 64-byte aligned: 257956320
+[GGUF] WARNING: Tensor 'blk.94.attn.weight' offset not 64-byte aligned: 260053472
+[GGUF] WARNING: Tensor 'blk.108.attn.weight' offset not 64-byte aligned: 262150624
+[GGUF] WARNING: Tensor 'blk.22.attn.weight' offset not 64-byte aligned: 264247776
+[GGUF] WARNING: Tensor 'blk.102.attn.weight' offset not 64-byte aligned: 266344928
+[GGUF] WARNING: Tensor 'blk.46.attn.weight' offset not 64-byte aligned: 268442080
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED
+BLOCKED_AT=LAYERS
+BLOCKED_OWNER=GGUF_METADATA
+REASON=block_count/n_layer missing or zero
+FIRST_DELTA=LAYERS
+[Deep2Engine] Loading model from: F:\OllamaModels\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[MODEL-HOTPATCH] VRAM pressure changed: 0 → 1 (utilization: 53.1739%)
+[MODEL-HOTPATCH] VRAM pressure changed: 1 → 2 (utilization: 71.7167%)
+[MODEL-HOTPATCH] VRAM pressure changed: 2 → 1 (utilization: 68.9639%)
+[MODEL-HOTPATCH] VRAM pressure changed: 1 → 2 (utilization: 71.3201%)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=qwen35 L=96 H=5120 FFN=17408 heads=24 kv=4 hd=256 ctx=262144
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'qwen35'  hidden=5120 layers=96 heads=24 kvHeads=4 inter=17408 vocab=248320
+[Deep2Engine] Qwen3.5: gated Q keeps numHeads=24 (qOut=12288=2*6144)
+[Deep2Engine] Tokenizer loaded: vocab=248320 bos=1 eos=248046 (Spm::encode)
+[ATTN_GATE] Mapped blk.0.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=48x1 type=0)
+[SSM_MAP] blk.0.ssm_alpha.weight -> ssmAlpha (dims=48x5120 type=12)
+[SSM_MAP] blk.0.ssm_beta.weight -> ssmBeta (dims=48x5120 type=12)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=10240x4 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=48x1 type=0)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=128x1 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=5120x6144 type=12)
+[ATTN_GATE] Mapped blk.1.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.2.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.4.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.5.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.6.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.8.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.9.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.10.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.12.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.13.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.14.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.16.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.17.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.18.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.20.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.21.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.22.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.24.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.25.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.26.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.28.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.29.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.30.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.32.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.33.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.34.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.36.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.37.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.38.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.40.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.41.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.42.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.44.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.45.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.46.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.48.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.49.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.50.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.52.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.53.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.54.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.56.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.57.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.58.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.60.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.61.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.62.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.64.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.65.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.66.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.68.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.69.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.70.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.72.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.73.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.74.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.76.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.77.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.78.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.80.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.81.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.82.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.84.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.85.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.86.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.88.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.89.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.90.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.92.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.93.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ATTN_GATE] Mapped blk.94.attn_gate.weight to attnO (rows=6144 cols=5120 type=12)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000000001836D7B0  Registered 'output.weight': shard=0 offset=11020224 bytes=1042944000  |  registry_size=1  registeredBytes=1042944000  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.7.attn_k_norm.weight': shard=0 offset=3477656768 bytes=1024  |  registry_size=100  registeredBytes=3466637568  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.14.ssm_beta.weight': shard=0 offset=5350075136 bytes=138240  |  registry_size=200  registeredBytes=5339193152  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.22.ffn_down.weight': shard=0 offset=7000961856 bytes=50135040  |  registry_size=300  registeredBytes=7040076672  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.29.ssm_dt.bias': shard=0 offset=8753935744 bytes=192  |  registry_size=400  registeredBytes=8742915712  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ffn_up.weight': shard=0 offset=10504790464 bytes=50135040  |  registry_size=500  registeredBytes=10543905280  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.post_attention_norm.weight': shard=0 offset=10554925504 bytes=20480  |  registry_size=501  registeredBytes=10543925760  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_a': shard=0 offset=10554945984 bytes=192  |  registry_size=502  registeredBytes=10543925952  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_alpha.weight': shard=0 offset=10554946176 bytes=138240  |  registry_size=503  registeredBytes=10544064192  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_beta.weight': shard=0 offset=10555084416 bytes=138240  |  registry_size=504  registeredBytes=10544202432  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_conv1d.weight': shard=0 offset=10555222656 bytes=163840  |  registry_size=505  registeredBytes=10544366272  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_dt.bias': shard=0 offset=10555386496 bytes=192  |  registry_size=506  registeredBytes=10544366464  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_norm.weight': shard=0 offset=10555386688 bytes=512  |  registry_size=507  registeredBytes=10544366976  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.37.ssm_out.weight': shard=0 offset=10555387200 bytes=17694720  |  registry_size=508  registeredBytes=10562061696  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.38.attn_gate.weight': shard=0 offset=10573081920 bytes=17694720  |  registry_size=509  registeredBytes=10579756416  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.44.ssm_out.weight': shard=0 offset=12157494976 bytes=17694720  |  registry_size=600  registeredBytes=12164169472  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.52.ssm_a': shard=0 offset=13957152832 bytes=192  |  registry_size=700  registeredBytes=13946132800  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.60.attn_norm.weight': shard=0 offset=15593739584 bytes=20480  |  registry_size=800  registeredBytes=15582739840  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.67.attn_v.weight': shard=0 offset=17221417536 bytes=2949120  |  registry_size=900  registeredBytes=17213346432  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.75.attn_k.weight': shard=0 offset=18988439360 bytes=2949120  |  registry_size=1000  registeredBytes=18980368256  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.82.ssm_alpha.weight': shard=0 offset=20769051008 bytes=138240  |  registry_size=1100  registeredBytes=20758169024  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000000001836D7B0  Registered 'blk.90.attn_qkv.weight': shard=0 offset=22497572288 bytes=36044800  |  registry_size=1200  registeredBytes=22522596864  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=1275
+TENSORS_ADDRESSED=1275
+TENSORS_REGISTERED=1275
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000000001836D7B0  registered=1275 tensors  bytes=23916207104  max=536870912
+[RMV_MOUNT_001]=PASS
+[error] ProductDeep2Infer failed — FAILED_OWNER=ProductRun
+[Deep2Engine] Unloading model...
+[MODEL-HOTPATCH] VRAM pressure changed: 2 → 1 (utilization: 68.5294%)
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[MODEL-HOTPATCH] VRAM pressure changed: 1 → 0 (utilization: 42.7741%)
+[MODEL-HOTPATCH] Shutdown. Surgeries performed: 0 Memory saved: 0MB
+[Scheduler] Shutdown complete

@@ -1,0 +1,68 @@
+PATH_B_TWIST_001=ATTRIBUTION_ONLY
+DATE=2026-09-08
+TWIST=INITIATED
+HARNESS=PATH_B_STRUCTURAL_DELETE
+SUBJECT_NE_HARNESS=1
+PROMOTE=0
+CHAMPION_REMAINS=PATH_A
+CHAMPION_WALL_MEDIAN_NS=10184789000
+
+TRIAL=path_b_twist_t01
+TAG=path_b_twist_t01
+STAMP=20260908-184907
+LOG=evidence/K2_USEFUL_TPS_001/path_b_twist_t01_20260908-184907.log
+ERR=evidence/K2_USEFUL_TPS_001/path_b_twist_t01_20260908-184907.err.log
+EXCHANGE=evidence/K2_USEFUL_TPS_001/path_b_twist_t01_20260908-184907.exchange.txt
+N=1 (smoke torque; not n=5 endurance)
+
+# ---------------------------------------------------------------------------
+# DELETE_PROVEN (q_b host edge Nothing pole)
+# ---------------------------------------------------------------------------
+DELETE_PROVEN=1
+  QB_X_D2H_TO_HOST_MIRROR_B=0
+  QB_X_HOST_MIRROR_MEMCPY_B=0
+  HOST_XCHG q_b_d2h_deleted ops=3904 bytes=0
+  MLA_Q_DEVICE_OPS=3904 MLA_Q_DEVICE_FAIL=0
+
+# ---------------------------------------------------------------------------
+# PRODUCT / PARITY
+# ---------------------------------------------------------------------------
+PRODUCT_PATH=1
+ARGMAX_PARITY=1 ARGMAX_PARITY_FAIL=0
+ACTUAL_E2E_GENERATION_001=PASS
+STREAM_COMPLETE=1
+
+# ---------------------------------------------------------------------------
+# WALL (fail promote)
+# ---------------------------------------------------------------------------
+GENERATION_WALL_NS_LOG=29440002000
+GENERATION_WALL_NS_ERR_CERT=32552196800
+  # authority = PassMetricAuthority last GENERATION_WALL_NS; both >> champion
+WALL_LT_CHAMPION=0
+TPS_WALL_DERIVED≈2.17 (64e9/29440002000)
+PATH_A_TPS_FLOOR=6.284
+
+PROMOTE_STRICT
+  DELETE_PROVEN=1
+  PARITY=1 PURITY=tbd PRODUCT=1
+  WALL_LT_PATH_A=0 → PROMOTE=0 ATTRIBUTION_ONLY
+
+MATERIALS_VS_AXIOM_REASSIGNED
+  secondary_kernel_attn_decode_mla=1 → MATERIALS_VIOLATION
+  new device MLA cache footprint=1 → MATERIALS_VIOLATION
+  NOTHING_POLE_WITNESS=RETAINED
+  INVENTION_IDENTITY=0 under AXIOM_REASSIGNED_001
+
+# ---------------------------------------------------------------------------
+# PHENOMENOLOGY READ
+# ---------------------------------------------------------------------------
+FIRST_TWIST_APPLIED=polarity_exchange_at_q_b_host_visibility_edge
+NOTHING_POLE=achieved (voided q_b D2H)
+EVERYTHING_POLE=device path live; wall reorganization not yet under own weight
+  (harness slower than PATH_A confinement map — torque measured, not promoted)
+AXIOM_REASSIGNED=secondary_kernel_not_the_twist
+
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+GOODS_BRAIDED=1
+NEXT=absolute_zero_along_twist OR HOLD

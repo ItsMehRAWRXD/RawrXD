@@ -1,0 +1,43 @@
+MORNING_GROUCH — streamer residency law (architecture-agnostic)
+==============================================================
+
+LAYER=STREAMER (not adapter; not provider-specific)
+APPLIES_TO=DeepSeek|Kimi|Mixtral|Llama|Qwen|Gemma|… + GGUF/Ollama/HF blobs
+
+STATE MACHINE (per tensor / expert / region):
+  COLD → MORNING_GROUCH → WARM → HOT
+           first touch      RAM    GPU/kernel-ready
+
+MORNING_GROUCH path (first-ever touch of a region):
+  current operation requires region
+    → residency miss (COLD)
+    → parse/locate → open shard → offset+quant
+    → disk→RAM [→VRAM] → kernel-ready
+    → execute
+    → KEEP useful result resident (promote to WARM/HOT)
+
+WARM_HIT: already materialized in RAM
+HOT_HIT:  already GPU-resident / kernel-ready
+
+NOT speculative prefetch:
+  MORNING_GROUCH fires only when the real execution path asked
+  for an absent required region (demand I/O).
+
+MoE note:
+  Expert is grouchy the first time the router selects it.
+  Subsequent selections should EXPERT_REUSE (WARM/HOT), not re-grouch.
+
+COUNTERS (OBSERVED):
+  MORNING_GROUCH_LOADS / BYTES / NS
+  WARM_CACHE_HITS
+  HOT_GPU_HITS
+  EXPERT_FIRST_TOUCHES / EXPERT_REUSES
+  COLD_TPS / WARM_TPS / STEADY_STATE_TPS
+
+METRICS_USE:
+  Separate first-touch acquisition cost from steady-state inference.
+  Do not judge product solely on morning-grouch TPS.
+
+PROMOTE=0 from counters alone
+AUTHORIZED_PASS=0 from counters alone
+CROSSLINK=STREAMER_ADAPTER_SPLIT_LAW.txt

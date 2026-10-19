@@ -1,0 +1,29 @@
+RAWRXD_671B_WORKING_SET_CONTRACT_NODEP — Windows native proof
+=============================================================
+
+ZIP:
+  C:\Users\Garrett\Downloads\RAWRXD_671B_WORKING_SET_CONTRACT_NODEP_SOURCE_DROP.zip
+  SHA-256=a38bd3d4e0ac84dd1077c3916f808a8a2d91788d5484c335143e30aae12e2fad
+
+EXTRACT:
+  G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_DEEP2_671B_STREAM_PHYSICALIZATION_001\R671_WSC_NODEP_DROP\RAWRXD_671B_WORKING_SET_CONTRACT_NODEP\
+
+RESULTS (build_win64.bat):
+  ZERO_CONTRACT_PASS=0
+  ZERO_NOTRUN_COUNT=13
+  WSC01..WSC15=PASS (state=2)
+  PASS_COUNT=15
+  FAIL_COUNT=0
+  NOTRUN_COUNT=0
+  CONTRACT_PASS=1
+  WSC15_PROBE=PASS
+  WSC15_WIN64=PASS
+  BUILD_RC=0
+
+AUTHORITY:
+  working-set/residency truth only
+  pumpOnce / TryIssueNext / SCOREBOARD_SCHEDULER_LIVE / PROMOTE / TOKEN_NILW / DECODE = not owned
+  PROMOTE=0
+
+NEXT:
+  real DeepSeek tensor offsets → r671 acquire/release → live WSC01..WSC15 → one token

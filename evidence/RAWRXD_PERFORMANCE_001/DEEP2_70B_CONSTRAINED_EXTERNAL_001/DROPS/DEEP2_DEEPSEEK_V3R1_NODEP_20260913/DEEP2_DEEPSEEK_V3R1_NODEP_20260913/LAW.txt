@@ -1,0 +1,33 @@
+GATE=DEEP2_DEEPSEEK_V3R1_NODEP_20260913
+BASELINE_V6D=c1e90fcdf5
+PRODUCT_BOUND=0
+PROMOTE=0
+TPS_MINT=0
+
+SCOPE=source-ready model-semantics-preserving planner/adapter
+ROUTER_TOPK_AUTHORITATIVE=1
+ROUTER_ID_SET_PRESERVED=1
+ROUTER_WEIGHTS_PRESERVED=1
+DYNAMIC_EXPERT_DROPPING=0
+QUALITY_SWAP=0
+
+TOP15=
+  01 MLA latent-KV tier planner
+  02 routed-expert heat map
+  03 shared-expert pin accounting seam
+  04 router-preserving expert placement
+  05 low-bit expert policy classification
+  06 outlier/sensitivity quant promotion
+  07 dequant-fusion scheduling seam
+  08 chunked long-prefill planner
+  09 MTP draft/verify planner
+  10 DualStick expert placement adapter
+  11 RAM/VRAM/MMAP KV tier plan
+  12 transfer-aware predicted-finish callback
+  13 cross-token hot-expert prefetch planner
+  14 persistent cost-surface-compatible observations
+  15 whole-token authority metrics
+
+BIND_RULE=all model-specific tensor decoding remains owned by live DeepSeek loader
+NOT_IN_DROP=quant kernels, MLA math kernel, MTP logits kernel, GGUF parser
+WHY=those require actual product tensor/layout contracts; do not invent them side-only

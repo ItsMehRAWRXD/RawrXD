@@ -1,0 +1,28 @@
+SHADOW_TRACER_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  Non-invasive TRACE_POINT ring buffer / live Memory Watcher
+  Sovereign_Visualizer (.map → labels)
+  Predicate tracer on UpdateVehiclePhysics / TITAN_LOOP
+
+REVERSE
+  No product-wired Sovereign_Visualizer
+  No TRACE_POINT macro as proposed in critical MLA path
+  Vehicle/TITAN_LOOP physics braid = not live perf authority surface
+  Perf observability that EXISTS = ExchangeMirror / HostExchangeDiscover /
+    QbExchangeLedger / TeardownWitness telemetry (attribution, not INT3)
+
+ADJUDICATION
+  Sovereign_Visualizer = REFUSED under GATE STOP
+  Proposed TRACE_POINT macro = NOT to be inserted as spend
+  Note (attribution only, not a fix spend): sample macro as written is
+    incorrect MASM (post-push RAX log, RIP capture) — do not ship as-is
+  Live RE of gen path remains deep2_benchmark exchange receipts
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

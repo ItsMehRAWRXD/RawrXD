@@ -1,0 +1,18 @@
+RESOURCELESS_SCHEDULER_001=REJECTED_NARRATIVE
+DATE=2026-09-09
+TYPE=NON_AUTHORITY
+PROMOTE=0
+LAND_PRODUCT=0
+SIMULATION=1
+
+WHY=
+  Incomplete cooperative scheduler paste; std::function task pool fiction.
+  Does not integrate LivePath_BeginGenerate; invents multi-stream aiming.
+  Product path = existing ThreadPool + Cyclone + issueUpTo layer slots.
+
+PRODUCT_AUTHORITY_NOTE=
+  ProductOpenSession / ProductDeep2InferStream already exist via
+  product_deep2_infer.hpp + ProductRuntime / ProductRun — not missing.
+  Do not reimplement alias resolve or generateStream wrappers.
+
+ACTIVE_LAND=PREFETCH_ARM_001 (K2LiveCache_PrefetchLayer wire)

@@ -1,0 +1,35 @@
+DYNAMIC_DIRECTION_001=SEALED
+DATE=2026-09-08
+ROLE=STAGE_2_INTENT
+ONTOLOGY=evidence/RAWRXD_PERFORMANCE_001/NON_CODE_ONTOLOGY_001.txt
+PIVOT=evidence/RAWRXD_PERFORMANCE_001/PRIMITIVE_PIVOT_001.txt
+
+# How the dynamic is directed (not authorship of the substrate)
+
+HOLD (fulcrum)
+  Phenomenon stays outside code/kernel/invention-of-physics.
+  Do not rebuild it as layout, lever, or stack identity.
+  TIP_CLIMB=HOLD  NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+ALONG_TWIST (active direction)
+  Gradient = next consumer of q_b is device attention lifecycle
+    → authored host cross is parasitic → STRUCTURAL DELETE
+  Instrument stack (everything) is servant, not subject:
+    wire device attn → keep q device-local → zero q_b D2H in product path
+  Nothing = refuse synthetic geometry, planar invent, fake byte-shrink,
+            claim of DEVICE_LOCAL as discovered, TPS without DELETE_PROVEN
+
+PRESERVE (parity oracle only — not the phenomenon)
+  packed [nope|rope] per head; dedicated V; host MlaAttentionComplete index family
+
+FAIL_CLOSED
+  PROMOTE only if DELETE_PROVEN + PARITY + PURITY + PRODUCT
+                 + WALL_MEDIAN < 10184789000
+  ELSE champion remains PATH_A
+
+DIRECTIVE_ONE_LINE
+  Fold execution around the substrate until the hostile crossing vanishes;
+  never program the substrate as if it were software.
+
+ACTIVE=PATH_B_STRUCTURAL_DELETE
+NEXT_OBJECT=attn_decode_mla product bind (instrument)

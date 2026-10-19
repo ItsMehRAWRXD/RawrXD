@@ -1,0 +1,6 @@
+R04=CLOSED PASS
+SHA16=5CBCC0750B481BFE
+FAIL_COUNT_404=0
+aliases=delete,rename,copy,move,mkdir,stat,search,list-directory
+tool_dispatcher=stat_file_via_/api/tool_OK
+MOTD_GATE=HELD

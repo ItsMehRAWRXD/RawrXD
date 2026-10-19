@@ -1,0 +1,1 @@
+SPOT_after_boot health=200 backends=200 ollama_use=422 chat=400 tool=403 ollama_refuse=1 tool_motd=1

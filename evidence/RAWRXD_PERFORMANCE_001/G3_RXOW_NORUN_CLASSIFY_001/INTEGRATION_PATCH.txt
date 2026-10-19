@@ -1,0 +1,37 @@
+RAWRXD_OVERWATCH_NORUN_SOURCE_DROP_001 — INTEGRATION_PATCH
+PROMOTE=0 TIP_CLIMB=HOLD DualStick=HOLD Ollama=0
+
+## Land headers in product tree
+Copy drop/*.hpp and RxRunStateHooks.cpp → src/deep2/lavapath/
+  RxNoDeps.hpp
+  RxRunStateOverwatch.hpp
+  RxRunStateHooks.hpp
+  RxRunStateHooks.cpp  (optional TU; hooks are header-inline)
+
+## Wire (exact)
+
+1) ProductRuntime.hpp OpenSession success path (after BuildExecutionGraph / fail):
+   #include "RxRunStateHooks.hpp"
+   On success: rxow::OnArmed(layers, tensors); rxow::OnPrepared(graphNodes, layers, tensors);
+   On NO_TENSOR / open fail: rxow::OnOpenFailed("...");
+
+2) ProductRun.hpp after BUSY/alias checks, before OpenSession/RunDecode:
+   rxow::OnProductRunRequested();
+
+3) ProductRunDecode.hpp before generateStream:
+   rxow::OnGenerateEntered();
+   First token callback or before generateStream body: rxow::OnDecodeStep0() once
+   (call once at start of generateStream entry — step0 = enter decode loop).
+
+4) RuntimeEvidence512Surface.hpp HostSurfaceAllClaims when !HostArmed():
+   after fprintf NO_RUN_STATE: rxow::OnTeardownNoRunState();
+
+## Build
+- Standalone: drop/build_msvc.bat → test_rxow.exe
+- Product: headers only (inline); no CMake list change required if header-only hooks.
+  If linking RxRunStateHooks.cpp, add to InferenceEngine / Win32IDE sources.
+
+## Classify campaign
+Same EXE; TinyLlama control; BigDaddy/Qwen expect BR_NOT_PREPARED graph_empty;
+Codestral layers>0 tensors>0 + NO_RUN_STATE → BR_DISPATCH_GATE.
+Evidence: G3_RXOW_NORUN_CLASSIFY_001/

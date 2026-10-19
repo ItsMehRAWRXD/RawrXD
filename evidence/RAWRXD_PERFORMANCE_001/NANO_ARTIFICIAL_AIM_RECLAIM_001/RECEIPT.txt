@@ -1,0 +1,21 @@
+NANO_ARTIFICIAL_AIM_RECLAIM_001=REJECTED
+DATE=2026-09-09
+TYPE=NON_AUTHORITY
+PROMOTE=0
+SIMULATION=1
+LAND_PRODUCT=0
+
+PASTE_CLAIMS=
+  Deep2Engine/Batch007Emit ARE the nano-drop
+  NotePositions(prompt+count) is the 104 fix
+  LivePath_BeginGenerate = always-on multi-stream artificial aiming
+  New RawrNanoAuthority.cpp with mock Tokenizer + Orchestrator MAX_STREAMS=4
+
+FACT=
+  104/93 already OBSERVED PASS (witness_20260909-011253.log)
+  104 owner = K2NativeStreamGate Commit → NotePositions(cacheLen) — not prompt+count
+  93 owner = GGUF NoteSpecials — real; mock bos=1/eos=2 is fiction
+  Artificial aiming / virtual streams = not product-closed (see REVERSE_ENGINEERED #4)
+
+ACTION=Do not land paste. Do not reopen 104/93. Proceed PERF levers only.
+REF=BLOCKER_104_93_K2_LAND_001 RECEIPT DISCARD

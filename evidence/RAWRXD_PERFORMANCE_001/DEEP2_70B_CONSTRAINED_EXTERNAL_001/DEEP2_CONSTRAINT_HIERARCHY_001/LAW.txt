@@ -1,0 +1,64 @@
+GATE=DEEP2_CONSTRAINT_HIERARCHY_001
+DATE=2026-09-13
+KIND=GOVERNING_DESIGN_LAW
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+NOT_RUN!=PASS
+
+# Strict dependency order — lower layer may improve only if all above hold
+ORDER=SURVIVABILITY > RESIDENCY > PREDICTION > BALANCE > TPS
+
+RULE=
+  Never trade a higher-order invariant for a lower-order performance gain.
+  Prefer slower-safe over faster-unstable.
+
+VALID_OPTIMIZATION=
+  SURVIVABILITY_PASS
+  && RESIDENCY_PASS
+  && PREDICTION_PASS
+  && BALANCE_PASS
+  && TPS_PASS
+
+FLOW=
+  if !SURVIVABILITY_PASS: reject everything below
+  else if !RESIDENCY_PASS: do not tune prediction/balance/TPS
+  else if !PREDICTION_PASS: keep scheduler conservative
+  else if !BALANCE_PASS: optimize makespan, not raw TPS
+  else: measure and mint TPS
+
+# Authority: downward unlock only; regression invalidates upward immediately
+DOWNWARD_UNLOCK=
+  SURVIVE=1 → residency tuning
+  residency PASS → predictor authority
+  prediction PASS → balancing authority
+  balance PASS → TPS mint path
+UPWARD_INVALIDATE=
+  OOM / reload / parity / acquire fail → voids lower balance/TPS wins
+
+TOP15=
+  01 Survivability first — OOM/device-loss/pin-abort/deadlock/incomplete = reject
+  02 Memory envelope hard constraint — VRAM/RAM budgets = invariants
+  03 Residency before scheduling cleverness
+  04 Reload cost part of correctness — avoidable eviction = structurally worse
+  05 Predict only after stable residency (no transient-failure samples as authority)
+  06 Prediction accuracy before balancing
+  07 Balance = completion-time balance (not equal expert counts)
+  08 Balance may not violate affinity (residency/H2D/evict/reuse in cost)
+  09 TPS is outcome not scheduler objective
+  10 No TPS gain overrides regression above it
+  11 Each layer has its own acceptance gate
+  12 Optimization authority flows downward only
+  13 Regression authority flows upward immediately
+  14 Prefer slower-safe over faster-unstable
+  15 Final: minimize TOKEN_COMMIT_NS subject to constraints above
+
+V7_GATES=
+  SURVIVABILITY: EXIT=0 ACQUIRE_FAIL=0 WORKER_FAILURES=0 no OOM/device loss
+  RESIDENCY:     RELOAD_MISS_BYTES=0 pin budget respected eviction stable
+  PREDICTION:    PREDICT_ERR < 10%
+  BALANCE:       SKEW < 5% JOIN_WAIT <= accepted baseline (V6d 16.8s)
+  TPS:           full-forward measured; parity; authority receipt
+  # current: SURVIVE≈PASS (74cd054d6) · RESIDENCY FAIL (~1GB reload) · below locked
+
+OBJECTIVE=minimize TOKEN_COMMIT_NS s.t. survivability, residency, parity, predictor-confidence

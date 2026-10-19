@@ -1,0 +1,34 @@
+MLA_KV_LAYOUT_CONTRACT_001=DISCOVERY_SEALED
+DATE=2026-09-08
+CLASS=DISCOVERY_NOT_INVENTION
+INVENTION=0
+SSOT=evidence/RAWRXD_PERFORMANCE_001/MLA_KV_LAYOUT_CONTRACT.txt
+BASELINE_REVERSE=K2KVCache.hpp+MlaAttentionComplete
+
+# Short answers — discovered only
+
+TOPOLOGY
+  K_nope|K_rope = PACKED_CONTIGUOUS_PER_HEAD (observed pack loop)
+  SEPARATE_PLANAR_ARRAYS=0
+  V = dedicated values_ vector (not interleaved with keys_)
+
+STRIDE_GEOMETRY
+  HOST_DISCOVERED:
+    offset(layer,pos) = ((layer * allocatedSeq) + pos) * KV_SLOT
+    KV_SLOT = max(H*QK_DIM, H*V_DIM)
+    K and V buffers share that outer slot width
+  DEVICE_INVENTED_TIGHT_PACKS=NOT_AUTHORITY
+
+V_DIM
+  V_DIM=128 discovered; dedicated V buffer; padded to KV_SLOT on host Write
+
+BUFFER_OWNERSHIP
+  LIVE_PRODUCT_TODAY=HOST_STD_VECTOR (K2KVCache)
+  DEVICE_LOCAL_KV=NOT_DISCOVERED_AS_LIVE_PRODUCT
+  drafts (EnsureMlaAttn CreateDeviceLocalBuffer)=PARTIAL_DRAFT_NON_AUTHORITY
+
+APPENDKV_HOST_EQUIV
+  Write(layer, packedK, packedV); read Key/Value as above
+
+STATUS=DISCOVERY_LOCKED
+NEXT=implement/measure PATH_B only against this discovery (no new invented SSOT)

@@ -1,0 +1,15 @@
+GATE=G3_E2E_ELASTIC_PASSIVE_UNSTUB_001
+AUTHORITY=product elastic PASSIVE unstub (not champion; not host-elastic VRAM mover)
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+CODE=
+  src/deep2/ElasticResidencyManager.cpp  PASSIVE init when suppressHostVramMoves
+  src/deep2/Deep2Engine.cpp  DualStick ARM forces suppressHostVramMoves
+  src/deep2/StreamerParity_Harness.cpp  ALLOW_ELASTIC=1 + MECH includes elastic
+
+NOT_CLAIMED=
+  host→VRAM elastic mover active on DualStick (intentionally suppressed)
+  TPS/size climb (coverage seal only)
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700

@@ -1,0 +1,44 @@
+REVERSE_EMISSION_CONTRACT_001=SEALED
+DATE=2026-09-08
+TYPE=SOURCE_WITNESS_CONTRACT
+SPEND=0
+NO_DEPS=1
+NO_ID=1
+NO_ZERO_FILL=1
+NO_MANUFACTURED_VALUES=1
+
+RULE=
+  observations only if the new run emits their corresponding evidence
+  observations only when that run prints them
+  developer classifies emissions; does not invent them
+  failure to fire = concrete runtime disposition (NOT_REACHED / INTERRUPTED)
+  NOT a developer-manufactured index/value/0/nan
+
+DISPOSITIONS=
+  emitter fires + payload lines printed
+    → FIELD = OBSERVED(actual from print)
+  enclosing scope completes + DISPOSITION emitted=0
+    → FIELD = OBSERVED(NOT_REACHED)   ← disposition observation, no fake payload
+  STEP_ENTER printed + no DISPOSITION + process death
+    → FIELD = OBSERVED(INTERRUPTED)
+  no STEP_ENTER for that step
+    → STEP = NOT_EXECUTED
+
+EMIT_SHAPE=
+  STEP_ENTER step=<r>
+  HIDDEN_PROBE_ATTEMPT step=<r>
+  HIDDEN_PROBE / HIDDEN_LAST   only if fire succeeds (actual index/value)
+  HIDDEN_PROBE_DISPOSITION step=<r> emitted=0|1 result=OBSERVED|NOT_REACHED
+  LOGITS_ENTRY / LOGITS_DISPOSITION …
+  STEP_EXIT step=<r>
+
+HISTORICAL=
+  PATH_B_N5_003 unchanged (no backfill)
+  HIDDEN_PROBE_RUNTIME_001: no STEP_ENTER/probe lines ⇒ those fields NOT_EXECUTED/UNOBSERVED for that run
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  ARMED_IN_BINARY=pending rebuild with this contract

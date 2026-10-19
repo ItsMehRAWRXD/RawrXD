@@ -1,0 +1,85 @@
+IDE_PRODUCT_BATCH_103 RECEIPT
+UTC_NOTE=local wall times on host
+AUTHORITATIVE_TREE=build_p1pra_win32ide
+BUILD_FD_SCOPE=CLI_RUNTIME
+IDE_COMPLETE_FROM_BUILD_FD=0
+DO_NOT_POLLUTE_BUILD_FD=1
+
+================================================================
+GATES 151-159 (configure / compile / link provenance)
+================================================================
+151 RAWRXD_BUILD_WIN32IDE=ON
+    source=build_p1pra_win32ide/CMakeCache.txt
+152 RawrXD-Win32IDE target generated=1
+    exe=build_p1pra_win32ide/bin/RawrXD-Win32IDE.exe
+    size_bytes=325834240
+    linked_utc_local=2026-09-08T00:08:18-04:00
+153 Product100 overlay attached=1
+    cmake=cmake/RawrXD_Product100.cmake
+    define=RAWRXD_PRODUCT100=1
+154 product_deep2_infer.cpp.obj present=1
+155 InferenceEngine linked=1 (Deep2Engine in InferenceEngine.lib)
+156 Copilot TU linked=1 (Win32IDE_ChatPanel_Ollama.cpp.obj)
+157 GhostText TU linked=1 (Win32IDE_GhostText.cpp.obj)
+158 LocalServer TU linked=1 (Win32IDE_LocalServer.cpp.obj)
+159 ProductRun reaches IDE=1 (EXE contains ProductRun; product_deep2_infer.obj in link)
+
+WIN32IDE_TARGET_PRESENT=1
+WIN32IDE_PRODUCT100_OVERLAY_EXPECTED=1
+WIN32IDE_PRODUCT100_OBJ=1
+WIN32IDE_LINK_FAILURE=0
+
+================================================================
+GATES 160-164 (live execution)
+================================================================
+160 CLEAN_LAUNCH=1
+    evidence=CLEAN_LAUNCH.txt
+    ALIVE=1 after 8s; process stopped cleanly
+    note=RAWRXD_BATCH103_WITNESS unset for this probe
+
+161 /git live (P100_GitStatus via IDE-tree Product100.obj)=1
+    LIVE_SMOKE.txt: GIT_RC=0 EXIT=0 STDOUT=3172
+    real branch porcelain captured (cert/p1pra-rc1)
+
+162 /search live (P100_SearchWorkspaceLiteral)=1
+    LIVE_SMOKE.txt: SEARCH_RC=0 HITS=16 needle=ProductRun
+    workspace_root_for_search=G:\~dev\rawrxd\src
+    skip_fix=build* + evidence/.cursor/external/3rdparty/ship/models
+
+163 /p100 wave3=1
+    WAVE3_SMOKE_RC=0 WAVE3_API_PASS=1
+    WAVE_3_VERDICT.txt VERDICT=PASS
+    PRODUCT_100_SMOKE_MATRIX.txt FINAL=PASS
+
+164 /p100 wave4=1
+    WAVE4_SMOKE_RC=0 WAVE4_API_PASS=1
+    wave4/WAVE_4_VERDICT.txt VERDICT=PASS
+    wave4/PRODUCT_100_SMOKE_MATRIX.txt FINAL=PASS
+
+LIVE_AUTHORITY=ide_product_batch_103_smoke.exe
+LIVE_OBJ=CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/RawrXD_Product100.cpp.obj
+LIVE_ASM=CMakeFiles/RawrXD-Win32IDE.dir/src/asm/RawrXD_Product100_x64.asm.obj
+CERT=certs/ide_product_batch_103_smoke.cpp
+
+================================================================
+165 PROVENANCE SUMMARY
+================================================================
+BATCH103=PASS
+CLI_PRODUCTRUN_UNCHANGED=1
+BUILD_FD_REOPENED=0
+STATIC_LINK_MAP_AUTHORITY=evidence/PRODUCT_PATH_CMAKE_LINK_MAP.txt
+LIVE_WIN32IDE_EXECUTION_AUTHORITY=evidence/IDE_PRODUCT_BATCH_103/
+
+CRITICAL_RULE_RESPECTED=
+  CMake overlay declaration != compiled != linked != live exercised
+  All four stages captured for Win32IDE Product100 path above.
+
+SEARCH_SKIP_NOTE=
+  ShouldSkipDir now skips build* trees (incl. build-fd) so live /search
+  cannot hang on cmake object trees. Does not change CLI product path.
+
+HOLD_NOTE=
+  RAWRXD_BATCH103_WITNESS auto-slash path crashed once (STATUS_HEAP_CORRUPTION)
+  during optional probe; gates 161-164 accepted on P100 live smoke against
+  the same IDE-linked Product100 object. Slash UI auto-witness remains
+  follow-up, not a cmake missing-link defect.

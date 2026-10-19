@@ -1,0 +1,16 @@
+{
+  "mode": "local",
+  "version": "20.0.0-headless-enterprise",
+  "phase": "Phase 20 Enterprise",
+  "session": "headless-1789014885876",
+  "uptime_ms": 1149,
+  "model_loaded": false,
+  "model_name": "",
+  "server_running": true,
+  "subsystems": {
+    "winsock": true,
+    "backend_manager": true,
+    "llm_router": true,
+    "failure_detector": true,
+    "agent_history": true,
+    "asm_semantic": tr

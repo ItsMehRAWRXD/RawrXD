@@ -1,0 +1,1 @@
+{"loaded":true,"name":"tinyllama_18layer_20260604_001000.gguf"}

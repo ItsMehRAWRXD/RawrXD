@@ -1,0 +1,44 @@
+D2H_CLASSIFICATION_001=SEALED
+DATE=2026-09-08
+COMPLETION_DELTA=D2H_CLASSIFICATION
+EXISTING_GOODS_ONLY=1
+NEW_STACKS=0
+COMPLEXITY_BUDGET=0
+
+LAW
+  NEXT_CONSUMER=HOST → KEEP_OR_SHRINK
+  NEXT_CONSUMER=DEVICE → DELETE_D2H
+  NEXT_CONSUMER=TRACE/METRIC/DEBUG → DELETE_PRODUCT_D2H
+  NEXT_CONSUMER=UNKNOWN → FAIL_CLOSED
+
+# id | site | next_consumer | action | bytes_note | product_path
+D2H_01 | MLA_QPathDevice GemvHostReadOut(q_b) | HOST (MlaAttentionComplete) | KEEP | outB=qBCols*4 per layer | YES
+D2H_02 | GemvHostWriteIn(hidden) H2D | DEVICE (fused Q) | N/A_H2D | not D2H | YES
+D2H_03 | Q_A intermediate host read | DEVICE (would feed Q_B) | DELETED_ALREADY | fused path never crosses Q_A | YES
+D2H_04 | deep2_gpu_numeric_parity_cert DownloadBuf | TRACE/DEBUG | DELETE_PRODUCT_D2H | cert-only; not deep2_benchmark product | NO
+D2H_05 | deep2_gpu_forward_ops_cert DownloadHidden | TRACE/DEBUG | DELETE_PRODUCT_D2H | cert-only | NO
+D2H_06 | Deep2Engine_GpuForward DownloadHidden | UNKNOWN/ALT_PATH | FAIL_CLOSED_FOR_PRODUCT | not K2 MLA product decode | NO
+D2H_07 | O_PROJ output readback fields | HOST/SAMPLE path | KEEP_OR_SHRINK | timing counters only when emitted | YES_TIMING
+D2H_08 | GPU_LOGITS_FULL_READBACK | HOST (CPU logits) | KEEP_IF_CPU_LOGITS | DEEP2_LOGITS_GPU_SPLIT=0 purity | YES
+D2H_09 | QKV_OWNER_RESI_LOG / TOK_RESIDUAL_SPAM D2H | TRACE/METRIC | DELETE_PRODUCT_D2H | FORCED_OFF purity | NO
+D2H_10 | ModelStreamerTrace dump | TRACE | DELETE_PRODUCT_D2H | write-only ring; no product D2H | NO
+
+SUMMARY_PRE_MEASURE
+  D2H_TOTAL_CLASSIFIED=10
+  D2H_PRODUCT_LIVE=1_PRIMARY (q_b host attention)
+  D2H_KEPT=q_b (HOST required)
+  D2H_SHRUNK=0 (no byte shrink without device attention / QB reopen — forbidden)
+  D2H_DELETED=Q_A_cross already absent; cert/trace off product
+  D2H_UNKNOWN=0 on product path
+  REOPENED_QB=0
+  REOPENED_KVA=0
+  REOPENED_LOGITS=0
+
+Q_B_CROSS_NOTE
+  Legal under HOST next consumer.
+  Shrink deferred = would require device attention consumer (new stack) → forbidden by COMPLEXITY_BUDGET=0.
+  Prior CUT_MISS bytes=191891712 unchanged until device-side attention exists.
+
+NO_REOPEN=QB|KVA|LOGITS
+TIP_BOT=HOLD
+SLINGSHOT_REBUILD=NO

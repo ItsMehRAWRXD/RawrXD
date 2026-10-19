@@ -1,0 +1,12 @@
+FAIL_LOAD tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf LC=000 
+FAIL_LOAD tinyllama.gguf LC=000 
+FAIL_LOAD model.gguf LC=000 
+FAIL_LOAD BigDaddyG-Q2_K-ULTRA.gguf LC=000 
+FAIL_LOAD BigDaddyG-Q2_K-CHEETAH.gguf LC=000 
+FAIL_LOAD BigDaddyG-Q2_K-PRUNED-16GB.gguf LC=000 
+FAIL_LOAD Phi-3-mini-4k-instruct-q8_0.gguf LC=000 
+FAIL_LOAD qwen2.5-coder-14b-instruct-q8_0.gguf LC=000 
+FAIL_LOAD DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf LC=000 
+FAIL_LOAD Codestral-22B-v0.1-Q4_K_M.gguf LC=000 
+FAIL_LOAD gemma-4-E4B-it-Q4_K_M.gguf LC=000 
+FAIL_LOAD NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf LC=000 

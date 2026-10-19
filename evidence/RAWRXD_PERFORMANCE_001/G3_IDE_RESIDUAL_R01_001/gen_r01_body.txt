@@ -1,0 +1,1 @@
+﻿{"model":"rawrxd","response":"\nSay hi in 3 words is a popular phrase that has become a popular way to say hello in a few different languages. Here are the three words in 3 sentences:\n\n1. \"Hey, how are you","done":true}

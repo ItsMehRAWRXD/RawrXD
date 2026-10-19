@@ -1,0 +1,11 @@
+ID	LOAD	GEN	ALIVE	PATH
+tinyllama	200	200	1	G:/~dev/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+gemma3	400	000	1	G:/~dev/rawrxd/gemma3-1b-Q2_K.gguf
+llama32_q2	400	000	1	G:/~dev/rawrxd/llama3.2-3b-Q2_K.gguf
+llama32_q3	400	000	1	G:/~dev/rawrxd/llama3.2-3b-Q3_K_S.gguf
+phi3_q2	400	000	1	G:/~dev/rawrxd/phi3-mini-Q2_K.gguf
+phi3_q8	400	000	1	F:/OllamaModels/Phi-3-mini-4k-instruct-q8_0.gguf
+deepseek8b	400	000	1	F:/OllamaModels/DeepSeek-R1-0528-Qwen3-8B-GGUF/DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+gemma4e4b	400	000	1	F:/OllamaModels/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-Q4_K_M.gguf
+bigdaddy	400	000	1	F:/OllamaModels/BigDaddyG-Q2_K-ULTRA.gguf
+codestral	400	000	1	F:/OllamaModels/rawrxd_test_models/Codestral-22B-v0.1-Q4_K_M.gguf

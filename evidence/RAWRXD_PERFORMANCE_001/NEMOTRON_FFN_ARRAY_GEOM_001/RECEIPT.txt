@@ -1,0 +1,54 @@
+NEMOTRON_FFN_ARRAY_GEOM_001
+DATE=2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+BAK=build-fd\bin\deep2_streamer_parity.exe.bak_nemo_ffn
+MODEL=F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+PROMOTE=0
+OLLAMA_HTTP=0
+
+## Closed — FFN geometry open blocker
+
+ROOT
+  nemotron_h.feed_forward_length = GGUF ARRAY (vt=9) per-layer
+  nemotron_h.attention.head_count_kv = GGUF ARRAY (vt=9) per-layer
+  GgufResolveDynamicGeometry skipped vt=9 → BLOCKED_AT=FFN
+
+FIX (geometry TUs only; Deep2Engine.obj untouched)
+  lavapath/GgufDynamicGeometry_arrays.cpp
+    max-positive element from per-layer FFN/KV arrays
+  lavapath/GgufDynamicGeometry_resolve.cpp
+    takeArrayMaxPositive for feed_forward_length / head_count_kv
+  lavapath/GgufDynamicGeometry_finalize.cpp
+    ROPE_BASE_ARCH_COMPAT for arch=nemotron_h (GGUF omits freq_base;
+    rope.dimension_count present; value=10000 keyed by attested arch)
+
+GEOM_TEST
+  ok=1 arch=nemotron_h L=42 H=3136 FFN=12544 heads=40 kv=8 hd=128
+  ctx=1048576 ropeBase=10000 ropeDim=78
+  ROPE_BASE_ARCH_COMPAT=1
+
+STREAMER SMOKE tok8
+  FFN/geometry open: PASS (no longer BLOCKED_AT=FFN)
+  NEXT_BLOCKED_AT=layer_topology / AUTHORITY_LADDER
+  GEMMA4_LAYER_TOPOLOGY_BIND ok=0
+    why=NO_LAYER_ATTENTION_OR_PROJECTOR_TOPOLOGY
+    layers=42 split=4 ffn=0 unknown=38
+  MANIFEST_READY=0 BLOCKED_AT=layer_topology
+  STREAM_ERROR=open_failed (SealLadder BindLlamaSchema / hybrid SSM+FFN)
+  TOKENS_EMITTED=0
+
+TINYLLAMA REGRESSION
+  still streams after geometry lib replace (sealed Deep2Engine.obj)
+
+## Not closed (needs Deep2Engine.obj refresh)
+
+1) Hybrid layer topology — allow SSM-only / FFN-only / attn layers
+   (Gemma4LayerTopologyBind + DynamicPersistentModelManifest)
+2) SealLadder BindLlamaSchema for nemotron_h hybrid tensor set
+3) enableVulkan heap crash blocking Deep2Engine recompile
+
+## Law notes
+  Array max-positive = attested metadata, not invented geometry
+  ROPE_BASE_ARCH_COMPAT = arch-keyed table only for nemotron_h
+  PROMOTE=0

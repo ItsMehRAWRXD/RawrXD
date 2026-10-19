@@ -1,0 +1,34 @@
+KEY_WITNESSES=G3_R1_TEN_GGUF_LIFECYCLE_001
+
+EXE=
+  smoke_bin/RawrXD-Win32IDE_r01_laa.exe
+  SHA16=310E432918338DD1 PE_LAA=YES (editbin on R01 hostdecode)
+  HOST_DECODE=1 DEEP2_DUALSTICK_ARM=0 RAWRXD_NO_VULKAN=1
+
+NO_OLLAMA=
+  NO_OLLAMA_PROOF.txt — PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO
+
+MATRIX=
+  MATRIX.txt MATRIX_LIVE.log (worker) ROLLUP.txt
+  Per-model: smoke/<id>.lifecycle.txt smoke/<id>.S.{out,err}.txt smoke/<id>.gen*.json
+
+ISOLATED_PHI_SMOKE_PASS=
+  smoke/clean_phi.out.txt + clean_phi.err.txt
+  arch=phi3 L=32; ENHANCEMENT STACK: HOST_DECODE
+  GENERATED_TOKENS=48 PRODUCT_PASS=1 GEN_HTTP=200 UNLOAD=200
+
+TINY_MATRIX_PASS=
+  ROW 01 full lifecycle TOKENS=48 SURVIVED=1
+
+PREP_SOURCE_PATCH=
+  src/deep2/lavapath/ProductStreamerPrep.hpp
+  Default HOST_DECODE floor unless RAWRXD_ALLOW_GPU=1 (R1 host floor)
+
+MODEL_ISOLATION=
+  G:\~dev\rawrxd\_r1_iso\** (junction → F:\OllamaModels\_r1_iso)
+  G:\~dev\rawrxd\_r1_models\01_tinyllama\ (hardlink)
+  One GGUF per directory (avoid multi-sibling shard/hotpatch confusion)
+
+BUILD_FD_REGRESSION=
+  build-fd RawrXD-Win32IDE.exe SHA16=5AB597450FFF0FFE
+  /api/generate → C0000374 (ntdll heap) despite HOST_DECODE env

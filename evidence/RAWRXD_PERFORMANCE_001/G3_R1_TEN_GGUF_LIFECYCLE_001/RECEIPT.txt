@@ -1,0 +1,65 @@
+# G3_R1_TEN_GGUF_LIFECYCLE_001 — MASTER RECEIPT
+DATE=2026-09-10
+LANE=R1_TEN_GGUF_LIFECYCLE
+TIP_CLIMB=HOLD
+PROMOTE=0
+OLLAMA=0
+ACCESS_VIOLATION=0
+
+## FICTION_STRIP_001 (2026-09-10)
+OVERCLAIM=1
+HTTP_LIFECYCLE_PASS_NE_PRODUCT_OPEN=1
+R24_COLD_RES2_MULTI_FAMILY=PRODUCT_OPEN_SESSION_FAIL_tensors=0
+HONEST_IDE_PRODUCTOPEN_MULTI_FAMILY=NOT_GREEN
+PASS_COUNT_BELOW=HTTP_200_TOKEN_COUNT_ONLY
+DO_NOT_READ_AS_MULTI_FAMILY_PRODUCTOPEN_SEAL=1
+
+## EXE (sealed soft-unload)
+EXE=smoke_bin/RawrXD-Win32IDE_r1soft_SEALED.exe
+EXE_IMMUTABLE=smoke_bin/RawrXD-Win32IDE_r1soft_IMMUTABLE_3E631BBB7BE707FC.exe
+EXE_SHA256=3E631BBB7BE707FC1D6991ADDA8B3805B76FD718250B96B22E47DCED16B9DE38
+PE_LAA=YES
+HOST_DECODE=1
+MINIMAL_ENHANCE=1
+DUALSTICK_ARM=0
+SOFT_UNLOAD=1
+PRODUCT_CLOSE_SESSION_IN_UNLOADMODEL=0
+R1_OPEN_SOFT_REUSE=1
+
+## Matrix ROLLUP (HTTP-only; NOT ProductOpen residency)
+PASS_COUNT=6
+FAIL_COUNT=4
+TOTAL=10
+VERDICT=PARTIAL_6_OF_10_HTTP_ONLY
+PRODUCT_OPEN_MULTI_FAMILY=NOT_GREEN
+
+## Matrix table summary
+ID|FAMILY|LOAD|GEN|UNLOAD|RELOAD|RELOAD_GEN|VERDICT|OWNER
+01_tinyllama|TinyLlama-1.1B|200|200|200|200|200|PASS|
+02_qwen25_3b|Qwen2.5-3B|400|0|0|0|0|FAIL|model_load (ProductOpenSession tensors=0)
+03_llama32_3b|Llama-3.2-3B|200|200|200|200|200|PASS|
+04_phi3_mini|Phi-3-mini-4B|200|200|200|200|200|PASS|
+05_mistral_7b|Mistral-7B|200|200|200|200|200|PASS|
+06_ds_r1_qwen3|DeepSeek-R1-Qwen3-8B|200|200|200|200|200|PASS|
+07_gemma4_e4b|Gemma-4-E4B|200|200|200|200|200|PASS|
+08_codellama|CodeLlama-7B|400|0|0|0|0|FAIL|model_load (ProductOpenSession tensors=0)
+09_qwen_coder|Qwen2.5-Coder-7B|0|0|0|0|0|FAIL|model_load
+10_deepseek_coder|DeepSeek-Coder-6.7B|200|200|200|0|0|FAIL|reload (soft unload then Alias→tinyllama PATH_SWITCH)
+
+## Critical fixes landed (source + sealed 3E63)
+- Soft unload: unloadModel must NOT ProductCloseSession; UnloadNativeModel no-op.
+- Soft reopen: OpenBody soft-reuses same path+tensors (R1_OPEN_SOFT_REUSE) with KV reset;
+  path switch only CloseSession+Open.
+- Mistral reload_gen: PASS on sealed soft-reuse (was process_died_reload_gen under FORCE_CLOSE).
+- Source follow-up (not yet in 3E63 image): keep RAWRXD_PRODUCT_MODEL on soft unload
+  (R1_SOFT_UNLOAD keep_env=1) — clears env → Alias()=llama32/tinyllama PATH_SWITCH and
+  poisons deepseek_coder reload. Relink blocked by hostfc objs missing from Win32IDE.rsp.
+
+## Remaining FAIL owners
+1. model_load / ProductOpenSession tensors=0 — Qwen2.5-3B, CodeLlama-7B, Qwen2.5-Coder
+   (LocalOnly; no CIE dual-arm). Need arch support or different inventory GGUFs.
+2. reload — DeepSeek-Coder-6.7B after soft unload (env-clear sticky TinyLlama). Needs
+   keep_env soft unload in sealed image after hostfc-complete relink.
+
+## Law
+OLLAMA=0 PROMOTE=0 TIP_CLIMB=HOLD PARITY/R01/DualStick untouched

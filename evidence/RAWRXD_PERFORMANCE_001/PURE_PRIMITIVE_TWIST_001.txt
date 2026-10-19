@@ -1,0 +1,92 @@
+PURE_PRIMITIVE_TWIST_001=SEALED
+DATE=2026-09-08
+ROLE=ONTOLOGY_OF_INVENTION
+RNG_USED=0
+
+# ---------------------------------------------------------------------------
+# EXTRACTION
+# ---------------------------------------------------------------------------
+
+ACT=EXTRACT_PURE_PRIMITIVE
+REVEALED_THROUGH=programming
+TRANSCENDS=syntax | execution_environment | kernel_space
+
+REMAINS_AFTER_STRIP
+  NOT=software_artifact
+  NOT=traditional_mechanical_invention
+  NOT=architectural_feature_claim
+  IS=discovered_law_of_logic
+  IS=systemic_behavior
+  IS=topological_reality
+  UNEARTHED_VIA=computation
+  INDEPENDENT_OF=what_a_machine_can_execute_as_bound
+
+RE_CATEGORIZED_INTO
+  REALM=PURE_POTENTIAL
+  SPACE=everything_and_nothing
+  STATUS=raw_foundational_concept
+
+# ---------------------------------------------------------------------------
+# THE TWIST (fold, not program)
+# ---------------------------------------------------------------------------
+
+LINEAR_STRIP=extracted_pure_primitive (flat law as found)
+HALF_TWIST=fold_property_back_on_itself
+RESULTING_SHAPE=Möbius_topology (continuous; no edge cross)
+
+ALONG_TWIST_PHENOMENON
+  = realization of that new topology
+  = bend fundamental rule of logic / systemic flow
+  = use tension between state and statelessness
+      (EVERYTHING ↔ NOTHING)
+  = invent a way to WEAVE THROUGH the shape
+  ≠ build a new program
+  ≠ claim authorship of the underlying physics
+
+INVENTION_DEFINITION (this campaign)
+  DISCOVERED=new_shape_of_reality (primitive + polarity geometry)
+  INVENTED=method_of_weaving_through_it (containment / harness only)
+
+# ---------------------------------------------------------------------------
+# THIS CAMPAIGN'S PRIMITIVE (already extracted)
+# ---------------------------------------------------------------------------
+
+PRIMITIVE_NAME=HOST_WINDOW_DOF_ZERO ∩ FENCE_NOT_COPY ∩ Q_B_D2H_HOSTILE
+FLAT_LAW
+  host consumer span ≡ producer head; sync polarity dominates bytes;
+  host-edge cross is structurally hostile when next consumer is device
+
+TWIST_FOLD
+  HOST_CONSUMER_POLE ↔ DEVICE_LIFECYCLE_POLE as one surface
+  refuse edge cross; continuous on-device traversal
+
+WEAVE (invention along twist — harness, not subject)
+  POLARITY_EXCHANGE first manipulation (ledger)
+  instrument candidate = PATH_B_STRUCTURAL_DELETE (await EXECUTE_INSTRUMENT)
+  prove = DELETE_PROVEN + wall fail-closed vs PATH_A
+
+# ---------------------------------------------------------------------------
+# LEDGER BINDINGS
+# ---------------------------------------------------------------------------
+
+CODE_SPACE=TOOLING_HARNESS_CONTAINMENT_FIELD_ONLY
+PHENOMENON_SPACE=ACTIVE
+INVENTION_GATE=UNLOCKED
+INVENTION_MODE=WEAVE_THROUGH_TWISTED_PRIMITIVE
+
+STATUS=PRIMITIVE_EXTRACTED_TWIST_DEFINED_WEAVE_AWAITS_EXECUTE
+NEXT=EXECUTE_INSTRUMENT | continue_mapping_weave_geometry
+
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+CHAMPION_HOLD=PATH_A WALL_MEDIAN_NS=10184789000
+GOODS_STAY_BRAIDED=1
+
+BINDS
+  TWIST_AXIOM_001
+  FIRST_INTENTIONAL_MANIPULATION_001
+  INVENTION_GATE_UNLOCK_001
+  EMERGENT_OBSERVATION_001
+  PHENOMENON_CATEGORY_EXIT_001
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/PURE_PRIMITIVE_TWIST_001.txt

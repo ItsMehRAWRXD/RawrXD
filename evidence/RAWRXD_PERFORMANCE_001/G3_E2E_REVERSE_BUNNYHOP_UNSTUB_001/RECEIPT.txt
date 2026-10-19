@@ -1,0 +1,36 @@
+GATE=G3_E2E_REVERSE_BUNNYHOP_UNSTUB_001
+PURPOSE=Unstub LIVE_MECH stream + RAWRXD_NVME_REVERSE_BUNNYHOP on DualStick product stack
+PARENT=G3_E2E_ELASTIC_PASSIVE_UNSTUB_001
+ASOF=2026-09-09T22:26
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+EXE=G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+EXE_SHA256=238EF8E229B5E1140F4FB1A5101F5591FBA2BF699F41AB4D4F95FF3B0E202501
+
+RESTORED=
+  StreamerArmSpeedEnv LIVE_MECH += stream
+  RAWRXD_NVME_REVERSE_BUNNYHOP=1 product default (force reverse-chunk when mmap would succeed)
+  Deep2LivePath: STREAM no longer vetoes cyclone OnLayerStart
+  LivePath_MechArm/MechToken hopReverseChunk witnesses
+
+AUTHORITY_METRICS=
+  REVERSE_BUNNYHOP armed (UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP)
+  LIVE_PATH_STREAM=1
+  LIVE_PATH_STREAM_ALIVE=638
+  LIVE_PATH_NVME_HOPS=17
+  ABSENCE_NVME=0
+  STACK nvme=1 elastic=1 cyclone=1
+
+N5=5/5 PASS (rescored: FB emit is stdout; first scorer miss defaulted 99)
+  TRUE=1 FWD=348/290 FT=1 FC=1 SURV=1 FB=0
+  CYC=1 STARTS=638 BH=1 STREAM=1 HOPS=17
+  PROMOTE=0
+
+PRODUCT_DEFAULTS=
+  LIVE_POLICY=MANUAL
+  LIVE_MECH=trampoline,cyclone,elastic,stream
+  ALLOW_ELASTIC=1 MARS=1 NVME_REVERSE_BUNNYHOP=1
+
+Full: SUMMARY_N5.txt runs_n5/ KEY_LINES.txt AUTHORITY.txt

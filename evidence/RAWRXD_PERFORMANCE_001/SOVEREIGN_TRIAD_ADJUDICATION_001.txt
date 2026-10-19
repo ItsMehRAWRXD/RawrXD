@@ -1,0 +1,31 @@
+SOVEREIGN_TRIAD_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  Actor/Sentinel/Chronicler closed-loop braid
+  Sovereign_Braid_Loop / UpdateVehiclePhysics / VERIFY_CANARY /
+  Commit_Vehicle_State transactional bridge
+
+REVERSE
+  ZERO matches in src for Sovereign_Braid_Loop|VERIFY_CANARY|
+  Commit_Vehicle_State|UpdateVehiclePhysics|Sovereign_Triad
+  Vehicle-physics triad = NOT discovered in RawrXD MLA/perf tree
+  Distinct from PERF braid goods (GOODS_STAY_BRAIDED) and PATH_A/PATH_B
+
+ADJUDICATION
+  Commit_Vehicle_State bridge = REFUSED under GATE STOP
+  Triad as product claim = INVENTION not reverse
+  May inventory later under UNTRIED_BRAID only if user reopens NEW_STACKS
+  Does NOT braid into current NEXT_SPEND=NONE checkpoint
+
+LIVE_AUTHORITY
+  PATH_A champion WALL_MEDIAN_NS=10184789000
+  PATH_B one-shot observe frozen
+  PERF_EXE=deep2_benchmark.exe
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

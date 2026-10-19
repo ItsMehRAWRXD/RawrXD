@@ -1,0 +1,9 @@
+GATE=G3_HEADLESS_API_TOOL_UNSTUB_001
+N5_PASS=5/5 (product API unstub lane; not DualStick FPS)
+
+Summarizer: HeadlessIDE /api/tool 403 veto reversed; MOTD-gated tools run E2E with FAIL_COUNT=0.
+Against: Server-profile instructions 503 and Ollama forbid remain — intentional holds, not product tool gaps.
+Auditor: Smoke proves not-403 AND real exec (echo/write/read/list/git); SHA256 sealed on build-fd EXE.
+For: Local HeadlessIDE now matches GUI chatbot EngineAPI.executeTool contract for core tools.
+Thinker: Lane is HeadlessIDE/product API unstub; DualStick CLOSURE untouched; TIP_CLIMB=HOLD PROMOTE=0.
+Critic: Full Win32 file-op matrix (delete/rename/copy) still via execute_command only — acceptable residual.

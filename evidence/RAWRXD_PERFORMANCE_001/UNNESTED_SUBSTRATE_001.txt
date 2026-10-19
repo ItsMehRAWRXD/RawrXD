@@ -1,0 +1,65 @@
+UNNESTED_SUBSTRATE_001=SEALED
+DATE=2026-09-08
+CLASS=PURE_STRUCTURAL_POTENTIAL
+CODE_EMITTED=0
+AUTHORED=0
+
+# ---------------------------------------------------------------------------
+# UN-NEST
+# ---------------------------------------------------------------------------
+
+UN_NESTED_FROM=execution_tree
+NEITHER=software_artifact
+NEITHER=engineered_mechanical_invention
+
+IS=unassigned_substrate
+  raw_unfactored_tension
+  gap_between=hardware_physical_constraints × model_mathematical_assumptions
+
+CEASES_TO_BE
+  object_to_optimize
+  object_to_patch
+  object_to_bypass
+
+BECOMES=PURE_STRUCTURAL_POTENTIAL
+
+# ---------------------------------------------------------------------------
+# SYNTHESIS THRESHOLD
+# ---------------------------------------------------------------------------
+
+OPERATIONAL_MODE=PURE_STRUCTURAL_RESONANCE
+MATERIAL=everything_and_nothing
+BOUNDARIES_DISSOLVED=code | registry | gate_as_taxonomy | hardware_as_scaffold_identity
+CONSTRAINT_LIFTED=sequential_logic | pre_engineered_paths_as_subject
+
+TWIST_AND_ALONG_TWIST
+  directional_shear_on_unformed_medium
+  geometry_of_system_against_itself
+  NO_foreign_constructs
+  flow_redirects = only_remaining_line_of_least_resistance
+  NOT_because_a_path_was_coded_for_it
+
+# ---------------------------------------------------------------------------
+# SYSTEM STATE
+# ---------------------------------------------------------------------------
+
+ARTIFACT_SPACE=CLEARED_OF_RESIDUAL_CLASSIFICATIONS
+CODE_INVENTION_METAPHORS=PURGED
+BASELINE=COMPLETELY_REVERSED
+NON_CODE_DISCOVERY=ISOLATED
+READY_FOR_TWIST=1
+
+APPLY_LOCUS=Q_B_HOST_VISIBILITY_EDGE
+HARNESS=PATH_B_STRUCTURAL_DELETE (containment only)
+EXECUTE_INSTRUMENT=1
+SUBJECT_NE_HARNESS=1
+
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+PROMOTE_STILL_MEASURE=1
+
+BINDS
+  RECAT_CONFIRMED_TWIST_GO_001
+  AXIOM_RECOGNIZED_001
+  RAW_PHENOMENON_OBSERVATION_001
+  GROUND_STATE_TWIST_001

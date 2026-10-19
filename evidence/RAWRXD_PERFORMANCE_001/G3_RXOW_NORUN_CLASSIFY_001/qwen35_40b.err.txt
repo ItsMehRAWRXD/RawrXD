@@ -1,0 +1,92 @@
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RXOW stage=NONE br=BR_NOT_PREPARED layers=0 tensors=0 graph=0 decode0=0 note=product_run_before_prepared
+RXOW stage=NONE br=BR_OPEN_FAILED layers=0 tensors=0 graph=0 decode0=0 note=RAW_RUN_OPEN_FAIL
+PRODUCT_RUN
+MODEL_RESOLVED=0
+MODEL_OPEN=0
+TOKENIZER_READY=0
+KV_READY=0
+RUNTIME_READY=0
+STREAM_ENTER=0
+FIRST_TOKEN=0
+GENERATED_TOKENS=0
+LAST_TOKEN=0
+STREAM_FINISHED=0
+EXIT_REASON=FAIL
+PRODUCT_PASS=0
+FAILED_STAGE=LOAD
+FAILED_OWNER=GGUF_OPEN
+PRODUCT_PATH=rawr→ProductRun→generateStream MAX_TOKENS=8 PRODUCT_PASS=0
+rawr: PRODUCT_PASS=0 stage=LOAD owner=GGUF_OPEN
+[Deep2Engine] Loading model from: G:\~dev\Qwen3.5-40B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[ReverseHotpatch] ERROR: Parse failed for G:\~dev\Qwen3.5-40B-Q4_K_M.gguf: GGUF file validation failed
+[ReverseHotpatch] FAILED at stage 2 (ReverseUnlayer_Parse)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[GGUF] ERROR: Tensor data extends beyond file end:
+  File size: 6448907579 bytes
+  Required: 23927227328 bytes
+  Shortfall: 17478319749 bytes
+
+[GGUF] Offending tensor:
+  Name      : blk.95.post_attention_norm.weight
+  Type      : F32
+  Dims      : 1 x 5120
+  Elements  : 5120
+  Offset    : 23916186624
+  Computed  : 20480 bytes
+  Available : 18446744056231252347 bytes
+  Difference: -17478319749 bytes
+[Deep2Engine] ERROR: Failed to load GGUF metadata: GGUF file validation failed
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+[StreamEngine] Shutdown

@@ -1,0 +1,56 @@
+ZERO_STATE_FIRST_TWIST_001=SEALED
+DATE=2026-09-08
+CLASS=RAW_TOPOLOGY
+CODE_EMITTED=0
+ROUTINE=0
+SCHEMA=0
+FEATURE=0
+TOOL=0
+
+LIBERATED_FROM=syntax_of_code | ambition_of_invention
+FUNCTIONAL_IMPERATIVE_STRIPPED=compile|execute|optimize
+
+IS=pure_constraint / raw_topology
+  discovered_in_media_res
+  refuses_feature_or_tool_classification
+  sits_in_conceptual_void
+
+ZERO_STATE=1
+BASELINE=REVERSED
+BENIGN=REMOVED
+SPACE=CLEARED
+
+# ---------------------------------------------------------------------------
+# FIRST TWIST (answer)
+# ---------------------------------------------------------------------------
+
+FIRST_TWIST=POLARITY_EXCHANGE_AT_Q_B_HOST_VISIBILITY_EDGE
+
+AXIS
+  EVERYTHING = mapped host-visible mass (PATH_A floor: mirror+fence+host consume)
+  NOTHING    = voided q_b D2H (zero-byte readback when next consumer is device)
+
+ACT
+  shear host-visibility polarity without inventing PCIe physics
+  fold DOF≡0 + fence-not-copy + mirror-partial onto themselves
+  → host edge ceases as necessary crossing; device-side line of least resistance remains
+
+ALONG_TWIST (orthogonal, second)
+  lateral propagation along computational gravity
+  device-resident attention lifecycle as containment field only
+  harness name (when torque applied) = PATH_B_STRUCTURAL_DELETE
+  ≠ the phenomenon; ≠ a feature
+
+NOT_FIRST_TWIST
+  inventing shaders as the subject
+  tip climb / 5.904 chase
+  planar K layout invention
+  optimizing the benign boundary
+
+WITNESS_FLOOR
+  O1 DOF≡0 | O2 fence≫copy | O3 mirror partial | O4 host-edge friction
+  champion WALL_MEDIAN_NS=10184789000
+
+TIP_CLIMB=HOLD
+GATE_STOP=1 until EXPLICIT_TORQUE
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904

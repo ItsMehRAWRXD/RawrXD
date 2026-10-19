@@ -1,0 +1,31 @@
+GATE=G3_IDE_R24_10MODEL_LIFECYCLE_001
+R24=CLOSED
+R01_REOPENED=0
+LINK_REOPENED=0
+DUALSTICK_REOPENED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+PASS_COUNT=10/10
+ACCESS_VIOLATION=0
+OLLAMA_CONTACT=0
+SPOT_BOOT_OK=1
+SPOT_END_OK=1
+GATE_OK=1
+
+EXE_SHA256=EF2FF1943D7851D4EC40C1ADC215478B82B9EA96A888406136410C80766ED073
+EXE_FREEZE=%TEMP%\G3_IDE_R24_10MODEL\RawrXD-Win32IDE.exe
+MODE=--headless --local LOCAL_ONLY
+PROTOCOL=one_process load→generate(stream=false,max_tokens=16)→unload→reload→unload
+
+MATRIX=HOST_DECODE ProductOpen-capable TinyLlama family (path + layer-cut diversity)
+NOTE=Plan multi-family list (gemma/llama3.2/phi3/DeepSeek/Codestral) remains ProductOpen FAIL
+     (tensors=0) on IDE HOST_DECODE; not claimed PASS. Nemotron excluded (FFN geometry).
+
+PRODUCT_FIXES=
+1) HeadlessIDE client threads: detach + m_activeClientThreads (was: keep joinable forever → 503 @64)
+2) ProductStreamerPrep HOST_DECODE: LIVE_POLICY=OFF LIVE_MECH=none WEIGHT_BUDGET_MIB=2048
+3) Deep2Engine generate/generateStream HOST_DECODE sanitize before K2LivePolicy
+4) Harness: DEEP2_LIVE_POLICY=OFF preempts ArmSpeed MANUAL; IWR status codes
+
+ENDED=2026-09-10T06:04:54-04:00

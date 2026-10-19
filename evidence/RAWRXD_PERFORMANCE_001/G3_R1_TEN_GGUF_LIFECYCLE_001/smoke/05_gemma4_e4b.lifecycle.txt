@@ -1,0 +1,14 @@
+﻿MODEL=gemma-4-E4B-it-Q4_K_M.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\05_gemma4_e4b\gemma-4-E4B-it-Q4_K_M.gguf
+SIZE_MB=5088.1 SHA16=3F72A20A06F626C7
+HEADLESS_PID=16704
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"gemma-4-E4B-it-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9849,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature
+LOAD=200 {"success":true,"model":"gemma-4-E4B-it-Q4_K_M.gguf"}
+GENERATE=200 TOKENS=8 PROCS=1
+GEN_SNIP={"model":"rawrxd","response":" Ком딴 barbedcementinvasive உதவுлка thumbnails","done":true}
+UNLOAD=200 {"success":true}
+RELOAD=200 {"success":true,"model":"gemma-4-E4B-it-Q4_K_M.gguf"}
+RELOAD_GEN=200 TOKENS=8 PROCS=1
+VERDICT=PASS

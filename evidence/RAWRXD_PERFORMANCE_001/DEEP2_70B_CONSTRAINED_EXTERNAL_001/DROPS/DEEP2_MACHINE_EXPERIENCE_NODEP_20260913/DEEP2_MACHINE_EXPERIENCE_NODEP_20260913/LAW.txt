@@ -1,0 +1,39 @@
+GATE=DEEP2_MACHINE_EXPERIENCE_NODEP_20260913
+AUTH_BASELINE=c1e90fcdf5
+V6D=HOLD
+PRODUCT_BOUND=0
+PROMOTE=0
+TPS_MINT=0
+
+PURPOSE=missing layer above V6 keyed EWMA:
+  durable machine experience
+  hardware/software epochs
+  feature-selective invalidation
+  freshness/confidence
+  live-over-history arbitration
+  drift tripwire + quarantine
+  nearest-valid fallback
+  truth-first persistence
+  generation rollover
+  self-healing revalidation
+
+TOP15=
+  01 hardware/software epoch ids
+  02 feature-level invalidation
+  03 freshness-weighted confidence
+  04 live-vs-history arbitration
+  05 regime identity
+  06 prediction-error tripwire
+  07 revalidation path
+  08 persistent confidence metadata
+  09 generation cost surfaces
+  10 cross-generation revalidation
+  11 stale quarantine
+  12 nearest-valid fallback
+  13 drift-aware live update
+  14 truth-first persistent cache
+  15 self-healing experience store
+
+INVARIANT=HISTORY_IS_PRIOR_LIVE_MEASUREMENT_IS_TRUTH
+BIND_OWNER=DUALSTICK_EXPERIENCE_V7
+BIND_REQUIRES=compile+unit+selftest+live Kimi A/B

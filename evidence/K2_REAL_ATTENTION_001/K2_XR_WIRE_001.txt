@@ -1,0 +1,18 @@
+K2_XR_WIRE_001 — RECEIPT
+DATE=2026-09-08
+
+WIRE
+  K2MLAAttention: XR_Dot_F32 + XR_Softmax_F32 + real Σw·V
+  Deep2Engine::SwiGLU → XR_SwiGLU_F32
+  Deep2_SwiGLU → XR_SwiGLU_F32 (gate=y, up=x)
+
+LIVE_K2_MLA_USES_XR=1
+LIVE_K2_SWIGLU_USES_XR=1
+WIRE_SWIGLU_PARITY=1
+WIRE_ATTENTION_PARITY=1
+K2_XR_WIRE_001=PASS
+
+DEAD_FORMULAS_REOPENED=0
+NO_REOPEN_PRODUCT_AUTHORITY=1
+
+NOTE=MLA keeps explicit Σw·V when vHeadDim!=qkDim (XR_AttentionHead is equal-dim only).

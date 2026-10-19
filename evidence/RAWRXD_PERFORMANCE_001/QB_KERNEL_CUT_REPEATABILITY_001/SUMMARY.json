@@ -1,0 +1,71 @@
+﻿{
+    "result":  "HOLD",
+    "champion_seal_tps":  5.904,
+    "product_floor_tps":  5,
+    "warmup_discard":  1,
+    "scored_count":  3,
+    "scored_above_floor":  0,
+    "min_tps":  3.055,
+    "max_tps":  4.27,
+    "mean_tps":  3.495,
+    "spread_tps":  1.215,
+    "stable_product_wall":  false,
+    "promote_baseline":  0,
+    "trials":  {
+                   "value":  [
+                                 {
+                                     "trial":  1,
+                                     "warmup":  1,
+                                     "exit":  0,
+                                     "decode_tps_real":  3.442,
+                                     "generation_wall_ns":  18398630000,
+                                     "argmax_parity":  1,
+                                     "prompt_tokens":  "7",
+                                     "mla_q_device_ops":  "3904",
+                                     "above_floor":  0,
+                                     "log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t01_20260908-112530.log",
+                                     "err":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t01_20260908-112530.err.log"
+                                 },
+                                 {
+                                     "trial":  2,
+                                     "warmup":  0,
+                                     "exit":  0,
+                                     "decode_tps_real":  3.161,
+                                     "generation_wall_ns":  20038711000,
+                                     "argmax_parity":  1,
+                                     "prompt_tokens":  "7",
+                                     "mla_q_device_ops":  "3904",
+                                     "above_floor":  0,
+                                     "log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t02_20260908-112551.log",
+                                     "err":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t02_20260908-112551.err.log"
+                                 },
+                                 {
+                                     "trial":  3,
+                                     "warmup":  0,
+                                     "exit":  0,
+                                     "decode_tps_real":  3.055,
+                                     "generation_wall_ns":  19760787000,
+                                     "argmax_parity":  1,
+                                     "prompt_tokens":  "7",
+                                     "mla_q_device_ops":  "3904",
+                                     "above_floor":  0,
+                                     "log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t03_20260908-112614.log",
+                                     "err":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t03_20260908-112614.err.log"
+                                 },
+                                 {
+                                     "trial":  4,
+                                     "warmup":  0,
+                                     "exit":  0,
+                                     "decode_tps_real":  4.27,
+                                     "generation_wall_ns":  14796515000,
+                                     "argmax_parity":  1,
+                                     "prompt_tokens":  "7",
+                                     "mla_q_device_ops":  "3904",
+                                     "above_floor":  0,
+                                     "log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t04_20260908-112638.log",
+                                     "err":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/qb_kern_quiet_t04_20260908-112638.err.log"
+                                 }
+                             ],
+                   "Count":  4
+               }
+}

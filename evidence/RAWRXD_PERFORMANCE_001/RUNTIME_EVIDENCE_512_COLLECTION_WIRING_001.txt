@@ -1,0 +1,103 @@
+RUNTIME_EVIDENCE_512_COLLECTION_WIRING_001=SEALED
+DATE=2026-09-08
+TYPE=SOURCE_DROP_LANDED
+MODE_CHANGE=0
+HOT_GATE_CHANGE=0
+SPEND=0
+REAL_SITE_WIRING=0
+
+PURPOSE=
+  land the missing read-only collection surface around the already-landed
+  RuntimeEvidence512 EvidenceState/EvidenceRecord ABI
+
+ADDED=
+  src/asm/RuntimeEvidence512_Collect.asm
+  src/asm/RuntimeEvidence512_Collect.inc
+  evidence/RAWRXD_PERFORMANCE_001/BUILD_RuntimeEvidence512_Collect.txt
+
+EXPORTS=
+  EvidenceSummarize512
+  EvidenceFindClaim512
+  EvidenceCopyCommitted512
+
+HARD_LAW=
+  SEQ_CAP=512
+  Commit must equal 0A11CE55A11CE55h
+  Commit is observed before record payload is trusted
+  Magic/Version/RecordBytes/RunId/SeqCap/ClaimId must validate
+  Ordinal must equal reservation slot index
+  missing Claim X never creates a Claim-X record
+  Claim X lookup never falls back to Claim Y
+  Dropped>0 is surfaced and blocks CLOSED_SNAPSHOT
+  incomplete reserved slots are surfaced and block CLOSED_SNAPSHOT
+  malformed committed records are surfaced and block CLOSED_SNAPSHOT
+
+CANONICAL_VALIDATE=
+  Commit
+  → Magic
+  → Version
+  → RecordBytes
+  → RunId
+  → SeqCap=512
+  → Ordinal==slot
+  → ClaimId 1..17
+  → accept record
+
+SUMMARY_LAYOUT=
+  +00 RunId qword
+  +08 Reserved qword
+  +16 Capacity qword
+  +24 Committed qword
+  +32 Dropped qword
+  +40 ClaimMask qword  (bit ClaimId-1)
+  +48 Invalid qword
+  +56 Incomplete qword
+  +64 SeqCap dword
+  +68 Flags dword
+  bytes=72
+
+FLAGS=
+  0x01 SEQCAP_OK
+  0x02 RESERVED_COMPLETE
+  0x04 RECORDS_VALID
+  0x08 NO_DROPS
+  0x10 CLOSED_SNAPSHOT
+
+CLOSED_SNAPSHOT_MEANS=
+  seqCap accepted
+  AND every currently reserved in-capacity slot is committed
+  AND every committed slot validates
+  AND Dropped==0
+  NOT proof measured generation ended
+  call collection only after real run completion/join point
+
+CURRENT_ATTRIBUTION=
+  LAST_PROVEN=FINAL_NORM(step22)
+  FIRST_UNPROVEN_CONSUMER=ProjectLogitsArgmax(step22)
+  A/B=UNRESOLVED
+
+REAL_SITE_WIRING_STILL_REQUIRES=
+  SPECIAL_MOMENT early-complete OR MODE=A HOT_GATE=1
+  EvidenceEmit* at actual sites only
+  this drop does not install or fire those calls
+
+MEASUREMENT=
+  EvidenceEmitWallNs / EvidenceEmitDecodeTpsQ32_32 remain measurement emitters
+  floor stays 5.000 TPS
+  collector only reads what that run actually emitted
+
+AUTHORITY=
+  SOURCE_COLLECTION=PRESENT
+  ASSEMBLY_NEW_COLLECTOR=UNCLAIMED
+  LINK_NEW_COLLECTOR=UNCLAIMED
+  REAL_SITE_WIRING=NOT_DONE
+  RUNTIME_OBSERVATION=NOT_DONE
+  MEASUREMENT=NOT_DONE
+  CLOSED_SNAPSHOT=INTEGRITY_ONLY
+  no authority transition from unpack/inspect/local obj
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  SSOT=RUNTIME_EVIDENCE_512_COLLECTION_SOURCE_001
+  ATTRIBUTION=LAST_PROVEN=FINAL_NORM(step22) FIRST_UNPROVEN=ProjectLogitsArgmax(step22) A/B=UNRESOLVED

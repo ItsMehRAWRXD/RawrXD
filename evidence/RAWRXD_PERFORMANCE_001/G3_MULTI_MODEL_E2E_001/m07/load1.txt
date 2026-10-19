@@ -1,0 +1,2 @@
+﻿{"success":true,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"}
+HTTP_CODE=200

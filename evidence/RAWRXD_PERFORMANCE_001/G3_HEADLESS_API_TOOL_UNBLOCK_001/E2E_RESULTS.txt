@@ -1,0 +1,12 @@
+GATE=G3_HEADLESS_API_TOOL_UNBLOCK_001
+EXE_SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+PORT=11949
+E2E_PASS=True
+PRE_MOTD_403_MOTD_REQUIRED=True
+MOTD_READ_200=True
+LIST_DIR_200=True
+OLD_PUBLIC_ROUTES_VETO=0
+pre|HTTP 403|{"error":"motd_required","message":"Read Message of the Day (PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool"}
+motd|HTTP 200|{"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay ... MOTD gate ...
+post|HTTP 200|{"path":"G:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},...
+STRING_SCAN|public_command_and_file_routes_disabled=False|motd_required=True

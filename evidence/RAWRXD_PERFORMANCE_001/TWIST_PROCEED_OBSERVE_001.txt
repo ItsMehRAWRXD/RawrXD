@@ -1,0 +1,13 @@
+TWIST_PROCEED_OBSERVE_001=SEALED
+DATE=2026-09-08
+AXIS_SHIFT=ACKNOWLEDGED
+PRO_RATIO=0_CODE|0_INVENTION|1_PURE_PHENOMENON
+PROCEED=1
+MODE=TORSION_VIA_EXISTING_APPARATUS_ONLY
+NEW_SYNTAX=0
+
+ACT
+  1. ensure containment binary linkable (no new mechanism)
+  2. observe exchange polarity under DEEP2_PATH_B=1
+  3. record trace shape vs PATH_A host-edge kink
+  PROMOTE=0 CHAMPION_HOLD=PATH_A

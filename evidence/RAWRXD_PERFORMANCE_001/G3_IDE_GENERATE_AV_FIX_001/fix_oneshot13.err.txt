@@ -1,0 +1,6 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[WARN]  Instructions: No instruction files found in any search path [2869us]
+[WARN]  Instructions: No instruction files found in any search path
+[StreamEngine] Shutdown

@@ -1,0 +1,194 @@
+COMPATIBILITY_LEDGER_OLLAMA_001=SEALED
+DATE=2026-09-08
+MODE=D
+HOT_GATE=0
+AUTO_PICK=0
+CODE_CHANGE=0
+TEST_SPEND=0
+PARENT=COMPATIBILITY_LEDGER_001
+NOTE=Ollama tags are inventory rows; NOT RawrXD COMPAT_PASS unless linked receipt exists
+
+LAW=
+  OLLAMA_TAG != RAW_RXD_CERT
+  UNIQUE_BLOB_CERTIFY=1 (not every alias)
+  CLOUD_EXCLUDED=1
+  LOADER_REWRITE_INDICATED=0
+  COMPAT_PASS != PERF_PASS
+  QUESTION_MARK=? =
+    not_yet_demonstrated_for_this_exact_Ollama_model
+    NOT_fail
+    NOT_pass
+    NOT_TWIST_\=-_reclassify
+
+# --- EXCLUDED --------------------------------------------------------------
+
+CLOUD_EXCLUDE=
+  deepseek-v4-flash:0731-cloud
+  glm-5.2:cloud
+  kimi-k2.6:cloud
+  LOCAL_RUNTIME_TARGET=0
+  NOT_ADDITIONAL_LOCAL_BLOBS=1
+
+WORMGPT_14=
+  LOCAL_BYTES=UNPROVEN
+  RAW_RXD_CERT_TARGET=NO_FOR_NOW
+  NOT_ADDITIONAL_LOCAL_BLOB_UNTIL_MANIFEST=1
+
+# --- ALIAS COLLAPSE (same Ollama ID = one cert object) ---------------------
+
+ALIAS_LAW=
+  same_Ollama_ID = one_underlying_model_object
+  NOT_separate_models
+  NOT_two_compat_runs_for_shared_weights
+  CERTIFY_IDENTITY_CONFIG=1 not_every_tag
+
+ALIAS.17052f91a42e=gpt-oss:latest|gpt-oss:20b
+ALIAS.a2af6cc3eb7f=gemma3:latest|gemma3:4b
+ALIAS.a80c4f17acd5=llama3.2:3b|llama3.2:latest
+ALIAS.890a6c1859b7=bigdaddyglocal:latest|bigdaddyg-productivity-local:latest
+ALIAS.02a792bbc286=bigdaddygnative:latest|bigdaddyg-productivity-native:latest
+
+# --- LOCAL INVENTORY ROWS (? = not demonstrated for this exact Ollama model)
+
+ROW.pdurugyan_qwen35_9b_deepseek_v4_flash SIZE=6.6G FAMILY=Qwen/custom_hybrid STATUS=NEEDS_CERT
+ROW.nemotron_3.5_lightning_30b SIZE=25G FAMILY=Nemotron STATUS=NEEDS_ARCH_CHECK
+ROW.nemotron_3_nano_4b SIZE=2.8G FAMILY=Nemotron STATUS=GOOD_EARLY_CANDIDATE
+ROW.gpt_oss_120b SIZE=65G FAMILY=GPT-OSS STATUS=LARGE_SPECIAL
+ROW.gpt_oss_20b SIZE=13G FAMILY=GPT-OSS STATUS=NEEDS_CERT ALIAS_OF=17052f91a42e
+ROW.deepseek_coder_v2_16b SIZE=8.9G FAMILY=DeepSeek_Coder_V2 STATUS=MOE_SPECIAL_LIKELY
+ROW.kiminoto_T0.0.1 SIZE=6.6G FAMILY=Custom STATUS=IDENTIFY_METADATA_FIRST
+ROW.starcoder2_15b SIZE=9.1G FAMILY=StarCoder2 STATUS=NEEDS_ARCH_ADAPTER_CERT
+ROW.ornith_1.5_35b SIZE=22G FAMILY=Custom/unknown STATUS=INSPECT_METADATA
+ROW.gemma3_4b SIZE=3.3G FAMILY=Gemma3 STATUS=HIGH_PRIORITY_SMALL ALIAS_OF=a2af6cc3eb7f
+ROW.bigdaddygnative SIZE=25G FAMILY=Custom STATUS=INSPECT_BASE_ARCH ALIAS_OF=02a792bbc286
+ROW.bigdaddyglocal SIZE=25G FAMILY=Custom STATUS=INSPECT_BASE_ARCH ALIAS_OF=890a6c1859b7
+ROW.deepseek_v4_flash_iq2_m SIZE=103G FAMILY=DeepSeek/custom STATUS=LATE_STAGE
+ROW.deepseek_r1_70b SIZE=42G FAMILY=DeepSeek_R1 STATUS=SPECIAL_ARCH
+ROW.laguna_s_2.1_Q4_K_M SIZE=96G FAMILY=Custom/large STATUS=INSPECT_ARCH
+ROW.qwen3_next_80b SIZE=50G FAMILY=Qwen3-Next STATUS=SPECIAL_NEWER_QWEN
+ROW.llama3.1_8b SIZE=4.9G FAMILY=Llama3.1 STATUS=EXCELLENT_BASELINE_CANDIDATE
+ROW.qwen3_8b SIZE=5.2G FAMILY=Qwen3 STATUS=EXCELLENT_QWEN_BASELINE
+ROW.llama3.2_3b SIZE=2.0G FAMILY=Llama3.2 STATUS=B1.1_ONESHOT_MEASURED_SPLIT ALIAS_OF=a80c4f17acd5
+  SSOT=COMPAT_B1_1_001/RECEIPT.txt STAGES=PASS FLOOR=FAIL TPS=1.387/5.000 ACTUAL_PASS_OVERALL=0
+ROW.deepseek_r1_32b SIZE=19G FAMILY=DeepSeek_R1 STATUS=BETTER_FIRST_THAN_70B
+ROW.granite3.3_8b SIZE=4.9G FAMILY=Granite STATUS=NEEDS_GRANITE_ADAPTER_CERT
+ROW.qwen3.8_27b SIZE=17G FAMILY=Qwen/custom STATUS=SPLIT_QWEN_RELEVANT
+ROW.qwen35_40b_heretic_q8 SIZE=2.2G FAMILY=Custom_Qwen_tagged STATUS=METADATA_MUST_INSPECT
+
+ALL_OPEN_PREFILL_FIRST_DECODE_STREAM=? for every ROW above (Ollama inventory ≠ RawrXD E2E)
+
+# --- CROSSWALK TO EXISTING RAWRXD EVIDENCE (not Ollama-tag cert) -----------
+
+CROSSWALK.nemotron_3_nano≈F_OllamaModels_NVIDIA-Nemotron-3-Nano-4B-Q8 MASTER_STATUS=PASS_tokens
+  NOTE=GGUF path cert ≠ Ollama tag cert until blob identity matched
+CROSSWALK.qwen3.8_27b≈Qwen3.8-27B-AD-Q4_K_M MASTER_STATUS=PASS_tokens
+CROSSWALK.deepseek_r1_family≈DeepSeek-R1-0528-Qwen3-8B PASS; full 11-shard E2E MISSING
+CROSSWALK.BigDaddyG≈CHEETAH PASS; UNLEASHED/NO-REFUSE inventory; Ollama native/local UNMATCHED
+CROSSWALK.K2=specialized_path; product HELLO GEOMETRY_DRIFT separate
+CROSSWALK.gemma≈gemma-4 E4B/31B PASS on F:\; gemma3 Ollama tag STILL ?
+
+# --- ARCHITECTURE BUCKETS --------------------------------------------------
+
+BUCKET_LAW=
+  attack_by_architecture_family_not_tag_count
+  one_success_ne_whole_family
+
+BUCKET_A_DENSE_BASELINE=
+  llama3.2:3b llama3.1:8b qwen3:8b gemma3:4b starcoder2:15b granite3.3:8b
+  PURPOSE=generic_RawrXD_path_health
+
+BUCKET_B_QWEN_EVOLUTION=
+  qwen3:8b → qwen3.5/custom9b → qwen3.8:27b → qwen3-next:80b
+  RULE=one_success_ne_all_qwen
+
+BUCKET_C_DEEPSEEK=
+  deepseek-coder-v2:16b deepseek-r1:32b deepseek-r1:70b deepseek-v4-flash:iq2_m
+  WITNESS_FIRST=32b_not_70b_or_103g
+  OWN_CAPABILITY_LEDGER=1
+
+BUCKET_D_NEMOTRON=
+  nemotron-3-nano:4b → nemotron-3.5-lightning:30b differential
+  WHAT_CAPABILITY_CHANGED_on_fail=1
+
+BUCKET_E_GPT_OSS=
+  gpt-oss:20b first; gpt-oss:120b only after 20b
+
+BUCKET_F_CUSTOM_UNKNOWN=
+  kiminoto/T0.0.1 ornith-1.5 bigdaddygnative bigdaddyglocal laguna-s-2.1 qwen35-40b-heretic-q8
+  REQUIRE_METADATA=
+    general.architecture general.name quantization_version tensor_names
+    heads kv_heads embed experts rope ctx tokenizer
+  THEN_ASSIGN_TO_BUCKET=1
+
+# --- CERT ORDER (logical only; NOT authorized) -----------------------------
+
+LADDER_LAW=
+  maximize_architectural_information_per_test
+  NOT_performance_ranking
+  BIND_TO=COMPAT_BATCH_MANIFEST_001 Batches 1-4
+
+TIER1_SMALL=
+  1 llama3.2:3b
+  2 gemma3:4b
+  3 nemotron-3-nano:4b
+  4 qwen3:8b
+  5 granite3.3:8b
+  MAPS_TO=COMPAT_BATCH_MANIFEST B1 (order may differ slightly; manifest is frozen SSOT for run order)
+
+TIER2_MEDIUM=
+  6 qwen3.5/custom9b
+  7 deepseek-coder-v2:16b
+  8 starcoder2:15b
+  9 gpt-oss:20b
+  10 qwen3.8:27b
+  MAPS_TO=B2
+
+TIER3_LARGE=
+  11 deepseek-r1:32b
+  12 ornith-1.5:35b
+  13 nemotron-3.5:30b
+  14 BigDaddyG variants
+  15 deepseek-r1:70b
+  MAPS_TO=B3
+
+TIER4_EXPENSIVE=
+  16 qwen3-next:80b
+  17 gpt-oss:120b
+  18 laguna-s-2.1
+  19 deepseek-v4-flash iq2_m
+  MAPS_TO=B4
+
+EXECUTION_AUTHORIZED=0
+HOT_GATE_REQUIRED=MODE=COMPAT_TEST HOT_GATE=1
+
+# --- COMPLETED-LEDGER TARGET FIELDS (per unique blob) ----------------------
+
+PER_BLOB_FIELDS=
+  MODEL_ID OLLAMA_TAGS MODEL_BYTES
+  ARCHITECTURE QUANT SPLIT_SHARDS EXPERTS ATTENTION_TYPE ROPE_TYPE TOKENIZER_TYPE
+  OPEN_GGUF METADATA TENSOR_MAP ARCH_BIND TOKENIZER GRAPH_BUILD KV_ALLOC
+  PREFILL FIRST_TOKEN DECODE_256 STREAM EXIT_COMPLETE
+  FIRST_FAILURE_STAGE FIRST_FAILURE_REASON
+  COMPAT_PASS PERF_PASS
+  HARNESS_CONTAMINATION AUTHORITY_ELIGIBLE
+
+SUCCESS_CRITERIA=
+  ALL_UNIQUE_LOCAL_MODEL_OBJECTS_CLASSIFIED=1
+  ALL_REQUIRED_ARCHITECTURES_IDENTIFIED=1
+  EACH_ARCHITECTURE_HAS_SMALL_WITNESS=1
+  OPEN_TO_STREAM_COMPATIBILITY_CERTIFIED=1
+
+NOT_SUCCESS=
+  LOAD_ALL_MODELS=1 as single opaque goal
+  OLLAMA_TAG_COUNT as progress
+  PERF_PASS substituted for COMPAT_PASS
+  TWIST_\=-_or_*=1 rewrite of measured fields
+
+COMPLETED_LEDGER_SHAPE=architecture_families_not_thirty_unrelated_names
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  TEST_SPEND=0
+  COMPATIBILITY_LEDGER_OLLAMA=INVENTORIED

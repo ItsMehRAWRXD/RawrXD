@@ -1,0 +1,2 @@
+{"model":"rawrxd","response":"\nSay hi in one word.","done":true}
+HTTP_CODE=200

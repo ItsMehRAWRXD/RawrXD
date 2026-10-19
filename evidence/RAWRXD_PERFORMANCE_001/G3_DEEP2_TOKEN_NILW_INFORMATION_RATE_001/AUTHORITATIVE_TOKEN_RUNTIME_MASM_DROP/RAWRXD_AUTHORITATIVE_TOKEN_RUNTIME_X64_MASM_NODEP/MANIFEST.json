@@ -1,0 +1,42 @@
+[
+  {
+    "file": "AUTHORITY_LAW.txt",
+    "bytes": 874,
+    "sha256": "31f0f224c294800b14e106ad30b8257b237de820359a9439df4119673d9c7677"
+  },
+  {
+    "file": "README.md",
+    "bytes": 1197,
+    "sha256": "f89de175f21fe6dc7c2c848b3a911bb8072966e39b8de0d1c20771ddca76e997"
+  },
+  {
+    "file": "WITNESS_MATRIX.txt",
+    "bytes": 970,
+    "sha256": "e4fc21be13a16412483bc1382ee225a4250c30e70a308cff05ac8caf90879174"
+  },
+  {
+    "file": "authoritative_token.asm",
+    "bytes": 13974,
+    "sha256": "ffb9f21faf59960e314fbfe8d13667967b74dbfe82a90611477edfb11ed4aab0"
+  },
+  {
+    "file": "authoritative_token.inc",
+    "bytes": 2510,
+    "sha256": "8ab8d32677a7853eca090100ba5ab2d872cfb435680a20fd3d1f86a09ea19aef"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 851,
+    "sha256": "42f4d1c54d29eb994c21edb11718524da3a96fe254ce33dfd2205b38f1eaa31d"
+  },
+  {
+    "file": "positive_harness.asm",
+    "bytes": 1733,
+    "sha256": "67c30f45f53d85e1ed6133ad29bd49b857be7c76a1f8a86ed5eb0f82b6490c3a"
+  },
+  {
+    "file": "zero_harness.asm",
+    "bytes": 567,
+    "sha256": "2f24fe0fe62245d389062cac8afb223e8a72e49414c0664ca361d937dc311213"
+  }
+]

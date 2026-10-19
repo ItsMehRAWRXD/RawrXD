@@ -1,0 +1,11 @@
+MULTIPLAYER_ROLE_REFUSE_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+LAND=0
+IMPLEMENT=0
+
+REFUSE=civilian/police/doctor role tables (shadow game braid)
+DEFECT_ACK=after div RDX=role id; store through wrong base (slot ptr lost)
+ON_CONTRACT_ONLY=PATH_B / existing product task if named
+STAY=PATH_A HOLD WALL_MEDIAN_NS=10184789000

@@ -1,0 +1,69 @@
+RAWRXD_THREE_LAYER_SYNTHESIS_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_RETAIN
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+
+LAYERS=
+  1 Deep2 runtime — load/residency/execute/stream (PRESENT; stream not classified missing)
+  2 RawrXD orchestration — routing/agents/IDE/tooling (PARTIAL; adapters on ProductRun)
+  3 Evidence/certification — ownership/measurement (SOURCE ready; RUNTIME UNCLAIMED)
+
+LAW=
+  source existence ≠ runtime evidence
+  executed and produces = MODE_BATCH_STATE
+  SURFACE_READY ≠ fired
+  UI evidence isolated from inference evidence
+
+VALUATION_BAND_USD_NONBINDING=
+  source-only incomplete          <1e6
+  stable local runtime+IDE+stream 2e6..10e6
+  commercial developer product    10e6..50e6
+  enterprise adoption/licensing   50e6+
+  DRIVER=demonstrated product capability (not LOC / evidence infra volume)
+  SSOT_RELATED=RAWR_RUN_STREAM_WIRING_VALUATION_001
+
+PRODUCT_COMMAND_TARGET=
+  rawrxd|rawr run <model> "assert the runtime wiring"
+  → Discover→Open→Session→Tokenize→Prefill→GenerateStream→Callback→Finish
+  all fronts → Deep2::generateStream (one engine)
+  evidence observational only if DEEP2_EV512 sites fire
+
+PRESENT_PER_MISSING_IMPL_AUDIT=
+  rawr run minimal | deep2_benchmark PERF | PATH_A | PATH_B source
+  GGUFLoader align32 hardcode | ALIGN8 correctly absent | q_b | seed blobs
+
+MISSING_OR_INCOMPLETE=
+  1 CLI list|inspect|chat|stop|unload|ps
+  2 Deep2 general.alignment metadata wire
+  3 COMPAT B1.2–B1.5 / BATCH1 witnesses
+  4 PATH_B endurance (gated)
+  5 QuadBuffer reachability on bench
+  6 q_b perf equivalence attribution
+  7 Security agent runtime surface
+  8 optional receipt hygiene
+  9 EV512 LIVE_SITE_WIRING 18..96 + measured fire Claim6
+  10 PRODUCT_FLOOR TPS unmet on B1.1 (stream works / floor fail)
+
+LARGEST_PRODUCT_GAP=
+  public_API_feel / CLI operational surface around rawr run
+  NOT more evidence infra; NOT core stream math absence
+
+HIGHEST_VALUE_MILESTONE=
+  polished E2E: auto-discover → load → stream seconds → continuous tokens
+  → graceful end → identical CLI|IDE|HTTP
+
+CURRENT=
+  MODE=D MODE_BATCH_STATE=0
+  product stream EXISTS (asserted)
+  EV512 runtime wiring assert INCOMPLETE
+  LAST_PROVEN=FINAL_NORM(step22) unchanged
+
+SSOT=
+  MISSING_IMPL_AUDIT_001
+  PRODUCT_UX_VS_ENG_GAP_001
+  IDE_PRODUCT_PATH_BATCH15
+  RAWR_RUN_STREAM_WIRING_VALUATION_001
+  EXECUTED_PRODUCES_MODE_BATCH_001
+  CLAIM_SURFACE_AUDIT_001

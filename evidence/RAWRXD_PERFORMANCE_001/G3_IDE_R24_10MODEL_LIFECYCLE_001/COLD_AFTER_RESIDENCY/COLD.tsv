@@ -1,0 +1,7 @@
+ID	LOAD	GEN	ALIVE	MB
+tinyllama	200	200	1	17179869184
+llama32_q2	400	000	1	
+llama32_q3	400	000	1	
+phi3_q2	400	000	1	
+phi3_q8	400	000	1	
+gemma3	400	000	1	

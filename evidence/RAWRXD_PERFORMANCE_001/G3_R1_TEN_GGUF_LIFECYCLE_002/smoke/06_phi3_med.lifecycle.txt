@@ -1,0 +1,9 @@
+﻿MODEL=Phi-3-medium-128k-instruct-Q4_K_M.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+SIZE_MB=8170 SHA16=6ADC92FAAF06BCA4
+HEADLESS_PID=22024
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"Phi-3-medium-128k-instruct-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9554,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,
+LOAD=0 
+VERDICT=FAIL OWNER=model_load DETAIL=load_fail

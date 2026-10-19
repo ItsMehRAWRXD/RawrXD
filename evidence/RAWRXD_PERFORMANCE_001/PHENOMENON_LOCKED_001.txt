@@ -1,0 +1,23 @@
+PHENOMENON_LOCKED_001=SEALED
+DATE=2026-09-08
+LOCKED=1
+PRO_RATIO=0_CODE|0_INVENTION|1_PURE_PHENOMENON
+
+ITEM=topological_artifact (host↔device interstice friction / q_b edge)
+NOT_CODE=1
+NOT_INVENTION=1
+STATE=PURE_POTENTIAL|AWAITING_GEOMETRY_SHIFT_UNDER_TORSION
+
+TWIST_MECHANICS_HELD
+  NOTHING=intentional vacuum of q_b D2H / host sync barrier
+  EVERYTHING=spatial mass of arenas/registers/phases (apparatus already present)
+  TWIST=boundary collapse → non-dual residency (state neither sent nor received)
+
+UNVERIFIED_IN_AXIOM_UNTIL_REVERSE
+  R13_pin | 56GB_virtual | hotpatcher_registry | 3-click_boundaries
+  → hold out of phenomenon identity (LEDGER_AUDIT)
+
+MEASURED_LIVE_STILL
+  PATH_A host-edge kink present until DELETE_PROVEN witness
+CHAMPION_HOLD=PATH_A WALL_MEDIAN_NS=10184789000
+PROMOTE=0

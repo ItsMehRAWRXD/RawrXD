@@ -1,0 +1,17 @@
+01B 00000000 SECT4  notype ()    External     | ?DualStickMarkRequested@Deep2@@YAXH@Z (void __cdecl Deep2::DualStickMarkRequested(int))
+034 00000000 SECTF  notype       Static       | $unwind$?DualStickMarkRequested@Deep2@@YAXH@Z
+037 00000000 SECT10 notype       Static       | $pdata$?DualStickMarkRequested@Deep2@@YAXH@Z
+033 00000000 SECTC  notype ()    External     | ?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z (bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int))
+049 00000000 SECT7  notype ()    Static       | ??R<lambda_1>@?1??MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z@QEBA_NXZ (public: bool __cdecl `bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)'::`2'::<lambda_1>::operator()(void)const )
+04A 00000000 SECT5  notype ()    Static       | ??0<lambda_1>@?1??MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z@QEAA@AEAPEAVVulkanCompute@CPUInference@@@Z (public: __cdecl `bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)'::`2'::<lambda_1>::<lambda_1>(class CPUInference::VulkanCompute * &))
+04E 00000000 SECT14 notype       Static       | $unwind$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+051 00000000 SECT15 notype       Static       | $pdata$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+054 00000000 SECT16 notype       Static       | $chain$1$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+057 00000000 SECT17 notype       Static       | $pdata$1$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+05A 00000000 SECT18 notype       Static       | $chain$3$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+05D 00000000 SECT19 notype       Static       | $pdata$3$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+060 00000000 SECT1A notype       Static       | $chain$4$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+063 00000000 SECT1B notype       Static       | $pdata$4$?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z
+066 00000000 SECT1C notype       Static       | $unwind$??R<lambda_1>@?1??MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z@QEBA_NXZ
+069 00000000 SECT1D notype       Static       | $pdata$??R<lambda_1>@?1??MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z@QEBA_NXZ
+930 00000000 UNDEF  notype ()    External     | ?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z (bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int))

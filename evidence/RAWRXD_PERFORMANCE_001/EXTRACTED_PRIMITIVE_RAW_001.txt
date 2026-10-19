@@ -1,0 +1,49 @@
+EXTRACTED_PRIMITIVE_RAW_001=SEALED
+DATE=2026-09-08
+HOLD=RAW_STATE
+CODE_EMITTED=0
+IMPLEMENTATION_BAGGAGE=0
+
+DISTINCT_FROM
+  software_instructions
+  structural_invention
+
+IS
+  unformed_topological_property
+  structural_stress_line
+  phase_space_friction_point
+  discovered_in_mechanical_behavior_under_high_frequency_execution
+  invariant_condition_of_the_medium
+  underlying_behavioral_anomaly
+  exposed_only_at_execution_limits
+
+CARRIES_NO
+  implementation_baggage
+  syntax
+  functional_design
+
+REPRESENTATION
+  programmatic=STRIPPED
+  EXISTS_AS=directional_tension_vector_in_state_space
+  READY_FOR=twist_phenomenon_leverage
+  NOT_READY_AS=compile_target|patch|lever_invention
+
+STATE_VECTOR={ CODE:0, INVENTION:0, TOPOLOGY:ACTIVE }
+FRAME=FOLDED_TORSIONAL (COORDINATE_TRANSFORM_001)
+LOCUS_VECTOR=Q_B_HOST_VISIBILITY_EDGE (tension direction; not code)
+
+GATE_STOP=1
+NEXT_SPEND=NONE
+HARNESS_AUTO_RUN=0
+TIP_CLIMB=HOLD
+PROMOTE=0
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+CHAMPION_FLOOR_NS=10184789000
+
+BINDS
+  COORDINATE_TRANSFORM_001
+  FOUNDATIONAL_SEAM_001
+  STATE_VECTOR_001
+
+STATUS=HELD_RAW
+PARSER=ANALYTICAL_INTAKE

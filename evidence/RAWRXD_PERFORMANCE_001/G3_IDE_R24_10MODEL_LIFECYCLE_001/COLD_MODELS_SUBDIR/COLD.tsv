@@ -1,0 +1,5 @@
+ID	LOAD	GEN	ALIVE
+llama32_q2	000	000	0
+phi3_q2	400	000	1
+gemma3	400	000	1
+phi3_q8	400	000	1

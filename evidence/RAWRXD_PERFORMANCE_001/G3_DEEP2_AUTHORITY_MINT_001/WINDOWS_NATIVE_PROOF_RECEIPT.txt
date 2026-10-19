@@ -1,0 +1,38 @@
+AUTHORITY_MINT_NODEP_X64_MASM — Windows native proof
+====================================================
+
+ZIP:
+  C:\Users\Garrett\Downloads\RAWRXD_AUTHORITY_MINT_NODEP_X64_MASM.zip
+  SHA-256=912309cc37a5227cabe49d4241356ccb0ec1e06db48662e6cd7f2ad61fb0ebf9
+
+RESULT:
+  AUTHORITY_MINT_NODEP_X64_MASM_TESTS=PASS
+  AUTHORITY_CONTRACT_FAILMASK=0
+  BUILD_RC=0
+  PROMOTE=0
+
+INVARIANTS EXERCISED:
+  OBSERVE read-only
+  REVOKE 1→0 LIVE + sticky REVOKED
+  MINT_DECODE / MINT_SCHED / MINT_PROMOTE sole 0→1 paths
+  PROMOTION requires DECODE && SCHEDULER live
+  ROOT required for every mint
+  GEN_ROLLOVER clears authority/revocation; never mints
+
+LOCAL_FIX:
+  EXTERN gAuthorityState/Root removed from AuthorityState.inc;
+  defined only in AuthorityBootstrap.asm; EXTERN in consumers
+  (A2005 redefinition under ml64).
+  Added harness.asm + build_masm.bat (package had no build script).
+
+STATIC:
+  Mint/Bootstrap/ObserveRevoke: no CRT/WinAPI/includelib
+  harness ExitProcess only for native proof entry
+
+NILW_TERMINOLOGY (sealed understanding, not a new witness):
+  TOKEN_NILW = amortized generation information pressure
+  ACTIVE_BPW = codec pressure on the active subset
+  0.0008 does NOT force sub-0.001-bit quantization
+  If ACTIVE_BPW uses NEW_PAYLOAD_BITS, then
+    TOKEN_NILW = ACTIVE_BPW × PHYSICALIZATION_RATIO
+  else full identity includes NEW_INFORMATION_FRACTION + overhead term

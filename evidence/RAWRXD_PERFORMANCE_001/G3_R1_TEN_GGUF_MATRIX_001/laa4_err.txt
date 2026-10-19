@@ -1,0 +1,51 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[WARN]  Instructions: No instruction files found in any search path [4398us]
+[WARN]  Instructions: No instruction files found in any search path
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\phi3-mini-Q2_K.gguf
+ARCH=phi3
+HIDDEN=3072 LAYERS=32 HEADS=32 KV_HEADS=32 HEAD_DIM=96 VOCAB=32064 INTERMEDIATE=8192
+SPLIT_QKV_LAYERS=0 FUSED_QKV_LAYERS=32 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=0 FUSED_FFN_LAYERS=32
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\phi3-mini-Q2_K.gguf.5a000000.1dcecc6ccd74f18.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=32064 cols=3072 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=3072 cols=1 type=0
+FFN_INTER_INFERRED ok=1 why=FUSED_UP_2X_DOWN_HALF inter=8192 old_meta=8192 old_model=8192 old_config=8192
+PHI3_FUSED_FFN_LAYER layer=0 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=1 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=2 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=3 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=4 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=5 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=6 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=7 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=8 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=9 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=10 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=11 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=12 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=13 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=14 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=15 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=16 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=17 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=18 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=19 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=20 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+PHI3_FUSED_FFN_LAYER layer=21 fused=1 exact=1 up_rows=16384 up_cols=3072 half=8192 down_rows=3072 down_cols=8192
+

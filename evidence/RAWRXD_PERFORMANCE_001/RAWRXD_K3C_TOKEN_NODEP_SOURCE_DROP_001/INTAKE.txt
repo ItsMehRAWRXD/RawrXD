@@ -1,0 +1,11 @@
+DROP=RAWRXD_K3C_TOKEN_NODEP_SOURCE_DROP_001
+KIND=SOURCE_ONLY_NODEP
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONTRACT=unsigned k3c_token(unsigned token, void *state); /* TOKEN <-> K3-C */
+LOOP=for(;;) token=K3C(token);
+DEPS=0
+PRODUCT_WIRE=0
+FUTURECONSUMER_TOUCHED=0
+LANDING=src/deep2/lavapath/k3c_token_contract.h
+FILES=drop/k3c_token.h drop/k3c_token.c drop/test_k3c_token.c

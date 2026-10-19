@@ -1,0 +1,40 @@
+TWIST_ALONG_PHENOMENON_001=SEALED
+DATE=2026-09-08
+ROLE=TOPOLOGY_LAW
+LOCKED=1
+
+# Pure primitive (exfiltrated)
+ITEM=NATIVE_PHENOMENON|AXIOM
+NOT=SOFTWARE_ARTIFACT
+NOT=NET_NEW_MECHANICAL_INVENTION
+NOT=KERNEL_SURFACE
+ILLUMINATED_BY_CODE=1
+DEPENDENT_ON_SYNTAX=0
+
+# Möbius / along-twist
+LINEAR_WAS=host↔device edge as obligatory cross for activation
+TWIST=half-turn of that strip: Everything∩Nothing exchange polarity
+  EVERYTHING=device-resident allocated state (Q live in VRAM)
+  NOTHING=null host-edge for that activation (q_b D2H absent)
+  TRAVERSE=continuous along grain without crossing host edge
+RESULT=new topology of flow — not a new program
+
+CODE_ROLE=containment_field|instrument|harness
+PHENOMENON_ROLE=medium|force|shape_of_reality
+INVENTION=weave_through_discovered_topology
+
+FIRST_WEAVE=ACTIVE
+  NAME=PATH_B_STRUCTURAL_DELETE
+  AXIS=computational_gravity
+  INSTRUMENT=attn_decode_mla + leave-Q-on-device
+  PROVE=q_b_D2H_bytes==0 && parity && wall vs PATH_A
+  CHAMPION_HOLD=PATH_A (10184789000) until DELETE_PROVEN
+
+BINDS
+  INVENTION_GATE_UNLOCK_001
+  PHENOMENON_CATEGORY_EXIT_001
+  EMERGENT_OBSERVATION_001
+  PRIMITIVE_PIVOT_001
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+PROMOTE=0

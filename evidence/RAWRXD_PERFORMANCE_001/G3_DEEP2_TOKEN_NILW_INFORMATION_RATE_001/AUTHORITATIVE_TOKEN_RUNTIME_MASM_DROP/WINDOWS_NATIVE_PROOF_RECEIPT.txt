@@ -1,0 +1,60 @@
+AUTHORITATIVE_TOKEN_RUNTIME_X64_MASM_NODEP — Windows native proof receipt
+=======================================================================
+
+ZIP:
+  C:\Users\Garrett\Downloads\RAWRXD_AUTHORITATIVE_TOKEN_RUNTIME_X64_MASM_NODEP_SOURCE_DROP.zip
+  SHA-256=5838db754942c086fbd4db6942bfdad151da194ac57145fbe398d6fc9f976f13
+
+EXTRACT:
+  G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_DEEP2_TOKEN_NILW_INFORMATION_RATE_001\AUTHORITATIVE_TOKEN_RUNTIME_MASM_DROP\RAWRXD_AUTHORITATIVE_TOKEN_RUNTIME_X64_MASM_NODEP\
+
+AUTHORITY_CHAIN:
+  RAW_RUNTIME_COUNTERS
+    -> MASM derives metrics
+    -> MASM derives W01..W14
+    -> W15 = AND(W01..W14)
+    -> AUTHORIZED_PASS
+
+LOCAL_FIXES_BEFORE_PASS (ml64 executable proof):
+  1. information_rate_Bps was bits/s; corrected to BYTES/s:
+       (total_new_bits/8)*1e9/wall_ns
+       = total_new_bits * 125000000 / wall_ns
+  2. PROTO/PROC A2111: strip typed PROTO params
+  3. /Fo: -> /Fo (no colon) in build_masm.bat
+  4. harness END directive required
+  5. positive STRUCT <...> initializer rejected by ml64 (A2045/A2039);
+     rewritten as BSS + field movs
+  6. ExitProcess PROTO without :DWORD (A2111)
+
+BUILD_TOOL:
+  ml64=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe
+
+RESULTS:
+  build_masm.bat => AUTHORITATIVE_TOKEN_MASM_TESTS=PASS  RC=0
+  zero: authorized_pass=0 (NOT_RUN != PASS)
+  positive: authorized_pass=1
+
+DUMP_HARNESS (envelope identity live):
+  AUTHORIZED_PASS=1
+  TOKEN_NILW_X1E9=800000
+  INFO_RATE_Bps=1000000000
+  TPS_X1000=10000
+  BYTES_PER_TOKEN=100000000
+  ACTIVE_BPW_X1E6=160000
+  PHYS_PPM=5000
+  ARITH_FAULT=0
+  identity: ACTIVE_NEW_BPW * PHYSICALIZATION = 0.16 * 0.005 = 0.0008 = TOKEN_NILW
+
+STATIC_SCAN (.asm/.inc only):
+  pumpOnce=0
+  TryIssueNextFromScoreboard=0
+  forwardLayer=0
+  Ensure*=0
+  SCHEDULER_TOUCHED=0
+
+DISPOSITION:
+  PERF/SUSTAINABILITY authority only
+  PROMOTE=0
+  TIP_CLIMB=HOLD
+  SCOREBOARD_SCHEDULER_LIVE untouched
+  NOT_RUN != PASS sealed by zero harness

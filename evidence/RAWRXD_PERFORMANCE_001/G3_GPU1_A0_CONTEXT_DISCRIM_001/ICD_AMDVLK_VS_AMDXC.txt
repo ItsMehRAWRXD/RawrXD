@@ -1,0 +1,81 @@
+AMDVLK64_PATH=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll
+AMDVLK64_EXISTS=True
+AMDVLK64_SHA256=5C0561968155F4B0AA80FE9A5BBD17072D5942ECB906C687E749DC92058A8650
+AMDVLK64_SIZE=103213064
+AMDVLK64_MTIME=2026-08-18T03:04:56.0000000Z
+AMDXC64_PATH=C:\Windows\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxc64.dll
+AMDXC64_SHA256=F8E6C9E4DF6907A08B6AAB802E5E3794E25D4EAB59C16439DFC1608501454E69
+ICD_BINARY_MATCH_AMDXC_VS_AMDVLK=0
+VULKANINFO_ICD_FAIL_PATH=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll
+WIN32_AVAIL_3=RunningOrFullPower
+WIN32_AVAIL_8=OffLine
+R9700_WIN32_STATUS=OK
+R9700_WIN32_AVAILABILITY=3
+R9700_WIN32_CONFIG_MANAGER_ERROR=0
+R9700_WIN32_PNP=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+RX7800XT_WIN32_STATUS=OK
+RX7800XT_WIN32_AVAILABILITY=8
+RX7800XT_WIN32_CONFIG_MANAGER_ERROR=0
+RX7800XT_WIN32_PNP=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+AMDVLK_PACKAGE_DIR=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60
+AMDVLK_PKG_FILE=amd-vulkan32.json SIZE=703
+AMDVLK_PKG_FILE=amd-vulkan64.json SIZE=703
+AMDVLK_PKG_FILE=amdvlk.cat SIZE=806611
+AMDVLK_PKG_FILE=amdvlk.inf SIZE=2663
+AMDVLK_PKG_FILE=amdvlk.PNF SIZE=10404
+AMDVLK_PKG_FILE=amdvlk32.dll SIZE=89595920
+AMDVLK_PKG_FILE=amdvlk64.dll SIZE=103213064
+AMDVLK_PKG_FILE=amdvlk_nexus.cab SIZE=69625053
+AMDVLK_PKG_FILE=regamdcomp.exe SIZE=301584
+AMDVLK_PKG_FILE=vulkan32.dll SIZE=1531504
+AMDVLK_PKG_FILE=vulkan64.dll SIZE=1719408
+AMDVLK_PKG_FILE=vulkaninfo32.exe SIZE=2637328
+AMDVLK_PKG_FILE=vulkaninfo64.exe SIZE=3093512
+AMDVLK_JSON=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json
+---JSON_BODY---
+{
+    "file_format_version" : "1.0.0",
+    "ICD" : {
+        "library_path" : ".\\amdvlk32.dll",
+        "api_version" : "1.4.349"
+    },
+    "layer": {
+        "name": "VK_LAYER_AMD_switchable_graphics",
+        "type": "GLOBAL",
+        "library_path": ".\\amdvlk32.dll",
+        "api_version" : "1.4.349",
+        "implementation_version" : "1",
+        "description" : "AMD switchable graphics layer",
+        "functions": {
+            "vkGetInstanceProcAddr": "vk_icdGetInstanceProcAddrSG",
+            "vkGetDeviceProcAddr": "vk_icdGetDeviceProcAddrSG"
+        },
+        "disable_environment": {
+            "DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1": "1"
+        }
+    }
+}
+AMDVLK_JSON=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+---JSON_BODY---
+{
+    "file_format_version" : "1.0.0",
+    "ICD" : {
+        "library_path" : ".\\amdvlk64.dll",
+        "api_version" : "1.4.349"
+    },
+    "layer": {
+        "name": "VK_LAYER_AMD_switchable_graphics",
+        "type": "GLOBAL",
+        "library_path": ".\\amdvlk64.dll",
+        "api_version" : "1.4.349",
+        "implementation_version" : "1",
+        "description" : "AMD switchable graphics layer",
+        "functions": {
+            "vkGetInstanceProcAddr": "vk_icdGetInstanceProcAddrSG",
+            "vkGetDeviceProcAddr": "vk_icdGetDeviceProcAddrSG"
+        },
+        "disable_environment": {
+            "DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1": "1"
+        }
+    }
+}

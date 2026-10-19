@@ -1,0 +1,54 @@
+GATE=DEEP2_COST_PER_TOKEN_ADVANTAGE_001
+DATE=2026-09-13
+KIND=SOURCE_READY_ECONOMIC_BENCHMARK_LAW
+PROMOTE=0
+TPS_MINT=0
+TPS_PERFORMANCE_AUTHORITY=0
+COST_SEAL=0
+NOT_RUN!=PASS
+ACTIVATE_IF=after PRODUCT_BOUND=1 && TPS_MINT path exists; never mint from TPS alone
+
+# Investor proof ≠ "Deep2 = faster"
+PROOF_FRAME=
+  SAME MODEL · SAME QUANT · SAME HARDWARE · SAME CONTEXT · SAME OUTPUT QUALITY
+  → lower wall/token · Wh/token · bytes/token · idle/token · $/1M output tokens
+
+GOVERNING_METRIC=
+  TOTAL_COST_PER_1M_TOKENS =
+    (ENERGY_COST + AMORTIZED_HARDWARE_COST + STORAGE_COST
+     + HOST_SYSTEM_COST + OPTIONAL_OPERATOR_COST)
+    / GENERATED_TOKENS × 1,000,000
+
+TOP15=
+  01 Canonical Cost/Token Meter — ($power+$hw_amort+$storage+$host)/generated_tokens
+  02 Quality-Normalized Cost — equate quality/quant/context/sampling/semantics first
+  03 End-to-End Wall Accounting — load+route+xfer+prefill+decode+sync+commit
+  04 Energy-per-Token Authority — live Wh/token beside TPS/latency
+  05 CapEx Amortization Model — workstation price / useful-life inference hours
+  06 Active-Parameter Efficiency — tokens/sec per active-B params (MoE sparsity→$)
+  07 Bytes-Moved-per-Token — H2D/D2H/DDR5/storage traffic/token
+  08 VRAM-Dollar Efficiency — useful tokens per $ installed VRAM
+  09 Warm-vs-Cold Cost Split — cold-start / first-token / steady-state separate
+  10 Context-Length Cost Curve — 4K→32K→128K+ $/token
+  11 Concurrency Cost Curve — 1/2/4/8+ sessions $/token
+  12 Baseline Adapter Harness — identical prompts/limits/quant/ctx/hw vs competitors
+  13 Cost-of-Idle Attribution — join/queue/PCIe/CPU idle → wasted $/token
+  14 Counterfactual Savings Receipt — baseline→optimized→% reduction per opt
+  15 Total Cost Advantage Seal — mint only on repeated $/1M beat + parity/quality/ctx/hw held
+
+SEAL_IF=
+  repeated beat of comparison stack on $/1M generated tokens
+  && QUALITY_EQUIVALENT=1
+  && NUMERIC_OR_SEMANTIC_PARITY=1
+  && HARDWARE_CONSTRAINTS_HELD=1
+  && DEBUG_TIMING=0
+# COST_SEAL ≠ TPS_MINT ≠ PROMOTE; each independent
+
+MAPS_FROM_LIVE=
+  V6d/V7 JOIN_WAIT · miss_bytes · dualstick residency · machine experience
+  → feed 07/13/14 receipts once individual expert timing + Wh meter exist
+
+KIMI_DROP=DEEP2_KIMI_COST_PER_TOKEN_NODEP_20260913
+  ARCHIVE_SHA_VERIFY=PASS PRODUCT_BOUND=0 COST_SEAL_LIVE=0
+  SELFTEST_PCT_ADVANTAGE=NONAUTH
+LIVE_OWNER_NOW=HETEROGENEOUS_EXPERT_COST_MODEL_V7

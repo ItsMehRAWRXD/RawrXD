@@ -1,0 +1,55 @@
+MODEL_STREAMER_TRACE_001 SCHEMA
+================================
+
+HOT PATH event (ring; minimal):
+  qpc_ns
+  ticket
+  binding_id
+  token_step
+  layer
+  event   (1=BEGIN, 2=END)
+
+IMMUTABLE BINDING TABLE (sealed before decode):
+  binding_id
+  stage
+  tensor_id
+  model_file_id
+  file_offset
+  bytes
+  kernel_id
+  device_id
+
+RAW dump after generation (joined TSV for analyzer):
+RAW/MODEL_STREAMER_RAW.tsv
+
+columns (tab-separated; join expands binding):
+  qpc_begin_ns
+  qpc_end_ns
+  ticket
+  token_step
+  layer
+  stage
+  file_id
+  file_offset
+  bytes
+  tensor
+  binding_id
+  kernel_id
+  device_id
+
+stage vocabulary (fixed; lives in binding table, not hot path):
+  MODEL_READ MAP STREAMER QKV_READBACK QKV ATTENTION
+  O_PROJ FFN LOGITS WAIT SAMPLE EMIT TOKEN_WALL
+
+JOIN_KEY = ticket + token_step + layer
+MODEL_FILE_TIE = binding_id → (file_id, file_offset, bytes, tensor)
+
+Rules:
+  NO_ASSUMED_OWNER=1
+  OWNER_FROM_MEASURED_SPANS_ONLY=1
+  empty file_id/tensor => MODEL_FILE_TIE=UNAVAILABLE
+  duration_ns = qpc_end_ns - qpc_begin_ns (reject if end < begin)
+  PERFORMANCE_AUTHORITY=GENERATION_WALL_NS
+  TRACE_MAY_PROMOTE_CONFIG=0
+
+Binary ring = HotPathEvent only; DumpRawTsv joins BindingTable after generation.

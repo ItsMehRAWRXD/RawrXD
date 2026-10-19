@@ -1,0 +1,14 @@
+MODEL_OPEN_COMPAT_DROP_001
+DATE=2026-09-09
+BRANCH_TARGET=cert/p1pra-rc1
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+TARGET_FAILED_OPEN=phi3|gemma3|deepseek-r1-8b
+CLAIM_SCOPE=OPEN_COMPAT_ONLY
+PROMOTE=0
+RUNTIME_REQUIRED_FOR_PASS=1
+
+GitHub write attempt failed with 403 Resource not accessible by integration, so the source drop is provided as files here instead of committed directly.

@@ -1,0 +1,95 @@
+MODE_BC_REVIEW_001=SEALED
+DATE=2026-09-08
+TYPE=NON_SPEND_NON_IDLE_REVIEWS
+MODE=D
+HOT_GATE=0
+SPEND=0
+CODE_CHANGE=0
+
+# --- B TARGETS (receipt hygiene) ------------------------------------------
+
+B.1=stamp_SUPERSEDED_on_stale_GATE_STOP_0
+  STATUS=DONE (B1_STALE_GATE_SUPERSEDE_001 earlier this session)
+  PHENOMENON_CATEGORY_EXIT ACTIVE_NOW 1→0
+  ONTOLOGY_SEAL_FINAL GATE_STOP 0→1
+  STAGE_2_* / NON_CODE_ONTOLOGY / MLA_KV_LAYOUT_CONTRACT held
+
+B.2=mark_ontology_duplicate_SUPERSEDED
+  STATUS=DONE (B2_ONTOLOGY_SUPERSEDE_001 earlier this session)
+  STAMPED=RECAT_CONFIRMED_TWIST_GO_001|TWIST_EXECUTE_001|TWIST_PROCEED_001|
+          TWIST_EXECUTE_ABSOLUTE_ZERO_001|ALONG_TWIST_PROCEED_001|
+          BLANK_AWAITING_TWIST_001
+  EXECUTE_INSTRUMENT forced to 0 on recat receipt
+
+B.3=reconcile_GATE_vs_OWNER_vs_AUDIT_NEXT
+  STATUS=DONE (B3_GATE_RECONCILE_001 earlier this session)
+  GE_GATE.txt OPEN→LOCKED
+  HOTPATH_ASSESSMENT §6 TARGET_150 OPEN→NON_AUTHORITY
+  SSOT=GATE.txt GATE_STOP=1 NEXT_SPEND=NONE
+
+# --- C TARGETS (receipt review) -------------------------------------------
+
+C.1=PATH_A_CHAMPION
+  RECEIPT=QKV_READBACK_PATH_A_001/RECEIPT.txt
+  WALL_MEDIAN=10184789000 TPS_MEDIAN=6.284
+  LEVER=HOST_CACHED_OUT+invalidate
+  PROMOTE=1 (champion stands)
+  REVIEW=clean; n=5 endurance all PARITY=1; READBACK_REDUCED=1
+
+C.2=TERMINAL_TWIST_OBSERVE_001
+  PROMOTE=0 (one-shot 16-tok; NOT n5)
+  WALL=8486137000 (one-shot; not comparable to floor)
+  q_b_d2h_bytes=0 ops=976 (DELETE_PROVEN provisional)
+  PARITY_PASS=0 noted in err section — do not promote
+  REVIEW=observation of polarity only; not a promote candidate
+
+C.3=U02_BYTE_SHRINK_ADJUDICATION
+  STATUS=CLOSED_VALID_NEGATIVE
+  GEOMETRY=hostHead==prodHead==192 (nope+rope clamp is identity)
+  BYTE_SHRINK_READBACK_REDUCED=0 (CORRECT not bug)
+  DEVICE_ATTENTION_REQUIRED=1
+  REVIEW=reject is correct; PATH_A champion stands on HOST_CACHED_US not bytes
+
+C.4=PER_DESCRIPTOR_ALIGN8_REJECT
+  STATUS=FINAL_CLOSURE
+  REVIEW=correct; Deep2 GGUFLoader absent ALIGN8-in-loop is right
+  REOPEN_ONLY_IF=LIVE_CURSOR_DIVERGENCE_RECEIPT=1 (UNPROVEN)
+
+C.5=PERF_EPOCH_0
+  MEASURED_UNIQUE=18/18 PARITY_PASS=18 INVALID=0
+  WINNER=QB64_QA32_QKV64 WALL=10162320000 TPS_WALL=6.298 DECODE_TPS=4.833
+  STATUS=COVERAGE_RANK_ONLY
+  SEARCH_BASELINE_TPS=4.329 INSTALLED
+  PROMOTION=NO (needs bytewise env match + min TPS > 4.329)
+  REVIEW=clean; first valid target is repeatable floor above 4.329
+
+C.6=DELETE_PROVEN_MAPPING
+  q_b_d2h_bytes=0 (PATH_B one-shot observed)
+  vkcopy_qb=0 (absent in PATH_B trace)
+  host_memcpy_qb=0 (absent in PATH_B trace)
+  REVIEW=provisional on one-shot; strict promote needs n5 wall < floor
+        + PARITY/PURITY/PRODUCT all + no harness abort
+  PATH_B_N5 trial 1 = FAIL (crash; wall 3.16x over) — DELETE_PROVEN not
+  assessed on invalid witness
+
+C.7=UNTRIED_BRAID_CANDIDATES
+  UNTRIED_COUNT=15
+  TRIED_STRIPPED=0
+  E2E_CLOSED=U02|U14
+  ATTRIBUTION_ONLY=U03 (DELETE_PROVEN=1; wall fail)
+  HELD=U15|U01|U04|U05|U06|U07|U08|U09|U10|U11|U12|U13
+  REVIEW=neutral inventory; no spend; no reopen; goods stay braided
+
+# --- AUTHORITY ------------------------------------------------------------
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  B.1=DONE B.2=DONE B.3=DONE
+  C.1..C.7=REVIEWED
+  CHAMPION=PATH_A (WALL_MEDIAN_NS=10184789000 unchanged)
+  PATH_B_N5=FAIL (sealed)
+  B1.1=MEASURED_SPLIT (stages PASS / floor FAIL)
+  NO_FORGERY=1
+  NO_INVENT=1

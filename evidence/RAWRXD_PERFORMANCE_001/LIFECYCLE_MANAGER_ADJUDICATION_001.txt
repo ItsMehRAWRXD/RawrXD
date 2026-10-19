@@ -1,0 +1,18 @@
+LIFECYCLE_MANAGER_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP
+AUTHORIZED_SPEND=0
+
+PROPOSAL=Sovereign_Lifecycle_Manager.asm (Manifest/Chew/Tick 256 entities)
+
+REVERSE=proposed symbols not in live src asm product braid
+
+ADJUDICATION
+  Do not add/link this file under STOP
+  Not perf authority surface
+  PATH_A hold stands
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

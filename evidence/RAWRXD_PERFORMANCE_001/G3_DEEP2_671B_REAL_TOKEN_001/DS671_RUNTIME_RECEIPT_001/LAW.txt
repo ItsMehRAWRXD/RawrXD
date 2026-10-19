@@ -1,0 +1,34 @@
+PROMOTE / RECEIPT PROVENANCE LAW — no-stream path
+=================================================
+
+CATEGORIES:
+  DECLARED = config/intent only (EXPECTED_*, PROMOTE_REQUESTED)
+  OBSERVED = completed runtime work
+  DERIVED  = deterministic function of OBSERVED
+
+RULE:
+  receipt.field = observed_runtime_state;   /* never requested/expected/"PASS" */
+  Only OBSERVED and DERIVED may participate in PROMOTE.
+  DECLARED must never create authority.
+
+PROMOTE (DERIVED) =
+  full_load_no_stream
+  & opened_shards==11 & tensor_total==1025 & unresolved==0
+  & semantic_map (classified==discovered & required classes & other==0 & norm>0)
+  & metadata (61/256/8/1/7168/129280)
+  & router_real & routed_expert_real & shared_expert_real & dense_real
+  & mla_real & logits_real & generated_tokens>0 & token_commit_real
+  & fixed_gate pass_mask==0x1f
+  & !stream_used & !fallback_used & !stub_used & !synthetic_used
+
+REFUSE while any OBSERVED decode/load term is zero — including
+  full_load_no_stream=0 (376GiB resident not proven)
+  even if semantic_map_pass=1 and promote_requested=1.
+
+STALE CLAIM CORRECTION:
+  Earlier DS_TENSOR_MAP_PASS=0 / norm=0 / other=58 was fixed by OTHER dump
+  + reclassify; current OBSERVED semantic map may be 1. That still does
+  NOT authorize PROMOTE without live decode + full_load_no_stream.
+
+AUTHORIZED_PASS remains independent NILW authority (still 0).
+PROMOTE=0 until emit_receipt returns 0 at runtime.

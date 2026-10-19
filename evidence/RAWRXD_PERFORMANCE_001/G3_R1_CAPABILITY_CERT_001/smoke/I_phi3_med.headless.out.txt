@@ -1,0 +1,127 @@
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 05:08:42 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+Headless IDE initialized successfully.
+HTTP server listening on 127.0.0.1:11435
+Headless IDE running in server mode. Press Ctrl+C to stop.
+Loading model: G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+[ModelSourceResolver] Resolving: G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+[ModelSourceResolver] Detected source: Local File
+[ModelSourceResolver] ✅ Local file validated: G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+Model armed for ProductRun: Phi-3-medium-128k-instruct-Q4_K_M.gguf
+  Path: G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+  GGUF magic: OK
+  Arm latency: 5 ms
+
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\_r1_iso\06_phi3_med)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=phi3 L=40 H=5120 FFN=17920 heads=40 kv=10 hd=128 ctx=4096
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'phi3'  hidden=5120 layers=40 heads=40 kvHeads=10 inter=17920 vocab=32064
+[Deep2Engine] Tokenizer loaded: vocab=32064 bos=1 eos=32000 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000000146F3E70  Registered 'token_embd.weight': shard=0 offset=741440 bytes=92344320  |  registry_size=1  registeredBytes=92344320  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000146F3E70  Registered 'blk.16.ffn_up.weight': shard=0 offset=3503988800 bytes=103219200  |  registry_size=100  registeredBytes=3606466560  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000146F3E70  Registered 'blk.33.attn_norm.weight': shard=0 offset=6913663040 bytes=20480  |  registry_size=200  registeredBytes=6912942080  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=245
+TENSORS_ADDRESSED=245
+TENSORS_REGISTERED=245
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000000146F3E70  registered=245 tensors  bytes=8566080512  max=536870912
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=PASS schema=243 quant=243 tok=32064
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=0000000001B7BF90 dequant=0000000001B79360 GetGEMV(12)=0000000001B7BF90 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=40 page=8 virtualMax=4096 heads=10 dim=128
+[KVCache] HOT_BYTES=3276800 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (245 tensors)
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] PHI3 heal=end_tag->eos stop=false
+[ChatTemplate] Detected 'phi3' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=19
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=1920
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=40 TOKENS=48
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=2212000000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=5760MB la=2 ramAvail=37234MB vram=32476MB L=40 pressure=0
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=5760 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=5760 la=2
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP G:\~dev\rawrxd\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf 8.57GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] embedToken: type=12 vocabSize=32064 hiddenDim=5120 data=0000000037D30000 sizeBytes=92344320
+[Deep2Engine] Layer 0 weights: wq.data=0000000000000000 type=0 wk.data=0000000000000000 wv.data=0000000000000000 wo.data=0000000047F90000 wqkv.data=0000000048DA0000 attnO.data=0000000047F90000
+[Deep2Engine] Layer 0 weights: attnNorm.data=00000000146E0000 ffnNorm.data=0000000015590000
+[KVCache] page grow 8 -> 16 hot (virtualMax=4096 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=4096 pos=16)
+[AGENT] PREFILL_DONE prompt_tokens=19 prefill_ms=35037.869
+[AGENT] DECODE_BEGIN max_out=48
+POS_DUMP TOKEN_INDEX=1 ROPE_POSITION=20 KV_POSITION=20 POSITION_MATCH=1
+POS_DUMP TOKEN_INDEX=2 ROPE_POSITION=21 KV_POSITION=21 POSITION_MATCH=1
+POS_DUMP TOKEN_INDEX=3 ROPE_POSITION=22 KV_POSITION=22 POSITION_MATCH=1

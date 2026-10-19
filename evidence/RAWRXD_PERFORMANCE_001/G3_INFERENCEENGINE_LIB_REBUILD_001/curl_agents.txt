@@ -1,0 +1,1 @@
+{"status":"ok","agents":[],"stats":"Agent history: Active (headless)\nSession: headless-1789018295587\nEvents: 0"}

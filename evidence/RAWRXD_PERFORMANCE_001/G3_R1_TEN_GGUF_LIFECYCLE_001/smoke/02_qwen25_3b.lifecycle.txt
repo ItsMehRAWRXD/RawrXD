@@ -1,0 +1,9 @@
+﻿MODEL=qwen2.5-3b.gguf
+PATH=F:\OllamaModels\models\blobs\sha256-5ee4f07cdb9beadbbb293e85803c569b01bd37ed059d2715faa7bb405f31caa6
+SIZE_MB=1840.5 SHA16=5EE4F07CDB9BEADB
+HEADLESS_PID=12304
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"qwen2.5-3b.gguf","profile_source":"runtime_gguf","profile_id":9673,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300
+LOAD=400 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

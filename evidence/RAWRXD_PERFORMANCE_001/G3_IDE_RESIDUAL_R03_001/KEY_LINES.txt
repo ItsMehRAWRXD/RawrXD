@@ -1,0 +1,6 @@
+R03=CLOSED PASS
+SHA16=5CBCC0750B481BFE
+FAIL_COUNT_404=0
+adapters=policies,extensions,browse,explain,backends/use,metrics,complete
+backends_use_deep2=200 backends_use_ollama=422 complete_alias=503_not_404
+NEXT=R04 (also CLOSED this spend)

@@ -1,0 +1,11 @@
+﻿SMOKE=G3_HEADLESS_API_TOOL_UNBLOCK_001
+CMD=RawrXD-Win32IDE.exe --headless --local --port 11495 --dir G:\~dev\rawrxd
+
+before_list=403 motd_required
+read_motd=200
+after_list=200 (.cursor/rules entries)
+empty_generate=400 invalid_prompt (MOTD reset)
+post_reset_list=403 motd_required
+blanket_public_command_string=ABSENT
+
+PASS=1

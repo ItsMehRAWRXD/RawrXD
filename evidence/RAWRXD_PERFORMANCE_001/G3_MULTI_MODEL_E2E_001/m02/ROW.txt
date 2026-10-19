@@ -1,0 +1,1 @@
+m02	phi3-mini-q8	OK	TOK1=8	247780ms	OK	TOK2=8	207200ms	AV=0	PASS

@@ -1,0 +1,56 @@
+RAWRXD 671B WORKING-SET CONTRACT — TOP 15
+
+WSC01 FIXED_SLOT_BOUND
+  slot_count > 0
+
+WSC02 FIXED_WINDOW_BOUND
+  window_bytes > 0
+
+WSC03 REQUEST_IN_FILE_BOUNDS
+  request_offset + request_bytes <= file_bytes
+  overflow => FAIL
+
+WSC04 SINGLE_WINDOW_REQUEST
+  request_bytes <= window_bytes
+
+WSC05 PIN_SAFE_EVICTION
+  evictions_while_pinned = 0
+
+WSC06 UNPINNED_LRU_ONLY
+  non_lru_evictions = 0
+
+WSC07 NO_FULL_TENSOR_FALLBACK
+  full_tensor_fallback_count = 0
+
+WSC08 CURRENT_BYTES_BOUNDED
+  current_mapped_bytes <= slot_count * window_bytes
+  current_mapped_bytes <= configured_max_mapped_bytes
+
+WSC09 PEAK_BYTES_BOUNDED
+  peak_mapped_bytes <= slot_count * window_bytes
+  peak_mapped_bytes <= configured_max_mapped_bytes
+
+WSC10 CACHE_REUSE_ACCOUNTED
+  cache_hits > 0
+  reused_bytes > 0
+
+WSC11 NEW_BYTES_ACCOUNTED
+  cache_misses > 0
+  newly_mapped_bytes > 0
+
+WSC12 EVICTION_ACCOUNTED
+  evictions > 0
+  evictions <= cache_misses
+
+WSC13 LEASE_LIFETIME_CLOSED
+  leases_acquired == leases_released
+  invalid_release_count = 0
+
+WSC14 TOKEN_WORKING_SET_CLOSED
+  token observed
+  token peak/end mapped bytes <= configured bound
+  token has new or reused bytes
+
+WSC15 CONJUNCTION
+  WSC01..WSC14 all PASS
+  any FAIL or NOT_RUN => contract_pass=0

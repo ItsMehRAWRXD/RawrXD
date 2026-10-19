@@ -1,0 +1,29 @@
+HIDDEN_PROBE_WITNESS_001=SEALED
+DATE=2026-09-08
+TYPE=SOURCE_WITNESS_CONTRACT
+STATUS=ARMED_SOURCE
+REVERSE_EMISSION=1
+SPEND=0
+NO_DEPS=1
+NO_ID=1
+
+GOVERNING=OBSERVATION_AUTHORITY_001
+
+OBSERVATION_LAW=
+  observations only when that run prints the corresponding evidence
+  each claim owned by its own emission from that run
+  no inheritance across emitters / runs / neighbors
+
+REVERSE_EMISSION=
+  disposition lines (NOT_REACHED / INTERRUPTED) are observations
+  only when printed by that run's enclosing scope
+  missing index/value ≠ 0 / false / invented
+
+HISTORICAL=
+  PATH_B_N5_003 unchanged; FINAL_NORM does not own probe/last/logits claims
+
+SOURCE=
+  FinalHiddenWitness.hpp / K2NativeStreamGate STEP_ENTER…STEP_EXIT
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE CHAMPION=PATH_A

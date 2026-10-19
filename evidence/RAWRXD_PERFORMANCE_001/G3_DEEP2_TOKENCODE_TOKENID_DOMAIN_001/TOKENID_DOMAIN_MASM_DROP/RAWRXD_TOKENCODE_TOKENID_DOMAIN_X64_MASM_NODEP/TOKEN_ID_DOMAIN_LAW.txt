@@ -1,0 +1,41 @@
+TOKENCODE RAW TOKEN-ID DOMAIN LAW
+
+Problem removed:
+  hard-coded small vocabulary ceilings such as 32000 are not authority.
+
+Two explicit modes exist:
+
+1. TOKEN_ID_MODE_BOUNDED
+   valid IDs:
+       vocab_base_id <= token_id < vocab_base_id + vocab_count
+
+   Rules:
+       vocab_count > 0
+       base + count must not overflow uint64
+       min_observed >= base
+       max_observed < end-exclusive
+
+2. TOKEN_ID_MODE_U64_FULL
+   valid storage domain:
+       0 <= token_id <= UINT64_MAX
+
+   There is no fake end-exclusive UINT64_MAX+1 calculation.
+   No overflow-prone sentinel arithmetic is used.
+
+Both modes still require:
+   generation binding
+   token_id_check_count == generated
+   min_observed <= max_observed
+   out_of_vocab_count == 0
+   negative_token_id_count == 0
+   token_id_decode_mismatch == 0
+   token_id_encode_mismatch == 0
+
+"U64 full" is not a bypass:
+   unchecked IDs do not authorize
+   signed-negative reinterpretation does not authorize
+   runtime OOV evidence does not authorize
+   encode/decode mismatch does not authorize
+   stale generation does not authorize
+
+token_id_authorized is derived internally.

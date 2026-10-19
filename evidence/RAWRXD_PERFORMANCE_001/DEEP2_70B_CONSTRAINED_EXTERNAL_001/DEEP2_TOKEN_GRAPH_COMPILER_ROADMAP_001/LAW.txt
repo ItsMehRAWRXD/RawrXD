@@ -1,0 +1,45 @@
+GATE=DEEP2_TOKEN_GRAPH_COMPILER_ROADMAP_001
+DATE=2026-09-13
+KIND=SOURCE_READY_UPSIDE
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+ACTIVATE_IF=PHASE_B_PASS AND PREDICT_ERR<10 AND PHASE_A_GEOMETRY_PASS
+
+# Do NOT spend live authority here while V6 predictor open.
+
+EVOLUTION=
+  static engine → per-op sched → hetero layer → whole-token DAG
+  → runtime graph compiler → self-optimizing token compiler
+
+OBJ=MINIMIZE PREDICTED_TOKEN_COMMIT_NS
+# NOT GPU_WORK / EXPERT_COUNT / LAYER_WORK / TRANSFER_BYTES / UTILIZATION
+CONSTRAINTS=parity · router-set · deps · residency · VRAM · engines · BW
+
+UNIFIED_SEARCH=
+  CHOOSE {kernel, gpu, transfer_time, fusion, split, residency, sync}
+  TO MINIMIZE TOKEN_COMMIT_NS
+  # all seven are dimensions of one search — not standalone subsystems
+
+NEXT_AFTER_V6_CHAIN=
+  PREDICTED_FINISH_DELTA → RESIDUAL_SKEW_FORECASTER → CRITICAL_EXPERT_PROMOTION
+  → TRANSFER_HIDING → UNSTARTED_MIGRATION → TOKEN_MAKESPAN_PGO
+
+WHOLE_TOKEN_ORDER=
+  TOKEN_CRITICAL_PATH_CLOCK → REMAINING_TOKEN_COST → MARGINAL_MAKESPAN
+  → JOIN_SKEW_PREEMPTION → TRANSFER_UNDER_COMPUTE → BARRIER_ELISION
+  → NEXT_LAYER_EARLY_START → TOKEN_PGO → COUNTERFACTUAL_REPLAY
+
+COMPILER_PASSES_SOURCE_READY=
+  Token DAG · CP extract · earliest-start · slack · marginal makespan
+  · hetero enum · multi-resource · transfer-hide · barrier-elision
+  · partial-dep launch · residency rewrite · lookahead · runtime repair
+  · PGO · counterfactual search
+  · Dynamic Token IR · measured recompile · multi-resource EFT
+  · slack-steal · speculative reserve · compute-copy co-sched
+  · cross-GPU pipeline · fine-grain release · fusion/split synthesis
+  · online patch · whole-token autotune
+  · Unified ΔTOKEN scoring · joint kernel-device · transfer-aware kernel
+  · residency-aware device · fusion/split/residency tradeoffs
+  · sync-as-cost · transfer co-opt · CP residency alloc
+  · device-specific rewrite · counterfactual whole-graph · online unified recompile

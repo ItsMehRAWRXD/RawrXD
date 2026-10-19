@@ -1,0 +1,14 @@
+﻿MODEL=Phi-3-mini-4k-instruct-q8_0.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf
+SIZE_MB=2075.4 SHA16=633FC5BE925F9A48
+HEADLESS_PID=21804
+OLLAMA_PRESENT=1
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"Phi-3-mini-4k-instruct-q8_0.gguf","profile_source":"runtime_gguf","profile_id":9452,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"tempe
+LOAD=200 {"success":true,"model":"Phi-3-mini-4k-instruct-q8_0.gguf"}
+GENERATE=200 TOKENS=8 PROCS=1
+GEN_SNIP={"model":"rawrxd","response":" to to the the the the the-","done":true}
+UNLOAD=200 {"success":true}
+RELOAD=200 {"success":true,"model":"Phi-3-mini-4k-instruct-q8_0.gguf"}
+RELOAD_GEN=200 TOKENS=8 PROCS=1
+VERDICT=PASS

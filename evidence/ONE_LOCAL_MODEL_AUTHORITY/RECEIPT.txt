@@ -1,0 +1,107 @@
+﻿ONE_LOCAL_MODEL_AUTHORITY — SCOPE SEAL
+DATE=2026-09-08
+
+# ============================================================
+# SCOPE LAW
+# ============================================================
+LOCAL_MODEL_E2E_FINISH_001=PASS
+PROVES=ONE complete production execution path (TinyLlama)
+DOES_NOT_PROVE=universal local-model execution
+
+NO_REOPEN_PRODUCT_AUTHORITY=1
+# Reopen only if ACTUAL_RUNTIME_REGRESSION=1
+# Do NOT rebuild PASSed TinyLlama gates because another model fails.
+
+# ============================================================
+# COMPLETED — TinyLlama production path
+# ============================================================
+PATH=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+ARCH=llama LAYERS=22 HIDDEN=2048 FFN=5632 HEADS=32 KV_HEADS=4 HEAD_DIM=64 CTX=2048 VOCAB=32000
+
+CLOSED — DO NOT REOPEN
+  GGUF_DYNAMIC_GEOMETRY_001
+  TENSOR_NAME_TYPE_BINDING_001          # 201/201
+  QUANT_DISPATCH_001                    # F32=45 Q4_K=135 Q6_K=21
+  TOKENIZER_TEMPLATE_EOG_001            # BOS=1 EOS/EOG=2 template
+  AUTHORITY_LADDER_001
+  AuthorityBundle
+  ProductRuntime::OpenSession
+  BindProductDeep2
+  ONE_ACTIVE_DEEP2_SESSION
+  DEEP2_SESSION_PREFILL
+  Deep2Engine::generateStream
+  REAL_TOKEN_CALLBACK                   # 8 tok / 60 decode bytes
+  EOS / bounded completion (MAX_TOKENS)
+  CANCEL_WIRE_001                       # SessionControl; VULKAN_SDK_REQUIRED=0
+  EOS_CANCEL_TEARDOWN_001
+  CANCEL
+  UNLOAD
+  RELOAD
+  LOCAL_MODEL_E2E
+
+WITNESS
+  evidence\ONE_LOCAL_MODEL_AUTHORITY\LOCAL_MODEL_E2E_FINISH_001\RECEIPT.txt
+  evidence\ONE_LOCAL_MODEL_AUTHORITY\CANCEL_WIRE_001\RECEIPT.txt
+  evidence\ONE_LOCAL_MODEL_AUTHORITY\EOS_CANCEL_TEARDOWN_001\RECEIPT.txt
+
+INVARIANT_PROVEN
+  MODEL_INPUT → AuthorityBundle → ProductRuntime → Deep2 prefill
+  → generateStream → real token IDs → tokenizer decode → callback
+  → bounded completion → cancel → unload → reload → generate → PASS
+  (no alternate generator)
+
+# ============================================================
+# MATH PRIMITIVES — implemented path closed
+# ============================================================
+XR_ExpF32 / XR_SiLU_F32 / XR_Softmax_F32 / XR_RMSNorm_F32
+XR_Dot_F32 / XR_AttentionHead_F32 = CLOSED_FOR_IMPLEMENTED_PRIMITIVE
+ABI: XMM0-XMM5 caller-volatile (spill/reload across call)
+identity_SiLU=DEAD
+fake_2x_SoftMax=DEAD
+missing_Sigma_weight_V=DEAD
+
+# ============================================================
+# NOT PROVEN BY THIS RECEIPT
+# ============================================================
+MODEL_GENERALIZATION=OPEN
+  qwen* / mistral/codestral / gemma / phi
+  nemotron hybrid/SSM / K2 MLA / DeepSeek / MoE / multimodal
+  other llama GGUFs need their own witness (do not reopen TinyLlama)
+
+QUANT_BREADTH
+  F32 Q4_K Q6_K = PASS E2E witness (this model)
+  Q8_0 = impl may exist, not this E2E witness
+  Q2_K = OLD_Q2_K_PRODUCTION=0 (do not promote)
+  Q3_K Q5_* Q4_0/1 IQ* = not covered here
+
+TOKENIZER_BREADTH
+  TinyLlama tokenizer E2E = CLOSED
+  Universal tokenizer coverage = OPEN / model-by-model
+
+SPLIT_GGUF_LOCAL_MODEL_E2E=NOT_PROVEN_BY_THIS_RECEIPT
+SINGLE_GGUF_LOCAL_MODEL_E2E=PASS
+
+DUAL_GPU_LOCAL_MODEL_E2E_FINISH_001=NOT_SHOWN_HERE
+  ONE_AUTHORITY + ONE_SESSION may use CPU/GPU0/GPU1
+  independent dual samplers = WRONG
+
+# ============================================================
+# PROJECT SPLIT
+# ============================================================
+PRODUCT
+  ONE_MODEL_E2E=PASS (TinyLlama)
+  NEXT=MULTI_MODEL_E2E MATRIX → UNIVERSAL_LOCAL_MODEL_AUTHORITY
+  STATUS=TinyLlama CLOSED; universal OPEN
+
+PERFORMANCE
+  K2 TPS / WALL_WITHIN_BUDGET=OPEN
+  LOCAL_MODEL_E2E_BLOCKED_BY_K2=0
+  CLIMB_AUTHORITY=UNSPENT
+  NEXT=64-tok Q8 KVA → parity → winner → KVA_SHARED_X → wall remeasure
+
+RETIRED — DO NOT COUNT AS MISSING PRODUCT WORK
+  Sovereign/TITAN detour
+  Kimi fake math / identity SiLU / fake SoftMax / missing weighted V
+  simplified Q2_K
+  loader alt generator / compatibility generator
+  second model authority / hardcoded geometry / silent quant→F32

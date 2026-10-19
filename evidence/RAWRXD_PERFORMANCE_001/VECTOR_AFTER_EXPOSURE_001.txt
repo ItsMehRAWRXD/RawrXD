@@ -1,0 +1,21 @@
+VECTOR_AFTER_EXPOSURE_001=SEALED
+DATE=2026-09-08
+ONTOLOGICAL_RECLASS=FORMAL
+QUESTION=where_does_the_vector_point
+
+VECTOR
+  ORIGIN=exposed non-code constraint
+         (device-consumed activation must not host-cross)
+  AXIS=computational_gravity / q_b host-edge shear
+  DIRECTION=into the Nothing pole of that edge
+             (null q_b D2H / null host GemvHostReadOut consume)
+  ALONG=device-local Q→packed KV→attn residency
+        (Everything = apparatus mass already present)
+  NOT=outrun latency | thicken PATH_A cache | invent planar K
+  NOT=QB_KERNEL|KVA|LOGITS|SX|5.904
+
+LIVE_VS_VECTOR
+  LIVE_TRACE=still PATH_A host-edge kink (until witness)
+  VECTOR_TIP=polarity exchange under DEEP2_PATH_B observe
+  APPARATUS=build-fd/bin/deep2_benchmark.exe READY
+  PROMOTE=0 CHAMPION=PATH_A until DELETE_PROVEN

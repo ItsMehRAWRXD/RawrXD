@@ -1,0 +1,69 @@
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 03:53:21 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+[EXPERIMENTAL] governor_activated=true (RAWRXD_ENABLE_GOVERNOR=1)
+[MODEL-HOTPATCH] Universal Model Hotpatcher initialized.
+  GPU accel: ENABLED
+  Pressure thresholds: high=70% critical=85% emergency=95%
+  Supported: 120B-800B via streaming quantization
+[EXPERIMENTAL] hotpatch70b_activated=true (RAWRXD_ENABLE_70B_HOTPATCH=1)
+[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)
+Loading model: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[ModelSourceResolver] Resolving: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[ModelSourceResolver] Detected source: Local File
+[ModelSourceResolver] ✅ Local file validated: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+Model armed for ProductRun: NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+  Path: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+  GGUF magic: OK
+  Arm latency: 3 ms
+
+Headless IDE initialized successfully.
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[GGUF] ERROR: Failed to allocate 25589760 bytes for tensor 'blk.2.ssm_out.weight'
+[Deep2Engine] ERROR: Failed to load GGUF metadata: Failed to load tensor data
+[Deep2Engine] Loading model from: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[GGUF] ERROR: Failed to allocate 436731904 bytes for tensor 'output.weight'
+[Deep2Engine] ERROR: Failed to load GGUF metadata: Failed to load tensor data
+[error] ProductDeep2Infer failed — FAILED_OWNER=ProductRun
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MODEL-HOTPATCH] Shutdown. Surgeries performed: 0 Memory saved: 0MB
+[Scheduler] Shutdown complete

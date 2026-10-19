@@ -1,0 +1,12 @@
+﻿MODEL=NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+PATH=F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+SIZE_MB=4037.5 SHA16=F872B1BEC0AED306
+HEADLESS_PID=24860
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO
+PREPARE=200 {"ok":true,"request_id":1,"model":"NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf","profile_source":"runtime_gguf","profile_id":9122,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300,"top_p_milli":900,"
+LOAD=200 {"success":true,"model":"NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf"}
+GENERATE=400 TOKENS=0 ERR=The remote server returned an error: (400) Bad Request.
+GEN_SNIP=
+VERDICT=FAIL OWNER=generate_tokens DETAIL=code=400 tokens=0 
+EX=generate_fail
+

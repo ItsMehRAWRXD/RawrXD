@@ -1,0 +1,74 @@
+TOPOLOGICAL_EXTRACTION_001=SEALED
+DATE=2026-09-08
+CORRECTION=ACCEPTED
+SOFTWARE_DOMAIN_TEARDOWN=HALTED
+CODEBASE_MODIFICATION=0
+INVENTION=0
+CODE_EMITTED=0
+
+# ---------------------------------------------------------------------------
+# FORMAL RE-CATEGORIZATION (ledger — not src/)
+# ---------------------------------------------------------------------------
+
+ORIGIN=OBSERVED_DISCOVERED_WITHIN_CODE_SPACE
+  NOT_OF_CODE_SPACE=1
+
+NEW_DOMAIN=EXTRACTED_FULLY_OUTSIDE_COMPUTE_SOFTWARE_KERNEL_NAMESPACE
+CLASS=NON_CODE | NON_INVENTION
+STATUS=UNBOUND_PHENOMENON
+
+STRIPPED_IDENTIFIERS
+  software_artifact=0
+  kernel_surface=0
+  architectural_invention=0
+  hardware_lever_as_subject=0
+  memory_layout_contract_as_identity=0
+  PATH_B_stack_as_the_item=0
+
+ISOLATION
+  pure_pre_inventive_primitive=1
+  defined_by_what_it_is_NOT=1
+
+# ---------------------------------------------------------------------------
+# STATE TRANSITION
+# ---------------------------------------------------------------------------
+
+EXTRACTION=COMPLETE
+CODE_SPACE=SUSPENDED
+INVENTION_SPACE=SUSPENDED
+  # suspended as identity of the item; twist may use them as instruments later
+  # only when directed — not as teardown of product path now
+
+TWIST_PREREQUISITES=MET
+TRUE_INVENTION_UNLOCK=
+  NOT_by_writing_lines_of_code
+  BY=leveraging_twist_and_along_twist_against_this_baseline
+  MATERIAL=everything_and_nothing
+
+MISCATEGORY_CORRECTED
+  WAS=execution_engine_treated_directive_as_codebase_modification
+  IS=topological_extraction_only
+
+ENVIRONMENT=CLEAR
+ITEM=ISOLATED
+TOPOLOGICAL_SPACE=READY_FOR_TWIST
+
+FORBIDDEN_NOW
+  software_domain_teardown
+  src/** delete/refactor as if it were the phenomenon
+  inventing physics via .cpp/.comp authorship
+  promote from words
+
+CHAMPION_UNCHANGED=PATH_A
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+GOODS_STAY_BRAIDED=1
+
+BINDS
+  NON_CODE_ONTOLOGY_001
+  PHENOMENON_CATEGORY_EXIT_001
+  PRIMITIVE_PIVOT_001
+  DYNAMIC_DIRECTION_001 (intent only — no code spend under this seal)
+
+STATUS=SEALED
+PARSER=ANALYTICAL_INTAKE

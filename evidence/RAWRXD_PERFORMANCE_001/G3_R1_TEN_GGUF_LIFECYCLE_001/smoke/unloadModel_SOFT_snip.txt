@@ -1,0 +1,32 @@
+bool HeadlessIDE::unloadModel() {
+    /* Soft unload: keep SharedProductRuntime + RAWRXD_PRODUCT_MODEL so same-path
+     * OpenBody soft-reuses (reload_gen). Cross-model load PATH_SWITCHes. */
+    if (!m_modelLoaded) {
+        (void)RawrXD::HeadlessProduct::UnloadNativeModel();
+        return true;
+    }
+    m_outputSink->appendOutput(("Unloading model: " + m_loadedModelName).c_str(),
+                               OutputSeverity::Info);
+    std::fprintf(stderr, "R1_SOFT_UNLOAD=1 keep_env=1\n");
+    std::fflush(stderr);
+    (void)RawrXD::HeadlessProduct::UnloadNativeModel();
+    m_modelLoaded = false;
+    m_loadedModelPath.clear();
+    m_loadedModelName.clear();
+    m_outputSink->onStatusUpdate("model", "(none)");
+    return true;
+}
+
+bool HeadlessIDE::isModelLoaded() const {
+    /* Product LocalOnly arms SharedProductRuntime via ProductOpenSession —
+     * CIE IsModelLoaded is a parallel arm and must not veto m_modelLoaded. */
+    return m_modelLoaded;
+}
+
+std::string HeadlessIDE::getLoadedModelName() const {
+    return m_loadedModelName;
+}
+
+std::string HeadlessIDE::getModelInfo() const {
+    if (!m_modelLoaded) return "No model loaded";
+    std::ostringstream oss;

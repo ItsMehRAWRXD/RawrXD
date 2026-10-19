@@ -1,0 +1,64 @@
+GATE=DUALSTICK_CRITICAL_PATH_FABRIC_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+ACTIVATE_IF=PHASE_A HARD_GATE PASS AND PHASE_B SKEW_TARGET PASS
+# Until then SOURCE_READY — A then B first
+
+ROLE=runtime compiler that continuously recompiles sparse execution
+     around the actual critical path of each token
+# NOT merely a scheduler
+
+OBJECTIVE=MINIMIZE TOKEN_MAKESPAN
+SUBORDINATE=individual expert runtime · total GPU work · bytes moved
+
+COMPILER_PIPELINE=
+  router top-k
+  → build sparse DAG
+  → enumerate execution configurations
+  → attach measured costs
+  → mark critical path
+  → place/fuse/reorder/prefetch
+  → schedule GPU0 + GPU1
+  → emit two device work graphs
+  → run
+  → measure actual timings
+  → profile-guided recompile
+
+# Top 15 — critical-path compiler for sparse inference
+# 1  Sparse execution DAG builder
+# 2  Critical-path extraction pass
+# 3  Expert configuration enumeration
+# 4  Marginal latency cost pass
+# 5  Heterogeneous list scheduler
+# 6  Residency-aware compile pass
+# 7  Transfer-hiding placement pass
+# 8  Kernel fusion compiler
+# 9  Barrier elimination pass
+# 10 Tail-aware expert ordering
+# 11 Speculative next-layer compilation
+# 12 Profile-guided recompilation
+# 13 Per-model sparse execution plans
+# 14 Counterfactual schedule search
+# 15 Whole-token critical-path compilation
+
+COMPILER_FIRST=
+  #1 DAG builder
+  → #2 critical-path extraction
+  → #3/#4 configuration + marginal-cost model
+  → #5 heterogeneous scheduler
+  → #7 transfer hiding
+  → #8/#9 fusion + barrier removal
+  → #12 profile-guided recompilation
+  → #15 whole-token compilation
+
+# Prior fabric layers remain subordinate feeds into the compiler:
+C1_FABRIC · C2_ENGINES · C3_CP_ORACLE (see prior LAW revisions)
+CONSTRAINTS=
+  ROUTER_SET_UNCHANGED SEL==EXE ACQUIRE_FAIL==0 HOST_GEMV_EXPERT==0 NO_TOPK_DROP
+
+SEALED_PRESERVE=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679

@@ -1,0 +1,1 @@
+{"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay — Multitask continue triggers + MOTD gate: models cannot\r\n  execute tools until they Read this file each message turn (Cursor + Deep ID

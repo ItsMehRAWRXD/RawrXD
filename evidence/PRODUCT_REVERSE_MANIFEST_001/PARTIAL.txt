@@ -1,0 +1,232 @@
+﻿001 Single ProductRun entrypoint
+    Declaration/name/interface evidence exists without strong implementation evidence.
+002 CLI wired to production runtime
+    Implementation evidence exists but matched files contain stub/TODO markers.
+003 IDE wired to production runtime
+    Implementation evidence exists but matched files contain stub/TODO markers.
+004 Agent wired to production runtime
+    Implementation evidence exists but matched files contain stub/TODO markers.
+005 Central model resolver
+    Implementation evidence exists but matched files contain stub/TODO markers.
+006 Central GGUF loader
+    Implementation evidence exists but matched files contain stub/TODO markers.
+007 Tokenizer construction
+    Implementation evidence exists but matched files contain stub/TODO markers.
+008 KV cache implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+009 Execution graph builder
+    Implementation evidence exists but matched files contain stub/TODO markers.
+010 Production GenerateStream
+    Implementation evidence exists but matched files contain stub/TODO markers.
+011 Forward layer implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+012 Sampler implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+013 Streaming token emitter
+    Implementation evidence exists but matched files contain stub/TODO markers.
+014 Unified teardown
+    Implementation evidence exists but matched files contain stub/TODO markers.
+015 Canonical product receipt
+    Implementation evidence exists but matched files contain stub/TODO markers.
+016 Runtime state owner
+    Declaration/name/interface evidence exists without strong implementation evidence.
+017 Architecture dispatch
+    Implementation evidence exists but matched files contain stub/TODO markers.
+018 Attention implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+019 FFN implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+020 SSM implementation
+    Declaration/name/interface evidence exists without strong implementation evidence.
+021 MoE router
+    Implementation evidence exists but matched files contain stub/TODO markers.
+022 Logits implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+023 Prompt prefill
+    Implementation evidence exists but matched files contain stub/TODO markers.
+024 Autoregressive decode loop
+    Implementation evidence exists but matched files contain stub/TODO markers.
+025 Stop conditions
+    Implementation evidence exists but matched files contain stub/TODO markers.
+026 Cancellation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+027 First failure ownership
+    Implementation evidence exists but matched files contain stub/TODO markers.
+028 Normal completion state
+    Implementation exists, but required dependencies are not DONE: 24,25
+029 Generated-token accounting
+    Implementation evidence exists but matched files contain stub/TODO markers.
+030 Runtime error propagation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+031 GGUF metadata parsing
+    Implementation evidence exists but matched files contain stub/TODO markers.
+032 Tensor registry
+    Implementation evidence exists but matched files contain stub/TODO markers.
+033 Tensor lookup
+    Implementation evidence exists but matched files contain stub/TODO markers.
+034 Split GGUF
+    Implementation evidence exists but matched files contain stub/TODO markers.
+035 Quant dispatch
+    Implementation evidence exists but matched files contain stub/TODO markers.
+036 Q2_K implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+037 Q3_K implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+038 Q4_K implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+039 Q5_K implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+040 Q6_K implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+041 Q8_0 implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+042 Model dimension authority
+    Implementation evidence exists but matched files contain stub/TODO markers.
+044 Residency/working set
+    Implementation evidence exists but matched files contain stub/TODO markers.
+045 Weight streaming
+    Implementation evidence exists but matched files contain stub/TODO markers.
+046 CPU backend
+    Implementation evidence exists but matched files contain stub/TODO markers.
+047 Vulkan backend
+    Implementation evidence exists but matched files contain stub/TODO markers.
+048 Vulkan compute pipeline
+    Implementation evidence exists but matched files contain stub/TODO markers.
+049 Device discovery
+    Implementation evidence exists but matched files contain stub/TODO markers.
+050 Capability-based GPU selection
+    Implementation evidence exists but matched files contain stub/TODO markers.
+051 GPU memory allocator
+    Implementation evidence exists but matched files contain stub/TODO markers.
+052 Command buffer execution
+    Implementation evidence exists but matched files contain stub/TODO markers.
+053 GPU synchronization
+    Implementation evidence exists but matched files contain stub/TODO markers.
+054 Shader registry
+    Implementation evidence exists but matched files contain stub/TODO markers.
+055 QKV GPU path
+    Implementation evidence exists but matched files contain stub/TODO markers.
+056 KVA GPU path
+    Implementation evidence exists but matched files contain stub/TODO markers.
+057 O_PROJ GPU path
+    Implementation evidence exists but matched files contain stub/TODO markers.
+058 Multiple GPU support
+    Implementation evidence exists but matched files contain stub/TODO markers.
+059 Backend fallback
+    Implementation evidence exists but matched files contain stub/TODO markers.
+060 Backend metrics
+    Implementation evidence exists but matched files contain stub/TODO markers.
+061 Native IDE main window
+    Implementation evidence exists but matched files contain stub/TODO markers.
+062 Editor component
+    Implementation evidence exists but matched files contain stub/TODO markers.
+063 Workspace open
+    Implementation evidence exists but matched files contain stub/TODO markers.
+064 File explorer
+    Implementation evidence exists but matched files contain stub/TODO markers.
+065 File open/save
+    Implementation evidence exists but matched files contain stub/TODO markers.
+066 Terminal
+    Implementation evidence exists but matched files contain stub/TODO markers.
+067 Chat panel
+    Implementation evidence exists but matched files contain stub/TODO markers.
+068 Streaming chat rendering
+    Implementation evidence exists but matched files contain stub/TODO markers.
+069 Cancel generation UI
+    Implementation evidence exists but matched files contain stub/TODO markers.
+070 Git integration
+    Implementation evidence exists but matched files contain stub/TODO markers.
+071 Search
+    Implementation evidence exists but matched files contain stub/TODO markers.
+072 Build command
+    Implementation evidence exists but matched files contain stub/TODO markers.
+073 Diagnostics
+    Implementation evidence exists but matched files contain stub/TODO markers.
+074 Session persistence
+    Implementation evidence exists but matched files contain stub/TODO markers.
+075 IDE runtime status
+    Implementation evidence exists but matched files contain stub/TODO markers.
+076 Agent loop
+    Implementation evidence exists but matched files contain stub/TODO markers.
+077 Planner
+    Implementation evidence exists but matched files contain stub/TODO markers.
+078 Tool registry
+    Implementation evidence exists but matched files contain stub/TODO markers.
+079 File read tool
+    Implementation evidence exists but matched files contain stub/TODO markers.
+080 File write/edit tool
+    Implementation evidence exists but matched files contain stub/TODO markers.
+081 Diff engine
+    Implementation evidence exists but matched files contain stub/TODO markers.
+082 Patch application
+    Implementation evidence exists but matched files contain stub/TODO markers.
+083 Undo
+    Implementation evidence exists but matched files contain stub/TODO markers.
+084 Shell/process tool
+    Implementation evidence exists but matched files contain stub/TODO markers.
+085 Agent progress events
+    Implementation evidence exists but matched files contain stub/TODO markers.
+086 Agent cancellation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+087 Agent state persistence
+    Implementation evidence exists but matched files contain stub/TODO markers.
+088 Autonomous build/test loop
+    Implementation evidence exists but matched files contain stub/TODO markers.
+089 Execution policy
+    Implementation evidence exists but matched files contain stub/TODO markers.
+090 Agent-to-runtime generation
+    Declaration/name/interface evidence exists without strong implementation evidence.
+091 Markdown rendering
+    Implementation evidence exists but matched files contain stub/TODO markers.
+092 Code syntax highlighting
+    Implementation evidence exists but matched files contain stub/TODO markers.
+093 Context management
+    Implementation evidence exists but matched files contain stub/TODO markers.
+094 Conversation history
+    Implementation evidence exists but matched files contain stub/TODO markers.
+095 Model selection UI
+    Implementation evidence exists but matched files contain stub/TODO markers.
+096 Generation settings UI
+    Declaration/name/interface evidence exists without strong implementation evidence.
+097 Workspace context injection
+    Implementation evidence exists but matched files contain stub/TODO markers.
+098 Build output capture
+    Implementation evidence exists but matched files contain stub/TODO markers.
+099 Crash handling
+    Implementation evidence exists but matched files contain stub/TODO markers.
+100 Graceful runtime unload
+    Implementation evidence exists but matched files contain stub/TODO markers.
+102 Concurrent/busy rejection
+    Implementation evidence exists but matched files contain stub/TODO markers.
+103 Local-only execution
+    Implementation evidence exists but matched files contain stub/TODO markers.
+104 No mandatory Ollama runtime dependency
+    Implementation evidence exists but matched files contain stub/TODO markers.
+105 256-token product completion path
+    Implementation evidence exists but matched files contain stub/TODO markers.
+106 CMake/project build definition
+    Implementation evidence exists but matched files contain stub/TODO markers.
+109 Runtime library target
+    Implementation evidence exists but matched files contain stub/TODO markers.
+110 Release build configuration
+    Implementation evidence exists but matched files contain stub/TODO markers.
+111 Portable configuration
+    Implementation evidence exists but matched files contain stub/TODO markers.
+112 Installer
+    Implementation evidence exists but matched files contain stub/TODO markers.
+113 Regression tests
+    Implementation evidence exists but matched files contain stub/TODO markers.
+114 Runtime tests use production code
+    Implementation evidence exists but matched files contain stub/TODO markers.
+115 Benchmark uses production decode
+    Declaration/name/interface evidence exists without strong implementation evidence.
+116 Evidence/product receipt output
+    Implementation evidence exists but matched files contain stub/TODO markers.
+117 Version metadata
+    Implementation evidence exists but matched files contain stub/TODO markers.
+118 Configuration loader
+    Implementation evidence exists but matched files contain stub/TODO markers.
+119 Logging
+    Implementation evidence exists but matched files contain stub/TODO markers.
+120 Product acceptance receipt
+    Declaration/name/interface evidence exists without strong implementation evidence.

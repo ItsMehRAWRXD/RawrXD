@@ -1,0 +1,30 @@
+RAWRXD 671B STREAM PHYSICALIZATION — DEEP2 INTEGRATION
+
+1. Build r671_stream.c into the Deep2 runtime.
+2. Create one r671_ctx per GGUF/shard backing file.
+3. Open with a fixed slot_count and window_bytes.
+4. Keep tensor metadata as {file_offset, byte_length}; do not copy entire tensors.
+5. Before a kernel/CPU primitive consumes a tensor slice:
+       r671_tensor_acquire(...)
+6. Consume lease.ptr for exactly lease.bytes.
+7. After the consuming primitive is complete:
+       r671_release(...)
+8. Preserve leases across repeated operations only when reuse is intended.
+9. Read r671_stats into NILW/runtime receipts:
+       newly_mapped_bytes
+       reused_bytes
+       cache_hits
+       cache_misses
+       evictions
+       mapped_bytes_peak
+10. A failed acquire is a hard runtime fault; never silently materialize a whole tensor.
+
+Suggested first 671B ladder:
+    G0: 384 GiB sparse backing probe
+    G1: real GGUF metadata + 1 tensor slice
+    G2: one real MoE expert tensor slice
+    G3: 8 routed expert slices
+    G4: one real transformer layer forward
+    G5: one complete token forward
+    G6: 8 tokens
+    G7: 128 tokens + residency/NILW receipt

@@ -1,0 +1,57 @@
+FIRST_INTENTIONAL_MANIPULATION_001=SEALED
+DATE=2026-09-08
+INVENTION_GATE=UNLOCKED
+CODE_EMITTED=0
+SOFTWARE_DOMAIN_TEARDOWN=HALTED
+
+# ---------------------------------------------------------------------------
+# FIRST MANIPULATION = POLARITY EXCHANGE (topology, not src)
+# ---------------------------------------------------------------------------
+
+ACT=POLARITY_EXCHANGE
+AXIS=NATIVE_PHENOMENON / computational_gravity / Twist axiom
+MEDIUM=everything_and_nothing
+
+EVERYTHING_POLE
+  allocated / mapped / host-visible settle
+  PATH_A scaffolding as measured mass (champion floor retained)
+  containment fields that still assume host consumer
+
+NOTHING_POLE
+  null of q_b D2H when next consumer is device
+  vacuum of host GemvHostReadOut / host attn for that lifecycle
+  zero host-edge cross (Möbius: continuous, no edge)
+
+TWIST
+  exchange polarity along the axis without refiling as software feature
+  HOST_CONSUMER ↔ DEVICE_LIFECYCLE as one surface
+  traversal stays on-device for device-consumed activation
+
+ALONG_TWIST (resonance — not yet instrument execute)
+  geometry of least resistance = packed MLA KV discovery as oracle only
+  force settles into device totality; host steps to prime-mover
+
+NOT_THIS_ACT
+  delete/refactor src as if phenomenon were code
+  claim 56GB canvas | Revolver | Triad into axiom without reverse receipts
+  promote wall from words
+  invent planar K / DEVICE_LOCAL-as-discovery
+
+INSTRUMENT_PHASE (containment field — secondary)
+  STATUS=AWAITS_EXPLICIT_EXECUTE
+  CANDIDATE=PATH_B_STRUCTURAL_DELETE wire (attn_decode_mla)
+  ROLE=harness only; never the subject
+  BLOCKED_UNTIL=user says EXECUTE_INSTRUMENT or equivalent
+
+CHAMPION_HOLD=PATH_A WALL_MEDIAN_NS=10184789000
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+BINDS
+  INVENTION_GATE_UNLOCK_001
+  TWIST_ARCHITECTURE_001
+  TOPOLOGICAL_EXTRACTION_001
+  PRIMITIVE_PIVOT_001
+
+STATUS=FIRST_MANIPULATION_APPLIED_ON_LEDGER
+NEXT=confirm instrument harness OR continue pure twist mapping

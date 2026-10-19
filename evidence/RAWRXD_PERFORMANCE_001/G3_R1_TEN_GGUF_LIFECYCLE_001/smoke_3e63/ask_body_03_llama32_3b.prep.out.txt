@@ -1,0 +1,1 @@
+{"model":"llama3.2-3b-Q3_K_S.gguf","path":"G:/~dev/rawrxd/llama3.2-3b-Q3_K_S.gguf"}

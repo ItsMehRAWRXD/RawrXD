@@ -1,0 +1,48 @@
+GATE=DEEP2_REQUEST_COMPILER_50_NODEP_20260913
+KIND=SOURCE_DROP
+DEPENDENCIES=STDLIB_ONLY
+LANGUAGE=C++17
+C_ABI=1
+MECHANISMS=50
+PRODUCT_LINKED=0
+RUNTIME_AUTHORITY=0
+PROMOTE=0
+
+LAW:
+1. A request is compiled to unique observable work nodes before execution.
+2. Prompt length is not execution authority.
+3. Duplicate semantic work executes once.
+4. Evidence authority is explicit: UNKNOWN < PROJECTED < DERIVED < MEASURED.
+5. Side effects are classified and irreversible work is ordered late.
+6. Failed/held prerequisites do not silently promote dependents.
+7. Node completion requires an observable status transition.
+8. Planning success never substitutes for product/runtime proof.
+9. State changes cause incremental recomputation, not full-plan reinvention.
+10. Closure requires zero unresolved actionable nodes or an explicit HOLD/FAIL frontier.
+
+NEW25:
+26 Subgoal Fusion
+27 Dependency Fan-In Hoisting
+28 Dependency Fan-Out Sharing
+29 Late Binding of Executors
+30 Capability Cost Ranking
+31 Proof Obligation Minimization
+32 Counterexample-First Validation
+33 Contradiction Frontier Isolation
+34 Monotonic State Advancement
+35 Idempotent Action Folding
+36 Checkpointed Re-entry
+37 Hot-Path Requirement Promotion
+38 Cold-Path Deferral
+39 Work-Conserving Scheduler
+40 Uncertainty-Weighted Priority
+41 Cut-Set Retry
+42 Failure Memoization
+43 Boundary Contract Synthesis
+44 Scope Firewalling
+45 Progressive Precision
+46 Budget-Aware Degradation
+47 Output Schema Locking
+48 Deterministic Tie-Breaking
+49 Plan Hash Sealing
+50 Closure Certificate

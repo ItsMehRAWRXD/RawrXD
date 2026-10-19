@@ -1,0 +1,64 @@
+OBSERVATION_AUTHORITY_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_CONTRACT
+SPEND=0
+NO_ID=1
+
+OBSERVATION_AUTHORITY=RUNTIME_LOCAL
+
+OBSERVED
+  ⇔ that specific run emitted the corresponding evidence
+
+NO_EMISSION
+  → no observation for that field
+
+FAILURE_TO_FIRE
+  → OBSERVED only if that run explicitly emits a failure-to-fire disposition
+  → absence of emission ≠ observation of failure-to-fire
+
+DEVELOPER_CLASSIFICATION
+  → may classify emitted evidence
+  → cannot manufacture missing evidence
+
+AUTHORITY_ISOLATION=
+  No claim inherits authority from another claim's emitter.
+  CLAIM_X → requires EMISSION_X from the same runtime run
+  CLAIM_X classifies only what EMISSION_X actually reports
+  EMISSION_X ≠ authority for CLAIM_Y
+  proximity ≠ authority
+  ordering ≠ authority
+  inference ≠ emission
+  prior run ≠ current-run authority
+  neighboring evidence ≠ corresponding evidence
+  RUN_A emission ≠ evidence for RUN_B
+
+NO=
+  backfill
+  inferred values
+  synthetic zeros
+  synthetic IDs
+  OTHER_EMISSION as substitute observation
+
+CLAIM_OWNERS (step-22 boundary)=
+  hidden[random#]            ← HIDDEN_PROBE emission
+  hidden[last]               ← HIDDEN_LAST emission
+  bounded                    ← BOUNDED emission (or field on HIDDEN_PROBE)
+  valid                      ← VALID emission (or field on HIDDEN_PROBE/LAST)
+  ProjectLogitsArgmax entry  ← LOGITS_ENTRY emission
+  logits completion          ← LOGITS_COMPLETE / LOGITS_DISPOSITION emission
+  failure-to-fire disposition← HIDDEN_PROBE_DISPOSITION / STEP_ENTER without STEP_EXIT
+
+HISTORICAL=
+  PATH_B_N5_003: FINAL_NORM×23 owns only that claim
+  does not own hidden[random#] / hidden[last] / LOGITS_ENTRY
+
+SSOT_RELATED=
+  HIDDEN_PROBE_WITNESS_001
+  PATH_B_N5_003_ATTRIBUTION_HOLD_001
+  MISSING_RUNTIME_CONCRETE_ASSERT_001
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

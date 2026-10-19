@@ -1,0 +1,56 @@
+GATE=CRASH_NTDLL_5BE6B_001
+ASOF=2026-09-10T07:56:43-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## User address
+INPUT=0x000007ffe25dd be68
+MATCHED_RIP=0x00007FFE25DDBE6B
+NOTE=user be68 ≈ report BE6B (same fault site; 3-byte off)
+
+## Crash report (cathedral)
+LOG=g:\~dev\rawrxd\crash_dumps\rawrxd_crash_20260910_075643.log
+DMP_CATHEDRAL=MISSING (log says Dump File: Yes but .dmp absent — MiniDumpWriteDump fail/delete or path not persisted)
+EXCEPTION=0xC0000005
+MODULE=C:\WINDOWS\SYSTEM32\ntdll.dll
+FAULT_OFFSET=0x000000000005be6b
+NEAREST_EXPORT=SbSelectProcedure @ RVA 0x5BD00 (delta +0x16B)
+PROCESS_LOG=18812 THREAD=33396
+
+## Windows Error Reporting (same offset)
+REPEATED_APPCRASH fault offset 0x5be6b on:
+  RawrXD-Win32IDE_r1cap_self.exe (C:\r1cert\smoke_bin\) — 07:51, 07:53
+  iso_r25.exe (Temp\r25_build) — multiple 07:46–07:49
+  smoke_r25_productopen.exe — 07:43–07:48
+EARLIER_BEX64 iso_r25.exe+0x16358 EXCEPTION_INFO=0x8 (NX / non-executable fetch) @ 07:46
+WER_LOCAL_DUMPS=C:\Users\Garrett\AppData\Local\CrashDumps\RawrXD-Win32IDE_r1cap_self.exe.*.dmp (~281MB)
+
+## Classification
+OWNER_SURFACE=R25 ProductOpen MASM/smoke + r1cap_self IDE path
+NOT_OWNER=rawr.exe ProductRun HOST_DECODE TinyLlama (this spend)
+FAILURE_CLASS=ntdll AV @ 0x5be6b (heap/loader internal; secondary to prior corruption)
+  prior BEX64 on iso_r25 suggests control-flow into non-X memory before ntdll AV
+NOT=DualStick/GPU ICD reopen
+NOT=PERFORMANCE_PASS
+
+## Live product E2E (this spend) — fail-closed separate from R25 smoke crash
+EXE=g:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+HOST_DECODE=1
+EXIT=0
+OPEN_SEMANTIC=STREAMABLE
+GENERATED_TOKENS=4
+CLEAN_EXIT=1
+CRASH_OBSERVED=0
+PROMOTE=0
+ARTIFACT=LIVE_E2E.err.txt
+
+## Ready tetrad (unchanged law)
+PROMOTE_IF=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+MULTI_FAMILY=NEXT_INDEPENDENT_GATE
+R25_MASM_SMOKE_CRASH ≠ TinyLlama R25 ProductOpen seal on rawr/Headless STREAMABLE
+
+## Next
+1. Capture stack from WER mdmp / install Windows SDK debuggers for cdb !heap / k
+2. Isolate iso_r25 BEX64 @ +0x16358 (likely first owner) before ntdll 0x5be6b
+3. Do not treat r1cap_self ntdll AV as ProductRun HOST_DECODE regress — rawr CLEAN_EXIT

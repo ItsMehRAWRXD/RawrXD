@@ -1,0 +1,38 @@
+loader_masm.txt:43: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_masm.txt:83: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_masm.txt:85: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_masm.txt:112: [Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+loader_masm.txt:125: [Vulkan Loader] DRIVER:                Using "AMD Radeon RX 7800 XT" with driver: "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll"
+loader_masm.txt:126: [Vulkan Loader] ERROR | DRIVER: terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll vkCreateDevice call
+loader_masm.txt:127: [Vulkan Loader] ERROR:          vkCreateDevice:  Failed to create device chain.
+loader_vulkaninfo.txt:74: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:163: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:252: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:341: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:430: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:519: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:608: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:697: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:786: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:875: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:964: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:1053: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:1142: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:1231: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:1320: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:1376: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_vulkaninfo.txt:1378: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_vulkaninfo.txt:1385: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_vulkaninfo.txt:1387: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_vulkaninfo.txt:1444: [Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+loader_vulkaninfo.txt:1485: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_vulkaninfo.txt:1487: [Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+loader_vulkaninfo.txt:1516: [Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+loader_vulkaninfo.txt:1532: [Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+loader_vulkaninfo.txt:1548: [Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+loader_vulkaninfo.txt:1561: [Vulkan Loader] DRIVER:                Using "AMD Radeon RX 7800 XT" with driver: "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll"
+loader_vulkaninfo.txt:1562: ERROR: [Loader Message] Code 0 : terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll vkCreateDevice call
+loader_vulkaninfo.txt:1563: [Vulkan Loader] ERROR | DRIVER: terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll vkCreateDevice call
+loader_vulkaninfo.txt:1564: ERROR: [Loader Message] Code 0 : vkCreateDevice:  Failed to create device chain.
+loader_vulkaninfo.txt:1565: [Vulkan Loader] ERROR:          vkCreateDevice:  Failed to create device chain.
+loader_vulkaninfo.txt:1568: ERROR at C:\SDKBuild\build-X64-1.4.341.0\Vulkan-Tools\vulkaninfo\vulkaninfo.h:1771:vkCreateDevice failed with ERROR_UNKNOWN

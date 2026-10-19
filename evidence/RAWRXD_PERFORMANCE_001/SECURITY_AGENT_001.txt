@@ -1,0 +1,51 @@
+SECURITY_AGENT_001=INVENTORIED
+DATE=2026-09-08
+NAME=APPSEC_REPOSITORY_REVIEW
+TYPE=SCHEDULED_SECURITY_AGENT
+
+CURRENT_STATE=HELD_NOT_ACTIVATED
+MODE_NOW=D
+MODE=RE_ATTRIBUTION_ONLY
+HOT_GATE=0
+AUTO_PICK=FORBIDDEN
+EXECUTION=0
+SCHEDULE_CREATED=0
+REPOSITORY_SCAN=0
+MEMORY_WRITE=0
+SLACK_POST=0
+PR_OPEN=0
+ACTIVATION_INFERRED=0
+
+FINDING_MEMORY_CONTRACT=
+  VALID_FAMILY={repository_name}---flagged-vulnerabilities*.json
+  CAP=100_findings
+  DEDUPE_EXISTING=1
+  JSON_IO=json.load|json.dump only
+  FORBIDDEN=differently_named_scratch_finding_files
+
+SECURITY_FINDING_REQUIRED=
+  severity >= MEDIUM
+  attacker = identified
+  controlled_input = identified
+  reachable_attack_path = validated
+  impact = validated
+  location = exactly_one_primary_file_path
+  evidence = concrete
+  status = active
+  commit_hash = full_hash
+  detected_at_pst = offset_timestamp
+  reported_link = url_or_empty
+
+EXTERNAL=
+  report_only_new_validated_findings
+  no_external_post_when_none
+  MUST_NOT_OPEN_PR=1
+
+AUTHORITY_AFTER_ADD=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  SECURITY_AGENT_001=HELD
+  ACTIVATION_INFERRED=0
+
+NOTE=Inventory only under Mode D; not MODE_A; not PARSER_REOPEN; not spend

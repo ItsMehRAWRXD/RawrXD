@@ -1,0 +1,8 @@
+id=sess_1792278489
+model=phi3-mini-Q2_K
+path=G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=audit ide
+patch=patch_1
+turns=0

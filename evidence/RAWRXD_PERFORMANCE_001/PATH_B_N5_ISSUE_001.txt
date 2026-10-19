@@ -1,0 +1,30 @@
+PATH_B_N5_ISSUE_001=ACTIVE
+DATE=2026-09-08
+MODE=A
+HOT_GATE=1
+TARGET=PATH_B_N5
+ALIAS=U03_PATH_B_DELETE
+SPEND=1
+CODE_CHANGE=0
+
+BAR=
+  DEEP2_PATH_B=1
+  n=5
+  WALL_MEDIAN_NS < 10184789000 (PATH_A champion floor)
+  DELETE_PROVEN=
+    q_b_d2h_bytes == 0
+    vkcopy_qb == 0
+    host_memcpy_qb == 0
+  PARITY=1
+  PURITY=1
+  PRODUCT=1
+
+NOT_SUFFICIENT=
+  oneshot_twist
+  DELETE_PROVEN alone
+  stale AUTHORIZED_SPEND=1 receipts
+
+PERF_AUTHORITY=build-fd/bin/deep2_benchmark.exe
+rawr.exe=NON_AUTHORITY
+
+PROMOTE=0 until bar met

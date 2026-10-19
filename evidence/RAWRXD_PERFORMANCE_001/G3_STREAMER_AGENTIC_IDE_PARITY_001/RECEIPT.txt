@@ -1,0 +1,46 @@
+GATE=G3_STREAMER_AGENTIC_IDE_PARITY_001
+PURPOSE=Unblock HeadlessIDE /api/tool (reverse public_command 403) + prove IDE/tool parity E2E with sealed streamer stack
+PARENT=G3_STREAMER_AGENTIC_001
+ASOF=2026-09-10T00:35
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+NEXT_SPEND=NONE
+CONFIRMED=1
+
+EXE=RawrXD-Win32IDE.exe (headless --local)
+EXE_SHA256=4A68211B4FA808211AAE0AE3E6B7101DE2DE09CFEEB18E2146CFB62F326C90FC
+SOURCE=smoke_bin restored (build-fd/bin copy may vanish under concurrent rebuild)
+STREAMER_SHA256=3356C51DDD3A535B3C50FBD1447B66506610E13B053B257C89DE5A739EF4EB1F
+
+REVERSED=
+  HeadlessIDE /api/tool|/api/file|/api/command no longer hard-403 public_command_and_file_routes_disabled
+  routeToolAndFileRequest + HeadlessIDE_ToolRoutes.cpp (MOTD gate fail-closed)
+
+TOOL_E2E (absolute workspace paths; port 11443):
+  PRE_MOTD list → HTTP 403 (MOTD gate armed)
+  read_file PassiveRoleNotRoleplay.md → HTTP 200
+  list_directory .cursor/rules → HTTP 200 (StreamerAgenticContinueEnsure present)
+  execute_command echo TOOL_LOOP_OK → HTTP 200 success
+  /health=200 /api/version headless /api/nvme/bunnyhop/status reachable
+
+STREAMER_PERFECT_METRICS (inherits ArmSpeed):
+  EXIT=0 TRUE=1 FWD=348/290 FT=1 FC=1 SURV=1 FB=0
+  STREAM=1 HOPS=17 CYC=1 elastic=1
+  PROMOTE=0
+
+LENS=
+  Summarizer: DualStick TRUE + FT/FC + MARS + cyclone + elastic PASSIVE + stream/bunnyhop sealed
+  Against: no invent pinball/trailbrake/tensor_hop/host-VRAM
+  Auditor: LIVEPATH miss was scorer/plasma; bunnyhop N5 inherited
+  For: user product path restored E2E perfect metrics only
+  Thinker: FORCED_OFF purity ≠ DualStick stubs; MoE/plasma/PASSIVE honest holds
+  Critic: no TPS/size claims; PROMOTE=0 TIP_CLIMB=HOLD
+
+RESIDUAL=
+  Relative tool paths (.cursor/rules) can return empty 500 on this host until workingDir/cwd join hardened + rebuild
+  Prefer abs paths or read_file abs MOTD (proven)
+  build-fd/bin RawrXD-Win32IDE.exe can disappear mid-session under concurrent ninja — use smoke_bin/Temp copy for proof
+
+VERDICT=IDE_TOOL_PARITY_UNBLOCKED + STREAMER_STACK_GREEN
+Full: final_*.txt streamer_key.txt PROVENANCE.txt run_tool_parity.ps1

@@ -1,0 +1,60 @@
+GATE=DEEP2_EXPERT_MATH_TOP15_20260913
+DATE=2026-09-13
+KIND=COMPUTE_KERNEL_LADDER
+SCHEDULER_ONLY=0
+PROMOTE=0
+TPS_MINT=0
+TPS_PERFORMANCE_AUTHORITY=0
+NOT_RUN!=PASS
+SEPARATE_FROM=scheduler Top-15 / V7 / MISSING15 (placement≠math cost)
+
+# Changes expert math cost: bytes · instructions · launches · intermediates · occupancy · arith/byte
+# NOT: same FLOPs / better placement
+
+TOP15=
+  01 Fuse quant decode into dot-product microkernel (no F16/F32 materialize)
+  02 Prepack resident experts to GPU-native tile layout (once)
+  03 Grouped-expert GEMM/GEMV (one high-occupancy vs many tiny GEMV)
+  04 Fuse gate+up+activation (single activation load)
+  05 Fuse down-proj with router weight/reduce (no intermediate reduce pass)
+  06 Wave32/64-native quantized DP for RDNA (not generic shader GEMV)
+  07 Packed int/vector dots where quant allows
+  08 Keep activation tiles in regs/LDS across MLP projections
+  09 Specialize to exact Kimi K/N · quant block · wave · tile · stride
+  10 Persistent expert kernels + device-side work queues
+  11 Split large expert across CUs (bandwidth-balanced split-K/N)
+  12 Interleave quant metadata with consuming weight tiles
+  13 Activation-aware zero/tile skip (exact zero → suppress weight reads)
+  14 Separate R9700 vs 7800 XT expert binaries (no compromise kernel)
+  15 Compile selected-expert MLP into one device execution program
+
+EQUATION=
+  fewer_bytes/expert × fewer_insn/weight × fewer_launches
+  × fewer_intermediates × higher_occupancy × greater_arith/byte
+
+FIRST_LADDER=
+  QDECODE_DOT_FUSED (#1)
+  → PREPACK_NATIVE (#2)
+  → RDNA_SPECIALIZED (#6)
+  → FIXED_SHAPE (#9)
+  → GROUPED_EXPERT (#3)
+  → FUSED_MLP (#4+#5)
+  → PERSISTENT_EXPERT (#10)
+  → FUSED_EXPERT_PROGRAM (#15)
+# Primary trio #1+#2+#6 attacks weight-streaming cost itself
+
+PRIMARY_TARGET=
+  BYTES_READ_PER_EXPERT_TOKEN ↓
+  KERNELS_PER_EXPERT ↓
+  INTERMEDIATE_BYTES ↓
+  NS_PER_EXPERT ↓
+  WTA → 1 · EFFECTIVE_LOGICAL_GBPS ↑
+# Meter: DEEP2_EXPERT_WEIGHT_STREAM_ROOFLINE_001
+
+AUTHORITY_METRICS=
+  live ns/expert · live GB/s · live useful_ops/s · output parity
+# Opens path into 1–5+ TPS compute regime; ≠ scheduler 0.10–0.20 alone
+
+ACTIVATE_IF=after V7 residency/predict foundation stable enough not to poison kernel samples
+ORDER=SURVIVABILITY>RESIDENCY>PREDICTION>BALANCE>TPS
+# math ladder feeds QUANT/PERSISTENT/SPARSE fabric rows in TPS projection

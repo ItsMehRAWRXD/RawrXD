@@ -1,0 +1,87 @@
+PATH_B_N5_003=SEALED
+DATE=2026-09-08
+MODE=A
+HOT_GATE=1
+TARGET=PATH_B_N5
+SPEND=1
+OUTCOME=FAIL
+PROMOTE=0
+TRIALS_RUN=1 of 5
+STOP_REASON=trial_1_invalid_witness_stream_abort_teardown_av
+NOTE_STOP=
+  invalid Trial 01 witness (VALID_WITNESS=0); process death EXIT=-1 (AV-class)
+  STREAM_ABORT line was UNOBSERVED this run — stop_reason is classification of
+  invalid-witness + teardown-class death, not a claim that STREAM_ABORT=1 was printed
+  (see OBSERVATION_AUTHORITY_001: no inheritance / no fabricated STREAM_ABORT payload)
+
+BINARY=build-fd/bin/deep2_benchmark.exe (post-t0 rebuild)
+ENV=DEEP2_PATH_B=1 RAWRXD_NO_TP=1
+ARGS=--max-tokens 64 --ctx-size 512 --phase single --prompt hi
+SEQ_CAP=512
+
+TRIAL_01_MEASURED=
+  STREAM_ABORT=UNOBSERVED
+  PARITY_PASS=UNOBSERVED
+  GENERATION_WALL_NS=UNOBSERVED
+  DECODE_TPS_REAL=UNOBSERVED
+  q_b_d2h_bytes=UNOBSERVED
+  vkcopy_qb=UNOBSERVED
+  host_memcpy_qb=UNOBSERVED
+  PROCESS_EXIT=-1
+  LAST_STREAM_HEARTBEAT=STEP_0_OF_64
+  FINAL_NORM_CYCLES≈23
+  CLEAN_STREAM_COMPLETION=0
+  CLEAN_TEARDOWN=0
+  PRIOR_RECEIPT_8_48=SUPERSEDED
+
+ATTRIBUTION_BOUNDARY=
+  CURRENT_STEP=22
+  LAST_PROVEN=FINAL_NORM(step22)
+  NEXT_BOUNDARY=ProjectLogitsArgmax(step22)
+  BEYOND=UNPROVEN
+  CURRENT_UNKNOWN=hidden[random#],hidden[last],ProjectLogitsArgmax_entry
+  ATTRIBUTION_INTERVAL=FINAL_NORM(step22) -> UNKNOWN -> ProjectLogitsArgmax(step22) -> UNKNOWN -> process termination
+  LOGITS_STARTED=UNPROVEN
+  LOGITS_COMPLETED=UNPROVEN
+  TOKEN_CALLBACK=UNPROVEN
+  STREAM_HEARTBEAT_STEP32=UNOBSERVED
+  STREAM_ABORT_OWNER=UNOBSERVED
+  GATE10_FOOTER=UNOBSERVED
+  TEARDOWN_WITNESS=UNOBSERVED
+  EXIT_0=UNOBSERVED
+  HIDDEN_PROBE_VALID=UNOBSERVED
+  HIDDEN_LAST_VALID=UNOBSERVED
+
+EPISTEMOLOGY=
+  RUNTIME_EMISSION=observation; developer label=classification only
+  runtime emits them until developer marks them UNOBSERVED
+  no invented IDs; no zero-fill; no manufactured probe index/value
+  step=22 concrete from FINAL_NORM count; probe/last remain UNOBSERVED until emit
+
+TRIAL_CLOSURES_BOUNDED=
+  Gate12_RoPE_abort_text=NOT_OBSERVED_THIS_TRIAL
+  Q_buffer_null_path=NOT_OBSERVED_THIS_TRIAL
+  NOTE=Closes those two prior signatures for this trial only; not permanent elimination.
+
+ADJUDICATION=
+  VALID_WITNESS=0
+  DELETE_PROVEN=NOT_ASSESSED
+  PROMOTE=0
+  PATH_A=CHAMPION
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  PATH_B_N5=FAIL
+  CHAMPION=PATH_A
+  PATH_A_WALL_MEDIAN_NS=10184789000
+
+LOGS=evidence/RAWRXD_PERFORMANCE_001/PATH_B_N5_003/
+NOTE=No further attribution without a new runtime witness beyond FINAL_NORM(step22).
+EPISTEMOLOGY=
+  RUNTIME_EMISSION=observation; developer label=classification only
+  runtime emits them until developer marks them UNOBSERVED
+  no invented IDs; no zero-fill; no manufactured probe index/value
+  step=22 concrete from FINAL_NORM count; probe/last remain UNOBSERVED until emit
+  HIDDEN_PROBE_WITNESS_001=SOURCE_CONTRACT only — does not backfill this receipt

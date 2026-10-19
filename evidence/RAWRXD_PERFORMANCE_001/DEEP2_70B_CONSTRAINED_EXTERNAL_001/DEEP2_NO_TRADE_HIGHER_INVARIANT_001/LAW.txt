@@ -1,0 +1,44 @@
+GATE=DEEP2_NO_TRADE_HIGHER_INVARIANT_001
+DATE=2026-09-13
+KIND=GOVERNING_ACCEPTANCE_LAW
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+NOT_RUN!=PASS
+PARENT=DEEP2_CONSTRAINT_HIERARCHY_001
+
+# Compact law
+LOWER_ORDER_GAIN_ACCEPTED =
+  HIGHER_ORDER_INVARIANTS_ALL_PASS
+  && LOCAL_METRIC_IMPROVES
+  && WHOLE_TOKEN_METRIC_NOT_REGRESSED
+
+STRICT=
+  if higher_order_regression: reject
+  elif lower_order_gain: consider
+  else: hold
+
+# Prevents "winning" a bench by spending stability/locality/correctness for temporary speed
+
+TOP15=
+  01 Invariant Priority Ladder — declare higher deps; never violate for local speedup
+  02 Fail-Upward Rejection — survive/residency/correctness/parity regression voids TPS wins
+  03 Monotonic Acceptance Law — promote only if sealed invariants equal or better
+  04 Constraint-Before-Objective — OOM/residency/parity hard before token latency min
+  05 No Hidden Debt — reject gains that move cost into reload/retry/host/sync/stall
+  06 Local Win / Global Loss Detector — subsystem vs whole-token + invariant health
+  07 Regression Budget=0 for Sealed Gates — no consuming sealed invariant as headroom
+  08 Optimization Dependency Graph — SURVIVABILITY→RESIDENCY→PREDICTION→BALANCE→TPS
+  09 Counterfactual Invariant Check — predict OOM/evict/parity/recovery before faster plan
+  10 Rollback-on-Higher-Layer Damage — revert lower opt when higher metric fails gate
+  11 Composite Promotion Predicate — conjunction of gates; never speed↔correctness average
+  12 Risk-Adjusted Performance Score — latency after instability/reload/variance penalties
+  13 Proof-Carrying Optimization — receipts that invariants held during measured gain
+  14 Stable-Slower Beats Fragile-Faster — deterministic envelope > intermittent peak TPS
+  15 Performance Is Final Derivative — mint TPS only after survive/resident/predict/balance/semantics
+
+ORDER=SURVIVABILITY > RESIDENCY > PREDICTION > BALANCE > TPS
+V7_APPLY=
+  pin-floor SURVIVE≈PASS does not authorize balance/TPS while RELOAD≠0
+  observe-only matrix until RESIDENCY then PREDICT_ERR<10
+  LPT/steal held until BALANCE gates unlocked

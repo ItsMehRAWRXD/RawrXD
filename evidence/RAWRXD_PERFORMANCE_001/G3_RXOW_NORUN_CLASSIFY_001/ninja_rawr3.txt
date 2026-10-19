@@ -1,0 +1,2 @@
+ninja: warning: build log version is too old; starting over
+ninja: error: opening deps log: Permission denied

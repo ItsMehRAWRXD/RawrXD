@@ -1,0 +1,5 @@
+ULPS_BEFORE EnableUlps=1 PP_GPUPowerDownEnabled=1
+ULPS_AFTER EnableUlps=1 PP_GPUPowerDownEnabled=1
+REG_WRITE=PASS
+PNP_CYCLE=FAIL Generic failure 
+WMI_AVAILABILITY_AFTER=8 Status=OK

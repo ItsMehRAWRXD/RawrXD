@@ -1,0 +1,30 @@
+POST_T0_AUDIT_CONTRACT_001=SEALED
+DATE=2026-09-08
+MODE=A
+TYPE=AUDIT_CONTRACT
+
+SEQ_CAP=512
+FIRST_TOKEN_BOUNDARY=AUDIT_START
+POST_FIRST_TOKEN_SKIP=0
+ZERO_FILL_AS_FIX=0
+FLOOR_TPS=5.000
+MANIFESTATION_FLIP=NON_AUTHORITY
+FIX_POLICY=SOURCE→BUILD→RUNTIME→MEASUREMENT
+
+FORBIDDEN=
+  eligibility/receipt poke
+  floor lower
+  ropeApplied=true stub
+  Clear-every-token fake seqLen=1
+  invent PATH_C / eligibility.c
+
+LANDED_SOURCE=
+  ForwardMLALayers(position, seqNeed) — no hardcode 0; Clear only pos==0
+  Run() passes step + streamTokens+8
+  stepRope required per token (Gate12)
+  null-KV Gate12 = hard fail
+  PathBAttend seqCap=512
+  error.clear after successful attn
+
+ROOT_CAUSES=STREAM_ABORT_POST_T0_ROOT_CAUSES_001
+NEXT=BUILD → RUNTIME PATH_B trial at seqCap=512 → MEASURE

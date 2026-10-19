@@ -1,0 +1,14 @@
+﻿MODEL=DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+SIZE_MB=4794.9 SHA16=713D3A7A93F30676
+HEADLESS_PID=17688
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9785,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"
+LOAD=200 {"success":true,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"}
+GENERATE=200 TOKENS=8 PROCS=1
+GEN_SNIP={"model":"rawrxd","response":"  \nI am considering using a React and","done":true}
+UNLOAD=200 {"success":true}
+RELOAD=200 {"success":true,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"}
+RELOAD_GEN=0 TOKENS=8 PROCS=0
+VERDICT=FAIL OWNER=process_died_reload_gen DETAIL=died_reload

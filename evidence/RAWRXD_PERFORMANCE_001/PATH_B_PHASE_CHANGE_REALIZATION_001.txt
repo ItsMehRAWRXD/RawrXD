@@ -1,0 +1,46 @@
+PATH_B_PHASE_CHANGE_REALIZATION_001=SEALED
+DATE=2026-09-08
+MODE=OBSERVATION_FROM_BASELINE_FRICTION
+INVENTION=0
+TOKEN_benign=STRUCK_UNASSIGNED_NAMESPACE
+
+================================================================================
+REALIZATION (conceptual — not a measured promote)
+================================================================================
+BASELINE_PREMISE_REJECTED
+  Host as perpetual orchestrator of intermediate activation state
+  (retrieve → validate → route → push) is legacy gravity, not physics law.
+
+BOUNDARY_STATUS
+  Host↔device transit for q_b is not a necessary feature.
+  It is an active disruption of device-local computational momentum.
+  PATH_A (HOST_CACHED + invalidate) minimized crossing cost;
+  it did not abolish the crossing. That is transitional, not terminal.
+
+PHASE_CHANGE_TARGET
+  Lifecycle of q (inception → attention consume) remains DEVICE_LOCAL.
+  Host role = prime mover (boundary conditions) not micro-manager.
+  Coherency scaffolding for that cross becomes unnecessary when the
+  consumer never leaves VRAM.
+
+WORD_ALIGN
+  "Remove baseline" = abandon host observation as required for q→attn
+  execution — NOT delete PATH_A champion receipts before DELETE_PROVEN.
+
+================================================================================
+GROUNDED IN PRIOR REVERSE (PATH_B_REVERSE_DISCOVERY_001)
+================================================================================
+STILL_LIVE (pre-phase-change state)
+  GemvHostReadOut(q_b) + MlaAttentionComplete(host)
+STILL_ABSENT (phase-change not yet physical)
+  CMake link of vulkan_fwd_attn_mla.cpp
+  Call site skipping GemvHostReadOut
+  Measured q_b_d2h_bytes==0
+
+CHAMPION_UNTIL_DELETE_PROVEN=PATH_A_HOST_CACHED (6.284 wall median)
+LAYOUT_LAW=MLA_KV_LAYOUT_CONTRACT (packed [nope|rope], not planar invention)
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+GOODS_STAY_BRAIDED=1
+PROMOTE=0
+MEASURED_PHASE_CHANGE=0

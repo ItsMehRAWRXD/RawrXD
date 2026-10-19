@@ -1,0 +1,77 @@
+GATE=G3_GPU1_A0_CONTEXT_DISCRIM_001
+PURPOSE=discriminate A0 fail: solo vs order vs qfam vs transient vs independent vulkaninfo
+PARENT=G3_GPU1_PRERUNTIME_PROVENANCE_001
+TARGET=RX7800XT
+STREAMER_EXE=FROZEN
+BEHAVIOR_PATCH=0
+PROMOTE=0
+PROBE_EXIT=0
+
+# --- hypothesis outcomes ---
+INPROC_CROSS_ADAPTER=DISPROVEN
+  SOLO_R9700_A0=VK_SUCCESS
+  SOLO_7800_A0=VK_ERROR_UNKNOWN (3/3 retries, fresh process)
+ORDER_DEPENDENT=DISPROVEN
+  order=r9700_first: FIRST_R9700=OK SECOND_7800=-13
+  order=7800_first:  FIRST_7800=-13 SECOND_R9700=OK
+HARNESS_QUEUE_FAMILY=DISPROVEN
+  SOLO_7800_QFAM_IDX=0 QFAM_FLAGS=0xF QFAM_QCOUNT=8 QFAM_COUNT=3
+  (valid compute/graphics family on this PD; not cross-adapter index)
+TRANSIENT_TDR=DISPROVEN
+  SOLO_7800 persistent -13 across TRY=0,1,2 (Sleep 200ms)
+
+# --- VRAM (stock sizes; kills mod theory) ---
+R9700_VRAM_BYTES=34208743424   # ~31.9 GiB
+RX7800XT_VRAM_BYTES=17163091968 # ~16.0 GiB
+
+# --- Win32 adapter health ---
+R9700_WIN32_STATUS=OK
+R9700_WIN32_AVAILABILITY=3   # Running/Full Power
+RX7800XT_WIN32_STATUS=OK
+RX7800XT_WIN32_AVAILABILITY=8 # Off Line
+RX7800XT_CONFIG_MANAGER_ERROR=0
+
+# --- independent Vulkan (not our harness) ---
+VULKANINFO=C:\Windows\System32\vulkaninfo.exe
+VULKANINFO_CREATE=FAIL
+VULKANINFO_VK_RESULT=ERROR_UNKNOWN
+VULKANINFO_ICD_FAIL=
+  C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll
+LOADER_NOTE=duplicate VK_LAYER_AMD_switchable_graphics
+  (amdvlk.inf_… vs u0203303.inf_…\B026363\amd-vulkan64.json)
+
+# --- ICD identity correction vs prior gate ---
+PRIOR_ASSUMED_ICD=amdxc64.dll (display UMD / DriverStore u0203304)
+TRUE_VK_CREATE_ICD=amdvlk64.dll (amdvlk.inf package)
+AMDVLK64_SHA256=5C0561968155F4B0AA80FE9A5BBD17072D5942ECB906C687E749DC92058A8650
+AMDXC64_SHA256=F8E6C9E4DF6907A08B6AAB802E5E3794E25D4EAB59C16439DFC1608501454E69
+ICD_BINARY_MATCH_AMDXC_VS_AMDVLK=0
+# SAME_DRIVER_PACKAGE / SAME_LOADER from prior gate still hold for display stack;
+# Vulkan ICD package is a distinct DriverStore node.
+
+# --- narrowing (revised) ---
+BLOCKER_A=RX7800XT_OFFLINE_OR_AMDVLK_DEVICE_STATE
+APPLICATION_POLICY_DEPENDENT=0
+DUALSTICK_DEPENDENT=0
+HARNESS_DEPENDENT=0
+INPROC_CROSS_ADAPTER_DEPENDENT=0
+FEATURE_EXTENSION_REDUCTION=BOTTOMED_OUT
+MIGRATION_REACHED=0
+LAYER_ASSIGNMENT_REACHED=0
+DUAL_FORWARD_REACHED=0
+DUALSTICK_LIVE=0
+
+DISPOSITION=
+  Solo 7800 A0 fails identically to paired create → not multi-GPU linking.
+  Queue-family provenance is coherent on the 7800 PD.
+  Stock vulkaninfo fails in the same ICD (amdvlk64) with ERROR_UNKNOWN →
+  app/harness exonerated for create shape.
+  Win32 Availability=8 (Off Line) on 7800 while R9700=3 is the strongest
+  OS-visible discriminator alongside amdvlk create failure.
+
+ENV_SNAP_NOTE=
+  DualStickEnvSnap.cpp:91 ENV_MUTATION_GPU_NAME_OWNER format/args consistent;
+  name-mut owner hardcodes DualStickNoTruncate (clear path). Not owner of A0.
+
+Full: SOLO_R9700.txt SOLO_7800.txt ORDER_*.txt ICD_AMDVLK_VS_AMDXC.txt
+      VULKANINFO_SUMMARY.txt WIN32_ADAPTER_HEALTH.txt

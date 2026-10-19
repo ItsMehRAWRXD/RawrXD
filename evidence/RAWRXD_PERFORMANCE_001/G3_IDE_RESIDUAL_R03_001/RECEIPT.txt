@@ -1,0 +1,47 @@
+GATE=G3_IDE_RESIDUAL_R03_001
+ASOF=2026-09-10T06:45Z
+OWNER=ACTIVE_SPEND_R03
+PROMOTE=0
+TIP_CLIMB=HOLD
+VERDICT=PASS
+R03=CLOSED
+
+## Scope
+Thin GUI EngineAPI adapters on Headless (+ LocalServer aliases):
+  /api/policies* /api/extensions* /api/browse* /api/agents/explain*
+  POST /api/backends/use  GET /metrics  POST /complete|/complete/stream
+No duplicate policy/extension engines. backends/use → setActiveBackend(LocalGGUF).
+Ollama/cloud switch → HTTP 422 LOCAL_ONLY_NO_OLLAMA. /complete → generate path.
+
+## Live binary
+EXE=build-fd/bin/RawrXD-Win32IDE.exe
+SMOKE_COPY=smoke_bin/RawrXD-Win32IDE_r03r04.exe
+SHA256=5CBCC0750B481BFE862E7B6367BB006C63440650D79A24185211CC6541F60792
+SHA16=5CBCC0750B481BFE
+EXE_SIZE=329308672
+PORT=127.0.0.1:11435
+
+## HTTP proofs
+FILE=HTTP_PROOFS.txt
+FAIL_COUNT_404=0
+KEY=
+  GET /api/policies → 200
+  GET /api/extensions → 200
+  POST /api/browse → 200 (thin no-proxy JSON; not 404)
+  GET /api/agents/explain → 200
+  POST /api/backends/use deep2 → 200 success
+  POST /api/backends/use ollama → 422 LOCAL_ONLY
+  GET /metrics → 200
+  POST /complete → 503 model_not_loaded (alias hit; not 404)
+
+## Code
+  src/win32app/ProductGuiRouteAdapters.hpp
+  src/win32app/HeadlessIDE_GuiRoutes.cpp
+  src/win32app/HeadlessIDE.cpp (route wire)
+  src/win32app/Win32IDE_LocalServer.cpp (backends/use + thin GUI routes)
+  CMakeLists.txt
+
+## Unchanged
+R01=CLOSED R02=CLOSED R05 agenticMode=false HELD
+MOTD / DualStick / reachability / parity / tool-unstub = NOT REOPENED
+PROMOTE=0 TIP_CLIMB=HOLD

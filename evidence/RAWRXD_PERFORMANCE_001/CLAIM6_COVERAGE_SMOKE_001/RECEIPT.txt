@@ -1,0 +1,46 @@
+CLAIM6_COVERAGE_SMOKE_001=SEALED
+DATE=2026-09-08
+TYPE=OWNER_SITE_COVERAGE
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+NO_AUTHORITY_TRANSITION=1
+NO_PATH_B_PROMOTE=1
+
+GOAL=
+  Claim 6 LOGITS_ENTRY: NO_CORRESPONDING → OBSERVED
+  via real ProjectLogitsArgmax owner (not synthetic)
+
+WORKLOAD=
+  BINARY=build-fd/bin/deep2_benchmark.exe (rebuilt w/ EV512)
+  MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\...-00001-of-00013.gguf
+  ARGS=--phase single --prompt hi --max-tokens 1 --ctx-size 512
+  ENV=DEEP2_EV512=1 DEEP2_PATH_B=unset RAWRXD_NO_TP=1
+  PATH=generateStream→runK2NativeStreamPartial→ProjectLogitsArgmax
+
+RESULT=
+  RC=0 WALL_MS≈9968
+  LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+  LOGITS_ENTRY STEP=0/1 printed
+  RXEV_SUMMARY OK=1 CAP=512 COM=74 DROP=0 SEQ=512
+
+CLAIM_6=
+  ID=6 LOGITS_ENTRY DISPOSITION=OBSERVED STATUS=2 ORD=66 ARG0=0 ARG1=1
+  VERDICT=PASS
+
+PHASE1_SIDE_COVERAGE_THIS_RUN=
+  OBSERVED: 1,2,3,4,5,6,7,8,10,12,13,15,16,17
+  NO_CORRESPONDING: 9 PATHB_COMPLETE (PathB not enabled — expected)
+  NO_CORRESPONDING: 11 STREAM_ABORT (clean complete — expected)
+  NO_CORRESPONDING: 14 TEARDOWN_FAULT (no fault — expected)
+
+NOT_CLAIMED=
+  MODE=A measurement
+  PATH_B promote / Claim 9 fire
+  Claims 18–96 IDE workflows
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

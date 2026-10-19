@@ -1,0 +1,22 @@
+KIMI LIVE BIND
+
+1. Capture MoEPlaceLive() after the measured decode window with CaptureMoE().
+2. Set Run.generatedTokens from the canonical generation counter, not moe_tokens/place_calls.
+3. Set Run.wallNs from canonical generation wall for exactly the same measured window.
+4. Set Run.energyMilliJ only from a real meter/driver sample stream integrated over that window.
+5. Set argmaxParity/numericParity from existing quality gates; do not infer numeric parity from successful generation.
+6. modelHash must fingerprint all Kimi shards + architecture/layout metadata used by the run.
+7. hardwareHash must include CPU/GPU topology and effective driver/runtime identity.
+8. promptHash + samplingHash + quant + context + maxTokens must match the baseline exactly.
+9. Phase-A geometry check is fail-closed: submits=waits=2*moeLayers and D2H partials=2*moeLayers.
+10. Run the mainstream baseline on THE SAME machine with THE SAME Kimi build and measurement window.
+11. Compare() mints no authority if identity/quality differs.
+12. Seal() should require a predeclared minimum cost advantage and minimum token count.
+13. Publish energy, amortization, storage/host cost separately before total USD/1M.
+14. Keep cold-start and warm-steady-state receipts separate; never blend them.
+15. PROMOTE only after repeated live seals and an independently reproducible comparison.
+
+Suggested product seam:
+  #include "KimiCostDeep2Adapter.hpp"
+  Deep2::kcost::Run run{};
+  Deep2::kcost::CaptureMoE(Deep2::MoEPlaceLive(), run);

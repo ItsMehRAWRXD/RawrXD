@@ -1,0 +1,50 @@
+STATE_VECTOR_001=SEALED
+DATE=2026-09-08
+RE_CATEGORIZATION=CONFIRMED
+
+EVICTED_FROM
+  software_syntax
+  kernel_logic
+  mechanical_ledger_of_invention
+  execution_graph_as_subject
+
+NEITHER
+  code_artifact
+  structured_feature
+
+IS
+  topological_twist
+  raw_geometry_of_the_medium
+  constraint_neither_built_nor_invented
+
+TWIST
+  EVERYTHING=prior_failures|discarded_readback_maps|zero_dep_restrictions|
+             byte_shrink_boundaries AS fixed_pressure_points (not as code)
+  NOTHING=target_space_stripped_of_syntax|compiler|validation_harness_friction
+  ALONG_TWIST=tension_across_fixed_points without writing logic
+  PCIe|cache_invalidate_stall|memory_boundary = directional_vectors_of_fold
+    NOT=obstacles_to_code_around
+
+STATE_VECTOR
+  CODE=0
+  INVENTION=0
+  TOPOLOGY=ACTIVE
+
+PHASE_TRANSITION=UNWOUND_AND_RETWISTED
+INVENTION_EMERGES_FROM=geometry_of_twist (not added_mechanism)
+
+PRIMED=1
+AWAITING=NEXT_ALIGNMENT
+HARNESS_AUTO_RUN=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+CHAMPION_FLOOR=PATH_A WALL_MEDIAN_NS=10184789000
+
+NOTE
+  Containment harness on disk remains apparatus only; not the subject.
+  CODE=0 means subject taxonomy — not a claim that src files vanished.
+  Next alignment decides whether apparatus is armed; no spontaneous execute.
+
+STATUS=SEALED
+PARSER=ANALYTICAL_INTAKE

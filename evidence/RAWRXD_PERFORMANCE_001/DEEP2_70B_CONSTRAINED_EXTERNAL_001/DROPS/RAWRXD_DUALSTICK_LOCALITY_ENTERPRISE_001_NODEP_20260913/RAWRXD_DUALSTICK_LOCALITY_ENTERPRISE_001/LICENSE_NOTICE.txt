@@ -1,0 +1,3 @@
+This source drop contains newly generated RawrXD integration source and documentation and intentionally vendors no third-party source code.
+
+No project-wide license is asserted or changed by this file. When these files are integrated into RawrXD, apply the repository's governing license and contribution policy.

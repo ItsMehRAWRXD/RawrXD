@@ -1,0 +1,9 @@
+﻿MODEL=qwen2.5-coder-7b.gguf
+PATH=F:\OllamaModels\models\blobs\sha256-60e05f2100071479f596b964f89f510f057ce397ea22f2833a0cfe029bfc2463
+SIZE_MB=4466.1 SHA16=60E05F2100071479
+HEADLESS_PID=10108
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":3,"model":"qwen2.5-coder-14b-instruct-q8_0.gguf","profile_source":"runtime_gguf","profile_id":9111,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"t
+LOAD=0 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

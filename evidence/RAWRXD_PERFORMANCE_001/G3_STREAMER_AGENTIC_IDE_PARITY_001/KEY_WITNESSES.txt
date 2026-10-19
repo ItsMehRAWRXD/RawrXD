@@ -1,0 +1,58 @@
+﻿ASOF=2026-09-10T00:34:02.1683350-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+=== Cursor hooks ===
+hooks.json=True
+motd-before-submit.ps1=True
+motd-pre-tool.ps1=True
+motd-post-tool.ps1=True
+motd-common.ps1=True
+motd-ack.json={"conversation_id":"","acked":false,"updated":"2026-09-10T00:33:39.9483730-04:00"}
+
+HOOK_GATE_TEST: NON_MOTD_BLOCKED=True MOTD_READ_ALLOWED=True ACK_RESET=True
+
+=== Engine.js continue-ensure ===
+engine:77:path: '.cursor/rules/PassiveRoleNotRoleplay.md',
+engine:81:continueEnsure: {
+engine:491:sys += '\n\n[CONTINUE-ENSURE / MULTITASK] When the user says "Please continue ensuring" '
+engine:2507:((tool === 'read_file' || tool === 'Read') && pathStr.indexOf('PassiveRoleNotRoleplay') >= 0);
+engine:4338:// Continue-ensure / Multitask (Cursor-parity for Deep IDE)
+engine:4341:var CONTINUE_ENSURE_MAX_BRIEF =
+engine:4374:await EngineAPI.subagent(CONTINUE_ENSURE_MAX_BRIEF, model, 'continue-ensure');
+
+=== standalone.html parity ===
+standalone:10891:path: '.cursor/rules/PassiveRoleNotRoleplay.md',
+standalone:10895:continueEnsure: {
+standalone:11326:sys += '\n\n[CONTINUE-ENSURE / MULTITASK] When the user says "Please continue ensuring" '
+standalone:12793:((tool === 'read_file' || tool === 'Read') && pathStr.indexOf('PassiveRoleNotRoleplay') >= 0);
+standalone:14939:// Continue-ensure / Multitask (Cursor-parity for Deep IDE standalone)
+standalone:14942:var CONTINUE_ENSURE_MAX_BRIEF =
+standalone:14958:function isContinueEnsureTrigger(text) {
+standalone:14975:await EngineAPI.subagent(CONTINUE_ENSURE_MAX_BRIEF, model, 'continue-ensure');
+standalone:15029:if (isContinueEnsureTrigger(text)) {
+
+=== standalone_e2e.html parity ===
+e2e:10891:path: '.cursor/rules/PassiveRoleNotRoleplay.md',
+e2e:10895:continueEnsure: {
+e2e:11326:sys += '\n\n[CONTINUE-ENSURE / MULTITASK] When the user says "Please continue ensuring" '
+e2e:12793:((tool === 'read_file' || tool === 'Read') && pathStr.indexOf('PassiveRoleNotRoleplay') >= 0);
+e2e:14939:// Continue-ensure / Multitask (Cursor-parity for Deep IDE standalone)
+e2e:14942:var CONTINUE_ENSURE_MAX_BRIEF =
+e2e:14958:function isContinueEnsureTrigger(text) {
+e2e:14975:await EngineAPI.subagent(CONTINUE_ENSURE_MAX_BRIEF, model, 'continue-ensure');
+e2e:15029:if (isContinueEnsureTrigger(text)) {
+
+=== C++ MotdPathMatches ===
+Win32IDE_LocalServer.cpp:49:// MOTD gate: each streaming local chat turn must Read PassiveRoleNotRoleplay.md before tools
+Win32IDE_LocalServer.cpp:52:constexpr const char* kMotdNeedle = "PassiveRoleNotRoleplay.md";
+Win32IDE_LocalServer.cpp:54:bool MotdPathMatches(const std::string& path)
+Win32IDE_LocalServer.cpp:56:return path.find("PassiveRoleNotRoleplay") != std::string::npos;
+Win32IDE_LocalServer.cpp:4944:(tool == "read_motd") || (tool == "read_file" && MotdPathMatches(pathArg));
+Win32IDE_LocalServer.cpp:4951:"(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}");
+Win32IDE_LocalServer.cpp:4963:motdPath = ".cursor/rules/PassiveRoleNotRoleplay.md";
+Win32IDE_LocalServer.cpp:4971:if (MotdPathMatches(pathArg))
+HeadlessIDE_ToolRoutes.cpp:21:constexpr const char* kMotdNeedle = "PassiveRoleNotRoleplay.md";
+HeadlessIDE_ToolRoutes.cpp:23:bool motdPathMatches(const std::string& path) {
+HeadlessIDE_ToolRoutes.cpp:24:return path.find("PassiveRoleNotRoleplay") != std::string::npos;
+HeadlessIDE_ToolRoutes.cpp:117:const char* rel = ".cursor\\rules\\PassiveRoleNotRoleplay.md";

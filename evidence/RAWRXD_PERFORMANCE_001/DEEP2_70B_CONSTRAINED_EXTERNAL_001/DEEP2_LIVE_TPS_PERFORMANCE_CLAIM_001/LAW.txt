@@ -1,0 +1,64 @@
+GATE=DEEP2_LIVE_TPS_PERFORMANCE_CLAIM_001
+DATE=2026-09-13
+KIND=SOURCE_READY_TPS_AUTHORITY_LAW
+PROMOTE=0
+TPS_MINT=0
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+# Claim from raw live counters only — never target/estimate/ceiling/selftest/microbench
+
+TOP15=
+  01 Canonical Generation Clock — first→final committed decode token; monotonic ns; no load/prefill in decode TPS
+  02 Authoritative Token Counter — count only at token-commit; never MoE/layer/draft/retry/reject inflate
+  03 Full-Forward Enforcement — attn→MoE/FFN→LM-head→sample; sealed-logit reuse/shortcuts OFF
+  04 Real-Model Identity Seal — hash all GGUF shards + arch/quant metadata
+  05 Product-Backend Attestation — rawr run Deep2 product path only (no mock/synth/replay/microbench)
+  06 Router Execution Parity — SEL==EXE; IDs+weights unchanged
+  07 Numerical/Generation Parity Gate — logits or deterministic tokens vs trusted reference
+  08 No-Host-Fallback Seal — HOST_GEMV_EXPERT=0 when GPU/DualStick claimed
+  09 Warm/Cold Run Separation — cold / first-token / warm steady-state separate
+  10 Per-Token Wall Distribution — mean/median/p95/min/max decode wall
+  11 Stable-Window Requirement — min consecutive tokens; no abort/retry/device-loss/counter-reset
+  12 Resource-State Receipt — GPU assign, VRAM, H2D/D2H, reload, join wait, host RAM, context
+  13 Exact TPS Formula — committed_decode_tokens / decode_wall_seconds; print num+den
+  14 Matched Baseline Harness — same shards/quant/prompt/ctx/count/sampling/hw/warm-cold
+  15 Fail-Closed Performance Seal — TPS_PERFORMANCE_AUTHORITY=1 only if all predicates pass
+
+LIVE_TPS_PASS_IF=
+  EXIT==0
+  && PRODUCT_BACKEND_ATTESTED==1
+  && MODEL_HASH_VALID==1
+  && FULL_FORWARD==1
+  && GENERATED_COMMITTED_TOKENS>=AUTH_MIN
+  && TOKEN_COMMIT_COUNT==GENERATED_COMMITTED_TOKENS
+  && GENERATION_WALL_NS>0
+  && ROUTER_ID_WEIGHT_PARITY==1
+  && SELECTED_EXPERTS==EXECUTED_EXPERTS
+  && NUMERIC_PARITY==1
+  && WORKER_FAILURES==0
+  && DEVICE_LOST==0
+  && STREAM_ABORT==0
+
+TPS=
+  GENERATED_COMMITTED_TOKENS / (GENERATION_WALL_NS / 1e9)
+
+MIN_RECEIPT_FIELDS=
+  MODEL MODEL_SHA256 QUANT CONTEXT PROMPT_TOKENS
+  GENERATED_COMMITTED_TOKENS GENERATION_WALL_NS TPS
+  EXIT PRODUCT_BACKEND_ATTESTED FULL_FORWARD
+  SEL EXE ROUTER_PARITY NUMERIC_PARITY
+  HOST_GEMV_EXPERT RELOAD_MISS_BYTES
+  GPU0_WORK_NS GPU1_WORK_NS GPU_JOIN_WAIT_NS
+  H2D_BYTES D2H_BYTES WORKER_FAILURES
+  TPS_PERFORMANCE_AUTHORITY
+# PROMOTE = separate gate (≠ TPS_PERFORMANCE_AUTHORITY)
+
+RELATED=
+  DEEPSEEK_PRODUCT_BOUND_CHAIN_001 (PRODUCT_BOUND before TPS_MINT)
+  DEEP2_COST_PER_TOKEN_ADVANTAGE_001 (economic seal ≠ TPS seal)
+  DEEP2_KIMI_COST_PER_TOKEN_NODEP_20260913 (cost receipts; COST_SEAL_LIVE=0)
+
+LIVE_OWNER_NOW=HETEROGENEOUS_EXPERT_COST_MODEL_V7
+# mint TPS_PERFORMANCE_AUTHORITY only after live receipt satisfies LIVE_TPS_PASS_IF

@@ -1,0 +1,66 @@
+GATE=G3_RAWRXD_SERVER_11435_INDEPENDENCE_001
+PURPOSE=Prove RawrXD product server independence from Ollama :11434; product clients default to :11435
+ASOF=2026-09-10T01:05
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+OLLAMA_PROCESS_REQUIRED=NO
+RAWRXD_SERVER_REQUIRED=YES
+RAWRXD_PORT=11435
+MODEL_EXECUTION=YOUR_LOCAL_SERVER
+LOCAL_ONLY_NO_OLLAMA=1
+
+POSTURE=
+  Headless IDE is the product inference/API server on 127.0.0.1:11435
+  Ollama daemon NOT required; ImportSpace68 / LOCAL_ONLY_NO_OLLAMA preserved
+  Did NOT Stop-Process ollama (PORT_11434_LISTEN=0 at seal time; OLLAMA_STOPPED_BY_US=0)
+
+CURL_PROOF=
+  GET http://127.0.0.1:11435/health → 200 {"status":"ok","mode":"local",...}
+  GET http://127.0.0.1:11435/api/tags → 200 {"models":[]}
+  Witnesses: health.json api_tags.json KEY_WITNESSES.txt
+
+BINARY=
+  G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE_headless_live.exe
+  args: --headless --local --port 11435 --dir G:\~dev\rawrxd
+  OWNER_PID=24720 (at seal)
+
+CLIENT_FIXES=
+  gui/ide_chatbot_standalone.html
+  gui/ide_chatbot_standalone_e2e.html
+  gui/ide_chatbot_engine.js
+  native_e2e/ide_chatbot_standalone_e2e.html
+  Changes:
+    - State.backend.ollamaDirectUrl → http://127.0.0.1:11435 (was :11434)
+    - ghost.scanPorts drop 11434
+    - getOllamaDirectUrl / LocalBrowse / beacon fallbacks → :11435
+    - EngineAPI getCliUrl default :11435 (engine.js had :11434 bug)
+    - Try 2 Ollama connect fallback DISABLED (if false && …)
+    - ALLOWED_ORIGINS drop :11434
+    - Welcome/offline copy → RawrXD :11435 only
+
+11434_FINDINGS_PRE_FIX=
+  Product defaults already preferred :11435 for State.backend.url / _ideServerUrl
+  Residual Ollama paths: ollamaDirectUrl, scanPorts[+11434], getOllamaDirectUrl,
+    LocalBrowse tags probes, beacon switch-to-ollama, TestAPI ALLOWED_ORIGINS,
+    engine.js getCliUrl fallback http://localhost:11434 (critical)
+  Server-side optional Ollama backend stubs remain in Win32IDE_BackendSwitcher /
+    HeadlessIDE / HotpatchWiring (LOCAL_ONLY_NO_OLLAMA already refuses at runtime)
+  NOT product client defaults — left as server refuse-path / comments
+
+NATIVE_E2E_TIE=
+  Prior UI failure model_profile_not_found for BigDaddyG-Q2_K-ULTRA.gguf
+  POST :11435/api/native/generation/prepare → same error from RawrXD (not Ollama)
+  Proves prepare/tags path hits RawrXD :11435; residual = empty /api/tags + missing
+  RawrNative_RegisterRuntimeModel for the GGUF name (load/register on Headless)
+
+RESIDUALS=
+  /api/tags returns {"models":[]} until a GGUF is loaded + RegisterRuntimeModel
+  model_profile_not_found remains until runtime registration (path correct)
+  C++ optional Ollama config defaults (port=11434) still in BackendSwitcher/Hotpatch —
+    refused by LOCAL_ONLY_NO_OLLAMA; not reintroduced
+  sites/screenpilot.tech + Full Source / history copies not rewritten this seal
+  DualStick / Headless /api/tool public-veto lane NOT reopened
+
+VERDICT=RAWRXD_11435_INDEPENDENT
+  Product clients + live Headless prove independence from Ollama :11434.

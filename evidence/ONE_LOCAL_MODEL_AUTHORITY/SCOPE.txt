@@ -1,0 +1,28 @@
+RAWRXD LOCAL MODEL — COMPLETED vs NOT-COMPLETED
+DATE=2026-09-08
+SOURCE=scope dump (authoritative distinction)
+
+SHORTEST STATUS
+--------------
+COMPLETED LOCAL-MODEL PATH:
+  TinyLlama GGUF → AuthorityBundle → ProductRuntime → Deep2
+  → real prefill → real tokens → cancel → unload/reload → real tokens → PASS
+
+MISSING FROM UNIVERSAL COMPLETION:
+  architecture breadth, quant breadth, tokenizer breadth,
+  split/shard E2E, MoE/SSM/MLA variants, dual-GPU product E2E proof
+
+SEPARATE OPEN PATH:
+  K2 performance / WALL_WITHIN_BUDGET
+
+LAW
+---
+LOCAL_MODEL_E2E=PASS proves ONE complete production path, not universal coverage.
+Do not rebuild TinyLlama PASSed gates because another model fails.
+NO_REOPEN_PRODUCT_AUTHORITY=1 unless ACTUAL_RUNTIME_REGRESSION=1.
+
+PRODUCT NEXT
+  ONE_MODEL_E2E → MULTI_MODEL_E2E MATRIX → UNIVERSAL_LOCAL_MODEL_AUTHORITY
+
+PERFORMANCE NEXT (independent)
+  K2 KVA → parity → winner → shared-X → wall budget

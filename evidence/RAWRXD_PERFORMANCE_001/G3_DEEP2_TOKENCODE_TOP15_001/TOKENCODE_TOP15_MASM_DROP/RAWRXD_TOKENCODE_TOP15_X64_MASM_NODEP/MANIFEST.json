@@ -1,0 +1,52 @@
+[
+  {
+    "file": "GENERATOR_FINALIZATION_MAP.txt",
+    "bytes": 829,
+    "sha256": "d867bb47536076180a41b20022a4185dbd6210469840d1971e34e70a872952fb"
+  },
+  {
+    "file": "README.md",
+    "bytes": 735,
+    "sha256": "e20ec873ba86010d6e05ada647c97d7cbabb825baa39b676a99e03a558552e36"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 2966,
+    "sha256": "8daae8c05e6a4d4508eda2520d7da768ce77e37bf1b8f5d7068aec6b30ad9158"
+  },
+  {
+    "file": "TOP15_TOKENCODE.txt",
+    "bytes": 1240,
+    "sha256": "989cc6b7bf35fc03a2ede468c685a39a8ffe0c7888ad4f82a0e021b0169b008a"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 526,
+    "sha256": "72662ac45620565fdaa73f4c06aa4f16b7f304c32df6723a08f31d10388859d7"
+  },
+  {
+    "file": "positive_harness.asm",
+    "bytes": 1381,
+    "sha256": "df7af9b9a9d06f95527055b0d645b7d832f3f87b74af33df053b26d9609223e6"
+  },
+  {
+    "file": "tamper_harness.asm",
+    "bytes": 665,
+    "sha256": "1b5cade5e4a088a79305d3b8ba85c00cbf7729dbd65dd62294944ce64128c19f"
+  },
+  {
+    "file": "tokencode15.asm",
+    "bytes": 7932,
+    "sha256": "9496598a11b17556d7bc7a24f440f1dd7982a9ca7d21d85114b66effc3a19e23"
+  },
+  {
+    "file": "tokencode15.inc",
+    "bytes": 2051,
+    "sha256": "fcbe6b88cd2be40d092055392f24ed21fb699b890c0375bb44a8f8616a90d232"
+  },
+  {
+    "file": "zero_harness.asm",
+    "bytes": 458,
+    "sha256": "9063b8968fe1ce987ed37f0cd2c014aad0d67d90535e75dc23ad234eaab6245a"
+  }
+]

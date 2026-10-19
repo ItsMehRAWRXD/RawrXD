@@ -1,0 +1,47 @@
+﻿{
+    "receipt_id":  "SMOKE_LOGITS_SPLIT",
+    "result":  "INCOMPLETE",
+    "promote":  0,
+    "date":  "2026-09-08",
+    "decode_tps_real":  0,
+    "generation_wall_ns":  0,
+    "generated_tokens":  64,
+    "q_branch_us":  3678736,
+    "qkv_readback_us":  null,
+    "qkv_exposed_us":  null,
+    "o_proj_exposed_us":  null,
+    "logits_exposed_us":  null,
+    "logits_dot_ms":  0,
+    "mla_q_device_ops":  0,
+    "mla_q_device_fail":  0,
+    "argmax_parity":  1,
+    "kva_rows_per_wg":  16,
+    "product_floor_tps":  5,
+    "wall_within_budget":  0,
+    "product_pass":  0,
+    "k2_product_5tps":  "OPEN",
+    "champion_generation":  "smoke_logits_split",
+    "witness_log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/smoke_logits_split.log",
+    "attrib_receipt":  "evidence/K2_USEFUL_TPS_001/smoke_logits_split.log",
+    "next_runtime_action":  "LOGITS",
+    "forced_off":  {
+                       "TOKEN_PACING":  "OFF",
+                       "DEEP2_CERT_STEP_LOG":  "0",
+                       "DEEP2_LOGITS_GPU_SPLIT":  "0",
+                       "DEEP2_MLA_Q_DEVICE_FORCE_OFF":  "0",
+                       "QKV_OWNER_RESI_LOG":  "0",
+                       "TOK_RESIDUAL_SPAM":  "0"
+                   },
+    "forced_on":  {
+                      "DEEP2_MLA_Q_DEVICE":  "1",
+                      "DEEP2_WEIGHT_PIN":  "1",
+                      "DEEP2_MLA_FUSED_Q4KT":  "1",
+                      "DEEP2_LOGITS_THREADS":  "32",
+                      "RAWRXD_NO_TP":  "1"
+                  },
+    "do_not_reopen":  [
+                          "KvaRowsClimb",
+                          "ProductAuthority",
+                          "XR_correctness"
+                      ]
+}

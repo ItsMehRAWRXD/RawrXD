@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.16)
+project(deep2_deepseek_v3r1_nodep CXX)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(deepseek_nodep_selftest
+ Deep2DeepSeekRuntime_Core.cpp Deep2DeepSeekRuntime_Router.cpp
+ Deep2DeepSeekRuntime_Schedule.cpp Deep2DeepSeekRuntime_Residency.cpp
+ Deep2DeepSeekRuntime_KvPrefill.cpp Deep2DeepSeekRuntime_MtpQuant.cpp
+ Deep2DeepSeekRuntime_Prefetch.cpp Deep2DeepSeekDualStickAdapter.cpp selftest.cpp)

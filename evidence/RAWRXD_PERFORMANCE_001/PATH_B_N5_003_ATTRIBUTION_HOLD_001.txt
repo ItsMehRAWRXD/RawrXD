@@ -1,0 +1,67 @@
+PATH_B_N5_003_ATTRIBUTION_HOLD_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_HOLD
+SPEND=0
+RERUN=0
+STATUS=SEALED
+NARROWING=EXHAUSTED_FROM_CURRENT_LOGS
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  VALID_WITNESS=0
+  DELETE_PROVEN=NOT_ASSESSED
+  PROMOTE=0
+
+CURRENT_STEP=22
+
+PROVEN=
+  FINAL_NORM_AFTER_L2 #23
+  ProduceFinalHidden completion (inferred from emit count)
+
+CURRENT_UNKNOWN=
+  concrete hidden[random#] index/value
+  concrete hidden[last] value
+  ProjectLogitsArgmax entry
+
+BOUNDARY=
+  step22 final-hidden output
+    → UNKNOWN
+    → ProjectLogitsArgmax(step22)
+    → UNKNOWN
+    → process termination
+
+A_VS_B=
+  A=crash before ProjectLogitsArgmax entry
+  B=crash after entry before first observable owner/log
+  neither favored
+
+UNPROVEN_NOT_FAILED=
+  LOGITS_STARTED
+  LOGITS_COMPLETED
+  TOKEN_CALLBACK
+  MLA_FORWARD(step23)
+
+UNOBSERVED_NOT_FAILED=
+  STREAM_ABORT_OWNER
+  STREAM_HEARTBEAT_STEP32
+  GATE10_FOOTER
+  TEARDOWN_WITNESS
+  EXIT_0
+
+TRIAL_CLOSURES_THIS_RUN_ONLY=
+  Gate12/RoPE abort = NOT OBSERVED THIS TRIAL
+  Q-buffer null path = NOT OBSERVED THIS TRIAL
+
+EPISTEMOLOGY=
+  RUNTIME_EMISSION = observation
+  DEVELOPER_LABEL  = classification
+  runtime emits them until developer marks them UNOBSERVED
+  developer does not manufacture observation / invent ID / zero-fill
+  step=22 concrete from prior FINAL_NORM count
+  probe index/value = UNOBSERVED until a run emits HIDDEN_PROBE_VALID
+  last value        = UNOBSERVED until a run emits HIDDEN_LAST_VALID
+
+NOTE=No further attribution without new runtime witness past FINAL_NORM(step22).

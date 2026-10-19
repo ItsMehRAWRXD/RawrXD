@@ -1,0 +1,3 @@
+ALIVE=1
+11494=11494
+HTTP_CODE=%{http_code}

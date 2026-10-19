@@ -1,0 +1,52 @@
+GATE=DEEPSEEK_671B_COMMUNITY_MAP_001
+DATE=2026-09-13
+KIND=SOURCE_READY_EXTRACT
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+ACTIVATE_IF=after V7_ACCEPT; secondary to DualStick recovery + K2.5 fabric
+
+# Ground-truth corrections (do not re-encode community one-liner errors)
+SEMANTICS=
+  DeepSeek-V3/R1 ≈671B params · ~37B activated · 61 layers
+  256 routed experts · 8 activated routed + shared expert
+  NOT native top-2 — "force top-4 instead of two" = semantic change ≠ opt
+VRAM_REALITY=
+  4×4090 = 96GB VRAM — ~180–220GB ckpt needs host/storage offload (not all-in-VRAM)
+FP4=
+  native Tensor Core FP4 = Blackwell; Hopper FP8-native; FP4 weights via non-native (e.g. W4A16)
+
+MINE_REPOS=
+  DeepSeek-V3 official — MLA/MoE/router geometry + FP8 reference + MTP weights
+  llama.cpp — GGUF/offload/consumer memory
+  SGLang — expert parallel, chunked prefill, speculative, scheduler ideas
+  vLLM — production V3/R1 serving FP8/FP4 paths
+  FlashInfer — MLA / paged-attention kernels
+  DeepSpeed — MoE/expert-parallel infra (ideas; not DualStick transplant)
+  QuIP# — extreme 2-bit research (not direct CUDA/Llama transplant)
+
+# Deep2 extract (mechanisms, not framework copy)
+# 1  MLA Latent-KV Residency
+# 2  256-Expert Heat Map (prefetch from measured future likelihood)
+# 3  Shared-Expert Permanent Pinning (before routed residency)
+# 4  Router-Preserving Expert Reordering (all 8 IDs/weights; exec order only)
+# 5  Extreme-Low-Bit Expert Tiering (routed aggressive; attn/router higher)
+# 6  Outlier-Aware Quant Islands
+# 7  Dequant→GEMV Fusion
+# 8  MLA Decode Kernel Fusion
+# 9  Chunked Long-Prefill Compiler
+# 10 MTP Draft/Verify Path (native MTP module ≠ bolt-on 7B)
+# 11 DualStick Expert Pipeline (finish-time cost; not equal counts) — LIVE V7 adjacent
+# 12 Host-RAM Expert Cache (DDR5 L2; predictive VRAM promote)
+# 13 Transfer/Compute Double Buffering
+# 14 Persistent DeepSeek Hardware Surface
+# 15 Whole-Token DeepSeek Compiler (min TOKEN_COMMIT_NS)
+
+TOP3_NEXT_PASS=
+  DeepSeek-V3 official — ground-truth semantics
+  FlashInfer/SGLang — MLA + scheduling mechanics
+  llama.cpp — consumer-memory/GGUF
+OPPORTUNITY=MTP + hardware-trained DualStick scheduler (same token graph)
+
+LIVE_OWNER=HETEROGENEOUS_EXPERT_COST_MODEL_V7
+MACHINE=7800X3D + R9700 32GB + 7800 XT 16GB + 64GB DDR5

@@ -1,0 +1,55 @@
+GATE=DEEP2_POST_TPS_TOP15_ENHANCEMENTS_20260912
+STATUS=LAW_ONLY
+PRODUCT_LINKED=0
+FULL_MODEL_TPS_AUTHORITY=1
+AGGREGATE_BW_AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+TPS_AUTHORITY_UNTOUCHED=1
+
+LOCKED_STATE=
+  ATTEMPT2=SEALED
+  FULL_MODEL_TPS_AUTHORITY=1
+  BASELINE_SUSTAINED_TPS=0.045469
+  MOCK_DUAL_SPLIT=4148/4044
+  MISSING15_SOURCE=LANDED
+  AUDIT_P0_P8=LANDED
+
+TOP15_BY_LEVERAGE=
+  01 direct_packed_Q2K_GEMV_GEMM
+  02 persistent_dual_GPU_command_graphs
+  03 same_operator_dual_GPU_partitioning
+  04 device_local_weight_permanence
+  05 predictive_next_block_residency
+  06 MoE_expert_lookahead_cache
+  07 kernel_fusion_decode_stages
+  08 persistent_KV_kernels
+  09 adaptive_KV_quantization
+  10 LM_head_distributed_vocab_projection
+  11 asynchronous_compact_reduction
+  12 residency_value_cost_compiler
+  13 decode_stage_timing_authority
+  14 zero_allocation_steady_state_decode
+  15 speculative_pipelined_token_execution
+
+IMMEDIATE_SEQUENCE=
+  01 packed_execution          (=TOP15 #01; step label “packed” in prior briefs)
+  04 device_local_residency
+  → existing D2DeviceIo/SsVk bind
+  03 same_operator_partition
+  11 compact_reduction
+  TARGET=DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
+  EFFECT=mock 4148/4044 → real dual-memory-bandwidth utilization
+
+PARALLEL_DIAGNOSTIC=
+  13 decode_stage_timing_authority
+  expose dominant bottleneck behind 0.045469 TPS on sealed path
+
+INVARIANTS=
+  FULL_DEQUANT_BUFFER=0
+  MATERIALIZED_WEIGHT_BYTES=0
+  WEIGHT_MIGRATION_BYTES=0 on hot path
+  SERIAL_GPU_CHAIN=0 for same-operator dual
+  CRITICAL_PATH_NVME_READS_PER_TOKEN=0
+  AR_DEPENDENCIES_NOT_FALSIFIED (#15)

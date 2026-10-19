@@ -1,0 +1,1 @@
+m04	deepseek-r1-qwen3-8b	OK	TOK1=8	44185ms	OK	TOK2=8	42560ms	AV=0	PASS

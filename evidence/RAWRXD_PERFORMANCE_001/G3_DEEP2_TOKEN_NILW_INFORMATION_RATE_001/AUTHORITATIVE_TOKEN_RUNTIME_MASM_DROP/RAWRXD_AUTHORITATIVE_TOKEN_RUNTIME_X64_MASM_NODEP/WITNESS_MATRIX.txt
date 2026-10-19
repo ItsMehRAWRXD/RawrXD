@@ -1,0 +1,57 @@
+W01 ACTIVE_SUBSET
+    sample exists
+    0 < active < total
+
+W02 NEW_PAYLOAD
+    live payload_bits_fetched > 0
+    selected form numerator > 0
+
+W03 REUSE
+    reuse_events > 0
+    reused_bits > 0
+
+W04 OVERHEAD
+    explicit overhead measurement event
+    zero overhead is allowed if measured
+
+W05 FORM_SELECTION
+    Form A xor Form B numerators
+
+W06 ACTIVE_BPW
+    internally derived, nonzero, no arithmetic fault
+
+W07 TOKEN_NILW
+    internally derived
+    <= 0.0008
+
+W08 BANDWIDTH
+    internally derived
+    <= 1 GB/s
+
+W09 TOKEN_RATE
+    generated_tokens >= 128
+    >= 10 TPS
+
+W10 PAYLOAD_PER_TOKEN
+    internally derived
+    <= 100 MB/token
+
+W11 FULL_MATERIALIZATION
+    live run exists
+    model=0
+    layer=0
+
+W12 QUALITY
+    quality_samples > 0
+    quality_failures = 0
+
+W13 LONGRUN
+    >=128 tokens
+    zero longrun/budget/stale failures
+
+W14 ACCOUNTING
+    payload == component sum == class sum
+    unaccounted = 0
+
+W15 AUTHORIZATION_DERIVATION
+    conjunction only

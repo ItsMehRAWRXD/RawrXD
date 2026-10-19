@@ -1,0 +1,62 @@
+GATE=G3_IDE_BACKEND_FULLFIX_001
+PURPOSE=full fix: Origin null + bunnyhop on live :11435; kill CORS proxy workaround; relink EXE
+ASOF=2026-09-09T23:48
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+SUPERSEDES=G3_IDE_BACKEND_CONNECT_001 (CORS proxy :11435→:11436 — DO NOT USE)
+
+ROOT_CAUSES_FIXED=
+  1) HeadlessIDE localOriginAllowed denied Origin literal "null" (file://) → 403.
+     Fix already in HeadlessIDE.cpp; now RELINKED into EXE.
+  2) Win32IDE_Session.cpp ProductSession missing members blocked full EXE relink.
+     Fixed: src/product/runtime/session_persist.hpp adds modelPath/modelAlias/keepOpen/maxTokens.
+  3) Win32IDE_BackendSwitcher.cpp used AIBackendType::Cursor without enum/decls → link break.
+     Fixed: Win32IDE.h Cursor=8 Count=9 + routeToCursor/loadProviderKeysFromStore decls.
+  4) /api/nvme/bunnyhop/* only on GUI LocalServer → headless 404.
+     Fixed: HeadlessIDE routeNativeRequest + generate ApplyFromGenerateBody.
+  5) GUI LocalServer 0xC0000374: WSACleanup while client threads still in recv/send.
+     Fixed: m_localServerClientThreads drain before WSACleanup in Win32IDE_LocalServer.cpp.
+  6) CORS proxy workaround (HTTP.sys Microsoft-HTTPAPI) on :11435 — KILLED; script marked SUPERSEDED.
+
+BINARY=
+  G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+  MTIME=2026-09-09 23:47:24
+  SIZE=329277440
+
+LIVE_SERVER=
+  PID=7004
+  CMD=RawrXD-Win32IDE.exe --headless --port 11435 --bind 127.0.0.1
+  CANONICAL_URL=http://127.0.0.1:11435
+  NO_CORS_PROXY=1
+  NO_HTTPAPI_PROXY=1
+
+E2E_ORIGIN_NULL=PASS (see SMOKE.txt)
+  GET  /status → 200
+  GET  /health → 200
+  GET  /api/engine/capabilities → 200 (engine.nvme_reverse_bunnyhop present)
+  GET  /api/tags → 200
+  GET  /api/nvme/bunnyhop/status → 200
+  POST /api/nvme/bunnyhop/arm → 200 (force:true)
+
+CODE_TOUCHED=
+  src/product/runtime/session_persist.hpp
+  src/win32app/HeadlessIDE.cpp          (Origin null; bunnyhop routes; caps; generate apply)
+  src/win32app/Win32IDE_LocalServer.cpp (client-thread drain before WSACleanup; bind WSA log)
+  src/win32app/Win32IDE.h               (Cursor backend; localServerClientThreads; decls)
+
+LOCALSERVER_NOTE=
+  Heap-corruption race fixed in source and linked into same EXE.
+  Canonical IDE Backend for file:// HTML is HeadlessIDE on :11435 (CORS * not required;
+  Origin null allowed). GUI LocalServer still uses Access-Control-Allow-Origin: * and
+  shares bunnyhop routes; do not start GUI LocalServer on :11435 while headless owns it.
+
+USER_ACTION=
+  Reload ide_chatbot_standalone.html / e2e from disk (or reconnect).
+  Backend URL: http://127.0.0.1:11435
+  Do NOT run cors_proxy_11435.ps1.
+
+PROMOTE=0
+
+SUPERSEDED_PARTIAL_BY=G3_HEADLESS_API_UNBLOCK_E2E_001 (tool/file/command intentional 403 reversed)

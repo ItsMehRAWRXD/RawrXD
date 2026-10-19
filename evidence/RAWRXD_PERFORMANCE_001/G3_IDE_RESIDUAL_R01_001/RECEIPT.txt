@@ -1,0 +1,63 @@
+GATE=G3_IDE_RESIDUAL_R01_001
+ASOF=2026-09-10T06:35Z
+OWNER=G3_IDE_GENERATE_AV_SPEND_001
+ACTIVE_SPEND=R01
+PROMOTE=0
+TIP_CLIMB=HOLD
+FIX_SCOPE=GENERATE_PATH_ONLY
+VERDICT=PASS
+R01=CLOSED
+
+## Closure gates
+R01_REPRODUCED=1
+FIRST_AV_OWNER=IDENTIFIED
+  Owner=ProductOpenSession / enableAllEnhancements under LAA:NO → amdvlk ICD
+         (snmalloc abort / failfast; dbgcore 0xC0000005 secondary)
+/api/generate_HTTP=200
+TOKENS_EMITTED=48 (>0)
+ACCESS_VIOLATION=0
+C0000374=0
+PROCESS_SURVIVED=1
+R02_REOPENED=0
+MOTD_SEAL_CHANGED=0
+DUALSTICK_REOPENED=0
+
+## Live binary
+EXE=build-fd/bin/RawrXD-Win32IDE.exe
+SMOKE_COPY=smoke_bin/RawrXD-Win32IDE_r01_hostdecode.exe
+SHA256=93F7E30B9B00B56B298721513A3C2BEE7DE7BF4C76C1C604466BCC71E2B9F793
+SHA16=93F7E30B9B00B56B
+PE_LAA=NO (dumpbin: no "Application can handle large addresses")
+PORT=127.0.0.1:11435
+
+## Runtime evidence
+ERR=headless_r01.err.txt
+OUT=headless_r01.out.txt
+BODY=gen_r01_body.txt
+KEY_LINES=
+  PRODUCT_LAA=0 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 WHY=AMDVLK_SNMALLOC
+  [Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+  GENERATED_TOKENS=48 PRODUCT_PASS=1
+  HTTP=200 LEN=222 done=true (gen2 also 200)
+
+## Fix (GENERATE_PATH_ONLY)
+1. Deep2Engine::enableAllEnhancements — HOST_DECODE checked before MINIMAL/Vulkan
+2. ProductStreamerPrep — !LAA → HOST_DECODE=1 + DualStick off (CPU floor)
+3. product_deep2_infer sticky main-lane (R01_MAIN_INFER_LANE=1)
+4. CMakeLists: removed POST_BUILD editbin /LARGEADDRESSAWARE flip
+   (that flip defeated Prep LAA probe / reopened amdvlk path)
+
+## Unchanged
+R02=CLOSED (not reopened)
+MOTD / DualStick ArmSpeed policy = UNCHANGED
+PATH_B=NOT_TAKEN (no GPU-on-LAA:NO invent)
+GPU Vulkan on LAA:NO IDE = deferred
+
+## R05 confirm-only
+gui/ide_chatbot_standalone.html agenticMode:false HELD_BY_POLICY
+gui/ide_chatbot_standalone_e2e.html agenticMode:false HELD_BY_POLICY
+
+## Next
+R03 OPEN — thin GUI routes
+R04 OPEN — Headless file aliases
+R05 = DONE (confirm only)

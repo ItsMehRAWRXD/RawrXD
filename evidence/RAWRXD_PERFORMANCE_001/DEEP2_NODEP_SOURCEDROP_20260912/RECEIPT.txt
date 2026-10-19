@@ -1,0 +1,35 @@
+GATE=DEEP2_NODEP_SOURCEDROP_20260912
+ARCHIVE=C:\Users\Garrett\Downloads\Deep2_NoDep_SourceDrop_20260912.zip
+ARCHIVE_SHA256=ea6b071659a3f16bcdf25d9069ba27190fad7d956458e908852750bbe0824ac7
+SHA_MATCH=1
+LANDING=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_NODEP_SOURCEDROP_20260912\Deep2_NoDep_SourceDrop_20260912
+STATUS=SOURCE_LANDED
+NATIVE_ML64_BUILD_HERE=NOT_RUN
+PRODUCT_WIRE=OPEN
+FULL_MODEL_DECODE=UNPROVEN
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+OBSERVATION_MINTS_AUTHORITY=1
+DECLARATION_MINTS_AUTHORITY=0
+NOT_RUN_NE_PASS=1
+
+#03_REPAIR_ENCODED=1
+  Deep2DecodeSeedLiveState
+  Deep2DecodeBeginToken
+  Deep2ObserveForward
+  Deep2DecodeSetPosition
+
+#03_LIVE_PRODUCT_STATUS=
+  SOURCE_LANDED prior decode drop
+  PRODUCT_WIRE partial
+  ERROR_CODE=5 FORWARD_CALLS=0 observed on prior run
+  EMBD_REENTRY_PROBE rc=0 before seal (embd itself reentrant)
+  FIRST_SUSPECT=POST_SEAL_STATE_POLLUTION_OR_EMBD_AFTER_61
+  POSITION=0 legal for cold-start token-0 (not prefill continuation)
+
+NEXT=
+  Unblock TARGET_TOKENS=1 via sealed-logits ForwardFn reuse when logits already real
+  Force embd pipe reset for pos>0 reentry
+  Integrate SeedLiveState/BeginToken after TARGET=1 PASS
+  Then TARGET=2 reentry proof

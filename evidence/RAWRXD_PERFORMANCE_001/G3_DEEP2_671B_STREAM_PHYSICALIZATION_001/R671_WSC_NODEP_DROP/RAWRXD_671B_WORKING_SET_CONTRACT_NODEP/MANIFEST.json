@@ -1,0 +1,42 @@
+[
+  {
+    "file": "AUTHORITY.txt",
+    "bytes": 346,
+    "sha256": "3fbc4327e0c4f1c656388b12d23d5a452058b9f22f35ab1af801f16dea1de092"
+  },
+  {
+    "file": "INTEGRATION.txt",
+    "bytes": 1155,
+    "sha256": "fa71fe7c45038ca30a15f3e25f58726d083f2a10edd3e41352a29e7596625e24"
+  },
+  {
+    "file": "TOP15_WORKING_SET_CONTRACT.txt",
+    "bytes": 1230,
+    "sha256": "c5bdebecd896a057f7427c6074dedd4929d9766ad82874cfbf04ba59e6027b40"
+  },
+  {
+    "file": "build_linux.sh",
+    "bytes": 117,
+    "sha256": "eaefb702740ecff200633f1a3a43254d02e8827851bbbb7859d90ed013648b06"
+  },
+  {
+    "file": "build_win64.bat",
+    "bytes": 206,
+    "sha256": "7ae9b3044201c3ce9887959d9d3a86cb2e19465b6c31cf9eb430374540dfc282"
+  },
+  {
+    "file": "wsc15.c",
+    "bytes": 5385,
+    "sha256": "95f7c0be86e28caabddd70dea58b4e8695a460228fc34e84dc72b7be26fc3d35"
+  },
+  {
+    "file": "wsc15.h",
+    "bytes": 1909,
+    "sha256": "fc0e4f901cc360ee23436753dc53dcbfc0eed4a718a86b2c83ac32e3f979f0c5"
+  },
+  {
+    "file": "wsc15_probe.c",
+    "bytes": 2382,
+    "sha256": "f52a6d5c420a10061ec239cf5e06acd4d8a7173178b766eb4062b733de7565fc"
+  }
+]

@@ -1,0 +1,51 @@
+GATE=G3_E2E_FULLSTACK_UNSTUB_001
+PURPOSE=Unstub DualStick+FreeToken+FutureConsumer E2E; restore enhance stack minus elastic
+PARENT=G3_DUALSTICK_TRUE_RUNTIME_001
+ASOF=2026-09-09T20:38
+PROMOTE=0
+CONFIRMED=1
+TIP_CLIMB=HOLD
+
+EXE=G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+SHA256=601A8D9A005AA8D20D6637B792A993C2F59F0801148F60D1C35E26CE58162DCE
+MODEL=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+TOKENS=16
+
+RESTORED=
+  DualStickAcquire on attn-norm forward path (was Resolve-only)
+  FREETOKEN_EXEC from real MicroZone overwrites (OW>0 => EXEC=1)
+  FUTURE_CONSUMER_EXEC from real ownership/overwrite counters
+  Harness: SetEnvIfUnset for LIVE_MECH/GEN_ALG (no force-veto)
+  DEEP2_MARS=1 default, cyclone in LIVE_MECH
+
+FAIL_CLOSED=
+  elastic (D_elastic = AV 0xC0000005 / exit -1073741819)
+  defaults: RAWRXD_DEEP2_ALLOW_ELASTIC=0, RAWRXD_ENHANCE_SKIP=elastic
+  LIVE_MECH default=trampoline,cyclone (no elastic)
+
+LADDER=
+  A_base_acquire PASS TRUE=1 FWD=510/360 FT=1 OW=870 FC=1 SURV=1 FB=0
+  B_cyclone PASS
+  C_mars PASS
+  D_elastic FAIL C0000005
+  E_cyclone_mars PASS
+  F_medusa PASS
+  G_max_no_elastic PASS
+
+N5_PRODUCT_DEFAULTS=
+  ENDURANCE_N5=5/5
+  TRUE=1 FWD=300/360 FT=1 OW=660 FC=1 SURV=1 FB=0 (all runs)
+  MARS_EFFECTIVE=1 ELASTIC_EFFECTIVE=0 HOTPATH_CYCLONE=1
+  PROMOTE=0
+
+PERFECT_METRICS_CONTRACT=
+  DUALSTICK_TRUE_RUNTIME=1
+  FWD_G0>0 AND FWD_G1>0
+  FREETOKEN_EXEC=1
+  FUTURE_CONSUMER_EXEC=1
+  GENERATION_SURVIVED=1
+  DEEP2_GPU_FORWARD_FALLBACKS=0
+  PROCESS_EXIT=0
+  PROMOTE=0
+
+Full: LADDER.txt SUMMARY_N5.txt runs_n5/ KEY_LINES.txt AUTHORITY.txt

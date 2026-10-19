@@ -1,0 +1,42 @@
+[
+  {
+    "file": "AUTHORITY.txt",
+    "bytes": 370,
+    "sha256": "c7161a88653d6dc130ec2de008a42c9a8330201da3005c62e750e9abe29aa5e0"
+  },
+  {
+    "file": "README.md",
+    "bytes": 784,
+    "sha256": "8a33b68e77f006d51c9736336679a3232a6f58e65df3079fda9ca09c09c84f89"
+  },
+  {
+    "file": "WITNESS_MATRIX.txt",
+    "bytes": 1306,
+    "sha256": "eb03bd0a0534d324eee374c4cf6e0c05ee3cb87c3b191473cfeae5ca5b995636"
+  },
+  {
+    "file": "authoritative_decode.asm",
+    "bytes": 9462,
+    "sha256": "b55d77187cb9fcd7cd14cf286cf6ca0664ec16d2511a68a17494c498c0c53c10"
+  },
+  {
+    "file": "authoritative_decode.inc",
+    "bytes": 2262,
+    "sha256": "7c2eea7f167426c60350f71735093881c198ffe547a6a6eddf10b907ee558ec3"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 863,
+    "sha256": "a987f073314acbee1321fc17ed51ff9273f1b7f14b51d0f6d8b562919036263d"
+  },
+  {
+    "file": "positive_harness.asm",
+    "bytes": 1546,
+    "sha256": "28802dc017a1ac1dd92c8bd8629b8442752ffb9530a52d88ff8c99ab2de955de"
+  },
+  {
+    "file": "zero_harness.asm",
+    "bytes": 483,
+    "sha256": "906f8debc79e1d131eda481206a279b4983f70674fe8f0dd5771de7b41b4a799"
+  }
+]

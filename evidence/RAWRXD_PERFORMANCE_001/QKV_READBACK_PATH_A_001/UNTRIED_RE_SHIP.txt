@@ -1,0 +1,25 @@
+PATH_A_UNTRIED_RE_001=ACTIVE
+DATE=2026-09-08
+OWNER=QKV_READBACK_DOWNWARD
+SPEND=PATH_A_SHRINK
+GOODS_STAY_BRAIDED=1
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+
+SHIPPED_THIS_ROUND
+  1. HOST_CACHED_OUT+invalidate (DEEP2_HOST_CACHED_OUT default ON)
+  2. HostExchangeDiscover+ExchangeMirror emit + harness .exchange.txt extract
+  3. cmake wire: HostExchangeDiscover / QbHostReadback / QbHostShrink
+
+HELD_AFTER_CRASH
+  Q_B_GEMV_DIRECT_HOST_OUT
+  STATUS=REVERTED_TO_RecordCopy
+  REASON=path_a_re_untried aborted mid-setup/early-gen EXIT=-1 on R9700
+  NEXT=retry_only_after_HOST_CACHED_baseline_sealed
+
+STILL_DEAD_THIS_GEOMETRY
+  head_window_byte_shrink: hostHead==prodHead==192
+
+PROMOTE_ONLY_IF
+  PRODUCT_PATH_ALL=1 PARITY_ALL=1 PURITY_ALL=1
+  READBACK_REDUCED=1
+  MEDIAN_WALL_NS < 10763035000

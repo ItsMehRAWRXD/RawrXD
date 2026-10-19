@@ -1,0 +1,93 @@
+COMPAT_BATCH_MANIFEST_001=SEALED
+DATE=2026-09-08
+TYPE=INVENTORY_ONLY
+EXECUTION=0
+CODE=0
+LEDGER_RESULT_CHANGE=0
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE
+SSOT=COMPATIBILITY_LEDGER_001
+PARENT=COMPATIBILITY_LEDGER_OLLAMA_001
+
+LAW=
+  one_target_per_run=1
+  one_expected_architecture_per_run=1
+  stop_at_first_failing_stage=1
+  alias_dedupe=1
+  contaminated_harness_REJECT=1
+  MODE_A_PATH_B_N5_NE_COMPAT_SPEND=1
+  CURRENT_CATALOG_HAD_NO_COMPAT_EXECUTION_SPEND_TARGET=1 (pre-catalog; CLOSED)
+  CURRENT_CATALOG_HAS_COMPAT_TEST=1
+  COMPAT_TEST_HOT_GATED=0
+  UNCONFLICTED_SEED=evidence/RAWRXD_PERFORMANCE_001/UNCONFLICTED_SEED_001.txt
+
+STAGE_LADDER=
+  OPEN_GGUF → METADATA → TENSOR_MAP → ARCH_BIND → TOKENIZER
+  → GRAPH_BUILD → KV_ALLOC → PREFILL → FIRST_TOKEN
+  → DECODE_256 → STREAM → COMPLETE
+
+RESULT_RECORD_FIELDS=
+  COMPAT_RUN_ID MODEL MODEL_ID ARCH
+  FIRST_FAILURE_STAGE FIRST_FAILURE_REASON
+  OPEN_GGUF METADATA TENSOR_MAP ARCH_BIND TOKENIZER
+  GRAPH_BUILD KV_ALLOC PREFILL FIRST_TOKEN DECODE_256 STREAM EXIT_COMPLETE
+  HARNESS_CONTAMINATION AUTHORITY_ELIGIBLE
+
+# --- BATCH 1 — smallest independent architecture witnesses (order frozen) ---
+
+B1.1 MODEL=llama3.2:3b SIZE=2.0G PURPOSE=Llama_baseline
+  ALIAS_COLLAPSE=a80c4f17acd5 (llama3.2:3b|llama3.2:latest)
+  ONESHOT=MEASURED_SPLIT SSOT=COMPAT_B1_1_001/RECEIPT.txt
+  STAGES=PASS FLOOR=FAIL TPS=1.387/5.000 ACTUAL_PASS_OVERALL=0
+B1.2 MODEL=nemotron-3-nano:4b SIZE=2.8G PURPOSE=Nemotron_baseline
+B1.3 MODEL=gemma3:4b SIZE=3.3G PURPOSE=Gemma_baseline
+  ALIAS_COLLAPSE=a2af6cc3eb7f (gemma3:latest|gemma3:4b)
+B1.4 MODEL=granite3.3:8b SIZE=4.9G PURPOSE=Granite_baseline
+B1.5 MODEL=qwen3:8b SIZE=5.2G PURPOSE=Qwen_baseline
+
+B1_EXECUTION_RULE=strictly_one_by_one_when_COMPAT_TEST_spend_hot_gated
+B1_STATUS=B1.1_ONESHOT_DONE|B1.2-B1.5_NOT_RUN
+
+# --- BATCH 2 — medium (only after Batch 1 authoritative rows) --------------
+
+B2.1 pdurugyan/qwen3.5-9b-deepseek-v4-flash...
+B2.2 deepseek-coder-v2:16b
+B2.3 starcoder2:15b
+B2.4 gpt-oss:20b  ALIAS=17052f91a42e (gpt-oss:latest|gpt-oss:20b)
+B2.5 qwen3.8:27b
+
+# --- BATCH 3 — larger/specialized ------------------------------------------
+
+B3.1 deepseek-r1:32b
+B3.2 ornith-1.5:35b
+B3.3 nemotron-3.5-lightning:30b
+B3.4 bigdaddygnative  ALIAS=02a792bbc286
+B3.5 bigdaddyglocal   ALIAS=890a6c1859b7
+B3.6 deepseek-r1:70b
+
+# --- BATCH 4 — expensive ---------------------------------------------------
+
+B4.1 qwen3-next:80b
+B4.2 gpt-oss:120b
+B4.3 laguna-s-2.1
+B4.4 deepseek-v4-flash:iq2_m
+
+CLOUD_EXCLUDED=deepseek-v4-flash:0731-cloud|glm-5.2:cloud|kimi-k2.6:cloud
+
+# --- FUTURE CLEAN SEQUENCE (not executed by this seal) ---------------------
+
+FUTURE=
+  1 THIS_MANIFEST sealed
+  2 catalog named COMPAT_TEST spend target (NAME_MODE_TARGET_ISSUE_001)
+  3 HOT_GATE that target
+  4 Run Batch 1 one model at a time
+  5 Reject contaminated harness results
+  6 Update COMPATIBILITY_LEDGER_001 only from AUTHORITY_ELIGIBLE=1
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  COMPAT_BATCH_MANIFEST=FROZEN
+  EXECUTION=0

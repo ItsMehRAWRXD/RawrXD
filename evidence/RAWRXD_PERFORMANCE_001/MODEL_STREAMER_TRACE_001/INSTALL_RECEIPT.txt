@@ -1,0 +1,35 @@
+MODEL_STREAMER_TRACE_001_INSTALL=PASS
+DATE=2026-09-08
+PRODUCT_AUTHORITATIVE=0
+
+INSTALLED
+  scripts/Analyze-ModelStreamerTrace.ps1
+  src/deep2/ModelStreamerTrace.hpp
+  src/deep2/ModelStreamerTrace_dump.hpp
+  evidence/RAWRXD_PERFORMANCE_001/MODEL_STREAMER_TRACE_001/*
+  PRODUCT_TRACE_LAW.txt
+
+LAW
+  PERFORMANCE_AUTHORITY=GENERATION_WALL_NS
+  TRACE_AUTHORITY=CAUSAL_ATTRIBUTION_ONLY
+  TRACE_MAY_EXPLAIN_WALL=1
+  TRACE_MAY_REPLACE_WALL=0
+  TRACE_MAY_PROMOTE_CONFIG=0
+  HOT_PATH_MINIMAL=qpc|ticket|binding_id|token_step|layer|event
+  IMMUTABLE_BINDING_TABLE=1
+
+LIVE_RESULT=CAPTURE_EMPTY
+REASON=no product RAW/MODEL_STREAMER_RAW.tsv yet
+FIXTURE_SMOKE=PASS (schema only; FIXTURE_AUTHORITY=0)
+
+GATE_UNCHANGED=1
+TIP_CLIMB=HOLD
+QKV_READBACK_CUT=BLOCKED_UNTIL_RANKING_CLOSED
+NO_MOVING_PARTS=LAW_ONLY
+PRIORITY=FINISH_18_CONFIG_EPOCH_ENDURANCE_FIRST
+
+NEXT_FOR_THIS_LAYER (passive until ranking closed)
+  1) SealBinding once per binding before decode
+  2) Begin/End(ticket,binding_id,token,layer) around product ops
+  3) DumpRawTsv after generation only
+  4) Analyze for causal attribution; never promote/rank configs

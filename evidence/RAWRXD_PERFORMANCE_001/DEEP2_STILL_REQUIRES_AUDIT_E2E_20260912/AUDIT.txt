@@ -1,0 +1,162 @@
+GATE=DEEP2_STILL_REQUIRES_AUDIT_E2E_20260912
+STATUS=AUDIT_COMPLETE
+ORIGIN_CHECKPOINT=254575670d
+BRANCH=cert/gpu-forward-child-ladder-20260909
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+# ---------------------------------------------------------------------------
+# AUTHORITY FLAGS (observed)
+# ---------------------------------------------------------------------------
+FULL_MODEL_TPS_AUTHORITY=1
+  evidence=DEEP2_FULL_MODEL_TPS_AUTHORITY_001/RECEIPT_ATTEMPT2.txt
+  mint=ss_ar_tps FULL_MODEL_DECODE block
+  SUSTAINED_TPS=0.045469 (baseline; not interactive-class claim)
+DAILY_STREAMER_READY=0
+AGGREGATE_BW_AUTHORITY=0
+SCOREBOARD_SCHEDULER_LIVE=1 (input only; ≠ PROMOTE)
+
+# ---------------------------------------------------------------------------
+# SEALED / PASS (do not reopen without new evidence)
+# ---------------------------------------------------------------------------
+01 TARGET64_FREEZE
+   PASS CERT=7ef6e1fb…f3936f LOG=fd177bea…392a4e
+02 TARGET64_REGRESSION_ENDURANCE_MERGE
+   PASS (correctness; not TPS)
+03 ATTEMPT1_TPS
+   DECODE_PASS_TIMING_FAIL_CLOSED QPC overflow
+04 ATTEMPT2_TPS
+   SEALED_PASS FULL_MODEL_TPS_AUTHORITY=1
+   CERT=eac25986…4cb690 LOG=cb4936cb…91fdd4a
+05 DAILY_STREAMER_V0_MOCK_SMOKE
+   RE_RUN_E2E=PASS (this audit) SECOND_GEN/CANCEL/RELOAD/SURVIVE
+06 DUAL_AGGREGATE_FABRIC_MOCK_SMOKE
+   RE_RUN_E2E=PASS BOTH_LANES=1 SERIAL=0 MIGRATE=0 rows=4148/4044
+07 ENDURANCE_TOP15_PRODUCT_MERGE
+   SOURCE_WIRED into AR path (invariant observed on Attempt2)
+08 MODEL_SIZE_INDEPENDENCE_TOP15
+   LAW_ONLY landed on origin
+09 DUAL_AGGREGATE_FABRIC_NODEP
+   SIDE_DROP on origin; AGGREGATE_BW_AUTHORITY=0
+
+# ---------------------------------------------------------------------------
+# STILL REQUIRED — priority order (blocks)
+# ---------------------------------------------------------------------------
+
+P0  DEEP2_DAILY_STREAMER_LIVE_001
+    STATUS=SOURCE_WIRED_ADAPTER RUNTIME_LIVE_PROOF=NOT_RUN
+    BLOCKS=DAILY_STREAMER_READY; valuation $150M+ reservation
+    E2E_NOW=PARTIAL — needs CMake link Deep2Engine + TinyLlama HOST_DECODE
+            two gens same process; Attempt2 isolation no longer blocks mint
+    NEXT= cmake target deep2_streamer_live; d2_session_bind_deep2_engine_ptr
+
+P1  DEEP2_STAGE_TIMING_AUTHORITY_001
+    STATUS=LAW_ONLY / NOT_RUN
+    BLOCKS=identifying whether LM-head vs blocks dominate 0.045 TPS
+    E2E_NOW=YES after instrumented stage timers on same cert path
+    NEXT= per-stage QPC on embd/block/lmhead; seal receipt
+
+P2  DEEP2_UNIVERSAL_TILED_QUANT_001 + DEEP2_Q2K_DIRECT_GEMV_001
+    STATUS=OPEN (FULL_DEQUANT_BUFFER=0 invariant)
+    SOURCE_BRIDGE=DEEP2_MISSING15_NODEP_SOURCE #08+#09 contracts
+    BLOCKS=interactive TPS; model-size next4 #2 packed form
+    E2E_NOW=NO until kernels land on product forward
+    NEXT= direct packed Q2_K/Q4/Q5/Q6 GEMV; MATERIALIZED_WEIGHT_BYTES=0
+
+P3  DEEP2_D2DEVICEIO_SSVK_BIND_001
+    STATUS=DEFERRED / FRAMEWORK_SMOKE only
+    SOURCE_BRIDGE=DEEP2_MISSING15_NODEP_SOURCE #04 d2_deviceio_ssvk_bind
+    BLOCKS=exact-range product I/O; dual fabric live weights
+    E2E_NOW=NO
+    NEXT= load_exact/evict/copy → SsVk; SYNTHETIC_DEVICE_IO=0
+
+P4  DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
+    STATUS=LAW_ONLY NOT_RUN
+    SOURCE_BRIDGE=MISSING15 #4→#5→#6→#7
+    BLOCKS=AGGREGATE_BW_AUTHORITY; 1.264TB/s-class claim
+    E2E_NOW=NO — requires P2+P3 + OVERLAP_NS>0 both REAL_FORWARDS
+    NEXT= D2FabricSubmitFn/ReduceFn=SSVK_REAL; reject SERIAL_GPU_CHAIN
+
+P5  Production Missing15 #01–#15 (REMAINING_PRODUCTION)
+    STATUS=mostly OPEN (framework smokes ≠ product)
+    01 arbitrary-N Deep2Decode executor
+    02 sealed-logit shortcuts gone in production API
+    03 authoritative D2SequenceState
+    04 permanent per-layer KV
+    05 all-device attention
+    06 universal native quant (incl Q2_K)  → couples P2
+    07 universal tiled projection          → couples P2
+    08 metadata dense+MoE executor
+    09 D2DeviceIo→SsVk                     → P3
+    10 exact-range product bind
+    11 real dual-GPU arithmetic            → P4
+    12 bounded 64GB host streaming
+    13 allocation-free steady-state arenas (partial endurance)
+    14 native tokenizer/sampler/UTF-8
+    15 single product exe/API + observe receipts
+    E2E_NOW=NO as conjunction; smoke-level only for some frameworks
+
+P6  Model-size independence NEXT4
+    01 residency_budget_solver     OPEN ← MISSING15 #10+#11
+    02 packed_execution_form       OPEN (=P2) ← #08+#09
+    03 predictive_expert_cache     OPEN_MOE after dense packed ← #12
+    04 adaptive_KV_residency       OPEN after permanent device KV ← #13
+    E2E_NOW=NO
+    SOURCE_BRIDGE=DEEP2_MISSING15_NODEP_SOURCE_20260912 (mock smoke ≠ product)
+
+P7  IDE daily UX
+    HTTP /api/generate live InferStream SSE (not buffered dump)
+    POST /api/generate/cancel
+    STATUS=OPEN (product path mapped; not wired)
+    E2E_NOW=NO without LocalServer change + live Deep2
+
+P8  PROMOTE / TIP_CLIMB
+    PROMOTE=0 until PRODUCT_OPEN_PASS && SESSION_ENTER_PASS
+              && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS
+              + independent multi-family coverage
+    TIP_CLIMB=HOLD
+    E2E_NOW=NO — correctly held
+
+# ---------------------------------------------------------------------------
+# E2E EXECUTED THIS AUDIT
+# ---------------------------------------------------------------------------
+ATTEMPT2_OBSERVE_AND_SEAL=PASS (mint predicates)
+DUAL_FABRIC_SMOKE_RERUN=PASS → dual_fabric_smoke.out.txt
+DAILY_MOCK_SMOKE_RERUN=PASS → daily_streamer_smoke.out.txt
+LIVE_STREAMER_E2E=NOT_RUN
+SSVK_DUAL_E2E=PASS_LIVE_OVERLAP → DEEP2_DUAL_AGGREGATE_SSVK_BIND_001/RECEIPT.txt
+  OVERLAP_NS>0 SERIAL=0 SYNTHETIC=0 both REAL_FORWARDS
+  AGGREGATE_BW_AUTHORITY=0 (product_linked/packed still open)
+STAGE_TIMING_E2E=NOT_RUN
+PACKED_Q2K_E2E=NOT_RUN
+
+NEXT_PRODUCTION_CRITICAL=
+  GOVERNING=DEEP2_TRUE_E2E_TOP15_20260912
+  CRITICAL_PATH=
+    TIMING → PACKED_Q2K → D2DEVICEIO→SSVK → DUAL_SUBMIT
+    → OVERLAP → COMPACT_REDUCE → RESIDENCY/PREFETCH
+    → KV+MOE → DAILY_STREAMER → IDE_SSE/CANCEL → ENDURANCE → PROMOTE
+  IMMEDIATE_P0=
+    DEEP2_DUAL_AGGREGATE_SSVK_BIND_001=PASS_LIVE_OVERLAP (existence)
+    NEXT=DEEP2_PACKED_Q2K_PRODUCT_DUAL_AGGREGATE_001
+      PRODUCT_LINKED + PACKED_Q2K_LIVE + material overlap
+      before AGGREGATE_BW_AUTHORITY=1
+  SOURCE_PACKS=
+    DEEP2_MISSING15_NODEP_SOURCE_20260912
+    DEEP2_AUDIT_P0_P8_NODEP_SOURCE_20260912
+    DEEP2_POST_TPS_TOP15_ENHANCEMENTS_20260912
+    DEEP2_TRUE_E2E_TOP15_20260912
+    DEEP2_PACKED_Q2K_PRODUCT_DUAL_AGGREGATE_001
+  TPS_AUTHORITY_UNTOUCHED=1
+  AGGREGATE_BW_AUTHORITY=0 until packed product material overlap
+  PROMOTE=0 until #15 conjunction
+
+# ---------------------------------------------------------------------------
+# HARD HOLDS
+# ---------------------------------------------------------------------------
+Do not invent AGGREGATE_BW_AUTHORITY from mock ~2.8 GB/s
+Do not invent DAILY_STREAMER_READY from mock backend / P0-P8 harness
+Do not let abbreviated-overlay AUTHORITY=0 revoke Attempt2 mint
+Do not link Link15/Mint15/Sweep into sealed baseline path as rewrite
+CERT_BINARY_TOUCHED for Attempt2 seal observation=0 (hash still matches)

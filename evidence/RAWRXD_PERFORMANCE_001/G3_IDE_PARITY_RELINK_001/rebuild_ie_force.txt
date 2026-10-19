@@ -1,0 +1,2 @@
+[1/2] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\WarmupScheduler.cpp.obj
+[2/2] Linking CXX static library InferenceEngine.lib

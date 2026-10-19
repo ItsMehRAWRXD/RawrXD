@@ -1,0 +1,5 @@
+CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LocalServer.cpp.obj
+CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_observability.cpp.obj
+CMakeFiles\RawrXD-Win32IDE.dir\src\ai\symbol_graph_indexer.cpp.obj
+CMakeFiles\RawrXD-Win32IDE.dir\src\ai\semantic_code_search.cpp.obj
+CMakeFiles\RawrXD-Win32IDE.dir\src\ai\repo_refactor_engine.cpp.obj

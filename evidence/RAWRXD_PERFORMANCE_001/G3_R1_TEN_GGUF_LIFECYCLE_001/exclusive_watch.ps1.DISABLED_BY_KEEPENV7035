@@ -1,0 +1,20 @@
+﻿$ErrorActionPreference='SilentlyContinue'
+$ev='G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_R1_TEN_GGUF_LIFECYCLE_001'
+$deadline=(Get-Date).AddHours(6)
+while((Get-Date) -lt $deadline){
+  if(-not (Test-Path (Join-Path $ev 'MATRIX_EXCLUSIVE.lock'))){ Start-Sleep 5; continue }
+  Get-CimInstance Win32_Process | Where-Object {
+    ($_.CommandLine -match 'G3_R1_TEN_GGUF_LIFECYCLE_002\\run_r1_matrix') -or
+    ($_.CommandLine -match 'G3_IDE_R24') -or
+    ($_.Name -match 'RawrXD' -and $_.CommandLine -notmatch '11435' -and $_.CommandLine -notmatch 'r1soft')
+  } | ForEach-Object {
+    Stop-Process -Id $_.ProcessId -Force -EA SilentlyContinue
+  }
+  # If matrix finished (ROLLUP rewritten with TOTAL=10), exit watch
+  $r=Join-Path $ev 'ROLLUP.txt'
+  if(Test-Path $r){
+    $c=Get-Content $r -Raw
+    if($c -match 'TOTAL=10' -and $c -match 'EXE_SHA256=3E631BBB7BE707FC'){ break }
+  }
+  Start-Sleep 8
+}

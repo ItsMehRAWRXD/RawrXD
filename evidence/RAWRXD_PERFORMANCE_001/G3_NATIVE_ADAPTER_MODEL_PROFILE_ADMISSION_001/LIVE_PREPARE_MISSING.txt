@@ -1,0 +1,2 @@
+{"ok":false,"error":"model_profile_not_found","model":"NopeMissing.gguf","detail":"GGUF not found under F:/G:/D:/C:/OllamaModels or exe\\models; place file or call /api/native/runtime/register with path, or RawrNative_RegisterRuntimeGgufPath / RawrNative_RegisterRuntimeModel"}
+HTTP_CODE=404

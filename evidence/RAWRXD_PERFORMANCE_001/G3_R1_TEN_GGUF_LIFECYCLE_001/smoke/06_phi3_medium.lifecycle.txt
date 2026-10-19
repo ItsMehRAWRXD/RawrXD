@@ -1,0 +1,12 @@
+﻿MODEL=Phi-3-medium-128k-instruct-Q4_K_M.gguf
+PATH=F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf
+SIZE_MB=8170 SHA16=6ADC92FAAF06BCA4
+HEADLESS_PID=12232
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO
+PREPARE=200 {"ok":true,"request_id":1,"model":"Phi-3-medium-128k-instruct-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9554,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300,"top_p_milli":90
+LOAD=200 {"success":true,"model":"Phi-3-medium-128k-instruct-Q4_K_M.gguf"}
+GENERATE=400 TOKENS=0 ERR=The remote server returned an error: (400) Bad Request.
+GEN_SNIP=
+VERDICT=FAIL OWNER=generate_tokens DETAIL=code=400 tokens=0 
+EX=generate_fail
+

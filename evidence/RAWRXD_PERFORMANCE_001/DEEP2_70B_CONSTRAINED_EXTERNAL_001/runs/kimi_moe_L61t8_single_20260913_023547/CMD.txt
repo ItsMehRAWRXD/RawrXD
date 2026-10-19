@@ -1,0 +1,1 @@
+DUALSTICK=0

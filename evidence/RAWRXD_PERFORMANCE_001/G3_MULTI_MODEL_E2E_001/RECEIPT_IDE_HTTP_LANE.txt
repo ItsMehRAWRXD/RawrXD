@@ -1,0 +1,30 @@
+GATE=G3_MULTI_MODEL_E2E_001
+DOC=RECEIPT_IDE_HTTP_LANE.txt
+ASOF=2026-09-10T08:17Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+LANE=IDE_Headless_HOST_DECODE_LAA_NO
+VERDICT=FAIL_CLOSED
+PASS_COUNT=1/10
+
+## Scope
+This receipt is the IDE HTTP / ProductOpenSession lane only
+(EXE=RawrXD-Win32IDE_g3matrix_11492.exe, PORT=11492, PE_LAA=NO).
+It does NOT supersede the live rawr LAA ProductRun matrix
+(MATRIX_RAWR_LIVE.txt / Run-RawrMultiModelE2E.ps1).
+
+## Matrix (IDE lane)
+m01 tinyllama — PASS (full cold cycle; AV=0)
+m02–m10 — FAIL_CLOSED ProductOpenSession HTTP400 (process alive)
+
+## Code fixes (this lane)
+loadModel → ProductOpenSession; routeInferenceRequest → ProductDeep2Infer;
+InferBody max_tokens 8; unique g3matrix EXE name.
+
+## Blockers
+ProductOpenSession false/fail under LAA:NO for non-tinyllama;
+tilde workspace_path_denied mitigated via absolute .gguf / R: subst.
+
+## Authority
+PROMOTE=0 TIP_CLIMB=HOLD — no universal multi-model claim from this lane.
+OLLAMA_CONTACT=0

@@ -1,0 +1,17 @@
+
+G:\~dev\rawrxd\build-fd>call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64  1>nul 
+   Creating library RawrXD-Win32IDE_r1soft.lib and object RawrXD-Win32IDE_r1soft.exp
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "int __cdecl Deep2::hostfc::Armed(void)" (?Armed@hostfc@Deep2@@YAHXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::BindHostWeight(void *,unsigned __int64,unsigned __int64)" (?BindHostWeight@hostfc@Deep2@@YAXPEAX_K1@Z)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::BindHostWeight(void *,unsigned __int64,unsigned __int64)" (?BindHostWeight@hostfc@Deep2@@YAXPEAX_K1@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::hostfc::LayerEdge::LayerEdge(unsigned int,unsigned int)" (??0LayerEdge@hostfc@Deep2@@QEAA@II@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::hostfc::LayerEdge::~LayerEdge(void)" (??1LayerEdge@hostfc@Deep2@@QEAA@XZ)
+K2MLAWeights.cpp.obj : error LNK2001: unresolved external symbol "bool __cdecl Deep2::MLA_QPathDeviceFused(float const *,float *,float *,class RawrXD::TensorView const &,class RawrXD::TensorView const &,class RawrXD::TensorView const &,bool,unsigned int,unsigned int,unsigned int,float,unsigned int)" (?MLA_QPathDeviceFused@Deep2@@YA_NPEBMPEAM1AEBVTensorView@RawrXD@@22_NIIIMI@Z)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::DualStickMarkRequested(int)" (?DualStickMarkRequested@Deep2@@YAXH@Z)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::MarkProductDecode(void)" (?MarkProductDecode@hostfc@Deep2@@YAXXZ)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::ArmFromProductRun(unsigned int)" (?ArmFromProductRun@hostfc@Deep2@@YAXI@Z)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::BindNvme(class Deep2::NVMeStream *)" (?BindNvme@hostfc@Deep2@@YAXPEAVNVMeStream@2@@Z)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::EnterLayer(unsigned int,unsigned int)" (?EnterLayer@hostfc@Deep2@@YAXII@Z)
+product_deep2_infer.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::hostfc::SealDecode(int,struct _iobuf *)" (?SealDecode@hostfc@Deep2@@YAXHPEAU_iobuf@@@Z)
+bin\RawrXD-Win32IDE_r1soft.exe : fatal error LNK1120: 11 unresolved externals
+LINK_EXIT=1120

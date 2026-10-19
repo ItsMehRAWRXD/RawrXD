@@ -1,0 +1,62 @@
+FALSE_ARM_FIX
+GATE=G3_MULTI_MODEL_E2E_001
+ASOF=2026-09-10
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK=HOLD (not reopened)
+OLLAMA=no contact
+IDE_LAA=NO (HOST_DECODE floor; no editbin)
+
+## Bug
+HeadlessIDE --model /api/model/load could report success (m_modelLoaded=true,
+"Model armed for ProductRun", Arm latency ~3–48ms) while Deep2 never resident-
+loaded tensors. Later: Failed to allocate / Failed to load tensor data;
+/api/model/info loaded:true; /api/generate → FAILED_OWNER=ProductRun.
+
+## Files changed
+1. src/deep2/lavapath/ProductRuntime.hpp
+   - OpenSession fails closed if modelWeights.loaded but no tokenEmbed/lmHead.data
+     (INDEX_AND_ADDRESS / false payload). Unloads and returns false.
+2. src/product/gateway/product_deep2_infer_open.hpp
+   - OpenBody requires TensorsResident; short-circuit only when tensors present;
+     ProductOpenSession returns false otherwise (PRODUCT_OPEN_SESSION=FAIL).
+3. src/win32app/HeadlessIDE.cpp
+   - loadModel: ProductOpenSession + ProductSessionOpen required before
+     m_modelLoaded=true; clear state on fail; success line is
+     "Model loaded via ProductOpenSession (Deep2 tensors)" + Load latency.
+   - runInferenceStreaming LocalGGUF: ProductDeep2Infer only (removed
+     GenerateNativeStreaming dead path after early return).
+   - /api/generate arm: do not set m_modelLoaded until open succeeds;
+     503 product_open_failed if Deep2 tensors not resident.
+
+## How to verify
+1. Rebuild HeadlessIDE / product_deep2_infer objs (do not editbin LAA IDE).
+2. Cold start with a model that previously false-armed under LAA:NO, e.g.:
+     RawrXD-Win32IDE_r1matrix.exe --headless --model R:\gemma3-1b-Q2_K.gguf
+   Expect: ProductOpenSession failed / PRODUCT_OPEN=FAIL or NO_TENSOR_PAYLOAD
+   (or allocate fail) — NOT "armed" with 3ms and loaded:true.
+3. GET /api/model/info → "loaded":false when open failed.
+4. TinyLlama success path (fits HOST_DECODE / VA):
+   Expect: "Model loaded via ProductOpenSession (Deep2 tensors)" and
+   stderr "Model loaded successfully (N tensors)" before success line;
+   Load latency ≫ tens of ms; GET /api/model/info loaded:true;
+   POST /api/generate returns text (not FAILED_OWNER=ProductRun).
+5. Leave live rawr matrix runner (PID 9484) alone during verify.
+
+## Compile note
+Optional ninja obj rebuild in build-fd for
+  CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/HeadlessIDE.cpp.obj
+  CMakeFiles/RawrXD-Win32IDE.dir/src/product/gateway/product_deep2_infer.cpp.obj
+hit Permission denied on .obj (live binary/process lock). Do not fight matrix;
+rebuild after runner exits or into a separate smoke_bin out-dir.
+
+## Authority
+ProductOpenSession → ProductStreamerPrep → ProductRuntime::OpenSession →
+Deep2::rawr_run::OpenSession → InitFromPath/loadModel. Success iff tensors
+resident (embed or lmHead payload), not GGUF magic alone.
+
+## Rebuild status
+SOURCE_PATCH=LANDED (ProductRuntime.hpp, product_deep2_infer_open.hpp, HeadlessIDE.cpp)
+OBJ_REBUILD=QUEUED (rebuild_false_arm_when_idle.bat waits for matrix PID 9484 then ninja RawrXD-Win32IDE)
+LIVE_MATRIX=do not interrupt; m01/m02/m04 PASS, m03 FAIL (nemotron), continuing
+ASOF=2026-09-10T04:14:57.3508400-04:00

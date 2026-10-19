@@ -1,0 +1,7 @@
+N5 cyclone-live DualStick SHA256=F483AE4DBAD0596560243B4E5913F36FBA0619AFB86001B88FC47C54B8EE5523
+run_01 exit=0 OK=True TRUE=1 FWD=300/360 FT=1 FC=1 SURV=1 FB=0 CYC=1 STARTS=660 ENDS=660 MECH=trampoline,cyclone REASON=manual_preserve_mech
+run_02 exit=0 OK=True TRUE=1 FWD=300/360 FT=1 FC=1 SURV=1 FB=0 CYC=1 STARTS=660 ENDS=660 MECH=trampoline,cyclone REASON=manual_preserve_mech
+run_03 exit=0 OK=True TRUE=1 FWD=300/360 FT=1 FC=1 SURV=1 FB=0 CYC=1 STARTS=660 ENDS=660 MECH=trampoline,cyclone REASON=manual_preserve_mech
+run_04 exit=0 OK=True TRUE=1 FWD=300/360 FT=1 FC=1 SURV=1 FB=0 CYC=1 STARTS=660 ENDS=660 MECH=trampoline,cyclone REASON=manual_preserve_mech
+run_05 exit=0 OK=True TRUE=1 FWD=300/360 FT=1 FC=1 SURV=1 FB=0 CYC=1 STARTS=660 ENDS=660 MECH=trampoline,cyclone REASON=manual_preserve_mech
+ENDURANCE_N5=5/5

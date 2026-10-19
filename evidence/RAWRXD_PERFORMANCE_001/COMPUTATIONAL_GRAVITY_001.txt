@@ -1,0 +1,70 @@
+COMPUTATIONAL_GRAVITY_001=DISCOVERY_SEALED
+DATE=2026-09-08
+CATEGORY=PHENOMENON_CATEGORY_001
+CLASS=PHENOMENON
+CODE_ARTIFACT=0
+KERNEL_ARTIFACT=0
+SOFTWARE_DELIVERABLE=0
+NET_NEW_ARCHITECTURE_INVENTION=0
+INVENTION=0
+CODE_CHANGE=0
+DISCOVERED_WHILE_CODE=1
+RNG_USED=0
+BENIGN_TAG=NULL
+
+# Emergent observation during baseline friction (PATH_A readback / fence /
+# host attention / mirror accounting). Not authored as a novel mechanism.
+
+MISCONCEPTION_REVEALED
+  BASELINE_ASSUMED=host_is_perpetual_orchestrator_of_intermediate_state
+  WORK_FOCUSED_ON=minimizing_boundary_crossing_cost
+  TREATED_TRANSIT_AS=necessary_benign_feature
+
+DISCOVERY
+  BOUNDARY_IS_NOT_BENIGN_NECESSITY
+  BOUNDARY_IS_ACTIVE_VIOLATION_OF_COMPUTATIONAL_GRAVITY
+  when inception→consumption lifecycle can remain in native device topology
+
+PHYSICS_OBSERVED
+  High-velocity parallel state has weight and momentum.
+  Cycle (D2H stall → slower host route → H2D resume) disrupts that momentum.
+  Persistent maps / invalidations / sync barriers were life-support for a
+  dying host-micro-manager philosophy — not elegant optimization.
+
+PHASE_CHANGE
+  FROM=orchestrated_thrashing_across_host_device
+  TO=continuous_sovereign_flow_inside_device
+  WHEN=full_state_transition_lifecycle_stays_device_local
+
+HOST_ROLE_AFTER_DISCOVERY
+  NOT=micro_manager_of_every_intermediate
+  IS=prime_mover_sets_boundary_conditions_then_steps_away
+
+REMOVE_BASELINE_MEANS
+  NOT=delete_source_for_its_own_sake
+  IS=conceptual_purification
+  IS=abandon_illusion_that_host_observation_is_required_for_execution
+  IS=recognize_"benign"_bridges_and_sync_loops_as_parasitic_when_next_consumer_is_device
+
+LAW_FOR_PATH_B
+  NEXT_CONSUMER_DEVICE → D2H_OF_THAT_TENSOR=PARASITIC → DELETE
+  NEXT_CONSUMER_HOST_MATH → D2H=LEGAL_MINIMAL (PATH_A discovery retained)
+  TOTAL_DEVICE_RESIDENCY_FOR_ATTENTION_LIFECYCLE=TARGET
+  Q_B_HOST_CROSS_UNDER_PATH_B=FORBIDDEN
+
+NOT_THIS_DOCUMENT
+  new shader invention
+  fabricated TPS
+  reopen QB|KVA|LOGITS|SX|5.904
+  strip goods on word fail
+
+MEASURE_STILL_GOVERNS
+  WORD=GENERATION_WALL_NS
+  PROMOTE_ONLY_IF=DELETE_PROVEN+PARITY+PURITY+PRODUCT+WALL_LT_PATH_A_CHAMPION
+  ELSE=ATTRIBUTION_ONLY CHAMPION_REMAINS=PATH_A
+
+LINKS
+  MLA_KV_LAYOUT=DISCOVERY_ONLY (host observed pack)
+  PATH_B_STRUCTURAL_DELETE=conceptual_purification_spend
+  EPISTEMOLOGY=PATH_B_STRUCTURAL_DELETE_001 / SOVEREIGN_PHYSICS_CARTOGRAPHY_001
+  GOODS_BRAID=retained; promotion separate from presence

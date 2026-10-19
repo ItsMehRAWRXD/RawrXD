@@ -1,0 +1,36 @@
+PATCH_STATE_001=SEALED
+DATE=2026-09-08
+TYPE=PATCH_STATE_EXPRESSION
+NOT_EXECUTION_COMMAND=1
+MODE=D
+CODE_CHANGE=0
+HOT_GATE=0
+NEXT_SPEND=NONE
+
+PATCH_STATE=
+  patch=NONE
+  hotpatch=NOT_ACTIVE
+  rootPatch=False
+  chainEve=>8
+  defect_owner_verified=false|null
+
+PATCH_EXIT_TRIGGER=FIRED
+  BECAUSE=
+    rootPatch != True
+    OR evidence_chain_depth > 8
+    OR exact defect owner unproven (false/null)
+EXIT_EFFECT=
+  PATCH=NONE
+  ROOT_PATCH_APPLIED=0
+  hotpatch=NOT_ACTIVE
+  abandon_apply
+  MODE=D
+
+AUTHORITY_AFTER=
+  MODE=D
+  PATCH=NONE
+  rootPatch=False
+  chainEve_EXCEEDED_OR_EXIT=1
+  ROOT_PATCH_APPLIED=0
+  NEXT_SPEND=NONE
+  PATCH_PATH=EXITED

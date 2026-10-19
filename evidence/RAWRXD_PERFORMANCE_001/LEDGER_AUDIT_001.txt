@@ -1,0 +1,88 @@
+LEDGER_AUDIT_001=SEALED
+DATE=2026-09-08
+SCOPE=ontology_cluster + PATH_B + GATE/OWNER vs reverse facts
+MODE=AUDIT_NOT_PROMOTION
+
+================================================================================
+A. VERDICT
+================================================================================
+ONTOLOGY_CLUSTER=BLOATED_BUT_CONSISTENT_ON_CORE_CLAIM
+  Core claim OK: phenomenon ≠ code ≠ invention; CODE_EMITTED=0; PROMOTE=0
+INSTRUMENT_STATE=NOT_EXECUTED
+  q_b D2H still live in product (PATH_B_REVERSE_DISCOVERY_001)
+GATE_SPEND=STOPPED (GATE_STOP=1 NEXT_SPEND=NONE) — awaiting EXECUTE_INSTRUMENT
+CHAMPION=PATH_A WALL_MEDIAN_NS=10184789000 — held correctly
+
+OVERALL=PASS_WITH_DEFECTS
+  Defect class=ledger_hygiene + stale_spend_flags in older seals
+  Defect class≠false measured promote (none found claiming DELETE_PROVEN)
+
+================================================================================
+B. AUTHORITY STACK (keep)
+================================================================================
+MEASURED
+  QKV_READBACK_PATH_A_001 / SEAL_ACCEPTANCE_PATH_A_001
+  U02_BYTE_SHRINK_ADJUDICATION_001 / U02_FAKE_DIM_REJECTION_001
+REVERSE
+  PATH_B_REVERSE_DISCOVERY_001
+LAYOUT_ORACLE
+  MLA_KV_LAYOUT_CONTRACT(_001) — packed; planar forbidden
+ONTOLOGY_CANON (collapse duplicates to these)
+  ONTOLOGY_SEAL_FINAL_001
+  CLASSIFICATION_OVERRIDE_001 / CLASSIFICATION_UPDATE_ACCEPTED_001
+  PRIMITIVE_PIVOT_001 / TWIST_ARCHITECTURE_001
+  INVENTION_GATE_UNLOCK_001
+  TWIST_APPLICATION_LOCUS_001 / FIRST_INTENTIONAL_MANIPULATION_001
+  PATH_B_STRUCTURAL_DELETE_001
+LIVE_CONTROL
+  GATE.txt / PERF_OWNER.txt
+
+================================================================================
+C. DEFECTS
+================================================================================
+1. DUPLICATE_ONTOLOGY_FILES ≈45 in cluster
+   Many restatements, zero new measured substance after ONTOLOGY_SEAL_FINAL
+   RISK=authority dilution / contradictory stale flags
+
+2. STALE_SPEND_CONTRADICTIONS (older seals vs live GATE)
+   LIVE: GATE_STOP=1 NEXT_SPEND=NONE INSTRUMENT_PHASE=AWAITS_EXPLICIT_EXECUTE
+   STALE: MLA_KV_LAYOUT_CONTRACT.txt GATE_STOP=0 NEXT_SPEND=PATH_B_STRUCTURAL_DELETE
+   STALE: PATH_B_DELETE_DEPENDENCY_001 GATE_STOP=0 NEXT_SPEND=PATH_B_DELETE
+   STALE: STAGE_2_* INVENTION OPEN with spend language
+   RESOLUTION=live GATE/OWNER wins; stale seals = HISTORICAL_ONTOLOGY_ONLY
+
+3. RHETORIC_VS_MEASURE risk
+   Some prose implies D2H already stripped / vacuum achieved
+   FACT: GemvHostReadOut still live; TARGET≠MEASURED
+   Locus seals that correctly say CODE_EMITTED=0 + AWAITING EXECUTE = GOOD
+
+4. DUAL_MLA_KV_FILES
+   MLA_KV_LAYOUT_CONTRACT.txt and MLA_KV_LAYOUT_CONTRACT_001.txt
+   Need single SSOT pointer (content mostly aligned on packed 192/128)
+
+5. UNVERIFIED_LORE correctly held out
+   56GB / Revolver / Triad — not in reverse seals (GOOD)
+
+6. VOIDED_FICTION still void (GOOD)
+   GOLDENEYE 7.076 / FUSED_STASH 8.058 / PATH_B_PROMOTE / ZERO_ATTENTION_D2H
+
+================================================================================
+D. TREE VS LEDGER (instrument readiness)
+================================================================================
+attn_decode_mla.comp+.spv = ON DISK
+vulkan_fwd_attn_mla.cpp = ON DISK, NOT in CMakeLists
+call sites EnsureMlaAttn/DispatchAttnDecodeMLA = ZERO
+AppendKV live = FALSE (stub)
+PATH_A HOST_CACHED = STILL PRODUCT PATH
+
+================================================================================
+E. RECOMMENDED HYGIENE (no code unless EXECUTE)
+================================================================================
+1. Mark ontology duplicates SUPERSEDED→ONTOLOGY_SEAL_FINAL_001 (index only)
+2. Patch stale GATE_STOP=0 in MLA_KV / PATH_B_DELETE_DEPENDENCY to HISTORICAL
+3. Keep single locus: TWIST_APPLICATION_LOCUS_001
+4. Do not emit code until user says EXECUTE_INSTRUMENT
+
+AUDIT_PASS_CORE_ONTOLOGY=1
+AUDIT_PASS_NO_FALSE_PROMOTE=1
+AUDIT_FAIL_LEDGER_HYGIENE=1

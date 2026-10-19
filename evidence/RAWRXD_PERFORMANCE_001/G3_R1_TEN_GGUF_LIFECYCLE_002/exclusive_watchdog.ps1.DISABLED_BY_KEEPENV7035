@@ -1,0 +1,9 @@
+﻿while ($true) {
+  Get-CimInstance Win32_Process -EA SilentlyContinue | Where-Object {
+    $_.CommandLine -and (
+      $_.CommandLine -match 'LIFECYCLE_001\\run_r1_matrix|CAPABILITY_CERT|G3_R1_TEN_GGUF_MATRIX|run_cold_matrix' -or
+      ($_.Name -match 'RawrXD' -and $_.CommandLine -notmatch 'LIFECYCLE_002' -and $_.CommandLine -notmatch '--port 11436')
+    )
+  } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -EA SilentlyContinue }
+  Start-Sleep 5
+}

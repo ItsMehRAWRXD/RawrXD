@@ -1,0 +1,14 @@
+TOKENCODE_TOKENID_DOMAIN — Windows native proof
+================================================
+
+ZIP_SHA256=f065a188ce4632dd7c9a00ccaa95dcca5c8726b98f25587b8faef1530d031ce1
+RESULT=TOKENCODE_TOKENID_DOMAIN_X64_MASM_TESTS=PASS  RC=0
+
+HARNESSES:
+  bounded  -> authorized=1
+  u64full  -> authorized=1
+  tamper   -> authorized=0 (negative reinterpret)
+  overflow -> arithmetic_fault=1 authorized=0
+
+LOCAL_FIXES: PROTO strip, /Fo no-colon, BSS+field mov harnesses
+PROMOTE=0

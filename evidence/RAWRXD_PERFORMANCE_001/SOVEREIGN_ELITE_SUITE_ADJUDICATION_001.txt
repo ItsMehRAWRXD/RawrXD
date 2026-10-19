@@ -1,0 +1,25 @@
+SOVEREIGN_ELITE_SUITE_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  Elite Suite: build_sovereign.bat, PE walker, trampoline hooks,
+  mini disasm/asm, plugin header SOV_PLG, fiber loader
+  Priority ask: PE Inspector vs Plugin Manifest Handler
+
+REVERSE
+  Proposed Elite Suite filenames/symbols NOT found as product-wired suite
+  Live hotpatch plane = UnifiedHotpatchManager / Win32IDE (C++) — separate
+  Perf authority = deep2_benchmark PATH_A — unrelated to Elite Suite invent
+
+ADJUDICATION
+  Neither PE Inspector nor Plugin Manifest Handler = priority under STOP
+  Both refused as NEW_STACK spend
+  No trampoline/inject PoC authored this turn
+  Reopen NEW_STACKS only by explicit gate lift after PATH_A hold
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

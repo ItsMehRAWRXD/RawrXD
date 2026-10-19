@@ -1,0 +1,14 @@
+﻿MODEL=Meta-Llama-3.1-8B-Instruct.gguf
+PATH=F:\OllamaModels\models\blobs\sha256-667b0c1932bc6ffc593ed1d03f895bf2dc8dc6df21db3042284a6f4416b06a29
+SIZE_MB=4692.8 SHA16=667B0C1932BC6FFC
+HEADLESS_PID=21356
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"Meta-Llama-3.1-8B-Instruct.gguf","profile_source":"runtime_gguf","profile_id":9487,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temper
+LOAD=200 {"success":true,"model":"sha256-667b0c1932bc6ffc593ed1d03f895bf2dc8dc6df21db3042284a6f4416b06a29"}
+GENERATE=200 TOKENS=1 PROCS=1
+GEN_SNIP={"model":"rawrxd","response":"OK","done":true}
+UNLOAD=200 {"success":true}
+RELOAD=200 {"success":true,"model":"sha256-667b0c1932bc6ffc593ed1d03f895bf2dc8dc6df21db3042284a6f4416b06a29"}
+RELOAD_GEN=200 TOKENS=1 PROCS=1
+VERDICT=PASS

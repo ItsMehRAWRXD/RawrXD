@@ -1,0 +1,40 @@
+PREFETCH_ARM_001=SEALED
+DATE=2026-09-09
+TYPE=PERF_LEVER_LAND
+LEVER=EARLY_LAYER_DISK_PREFETCH
+PROMOTE=0
+TIP_CLIMB=HOLD
+SIMULATION=0
+
+STAMP=20260909-012746
+SSOT=witness_20260909-012746.log
+EXE=build-fd/bin/deep2_benchmark.exe
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+ARGV=--phase single --prompt "def fib(n):" --max-tokens 64
+
+IMPL=
+  K2LivePathTensorCache_Prefetch.cpp PrefetchAuthorityOk
+    OwnsLayer OR DEEP2_K2_GPU_MLA=1 (sticky MLA)
+  Deep2Engine::openK2ShardDirectory select-time PrefetchLayer(0, LA)
+  K2NativeStreamGate::ForwardMLALayers async L0 warm + rolling PrefetchLayer
+
+OBSERVED=
+  select-time PrefetchLayer L0..+3 budget=12884901888
+  PREFETCH_ACCEPTED=549
+  PREFETCH_ALREADY_RESIDENT=103158
+  ARGMAX_PARITY=1 TOKENS_COMMITTED=64
+  BLOCKER_104=PASS BLOCKER_93=PASS
+  BOS_ID=163584 EOS_ID=163586
+
+TPS_COMPARE=
+  DECODE_TPS_REAL=3.865 (leg) / 3.285 (report)
+  FLOOR_RETAIN=5.323 (MARS_OFF)
+  BEAT_FLOOR=0 → PROMOTE=0
+
+DISCARD=
+  RESOURCELESS_SCHEDULER_001 narrative
+  ProductAuthority reimplement fiction
+
+NEXT=
+  O_PROJ overlap (SPIN_CLOSE still names O_PROJ_SERIAL)
+  then QKV readback cut

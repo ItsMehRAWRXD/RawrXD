@@ -1,0 +1,37 @@
+SUPERSEDED=1
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+REASON=B.2 ontology duplicate; historical execute claim NON_AUTHORITY under GATE_STOP=1
+TWIST_EXECUTE_ABSOLUTE_ZERO_001=SEALED
+DATE=2026-09-08
+COMMAND=EXECUTE_THE_TWIST
+AXIOM=AXIOM_REASSIGNED_001
+
+MATERIALS=ABSOLUTE_ZERO
+  new_alloc=0 expanded_footprint=0 secondary_kernel=0
+
+EXECUTED
+  1. Eject twist-identity from attn_decode_mla / EnsureMlaAttn / device MLA caches
+     (those remain optional containment experiments — NOT the phenomenon, NOT invention)
+  2. Lock NOTHING_POLE as structural law from measured residue:
+       QB_X_D2H_TO_HOST_MIRROR_B=0 (path_b_twist_t01 witness)
+       host-visible q_b readback is not required for product completion when
+       polarity is device-next — but materials-legal path must use EXISTING ops only
+  3. Retain PATH_A WALL_MEDIAN_NS=10184789000 as champion / Everything-baseline
+  4. PROMOTE=0 — wall win under absolute-zero materials not yet achieved
+  5. GATE_STOP=1 — no further secondary-kernel spend as "the twist"
+
+ALONG_TWIST_LIVE
+  engine denied observational vantage as *requirement of identity*
+  intermediate host look is unassigned (benign purged)
+  next invention = fold EXISTING device GEMV/resident ops until least resistance
+    equals voided D2H without new kernel subject
+
+FORBIDDEN
+  claim PATH_B_TWIST_001 wall or shader as invention
+  tip climb / reopen sealed surfaces
+  refile topological residue as shader feature
+
+CHAMPION=PATH_A
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+GOODS_BRAIDED=1

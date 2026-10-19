@@ -1,0 +1,36 @@
+﻿{
+    "receipt_id":  "CAUSAL_EXPOSURE_ATTRIBUTION_001",
+    "result":  "PASS",
+    "date":  "2026-09-08",
+    "witness_log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/hotpath64_latest_qkv.txt",
+    "attrib_receipt":  "evidence/RAWRXD_PERFORMANCE_001/CAUSAL_EXPOSURE_ATTRIBUTION_001.txt",
+    "next_runtime_action":  "REMOVE_KVA_FROM_EXPOSED_CAUSAL_DEPTH",
+    "forced_off":  {
+                       "TOKEN_PACING":  "OFF",
+                       "DEEP2_CERT_STEP_LOG":  "0",
+                       "DEEP2_LOGITS_GPU_SPLIT":  "0",
+                       "DEEP2_MLA_Q_DEVICE_FORCE_OFF":  "0",
+                       "QKV_OWNER_RESI_LOG":  "0",
+                       "TOK_RESIDUAL_SPAM":  "0"
+                   },
+    "forced_on":  {
+                      "DEEP2_MLA_Q_DEVICE":  "1",
+                      "DEEP2_WEIGHT_PIN":  "1",
+                      "DEEP2_MLA_FUSED_Q4KT":  "1",
+                      "DEEP2_LOGITS_THREADS":  "32"
+                  },
+    "do_not_reopen":  [
+                          "KvaRowsClimb",
+                          "ProductAuthority",
+                          "QB_SX_256"
+                      ],
+    "metrics":  {
+                    "decode_tps_real":  "3.556",
+                    "generation_wall_ns":  "17997131700",
+                    "q_branch_us":  "3428798",
+                    "qkv_readback_us":  null,
+                    "mla_q_device_ops":  "0",
+                    "mla_q_device_fail":  "0"
+                },
+    "promote":  0
+}

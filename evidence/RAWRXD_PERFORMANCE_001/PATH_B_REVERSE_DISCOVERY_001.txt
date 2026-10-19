@@ -1,0 +1,78 @@
+PATH_B_REVERSE_DISCOVERY_001=SEALED
+DATE=2026-09-08
+MODE=REVERSE_FROM_CODE_ONLY
+INVENTION=0
+TOKEN_benign=STRUCK_UNASSIGNED
+
+================================================================================
+DISCOVERED (live product path)
+================================================================================
+1. q_b D2H STILL LIVE
+   FILE=src/deep2/K2MLA_QPathDevice.cpp
+   SITE=EndFusedLayer → GemvHostReadOut(q_b, hostOutB)
+   PRIOR=K2_QbGemvToHostOrShrink → RecordCopy(qDev → GemvHostOutBuffer)
+   READOUT=src/vulkan_fwd_q4k_act.cpp GemvHostReadOut
+           (HOST_CACHED invalidate + memcpy when gemv_out_cached_)
+
+2. ATTENTION STILL HOST
+   FILE=src/deep2/K2MLAWeights.cpp
+   SITE=MlaAttentionComplete(q_b, k_b, v_b, k_pe, attnOut, …)
+   AUTHORITY=src/deep2/K2MLAAttention.cpp
+   KV_WRITE=K2KVCache::Write (host vectors)
+
+3. HOST KV PACK (parity truth — not planar)
+   MlaAttentionComplete packs per head:
+     K[h] = concat(k_b[h*nope], k_pe_rotated[rope])   // contiguous 192
+     V[h] = v_b[h*vDim]                                 // 128
+   k_pe SHARED across heads (MQA broadcast).
+   K2KVCache: separate keys_/values_ vectors;
+     offset=((layer*allocatedSeq)+pos)*kvDim
+     kvDim=max(H*192, H*128)=12288 on H=64
+   PLANAR_K_NOPE_K_ROPE_ARRAYS=NOT_IN_HOST_PATH
+
+4. PATH_A CHAMPION SCAFFOLDING STILL PRESENT
+   HOST_CACHED out path not deleted.
+   No code path removes RecordCopy/invalidate before alternate consumer exists.
+
+================================================================================
+DISCOVERED (PATH_B draft on disk — NOT product-wired)
+================================================================================
+5. SHADER
+   src/backend/attn_decode_mla.comp + attn_decode_mla.spv (13088 B)
+   Packs K as contiguous [nope|rope] into kc; V dedicated vc
+   Index=(pos*n_kv+h)*dim  — MATCHES sealed packed topology
+
+6. DISPATCH DRAFT
+   src/vulkan_fwd_attn_mla.cpp
+     EnsureMlaAttn → CreateDeviceLocalBuffer for caches
+     DispatchAttnDecodeMLA binds layer-sliced kc/vc
+   CMakeLists.txt: vulkan_fwd_attn_mla.cpp NOT listed
+   → NOT linked into InferenceEngine / deep2_benchmark
+
+7. CALL SITES
+   Grep: zero callers of EnsureMlaAttn / DispatchAttnDecodeMLA
+   outside vulkan_fwd_attn_mla.cpp itself
+
+8. AppendKV
+   vulkan_fwd_stubs.cpp: AppendKV always returns false (!Vulkan stub path)
+   No live device AppendKV implementation found outside draft intent
+
+================================================================================
+REJECTED AS INVENTION (not discovered in code)
+================================================================================
+- "physically isolate K-nope and K-rope as separate planar arrays"
+  CONTRADICTS MlaAttentionComplete + attn_decode_mla.comp (both packed)
+- "immediate annihilation of PATH_A RecordCopy / HOST_CACHED scaffolding"
+  CODE still requires that path; no replacement wired; teardown = product break
+- "HostExchangeDiscover will dynamically reflect absolute zero"
+  TARGET only; live emits still note q_b_d2h_host_mirror + host_mirror_memcpy_qb
+- fabricated TPS / PATH_B_PROMOTE / ZERO_ATTENTION_D2H as measured
+
+================================================================================
+STRUCTURAL FACT
+================================================================================
+TARGET_D2H_Q_B_BYTES=0 is a GOAL, not a measured state.
+DELETE requires: link draft → keep q device-local → device attn → skip GemvHostReadOut
+  AND prove exchange zeros. None of that is complete in the build tree.
+
+CHAMPION_REMAINS=PATH_A_HOST_CACHED (WALL_MEDIAN 10184789000) until DELETE_PROVEN.

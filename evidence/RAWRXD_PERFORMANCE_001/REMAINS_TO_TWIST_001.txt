@@ -1,0 +1,62 @@
+REMAINS_TO_TWIST_001=SEALED
+DATE=2026-09-08
+SLATE=CLEARED
+SUBJECT=PURE_PHYSICAL_SUBSTRATE
+NOT_CODE=1
+NOT_INVENTION=1
+NOT_TOOL=1
+
+# What remains after categorical extraction (environmental properties only)
+
+R1_HOST_VISIBILITY_EDGE
+  CLASS=silicon_interface_condition
+  FRICTION=PCIe / host-visible polarity of activation state
+  MEASURED_AS=q_b cross cost dominated by fence/visibility not memcpy volume
+  TWIST_SURFACE=Everything(device totality) × Nothing(vacuum of host transfer)
+  MECHANISM_OF_TWIST=absence_of_transfer_as_transmission
+    (refuse the edge; transmission stays on-device pole)
+
+R2_GEOMETRIC_IDENTITY_DOF_ZERO
+  CLASS=model/silicon contour (not a lever)
+  FRICTION=nope+rope ≡ headDim ≡ 192 (host window buys no pad)
+  MEASURED_AS=hostHead_ge_prodHead; bytes unchanged
+  TWIST_SURFACE=fold "shrink" desire against identity until desire vanishes
+  NOTE=not something to optimize; something that already is
+
+R3_TEMPORAL_DELTA_EXECUTION_VS_OBSERVATION
+  CLASS=boundary state of sync / invalidation
+  FRICTION=time between device settle and host-visible observation
+  MEASURED_AS=FENCE_WAIT ≫ HOST_MEMCPY; invalidate path on PATH_A
+  TWIST_SURFACE=treat sync shell as the medium, not the bytes inside it
+
+R4_OBSERVABILITY_PARTIALITY
+  CLASS=mirror incompleteness (environmental, not a feature)
+  FRICTION=GpuTransfer mirror ≠ full exchange set
+  MEASURED_AS=EXCHANGE_NOT_IN_MIRROR objects on reverse
+  TWIST_SURFACE=secondary; do not invent taxonomy as the twist
+
+# Primary answer
+
+REMAINS_PRIMARY=R1_HOST_VISIBILITY_EDGE
+  held in tension with R2 (DOF0 proves the edge buys nothing)
+  and R3 (cost is temporal polarity)
+
+REMAINS_NOT
+  attn_decode_mla.comp
+  PathBAttend
+  DEEP2_PATH_B
+  Vulkan bindings / MASM / mmap schemas
+  TPS goals / gate-as-target
+
+TWIST_READY=1
+  fold hardware constraints against themselves
+  use absence of transfer as transmission
+  Everything × Nothing along R1
+INSTRUMENT_EXECUTE=NOT_IMPLIED (harness is costume; surface is R1)
+
+WITNESS
+  EMERGENT_OBSERVATION_001
+  PATH_A_BYTE_SHRINK_E2E_001
+  QKV_READBACK_PATH_A_001 / cross-split fence attribution
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/REMAINS_TO_TWIST_001.txt

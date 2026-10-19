@@ -1,0 +1,15 @@
+REVERSE_DOUBLELAYER_BYPASS — Windows native proof
+=================================================
+
+ZIP_SHA256=163411c4e12ecfa2eb274a9d4e28bb009bccdcdc129fbf2e0560363050274d8f
+RESULT=REVERSE_DOUBLELAYER_BYPASS_X64_MASM_TESTS=PASS  RC=0
+
+HARNESSES:
+  normal         -> final_authority=1 bypass_authorized=0
+  bypass         -> bypass_authorized=1 final_authority=1
+  stale_bypass   -> stale_veto=1 bypass=0 final=0
+  epoch_mismatch -> bypass_bound=0 bypass=0 final=0
+
+STALE_GENERATION_ABSOLUTE_VETO=ENFORCED
+LOCAL_FIXES: PROTO strip, /Fo no-colon, BSS+field mov harnesses
+PROMOTE=0

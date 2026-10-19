@@ -1,0 +1,10 @@
+CMAKE_TARGET=deep2_streamer_parity
+TARGET_LINK_LIBRARIES=InferenceEngine; dxgi
+MSVC_RUNTIME=MultiThreaded (static CRT) — explains PE deps without msvcrt/vcruntime
+TRANSITIVE_VIA_InferenceEngine=vulkan-1; pdh; (and static objs/libs inside IE)
+RUNTIME_DLL_RESOLVED=
+  vulkan-1.dll -> C:\Windows\System32\vulkan-1.dll
+  dxgi.dll -> System32
+  pdh.dll -> System32
+  KERNEL32.dll -> System32
+PE_IMPORT_CERT=ImportSpace68 (must PASS before StreamerArmSpeedEnv)

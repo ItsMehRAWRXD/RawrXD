@@ -1,0 +1,15 @@
+MEDIA_ENGINE_REFUSAL_CONFIRMED_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+AUTHORIZED_SPEND=0
+
+REFUSE=Sovereign_Media_Engine.asm
+  Spotify/YouTube/SoundCloud bare-metal playback = OUT_OF_SCOPE
+  Not GGUF/PATH_A/deep2_benchmark braid
+  RequestStream names = LLM/inline-edit streaming NOT media apps
+  No assemble / wire / invent Sovereign_Network_Sync for media
+
+USER_ACK=aligned_with_refuse
+LIVE_AUTHORITY=PATH_A / deep2_benchmark.exe

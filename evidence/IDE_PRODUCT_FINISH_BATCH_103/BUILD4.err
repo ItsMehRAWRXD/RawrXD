@@ -1,0 +1,26 @@
+CMake Warning at CMakeLists.txt:6482 (message):
+  [Win32IDE] Optional fallback unit missing, skipping:
+  src/modules/quickjs_node_shims.cpp
+
+
+CMake Warning at CMakeLists.txt:6542 (message):
+  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
+  (strict lane).  The IDE usually will not link unless every ASM symbol is
+  provided elsewhere.  For a normal dev link:
+  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
+
+
+CMake Warning at src/validation/CMakeLists.txt:343 (message):
+  RawrXD libraries not found at
+  G:/~dev/rawrxd/src/validation/../../build-fresh-aug22
+
+
+CMake Warning at src/validation/CMakeLists.txt:344 (message):
+  Building only minimal validation (simulation mode)
+
+
+CMake Warning at CMakeLists.txt:14486 (message):
+  [SoloIDE] Qt6 not found ΓÇö SoloIDE target skipped.  Install Qt6 or set
+  CMAKE_PREFIX_PATH.
+
+

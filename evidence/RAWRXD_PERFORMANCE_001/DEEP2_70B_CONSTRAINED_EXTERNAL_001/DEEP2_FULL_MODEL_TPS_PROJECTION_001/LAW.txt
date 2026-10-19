@@ -1,0 +1,36 @@
+GATE=DEEP2_FULL_MODEL_TPS_PROJECTION_001
+DATE=2026-09-13
+KIND=NONAUTH_PLANNING_PROJECTION
+STATUS=ACCEPT_AS_PLANNING_BASELINE
+PROMOTE=0
+TPS_MINT=0
+TPS_PERFORMANCE_AUTHORITY=0
+NOT_RUN!=PASS
+PARENT=DEEP2_TPS_PROJECTION_TOP15_VS_LADDER_20260913
+
+# Kimi K2: 1T total · 32B activated/token · 61 layers · 8 routed+shared · MLA
+T_TOKEN ≈ T_SERIAL + Σ critical_path_stage(max(GPU_COMPUTE, WEIGHT_STREAM, H2D, HOST, STORAGE))
+TPS=1/T_TOKEN
+
+FULL_ACTIVE_WEIGHT_STREAM≈18–20 GB/token (32B×~4.5bpw; better than expert-only ~12GB)
+R9700=640 + 7800XT=624 = 1264 GB/s aggregate peak (concurrent useful only)
+ACTIVE_WEIGHT_PHYSICAL_CEILING≈63–70 TPS (18–20GB/1264) — NOT finished prediction
+
+# ~63–70 TPS = conventional Q4 active-weight physical roofline
+# Defensible finished full-model remains ~8–12; aggressive ~12–18
+# Reaching ~70 TPS requires ↓ EFFECTIVE_ACTIVE_BYTES_PER_GENERATED_TOKEN
+#   not merely approaching peak memory bandwidth
+# 70 TPS × 18 GB = 1.26 TB/s ≈ dual peak — zero budget for decode/attn/sync/miss
+
+KEY_METRIC=EFFECTIVE_ACTIVE_BYTES_PER_GENERATED_TOKEN
+BYTE_LADDER=18–20 → WTA≈1 → 12–15 hetero → 8–12 sparse → 4–8 multi-token reuse
+# then 70 TPS physically plausible
+
+MLA_KV≈68.6 KiB/seq-token (576×2×61); short-ctx weight-dominated; 128K–256K attn matters
+MISS_EQ=T_MISS=max(M/host_BW, M/PCIe, M_disk/storage) − overlap_hidden
+
+ENDPOINT_ROWS_NOT_ADDITIVE=
+  0.0685 measured · Top15 0.10–0.20 · kernel 0.3–0.8 · quant/prepack 0.8–2
+  persistent 1.5–4 · sparse+async 3–6 · locality 5–10 · dual-GPU 8–12
+  excellent 12–18 · near-resident 18–25 · device-local eng 25–40+
+  raw active-weight roof ~63–70

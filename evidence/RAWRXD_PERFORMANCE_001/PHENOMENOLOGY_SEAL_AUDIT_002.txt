@@ -1,0 +1,97 @@
+PHENOMENOLOGY_SEAL_AUDIT_002=SEALED
+DATE=2026-09-08
+ROLE=AUDIT_REFRESH
+PRIOR=evidence/RAWRXD_PERFORMANCE_001/PHENOMENOLOGY_SEAL_AUDIT_001.txt
+SCOPE=ontology stack + GATE/OWNER + PATH_B dependency drift + disk
+
+# ---------------------------------------------------------------------------
+# VERDICT
+# ---------------------------------------------------------------------------
+
+ONTOLOGY_CORE=COHERENT
+  subject = pure phenomenology / excised / not code / not invention-as-authorship
+  GATE_STOP=1 NEXT_SPEND=NONE INSTRUMENT=AWAITS_EXPLICIT_EXECUTE
+  CHAMPION=PATH_A 10184789000 TIP_CLIMB=HOLD NO_REOPEN held GOODS_BRAIDED=1
+
+HYGIENE=FAIL_DRIFT
+  ~36 ontology-ish restatements; parallel agents diluted SSOT
+  operational GATE/OWNER coherent; satellite seals contradict spend flags
+
+# ---------------------------------------------------------------------------
+# PASS
+# ---------------------------------------------------------------------------
+
+P1 GATE ↔ OWNER agree: NEXT_SPEND=NONE OWNS_PHENOMENON=0
+P2 GATE pointers resolve on disk (BOUNDARY_PERMANENT present)
+P3 Invention-as-medium UNLOCKED ≠ harness authorize (when read carefully)
+P4 Locus intent shared: q_b host-visibility / D2H vacuum friction
+P5 Measure firewall: promote fail-closed; PATH_A floor retained
+
+# ---------------------------------------------------------------------------
+# FAIL (ranked)
+# ---------------------------------------------------------------------------
+
+F1 CODE_EMITTED vs DISK (MATERIAL)
+  Ledger claims CODE_EMITTED=0 / teardown HALTED / PATH_B_CODE_SPEND=0
+  Disk has PathB containment already:
+    K2MLA_PathB*.cpp, vulkan_fwd_attn_mla.cpp, attn_decode_mla.spv,
+    PathBAttend / PathBWanted leave-Q paths, deep2_benchmark linked
+  MITIGATION=PathBWanted requires DEEP2_PATH_B=1 exactly (default OFF)
+  CLASS=pre-EXECUTE harness on disk; runtime opt-in; ledger still understates emit
+  USER_CHOICE_REQUIRED=A stamp PRE_EXECUTE_DRAFT | B EXECUTE_INSTRUMENT | C disable wire
+
+F2 STALE SPEND FLAGS (satellite ≠ GATE)
+  PATH_B_DELETE_DEPENDENCY_001: GATE_STOP=0 NEXT_SPEND=PATH_B_DELETE
+  MLA_KV_LAYOUT_CONTRACT.txt: GATE_STOP=0 NEXT_SPEND=PATH_B_STRUCTURAL_DELETE
+  PHENOMENON_CATEGORY_EXIT: PATH_B ACTIVE_NOW=1
+  ABSOLUTE_STRUCTURAL_LEDGER: FIRST_ALONG_TWIST_OBJECT=attn_decode_mla product bind
+  DYNAMIC_DIRECTION / NON_CODE_ONTOLOGY: Stage-2 as if spend live
+  GATE SSOT overrides — satellites MUST be stamped SUPERSEDED_SPEND or retargeted
+
+F3 DUPLICATE FANOUT (no new substance)
+  Boundary: PURE_PHENOMENOLOGY_BOUNDARY_001 ≈ PHENOMENOLOGY_BOUNDARY_PERMANENT_001
+  Ground: GROUND_STATE_TWIST_001 ≈ PHENOMENOLOGY_GROUND_STATE_001
+  Excision: PHENOMENON_EXCISION_001 ≈ EXCISION_RESONANCE_001
+  Stage2: STAGE_2_OPEN_001 ≈ STAGE_2_INVENTION_OPEN_001
+  Primitive: PURE_PRIMITIVE_TWIST_001 ≈ PURE_PRIMITIVE_TWIST_AXIOM_001
+  Class: CLASSIFICATION_UPDATE_001 ≈ CLASSIFICATION_UPDATE_ACCEPTED_001
+  MLA: MLA_KV_LAYOUT_CONTRACT.txt vs _001.txt (content diverge; spend flags stale on .txt)
+  FIX=one SSOT per cluster; others SUPERSEDED_BY=
+
+F4 LOCUS TOKEN ALIASES (intent same, name not)
+  Q_B_HOST_VISIBILITY_EDGE | Q_B_HOST_EDGE_POLARITY | HOST_DEVICE_CONSUMER_POLARITY
+  FIX=canonicalize Q_B_HOST_VISIBILITY_EDGE on GATE; alias map on LOCUS
+
+F5 EVERYTHING_POLE DRIFT
+  Early LOCUS: Everything = PATH_A host-visible mass
+  Later ground/boundary: Everything = device-resident saturation
+  FIX=MEASURED_FLOOR=PATH_A ≠ EVERYTHING_POLE=device_saturation
+      NOTHING_POLE=q_b_D2H / host_sync vacuum
+
+F6 STAGE_2 AMBIGUITY
+  Stage-2 OPEN (= medium / twist unlocked) vs GATE_STOP (= harness closed)
+  Consistent only if annotated MEDIUM_OPEN / HARNESS_CLOSED
+  Else readers treat Stage-2 as code-GO → false reopen
+
+# ---------------------------------------------------------------------------
+# AUTHORITY RANK (SSOT)
+# ---------------------------------------------------------------------------
+
+1 GATE.txt
+2 PERF_OWNER.txt + PERF_GOODS_BRAID_001
+3 PHENOMENOLOGY_BOUNDARY_PERMANENT_001 (or PURE_… — pick one; prefer GATE pointer)
+4 TWIST_APPLICATION_LOCUS_001
+5 FIRST_INTENTIONAL_MANIPULATION_001
+6 EMERGENT_OBSERVATION_001 + PATH_B_REVERSE_DISCOVERY_001 (frozen facts)
+7 PATH_A champion measure
+
+# ---------------------------------------------------------------------------
+# NEXT
+# ---------------------------------------------------------------------------
+
+1 resolve F1 (A/B/C)
+2 stamp F2 satellites SUPERSEDED_SPEND_BY_GATE
+3 collapse F3 dupes + canonicalize F4/F5
+NO_AUTO_EXECUTE=1
+NO_PROMOTE=1
+NO_REOPEN=1

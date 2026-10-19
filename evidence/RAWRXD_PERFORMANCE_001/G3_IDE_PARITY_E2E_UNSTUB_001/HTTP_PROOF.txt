@@ -1,0 +1,8 @@
+﻿HTTP_PROOF_PORT=11961 EXE_SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+HEALTH=200
+PRE_TOOL_list_directory=403 motd_required
+MOTD_read_motd_relative=200
+POST_TOOL_list_directory=200
+SUBAGENT_on_this_EXE=503 hexmag_unavailable (source fixed; awaiting relink)
+PUSH=https://github.com/ItsMehRAWRXD/RawrXD/commit/58ffd4c9760979c444476ecc979c6156d423fd55
+BRANCH=cert/gpu-forward-child-ladder-20260909

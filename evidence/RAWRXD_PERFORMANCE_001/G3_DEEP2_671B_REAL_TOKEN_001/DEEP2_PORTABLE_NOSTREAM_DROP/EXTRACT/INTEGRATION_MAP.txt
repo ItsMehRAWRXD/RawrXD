@@ -1,0 +1,60 @@
+DEEP2 PORTABLE NO-BACKGROUND-STREAMING HOTPATCH MAP
+=================================================
+Policy: only the current execution operation may cause weight I/O.
+Router-selected loads happen AFTER the real Top-K is known. No prediction.
+
+Current source paths to neutralize/replace:
+1) src/streaming_gguf_loader_enhanced.cpp
+   - Open(): do not start prefetch_thread_.
+   - GetTensorView(): remove PredictNextZones()/PrefetchZoneAsync().
+   - PrefetchTensorAsync()/PrefetchZoneAsync()/PrefetchWorkerThread(): forbidden in no-stream build.
+   - LoadWithNVMe(): do not use overlapped/ERROR_IO_PENDING path in no-stream build.
+   - I/O ring submit/batch paths: forbidden in no-stream build.
+
+2) src/streaming/streaming_loader_production.cpp
+   - LoadStreaming(): do not StartBackgroundLoading().
+   - RequestTensor(s): replace queue submission with current-op synchronous require.
+   - Start/Stop/Pause/Resume/BackgroundLoadThread: exclude from no-stream build.
+   - GetTensorDataSync is the correct semantic model, but route all storage through one provider.
+
+3) src/deep2/NVMeStream.cpp
+   - remove FILE_FLAG_SEQUENTIAL_SCAN in no-stream mode.
+   - no whole-file MapViewOfFile as the residency mechanism for the 376.65 GiB model.
+   - prefetchExpert()/prefetchPredicted(): forbidden.
+   - acquireExpert() becomes exact router-triggered synchronous require.
+   - LRU may be retained only as an explicit foreground operation, never a worker.
+
+4) src/deep2/Deep2ExecutionGraph.cpp
+   - Expert_Load is NOT async prefetch.
+   - after MoE_Route produces actual Top-K, call d2ns_require_route() synchronously.
+   - OnRouterPrediction must not enqueue predictions.
+   - Expert_Execute consumes only returned current-route handles.
+
+5) src/deep2/DeepSeekMoELoader.hpp/.cpp
+   - PrefetchLayer/PrefetchExpert APIs are forbidden in no-stream mode.
+   - ReadAt may remain synchronous exact-offset I/O.
+   - whole-file mapping is not required; prefer exact-offset reads for huge sharded model.
+   - cache eviction, if used, occurs synchronously on the requesting thread.
+
+6) Any optional NEVM/RawRamXD/cache prefetch layer reached by Deep2
+   - it must be bypassed by the portable no-stream path.
+   - do not globally delete unrelated subsystem prefetch; prove Deep2 does not call it.
+
+DeepSeek2 observed profile (user's actual shard1/header scan):
+  GGUF v3; 11 shards; 404430188064 total bytes; deepseek2; 61 blocks;
+  3 leading dense -> 58 MoE blocks; hidden 7168; experts 256; Top-K 8;
+  shared experts 1; q_lora 1536; kv_lora 512; RoPE dim 64;
+  vocab 129280; context 163840; feed-forward 18432.
+  qk_nope_head_dim and v_head_dim remain UNVERIFIED; run gguf_v3_numeric_probe.
+
+Required live invariants:
+  BACKGROUND_THREAD_COUNT=0
+  PREFETCH_SUBMIT_COUNT=0
+  PREDICTIVE_LOAD_COUNT=0
+  CURRENT_OP_SYNC_LOAD_ONLY=1
+  ROUTER_TOPK_CAUSES_EXPERT_LOAD=1
+  BACKGROUND_SUBMITS=0
+  MISSING_WEIGHT=>FAIL_CLOSED
+  BUDGET_EXCEEDED=>FAIL_CLOSED
+  AUTHORIZED_PASS=0
+  PROMOTE=0

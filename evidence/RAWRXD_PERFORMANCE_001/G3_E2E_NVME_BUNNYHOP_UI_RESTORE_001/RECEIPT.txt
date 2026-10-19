@@ -1,0 +1,38 @@
+GATE=G3_E2E_NVME_BUNNYHOP_UI_RESTORE_001
+PURPOSE=restore IDE NVMe Reverse Bunnyhop panel stripped after HTML E2E; prove streamer hops still perfect
+PARENT=G3_E2E_ELASTIC_PASSIVE_UNSTUB_001
+ASOF=2026-09-09T22:30
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+LOST=
+  gui/ide_chatbot_standalone.html NVMe Reverse Bunnyhop sidebar + generate nvme_bunnyhop extras
+  (present in ide_chatbot_standalone.html.bak_pre_e2e; native APIs never removed)
+
+RESTORED=
+  ide_chatbot_standalone.html — panel, State.gen.nvmeBunnyHop, persist/restore, Arm/Disarm/Status,
+    buildNvmeBunnyHopOptions → extras/options.nvme_bunnyhop, caps nvmebunny display,
+    Engine Explorer 'Deep2 / NVMe Reverse Bunnyhop' + Tool Server bunnyhop endpoints
+  ide_chatbot_standalone_e2e.html — same panel/state/helpers/caps/explorer (was fully missing)
+  ide_chatbot_engine.js — same state + payload helpers
+
+BAK_SIDEBAR_DELTA=
+  bunny/bridge/mars/safe/nvme title scan: BAK_ONLY empty (no further stripped panels of that class)
+
+NATIVE_ALREADY_LIVE=
+  NVMeReverseBunnyHop + STREAM mech + RAWRXD_NVME_REVERSE_BUNNYHOP harness default
+  LIVE_PATH_NVME_HOPS counters
+
+SMOKE_STREAMER=
+  exit=0 TRUE=1 FWD=360/300 FT=1 FC=1 SURV=1 FB=0
+  CYC=1 STARTS=660 STACK_EL=1 NVME_HOPS=17 REVERSE=True
+  PROMOTE=0
+
+NOT_RESTORED_INVENTION=
+  IDE tensor_hop JSON → native layer-skip consumer (never existed; do not invent)
+
+RESIDUAL_TRUE_BLOCKERS_FOR_THIS_LANE=
+  none — restore complete; streamer hops + DualStick perfect metrics sealed
+
+Full: SMOKE.txt

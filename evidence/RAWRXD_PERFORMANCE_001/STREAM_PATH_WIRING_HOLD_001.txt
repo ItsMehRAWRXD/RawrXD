@@ -1,0 +1,54 @@
+STREAM_PATH_WIRING_HOLD_001=SEALED
+DATE=2026-09-08
+TYPE=DEFERRED_NOT_REQUIRED_YET
+
+STREAM_PATH_WIRING=0
+REQUIRED_YET=0
+COMPLETE_WITHOUT_WIRING=1
+
+EARLY_MOMENT_SSOT=NOT_REQUIRED_YET_EARLY_COMPLETE_001
+POLICY_ALIAS=EARLY_COMPLETE_NOT_REQUIRED_YET_001
+
+EARLY_MOMENT=
+  STATUS=QUEUED
+  ITEM=STREAM_PATH_WIRING
+  SPECIAL_MOMENT=0
+  OPEN=0
+  NOTE=issue SPECIAL_MOMENT=1 EARLY_COMPLETE=STREAM_PATH_WIRING to open
+  MEASUREMENT_STILL=MODE=A HOT_GATE=1 (early complete ≠ observation)
+
+COMPLETE_NOW=
+  RUNTIME_EVIDENCE_512_SOURCE_001 (Core+Emit assemble)
+  RUNTIME_EVIDENCE_512_COLLECTION_REMAIN_001
+  RUNTIME_EVIDENCE_512_COLLECTION_SITE_MAP_001
+  RUNTIME_EVIDENCE_512_COLLECTION_PREREQ_001
+  RUNTIME_EVIDENCE_512_COLLECTION_CHECKLIST_001
+  SPEND_CLAIM_001 (SPEND=NONE)
+  RUNTIME_EVIDENCE_512_AUTHORITY_HOLD_001 (MODE=D)
+  OBSERVATION_AUTHORITY_001 / EMISSION_OWNERSHIP_001
+  SEQ_CAP_512_POST_FT_AUDIT_CONTRACT_001
+
+NOT_REQUIRED_YET=
+  ProjectLogitsArgmax site → EvidenceEmitLogitsEntry/Complete
+  hidden probe/last sites → EvidenceEmitHiddenProbe/Last/Bounds/Valid
+  stream abort/complete → EvidenceEmitStreamAbort/Complete
+  teardown sites → EvidenceEmitTeardown*
+  PathB/Attn complete emitters
+  deep2_benchmark link of Core+Emit into live generateStream
+
+CANONICAL=
+  stream path missing wiring that isnt required yet = complete
+  anything not required yet gets a special moment to get done early
+
+LAW=
+  stream path wiring missing ≠ incomplete SOURCE/COLLECTION seal
+  wiring is SPECIAL_MOMENT-queued (NOT_REQUIRED_YET_EARLY_COMPLETE_001)
+  source existence ≠ runtime evidence
+  no wiring → no runtime claim promotion
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  ALIAS=RUNTIME_EVIDENCE_512_STREAM_PATH_WIRING_NOT_REQUIRED_001

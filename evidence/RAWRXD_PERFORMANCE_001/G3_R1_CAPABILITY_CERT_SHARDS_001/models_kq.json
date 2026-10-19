@@ -1,0 +1,9 @@
+[
+  {"Stage":"K","Id":"K_qwen14","Arch":"qwen2","Family":"Qwen2.5-Coder-14B","Path":"G:/~dev/rawrxd/_r1_iso/08_qwen_coder/qwen2.5-coder-14b-instruct-q8_0.gguf","SizeMB":14974.2,"Found":true},
+  {"Stage":"L","Id":"L_qwen27","Arch":"qwen2","Family":"Qwen3.8-27B","Path":"G:/~dev/rawrxd/_r1_iso/03_qwen38_27b/Qwen3.8-27B-AD-Q4_K_M.gguf","SizeMB":16327.6,"Found":true},
+  {"Stage":"M","Id":"M_glm","Arch":"glm","Family":"GLM-4.7-Flash","Path":"G:/~dev/rawrxd/_r1_iso/10_glm47/GLM-4.7-Flash-Q4_K_M.gguf","SizeMB":17292.7,"Found":true},
+  {"Stage":"N","Id":"N_gemma31","Arch":"gemma3","Family":"Gemma4-31B","Path":"F:/OllamaModels/gemma-4-31B-it-GGUF/gemma-4-31B-it-Q4_K_M.gguf","SizeMB":17821.4,"Found":true},
+  {"Stage":"O","Id":"O_qwen_moe","Arch":"moe","Family":"Qwen35B-A3B-MoE","Path":"","SizeMB":0,"Found":false,"Note":"resolve hit mmproj only; no full MoE GGUF"},
+  {"Stage":"P","Id":"P_ds_shards","Arch":"deepseek-r1","Family":"DeepSeek-R1-shards","Path":"","SizeMB":0,"Found":false,"Note":"no multi-shard DeepSeek-R1 pack; 8B already covered in Phase1 G"},
+  {"Stage":"Q","Id":"Q_kimi_k2","Arch":"kimi","Family":"Kimi-K2-shards","Path":"","SizeMB":0,"Found":false,"Note":"resolve hit markdown not GGUF; NO_ADOPT kimi-k3-in-c"}
+]

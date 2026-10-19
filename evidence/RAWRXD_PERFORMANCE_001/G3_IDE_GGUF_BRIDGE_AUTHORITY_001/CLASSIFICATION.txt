@@ -1,0 +1,42 @@
+GATE=G3_IDE_GGUF_BRIDGE_AUTHORITY_001
+ASOF=2026-09-10T08:05Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+REOPEN_R01=0
+
+## Classification (user authority — accepted)
+PRIMARY_ROOT_CAUSE            = SPLIT_LOADER/INFERENCE_STATE
+FIX_OWNER                     = WIN32IDE_GGUF_BRIDGE
+FIX                           = DELEGATE LOAD TO SHARED CPUInferenceEngine
+SECOND_G_MODEL_LOADED_FLAG    = REMOVED (ABI + Headless isModelLoaded→CIE)
+
+Spotify client attachment     = UNRELATED / ignored
+
+## Applied
+1. gguf_loader_masm_real.cpp → Option A façade (CIE Load/IsLoaded/Unload)
+2. gguf_loader_masm.cpp → same façade (parser-only g_modelLoaded REJECTED)
+3. HeadlessIDE LOCAL_ONLY load → LoadNativeModel (CIE)
+4. HeadlessIDE LocalGGUF generate → GenerateNative (same CIE)
+5. HeadlessIDE::isModelLoaded LocalOnly → CIE::IsModelLoaded()
+6. CIE UnloadModel + path-aware LoadModel switch
+7. Surgical rebuild+link RawrXD-Win32IDE (rsp link; avoid 790-cascade ninja)
+
+## Live proof (smoke_bin SHA256=38CC014D71F2C6ED680C26F28821B53840B36EF13BF62E5029CBBD02B3499338)
+POST /api/model/load tinyllama → 200
+  stdout: Deep2Engine Model loaded successfully (201 tensors)
+  stdout: Model armed via CIE/RawrXDInference (Arm latency 485 ms)
+POST /api/generate → process died mid-forward
+  STREAM_STATUS=READY (not BLOCKED)
+  HOST_Q8_GEMV_SAFE=1
+  GENERATE_STREAM_ENTER + PREFILL_BEGIN
+  FINAL_NORM OK then silence (no LOGITS_LINEARW_AFTER)
+
+## Disposition
+SPLIT_AUTHORITY_HANDOFF       = CLOSED_PASS
+WRAPPER_MODEL_LOADED          = NO LONGER RUNTIME AUTHORITY
+POST_LOAD_GATE (HOST_Q8)      = NOT_OWNER this run
+GENERATE_COMPLETE             = OPEN (post-handoff forward crash)
+FAIL_CLASS                    = POST_HANDOFF_FORWARD
+STRICT_GPU_LINEARW            = NOT_REACHED_IN_LOG
+R01_LAA / HOST_DECODE         = CLOSED_PASS (PRODUCT_LAA=0 HOST_DECODE=1 VK_ICD=BLOCKED)
+PROMOTE=0 TIP_CLIMB=HOLD

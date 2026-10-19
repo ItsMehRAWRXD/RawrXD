@@ -1,0 +1,39 @@
+SOVEREIGN_SELF_RE_BRAID_001=SEALED
+DATE=2026-09-08
+ROLE=ARCHITECTURE_BRAID
+TARGET=own_user_mode_x64_binary (Sovereign)
+MODE=zero_dep_MASM_instrumentation
+
+LAYERS (build order — do not skip substrate)
+  1. PEB_INTERNAL_VISION
+     GS:60h → LDR → module bases → EDT / IAT resolve
+     BINDS=Sovereign_PEB_Bootstrap (Root skeleton)
+  2. SYMBOLIC_BRIDGE
+     /MAP → GenerateSymbols → Sovereign_Symbols.inc
+     self-symbolication for RIP/stack (PRIOR: SOVEREIGN_SYMBOLIC_BRIDGE_PRIORITY_001)
+  3. COLD_CFG
+     PE .text scan; prologue/epilogue; E8 / FF15 xref table
+     output=callable skeleton for DAG (not decompile theater)
+  4. HOT_TRAMPOLINE
+     own-binary entry hooks only; save orig bytes; audit then resume
+     register dump RAX-R15; XMM0-XMM5 = caller-volatile (spill if live across call)
+  5. DATAFLOW
+     PAGE_NOACCESS + SEH for access maps; shadow SIMD around math blocks
+     Knowledge Arena / KV / weight regions as exception oracles
+
+SYNTHESIS
+  treat target as dynamic machine → feed Sovereign_OS_DAG_Compiler
+  re-execute / integrate — AFTER layers 1–2 prove stable
+
+NEXT_SPEND_RECOMMENDED=Layer_1_complete_PEB_fill_g_ApiTable
+  then Layer_2 map→inc
+  Stack Tracer consumes Layer_2
+  Trampolines only after entry-point stability (SOVEREIGN_ROOT_PRIORITY_001)
+
+FORBIDDEN
+  third-party binary offensive RE framing as default
+  trampolines before PEB+map bridge
+  ignore XMM0-5 volatility across CALL
+
+STATUS=BRAID_ORDERED
+AWAITING=user_go on Layer_1_or_2

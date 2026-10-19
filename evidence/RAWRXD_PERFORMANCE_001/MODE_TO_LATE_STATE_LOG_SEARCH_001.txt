@@ -1,0 +1,42 @@
+MODE_TO_LATE_STATE_LOG_SEARCH_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_SEARCH
+SPEND=0
+HOT_GATE=0
+
+LAW_CONTEXT=
+  executed and produces = MODE_BATCH_STATE
+  SSOT=EXECUTED_PRODUCES_MODE_BATCH_001
+
+SEARCH=mode → late state log
+
+HITS_PERF_AUTHORITY_LATE=
+  AUTHORITY_AFTER=  (receipt/issue late block after spend/compat)
+    PATH_B_N5_*/RECEIPT.txt
+    COMPAT_B1_1_001/RECEIPT.txt
+    COMPAT_B1_1_ISSUE_001.txt
+    MODE_BC_REVIEW_001.txt
+    GATE/NAME_MODE TARGET inventory MODE_NOW=
+  PATTERN=
+    MODE=… HOT_GATE=… NEXT_SPEND=…
+    written after executed/produces closes → late authority state log
+  EQUATES_WHEN=
+    HOT_GATE measured run produced receipts
+    → MODE_BATCH / COMPAT_TEST|MODE=A late AUTHORITY_AFTER
+
+HITS_IDE_LATE_NOT_MODE_BATCH=
+  Win32IDE_Core.cpp ONCREATE_LATE_01..11 (+ _OK)
+  evidence/P1_UI_MENU_LIFETIME_001/TRACE.txt MENU_STATE phase=ONCREATE_LATE_*
+  CLASS=IDE boot late checkpoints (UI lifetime)
+  ≠ MODE_BATCH_STATE
+  ≠ executed-and-produces under HOT_GATE
+
+SEPARATION=
+  IDE ONCREATE_LATE_*  = boot/menu late log (shipping IDE)
+  AUTHORITY_AFTER      = perf/compat mode late state after produce
+  MODE_D hold          = no late MODE_BATCH log (nothing produced)
+
+CURRENT=
+  MODE=D MODE_BATCH_STATE=0
+  no new AUTHORITY_AFTER from this search
+  LAST_PROVEN=FINAL_NORM(step22) unchanged

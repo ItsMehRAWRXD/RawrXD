@@ -1,0 +1,34 @@
+GATE=G3_IDE_GENERATE_AV_SPEND_001
+PURPOSE=Authorize spend on ProductDeep2Infer /api/generate + oneshot ACCESS_VIOLATION as product-runtime defect
+PARENT=G3_IDE_RESIDUAL_AUDIT_001
+SIBLING=G3_STREAMER_AGENTIC_IDE_001
+ASOF=2026-09-10T01:13
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+NEXT_SPEND=R01_GENERATE_AV
+SPEND=1
+CONFIRMED=1
+
+AUTHORITY=
+  Prior OUTSIDE_AUTHORIZE_LANE / UNPLAN framing for IDE generate AV is SUPERSEDED for spend.
+  Access violation (0xC0000005 / dbgcore) on ProductDeep2Infer generate/oneshot is PRODUCT_BLOCKER.
+  Spend on any matching defect regardless of accidental scope creep (Headless, LocalServer, product_deep2_infer, ProductRun).
+
+UNCHANGED=
+  RUNTIME_SEALS (PARITY / MOTD / DualStick ArmSpeed) = UNCHANGED
+  JUNK_CLEANUP = DONE
+  TIP_CLIMB = HOLD
+  PROMOTE = 0
+
+COMMIT_SCOPE=
+  HeadlessIDE_ToolRoutes.cpp
+  STATUS=TRACKED_CLEAN_MATCHES_HEAD
+  ON_DISK=1
+  IN_GIT_INDEX=1
+  COMMIT=58ffd4c976 (Unblock IDE parity MOTD gates and product /api/subagent spawn.)
+  INCLUDE_IN_NEXT_IDE_COMMIT=SATISFIED (already indexed; re-verify before push)
+
+TARGET=
+  R01 from G3_IDE_RESIDUAL_AUDIT_001/RESIDUAL_TABLE.txt
+  Fix live generate/oneshot AV; seal under G3_IDE_GENERATE_AV_FIX_001 (or fail-closed receipt)

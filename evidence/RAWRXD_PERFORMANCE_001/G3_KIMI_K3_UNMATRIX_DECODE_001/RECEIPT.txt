@@ -1,0 +1,51 @@
+GATE=G3_KIMI_K3_UNMATRIX_DECODE_001
+ALIAS=G3_KIMI_K3_CAPACITY_REF_001
+DATE=2026-09-10
+KIND=REVERSE_ENGINEERING_BRIEF
+STATUS=SEALED_DOCS_ONLY
+TIP_CLIMB=HOLD
+PROMOTE=0
+DUALSTICK_REOPENED=0
+NO_ADOPT_RUNTIME=1
+NO_VENDOR_CHECKPOINT=1
+
+## Authority
+FareedKhan-dev/kimi-k3-in-c is a REAL external capacity oracle:
+  MODEL_SIZE != REQUIRED_RESIDENT_MEMORY
+  2.78T params / ~1.56 TB checkpoint / ~8.24 GB peak RSS (laptop preset, measured)
+Portable C99; no BLAS; no framework; no GPU. Reference only — not RawrXD product runtime.
+
+Sibling ports (cited, not adopted):
+  undeemed/kimi-k3-in-rust — byte-identical; ~74.46s C vs ~72.47s Rust @ 8GiB; ~78–83% wall I/O
+  Exorust/kimi-k3-metal — Metal GPU backend; repo description: 1.9–2.9× over baseline, bit-exact
+
+## Framing (user-authoritative)
+  kimi-k3-in-c = capacity first (works; disk-bound / slow)
+  Deep2 target  = fixed physical pool + predict FutureConsumer
+                  + NVMe──async──►RAM──async──►VRAM + dual-GPU + recycle zone
+Not "adopt kimi runtime." Un-matrix decode = resident working set ≠ matrix/model size.
+
+## Hard question (answered in KEY_LINES + DECODE_MAP)
+  How much of the 20–70+ s/token storage stall can Deep2 remove by predicting and
+  asynchronously moving the next consumer's data while the current consumer computes?
+
+## R1 context (do not promote)
+  Canonical: G3_R1_TEN_GGUF_MATRIX_001 VERDICT=FAIL_CLOSED PASS=7/10
+  LAA:NO / ProductOpenSession VA fails for multi-GB GGUF when forcing residency
+  kimi validates STREAMING authority; R1 remains FAIL-CLOSED — no 10/10 claim
+
+## Prior gate
+  G3_KIMI_K3_IN_C_RE_MAP_001/AUTHORITY_DEFERRED.txt — deferred until R1 ladder;
+  this gate DEEPENS that map into full un-matrix decode RE (docs-only).
+
+## Deliverables
+  RECEIPT.txt (this file)
+  KEY_LINES.txt
+  DECODE_MAP.md
+
+## Law
+PROMOTE=0
+TIP_CLIMB=HOLD
+LIVE_TIP_CLIMB=HOLD
+NO DualStick/ArmSpeed reopen
+PASSIVE product engineering only

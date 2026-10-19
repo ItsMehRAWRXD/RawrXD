@@ -1,0 +1,65 @@
+PATH_B_N5_003_LAST_PROVEN_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_ATTRIBUTION
+SPEND=0
+CODE_CHANGE=0
+RERUN=0
+PROMOTE=0
+DELETE_PROVEN=NOT_ASSESSED
+VALID_WITNESS=0
+MEMORY_OVERRIDE=0
+
+RETAIN=
+  PATH_B_N5_003=FAIL
+  CHAMPION=PATH_A
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  STOP_REASON=trial_1_invalid_witness_stream_abort_teardown_av
+  DEFECT_A=stream_contract_completion OPEN (owner unattributed)
+  DEFECT_B=teardown_AV_0xC0000005 OPEN (source RC9 unconfirmed)
+
+# --- LAST PROVEN EXECUTION CHAIN -------------------------------------------
+
+CHAIN_PROVEN=
+  TOKEN_EMBED → MLA_FORWARD → FINAL_NORM → UNKNOWN_GAP → process termination
+
+COUNTS=
+  FINAL_NORM_AFTER_L2=23
+  STREAM_HEARTBEAT=1 (STEP=0/64 only)
+  STREAM_HEARTBEAT STEP=32=ABSENT
+  STREAM_ABORT OWNER=*=ABSENT
+  Gate10 footer=ABSENT
+  TEARDOWN_WITNESS=1=ABSENT
+
+LAST_PROVEN_BOUNDARY=FINAL_NORM(step22)
+FIRST_UNPROVEN_CONSUMER=ProjectLogitsArgmax(step22)
+
+NOT_CLAIMED=
+  LOGITS FAILED          (no entry witness)
+  ProjectLogitsArgmax began
+  TOKEN_CALLBACK reached
+  MLA_FORWARD(step23) reached
+
+MLA_FORWARD(step23)=NOT_REACHED_OR_UNPROVEN
+STREAM_ABORT_OWNER=UNOBSERVED
+TEARDOWN=UNREACHED
+
+# --- REMAINING UNCERTAINTY (mutually exclusive; unresolved) ----------------
+
+GAP_A=crash after FINAL_NORM(step22) before ProjectLogitsArgmax entry
+GAP_B=ProjectLogitsArgmax entered; crash before first observable log
+DISTINGUISH_A_VS_B=IMPOSSIBLE_FROM_CURRENT_LOGS
+
+HEARTBEAT_CONSTRAINT=
+  emit every 32 steps → crash before STEP=32 heartbeat
+  constrains failure to decode loop after step22 FINAL_NORM and before step32
+  does not further localize within that window
+
+EXCLUDED=
+  Gate12 RoPE failure
+  Q-buffer null path
+
+SSOT_PRIOR=
+  PATH_B_N5_003_ATTR_SPLIT_001
+  PATH_B_N5_003_LAST_BOUNDARY_001

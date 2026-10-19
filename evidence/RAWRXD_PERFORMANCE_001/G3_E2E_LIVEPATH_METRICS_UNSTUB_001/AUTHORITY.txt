@@ -1,0 +1,20 @@
+GATE=G3_E2E_LIVEPATH_METRICS_UNSTUB_001
+AUTHORITY=product livepath metrics unstub (not champion; not TIP climb)
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+RESTORED=
+  lukewarm no longer disables STACK medusa at generate
+  cyclone OnLayerStart not vetoed by elastic; DEMANDS>0
+  plasma sample site moved out of STREAM-only (MechArm always)
+
+STILL_VETO=
+  LIVE_PATH_PLASMA_SAMPLES>0 on this host (ADL Overdrive5 absent — hardware ABSENCE_PLASMA=1)
+  MoE Vulkan async prefetch (CPU fallback stub; TinyLlama dense N/A)
+
+NOT_CLAIMED=
+  TPS/size climb
+  HOTPATH_MEDUSA force under lukewarm DualStick
+  ADL plasma as product gate
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700

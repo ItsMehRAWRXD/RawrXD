@@ -1,0 +1,1 @@
+{"model":"GLM-4.7-Flash-Q4_K_M.gguf","path":"G:/~dev/rawrxd/_r1_iso/10_glm47/GLM-4.7-Flash-Q4_K_M.gguf"}

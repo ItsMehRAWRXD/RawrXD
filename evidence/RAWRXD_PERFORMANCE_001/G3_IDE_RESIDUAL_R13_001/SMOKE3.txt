@@ -1,0 +1,15 @@
+EXE_SHA256=96842C639D03FF087AB2EA12257F23515470C9F7D867FA08B7CB22142C2B9D5E
+EXE_SHA16=96842C639D03FF08
+PORT=11491
+STATUS=200 hollow_array=False agents_object=True
+AGENTS=200
+HISTORY=200 nonempty=True totalEvents=True
+HISTORY_FILTER=200 events=True
+HISTORY_EMPTY_FILT=200 empty=True
+REPLAY=200 replayed=True
+REPLAY_400=400 
+REPLAY_404=404 
+STATUS_SNIP={"agents":{"active":0,"completed":0,"failed":0,"subagents":0},"failures":{"total":0,"totalRequests":1,"totalRetries":0,"successAfterRetry":0,"retriesDeclined":0,"byType":{},"retrySuccessRate":0.0},"intelligence":{}}
+HIST_SNIP={"events":[{"id":0,"eventType":"SessionEvent","sessionId":"headless-1789049687624","timestampMs":1789049687628,"durationMs":0,"agentId":"headless","parentId":"","description":"session_boot","input":"session_boot","output":"","metadata":"","success":true,"errorMessage":""}],"stats
+REP_SNIP={"success":true,"result":"Replay of agent headless:\\n  Step 1: SessionEvent — session_boot [OK]\\n","events_replayed":1,"duration_ms":0,"dry_run":true}
+ASOF=2026-09-10T10:14:48.2244752-04:00

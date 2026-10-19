@@ -1,0 +1,68 @@
+VULKAN_GPU_REQUIRED + OFFSET_RE + NEXT_MOVES
+DATE=2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+PROMOTE=0
+OLLAMA_HTTP=0
+
+## Product law (landed)
+
+GPU inference is required. CPU is opt-in only:
+  RAWRXD_HOST_DECODE=1  OR  DEEP2_MINIMAL_ENHANCE=1  OR  RAWRXD_SEMANTIC_SAFE=1
+Removed "CPU fail-safe" / "CPU always works" framing.
+vulkanStrictNoCpuFallback_ default = true
+InitFromPath fails closed if vulkan=0 without CPU opt-in
+Smoke: RAWRXD_ENHANCE_SKIP=vulkan → INIT_FROM_PATH=FAIL reason=GPU_REQUIRED
+
+## Vulkan rebuild progress
+
+ROOT (arm crash): memset(&device_info_, sizeof(VulkanDeviceInfo)) with std::string
+  → C0000374. Fixed: value-init device_info_.
+OPEN now works: Vulkan single-GPU open AMD Radeon AI PRO R9700
+PREFILL works on HOTPATH_GEMV=VULKAN (~2.3s tinyllama)
+DECODE first logits still dies on output.weight Q6_K (type=14)
+
+## Reverse-engineer: pointers like 0000024E10278020
+
+These are NOT GGUF file offsets. Pattern from ResidencyManager / weight dumps:
+
+  this=0000021B184AED20
+    → heap address of ResidencyManager object (ASLR; changes every run)
+    → printed as %p from ResidencyManager.cpp Register / Deep2Engine summary
+
+  data=00000211A3980000  (embedToken / wq.data / …)
+    → host/mmap base of tensor payload (process VA)
+
+  FINAL_NORM_SRC_PTR=0000021B413F2060
+    → live activation buffer (advances +0x2000 per token in smoke = 2048 floats)
+
+  GGUF file offsets (STABLE — use these for planning):
+    output.weight     offset=1709440   bytes=53760000  type=14 (Q6_K)
+    blk.18.attn_q     offset=377767296 bytes=2359296
+    blk.9.attn_v      offset=668349824 bytes=430080
+    token embed data region sizeBytes=36864000 type=12 (Q4_K)
+
+  SMELL: registeredBytes=667078656 > maxResidentBytes=536870912
+    residency cap under-subscribed vs full tensor registry (next: raise budget
+    or pin-by-hotset only; not a crash root by itself)
+
+## Decode blocker (next owner)
+
+output.weight Q6_K logits:
+  DispatchGEMVQuant via weight-window truncates large packed tensors → miss
+  DispatchGEMVQ6kPacked (dedicated logits buffer) entered → C0000374 on first decode
+  F32 dequant fallback → C0000005 (do not use as product path)
+
+NEXT_COMPUTE (ordered):
+  1) Instrument DispatchGEMVQ6kPacked (EnsureQ6kPipeline / Upload / Bind / readback)
+     isolate which call heap-corrupts
+  2) Fix Q6_K logits upload/bind (53,760,000 B) — keep GPU, no CPU
+  3) Re-smoke tok20 DISPOSITION=PASS with RAWRXD_GPU_FWD=1, no HOST_DECODE
+  4) Then re-enable non-elastic enhance arms one-by-one
+  5) Elastic remains ALLOW-gated (C0000005 alone)
+
+## Do not
+
+  Promote from SAFE_BYPASS
+  Re-open CPU as default "always works"
+  TIP_CLIMB until GPU tok64 product seal

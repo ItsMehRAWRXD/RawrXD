@@ -1,0 +1,89 @@
+GATE=DEEP2_END_TO_END_RUNTIME_COMPLETION_001
+DATE=2026-09-13
+KIND=IMPLEMENTATION_PLAN
+SOURCE_DROP_ONLY=1
+NODEP=1
+PROMOTE=0
+TPS_MINT=0
+AUTHORITY_ONLY_FROM_LIVE_RUNS=1
+NOT_RUN!=PASS
+# Largest remaining gap ≠ scheduler theory — measurable runtime mechanisms
+# Planning projections ≠ performance authority until live receipts
+
+LIVE_OWNER_NOW=V7_HOT_MATURITY_RELOAD_001 (AB→HOT32; BLEND=0)
+ORDER=SURVIVABILITY>RESIDENCY>PREDICTION>BALANCE>TPS
+
+PHASE01_MEASURE=
+  PER_TOKEN_RECEIPT: TOKEN LAYER EXPERT
+  LOGICAL/PHYSICAL/DEVICE/HOST/PCIE bytes · WAIT/KERNEL/JOIN/H2D_NS
+  STREAM_ID GPU_ID
+  DERIVED: WTA EFFECTIVE_LOGICAL_GBPS DEVICE_OCCUPANCY QUEUE_DEPTH IDLE_PERCENT
+  # proves compute vs memory vs sync vs residency vs idle
+
+PHASE02_NO_PER_TOKEN_SETUP=
+  GGUF→startup native GPU layout→decode forever
+  OUT_OF_DECODE: transpose temp tensors descriptor/pointer rebuild
+  metadata scan shape lookup kernel generation
+
+PHASE03_DIRECT_QUANT=
+  Q4→register→dot→accum · DEQUANT_TEMP_BYTES=0
+  (not Q4→FP16 temp VRAM→GEMV)
+
+PHASE04_PERSISTENT_EXPERTS=
+  Persistent Expert Engine loop: wait queue→execute→repeat
+  kernels/LDS/descriptors/cmdbufs at startup only
+
+PHASE05_DEVICE_SIDE_SCHEDULER=
+  GPU consumes router→launch experts→signal · CPU feeds prompts only
+  no CPU between experts
+
+PHASE06_DUAL_GPU_FABRIC=
+  shared queue not GPU0→CPU→GPU1
+  PERMANENT on GPU0: attn router shared dense
+  routed: predict→owner→remain · never migrate weights; activations only
+
+PHASE07_RESIDENCY_ENGINE=
+  PERMANENT/HOT/PREDICTED/COLD · predict→prefetch→hide→resident
+  NVME_ON_CRITICAL_PATH=0 UNHIDDEN_PCIE_WAIT=0
+
+PHASE08_WTA_RECEIPT=
+  LOGICAL PHYSICAL WTA · refuse promote if WTA>TARGET
+  ladder 8→4→2→1.25→1.0
+
+PHASE09_BYTE_REDUCTION=
+  per-block Q5/Q4/Q3/Q2 · BITS_PER_WEIGHT BYTES_PER_TOKEN
+
+PHASE10_MULTI_TOKEN_REUSE=
+  expert→N token vectors · TOKENS_PER_WEIGHT_FETCH
+  (architectural shift ≠ microkernel alone)
+
+PHASE11_PIPELINE=
+  TOKEN N: GPU compute ∥ host prefetch ∥ PCIe ∥ GPU1 prefetch
+  never compute→wait→copy→wait→launch→wait
+
+PHASE12_AUTO_AUTHORITY_RECEIPT=
+  TOKEN_TIME LOGICAL/PHYSICAL WTA GPU0/1/TOTAL_GBPS OCCUPANCY IDLE
+  WAIT SYNC H2D DISK PCIE_NS BYTES_PER_TOKEN TOKENS_PER_FETCH
+  ACTIVE/HOT_EXPERTS PREDICT_ACCURACY — no manual analysis
+
+E2E_SUCCESS=
+  startup→GGUF→native pack→persistent kernels/queues→prediction
+  →async residency→resident experts→direct quant→dual overlap
+  →continuous gen→automatic receipts
+
+COMPLETE_LADDER=
+  GGUF → Native GPU Layout → Persistent Runtime → Direct Quant
+  → Predictive Residency → Async Streaming → Dual-GPU Fabric
+  → WTA≈1 → Effective Bytes/Token ↓ → Grouped Experts
+  → Multi-Token Reuse → Continuous E2E Decode
+
+NEXT25_INVENTORY=DEEP2_NEXT25_NODEP_SOURCE_DROPS_001
+DENOM_TOP25=DEEP2_DENOMINATOR_REDUCTION_TOP25_001
+FIRST_NODEP_LAND=DEEP2_RECEIPT_SCHEMA_V1
+# after V7 AB/HOT maturity; selftest≠TPS
+
+PARENTS=
+  DEEP2_FULL_MODEL_TPS_PROJECTION_001
+  DEEP2_GPU_LOCAL_TO_FULL_MODEL_30_50_001
+  DEEP2_EXPERT_MATH_TOP15_20260913
+  DEEP2_EXPERT_WEIGHT_STREAM_ROOFLINE_001

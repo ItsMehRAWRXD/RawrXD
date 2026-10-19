@@ -1,0 +1,80 @@
+[Vulkan Loader] INFO:           No valid vk_loader_settings.json file found, no loader settings will be active
+[Vulkan Loader] INFO:           windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+[Vulkan Loader] LAYER:          Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers
+[Vulkan Loader] INFO:           windows_add_json_entry: Located json file "C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json" from PnP registry: E
+[Vulkan Loader] INFO:           windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json" from PnP registry: E
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\ProgramData\obs-studio-hook\obs-vulkan64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO:           Found manifest file C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\ProgramData\obs-studio-hook\obs-vulkan64.json (file version 1.1.2)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json (file version 1.1.2)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json (file version 1.0.0)
+[Vulkan Loader] WARNING:        Removing layer VK_LAYER_AMD_switchable_graphics (C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json) because it is a duplicate of VK_LAYER_AMD_switchable_graphics (C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json)
+[Vulkan Loader] INFO:           No valid vk_loader_settings.json file found, no loader settings will be active
+[Vulkan Loader] INFO:           windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+[Vulkan Loader] LAYER:          Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers
+[Vulkan Loader] INFO:           windows_add_json_entry: Located json file "C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json" from PnP registry: E
+[Vulkan Loader] INFO:           windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json" from PnP registry: E
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\ProgramData\obs-studio-hook\obs-vulkan64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO:           Found manifest file C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\ProgramData\obs-studio-hook\obs-vulkan64.json (file version 1.1.2)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json (file version 1.1.2)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json (file version 1.0.0)
+[Vulkan Loader] WARNING:        Removing layer VK_LAYER_AMD_switchable_graphics (C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json) because it is a duplicate of VK_LAYER_AMD_switchable_graphics (C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json)
+[Vulkan Loader] INFO:           windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+[Vulkan Loader] LAYER:          Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers
+[Vulkan Loader] INFO:           windows_add_json_entry: Located json file "C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json" from PnP registry: E
+[Vulkan Loader] INFO:           windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json" from PnP registry: E
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\ProgramData\obs-studio-hook\obs-vulkan64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO | LAYER:   Located json file "C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+[Vulkan Loader] INFO:           Found manifest file C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\ProgramData\obs-studio-hook\obs-vulkan64.json (file version 1.1.2)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json (file version 1.1.2)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json (file version 1.0.0)
+[Vulkan Loader] INFO:           Found manifest file C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json (file version 1.0.0)
+[Vulkan Loader] LAYER:          Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(1) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 2 - SWD\DRIVERENUM\AMDFDANS&5&361171C4&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(2) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 3 - SWD\DRIVERENUM\AMDOCL&5&361171C4&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(3) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 4 - SWD\DRIVERENUM\AMDWIN&5&361171C4&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(4) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(5) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 6 - SWD\DRIVERENUM\AMDCP&7&349E7D26&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(6) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 7 - SWD\DRIVERENUM\AMDFDANS&7&349E7D26&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(7) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 8 - SWD\DRIVERENUM\AMDOCL&7&349E7D26&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(8) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 9 - SWD\DRIVERENUM\AMDOGL&7&349E7D26&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(9) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 10 - SWD\DRIVERENUM\AMDVLK&7&349E7D26&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(10) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 11 - SWD\DRIVERENUM\AMDWIN&7&349E7D26&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(11) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(13) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 14 - SWD\DRIVERENUM\AMDCP&7&ABD0FC3&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(14) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 15 - SWD\DRIVERENUM\AMDFDANS&7&ABD0FC3&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(15) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 16 - SWD\DRIVERENUM\AMDOCL&7&ABD0FC3&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(16) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 17 - SWD\DRIVERENUM\AMDOGL&7&ABD0FC3&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(17) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 18 - SWD\DRIVERENUM\AMDVLK&7&ABD0FC3&0
+[Vulkan Loader] INFO | DRIVER:  windows_get_device_registry_entry: Device ID(18) Does not contain a value for "VulkanExplicitLayers"
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: Opening child device 19 - SWD\DRIVERENUM\AMDWIN&7&ABD0FC3&0

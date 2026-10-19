@@ -1,0 +1,25 @@
+SESSION_CREATED=1
+agent session=sess_1789008834 workspace=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_001\agent_ws auto=full
+[agent phase=1 step=0] inspect
+[agent phase=2 step=1] search relevant files
+[agent phase=2 step=1] patch
+[agent phase=3 step=2] apply patch if allowed
+[agent phase=3 step=2] build
+[agent phase=4 step=3] run build if allowed
+[agent phase=4 step=3] test
+[agent phase=6 step=4] run test if allowed
+[agent phase=6 step=4] report
+AGENT_LOOP_E2E=PASS
+WORKSPACE_OPENED=1
+FILES_READ=1
+PLAN_CREATED=1
+PATCH_CREATED=1
+PATCH_APPLIED=1
+DIFF_RENDERED=1
+UNDO_AVAILABLE=1
+BUILD_STARTED=1
+BUILD_COMPLETED=1
+BUILD_EXIT_CODE_CAPTURED=1
+AGENT_RESULT_EMITTED=1
+AGENT_LOOP=PASS
+[StreamEngine] Shutdown

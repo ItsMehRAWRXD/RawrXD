@@ -1,0 +1,42 @@
+IDE_PRODUCT_FINISH_BATCH_103
+============================
+Date: 2026-09-08
+Mode: LIVE_RUNTIME (early WinMain RAWRXD_IDE_PRODUCT_BATCH_103=1)
+
+## Verdict
+IDE_PRODUCT_BATCH_103=HOLD
+
+## Measured live (not link-map)
+| # | Item | Result |
+|---|------|--------|
+| 166 | Clean launch EXE | PASS |
+| 167 | P100_Init | PASS |
+| 168 | Command-home ready | HOLD (early path; no UI) |
+| 169-171 | /git slash | HOLD (not dispatched via composer) |
+| 172-174 | /search slash | HOLD |
+| 175-176 | Wave3 / WAVE3_API_PASS | HOLD (git/search probe 0 in-process) |
+| 177-178 | Wave4 smoke host call | PASS (executed; matrix HOLD on missing cbs) |
+| 179 | IDE ProductRun enter | PASS |
+| 180 | FIRST_TOKEN + COMPLETE | PASS |
+
+## ProductRun live receipt (authoritative)
+MODEL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+FIRST_TOKEN=1
+GENERATED_TOKENS=16
+EXIT_REASON=COMPLETE
+PRODUCT_PASS=1
+GENERATE_STREAM_ENTER=1
+See RUN103b.err / RUN103c.err
+
+## Blockers remaining for Batch103 PASS
+1. Command-home + real slash via handleCommandSend (GUI path)
+2. WAVE3_API_PASS=1 (git/search probe in Batch103 early path)
+3. Phi-3-mini path OOM'd earlier; tinyllama proves ProductRun
+
+## Source landed
+- Win32IDE_Product100Batch103.cpp (RunIdeProductBatch103)
+- main_win32 RAWRXD_IDE_PRODUCT_BATCH_103 early path
+- cmake RawrXD_Product100.cmake must list Batch103+104 TUs
+
+## Law
+LINK_ONLY_PROOF=0. LIVE_RUNTIME_PROOF=1. IDE_COMPLETE=0.

@@ -1,0 +1,37 @@
+// Replace the current serial tA/tB/tC section in K2NativeMoEFfn_Place.cpp.
+// This is an integration sketch, not a claim that the product has been built.
+// IMPORTANT: current MoEPlaceLiveCounters and residency tables are plain globals;
+// wire the TLS/private counter + protected first-touch rules from README_BIND.md
+// before enabling this block in the live binary.
+
+std::string err0, err1;
+uint32_t ex0 = 0, ex1 = 0;
+bool ok0 = true, ok1 = true;
+uint64_t s0b = 0, s0e = 0, s1b = 0, s1e = 0;
+
+auto run0 = [&] {
+    s0b = NowNs();
+    ok0 = ExecStickWorklist(index, cfg, layer, normed, plan, ix0, n0,
+                            p0.data(), err0, ex0);
+    s0e = NowNs();
+};
+auto run1 = [&] {
+    s1b = NowNs();
+    ok1 = ExecStickWorklist(index, cfg, layer, normed, plan, ix1, n1,
+                            p1.data(), err1, ex1);
+    s1e = NowNs();
+};
+
+std::thread w0, w1;
+if (n0) w0 = std::thread(run0);
+if (n1) w1 = std::thread(run1);
+if (w0.joinable()) w0.join();
+if (w1.joinable()) w1.join();
+if (!ok0 || !ok1) {
+    error = !ok0 ? err0 : err1;
+    return false;
+}
+executed = ex0 + ex1;
+const uint64_t overlap = (n0 && n1 && std::min(s0e,s1e) > std::max(s0b,s1b))
+    ? std::min(s0e,s1e) - std::max(s0b,s1b) : 0;
+// emit overlap; do not mint TPS from it.

@@ -1,0 +1,60 @@
+D01 PRODUCT_OPEN
+    attempts > 0
+    success == attempts
+
+D02 SESSION_ENTER
+    attempts > 0
+    success == attempts
+
+D03 DECODE_ENTER
+    decode_enter_count > 0
+    decode_exit_count == decode_enter_count
+
+D04 LAYER_FORWARD
+    expected_layer_forwards > 0
+    actual == expected
+
+D05 LMHEAD
+    lmhead_calls >= generated_tokens
+
+D06 LOGITS
+    logits_ready_count == generated_tokens
+
+D07 TOKEN_SELECT
+    token_select_count == generated_tokens
+
+D08 TOKEN_COMMIT
+    token_commit_count == generated_tokens
+    zero_token_commit_count == 0
+
+D09 STEP_MONOTONIC
+    step_regression_count == 0
+    last_step_id >= first_step_id
+    inclusive step span == generated_tokens
+    step_observation_count == generated_tokens
+
+D10 NO_DUP_COMMIT
+    duplicate_commit_count == 0
+
+D11 OUTPUT_PROGRESS
+    output_bytes > 0
+    output_tokens_visible == generated_tokens
+
+D12 ERROR_FREE
+    decode_fault_count == 0
+    av_count == 0
+    heap_fault_count == 0
+
+D13 SINGLE_PATH_AUTH
+    declared host => host>0, gpu=0
+    declared gpu  => gpu>0, host=0
+    declared mixed=> FAIL (ambiguous dual authority)
+
+D14 COUNT_CLOSURE
+    generated == logits == selected == committed == visible
+
+D15 AUTH_DERIVATION
+    AND(D01..D14)
+    generated_tokens >= 128
+    full_model_materialization == 0
+    full_layer_materialization == 0

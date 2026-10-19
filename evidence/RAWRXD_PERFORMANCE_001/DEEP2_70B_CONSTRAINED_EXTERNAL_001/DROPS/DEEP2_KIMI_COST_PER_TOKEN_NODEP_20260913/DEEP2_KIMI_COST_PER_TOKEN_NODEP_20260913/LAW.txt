@@ -1,0 +1,36 @@
+GATE=DEEP2_KIMI_COST_PER_TOKEN_NODEP_20260913
+MODEL_FAMILY=KIMI_K2_K2_5
+BASELINE_RUNTIME_AUTH=c1e90fcdf5
+PRODUCT_BOUND=0
+COST_SEAL_LIVE=0
+TPS_MINT=0
+PROMOTE=0
+
+PURPOSE=prove economic advantage without hiding model/quality/hardware differences
+TOP15=
+  01 canonical cost/token meter
+  02 quality-normalized comparison
+  03 end-to-end wall accounting
+  04 measured energy/token authority
+  05 capex amortization/token
+  06 active-path TPS receipt input
+  07 H2D bytes/token
+  08 D2H bytes/token
+  09 warm/cold separable run identity
+  10 context identity
+  11 concurrency/sampling identity seam
+  12 same-hardware/model/quant comparison gate
+  13 join-idle economic attribution
+  14 baseline->Deep2 savings receipt
+  15 fail-closed USD/1M cost seal
+
+COST_AUTHORITY_REQUIRES=
+  EXIT0 + GENERATED_TOKENS + ARGMAX_AND_NUMERIC_PARITY + PRODUCT_BACKEND +
+  SEL_EQ_EXE + WORKER_FAILURES_0 + PHASE_A_2PLUS2 + MEASURED_ENERGY + QUALITY_PASS
+
+COMPARISON_REQUIRES=
+  SAME_MODEL_HASH + SAME_PROMPT_HASH + SAME_HARDWARE_HASH + SAME_SAMPLING_HASH +
+  SAME_QUANT + SAME_CONTEXT + SAME_MAX_TOKENS + BOTH_QUALITY_PASS
+
+ENERGY_RULE=NO_POWER_SAMPLE_NO_ENERGY_AUTHORITY
+ECONOMICS_RULE=user-supplied electricity/capex/life/host-storage inputs; never inferred

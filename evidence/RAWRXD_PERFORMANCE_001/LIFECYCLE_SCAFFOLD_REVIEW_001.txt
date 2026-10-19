@@ -1,0 +1,26 @@
+LIFECYCLE_SCAFFOLD_REVIEW_001=SEALED
+DATE=2026-09-08
+MODE=REVIEW_ONLY
+GATE_STOP=1
+NEXT_SPEND=NONE
+LAND=0
+
+SCAFFOLD=Sovereign_Lifecycle_Manager.asm (prior invent dump — not in product braid)
+ABI=Sovereign_Execution_Graph_ABI.asm ABSENT_IN_TREE
+
+HARD_BUGS_ACKNOWLEDGED
+  EntityState vs ENTITY_STATE field tags
+  ChewEntity clobbers RDI (non-volatile)
+  Lifecycle_Tick RSI live across call (non-volatile)
+  Active=2 Dirty never chewed/promoted
+
+LOGIC_NOTES_ACKNOWLEDGED
+  stride 32 OK if packed 4dq
+  ManifestEntity linear scan / g_NextID no reuse
+  TTL dec then jg → TTL=1 dies this tick
+  Not real GC (no freelist/generation/canary); tick owner unbound
+
+HOLD
+  Do not land under src/asm without explicit sovereign-lifecycle reopen
+  Stay PATH_A / HOST_VISIBILITY_EDGE measure locus
+  CHAMPION WALL_MEDIAN_NS=10184789000

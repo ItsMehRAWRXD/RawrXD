@@ -1,0 +1,50 @@
+ACTUAL_PASS_LAW_001=SEALED
+DATE=2026-09-08
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE
+ATTRIBUTION_ONLY=1
+
+PREAMBLE=
+  Without authorizing execution, logical certification ordering remains inventory.
+  Synthetic rewrites, manifestation syntax, inventory rows, aliases, and
+  forced-normalized views do NOT classify a result as actual PASS.
+
+ACTUAL_PASS_REQUIRES=
+  AUTHORITY_ELIGIBLE=1
+  TARGET_EXACT=1
+  HARNESS_CONTAMINATION=0
+  WITNESS_EXIT_VALID=1
+  REQUIRED_STAGE_BAR_MET=1
+  SUPERSEDED_CONFLICT=0
+  no_alias_substitution=1
+
+FORBIDDEN_AS_PASS=
+  ?
+  0
+  FAIL
+  HOLD
+  UNPROVEN
+  NON_AUTHORITY
+  SYNTHETIC_OVERRIDE
+  *=1
+  \=- manifestation
+  alias-only evidence
+  contaminated harness output
+  inventory freeze alone
+  MODE_A PATH_B_N5
+  Ollama tag presence without exact-target witness
+
+MODE_D=
+  ledger_row_reclassify=0
+  measured_result_reclassify=0
+  parser_state_reclassify=0
+  compatibility_status_reclassify=0
+  WITHOUT_REQUIRED_WITNESS=FORBIDDEN
+
+SSOT=COMPATIBILITY_LEDGER_001
+MANIFEST=COMPAT_BATCH_MANIFEST_001
+SPEND_TARGET=COMPAT_TEST (cataloged; HOT_GATE_NOW=0)
+B1.1_ONESHOT=MEASURED_SPLIT (stages PASS / floor FAIL; ACTUAL_PASS_OVERALL=0)
+FLOOR_WAIVER=FORBIDDEN
+RECEIPT_REWRITE_NE_PASS=1

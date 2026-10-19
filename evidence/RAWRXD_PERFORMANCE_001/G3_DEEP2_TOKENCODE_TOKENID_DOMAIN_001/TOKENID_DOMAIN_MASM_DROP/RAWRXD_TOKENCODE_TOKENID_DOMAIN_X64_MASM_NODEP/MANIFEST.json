@@ -1,0 +1,52 @@
+[
+  {
+    "file": "README.md",
+    "bytes": 659,
+    "sha256": "783e396b2c0cbaf72874fd9ac0ff524339dbe0cad9d8b088149f25b10ead4fc3"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 2816,
+    "sha256": "93511026e20e4bb11345dd4895b02ad24f0689ffd332c207cdbc82ec04b15548"
+  },
+  {
+    "file": "TOKEN_ID_DOMAIN_LAW.txt",
+    "bytes": 1127,
+    "sha256": "9661a18cc9b4604ff47f88d756fd34d4b5cd6f4c9713093ec0fe633240cadc52"
+  },
+  {
+    "file": "bounded_harness.asm",
+    "bytes": 505,
+    "sha256": "a438e4965df10e29ed143b9025a5829a4645c3b157fc32c024aa0e4074a9f772"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 577,
+    "sha256": "e7a5be5e784d2d963809cf39e11c3c8dcf56c30b2ede9bb7943866fbdae9daac"
+  },
+  {
+    "file": "overflow_harness.asm",
+    "bytes": 610,
+    "sha256": "ae5b266c5f48dea37988c601143ef97fc46649b675003bcef0d6dc64475a97e1"
+  },
+  {
+    "file": "tamper_harness.asm",
+    "bytes": 621,
+    "sha256": "df46b446b3dba44bdfeb62b273edc9b26ca21628e3e6fedea574caced0c3ae14"
+  },
+  {
+    "file": "tokencode_tokenid_domain.asm",
+    "bytes": 4007,
+    "sha256": "aaa7ca3c3bfe1b53247f7bd9f36bca813dc22618ab4150bb7921ed658faa183d"
+  },
+  {
+    "file": "tokencode_tokenid_domain.inc",
+    "bytes": 1334,
+    "sha256": "c7501c68153f265151e3295349a79a9e88f066e34836fd454daa592ba78029d4"
+  },
+  {
+    "file": "u64full_harness.asm",
+    "bytes": 513,
+    "sha256": "2884b5bd54c3fd487fef0fadbd45739b2aff52d96941b7594012870a5f980501"
+  }
+]

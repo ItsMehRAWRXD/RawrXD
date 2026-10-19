@@ -1,0 +1,14 @@
+GATE=G3_MULTI_MODEL_E2E_001
+ASOF=2026-09-10T04:21:51.7628352-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+ENGINE=rawr.exe ProductRun (LAA) + IDE Headless TinyLlama parity
+OLLAMA_CONTACT=0
+PASS_COUNT=1/10
+IDE_PRODUCTOPEN_TINYLLAMA_ONLY=1
+IDE_GENERATE_TINYLLAMA=FAIL
+VERDICT=FAIL
+CYCLE=cold rawr run → tokens → exit(unload) → cold rawr run → tokens
+LAW=fail-closed; zero Ollama; no invented PASS
+FICTION_STRIP_001=aligned_to_KEY_LINES_1of10
+NOTE=Prior RECEIPT PASS_COUNT=5/10 was overclaim vs KEY_LINES ProductOpen FAIL m02-m10.

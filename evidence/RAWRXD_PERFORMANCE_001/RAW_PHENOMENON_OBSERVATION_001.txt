@@ -1,0 +1,103 @@
+RAW_PHENOMENON_OBSERVATION_001=SEALED
+DATE=2026-09-08
+MODE=OBSERVE_ONLY
+CODE_EMITTED=0
+INSTRUMENT_EXECUTE=0
+AXIOM=evidence/RAWRXD_PERFORMANCE_001/AXIOM_RECOGNIZED_001.txt
+
+# ---------------------------------------------------------------------------
+# RAW PHENOMENON (pre-logical strata — observed, not authored)
+# ---------------------------------------------------------------------------
+# Blind spot between execution states. Not algorithm / buffer / invention.
+
+O1  NAME=HOST_WINDOW_DEGREE_OF_FREEDOM_IS_IDENTICALLY_ZERO
+    CLASS=topological_invariant (model geometry)
+    OBSERVED
+      nope+rope = 128+64 = 192 = headDim = prodHead = hostHead
+      byte-shrink free variable absent
+      BEFORE_B=AFTER_B=49152 per-op window (exchange witnesses)
+      QKV_READBACK_BYTES floor held at 191891712 under PATH_A shrink attempt
+    WITNESS
+      EMERGENT_OBSERVATION_001
+      PATH_A_BYTE_SHRINK_E2E_001 / U02
+    STATUS=RECOGNIZED
+    AUTHORED=0
+
+O2  NAME=READBACK_WALL_IS_FENCE_NOT_COPY
+    CLASS=structural_friction (temporal / sync)
+    OBSERVED (qb_cross_split_001b)
+      FENCE_WAIT_US=1121273  (~90.4% of lump)
+      SUBMIT_US=110422       (~8.9%)
+      HOST_MEMCPY_US=8895    (~0.7%)
+      MAP_INVALIDATE_US=20   (~0%)
+      HOST_ATTENTION_US=214151 (consume after visibility)
+    MEANING
+      Cost that shears the wall is visibility/sync stall,
+      not byte volume of host mirror memcpy.
+    WITNESS
+      QB_HOST_CROSS_LATENCY_SPLIT_001/RECEIPT.txt
+    STATUS=RECOGNIZED
+    AUTHORED=0
+
+O3  NAME=EXCHANGE_MIRROR_IS_PARTIAL_BY_CONSTRUCTION
+    CLASS=observability blind spot
+    OBSERVED
+      EXCHANGE_NOT_IN_MIRROR=6 on PATH_A champion endurance
+      HOST_XCHG_UNMIRRORED_OPS=15618
+      Missing includes host_memcpy paths, weight_pin_h2d,
+        vkcopy gemv in/out, host_mirror_memcpy_qb
+    MEANING
+      Mirror ≠ full host↔device exchange physics.
+      Phenomenon sits partly outside instrumented ledger.
+    WITNESS
+      QKV_READBACK_PATH_A_001/RECEIPT.txt
+    STATUS=RECOGNIZED
+    AUTHORED=0
+
+O4  NAME=HOST_EDGE_UNDER_DEVICE_NEXT_CONSUMER_IS_STRUCTURAL_FRICTION
+    CLASS=computational_gravity / polarity axis
+    OBSERVED
+      Next true consumer of q_b today = HOST:MlaAttentionComplete
+      PATH_A improved wall by HOST_CACHED+invalidate (champion)
+        WALL_MEDIAN_NS=10184789000 TPS_FROM_WALL=6.284
+      Fence-narrow legal delta = 0 without new stack / PATH_B
+      Geometry + fence ownership jointly imply: host-edge polarity
+        is the friction surface, not a shrinkable byte lever
+    MEANING
+      Everything-pole = mapped host-visible saturation (PATH_A floor)
+      Nothing-pole = vacuum of that edge when consumer can be device
+      Friction site = Q_B_HOST_VISIBILITY_EDGE (locus held; not executed)
+    WITNESS
+      COMPUTATIONAL_GRAVITY_001
+      QKV_READBACK_PATH_A_001
+      QB_HOST_CROSS_LATENCY_SPLIT_001
+    STATUS=RECOGNIZED
+    AUTHORED=0
+
+# ---------------------------------------------------------------------------
+# COMPOSITE (what the blind spot is)
+# ---------------------------------------------------------------------------
+
+COMPOSITE_PHENOMENON
+  At the host-visibility edge of q_b, three invariants coincide:
+    (1) geometric DOF ≡ 0 on the host pole
+    (2) temporal cost dominated by fence/visibility, not copy
+    (3) observability incomplete by construction
+  Together they are a pure phenomenon / pre-logical strata —
+  structural friction between saturation and vacuum —
+  excavated by code, independent of syntax.
+
+NOT_CLAIMED
+  PATH_B promote
+  fabricated TPS
+  DEVICE_LOCAL_KV as live discovery
+  authorship of silicon physics
+
+NEXT
+  continue observation OR await EXECUTE_INSTRUMENT
+  tip_climb=HOLD champion=PATH_A
+
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+GATE_STOP=1
+NEXT_SPEND=NONE

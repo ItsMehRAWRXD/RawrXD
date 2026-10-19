@@ -1,0 +1,65 @@
+[2026-09-10T04:45:27] SHA=746C4DB7D2B5A153DBADC39AE3C45AC61E22E4C3030FCF5DF2AAAD24C04EF83F EXE=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_IDE_R1_10MODEL_E2E_001\smoke_bin\RawrXD-Win32IDE_r1e2e.exe HOST_DECODE=1 LAA_EXPECT=1
+[2026-09-10T04:45:27] ==== 01_tinyllama tinyllama-1.1b ====
+[2026-09-10T04:45:27] READY pid=11900
+[2026-09-10T04:45:28] LOAD http=200 ok=1 sec=0.4 loc=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[2026-09-10T04:45:30] GEN http=200 tokens=3 body={"model":"rawrxd","response":"\nYes, 2 + 2","done":true}
+[2026-09-10T04:45:30] UNLOAD http=200
+[2026-09-10T04:45:30] RELOAD http=200 ok=True
+[2026-09-10T04:45:35] RELOAD_GEN http=200 tokens=3
+[2026-09-10T04:45:35] UNLOAD2 http=200
+[2026-09-10T04:45:35] ROW 01_tinyllama,tinyllama-1.1b,"G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",200,1,200,3,200,200,200,3,1,0,0,PRODUCT_PASS
+[2026-09-10T04:45:37] ==== 02_phi3_mini phi3-mini-q8 ====
+[2026-09-10T04:45:38] READY pid=24616
+[2026-09-10T04:45:40] LOAD http=200 ok=1 sec=2 loc=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+[2026-09-10T04:46:07] GEN http=200 tokens=7 body={"model":"rawrxd","response":" to to to to the to the as","done":true}
+[2026-09-10T04:46:07] UNLOAD http=200
+[2026-09-10T04:46:07] RELOAD http=200 ok=True
+[2026-09-10T04:46:18] RELOAD_GEN http=0 tokens=0
+[2026-09-10T04:46:22] UNLOAD2 http=0
+[2026-09-10T04:46:22] ROW 02_phi3_mini,phi3-mini-q8,"F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf",200,1,200,7,200,200,0,0,0,1,0,DIED_ON_RELOAD_GEN;DIED_ON_UNLOAD2;FAIL
+[2026-09-10T04:46:23] ==== 03_nemotron_nano nemotron-nano-4b ====
+[2026-09-10T04:46:26] DIED_BEFORE_READY
+[2026-09-10T04:46:26] ==== 04_deepseek_r1_qwen3_8b deepseek-r1-qwen3-8b ====
+[2026-09-10T04:46:28] READY pid=17432
+[2026-09-10T04:46:38] LOAD http=200 ok=1 sec=9.9 loc=F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+[2026-09-10T04:47:26] GEN http=200 tokens=7 body={"model":"rawrxd","response":"  \n**System:  \nYou are an","done":true}
+[2026-09-10T04:47:27] UNLOAD http=200
+[2026-09-10T04:47:27] RELOAD http=200 ok=True
+[2026-09-10T04:47:59] RELOAD_GEN http=200 tokens=7
+[2026-09-10T04:47:59] UNLOAD2 http=200
+[2026-09-10T04:47:59] ROW 04_deepseek_r1_qwen3_8b,deepseek-r1-qwen3-8b,"F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",200,1,200,7,200,200,200,7,1,0,0,PRODUCT_PASS
+[2026-09-10T04:48:00] ==== 05_gemma4_e4b gemma4-e4b ====
+[2026-09-10T04:48:01] READY pid=19872
+[2026-09-10T04:48:10] LOAD http=200 ok=1 sec=9.2 loc=F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+[2026-09-10T04:48:12] GEN http=0 tokens=0 body=
+[2026-09-10T04:48:12] ROW 05_gemma4_e4b,gemma4-e4b,"F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf",200,1,0,0,0,0,0,0,0,1,0,DIED_ON_GEN;GEN_HTTP=0;GEN_TOKENS_0;FAIL
+[2026-09-10T04:48:13] ==== 06_phi3_medium_14b phi3-medium-14b ====
+[2026-09-10T04:48:14] READY pid=15228
+[2026-09-10T04:48:17] LOAD http=0 ok=0 sec=2.7 loc=
+[2026-09-10T04:48:17] ROW 06_phi3_medium_14b,phi3-medium-14b,"F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf",0,0,0,0,0,0,0,0,0,1,0,DIED_ON_LOAD;LOAD_FAIL;LOAD_BODY=;FAIL
+[2026-09-10T04:48:18] ==== 07_codestral_22b codestral-22b ====
+[2026-09-10T04:48:18] READY pid=3372
+[2026-09-10T04:48:35] LOAD http=400 ok=0 sec=16.2 loc=F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf
+[2026-09-10T04:48:35] UNLOAD http=200
+[2026-09-10T04:48:43] RELOAD http=400 ok=False
+[2026-09-10T04:48:43] UNLOAD2 http=200
+[2026-09-10T04:48:44] ROW 07_codestral_22b,codestral-22b,"F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf",400,0,0,0,200,400,0,0,1,0,0,LOAD_FAIL;LOAD_BODY={"success":false;"model":""};RELOAD_FAIL;FAIL
+[2026-09-10T04:48:45] ==== 08_qwen38_27b qwen3.8-27b ====
+[2026-09-10T04:48:46] READY pid=10696
+[2026-09-10T04:49:08] LOAD http=400 ok=0 sec=22.8 loc=
+[2026-09-10T04:49:09] UNLOAD http=200
+[2026-09-10T04:49:31] RELOAD http=400 ok=False
+[2026-09-10T04:49:31] UNLOAD2 http=200
+[2026-09-10T04:49:31] ROW 08_qwen38_27b,qwen3.8-27b,"F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf",400,0,0,0,200,400,0,0,1,0,0,LOAD_FAIL;LOAD_BODY={"success":false;"model":""};RELOAD_FAIL;FAIL
+[2026-09-10T04:49:33] ==== 09_gemma4_31b gemma4-31b ====
+[2026-09-10T04:49:33] READY pid=7108
+[2026-09-10T04:50:00] LOAD http=0 ok=0 sec=26.9 loc=
+[2026-09-10T04:50:00] ROW 09_gemma4_31b,gemma4-31b,"F:\OllamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf",0,0,0,0,0,0,0,0,0,1,0,DIED_ON_LOAD;LOAD_FAIL;LOAD_BODY=;FAIL
+[2026-09-10T04:50:01] ==== 10_bigdaddyg_cheetah bigdaddyg-q2k-cheetah ====
+[2026-09-10T04:50:02] READY pid=6072
+[2026-09-10T04:50:04] LOAD http=0 ok=0 sec=2.5 loc=
+[2026-09-10T04:50:04] ROW 10_bigdaddyg_cheetah,bigdaddyg-q2k-cheetah,"F:\OllamaModels\BigDaddyG-Q2_K-CHEETAH.gguf",0,0,0,0,0,0,0,0,0,1,0,DIED_ON_LOAD;LOAD_FAIL;LOAD_BODY=;FAIL
+[2026-09-10T04:50:05] ==== PARITY (tinyllama cold) ====
+[2026-09-10T04:50:06] READY pid=6392
+[2026-09-10T04:50:22] STOP parity pid=6392
+[2026-09-10T04:50:23] DONE pass=2 fail=8 av=5 survAll=0 ollama=0 parity404=2

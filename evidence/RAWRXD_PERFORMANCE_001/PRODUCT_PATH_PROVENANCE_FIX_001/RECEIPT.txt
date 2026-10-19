@@ -1,0 +1,43 @@
+STREAMING BLOCKER ELIMINATION — 2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+BAK=build-fd\bin\deep2_streamer_parity.exe.bak_cert_remap
+PROMOTE=0
+OLLAMA_HTTP=0
+
+## Closed this pass
+
+1) G0–G8 GPU_FORWARD child-ignore ladder
+   EVIDENCE=evidence\GPU_FORWARD_CHILD_ONE_IGNORE\20260909_061652\RECEIPT.txt
+   WINNER_OBSERVED=0
+   NEXT=RETAIN_GPU_FORWARD_OWNER
+   All G1–G8 SAFE_BYPASS (ignore not applied)
+
+2) False cert blocker PROVENANCE_MISMATCH on tok≠64
+   ROOT=ProductPathSeal sameChampionProvenance=(tokensRequested==64)
+        while MODEL_PROVENANCE_MATCH=1
+   SHIPPED_FIX=streamer CERT_BLOCKER_REMAP (deep2_streamer_parity.cpp)
+     tok≠64 → last BLOCKED_AT=64_TOKEN_PRODUCT_RUN
+     FALSE_PROVENANCE_MISMATCH=1 WHY=TOKENS_NE_64_NOT_MODEL_FP
+   SMOKE=evidence\RAWRXD_PERFORMANCE_001\PRODUCT_PATH_PROVENANCE_FIX_001\tok20_remap.*
+     RC=0 TOKENS=20 DEEP2_REAL_GPU_FORWARD=1
+     last BLOCKED_AT=64_TOKEN_PRODUCT_RUN
+
+## Staged in source (not in sealed Deep2Engine.obj yet)
+
+- ProductPathSeal.hpp: modelProvenanceMatch field
+- FunctionalChampionSeal.hpp: PROVENANCE_MISMATCH only when tokens==64
+- K2MLA_QPathDevice: counter ODR fix (NoteOk/NoteFail)
+- K2MLAWeights.hpp: Execute ABI retain (onPin/pinCtx) for bak lib
+
+## Blocked: Deep2Engine.obj refresh
+
+Any recompile of current Deep2Engine.cpp + enableVulkan heap-corrupts
+(C0000374) after loadModel; sealed _extract\Deep2Engine.cpp.obj remains
+GPU-good. Do not replace Deep2Engine.obj until enableVulkan crash is closed.
+
+## Next
+
+- RETAIN GPU_FORWARD; optional FFN leaf timing (extended children)
+- Nemotron feed_forward_length = separate P1
+- Land ProductPathSeal into Deep2Engine only after Vulkan-arm crash fixed

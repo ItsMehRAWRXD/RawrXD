@@ -1,0 +1,32 @@
+[
+  {
+    "file": "PATCH_PATTERN.asm",
+    "bytes": 1388,
+    "sha256": "a1d0e92659f7ce10517abc39f7f5e180a869c6501978e52f047bc5eab962b064"
+  },
+  {
+    "file": "README.md",
+    "bytes": 959,
+    "sha256": "382a1a94843f76b60941a0cc762b730c6ff48cf8010cad970ac128e8d12a9ee5"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 1275,
+    "sha256": "04a7667558e793dd294511f6bb881b11bd6141fb99c667641c0479c5d005a6f6"
+  },
+  {
+    "file": "TOP15_ARG5_RESIDENCY_BUGS.txt",
+    "bytes": 2554,
+    "sha256": "c9dc416021ea35606b0bafd23752ce834f50e5a73da29d60e3a632f5c286f47d"
+  },
+  {
+    "file": "r671_arg5_residency_hardening.asm",
+    "bytes": 2467,
+    "sha256": "2368a4ecbfa177101c52b6d7b6e24a9e49e6d3eabe4dacc1b5b954a49f36976b"
+  },
+  {
+    "file": "r671_arg5_residency_hardening.inc",
+    "bytes": 1291,
+    "sha256": "36318623b647d3f99b97b04128189e42035406d35b4b55d6c40d36f2331e973a"
+  }
+]

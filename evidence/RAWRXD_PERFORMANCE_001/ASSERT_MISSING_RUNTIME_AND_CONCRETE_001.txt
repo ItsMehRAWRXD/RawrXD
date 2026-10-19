@@ -1,0 +1,65 @@
+ASSERT_MISSING_RUNTIME_AND_CONCRETE_001=SEALED
+DATE=2026-09-08
+TYPE=ASSERTION
+SPEND=0
+SSOT=PATH_B_N5_003 + HIDDEN_PROBE_WITNESS_001 + PATH_B_N5_003_ATTRIBUTION_HOLD_001
+
+# --- CONCRETE (observed / established) ------------------------------------
+
+CONCRETE=
+  CURRENT_STEP                    = 22
+  FINAL_NORM_AFTER_L2_count       = 23
+  LAST_PROVEN_BOUNDARY            = FINAL_NORM(step22)
+  ProduceFinalHidden(step22)      = completed (inferred from emit #23)
+  PROCESS_EXIT                    = -1 (abnormal)
+  LAST_STREAM_HEARTBEAT           = STEP_0_OF_64
+  PATH_B_N5_003                   = FAIL
+  VALID_WITNESS                   = 0
+  PROMOTE                         = 0
+  CHAMPION                        = PATH_A
+  PATH_A_WALL_MEDIAN_NS           = 10184789000
+  Gate12_RoPE_abort_this_trial    = NOT_OBSERVED
+  Q_buffer_null_this_trial        = NOT_OBSERVED
+
+# --- MISSING RUNTIME (not emitted; not backfilled) ------------------------
+
+MISSING_RUNTIME=
+  HIDDEN_PROBE_VALID.index        = MISSING
+  HIDDEN_PROBE_VALID.value        = MISSING
+  HIDDEN_PROBE_VALID.bounded      = MISSING
+  HIDDEN_PROBE_VALID.valid        = MISSING
+  HIDDEN_LAST_VALID.index         = MISSING
+  HIDDEN_LAST_VALID.value         = MISSING
+  HIDDEN_COMPLETE                 = MISSING
+  HIDDEN_TO_LOGITS                = MISSING
+  LOGITS_ENTRY                    = MISSING
+  LOGITS_CONTRACT_OK              = MISSING
+  LOGITS_PROJECT_BEGIN            = MISSING
+  LOGITS_PROJECT_END              = MISSING
+  LOGITS_ARGMAX_END               = MISSING
+  LOGITS_RETURN_OK                = MISSING
+  TOKEN_CALLBACK                  = MISSING
+  MLA_FORWARD(step23)             = MISSING
+  STREAM_HEARTBEAT STEP=32        = MISSING
+  STREAM_ABORT_OWNER              = MISSING
+  GATE10_FOOTER                   = MISSING
+  TEARDOWN_WITNESS                = MISSING
+  EXIT_0                          = MISSING
+  GENERATION_WALL_NS              = MISSING
+  DECODE_TPS_REAL                 = MISSING
+  DELETE_PROVEN fields            = MISSING
+
+# --- CLASSIFICATION -------------------------------------------------------
+
+ASSERT=
+  missing ≠ failed
+  missing ≠ zero
+  missing ≠ invented ID
+  concrete step=22 does NOT imply concrete hidden[random#] or hidden[last]
+  FIRST_UNPROVEN_CONSUMER = ProjectLogitsArgmax(step22)
+  source witness contract may exist; observations require future emit
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE

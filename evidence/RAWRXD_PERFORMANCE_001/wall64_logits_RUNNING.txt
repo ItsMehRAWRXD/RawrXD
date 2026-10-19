@@ -1,0 +1,3 @@
+23836
+G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\wall64_logits_20260908-092804.log
+G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\wall64_logits_20260908-092804.err.log

@@ -1,0 +1,19 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+ arc arc arc arc arc arc arc arc
+[MARS] Shutting down...
+[DualGPUBackend] Shutting down...
+[DualGPUBackend] Worker 0 stopped
+[DualGPUBackend] Worker 1 stopped
+[DualGPUBackend] Shutdown complete
+[VRAMManager] Shutdown complete
+[MARS] Shutdown complete
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Shutdown complete
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

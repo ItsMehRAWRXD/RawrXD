@@ -1,0 +1,1 @@
+LINK_ARGS=/nologo /OUT:bin\RawrXD-Win32IDE.exe /PDB:bin\RawrXD-Win32IDE.pdb /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE:NO /DEBUG:FULL /MAP:G:/~dev/rawrxd/build-fd/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 @CMakeFiles\RawrXD-Win32IDE.rsp

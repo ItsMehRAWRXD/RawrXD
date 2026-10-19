@@ -1,0 +1,13 @@
+PROMPT=hi
+MODEL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_LOADED=1
+BYTES=157
+RESPONSE_BEGIN
+
+Sure, here are some examples of how to use the "hi2" function in R:
+
+1. Count the number of occurrences of a specific character:
+
+```r
+hi2("hello") # Output
+RESPONSE_END

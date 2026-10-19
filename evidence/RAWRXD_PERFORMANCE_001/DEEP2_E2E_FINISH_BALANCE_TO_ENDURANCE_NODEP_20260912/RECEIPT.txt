@@ -1,0 +1,26 @@
+DROP=DEEP2_E2E_FINISH_BALANCE_TO_ENDURANCE_NODEP_20260912
+STATUS=SOURCE_READY_SELFTEST_PASS
+LIVE_PRODUCT_RUN=NOT_RUN
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+CORE_SELFTEST=PASS
+BALANCER_SELFTEST=PASS
+PERSISTENT_DECODE_SELFTEST=PASS
+RESIDENCY_SELFTEST=PASS
+STREAMER_ENDURANCE_SELFTEST=PASS
+
+NOTE=selftest is synthetic-callback only; cannot mint AGGREGATE_BW, TPS, or PROMOTE
+PRIOR_LIVE=
+  AGGREGATE_BW_AUTHORITY=1
+  MATERIAL_SAME_TOKEN_OVERLAP=1
+  PACKED_Q2K_LIVE=1 (harness)
+
+NEXT_LIVE_BINDS=
+  1. D2DecodeBalancer -> calibrated dual timestamps / single effective-work lever
+  2. D2PersistentDecode -> Deep2Engine persistent cmds+KV+N+1
+  3. D2Residency -> real tensor/expert/KV nodes + VRAM0/1/RAM budgets
+  4. D2Streamer -> native open/prefill/decode/emit/reset/close (no Ollama/llama.cpp)
+  5. Endurance -> installed GGUF matrix
+
+AUTHORITY=SOURCE_WIRED_SELFTEST != RUNTIME_REACHED != TOKEN_SURVIVED

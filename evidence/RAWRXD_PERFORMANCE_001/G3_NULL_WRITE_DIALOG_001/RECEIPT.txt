@@ -1,0 +1,21 @@
+GATE=G3_NULL_WRITE_DIALOG_001
+SOURCE=Screenshots 1/deep2streamererror.png
+EXE=deep2_streamer_parity.exe
+
+DIALOG=Application Error
+FAULT_KIND=NULL_WRITE
+INSTRUCTION=0x00007FF6B7793ECF
+REFERENCED=0x0000000000000000
+VERB=written
+
+INTERPRETATION=ACCESS_VIOLATION storing through a null pointer
+NOTE=Prior smoke exit 0xC0000374 (HEAP_CORRUPTION) can accompany or precede this UI; dialog itself is a null write, not an ambiguous multi-GPU failure
+
+ALIGNED_WITH=G3_MARS_OFF_CONTROL_001 crash family
+  PREFILL_DONE=1
+  DECODE_BEGIN=1
+  FINAL_NORM completed
+  then process death
+
+SYMBOL_RESOLVE=NO_PDB (ASLR load address; preferred-base RVA not trustworthy)
+PROMOTE=0

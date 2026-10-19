@@ -1,0 +1,80 @@
+IMPLEMENTATION_AUTHORITY_001=SEALED
+DATE=2026-09-08
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE
+CODE_CHANGE=0
+LEDGER_CHANGE=0
+SUPERSEDES_PARTIAL=FORBIDDEN_IMPL_CHECK_001 (policy vs impl separation)
+
+AUTHORITY=IMPLEMENTATION
+
+VERIFY_BY=
+  SOURCE_PRESENT
+  SYMBOL_PRESENT
+  CALLSITE_PRESENT
+  BUILD_INCLUDED
+  RUNTIME_REACHABLE
+
+CLASSIFY=
+  IMPLEMENTED=source=1 symbol=1 callsite=1 build=1 runtime=1
+  PRESENT_UNWIRED=source=1 runtime=0
+  ABSENT=source=0
+  UNKNOWN=evidence_insufficient=1
+
+IGNORE_AS_EVIDENCE=
+  policy labels
+  forbidden labels
+  transcript wording
+  stale receipts
+  theory names
+  gate state
+
+FORBIDDEN=
+  ≠ ABSENT
+  ≠ IMPLEMENTED
+  ≠ BUG
+  ≠ PASS
+  ≠ FAIL
+  = POLICY_STATE_ONLY
+
+# --- APPLIED ---------------------------------------------------------------
+
+ALIGN8_per_tensor_info_loop=IMPLEMENTED_ABSENT (C++ loaders)
+DATA_ALIGN_32=IMPLEMENTED (hardcoded)
+general.alignment=ABSENT (not wired)
+U02_nope_rope=IMPLEMENTED
+PATH_B_code=PRESENT
+PATH_B_execution=DISABLED_BY_GATE (policy; not absense)
+ACTUAL_PASS=POLICY_ONLY
+NO_REOPEN=POLICY_ONLY
+q_b=PRESENT (perf interpretation UNPROVEN)
+BADF107_literal=UNKNOWN
+TIP_CLIMB_literal=UNKNOWN
+
+# --- ISOLATED RISK ---------------------------------------------------------
+
+RawrXD_QuadBuffer_Streamer.asm=
+  ALIGN32_AFTER_KV_BEFORE_TENSOR_INFO=OBSERVED
+  PER_DESCRIPTOR_ALIGN8=NOT_OBSERVED
+  GENERAL_ALIGNMENT_METADATA=NOT_WIRED
+  STATUS=IMPLEMENTATION_PRESENT
+  EDIT_PRECONDITION=LIVE_CURSOR_DIVERGENCE_RECEIPT=1
+
+THREE_CONCEPTS=
+  POLICY=what actions currently permitted
+  IMPLEMENTATION=what code contains (SOURCE|SYMBOL|CALLSITE|BUILD|RUNTIME only)
+  EXECUTION_AUTHORITY=whether changes or experiments authorized
+
+DOES_NOT_ESTABLISH=
+  correct_vs_incorrect of any implementation by this seal alone
+  only defines evidence hierarchy + QuadBuffer edit precondition
+
+NORMALIZED=
+  AUTHORITY_FOR_IMPLEMENTATION=SOURCE|SYMBOL|CALLSITE|BUILD|RUNTIME
+  POLICY_LABELS=NON_AUTHORITY
+  FORBIDDEN=POLICY_ONLY
+  IMPLEMENTATION_STATUS=determined_only_by(SOURCE,SYMBOL,CALLSITE,BUILD,RUNTIME)
+  QuadBuffer_Streamer.asm ALIGN32_AFTER_KV_BEFORE_TENSOR_INFO=OBSERVED
+  PER_DESCRIPTOR_ALIGN8=NOT_OBSERVED
+  EDIT_PRECONDITION=LIVE_CURSOR_DIVERGENCE_RECEIPT

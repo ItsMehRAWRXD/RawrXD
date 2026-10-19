@@ -1,0 +1,54 @@
+QB_KERNEL_UPLOAD_CUT_001 — RECEIPT
+DATE=2026-09-08
+
+SPEND
+  Pin Q_A/Q_B on main thread after host-KV launch (overlap upload with KV).
+  Seal QKV shared-x winner=128 (skip in-gen climb). DEEP2_QKV_CLIMB=1 to reopen.
+  Keep DEEP2_MLA_Q_DEVICE=0 for wall (device path still READBACK-bound).
+  No KVA rows/math reopen.
+
+SOURCE
+  src/deep2/K2MLAWeights.cpp          (prepin after kvTh)
+  src/deep2/K2MLA_GpuGemv.cpp         (MLA_PinPacked)
+  src/deep2/K2MlaQBranchTiming.hpp    (Q_PREPIN_*)
+  src/deep2/K2MlaStageTiming.hpp      (QKV sx seal)
+  LOG=evidence/K2_USEFUL_TPS_001/qb_kup64c_20260908-092720.log
+  PRIOR_CHAMPION=evidence/K2_USEFUL_TPS_001/kva_causal_gq64_20260908-083358.log
+
+MEASURE (64 tok Kimi-K2 Q4_K_M)
+  BASELINE_TPS=3.831
+  CURRENT_TPS=3.910
+  DECODE_TPS_REAL_PRIMARY=3.949
+  DELTA_TPS=+0.079 (vs 3.831; +0.118 vs primary)
+  SPEEDUP=1.021x
+  GENERATION_WALL_NS=16184963000 (was ≈16548284000)
+
+  Q_B_UPLOAD_US=5662 (was 336631)   CUT≈98.3%
+  Q_A_UPLOAD_US=8399 (was 276512)
+  Q_PREPIN_US=567631 Q_PREPIN_OK=120
+  Q_B_KERNEL_US=1332310 (was 1302517)
+  Q_BRANCH_US=2813897 (was 3208771)
+  KV_BRANCH_US=1879640
+  QKV_WEIGHT_MISSES=3 (was 123)
+  MLA_Q_CRITICAL_OWNER=q_b
+  QKV_SUB_OWNER=KERNEL
+  ARGMAX_PARITY=1 KVA_WINNER=16 QKV_WINNER=128
+  FUNCTIONAL_PASS=1 ACTUAL_E2E_GENERATION_001=PASS
+
+PROMOTE_IF
+  TPS > 3.831 && PARITY=PASS
+RESULT
+  PROMOTE=1
+  NEW_SEAL_TPS=3.910
+  CHAMPION_GENERATION=qb_kup64c_20260908-092720
+  WALL_WITHIN_BUDGET=0
+  PRODUCT_FLOOR_TPS=5.000
+
+FIRST_DELTA=q_b_KERNEL_CUT (upload removed; kernel still leaf)
+  OR dual-GPU / LOGITS_SPLIT_CUT (LOGITS still largest exposed)
+THEN=LOGITS_SPLIT_CUT=DEFERRED by prior order until Q leaf shrinks further
+
+NO_REOPEN_PRODUCT_AUTHORITY=1
+KVA_ROWS_CLIMB=SEALED_UNTOUCHED
+DO_NOT_ENABLE_MLA_Q_DEVICE_FOR_WALL=1
+K2_PRODUCT_5TPS=OPEN

@@ -1,0 +1,8 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+GENERATE_REQ path=/api/generate body_len=73 prompt_len=29 model_field_len=0 loaded=1 local_only=1 backend=0
+[TRANSFER] tensor=111 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+GENERATE_FAIL owner=NativeCIE model=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf detail=[error] NativeCIE failed: native generation exception: bad allocation
+GENERATE_REQ path=/api/generate body_len=73 prompt_len=29 model_field_len=0 loaded=1 local_only=1 backend=0
+GENERATE_FAIL owner=NativeCIE model=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf detail=[error] NativeCIE failed: native generation exception: bad allocation

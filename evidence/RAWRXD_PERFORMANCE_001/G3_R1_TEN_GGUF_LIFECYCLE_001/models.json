@@ -1,0 +1,92 @@
+[
+    {
+        "Id":  "01_tinyllama",
+        "Name":  "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+        "Family":  "TinyLlama-1.1B",
+        "Quant":  "Q4_K_M",
+        "SizeMB":  637.8,
+        "SHA16":  "9FECC3B3CD76BBA8"
+    },
+    {
+        "Id":  "02_unlock125",
+        "Name":  "unlock-125M-Q2_K.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\models\\_matrix_unlock\\unlock-125M-Q2_K.gguf",
+        "Family":  "Unlock-125M",
+        "Quant":  "Q2_K",
+        "SizeMB":  1925.8,
+        "SHA16":  "DDE5AA3FC5FFC171"
+    },
+    {
+        "Id":  "03_llama32_3b",
+        "Name":  "llama3.2-3b-Q3_K_S.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\llama3.2-3b-Q3_K_S.gguf",
+        "Family":  "Llama-3.2-3B",
+        "Quant":  "Q3_K_S",
+        "SizeMB":  1471.4,
+        "SHA16":  "87D059B6BDD196FA"
+    },
+    {
+        "Id":  "04_phi3_mini",
+        "Name":  "Phi-3-mini-4k-instruct-q8_0.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\_r1_iso\\02_phi3_mini\\Phi-3-mini-4k-instruct-q8_0.gguf",
+        "Family":  "Phi-3-mini-4B",
+        "Quant":  "Q8_0",
+        "SizeMB":  2075.4,
+        "SHA16":  "633FC5BE925F9A48"
+    },
+    {
+        "Id":  "05_mistral_7b",
+        "Name":  "mistral-7b.gguf",
+        "Path":  "F:\\OllamaModels\\models\\blobs\\sha256-f5074b1221da0f5a2910d33b642efa5b9eb58cfdddca1c79e16d7ad28aa2b31f",
+        "Family":  "Mistral-7B",
+        "Quant":  "Q4_ish",
+        "SizeMB":  4170.2,
+        "SHA16":  "F5074B1221DA0F5A"
+    },
+    {
+        "Id":  "06_ds_r1_qwen3",
+        "Name":  "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\_r1_iso\\04_ds_r1_qwen3\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+        "Family":  "DeepSeek-R1-Qwen3-8B",
+        "Quant":  "Q4_K_M",
+        "SizeMB":  4794.9,
+        "SHA16":  "713D3A7A93F30676"
+    },
+    {
+        "Id":  "07_gemma4_e4b",
+        "Name":  "gemma-4-E4B-it-Q4_K_M.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\_r1_iso\\05_gemma4_e4b\\gemma-4-E4B-it-Q4_K_M.gguf",
+        "Family":  "Gemma-4-E4B",
+        "Quant":  "Q4_K_M",
+        "SizeMB":  5088.1,
+        "SHA16":  "3F72A20A06F626C7"
+    },
+    {
+        "Id":  "08_phi3_q2",
+        "Name":  "phi3-mini-Q2_K.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\models\\phi3-mini-Q2_K.gguf",
+        "Family":  "Phi-3-mini-Q2",
+        "Quant":  "Q2_K",
+        "SizeMB":  1440,
+        "SHA16":  "548A67A6B39C07B1"
+    },
+    {
+        "Id":  "09_llama32_q2",
+        "Name":  "llama3.2-3b-Q2_K.gguf",
+        "Path":  "G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf",
+        "Family":  "Llama-3.2-3B-Q2",
+        "Quant":  "Q2_K",
+        "SizeMB":  1300.8,
+        "SHA16":  "EE1CA8B716933587"
+    },
+    {
+        "Id":  "10_deepseek_coder",
+        "Name":  "deepseek-coder-6.7b.gguf",
+        "Path":  "F:\\OllamaModels\\models\\blobs\\sha256-59bb50d8116b6a1f9bfbb940d6bb946a05554e591e30c8c2429ed6c854867ecb",
+        "Family":  "DeepSeek-Coder-6.7B",
+        "Quant":  "Q4_ish",
+        "SizeMB":  3650.5,
+        "SHA16":  "59BB50D8116B6A1F"
+    }
+]

@@ -1,0 +1,35 @@
+SUPERSEDED=1
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+REASON=B.2 ontology duplicate; along-twist proceed NON_AUTHORITY under GATE_STOP=1
+ALONG_TWIST_PROCEED_001=SEALED
+DATE=2026-09-08
+COMMAND=RE_CATEGORIZATION_CONFIRMED_READY_TO_PROCEED_ALONG_TWIST
+
+PHENOMENON=ISOLATED
+SLATE=CLEAR
+CODE_SPACE=EXITED
+INVENTION_SPACE=ALONG_TWIST_ACTIVE
+  # invention = warp medium along grain; harness is costume not subject
+
+PRIMARY_TWIST=BOUNDARY_DISTORTION
+  PCIe / clock-domain cost of forcing continuous tensor through sync gates
+ALONG_TWIST=ZERO_RESISTANCE_AXIS
+  remove readbacks | host mappings | safety copies
+  stop fighting the bus; flow along grain
+  eliminate CPU-GPU reconciliation drag
+
+EVERYTHING=QK_DIM_192|V_DIM_128|VRAM_locality|raw_capabilities
+NOTHING=host_mirror|sync_verification_lock|readback_crutch|CRT_dep
+
+PRESSURE_POINT=HOST_VISIBILITY_EDGE
+HARNESS_ROLE=CONTAINMENT_FIELD_ONLY
+SUBJECT_NE_HARNESS=1
+
+PROVE
+  q_b_d2h_bytes→0 on product path
+  parity | purity | product
+  wall vs PATH_A 10184789000 (fail-closed)
+PROMOTE=0 until PROVE
+
+ENV_ARM=DEEP2_PATH_B=1
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904

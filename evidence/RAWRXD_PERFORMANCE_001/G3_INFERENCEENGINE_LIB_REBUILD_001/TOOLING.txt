@@ -1,0 +1,1 @@
+NINJA=C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Packages\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe\ninja.exe VERSION=1.13.2

@@ -1,0 +1,42 @@
+CAPTURE_LAW=1
+HOT_PATH=WRITE_ONLY
+AFTER_STREAM=ANALYZE
+PRODUCT_AUTHORITATIVE=0
+
+HOT_PATH_ALLOWED
+  QPC begin/end
+  atomic slot claim
+  fixed HotPathEvent write (qpc,ticket,binding_id,token_step,layer,event)
+
+HOT_PATH_FORBIDDEN
+  formatting
+  sorting
+  JSON
+  file writes
+  string building
+  owner analysis
+  model provenance fields (stage/file/offset/bytes/tensor/kernel/device)
+  promote/rank decisions
+
+IMMUTABLE_BINDING_TABLE (seal before decode; not rewritten per event)
+  binding_id
+  stage
+  tensor_id/name
+  model_file_id
+  file_offset
+  bytes
+  kernel_id
+  device_id
+
+AFTER_GENERATION
+  dump RAW/MODEL_STREAMER_RAW.tsv (join event↔binding)
+  run Analyze-ModelStreamerTrace.ps1
+  reconstruct spans / causal edges
+  attribute against GENERATION_WALL_NS (explain only)
+
+PERFORMANCE_AUTHORITY=GENERATION_WALL_NS
+TRACE_AUTHORITY=CAUSAL_ATTRIBUTION_ONLY
+TRACE_MAY_EXPLAIN_WALL=1
+TRACE_MAY_REPLACE_WALL=0
+TRACE_MAY_PROMOTE_CONFIG=0
+TRACE_MUST_NOT_BECOME_OWNER=1

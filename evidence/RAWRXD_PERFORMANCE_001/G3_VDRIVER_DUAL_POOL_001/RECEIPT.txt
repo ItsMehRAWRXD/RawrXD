@@ -1,0 +1,55 @@
+GATE=G3_VDRIVER_DUAL_POOL_001
+PURPOSE=both sticks on WDDM/D3D12 (no Vulkan); logical memory pool sum
+PARENT=G3_BLOCKER_A_CLASSIFICATION_001
+STREAMER_EXE=FROZEN
+BEHAVIOR_PATCH=0
+PROMOTE=0
+VULKAN_USED=0
+
+POOL_MODEL=SOFTWARE_SUM_OF_DISCRETE_ADAPTERS
+HARDWARE_UNIFIED_VRAM=0
+  # two discrete devices; pool is accounting + explicit cross-adapter copies later
+  # not a single coherent VRAM aperture
+
+# --- R9700 AI Pro (already D3D12-capable; confirmed again) ---
+R9700_DXGI_NAME=AMD Radeon AI PRO R9700
+R9700_PCI_DEVICE=0x7551
+R9700_DXGI_LUID=00000000000158A5
+R9700_DXGI_DEDICATED=34054242304
+R9700_D3D12CreateDevice=PASS
+R9700_LOCAL_Budget=33244737536
+R9700_LOCAL_CurrentUsage=0
+R9700_LOCAL_AvailableForReservation=16756586496
+
+# --- RX7800XT ---
+RX7800XT_DXGI_NAME=AMD Radeon RX 7800 XT
+RX7800XT_PCI_DEVICE=0x747E
+RX7800XT_DXGI_LUID=0000000000018904
+RX7800XT_DXGI_DEDICATED=16963137536
+RX7800XT_D3D12CreateDevice=PASS
+RX7800XT_LOCAL_Budget=16157831168
+RX7800XT_LOCAL_CurrentUsage=0
+RX7800XT_LOCAL_AvailableForReservation=8213133312
+
+# --- logical pool ---
+POOL_STICK_COUNT=2
+POOL_DXGI_DEDICATED_SUM=51017379840   # ~47.5 GiB dedicated
+POOL_LOCAL_Budget_SUM=49402568704     # ~46.0 GiB local budget
+BOTH_D3D12_LANE=1
+TRUE_DUAL_RUNTIME=OPEN_ON_D3D12_NOT_VULKAN
+
+BLOCKER_A=RX7800XT_VULKAN_ICD_CREATE_FAIL
+  # unchanged: Vulkan A0 still fails on 7800; D3D12 path is the bypass lane
+R9700_GENERATION_SURVIVE=PASS
+DUALSTICK_FALLBACK_STABLE=PASS
+VULKAN_TRUE_DUAL=BLOCKED
+D3D12_TRUE_DUAL_PROBE=READY
+PROMOTE=0
+
+DISPOSITION=
+  R9700 does not need Vulkan for device open — D3D12 PASS (same as 7800).
+  Logical pool sum is sealable now; placement/migration fabric is next product work.
+  Streamer remains FROZEN on Vulkan/R9700 fallback until a D3D12 product path is elected.
+
+TOOL=tools/g3_vdrv_dual_pool.cpp build_g3_vdrv_dual_pool.cmd
+Full: PROBE_OUT.txt

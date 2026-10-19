@@ -1,0 +1,42 @@
+U02_BYTE_SHRINK_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+MODE=ATTRIBUTION_ONLY
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+RNG_USED=0
+
+CLAIM_REJECTED
+  "pass hostHeadFloats=nope+rope to force READBACK_REDUCED byte drop"
+REASON
+  Caller ALREADY passes qbHostHead = nope+rope (K2MLAWeights.cpp).
+  On K2 Q4_K_M: nope=128 rope=64 sum=192 = headDim = prodHead.
+  Shrink predicate requires hostHead < prodHead → FALSE.
+  Bytes stay 191891712; QB_HOST_RB REDUCED=0 is CORRECT not a bug.
+
+EVIDENCE
+  path_a_safe64_20260908-175244.log
+    GENERATION_WALL_NS=9854056000
+    QKV_READBACK_BYTES=191891712
+    QB_X_PROD_HEAD=192 QB_X_HOST_HEAD=192
+    QB_X_SHRINK_DEAD_REASON=hostHead_ge_prodHead
+    QB_X_SHRINK_OPS=0 QB_X_FULL_OPS=3904
+  CODE
+    qbHostHead = (headDim >= nope+rope) ? (nope+rope) : headDim
+
+VERDICT
+  U02_BYTE_SHRINK=BLOCKED_GEOMETRY
+  DEVICE_ATTENTION_REQUIRED_FOR_Q_B_SHRINK=1
+  FAKE_PATCH_hostHeadFloats_nope_rope=NO_OP_FORBIDDEN
+  PATH_A_CHAMPION_STANDS_ON_HOST_CACHED_US_NOT_BYTES=1
+
+U14=ATTRIBUTION_ACTIVE
+U15=HOLD (GEMV direct; GATE STOP; no NT map / LOCK CMPXCHG spend)
+
+BUILD
+  PERF_AUTHORITY_EXE=build-fd/bin/deep2_benchmark.exe
+  rawr.exe=NON_AUTHORITY_FOR_PERF (optional product target; not required)
+  SunshineFPS.exe=OUT_OF_SCOPE
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+GOODS_STAY_BRAIDED=1

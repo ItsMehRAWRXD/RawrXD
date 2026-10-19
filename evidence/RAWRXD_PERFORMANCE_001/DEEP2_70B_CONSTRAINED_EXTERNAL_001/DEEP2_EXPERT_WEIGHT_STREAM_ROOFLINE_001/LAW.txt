@@ -1,0 +1,70 @@
+GATE=DEEP2_EXPERT_WEIGHT_STREAM_ROOFLINE_001
+DATE=2026-09-13
+KIND=COMPUTE_ROOFLINE_LAW
+PROMOTE=0
+TPS_MINT=0
+TPS_PERFORMANCE_AUTHORITY=0
+NOT_RUN!=PASS
+PARENT=DEEP2_EXPERT_MATH_TOP15_20260913
+SCHEDULER_ONLY=0
+
+# Kimi K2 geometry (HF config): H=7168 I=2048 top8+shared · ~60 MoE layers
+PARAMS_PER_EXPERT=3×7168×2048=44040192
+IDEAL_Q4=22.02 MiB/expert
+Q4K_FIRST_ORDER≈23.625 MiB/expert (~4.5 bpw incl metadata)
+ROUTED_ONLY≈189 MiB/layer ≈11.07 GiB/token (8×60)
++SHARED≈212.6 MiB/layer ≈12.46 GiB/token
+# Q4_K_M exact mixes; magnitude ~11–12.5 GiB useful expert weight/token
+
+WTA=PHYSICAL_WEIGHT_BYTES_READ / LOGICAL_QUANT_WEIGHT_BYTES_NEEDED
+PERFECT_WTA=1.00
+# Naive Q4→FP16 materialize ≈4.5625 B/w vs 0.5625 → WTA≈8.1 on that path
+
+ROOFLINE_DIAG_NOT_FULL_TPS=
+  R9700 peak=640 GB/s · 7800XT=624 GB/s · agg=1264 GB/s (only if concurrent resident)
+  12.46 GiB @640 → ≈20.9 ms ≈47.8 TPS expert-stream-only ceiling
+  11.07 GiB @640 → ≈18.6 ms ≈53.8 TPS
+  perfect dual split 12.46/1264 → ≈10.6 ms ≈94 TPS expert-stream-only
+# NOT full-model TPS — attn/route/norm/lmhead/launch/sync/cache raise wall
+# Proves: raw quant expert bytes ≠ require 14.60 s/token authority
+
+T_EXPERT=T_ACQUIRE+T_H2D+T_PREPACK+T_QDECODE_DOT+T_REDUCE+T_WAIT
+MEASURE_PER_EXPERT=
+  LOGICAL_WEIGHT_BYTES PHYSICAL_WEIGHT_BYTES H2D_BYTES
+  PREPACK_READ/WRITE DEQUANT_WRITE/REREAD METADATA_BYTES
+  KERNEL_NS WAIT_NS
+DERIVED=
+  EXPERT_WTA EXPERT_EFFECTIVE_LOGICAL_GBPS EXPERT_EFFECTIVE_PHYSICAL_GBPS
+  NS_PER_LOGICAL_MIB
+# EFFECTIVE_LOGICAL_BW = logical_quant_bytes / critical_path_ns (not vendor BW alone)
+
+STREAM_ATTACK_TOP15=
+  01 Q4 decode-in-dot · 02 prepack once · 03 one-pass gate+up
+  04 fuse SiLU/mul in regs · 05 fuse down+router reduce
+  06 interleave scales · 07 128/256B native tiles · 08 wave coop loads
+  09 persistent descriptors · 10 grouped selected-expert kernel
+  11 device-side work queue · 12 avoid unprofitable split-K rereads
+  13 structured tile skip · 14 lower bpw where parity OK
+  15 multi-token expert batch/reuse (arith intensity ↑)
+
+MULTI_TOKEN_REUSE=
+  ~4.5bpw ≈3.56 ops/B @1 tok · ≈14.2 @4 · ≈28.4 @8
+  ROUTE_AHEAD→group by expert→stream tile once→N tokens (needs batch/spec)
+
+HETERO_QUANT=
+  Q4.5≈23.6 · Q4≈21 · Q3≈15.8 · Q2.5≈13.1 · Q2≈10.5 MiB/expert
+  sensitivity → storage → GPU-specific kernel (fabric ⊂ math engine)
+
+PREPACK_RULE=win only if GGUF→native ONCE replaces per-token copy/transpose/temp
+
+AUTHORITY_INPUT=LIVE_KIMI · REAL_SELECTED_EXPERTS · REAL_Q4_K_M_BYTES · NO_SYNTHETIC_TPS
+TARGET_LADDER=WTA<8 → <4 → <2 → <1.25 → ≈1
+THEN_GBPS=100 → 250 → 400 → 500+ device-local effective stream
+
+LEVELS=
+  L1 residency: avoid fetching wrong expert
+  L2 WTA: why 23.6 MiB math → 50/100/200+ MiB physical?
+  L3 shrink/reuse: 23.6→15→10 MiB or serve N tokens / fetch
+
+RECEIPT_BESIDE=SKEW PREDICT_ERR RELOAD + WTA + EFFECTIVE_LOGICAL_GBPS
+ACTIVATE_IF=after V7 coverage footing; instrument before claiming compute PASS

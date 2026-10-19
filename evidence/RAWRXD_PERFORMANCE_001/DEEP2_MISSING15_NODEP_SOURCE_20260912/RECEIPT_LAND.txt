@@ -1,0 +1,56 @@
+GATE=DEEP2_MISSING15_NODEP_SOURCE_20260912
+STATUS=SIDE_DROP_SMOKE_PASS
+PRODUCT_LINKED_INTO_CERT=0
+CERT_BINARY_TOUCHED=0
+ATTEMPT2_TOUCHED=0
+FULL_MODEL_TPS_AUTHORITY=1
+AGGREGATE_BW_AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOTE=MOCK_ONLY_NO_PRODUCT_AUTHORITY
+
+ZIP=C:\Users\Garrett\Downloads\DEEP2_MISSING15_NODEP_SOURCE_20260912.zip
+ZIP_SHA256=f4515cd0d97f075818817ea447597007596c048248fafcc3647730dbeed8f180
+ZIP_SHA256_MATCH=1
+
+SMOKE=
+  ROWS=4148/4044
+  OVERLAP_NS=46700000
+  AGGREGATE_EFFECTIVE_BPS=2843595932
+  AUTHORITY_FAIL_CLOSED=PASS
+  NOTE=MOCK_ONLY_NO_PRODUCT_AUTHORITY
+
+TOP15=
+  01 d2_nodep.h
+  02 d2_partition_planner.cpp
+  03 d2_range_locality.cpp
+  04 d2_deviceio_ssvk_bind.cpp
+  05 d2_fabric_submit.cpp
+  06 d2_overlap_authority.cpp
+  07 d2_compact_reduce.cpp
+  08 d2_packed_q2k_contract.cpp
+  09 d2_packed_q4k_contract.cpp
+  10 d2_residency_budget.cpp
+  11 d2_fit_class.cpp
+  12 d2_expert_predictor.cpp
+  13 d2_adaptive_kv.cpp
+  14 d2_nvme_coldpath_guard.cpp
+  15 d2_authority_gate.cpp
+
+HIGHEST_VALUE_NEXT_BIND=
+  #4 d2_deviceio_ssvk_bind → real SsVk callbacks
+  #5 d2_fabric_submit → same-token dual enqueue
+  #6 d2_overlap_authority → OVERLAP_NS measured on device
+  #7 d2_compact_reduce → compact merge
+  closes gap to DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
+
+MAPS_TO_MODEL_SIZE_NEXT4=
+  residency_budget_solver ← #10+#11
+  packed_execution_form ← #08+#09
+  predictive_expert_cache ← #12
+  adaptive_KV ← #13
+  NVMe L3 guard ← #14
+
+HARD_HOLD=
+  mock OVERLAP_NS / AGGREGATE_EFFECTIVE_BPS ≠ AGGREGATE_BW_AUTHORITY
+  do not promote from this smoke

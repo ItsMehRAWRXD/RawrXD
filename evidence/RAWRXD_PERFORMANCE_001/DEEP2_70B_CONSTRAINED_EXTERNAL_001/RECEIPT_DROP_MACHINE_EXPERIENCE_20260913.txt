@@ -1,0 +1,29 @@
+GATE=DROP_INTAKE_MACHINE_EXPERIENCE_20260913
+DATE=2026-09-13
+PROMOTE=0
+TPS_MINT=0
+PRODUCT_BOUND=0
+NOT_RUN!=PASS
+
+DROP=DEEP2_MACHINE_EXPERIENCE_NODEP_20260913
+AUTH_BASELINE=c1e90fcdf5
+ARCHIVE_SHA256=92d8d2c7d788f01840bd5c368ef0bcf31261a54d5dbdb78a703e398244e735e0
+SHA_VERIFY=PASS
+STAGED=DROPS/DEEP2_MACHINE_EXPERIENCE_NODEP_20260913/
+SELFTEST=PASS (drop-author) LOCAL_GCC_EXIT=0
+GITHUB_BRANCH=403_NOT_PUSHED sealed branch untouched
+
+UNITS=
+  Key.cpp     — epoch + regime identity + regime distance
+  Core.cpp    — fixed cache + adaptive EWMA + truth-gated recovery
+  Predict.cpp — confidence + nearest fallback + staleness arbitration
+  Persist.cpp — truth-first persist + checksum image + selective reload
+  Adapter.cpp — V6 fallback bridge + train hook + narrow DualStick seam
+
+SPLIT_LAW=
+  measurement / trust / persistence / product scheduling independently testable
+  HISTORY=PRIOR LIVE=TRUTH
+  layer ABOVE V6 keyed kernel/transfer predictor
+
+ACTIVATE_IF=V7_ACCEPT (PREDICT_ERR<10 SKEW<5 Phase A 2+2 held)
+# until then SOURCE_READY only — do not rewrite sealed placement geometry

@@ -1,0 +1,67 @@
+NOT_REQUIRED_YET_EARLY_COMPLETE_001=SEALED
+DATE=2026-09-08
+TYPE=SPECIAL_MOMENT_CONTRACT
+SPEND=0
+HOT_GATE=0
+EARLY_COMPLETE_ISSUED=0
+
+PURPOSE=
+  Anything marked NOT_REQUIRED_YET gets a special moment to get done early.
+  That moment is explicit, optional, and separate from Mode D debt and from
+  HOT_GATE measurement spend.
+
+LAW=
+  NOT_REQUIRED_YET ≠ forever-forbidden
+  NOT_REQUIRED_YET ≠ current Mode D incompleteness
+  NOT_REQUIRED_YET ≠ automatic authorization to execute now
+
+  SPECIAL_MOMENT =
+    an explicit early-complete authorization for a named NOT_REQUIRED_YET item
+    issued in-chat or by sealed receipt line
+
+  EARLY_COMPLETE (when SPECIAL_MOMENT issued) may do:
+    site-local wiring
+    caller-owned EvidenceState / Init512
+    CMake product link of Core+Emit
+    SOURCE→BUILD of the instrumented binary
+
+  EARLY_COMPLETE does NOT by itself authorize:
+    HOT_GATE remasure
+    PATH_B_N5 trial spend
+    MEASUREMENT receipt as product PASS/FAIL
+    claim promotion without that claim's own Commit record from a measured run
+    backfill of PATH_B_N5_003
+
+  After EARLY_COMPLETE BUILD:
+    source existence still ≠ runtime evidence
+    runtime claims remain unobserved until a later measured run fires emitters
+    MEASUREMENT still requires MODE=A HOT_GATE=1 (or other catalog spend line)
+
+ISSUE_SYNTAX=
+  SPECIAL_MOMENT=1
+  EARLY_COMPLETE=<named NOT_REQUIRED_YET item>
+  example:
+    SPECIAL_MOMENT=1 EARLY_COMPLETE=STREAM_PATH_WIRING
+
+CURRENT=
+  SPECIAL_MOMENT=0
+  EARLY_COMPLETE_ISSUED=0
+  no early-complete item named this turn
+
+APPLIES_TO (examples)=
+  STREAM_PATH_WIRING_HOLD_001 NOT_REQUIRED_YET list
+  RUNTIME_EVIDENCE_512_COLLECTION_CHECKLIST_001 open boxes
+  any future NOT_REQUIRED_YET inventory row under this campaign
+
+CROSS=
+  STREAM_PATH_WIRING_HOLD_001
+  SPEND_CLAIM_001
+  RUNTIME_EVIDENCE_512_AUTHORITY_HOLD_001
+  NAME_MODE_TARGET_ISSUE_001
+  OBSERVATION_AUTHORITY_001
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

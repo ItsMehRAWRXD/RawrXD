@@ -1,0 +1,17 @@
+POST /api/model/load tiny -> HTTP=200 BODY={"success":true,"model":"tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"}
+POST /ask -> HTTP=200 BODY={"answer":"\nYes, 2 + 2","done":true}
+POST /v1/chat/completions -> HTTP=200 BODY={"choices":[{"message":{"role":"assistant","content":"\nYes, 2 + 2"}}]}
+GET /api/policies -> HTTP=200 BODY={"policies":[{"name":"content-safety","enabled":true,"violations":0},{"name":"rate-limit","enabled":true,"violations":0}
+GET /api/extensions -> HTTP=200 BODY={"extensions":[],"results":[],"total":0,"adapter":"product_thin"}
+POST /api/browse -> HTTP=200 BODY={"success":false,"error":"browse_thin_no_proxy","message":"Use embedded browser; product adapter kills 404","subsystem":
+GET /api/agents/explain -> HTTP=200 BODY={"explanations":[],"chain":[],"count":0,"adapter":"product_thin"}
+POST /api/backends/use -> HTTP=200 BODY={"success":true,"active":"deep2","backend":"LocalGGUF","adapter":"product_thin"}
+GET /metrics -> HTTP=200 BODY={"requests":2,"tokensPerSec":0,"memUsedMB":0,"adapter":"product_thin","uptimeMs":14098}
+POST /complete -> HTTP=0 BODY=
+POST /api/stat-file -> HTTP=404 BODY={"error":"not_found","path":"/api/stat-file"}
+POST /api/list-directory -> HTTP=404 BODY={"error":"not_found","path":"/api/list-directory"}
+POST /api/backends/use ollama -> HTTP=404 BODY={"error":"not_found","path":"/api/backends/use"}
+list_tools pre -> HTTP=403 BODY={"error":"motd_required","message":"Read Message of the Day (PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool"}
+read_motd -> HTTP=200 BODY={"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay — Multitask continue triggers + MOTD gate: models cannot\r\n  execute tools until they Read this 
+read_file post_motd -> HTTP=400 BODY={"error":"invalid_path","message":"empty path"}
+list_tools post -> HTTP=400 BODY={"error":"unknown_tool","message":"Unknown tool: list_tools","available":["read_motd","read_file","write_file","list_directory","execute_command","git_status"]}

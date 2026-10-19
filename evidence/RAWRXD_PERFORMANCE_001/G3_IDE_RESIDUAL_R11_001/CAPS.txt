@@ -1,0 +1,1 @@
+{"ok":true,"native_bridge":true,"model_bridge_caps":16,"safe_decode":true,"tensor_hop":true,"execution_receipts":true,"route_registry":true,"route_count":60,"runtime_model_count":3}

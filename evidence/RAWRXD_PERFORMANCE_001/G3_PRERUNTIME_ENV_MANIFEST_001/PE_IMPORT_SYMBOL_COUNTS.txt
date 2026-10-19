@@ -1,0 +1,4 @@
+dxgi.dll=5
+KERNEL32.dll=143
+pdh.dll=9
+vulkan-1.dll=54

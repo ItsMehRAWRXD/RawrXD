@@ -1,0 +1,32 @@
+GATE=DEEP2_MOE_RELOAD_ATTRIBUTION_001
+DATE=2026-09-13
+KIND=RECEIPT
+COMMIT=53968f4c32
+AUTH_RUN=kimi_moe_DS_L61t8_pincoh_20260913_040150
+EXIT=0
+V7_MODE=0
+BLEND_W=0
+PROMOTE=0
+BRANCH=PARTITION
+NOT_RUN!=PASS
+
+GPU_WEIGHT_BYTES_RELOAD=1131282432 (~1078 MiB)
+RELOAD_MOE=1131282432 (100%)
+RELOAD_MLA=0
+RELOAD_GENERAL=0
+moe_evicted_keys=1141 reused=126
+moe_evicted_bundles=381 reused=42
+MOE_RELOAD_AFTER_EVICTION_BYTES=1131282432 (= global)
+MOE_COMPULSORY_LOAD_BYTES=34725003264
+MLA_TO_MOE=0 GENERAL_TO_MOE=0
+# pressure = MoE→MoE self-eviction under shared pin envelope
+RELOAD_MISS_BYTES=0 NONAUTH
+
+VERDICT=
+  not a global-counter misread
+  ~1 GiB = MoE physical reload-after-eviction
+  PARTITION required (hot MoE thrashing itself without protected working set)
+
+NEXT=SEGMENTED_MOE_QUOTA_001 / DEEP2_SEGMENTED_RESIDENCY_QUOTAS_001
+  MOE_RESERVED hard floor · protect hot set from MoE self-churn + non-MoE
+  PASS_IF=MOE_PHYSICAL_RELOAD STABLE + reserved residency held

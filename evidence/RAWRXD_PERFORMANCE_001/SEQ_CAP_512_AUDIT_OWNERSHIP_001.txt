@@ -1,0 +1,35 @@
+SEQ_CAP_512_AUDIT_OWNERSHIP_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_OWNERSHIP
+SPEND=0
+
+GOVERNING=
+  SEQCAP_512_POST_FT_AUDIT_CONTRACT_001
+  OBSERVATION_AUTHORITY_001
+
+RULES=
+  Each claim requires its own emitting authority.
+  A site must either fire its own emitter or emit a disposition.
+  Absence of an emitter does not allow authority transfer.
+  No emitter inherits another emitter's authority.
+  FINAL_NORM×23 authority limited to its own emitter/claim scope.
+  Stream-abort chain and teardown-AV chain remain distinct.
+
+PATH_B_N5_003_INTERPRETATION=
+  OUTCOME=FAIL
+  PROMOTE=0
+  STOP_REASON=trial_1_invalid_witness_stream_abort_teardown_av
+  MODE=D
+  CHAMPION=PATH_A
+  STOP_REASON is a classification marker for invalid-witness handling
+  and AV-class termination.
+  STOP_REASON does NOT reassert:
+    STREAM_ABORT=1
+    wall-clock measurements
+    TPS measurements
+  Those values remain UNOBSERVED for that run unless their own emissions exist.
+
+SEQ_CAP=512
+FIX_POLICY=SOURCE→BUILD→RUNTIME→MEASUREMENT
+FLOOR_TPS=5.000
+MANIFESTATION_FLIP=NON_AUTHORITY

@@ -1,0 +1,28 @@
+SWARM_NEGATIVE_64K_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  Swarm Negative 64k fibers, work-steal LOCK CMPXCHG,
+  Swarm_Signal_Bus lock-free rings
+
+REVERSE
+  Proposed Sovereign_Swarm_* / Swarm_Signal_Bus / Negative-64k control
+  block NOT found as live perf product braid
+  U15 HOLD already forbids LOCK CMPXCHG spend under prior STOP posture
+  Live parallel planes elsewhere ≠ this invented swarm ABI
+
+ADJUDICATION
+  Swarm_Signal_Bus = REFUSED under GATE STOP
+  Work-steal CMPXCHG swarm = NEW_STACK = REFUSED
+  Cache-density claims (16 fibers / 1MB L3) = unmeasured invention
+
+LIVE_AUTHORITY
+  PATH_A WALL_MEDIAN_NS=10184789000
+  deep2_benchmark.exe
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

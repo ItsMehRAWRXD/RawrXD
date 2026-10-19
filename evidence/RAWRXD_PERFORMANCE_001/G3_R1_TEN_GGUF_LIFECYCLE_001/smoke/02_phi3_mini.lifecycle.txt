@@ -1,0 +1,9 @@
+﻿MODEL=Phi-3-mini-4k-instruct-q8_0.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf
+SIZE_MB=2075.4 SHA16=633FC5BE925F9A48
+HEADLESS_PID=18552
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"Phi-3-mini-4k-instruct-q8_0.gguf","profile_source":"runtime_gguf","profile_id":9452,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"tempe
+LOAD=400 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

@@ -1,0 +1,102 @@
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 05:07:40 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+Headless IDE initialized successfully.
+HTTP server listening on 127.0.0.1:11435
+Headless IDE running in server mode. Press Ctrl+C to stop.
+Loading model: G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+[ModelSourceResolver] Resolving: G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+[ModelSourceResolver] Detected source: Local File
+[ModelSourceResolver] ✅ Local file validated: G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+Model armed for ProductRun: DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+  Path: G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+  GGUF magic: OK
+  Arm latency: 5 ms
+
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\_r1_iso\04_ds_r1_qwen3)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=qwen3 L=36 H=4096 FFN=12288 heads=32 kv=8 hd=128 ctx=32768
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'qwen3'  hidden=4096 layers=36 heads=32 kvHeads=8 inter=12288 vocab=151936
+[Deep2Engine] Tokenizer loaded: vocab=151936 bos=151643 eos=151645 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000000148BE380  Registered 'output.weight': shard=0 offset=5955648 bytes=510504960  |  registry_size=1  registeredBytes=510504960  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000148BE380  Registered 'blk.8.ffn_gate.weight': shard=0 offset=1857238080 bytes=28311552  |  registry_size=100  registeredBytes=1879593984  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000148BE380  Registered 'blk.17.ffn_norm.weight': shard=0 offset=2904774720 bytes=16384  |  registry_size=200  registeredBytes=2898835456  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000148BE380  Registered 'blk.26.ffn_up.weight': shard=0 offset=3924016192 bytes=28311552  |  registry_size=300  registeredBytes=3946372096  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=399
+TENSORS_ADDRESSED=399
+TENSORS_REGISTERED=399
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000000148BE380  registered=399 tensors  bytes=5021827072  max=536870912
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=PASS schema=327 quant=327 tok=151936
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=0000000001B7BF90 dequant=0000000001B79360 GetGEMV(12)=0000000001B7BF90 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=36 page=8 virtualMax=32768 heads=8 dim=128
+[KVCache] HOT_BYTES=2359296 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (399 tensors)
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'qwen3' from model metadata (arch=qwen3)
+[AGENT] PREFILL_BEGIN prompt_tokens=28
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=1728
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=36 TOKENS=48
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1990800000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=5184MB la=2 ramAvail=41141MB vram=32476MB L=36 pressure=0

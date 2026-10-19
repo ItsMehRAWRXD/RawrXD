@@ -1,0 +1,69 @@
+GATE=G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001
+ALIAS=G3_IDE_MODEL_PROFILE_ADMISSION_001
+TARGET=NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION
+ASOF=2026-09-10T14:10Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK=UNTOUCHED
+R28_APPLY=UNTOUCHED
+OLLAMA_REOPEN=0
+LOCAL_ONLY=1
+PORT=11435
+CONFIRMED=1
+
+PURPOSE=
+  Remove generation-prepare dependence on seed_default_runtime_models(qwen/rawrxd-e2e).
+  Admit runtime profiles from opened-model / on-disk GGUF header KV metadata.
+  Fail closed only on missing file or malformed/unsupported metadata.
+
+FIX=
+  native_e2e/runtime_gguf_meta.cpp — header KV probe (arch/layers/ctx/file_type)
+  native_e2e/runtime_gguf_disk_resolve.cpp — require meta.ok; RegisterRuntimeModelSrc
+    source=model_metadata; rc=3 → model_metadata_unsupported
+  native_e2e/rawr_native_http_adapter.cpp — profile_source tagged;
+    seed_compat retained for qwen2.5:1.5b / qwen / rawrxd-e2e only
+  Headless ProductOpen → RegisterRuntimeGgufPath (meta admit) unchanged owner path
+
+PASS_IF (LIVE)=
+  MODEL_PROFILE_NOT_FOUND_FOR_VALID_OPEN_MODEL=0
+  PROFILE_SOURCE=MODEL_METADATA
+  PREPARE_PASS=1
+  PRODUCT_GENERATION_REGRESSION=0
+
+LIVE_PROOF=
+  EXE_SHA256=C3BE946E0764AC565470994905923141DEC57FCA0EE7FB87DF0F388675498F06
+  SMOKE=build-fd/smoke_bin_admit/RawrXD-Win32IDE_admit.exe
+  Listener: --headless --server --port 11435 --dir G:\~dev  HOST_DECODE=1 LOCAL_ONLY=1
+
+  PREPARE BigDaddyG-Q2_K-ULTRA.gguf → HTTP 200 profile_source=model_metadata num_layers=80
+  PREPARE tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf → HTTP 200 profile_source=model_metadata num_layers=22
+  PREPARE qwen → HTTP 200 profile_source=seed_compat
+  PREPARE rawrxd-e2e → HTTP 200 profile_source=seed_compat
+  PREPARE NopeMissing.gguf → HTTP 404 model_profile_not_found
+  PRODUCT_OPEN /api/model/load TinyLlama → HTTP 200
+  PREPARE_AFTER_OPEN → HTTP 200 profile_source=model_metadata
+  /api/generate → HTTP 200 PROCESS_SURVIVED=1 HEALTH_AFTER=200
+
+WITNESSES=
+  LIVE_PREPARE_ULTRA.txt LIVE_PREPARE_TINY.txt LIVE_PREPARE_QWEN.txt
+  LIVE_PREPARE_E2E.txt LIVE_PREPARE_MISSING.txt
+  LIVE_PRODUCT_OPEN.txt LIVE_PREPARE_AFTER_OPEN.txt LIVE_GENERATE.txt
+  LIVE_HEALTH.txt EXE_SHA.txt KEY_LINES.txt
+
+HELD=
+  PROMOTE=0 TIP_CLIMB=HOLD DualStick / R28 APPLY untouched
+  Sealed R01 generate-AV / backend-fullfix / IDE parity / Headless thin-tool untouched
+  agenticMode:false · ollamaDirectUrl :11435 · SCANPORTS_11434=0 (T13:50; not reopened)
+
+DISPOSITION=
+  OPEN_R03 MODEL_PROFILE_ADMISSION = CLOSED
+  RESIDUAL_TABLE R02 = CLOSED / OPEN_R03_CLOSED
+  NEXT_NOTE_ONLY=generate-without-model HTTP 503 health/API-semantics (RETEST_ONLY)
+  Relative-path residual remains RETAIN_CLOSED subordinate to parity seal
+
+VERDICT=PASS
+  MODEL_PROFILE_NOT_FOUND_FOR_VALID_OPEN_MODEL=0
+  PROFILE_SOURCE=MODEL_METADATA
+  PREPARE_PASS=1
+  PRODUCT_GENERATION_REGRESSION=0
+  NOT_RUN≠PASS — live probes executed on :11435

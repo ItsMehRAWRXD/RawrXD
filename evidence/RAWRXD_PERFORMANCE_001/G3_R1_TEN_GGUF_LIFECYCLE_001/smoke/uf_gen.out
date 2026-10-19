@@ -1,0 +1,1 @@
+{"model":"rawrxd","response":"\nSure, here are some examples of how to use the \"if\" statement in Python:\n\n1. Checking if a number is even:\n```python\nnum = 10\nif num % 2 ==","done":true}

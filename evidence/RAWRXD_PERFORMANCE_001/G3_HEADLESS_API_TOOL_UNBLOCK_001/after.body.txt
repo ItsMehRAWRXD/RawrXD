@@ -1,0 +1,1 @@
+{"error":"list_failed","message":"Cannot list: G:\\~dev\\rawrxd\\build-fd\\bin\\.cursor\\rules"}

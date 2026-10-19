@@ -1,0 +1,2 @@
+LAA_PE=YES
+Application can handle large (>2GB) addresses

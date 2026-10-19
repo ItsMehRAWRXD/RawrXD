@@ -1,0 +1,17 @@
+GET /api/policies -> HTTP=200 LEN=225 BODY={"policies":[{"name":"content-safety","enabled":true,"violations":0},{"name":"rate-limit","enabled":true,"violations":0},{"name":"token-budget","enabled":true,"
+GET /api/policies/suggestions -> HTTP=200 LEN=48 BODY={"suggestions":[],"pending":0,"new_generated":0}
+GET /api/policies/heuristics -> HTTP=200 LEN=27 BODY={"heuristics":[],"count":0}
+GET /api/policies/stats -> HTTP=200 LEN=55 BODY={"active":true,"violations":0,"applied":0,"rejected":0}
+POST /api/policies/apply -> HTTP=200 LEN=66 BODY={"success":true,"message":"acknowledged","adapter":"product_thin"}
+GET /api/extensions -> HTTP=200 LEN=65 BODY={"extensions":[],"results":[],"total":0,"adapter":"product_thin"}
+GET /api/extensions/host/status -> HTTP=200 LEN=70 BODY={"running":true,"host_pid":0,"extensions_loaded":0,"uptime_seconds":0}
+POST /api/extensions/install -> HTTP=200 LEN=66 BODY={"success":true,"message":"acknowledged","adapter":"product_thin"}
+POST /api/browse -> HTTP=200 LEN=154 BODY={"success":false,"error":"browse_thin_no_proxy","message":"Use embedded browser; product adapter kills 404","subsystem":"browse","adapter":"product_thin"}
+GET /api/agents/explain -> HTTP=200 LEN=65 BODY={"explanations":[],"chain":[],"count":0,"adapter":"product_thin"}
+GET /api/agents/explain/stats -> HTTP=200 LEN=47 BODY={"chains":0,"steps":0,"adapter":"product_thin"}
+POST /api/backends/use -> HTTP=200 LEN=80 BODY={"success":true,"active":"deep2","backend":"LocalGGUF","adapter":"product_thin"}
+POST /api/backends/use -> HTTP=422 LEN=0 BODY=
+GET /metrics -> HTTP=200 LEN=87 BODY={"requests":0,"tokensPerSec":0,"memUsedMB":0,"adapter":"product_thin","uptimeMs":23827}
+POST /complete -> HTTP=503 LEN=0 BODY=
+POST /api/backends/use ollama -> HTTP=422 BODY=
+POST /complete -> HTTP=503 BODY=

@@ -1,0 +1,8 @@
+﻿{
+  "_comment": "Legal-domain expansion for tip-bot neighbors. Arrays or {values:[...]}; numeric ranges use {start,stop,step}. Q_DEVICE is never forced to 0. KVA rows sealed — do not expand.",
+  "domains": {
+    "DEEP2_QB_SX_ROWS": [32, 64, 128],
+    "DEEP2_QA_SX_ROWS": [32, 64, 128],
+    "DEEP2_QKV_SX_ROWS": [64, 128]
+  }
+}

@@ -1,0 +1,25 @@
+SOVEREIGN_DIALOGUE_ENGINE_REVIEW_001=SEALED
+DATE=2026-09-08
+ROLE=CODE_REVIEW
+FILE=Sovereign_Dialogue_Engine.asm (proposed)
+
+BLOCKERS
+  1. STRUCT syntax: use DIALOGUE_NODE STRUCT … ENDS
+     field refs must match: DIALOGUE_NODE.BranchA not DialogueNode.*
+  2. SelectResponse: RBX is non-volatile — save/restore or use volatile (RAX/RDX/R8)
+  3. RegisterNode 5th arg: Microsoft x64 home is [rsp+28h] at entry
+     ABI_PUSH_FRAME changes stack — compute mood offset from frame base
+  4. R15: add [r15],r8 implies R15 = pointer to mood cell (document)
+     if R15 is the mood value itself, use add r15,r8 (and still preserve across calls)
+
+CORRECTNESS
+  5. Bounds: clamp NodeID / CurrentNodeID to [0,MAX_NODES)
+  6. GenerateGreeting: role*10+rdtsc%3 can exceed 128 — mask or reject
+  7. Node stride 32 OK if STRUCT is exactly 4*dq
+
+PERF / STYLE
+  8. Prefer index table over imul rax,10 if roles are dense
+  9. Branch select: cmovz/cmovnz from BranchA/B to cut taken-branch noise
+
+STATUS=NEEDS_FIX_BEFORE_ASSEMBLE
+NEXT=fix_struct_names+RBX+5th_arg OR wire RegisterNode seed table

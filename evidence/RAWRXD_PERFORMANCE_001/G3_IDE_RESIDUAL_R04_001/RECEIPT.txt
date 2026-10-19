@@ -1,0 +1,41 @@
+GATE=G3_IDE_RESIDUAL_R04_001
+ASOF=2026-09-10T06:45Z
+OWNER=ACTIVE_SPEND_R04
+PROMOTE=0
+TIP_CLIMB=HOLD
+VERDICT=PASS
+R04=CLOSED
+
+## Scope
+Headless HTTP file-op aliases into ToolRoutes/dispatcher:
+  POST /api/delete-file /api/rename-file /api/copy-file /api/move-file
+  POST /api/mkdir /api/stat-file /api/search-files /api/list-directory
+Also /api/tool tools: delete_file rename_file copy_file move_file mkdir stat_file search_files
+MOTD gate retained (read_motd before ops).
+
+## Live binary
+EXE=build-fd/bin/RawrXD-Win32IDE.exe
+SMOKE_COPY=smoke_bin/RawrXD-Win32IDE_r03r04.exe
+SHA256=5CBCC0750B481BFE862E7B6367BB006C63440650D79A24185211CC6541F60792
+SHA16=5CBCC0750B481BFE
+EXE_SIZE=329308672
+PORT=127.0.0.1:11435
+
+## HTTP proofs
+FILE=HTTP_PROOFS.txt
+FAIL_COUNT_404=0
+KEY=
+  MOTD read_motd → 200
+  stat/list/mkdir/copy/rename/search/move/delete → 200
+  /api/tool stat_file → 200
+
+## Code
+  src/win32app/HeadlessIDE_FileAliases.cpp
+  src/win32app/HeadlessIDE_ToolRoutes.cpp (path→tool aliases)
+  src/win32app/HeadlessIDE.cpp (route table)
+  CMakeLists.txt
+
+## Unchanged
+R01/R02/R03 CLOSED · R05 agenticMode=false
+MOTD / DualStick / reachability / parity / tool-unstub = NOT REOPENED
+PROMOTE=0 TIP_CLIMB=HOLD

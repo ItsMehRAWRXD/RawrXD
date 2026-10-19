@@ -1,0 +1,55 @@
+GATE=G3_ARMSPEED_AUTHORIZE_LANE_CLOSE_001
+PURPOSE=Close StreamerArmSpeedEnv product authorize lane after blocker unstubs; UNPLAN speculative next
+PARENT=G3_E2E_REVERSE_BUNNYHOP_UNSTUB_001
+ASOF=2026-09-09T22:30
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+AUTHORIZE_LANE=StreamerArmSpeedEnv (only)
+EXE_SHA256=238EF8E229B5E1140F4FB1A5101F5591FBA2BF699F41AB4D4F95FF3B0E202501
+
+PRODUCT_DEFAULTS_SEALED=
+  DEEP2_LIVE_POLICY=MANUAL
+  DEEP2_LIVE_MECH=trampoline,cyclone,elastic,stream
+  DEEP2_LIVE_PATH=1
+  DEEP2_GEN_ALG=lukewarm
+  RAWRXD_DEEP2_ALLOW_ELASTIC=1
+  DEEP2_MARS=1
+  RAWRXD_NVME_REVERSE_BUNNYHOP=1
+  ENHANCE_SKIP=unset (no elastic re-veto)
+
+E2E_CHAIN_COMPLETE=
+  G3_DUALSTICK_TRUE_RUNTIME_001
+  G3_E2E_FULLSTACK_UNSTUB_001
+  G3_E2E_CYCLONE_LIVE_UNSTUB_001
+  G3_E2E_ELASTIC_PASSIVE_UNSTUB_001
+  G3_E2E_LIVEPATH_METRICS_UNSTUB_001
+  G3_E2E_REVERSE_BUNNYHOP_UNSTUB_001 N5=5/5
+
+NOTHING_LEFT_TO_ADD_IN_LANE=
+  DualStick acquire/true-runtime
+  FreeToken + FutureConsumer exec
+  cyclone live layer starts + demands
+  elastic PASSIVE under Vulkan/DualStick
+  stream MECH + reverse bunnyhop hops
+
+UNPLAN_NEXT=
+  TIP_CLIMB / champion TPS chase
+  rainbow candidate spend
+  PATH_B_DELETE / QKV climb
+  pinball / trailbrake / reversal product defaults
+  host→VRAM elastic mover on DualStick
+  ADL plasma sample repair as product gate
+  medusa HOTPATH force under lukewarm DualStick
+  invent MECH tokens beyond ArmSpeed authorize set
+
+NEXT_SPEND=NONE
+HOT_GATE=0
+MODE=D
+
+SESSION_AFFIRM=2026-09-09T22:30
+RESTORE_EMPTY=1
+UNPLAN_APPLIED=1
+CANONICAL_NEXT=STOP
+SPEND=0

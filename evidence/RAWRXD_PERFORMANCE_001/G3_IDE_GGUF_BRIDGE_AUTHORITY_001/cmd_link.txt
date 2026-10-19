@@ -1,0 +1,65 @@
+﻿
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" 
+-DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 
+-DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 
+-DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 
+-DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 
+-DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 
+-DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 
+-DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 
+-DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 
+-DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 
+-DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 
+-DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 
+-DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 
+-DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 
+-DRAWR_STANDALONE_INFERENCE=1 -DRAWR_VULKAN_AVAILABLE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN 
+-D_CRT_SECURE_NO_WARNINGS -IG:\~dev\rawrxd\include -IC:\VulkanSDK\1.4.357.0\Include -IG:\~dev\rawrxd\src 
+-IG:\~dev\rawrxd\src\deep2 -IG:\~dev\rawrxd\src\inference -IG:\~dev\rawrxd\src\engine -IG:\~dev\rawrxd\src\core 
+-IG:\~dev\rawrxd\src\codec -IG:\~dev\rawrxd\src\masm -IG:\~dev\rawrxd\src\runtime\governance 
+-IG:\~dev\rawrxd\3rdparty\quickjs_ng\.. -IG:\~dev\rawrxd\3rdparty\quickjs_ng -I"C:\Program Files (x86)\Microsoft 
+Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -I"C:\Program Files (x86)\Windows 
+Kits\10\Include\10.0.26100.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" 
+-I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -I"C:\Program Files (x86)\Windows 
+Kits\10\Include\10.0.26100.0\winrt" -ID:\rawrxd\Ship\webview2\build\native\include /c /Zi /Zd /IG:/~dev/rawrxd/src/asm 
+-c -Fo CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_IDEEmit.asm.obj 
+G:\~dev\rawrxd\src\asm\RuntimeEvidence512_IDEEmit.asm
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe" 
+-DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 
+-DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 
+-DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 
+-DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 
+-DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 
+-DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 
+-DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 
+-DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 
+-DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 
+-DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 
+-DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 
+-DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 
+-DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 
+-DRAWR_STANDALONE_INFERENCE=1 -DRAWR_VULKAN_AVAILABLE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN 
+-D_CRT_SECURE_NO_WARNINGS -IG:\~dev\rawrxd\include -IC:\VulkanSDK\1.4.357.0\Include -IG:\~dev\rawrxd\src 
+-IG:\~dev\rawrxd\src\deep2 -IG:\~dev\rawrxd\src\inference -IG:\~dev\rawrxd\src\engine -IG:\~dev\rawrxd\src\core 
+-IG:\~dev\rawrxd\src\codec -IG:\~dev\rawrxd\src\masm -IG:\~dev\rawrxd\src\runtime\governance 
+-IG:\~dev\rawrxd\3rdparty\quickjs_ng\.. -IG:\~dev\rawrxd\3rdparty\quickjs_ng -I"C:\Program Files (x86)\Microsoft 
+Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -I"C:\Program Files (x86)\Windows 
+Kits\10\Include\10.0.26100.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" 
+-I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -I"C:\Program Files (x86)\Windows 
+Kits\10\Include\10.0.26100.0\winrt" -ID:\rawrxd\Ship\webview2\build\native\include /c /Zi /Zd /IG:/~dev/rawrxd/src/asm 
+-c -Fo CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_IDECollect.asm.obj 
+G:\~dev\rawrxd\src\asm\RuntimeEvidence512_IDECollect.asm
+C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D G:\~dev\rawrxd\build-fd && "C:\Program 
+Files\CMake\bin\cmake.exe" -E rm -f G:/~dev/rawrxd/build-fd/bin/RawrXD-Win32IDE.exe 
+G:/~dev/rawrxd/build-fd/bin/RawrXD-Win32IDE.pdb && cd G:\~dev\rawrxd\build-fd" && "C:\Program 
+Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc="C:\Program 
+Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows 
+Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual 
+Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  
+/out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 
+/INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE:NO /DEBUG:FULL 
+/MAP:G:/~dev/rawrxd/build-fd/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 && 
+C:\WINDOWS\system32\cmd.exe /C "cd /D G:\~dev\rawrxd\build-fd && "C:\Program Files\CMake\bin\cmake.exe" -E 
+copy_if_different G:/~dev/rawrxd/build-fd/bin/RawrXD-Win32IDE.map G:/~dev/rawrxd/build-fd/RawrXD-Win32IDE.map""
+
+

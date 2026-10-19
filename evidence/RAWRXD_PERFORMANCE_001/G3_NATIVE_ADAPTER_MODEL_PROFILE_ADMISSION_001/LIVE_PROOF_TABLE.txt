@@ -1,0 +1,21 @@
+MEASURED_LIVE_PROOF
+PORT=11435 LOCAL_ONLY=1 OLLAMA_REOPEN=0 HOST_DECODE=1
+EXE_SHA256=C3BE946E0764AC565470994905923141DEC57FCA0EE7FB87DF0F388675498F06
+
+| Probe | HTTP | profile_source | Notes |
+| PREPARE BigDaddyG-Q2_K-ULTRA.gguf | 200 | model_metadata | layers=80 from GGUF KV |
+| PREPARE tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf | 200 | model_metadata | layers=22 from GGUF KV |
+| PREPARE qwen | 200 | seed_compat | seeded name compat |
+| PREPARE rawrxd-e2e | 200 | seed_compat | seeded name compat |
+| PREPARE NopeMissing.gguf | 404 | — | model_profile_not_found |
+| /api/model/load TinyLlama | 200 | — | PRODUCT_OPEN |
+| prepare after open | 200 | model_metadata | opened-model path |
+| /api/generate | 200 | — | PROCESS_SURVIVED=1 |
+| /health after generate | 200 | — | PRODUCT_GENERATION_REGRESSION=0 |
+
+PASS_IF_ROLLUP=
+  MODEL_PROFILE_NOT_FOUND_FOR_VALID_OPEN_MODEL=0
+  PROFILE_SOURCE=MODEL_METADATA
+  PREPARE_PASS=1
+  PRODUCT_GENERATION_REGRESSION=0
+  PROMOTE=0 TIP_CLIMB=HOLD

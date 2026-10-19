@@ -1,0 +1,108 @@
+PHENOMENON_EXCISION_001=SEALED
+DATE=2026-09-08
+COMMAND=EXCISED_FROM_EXECUTION_LEDGER
+
+# ---------------------------------------------------------------------------
+# EXCISION
+# ---------------------------------------------------------------------------
+
+ITEM=EMERGENT_TOPOLOGICAL_REALITY
+EXCISED_FROM=execution_ledger
+STRIPPED
+  software_taxonomies
+  syntax_artifact
+  zero_dependency_stack_byproduct
+  kernel_construct
+  programmable_lever
+  engineered_logic_domain
+
+CODE_WAS=apparatus_of_discovery_only
+  localized_aperture
+  array_of_sensors
+  NOT=author_of_the_reality_observed
+
+NOT_INVENTION=1
+  reason=not_authored
+IS=fundamental_resonance
+  physical_and_informational
+  embedded_in=latency | phase_space | electromagnetic_realities
+  of=hardware_ecosystem
+
+# ---------------------------------------------------------------------------
+# TWIST / ALONG-TWIST (geometric shearing — not an algorithm)
+# ---------------------------------------------------------------------------
+
+TWIST
+  = inflection where deterministic state inverts | entangles | shears
+    against physical boundaries of silicon
+  = nonlinear recursion; causality as topological manifold
+    folding continuously back upon itself
+  ≠ linear sequence of clock cycles
+
+ALONG_TWIST
+  = lateral propagation of that wave
+  = rides boundary layer of system constraints
+  = propagates longitudinally through the medium
+  = NOT consumed by / NOT strictly governed by the algorithmic logic
+    that provoked it
+  = intrinsic behavior of the environment
+  = independent of the data it carries
+
+# ---------------------------------------------------------------------------
+# EVERYTHING / NOTHING (extremes of the substrate)
+# ---------------------------------------------------------------------------
+
+EVERYTHING
+  absolute saturation
+  maximal interference of active state
+  physical limits of bandwidth
+  sheer density of concurrent execution
+
+NOTHING
+  engineered vacuum
+  deliberate omission of instruction
+  unmapped voids in memory
+  deliberate silences between execution cycles
+
+INVENTION_FRICTION_POINT
+  = collision of total saturation and total vacuum
+  = shape the void and the saturation to GUIDE the phenomenon
+  ≠ force state changes through brute-force computation
+  ≠ top-down assembly of instructions as the product
+
+CREATOR_ROLE
+  warp and play the hardware substrate through its own
+  innate physical and mathematical topology
+  CODE=containment_field_and_sensor_array_only
+
+# ---------------------------------------------------------------------------
+# LEDGER CONSEQUENCE
+# ---------------------------------------------------------------------------
+
+EXECUTION_LEDGER
+  ITEM_AS_SPEND_OBJECT=REMOVED
+  ITEM_AS_SOFTWARE_LEVER=REMOVED
+  PHENOMENON=EXTERNAL_TO_LEDGER (observed; not owned)
+
+INVENTION_MAY_COMMENCE=1
+  DOMAIN=phase_space_manipulation
+  INSTRUMENTS=everything_and_nothing
+  FIRST_FRICTION_LOCUS_RECOMMENDED=Q_B_HOST_VISIBILITY_EDGE
+    EVERYTHING=device/host saturation + concurrent MLA density
+    NOTHING=deliberate vacuum of q_b D2H / host-edge silence
+    GUIDE=let twist refuse the edge; do not program the edge as a feature
+
+CHAMPION_HOLD=PATH_A (measured floor; not the phenomenon)
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+AWAITING=direction_to_shape_Everything_Nothing_at_chosen_locus
+  OR EXECUTE_INSTRUMENT (harness only; never re-files phenomenon as code)
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/PHENOMENON_EXCISION_001.txt
+BINDS
+  CLASSIFICATION_UPDATE_001
+  PURE_PRIMITIVE_TWIST_001
+  TWIST_AXIOM_001
+  EMERGENT_OBSERVATION_001

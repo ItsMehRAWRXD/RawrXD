@@ -1,0 +1,22 @@
+GATE=G3_R1_TEN_GGUF_LIFECYCLE_001
+ASOF=2026-09-10
+AUTH=R1_TEN_GGUF_MULTI_MODEL_LIFECYCLE
+AUTH_STATUS=NOT_GREEN
+FICTION_STRIP_001=1
+PRODUCT_OPEN_MULTI_FAMILY=NOT_GREEN
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPENED=0
+MOTD_SEAL_REOPENED=0
+R01_R05_REOPENED=0
+agenticMode_DEFAULT=false
+
+SCOPE=
+  Ten materially different on-disk GGUFs; cold-start → prepare → load →
+  /api/generate (TOKENS>0) → unload → reload → generate; RawrXD :11435 only;
+  OLLAMA_PROCESS_REQUIRED=NO; ACCESS_VIOLATION=0; C0000374=0; PROCESS_SURVIVED=1.
+  HTTP token lifecycle ≠ PRODUCT_OPEN_SESSION tensors-resident seal.
+
+HELD=
+  No DualStick reopen. No MOTD/tool/IDE residual reopen.
+  No TPS climb invented. PROMOTE=0.

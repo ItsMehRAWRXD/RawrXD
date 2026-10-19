@@ -1,0 +1,32 @@
+=== HKLM\SOFTWARE\Khronos\Vulkan\Drivers ===
+MISSING
+
+=== HKLM\SOFTWARE\Khronos\Vulkan\ImplicitLayers ===
+LAYER_VALUE=C:\ProgramData\obs-studio-hook\obs-vulkan64.json = 0
+LAYER_VALUE=C:\Program Files (x86)\Epic Games\Epic Online Services\managedArtifacts\98bc04bc842e4906993fd6d6644ffb8d\EOSOverlayVkLayer-Win64.json = 0
+LAYER_VALUE=C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json = 0
+LAYER_VALUE=C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json = 0
+
+=== Device VulkanDriverName (7800 DEV_747E / R9700 DEV_7551) ===
+PNP=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009 Status=OK Class=Display
+PNP=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B Status=OK Class=Display
+DEVICE=6&2e27fda8&0&0000000B under VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8
+CLASS_KEY=HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002
+  DriverDesc=AMD Radeon RX 7800 XT
+  DriverVersion=32.0.31041.1004
+  InfPath=oem30.inf
+  VulkanDriverName=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+  VulkanImplicitLayers=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+  VulkanDriverNameWow=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json
+  VulkanImplicitLayersWow=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json
+  VulkanDriverNameNexus=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk_nexus.cab
+DEVICE=6&8916a45&0&00000009 under VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0
+CLASS_KEY=HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000
+  VulkanDriverName=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+  VulkanDriverNameNexus=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk_nexus.cab
+  VulkanDriverNameWow=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json
+  VulkanImplicitLayers=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+  VulkanImplicitLayersWow=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json
+  DriverDesc=AMD Radeon AI PRO R9700
+  DriverVersion=32.0.31041.1004
+  InfPath=oem30.inf

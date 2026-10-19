@@ -1,0 +1,12 @@
+﻿MODEL=DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+PATH=F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+SIZE_MB=4794.9 SHA16=713D3A7A93F30676
+HEADLESS_PID=24916
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO
+PREPARE=200 {"ok":true,"request_id":1,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9785,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300,"top_p_milli":900
+LOAD=200 {"success":true,"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"}
+GENERATE=400 TOKENS=0 ERR=The remote server returned an error: (400) Bad Request.
+GEN_SNIP=
+VERDICT=FAIL OWNER=generate_tokens DETAIL=code=400 tokens=0 
+EX=generate_fail
+

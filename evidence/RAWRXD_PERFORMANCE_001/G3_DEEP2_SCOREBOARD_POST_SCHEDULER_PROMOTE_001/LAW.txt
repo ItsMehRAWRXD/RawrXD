@@ -1,0 +1,57 @@
+GATE=G3_DEEP2_SCOREBOARD_POST_SCHEDULER_PROMOTE_001
+KIND=POST_SCHEDULER_PROMOTION_LAW
+ASOF=2026-09-10T23:52
+PROMOTE=0
+TIP_CLIMB=HOLD
+R28_APPLY=HELD
+TOP15=TOP15_BREAKTHROUGH_ORDER.txt
+
+###############################################################################
+# LAYER SEPARATION (locked)
+###############################################################################
+SCHEDULER_LAYER:
+  SCOREBOARD_SCHEDULER_LIVE=1
+  INVARIANTS=FROZEN
+  ATTRIBUTION=CLOSED
+  CONTROLLING_WITNESS=2b7091ecdbaf4d06b8edb424897961ce
+
+PROMOTION_LAYER:
+  PROMOTE=0
+  PROMOTE_IF=
+      PRODUCT_OPEN_PASS
+   && SESSION_ENTER_PASS
+   && GENERATED_TOKENS>0
+   && TOKEN_COMMIT_PASS
+   [+ independent multi-family/product coverage]
+
+NEXT_GATE=POST_SCHEDULER_PROMOTION_REQUIREMENTS
+
+CLOSEST_THREE=
+  #1 PROMOTION_TETRAD_LIVE
+  #2 MULTI_FAMILY_PRODUCT_GREEN
+  #3 K2_FULL_PRODUCT_GENERATION
+
+RELATED_PERF_LAW=
+  ../G3_DEEP2_TOKEN_NILW_INFORMATION_RATE_001/LAW.txt
+  NOTE=TOKEN_NILW=sustainability; ACTIVE_BPW=codec pressure; NILW≠quantize-to-0.0008
+NOTE=THREE_AUTHORITY_SPLIT=../THREE_AUTHORITY_SPLIT.txt
+NOTE=TOP15/NILW MUST NOT alter sealed SCOREBOARD_SCHEDULER_LIVE=1
+
+###############################################################################
+# PRACTICAL RULE
+###############################################################################
+LIVE=1 = satisfied prerequisite only; ≠ full product gate green
+PROMOTE failure → product/promote layer
+  unless a frozen scheduler invariant is directly violated
+DO_NOT_ATTRIBUTE_PROMOTE_FAIL_TO_SCHEDULER_BY_DEFAULT=1
+
+NOT_COUPLED_TO=
+  PUMP_ISSUE_OWNERSHIP
+  OUTER_LOOP_REMOVAL
+  DUPLICATE_ISSUE
+  WALK_ENSURE_CRUTCH
+  FENCE_PUMP_CONTINUE
+  PER_LAYER_WAIT
+  FENCE3_MLA_COVERAGE
+
+DEEP2_BENCHMARK_AUTHORITY=NONE_FOR_SCHEDULER_SEAL

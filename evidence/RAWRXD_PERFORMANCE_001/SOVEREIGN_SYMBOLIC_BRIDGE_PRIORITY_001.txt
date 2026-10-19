@@ -1,0 +1,27 @@
+SOVEREIGN_SYMBOLIC_BRIDGE_PRIORITY_001=SEALED
+DATE=2026-09-08
+ROLE=PRIORITY_CHOICE
+
+QUESTION=implement Stack Tracer (human-readable fiber fault log via symbols)?
+ANSWER=YES_AFTER_BRIDGE
+
+PHASE_A — SYMBOLIC BRIDGE (required substrate)
+  1. Force /MAP+/MAPINFO on active sovereign link bat
+  2. GenerateSymbols.ps1: Sovereign.map → Sovereign_Symbols.inc
+  3. Prefer ImageBase+RVA (Rva+Base column) for runtime cmp vs RIP
+     (section-relative 0001:xxxx alone is insufficient for absolute RIP)
+  4. Existing artifact note: RawrXD_Engine_Sovereign.map present — refresh pipeline
+
+PHASE_B — STACK TRACER (consumer)
+  On TITAN_LOOP fiber fault / int3 / exception:
+    walk stack (RBP chain or RtlCaptureStackBackTrace via syscall path if allowed)
+    resolve each RIP against symbol table from .inc or compact runtime table
+    Sovereign_Log human-readable names
+  NOT hooked into every math iteration — fault path only
+
+FORBIDDEN
+  vehicle Physics examples as product identity
+  Stack Tracer without live map from current link
+
+STATUS=YES_STACK_TRACER_AFTER_MAP_INC_PIPELINE
+AWAITING=user_go Phase_A_or_full_A_then_B

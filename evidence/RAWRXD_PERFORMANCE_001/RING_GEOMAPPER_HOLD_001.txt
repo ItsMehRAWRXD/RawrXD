@@ -1,0 +1,25 @@
+RING_GEOMAPPER_HOLD_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+LAND=0
+
+REFUSE=InitializeGeoMapper (GIS new domain; no sealed spend)
+REFUSE=parallel Sovereign_Ring_Bridge invent
+
+PREFER_EXISTING
+  RawrXD_RingBuffer_Producer.asm / Consumer.asm
+  (verify in-tree before wire)
+
+SKETCH_DEFECTS_ACK
+  Capacity vs mask needs 2^n-1 not raw power-of-two
+  plain head store = SPSC at best; not MP atomic
+  lock inc Head wrong for reservation; CAS claim index
+  RING_HEADER STRUCT/ENDS; .Full labels fragile; ABI.inc / ABI_PUSH_FRAME absent
+
+NEXT_IF_REOPEN
+  harden/wire EXISTING ring into Shadow Trace telemetry
+  NOT GeoMapper
+  USER_PROMPT_TO_PROCEED=wire existing ring
+
+STAY=PATH_A / HOST_VISIBILITY_EDGE measure

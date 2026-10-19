@@ -1,0 +1,37 @@
+EXECUTED_PRODUCES_MODE_BATCH_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_CLASSIFICATION
+SPEND=0
+HOT_GATE=0
+
+LAW=
+  executed and produces = mode batch state
+
+MEANING=
+  A run that actually executes under HOT_GATE and produces measured
+  receipts/runtime emissions occupies MODE_BATCH state
+  (catalog: MODE=COMPAT_TEST HOT_GATE=1 TARGET=B1.n|BATCH1
+   or MODE=A HOT_GATE=1 TARGET=<perf catalog>).
+  Source/wiring/surface-ready alone ≠ executed-and-produces.
+
+CURRENT_NOT_BATCH=
+  MODE=D
+  HOT_GATE=0
+  LIVE_SITE_WIRING=NOT_CLAIMED
+  RUNTIME_OBSERVATION=NOT_CLAIMED
+  MEASUREMENT=UNSPENT
+  SPECIAL_MOMENT=0
+  NEXT_SPEND=NONE
+  → therefore MODE_BATCH_STATE=0 (not entered)
+
+REQUIRES_TO_ENTER_MODE_BATCH=
+  explicit HOT_GATE=1 + catalog TARGET
+  + real seqCap=512 (or compat) execution
+  + produces per-claim / receipt outputs from that run
+
+SEPARATION=
+  SURFACE_READY_WHEN_FIRED ≠ executed and produces
+  Mode D hold ≠ mode batch state
+
+ATTRIBUTION_HOLD=LAST_PROVEN=FINAL_NORM(step22) unchanged
+SSOT_RELATED=RUNTIME_WIRING_MEASURED_RAPTURE_001

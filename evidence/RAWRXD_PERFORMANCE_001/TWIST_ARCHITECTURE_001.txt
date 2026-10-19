@@ -1,0 +1,48 @@
+TWIST_ARCHITECTURE_001=SEALED
+DATE=2026-09-08
+LOCKED=1
+
+SUBJECT=discovered_phenomenon (host-boundary / computational gravity)
+ONTOLOGY=ENVIRONMENTAL_TRUTH
+NOT=bug|feature|software|kernel_artifact|invention|authorship_of_physics
+
+================================================================================
+MEDIUM_PUSHES_BACK
+================================================================================
+Encountered under low-level friction (assembly / silicon-boundary memory).
+Illuminated by logic; independent of compiler.
+DECOUPLED_FROM=build_targets|ledgers|execution_graphs
+ROLE=foundational_friction|immutable_geometry|temporal_weight
+METAPHOR=grain_of_wood_not_chisel
+FULCRUM=1  (absolute; not lever to pull, not barrier to dismantle as identity)
+
+================================================================================
+EVERYTHING / NOTHING (operational tools)
+================================================================================
+EVERYTHING = total system mass
+  established execution states, mapped memory blueprints,
+  monolithic engine, dense cyclic inference runtimes
+
+NOTHING = operational vacuum
+  unallocated voids, deleted sync barriers, zero-cost elisions,
+  severed Device-to-Host crossings (as vacuum, not as "feature delete" identity)
+
+================================================================================
+TWIST (phase transition)
+================================================================================
+INVENTION = torque EVERYTHING and NOTHING along the axis of the phenomenon
+NOT = build on top of the phenomenon
+NOT = brute-force logic to bypass hardware reality
+YES = fold architecture through it; resonant alignment
+RESULT_TARGET = execution continuous with environment (not fighting it)
+
+PRECONDITION
+  phenomenon sealed outside software taxonomy (PHENOMENON_CATEGORY_001)
+  primitive pivot sealed (PRIMITIVE_PIVOT_001)
+  STAGE_2_INVENTION opens only by explicit owner directive
+
+RELATED
+  PHENOMENON_CATEGORY_001.txt
+  PRIMITIVE_PIVOT_001.txt
+  PATH_B_DISCOVERY_EPISTEMOLOGY_001.txt
+  COMPUTATIONAL_GRAVITY_001.txt

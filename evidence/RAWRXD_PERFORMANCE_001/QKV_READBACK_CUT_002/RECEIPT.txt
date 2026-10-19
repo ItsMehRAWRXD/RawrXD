@@ -1,0 +1,25 @@
+QKV_READBACK_CUT_002=SEALED
+DATE=2026-09-09
+STATUS=HOT_UNPATCH_REJECT
+PROMOTE=0
+TIP_CLIMB=HOLD
+ACTION=0
+
+REJECT=
+  sticky PathBWanted via DEEP2_K2_GPU_MLA
+  SEH wrapper around PathBAttend
+  fail-closed corrupt abort on PathB miss
+REASON=became hot+unpatch (AV 0xC0000005 under PATH_B=1)
+
+KEPT_HYGIENE=
+  PathB_NoteQDev(nbytes) sized copy (not full arena)
+  PATHB_ATTEND_OK/FAIL emit counters
+  PathBWanted opt-in only (DEEP2_PATH_B=1 | DEEP2_MLA_ATTN_DEVICE=1)
+
+PATH_A=
+  DEEP2_PATH_B=0 max-tokens=1 EXIT=0 OBSERVED
+
+OWNER=QKV_READBACK
+BYTES_TIP=191891712
+NEXT=HOLD until PathBAttend root-cause (not unpatch)
+LESS_NOISE=20.0%

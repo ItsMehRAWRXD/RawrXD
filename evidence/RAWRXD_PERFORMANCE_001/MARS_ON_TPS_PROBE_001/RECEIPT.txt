@@ -1,0 +1,53 @@
+MARS_ON_TPS_PROBE_001=SEALED
+DATE=2026-09-09
+TYPE=DIRECTED_TPS_PROBE
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+AUTHORITY=deep2_benchmark.exe (PERF)
+CONFIG=QB64_QA32_QKV64 MAX_TOKENS=64 PURITY=FORCED_OFF_CONTRACT
+MODEL=Kimi-K2 Q4_K_M shard dir
+
+WIRE=
+  DEEP2_MARS=1 → Deep2Benchmark enableMARS + placeAllModelTensorsMARS
+  default (unset) → disableMARS after Vulkan SOLO open (prior behavior)
+
+LEG_OFF=
+  TAG=mars_off_clean
+  DEEP2_MARS=unset
+  MARS_DURING_DECODE=0 (disabled after Vulkan open)
+  ARGMAX_PARITY=1
+  TOKENS_COMMITTED=64
+  GENERATION_WALL_NS=12024157000
+  DECODE_TPS_REAL=5.323
+  SSOT=mars_off_clean_20260909-001037.{log,err.log}
+
+LEG_ON=
+  TAG=mars_on_clean
+  DEEP2_MARS=1
+  MARS_DURING_DECODE=1 (no mid-run disable; teardown disable only)
+  PLACE_REPORT=placed=0 oom=0 skip=3
+  ARGMAX_PARITY=1
+  TOKENS_COMMITTED=64
+  GENERATION_WALL_NS=12505023000
+  DECODE_TPS_REAL=5.118
+  SSOT=mars_on_clean_20260909-001117.{log,err.log}
+
+DELTA=
+  TPS_ON_MINUS_OFF=5.118-5.323=-0.205
+  TPS_PCT≈-3.9%
+  WALL_ON_MINUS_OFF=+480866000 ns (≈+4.0%)
+  VERDICT=NO_TPS_INCREASE
+  MARS_ON_SLOWER_ON_THIS_K2_VULKAN_SOLO_PATH
+
+NOTE=
+  K2 stream path inventory placed=0 (weights not host WeightTensor inventory).
+  Probe measures MARS controller kept alive under Vulkan SOLO, not full
+  dual-GPU weight migration benefit. Full placeAll needs host-resident tensors.
+
+PROMOTE=0
+NEXT=NONE unless user authorizes follow-up (e.g. host-decode MARS place path)
+
+IMPL=
+  src/deep2/Deep2Benchmark.cpp DEEP2_MARS=1 branch
+  src/deep2/Deep2Engine.cpp enableAllEnhancements DEEP2_MARS with Vulkan

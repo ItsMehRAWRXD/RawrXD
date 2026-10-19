@@ -1,0 +1,101 @@
+DEEP2_GPU_FORWARD_CHILD_IGNORE_DROP_001
+TARGET TREE: G:\~dev\rawrxd
+SCOPE: Deep2 only. No D:\rawrxd / Ollama / Camellia inheritance.
+
+FILES
+  src/deep2/GPUForwardChildIgnore.hpp
+  src/deep2/GPUForwardChildIgnoreHooks.hpp
+  tests/deep2_gpu_forward_ignore_unit.cpp
+
+CANONICAL ENV
+  DEEP2_GPU_FORWARD_IGNORE=NONE
+  DEEP2_GPU_FORWARD_IGNORE=QKV
+  DEEP2_GPU_FORWARD_IGNORE=DEVICE_ATTN
+  DEEP2_GPU_FORWARD_IGNORE=FFN
+  DEEP2_GPU_FORWARD_IGNORE=QUANT_GEMV
+  DEEP2_GPU_FORWARD_IGNORE=ATTN_OUTPUT_PROJ
+  DEEP2_GPU_FORWARD_IGNORE=KV_UPDATE
+  DEEP2_GPU_FORWARD_IGNORE=SYNC_WAIT
+  DEEP2_GPU_FORWARD_IGNORE=READBACK_D2H
+
+ADDITIONAL OMITTED CHILDREN NOW COVERED
+  INPUT_NORM
+  ROPE
+  POST_ATTN_NORM
+  FFN_UP_GATE
+  FFN_ACTIVATION
+  FFN_DOWN
+  MOE_ROUTE
+  MOE_EXPERTS
+  RESIDUAL
+  UPLOAD_H2D
+  COMMAND_SUBMIT
+  OTHER
+
+ONE-IGNORE LAW
+  Only one selector is accepted. ',', ';', '|', '+' make the configuration invalid.
+  Invalid/unknown selector => no child is ignored; GPU_FORWARD_IGNORE_VALID=0.
+  No result from this diagnostic module can set PROMOTE=1.
+  A child is emitted only if its own counter fired in that run.
+
+KNOWN DEEP2 PATCH POINTS
+  Deep2Engine::forwardLayer
+      DEEP2_GPU_FORWARD_LAYER_ENTER() at the real GPU-resident layer entry.
+
+  Deep2Engine::computeAttention / MLAForward::Execute
+      QKV around q_a/q_b or ordinary Q/K/V projection bundle.
+      ROPE around positional transform.
+      KV_UPDATE around K2KVCache write/consumer update.
+      DEVICE_ATTN around real device attention dispatch.
+      ATTN_OUTPUT_PROJ around attnO/output projection.
+
+  Deep2Engine::computeFFN / computeMoEFFN
+      FFN around the whole GPU FFN child.
+      FFN_UP_GATE around up+gate projections.
+      FFN_ACTIVATION around SwiGLU/activation.
+      FFN_DOWN around down projection.
+      MOE_ROUTE around router/top-k selection.
+      MOE_EXPERTS around expert dispatch/aggregation.
+
+  LinearW / QuantKernelRegistry / Vulkan GEMV callsite
+      QUANT_GEMV around the actual quantized device GEMV dispatch.
+
+  Deep2GPUBackend / VulkanCompute submit path
+      UPLOAD_H2D around host->device transfers that occur in forward.
+      COMMAND_SUBMIT around queue submit.
+      SYNC_WAIT around fence/event/queue waits.
+      READBACK_D2H around device->host transfers/readback.
+
+  Residual/norm callsites
+      INPUT_NORM, POST_ATTN_NORM, RESIDUAL as applicable.
+
+RUN BOUNDARIES
+  Before generation: RawrXD::Deep2::GpuForwardIgnore::BeginRun();
+  After generation:  RawrXD::Deep2::GpuForwardIgnore::EmitReceipt(stderr);
+
+IMPORTANT: SKIP BODY
+  The drop intentionally does not invent tensors, zero-fill, reuse stale buffers,
+  or bypass data dependencies. At each real child boundary, use the engine's
+  existing diagnostic-safe bypass/disposition. If none exists, that rung is
+  BLOCKED_AT=SAFE_BYPASS rather than fabricated PASS. This preserves your law:
+  runtime evidence owns the claim and no claim inherits authority.
+
+EXPECTED RECEIPT SURFACE (schema only, not evidence)
+  GPU_FORWARD_CHILD_IGNORE_DROP=1
+  GPU_FORWARD_IGNORE_ARMED=1
+  GPU_FORWARD_IGNORE_VALID=1
+  GPU_FORWARD_IGNORE_CHILD=QKV
+  GPU_FORWARD_ONE_IGNORE_ONLY=1
+  GPU_FORWARD_LAYERS=<runtime>
+  GPU_CHILD=QKV ATTEMPTED=<runtime> EXECUTED=<runtime> IGNORED=<runtime> NS=<runtime> MS=<runtime>
+  SELECTED_CHILD_EVIDENCE_FIRED=<runtime 0|1>
+  CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+  PROMOTE=0
+
+POWERHELL RUN EXAMPLE
+  $env:DEEP2_GPU_FORWARD_IGNORE='QKV'
+  # invoke the same tinyllama/max-tokens=20 command used by A0/A8/A9/A10
+  # capture stdout/stderr to the next rung receipt
+
+The unit test validates selector/counter mechanics only and prints RUNTIME_AUTHORITY=0.
+It cannot satisfy a Deep2 model-runtime gate.

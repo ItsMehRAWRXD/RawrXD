@@ -1,0 +1,7 @@
+COMPAT_TEST_ISSUE_001=SUPERSEDED
+DATE=2026-09-08
+REASON=operator clarified: authorize that operational transition = full missing impl audit
+  NOT MODE=COMPAT_TEST BATCH1
+ACTIVE_SPEND_ISSUE=0
+HOT_GATE=0
+MODE=D

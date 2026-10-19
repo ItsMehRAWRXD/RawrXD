@@ -1,0 +1,8 @@
+id=sess_1792284044
+model=qwen2.5-coder
+path=F:\OllamaModels\models\blobs\sha256-60e05f2100071479f596b964f89f510f057ce397ea22f2833a0cfe029bfc2463
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=audit ide
+patch=
+turns=0

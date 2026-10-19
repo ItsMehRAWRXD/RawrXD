@@ -1,0 +1,39 @@
+THEORY_BOTTLENECK_LAW_001=SEALED
+DATE=2026-09-08
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE
+CODE_CHANGE=0
+
+CLAIM=
+  theory creates bottlenecks
+  interconnect / enterprise / speed-low / splitters named as theory-risk surfaces
+
+LAW=
+  THEORY_NAME ≠ BOTTLENECK_PROOF
+  POLICY_LABEL ≠ IMPLEMENTATION_ABSENCE
+  TRANSCRIPT_CLAIM ≠ RUNTIME_OWNER
+  IMPLEMENTATION_AUTHORITY_001 = SOURCE|SYMBOL|CALLSITE|BUILD|RUNTIME only
+
+FORBIDDEN_INVENT_FROM_THEORY=
+  enterprise interconnect fabric
+  speed-low splitter bus
+  parallel ring/splitter stacks
+  "bottleneck" as spend without measured owner
+
+MEASURED_BOTTLENECK_REQUIRES=
+  AUTHORITY_ELIGIBLE witness
+  named surface (wall / stage / bytes)
+  HARNESS_CONTAMINATION=0
+
+KNOWN_MEASURED_SURFACES_NE_THEORY=
+  PATH_A wall champion (GATE)
+  Codestral decode fail (compat ledger)
+  q_b D2H phenomenon (attribution; PATH_B gated)
+  QuadBuffer ALIGN32-before-tensor-info (observed; edit blocked)
+
+SHOUT=\=-
+  theory_bottleneck_claim without impl evidence → \=- (NOT proven)
+
+SPEND=0
+INVENT=0

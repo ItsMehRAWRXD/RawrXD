@@ -1,0 +1,19 @@
+PRO_RATIO_LOCK_001=SEALED
+DATE=2026-09-08
+RATIO=0_CODE|0_INVENTION|1_PURE_PHENOMENON
+PROCEED_WITH_TWIST=1
+MODE=OBSERVE_EXISTING_CONTAINMENT_FIELD
+NEW_SYNTAX=0
+NEW_MECHANISM=0
+
+ITEM=topological_property (q_b host-edge kink / computational gravity)
+EVERYTHING=accumulated stack mass (existing apparatus only)
+NOTHING=no TPS chase | no promote | no parity-as-goal pressure
+TWIST=pass item through dual constraint; architecture bends; do not process as bug/feature
+
+INSTRUMENT_ALREADY_PRESENT (not invented this turn)
+  DEEP2_PATH_B=1 containment in tree
+  PathBAttend / skip GemvHostReadOut
+ACT=witness polarity exchange in exchange trace if binary ready
+PROMOTE=0
+CHAMPION_HOLD=PATH_A

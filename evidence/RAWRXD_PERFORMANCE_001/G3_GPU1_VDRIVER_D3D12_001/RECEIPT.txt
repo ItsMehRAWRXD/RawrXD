@@ -1,0 +1,48 @@
+GATE=G3_GPU1_VDRIVER_D3D12_001
+PURPOSE=bypass Vulkan/amdvlk; open adapters via WDDM UMD (amdxc64) + D3D12CreateDevice
+PARENT=G3_GPU1_MASM_SOLO_A0_001
+TARGET=RX7800XT
+STREAMER_EXE=FROZEN
+BEHAVIOR_PATCH=0
+PROMOTE=0
+VULKAN_USED=0
+
+IMPL=pure_x64_masm_vdriver
+BUILD=tools/g3_masm_gpu1/build_masm_vdrv_d3d12.cmd
+STATIC_DEP=masm+ucrt DYNAMIC=dxgi,d3d12
+VDRIVER_PATH=WDDM_UMD_via_D3D12_no_vulkan
+
+# --- direct UMD load (not ICD) ---
+UMD_ROLE=WDDM_display_vdriver_not_amdvlk_ICD
+UMD_AMDXC64_LOAD=PASS
+UMD_AMDXC64_MODULE=C:\Windows\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxc64.dll
+
+# --- D3D12 create (solo per adapter, same process OK) ---
+R9700_DXGI_DedicatedVideoMemory=34054242304
+R9700_D3D12CreateDevice_HRESULT=0
+R9700_D3D12CreateDevice=PASS
+RX7800XT_DXGI_DedicatedVideoMemory=16963137536
+RX7800XT_D3D12CreateDevice_HRESULT=0
+RX7800XT_D3D12CreateDevice=PASS
+
+# --- contrast ---
+PRIOR_SOLO_VK_A0_7800=VK_ERROR_UNKNOWN
+VDRIVER_D3D12_7800=PASS
+AMDVLK_ICD_DEPENDENT_FAIL=1
+WDDM_UMD_HEALTHY=1
+
+# --- narrowing ---
+BLOCKER_A=RX7800XT_VULKAN_ICD_CREATE_FAIL
+  # WDDM/amdxc64 + D3D12CreateDevice succeeds on R9700 and 7800; Vulkan ICD create fails on 7800.
+CHILD=G3_VDRIVER_DUAL_POOL_001
+WMI_AVAILABILITY_CAUSAL=UNPROVEN
+APPLICATION_POLICY_DEPENDENT=0
+DUALSTICK_DEPENDENT=0
+HARNESS_DEPENDENT=0
+VULKAN_STACK_DEPENDENT=1
+PROMOTE=0
+
+DISPOSITION=
+  From-scratch relative to Vulkan: no vulkan-1, no amdvlk CreateDevice.
+  Display vdriver (amdxc64) loads; D3D12 device create PASS on R9700 and RX7800XT.
+  BLOCKER_A narrows to the Vulkan ICD create path on 7800, not a dead WDDM node.

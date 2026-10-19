@@ -1,0 +1,2 @@
+curl: (7) Failed to connect to 127.0.0.1:28911 after 2031 ms: Could not connect to server
+curl: (6) Could not resolve host: application

@@ -1,0 +1,50 @@
+﻿G3_IDE_SERVER_REACHABILITY_11435_001
+SEALED=1
+CURRENT_OWNER=SERVER_REACHABILITY / LISTENER
+R01..R04=NOT_REACHED_UNTIL_THIS_GATE (now green)
+PROMOTE=0
+TIP_CLIMB=HOLD
+OLLAMA_PROCESS_REQUIRED=NO
+RAWRXD_PORT=11435
+BACKEND_URL=http://127.0.0.1:11435
+8080_FALLBACK=IGNORE
+
+ROOT_CAUSE:
+  Stale broken listener RawrXD-Win32IDE_headless_live.exe (PID 24720) held 11435.
+  TCP accept succeeded; HTTP read/write aborted (curl 56 Connection aborted).
+  Browser Failed to fetch matched abort/no-response — NOT missing /capabilities route,
+  NOT primarily CORS, NOT :8080 preference as primary failure mode.
+
+BEFORE:
+  PID=24720
+  Image=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE_headless_live.exe
+  SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+  Args=--headless --local --port 11435 --dir G:\~dev\rawrxd
+
+AFTER (stable proof PID):
+  PID=8824
+  Image=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+  SHA256=F682234A0F3E883C5839CD1F3D911C32F10CE8733CC84E061ADAE7EB785E5AD6
+  Args=--headless --local --port 11435 --dir G:\~dev\rawrxd
+  WorkingDirectory=G:\~dev\rawrxd
+  Note: interim PID 25536 proved health+caps then exited; restarted as 8824 for seal.
+
+GATE:
+  11435=LISTEN OwningProcess=8824
+  /health=HTTP 200
+  /api/engine/capabilities=HTTP 200
+  PROCESS_SURVIVED=1
+  CORS Origin:null -> Access-Control-Allow-Origin: null (file:// OK)
+
+SECONDARY_GUI (post-listener):
+  Disabled Try 1.5 :8080 fallback in standalone + standalone_e2e
+  dbgBackendUrl default http://127.0.0.1:11435
+  Softened isUrlAllowed partial loopback (engine.js + standalone_e2e; standalone already had dbg/8080)
+  Relabeled diagnostic 'Ollama Direct' 11435 probes to RawrXD
+  scanPorts dropped 8080
+
+START_CMD:
+  G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe --headless --local --port 11435 --dir G:\~dev\rawrxd
+
+AVOID:
+  RawrXD-Win32IDE_headless_live.exe (SHA E5AF...) — known aborting listener for this incident

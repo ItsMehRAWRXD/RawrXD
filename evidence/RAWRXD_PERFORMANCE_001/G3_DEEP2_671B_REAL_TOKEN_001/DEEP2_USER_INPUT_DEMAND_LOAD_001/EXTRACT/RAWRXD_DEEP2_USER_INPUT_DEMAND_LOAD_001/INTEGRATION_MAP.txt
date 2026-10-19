@@ -1,0 +1,67 @@
+RAWRXD / DEEP2 INTEGRATION MAP
+==============================
+
+PORTABLE AUTHORITY OWNER
+  d2u_authority.c
+  - scheduler owner cookie
+  - current operation ticket
+  - exact I/O reason
+  - sequential layer completion
+  - decode authority
+  - token commit
+  - runtime-local promotion
+
+REMOVE/BYPASS AS DEEP2 WEIGHT-I/O AUTHORITIES
+  src/streaming_gguf_loader_enhanced.cpp
+    PrefetchWorkerThread
+    PredictNextZones
+    PrefetchZoneAsync
+    asynchronous NVMe / IORing submissions
+
+  src/streaming/streaming_loader_production.cpp
+    StartBackgroundLoading
+    BackgroundLoadThread
+    RequestTensor queue as an inference authority
+
+  src/deep2/NVMeStream.cpp
+    FILE_FLAG_SEQUENTIAL_SCAN
+    whole-model mapped residency as the expert authority
+    prefetchExpert
+    prefetchPredicted
+    page-touch prefetch
+
+  src/deep2/Deep2ExecutionGraph.cpp
+    Expert_Load async prefetch semantics
+    ExpertResidencyManager::PrefetchExpert
+    OnRouterPrediction speculative loads
+
+PRESERVE/ADAPT
+  src/deep2/MoERouter.cpp
+    preserve W*x router concept
+    REMOVE inference random load-balancing noise
+    REPLACE generic softmax-only selection with DeepSeek correction-bias/group math
+
+  src/deep2/DeepSeekMoELoader.*
+    preserve GGUF tensor/index role
+    route real tensor reads through current-op authority
+    packed expert tensor -> exact expert slice, never entire 256-expert tensor
+
+  src/bridge/Deep2_Q4KM.*
+    preserve optimized kernel dispatch concept
+    FIX Q4_K physical block definition before using as authority
+    portable source drop's d2u_quant.c is the correctness reference
+
+HOTPATCH ORDER
+  1. Build/run d2u_smoke.
+  2. Run d2u_inspect against all 11 real shards.
+  3. Compare tensor names/dims/types against Deep2's current mapping.
+  4. Bind existing tokenizer token IDs into d2u_runtime_step.
+  5. Run token 0 with portable path; prove BACKGROUND_SUBMITS=0.
+  6. Replace scalar quant dot with existing corrected MASM/Vulkan kernels without changing tickets.
+  7. Bind authority counters into ProductRunDecode/scoreboard owner.
+  8. Only live end-to-end token commit may set runtime-local PROMOTE=1.
+
+CERTIFICATION BOUNDARY
+  This drop can create runtime-local scheduler/decode/promotion authority because it
+  defines and enforces those runtime contracts. It does not mutate or supersede any
+  existing sealed certification receipt, branch authority, or repository promotion.

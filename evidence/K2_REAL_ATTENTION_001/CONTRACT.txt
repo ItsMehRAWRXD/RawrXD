@@ -1,0 +1,61 @@
+K2 REAL ATTENTION 001
+=====================
+
+REPLACED DEAD IMPLEMENTATIONS
+-----------------------------
+identity_SiLU=0
+fake_2x_SoftMax=0
+missing_weighted_V=0
+DEAD_FORMULAS_REOPENED=0
+
+REAL MATH
+---------
+SiLU(x) = x / (1 + exp(-x))
+
+SoftMax:
+  m = max(x)
+  e[i] = exp(x[i] - m)
+  s = sum(e[i])
+  x[i] = e[i] / s
+
+Attention head:
+  score[t] = dot(Q, K[t]) / sqrt(head_dim)
+  weights = SoftMax(score)
+  out[d] = sum_t weights[t] * V[t,d]
+
+SwiGLU:
+  dst[i] = SiLU(gate[i]) * up[i]
+
+ABI
+---
+Windows x64.
+XMM0-XMM5 are caller volatile.
+Live FP values needed after calls are spilled/reloaded.
+Live volatile GPR state needed after calls is spilled/reloaded.
+No CRT calls, imported runtime symbols, invoke macros, alternate generator,
+or synthetic output.
+
+ATTENTION MEMORY CONTRACT
+-------------------------
+Q      contiguous float[head_dim]
+K      contiguous float[seq_len][head_dim]
+V      contiguous float[seq_len][head_dim]
+scores caller-owned float[seq_len] scratch
+out    caller-owned float[head_dim]
+
+K2 ROLE
+-------
+This scalar-F32 path is a correctness/reference lane for the K2 climb.
+Optimized Q8/KVA/GPU candidates may spend climb authority only after parity
+against this real path. The rejected formulas themselves are never candidates.
+
+SOURCE
+------
+src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
+ASSEMBLED=PASS
+OBJ=evidence/K2_REAL_ATTENTION_001/RawrXD_K2_RealAttention_x64.obj
+VENDOR_TAR_SHA256=5b3187aca8d8a74a1705488e31d6ee5cba7ed22e27c2423731706ffcb58ad643
+VENDOR_TAR_ON_DISK=0
+
+REAL_REFERENCE_PATH=READY
+CLIMB_AUTHORITY=UNSPENT

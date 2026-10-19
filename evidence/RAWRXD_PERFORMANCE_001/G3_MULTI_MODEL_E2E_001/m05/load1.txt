@@ -1,0 +1,2 @@
+﻿{"success":true,"model":"Phi-3-mini-4k-instruct-q8_0.gguf"}
+HTTP_CODE=200

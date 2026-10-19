@@ -1,0 +1,43 @@
+RUN_DEPLOYED_NILW15_WITNESS — live gate receipt
+===============================================
+
+DEPLOY_PATH=C:\r1cert\smoke_nilw15_masm\nilw15_witness.exe
+DEPLOY_SHA256=26e706848d6cc79af7cc50ca72da515019d086dee9835cdc6360f0241ab13ed4
+
+PROCESS_START=1
+EXIT_CODE=0
+LIVE_RUNTIME_WITNESS=1
+
+STDOUT:
+  RAWRXD_NILW15_X64_MASM_NODEP
+  ZERO_WITNESS=1
+  NOT_RUN_NE_PASS=1
+  AUTHORIZED_PASS=0
+
+TOKEN_AUTHORITY_AGREES=1
+  authoritative_token_zero.exe  RC=0
+  authoritative_token_positive.exe RC=0
+
+DECODE_AUTHORITY_AGREES=1
+  authoritative_decode_zero.exe RC=0
+  authoritative_decode_positive.exe RC=0
+
+EXE_STRING_SCAN:
+  pumpOnce=0
+  TryIssueNextFromScoreboard=0
+  SCOREBOARD_SCHEDULER_LIVE=0
+  PROMOTE=0
+  forwardLayer=0
+  BANNER_HIT=1 (RAWRXD_NILW15_X64_MASM_NODEP)
+
+NO_FALLBACK_TO_SUPERSEDED_ZERO_PATH=1
+  EARLIER_ZERO_WITNESS_BUILD=SUPERSEDED
+  BLOCKER_AUTHORITY=0
+
+DISPOSITION:
+  RUN_DEPLOYED_NILW15_WITNESS=PASS
+  independent zero/fail-closed witness candidate exercised
+  AUTHORIZED_PASS=0 (expected for zero witness)
+  PROMOTE=0
+  TIP_CLIMB=HOLD
+  SCOREBOARD_SCHEDULER_LIVE untouched

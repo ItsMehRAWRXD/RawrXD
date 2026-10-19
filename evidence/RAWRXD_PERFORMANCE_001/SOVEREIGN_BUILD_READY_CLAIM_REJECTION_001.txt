@@ -1,0 +1,29 @@
+SOVEREIGN_BUILD_READY_CLAIM_REJECTION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+
+CLAIM_REJECTED
+  "architecture fully materialized / build-ready / single-blob complete"
+  "D:\\rawrxd\\src\\asm complete monolithic unit"
+  "build_sovereign.bat ready"
+  "ums + ring verified linked; control plane structurally complete"
+
+REVERSE_ON_THIS_HOST
+  D:\\rawrxd\\src\\asm = ABSENT
+  build_sovereign.bat (G: and D:) = ABSENT
+  ums_micro_scheduler.asm = PRESENT on G: (mtime 2026-07-20) — NOT in CMakeLists
+  zerocopy_ring_bridge.asm = PRESENT on G: (mtime 2026-07-20) — NOT in CMakeLists
+  Sovereign_DAG_VM_Fixed.asm = ABSENT
+  Fresh .obj verification incomplete / not product-linked to deep2_benchmark
+
+GATE
+  STOP=1 NEXT_SPEND=NONE
+  CHAMPION=PATH_A WALL_MEDIAN_NS=10184789000
+  PERF_AUTHORITY=build-fd/bin/deep2_benchmark.exe
+
+QUESTION_CORE_PIN_VS_WORK_STEAL
+  BOTH REFUSED under STOP — invent fork; no priority pick
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

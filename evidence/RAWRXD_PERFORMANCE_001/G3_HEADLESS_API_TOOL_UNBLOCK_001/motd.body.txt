@@ -1,0 +1,1 @@
+{"error":"file_not_found","message":"Cannot open file: G:\\~dev\\rawrxd\\build-fd\\bin\\.cursor\\rules\\PassiveRoleNotRoleplay.md","win32_error":3}

@@ -1,0 +1,170 @@
+RUNTIME_EVIDENCE_512_IDE_E2E_AUDIT_001
+DATE=2026-09-08
+TYPE=SOURCE_COVERAGE_AUDIT
+RUNTIME_CLAIM=NONE
+MEASUREMENT_CLAIM=NONE
+MODE_CHANGE=0
+HOT_GATE_CHANGE=0
+
+OBJECTIVE=
+  Give every claim in the shipping RawrXD IDE/product execution surface a
+  claim-specific record path that CAN surface if and only if its owning real
+  site fires during the measured run.
+
+AUTHORITY_LAW=
+  source existence != runtime evidence
+  emitter existence != emitter fired
+  claim X requires claim-X emission from that run
+  emission X != authority for claim Y
+  missing claim-X record = no-corresponding-runtime-evidence
+  UI paint != decode
+  route intent != device execution
+  model path text != opened model identity
+  aggregate E2E completion != substitute for missing lower-layer records
+  Dropped>0 never becomes a synthetic observation
+  SeqCap must equal 512
+
+AUDIT_BASIS=
+  A. Source-traced shipping Win32 IDE audit (2026-08-29):
+     - actual RawrXD-Win32IDE target, boot sequence, feature stacks
+     - large orphan/unwired Win32 surface identified
+  B. Fake-vs-real runtime audit (2026-09-02):
+     - UI pre-hooks were historically capable of impersonating forward/sample/decode
+     - real GenerateStreaming/Deep2 paths identified
+  C. Local-model execution finish contract (current retained source):
+     - discovery -> shard/format -> arch -> quant -> tokenizer/template/EOG
+       -> tensor schema -> one Deep2 session -> prefill -> generateStream
+       -> real token callback -> bounded end -> cancel -> unload/reload
+  D. Current RuntimeEvidence512 ABI:
+     - EvidenceState 48 bytes
+     - EvidenceRecord 64 bytes
+     - Commit at +56, XCHG last
+     - original ClaimIds 1..17 preserved
+
+COVERAGE_RESULT=
+  CLAIM_NAMESPACE=1..96
+  LEGACY_CLAIMS_PRESERVED=17
+  NEW_IDE_CLAIMS=79
+  GENERIC_PUBLIC_EMIT=0
+  CLAIM_SPECIFIC_PUBLIC_EMITTERS_NEW=79
+  READ_ONLY_COLLECTOR_MAX_CLAIM=96
+  COLLECTOR_CLAIM_BITMAP_BITS=128
+
+COVERED_DOMAINS=
+  IDE boot/window/core init
+  workspace/session/backend route
+  model discovery/identity/load/shards/contracts/schema
+  Deep2 session/prefill/generate/decode/forward/sample/logits/token
+  device/residency/KV
+  UI stream paint/finalize
+  cancel/end/error/reload
+  agent plan/model/tool
+  file read/write/edit/undo
+  terminal/build/test
+  debugger/LSP
+  git/MCP/extensions/local server
+  settings/session persistence/resume
+  model unload/IDE exit/process fault
+  umbrella product completion
+  wall/TPS/parity and original post-first-token claims
+
+KNOWN_SHIPPING_SPLITS_REQUIRING OWNER-SITE DISCIPLINE=
+  - UI stream append must never emit decode/forward/sample authority.
+  - Debugger has historically had parallel stacks; instrument only the chosen
+    shipping stack actually reached by the command.
+  - LSP has in-process and external stacks; instrument the one actually active.
+  - Extension extraction is not extension execution; dispatch/complete require
+    a real QuickJS/native host.
+  - Optional/local-server/voice/etc. claims remain absent when unused.
+  - Orphan/unlinked TUs do not gain evidence merely because an emitter exists.
+
+MANDATORY PRODUCT SPINE=
+  IDE_BOOT_ENTRY
+  IDE_WINDOW_READY
+  CORE_INIT_COMPLETE
+  WORKSPACE_OPEN
+  BACKEND_SELECTED
+  MODEL_DISCOVERY
+  MODEL_IDENTITY
+  MODEL_LOAD_ENTRY
+  MODEL_LOAD_COMPLETE
+  SHARD_RESOLUTION
+  ARCH_CONTRACT
+  QUANT_CONTRACT
+  TOKENIZER_CONTRACT
+  TEMPLATE_EOG_CONTRACT
+  TENSOR_SCHEMA
+  DEEP2_SESSION_CREATE
+  DEEP2_SESSION_READY
+  REQUEST_ACCEPTED
+  REQUEST_ROUTED
+  TOKENIZE_COMPLETE
+  PREFILL_ENTRY
+  PREFILL_COMPLETE
+  GENERATE_STREAM_ENTRY
+  FIRST_TOKEN_BOUNDARY
+  DECODE_STEP_ENTRY (when post-first-token decode occurs)
+  ATTN_COMPLETE / FORWARD_COMPLETE
+  LOGITS_ENTRY
+  LOGITS_COMPLETE
+  SAMPLE_COMPLETE
+  TOKEN_CALLBACK
+  TOKEN_DECODED
+  UI_STREAM_APPEND
+  UI_STREAM_FINALIZE
+  END_REASON
+  STREAM_COMPLETE or STREAM_ABORT/STREAM_ERROR
+  AGENT_LOOP_ENTRY / AGENT_MODEL_RETURN (agent workflow)
+  TOOL_DISPATCH / TOOL_COMPLETE (when tool work occurs)
+  FILE_WRITE / EDIT_APPLIED (when engineering task edits)
+  BUILD_ENTRY / BUILD_COMPLETE
+  TEST_ENTRY / TEST_COMPLETE
+  GIT_ENTRY / GIT_COMPLETE (when commit is part of acceptance)
+  SESSION_PERSIST
+  MODEL_UNLOAD_ENTRY
+  MODEL_UNLOAD_COMPLETE
+  TEARDOWN_ENTRY
+  TEARDOWN_COMPLETE or TEARDOWN_FAULT
+  IDE_EXIT_ENTRY
+  IDE_EXIT_COMPLETE
+  WALL_NS
+  DECODE_TPS_Q32_32
+  PARITY
+  E2E_PRODUCT_COMPLETE
+
+OPTIONAL CLAIMS=
+  SESSION_RESTORE
+  CANCEL_REQUEST/CANCEL_COMPLETE
+  RESIDENCY_RELEASE
+  RELOAD_ENTRY/RELOAD_COMPLETE
+  AGENT_PLAN_READY
+  FILE_READ
+  UNDO_APPLIED
+  TERMINAL_ENTRY/TERMINAL_COMPLETE
+  DEBUG_ENTRY/DEBUG_STOP
+  LSP_REQUEST/LSP_RESULT
+  MCP_DISPATCH/MCP_COMPLETE
+  EXTENSION_DISPATCH/EXTENSION_COMPLETE
+  LOCAL_SERVER_REQUEST/LOCAL_SERVER_RESPONSE
+  SETTINGS_PERSIST
+  AGENT_RESUME
+
+IMPORTANT=
+  "every possible claim fired" does NOT mean every claim must appear in every
+  run. It means every defined claim has a unique owner emitter available, and
+  a record can exist only when that owning site actually executes.
+
+NOT_DONE=
+  wiring these 79 new emitters into the user's live source tree
+  assembling/linking these new objects in the user's VS2022 tree
+  executing a measured seqCap=512 run
+  proving any newly defined claim fired
+  proving E2E_PRODUCT_COMPLETE
+
+CURRENT_AUTHORITY=
+  existing retained runtime authority remains unchanged
+  no old claim is promoted by this source drop
+
+NEXT_RUNTIME_TRANSITION=
+  requires explicit authority to wire real owner sites
+  then SOURCE -> BUILD -> RUNTIME -> MEASUREMENT

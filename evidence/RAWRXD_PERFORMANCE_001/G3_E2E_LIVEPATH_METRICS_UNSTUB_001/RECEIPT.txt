@@ -1,0 +1,31 @@
+GATE=G3_E2E_LIVEPATH_METRICS_UNSTUB_001
+PURPOSE=Unstub livepath metrics vetoes: lukewarm medusa stack-kill, cyclone demands, plasma sample site
+PARENT=G3_E2E_ELASTIC_PASSIVE_UNSTUB_001
+ASOF=2026-09-09T23:48
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+EXE=G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+EXE_SHA256=DA593D00C79E095FB06751EAD689F238F7D6E8956DE0960954302A38804633AA
+
+RESTORED=
+  lukewarm no longer disables STACK medusa at generate
+  cyclone OnLayerStart not vetoed by elastic; DEMANDS>0
+  plasma sample site moved out of STREAM-only (MechArm always)
+
+N5_WITNESS=
+  EXIT=0 TRUE=1 SURV=1 EL=1 MEDUSA_STACK=1 MEDUSA_STACK_OFF=0 DEMANDS=4466
+  FWD=348/290 FT=1 FC=1 FB=0
+  LIVE_PATH_PLASMA_SAMPLES=0 ABSENCE_PLASMA=1
+  NOTE=ADL Overdrive5 temp sample fails on this host — honest hold, not a DualStick code veto
+  FIRST_SCORER_REQUIRED_PLASMA=superseded (hardware)
+
+AUTHORITY_METRICS=
+  LIVE_PATH_CYCLONE_DEMANDS>0
+  Medusa speculative ENABLED on STACK (HOTPATH_MEDUSA may stay 0 without heads)
+  PLASMA_SAMPLES not required for product ArmSpeed seal
+
+SCORER_NOTE=prior SUMMARY N5_PASS=0/5 was incomplete seal; rescored 5/5 perfect metrics
+
+Full: SUMMARY_N5.txt runs_n5/ KEY_LINES.txt AUTHORITY.txt

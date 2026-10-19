@@ -1,0 +1,32 @@
+EARLY_COMPLETE_NOT_REQUIRED_YET_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_POLICY
+SPEND=0
+HOT_GATE=0
+
+POLICY=
+  Anything marked NOT_REQUIRED_YET may receive a SPECIAL_MOMENT
+  to be completed early (SOURCE/BUILD/soft-wire) without waiting
+  for HOT_GATE or MEASUREMENT.
+
+BOUND=
+  Early complete ≠ runtime observation
+  Early complete ≠ spend
+  Early complete ≠ reopen attribution interval
+  source existence ≠ runtime evidence still holds
+
+MAY_EARLY_COMPLETE=
+  collection ABI / CollectScan
+  CMake link of RuntimeEvidence512 Core+Emit
+  stream-path soft-wire behind arm (DEEP2_EV512=1)
+  serve inventory for remaining claims
+
+MUST_NOT_EARLY_COMPLETE_AS_OBSERVATION=
+  RUNTIME_OBSERVATION records without armed measured run
+  MEASUREMENT / PATH_B remasure
+  DELETE_PROVEN / PROMOTE
+
+AUTHORITY=
+  MODE=D
+  NEXT_SPEND=NONE
+  SPEND_CLAIM_001=SEALED

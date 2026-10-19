@@ -1,0 +1,18 @@
+SOURCE_DROP=RAWRXD_671B_STREAM_PHYSICALIZATION_NODEP
+
+Properties enforced by code:
+- Fixed maximum slot count.
+- Fixed window size.
+- File-offset aligned mapping.
+- One-window request bound.
+- Pin-count prevents eviction while a lease is live.
+- LRU chooses only unpinned windows.
+- Cache hit reuses the existing view.
+- Cache miss maps only the selected window.
+- Peak mapped-byte accounting is internal.
+- Newly mapped and reused byte accounting is internal.
+- Acquire failure never falls back to whole-tensor allocation.
+- No scheduler, promote, NILW PASS, model-quality, or tensor-math authority is owned here.
+
+The stream layer is byte-authority only.
+The consuming Deep2 forward primitive remains tensor-math authority.

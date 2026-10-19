@@ -1,0 +1,79 @@
+REVERSE_ENGINEERED_BLOCKERS_001=SEALED
+DATE=2026-09-09
+TYPE=ANALYSIS_SEAL
+PROMOTE=0
+TIP_CLIMB=HOLD
+SIMULATION=0
+FRAME=cloud-born assumptions → local single-GPU IDE failure modes
+
+SUMMARY=
+  Formal RE of local-run blockers derived from Deep2/K2 code + prior logs.
+  Distinguishes CODE_LAND / SCOPE_LAW from OBSERVED_WITNESS and NARRATIVE.
+
+BLOCKER_1_POSITION_AUTHORITY=BLOCKER_104
+  CLOUD_ASSUME=central per-request KV / monotonic RoPE index
+  LOCAL_FAIL=kvLength stuck 0; RoPE at pos 0 every token
+  CODE_LAND=1
+    OWNER_MODEL=K2NativeStreamGate::ForwardMLALayers
+      RoPE pos = g_streamTlsKv.currentLength(); CommitPosition++; NotePositions(len)
+    OWNER_OBSERVE=Deep2Engine Finalize reads Acc.kvPos / Result.kvLength / ModelKvCurrentLength
+    NOT_OWNER=streamer inventing prompt+count (removed from K2 onToken)
+  OBSERVED_WITNESS=PASS
+    SSOT=BLOCKER_104_93_K2_LAND_001/witness_20260909-011253.log
+  REF=BLOCKER_104_93_K2_LAND_001
+
+BLOCKER_2_SPECIAL_TOKEN_AUTHORITY=BLOCKER_93
+  CLOUD_ASSUME=central vocab/special registry
+  LOCAL_FAIL=BOS/EOS=-1; never stop on EOS
+  CODE_LAND=1
+    OWNER=GGUFTokenizerLoad (tokenizer.ggml.bos/eos_token_id) → NoteSpecials
+    STOP=K2NativeStreamGate eosTokenId clean break + onToken EOS check
+  OBSERVED_WITNESS=PASS
+    BOS_ID=163584 EOS_ID=163586 SOURCE=gguf
+    SSOT=BLOCKER_104_93_K2_LAND_001/witness_20260909-011253.log
+  REF=BLOCKER_104_93_K2_LAND_001
+
+BLOCKER_3_VRAM_TRANSPARENCY=
+  CLOUD_ASSUME=fixed instance VRAM / static compile cap
+  LOCAL_FAIL=under-use of larger consumer GPUs
+  CODE_LAND=PARTIAL
+    BENCH=Deep2Benchmark DEVICE/VRAM via enumerate+PDH (BENCH_HARNESS_EVIDENCE_INTEGRITY_001)
+    PRODUCT_HardwareReflector=NOT_IN_DEEP2_HOTPATH
+    NANO_ONLY=RawrNanoAuthority artificial aim (not product authority)
+  OBSERVED_WITNESS=OPEN
+
+BLOCKER_4_SINGLE_VS_MULTI_STREAM=
+  CLOUD_ASSUME=multi-tenant batch scheduler saturates GPU
+  LOCAL_FAIL=one user / one stream → low util
+  CODE_LAND=0_PRODUCT
+    NARRATIVE_OR_NANO=artificial aiming / virtual streams (nano --aim only)
+  OBSERVED_WITNESS=N/A_PRODUCT
+  NEXT_PERF=O_PROJ overlap | QKV readback cut | K2LiveCache_PrefetchLayer arm
+
+BLOCKER_5_BUFFER_RETENTION=
+  CLOUD_ASSUME=alloc-per-request amortised; thread-per-request
+  LOCAL_FAIL=fragmentation / alloc stalls on short local requests
+  CODE_LAND=0_PRODUCT
+    BufferPool_RAII=NOT_FOUND_IN_src_deep2_PRODUCT
+  OBSERVED_WITNESS=N/A
+
+BLOCKER_6_MARS_PLACEMENT=MARS_SCOPE_LAW
+  CLOUD_ASSUME=host-resident multi-GPU placement controller
+  LOCAL_FAIL=K2 BOUNDED_STREAM → placed=0 idle cost (~−3.9% TPS)
+  CODE_LAND=1 SCOPE_LAW
+    REF=MARS_SCOPE_LAW_STANDBY_001 / MARS_ON_TPS_PROBE_001
+    RULE=STANDBY on K2; FORCE=idle probe only; dense host-resident separate
+  OBSERVED=STANDBY_SEALED FLOOR_K2_TPS=5.323
+
+VERDICT=
+  Correctness gates 104/93 = CODE_LAND + OBSERVED_WITNESS PASS (20260909-011253).
+  MARS localisation = SEALED. VRAM/streams/BufferPool claims ≠ product-closed.
+  Do not treat this receipt as TPS promotion or SEARCH_BASELINE change.
+
+WITNESS_NEXT=
+  deep2_benchmark K2 --max-tokens 64
+  grep POS_DUMP / BOS_ID / EOS_ID / BLOCKER_104_ / BLOCKER_93_
+
+PERF_NEXT_AFTER_WITNESS=
+  O_PROJ overlap → QKV readback → prefetch arm
+  TIP_CLIMB=HOLD until Phase A / contract

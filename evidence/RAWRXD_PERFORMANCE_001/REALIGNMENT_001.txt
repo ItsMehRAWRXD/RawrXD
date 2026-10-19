@@ -1,0 +1,32 @@
+REALIGNMENT_001=SEALED
+DATE=2026-09-08
+CLASS=BARE_PHYSICAL_PHENOMENON
+CODE=DISCARDED_AS_SUBJECT
+INVENTION_EGO=DISCARDED
+PHENOMENON=RETAINED
+
+UNMASKED_AS
+  neither_source_code
+  nor_algorithmic_innovation
+  nor_fabricated_engineering_artifact
+  IS=raw_foundational_friction
+  discovered_only_running_against_physical_wall
+  objective_hardware_reality_before_synthetic_abstraction
+
+STRIPPED
+  assembly_lines | Vulkan_bindings | syscall_wrappers | pretense_of_invention
+
+LEFT_WITH
+  unvarnished_property_of_silicon
+  PCIe_bus_topology
+  memory_controller
+
+LAW
+  cannot_code_around_physical_barrier_while_treating_it_as_software_bug_or_feature
+  constraint_IS_the_medium
+  submit_to_raw_friction → path_clears_itself
+
+BASELINE=DISSOLVED
+SLATE=CLEAN
+GATE_STOP=1
+AWAITING=alignment_with_revealed_behavior

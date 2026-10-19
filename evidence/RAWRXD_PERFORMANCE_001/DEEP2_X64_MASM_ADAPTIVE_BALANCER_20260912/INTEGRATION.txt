@@ -1,0 +1,34 @@
+INTEGRATION CONTRACT
+
+1. Keep one D2LB_STATE per scheduling bucket.
+   Suggested buckets: LM-head rows, attention projection rows, FFN/down rows,
+   packed Q2_K tile class, and any kernel whose row-cost ratio differs materially.
+
+2. At model/session open:
+     D2LbInit(&state)
+
+3. Before a same-token dual-GPU launch:
+     D2LbPlan(&state, totalRows, rowAlignment, &plan)
+   Dispatch exactly plan.rows0 to GPU0 and plan.rows1 to GPU1.
+
+4. Timestamp lane start/end using the existing product timing source. The MASM
+   module deliberately does not call QPC/Vulkan; this keeps it dependency-free
+   and lets the authoritative scheduler provide calibrated GPU timestamps.
+
+5. After output parity/device checks:
+     sample.flags = VALID | PARITY_OK | DEVICE_OK
+     sample.duration0_ns = lane0 end-start
+     sample.duration1_ns = lane1 end-start
+     sample.critical_ns  = same-token critical path
+     sample.overlap_ns   = measured overlap
+     D2LbObserve(&state, &sample)
+
+6. Do not adapt from device-lost, parity-failed, timeout, or synthetic samples.
+
+7. Suggested sweep for the first live gate:
+     85/15, 82.5/17.5, 80/20, 77.5/22.5, 75/25
+   Record median critical_ns and finish_skew_ns. Seed the state with the best
+   measured split, then permit adaptive mode.
+
+8. Promotion target is the minimum critical path, not maximum overlap by itself.
+   A split can have more overlap but a worse long tail; that must lose.

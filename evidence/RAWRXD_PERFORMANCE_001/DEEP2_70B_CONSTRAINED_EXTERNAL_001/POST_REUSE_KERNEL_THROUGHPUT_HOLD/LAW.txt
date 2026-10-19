@@ -1,0 +1,33 @@
+GATE=POST_REUSE_KERNEL_THROUGHPUT_HOLD
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+SEALED_DO_NOT_REOPEN=
+  FULL_HOST_MOE_EXECUTION=PASS 2d0f2dc480
+  K2_EXPERT_GPU_EXEC_BIND=PASS ca3be53613
+  DUALSTICK_LOCALITY=PASS 44b73b868e
+  DUALSTICK_REUSE_MICROFIX_001=PASS 9c4213e679
+
+OWNER=POST_REUSE_KERNEL_THROUGHPUT_HOLD
+PRIOR_REUSE_L32T16_WALL_S≈5.77
+PRIOR_REUSE_L61T8_WALL_S≈13.72
+
+# Failure mode after reuse PASS: residency/reuse wins wall;
+# next is true concurrency + staying on device longer.
+
+PRIORITY=
+  7 true parallel GPU0+GPU1 worklists; STICK_OVERLAP_NS>0; JOIN_WAIT honest
+  9/10 device Down / stick-local until single join; D2H≈H per expert
+  FULL_15 capacity if wall or JOIN/D2H moves: #2 #5 #8 #11-14
+
+PROOF_BARS=
+  FWD_G0>0 AND FWD_G1>0 AND HOST_GEMV≈0 AND RELOAD_MISS/tok≈0
+  STICK_OVERLAP_NS>0 AND/OR GPU_JOIN_WAIT_NS instrumented as stick skew
+  matched-depth wall ≤ reuse seal (prefer ↓ vs L32 5.77 / L61 13.72)
+  honest D2_MOE_REUSE counters (DEVICE_DOWN_PARTIALS GEMV_INPUT_REUSE)
+
+IF wall plateaus with good overlap → NEXT=measured ceiling; NOT_RUN!=PASS

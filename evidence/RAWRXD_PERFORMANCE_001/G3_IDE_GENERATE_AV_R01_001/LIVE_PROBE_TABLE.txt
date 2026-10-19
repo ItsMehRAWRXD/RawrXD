@@ -1,0 +1,4 @@
+probe	alive_after	exit_or_crash	tokens	PRODUCT_PASS	ACCESS_VIOLATION	notes
+oneshot	n/a(completed)	CLEAN_EXIT=1 CRASH_OBSERVED=0	8	1	0	HOST_DECODE floor; PRODUCT_STREAMER_PREP=1
+http_/api/generate	1	process_lived	8	1	0	port=11494 body done=true LEN=74
+cli_control_prior	n/a	PRODUCT_PASS=1	n/a	1	0	rawr run control from STREAMER_AGENTIC_IDE_001; compare only

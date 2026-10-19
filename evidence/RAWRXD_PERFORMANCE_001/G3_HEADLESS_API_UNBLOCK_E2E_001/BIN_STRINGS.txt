@@ -1,0 +1,4 @@
+BIN public_command_and_file_routes_disabled=False
+BIN motd_required=True
+BIN read_motd=True
+BIN MOTD/path not found=False

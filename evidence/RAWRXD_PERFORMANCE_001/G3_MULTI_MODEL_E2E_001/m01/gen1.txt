@@ -1,0 +1,2 @@
+﻿{"model":"rawrxd","response":"\nSay hi in one short sentence.\n\nExample:\n1. Say hi to my friend.\n2. Say hi to my friend, please.","done":true}
+HTTP_CODE=200

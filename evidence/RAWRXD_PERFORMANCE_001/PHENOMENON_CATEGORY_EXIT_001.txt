@@ -1,0 +1,87 @@
+SUPERSEDED_SPEND_FIELDS=1
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+REASON=B.1 hygiene; LIVE GATE_STOP=1 NEXT_SPEND=NONE; ACTIVE_NOW body fields HISTORICAL
+ACTIVE_NOW=0
+PATH_B_STRUCTURAL_DELETE_ACTIVE_NOW=0
+PHENOMENON_CATEGORY_EXIT_001=SEALED
+DATE=2026-09-08
+ROLE=CATEGORY_LAW
+RNG_USED=0
+
+# ---------------------------------------------------------------------------
+# FORMAL RE-CATEGORIZATION
+# ---------------------------------------------------------------------------
+
+ITEM=EMERGENT_HARDWARE_TRUTH
+  PRIMARY=HOST_WINDOW_DEGREE_OF_FREEDOM_IS_IDENTICALLY_ZERO
+  LIMIT=Q_B_D2H_STRUCTURALLY_HOSTILE_TO_PEAK_THROUGHPUT
+  SIBLINGS=FENCE_NOT_COPY | MIRROR_PARTIAL
+
+CATEGORY_WAS=misread_as_code_or_kernel_or_architecture_invention
+CATEGORY_NOW=PHENOMENON_OUTSIDE_CODE_KERNEL_SPACE
+
+NOT_SOFTWARE=1
+NOT_CODE_ARTIFACT=1
+NOT_KERNEL_ARTIFACT=1
+NOT_NET_NEW_ARCHITECTURAL_INVENTION=1
+
+BELONGS_TO
+  machine physics / PCIe-host geometry / model geometric identity /
+  temporal sync cost / observability incompleteness
+
+DOES_NOT_BELONG_TO
+  src/** as the subject
+  MASM/kernel as the subject
+  PATH_B draft shaders as the subject
+  "we invented a faster path" claims
+
+# ---------------------------------------------------------------------------
+# STAGE GATE (strict order)
+# ---------------------------------------------------------------------------
+
+STAGE_0_DISCOVER
+  STATUS=DONE
+  RECEIPT=evidence/RAWRXD_PERFORMANCE_001/EMERGENT_OBSERVATION_001.txt
+
+STAGE_1_RE_CATEGORIZE_OUT_OF_CODE
+  STATUS=SEALED_THIS_RECEIPT
+  REQUIREMENT=item formally outside code/kernel/invention space
+  THIS=evidence/RAWRXD_PERFORMANCE_001/PHENOMENON_CATEGORY_EXIT_001.txt
+
+STAGE_2_INVENTION_ALONG_PHENOMENON
+  STATUS=SUPERSEDED_UNDER_LIVE_GATE
+  INVENTION_GATE=HELD
+  OPENED_BY=STAGE_2_INVENTION_OPEN_001 + TWIST_AXIOM_001 (HISTORICAL)
+  MODE=HELD_RE_ATTRIBUTION_ONLY
+  INSTRUMENTS=code_as_containment_field_only
+  MEANING
+    Phenomenon is axiom / medium — not software.
+    Live spend requires MODE=A HOT_GATE=1 TARGET=PATH_B_N5.
+    Code harnesses; code is not the product.
+
+FORBIDDEN_BEFORE_STAGE_2
+  PATH_B implementation as "the item"
+  shader/memory-map authorship claiming to be the discovery
+  promoting wall from uncategorized invention
+
+# ---------------------------------------------------------------------------
+# RELATION TO PRIOR SEALS
+# ---------------------------------------------------------------------------
+
+CARTOGRAPHY_LAW=evidence/RAWRXD_PERFORMANCE_001/SOVEREIGN_PHYSICS_CARTOGRAPHY_001.txt
+  REMAINS=developer is cartographer; code is instrument
+  UPDATED_BY_THIS
+    even "survival adaptation" must wait for STAGE_1
+    adaptation/invention is STAGE_2 — along-twist only
+
+PATH_B_STRUCTURAL_DELETE
+  STAGE=2_HISTORICAL_UNDER_GATE_STOP
+  ACTIVE_NOW=0
+  MAY_ACTIVATE_ONLY_IF=MODE=A HOT_GATE=1 TARGET=PATH_B_N5
+  OPEN=evidence/RAWRXD_PERFORMANCE_001/STAGE_2_INVENTION_OPEN_001.txt (SUPERSEDED spend)
+
+CHAMPION_UNCHANGED=PATH_A
+TIP_CLIMB=HOLD
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+DISCARD=FORBIDDEN
+GOODS_STAY_BRAIDED=1

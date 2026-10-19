@@ -1,0 +1,81 @@
+PATH_B_N5_003_LAST_BOUNDARY_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_ATTRIBUTION
+SPEND=0
+CODE_CHANGE=0
+RERUN=0
+PROMOTE=0
+DELETE_PROVEN=NOT_ASSESSED
+MEMORY_OVERRIDE=0
+
+RETAIN=
+  PATH_B_N5_003=FAIL
+  PROMOTE=0
+  CHAMPION=PATH_A
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  STOP_REASON=trial_1_invalid_witness_stream_abort_teardown_av
+  ATTR_SPLIT=PATH_B_N5_003_ATTR_SPLIT_001 (DEFECT_A + DEFECT_B)
+
+NARROWING_RETAINED=
+  Gate12 RoPE failure=not reproduced
+  Q-buffer null path=not reproduced
+  decode after t0=observed
+  stream completion=not witnessed
+  teardown clean exit=not witnessed
+
+# --- LAST WITNESSED SUCCESSFUL BOUNDARY ------------------------------------
+
+WITNESS_FILES=
+  PATH_B_N5_003/trial_01.stderr.txt
+  PATH_B_N5_003/trial_01.stdout.txt
+  PATH_B_N5_003/trial_01.exit.txt
+
+COUNTS=
+  STREAM_HEARTBEAT=1 (STEP=0/64 TEARDOWN_WITNESS=0)
+  STREAM_ABORT_OWNER_LINES=0
+  FINAL_NORM_SRC_PTR=23
+  FINAL_NORM_AFTER_L2=23
+  Gate10_footer=ABSENT
+  exit=EXIT=-1 / 0xC0000005 class
+
+PIPELINE_PER_STEP (K2NativeStreamGate Run loop)=
+  TOKEN_EMBED → MLA_FORWARD → FINAL_NORM(ProduceFinalHidden) → LOGITS(ProjectLogitsArgmax)
+  → TOKEN_CALLBACK → (next step)
+
+LAST_WITNESSED_OK=
+  BOUNDARY=FINAL_NORM_AFTER_L2
+  COUNT=23
+  MEANING=ProduceFinalHidden completed for 23 stream steps (indices 0..22)
+  POST_FIRST_TOKEN=1 (count>>1)
+
+NOT_WITNESSED_AFTER_THAT=
+  OWNER=LOGITS success or STREAM_ABORT OWNER=LOGITS
+  OWNER=TOKEN_CALLBACK success or abort
+  STREAM_HEARTBEAT STEP=32/64
+  end-of-Run ok-assembly / Gate10 PrintCertificationContract
+  TEARDOWN_WITNESS=1
+  clean EXIT=0
+
+GAP_CLASS=
+  Hard stop in the open interval after FINAL_NORM_AFTER_L2 #23
+  and before any later logged consumer (LOGITS abort line, step-32 heartbeat,
+  Gate10 footer, teardown witness).
+  Exact owner remains UNATTRIBUTED (no OWNER=* line; no contract literal).
+  Consistent with DEFECT_B (AV) killing mid-step without orderly STREAM_ABORT,
+  and/or DEFECT_A (completion never reached) — still split, not merged.
+
+STDOUT_NOTE=
+  Last stdout line=KVA_CLIMB_CAND ROWS=64 … (no further flush).
+  Stderr continued with FINAL_NORM while stdout stalled — buffering/climb path,
+  not proof that KVA was the crash site.
+
+EXCLUDED_THEORIES (do not reopen)=
+  Gate12 RoPE not applied
+  PathB Q-buffer null / 0x0 descriptor
+
+MODE_D_NEXT=
+  Attribution only: instrument or inspect ProjectLogitsArgmax and post-FINAL_NORM
+  path for silent AV risk — SOURCE work allowed; RUNTIME remasure needs HOT_GATE.
+  No DELETE_PROVEN. No rerun. No promotion.

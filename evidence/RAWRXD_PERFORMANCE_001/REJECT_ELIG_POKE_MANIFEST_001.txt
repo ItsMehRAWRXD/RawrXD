@@ -1,0 +1,36 @@
+REJECT_ELIG_POKE_MANIFEST_001=SEALED
+DATE=2026-09-08
+TYPE=ATTRIBUTION
+MODE=D
+CODE_CHANGE=0
+EXECUTION=0
+
+CLASS=
+  reject/eligibility poking = MANIFESTATION_FLIP_GENERATOR
+  (FALSE_LITE memory write · cdb poke · WriteProcessMemory · GATE_STOP NOP fiction · posture.h invent)
+
+≠ MEASUREMENT
+≠ HOT_GATE spend
+≠ PRODUCT_FLOOR fix
+≠ ACTUAL_PASS
+
+B1.1_TRUTH=
+  blocker = PRODUCT_FLOOR_TPS (1.387 < 5)
+  NOT reject enum
+  NOT eligibility state dword
+
+LAW=
+  \=- ≡ NOT
+  manifestation ≠ PASS
+  IMPL via SOURCE|BUILD|RUNTIME|MEASUREMENT only
+
+DISPOSITION=
+  REJECT_ELIG_POKE = NON_AUTHORITY
+  DO_NOT_EXECUTE
+  LIVE_WORK = measured floors / explicit HOT_GATE only
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  B1.1=MEASURED_SPLIT (stages PASS / floor FAIL)

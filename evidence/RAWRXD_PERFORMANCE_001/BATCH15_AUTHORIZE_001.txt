@@ -1,0 +1,15 @@
+BATCH15_AUTHORIZE_001=SEALED
+DATE=2026-09-08
+OPERATOR=Authorize you in batches of 15 to rewrite one shot regardless of less none
+GRANT=
+  BATCH_SIZE=15
+  SCOPE=rewrite_one_shot_receipts_and_stale_inventory
+  REGARDLESS_OF=NEXT_SPEND=NONE (post-spend inventory rewrite only)
+NOT_GRANTED=
+  floor_waiver
+  PRODUCT_PASS forgery
+  eligibility poke
+  invent stacks
+  auto B1.2 / PATH_B_N5 without named HOT_GATE line
+
+BATCH1_ACTIONS=see BATCH15_ONESHOT_REWRITE_001

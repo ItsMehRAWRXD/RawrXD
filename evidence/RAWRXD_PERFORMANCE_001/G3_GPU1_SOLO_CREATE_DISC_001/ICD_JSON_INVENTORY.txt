@@ -1,0 +1,22 @@
+
+FullName                                                                                                     Length Las
+                                                                                                                    tWr
+                                                                                                                    ite
+                                                                                                                    Tim
+                                                                                                                    e  
+--------                                                                                                     ------ ---
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_3565b89cd6e20b82\amd-vulkan32.json              703 4/3
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_3565b89cd6e20b82\amd-vulkan64.json              703 4/3
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json              703 8/1
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json              703 8/1
+C:\Windows\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan32.json    703 8/1
+C:\Windows\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json    703 8/1
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_3565b89cd6e20b82\amd-vulkan32.json              703 4/3
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_3565b89cd6e20b82\amd-vulkan64.json              703 4/3
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan32.json              703 8/1
+C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json              703 8/1
+C:\Windows\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan32.json    703 8/1
+C:\Windows\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amd-vulkan64.json    703 8/1
+
+
+

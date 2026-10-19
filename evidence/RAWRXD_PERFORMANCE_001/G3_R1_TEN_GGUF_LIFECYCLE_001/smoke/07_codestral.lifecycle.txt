@@ -1,0 +1,14 @@
+﻿MODEL=Codestral-22B-v0.1-Q4_K_M.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\07_codestral\Codestral-22B-v0.1-Q4_K_M.gguf
+SIZE_MB=12073.9 SHA16=0CD893BC242B76EF
+HEADLESS_PID=3704
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":2,"model":"Codestral-22B-v0.1-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9597,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"tempera
+LOAD=200 {"success":true,"model":"Codestral-22B-v0.1-Q4_K_M.gguf"}
+GENERATE=200 TOKENS=8 PROCS=1
+GEN_SNIP={"model":"rawrxd","response":"\nSure, here's a","done":true}
+UNLOAD=200 {"success":true}
+RELOAD=200 {"success":true,"model":"Codestral-22B-v0.1-Q4_K_M.gguf"}
+RELOAD_GEN=0 TOKENS=8 PROCS=0
+VERDICT=FAIL OWNER=process_died_reload_gen DETAIL=died_reload

@@ -1,0 +1,61 @@
+GATE=G3_IDE_PARITY_AGENTIC_E2E_001
+PURPOSE=Unblock IDE-parity agentic E2E residuals (MOTD relative resolve + tool coherence); prove livepath
+PARENT=G3_STREAMER_AGENTIC_SESSION_VERIFY_001
+CHILD_OF_SEALED=G3_HEADLESS_API_TOOL_UNSTUB_001 (not re-litigated; no regression)
+ASOF=2026-09-10T01:20
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+NEXT_SPEND=NONE
+SPEND=0
+CONFIRMED=1
+RESTORE_EMPTY=1
+
+VERIFIED=
+  HeadlessIDE /api/tool LIVE (public_command_and_file_routes_disabled=ABSENT)
+  MOTD gate holds: PRE list_directory → HTTP 403 motd_required
+  Relative MOTD WITHOUT --dir: read_file .cursor/rules/PassiveRoleNotRoleplay.md → HTTP 200
+  Empty read_motd → HTTP 200 (cwd/module parent walk)
+  Post-MOTD list_directory + execute_command echo IDE_PARITY_E2E_OK → HTTP 200 exitCode=0
+  EXE string proof: ResolveMotdPath messages PRESENT (workingDir + projectRoot variants)
+  GUI engine.js: MOTD reads rewrite to read_motd; relative path cleared for server resolve
+  Win32 LocalServer: ResolveMotdPath + canonical MOTD ack-before-tools (ack only on HTTP 200 content)
+
+FIXED_THIS_SESSION=
+  HeadlessIDE_ToolRoutes.cpp: resolveMotdPath accepts relative pathArg via roots walk (no --dir required)
+  Win32IDE_LocalServer.cpp: ResolveMotdPath + MOTD-only tool path (parity with Headless)
+  ide_chatbot_engine.js: toolReadMotd + prefer server MOTD resolve
+  rawr_agent_executor.hpp: auto=read completes Report after inspect (read-only PASS; no false AGENT_LOOP=FAIL)
+
+EXE=
+  path=g:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+  mtime=2026-09-10 01:05:00
+  size=329334272
+  SHA256=F682234A0F3E883C5839CD1F3D911C32F10CE8733CC84E061ADAE7EB785E5AD6
+  E2E_PORT=11981 (no --dir; WorkingDirectory=build-fd\bin)
+
+PERFECT_METRICS=
+  HTTP_SUCCESS_ON_INTENDED_PATH=1
+  MOTD_GATE_HOLDS_PRE_ACK=1
+  RELATIVE_MOTD_WITHOUT_DIR=1
+  TOOL_EXECUTED=1
+  NO_403_PUBLIC_ROUTES_DISABLED=1
+  NO_FAKE_TPS=1
+  TIP_CLIMB=HOLD
+  PROMOTE=0
+
+RESIDUALS=
+  rawr.exe auto=read binary not relinked this session (InferenceEngine.lib missing mid-rebuild storm)
+    SOURCE hardened in rawr_agent_executor.hpp; sealed prior proof remains auto=full AGENT_LOOP=PASS
+    Until rawr relink: auto=read still fail-closes at patch (old binary behavior)
+  Concurrent ninja/PDB races on build-fd — do not tip-climb; product IDE EXE above is authoritative for this gate
+
+STILL_VETO=
+  Ollama / ImportSpace68 network forbids (unchanged)
+  MOTD-before-tools (intentional product gate)
+  TIP_CLIMB / rainbow / pinball / trailbrake / tensor_hop / host-VRAM restore (UNPLAN)
+
+AUTHORITY=
+  PROMOTE=0 TIP_CLIMB=HOLD CANONICAL_NEXT=STOP
+  VERDICT=IDE_PARITY_AGENTIC_READY
+  STREAMER_AGENTIC_READY remains (ArmSpeed lane CLOSED; Headless tool LIVE; MOTD relative unblocked)

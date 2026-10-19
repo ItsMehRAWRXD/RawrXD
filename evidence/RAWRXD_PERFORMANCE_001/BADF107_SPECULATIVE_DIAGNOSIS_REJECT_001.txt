@@ -1,0 +1,9 @@
+BADF107_SPECULATIVE_DIAGNOSIS_REJECT_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+CLAIM=offset desync from string arrays causes 0xBADF107
+STATUS=REJECTED_NO_LIVE_FAULT_RECEIPT
+QUESTION_mmap_base_vs_absolute_tracker=REFUSED_UNDER_STOP_WITHOUT_DUMP
+NOTE=Live Deep2/K2 ingest is not blocked by this invented fault narrative
+LIVE_AUTHORITY=PATH_A / deep2_benchmark.exe

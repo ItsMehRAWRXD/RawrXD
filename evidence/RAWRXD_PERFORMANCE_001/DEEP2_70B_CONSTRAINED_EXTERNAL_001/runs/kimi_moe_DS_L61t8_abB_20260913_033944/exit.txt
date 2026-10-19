@@ -1,0 +1,1 @@
+﻿EXIT=0 WALL_MS=114590 ARM=B V7_MODE=observe

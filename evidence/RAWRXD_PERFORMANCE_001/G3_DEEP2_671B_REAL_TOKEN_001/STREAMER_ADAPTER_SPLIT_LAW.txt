@@ -1,0 +1,44 @@
+STREAMER vs MODEL ADAPTER — authority split (locked intent)
+==========================================================
+
+STREAMER (format/provider/architecture AGNOSTIC):
+  Owns: address space, residency windows, demand I/O tickets,
+        shard open/index bytes, hotset/LRU policy hooks,
+        MODEL_SIZE_NE_RESIDENCY, no family-specific math.
+  Must NOT specialize to: Kimi, Mistral/Mixtral, DeepSeek, Llama,
+        Qwen, Gemma, Codestral, Ollama, HuggingFace.
+  Existing substrate: r671 stream/WSC, portable nostream residency
+        tickets, GGUF shard byte index (as storage, not arch).
+
+ADAPTER (family-specific, ABOVE streamer):
+  Owns: architecture dispatch (deepseek2 / llama / mixtral / …),
+        tensor name maps, MLA vs MHA/GQA, MoE router/Top-K,
+        shared-expert, quant dequant kernels as needed,
+        tokenizer/chat template, lm_head/sampler glue.
+  DeepSeek-R1 work (D2U, ds671 route-load, MLA dims) lives HERE.
+  One adapter per family/profile — not a second streamer.
+
+UNIVERSAL_E2E (composition OPEN; substrate landed):
+  STREAMER(agnostic residency) ← ADAPTER(arch) emits current-op RegionPlan
+  One residency / one D3D12 promotion; no per-family streamer.
+  Law: ../UNIVERSAL_STREAMER_RESIDENCY_001/UNIVERSAL_SPLIT_STREAM.txt
+  MODEL_NAMESPACE / PLAN / POST_ROUTER / HOST_BUDGET: see that drop.
+  Serving any family without a second streamer implementation.
+
+CURRENT OBSERVED (DeepSeek lane only):
+  SOURCE_WIRED=1
+  RUNTIME_REACHED=0
+  REAL_ROUTE_EXPERT_MLA_LOGITS_TOKEN=PENDING
+  PROMOTE=0
+  AUTHORIZED_PASS=0
+
+RESIDENCY_VOCAB (streamer counters; family-agnostic):
+  COLD → MORNING_GROUCH → WARM → HOT
+  LAW=../MORNING_GROUCH_FIRST_STREAM.txt
+  MODULE=../MORNING_GROUCH_STREAMER_001/
+
+DO_NOT:
+  Collapse adapter work into “DeepSeek streamer”
+  Claim provider-compat streamers (Ollama/HF) as product core
+  Mint RUNTIME_REACHED or PROMOTE from SOURCE_WIRED alone
+  Confuse MORNING_GROUCH with speculative prefetch

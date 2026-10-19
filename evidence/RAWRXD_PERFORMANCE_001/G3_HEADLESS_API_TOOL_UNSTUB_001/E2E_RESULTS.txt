@@ -1,0 +1,13 @@
+GATE=G3_HEADLESS_API_TOOL_UNSTUB_001
+EXE_SHA256=4A68211B4FA808211AAE0AE3E6B7101DE2DE09CFEEB18E2146CFB62F326C90FC
+PORT=11948
+E2E_PASS=True
+PRE_MOTD_403_MOTD_REQUIRED=True
+MOTD_READ_200=True
+LIST_DIR_200=True
+EXEC_CMD_200=True
+OLD_PUBLIC_ROUTES_VETO=0
+pre|HTTP/1.1 403 Forbidden|{"error":"motd_required","message":"Read Message of the Day (PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool"}
+motd|HTTP/1.1 200 OK|{"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay ??? Multitask continue triggers + MOTD gate: models cannot\r\n  execute tools until they Read this file each message turn (Cursor + Deep IDE).\r\nalwaysApply: true\r\n---\r\n\r\n# PassiveRoleNotRoleplay\r\n\r\nThis fi
+post|HTTP/1.1 200 OK|{"path":"G:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".archived_orphans","type":"dir"},{"name":".archived_orphans_ultra","type":"dir"},{"name":".backups","type":"dir"},{"name":".cache","type":"dir"},{"name":".clang-format","type":"file"},{"name":".clangd
+echo|HTTP/1.1 200 OK|{"success":true,"command":"echo HEADLESS_TOOL_E2E_OK","exitCode":0,"output":"HEADLESS_TOOL_E2E_OK\r\n"}

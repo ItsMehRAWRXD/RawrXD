@@ -1,0 +1,125 @@
+﻿SUPERSEDED_SPEND=1
+SUPERSEDED_BY=GATE.txt
+MLA_KV_LAYOUT_CONTRACT=DISCOVERY_SEALED
+DATE=2026-09-08
+CLASS=DISCOVERY_NOT_INVENTION
+INVENTION=0
+CODE_CHANGE=0
+RNG_USED=0
+
+# What this is: facts observed in existing host MLA path.
+# What this is not: a new device layout design.
+
+BASELINE_REVERSE
+  src/deep2/K2KVCache.hpp
+  src/deep2/K2MLAAttention.cpp   (MlaAttentionComplete)
+  src/deep2/K2NativeStreamGate.cpp (kvDim = max(H*(nope+rope), H*vDim))
+
+# ---------------------------------------------------------------------------
+# DISCOVERED dimensions (Kimi-K2 / defaults in gate when unset)
+# ---------------------------------------------------------------------------
+DISCOVERED_DIMS
+  NUM_HEADS=64            # k2cfg.numHeads ?: 64
+  QK_NOPE=128             # qkNopeHeadDim ?: 128
+  QK_ROPE=64              # qkRopeHeadDim ?: 64
+  QK_DIM=192              # nope+rope (computed in MlaAttentionComplete)
+  V_DIM=128               # vHeadDim ?: 128
+  K_PACK=H*QK_DIM         # discovered concat width
+  V_PACK=H*V_DIM
+  KV_SLOT=max(K_PACK,V_PACK)   # K2KVCache::kvDim_ â€” BOTH buffers use this
+
+# ---------------------------------------------------------------------------
+# 1) Topology (DISCOVERED)
+# ---------------------------------------------------------------------------
+DISCOVERED_K_TOPOLOGY=PACKED_CONTIGUOUS_PER_HEAD
+DISCOVERED_PLANAR_SEPARATE_K_NOPE_K_ROPE=0
+
+Observed in MlaAttentionComplete pack loop:
+  kh = kCur + h * QK_DIM
+  memcpy(kh,           k_b + h*QK_NOPE, QK_NOPE)   # K_nope
+  memcpy(kh + QK_NOPE, k_pe,            QK_ROPE)   # K_rope (shared k_pe)
+
+DISCOVERED_K_PE=SHARED_MQA_BROADCAST_INTO_EACH_HEAD
+DISCOVERED_CACHE_STORES=POST_ROPE_PACKED_K
+  (ropeNeoXInplace(k_pe) before pack; no separate planar rope cache)
+
+# ---------------------------------------------------------------------------
+# 2) Stride & geometry (DISCOVERED â€” host K2KVCache)
+# ---------------------------------------------------------------------------
+DISCOVERED_STORAGE=TWO_VECTORS
+  keys_   : separate std::vector<float>
+  values_ : separate std::vector<float>
+  NOT one interleaved K/V slab
+
+DISCOVERED_INDEX (float units), both keys_ and values_:
+  offset(layer, position) =
+      ((layer * allocatedSeq_) + position) * kvDim_
+  Key(layer,pos)   = keys_.data()   + offset
+  Value(layer,pos) = values_.data() + offset
+
+Within Key(layer,pos) payload (length kvDim_):
+  head h K slice starts at h * QK_DIM
+  within head: [0..QK_NOPE) = nope, [QK_NOPE..QK_DIM) = rope
+
+Within Value(layer,pos) payload (length kvDim_):
+  head h V slice starts at h * V_DIM
+  live V = H * V_DIM; remainder of slot to kvDim_ is zero pad
+  (Write memcpy's full kvDim_ for both K and V)
+
+DISCOVERED_LAYER_POS_DIM_ORDER=layer_major then position then head_pack
+  (not position-major across layers)
+
+# ---------------------------------------------------------------------------
+# 3) V_DIM (DISCOVERED)
+# ---------------------------------------------------------------------------
+DISCOVERED_V_DIM=128
+DISCOVERED_V_INTERLEAVED_WITH_K=0
+DISCOVERED_V_BUFFER=DEDICATED_values_VECTOR
+DISCOVERED_V_AND_K_SHARE_OUTER_SLOT_WIDTH=1
+  (same kvDim_ stride; V content narrower, padded)
+
+# ---------------------------------------------------------------------------
+# 4) Buffer ownership (DISCOVERED in live product path today)
+# ---------------------------------------------------------------------------
+DISCOVERED_LIVE_KV_OWNER=HOST_STD_VECTOR
+  K2KVCache keys_/values_ are host heap, not DEVICE_LOCAL.
+DISCOVERED_DEVICE_LOCAL_KV_IN_PRODUCT_PATH=0
+DISCOVERED_HOST_MAPPED_DEVICE_KV_MIRROR=NOT_PRESENT_IN_HOST_BASELINE
+
+# Explicit non-claims (do not invent):
+NOT_DISCOVERED_AS_PRODUCT_AUTHORITY
+  DEVICE_LOCAL K/V cache binding
+  EnsureMlaAttn / mla_k_cache_ / mla_v_cache_ byte geometry
+  attn_decode_mla.comp index formulas as SSOT
+  Any device stride that drops host KV_SLOT padding
+Those may exist as drafts on disk â€” CLASS=PARTIAL_DRAFT_NON_AUTHORITY
+until measured under PATH_B with parity to THIS discovery.
+
+# ---------------------------------------------------------------------------
+# Append semantics (DISCOVERED)
+# ---------------------------------------------------------------------------
+DISCOVERED_APPEND
+  Write(layer, key=kCur, value=vCur) at currentLength_
+  CommitPosition() advances length (caller-side in stream gate)
+  Attention read: Key(layer,t)+h*QK_DIM , Value(layer,t)+h*V_DIM
+  scale = 1/sqrt(QK_DIM)
+  attnOut = [H * V_DIM]
+
+DISCOVERED_ROPE
+  NeoX half-split on rope dims only
+  effectivePos = position / ropeScale   # host ropeNeoXInplace
+
+# ---------------------------------------------------------------------------
+# Authority use
+# ---------------------------------------------------------------------------
+SSOT_FOR_PATH_B_PARITY=THIS_DISCOVERY
+DEVICE_DRAFTS_MUST_MATCH_LOGICAL_PACK=packed_nope_rope_per_head + dedicated_V
+DEVICE_EXACT_BYTE_LAYOUT=OPEN_UNTIL_IMPLEMENTED_AND_PARITY_MEASURED
+
+PHASE=PATH_B_HELD_UNDER_GATE_STOP
+NEXT_SPEND=NONE # SUPERSEDED_SPEND; phenomenon excised
+GATE_STOP=1 # was 0; SUPERSEDED_SPEND vs live GATE
+NEW_STACKS_ALLOWED=0
+CHAMPION_WALL_MEDIAN_NS=10184789000
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+B1_HYGIENE=2026-09-08 NEW_STACKS_ALLOWED forced 0 to match GATE

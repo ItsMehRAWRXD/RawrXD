@@ -1,0 +1,35 @@
+TOKEN NILW — TOP 15 FAIL-CLOSED CONDITIONS
+
+01 TOTAL_WEIGHTS_ZERO
+   A whole-model denominator of zero invalidates every NILW ratio.
+02 ACTIVE_WEIGHTS_ZERO
+   Active BPW cannot be derived without an active subset.
+03 ACTIVE_GT_TOTAL
+   Physicalization may not exceed the logical model.
+04 CODEC_BITS_ZERO
+   The new-information fraction requires a codec-bit denominator.
+05 NEW_CODEC_GT_CODEC
+   New active information cannot exceed the represented active payload.
+06 PAYLOAD_SUM_OVERFLOW
+   new_codec_bits + overhead_bits must fit exactly in 64 bits.
+07 IDENTITY_MISMATCH
+   Measured transport bits must equal codec-new bits plus overhead bits.
+08 NILW_TARGET_ZERO
+   Both numerator and denominator of the configured limit must be nonzero.
+09 PAYLOAD_CAP_ZERO
+   The per-token byte envelope must be explicit.
+10 RATE_CAP_ZERO
+   The information-rate ceiling must be explicit.
+11 TPS_TARGET_ZERO
+   The token-rate target must be explicit.
+12 EMPTY_RUN_WINDOW
+   Minimum tokens, generated tokens, and wall time must all be nonzero.
+13 BOOLEAN_OUT_OF_RANGE
+   Authority and state facts are strictly 0 or 1.
+14 RUN_PAYLOAD_TOO_SMALL
+   Aggregate run bytes must include at least the current token payload.
+15 AUTHORITY_OR_SUSTAINABILITY_MISSING
+   Any missing gate keeps RUNTIME_AUTHORIZED clear; no partial pass promotes.
+
+All ratio and throughput comparisons use unsigned 128-bit cross-products.
+No floating-point rounding can turn a failing boundary into a pass.

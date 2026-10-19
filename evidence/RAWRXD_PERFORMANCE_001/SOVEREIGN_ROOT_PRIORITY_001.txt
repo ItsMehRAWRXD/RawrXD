@@ -1,0 +1,26 @@
+SOVEREIGN_ROOT_PRIORITY_001=SEALED
+DATE=2026-09-08
+ROLE=PRIORITY_CHOICE
+
+QUESTION
+  A=refine TITAN_LOOP for GGUF weight-tensor pre-fetch
+  B=link Sovereign Root and test entry-point stability
+
+PRIORITY=B_THEN_A
+  REASON=GGUF prefetch inside TITAN_LOOP is meaningless if
+         Sovereign_Engine_Bootstrap / PEB / syscall bridge do not boot.
+
+PHASE_1 — ENTRY STABILITY
+  1. Fix tool path to live ml64/link (BuildTools 14.44 — not obsolete Enterprise 14.50)
+  2. Link /NODEFAULTLIB /ENTRY:Sovereign_Engine_Bootstrap
+  3. Prove: process starts → PEB_Bootstrap returns → TITAN_LOOP entered once → clean exit
+  4. Stack: and rsp,-16 before any AVX-512
+  5. Prefer /LARGEADDRESSAWARE (YES) if 56GB canvas braid is in scope
+     (/LARGEADDRESSAWARE:NO fights Segmented Virtual Canvas)
+
+PHASE_2 — TITAN_LOOP GGUF PREFETCH
+  only after Phase_1 receipt
+  Swarm_Steal ↔ GEMV dispatch; weight pre-fetch into Positive arena
+
+STATUS=PRIORITY_ENTRY_STABILITY
+AWAITING=user_go_link_test

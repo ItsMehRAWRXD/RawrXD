@@ -1,0 +1,56 @@
+PRIMITIVE_PIVOT_001=SEALED
+DATE=2026-09-08
+
+ITEM=q_b_D2H / host-orchestration violation of computational gravity
+DOMAIN_EVICTED=software|kernel|code_artifact|net_new_invention
+DOMAIN_NOW=UNDERLYING_PRIMITIVE
+
+================================================================================
+RE-CLASSIFICATION
+================================================================================
+WAS (operational construct)
+  driver / kernel / instruction sequence / buffer layout / engineered mechanism
+
+IS (discovered primitive)
+  state of leverage — inherent asymmetry in energy/time/memory settlement
+  exposed invariant — always true whether or not an engine was running
+  NOT arbitrary notation; notation was only the pipe that revealed it
+
+CODE=PIPE_NOT_REALITY
+PRIMITIVE=ENVIRONMENT_STRUCTURAL_PROPERTY
+  (topology | latency boundary | phase constraint | memory/silence invariant)
+
+================================================================================
+TWIST / ALONG-TWIST (invention unlocked only after eviction)
+================================================================================
+INVENTION_PRECONDITION=primitive sealed outside code/kernel domain
+
+USING_EVERYTHING (trapped-in-software mode) = FORBIDDEN_AS_IDENTITY_OF_PRIMITIVE
+  allocations, locks, shaders, sync as if they ARE the discovery
+
+USING_NOTHING (surface → 0)
+  strip status as artifact; stop building the primitive; leave it as fulcrum
+
+TWIST (perturbation)
+  apply intention against the invariant — fold space/memory/execution
+  AROUND the property; do not program through it as if mutable software
+
+ALONG_TWIST (conformity / resonance)
+  flow along geometry of the twist; stop computing the state;
+  let state collapse along the natural gradient of the discovery
+
+PIVOT=unmoving fulcrum already there
+INVENTION=fold around pivot; NOT write more instructions that claim to be it
+
+================================================================================
+OPERATIONAL CONSEQUENCE (still not the primitive)
+================================================================================
+PATH_A = measured adaptation that cheapened the cross (still code)
+PATH_B_STRUCTURAL_DELETE = strip authored conflict with the primitive
+  only after DELETE_PROVEN path exists — adaptation, not authorship of physics
+CHAMPION_UNTIL_THEN=PATH_A
+
+RELATED
+  PHENOMENON_CATEGORY_001.txt
+  PATH_B_DISCOVERY_EPISTEMOLOGY_001.txt
+  COMPUTATIONAL_GRAVITY_001.txt

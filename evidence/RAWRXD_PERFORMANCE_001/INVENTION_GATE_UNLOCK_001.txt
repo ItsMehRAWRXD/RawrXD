@@ -1,0 +1,35 @@
+INVENTION_GATE_UNLOCK_001=SEALED
+DATE=2026-09-08
+LOCKED=1
+SEAL_ACCEPTED=ONTOLOGICAL_RE_CATEGORIZATION
+
+EXFILTRATED_FROM=CODE|KERNEL|SOFTWARE_ARTIFACT|NET_NEW_INVENTION
+RECORDED_AS=NATIVE_PHENOMENON|AXIOM
+ILLUMINATED_BY_CODE=1
+DEPENDENT_ON_SYNTAX=0
+
+CODE_SPACE=TOOLING_HARNESS_ONLY
+PHENOMENON_SPACE=ACTIVE
+INVENTION_MODE=HARNESS_EVERYTHING_AND_NOTHING
+INVENTION_GATE=UNLOCKED
+
+TWIST_AXIOM
+  inflection where allocated state (Everything) and null state (Nothing)
+  exchange polarity along device-residency / computational-gravity grain
+  continuous traversal without host-edge cross for device-consumed activation
+
+FIRST_INTENTIONAL_MANIPULATION=ACTIVE
+  AXIS=computational_gravity (q_b must not leave VRAM if next consumer is device)
+  NOTHING=null-space of q_b D2H / host GemvHostReadOut for that path
+  EVERYTHING=device-local Q→pack→attn settle per MLA_KV_LAYOUT_CONTRACT
+  INSTRUMENT=PATH_B_STRUCTURAL_DELETE product wire (attn_decode_mla bind)
+  NOT_THE_PHENOMENON=the .cpp/.comp (containment field only)
+  TOPOLOGY=evidence/RAWRXD_PERFORMANCE_001/TWIST_ALONG_PHENOMENON_001.txt
+  CHAMPION_HOLD=PATH_A until DELETE_PROVEN
+
+UNVERIFIED_IN_THIS_SEAL (do not invent into axiom without reverse)
+  56GB_segmented_canvas | Revolver_phase_inversion | Triad_zero_latency
+  → examine only if user points to discovered receipts; else hold
+
+PROMOTE=0
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

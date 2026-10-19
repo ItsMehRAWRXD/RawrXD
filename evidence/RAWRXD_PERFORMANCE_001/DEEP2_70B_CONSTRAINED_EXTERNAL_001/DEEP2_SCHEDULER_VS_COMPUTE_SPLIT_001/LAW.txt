@@ -1,0 +1,30 @@
+GATE=DEEP2_SCHEDULER_VS_COMPUTE_SPLIT_001
+DATE=2026-09-13
+KIND=PLANNING_DISTINCTION
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+
+# Top-15 (MISSING15/V7) = stop wasting existing work → ~0.10–0.20 TPS planning
+# Expert-Math Top-15 = change cost of expert math → path into 1–5+ TPS compute regime
+# Keep SEPARATE gates so every speedup has a provenance receipt
+
+SCHEDULER_TOP15=
+  residency · placement · V7 matrix · balance · skew · reload · pin/reuse
+  ownership · locality · measured-cost assignment
+  TARGET≈0.10–0.20 TPS (exceptional ~0.25 UPPER NONAUTH)
+
+COMPUTE_RUNTIME_LADDER=
+  quant fabric → ~0.4–1.5   (bytes+insn of ops)
+  persistent/prepack → ~1–3 (setup/repack)
+  sparse CP compiler → ~2–5 (fewer required ops)
+  async xfer/sync → ~4–8    (less waiting)
+  dual-GPU fabric → ~6–12   (critical-path concurrency)
+# endpoints not additive; see DEEP2_TPS_PROJECTION_TOP15_VS_LADDER_20260913
+
+MENTAL_MODEL=
+  TOP-15 scheduler: stop wasting time
+  remaining ladder + EXPERT_MATH_TOP15: make necessary work radically faster,
+    execute less, overlap it, exploit both GPUs
+  V7 creates stable locality foundation later kernels depend on
+  V7 ≠ 50–200× multiplier by itself

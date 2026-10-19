@@ -1,0 +1,1 @@
+﻿{"model":"rawrxd","response":"\nSay hi in three words is a popular phrase that has become a popular way to greet someone in a casual and friendly way. Here's how it's said in three words:\n\n1. \"Hey","done":true}

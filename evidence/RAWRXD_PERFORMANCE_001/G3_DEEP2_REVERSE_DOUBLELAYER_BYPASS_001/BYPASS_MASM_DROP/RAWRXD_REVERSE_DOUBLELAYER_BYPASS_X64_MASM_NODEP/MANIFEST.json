@@ -1,0 +1,52 @@
+[
+  {
+    "file": "AUTHORITY_LAW.txt",
+    "bytes": 778,
+    "sha256": "6f9db19f1d18ce3303166e4a336f989f2680a0cff5b5871e700102c6c82a3595"
+  },
+  {
+    "file": "README.md",
+    "bytes": 638,
+    "sha256": "f0fd7de4c675ac2cc7a743ee5b6dcfab2600292aecd0ad44dff3e176c716c5f8"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 3477,
+    "sha256": "e190f537c8dbbff29ab0d6adbc0608cec69b30bd9b4a3baac6179ff9947b993e"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 587,
+    "sha256": "6d4b3ca0fb1622aeb72a587885597ca1a3e3aabda5d434846531f0861b1963a8"
+  },
+  {
+    "file": "bypass_harness.asm",
+    "bytes": 893,
+    "sha256": "f8ee2fd66398d68937939d7e8ab23ca4399a12b204b83663de0909a2740529de"
+  },
+  {
+    "file": "epoch_mismatch_harness.asm",
+    "bytes": 640,
+    "sha256": "b5c082d2de54c454c986517b83168d61c41f545e89b1721d1c6c2a39e7eb16f0"
+  },
+  {
+    "file": "normal_harness.asm",
+    "bytes": 553,
+    "sha256": "f5b79693f7fe76f5d05c8b7519627f60061cad6e14731f5f376b8204df3934c2"
+  },
+  {
+    "file": "reverse_doublelayer_bypass.asm",
+    "bytes": 5128,
+    "sha256": "0180d4e2597a6e23c916081983a01fe562d5ad1b20d0f99b5aad67f6650e8418"
+  },
+  {
+    "file": "reverse_doublelayer_bypass.inc",
+    "bytes": 1839,
+    "sha256": "be4497c7f29ac3d7c8e527ef5501c71e736fef04a8f284e0f0d69feb9c7dca61"
+  },
+  {
+    "file": "stale_bypass_harness.asm",
+    "bytes": 661,
+    "sha256": "6cd812dcd8a39a3735e978cb69f629ca73c5d117192e4d48ea99a479268a93f2"
+  }
+]

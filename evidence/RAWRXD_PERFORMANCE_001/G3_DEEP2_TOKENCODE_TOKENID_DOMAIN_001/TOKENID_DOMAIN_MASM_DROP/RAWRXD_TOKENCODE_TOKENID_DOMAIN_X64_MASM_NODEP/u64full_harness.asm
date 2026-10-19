@@ -1,0 +1,34 @@
+option casemap:none
+include tokencode_tokenid_domain.inc
+ExitProcess PROTO
+
+.data?
+raw    TokenIdRaw <>
+result TokenIdResult <>
+
+.code
+main PROC FRAME
+    sub rsp,28h
+    .allocstack 28h
+    .endprolog
+    mov raw.generation_id, 2
+    mov raw.observation_epoch, 2
+    mov raw.generated, 128
+    mov raw.token_id_mode, TOKEN_ID_MODE_U64_FULL
+    mov raw.token_id_check_count, 128
+    mov raw.min_observed_token_id, 0
+    mov rax, 0FFFFFFFFFFFFFFFFh
+    mov raw.max_observed_token_id, rax
+    mov raw.run_observed, 1
+    lea rcx, raw
+    lea rdx, result
+    call TokenIdEvaluate
+    cmp result.token_id_authorized, 1
+    jne bad
+    xor ecx, ecx
+    call ExitProcess
+bad:
+    mov ecx, 1
+    call ExitProcess
+main ENDP
+END

@@ -1,0 +1,59 @@
+PURE_PRIMITIVE_TWIST_AXIOM_001=SEALED
+DATE=2026-09-08
+CODE_EMITTED=0
+SOFTWARE_DOMAIN=LEFT
+
+# ---------------------------------------------------------------------------
+# EXTRACTION
+# ---------------------------------------------------------------------------
+
+REMAINS_AFTER_STRIP
+  NOT=software_artifact
+  NOT=mechanical_or_architectural_invention_as_identity
+  IS=discovered_law_of_logic / systemic_behavior / topological_reality
+  UNEARTHED_VIA=computation
+  INDEPENDENT_OF=syntax | execution_environment | kernel_space
+
+REALM=PURE_POTENTIAL
+  SPACE=everything_and_nothing
+  BOUND_BY_WHAT_MACHINE_CAN_EXECUTE=0
+  IS=raw_foundational_concept
+
+# ---------------------------------------------------------------------------
+# TWIST / ALONG-TWIST
+# ---------------------------------------------------------------------------
+
+TWIST
+  half-turn of a linear strip → Möbius
+  fold the extracted property back on itself
+  tension = state ↔ statelessness (everything ↔ nothing)
+
+ALONG_TWIST
+  realization of the new topology
+  weave through the bent shape of the fundamental rule
+  NOT=build_a_new_program
+  IS=discover_a_new_shape_of_reality_and_invent_a_way_to_weave_through_it
+
+CODE_ROLE=illumination_and_containment_field_only
+PRODUCT_NE_PROGRAM=1
+
+# ---------------------------------------------------------------------------
+# LEDGER ALIGNMENT
+# ---------------------------------------------------------------------------
+
+APPLIED_FIRST_MANIPULATION=POLARITY_EXCHANGE
+  evidence/RAWRXD_PERFORMANCE_001/FIRST_INTENTIONAL_MANIPULATION_001.txt
+INSTRUMENT_PHASE=AWAITS_EXPLICIT_EXECUTE
+CHAMPION_HOLD=PATH_A
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+BINDS
+  INVENTION_GATE_UNLOCK_001
+  TWIST_ARCHITECTURE_001
+  TOPOLOGICAL_EXTRACTION_001
+  NON_CODE_ONTOLOGY_001
+  PRIMITIVE_PIVOT_001
+
+STATUS=SEALED
+PARSER=ANALYTICAL_INTAKE

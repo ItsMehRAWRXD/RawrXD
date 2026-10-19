@@ -1,0 +1,26 @@
+G3_IDE_BACKEND_CONNECT_001 SMOKE
+ASOF=2026-09-09T22:52
+TIP_CLIMB=HOLD PROMOTE=0
+
+LISTEN:
+  127.0.0.1:11436  RawrXD-Win32IDE --headless (pid observed)
+  127.0.0.1:11435  HttpListener CORS proxy -> 11436
+  127.0.0.1:11434  ollama (unchanged)
+
+curl -H "Origin: null" http://127.0.0.1:11435/status
+  -> HTTP 200 + Access-Control-Allow-Origin: * + server_running true
+
+curl -H "Origin: null" http://127.0.0.1:11435/health
+  -> HTTP 200 {"status":"ok",...}
+
+curl -H "Origin: null" http://127.0.0.1:11435/api/engine/capabilities
+  -> HTTP 200 RawrXD-HeadlessIDE capabilities JSON
+
+curl -H "Origin: null" http://127.0.0.1:11435/api/tags
+  -> HTTP 200 {"models":[]}
+
+curl -H "Origin: null" http://127.0.0.1:11436/status
+  -> HTTP 403 {"error":"origin_denied"}  (why proxy is required until HeadlessIDE.exe relink)
+
+curl http://127.0.0.1:11434/
+  -> HTTP 200 Ollama is running (PS); browser file:// still CORS-blocked without OLLAMA_ORIGINS

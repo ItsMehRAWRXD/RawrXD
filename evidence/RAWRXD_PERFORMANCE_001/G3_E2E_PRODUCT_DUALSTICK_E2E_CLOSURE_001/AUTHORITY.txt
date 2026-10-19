@@ -1,0 +1,17 @@
+GATE=G3_E2E_PRODUCT_DUALSTICK_E2E_CLOSURE_001
+AUTHORITY=product DualStick TinyLlama E2E lane closed (coverage seal; not champion)
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+LIVE_STACK=DualStick TRUE + FreeToken + FutureConsumer + MARS + cyclone + elastic PASSIVE + stream/reverse-bunnyhop
+AUTHORITATIVE_SHA256=238EF8E229B5E1140F4FB1A5101F5591FBA2BF699F41AB4D4F95FF3B0E202501
+N5=5/5 (G3_E2E_REVERSE_BUNNYHOP_UNSTUB_001)
+
+STILL_VETO=
+  MoE Vulkan async prefetch (CPU fallback stub; TinyLlama dense N/A)
+  LIVE_PATH_PLASMA_SAMPLES>0 (ADL Overdrive5 absent on this host)
+  host→VRAM elastic mover on DualStick (PASSIVE by design / suppressHostVramMoves)
+  IDE tensor_hop JSON→native layer-skip (never existed; do not invent)
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700
+NEXT_SPEND=NONE

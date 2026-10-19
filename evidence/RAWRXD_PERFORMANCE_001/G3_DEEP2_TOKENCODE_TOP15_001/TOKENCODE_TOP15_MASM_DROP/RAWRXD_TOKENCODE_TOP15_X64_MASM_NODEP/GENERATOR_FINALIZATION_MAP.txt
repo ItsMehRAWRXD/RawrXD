@@ -1,0 +1,38 @@
+RUNTIME GENERATOR FINALIZATION MAP
+
+Already closed independently:
+  authoritative token runtime
+  authoritative decode runtime
+  deployed NILW15 zero/fail-closed witness
+  pump-owned N+1 initiation
+  tokensdecoded Top-15 contract
+
+This drop adds:
+  tokencode Top-15 authority
+
+Generator-side chain after this drop:
+
+  GENERATED TOKEN INTENT
+          |
+          v
+     TOKENCODE TE01..TE14
+          |
+          v
+       TE15 AUTH
+          |
+          v
+  TOKENSDECODED TD01..TD14
+          |
+          v
+       TD15 AUTH
+          |
+          v
+  NEGATIVE DOUBLE STATIC LAYER
+          |
+          v
+       FINAL AUTHORITY
+
+Remaining product proof after native MASM validation:
+  one real model token must feed live tokencode counters,
+  then live tokensdecoded counters,
+  and close both authorities for the same generation.

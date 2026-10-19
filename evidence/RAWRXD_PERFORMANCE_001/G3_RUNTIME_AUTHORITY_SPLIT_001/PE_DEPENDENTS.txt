@@ -1,0 +1,24 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    dxgi.dll
+    vulkan-1.dll
+    pdh.dll
+    KERNEL32.dll
+
+  Summary
+
+      39F000 .data
+        1000 .fptable
+        F000 .pdata
+       52000 .rdata
+        1000 .reloc
+        1000 .rsrc
+      18B000 .text

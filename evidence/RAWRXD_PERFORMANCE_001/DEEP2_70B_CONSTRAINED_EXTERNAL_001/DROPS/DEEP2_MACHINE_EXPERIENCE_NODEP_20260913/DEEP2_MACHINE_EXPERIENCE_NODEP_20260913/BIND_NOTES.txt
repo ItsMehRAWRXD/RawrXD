@@ -1,0 +1,16 @@
+Minimal V7 bind (do not claim PASS from this source drop):
+
+1) Own one DualStickExperience beside DualStickImbalance state.
+2) At product/session open, build Epoch from:
+   GPU ids + driver fingerprint + runtime build + kernel ABI + model tensor-layout hash + topology.
+3) At token/layer start, update Regime buckets (clocks/queue/VRAM/contention/transfer mode).
+4) In DualStickImbalance::KernelCost:
+   fallback = existing keyed EWMA;
+   cost = DualStickExperienceCost(layer, expert, stick, quant, inDim, outDim, resident, fallback).
+5) On each individually-attributed expert completion, Observe(actual_ns,predicted_ns,truthValidated=true).
+   Do NOT feed aggregate stick wall as an individual expert sample.
+6) Persist only after a clean product run: EXIT=0, SEL==EXE, ACQUIRE_FAIL=0, WORKER_FAILURES=0.
+7) On kernel/runtime/driver/model-layout change call BeginGeneration with only affected Feature bits.
+8) If live error exceeds threshold: QuarantineDrift; fallback remains current V6 estimator.
+9) Revalidate quarantined cells using live truth samples before reuse.
+10) Phase-B authority remains SKEW<5 and predictor-error target; this drop mints no TPS.

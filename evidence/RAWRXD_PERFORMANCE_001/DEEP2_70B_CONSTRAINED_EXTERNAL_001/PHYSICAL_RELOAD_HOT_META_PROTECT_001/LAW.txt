@@ -1,0 +1,19 @@
+GATE=PHYSICAL_RELOAD_HOT_META_PROTECT_001
+DATE=2026-09-13
+KIND=ONE_VARIABLE_AB
+PARENT=PHYSICAL_RELOAD_ENVELOPE_001
+PROMOTE=0
+BLEND_W=0
+RAISE_BUDGET=0
+NOT_RUN!=PASS
+
+CHANGE=
+  DualStickInvalidateExpert: MarkCold only if roles 1/2/3 all absent
+  (HasPinnedGemvWeight probe; else keep place hot-set)
+  HOT_TOUCH2 protect remains (IsHot || touch_n>=2)
+
+PASS_IF=
+  AFTER≤~350MiB on ≥2× locked GEN8 (parent seal)
+  ELSE report delta vs BASELINE_AFTER=1013268480
+
+FORBIDDEN=budget raise · V7 blend · HOT_TOUCH2 revert

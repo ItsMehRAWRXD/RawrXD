@@ -1,0 +1,9 @@
+﻿MODEL=gemma2.gguf
+PATH=F:\OllamaModels\models\blobs\sha256-ff1d1fc78170d787ee1201778e2dd65ea211654ca5fb7d69b5a2e7b123a50373
+SIZE_MB=5191 SHA16=FF1D1FC78170D787
+HEADLESS_PID=22776
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"gemma2.gguf","profile_source":"runtime_gguf","profile_id":9352,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300,"to
+LOAD=400 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

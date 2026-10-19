@@ -1,0 +1,38 @@
+﻿PATH_B_DELETE_DEPENDENCY_001=SEALED
+DATE=2026-09-08
+CLASS=INVENTORY_ONLY
+AUTHORIZED_SPEND=0
+IMPLEMENTED=0
+MEASURED=0
+NEW_STACKS_ALLOWED=0
+GATE_STOP=1
+NEXT_SPEND=NONE
+
+PROMOTE_STRICTER_THAN_PATH_A
+  DELETE_PROVEN = q_b_d2h_bytes==0 && vkcopy_qb==0 && host_memcpy_qb==0
+  PATH_B_PERF_PROMOTE = DELETE_PROVEN && PARITY && PURITY && PRODUCT
+                      && WALL_MEDIAN < 10184789000
+  ELSE CHAMPION_REMAINS=PATH_A
+
+DEPENDENCY_CHAIN_IF_AUTHORIZED
+  1. MLA_KV_LAYOUT_CONTRACT
+     AppendKV semantics, layer/position strides, decoupled RoPE, V_DIM=128 device ownership
+     NOTE=discovery seals may exist; product contract work awaits phase reopen
+  2. attn_decode_mla.comp
+     QK_DIM=192 V_DIM=128 online softmax
+  3. DispatchAttnDecodeMLA
+     host dispatch; device-local Q/K/V production
+  4. EXCHANGE_MIRROR_PROOF
+     q_b_D2H_bytes==0 && q_b_vkcopy_d2h_calls==0
+  5. PARITY_AND_WALL
+     n=5 vs PATH_A WALL_MEDIAN_NS=10184789000
+
+PARTIAL_DRAFTS_NON_AUTHORITY
+  attn_decode_mla.comp|spv|PathB*.cpp may exist on disk — NOT measured, NOT promoted
+  EnsureMlaAttn/DispatchAttnDecodeMLA — NOT spend until authorized
+
+VOIDED
+  GOLDENEYE_7.076|FUSED_STASH_8.058|ZERO_ATTENTION_D2H|PATH_B_PROMOTE
+
+FORBIDDEN_UNTIL_PHASE_REOPEN
+  NEW_STACKS | fabricated TPS | PATH_B_PROMOTE

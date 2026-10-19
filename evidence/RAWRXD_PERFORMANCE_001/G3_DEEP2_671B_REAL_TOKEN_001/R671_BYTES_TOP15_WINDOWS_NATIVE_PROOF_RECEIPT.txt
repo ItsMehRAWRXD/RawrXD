@@ -1,0 +1,20 @@
+R671_BYTES_TOP15 — Windows native proof
+=======================================
+
+ZIP_SHA256=e45617c71b2fd3ba02853f97badd98ab3c8e30942df225fa49e5569d57afcdf8
+RESULT=R671_BYTES_TOP15_X64_MASM_TESTS=PASS  RC=0
+
+HARNESSES:
+  zero   -> bytes_authorized=0 notrun>0
+  positive -> bytes_authorized=1 pass_count=14
+  tamper -> RB07_POINTER_PROVENANCE=FAIL bytes_authorized=0
+
+LOCAL_FIXES: PROTO strip, /Fo no-colon, BSS+field mov harnesses
+PROMOTE=0
+
+CHAIN:
+  REAL GGUF offset+bytes -> r671_acquire -> lease provenance
+  -> exact Deep2 byte consumption -> release -> RB01..RB15
+
+NEXT: actual DeepSeek GGUF tensor bytes satisfying RB15 in one-token forward
+  (not another residency witness)

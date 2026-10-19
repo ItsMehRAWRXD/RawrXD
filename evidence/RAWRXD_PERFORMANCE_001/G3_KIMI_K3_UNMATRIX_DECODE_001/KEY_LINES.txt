@@ -1,0 +1,51 @@
+GATE=G3_KIMI_K3_UNMATRIX_DECODE_001
+PROMOTE=0 TIP_CLIMB=HOLD
+K3C_CONTRACT=unsigned k3c_token(unsigned token, void *state);
+
+## Core law
+MODEL_SIZE != REQUIRED_RESIDENT_MEMORY
+kimi-k3-in-c proves capacity; Deep2's value is latency/async overlap of the residual I/O wall.
+
+## Published capacity / latency ladder (kimi README; same byte-identical output)
+  ~8 GB  → ~26.5 s/token   (full stream off disk each step)
+  ~32 GB → ~24.2 s/token
+  ~64 GB → ~19.8 s/token
+  ~128 GB+ → ~5.6 s/token  (disk wait largely gone; trunk pinned)
+Laptop demo capture (slower drive): 32.69 s/token @ 8.24 GB peak RSS
+Graviton2 8GiB (Rust port table): C 74.46 / Rust 72.47 s/token; I/O share ~78–83%
+
+## I/O-overlap hypothesis (evidence-bounded; not a promotion claim)
+1. At 8GiB-class budgets, wall is mostly storage: Rust/C measure ~78–83% I/O.
+   Perfect hide of I/O behind compute ⇒ theoretical residual ≈ compute-only ≈ 17–22% of wall
+   ⇒ order-of-magnitude upper bound ~4–6× if moves always finish before consumers need them.
+2. kimi trunk already implements FIXED-order L→L+1 overlap (k3_trunk_prefetch):
+   measured laptop: 71.75 → 42.27 s/token ≈ 1.70× (k3_trunk.h commentary).
+   That is the empirical proof that async next-consumer move removes a LARGE fraction of stall
+   even WITHOUT more RAM — when the next consumer is known.
+3. Remaining ladder gap 26.5 → 5.6 s/token (~4.7×) is mostly PINNING (fewer bytes read),
+   not arithmetic. Expert path is data-dependent (896 top-16); LRU helps but is not determinism.
+4. Deep2 can remove MOST of the *serial* stall when:
+   - FutureConsumer nextUse drives UnifiedAsyncMove before Current compute
+   - FreeToken dual-slot ring holds Current + Next (recycle Past)
+   - HOST_DECODE path uses host-side async read (not only Vulkan PrefetchAsync)
+   - ProductOpenSession stops requiring full tensor residency (stream like kimi trunk)
+5. Deep2 cannot claim kimi's 1.70× or 4–6× on RawrXD GGUF until measured under purified runner.
+   This gate seals the DISSECTION TARGETS, not a TPS promote.
+
+## Capacity vs latency (explicit split)
+CAPACITY_PROOF=EXTERNAL (kimi-k3-in-c / rust / metal) — already demonstrated
+LATENCY_ASYNC_GAP=DEEP2_VALUE — FutureConsumer + UnifiedAsyncMove + NVMe→RAM→VRAM
+HAS_ON_DISK_DEEP2=sliding window, FreeToken zones, FutureConsumer law/pool, MoE proxy,
+  RouterPrefetch, GlobalTensorIndex, NVMeStream, ElasticResidency UnifiedAsyncMove, MoE pack HUD
+MISSING_FOR_PRODUCT=FutureConsumer-driven prefetch wired through HOST_DECODE ProductRun;
+  OpenSession still fail-closed when VA cannot hold multi-GB resident tensors (LAA:NO)
+
+## R1
+MATRIX_001=FAIL_CLOSED PASS=7/10 — do not claim 10/10 or PROMOTE
+
+## Sources (public)
+https://github.com/FareedKhan-dev/kimi-k3-in-c
+https://raw.githubusercontent.com/FareedKhan-dev/kimi-k3-in-c/main/src/cli/k3_run.c
+https://raw.githubusercontent.com/FareedKhan-dev/kimi-k3-in-c/main/src/io/k3_trunk.h
+https://github.com/undeemed/kimi-k3-in-rust
+https://github.com/Exorust/kimi-k3-metal

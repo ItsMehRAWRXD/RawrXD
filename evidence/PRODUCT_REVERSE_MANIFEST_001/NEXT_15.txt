@@ -1,0 +1,30 @@
+﻿024 [PARTIAL] SCORE=330 Autoregressive decode loop
+    Implementation evidence exists but matched files contain stub/TODO markers.
+025 [PARTIAL] SCORE=330 Stop conditions
+    Implementation evidence exists but matched files contain stub/TODO markers.
+028 [PARTIAL] SCORE=330 Normal completion state
+    Implementation exists, but required dependencies are not DONE: 24,25
+029 [PARTIAL] SCORE=330 Generated-token accounting
+    Implementation evidence exists but matched files contain stub/TODO markers.
+120 [PARTIAL] SCORE=300 Product acceptance receipt
+    Declaration/name/interface evidence exists without strong implementation evidence.
+005 [PARTIAL] SCORE=270 Central model resolver
+    Implementation evidence exists but matched files contain stub/TODO markers.
+006 [PARTIAL] SCORE=270 Central GGUF loader
+    Implementation evidence exists but matched files contain stub/TODO markers.
+007 [PARTIAL] SCORE=270 Tokenizer construction
+    Implementation evidence exists but matched files contain stub/TODO markers.
+008 [PARTIAL] SCORE=270 KV cache implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+009 [PARTIAL] SCORE=270 Execution graph builder
+    Implementation evidence exists but matched files contain stub/TODO markers.
+010 [PARTIAL] SCORE=270 Production GenerateStream
+    Implementation evidence exists but matched files contain stub/TODO markers.
+011 [PARTIAL] SCORE=270 Forward layer implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+012 [PARTIAL] SCORE=270 Sampler implementation
+    Implementation evidence exists but matched files contain stub/TODO markers.
+013 [PARTIAL] SCORE=270 Streaming token emitter
+    Implementation evidence exists but matched files contain stub/TODO markers.
+014 [PARTIAL] SCORE=270 Unified teardown
+    Implementation evidence exists but matched files contain stub/TODO markers.

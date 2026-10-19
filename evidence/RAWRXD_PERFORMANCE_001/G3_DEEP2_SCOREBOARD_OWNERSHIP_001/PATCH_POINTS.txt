@@ -1,0 +1,15 @@
+A) Completion path:
+   ReleaseNextFromCompletion(...) after real kernel completion.
+
+B) Scoreboard pump:
+   TryIssueNextFromScoreboard(...) from normal pump/dispatch path.
+
+C) Legacy loop:
+   NoteSequentialLayerIssue() at every direct N+1 issue callsite.
+
+D) Evidence:
+   EmitOwnershipSeal(...) once per bound run.
+
+E) LIVE:
+   This drop never flips LIVE. Runtime must also prove real kernel dispatch,
+   GENERATED_TOKENS>0, TOKEN_COMMIT_PASS=1, and zero sequential issue count.

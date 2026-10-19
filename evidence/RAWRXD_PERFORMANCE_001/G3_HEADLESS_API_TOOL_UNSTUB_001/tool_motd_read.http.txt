@@ -1,0 +1,3 @@
+﻿LABEL=motd_read
+HTTP_STATUS=-1
+BODY=Unable to connect to the remote server

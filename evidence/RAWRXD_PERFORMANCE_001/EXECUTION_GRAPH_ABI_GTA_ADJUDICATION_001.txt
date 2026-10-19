@@ -1,0 +1,22 @@
+EXECUTION_GRAPH_ABI_GTA_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+AUTHORIZED_SPEND=0
+
+CLAIM=Created/locked Sovereign_Execution_Graph_ABI.asm on D:\rawrxd
+REVERSE
+  G:\~dev\rawrxd — file ABSENT
+  D:\rawrxd\src\asm\Sovereign_Execution_Graph_ABI.asm — ABSENT
+  ABI_LOCKED_CLAIM=FALSE_ON_THIS_HOST
+
+PROPOSAL_NEXT
+  Sovereign_Input_Hub (Prone/ZipTie) OR Neural Mesh NPC sync
+ADJUDICATION
+  BOTH REFUSED under GATE STOP
+  GTA/RDR2/WatchDogs mechanic invent = OUT_OF_SCOPE_PERF
+  Do not initialize Input Hub or Neural Mesh
+
+LIVE_AUTHORITY=PATH_A / deep2_benchmark.exe
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

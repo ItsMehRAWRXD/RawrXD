@@ -1,0 +1,23 @@
+DEEP2_BATTLE_STATION_LAW
+========================
+SIDE_CAR_ONLY=1
+CERT_BINARY_WRITE_ALLOWED=0
+CERT_LOG_WRITE_ALLOWED=0
+PRODUCT_MERGE_ALLOWED_DURING_CERT=0
+PROMOTE_ALLOWED=0
+DECLARATION_MINTS_AUTHORITY=0
+BATTLE_STATION_MINTS_TARGET_PASS=0
+OBSERVED_STATE_ONLY=1
+
+Required live invariants while TARGET=64 runs:
+  VENDOR_SMOKE=PASS
+  LOCAL_SMOKE=PASS
+  PID_ALIVE=1
+  CERT_BINARY_TOUCHED=0
+  SEALED_LOGITS_REUSE_OBSERVED=0
+  ENDURANCE_PRODUCT_MERGE=DEFERRED
+  PROMOTE=0
+
+TARGET=64 may only be reported PASS when the cert log itself contains a terminal PASS
+and the terminal counters reconcile. The Battle Station may observe and summarize this;
+it may not manufacture it.

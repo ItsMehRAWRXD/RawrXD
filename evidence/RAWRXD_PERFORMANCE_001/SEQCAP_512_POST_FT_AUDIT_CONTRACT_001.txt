@@ -1,0 +1,97 @@
+SEQCAP_512_POST_FT_AUDIT_CONTRACT_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_CONTRACT
+SPEND=0
+
+# --- FIXED GEOMETRY / POLICY -----------------------------------------------
+
+SEQ_CAP=512
+FIRST_TOKEN_BOUNDARY=AUDIT_START
+POST_FIRST_TOKEN_SKIP=0
+ZERO_FILL_AS_FIX=0
+FLOOR_TPS=5.000
+MANIFESTATION_FLIP=NON_AUTHORITY
+FIX_POLICY=SOURCE→BUILD→RUNTIME→MEASUREMENT
+
+# --- PATH_B_N5_003 DEFENSIBLE STATE ----------------------------------------
+
+OUTCOME=FAIL
+PROMOTE=0
+TRIALS_RUN=1 of 5
+STOP_REASON=trial_1_invalid_witness_stream_abort_teardown_av
+STOP_REASON_ALT_IF_PROTOCOL_HARD_STOP=trial_1_invalid_witness_stop_by_contract
+
+TRIAL_01=
+  STREAM_ABORT=1
+  GENERATION_WALL_NS=30540823900
+  DECODE_TPS_REAL=2.096
+  PARITY_PASS=1
+  EXIT=0xC0000005
+  WITNESS_EXIT_VALID=0
+
+DELETE_PROVEN=NOT_ASSESSED
+PRODUCT=0
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  PATH_B_N5=FAIL
+  CHAMPION=PATH_A
+  WALL_MEDIAN_NS=10184789000
+
+# --- CLAIM OWNERS (seqCap=512 post-first-token) ----------------------------
+
+CLAIM_OWNERS=
+  hidden[random#]               ← HIDDEN_PROBE
+  hidden[last]                  ← HIDDEN_LAST
+  bounded                       ← HIDDEN_BOUNDS / BOUNDED
+  valid                         ← HIDDEN_VALID / VALID
+  ProjectLogitsArgmax entry     ← LOGITS_ENTRY
+  ProjectLogitsArgmax complete  ← LOGITS_COMPLETE
+  stream contract complete      ← STREAM_COMPLETE
+  teardown entry                ← TEARDOWN_ENTRY
+  teardown complete             ← TEARDOWN_COMPLETE
+
+GOVERNING=
+  EMISSION_X(run N) → authority only for CLAIM_X(run N)
+  EMISSION_X ≠ CLAIM_Y authority
+  earlier emission ≠ later completion
+  neighboring stage ≠ target stage
+  successful producer ≠ successful consumer
+  prior run ≠ current run
+  developer inference ≠ runtime observation
+  absence of failure text ≠ success emission
+  NO CLAIM INHERITS AUTHORITY FROM ANOTHER CLAIM'S EMITTER
+
+FINAL_NORM_AFTER_L2 ×23
+  establishes only what those norm emissions report
+  does NOT establish hidden[random#]|hidden[last]|bounded|valid|LOGITS_ENTRY|LOGITS_COMPLETE
+
+# --- DISTINCT DEFECT CHAINS (do not conflate with Gate12/Q-buffer) ---------
+
+CHAIN_STREAM=
+  Path-B Attend completion
+    → Path-B completion
+    → generateStream contract completion
+    → STREAM_ABORT disposition
+
+CHAIN_TEARDOWN=
+  teardown entry
+    → teardown ownership / lifetime
+    → teardown completion
+    → 0xC0000005 disposition
+
+Gate12/Q-buffer change = not authority for remaining failures (this trial signatures absent only)
+
+# --- MODE D CLOSURE BAR ----------------------------------------------------
+
+Neither STREAM_ABORT nor teardown AV is closed until its own corresponding
+runtime evidence identifies the boundary required to justify a source change.
+
+SSOT=
+  OBSERVATION_AUTHORITY_001
+  PATH_B_N5_003_ATTRIBUTION_HOLD_001
+  HIDDEN_PROBE_WITNESS_001
+  PATH_B_N5_003/RECEIPT.txt (STOP_REASON corrected)
+  SEQCAP_512_001

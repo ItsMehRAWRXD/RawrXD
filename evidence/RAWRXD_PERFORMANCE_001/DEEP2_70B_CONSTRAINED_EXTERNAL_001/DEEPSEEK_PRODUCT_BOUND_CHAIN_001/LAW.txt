@@ -1,0 +1,72 @@
+GATE=DEEPSEEK_PRODUCT_BOUND_CHAIN_001
+DATE=2026-09-13
+KIND=LAW_FREEZE
+PROMOTE=0
+TPS_MINT=0
+PRODUCT_BOUND=0
+NOT_RUN!=PASS
+DROP=DEEP2_DEEPSEEK_V3R1_NODEP_20260913
+BASELINE_V6D=c1e90fcdf5
+
+# Flag flip ≠ close. Close live bind → parity → performance-authority.
+
+OWNERS_MISSING=
+  01 Live DeepSeek Product Bind (rawr run path; planner controls live exec)
+  02 Real Tensor Contract Bind (GGUF MLA/routed/shared/norm/out; no guessed layouts)
+  03 Router Identity Authority (IDs+weights bit-identical pre/post schedule)
+  04 DeepSeek MoE Execute Bind (fused 2-stick worklists; 2+2 retained)
+  05 Shared-Expert Live Bind (execute+pin; not planner metadata only)
+  06 MLA Numerical Parity Gate (real MLA math vs trusted reference)
+  07 MTP Live Module Detection (draft/verify iff validated MTP tensors)
+  08 Quant Kernel Dispatch Bind (Q2/Q3/Q4/FP8 → real Deep2 kernels + parity)
+  09 Individual Expert Timing Attribution (not aggregate stick wall)
+  10 Persistent Experience Product Bind (MachineExperience epoch/regime)
+  11 Prefetch Execution Bind (PlanPrefetch → async acquire; router frozen)
+  12 KV-Tier Execution Bind (advisory → live place/migrate; context exact)
+  13 Long-Prefill Live Bind (chunked vs unchunked token/logit parity)
+  14 End-to-End Authority Run (load→route→dual-GPU→decode→commit EXIT=0)
+  15 Timed TPS Certification (warm non-debug full-forward; then mint)
+
+STATE_MACHINE=
+  SOURCE_READY=1
+  → PRODUCT_BIND_COMPILES=1
+  → LIVE_MODEL_OPEN=1
+  → ROUTER_PARITY=1
+  → MLA_NUMERIC_PARITY=1
+  → MOE_NUMERIC_PARITY=1
+  → MTP_PARITY_OR_DISABLED_CORRECTLY=1
+  → 2PLUS2_GEOMETRY_RETAINED=1
+  → END_TO_END_EXIT0=1
+  → PRODUCT_BOUND=1
+  → TIMED_FULL_FORWARD_RUN=PASS
+  → TPS_MINT=1
+  → PROMOTE=1
+
+PRODUCT_BOUND=1 IF
+  REAL_PRODUCT_PATH=1
+  && ROUTER_ID_WEIGHT_PARITY=1
+  && MLA_NUMERIC_PARITY=1
+  && MOE_NUMERIC_PARITY=1
+  && SEL==EXE
+  && ACQUIRE_FAIL=0
+  && WORKER_FAILURES=0
+  && EXIT=0
+
+TPS_MINT=1 IF
+  PRODUCT_BOUND=1
+  && DEBUG_TIMING=0
+  && FULL_FORWARD=1
+  && GENERATED_TOKENS>=AUTH_MIN
+  && TOKEN_WALL_NS>0
+  && MEASURED_TPS_VALID=1
+
+PROMOTE=1 IF
+  PRODUCT_BOUND=1
+  && TPS_MINT=1
+  && RELOAD_REGRESSION=0
+  && ROUTER_QUALITY_REGRESSION=0
+  && NUMERIC_PARITY=1
+
+BIGGEST_GAPS=real DeepSeek MLA math · live tensor bind · timed full-forward authority
+LIVE_OWNER_NOW=HETEROGENEOUS_EXPERT_COST_MODEL_V7
+# DeepSeek bind after V7 ACCEPT; do not reopen Phase A 2+2

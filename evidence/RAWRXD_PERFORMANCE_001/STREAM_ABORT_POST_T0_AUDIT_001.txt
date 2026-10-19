@@ -1,0 +1,34 @@
+STREAM_ABORT_POST_T0_AUDIT_001=SEALED
+DATE=2026-09-08
+MODE=A
+TYPE=ROOT_CAUSE_AUDIT
+CODE_CHANGE=1
+
+SYMPTOM=
+  STREAM_ABORT=1 Gate 12: RoPE not applied
+  TOKENS_OBSERVED=64 TARGET=64 (N5 trials)
+  POSITION_MATCH=0 ROPE_POSITION=0 KV_POSITION=0 at TOKEN_INDEX=64
+
+ROOT_CAUSES (after first token / within decode):
+  1. ForwardMLALayers hardcodes position=0 every layer/token
+     → PathBAttend requires pos==cacheLen → fails after Commit
+     → RoPE always applied at pos 0 even on host fallback
+  2. ForwardMLALayers calls tlsKv.Clear() every token
+     → KV never accumulates across decode steps (fake length-1)
+     → hides CanAppend/seqCap failures; not real E2E decode
+  3. tlsKv.Reset(..., maxSeq=8) undersized for 64-tok streams
+     → would fail CanAppend after t8 once Clear is removed
+  4. Gate 12 post-check sees ropeApplied=0 while stream still emitted
+     tokens (contract fail after apparent success)
+
+NOT_FIX=
+  zeroing PRODUCT_FLOOR
+  skipping Gate 12
+  stubbing ropeApplied=true without attention
+  eligibility/memory poke
+
+FIX=
+  pass real decode position into ForwardMLALayers
+  persist KV across tokens (Clear only on stream start / geometry change)
+  size maxSeq to stream need
+  fail loud if enableMlaComplete && rope never applied in-layer

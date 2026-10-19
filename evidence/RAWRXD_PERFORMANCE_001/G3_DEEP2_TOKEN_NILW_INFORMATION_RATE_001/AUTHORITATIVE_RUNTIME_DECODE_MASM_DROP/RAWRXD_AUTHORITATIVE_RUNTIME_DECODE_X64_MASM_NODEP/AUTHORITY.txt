@@ -1,0 +1,17 @@
+AUTHORITATIVE_RUNTIME_DECODE
+
+INPUT:
+    raw counters only.
+
+OUTPUT:
+    derived decode witnesses and DECODE_AUTHORIZED.
+
+NO COUPLING:
+    SCOREBOARD_SCHEDULER_LIVE is not read or written.
+    PROMOTE is not read or written.
+    TOKEN_NILW is not read or written.
+
+DECODE_AUTHORIZED is an independent runtime-decode proof only.
+
+NOT_RUN != PASS
+D15 cannot self-promote.

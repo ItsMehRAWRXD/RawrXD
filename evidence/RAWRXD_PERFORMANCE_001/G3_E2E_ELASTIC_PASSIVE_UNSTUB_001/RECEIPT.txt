@@ -1,0 +1,33 @@
+GATE=G3_E2E_ELASTIC_PASSIVE_UNSTUB_001
+PURPOSE=unstub STACK elastic=1 on DualStick via PASSIVE mode (no scheduler/GhostCache)
+PARENT=G3_E2E_ELASTIC_LIVE_UNSTUB_001
+ASOF=2026-09-09T22:15
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+EXE_SHA256=5E944D00CD557E308AF559B40CB45E00D69B1113B501BAA79E6A23918AD89F0B
+
+ROOT_CAUSE=
+  Elastic scheduler + GhostCache raced FreeToken/FutureConsumer on DualStick
+  Vulkan path (suppressHostVramMoves was set but scheduler still ran).
+
+FIX=
+  ElasticResidencyManager::Initialize: if suppressHostVramMoves → PASSIVE
+    (no scheduler thread, no GhostCache; registry + hit accounting only)
+  enableElastic: suppressHostVramMoves = vulkanEnabled_ || DEEP2_DUALSTICK_ARM=1
+  FreeToken Init skipped if Pool already live
+
+N5=5/5 PASS
+  TRUE=1 FWD=360/300 FT=1 FC=1 SURV=1 FB=0
+  CYC=1 STARTS=660 STACK elastic=1
+  PASSIVE vulkan/DualStick confirmed
+  PROMOTE=0
+
+PRODUCT_DEFAULTS=
+  ALLOW_ELASTIC=1 LIVE_MECH=trampoline,cyclone,elastic MARS=1
+  POLICY=MANUAL LIVE_PATH=1
+
+AUTHORITY_METRIC=STACK elastic=1 (not env ALLOW alone)
+
+Full: SUMMARY_N5.txt runs_n5/ KEY_LINES.txt AUTHORITY.txt

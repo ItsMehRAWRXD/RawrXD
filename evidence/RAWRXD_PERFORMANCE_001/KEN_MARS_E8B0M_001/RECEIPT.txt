@@ -1,0 +1,30 @@
+﻿KEN_MARS_E8B0M_001
+DATE=2026-09-09
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+ARM
+  ken/mars active b=E8B0M
+  DEEP2_MARS=1
+  DEEP2_WEIGHT_BUDGET_MIB=E8B0M → 0xE8B0 = 59568 MiB (~58.17 GiB)
+  FREETOKEN_MICROZONE=1
+
+VERIFIED_WITNESS (streamer open)
+  KEN_MARS_ACTIVE=1 DEEP2_MARS=1 DEEP2_WEIGHT_BUDGET_MIB=E8B0M
+  FREETOKEN_MICROZONE=1 budget_mib=59568
+
+FIX
+  ArmSpeedEnv now uses _putenv_s (CRT getenv) — SetEnvironmentVariableA alone
+  left Deep2Engine seeing unset DEEP2_MARS / budget / elastic.
+
+PARSE
+  lavapath/ParseMibBudget.hpp — decimal | 0xHEX | HEXM
+  Deep2Engine_GpuForward weight window: EnvMib("DEEP2_WEIGHT_BUDGET_MIB", 512)
+
+SCOPE_LAW
+  MARS still refuse on BOUNDED_STREAM / K2 shard
+  Dense host-resident: MARS may place when DEEP2_MARS=1 + Vulkan
+
+NOTE
+  Tinyllama smoke still dies post-arm (pre-existing Vulkan/Q6_K path) —
+  arm witness is sealed; decode seal is separate.

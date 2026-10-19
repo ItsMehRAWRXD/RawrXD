@@ -1,0 +1,8 @@
+id=sess_1792301356
+model=llama3.2-3b-Q2_K
+path=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+workspace=G:\VSC0de\rawr_test_project
+autonomy=off
+plan=Audit this C++ project, identify the bug causing incorrect array sum computation, fix the source code, build it with CMake, run the tests, and report the exact changes made. Do not use deterministic fallback - use only model-selected tool operations.
+patch=
+turns=0

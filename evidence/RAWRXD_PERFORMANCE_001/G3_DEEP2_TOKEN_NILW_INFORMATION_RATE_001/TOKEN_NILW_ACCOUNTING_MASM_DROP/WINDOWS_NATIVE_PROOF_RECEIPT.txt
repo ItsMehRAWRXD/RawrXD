@@ -1,0 +1,47 @@
+TOKEN_NILW_ACCOUNTING_X64_MASM — Windows native proof
+=====================================================
+
+ZIP_SHA256=a48123cec2685ba06a252ef7c561d123804ccdd1b0908e5d31cbd544669d3eb6
+
+GATES:
+  GATE_1 ML64_BUILD              = PASS
+  GATE_2 ABI_LINK                = PASS
+  GATE_3 Q4_FIXTURE_RUNTIME      = PASS (smoke_q4_reuse)
+  GATE_4 FAIL_CLOSED_RUNTIME     = PASS (smoke_reject_identity)
+  GATE_5 ONE_BYTE_OVER_RUNTIME   = PASS (smoke_reject_budget)
+  GATE_6 DEEP2_NONZERO_LIVE_INPUT= NOT_RUN
+  GATE_7 ACCOUNTING_RESULT_PARITY= NOT_RUN
+  GATE_8 CALLER_AUTHORITY_PRESERVED = NOT_RUN (source law only)
+
+SMOKES:
+  smoke_identity=PASS
+  smoke_overhead=PASS
+  smoke_q4_reuse=PASS   ; 4.0 × 0.005 × 0.04 = 0.0008
+  smoke_reject_identity=PASS
+  smoke_reject_budget=PASS
+
+BUILD_AND_SMOKE=PASS
+THIRD_PARTY_DEPS=0
+
+LOCAL_FIXES:
+  PROTO strip (A2111)
+  jmp short -> jmp (A2075 range in nilw_derive)
+  ExitProcess PROTO without :DWORD
+
+POLICY_INVARIANTS (fixed envelope; codec factors free):
+  TOKEN_BYTES_MAX = 100 MB/token
+  STREAM_BW_MIN   = 1 GB/s
+  TPS_MIN         = 10
+  WINDOW_TOKENS   = 128
+  TOKEN_NILW_MAX  = 0.0008
+
+AUTHORIZED_PASS=0
+  (runtime-authorized still requires live Deep2 nonzero inputs
+   + caller token/decode authority agree; fixtures alone do not mint)
+PROMOTE=0
+SCHEDULER_TOUCHED=0
+
+NEXT_GATE=TOKEN_NILW_ML64_RUNTIME_MATRIX_001
+  see ../TOKEN_NILW_ML64_RUNTIME_MATRIX_001/GATE_OPEN.txt
+  SAME_POLICY_CONSTANTS_ACROSS_ALL_QUANTIZATIONS=1
+  Q4_FIXTURE_IS_WITNESS_NOT_AUTHORITY=1

@@ -1,0 +1,103 @@
+COMPAT_MATRIX_INVENTORY_001=SEALED
+DATE=2026-09-08
+MODE=RE_ATTRIBUTION_ONLY
+CLASS=D
+SPEND=0
+HOT_GATE=0
+LIVE_RUN=0
+SOURCE=existing receipts only (ONE_LOCAL_MODEL_AUTHORITY|LOCAL_MODEL_E2E|MASTER_STATUS|COMPAT_OWNERS)
+
+SEPARATION=
+  Q1=can_runtime_load_models_correctly  → ONE_MODEL path (TinyLlama) PASS
+  Q2=can_runtime_load_ALL_local_models → OPEN (matrix incomplete)
+  PERF_TRACK=GATE_STOP PATH_A champion (orthogonal; do not optimize before compat)
+
+# --- STEP 1 MODEL TABLE (from sealed evidence; ? = not certified this track) -
+
+MODEL_TABLE
+  TinyLlama_Q4_K_M
+    GGUF=Y LOADS=Y FIRST_TOKEN=Y STREAMS=Y STABLE=Y
+    RECEIPT=ONE_LOCAL_MODEL_AUTHORITY (full ladder E2E PASS)
+  Phi-3_mini_Q8
+    GGUF=Y LOADS=Y FIRST_TOKEN=Y STREAMS=Y STABLE=Y
+    RECEIPT=LOCAL_MODEL_E2E REPORT_small + run log tokens=4 FAIL_REASON=NONE
+  Phi-3_medium_14B_Q4_K_M
+    GGUF=Y LOADS=Y FIRST_TOKEN=Y STREAMS=Y STABLE=partial
+    NOTE=tokens=4; BENCHMARK_CERT may FAIL INSUFFICIENT_WINDOWS (non-compat)
+  Codestral_22B_Q4_K_M
+    GGUF=Y LOADS=Y FIRST_TOKEN=N STREAMS=N STABLE=N
+    FAIL_STAGE=Decode (post-prefill hidden norm=0 / DECODE_NOT_ENTERED)
+    LATER_NOTE=FINAL_NORM IDENTITY_ZERO_FILE work closed math; logits not certified
+  Qwen_32B_generic
+    GGUF=? LOADS=? FIRST_TOKEN=? STREAMS=? STABLE=?
+    NOTE=no single "Qwen 32B" row; nearest: Qwen3.8-27B-AD PASS; Qwen3.6-35B MoE FAIL
+  Kimi_K2
+    GGUF=Y LOADS=? FIRST_TOKEN=? STREAMS=? STABLE=?
+    NOTE=MASTER_STATUS Not yet run (large/sharded); PERF wall is PERFORMANCE_ONLY not compat E2E
+  DeepSeek
+    GGUF=Y LOADS=Y FIRST_TOKEN=Y STREAMS=Y STABLE=Y (8B Qwen3 distill)
+    NOTE=DeepSeek-R1-0528-Qwen3-8B PASS tokens=4; full R1 multi-shard NOT YET RUN
+
+# --- STEP 2 FIRST FAILING DELTA (TinyLlama/Phi-3 PASS → Codestral FAIL) ----
+
+FIRST_FAILING_MODEL=Codestral_22B
+ASSUMPTION_DELTAS_CANDIDATE=
+  weight_payload_zero_at_mapped_offset (IDENTITY_ZERO_FILE / HOST_MAPPED)
+  final_norm / hidden validity after prefill
+  NOT proven: GGUF v3 parse, MLA, MoE (Codestral is Mistral-family dense)
+DO_NOT_PARALLEL_FIX_ALL=1
+
+# --- STEP 3 FEATURE MATRIX (inventory; not live re-proof) -------------------
+
+FEATURE
+  GGUF_v3=Y (parser live; TinyLlama/Phi-3)
+  Split_GGUF=Y (code present; large shards NOT YET RUN in MASTER_STATUS)
+  Q4_K=Y Q5_K=? Q6_K=Y(TinyLlama) Q8_0=Y(Phi-3-mini)
+  MoE=? (Qwen3.6-35B-A3B HEAP_CORRUPTION OPEN)
+  MLA=? (K2 product path PERFORMANCE; not universal compat cert)
+  Sliding_Window=?
+  YaRN=?
+
+# --- STEP 4 FAILURE STAGES (law) --------------------------------------------
+
+STAGE_PIPELINE=
+  Open_GGUF → Read_metadata → Read_tensors → Build_graph → Allocate_KV
+  → Load_tokenizer → Prefill → Decode → Sample → Stream
+
+CLASSIFIED_FAILS_FROM_MASTER_STATUS
+  Codestral: Prefill_OK → Decode (hidden invalid / DECODE_NOT_ENTERED)
+  Qwen3.5-40B: Prefill_OK → Decode (SSM_ATTN_NUMERICS → AFTER_L2=0)
+  Qwen3.6-35B-A3B: Decode/MoE (HEAP_CORRUPTION)
+  Qwen3.6-27B: crash STAGE=? (STACK_BUFFER_OVERRUN)
+  GLM-4.7 / Qwen2.5-Coder / BigDaddyG PRUNED+ULTRA: crash after READY / abort
+  Large K2 shards: NOT_YET_RUN (compat); do not conflate with PATH_A wall
+
+# --- STEP 5 ARCHITECTURE MATRIX ---------------------------------------------
+
+ARCH
+  Llama=PASS (TinyLlama authority)
+  Mistral_family=FAIL_FIRST (Codestral Decode)
+  Qwen2.x=FAIL_OPEN (Qwen2.5-Coder crash)
+  Qwen3.x=MIXED (8B distill PASS; 27B-AD PASS; 3.5/3.6 FAIL owners)
+  DeepSeek=PASS_as_Qwen3_8B_distill; full_R1_sharded=NOT_YET_RUN
+  Kimi_K2=NOT_YET_RUN_compat
+  Phi-3=PASS (mini+medium tokens≥1)
+  Gemma=PASS (E4B w/ byte tok; 31B PASS)
+  GPT-OSS=?
+
+# --- AUTHORITY / NEXT -------------------------------------------------------
+
+COMPAT_TRACK=INVENTORIED_NOT_ACTIVATED
+PERF_TRACK=GATE_STOP HOLD (unchanged)
+SECURITY_AGENT_001=HELD (unchanged)
+
+TO_FILL_REMAINING_?= requires explicit operator NAME
+  SUPERSEDED_SUGGEST=MODE=COMPAT_MATRIX_FILL
+  USE_INSTEAD=MODE=COMPAT_TEST HOT_GATE=1 TARGET=B1.n|BATCH1
+  SEED=UNCONFLICTED_SEED_001
+
+SSOT_PRIOR=
+  evidence/LOCAL_MODEL_E2E/MASTER_STATUS.md
+  evidence/LOCAL_MODEL_E2E/COMPAT_OWNERS.txt
+  evidence/ONE_LOCAL_MODEL_AUTHORITY/RECEIPT.txt
+  THIS=evidence/RAWRXD_PERFORMANCE_001/COMPAT_MATRIX_INVENTORY_001.txt

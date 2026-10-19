@@ -1,0 +1,25 @@
+BENCH_HARNESS_EVIDENCE_INTEGRITY_001=SEALED
+DATE=2026-09-09
+TYPE=HARNESS_FIX
+PROMOTE=0
+PARENT=Deep2Benchmark review (device/VRAM/KV/FORCE/clock/sat/thermal)
+
+FIXED=
+  DEVICE ← Deep2Device_Enumerate primaryName (no hardcoded 7800 XT)
+  QUANT ← path/K2 observe (fail+success same label)
+  headDim=112 on K2 branch; KV_ESTIMATE_MODEL=FLOAT_PLANAR
+  VRAM_MEASURED from PDH Dedicated Usage; unmeasured ≠ vram_stable tautology
+  DEEP2_MARS_FORCE=1 reaches enableMARS (idle-cost probe); MARS=1 alone STANDBY
+  nowNs ← steady_clock
+  PDH primed with two CollectQueryData before first sample
+  numThreads=16 (match pool)
+  SATURATION_MODE=SEQUENTIAL_STREAM_MATRIX; saturation_pass=0 (no concurrency claim)
+  THERMAL_SOAK_MODE=IDLE_GAP; thermal_pass=0 (no heat claim)
+  overall_certified = U13 capacity + endurance only (excludes sat/thermal)
+
+OPEN=
+  prompt_tokens still CharTokenizer vs engine re-tokenize (PROMPT_TOKENS=1 on K2)
+  continuous thermal soak not implemented
+  true concurrent saturation not implemented
+
+SSOT=src/deep2/Deep2Benchmark.cpp

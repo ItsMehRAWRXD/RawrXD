@@ -1,0 +1,46 @@
+AUDIT_NEXT_HELP_001=SEALED
+DATE=2026-09-08
+AUTHORITY=GATE.txt|PERF_OWNER.txt|PATH_A_HOLD_ACK_001|GATE_STOP_INVENTORY_001
+FINAL_CLOSURE_ALIGN8=SEALED (orthogonal; not a spend)
+
+LIVE_LOCK=
+  GATE_STOP=1
+  NEXT_SPEND=NONE
+  TIP_CLIMB=HOLD
+  PROMOTE=0
+  CHAMPION=PATH_A_HOST_CACHED_OUT_INVALIDATE
+  WALL_MEDIAN_NS=10184789000
+  PERF_AUTHORITY=build-fd/bin/deep2_benchmark.exe
+
+CLOSED_THIS_THREAD=
+  PER_DESCRIPTOR_ALIGN8=REJECTED|FINAL_CLOSURE
+  0xBADF107_STRIDE_DESYNC=UNPROVEN
+  PARSER_TOUCH=0
+
+UNDER_STOP_LEGAL=
+  1 attribution_receipts_only
+  2 answer_questions_on_sealed_state
+  3 hygiene_mark_stale_receipts SUPERSEDED (no code)
+
+UNDER_STOP_FORBIDDEN=
+  parser_edit
+  invent_stacks
+  TIP_CLIMB
+  U02_nope_rope_reopen
+  U15_gemv_direct
+  QB_KERNEL|KVA|LOGITS|SX|5.904
+  promote_from_PATH_B_oneshot
+
+EXPLICIT_GATE_LIFT_ONLY=
+  PATH_B_n5:
+    DEEP2_PATH_B=1
+    WALL_MEDIAN < 10184789000
+    DELETE_PROVEN=q_b_d2h_bytes==0 && vkcopy_qb==0 && host_memcpy_qb==0
+    PARITY|PURITY|PRODUCT
+  OR live_cursor_divergence_receipt (parser reopen only)
+
+HELP_MENU_ASK=
+  A  lift gate → PATH_B n=5 endurance
+  B  inventory-only: UNTRIED_BRAID_CANDIDATES / stale GATE_STOP=0 hygiene
+  C  explain PATH_A champion receipts / twist observe vs promote bar
+  D  hold / idle (default)

@@ -1,0 +1,64 @@
+R671 TENSOR ACQUIRE — TOP 15 ARG5 + RESIDENCY BUGS
+
+01 ARG5_OFFSET_MAGIC
+   [rsp+98h] is correct only for the current exact prologue.
+   Law: derive the offset symbolically from Win64 entry ABI + local stack delta.
+
+02 PROLOGUE_DRIFT
+   Adding/removing a push or changing local allocation silently invalidates 98h.
+   Law: one named constant must encode the current stack delta.
+
+03 NO_STATIC_OFFSET_ASSERTION
+   The source has no mechanical assertion documenting:
+     entry arg5 = rsp_entry+28h
+     current rsp = rsp_entry-70h
+     current arg5 = rsp_current+98h.
+
+04 GENERATION_IN_VOLATILE_R10
+   generation_id is copied to r10, then zero_lease is called before it is stored.
+   r10 is caller-volatile under Win64 ABI.
+   Law: preserve generation in nonvolatile storage or a stack local across calls.
+
+05 ARG5_POINTER_PROVENANCE_UNRECORDED
+   Lease pointer is accepted from the fifth argument but no receipt records that
+   the exact pointer was recovered from the ABI stack slot.
+
+06 RESIDENCY_CAP_ABSENT
+   view_bytes = delta + request_bytes has no configured upper bound.
+
+07 PARALLEL_MAPPING_PATH
+   This acquire implementation directly calls MapViewOfFile and can bypass the
+   already locked fixed-window/slot streaming policy.
+
+08 NO_SLOT_OWNERSHIP
+   There is no slot identity/pin ownership connecting a lease to the bounded
+   working-set manager.
+
+09 CONCURRENT_LEASE_EXPANSION
+   Multiple live leases can each add a new mapping, so aggregate mapped bytes can
+   exceed the sealed working-set envelope.
+
+10 NONATOMIC_RESIDENCY_COUNTERS
+   mapped_bytes_live, peak, acquire/release counts use ordinary increments/adds;
+   concurrent callers can lose updates or report a false peak.
+
+11 RELEASE_UNDERFLOW_MASKED
+   If mapped_bytes_live < lease.view_bytes, release forces mapped_bytes_live=0.
+   That hides an accounting fault instead of failing closed.
+
+12 INVALID_RELEASE_NOT_COUNTED
+   inactive/double release returns state error but there is no invalid-release
+   counter for WSC/lease closure.
+
+13 NO_REUSE_ACCOUNTING
+   Every successful mapping increments newly_mapped_bytes; there are no cache-hit,
+   reused-byte, slot-hit, or eviction receipts.
+
+14 PEAK_IS_NOT_ENVELOPE_AUTHORITY
+   mapped_bytes_peak is observational only. It does not prevent a mapping that
+   crosses the configured bound.
+
+15 ABI_LAYER_CAN_DIVERGE_FROM_LOCKED_R671
+   A second mapping implementation creates two residency truths.
+   Law: the real-tensor ABI must consume the locked r671 residency manager or
+   enforce the same cap/slot law before MapViewOfFile.

@@ -1,0 +1,8 @@
+id=sess_1792269109
+model=phi3-mini-Q2_K.gguf
+path=G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf
+workspace=G:\~dev\rawrxd
+autonomy=off
+plan=read CMakeLists.txt
+patch=
+turns=0

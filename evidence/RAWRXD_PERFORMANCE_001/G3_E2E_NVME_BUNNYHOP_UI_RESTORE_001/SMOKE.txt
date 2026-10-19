@@ -1,0 +1,4 @@
+exit=0 TRUE=1 FWD=360/300 FT=1 FC=1 SURV=1 FB=0 CYC=1 STARTS=660 NVME_HOPS=17 STACK_EL=1 REVERSE=True
+nvme_panel=4
+nvme_js=3
+engine_js=3

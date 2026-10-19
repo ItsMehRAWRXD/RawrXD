@@ -1,0 +1,47 @@
+GATE=G3_MULTI_MODEL_E2E_001
+STATUS=IN_FLIGHT
+ASOF=2026-09-10T04:04-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## Proven so far
+IDE_HEADLESS_TINYLLAMA=
+  EXE=smoke_bin/RawrXD-Win32IDE_r1matrix.exe (PE_LAA=NO HOST_DECODE=1)
+  CYCLE=cold --model → /api/generate → kill → reload → /api/generate
+  VERDICT=PASS AV=0 (MATRIX_LIVE m01 earlier; gen HTTP 200 done=true)
+
+RAWR_CLI_TINYLLAMA=
+  EXE=build-fd/bin/rawr.exe (LAA ProductRun)
+  m01 cold×2 PRODUCT_PASS=1 GENERATED_TOKENS=8 AV=0 VERDICT=PASS
+  MATRIX_RAWR_LIVE.txt row1 sealed
+
+## In flight
+RUNNER_PID=9484
+SCRIPT=Run-RawrMultiModelE2E.ps1
+MODELS=10 (G4_R1_NATIVE list on F:\OllamaModels + TinyLlama)
+CYCLE=rawr run ×2 per model (cold load gen unload)
+CURRENT=m02 phi3-mini-q8 (~2GB) loading
+OLLAMA=stopped / zero contact policy
+
+## Blockers found + disposition
+1. Win32IDE PE_LAA=NO → ~2GB VA → Failed to allocate tensors on 3B+ GGUFs
+   DISPOSITION=product multi-model authority = rawr LAA; IDE HOST_DECODE floor kept for TinyLlama/UI
+2. ProductOpenSession can return success in ~3ms without Deep2 tensor load (false armed)
+   DISPOSITION=open fix; matrix readiness waits Model loaded successfully / PRODUCT_PASS
+3. build-fd RawrXD-Win32IDE.exe generate path hit "no native LocalGGUF" on some builds
+   DISPOSITION=use r1matrix for IDE; source streaming path directed to ProductDeep2Infer
+4. editbin LAA on IDE reopened load AV (amdvlk) — do not flip IDE PE for this gate
+
+## Model set (materially different)
+m01 tinyllama | m02 phi3-mini-q8 | m03 nemotron-nano-4b | m04 deepseek-r1-qwen3-8b
+m05 gemma4-e4b | m06 phi3-medium-14b | m07 codestral-22b | m08 qwen25-coder-14b
+m09 glm47-flash | m10 gemma4-31b
+
+## Watch
+STATUS.txt + MATRIX_RAWR_LIVE.txt under this gate folder
+FINAL RECEIPT.txt written when runner exits
+
+## Disposition after IDE-lane subagent close (2026-09-10T04:18)
+IDE 1/10 FAIL_CLOSED archived ? RECEIPT_IDE_HTTP_LANE.txt + MATRIX_IDE_HTTP.txt
+Canonical RECEIPT.txt = PENDING_RAWR_MATRIX (runner 9484 still live)
+Do not promote IDE 1/10 as final R1 closeout.

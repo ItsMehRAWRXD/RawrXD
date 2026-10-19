@@ -1,0 +1,2346 @@
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 03:25:21 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+HTTP server listening on 127.0.0.1:11435
+Headless IDE initialized successfully.
+Headless IDE running in server mode. Press Ctrl+C to stop.
+Loading model: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+03:25:21.653 CIE_LoadModel enter
+03:25:21.655 CIE_path G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+03:25:21.655 CIE_utf16 ok
+03:25:21.655 CIE_ext_tokenizer absent_use_gguf
+[CPUInferenceEngine] Loading model: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[CPUInferenceEngine] Stage: initialize backend
+03:25:21.655 CIE_before_InferenceBackend_Initialize
+03:25:21.655 CIE_backend AUTO
+03:25:21.656 INF_Initialize enter
+03:25:21.656 INF_vulkan attempt
+Selected GPU: AMD Radeon AI PRO R9700
+[RawrXD] Vulkan: Logical device created successfully (computeFamily=0)
+03:25:22.084 INF_vulkan device_ok
+[RawrXD] Stage: loader.Load
+03:25:22.086 INF_loader_Load before
+03:25:22.087 LOADER_Load enter
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+03:25:22.087 LOADER_gguf_reader validation_begin
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+03:25:22.088 LOADER_backend gpu-only
+03:25:22.088 LOADER_sliding_window before
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 637 MB placeholder window (zero commit)
+03:25:22.089 LOADER_sliding_window ok
+03:25:22.089 LOADER_file_mapping ok
+[RawrXD] Stage: parse_header_metadata
+03:25:22.089 LOADER_metadata parse_before
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[GGUF] size=668788096
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+03:25:22.092 LOADER_metadata parse_after
+[RawrXD] Stage: parse_tensor_index tensor_count=201
+03:25:22.093 LOADER_tensor_table parse_before
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=201 indexed_storage=0.62 GB
+[RawrXD] Data starts at offset 1709440
+03:25:22.093 LOADER_tensor_table materialize_lazy
+[RawrXD] Stage: build_tensor_lookup_map
+03:25:22.095 LOADER_tensor_table lookup_map
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+03:25:22.095 LOADER_Load ok
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=2048, layers=22, heads=32, kv_heads=4, vocab=32000, ctx=2048, experts=0, experts_used=0
+[RawrXD] Tensor names in model (201 total):
+  [  0] type=12 dims=2048 5632 blk.0.ffn_gate.weight
+  [  1] type=12 dims=2048 5632 blk.15.ffn_up.weight
+  [  2] type=12 dims=2048 5632 blk.13.ffn_gate.weight
+  [  3] type=14 dims=2048 32000 output.weight
+  [  4] type=14 dims=5632 2048 blk.0.ffn_down.weight
+  [  5] type=14 dims=2048 256 blk.1.attn_v.weight
+  [  6] type=0 dims=2048 blk.19.ffn_norm.weight
+  [  7] type=12 dims=2048 5632 blk.1.ffn_up.weight
+  [  8] type=12 dims=2048 2048 blk.19.attn_output.weight
+  [  9] type=12 dims=2048 32000 token_embd.weight
+  [ 10] type=12 dims=2048 2048 blk.12.attn_output.weight
+  [ 11] type=12 dims=5632 2048 blk.5.ffn_down.weight
+  [ 12] type=12 dims=2048 256 blk.10.attn_k.weight
+  [ 13] type=12 dims=2048 2048 blk.9.attn_output.weight
+  [ 14] type=12 dims=2048 5632 blk.0.ffn_up.weight
+  [ 15] type=12 dims=2048 2048 blk.12.attn_q.weight
+  ... (185 more)
+03:25:22.095 INF_loader_Load ok
+03:25:22.095 INF_model_config alloc
+03:25:22.095 INF_model_config dim=2048 layers=22 heads=32 kv=4 vocab=32000 hidden=5632 ctx=2048
+[RawrXD] Config: dim=2048 layers=22 heads=32 kv_heads=4 vocab=32000 hidden=5632 ctx=2048
+[RawrXD] Stage: transformer.Initialize
+03:25:22.095 INF_transformer_Initialize before
+03:25:22.096 XFMR_Initialize enter
+03:25:22.096 XFMR_DetectFusedQKV before
+[Transformer] Using separate Q/K/V weights (classic architecture)
+03:25:22.096 XFMR_DetectFusedQKV after
+03:25:22.096 XFMR_vulkan_gemm before
+[Router] InitializeVulkanDispatcher called (spirv=gemm_compute.spv)
+[Router] RAWRXD_NO_VULKAN not defined, calling gemmDispatcher.Initialize
+[VulkanGemmDispatcher] Loaded SPIR-V: gemm_compute.spv (2816 bytes)
+[VulkanGemmDispatcher] Pipeline created successfully
+[VulkanGemmDispatcher] Initialized (device=000000006CC20700, queue=000000006CCD9660, pool=0000000073485250)
+[Router] Vulkan GEMM dispatcher initialized (reusing inference device).
+[VX01] TensorExecutionRouter Vulkan GEMM dispatcher initialized
+03:25:22.098 XFMR_vulkan_gemm after
+03:25:22.098 XFMR_KV_ALLOC layers=22 ctx=2048 kv_dim=256 elems=11534336
+[RawrXD] KV cache: 11534336 floats (46.1 MB per cache)
+03:25:22.109 XFMR_KV_ALLOC k_ok
+03:25:22.121 XFMR_KV_ALLOC v_ok
+03:25:22.121 XFMR_KV_ALLOC pos_ok
+03:25:22.122 XFMR_moe_setup ok
+03:25:22.122 XFMR_residency_pool before
+[B015] WeightResidencyPool initialized: max_bytes=4096 MB
+03:25:22.122 XFMR_residency_pool ok
+03:25:22.122 XFMR_gpu_act_buffers before
+[VX01] GPU activation buffers initialized: 22528 bytes each (maxDim=5632)
+03:25:22.124 XFMR_gpu_act_buffers after
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+03:25:22.124 XFMR_governance before
+[B016] Governance plan applied: tier=5 path=3 ensemble=true reason=capability score
+[B016] Governance orchestrator initialized and started (2s period)
+03:25:22.126 XFMR_governance started
+03:25:22.126 XFMR_elastic enter
+03:25:22.126 XFMR_elastic index_ctor_before
+[Elastic] GGUF index creation failed: [ElasticGGUFIndex] Failed to open GGUF: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf — Elastic disabled, continuing with direct loader.
+03:25:22.126 XFMR_elastic index_ctor_ex
+[Elastic] Engine skipped (no index). Running direct loader path.
+03:25:22.127 XFMR_Initialize done_no_elastic
+03:25:22.127 INF_transformer_Initialize after
+03:25:22.127 INF_swarm make_scheduler
+03:25:22.127 INF_swarm configure
+[RawrXD] Swarm plan: GGUF coalesced (24 slices total=0.62 GiB max=61.76 MiB avg=26.51 MiB)
+03:25:22.127 INF_swarm submitPlan
+03:25:22.127 INF_swarm executePlan_before
+03:25:22.129 INF_swarm executePlan_after
+03:25:22.129 INF_swarm ownership_to_transformer
+[RawrXD] Stage: tokenizer.Load
+03:25:22.129 INF_tokenizer before
+[RawrXD] Stage: tokenizer.SetVocabulary (32000 tokens from GGUF)
+03:25:22.129 INF_tokenizer SetVocabulary
+03:25:22.137 INF_tokenizer after
+[RawrXD] Inference engine READY
+03:25:22.138 INF_Initialize READY
+03:25:22.138 CIE_Initialize returned_true
+03:25:22.138 CIE_metadata vocab=32000 dim=2048 layers=22 heads=32
+03:25:22.138 CIE_titan before_LoadLibrary
+03:25:22.139 CIE_titan absent
+[CPUInferenceEngine] Model loaded successfully
+03:25:22.139 CIE_LoadModel success
+Model armed for ProductRun: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  Path: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  GGUF magic: OK
+  Arm latency: 485 ms
+
+Loading model: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+03:25:25.236 CIE_LoadModel already_loaded
+Model armed for ProductRun: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  Path: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  GGUF magic: OK
+  Arm latency: 0 ms
+
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000000060EF80E0  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=0000000060EF80E0  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=0000000060EF80E0  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=0000000060EF80E0  registered=201 tensors  bytes=667078656  max=536870912
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=PASS schema=201 quant=201 tok=32000
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=0000000001CF4070 dequant=0000000001CF1440 GetGEMV(12)=0000000001CF4070 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[CPU] GenerateStreaming ENTER  input_tokens=8 max_tokens=2048
+[CPU] backend ptr=0000000013D114B0  model_loaded=1  context_limit=2048  current_pos=8
+[CPU] backend vocab=32000 dim=2048 layers=22 heads=32
+[CPU] GenerateFromTokens ENTER  tokens=8
+[STREAM] calling Forward() for prefill, tokens=8
+[B015-P1] Prefill T=8 residency ON (B015)
+[Forward] GQA: dim=2048 heads=32 kv_heads=4 head_dim=64 kv_dim=256 hidden=5632
+[MEM] Generation start: avail_phys=41627 MB, avail_virt=133947149 MB
+[MEM] KV footprint: k=44 MB, v=44 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=32000 * row_bytes(Q2_K)=672 = 20 MB
+[Forward] prefill: tokens=8 layers=22 total_layer_execs=176 est_ms=22880
+[ELASTIC] Forward T=8 layers=22
+[Forward] B009 layer-outer batched prefill: T=8 layers=22
+[RawrXD] Dequantizing embedding tensor token_embd.weight (type=12) via LoadTensorAsync
+[RawrXD] LoadTensorAsync CHUNK DEBUG token_embd.weight: iter=1
+  currentOffset=55469440, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=55469440
+  bytesRemainingInWindow=613318656, bytesRemainingInFile=613318656
+  bytesAvailableInWindow=613318656, MAX_CHUNK_SIZE=668788096
+  remainingSize=36864000, chunkSize=36864000
+[RawrXD] Uploaded token_embd.weight to GPU (250 MB)
+[RawrXD] GetTensor loaded: token_embd.weight (65536000 elements)
+[STEP] Layer 1/22 (batched T=8)
+[CPU] batched layer=0  383.9 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=1  383.7 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=2  373.5 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=3  371.9 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=507610496 size=27897856 view=26 MB)
+[CPU] batched layer=4  378.2 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (batched T=8)
+[CPU] batched layer=5  373.2 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=560297344 size=24788992 view=23 MB)
+[CPU] batched layer=6  369.5 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=7  374.9 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=612984192 size=27897856 view=26 MB)
+[CPU] batched layer=8  376.3 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=9  384.7 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=148129152 size=24788992 view=23 MB)
+[STEP] Layer 11/22 (batched T=8)
+[CPU] batched layer=10  372.4 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=11  364.6 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=197707136 size=27897856 view=26 MB)
+[CPU] batched layer=12  386.1 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=13  377.8 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=250393984 size=24788992 view=23 MB)
+[CPU] batched layer=14  372.2 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (batched T=8)
+[CPU] batched layer=15  378.3 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=303080832 size=24788992 view=23 MB)
+[CPU] batched layer=16  368.4 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=17  363.1 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[CPU] batched layer=18  363.4 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=380556672 size=24788992 view=23 MB)
+[CPU] batched layer=19  360.5 ms  SLOW (T=8)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (batched T=8)
+[CPU] batched layer=20  355.5 ms  SLOW (T=8)
+[RawrXD] Prefetch view promoted to compute window (off=458032512 size=24788992 view=23 MB)
+[STEP] Layer 22/22 (batched T=8)
+[CPU] batched layer=21  358.2 ms  SLOW (T=8)
+[Forward] B009 batched prefill complete: T=8 layers=22 elapsed_ms=8324.26 ms_per_layer=378.38
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[DECODE] output_projection complete
+[Forward] complete: tokens=8 layers=22 execs=176 elapsed_ms=8580.49 ms_per_layer_exec=48.753
+[MEM] Forward end: avail_phys=37451 MB avail_virt=133942689 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=5017.37  Attention=1.70  Dequant=3059.76  Other=501.65
+[B009-P3] GEMM efficiency: 4072544.3 ns/row  |  GEMM/Total: 58.5%  |  Attn/Total: 0.0%
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=1 BatchedMatMul=154 WeightLookup=155 AVX512Kernels=154
+
+[B009-P4] GEMM Microarchitectural Efficiency Report
+═══════════════════════════════════════════════════════
+Total calls: 154
+
+Shape (M×N×K)       Calls  Total(ms)    GFLOP/s         AI        Max        Min Class
+                                                       (F/B)    GFLOP/s    GFLOP/s 
+─────────────────────────────────────────────────────────────────────────────────────────
+   8×5632×2048        44    2546.27        3.2       3.96        3.3        3.1 BALANCED
+   8×2048×5632        22    1440.76        2.8       3.97        3.0        2.7 BALANCED
+   8×2048×2048        44     913.91        3.2       3.95        3.3        3.0 BALANCED
+   8× 256×2048        44     116.44        3.2       3.85        3.3        1.6 BALANCED
+─────────────────────────────────────────────────────────────────────────────────────────
+Overall:        3.1 GFLOP/s | AI=3.96 FLOP/byte | Classification: BALANCED
+═════════════════════════════════════════════════════════════════════════════════════════
+
+[B016] Kernel Internal Counters (aggregated across 154 calls):
+  vector_fma_count      = 0
+  scalar_fma_count      = 0
+  vector_loads          = 0
+  vector_stores         = 0
+  k_loop_iterations     = 0
+  scalar_tail_iterations= 0
+  horizontal_reductions = 0
+  token_chunks_8        = 0
+  token_scalar_tail     = 0
+
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[STREAM] Forward() returned, logits.size()=32000
+[STREAM] entering generation loop, maxTokens=2048
+[STREAM] generation iteration 0
+[STREAM] candidate token=20893
+[STREAM] calling Forward() for decode, absolutePos=8
+[B015-P1] Decode T=1 residency BYPASS (direct)
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[STEP] Layer 1/22 (pos=8 token=1/1)
+[RawrXD] GetTensor loading: blk.0.attn_q.weight offset=117441920 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.attn_q.weight: iter=1
+  currentOffset=117441920, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=117441920
+  bytesRemainingInWindow=551346176, bytesRemainingInFile=551346176
+  bytesAvailableInWindow=551346176, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.0.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.0.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.0.attn_k.weight offset=114787712 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.attn_k.weight: iter=1
+  currentOffset=114787712, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=114787712
+  bytesRemainingInWindow=554000384, bytesRemainingInFile=554000384
+  bytesAvailableInWindow=554000384, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.0.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.0.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.0.attn_v.weight offset=119801216 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.attn_v.weight: iter=1
+  currentOffset=119801216, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=119801216
+  bytesRemainingInWindow=548986880, bytesRemainingInFile=548986880
+  bytesAvailableInWindow=548986880, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.0.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.0.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.0.attn_output.weight offset=115082624 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.attn_output.weight: iter=1
+  currentOffset=115082624, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=115082624
+  bytesRemainingInWindow=553705472, bytesRemainingInFile=553705472
+  bytesAvailableInWindow=553705472, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.0.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.0.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.0.ffn_gate.weight offset=101803392 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.ffn_gate.weight: iter=1
+  currentOffset=101803392, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=101803392
+  bytesRemainingInWindow=566984704, bytesRemainingInFile=566984704
+  bytesAvailableInWindow=566984704, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.0.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.0.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.0.ffn_up.weight offset=108291456 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.ffn_up.weight: iter=1
+  currentOffset=108291456, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=108291456
+  bytesRemainingInWindow=560496640, bytesRemainingInFile=560496640
+  bytesAvailableInWindow=560496640, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.0.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.0.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.0.ffn_down.weight offset=92341632 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.0.ffn_down.weight: iter=1
+  currentOffset=92341632, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=92341632
+  bytesRemainingInWindow=576446464, bytesRemainingInFile=576446464
+  bytesAvailableInWindow=576446464, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.0.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.0.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=0  117.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.1.attn_q.weight offset=145339776 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.attn_q.weight: iter=1
+  currentOffset=145339776, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=145339776
+  bytesRemainingInWindow=523448320, bytesRemainingInFile=523448320
+  bytesAvailableInWindow=523448320, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.1.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.1.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.1.attn_k.weight offset=142685568 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.attn_k.weight: iter=1
+  currentOffset=142685568, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=142685568
+  bytesRemainingInWindow=526102528, bytesRemainingInFile=526102528
+  bytesAvailableInWindow=526102528, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.1.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.1.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.1.attn_v.weight offset=147699072 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.attn_v.weight: iter=1
+  currentOffset=147699072, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=147699072
+  bytesRemainingInWindow=521089024, bytesRemainingInFile=521089024
+  bytesAvailableInWindow=521089024, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.1.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.1.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.1.attn_output.weight offset=142980480 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.attn_output.weight: iter=1
+  currentOffset=142980480, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=142980480
+  bytesRemainingInWindow=525807616, bytesRemainingInFile=525807616
+  bytesAvailableInWindow=525807616, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.1.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.1.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.1.ffn_gate.weight offset=129701248 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.ffn_gate.weight: iter=1
+  currentOffset=129701248, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=129701248
+  bytesRemainingInWindow=539086848, bytesRemainingInFile=539086848
+  bytesAvailableInWindow=539086848, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.1.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.1.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.1.ffn_up.weight offset=136189312 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.ffn_up.weight: iter=1
+  currentOffset=136189312, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=136189312
+  bytesRemainingInWindow=532598784, bytesRemainingInFile=532598784
+  bytesAvailableInWindow=532598784, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.1.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.1.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.1.ffn_down.weight offset=120239488 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.1.ffn_down.weight: iter=1
+  currentOffset=120239488, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=120239488
+  bytesRemainingInWindow=548548608, bytesRemainingInFile=548548608
+  bytesAvailableInWindow=548548608, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.1.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.1.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=1  125.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.2.attn_q.weight offset=427480448 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.attn_q.weight: iter=1
+  currentOffset=427480448, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=427480448
+  bytesRemainingInWindow=241307648, bytesRemainingInFile=241307648
+  bytesAvailableInWindow=241307648, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.2.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.2.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.2.attn_k.weight offset=424826240 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.attn_k.weight: iter=1
+  currentOffset=424826240, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=424826240
+  bytesRemainingInWindow=243961856, bytesRemainingInFile=243961856
+  bytesAvailableInWindow=243961856, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.2.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.2.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.2.attn_v.weight offset=429839744 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.attn_v.weight: iter=1
+  currentOffset=429839744, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=429839744
+  bytesRemainingInWindow=238948352, bytesRemainingInFile=238948352
+  bytesAvailableInWindow=238948352, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.2.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.2.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.2.attn_output.weight offset=425121152 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.attn_output.weight: iter=1
+  currentOffset=425121152, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=425121152
+  bytesRemainingInWindow=243666944, bytesRemainingInFile=243666944
+  bytesAvailableInWindow=243666944, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.2.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.2.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.2.ffn_gate.weight offset=411841920 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.ffn_gate.weight: iter=1
+  currentOffset=411841920, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=411841920
+  bytesRemainingInWindow=256946176, bytesRemainingInFile=256946176
+  bytesAvailableInWindow=256946176, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.2.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.2.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.2.ffn_up.weight offset=418329984 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.ffn_up.weight: iter=1
+  currentOffset=418329984, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=418329984
+  bytesRemainingInWindow=250458112, bytesRemainingInFile=250458112
+  bytesAvailableInWindow=250458112, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.2.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.2.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.2.ffn_down.weight offset=405353856 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.2.ffn_down.weight: iter=1
+  currentOffset=405353856, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=405353856
+  bytesRemainingInWindow=263434240, bytesRemainingInFile=263434240
+  bytesAvailableInWindow=263434240, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.2.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.2.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=2  121.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.3.attn_q.weight offset=504956288 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.attn_q.weight: iter=1
+  currentOffset=504956288, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=504956288
+  bytesRemainingInWindow=163831808, bytesRemainingInFile=163831808
+  bytesAvailableInWindow=163831808, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.3.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.3.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.3.attn_k.weight offset=502302080 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.attn_k.weight: iter=1
+  currentOffset=502302080, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=502302080
+  bytesRemainingInWindow=166486016, bytesRemainingInFile=166486016
+  bytesAvailableInWindow=166486016, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.3.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.3.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.3.attn_v.weight offset=507315584 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.attn_v.weight: iter=1
+  currentOffset=507315584, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=507315584
+  bytesRemainingInWindow=161472512, bytesRemainingInFile=161472512
+  bytesAvailableInWindow=161472512, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.3.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.3.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.3.attn_output.weight offset=502596992 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.attn_output.weight: iter=1
+  currentOffset=502596992, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=502596992
+  bytesRemainingInWindow=166191104, bytesRemainingInFile=166191104
+  bytesAvailableInWindow=166191104, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.3.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.3.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.3.ffn_gate.weight offset=489317760 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.ffn_gate.weight: iter=1
+  currentOffset=489317760, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=489317760
+  bytesRemainingInWindow=179470336, bytesRemainingInFile=179470336
+  bytesAvailableInWindow=179470336, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.3.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.3.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.3.ffn_up.weight offset=495805824 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.ffn_up.weight: iter=1
+  currentOffset=495805824, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=495805824
+  bytesRemainingInWindow=172982272, bytesRemainingInFile=172982272
+  bytesAvailableInWindow=172982272, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.3.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.3.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.3.ffn_down.weight offset=482829696 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.3.ffn_down.weight: iter=1
+  currentOffset=482829696, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=482829696
+  bytesRemainingInWindow=185958400, bytesRemainingInFile=185958400
+  bytesAvailableInWindow=185958400, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.3.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.3.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=3  121.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.4.attn_q.weight offset=532718976 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.attn_q.weight: iter=1
+  currentOffset=532718976, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=532718976
+  bytesRemainingInWindow=136069120, bytesRemainingInFile=136069120
+  bytesAvailableInWindow=136069120, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.4.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.4.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.4.attn_k.weight offset=530064768 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.attn_k.weight: iter=1
+  currentOffset=530064768, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=530064768
+  bytesRemainingInWindow=138723328, bytesRemainingInFile=138723328
+  bytesAvailableInWindow=138723328, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.4.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.4.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.4.attn_v.weight offset=535078272 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.attn_v.weight: iter=1
+  currentOffset=535078272, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=535078272
+  bytesRemainingInWindow=133709824, bytesRemainingInFile=133709824
+  bytesAvailableInWindow=133709824, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.4.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.4.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.4.attn_output.weight offset=530359680 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.attn_output.weight: iter=1
+  currentOffset=530359680, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=530359680
+  bytesRemainingInWindow=138428416, bytesRemainingInFile=138428416
+  bytesAvailableInWindow=138428416, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.4.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.4.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.4.ffn_gate.weight offset=517080448 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.ffn_gate.weight: iter=1
+  currentOffset=517080448, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=517080448
+  bytesRemainingInWindow=151707648, bytesRemainingInFile=151707648
+  bytesAvailableInWindow=151707648, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.4.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.4.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.4.ffn_up.weight offset=523568512 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.ffn_up.weight: iter=1
+  currentOffset=523568512, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=523568512
+  bytesRemainingInWindow=145219584, bytesRemainingInFile=145219584
+  bytesAvailableInWindow=145219584, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.4.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.4.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.4.ffn_down.weight offset=507618688 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.4.ffn_down.weight: iter=1
+  currentOffset=507618688, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=507618688
+  bytesRemainingInWindow=161169408, bytesRemainingInFile=161169408
+  bytesAvailableInWindow=161169408, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.4.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.4.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=4  136.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=8 token=1/1)
+[RawrXD] GetTensor loading: blk.5.attn_q.weight offset=557643136 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.attn_q.weight: iter=1
+  currentOffset=557643136, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=557643136
+  bytesRemainingInWindow=111144960, bytesRemainingInFile=111144960
+  bytesAvailableInWindow=111144960, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.5.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.5.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.5.attn_k.weight offset=554988928 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.attn_k.weight: iter=1
+  currentOffset=554988928, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=554988928
+  bytesRemainingInWindow=113799168, bytesRemainingInFile=113799168
+  bytesAvailableInWindow=113799168, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.5.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.5.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.5.attn_v.weight offset=560002432 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.attn_v.weight: iter=1
+  currentOffset=560002432, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=560002432
+  bytesRemainingInWindow=108785664, bytesRemainingInFile=108785664
+  bytesAvailableInWindow=108785664, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.5.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.5.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.5.attn_output.weight offset=555283840 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.attn_output.weight: iter=1
+  currentOffset=555283840, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=555283840
+  bytesRemainingInWindow=113504256, bytesRemainingInFile=113504256
+  bytesAvailableInWindow=113504256, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.5.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.5.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.5.ffn_gate.weight offset=542004608 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.ffn_gate.weight: iter=1
+  currentOffset=542004608, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=542004608
+  bytesRemainingInWindow=126783488, bytesRemainingInFile=126783488
+  bytesAvailableInWindow=126783488, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.5.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.5.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.5.ffn_up.weight offset=548492672 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.ffn_up.weight: iter=1
+  currentOffset=548492672, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=548492672
+  bytesRemainingInWindow=120295424, bytesRemainingInFile=120295424
+  bytesAvailableInWindow=120295424, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.5.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.5.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.5.ffn_down.weight offset=535516544 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.5.ffn_down.weight: iter=1
+  currentOffset=535516544, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=535516544
+  bytesRemainingInWindow=133271552, bytesRemainingInFile=133271552
+  bytesAvailableInWindow=133271552, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.5.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.5.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=5  136.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.6.attn_q.weight offset=582432128 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.attn_q.weight: iter=1
+  currentOffset=582432128, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=582432128
+  bytesRemainingInWindow=86355968, bytesRemainingInFile=86355968
+  bytesAvailableInWindow=86355968, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.6.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.6.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.6.attn_k.weight offset=579777920 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.attn_k.weight: iter=1
+  currentOffset=579777920, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=579777920
+  bytesRemainingInWindow=89010176, bytesRemainingInFile=89010176
+  bytesAvailableInWindow=89010176, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.6.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.6.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.6.attn_v.weight offset=584791424 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.attn_v.weight: iter=1
+  currentOffset=584791424, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=584791424
+  bytesRemainingInWindow=83996672, bytesRemainingInFile=83996672
+  bytesAvailableInWindow=83996672, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.6.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.6.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.6.attn_output.weight offset=580072832 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.attn_output.weight: iter=1
+  currentOffset=580072832, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=580072832
+  bytesRemainingInWindow=88715264, bytesRemainingInFile=88715264
+  bytesAvailableInWindow=88715264, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.6.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.6.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.6.ffn_gate.weight offset=566793600 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.ffn_gate.weight: iter=1
+  currentOffset=566793600, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=566793600
+  bytesRemainingInWindow=101994496, bytesRemainingInFile=101994496
+  bytesAvailableInWindow=101994496, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.6.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.6.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.6.ffn_up.weight offset=573281664 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.ffn_up.weight: iter=1
+  currentOffset=573281664, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=573281664
+  bytesRemainingInWindow=95506432, bytesRemainingInFile=95506432
+  bytesAvailableInWindow=95506432, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.6.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.6.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.6.ffn_down.weight offset=560305536 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.6.ffn_down.weight: iter=1
+  currentOffset=560305536, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=560305536
+  bytesRemainingInWindow=108482560, bytesRemainingInFile=108482560
+  bytesAvailableInWindow=108482560, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.6.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.6.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=6  137.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.7.attn_q.weight offset=610194816 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.attn_q.weight: iter=1
+  currentOffset=610194816, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=610194816
+  bytesRemainingInWindow=58593280, bytesRemainingInFile=58593280
+  bytesAvailableInWindow=58593280, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.7.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.7.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.7.attn_k.weight offset=607540608 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.attn_k.weight: iter=1
+  currentOffset=607540608, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=607540608
+  bytesRemainingInWindow=61247488, bytesRemainingInFile=61247488
+  bytesAvailableInWindow=61247488, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.7.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.7.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.7.attn_v.weight offset=612554112 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.attn_v.weight: iter=1
+  currentOffset=612554112, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=612554112
+  bytesRemainingInWindow=56233984, bytesRemainingInFile=56233984
+  bytesAvailableInWindow=56233984, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.7.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.7.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.7.attn_output.weight offset=607835520 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.attn_output.weight: iter=1
+  currentOffset=607835520, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=607835520
+  bytesRemainingInWindow=60952576, bytesRemainingInFile=60952576
+  bytesAvailableInWindow=60952576, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.7.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.7.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.7.ffn_gate.weight offset=594556288 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.ffn_gate.weight: iter=1
+  currentOffset=594556288, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=594556288
+  bytesRemainingInWindow=74231808, bytesRemainingInFile=74231808
+  bytesAvailableInWindow=74231808, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.7.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.7.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.7.ffn_up.weight offset=601044352 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.ffn_up.weight: iter=1
+  currentOffset=601044352, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=601044352
+  bytesRemainingInWindow=67743744, bytesRemainingInFile=67743744
+  bytesAvailableInWindow=67743744, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.7.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.7.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.7.ffn_down.weight offset=585094528 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.7.ffn_down.weight: iter=1
+  currentOffset=585094528, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=585094528
+  bytesRemainingInWindow=83693568, bytesRemainingInFile=83693568
+  bytesAvailableInWindow=83693568, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.7.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.7.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=7  133.6 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.8.attn_q.weight offset=638092672 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.attn_q.weight: iter=1
+  currentOffset=638092672, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=638092672
+  bytesRemainingInWindow=30695424, bytesRemainingInFile=30695424
+  bytesAvailableInWindow=30695424, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.8.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.8.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.8.attn_k.weight offset=635438464 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.attn_k.weight: iter=1
+  currentOffset=635438464, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=635438464
+  bytesRemainingInWindow=33349632, bytesRemainingInFile=33349632
+  bytesAvailableInWindow=33349632, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.8.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.8.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.8.attn_v.weight offset=640451968 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.attn_v.weight: iter=1
+  currentOffset=640451968, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=640451968
+  bytesRemainingInWindow=28336128, bytesRemainingInFile=28336128
+  bytesAvailableInWindow=28336128, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.8.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.8.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.8.attn_output.weight offset=635733376 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.attn_output.weight: iter=1
+  currentOffset=635733376, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=635733376
+  bytesRemainingInWindow=33054720, bytesRemainingInFile=33054720
+  bytesAvailableInWindow=33054720, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.8.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.8.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.8.ffn_gate.weight offset=622454144 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.ffn_gate.weight: iter=1
+  currentOffset=622454144, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=622454144
+  bytesRemainingInWindow=46333952, bytesRemainingInFile=46333952
+  bytesAvailableInWindow=46333952, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.8.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.8.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.8.ffn_up.weight offset=628942208 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.ffn_up.weight: iter=1
+  currentOffset=628942208, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=628942208
+  bytesRemainingInWindow=39845888, bytesRemainingInFile=39845888
+  bytesAvailableInWindow=39845888, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.8.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.8.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.8.ffn_down.weight offset=612992384 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.8.ffn_down.weight: iter=1
+  currentOffset=612992384, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=612992384
+  bytesRemainingInWindow=55795712, bytesRemainingInFile=55795712
+  bytesAvailableInWindow=55795712, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.8.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.8.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=8  142.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.9.attn_q.weight offset=665990528 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.attn_q.weight: iter=1
+  currentOffset=665990528, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=665990528
+  bytesRemainingInWindow=2797568, bytesRemainingInFile=2797568
+  bytesAvailableInWindow=2797568, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.9.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.9.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.9.attn_k.weight offset=663336320 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.attn_k.weight: iter=1
+  currentOffset=663336320, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=663336320
+  bytesRemainingInWindow=5451776, bytesRemainingInFile=5451776
+  bytesAvailableInWindow=5451776, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.9.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.9.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.9.attn_v.weight offset=668349824 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.attn_v.weight: iter=1
+  currentOffset=668349824, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=668349824
+  bytesRemainingInWindow=438272, bytesRemainingInFile=438272
+  bytesAvailableInWindow=438272, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.9.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.9.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.9.attn_output.weight offset=663631232 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.attn_output.weight: iter=1
+  currentOffset=663631232, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=663631232
+  bytesRemainingInWindow=5156864, bytesRemainingInFile=5156864
+  bytesAvailableInWindow=5156864, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.9.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.9.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.9.ffn_gate.weight offset=650352000 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.ffn_gate.weight: iter=1
+  currentOffset=650352000, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=650352000
+  bytesRemainingInWindow=18436096, bytesRemainingInFile=18436096
+  bytesAvailableInWindow=18436096, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.9.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.9.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.9.ffn_up.weight offset=656840064 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.ffn_up.weight: iter=1
+  currentOffset=656840064, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=656840064
+  bytesRemainingInWindow=11948032, bytesRemainingInFile=11948032
+  bytesAvailableInWindow=11948032, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.9.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.9.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.9.ffn_down.weight offset=640890240 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.9.ffn_down.weight: iter=1
+  currentOffset=640890240, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=640890240
+  bytesRemainingInWindow=27897856, bytesRemainingInFile=27897856
+  bytesAvailableInWindow=27897856, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.9.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.9.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=9  138.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=8 token=1/1)
+[RawrXD] GetTensor loading: blk.10.attn_q.weight offset=170263936 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.attn_q.weight: iter=1
+  currentOffset=170263936, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=170263936
+  bytesRemainingInWindow=498524160, bytesRemainingInFile=498524160
+  bytesAvailableInWindow=498524160, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.10.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.10.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.10.attn_k.weight offset=167609728 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.attn_k.weight: iter=1
+  currentOffset=167609728, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=167609728
+  bytesRemainingInWindow=501178368, bytesRemainingInFile=501178368
+  bytesAvailableInWindow=501178368, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.10.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.10.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.10.attn_v.weight offset=172623232 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.attn_v.weight: iter=1
+  currentOffset=172623232, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=172623232
+  bytesRemainingInWindow=496164864, bytesRemainingInFile=496164864
+  bytesAvailableInWindow=496164864, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.10.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.10.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.10.attn_output.weight offset=167904640 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.attn_output.weight: iter=1
+  currentOffset=167904640, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=167904640
+  bytesRemainingInWindow=500883456, bytesRemainingInFile=500883456
+  bytesAvailableInWindow=500883456, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.10.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.10.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.10.ffn_gate.weight offset=154625408 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.ffn_gate.weight: iter=1
+  currentOffset=154625408, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=154625408
+  bytesRemainingInWindow=514162688, bytesRemainingInFile=514162688
+  bytesAvailableInWindow=514162688, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.10.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.10.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.10.ffn_up.weight offset=161113472 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.ffn_up.weight: iter=1
+  currentOffset=161113472, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=161113472
+  bytesRemainingInWindow=507674624, bytesRemainingInFile=507674624
+  bytesAvailableInWindow=507674624, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.10.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.10.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.10.ffn_down.weight offset=148137344 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.10.ffn_down.weight: iter=1
+  currentOffset=148137344, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=148137344
+  bytesRemainingInWindow=520650752, bytesRemainingInFile=520650752
+  bytesAvailableInWindow=520650752, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.10.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.10.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=10  148.1 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.11.attn_q.weight offset=195052928 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.attn_q.weight: iter=1
+  currentOffset=195052928, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=195052928
+  bytesRemainingInWindow=473735168, bytesRemainingInFile=473735168
+  bytesAvailableInWindow=473735168, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.11.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.11.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.11.attn_k.weight offset=192398720 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.attn_k.weight: iter=1
+  currentOffset=192398720, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=192398720
+  bytesRemainingInWindow=476389376, bytesRemainingInFile=476389376
+  bytesAvailableInWindow=476389376, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.11.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.11.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.11.attn_v.weight offset=197412224 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.attn_v.weight: iter=1
+  currentOffset=197412224, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=197412224
+  bytesRemainingInWindow=471375872, bytesRemainingInFile=471375872
+  bytesAvailableInWindow=471375872, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.11.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.11.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.11.attn_output.weight offset=192693632 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.attn_output.weight: iter=1
+  currentOffset=192693632, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=192693632
+  bytesRemainingInWindow=476094464, bytesRemainingInFile=476094464
+  bytesAvailableInWindow=476094464, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.11.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.11.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.11.ffn_gate.weight offset=179414400 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.ffn_gate.weight: iter=1
+  currentOffset=179414400, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=179414400
+  bytesRemainingInWindow=489373696, bytesRemainingInFile=489373696
+  bytesAvailableInWindow=489373696, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.11.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.11.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.11.ffn_up.weight offset=185902464 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.ffn_up.weight: iter=1
+  currentOffset=185902464, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=185902464
+  bytesRemainingInWindow=482885632, bytesRemainingInFile=482885632
+  bytesAvailableInWindow=482885632, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.11.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.11.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.11.ffn_down.weight offset=172926336 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.11.ffn_down.weight: iter=1
+  currentOffset=172926336, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=172926336
+  bytesRemainingInWindow=495861760, bytesRemainingInFile=495861760
+  bytesAvailableInWindow=495861760, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.11.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.11.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=11  140.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.12.attn_q.weight offset=222815616 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.attn_q.weight: iter=1
+  currentOffset=222815616, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=222815616
+  bytesRemainingInWindow=445972480, bytesRemainingInFile=445972480
+  bytesAvailableInWindow=445972480, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.12.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.12.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.12.attn_k.weight offset=220161408 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.attn_k.weight: iter=1
+  currentOffset=220161408, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=220161408
+  bytesRemainingInWindow=448626688, bytesRemainingInFile=448626688
+  bytesAvailableInWindow=448626688, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.12.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.12.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.12.attn_v.weight offset=225174912 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.attn_v.weight: iter=1
+  currentOffset=225174912, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=225174912
+  bytesRemainingInWindow=443613184, bytesRemainingInFile=443613184
+  bytesAvailableInWindow=443613184, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.12.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.12.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.12.attn_output.weight offset=220456320 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.attn_output.weight: iter=1
+  currentOffset=220456320, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=220456320
+  bytesRemainingInWindow=448331776, bytesRemainingInFile=448331776
+  bytesAvailableInWindow=448331776, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.12.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.12.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.12.ffn_gate.weight offset=207177088 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.ffn_gate.weight: iter=1
+  currentOffset=207177088, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=207177088
+  bytesRemainingInWindow=461611008, bytesRemainingInFile=461611008
+  bytesAvailableInWindow=461611008, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.12.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.12.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.12.ffn_up.weight offset=213665152 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.ffn_up.weight: iter=1
+  currentOffset=213665152, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=213665152
+  bytesRemainingInWindow=455122944, bytesRemainingInFile=455122944
+  bytesAvailableInWindow=455122944, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.12.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.12.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.12.ffn_down.weight offset=197715328 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.12.ffn_down.weight: iter=1
+  currentOffset=197715328, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=197715328
+  bytesRemainingInWindow=471072768, bytesRemainingInFile=471072768
+  bytesAvailableInWindow=471072768, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.12.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.12.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=12  158.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.13.attn_q.weight offset=247739776 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.attn_q.weight: iter=1
+  currentOffset=247739776, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=247739776
+  bytesRemainingInWindow=421048320, bytesRemainingInFile=421048320
+  bytesAvailableInWindow=421048320, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.13.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.13.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.13.attn_k.weight offset=245085568 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.attn_k.weight: iter=1
+  currentOffset=245085568, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=245085568
+  bytesRemainingInWindow=423702528, bytesRemainingInFile=423702528
+  bytesAvailableInWindow=423702528, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.13.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.13.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.13.attn_v.weight offset=250099072 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.attn_v.weight: iter=1
+  currentOffset=250099072, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=250099072
+  bytesRemainingInWindow=418689024, bytesRemainingInFile=418689024
+  bytesAvailableInWindow=418689024, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.13.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.13.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.13.attn_output.weight offset=245380480 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.attn_output.weight: iter=1
+  currentOffset=245380480, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=245380480
+  bytesRemainingInWindow=423407616, bytesRemainingInFile=423407616
+  bytesAvailableInWindow=423407616, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.13.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.13.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.13.ffn_gate.weight offset=232101248 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.ffn_gate.weight: iter=1
+  currentOffset=232101248, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=232101248
+  bytesRemainingInWindow=436686848, bytesRemainingInFile=436686848
+  bytesAvailableInWindow=436686848, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.13.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.13.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.13.ffn_up.weight offset=238589312 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.ffn_up.weight: iter=1
+  currentOffset=238589312, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=238589312
+  bytesRemainingInWindow=430198784, bytesRemainingInFile=430198784
+  bytesAvailableInWindow=430198784, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.13.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.13.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.13.ffn_down.weight offset=225613184 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.13.ffn_down.weight: iter=1
+  currentOffset=225613184, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=225613184
+  bytesRemainingInWindow=443174912, bytesRemainingInFile=443174912
+  bytesAvailableInWindow=443174912, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.13.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.13.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=13  148.7 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.14.attn_q.weight offset=272528768 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.attn_q.weight: iter=1
+  currentOffset=272528768, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=272528768
+  bytesRemainingInWindow=396259328, bytesRemainingInFile=396259328
+  bytesAvailableInWindow=396259328, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.14.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.14.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.14.attn_k.weight offset=269874560 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.attn_k.weight: iter=1
+  currentOffset=269874560, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=269874560
+  bytesRemainingInWindow=398913536, bytesRemainingInFile=398913536
+  bytesAvailableInWindow=398913536, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.14.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.14.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.14.attn_v.weight offset=274888064 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.attn_v.weight: iter=1
+  currentOffset=274888064, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=274888064
+  bytesRemainingInWindow=393900032, bytesRemainingInFile=393900032
+  bytesAvailableInWindow=393900032, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.14.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.14.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.14.attn_output.weight offset=270169472 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.attn_output.weight: iter=1
+  currentOffset=270169472, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=270169472
+  bytesRemainingInWindow=398618624, bytesRemainingInFile=398618624
+  bytesAvailableInWindow=398618624, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.14.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.14.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.14.ffn_gate.weight offset=256890240 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.ffn_gate.weight: iter=1
+  currentOffset=256890240, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=256890240
+  bytesRemainingInWindow=411897856, bytesRemainingInFile=411897856
+  bytesAvailableInWindow=411897856, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.14.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.14.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.14.ffn_up.weight offset=263378304 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.ffn_up.weight: iter=1
+  currentOffset=263378304, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=263378304
+  bytesRemainingInWindow=405409792, bytesRemainingInFile=405409792
+  bytesAvailableInWindow=405409792, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.14.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.14.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.14.ffn_down.weight offset=250402176 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.14.ffn_down.weight: iter=1
+  currentOffset=250402176, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=250402176
+  bytesRemainingInWindow=418385920, bytesRemainingInFile=418385920
+  bytesAvailableInWindow=418385920, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.14.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.14.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=14  145.0 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=8 token=1/1)
+[RawrXD] GetTensor loading: blk.15.attn_q.weight offset=300291456 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.attn_q.weight: iter=1
+  currentOffset=300291456, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=300291456
+  bytesRemainingInWindow=368496640, bytesRemainingInFile=368496640
+  bytesAvailableInWindow=368496640, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.15.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.15.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.15.attn_k.weight offset=297637248 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.attn_k.weight: iter=1
+  currentOffset=297637248, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=297637248
+  bytesRemainingInWindow=371150848, bytesRemainingInFile=371150848
+  bytesAvailableInWindow=371150848, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.15.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.15.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.15.attn_v.weight offset=302650752 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.attn_v.weight: iter=1
+  currentOffset=302650752, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=302650752
+  bytesRemainingInWindow=366137344, bytesRemainingInFile=366137344
+  bytesAvailableInWindow=366137344, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.15.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.15.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.15.attn_output.weight offset=297932160 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.attn_output.weight: iter=1
+  currentOffset=297932160, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=297932160
+  bytesRemainingInWindow=370855936, bytesRemainingInFile=370855936
+  bytesAvailableInWindow=370855936, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.15.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.15.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.15.ffn_gate.weight offset=284652928 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.ffn_gate.weight: iter=1
+  currentOffset=284652928, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=284652928
+  bytesRemainingInWindow=384135168, bytesRemainingInFile=384135168
+  bytesAvailableInWindow=384135168, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.15.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.15.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.15.ffn_up.weight offset=291140992 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.ffn_up.weight: iter=1
+  currentOffset=291140992, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=291140992
+  bytesRemainingInWindow=377647104, bytesRemainingInFile=377647104
+  bytesAvailableInWindow=377647104, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.15.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.15.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.15.ffn_down.weight offset=275191168 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.15.ffn_down.weight: iter=1
+  currentOffset=275191168, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=275191168
+  bytesRemainingInWindow=393596928, bytesRemainingInFile=393596928
+  bytesAvailableInWindow=393596928, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.15.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.15.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=15  154.2 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.16.attn_q.weight offset=325215616 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.attn_q.weight: iter=1
+  currentOffset=325215616, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=325215616
+  bytesRemainingInWindow=343572480, bytesRemainingInFile=343572480
+  bytesAvailableInWindow=343572480, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.16.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.16.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.16.attn_k.weight offset=322561408 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.attn_k.weight: iter=1
+  currentOffset=322561408, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=322561408
+  bytesRemainingInWindow=346226688, bytesRemainingInFile=346226688
+  bytesAvailableInWindow=346226688, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.16.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.16.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.16.attn_v.weight offset=327574912 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.attn_v.weight: iter=1
+  currentOffset=327574912, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=327574912
+  bytesRemainingInWindow=341213184, bytesRemainingInFile=341213184
+  bytesAvailableInWindow=341213184, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.16.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.16.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.16.attn_output.weight offset=322856320 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.attn_output.weight: iter=1
+  currentOffset=322856320, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=322856320
+  bytesRemainingInWindow=345931776, bytesRemainingInFile=345931776
+  bytesAvailableInWindow=345931776, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.16.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.16.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.16.ffn_gate.weight offset=309577088 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.ffn_gate.weight: iter=1
+  currentOffset=309577088, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=309577088
+  bytesRemainingInWindow=359211008, bytesRemainingInFile=359211008
+  bytesAvailableInWindow=359211008, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.16.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.16.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.16.ffn_up.weight offset=316065152 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.ffn_up.weight: iter=1
+  currentOffset=316065152, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=316065152
+  bytesRemainingInWindow=352722944, bytesRemainingInFile=352722944
+  bytesAvailableInWindow=352722944, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.16.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.16.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.16.ffn_down.weight offset=303089024 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.16.ffn_down.weight: iter=1
+  currentOffset=303089024, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=303089024
+  bytesRemainingInWindow=365699072, bytesRemainingInFile=365699072
+  bytesAvailableInWindow=365699072, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.16.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.16.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=16  140.4 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.17.attn_q.weight offset=350004608 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.attn_q.weight: iter=1
+  currentOffset=350004608, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=350004608
+  bytesRemainingInWindow=318783488, bytesRemainingInFile=318783488
+  bytesAvailableInWindow=318783488, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.17.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.17.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.17.attn_k.weight offset=347350400 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.attn_k.weight: iter=1
+  currentOffset=347350400, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=347350400
+  bytesRemainingInWindow=321437696, bytesRemainingInFile=321437696
+  bytesAvailableInWindow=321437696, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.17.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.17.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.17.attn_v.weight offset=352363904 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.attn_v.weight: iter=1
+  currentOffset=352363904, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=352363904
+  bytesRemainingInWindow=316424192, bytesRemainingInFile=316424192
+  bytesAvailableInWindow=316424192, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.17.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.17.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.17.attn_output.weight offset=347645312 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.attn_output.weight: iter=1
+  currentOffset=347645312, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=347645312
+  bytesRemainingInWindow=321142784, bytesRemainingInFile=321142784
+  bytesAvailableInWindow=321142784, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.17.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.17.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.17.ffn_gate.weight offset=334366080 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.ffn_gate.weight: iter=1
+  currentOffset=334366080, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=334366080
+  bytesRemainingInWindow=334422016, bytesRemainingInFile=334422016
+  bytesAvailableInWindow=334422016, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.17.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.17.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.17.ffn_up.weight offset=340854144 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.ffn_up.weight: iter=1
+  currentOffset=340854144, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=340854144
+  bytesRemainingInWindow=327933952, bytesRemainingInFile=327933952
+  bytesAvailableInWindow=327933952, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.17.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.17.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.17.ffn_down.weight offset=327878016 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.17.ffn_down.weight: iter=1
+  currentOffset=327878016, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=327878016
+  bytesRemainingInWindow=340910080, bytesRemainingInFile=340910080
+  bytesAvailableInWindow=340910080, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.17.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.17.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=17  149.5 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.18.attn_q.weight offset=377767296 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.attn_q.weight: iter=1
+  currentOffset=377767296, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=377767296
+  bytesRemainingInWindow=291020800, bytesRemainingInFile=291020800
+  bytesAvailableInWindow=291020800, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.18.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.18.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.18.attn_k.weight offset=375113088 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.attn_k.weight: iter=1
+  currentOffset=375113088, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=375113088
+  bytesRemainingInWindow=293675008, bytesRemainingInFile=293675008
+  bytesAvailableInWindow=293675008, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.18.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.18.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.18.attn_v.weight offset=380126592 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.attn_v.weight: iter=1
+  currentOffset=380126592, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=380126592
+  bytesRemainingInWindow=288661504, bytesRemainingInFile=288661504
+  bytesAvailableInWindow=288661504, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.18.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.18.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.18.attn_output.weight offset=375408000 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.attn_output.weight: iter=1
+  currentOffset=375408000, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=375408000
+  bytesRemainingInWindow=293380096, bytesRemainingInFile=293380096
+  bytesAvailableInWindow=293380096, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.18.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.18.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.18.ffn_gate.weight offset=362128768 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.ffn_gate.weight: iter=1
+  currentOffset=362128768, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=362128768
+  bytesRemainingInWindow=306659328, bytesRemainingInFile=306659328
+  bytesAvailableInWindow=306659328, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.18.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.18.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.18.ffn_up.weight offset=368616832 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.ffn_up.weight: iter=1
+  currentOffset=368616832, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=368616832
+  bytesRemainingInWindow=300171264, bytesRemainingInFile=300171264
+  bytesAvailableInWindow=300171264, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.18.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.18.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.18.ffn_down.weight offset=352667008 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.18.ffn_down.weight: iter=1
+  currentOffset=352667008, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=352667008
+  bytesRemainingInWindow=316121088, bytesRemainingInFile=316121088
+  bytesAvailableInWindow=316121088, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.18.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.18.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=18  161.3 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] GetTensor loading: blk.19.attn_q.weight offset=402691456 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.attn_q.weight: iter=1
+  currentOffset=402691456, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=402691456
+  bytesRemainingInWindow=266096640, bytesRemainingInFile=266096640
+  bytesAvailableInWindow=266096640, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.19.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.19.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.19.attn_k.weight offset=400037248 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.attn_k.weight: iter=1
+  currentOffset=400037248, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=400037248
+  bytesRemainingInWindow=268750848, bytesRemainingInFile=268750848
+  bytesAvailableInWindow=268750848, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.19.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.19.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.19.attn_v.weight offset=405050752 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.attn_v.weight: iter=1
+  currentOffset=405050752, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=405050752
+  bytesRemainingInWindow=263737344, bytesRemainingInFile=263737344
+  bytesAvailableInWindow=263737344, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.19.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.19.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.19.attn_output.weight offset=400332160 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.attn_output.weight: iter=1
+  currentOffset=400332160, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=400332160
+  bytesRemainingInWindow=268455936, bytesRemainingInFile=268455936
+  bytesAvailableInWindow=268455936, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.19.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.19.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.19.ffn_gate.weight offset=387052928 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.ffn_gate.weight: iter=1
+  currentOffset=387052928, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=387052928
+  bytesRemainingInWindow=281735168, bytesRemainingInFile=281735168
+  bytesAvailableInWindow=281735168, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.19.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.19.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.19.ffn_up.weight offset=393540992 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.ffn_up.weight: iter=1
+  currentOffset=393540992, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=393540992
+  bytesRemainingInWindow=275247104, bytesRemainingInFile=275247104
+  bytesAvailableInWindow=275247104, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.19.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.19.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.19.ffn_down.weight offset=380564864 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.19.ffn_down.weight: iter=1
+  currentOffset=380564864, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=380564864
+  bytesRemainingInWindow=288223232, bytesRemainingInFile=288223232
+  bytesAvailableInWindow=288223232, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.19.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.19.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=19  145.9 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=8 token=1/1)
+[RawrXD] GetTensor loading: blk.20.attn_q.weight offset=455243136 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.attn_q.weight: iter=1
+  currentOffset=455243136, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=455243136
+  bytesRemainingInWindow=213544960, bytesRemainingInFile=213544960
+  bytesAvailableInWindow=213544960, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.20.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.20.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.20.attn_k.weight offset=452588928 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.attn_k.weight: iter=1
+  currentOffset=452588928, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=452588928
+  bytesRemainingInWindow=216199168, bytesRemainingInFile=216199168
+  bytesAvailableInWindow=216199168, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.20.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.20.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.20.attn_v.weight offset=457602432 type=14 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.attn_v.weight: iter=1
+  currentOffset=457602432, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=457602432
+  bytesRemainingInWindow=211185664, bytesRemainingInFile=211185664
+  bytesAvailableInWindow=211185664, MAX_CHUNK_SIZE=668788096
+  remainingSize=430080, chunkSize=430080
+[RawrXD] Uploaded blk.20.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.20.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.20.attn_output.weight offset=452883840 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.attn_output.weight: iter=1
+  currentOffset=452883840, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=452883840
+  bytesRemainingInWindow=215904256, bytesRemainingInFile=215904256
+  bytesAvailableInWindow=215904256, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.20.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.20.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.20.ffn_gate.weight offset=439604608 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.ffn_gate.weight: iter=1
+  currentOffset=439604608, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=439604608
+  bytesRemainingInWindow=229183488, bytesRemainingInFile=229183488
+  bytesAvailableInWindow=229183488, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.20.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.20.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.20.ffn_up.weight offset=446092672 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.ffn_up.weight: iter=1
+  currentOffset=446092672, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=446092672
+  bytesRemainingInWindow=222695424, bytesRemainingInFile=222695424
+  bytesAvailableInWindow=222695424, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.20.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.20.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.20.ffn_down.weight offset=430142848 type=14 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.20.ffn_down.weight: iter=1
+  currentOffset=430142848, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=430142848
+  bytesRemainingInWindow=238645248, bytesRemainingInFile=238645248
+  bytesAvailableInWindow=238645248, MAX_CHUNK_SIZE=668788096
+  remainingSize=9461760, chunkSize=9461760
+[RawrXD] Uploaded blk.20.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.20.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=20  137.8 ms  SLOW
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=8 token=1/1)
+[RawrXD] GetTensor loading: blk.21.attn_q.weight offset=480167296 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.attn_q.weight: iter=1
+  currentOffset=480167296, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=480167296
+  bytesRemainingInWindow=188620800, bytesRemainingInFile=188620800
+  bytesAvailableInWindow=188620800, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.21.attn_q.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.21.attn_q.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.21.attn_k.weight offset=477513088 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.attn_k.weight: iter=1
+  currentOffset=477513088, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=477513088
+  bytesRemainingInWindow=191275008, bytesRemainingInFile=191275008
+  bytesAvailableInWindow=191275008, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.21.attn_k.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.21.attn_k.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.21.attn_v.weight offset=482526592 type=12 ne=524288
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.attn_v.weight: iter=1
+  currentOffset=482526592, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=482526592
+  bytesRemainingInWindow=186261504, bytesRemainingInFile=186261504
+  bytesAvailableInWindow=186261504, MAX_CHUNK_SIZE=668788096
+  remainingSize=294912, chunkSize=294912
+[RawrXD] Uploaded blk.21.attn_v.weight to GPU (2 MB)
+[RawrXD] GetTensor loaded: blk.21.attn_v.weight (524288 elements)
+[RawrXD] GetTensor loading: blk.21.attn_output.weight offset=477808000 type=12 ne=4194304
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.attn_output.weight: iter=1
+  currentOffset=477808000, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=477808000
+  bytesRemainingInWindow=190980096, bytesRemainingInFile=190980096
+  bytesAvailableInWindow=190980096, MAX_CHUNK_SIZE=668788096
+  remainingSize=2359296, chunkSize=2359296
+[RawrXD] Uploaded blk.21.attn_output.weight to GPU (16 MB)
+[RawrXD] GetTensor loaded: blk.21.attn_output.weight (4194304 elements)
+[RawrXD] GetTensor loading: blk.21.ffn_gate.weight offset=464528768 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.ffn_gate.weight: iter=1
+  currentOffset=464528768, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=464528768
+  bytesRemainingInWindow=204259328, bytesRemainingInFile=204259328
+  bytesAvailableInWindow=204259328, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.21.ffn_gate.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.21.ffn_gate.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.21.ffn_up.weight offset=471016832 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.ffn_up.weight: iter=1
+  currentOffset=471016832, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=471016832
+  bytesRemainingInWindow=197771264, bytesRemainingInFile=197771264
+  bytesAvailableInWindow=197771264, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.21.ffn_up.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.21.ffn_up.weight (11534336 elements)
+[RawrXD] GetTensor loading: blk.21.ffn_down.weight offset=458040704 type=12 ne=11534336
+[RawrXD] LoadTensorAsync CHUNK DEBUG blk.21.ffn_down.weight: iter=1
+  currentOffset=458040704, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=458040704
+  bytesRemainingInWindow=210747392, bytesRemainingInFile=210747392
+  bytesAvailableInWindow=210747392, MAX_CHUNK_SIZE=668788096
+  remainingSize=6488064, chunkSize=6488064
+[RawrXD] Uploaded blk.21.ffn_down.weight to GPU (44 MB)
+[RawrXD] GetTensor loaded: blk.21.ffn_down.weight (11534336 elements)
+[CPU] token=0 layer=21  144.3 ms  SLOW
+[CPU] token=0 total_layers=3086.2 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[RawrXD] Lazy tensor load: output.weight type=14 dims=2 est_f32=250.0 MB
+[RawrXD] GetTensor loading: output.weight offset=1709440 type=14 ne=65536000
+[RawrXD] LoadTensorAsync CHUNK DEBUG output.weight: iter=1
+  currentOffset=1709440, windowSize=668788096, apertureSize=668788096
+  windowStart=0, offsetInWindow=1709440
+  bytesRemainingInWindow=667078656, bytesRemainingInFile=667078656
+  bytesAvailableInWindow=667078656, MAX_CHUNK_SIZE=668788096
+  remainingSize=53760000, chunkSize=53760000
+[RawrXD] Prefetch view promoted to compute window (off=1709440 size=53760000 view=51 MB)
+[RawrXD] Uploaded output.weight to GPU (250 MB)
+[RawrXD] GetTensor loaded: output.weight (65536000 elements)
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=3298.12 ms_per_layer_exec=149.915
+[MEM] Forward end: avail_phys=33268 MB avail_virt=133934748 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=3298.12
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=156 BatchedMatMul=154 WeightLookup=310 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=1 pins=155 seq=9 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=20893
+[STREAM] callback returned
+[STREAM] generation iteration 1
+[STREAM] candidate token=17142
+[STREAM] calling Forward() for decode, absolutePos=9
+[DECODE_CARRY] T=1 warm gen=1 pins=155 seq=9
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=9 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=9 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=9 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=9 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=9 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=9 token=1/1)
+[CPU] token=0 total_layers=662.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=707.34 ms_per_layer_exec=32.152
+[MEM] Forward end: avail_phys=33415 MB avail_virt=133934800 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=707.34
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=311 BatchedMatMul=154 WeightLookup=465 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=2 pins=155 seq=10 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=17142
+[STREAM] callback returned
+[STREAM] generation iteration 2
+[STREAM] candidate token=12460
+[STREAM] calling Forward() for decode, absolutePos=10
+[DECODE_CARRY] T=1 warm gen=2 pins=155 seq=10
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=10 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=10 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=10 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=10 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=10 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=10 token=1/1)
+[CPU] token=0 total_layers=664.7 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=708.47 ms_per_layer_exec=32.203
+[MEM] Forward end: avail_phys=33365 MB avail_virt=133934800 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=708.47
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=466 BatchedMatMul=154 WeightLookup=620 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=3 pins=155 seq=11 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=12460
+[STREAM] callback returned
+[STREAM] generation iteration 3
+[STREAM] candidate token=701
+[STREAM] calling Forward() for decode, absolutePos=11
+[DECODE_CARRY] T=1 warm gen=3 pins=155 seq=11
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=11 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=11 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=11 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=11 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=11 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=11 token=1/1)
+[CPU] token=0 total_layers=660.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=703.03 ms_per_layer_exec=31.956
+[MEM] Forward end: avail_phys=33410 MB avail_virt=133934800 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=703.03
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=621 BatchedMatMul=154 WeightLookup=775 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=4 pins=155 seq=12 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=701
+[STREAM] callback returned
+[STREAM] generation iteration 4
+[STREAM] candidate token=15058
+[STREAM] calling Forward() for decode, absolutePos=12
+[DECODE_CARRY] T=1 warm gen=4 pins=155 seq=12
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=12 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=12 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=12 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=12 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=12 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=12 token=1/1)
+[CPU] token=0 total_layers=648.5 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=691.78 ms_per_layer_exec=31.445
+[MEM] Forward end: avail_phys=33451 MB avail_virt=133934800 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=691.78
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=776 BatchedMatMul=154 WeightLookup=930 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=5 pins=155 seq=13 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=15058
+[STREAM] callback returned
+[STREAM] generation iteration 5
+[STREAM] candidate token=6053
+[STREAM] calling Forward() for decode, absolutePos=13
+[DECODE_CARRY] T=1 warm gen=5 pins=155 seq=13
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=13 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=13 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=13 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=13 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=13 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=13 token=1/1)
+[CPU] token=0 total_layers=654.1 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=697.86 ms_per_layer_exec=31.721
+[MEM] Forward end: avail_phys=33423 MB avail_virt=133934800 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=697.86
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=931 BatchedMatMul=154 WeightLookup=1085 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=6 pins=155 seq=14 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=6053
+[STREAM] callback returned
+[STREAM] generation iteration 6
+[STREAM] candidate token=13793
+[STREAM] calling Forward() for decode, absolutePos=14
+[DECODE_CARRY] T=1 warm gen=6 pins=155 seq=14
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=14 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=14 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=14 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=14 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=14 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=14 token=1/1)
+[CPU] token=0 total_layers=653.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=699.02 ms_per_layer_exec=31.774
+[MEM] Forward end: avail_phys=33417 MB avail_virt=133934800 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=699.02
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=1086 BatchedMatMul=154 WeightLookup=1240 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=7 pins=155 seq=15 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=13793
+[STREAM] callback returned
+[STREAM] generation iteration 7
+[STREAM] candidate token=26817
+[STREAM] calling Forward() for decode, absolutePos=15
+[DECODE_CARRY] T=1 warm gen=7 pins=155 seq=15
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=15 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=15 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=15 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=15 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=15 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=15 token=1/1)
+[CPU] token=0 total_layers=667.6 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=712.60 ms_per_layer_exec=32.391
+[MEM] Forward end: avail_phys=33373 MB avail_virt=133934748 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=712.60
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=1241 BatchedMatMul=154 WeightLookup=1395 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=8 pins=155 seq=16 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=26817
+[STREAM] callback returned
+[STREAM] generation iteration 8
+[STREAM] candidate token=13548
+[STREAM] calling Forward() for decode, absolutePos=16
+[DECODE_CARRY] T=1 warm gen=8 pins=155 seq=16
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=16 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=16 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=16 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=16 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=16 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=16 token=1/1)
+[CPU] token=0 total_layers=679.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=725.62 ms_per_layer_exec=32.983
+[MEM] Forward end: avail_phys=33321 MB avail_virt=133934799 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=725.62
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=1396 BatchedMatMul=154 WeightLookup=1550 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=9 pins=155 seq=17 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=13548
+[STREAM] callback returned
+[STREAM] generation iteration 9
+[STREAM] candidate token=15431
+[STREAM] calling Forward() for decode, absolutePos=17
+[DECODE_CARRY] T=1 warm gen=9 pins=155 seq=17
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=17 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=17 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=17 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=17 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 21/22 (pos=17 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 22/22 (pos=17 token=1/1)
+[CPU] token=0 total_layers=659.8 ms
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=32000 dim=2048
+[DECODE] output_projection complete
+[Forward] complete: tokens=1 layers=22 execs=22 elapsed_ms=705.37 ms_per_layer_exec=32.062
+[MEM] Forward end: avail_phys=33482 MB avail_virt=133934799 MB
+[Forward] returning logits, size=32000
+[B009-P3] Time attribution (ms): GEMM=0.00  Attention=0.00  Dequant=0.00  Other=705.37
+[B009-P2] Structural counters: ForwardBatch=1 MatMul=1551 BatchedMatMul=154 WeightLookup=1705 AVX512Kernels=154
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
+[DECODE_CARRY] prepared gen=10 pins=155 seq=18 resident_MB=3946
+[STREAM] Forward() decode returned, logits.size()=32000
+[STREAM] invoking callback token=15431
+[STREAM] callback returned
+[STREAM] generation iteration 10
+[STREAM] candidate token=17142
+[STREAM] calling Forward() for decode, absolutePos=18
+[DECODE_CARRY] T=1 warm gen=10 pins=155 seq=18
+[Forward] prefill: tokens=1 layers=22 total_layer_execs=22 est_ms=2860
+[ELASTIC] Forward T=1 layers=22
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 1/22 (pos=18 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 6/22 (pos=18 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 11/22 (pos=18 token=1/1)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 000000407FFF0000 (2000+ TPS ready)
+[STEP] Layer 16/22 (pos=18 token=1/1)

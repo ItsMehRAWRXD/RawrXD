@@ -1,0 +1,8 @@
+id=sess_1792272800
+model=tinyllama
+path=G:\~dev\rawrxd\models\tinyllama.gguf
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=Read the CMakeLists.txt file
+patch=
+turns=0

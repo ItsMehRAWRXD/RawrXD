@@ -1,0 +1,39 @@
+STREAM_PATH_WIRING_DEFER_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_COMPLETE
+SPEND=0
+HOT_GATE=0
+CODE_CHANGE_STREAM=0
+
+ITEM=STREAM_PATH_WIRING
+STATUS=COMPLETE_AS_NOT_REQUIRED_YET
+REAL_SITE_WIRING=0
+WIRED_INTO_K2NativeStreamGate=0
+WIRED_INTO_ProjectLogitsArgmax=0
+
+MEANING=
+  Missing stream-path MASM emitter call sites are intentionally deferred.
+  Closing this item does NOT mean emitters are live on the stream.
+  Closing this item means: wiring is not required under current Mode D hold.
+
+REQUIRED_BEFORE_WIRING=
+  explicit MODE=A HOT_GATE=1
+  then REAL_CLAIM_SITE → claim-specific emitter → BUILD → seqCap=512 run
+
+LAW=
+  source existence ≠ runtime evidence
+  collection ABI may exist without stream wiring
+  no fabricated observation from deferred wiring
+
+COLLECTION_SIDE_LANDED_WITHOUT_STREAM_WIRE=
+  src/deep2/RuntimeEvidence512.hpp
+  src/deep2/RuntimeEvidence512_EmitDecl.hpp
+  src/deep2/RuntimeEvidence512Collect.hpp
+  evidence COLLECTION_SERVE_001
+
+AUTHORITY=
+  MODE=D
+  NEXT_SPEND=NONE
+  SPEND_CLAIM_001=SEALED
+  RUNTIME_EVIDENCE_512_SOURCE_001=SEALED
+  PATH_B_N5_003_ATTRIBUTION_HOLD_001=CURRENT

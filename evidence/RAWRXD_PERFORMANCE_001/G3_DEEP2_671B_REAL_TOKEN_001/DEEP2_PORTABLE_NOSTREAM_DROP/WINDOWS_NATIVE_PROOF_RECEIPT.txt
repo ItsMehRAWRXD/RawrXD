@@ -1,0 +1,63 @@
+DEEP2_PORTABLE_NOSTREAM + DS671 disposition (2026-09-11)
+=======================================================
+
+ZIP SHA256=7ee8cdf2054556472ac0194ad118623c68f9c8bbea4b2bd9c24699b828d29c96
+DEEP2_PORTABLE_NOSTREAM_SOURCE=PASS
+PORTABLE_BUILD=PASS
+PORTABLE_SMOKE=PASS
+SMOKE_OUT=DEEP2_NOSTREAM_PORTABLE_SMOKE=PASS
+NOSTREAM_SMOKE_RC=0
+BUILD_NOTE=cl.exe must not compile .obj as source; build_portable.bat uses compile+link
+
+AUTHORITY:
+  BACKGROUND_STREAMING=0
+  PREDICTIVE_PREFETCH=0
+  PREFETCH_WORKERS=0
+  CURRENT_OP_SYNC_LOAD_ONLY=1
+  ROUTER_TOPK_CAUSES_EXPERT_LOAD=1
+  DISK_IO_DURING_INFERENCE=ALLOWED
+  DISK_IO_CAUSE=CURRENT_REQUIRED_WEIGHT_ONLY
+  FULL_MODEL_RESIDENT=IMPOSSIBLE (~376.65 GiB)
+
+GGUF_NUMERIC_METADATA_PROBE=PASS (shard1, 51 KV walked)
+  attention.key_length=192
+  attention.value_length=128
+  attention.head_count=128
+  attention.head_count_kv=128
+  expert_feed_forward_length=2048
+  QK_NOPE not stored as KV; candidate key_length-rope_dim=128
+  V_HEAD_DIM verified as attention.value_length=128
+
+DS671_FILE_MANIFEST=PASS
+  SHARDS=11/11 TOTAL_BYTES=404430188064 TOTAL_TENSORS=1025
+  TYPE_0=361 TYPE_12=606 TYPE_14=58 (sum=1025)
+  MoE meta: 61/3/256/8/1
+
+DS_TENSOR_MAP:
+  ACCOUNTING_TOTAL=1025 PASS
+  UNRESOLVED_TENSORS=0 PASS
+  SEMANTIC after OTHER dump: exp_probs_b.bias -> expert class;
+    attn_norm/ffn_norm classified via norm-before-attn
+  FINAL: emb=1 out=1 attn=61 mla=244 dense=9 exp=464 norm=245 other=0
+  DS_TENSOR_MAP_PASS=1
+
+FIXED_GATE_POLICY (decimal SI, not MiB/GiB):
+  100000000 / 1000000000 / 10.000 / 128 / 1:1250
+  Eval=1 pass=0x1F Eval+1 pass=0x1E fail=1
+  FIXED_GATE_POLICY_RUNTIME=PASS
+  FIX: preserve r8 across Q4Witness (caller-volatile)
+  QUANTIZATION_INDEPENDENT_POLICY=PROVEN
+  Q4_FIXTURE_ROLE=WITNESS_ONLY
+
+DS671_ROUTE_LOAD portable smoke=PASS (prior drop f995914b…)
+
+NEXT (live, not invented PASS):
+  SHARD_AWARE_TENSOR_RANGE_MAP
+  REAL_TOP8_TO_EXPERT_SLICE_BIND
+  ONE_REAL_MOE_LAYER_SYNC_LOAD
+  ALL_58_MOE_LAYERS_TOKEN1
+  DS671_LIVE_POLICY_BIND (feed real counters into Eval ABI; require 0x1F)
+
+AUTHORIZED_PASS=0
+PROMOTE=0
+REAL_MODEL_DECODE=NOT_YET_PROVEN

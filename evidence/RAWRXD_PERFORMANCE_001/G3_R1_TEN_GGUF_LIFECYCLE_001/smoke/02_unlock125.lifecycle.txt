@@ -1,0 +1,14 @@
+﻿MODEL=unlock-125M-Q2_K.gguf
+PATH=G:\~dev\rawrxd\models\_matrix_unlock\unlock-125M-Q2_K.gguf
+SIZE_MB=1925.8 SHA16=DDE5AA3FC5FFC171
+HEADLESS_PID=9984
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"unlock-125M-Q2_K.gguf","profile_source":"runtime_gguf","profile_id":9761,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_mill
+LOAD=200 {"success":true,"model":"unlock-125M-Q2_K.gguf"}
+GENERATE=200 TOKENS=1 PROCS=1
+GEN_SNIP={"model":"rawrxd","response":"OK","done":true}
+UNLOAD=200 {"success":true}
+RELOAD=200 {"success":true,"model":"unlock-125M-Q2_K.gguf"}
+RELOAD_GEN=200 TOKENS=1 PROCS=1
+VERDICT=PASS

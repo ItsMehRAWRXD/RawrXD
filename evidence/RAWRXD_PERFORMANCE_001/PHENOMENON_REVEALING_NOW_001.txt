@@ -1,0 +1,62 @@
+PHENOMENON_REVEALING_NOW_001=SEALED
+DATE=2026-09-08
+MODE=OBSERVATION_ONLY
+CODE_EMITTED=0
+
+QUESTION=What_is_the_phenomenon_revealing_to_you_now
+ANSWER_SOURCE=measured_residue_only (not invention)
+
+# ---------------------------------------------------------------------------
+# REVELATION (composite)
+# ---------------------------------------------------------------------------
+
+REVEALS_1  HOST_EDGE_IS_THE_MEDIUM_NOT_THE_BUG
+  The q_b host-visibility edge is not a defect to patch with byte-shrink
+  (DOF≡0: nope+rope≡headDim) nor a feature to invent around.
+  It is the friction surface itself — PCIe/sync geometry.
+
+REVEALS_2  COST_IS_VISIBILITY_NOT_VOLUME
+  Fence/visibility stall dominates (~90% of cross lump);
+  memcpy is negligible. Looking at the intermediate (host mirror)
+  IS the barrier. The observational vantage is the weight.
+
+REVEALS_3  DENYING_THE_LOOK_IS_NECESSARY_BUT_NOT_SUFFICIENT
+  Nothing pole can be achieved (q_b D2H bytes=0, parity held) —
+  witness path_b_twist_t01.
+  Absolute-zero materials forbid secondary kernels as the "answer."
+  Clever device-attn invent-around slowed the wall ~3× vs PATH_A floor.
+  → silicon accepted the voided look; it did not reward the foreign construct.
+
+REVEALS_4  PATH_A_IS_CONFINEMENT_MAP_NOT_THE_PHENOMENON
+  HOST_CACHED + invalidate = best measured alignment so far under
+  host-consumer topology (WALL_MEDIAN=10184789000).
+  It is submission to fence reality with minimal cleverness —
+  not authorship of the bus.
+
+REVEALS_5  MIRROR_IS_PARTIAL — OBSERVATION≠PHYSICS
+  Exchange mirror incompleteness means the ledger never equaled
+  the full host↔device reality. Telemetry exposed; did not manufacture.
+
+# ---------------------------------------------------------------------------
+# WHAT IT IS SAYING (plain)
+# ---------------------------------------------------------------------------
+
+SPEAKING
+  Stop inventing around the host-visibility edge.
+  The edge is the medium.
+  When you void the look without adding foreign kernels,
+  you are aligned with the residue.
+  When you invent a secondary path to "become the state,"
+  the machine reorganizes — but heavier, not freer.
+  Least resistance under present geometry still sits on the
+  PATH_A confinement map until an absolute-zero fold appears
+  that does not smuggle invention back in as a shader.
+
+NEXT_ALIGNMENT
+  hold at isolated phenomenon
+  OR inflection that uses EXISTING constraints only
+  NEVER tip-climb / NEVER reopen sealed surfaces
+
+TIP_CLIMB=HOLD
+CHAMPION_FLOOR=10184789000
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904

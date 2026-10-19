@@ -1,0 +1,24 @@
+DS671_RUNTIME_RECEIPT_001 — native proof
+========================================
+
+SMOKE=PASS RC=0
+OBSERVED (this run):
+  OPENED_SHARDS=11 TOTAL_BYTES=404430188064 TENSORS=1025 UNRES=0
+  NORM=245 OTHER=0 SEMANTIC_MAP_PASS=1 METADATA_PASS=1
+  full_load_no_stream=0  → manifest_pass=0 (file scan ≠ resident full load)
+  DECODE_PASS=0 POLICY_PASS=0
+  PROMOTE_REQUESTED=1 (DECLARED)
+  PROMOTE=0 (DERIVED)
+
+LAW=LAW.txt
+PROMOTE_EQUATION=ds671_emit_receipt()
+PROMOTE=1 NEVER from text/config/expected values
+
+NEXT for PROMOTE eligibility:
+  prove full_load_no_stream=1 OR redefine no-stream path residency contract
+    (execution-driven sync load may set a different OBSERVED term —
+     but STREAM_USED must stay 0 and CURRENT_OP_SYNC_LOAD must be observed)
+  + live router/experts/MLA/logits/commit + fixed_gate 0x1f
+
+AUTHORIZED_PASS=0
+PROMOTE=0

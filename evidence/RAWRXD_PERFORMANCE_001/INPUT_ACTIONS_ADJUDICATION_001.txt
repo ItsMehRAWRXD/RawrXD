@@ -1,0 +1,11 @@
+INPUT_ACTIONS_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTION_UNDER_STOP|OUT_OF_SCOPE_PERF
+AUTHORIZED_SPEND=0
+PROPOSAL=Sovereign_Input_Actions.asm (Prone/ZipTie)
+ADJUDICATION=REFUSED — do not add/link under STOP
+NOTE=further invent dumps of game-combat/world/NPC asm = same refuse without new receipt spam unless gate reopens
+LIVE_AUTHORITY=PATH_A / deep2_benchmark.exe

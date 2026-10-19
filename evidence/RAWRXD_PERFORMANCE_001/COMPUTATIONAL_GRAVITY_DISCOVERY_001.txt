@@ -1,0 +1,72 @@
+COMPUTATIONAL_GRAVITY_DISCOVERY_001=SEALED
+DATE=2026-09-08
+CATEGORY=PHENOMENON_CATEGORY_001
+CLASS=PHENOMENON
+CODE_ARTIFACT=0
+KERNEL_ARTIFACT=0
+SOFTWARE_DELIVERABLE=0
+NET_NEW_ARCHITECTURE_INVENTION=0
+SUBJECT_NE_CODE=1
+SUBJECT_NE_INVENTION=1
+INVENTION=0
+ENGINEERED_SOLUTION=0
+DISCOVERED_WHILE_CODE=1
+SIBLING_OF=EMERGENT_OBSERVATION_001
+
+# ---------------------------------------------------------------------------
+# NAME
+# ---------------------------------------------------------------------------
+
+NAME=HOST_ORCHESTRATION_BOUNDARY_VIOLATES_COMPUTATIONAL_GRAVITY
+
+# ---------------------------------------------------------------------------
+# STATEMENT (emergent — revealed by baseline friction, not authored)
+# ---------------------------------------------------------------------------
+
+STATEMENT
+  While mapping memory architectures, readback windows, and host↔device
+  synchronization against the live baseline, the architectural premise
+  that the host must perpetually retrieve, validate, and route intermediate
+  execution state was exposed as a legacy paradigm — not a law of nature.
+
+  The prior campaign optimized the cost of crossing the boundary, treating
+  transit as necessary and benign (PATH_A: maps, invalidation, coherency).
+
+  The observation: that boundary is not benign necessity. It is an active
+  violation of computational gravity. Device-resident state generated at
+  high velocity has weight and momentum. The cycle
+    force across narrow bus → stall device → wake slower host for routing
+    → push instruction back
+  disrupts that momentum. Persistent maps, cache invalidations, and sync
+  barriers are life-support for that philosophy — measured improvements
+  under GENERATION_WALL_NS do not prove the boundary is structurally required
+  when the next true consumer is already on-device.
+
+  When the full lifecycle of a state transition (inception→consumption)
+  remains inside its native high-bandwidth topology, dual-domain coherency
+  scaffolding ceases to be load-bearing. The host role shrinks from
+  micro-manager to prime mover: establish boundary conditions, then step away.
+
+  Removing that baseline is conceptual purification — abandoning the illusion
+  that host-level observation is required for execution — not merely deleting
+  syntax. "Benign" bridges become parasitic when they feed a device consumer.
+
+# ---------------------------------------------------------------------------
+# BINDING (no new mechanism invented here)
+# ---------------------------------------------------------------------------
+
+BINDS
+  EMERGENT_OBSERVATION_001 (host window DoF=0; fence-not-copy; mirror partial)
+  D2H_CLASSIFICATION (NEXT_CONSUMER=DEVICE → DELETE_D2H)
+  MLA_KV_LAYOUT_CONTRACT_001 (discovery packing only)
+  PATH_A champion retained as wall baseline until PATH_B measures
+
+DOES_NOT
+  claim PATH_B TPS
+  invent DEVICE_LOCAL_KV as already live
+  invent new KV topology
+  authorize shader syntax in this file
+  reopen QB|KVA|LOGITS|SX|5.904
+
+STATUS=DISCOVERY_LOCKED
+PARSER=ANALYTICAL_INTAKE

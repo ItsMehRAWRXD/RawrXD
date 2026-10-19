@@ -1,0 +1,44 @@
+PERF_RANKING_LAW_001=SEALED
+DATE=2026-09-08
+RNG_USED=0
+
+PROBLEM
+  Last DECODE_TPS_REAL in witness logs is often min-window / slowest-path TPS
+  (DECODE_TPS_MIN_WINDOW family), not wall-derived rate.
+  Sorting candidates by that number ranks the "longest to generate" window,
+  not the product generation wall.
+
+AUTHORITY
+  RATE_GATE_SOURCE=GENERATION_WALL_NS
+  TPS_DERIVED_ONLY=1
+  TPS_AUTHORITY=WALL_DERIVED_ONLY
+  FORMULA=GENERATED_TOKENS * 1e9 / GENERATION_WALL_NS
+
+RANKING (parity-passing authoritative candidates only)
+  1. PARITY=1
+  2. PRODUCT_PATH=1
+  3. PURITY=1
+  4. lowest GENERATION_WALL_NS
+  5. tie: higher TPS_WALL_DERIVED
+  6. tie: CONFIG_ID lexical
+
+FORBIDDEN
+  Sort-Object DECODE_TPS_REAL
+  Get-LastField DECODE_TPS_REAL as promote/rank key
+  Ranking by min-window / MEASURED_DECODE_TPS when it disagrees with wall
+  Numerical TPS order as primary traversal or winner key
+
+DISPLAY
+  TPS_WALL_DERIVED may be shown for human comparison / intra-epoch rank
+  SEARCH_BASELINE_WALL_NS may accompany wall-rank displays
+
+INSTALLED_PROMOTION_BASELINE
+  SEARCH_BASELINE_TPS=4.329
+  AUTHORITY=PERF_PROMOTION_LAW_001
+  NOTE=wall-derived 5.946 is NOT the installed search baseline
+  PROMOTE_REQUIRES_MIN_TPS_GT=4.329
+  NO_REOPEN_5.904=1
+
+HELPER=scripts/PassMetricAuthority.ps1
+PROMOTION=evidence/RAWRXD_PERFORMANCE_001/PERF_PROMOTION_LAW_001.txt
+CONTRACT=evidence/RAWRXD_PERFORMANCE_001/PERF_COMPLETION_CONTRACT_001.txt

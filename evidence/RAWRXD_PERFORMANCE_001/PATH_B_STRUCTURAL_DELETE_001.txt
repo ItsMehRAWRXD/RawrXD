@@ -1,0 +1,80 @@
+PATH_B_STRUCTURAL_DELETE_001=SEALED
+DATE=2026-09-08
+CLASS=EPISTEMOLOGY_DISCOVERY_NOT_INVENTION
+INVENTION=0
+CODE_EMITTED=0
+SUBJECT_NE_AUTHORED_LOGIC=1
+
+# ---------------------------------------------------------------------------
+# LAW (user seal — cartography of machine physics)
+# ---------------------------------------------------------------------------
+
+ROLE
+  AT_DEPTH=cartographer_of_machine_physics
+  NOT=inventor_of_hardware_behavior
+  CODE=instrument_of_discovery_only
+
+DISCOVERY_CLASS
+  Emergent physical truths of host↔device geometry, revealed by friction of
+  bare-metal / zero-dep / PCIe / NT execution — not drafted mechanisms.
+  Authorship claim over GPU/bus physics = FALSE.
+  Observed phenomena exist independent of the program that provoked them.
+
+FORMAL_RECLASS (PHENOMENON_RECLASS_001)
+  discovered WHILE code; NOT code; NOT invention-yet
+  OUTSIDE_CODE_KERNEL_NAMESPACE=1
+  NEITHER software/code artifact NOR net-new architectural invention
+  INVENTION_GATE opens only AFTER this reclass locks
+  THEN invention = twist along phenomenon (everything and nothing)
+  invention_cannot_precede_reclassification
+
+q_b_D2H
+  CLASS=OBSERVED_LIMIT_OF_PCIE_GEOMETRY
+  SPACE=OUTSIDE_CODE_KERNEL_NAMESPACE
+  NOT=invented_optimization_target
+  NOT=kernel_surface / software feature
+  CODE_MAPPED_HIT_REVEALED the bottleneck; code did not invent it.
+
+ADAPTATION_CLASS (pre-invention gate)
+  MLA_KV_LAYOUT_CONTRACT = survival mirror of discovered host pack
+  DEVICE_SIDE_RESIDENCY = submission to discovered next-consumer topology
+  NOT=creative_invention_of_new_pathways (gate still closed)
+  METHOD=strip authored code that conflicts with discovered physics
+  METHOD_NE=impose_synthetic_design_on_hardware
+
+# ---------------------------------------------------------------------------
+# BIND
+# ---------------------------------------------------------------------------
+
+BINDS
+  COMPUTATIONAL_GRAVITY_001
+  COMPUTATIONAL_GRAVITY_DISCOVERY_001
+  PATH_B_REVERSE_DISCOVERY_001
+  PHENOMENON_CATEGORY_LAW_001
+  MLA_KV_LAYOUT_CONTRACT_001 (DISCOVERY_ONLY)
+  D2H_CLASSIFICATION (NEXT_CONSUMER=DEVICE → DELETE)
+  AUTHORITY_FIREWALL (CLAIM: invention-as-authorship blocked; twist-along after reclassify)
+
+CATEGORY_EXIT
+  ITEM_LEFT_CODE_KERNEL_SPACE=1
+  ITEM_LEFT_INVENTION_AS_AUTHORSHIP=1
+  ITEM_NOW=PHENOMENON
+  INVENTION_AFTER_RECLASSIFY=twist_along_phenomenon (everything_and_nothing)
+
+FORBIDDEN
+  invent planar K_nope/K_rope (contradicts discovery)
+  invent DEVICE_LOCAL_KV as already-live product fact
+  claim authorship of PCIe/cache/invalidation physics
+  fabricate TPS / PATH_B_PROMOTE without DELETE_PROVEN+wall
+  strip braided goods on word fail
+
+TRAJECTORY
+  PATH_B_STRUCTURAL_DELETE evolves by removing authored conflict with
+  discovered host↔VRAM physics — not by inventing alternate geometry.
+
+MEASURE_STILL_GOVERNS
+  GENERATION_WALL_NS | DELETE_PROVEN | PARITY | PURITY | PRODUCT
+  ELSE CHAMPION_REMAINS=PATH_A (10184789000)
+
+STATUS=SEALED
+PARSER=ANALYTICAL_INTAKE

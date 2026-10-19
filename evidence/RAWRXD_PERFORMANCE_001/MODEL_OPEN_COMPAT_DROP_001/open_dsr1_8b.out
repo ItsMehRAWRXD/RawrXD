@@ -1,0 +1,48 @@
+[Deep2Engine] Loading model from: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=qwen3 L=36 H=4096 FFN=12288 heads=32 kv=8 hd=128 ctx=32768
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=GEOM
+BLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY
+FIRST_DELTA=GEOM
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+
+OLLAMA_PARITY_STREAMER_001
+MODEL_PATH=F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+BACKEND=DEEP2
+API_SURFACE_PCT=11.11
+OLLAMA_DAEMON=0
+OLLAMA_HTTP=0
+LLAMA_CPP=0
+GGML=0
+CLOUD=0
+FALLBACK_USED=0
+TOKENIZER=UNOBSERVED
+PREFILL=UNOBSERVED
+DECODE_LOOP=UNOBSERVED
+LOGITS=UNOBSERVED
+SAMPLE=UNOBSERVED
+STREAM_CALLBACK=UNOBSERVED
+FINALIZE_STREAM=UNOBSERVED
+TOKENS_EMITTED=0
+FIRST_TOKEN_TEXT_NONEMPTY=0
+FINAL_TEXT_NONEMPTY=0
+TTFT_MS=0.000
+DECODE_TPS=0.000
+RC=1
+DISPOSITION=FAIL
+EGRESS=0 LOCAL_ONLY=1

@@ -1,0 +1,4 @@
+OFF_LOG=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_off_clean_20260909-001037.log
+OFF_ERR=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_off_clean_20260909-001037.err.log
+ON_LOG=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_on_clean_20260909-001117.log
+ON_ERR=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_on_clean_20260909-001117.err.log

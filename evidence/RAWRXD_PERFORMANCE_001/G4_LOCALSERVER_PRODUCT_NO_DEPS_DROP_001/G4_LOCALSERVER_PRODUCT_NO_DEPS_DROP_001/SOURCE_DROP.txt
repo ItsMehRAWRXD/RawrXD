@@ -1,0 +1,71 @@
+G4_LOCALSERVER_PRODUCT_NO_DEPS_DROP_001
+=====================================
+
+Purpose
+-------
+Close the product integration lane exposed by the file:// standalone chatbot:
+  browser -> 127.0.0.1:11435 -> native RawrXD headless backend.
+
+Scope
+-----
+PATCH ONLY:
+  src/win32app/HeadlessIDE.cpp
+ADD:
+  src/win32app/HeadlessIDE_ProductLocalOnly.hpp
+
+DO NOT TOUCH:
+  rawr.exe
+  R01 generate-AV containment
+  R02 Rawr relink evidence
+  InferenceEngine.lib certification receipt
+  DualStick
+  MOTD/tool authorization policy
+  existing certification evidence
+
+What the patch changes
+----------------------
+1. Starts the headless socket immediately after WSAStartup, before optional/heavy subsystem initialization.
+2. Keeps /health reachable while the runtime is warming and returns 503 (not transport failure) to other API calls until ready.
+3. Adds successful OPTIONS preflight and complete CORS headers for file:// JSON POSTs.
+4. Makes --local an explicit CLI alias for native LocalGGUF.
+5. Removes default/implicit Ollama probing and auto-selection. Ollama is touched only if explicitly requested with --backend ollama.
+6. Makes LocalGGUF model load call the already-linked process-wide CPUInferenceEngine.
+7. Makes LocalGGUF chat/generate call CPUInferenceEngine::Tokenize + GenerateStreaming directly; it never routes through AgentOllamaClient.
+8. Keeps the existing Ollama path available only when explicitly selected and not in --local mode.
+9. Adds product diagnostic aliases (/api/backends, /api/agents/status, /api/failures) without touching /api/tool/MOTD.
+10. Corrects HTTP reason phrases for non-200 responses.
+
+No-dependency invariant
+-----------------------
+No new package manager, library, DLL, HTTP service, Python runtime, Node runtime, Ollama process, or CMake target is added.
+The added header uses the existing CPUInferenceEngine already compiled into the Win32IDE source closure.
+
+Apply
+-----
+From the RawrXD repo root:
+  powershell -ExecutionPolicy Bypass -File <drop>\tools\apply_G4_LOCALSERVER_PRODUCT_NO_DEPS.ps1 -RepoRoot .
+
+Then relink RawrXD-Win32IDE.exe using the SAME KNOWN-GOOD build/link recipe and the SAME ninja/tool instance already owning this tree.
+Do not introduce VS ninja 1.12.1 into the tree.
+
+Run
+---
+  .\RawrXD-Win32IDE.exe --headless --local --port 11435
+
+Verify in a second PowerShell:
+  powershell -ExecutionPolicy Bypass -File <drop>\tools\verify_G4_LOCALSERVER_PRODUCT_NO_DEPS.ps1 -ExePath .\RawrXD-Win32IDE.exe
+
+Expected gate
+-------------
+WIN32IDE_RELINK=PASS
+PROCESS_ALIVE=1
+LISTEN_11435=1
+HEALTH_HTTP_REACHED=1
+CAPABILITIES_HTTP_REACHED=1
+CAPABILITIES_STATUS=2xx
+CORS_OPTIONS_STATUS=204
+OLLAMA_11434_CONTACT=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+Model load/generate remain separate evidence gates. A native incompatibility after /api/model/load is MODEL_COMPAT/INFERENCE evidence, not a reason to reopen LINK or LocalServer.

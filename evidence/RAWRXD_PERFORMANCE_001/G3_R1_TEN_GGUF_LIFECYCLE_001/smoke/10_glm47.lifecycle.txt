@@ -1,0 +1,9 @@
+﻿MODEL=GLM-4.7-Flash-Q4_K_M.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\10_glm47\GLM-4.7-Flash-Q4_K_M.gguf
+SIZE_MB=17292.7 SHA16=A53CCC46B2A48E4B
+HEADLESS_PID=22604
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":2,"model":"GLM-4.7-Flash-Q4_K_M.gguf","profile_source":"runtime_gguf","profile_id":9876,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_
+LOAD=0 
+VERDICT=FAIL OWNER=model_load DETAIL=load_fail

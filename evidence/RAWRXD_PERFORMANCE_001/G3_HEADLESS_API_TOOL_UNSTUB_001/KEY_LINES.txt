@@ -1,0 +1,18 @@
+PRIMARY_NEEDLE=
+  HeadlessIDE.cpp routeHttpRequest: public_command_and_file_routes_disabled 403 → REMOVED
+  Replaced by routeToolAndFileRequest() → executeToolRepl()
+
+SMOKE_PERFECT=
+  HEALTH 200
+  PRE_MOTD 403 motd_required (not public_command_and_file_routes_disabled)
+  READ_MOTD 200 PassiveRoleNotRoleplay
+  READ_FILE_ABS 200
+  API_READ_FILE 200
+  LIST_DIR 200 entries
+  EXEC_CMD 200 RAW_TOOL_E2E_OK
+  WRITE_FILE 200 success
+  READ_BACK 200 probe-write-ok
+  RUN_TOOL_GIT 200 output
+  FAIL_COUNT=0
+
+EXE_SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D

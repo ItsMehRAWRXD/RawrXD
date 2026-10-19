@@ -1,0 +1,20 @@
+# Follow-up to Relink seal smoke matrix (2edfd548)
+DATE=2026-09-10T05:08-04:00
+ACTION=INVALIDATE_0_OF_10_CONTENDED
+
+FINDING:
+  Soft-unload unit smoke on :11436 PASS (SHA 8B314E74…) is valid.
+  Matrix PASS=0/FAIL=10 is NOT a product verdict — :11435 was contended by
+  RawrXD-Win32IDE_r1cap_run.exe + foreign RawrXD-Win32IDE.exe during the run.
+  Parallel agents also raced smoke_bin SEALED (43DF4FCE / BD572D4B overwrites).
+
+SOURCE_STILL_SOFT_UNLOAD=1 (no ProductCloseSession in unloadModel)
+KILL_ALL_HARDENED=1 (matrix Kill-AllRawr also kills r1cap / :11435 stealers)
+
+RESEAL_SHA256=811FF11A3F0E153B89EC3D05CCC1BCDB1A8BD03824DF1CAB4920BDA2FEB08EA1
+PE_LAA=YES
+EXCLUSIVE_MATRIX=restarted after smoke on :11437
+
+PRIOR_HONEST_PARTIAL_WITHOUT_CONTENTION=4_OF_10 (FD8EA39A)
+PROMOTE=0
+TIP_CLIMB=HOLD

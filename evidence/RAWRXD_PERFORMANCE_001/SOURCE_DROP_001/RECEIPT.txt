@@ -1,0 +1,34 @@
+SOURCE_DROP=SEALED
+DATE=2026-09-09
+CROSS=DUST2_001
+SSOT_IMAGE=C:/Users/Garrett/Downloads/dust2.png
+TODO_LAW=src/deep2/lavapath/TodoMissingEdge.hpp
+
+WORDS_DUST → SOURCE_DROP
+  TODO = missing edge (owner|in|out|dep|emit|completion)
+  NOT_EMITTED = UNOBSERVED
+
+FINAL_COMPACT_LAW
+  SOURCE_DROP owns manifestation
+  DUST2 owns nothing
+  DUST2_FTL observes intent/sched propagation only
+  Runtime evidence belongs only to emitted runtime evidence
+
+DUST2_METAPHOR = 2c
+DUST2_OWNER    = 0
+  MAY: speed|propagation|sharpness|intent|ahead-of-runnable-source|sched-intent>data
+  MUST_NOT: own execution | create runtime evidence authority | authorize dep bypass | become physics
+
+EDGE=DUST2_FTL
+  EDGE_OWNER = SCHED_FTL | INTENT_FTL  (instrumentation sites only)
+  observes INTENT|SCHED_PROP_AHEAD_OF_DATA
+  AUTHORIZE_CONSUMPTION=0
+  VIOLATE_DEPENDENCIES=0
+  DEPENDENCY_BYPASS=0
+  PHYSICS_2C=0
+  PHYSICS_CLAIM=0
+  EXECUTABLE_OWNERSHIP=0
+
+INVARIANT
+  DUST2 != SOURCE_DROP_WORK
+  CLAIM_INHERITANCE=0

@@ -1,0 +1,186 @@
+﻿UNTRIED_BRAID_CANDIDATES_001=SEALED
+DATE=2026-09-08
+ROLE=NEUTRAL_INVENTORY_ONLY
+DEPERSONALIZED=1
+PROMOTION=0
+OPTIMIZATION_SPEND=0
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+GOODS_STAY_BRAIDED=1
+SUPERSEDES_PRIVATE_TITLE=PRIVATE_RE_UNTRIED_001
+STACK_INVENTORY=evidence/RAWRXD_PERFORMANCE_001/RE_UNTRIED_STACK_001.txt
+
+PURPOSE
+  Performance enhancements present as law/code/attribution that have NOT
+  been tried as a purified product-wall candidate under GENERATION_WALL_NS
+  authority. Neutral inventory — no ownership attribution.
+
+RULE
+  UNTRIED != AUTHORIZED_SPEND
+  UNTRIED = addressable braid inventory after current legal phase allows
+
+# --- ALREADY TRIED (do not relist as untried) -------------------------------
+
+TRIED_OR_EXHAUSTED
+  QKV_EXPOSURE_DEVICE_DEFAULT
+  LOGITS_SPLIT_CUT
+  LOGITS_OWNER_RESIDUAL (AVX2 Q6Ã—Q8)
+  QB_KERNEL_UPLOAD_PREPIN
+  QB_KERNEL_SHARED_X / fused Q_DEVICE
+  SX_RAINBOW_18 (epoch 0 covered; endurance retain)
+  QKV_READBACK_PERSISTENT_MAP (CUT_MISS)
+  KVA_ROWS climb (sealed winner=16)
+  XR live wire as TPS surface (VALID_NEGATIVE)
+
+# --- UNTRIED â€” measured ownership named them; no wall campaign yet ----------
+
+U01_O_PROJ_OVERLAP
+  CLASS=TRANSIENT_BINDING_CANDIDATE
+  EVIDENCE=CAUSAL_EXPOSURE_ATTRIBUTION_001 O_PROJ_OVERLAPPED_US=0
+  EVIDENCE2=LOGITS_OWNER_RESIDUAL_001 EMITTED_NEXT=O_PROJ_OVERLAP
+  IDEA=overlap O_PROJ with sibling work so exposedâ†’overlapped
+  WHY_UNTRIED=owner chase moved to QKV/readback; never a dedicated wall epoch
+  LEGAL_UNDER_INVARIANT=if no illegal D2H; residual fuse hook exists (GemvFuseResidualNext)
+  STATUS=CLOSED_VALID_NEGATIVE
+  WALL_MEDIAN_NS=10934369000
+  CHAMPION_WALL_NS=10184789000
+  PROMOTE=0
+  RECEIPT=evidence/RAWRXD_PERFORMANCE_001/O_PROJ_OVERLAP_001/ENDURANCE_RECEIPT.txt
+
+U02_QB_HOST_WINDOW_SHRINK_PATH_A
+  CLASS=HOST_CONSUMER_READBACK
+  STATUS=CLOSED_VALID_NEGATIVE
+  GEOMETRY=hostHead==prodHead==192 (nope+rope clamp is identity)
+  BYTE_SHRINK_READBACK_REDUCED=0
+  DEVICE_ATTENTION_REQUIRED=1
+  BYTE_SHRINK_E2E=evidence/RAWRXD_PERFORMANCE_001/PATH_A_BYTE_SHRINK_E2E_001/RECEIPT.txt
+  E2E_TAG=path_a_e2e_seal_20260908-181834
+  PATH_A_HOST_CACHED_PROMOTE=DISTINCT_LEVER (READBACK_REDUCED=1 via cache+invalidate)
+  RECEIPT_PROMOTE=evidence/RAWRXD_PERFORMANCE_001/QKV_READBACK_PATH_A_001/RECEIPT.txt
+  NOTE=U02 byte-shrink E2E sealed VALID_NEGATIVE; PROMOTE=0
+
+U03_DEVICE_SIDE_ATTENTION_DELETE_QB_D2H_PATH_B
+  CLASS=BRAID_CANDIDATE
+  IDEA=keep q_b on GPU; attention consumes device-side → DELETE host cross
+  STATUS=ATTRIBUTION_ONLY
+  DELETE_PROVEN=1 (path_b_twist_t01: D2H mirror/memcpy bytes=0)
+  WALL_LT_PATH_A=0 PROMOTE=0
+  MATERIALS_NOTE=secondary_kernel_harness_not_invention_identity
+  RECEIPT=evidence/RAWRXD_PERFORMANCE_001/PATH_B_TWIST_001/RECEIPT.txt
+  LAYOUT=MLA_KV_LAYOUT_CONTRACT_001 COMPLETE
+  NEXT=NONE (GATE_STOP until absolute-zero inflection)
+
+U15_QB_GEMV_DIRECT_HOST_VISIBLE_OUT
+  CLASS=HOST_CONSUMER_READBACK
+  WHY_UNTRIED=GATE U15_GEMV_DIRECT=HOLD (R9700 crash risk)
+  STATUS=HOLD_FORBIDDEN_REOPEN
+
+U14_HELLO_EXCHANGE_DISCOVERY
+  CLASS=ATTRIBUTION_ONLY
+  STATUS=SEALED_ATTRIBUTION
+  RECEIPT=evidence/RAWRXD_PERFORMANCE_001/HELLO_EXCHANGE_DISCOVERY_001/RECEIPT.txt
+  GENERATED_TOKENS=16
+  MIRROR_MISS_OBJECTS=13
+  PRODUCT_E2E_PASS=1
+  NOTE=discovery only; PROMOTION=0; process exit nonzero non-authority
+
+U04_KV_EXPAND_OWNER_CUT
+  CLASS=TRANSIENT_BINDING_CANDIDATE
+  EVIDENCE=LOGITS_OWNER_RESIDUAL rank KV_EXPAND ~2.98M US (2nd after QKV)
+  IDEA=cut/overlap KV expand critical contribution (not KVA rows reopen)
+  WHY_UNTRIED=never owned a FIRST_DELTA campaign after logits residual
+  STATUS=NEVER_WALL_CAMPAIGN
+  NOTE=must not reopen sealed KVA_ROWS=16 math
+
+U05_AUTO_QUANT_TRANSIENT_BINDING_EPOCH
+  CLASS=TRANSIENT_BINDING_CANDIDATE
+  PROTOCOL=AUTO_QUANT_RESTORE_POINT_001 sealed
+  IDEA=finite QUANT_EPOCH of exec-quant bindings; rebind not recompress
+  WHY_UNTRIED=SX epoch exhausted; quant domain never installed as new rainbow
+  STATUS=PROTOCOL_ONLY_NO_EPOCH
+
+U06_DUAL_STREAM_BRAID_CHALLENGER
+  CLASS=BRAID_CANDIDATE
+  PROTOCOL=BRAID_DUAL_STREAM_001 sealed
+  IDEA=A/B from snapshot S; elect by wall; endurance before promote
+  WHY_UNTRIED=no live challenger election after epoch0
+  STATUS=PROTOCOL_ONLY_NO_LIVE_ELECTION
+
+U07_SLINGSHOT_PREFETCH_BEFORE_DEMAND
+  CLASS=BRAID_CANDIDATE / SCHEDULER_HINT
+  LAW=SlingshotLaw.hpp LIVE
+  IDEA=PREFETCH_BEFORE_CAUSAL_DEMAND; fixed slots; NO_READBACK; NO_NEW_OWNER
+  KEEP=mmap/tile/expert-window/prefetch N+1 (from SLINGSHOT_BENCH_DISPOSITION KEEP list)
+  REJECT=pinball reconstruct thrash
+  WHY_UNTRIED=no finite SLINGSHOT_EPOCH wall coverage under purity profile
+  STATUS=LAW_LIVE_EPOCH_NEVER_RUN
+
+U08_SBRAID_GPU_NATIVE_CONSUME
+  CLASS=TRANSIENT_BINDING_CANDIDATE
+  CODE=rawrxd_slingshot_braid.* / BP1 braid streamer skeleton
+  IDEA=tile-local compressed consume on GPU; no CPU full reconstruct
+  WHY_UNTRIED=never product generateStream wall vs Q4_K_M baseline
+  STATUS=FORMAT_SKELETON_NO_WALL
+
+U09_REVERSE_BEACON_NEXT_BINDING_ONLY
+  CLASS=SCHEDULER_HINT
+  IDEA=write counters during witness; propose next binding BETWEEN epochs
+  FORBIDDEN=hot-path policy rewrite mid-token
+  WHY_UNTRIED=no beaconâ†’binding proposal loop sealed
+  STATUS=DISPOSITION_ONLY
+
+U10_PERSISTENT_LOGITS_WORKER
+  CLASS=TRANSIENT_BINDING_CANDIDATE
+  IDEA=persistent CPU logits resource; ban per-token thread spawn/join
+  WHY_UNTRIED=logits residual used AVX2 path; worker persistence never campaigned
+  STATUS=NEVER_WALL_CAMPAIGN
+
+U11_DEVICE_SIDE_SAMPLE_MIN_CANDIDATE_SET
+  CLASS=HOST_CONSUMER_READBACK / BRAID_CANDIDATE
+  IDEA=if sample stays host, shrink final candidate D2H; if sample moves device, delete logits D2H
+  SOURCE=NO_MOVING_PARTS QKV_READBACK interpretation
+  WHY_UNTRIED=never measured sample ownership D2H class
+  STATUS=LAW_ONLY
+
+U12_EXPERT_RESIDENCY_GPU_SPARSE
+  CLASS=BRAID_CANDIDATE
+  IDEA=VWA expert slice / residency / BG prefetch (GPU form of sparse gather)
+  REJECT=Titan AVX-512 paste / fake TopK
+  WHY_UNTRIED=MoE not measured wall owner on K2 MLA hotpath; deferred
+  STATUS=CONTROL_PRESENT_WALL_EPOCH_NEVER
+
+U13_PREFETCH_EXPOSED_CUT
+  CLASS=SCHEDULER_HINT
+  EVIDENCE=Batch006 PREFETCH_EXPOSED_US surface
+  IDEA=drive PREFETCH_EXPOSED_USâ†’0 on critical path (overlap only)
+  WHY_UNTRIED=no dedicated prefetch-exposed wall campaign under purity
+  STATUS=INSTRUMENTED_UNSPENT
+
+# --- ORDER IF A NEW DOMAIN IS EVER JUSTIFIED (not a tip-climb) --------------
+
+SUGGESTED_FINITE_EPOCHS_AFTER_CURRENT_PHASE
+  1. U02 PATH_A byte-shrink = CLOSED_VALID_NEGATIVE (done)
+  2. U14 HELLO exchange discovery = SEALED_ATTRIBUTION (done)
+  3. U03 PATH_B delete = ATTRIBUTION_ONLY (DELETE_PROVEN; wall fail; GATE_STOP)
+  4. U15 HOLD until async_barrier_safety_harness_PASS
+  5. U01/U04+/QUANT/SLINGSHOT — only with new domain receipt (not opened)
+
+# --- FOOTER ----------------------------------------------------------------
+
+UNTRIED_COUNT=15
+E2E_CLOSED_THIS_TURN=U02|U14
+U03_STATUS=ATTRIBUTION_ONLY
+STILL_HELD=U15|U01|U04|U05|U06|U07|U08|U09|U10|U11|U12|U13
+TRIED_STRIPPED=0
+INVENTORY_OPENS_SPEND=0
+AUTHORITY_REWRITE=0
+DEPERSONALIZED=1
+PRIVATE_RE_UNTRIED_001=SUPERSEDED
+GATE_STOP=1
+LINKS
+  STACK=evidence/RAWRXD_PERFORMANCE_001/RE_UNTRIED_STACK_001.txt
+  GOODS=evidence/RAWRXD_PERFORMANCE_001/PERF_GOODS_BRAID_001.txt
+  CAUSAL=evidence/RAWRXD_PERFORMANCE_001/CAUSAL_EXPOSURE_ATTRIBUTION_001.txt
+  LOGITS_RES=evidence/RAWRXD_PERFORMANCE_001/LOGITS_OWNER_RESIDUAL_001.txt
+  SLINGSHOT=evidence/RAWRXD_PERFORMANCE_001/SLINGSHOT_BENCH_DISPOSITION.txt
+  NO_MOVING=evidence/RAWRXD_PERFORMANCE_001/MODEL_STREAMER_TRACE_001/NO_MOVING_PARTS_001.txt
+  THIS=evidence/RAWRXD_PERFORMANCE_001/UNTRIED_BRAID_CANDIDATES_001.txt

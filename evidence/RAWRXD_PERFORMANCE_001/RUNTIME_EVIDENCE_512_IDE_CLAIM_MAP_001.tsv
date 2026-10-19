@@ -1,0 +1,97 @@
+ClaimId	ClaimName	Emitter	OwnerLayer	StatusMode	Arg0	Arg1	RequiredProductE2E	CandidateOwnerSite	FireCondition
+1	FIRST_TOKEN_BOUNDARY	EvidenceEmitFirstTokenBoundary	runtime	ENTER	firstTokenIndex	tokenId	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+2	HIDDEN_PROBE	EvidenceEmitHiddenProbe	runtime	OBSERVED	probeIndex	rawValueBits	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+3	HIDDEN_LAST	EvidenceEmitHiddenLast	runtime	OBSERVED	lastIndex	rawValueBits	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+4	BOUNDED	EvidenceEmitBounds	runtime	BOOL	index	elementCount	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+5	VALID	EvidenceEmitValid	runtime	BOOL	subjectId/pointer/index	detail	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+6	LOGITS_ENTRY	EvidenceEmitLogitsEntry	runtime	ENTER	hiddenStatePtr	hiddenCount	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+7	LOGITS_COMPLETE	EvidenceEmitLogitsComplete	runtime	COMPLETE	argmaxToken	argmaxScoreRawBits	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+8	ATTN_COMPLETE	EvidenceEmitAttnComplete	runtime	COMPLETE	layerOrStep	detail	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+9	PATHB_COMPLETE	EvidenceEmitPathBComplete	runtime	COMPLETE	step	detail	0	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+10	STREAM_COMPLETE	EvidenceEmitStreamComplete	runtime	COMPLETE	generatedTokenCount	generationWallNs	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+11	STREAM_ABORT	EvidenceEmitStreamAbort	runtime	ABORT	abortCode	stageId	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+12	TEARDOWN_ENTRY	EvidenceEmitTeardownEntry	runtime	ENTER	objectPtr	stageId	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+13	TEARDOWN_COMPLETE	EvidenceEmitTeardownComplete	runtime	COMPLETE	objectPtr	stageId	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+14	TEARDOWN_FAULT	EvidenceEmitTeardownFault	runtime	FAULT	exceptionCode	faultAddress	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+15	WALL_NS	EvidenceEmitWallNs	measurement	OBSERVED	wallNs	0	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+16	DECODE_TPS_Q32_32	EvidenceEmitDecodeTpsQ32_32	measurement	OBSERVED	TPS_Q32_32	floor_Q32_32	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+17	PARITY	EvidenceEmitParity	runtime	BOOL	parityDetail0	parityDetail1	1	landed RuntimeEvidence512 owner	Existing claim-specific landed emitter; preserve original site-local ownership.
+18	IDE_BOOT_ENTRY	EvidenceEmitIDEBootEntry	ide	ENTER	processId	threadId	1	src/win32app/main_win32.cpp	Immediately after real GUI process entry begins.
+19	IDE_WINDOW_READY	EvidenceEmitIDEWindowReady	ide	COMPLETE	hwnd	uiThreadId	1	src/win32app/Win32IDE_Core.cpp / Win32IDE_Window.cpp	After the real main window exists and is usable.
+20	CORE_INIT_COMPLETE	EvidenceEmitCoreInitComplete	ide	COMPLETE	initMaskLo	initMaskHi	1	src/win32app/Win32IDE_Core.cpp	After the actual Core startup sequence returns success.
+21	WORKSPACE_OPEN	EvidenceEmitWorkspaceOpen	workspace	OBSERVED	workspacePathHash	rootIdentity	1	src/win32app/Win32IDE.cpp / file-workspace owner	After the selected workspace/root is actually opened.
+22	SESSION_RESTORE	EvidenceEmitSessionRestore	workspace	COMPLETE	sessionIdHash	restoredItemCount	0	src/win32app/Win32IDE_Session.cpp	After session JSON is parsed and state is applied.
+23	BACKEND_SELECTED	EvidenceEmitBackendSelected	routing	OBSERVED	backendId	modelRouteId	1	src/win32app/Win32IDE_BackendSwitcher.cpp	At the real routing decision; do not emit from UI selection alone.
+24	MODEL_DISCOVERY	EvidenceEmitModelDiscovery	model	OBSERVED	canonicalPathHash	shardCount	1	model discovery / canonical authority owner	After deterministic model/shard discovery resolves.
+25	MODEL_IDENTITY	EvidenceEmitModelIdentity	model	OBSERVED	canonicalPathHash	fileIdentityHash	1	model loader authority	After the actual opened file identity is known; not merely UI path text.
+26	MODEL_LOAD_ENTRY	EvidenceEmitModelLoadEntry	model	ENTER	canonicalPathHash	requestedContext	1	shipping model-load owner	Immediately before the real model open/load call.
+27	MODEL_LOAD_COMPLETE	EvidenceEmitModelLoadComplete	model	COMPLETE	modelHandle/sessionSeed	loadedBytesOrIdentity	1	shipping model-load owner	Only after the model is actually open/indexed for execution.
+28	SHARD_RESOLUTION	EvidenceEmitShardResolution	model	COMPLETE	resolvedShardCount	expectedShardCount	1	GGUF/shard resolver	After real shard set resolution.
+29	ARCH_CONTRACT	EvidenceEmitArchContract	model	BOOL	architectureId	geometryHash	1	architecture contract owner	Emit pass/fail from resolved model metadata.
+30	QUANT_CONTRACT	EvidenceEmitQuantContract	model	BOOL	quantType	quantSchemaHash	1	quant contract owner	Emit from the execution quant contract, not file extension.
+31	TOKENIZER_CONTRACT	EvidenceEmitTokenizerContract	model	BOOL	tokenizerType	vocabHashOrCount	1	tokenizer owner	After tokenizer is bound from canonical model metadata.
+32	TEMPLATE_EOG_CONTRACT	EvidenceEmitTemplateEogContract	model	BOOL	templateHash	eogTokenSetHash	1	chat-template/EOG owner	After model template and EOG contract are resolved.
+33	TENSOR_SCHEMA	EvidenceEmitTensorSchema	model	BOOL	requiredTensorCount	resolvedTensorCount	1	tensor schema validator	After mandatory tensor schema closure.
+34	DEEP2_SESSION_CREATE	EvidenceEmitDeep2SessionCreate	runtime	ENTER	authorityId	requestedSessionId	1	ProductRuntime/Deep2 session owner	At actual Deep2 session creation attempt.
+35	DEEP2_SESSION_READY	EvidenceEmitDeep2SessionReady	runtime	COMPLETE	sessionId	deviceSetHash	1	ProductRuntime/Deep2 session owner	Only after one active Deep2 session is execution-ready.
+36	REQUEST_ACCEPTED	EvidenceEmitRequestAccepted	request	ENTER	requestId	modeId	1	Win32IDE command/chat/agent request owner	When a real request is accepted into the product path.
+37	REQUEST_ROUTED	EvidenceEmitRequestRouted	routing	OBSERVED	requestId	routeId	1	backend/orchestrator routing owner	After actual route selection.
+38	TOKENIZE_COMPLETE	EvidenceEmitTokenizeComplete	runtime	COMPLETE	inputTokenCount	tokenHash	1	shipping tokenizer	After the real prompt is tokenized.
+39	PREFILL_ENTRY	EvidenceEmitPrefillEntry	runtime	ENTER	sessionId	inputTokenCount	1	Deep2 prefill owner	Immediately before real prefill.
+40	PREFILL_COMPLETE	EvidenceEmitPrefillComplete	runtime	COMPLETE	sessionId	kvOrStateDetail	1	Deep2 prefill owner	Only when real prefill returns successfully.
+41	GENERATE_STREAM_ENTRY	EvidenceEmitGenerateStreamEntry	runtime	ENTER	sessionId	maxTokens	1	Deep2 generateStream owner	At the real generateStream call boundary.
+42	DECODE_STEP_ENTRY	EvidenceEmitDecodeStepEntry	runtime	ENTER	decodeStep	inputTokenId	1	Deep2 decode loop	Per real autoregressive decode step after first-token boundary.
+43	FORWARD_COMPLETE	EvidenceEmitForwardComplete	runtime	COMPLETE	decodeStep	hiddenCount	1	engine forward owner	After real model forward for the step, not from UI.
+44	SAMPLE_COMPLETE	EvidenceEmitSampleComplete	runtime	COMPLETE	sampledTokenId	sampleDetail	1	sampler owner	After actual sampler returns token id.
+45	TOKEN_CALLBACK	EvidenceEmitTokenCallback	runtime	OBSERVED	tokenId	tokenOrdinal	1	Deep2 committed token callback	Only from real committed engine token callback.
+46	TOKEN_DECODED	EvidenceEmitTokenDecoded	runtime	OBSERVED	tokenId	decodedByteCount	1	model-derived tokenizer decoder	After token callback is decoded to model text bytes.
+47	UI_STREAM_APPEND	EvidenceEmitUIStreamAppend	ui	OBSERVED	requestId	appendedByteCount	1	Win32IDE_CommandSurface.cpp / native UI paint sink	Only after bytes are actually appended/painted; never counts as decode.
+48	UI_STREAM_FINALIZE	EvidenceEmitUIStreamFinalize	ui	COMPLETE	requestId	totalPaintedBytes	1	UI stream finalizer	After trailing buffer is flushed and UI stream finalizes.
+49	END_REASON	EvidenceEmitEndReason	runtime	OBSERVED	endReasonCode	generatedTokenCount	1	Deep2 generation completion owner	EOS/MAX_TOKENS/CANCEL/ERROR from real stream result.
+50	CANCEL_REQUEST	EvidenceEmitCancelRequest	runtime	ENTER	sessionId	requestId	0	ProductRuntime cancel owner	When cancellation is issued to a live generation.
+51	CANCEL_COMPLETE	EvidenceEmitCancelComplete	runtime	COMPLETE	sessionId	endReasonCode	0	ProductRuntime cancel owner	After that exact active generation acknowledges cancellation.
+52	STREAM_ERROR	EvidenceEmitStreamError	runtime	ABORT	errorCode	stageId	1	Deep2 generateStream owner	On real stream error; never substitute STREAM_COMPLETE.
+53	DEVICE_SELECTED	EvidenceEmitDeviceSelected	device	OBSERVED	deviceIdentity	deviceCapsHash	1	Deep2 device selection policy	After capability/policy selects the actual executable device.
+54	DEVICE_EXECUTION	EvidenceEmitDeviceExecution	device	OBSERVED	deviceIdentity	kernelOrLayerId	1	device execution owner	At actual device work completion/receipt, not policy intent.
+55	WEIGHT_RANGE_READY	EvidenceEmitWeightRangeReady	residency	OBSERVED	tensorOrRangeId	residentBytes	1	residency scoreboard/VWA owner	When required quantized weight range is actually ready.
+56	KV_HOTSET_READY	EvidenceEmitKVHotsetReady	residency	OBSERVED	decodeStep	liveKvBytes	1	KV cache owner	When the live KV set needed for the step is available.
+57	RESIDENCY_RELEASE	EvidenceEmitResidencyRelease	residency	OBSERVED	tensorOrLeaseId	releasedBytes	0	residency lease owner	At real last-use release/retirement.
+58	RELOAD_ENTRY	EvidenceEmitReloadEntry	model	ENTER	canonicalPathHash	generationId	0	product model/session owner	Before replacement session/model reload.
+59	RELOAD_COMPLETE	EvidenceEmitReloadComplete	model	COMPLETE	newSessionId	generationId	0	product model/session owner	After reload and execution-ready state are real.
+60	AGENT_LOOP_ENTRY	EvidenceEmitAgentLoopEntry	agent	ENTER	requestId	objectiveHash	1	src/win32app/Win32IDE_AgenticBridge.cpp / bounded loop	When actual agent loop begins.
+61	AGENT_PLAN_READY	EvidenceEmitAgentPlanReady	agent	OBSERVED	requestId	planHash	0	agent planner owner	After a real plan is produced; not a static template.
+62	AGENT_MODEL_RETURN	EvidenceEmitAgentModelReturn	agent	OBSERVED	requestId	modelOutputHash	1	agent model-call owner	After a real local model return reaches the agent.
+63	TOOL_DISPATCH	EvidenceEmitToolDispatch	tool	ENTER	toolId	invocationId	1	AgentToolHandlers / MCP/tool registry	Immediately before actual tool execution.
+64	TOOL_COMPLETE	EvidenceEmitToolComplete	tool	COMPLETE	invocationId	resultCode	1	tool execution owner	After actual tool execution returns.
+65	FILE_READ	EvidenceEmitFileRead	workspace	OBSERVED	pathHash	bytesRead	0	real filesystem read owner	After requested project file bytes are actually read.
+66	FILE_WRITE	EvidenceEmitFileWrite	workspace	COMPLETE	pathHash	bytesWritten	1	real filesystem write owner	After write succeeds on disk.
+67	EDIT_APPLIED	EvidenceEmitEditApplied	editor	COMPLETE	documentId	editHash	1	editor/agent edit owner	After the actual document/buffer mutation is applied.
+68	UNDO_APPLIED	EvidenceEmitUndoApplied	editor	COMPLETE	documentId	undoSequence	0	editor undo owner	After an actual undo/revert mutation.
+69	TERMINAL_ENTRY	EvidenceEmitTerminalEntry	terminal	ENTER	commandHash	processId	0	Win32TerminalManager / shell owner	After CreateProcess succeeds for the requested command.
+70	TERMINAL_COMPLETE	EvidenceEmitTerminalComplete	terminal	COMPLETE	processId	exitCode	0	terminal process owner	After real process exit is observed.
+71	BUILD_ENTRY	EvidenceEmitBuildEntry	build	ENTER	commandHash	buildId	1	compiler/build execution owner	Immediately before the actual build process.
+72	BUILD_COMPLETE	EvidenceEmitBuildComplete	build	COMPLETE	buildId	exitCode	1	compiler/build execution owner	After actual build process exit.
+73	TEST_ENTRY	EvidenceEmitTestEntry	test	ENTER	testCommandHash	testRunId	1	test execution owner	Immediately before actual test process/run.
+74	TEST_COMPLETE	EvidenceEmitTestComplete	test	COMPLETE	testRunId	exitCode	1	test execution owner	After actual test completion.
+75	DEBUG_ENTRY	EvidenceEmitDebugEntry	debugger	ENTER	debugSessionId	targetPid	0	chosen shipping debugger owner	When real debugger attach/launch begins.
+76	DEBUG_STOP	EvidenceEmitDebugStop	debugger	OBSERVED	stopReason	threadId	0	debugger engine	On real breakpoint/exception/stop event.
+77	LSP_REQUEST	EvidenceEmitLSPRequest	lsp	ENTER	requestId	methodHash	0	actual active LSP stack	When a real LSP request is sent to the selected server.
+78	LSP_RESULT	EvidenceEmitLSPResult	lsp	COMPLETE	requestId	resultHashOrCount	0	actual active LSP stack	After real LSP response is parsed.
+79	GIT_ENTRY	EvidenceEmitGitEntry	git	ENTER	commandHash	repoRootHash	1	sidebar/real git.exe execution owner	Immediately before the real git process.
+80	GIT_COMPLETE	EvidenceEmitGitComplete	git	COMPLETE	commandHash	exitCode	1	git process owner	After real git process exit.
+81	MCP_DISPATCH	EvidenceEmitMCPDispatch	mcp	ENTER	toolId	invocationId	0	initMCP/registerBuiltinTools owner	When an in-process MCP tool is actually dispatched.
+82	MCP_COMPLETE	EvidenceEmitMCPComplete	mcp	COMPLETE	invocationId	resultCode	0	MCP tool owner	After actual MCP tool completion.
+83	EXTENSION_DISPATCH	EvidenceEmitExtensionDispatch	extension	ENTER	extensionIdHash	commandHash	0	QuickJS/native plugin host actually selected	When an extension command enters a real executable host.
+84	EXTENSION_COMPLETE	EvidenceEmitExtensionComplete	extension	COMPLETE	extensionIdHash	resultCode	0	extension host	After actual extension execution returns.
+85	LOCAL_SERVER_REQUEST	EvidenceEmitLocalServerRequest	server	ENTER	requestId	routeHash	0	src/win32app/Win32IDE_LocalServer.cpp	After a real local HTTP request is accepted.
+86	LOCAL_SERVER_RESPONSE	EvidenceEmitLocalServerResponse	server	COMPLETE	requestId	statusCode	0	local server	After actual response is written/completed.
+87	SETTINGS_PERSIST	EvidenceEmitSettingsPersist	workspace	COMPLETE	settingsHash	bytesWritten	0	Win32IDE_Settings.cpp / SettingsGUI persistence owner	After settings are actually persisted.
+88	SESSION_PERSIST	EvidenceEmitSessionPersist	workspace	COMPLETE	sessionHash	bytesWritten	1	src/win32app/Win32IDE_Session.cpp	After session persistence completes.
+89	AGENT_RESUME	EvidenceEmitAgentResume	agent	ENTER	generationId	objectiveHash	0	agent persistence/resume owner	When a persisted objective is actually resumed.
+90	AGENT_COMPLETE	EvidenceEmitAgentComplete	agent	COMPLETE	requestId	resultHash	1	bounded agent loop owner	After real agent workflow completion.
+91	MODEL_UNLOAD_ENTRY	EvidenceEmitModelUnloadEntry	model	ENTER	sessionId	modelIdentityHash	1	ProductRuntime/Deep2 teardown owner	Immediately before real unload.
+92	MODEL_UNLOAD_COMPLETE	EvidenceEmitModelUnloadComplete	model	COMPLETE	sessionId	releasedBytesOrDetail	1	ProductRuntime/Deep2 teardown owner	Only after real unload/cleanup returns success.
+93	IDE_EXIT_ENTRY	EvidenceEmitIDEExitEntry	ide	ENTER	processId	exitReason	1	Win32IDE destroy/shutdown owner	When real IDE shutdown begins.
+94	IDE_EXIT_COMPLETE	EvidenceEmitIDEExitComplete	ide	COMPLETE	processId	exitCode	1	last product-owned shutdown point	At final reachable application-owned clean exit boundary.
+95	PROCESS_FAULT	EvidenceEmitProcessFault	ide	FAULT	exceptionCode	faultAddress	1	top-level fault/first-chance evidence owner	On observed process fault; never emit as a guessed postmortem.
+96	E2E_PRODUCT_COMPLETE	EvidenceEmitE2EProductComplete	product	COMPLETE	requestId	workflowHash	1	single umbrella product orchestrator	Only after the same real workflow finishes; does not substitute for missing lower claims.

@@ -1,0 +1,5 @@
+GUI_PID=34792
+EXE_SHA256=CDF1FD608ACDC5D5B10572FFC9A67042866FD4EB05E370A2A823FFC99806CB10
+SERVER_ID=LOCALSERVER
+HEALTH={"status":"ok","mode":"local","server":"RawrXD-HeadlessIDE","backend":"rawrxd-win32ide","version":"20.0.0-headless-enterprise","authConfigured":false,"uptime":214}
+ASOF=2026-09-10T10:07:37.8749952-04:00

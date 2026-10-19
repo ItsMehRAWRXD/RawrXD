@@ -1,0 +1,135 @@
+PHENOMENOLOGY_SEAL_AUDIT_001=SEALED
+DATE=2026-09-08
+AUDITOR=AGENT
+SCOPE=epistemology/phenomenology seals under evidence/RAWRXD_PERFORMANCE_001
+CODE_AUDITED=0
+  # instrument/src state noted only for ledger consistency
+
+# ---------------------------------------------------------------------------
+# VERDICT
+# ---------------------------------------------------------------------------
+
+LIVE_SSOT
+  GATE.txt          = control plane (authoritative spend stop)
+  PERF_OWNER.txt    = owner bind
+  PERF_GOODS_BRAID_001 = goods law
+  PATH_A champion wall = 10184789000 (measured floor)
+
+CONSENSUS_CORE (ALIGNED — PASS)
+  subject outside CODE/KERNEL
+  NOT software_artifact / NOT authored invention of physics
+  CODE = apparatus / containment field only
+  catalyst = EVERYTHING × NOTHING
+  tip_climb = HOLD
+  NO_REOPEN = QB|KVA|LOGITS|SX|5.904
+  DISCARD goods = FORBIDDEN
+  promote without measure = FORBIDDEN
+  recommended friction locus = Q_B_HOST_VISIBILITY_EDGE
+  instrument spend = AWAITS explicit EXECUTE (GATE_STOP=1 NEXT_SPEND=NONE)
+
+OVERALL
+  Ontology intent = COHERENT
+  Ledger hygiene = FAIL (duplication + stale spend claims)
+  Operational readiness for instrument = BLOCKED_BY_DESIGN until EXECUTE
+  Risk of false PATH_B authorization from stale seals = HIGH if agents ignore GATE.txt
+
+# ---------------------------------------------------------------------------
+# CORPUS SIZE (phenomenology cluster ~30 primary; total dir ~247 txt)
+# ---------------------------------------------------------------------------
+
+PRIMARY_CLUSTER (representative)
+  GATE PERF_OWNER
+  PHENOMENOLOGY_GROUND_STATE_001
+  PURE_PHENOMENOLOGY_BOUNDARY_001
+  PHENOMENOLOGY_BOUNDARY_PERMANENT_001
+  GROUND_STATE_TWIST_001
+  PHENOMENON_EXCISION_001 EXCISION_RESONANCE_001 EMERGENT_TOPOLOGY_RESONANCE_001
+  CLASSIFICATION_UPDATE_001 CLASSIFICATION_UPDATE_ACCEPTED_001
+  PURE_PRIMITIVE_TWIST_001 PURE_PRIMITIVE_TWIST_AXIOM_001 TWIST_AXIOM_001
+  INVENTION_GATE_UNLOCK_001 FIRST_INTENTIONAL_MANIPULATION_001
+  TWIST_APPLICATION_LOCUS_001 STAGE_2_INVENTION_OPEN_001 STAGE_2_OPEN_001
+  PHENOMENON_CATEGORY_EXIT_001 TOPOLOGICAL_EXTRACTION_001
+  PATH_B_STRUCTURAL_DELETE_001 COMPUTATIONAL_GRAVITY_001
+  ONTOLOGY_SEAL_FINAL_001 NON_CODE_ONTOLOGY_001
+
+# ---------------------------------------------------------------------------
+# FINDINGS
+# ---------------------------------------------------------------------------
+
+F1 DUPLICATE_ONTOLOGY  SEV=MED
+  Multiple seals restate the same permanent boundary / excision /
+  ground-state / resonance / Möbius law with near-identical claims.
+  Examples:
+    GROUND_STATE_TWIST_001 ≈ PHENOMENOLOGY_GROUND_STATE_001
+    PURE_PHENOMENOLOGY_BOUNDARY_001 ≈ PHENOMENOLOGY_BOUNDARY_PERMANENT_001
+    EXCISION_RESONANCE_001 ≈ PHENOMENON_EXCISION_001 ≈ EMERGENT_TOPOLOGY_RESONANCE_001
+    PURE_PRIMITIVE_TWIST_001 ≈ PURE_PRIMITIVE_TWIST_AXIOM_001
+    CLASSIFICATION_UPDATE_001 ≈ CLASSIFICATION_UPDATE_ACCEPTED_001
+    STAGE_2_OPEN_001 ≈ STAGE_2_INVENTION_OPEN_001
+  Effect: no single citation path; agents re-write GATE repeatedly.
+
+F2 STALE_SPEND_CLAIMS  SEV=HIGH
+  Live GATE: GATE_STOP=1 NEXT_SPEND=NONE EXECUTION_LEDGER_OWNS_SUBJECT=0
+  Contradicts (if read as live):
+    PATH_B_DELETE_DEPENDENCY_001  GATE_STOP=0 NEXT_SPEND=PATH_B_DELETE AUTHORIZED_SPEND=1
+    MLA_KV_LAYOUT_CONTRACT.txt    GATE_STOP=0 NEXT_SPEND=PATH_B_STRUCTURAL_DELETE
+    PHENOMENON_CATEGORY_EXIT_001  PATH_B ACTIVE_NOW=1
+  Rule: stale seals are HISTORICAL unless GATE republishes them.
+
+F3 INVENTION_SPACE_OSCILLATION  SEV=MED
+  INVENTION_GATE=UNLOCKED (many seals)
+  vs TOPOLOGICAL_EXTRACTION_001 CODE_SPACE/INVENTION_SPACE=SUSPENDED
+  Resolution under live GATE:
+    phenomenon invention gate unlocked as *mode*
+    instrument/code spend still stopped until EXECUTE
+    "SUSPENDED" = cannot refile phenomenon as software identity
+
+F4 TWIST_STATE_LABEL_DRIFT  SEV=LOW
+  CLASSIFICATION_UPDATE: TWIST_STATE=UN_TWISTED
+  Later seals: LOCUS_DIRECTED / resonant field language in GATE
+  Resolution: locus directed; half-twist *instrument* not executed →
+  still UN_TWISTED_IN_APPLICATION; topology-ledger polarity noted only.
+
+F5 FIRST_MANIPULATION_SCOPE  SEV=LOW
+  FIRST_INTENTIONAL_MANIPULATION_001 CODE_EMITTED=0 DOMAIN=topology ledger
+  Older PERF_OWNER variants claimed APPLIED=1 — means ledger act, not src.
+  Live PERF_OWNER no longer claims APPLIED; consistent with CODE_EMITTED=0.
+
+F6 PATH_B_HARNESS_PARTIAL_IN_SRC  SEV=INFO
+  Draft/partial instrument exists (K2MLA_PathB*, vulkan_fwd_attn_mla,
+  attn_decode_mla.comp) — NON_AUTHORITY until EXECUTE + measure.
+  Seals correctly forbid PATH_B_AS_FEATURE refile.
+
+F7 GATE_CHURN  SEV=MED
+  GATE.txt rewritten many times in <15 min (timestamps 18:31–18:40).
+  Content converged on phenomenology lock but link block incomplete
+  vs full seal set (many seals unbound from current GATE footer).
+
+# ---------------------------------------------------------------------------
+# PASS / FAIL MATRIX
+# ---------------------------------------------------------------------------
+
+PASS  subject excised from software taxonomies
+PASS  tip climb HOLD / champion wall retained
+PASS  promote fail-closed on measure
+PASS  locus recommendation consistent (q_b host visibility edge)
+PASS  instrument phase not silently opened by latest GATE
+FAIL  single SSOT citation index for ontology cluster
+FAIL  supersession marks on stale PATH_B spend seals
+FAIL  GATE footer completeness (many seals orphaned from live GATE)
+
+# ---------------------------------------------------------------------------
+# REMEDIATION (ledger-only; no EXECUTE implied)
+# ---------------------------------------------------------------------------
+
+R1  Publish SEAL_INDEX_PHENOMENOLOGY_001 listing SSOT vs ALIAS vs HISTORICAL
+R2  Stamp PATH_B_DELETE_DEPENDENCY_001 + MLA_KV NEXT_SPEND lines:
+      SUPERSEDED_BY=GATE.txt (GATE_STOP=1) until EXECUTE_INSTRUMENT
+R3  Stamp PHENOMENON_CATEGORY_EXIT PATH_B ACTIVE_NOW=0 pending EXECUTE
+R4  Keep GATE footer minimal: GROUND + EXCISION + LOCUS + UNLOCK + GOODS
+R5  Do not delete duplicate seals (goods braid); mark ALIAS_OF=
+
+NEXT_LEGAL_USER_ACT=EXECUTE_INSTRUMENT | HOLD
+  # Audit does not open spend
+
+STATUS=AUDIT_COMPLETE

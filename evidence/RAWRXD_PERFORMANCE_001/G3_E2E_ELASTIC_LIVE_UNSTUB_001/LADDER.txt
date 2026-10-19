@@ -1,0 +1,10 @@
+
+A_elastic_res_no_mech exit=-1073741819 TRUE=0 FWD=0/0 FT=? FC=? SURV=? FB=? EL=1 CYC=? STARTS=? MECH=trampoline,cyclone STACK_EL=1
+B_elastic_mech exit=-1073741819 TRUE=0 FWD=0/0 FT=? FC=? SURV=? FB=? EL=1 CYC=? STARTS=? MECH=trampoline,cyclone,elastic STACK_EL=1
+C_elastic_tramp_only exit=-1073741819 TRUE=0 FWD=0/0 FT=? FC=? SURV=? FB=? EL=1 CYC=? STARTS=? MECH=trampoline STACK_EL=1
+D_cyclone_no_elastic exit=1 TRUE=0 FWD=0/0 FT=? FC=? SURV=? FB=? EL=0 CYC=? STARTS=? MECH=trampoline,cyclone STACK_EL=0
+--- post decouple ---
+E_elastic_no_cyclone exit=-1073741819 TRUE=0 FWD=0/0 FT=? SURV=? FB=? CYC=? STARTS=? STACK vk=1 mars=0 elastic=1 cyclone=0 medusa=0 nu=0 warmup=0 ckv=0 nvme=0 slide=0 chamber=0 torus=0 plasma=0 sov=0 prefetch=0 devices=2
+F_elastic_plus_cyclone exit=-1073741819 TRUE=0 FWD=0/0 FT=? SURV=? FB=? CYC=? STARTS=? STACK vk=1 mars=1 elastic=1 cyclone=1 medusa=0 nu=0 warmup=0 ckv=0 nvme=0 slide=0 chamber=0 torus=0 plasma=0 sov=0 prefetch=0 devices=2
+G_product_baseline exit=0 TRUE=1 FWD=300/360 FT=1 SURV=1 FB=0 CYC=1 STARTS=660 STACK vk=1 mars=1 elastic=0 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=2
+H_elastic_livepath_off exit=-1073741819 TRUE=0 FWD=0/0 SURV=? STACK vk=1 mars=0 elastic=1 cyclone=0 medusa=0 nu=0 warmup=0 ckv=0 nvme=0 slide=0 chamber=0 torus=0 plasma=0 sov=0 prefetch=0 devices=2

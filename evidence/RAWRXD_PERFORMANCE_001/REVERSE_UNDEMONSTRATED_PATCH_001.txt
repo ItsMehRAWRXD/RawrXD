@@ -1,0 +1,100 @@
+REVERSE_UNDEMONSTRATED_PATCH_001=SEALED
+DATE=2026-09-08
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE
+CODE_CHANGE=0
+
+UNDEMONSTRATED_PATCH=
+  code change proposed before runtime defect is proven
+
+PATCH_ONLY_AFTER_DEMONSTRATION=
+  SOURCE_PRESENT
+  → CALLSITE_PRESENT
+  → BUILD_INCLUDED
+  → RUNTIME_REACHABLE
+  → DEFECT_REPRODUCED
+  → FIRST_DIVERGENCE_LOCALIZED
+  → PATCH_MINIMAL
+  → RETEST
+
+FLOW=
+  THEORY → WITNESS
+  WITNESS → LOCALIZE
+  LOCALIZE → PATCH
+  PATCH → RETEST
+  NOT: THEORY → PATCH
+
+CANONICAL=
+  UNDEMONSTRATED_PATCH=FORBIDDEN_BY_EVIDENCE
+  DEMONSTRATED_DEFECT=PATCH_ELIGIBLE
+  UNLOCALIZED_FAILURE=INVESTIGATE_NOT_PATCH
+  OBSERVED_ODDITY=NO_PATCH
+
+# --- APPLIED TO CURRENT AUDIT ----------------------------------------------
+
+QuadBuffer_ALIGN32_before_tensor_info=
+  observed != bug
+  no cursor divergence = no patch
+  CLASS=OBSERVED_ODDITY=NO_PATCH
+
+general.alignment_absent_in_Deep2_GGUFLoader=
+  demonstrated missing wiring
+  patch candidate valid
+  CLASS=DEMONSTRATED_DEFECT=PATCH_ELIGIBLE
+  NOTE=eligible ≠ authorized; still needs explicit spend/issue to land
+
+Codestral_decode_failure=
+  demonstrated failure
+  exact owner unlocalized
+  patch target not yet valid
+  CLASS=UNLOCALIZED_FAILURE=INVESTIGATE_NOT_PATCH
+
+q_b_PATH_B=
+  implementation present
+  one-shot evidence exists
+  qualification missing
+  no replacement patch
+  CLASS=no replacement; MODE=A for n5 qualify only
+
+BIND=
+  MISSING_IMPL_AUDIT_001
+  MISSING_IMPL_AUDIT_NOT_AUTHORIZE_001
+  IMPLEMENTATION_AUTHORITY_001
+  BOTTLENECK_ATTRIBUTION_001
+
+OPERATOR_CONFIRM=1
+UNDEMONSTRATED_PATCH=UNAPPLIED
+DEMONSTRATION_RECORD=
+  = template message received when agent answers
+  PURPOSE=evidence/witness carrier in the transcript
+  EMPTY_TEMPLATE ≠ DEFECT_PROVEN
+  TEMPLATE_MUST_CARRY=
+    SOURCE_PRESENT
+    CALLSITE_PRESENT (or N/A)
+    BUILD_INCLUDED (or N/A)
+    RUNTIME_REACHABLE (or N/A)
+    DEFECT_REPRODUCED | MEASUREMENT | exact eligible witness
+  WITHOUT_CARRIED_EVIDENCE=
+    DEMONSTRATION=0
+    PATCH=NONE (incl hotpatch|rootPatch)
+OBSERVED_MAY_STAY_INVENTORIED_WITHOUT_PATCH_TARGET=1
+
+PATCH=NONE
+  includes=
+    undemonstrated_source_edit
+    hotpatch
+    rootPatch
+  UN_PATCH=NONE
+  HOTPATCH=NONE_WITHOUT_DEMONSTRATION
+  ROOTPATCH=NONE_WITHOUT_DEMONSTRATION
+
+PATCH_STATE_SSOT=PATCH_STATE_001
+  patch=NONE
+  hotpatch=NOT_ACTIVE
+  rootPatch=ROOT_PATCH_CANDIDATE UNAPPLIED
+  HOTPATCH_FLAG=1 concept_only ≠ applied ≠ authorized
+
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE

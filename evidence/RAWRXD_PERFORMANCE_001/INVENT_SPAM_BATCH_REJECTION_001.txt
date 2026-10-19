@@ -1,0 +1,19 @@
+INVENT_SPAM_BATCH_REJECTION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+
+REJECTED_AS_FALSE_OR_STOP
+  D:\\rawrxd drop-ins verified / build-ready = FALSE (path absent)
+  Green-light drop-in ums+ring under STOP = REFUSED
+  SPSC vs MPSC strategy pick under STOP = REFUSED
+  Speculative BADF107 AlignUp64 "fix" as spend = REFUSED without live fault receipt
+  Parallel-universe "structurally complete Sovereign OS" narrative = REJECTED
+
+LIVE_AUTHORITY
+  PATH_A WALL_MEDIAN_NS=10184789000
+  deep2_benchmark.exe
+  GATE STOP holds
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

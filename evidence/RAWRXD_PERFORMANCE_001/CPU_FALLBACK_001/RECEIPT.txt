@@ -1,0 +1,41 @@
+CPU_FALLBACK_001=REJECTED_NARRATIVE
+DATE=2026-09-09
+TYPE=NON_AUTHORITY
+PROMOTE=0
+TIP_CLIMB=HOLD
+SIMULATION=1
+LAND_PRODUCT=0
+
+PASTE=
+  gemv_cpu.asm / gemv_avx2.asm + std::thread wrapper + LoadLibrary gemv_cpu.dll
+  Self-admitted incomplete: skip CreateThread, wrong ABI/stack, stub gemv_parallel,
+  FreeBuffer writes through caller pointer incorrectly, spinlock loops are broken,
+  FP32 GEMV only (K2 MLA path is Q4_K/Q6_K quantized GEMV).
+
+WHY_REJECT=
+  Same class as simulated RawrNanoAuthority — conceptual story, not assemble/link/measure.
+  Invented TPS (2–3 / 15–20) without witness.
+  Would replace or bypass live Vulkan MLA_Gemv + existing sovereign_*_gemv.asm — forbidden
+  as “fallback land” without parity cert + OBSERVED K2 path.
+  High-level std::thread / DLL LoadLibrary wrapper contradicts sovereign protocol for hotpath.
+  Does not close BLOCKER_104/93, MARS, or GPU-insufficient for streamed K2 shards.
+
+PRODUCT_ALREADY_HAS=
+  src/deep2/sovereign_q4k_gemv.asm (+ v2)
+  src/deep2/sovereign_q6_k_gemv.asm (+ v2)
+  src/deep2/sovereign_q8_0_gemv.asm / q5_k / q4_0 / q2_k / q3_k / fp16 …
+  Deep2Engine Q4K/Q5K/FP32 GEMV dispatch + K2MLA_GpuGemv Vulkan path
+  Authority = those kernels + MLA_Gemv, not a new DLL.
+
+DISCARD=
+  Do not add gemv_cpu.asm / gemv_wrapper.cpp to product.
+  Do not claim CUDA-dependency or VRAM-cap closed by this paste.
+
+NEXT_REAL=
+  Witness BLOCKER_104/93 on deep2_benchmark K2
+  PERF: O_PROJ overlap → QKV readback → PrefetchLayer arm
+  TIP_CLIMB=HOLD
+
+PARENT=
+  REVERSE_ENGINEERED_BLOCKERS_001 (narrative vs CODE_LAND honesty)
+  RAWR_NANO_AUTHORITY_001 (prior reject of simulated generate_stream)

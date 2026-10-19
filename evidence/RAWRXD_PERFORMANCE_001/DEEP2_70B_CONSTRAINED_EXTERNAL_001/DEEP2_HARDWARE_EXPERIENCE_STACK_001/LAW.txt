@@ -1,0 +1,72 @@
+GATE=DEEP2_HARDWARE_EXPERIENCE_STACK_001
+DATE=2026-09-13
+KIND=SOURCE_READY_UPSIDE
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+ACTIVATE_IF=V7_ACCEPT (PREDICT_ERR<10 AND SKEW<5 AND Phase A geometry held)
+
+# Do NOT spend live authority here while V7 matrix OPEN.
+
+LAYER_E1_HARDWARE_COST_SURFACE=
+  multidimensional tensor · online fitting · relative cost field
+  sparse interpolation · confidence · residency discontinuity
+  transfer/compute factorize · thermal · contention · queue-depth
+  tail p50/p90/p99 · kernel crossover · gradient sched
+  counterfactual query · TOKEN_MAKESPAN projection
+  Q: WHICH LEGAL EXECUTION POINT MINIMIZES PREDICTED TOKEN MAKESPAN?
+
+LAYER_E2_LIVE_RESPONSE_SURFACE=
+  real-time refresh · per-token snapshot · short-horizon drift
+  GPU/fabric/residency conditioning · queue-aware projection
+  confidence interp · gradient · crossover · critical oversampling
+  tail-risk · counterfactual · refit trigger · makespan overlay
+
+LAYER_E3_CONTINUOUS_ADAPTATION=
+  dual-timescale · error-driven alpha · state priors · recency
+  change-point · per-subsystem · confidence decay · bias correction
+  variance-adaptive · cross-state transfer · active sampling
+  counterfactual feedback · regime banks · token reward · self-prune
+  LOOP: OBSERVE→PREDICT→SCHEDULE→MEASURE→ATTRIBUTE→UPDATE→RECOMPILE
+
+LAYER_E4_MACHINE_TRAINED=
+  boot fingerprint · microprofile seed · per-device capability
+  real workload telemetry · state keying · driver-specific
+  topology-aware · kernel affinity · thermal · contention signature
+  residency behavior · transfer curves · error reprofile
+  persistent cache · hardware-specific schedule evolution
+
+LAYER_E5_EXECUTION_HISTORY=
+  replay buffer · recency weight · per-workload/model memory
+  sequence context · affinity/residency/contention/tail history
+  error archive · counterfactual history · LTM/STM fusion
+  experience cold start · selective invalidation · schedule evolution
+
+LAYER_E6_PERSISTENT_EXPERIENCE=
+  cost-surface store · versioned schema · per-model profiles
+  cross-model transfer · confidence priors · selective invalidation
+  LTM/STM merge · schedule templates · affinity/residency/contention
+  failure memory · counterfactual winners · aging/compression
+  machine-specific policy evolution
+  LOOP: LOAD→VALIDATE→SEED→RUN→MEASURE→CORRECT→PERSIST
+
+LAYER_E7_NO_STALE_CONTAMINATION=
+  epoch IDs · feature invalidation · freshness confidence
+  live-vs-historical arbitration · regime match · error tripwire
+  shadow validation · confidence metadata · generations
+  promotion · quarantine · nearest-valid fallback · drift-aware merge
+  truth-first cache · self-healing store
+  RULE: HISTORY IS A PRIOR; LIVE MEASUREMENT IS TRUTH
+
+LAYER_E8_STALENESS_AS_RUNTIME=
+  age vector · drift score · regime-distance · confidence half-life
+  stale-cost penalty · freshness arbitration · drift recalibration
+  staleness propagation · CP freshness priority · quarantine
+  staleness gradient · fresh override · temporal regime split
+  revalidation budget · token-level stale risk
+  STALE_RISK = AGE×DRIFT×REGIME_DISTANCE×UNCERTAINTY×CP_WEIGHT
+
+EVOLUTION=
+  static heuristics → online measure → machine model → token reward
+  → self-improving scheduler → persistent experience
+  → staleness-modeled durable knowledge

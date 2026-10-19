@@ -1,0 +1,82 @@
+[Deep2Engine] Loading model from: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=nemotron_h L=42 H=3136 FFN=12544 heads=40 kv=8 hd=128 ctx=1048576
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'nemotron_h'  hidden=3136 layers=42 heads=40 kvHeads=8 inter=12544 vocab=131072
+[Deep2Engine] Tokenizer loaded: vocab=131072 bos=1 eos=11 (Spm::encode)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.bias -> ssmConv1dBias (dims=9728x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=9728x4 type=0)
+[SSM_MAP] blk.0.ssm_d -> ssmD (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_in.weight -> ssmIn (dims=17504x3136 type=8)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=8x960 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=3136x7680 type=8)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000024A1B4E48D0  Registered 'output.weight': shard=0 offset=7885696 bytes=436731904  |  registry_size=1  registeredBytes=436731904  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=0000024A1B4E48D0  Registered 'blk.15.ffn_down.weight': shard=0 offset=2097181824 bytes=41796608  |  registry_size=100  registeredBytes=2131092736  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=0000024A1B4E48D0  Registered 'blk.31.ssm_norm.weight': shard=0 offset=3411917952 bytes=30720  |  registry_size=200  registeredBytes=3404062976  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=263
+TENSORS_ADDRESSED=263
+TENSORS_REGISTERED=263
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=0000024A1B4E48D0  registered=263 tensors  bytes=4225792256  max=536870912
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=FFN
+BLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY
+FIRST_DELTA=FFN
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+
+OLLAMA_PARITY_STREAMER_001
+MODEL_PATH=F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+BACKEND=DEEP2
+API_SURFACE_PCT=11.11
+OLLAMA_DAEMON=0
+OLLAMA_HTTP=0
+LLAMA_CPP=0
+GGML=0
+CLOUD=0
+FALLBACK_USED=0
+TOKENIZER=UNOBSERVED
+PREFILL=UNOBSERVED
+DECODE_LOOP=UNOBSERVED
+LOGITS=UNOBSERVED
+SAMPLE=UNOBSERVED
+STREAM_CALLBACK=UNOBSERVED
+FINALIZE_STREAM=UNOBSERVED
+TOKENS_EMITTED=0
+FIRST_TOKEN_TEXT_NONEMPTY=0
+FINAL_TEXT_NONEMPTY=0
+TTFT_MS=0.000
+DECODE_TPS=0.000
+RC=1
+DISPOSITION=FAIL
+EGRESS=0 LOCAL_ONLY=1
+CERT_BLOCKER_REMAP=1
+FALSE_PROVENANCE_MISMATCH=1
+WHY=TOKENS_NE_64_NOT_MODEL_FP
+BLOCKED_AT=64_TOKEN_PRODUCT_RUN
+PROMOTE=0

@@ -1,0 +1,9 @@
+﻿MODEL=codellama-7b.gguf
+PATH=F:\OllamaModels\models\blobs\sha256-3a43f93b78ec50f7c4e4dc8bd1cb3fff5a900e7d574c51a6f7495e48486e0dac
+SIZE_MB=3648.7 SHA16=3A43F93B78EC50F7
+HEADLESS_PID=15876
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"codellama-7b.gguf","profile_source":"runtime_gguf","profile_id":9617,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":3
+LOAD=400 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

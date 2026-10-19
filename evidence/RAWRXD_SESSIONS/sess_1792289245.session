@@ -1,0 +1,8 @@
+id=sess_1792289245
+model=qwen2.5-coder-14b-instruct-q8_0
+path=G:\~dev\rawrxd\models\_matrix_f\Qwen2.5-Coder-14B-Instruct-Q8_0\qwen2.5-coder-14b-instruct-q8_0.gguf
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=audit ide
+patch=
+turns=0

@@ -1,0 +1,3 @@
+﻿LABEL=after_motd_cmd
+HTTP_STATUS=-1
+BODY=Unable to connect to the remote server

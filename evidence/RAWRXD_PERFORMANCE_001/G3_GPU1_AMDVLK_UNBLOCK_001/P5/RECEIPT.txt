@@ -1,0 +1,17 @@
+GATE=G3_GPU1_AMDVLK_UNBLOCK_001/P5
+PURPOSE=Mesa/MS Dozen Vulkan-on-D3D12 escape hatch
+ASOF=2026-09-09
+PROMOTE=0
+DOZEN_PACKAGE=Microsoft.D3DMappingLayers_1.2404.1.0
+DOZEN_DLL=...\x64\vulkan_dzn.dll
+LoadLibrary=PASS
+Negotiate=PASS
+CreateInstance=PASS
+EnumeratePhysicalDevices=AV_C0000005
+vk_icdEnumerateAdapterPhysicalDevices=NOT_EXPORTED
+LOADER_PATH=AV
+SOLO_RX7800XT_A0=NOT_REACHABLE_VIA_DOZEN
+INCLUSION_MODE=NONE
+RX7800XT_POOL_STATUS=EXCLUDED
+BLOCKER_A=BYPASSED_DOZEN_D3D12=NOT_EARNED
+STATEMENT=Dozen ICD initializes then traps on physical enum; cannot un-exclude 7800.

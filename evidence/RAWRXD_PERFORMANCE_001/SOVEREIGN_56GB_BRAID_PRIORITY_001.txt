@@ -1,0 +1,35 @@
+SOVEREIGN_56GB_BRAID_PRIORITY_001=SEALED
+DATE=2026-09-08
+ROLE=PRIORITY_CHOICE
+PATH_B_GATE=UNRELATED (GATE_STOP PATH_A champion holds separately)
+
+QUESTION
+  A=stabilize_56GB_memory_reservation (NtAllocateVirtualMemory MEM_RESERVE)
+  B=Revolver_Dispatcher hot/cold swap into R13
+
+PRIORITY=A_THEN_B
+  REASON=Revolver_Dispatch / Get_Address / Verify_Bounds require a real
+          contiguous VA canvas base (R13). Without reservation, dispatcher
+          is invention without substrate.
+
+PHASE_1 (A) — RAW SYSCALL LAYER
+  NtAllocateVirtualMemory Size=56GiB Type=MEM_RESERVE Commit=on_demand
+  Layout contract:
+    Base = R13
+    Positive/Active = [Base + 0, Base + 8GiB)   OR centered layout if preferred
+    Deep/Negative   = signed offsets into reserved span
+  Prove: VirtualQuery region size, touch-commit one page each pole, no silent OOM
+  Sentinel Verify_Bounds armed only AFTER base+span sealed
+
+PHASE_2 (B) — REVOLVER
+  only after Phase_1 receipt
+  Hot window in Positive 8GiB; Cold via Swap_Arena_Window into reach
+  Chronicler histogram after both poles exist
+
+FORBIDDEN_NOW
+  claim 56GB as PATH_B/perf axiom
+  fabricate TPS from canvas alone
+  commit-all 56GiB physical
+
+STATUS=PRIORITY_A_SELECTED
+AWAITING=user_go_on_Phase_1_syscall_reserve

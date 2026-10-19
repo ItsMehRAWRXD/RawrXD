@@ -1,0 +1,419 @@
+=== HKLM:\SOFTWARE\AMD ===
+
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\AIM
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\AMDAnalytics
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\AMDInstallManager
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\CN
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\DU
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\DUTrack
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\DVR
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\EEU
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\Install
+SUB=HKEY_LOCAL_MACHINE\SOFTWARE\AMD\SmartDC
+MISSING HKLM:\SOFTWARE\AMD\AMDVLK
+MISSING HKLM:\SOFTWARE\AMD\Vulkan
+=== HKCU:\SOFTWARE\AMD ===
+
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\AIM
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\AMDInstallManager
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\CN
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\DVR
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\HKIDs
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\MOBILE
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\PPC
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\SA
+SUB=HKEY_CURRENT_USER\SOFTWARE\AMD\SCENE
+=== HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002 ===
+
+
+DriverDesc                                    : AMD Radeon RX 7800 XT
+ProviderName                                  : Advanced Micro Devices, Inc.
+DriverDateData                                : {0, 0, 176, 88...}
+DriverDate                                    : 8-17-2026
+DriverVersion                                 : 32.0.31041.1004
+InfPath                                       : oem30.inf
+InfSection                                    : ati2mtag_Navi32
+MatchingDeviceId                              : PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8
+DDC2Disabled                                  : 0
+MultiFunctionSupported                        : 0
+TimingSelection                               : 0
+VgaCompatible                                 : 0
+Adaptive De-interlacing                       : 1
+VPE Adaptive De-interlacing                   : 1
+GCOOPTION_DisableGPIOPowerSaveMode            : 1
+ReleaseVersion                                : 26.10.41.01-260811a-203304C-AMD-Software-Adrenalin-Edition
+BuildNumber                                   : 09700
+UserModeDriverGUID                            : {F3A42474-0891-4151-B44A-ED04B657432B}
+DALGameGammaScale                             : 6579300
+DXVA_WMV_NA                                   : 1
+DI_METHOD_NA                                  : 0
+Force_CV_Detection_DEF                        : 0
+LDA_ChainDescriptor                           : 
+KMD_UVDVideoStopDelay                         : 2000
+color_mapping_runtime_component_NA            : false
+powermanagement_delag_component_na            : false
+chill_component_na                            : false
+SMOOTHVISION_NAME                             : 
+VIDEO_NAME_SUFFIX                             : Avivo(TM)
+SameOnAllUsingStandardInVideoTheaterCloneMode : 1
+3to2Pulldown_NA                               : 0
+GI_NA                                         : 1
+AreaAniso_NA                                  : 1
+AAF_NA                                        : 0
+TemporalAAMultiplier_NA                       : 1
+CN_Hide_All_Notification                      : false
+USR_DelayInDays                               : 0
+USR_RepeatAfterDays                           : 0
+news_feed_runtime_component_na                : false
+6CD6F123-9AE3-4A7D-A182-D90051B6B327          : 1
+PowerSaverAutoEnable_DEF                      : 0
+Chill40_NA                                    : False
+cpumetrics_ui_component_NA                    : false
+ADL_CDVL                                      : 25.10
+HideAMDLinkForWindows                         : 0
+dvr_runtime_component_na                      : false
+prefmonitor_runtime_component_na              : false
+gpu_od_runtime_component_na                   : false
+smarttools_runtime_component_na               : false
+RSXBrowserUnavailable                         : true
+notifications_runtime_component_na            : false
+BugReportTool_Hide                            : false
+displays_list_ui_component_na                 : false
+customresolution_ui_component_na              : false
+customresolution_runtime_component_na         : false
+displaycolor_runtime_component_na             : false
+displayprops_runtime_component_na             : false
+displayspec_runtime_component_na              : false
+hdcp_runtime_component_na                     : false
+tenbit_runtime_component_na                   : false
+color_enhancement_runtime_component_na        : false
+freesync_runtime_component_na                 : false
+video_runtime_component_na                    : false
+camera_runtime_component_na                   : false
+wirelessvr_runtime_component_na               : false
+hotkeys_ui_component_na                       : false
+profileusertype_runtime_na                    : false
+imagesharpening_runtime_component_na          : false
+framerate_runtime_component_na                : false
+enhancedsync_ui_component_na                  : false
+crossfire_ui_component_na                     : false
+framepacing_ui_component_na                   : false
+tessellation_ui_component_na                  : false
+ogltriplebuffering_ui_component_na            : false
+gpuworkload_ui_component_na                   : false
+virtualmemory_runtime_na                      : false
+misctools_ui_component_na                     : false
+ecc_ui_component_na                           : false
+quadbuffer_runtime_component_na               : false
+wattman_ui_component_na                       : false
+ProblemReportUrl                              : show
+HelpUrl                                       : show
+EnableCoolerMasterRGB                         : 1
+AdvancedMetrics_NA                            : false
+EnableTempIntake                              : 1
+IsAutoDefault                                 : 1
+CN_Hide_Toast_Notification                    : false
+edid_ui_component_NA                          : false
+dgma_ui_component_NA                          : false
+glpbmode_ui_component_NA                      : false
+audio_ui_component_NA                         : false
+ReportAnalytics                               : 1
+DvrToastNotification_250_Hide                 : 1
+ClaimData_NA                                  : true
+IntelligenceFeature_NA                        : false
+smartfeatures_ui_component_NA                 : false
+CN_Hide_Tutorials                             : false
+CN_Hide_FeatureData                           : false
+videoupscale_runtime_component_na             : false
+DriverBuildNumber                             : 2608172034-26.10.41.01-260811a-203304C-AMD-Software-Adrenalin-Edition
+CommitHash                                    : e29338d6107cfac6308e0894b5c63d2fdf6ec9b6
+EnableSmartBlurInstall                        : 1
+radeon_superresolution_ui_component_na        : false
+frame_gen_ui_component_na                     : false
+glpbmode_runtime_component_na                 : false
+enhanced_sync_ui_component_na                 : false
+DXCoreAttributes                              : {{B69EB219-3DED-4464-979F-A00BD4687006}, 
+                                                {8c47866b-7583-450d-f0f0-6bada895af4b}, 
+                                                {0c9ece4d-2f6e-4f01-8c96-e89e331b47b1}, 
+                                                {248e2800-a793-4724-abaa-23a6de1be090}...}
+SafeModeUpdate_Enable                         : true
+SSEco1_5_NA                                   : false
+KMD_BackingStoreMgrEnabled                    : 1
+EnableCloudProfile                            : true
+b006b667-ca3d-411c-b5f3-9ee727a32ae8          : 0
+Notify_DriverUpdate_hide                      : false
+PreloadDelay                                  : 300
+575236dd-2453-4518-87eb-7052389c57e1          : 1
+DVRTrackingEnabledBuild                       : 1
+NotifySubscription                            : 0
+AllowSubscription                             : 1
+10BitPixelFormat_NA                           : 0
+ShowReleaseNotes                              : 1
+AllowSkins                                    : true
+DVRInstallEligible                            : 1
+blockchainsupport                             : 0
+mobile_runtime_component_NA                   : true
+Distribution                                  : Crimson
+DalDCELogFilePath                             : C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a
+                                                337568ce3f0\B026373\atikmdag_dce.log
+UA_Enabled                                    : 0
+DalAllowAutoVSROnEmbeddedDisplay              : 1
+driverupdate_ui_component_na                  : false
+MiscControl                                   : 33413048
+BigSoftwareMajorVersion                       : 2023
+BigSoftwareMinorVersion                       : 0
+PP_BACODelayIntervalInMilliSeconds            : 0
+AMDKMPFD                                      : C:\Windows\System32\AMD\AMDKMPFD
+DalWFDEnable                                  : 1
+DalEnableRemoteDisplayPath                    : 1
+DalAsicFIDOSForcedModeSupport                 : 3
+PXSplashScreen                                : 0
+OpenGLDriverName                              : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\atig6pxx.dll}
+OpenGLFlags                                   : 3
+OpenGLVersion                                 : 1
+OpenGLFlagsWow                                : 3
+OpenGLVersionWow                              : 1
+OpenGLDriverNameWow                           : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\atiglpxx.dll}
+AutoColorDepthReduction_NA                    : 1
+PP_ULPSDelayIntervalInMilliSeconds            : 30000
+TVEnableOverscan                              : 1
+TVForceDetection                              : 0
+AllowSnapshot                                 : 1
+InitDelay                                     : 20
+AllowRSOverlay                                : true
+PowerXpressLoad                               : 4294967295
+KMD_CVMLCameraSupport                         : 0
+BuildConfigType                               : 0
+EnableChipsetInstall                          : true
+EnableAIBundle                                : true
+RadeonSoftwareEdition                         : AMD Software: Adrenalin Edition
+RadeonSoftwareVersion                         : 26.8.1
+IntegerScalingPerAppSupport                   : 1
+MobileLinkOverCloudAuth_NA                    : 1
+ECCMode                                       : 0
+ContentProtectionDriverName                   : amdmiracast.dll
+KMD_EnableOPM2Interface                       : 1
+KMD_EnableContextBasedPowerManagement         : 1
+WmAgpMaxIdleClk                               : 32
+MemInitLatencyTimer                           : 2002219455
+Denoise_NA                                    : 0
+Detail_NA                                     : 0
+DynamicContrast_NA                            : 0
+ASTT_NA                                       : 1
+DemoMode_NA                                   : 0
+SplitScreen_NA                                : 0
+TheaterMode_NA                                : 1
+DemoMode_DEF                                  : 0
+StaticGamma_NA                                : 0
+Gamma_NA                                      : 1
+EQAA_NA                                       : 0
+MLF_NA                                        : 0
+EnableUlps_NA                                 : 1
+SurfaceFormatReplacements_NA                  : 0
+TFQ_NA                                        : 0
+AntiAlias_NA                                  : 0
+TextureLod_NA                                 : 1
+TestOnceRequest_NA                            : 1
+AutoTuneRequest_NA                            : 1
+CameraShakeMotionDetect_NA                    : 1
+GameConfigSupported                           : 1
+VcnHpqWhitelist                               : 
+Gmx_InferenceScalingConfigDGPU                : 1300013811
+MGPUSupported                                 : 1
+PP_SclkDeepSleepDisable                       : 1
+PP_DisableVoltageIsland                       : 1
+DalAllowDPrefSwitchingForGLSync               : 1
+DalReportSingleSelectedTiming                 : 1
+DisableSAMUPowerGating                        : 1
+EnableAspmL1                                  : 1
+EnableAspmL0s                                 : 1
+KMD_EnableDesktopTexture                      : 0
+DisableVCEPowerGating                         : 0
+EnableUvdClockGating                          : 1
+EnableVceSwClockGating                        : 1
+DisableUVDPowerGatingDynamic                  : 1
+StutterMode                                   : 8202
+MosquitoNoiseRemoval_NA                       : 0
+Deblocking_NA                                 : 0
+EnableUlps                                    : 0
+EnableCrossFireAutoLink                       : 1
+ExtEvent_BIOSEventByInterrupt                 : 1
+TVM6Flag                                      : 0
+TVDisableModes                                : 0
+ShowNewVFCurve                                : 1
+ColourDesktopGamma_DEF                        : 1.0 1.0 1.0
+ColourDesktopBrightness_DEF                   : 0 0 0
+ColourDesktopContrast_DEF                     : 1.0 1.0 1.0
+ColourFullscreenGamma_DEF                     : 1.0 1.0 1.0
+ColourFullscreenBrightness_DEF                : 0 0 0
+ColourFullscreenContrast_DEF                  : 1.0 1.0 1.0
+3D_Refresh_Rate_Override_DEF                  : 0
+Display_Detection_DEF                         : 0
+Panning_Mode_DEF                              : 0
+Force_TV_Detection_DEF                        : 0
+BD0B8A8B81E25DEFFD00                          : {92, 104, 6, 206}
+BD2B8A8B81E25DEFFD37                          : {92, 114, 6, 207}
+BD6B758B81EFDAEFFD37                          : {92, 114, 6, 207}
+BD6B878B81EFDAEFFD37                          : {92, 114, 6, 207}
+BD7B878B81EFDAEFFD37                          : {92, 114, 6, 207}
+BD7FE78B81DFEBEFFD27                          : {82, 86, 6, 112}
+BD87F58B81E151EFFD00                          : {92, 104, 6, 206}
+BD87FE8B81E151EFFD37                          : {92, 114, 6, 207}
+BD88FE8B81E151EFFD24                          : {78, 108, 6, 34}
+BD8B758B81EFDAEFFD00                          : {92, 104, 6, 206}
+BD8B878B81EFDAEFFD00                          : {92, 104, 6, 206}
+BD9B878B81EFDAEFFD00                          : {92, 104, 6, 206}
+BDABDD8B81E7B6EFFD24                          : {78, 108, 6, 34}
+BDACD88B81E7B6EFFD37                          : {92, 114, 6, 207}
+BDACD98B81E7B6EFFD37                          : {92, 114, 6, 207}
+BDACDB8B81E7B6EFFD37                          : {92, 114, 6, 207}
+BDACDC8B81E7B6EFFD00                          : {92, 104, 6, 206}
+BDACDD8B81E7B6EFFD00                          : {92, 104, 6, 206}
+BDACDE8B81E7B6EFFD00                          : {92, 104, 6, 206}
+BDADEC8B81EB9DEFFD00                          : {92, 104, 6, 206}
+BDADED8B81EB9DEFFD37                          : {92, 114, 6, 207}
+BDB8A08B81E25DEFFD00                          : {92, 104, 6, 206}
+BDB8A28B81E25DEFFD37                          : {92, 114, 6, 207}
+BDB8A38B81E25DEFFD00                          : {92, 104, 6, 206}
+BDB8A58B81E25DEFFD37                          : {92, 114, 6, 207}
+BDD9F38B8FEFD7EFFDFF                          : {87, 38, 6, 160}
+BDDBD88B81EB73EFFD37                          : {92, 114, 6, 207}
+BDDBD98B81EB73EFFD00                          : {92, 104, 6, 206}
+BDDBE48B8FEBA7EFFDFF                          : {87, 38, 6, 160}
+BDDBEB8B81EBA7EFFD00                          : {92, 104, 6, 206}
+BDDBEC8B81EBA7EFFD37                          : {96, 37, 6, 239}
+BDF9FE8B81EFBCEFFD37                          : {92, 114, 6, 207}
+BDFA028B81EFBCEFFD37                          : {92, 114, 6, 207}
+BDFAEB8B81EFBCEFFD00                          : {92, 104, 6, 206}
+BDFAED8B81EFBCEFFD00                          : {92, 104, 6, 206}
+BDFFDC8B81E101EFFD37                          : {92, 114, 6, 207}
+BDFFDD8B81E101EFFD37                          : {92, 114, 6, 207}
+BDFFDE8B81E101EFFD00                          : {92, 104, 6, 206}
+BDFFDF8B81E101EFFD00                          : {92, 104, 6, 206}
+KMD_EnableBrightnessInterface2                : 1
+PP_GPUPowerDownEnabled                        : 1
+UserModeDriverCompiler                        : C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a
+                                                337568ce3f0\B026373\amdxc64.dll
+UserModeDriverCompilerWow                     : C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a
+                                                337568ce3f0\B026373\amdxc32.dll
+UserModeDriverName                            : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\atidx9loader64.dll, C:\WINDOWS\System32\DriverStor
+                                                e\FileRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxx64.dl
+                                                l, C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6
+                                                e5a337568ce3f0\B026373\amdxx64.dll, C:\WINDOWS\System32\DriverStore\Fil
+                                                eRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxc64.dll}
+UserModeDriverNameWow                         : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\atidx9loader32.dll, C:\WINDOWS\System32\DriverStor
+                                                e\FileRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxx32.dl
+                                                l, C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6
+                                                e5a337568ce3f0\B026373\amdxx32.dll, C:\WINDOWS\System32\DriverStore\Fil
+                                                eRepository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxc32.dll}
+ProxyLDA_Support                              : 2
+OpenGLDynamicPX                               : 1
+UserModeDListDriverName                       : C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a
+                                                337568ce3f0\B026373\amdhdl64.dll
+UserModeDListDriverNameWow                    : C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a
+                                                337568ce3f0\B026373\amdhdl32.dll
+UserModeDriverNameWsl                         : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\amdxc64.so}
+D3DVendorName                                 : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\amdxn64.dll, C:\WINDOWS\System32\DriverStore\FileR
+                                                epository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxn64.dll, C:\W
+                                                INDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a3375
+                                                68ce3f0\B026373\amdxx64.dll, C:\WINDOWS\System32\DriverStore\FileReposi
+                                                tory\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxx64.dll}
+D3DVendorNameWoW                              : {C:\WINDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5
+                                                a337568ce3f0\B026373\amdxn32.dll, C:\WINDOWS\System32\DriverStore\FileR
+                                                epository\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxn32.dll, C:\W
+                                                INDOWS\System32\DriverStore\FileRepository\u0203304.inf_amd64_a6e5a3375
+                                                68ce3f0\B026373\amdxx32.dll, C:\WINDOWS\System32\DriverStore\FileReposi
+                                                tory\u0203304.inf_amd64_a6e5a337568ce3f0\B026373\amdxx32.dll}
+InstalledDisplayDrivers                       : {amdxc64, amdxc32, amdxn64, amdxx64...}
+FeatureScore                                  : 207
+KMD_EnableAmdFendrOptions                     : 16
+KMD_Oca_ErrorInjection                        : {0, 0, 0, 0...}
+Gmx_CSMEnabled                                : 0
+KMD_RebarControlMode                          : 1
+KMD_FRTEnabled                                : 0
+KMD_MaxFrameRateRequested                     : 60
+KMD_FRTCInitialStatus                         : 1
+PP_BACOCounter                                : 1
+DalLogMask_Display Connectivity               : {1, 0, 0, 0}
+KMD_ApplyResetIfPreemptFail                   : 0
+KD_TilingMode                                 : 0
+HardwareInformation.BiosString                : {49, 0, 49, 0...}
+HardwareInformation.DacType                   : {73, 0, 110, 0...}
+BDValue                                       : {0, 0, 0, 0...}
+HardwareInformation.ChipType                  : {65, 0, 77, 0...}
+HardwareInformation.AdapterString             : {65, 0, 77, 0...}
+HardwareInformation.qwMemorySize              : 17163091968
+HardwareInformation.MemorySize                : 4293918720
+OpenCLDriverName                              : C:\WINDOWS\System32\DriverStore\FileRepository\amdocl.inf_amd64_3adbbd0
+                                                621cf70c1\amdocl64.dll
+OpenCLDriverNameWow                           : C:\WINDOWS\System32\DriverStore\FileRepository\amdocl.inf_amd64_3adbbd0
+                                                621cf70c1\amdocl32.dll
+OpenGLVendorName                              : {C:\Windows\System32\DriverStore\FileRepository\amdogl.inf_amd64_0c58af
+                                                8f08364541\atio6axx.dll, C:\Windows\System32\DriverStore\FileRepository
+                                                \amdogl.inf_amd64_0c58af8f08364541\atio6axx.dll, }
+OpenGLVendorNameWow                           : {C:\Windows\System32\DriverStore\FileRepository\amdogl.inf_amd64_0c58af
+                                                8f08364541\atioglxx.dll, C:\Windows\System32\DriverStore\FileRepository
+                                                \amdogl.inf_amd64_0c58af8f08364541\atioglxx.dll, }
+VulkanDriverName                              : C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89
+                                                eaaafdf60\amd-vulkan64.json
+VulkanImplicitLayers                          : C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89
+                                                eaaafdf60\amd-vulkan64.json
+VulkanDriverNameWow                           : C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89
+                                                eaaafdf60\amd-vulkan32.json
+VulkanImplicitLayersWow                       : C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89
+                                                eaaafdf60\amd-vulkan32.json
+VulkanDriverNameNexus                         : C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89
+                                                eaaafdf60\amdvlk_nexus.cab
+ACE                                           : 0
+Gmx_RSREnabled                                : 3
+KMD_USUEnable                                 : 0
+KMD_ChillEnabled                              : 0
+Gmx_FRTCEnabled                               : 0
+KMD_RadeonBoostEnabled                        : 1
+KMD_BoostAdaptiveVrsEnabled                   : 0
+KMD_DeLagEnabled                              : 1
+DrvFrameGenEnabled                            : 1
+IsAdvancedControl                             : 7
+EscapeInputState                              : 
+Gmx_EFConfigCount                             : 0
+KMD_RadeonBoostMinResolution                  : 84
+PP_AutoOCEngineClock                          : 0
+PP_AutoCurveOptimizerVoltageOffset1           : 0
+PP_AutoCurveOptimizerVoltageOffset2           : 0
+PP_AutoCurveOptimizerVoltageOffset3           : 0
+PP_AutoCurveOptimizerVoltageOffset4           : 0
+PP_AutoCurveOptimizerVoltageOffset5           : 0
+PP_AutoCurveOptimizerVoltageOffset6           : 0
+PP_CNEscapeInput                              : {12, 0, 0, 0...}
+OD8Settings                                   : 4096
+Point2Freq                                    : 0
+Point3Freq                                    : 0
+IsComponentControl                            : 0
+PSPath                                        : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentCo
+                                                ntrolSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002
+PSParentPath                                  : Microsoft.PowerShell.Core\Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentCo
+                                                ntrolSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}
+PSChildName                                   : 0002
+PSDrive                                       : HKLM
+PSProvider                                    : Microsoft.PowerShell.Core\Registry
+
+
+
+
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\ACR
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\Classes
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\CopyToVmOverwrite
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\CopyToVmOverwriteWow64
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\DAL2_DATA__2_0
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\DAL3_DATA
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\DRV_SDWM
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\MediaFoundation
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\Microsoft
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\UMD
+SUB=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002\VolatileSettings

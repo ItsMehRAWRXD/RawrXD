@@ -1,0 +1,63 @@
+PRODUCT_UX_VS_ENG_GAP_001=SEALED
+DATE=2026-09-08
+MODE=D
+TYPE=ATTRIBUTION
+EXECUTION=0
+CODE_CHANGE=0
+
+SEPARATION=
+  Q1=engineering_work_left
+  Q2=end_user_experience_needed
+  Q2_PUBLIC_API_TARGET=rawr run <model>
+  PERF_RECEIPTS_NE_PRODUCT_UX=1
+
+# --- Q2 PRODUCT SURFACE (expected) -----------------------------------------
+
+EXPECTED_CLI=
+  rawr list
+  rawr inspect <model>
+  rawr run <model>
+  rawr chat <model>
+  rawr stop
+  rawr unload
+  rawr ps
+
+HIDDEN_PIPELINE_UNDER_run=
+  Locate → GGUF metadata → backend(CPU|Vulkan|Multi-GPU)
+  → residency → tokenizer → generation
+
+# --- IMPL CHECK (not UX complete) ------------------------------------------
+
+rawr_exe=
+  CMake=add_executable(rawr src/deep2/rawr_run.cpp) PRESENT
+  CLI_IMPLEMENTED=rawr run <modelname> [prompt] ONLY
+  CLI_ABSENT=list|inspect|chat|stop|unload|ps
+  GATE=NON_AUTHORITY_NON_BLOCKING vs deep2_benchmark PERF_AUTHORITY
+  PRODUCT_PATH=rawr→ProductRuntime→ProductRun→generateStream
+  RESOLVE_WITNESS=RAWR_RUN_RESOLVE_001 (nemotron resolve-only PASS; not full UX)
+  STATUS=MINIMAL_run_PRESENT; suite INCOMPLETE
+
+# --- Q1 ENG MAP (from REMAINING_SHOUTS_GAPS) --------------------------------
+
+ENG.Runtime_UX=needs simple rawr run entrypoint (product)
+ENG.Compatibility=5 seeds unexecuted (COMPAT_TEST hot gate)
+ENG.Performance=PATH_B needs MODE=A HOT_GATE=1
+ENG.Parser=cursor-divergence absent
+ENG.QuadBuffer=observed; edit blocked
+ENG.Security=inventoried inactive
+
+# --- PRODUCT PRIORITY ------------------------------------------------------
+
+LARGEST_PRODUCT_GAP=public_API_feel of rawr run <model>
+  NOT another optimization receipt
+
+SPEND_SEPARATION=
+  polishing CLI ≠ MODE_A PATH_B
+  polishing CLI ≠ COMPAT_TEST (though COMPAT seeds feed auto-run quality)
+  CLI work needs its own named mode if ever spend-class (not cataloged yet)
+  UNDER_D=attribution only; no CLI invent this turn
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  PERF=GATE.txt
+  COMPAT=COMPAT_UNCONFLICTED_SEEDS_001

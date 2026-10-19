@@ -1,0 +1,13 @@
+﻿
+Name                           Value                                                                                   
+----                           -----                                                                                   
+SHA256                         E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D                        
+PRE_STATUS                     403                                                                                     
+PRE_SNIP                       {"error":"motd_required","message":"Read Message of the Day (PassiveRoleNotRoleplay.m...
+MOTD_STATUS                    200                                                                                     
+MOTD_SNIP                      {"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay â€” Multitask continue...
+POST_STATUS                    200                                                                                     
+POST_SNIP                      {"path":"G:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".arch...
+OLD_VETO_IN_PRE                False                                                                                   
+
+

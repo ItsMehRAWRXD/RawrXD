@@ -1,0 +1,7 @@
+ONESHOT_LOG=INFER_OPEN_SESSION_DONE open=1; INFER_DEEP2_OK bytes=192; RUN_INFER_DONE bytes=192
+ONESHOT_ERR=PRODUCT_STREAMER_PREP=1; GENERATED_TOKENS=48; PRODUCT_PASS=1
+HTTP_GENERATE={"model":"rawrxd","response":"<192 bytes>","done":true}
+HTTP_STATUS=200
+PROCESS_SURVIVED=1
+LAA_AFTER_EDITBIN=Application can handle large (>2GB) addresses
+CLI_CONTROL=PRODUCT_PASS=1 (rawr run tinyllama --max-tokens 8) unchanged

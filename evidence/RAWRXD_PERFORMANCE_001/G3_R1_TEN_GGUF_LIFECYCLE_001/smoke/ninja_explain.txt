@@ -1,0 +1,2 @@
+ninja explain: stored deps info out of date for 'CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/HeadlessIDE.cpp.obj' (8107302545994299 vs 8107303461639919)
+[1/1] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE.cpp.obj

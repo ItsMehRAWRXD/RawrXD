@@ -1,0 +1,1 @@
+{"backends":[{"name":"deep2","type":"local","active":true},{"name":"cpu","type":"local","active":false},{"name":"vulkan","type":"local","active":false}],"active":"Backend: LocalGGUF (headless)\nStatus: Active\nModel: (none)\nInference requests: 0","status":"Backend: LocalGGUF (headless)\nStatus: Active\nModel: (none)\nInference requests: 0"}

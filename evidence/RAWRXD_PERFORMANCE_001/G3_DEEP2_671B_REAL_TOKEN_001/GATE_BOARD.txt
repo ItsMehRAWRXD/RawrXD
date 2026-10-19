@@ -1,0 +1,54 @@
+G3_DEEP2_671B_REAL_TOKEN_001 — GATE_BOARD (2026-09-11)
+======================================================
+
+CLOSED_NOW:
+  DS671_FILE_MANIFEST_PASS=1
+  DS_TENSOR_MAP_PASS=1 (semantic; other=0; UNRESOLVED=0; norm=245)
+  DEEP2_FIXED_GATE_POLICY_RUNTIME=PASS (decimal SI; r8 preserve)
+  DS671_ROUTE_LOAD portable smoke=PASS
+  DEEP2_PORTABLE_NOSTREAM portable smoke=PASS
+  GGUF_NUMERIC_METADATA_PROBE=PASS
+  DS671_TENSOR_ADAPTER SOURCE_WIRED=1 (measure/load/release + shard1 index bind)
+    ADAPTER_BUILD=PASS RUNTIME_REACHED=0 SLOTS_SHARD1=15
+    RECEIPT=DS671_ROUTE_LOAD_NODEP_DROP/EXTRACT/ADAPTER_RECEIPT.txt
+  DS671_RUNTIME_RECEIPT emit law SOURCE_WIRED=1 SMOKE=PASS
+    PROMOTE_REQUESTED=1 → PROMOTE=0 (DERIVED refuse)
+  STREAM+WSC (prior lock) unchanged
+
+STALE_CORRECTION:
+  DS_TENSOR_MAP_PASS=0 / norm=0 / other=58 is SUPERSEDED by OBSERVED reclassify
+  (still insufficient for PROMOTE without decode + load terms)
+
+PROMOTE_LAW=DS671_RUNTIME_RECEIPT_001/LAW.txt
+  OBSERVED|DERIVED only; DECLARED never mints authority
+  current DERIVED: SEMANTIC=1 META=1 MANIFEST=0(full_load) DECODE=0 POLICY=0 PROMOTE=0
+
+PROFILE_VERIFIED_ADDITIONS:
+  key_length=192 value_length=128 head_count=128
+  expert_ff=2048
+
+AUDIT:
+  deep2/ residual prefetch under nostream audit = 0
+  runtime/ still has async/prefetch symbols → BYPASS on portable token1 path
+
+OPEN (honest):
+  full_load_no_stream OR sync-load residency OBSERVED term=NOT_RUN
+  SHARD_AWARE_TENSOR_RANGE_MAP=NOT_RUN  (11-shard slot table; only shard1=15)
+  REAL_TOP8_TO_EXPERT_SLICE_BIND=NOT_RUN
+  PRODUCT_HOTPATCH ds671_require_route after router=NOT_RUN
+  ONE_REAL_MOE_LAYER_SYNC_LOAD=NOT_RUN
+  ALL_58_MOE_LAYERS_TOKEN1=NOT_RUN
+  DS671_LIVE_POLICY_BIND=NOT_RUN
+  MLA_FORWARD live=NOT_RUN
+  MOE_ROUTER live=NOT_RUN
+  REAL_MODEL_DECODE=NOT_YET_PROVEN
+
+AUTHORIZED_PASS=0
+PROMOTE=0
+ARCH_LAW=STREAMER_ADAPTER_SPLIT_LAW.txt
+  STREAMER=format/provider/arch AGNOSTIC (r671/WSC/demand I/O)
+  ADAPTER=family-specific ABOVE streamer (DeepSeek D2U/MLA/MoE here)
+  UNIVERSAL_E2E=NOT_PROVEN (RUNTIME_REACHED=0 on DeepSeek lane)
+  UNIVERSAL_STREAMER_RESIDENCY_001 ACCEPTANCE15=PASS (MG real I/O; PROMOTE=0)
+NEXT=DeepSeek adapter RUNTIME_REACHED on top of universal require_region
+  without family names in streamer core

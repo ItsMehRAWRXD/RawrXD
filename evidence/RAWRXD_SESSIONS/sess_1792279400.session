@@ -1,0 +1,8 @@
+id=sess_1792279400
+model=llama3.2-3b-Q2_K
+path=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+workspace=G:\~dev\rawrxd
+autonomy=off
+plan=read CMakeLists.txt
+patch=
+turns=0

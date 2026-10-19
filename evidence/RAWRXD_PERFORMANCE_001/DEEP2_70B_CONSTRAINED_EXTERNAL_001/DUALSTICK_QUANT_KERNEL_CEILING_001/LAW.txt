@@ -1,0 +1,57 @@
+GATE=DUALSTICK_QUANT_KERNEL_CEILING_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+ACTIVATE_IF=
+  DUALSTICK_THROUGHPUT_CLIMB_001 HARD_GATE product PASS
+  AND DUALSTICK_KERNEL_IMBALANCE_001 SKEW_TARGET product PASS
+  # ABS(T0-T1)/MAX < 5% without ↑RELOAD
+# Until then SOURCE_READY only — scheduler remains owner first
+
+GOAL=heterogeneous quant compute fabric
+  GPU0: independently fastest kernel architecture for (quant, shape)
+  GPU1: independently fastest kernel architecture for (quant, shape)
+  then scheduler balances using those measured kernel costs
+# NOT both GPUs running the same generic expert kernel
+
+# Top 15 — per-stick quantized expert kernel execution time
+# 1  Per-GPU quant kernel autotune cache
+# 2  Dedicated Q2_K/Q4_K/Q5_K/Q6_K kernels
+# 3  Kimi expert-shape specialization
+# 4  Fused dequantize-dot kernel
+# 5  Vectorized quant-block loads
+# 6  Register-resident scales/mins
+# 7  Wave-cooperative dot reduction
+# 8  Activation tile LDS reuse
+# 9  Multi-row-per-wave packing
+# 10 Persistent quant kernel
+# 11 Fused Gate+Up quant traversal
+# 12 Fused Down + router-weight accumulation
+# 13 Quant-block prefetch pipeline
+# 14 Occupancy/register-pressure governor
+# 15 Per-stick kernel family divergence
+
+PROGRESSION=
+  #1 autotune
+  → #2/#3 specialized kernels
+  → #4 fused dequant-dot
+  → #5/#6 memory + metadata efficiency
+  → #7/#8 wave/LDS reuse
+  → #11 Gate+Up fusion
+  → #12 Down+accumulate fusion
+  → #13 latency hiding
+  → #14 occupancy tuning
+  → #15 fully divergent per-stick kernels
+
+COUNTERS=
+  KERNEL_NS_PER_EXPERT KERNEL_NS_PER_WEIGHT_BYTE
+  QUANT_BLOCKS_PER_US VALUABLE_FMA_PER_CYCLE
+  VRAM_READ_GBPS LDS_HIT_RATIO WAVE_OCCUPANCY REGISTER_COUNT WAVES_PER_CU
+  DEQUANT_NS DOT_NS REDUCE_NS LAUNCH_NS
+  Q2K_NS Q4K_NS Q6K_NS
+
+SEALED_PRESERVE=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679

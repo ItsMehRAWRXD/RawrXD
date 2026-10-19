@@ -1,0 +1,204 @@
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000021B184AED20  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=0000021B184AED20  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=0000021B184AED20  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=0000021B184AED20  registered=201 tensors  bytes=667078656  max=536870912
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=PASS schema=201 quant=201 tok=32000
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6187658D0 dequant=00007FF618762CC0 GetGEMV(12)=00007FF6187658D0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[Deep2Engine] SAFE_DEFAULT_SKIP=elastic (set RAWRXD_DEEP2_ALLOW_ELASTIC=1 to arm)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=4
+DEEP2_PLAN_REASON=user_device_list
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000158A5
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000158A5
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001B8F6
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=1
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018904
+DEEP2_DEVICE_2_VRAM_BYTES=16963137536
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_COST_T_BEST=0.165414
+DEEP2_COST_CUT=22
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SOLO
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-21 kind=GPU
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=1
+DEEP2_DEVICE_PLANNED_COUNT=1
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=1
+DEEP2_PLAN_NUM_LAYERS=22
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:00000000000158A5
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-21
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=133
+DEEP2_LAYER_0_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:7551:00000000000158A5
+DEEP2_LAYER_21_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=1 strict=1
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] MARS skipped (Vulkan owns compute devices=1)
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=0 elastic=0 cyclone=1 medusa=1 nu=1 warmup=1 ckv=0 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=0 devices=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] PHI3 heal=eos_token stop=2
+[ChatTemplate] Detected 'phi3' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=17
+HOTPATH_GEMV=VULKAN
+HOTPATH_RMSNORM=GPU
+HOTPATH_ATTN=GPU
+HOTPATH_FFN=GPU_RESIDENT
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=1
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=1
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=440
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=20
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=0000021B1BA00000 sizeBytes=36864000
+[VulkanCompute] Q4K_SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv bytes=7592
+[KVCache] page grow 8 -> 16 hot (virtualMax=2048 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=2048 pos=16)
+[AGENT] PREFILL_DONE prompt_tokens=17 prefill_ms=2493.800
+[AGENT] DECODE_BEGIN max_out=20

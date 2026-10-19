@@ -1,0 +1,42 @@
+[
+  {
+    "file": "AUTHORITY.txt",
+    "bytes": 726,
+    "sha256": "e411b301b7804bbc0476ec941b6865bcaaa605018aab1e9b39b57cf3d063f5cd"
+  },
+  {
+    "file": "INTEGRATION.txt",
+    "bytes": 1156,
+    "sha256": "f562206ba5716fe8f4dd2e5876da9c548a0ac71a05be5d7293f4edb060dcd5ea"
+  },
+  {
+    "file": "build_linux.sh",
+    "bytes": 167,
+    "sha256": "c69dc7e99ff29f993a66b2743f2da9cdaa77f215d28b9b511010437dbd40b47a"
+  },
+  {
+    "file": "build_win64.bat",
+    "bytes": 214,
+    "sha256": "0727bc8c031f4f416a8aa1d3c76726c3e4dd103d6e935e52892be09b904dac0b"
+  },
+  {
+    "file": "r671_deep2_bridge.h",
+    "bytes": 861,
+    "sha256": "a6776630565496089c10410ff2c11cacaadd064c35d04d673ee6c739a61b725d"
+  },
+  {
+    "file": "r671_probe.c",
+    "bytes": 4173,
+    "sha256": "f198e9fbbf9b5a2a33a2eef0520d5c33646aab59240965302300ba6cb59e0428"
+  },
+  {
+    "file": "r671_stream.c",
+    "bytes": 7075,
+    "sha256": "973a7c7542fe6ce19711e65c2237d6a89388eedc38dc383b122158e1ef43d1f3"
+  },
+  {
+    "file": "r671_stream.h",
+    "bytes": 1853,
+    "sha256": "b88382e1034f225d316a1691a583de3088886aad955f2d09d9d7400077ce644a"
+  }
+]

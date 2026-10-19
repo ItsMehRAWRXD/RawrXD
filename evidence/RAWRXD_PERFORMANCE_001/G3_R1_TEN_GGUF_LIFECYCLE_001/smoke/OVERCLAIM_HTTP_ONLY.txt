@@ -1,0 +1,5 @@
+FICTION_STRIP_001=1
+LAW=HTTP_200_TOKEN_COUNT_VERDICT_NE_PRODUCT_OPEN_SESSION
+R24_COLD_RES2=PRODUCT_OPEN_SESSION_FAIL_tensors=0 for llama32/phi3/deepseek/gemma/codestral
+Do not treat *.lifecycle.txt VERDICT=PASS as IDE ProductOpen residency seal.
+PROMOTE=0

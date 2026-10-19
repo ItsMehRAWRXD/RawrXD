@@ -1,0 +1,62 @@
+GATE=DEEP2_INSTALLED_MODELS_FINISHED_TPS_PROJECTION_20260912
+STATUS=OPINION_ONLY
+NOT_TECHNICAL_AUTHORITY=1
+NOT_TPS_AUTHORITY=1
+NOT_AGGREGATE_BW_AUTHORITY=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+SEPARATION=
+  CERTIFIED_TPS = FULL_MODEL_TPS_AUTHORITY=1 baseline only (DeepSeek full-forward ~0.045)
+  PROJECTED_TPS = finished Deep2 after packed + material dual overlap + product link
+                  + residency/KV + expert predict + CRITICAL_PATH_NVME=0
+  PROJECTED ≠ MINTED
+
+CALIBRATION=
+  dense_69B_Q2_K finished envelope 20–35 TPS · planning ~27
+  MoE scaled by ACTIVE params / bytes, not total disk size
+
+HOST=R9700_32GB + RX7800XT_16GB + 64GB_DDR5
+
+INSTALLED_PROJECTIONS=
+  nemotron-3.5-lightning:30b     MoE A3B 25GB     75–135  ~100
+  qwen3.5-9b-deepseek-v4-flash…  ~9B 6.6GB        65–110   ~85
+  nemotron-3-nano:4b             4B 2.8GB        120–200  ~155
+  gpt-oss:120b                   MoE A5.1B 65GB   55–100   ~75
+  gpt-oss:20b                    MoE A3.6B 13GB   90–160  ~120
+  deepseek-coder-v2:16b          MoE A2.4B 8.9GB 100–175  ~135
+  kiminoto/T0.0.1                6.6GB unclear    65–110*  ~85*
+  starcoder2:15b                 ~16B Q4_0 9.1GB  50–85    ~65
+  ornith-1.5:35b                 MoE A3B 22–23GB  75–135  ~100
+  gemma3:latest / :4b            4.3B 3.3GB      110–180  ~145
+  bigdaddyg* (all four)          69B Q2_K 25GB    20–35    ~27
+  bluehawana/deepseek-v4-flash   MoE 284B/A13B   30–55    ~40
+  deepseek-r1:70b                70.6B Q4 ~43GB  11–20    ~15
+  laguna-s-2.1:Q4_K_M            MoE 118B/A8B    35–65    ~48
+  qwen3-next:80b                 MoE A3B 50GB    70–130   ~95
+  llama3.1:8b                    8B ~4.9GB       75–130  ~100
+  qwen3:8b                       8.19B 5.2GB     70–125   ~95
+  llama3.2:3b                    3.21B 2.0GB    150–250  ~190
+  deepseek-r1:32b                32.8B ~20GB     25–45    ~35
+  granite3.3:8b                  8B 4.9GB        75–130  ~100
+  qwen3.8:27b                    27.3B ~18GB     28–50    ~38
+  qwen35-40b-heretic-q8          2.2GB reported  UNTRUSTED inspect metadata
+  *-cloud / WORMGPT              N/A or insufficient metadata
+
+SHOWCASE_FIRST_IF_EXPERT_LOCALITY=
+  deepseek-coder-v2 ~135
+  nemotron-3.5-lightning ~100
+  ornith-35b ~100
+  qwen3-next-80b ~95
+  gpt-oss-120b ~75
+  laguna-s-2.1 ~48
+  deepseek-v4-flash ~40
+  bigdaddyg-69b-q2k ~27
+  deepseek-r1-70b ~15
+
+COLLAPSE_IF=
+  MoE touches full artifact every token → fall back to size/bandwidth scaling
+
+GOVERNING_NEXT=
+  DEEP2_PACKED_Q2K_PRODUCT_DUAL_AGGREGATE_001
+  AGGREGATE_BW mint only PRODUCT_LINKED∧PACKED_Q2K_LIVE∧MATERIAL_OVERLAP

@@ -1,0 +1,35 @@
+﻿G3_IDE_PARITY_RELINK_001 RECEIPT
+WHEN=2026-09-10T01:30-ish local
+TREE=G:\~dev\rawrxd
+PROMOTE=0 TIP_CLIMB=HOLD
+
+INFERENCEENGINE_LIB=G:\~dev\rawrxd\build-fd\InferenceEngine.lib
+INFERENCEENGINE_LIB_BYTES=215506752
+INFERENCEENGINE_LIB_MTIME=2026-09-10T01:25:08.7452224-04:00
+
+LIVE_BINARY=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE_headless_live.exe
+LIVE_BYTES=329344512
+LIVE_MTIME=2026-09-10T01:28:56.9334410-04:00
+LIVE_PORT=11435
+LIVE_PID=9440
+
+PARITY_SMOKE Origin:null
+  GET  /api/health           = 200
+  GET  /api/backends         = 200
+  GET  /api/backends/status  = 200
+  GET  /api/agents           = 200
+  GET  /api/agents/status    = 200
+  GET  /api/agents/history   = 200
+  GET  /api/failures         = 200
+  POST /api/chat             = 503 model_not_loaded  (routed; NOT 404)
+  POST /api/tool             = 403 motd_required     (sealed; NOT reopen)
+
+PRIOR_BLOCKER
+  LIVE_PARITY_ROUTES=NOT_SHIPPED / CVT1107->LNK2019
+CLEARED_BY
+  matching InferenceEngine.lib rebuild + Win32IDE relink + headless_live deploy
+
+NON_GOALS
+  no /api/tool lane reopen
+  no CORS proxy
+  no climb / DualStick reopen

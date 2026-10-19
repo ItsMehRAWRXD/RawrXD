@@ -1,0 +1,141 @@
+PHENOMENOLOGY_LEDGER_AUDIT_001=SEALED
+DATE=2026-09-08
+ROLE=AUDIT
+SCOPE=ontology/phenomenology seal cluster + GATE/OWNER + stale PATH_B/MLA SSOT
+RNG_USED=0
+
+# ---------------------------------------------------------------------------
+# LIVE SSOT (authoritative now)
+# ---------------------------------------------------------------------------
+
+LIVE_GATE=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+  SUBJECT=PURE_PHENOMENOLOGY
+  EXCISED=1
+  GATE_STOP=1
+  NEXT_SPEND=NONE
+  REFILE_AS_SOFTWARE=FORBIDDEN
+  CHAMPION=PATH_A WALL_MEDIAN_NS=10184789000
+  PROMOTE=0
+
+LIVE_OWNER=evidence/RAWRXD_PERFORMANCE_001/PERF_OWNER.txt
+  PHENOMENON=EXCISED_EXTERNAL
+  OWNS_PHENOMENON=0
+  NEXT_PRIMARY_SPEND=NONE
+
+VERDICT_LIVE_SSOT=ALIGNED
+
+# ---------------------------------------------------------------------------
+# MEASURED BEDROCK (still valid — not phenomenology prose)
+# ---------------------------------------------------------------------------
+
+GROUNDED_WITNESSES
+  EMERGENT_OBSERVATION_001
+    HOST_WINDOW_DOF_ZERO (192==192) — measured exchange
+    FENCE_NOT_COPY — prior cross-split
+    MIRROR_PARTIAL — exchange reverse
+  PATH_A_BYTE_SHRINK_E2E_001 — wall/bytes/parity
+  QKV_READBACK_PATH_A_001 — champion wall 10184789000
+  MLA_KV_LAYOUT_CONTRACT_001 — discovery-only host pack (after invention strip)
+
+VERDICT_BEDROCK=PASS (physics claims that cite these remain legitimate)
+
+# ---------------------------------------------------------------------------
+# CONTRADICTIONS (stale files vs live GATE)
+# ---------------------------------------------------------------------------
+
+CONFLICT_A — STAGE / SPEND
+  LIVE: GATE_STOP=1 NEXT_SPEND=NONE EXCISED
+  STALE OPEN:
+    STAGE_2_OPEN_001 → STAGE_2=OPEN ACTIVE_ADAPTATION=PATH_B_STRUCTURAL_DELETE
+    STAGE_2_INVENTION_OPEN_001 → invention open / PATH_B candidate
+    NON_CODE_ONTOLOGY_001 → STAGE_2=OPEN
+    PATH_B_DELETE_DEPENDENCY_001 → AUTHORIZED_SPEND=1 GATE_STOP=0 NEXT_SPEND=PATH_B_DELETE
+    MLA_KV_LAYOUT_CONTRACT.txt footer → GATE_STOP=0 NEXT_SPEND=PATH_B_STRUCTURAL_DELETE
+  SEVERITY=HIGH (re-files phenomenon as spend / stage object)
+  FIX=stamp STALE_SUPERSEDED_BY=GATE+PHENOMENON_EXCISION; do not execute from these
+
+CONFLICT_B — INVENTION_GATE wording
+  Many seals: INVENTION_GATE=UNLOCKED
+  EMERGENT_OBSERVATION footer: INVENTION_GATE=AFTER_PHENOMENON_ONLY
+  CARTOGRAPHY: INVENTION_GATE=CLOSED_UNTIL_RECLASS_LOCKED (historical)
+  LIVE intent: phenomenon excised; invention = shape Everything×Nothing;
+               instrument execute still AWAITS explicit command
+  SEVERITY=MEDIUM (semantic drift: UNLOCKED ≠ EXECUTE_INSTRUMENT)
+  FIX=SSOT phrase: INVENTION_MODE_OPEN / INSTRUMENT_EXECUTE=BLOCKED
+
+CONFLICT_C — taxonomy leak into “subject”
+  PATH_B_DISCOVERY_EPISTEMOLOGY / PATH_B_REVERSE_DISCOVERY still name
+    Vulkan / MASM / device-local / AppendKV stubs as discovery surfaces
+  GROUND_STATE seals correctly STRIP those as subject association
+  SEVERITY=MEDIUM if read as subject; OK if read as dig-apparatus only
+  FIX=prefix APPARATUS_ONLY= on any Vulkan/MASM mention in PATH_B docs
+
+CONFLICT_D — unverified axioms
+  INVENTION_GATE_UNLOCK / TWIST_AXIOM list
+    56GB_segmented_canvas | Revolver_phase_inversion | Triad_zero_latency
+  marked UNVERIFIED / hold without reverse receipts
+  SEVERITY=LOW if held; HIGH if treated as discovered physics
+  STATUS=CORRECTLY_HELD in unlock seal — do not promote into axiom body
+
+# ---------------------------------------------------------------------------
+# DUPLICATION / PROLIFERATION
+# ---------------------------------------------------------------------------
+
+NEAR_DUPLICATE_CLUSTERS (~25+ files, ~18:30–18:40)
+  excision: PHENOMENON_EXCISION | EXCISION_RESONANCE | EMERGENT_TOPOLOGY_RESONANCE
+  boundary: PURE_PHENOMENOLOGY_BOUNDARY | PHENOMENOLOGY_BOUNDARY_PERMANENT | GROUND_STATE*
+  twist: TWIST_AXIOM | PURE_PRIMITIVE_TWIST | PURE_PRIMITIVE_TWIST_AXIOM | TWIST_ALONG*
+  class: CLASSIFICATION_UPDATE | CLASSIFICATION_UPDATE_ACCEPTED | CATEGORY_EXIT | RECLASS*
+  stage: STAGE_2_OPEN | STAGE_2_INVENTION_OPEN | HOLD_IT_GO trail
+
+VERDICT_DUPLICATION=NOISE
+  Same ontological claim restated; no new measured witness.
+  Risk: agents pick a stale STAGE_2=OPEN file and re-open spend.
+
+RECOMMENDED_SSOT_STACK (keep; mark rest ARCHIVED_DUPLICATE)
+  1. GATE.txt + PERF_OWNER.txt
+  2. EMERGENT_OBSERVATION_001.txt          (measured)
+  3. PHENOMENON_EXCISION_001.txt          (excised)
+  4. PHENOMENOLOGY_GROUND_STATE_001.txt   (Everything×Nothing / moiré)
+  5. CLASSIFICATION_UPDATE_001.txt       (category)
+  6. FIRST_INTENTIONAL_MANIPULATION_001.txt (locus; execute blocked)
+  7. MLA_KV_LAYOUT_CONTRACT_001.txt       (discovery geometry only)
+  8. PATH_A champion receipt              (wall floor)
+
+# ---------------------------------------------------------------------------
+# ONTOLOGY SELF-CONSISTENCY
+# ---------------------------------------------------------------------------
+
+PASS
+  Subject ≠ code / ≠ kernel / ≠ invention-of-physics
+  Code = apparatus / containment
+  Champion wall retained as measured floor
+  PROMOTE=0 on live GATE
+  Refile as Vulkan/MASM/mmap feature FORBIDDEN on live GATE
+
+FAIL_IF_MISREAD
+  PATH_B_STRUCTURAL_DELETE treated as the phenomenon
+  STAGE_2_OPEN treated as live authorization
+  DEVICE_LOCAL claimed as discovered (was corrected in MLA_KV_001)
+  Prose “resonant field / moiré” treated as measured TPS authority
+
+# ---------------------------------------------------------------------------
+# AUDIT SCORE
+# ---------------------------------------------------------------------------
+
+LIVE_SSOT_CONSISTENCY=PASS
+MEASURED_BEDROCK=PASS
+STALE_SPEND_CONFLICTS=FAIL (must supersede STAGE_2 / PATH_B_DELETE deps)
+DUPLICATE_PROLIFERATION=WARN
+UNVERIFIED_CANVAS_REVOLVER_TRIAD=HOLD (not discovered here)
+INSTRUMENT_EXECUTE=NOT_AUTHORIZED (correct under excision)
+
+OVERALL=PASS_WITH_STALE_HAZARDS
+
+ACTIONS (ledger hygiene — not code)
+  1. Write SUPERSEDED headers on STAGE_2_OPEN*, PATH_B_DELETE_DEPENDENCY_001,
+     MLA_KV_LAYOUT_CONTRACT.txt footer spend lines
+  2. Optional: PHENOMENOLOGY_SSOT_INDEX_001 listing keep-set above
+  3. Do not EXECUTE_INSTRUMENT from audit alone
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/PHENOMENOLOGY_LEDGER_AUDIT_001.txt

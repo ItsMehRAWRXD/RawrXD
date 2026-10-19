@@ -1,0 +1,24 @@
+GATE=G3_HEADLESS_API_TOOL_UNSTUB_001
+AUTHORITY=HeadlessIDE product API tool/file/command unstub (not champion; not TIP climb)
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+RESTORED=
+  /api/tool and sibling public command/file routes on HeadlessIDE local loopback
+  Tool dispatcher executeToolRepl with MOTD gate + real CreateProcess execute_command
+  MOTD discovery via workingDir/cwd/module-parent walk for PassiveRoleNotRoleplay.md
+
+STILL_VETO=
+  LOCAL_ONLY_NO_OLLAMA — do not reintroduce Ollama for streamer/inference
+  motd_required before non-MOTD tools (PassiveRoleNotRoleplay)
+  Directory traversal / unsafe path components
+  Hosted non-loopback auth/origin gates
+  Headless Server-profile /api/instructions → 503 instructions_unavailable_in_server_profile (profile hold)
+  DualStick TIP_CLIMB / rainbow / TPS chase (already CLOSURE; out of lane)
+
+NOT_CLAIMED=
+  GUI Win32 LocalServer supersession on :11435 while headless owns port
+  Full parity of every Win32IDE file op (delete/rename/copy/move/search) — available via execute_command
+  Agent chatbot agenticMode default-on (client still default false)
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700

@@ -1,0 +1,36 @@
+GATE=DEEP2_REMAINING_WORK_INVENTORY_20260913
+DATE=2026-09-13
+KIND=PLANNING_INVENTORY_NOT_AUTHORITY
+PROMOTE=0
+TPS_MINT=0
+PRODUCT_BOUND=0
+NOT_RUN!=PASS
+
+# ~9 major / ~25–35 concrete remaining. Architecture ≠ missing engine.
+
+MAJOR=
+  1 PHYSICAL_RELOAD_ENVELOPE_001 (Belady RECORD→D0→D-sweep → AFTER≤~350×2)
+  2 V7_TRACE_LOCKED_MATURITY_001
+  3 Dual-GPU expert placement production scheduler
+  4 Hot/cold admission + reclaim geometry (beyond Belady)
+  5 Full-model sustained TPS authority mint
+  6 Universal quant/kernel coverage
+  7 Streaming loader productionization
+  8 Tokenizer + GGUF family compatibility
+  9 Productize rawr runtime loop (CLI/API/endurance)
+
+SUBPIECE_BAND≈25–35
+COMPLETION_EST_NONAUTH=
+  core arch ~90–95%
+  stream/runtime ~85–90%
+  dual-GPU perf ~75–85%
+  large-model residency ~70–80%
+  universal compat ~70–80%
+  product/endurance ~80–90%
+  FULL_E2E ~82–88%
+
+SINGLE_LARGEST_BLOCKER=PHYSICAL_RELOAD_ENVELOPE_001
+CURRENT_OWNER=PHYSICAL_RELOAD_ENVELOPE_001
+LIVE=COLD_REUSE_DISTANCE_GUARD_001
+  PROTOCOL=RECORD_GEN8 → D0_ORACLE_REPLAY → D-sweep
+B_C_BLOCKED_UNTIL_A_AFTER_SEAL=1

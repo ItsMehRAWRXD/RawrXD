@@ -1,0 +1,5 @@
+dxgi.dll
+KERNEL32.dll
+pdh.dll
+vulkan-1.dll
+IMPORT_DLL_COUNT_DUMPBIN=0

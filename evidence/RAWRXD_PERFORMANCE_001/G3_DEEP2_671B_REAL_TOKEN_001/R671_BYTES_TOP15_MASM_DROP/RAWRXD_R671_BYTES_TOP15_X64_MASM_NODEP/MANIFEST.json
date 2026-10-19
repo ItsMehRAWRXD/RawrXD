@@ -1,0 +1,47 @@
+[
+  {
+    "file": "README.md",
+    "bytes": 631,
+    "sha256": "d53ab71cd8ac89d544403a30ee02b710adec7b48833ee22373c4a26fb39bb2f8"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 2906,
+    "sha256": "9ff5d27c94aed6ebaba03b1b97b914217af52943c58dd1b8241b1e56544364bf"
+  },
+  {
+    "file": "TOP15_BYTES.txt",
+    "bytes": 1197,
+    "sha256": "a111e66917c6e64dbd71d078e28dbfedd3f4a81cd40cecda029216dfa723afdc"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 532,
+    "sha256": "3bb1bea9a64920723bcdd2f340e25dd48090f5e17479e187aa76656be03acc15"
+  },
+  {
+    "file": "positive_harness.asm",
+    "bytes": 1376,
+    "sha256": "b72434836a4c892f057c091acfffc0d50deba7459c87d3ad26482ed1fa0ffc83"
+  },
+  {
+    "file": "r671_bytes15.asm",
+    "bytes": 7402,
+    "sha256": "1977ccaeb7aaa4616b7ad0b8cd149b753364d8c628203a5e8dd714426f58d2a4"
+  },
+  {
+    "file": "r671_bytes15.inc",
+    "bytes": 1965,
+    "sha256": "bc9b2d732ed41c73ca1f09c9330451693e1d34efd795a72616fb26eefd00b1b4"
+  },
+  {
+    "file": "tamper_harness.asm",
+    "bytes": 747,
+    "sha256": "851841f15127794e770672d7ee4026129a19bc4eb7c2b3c379be769e888ec989"
+  },
+  {
+    "file": "zero_harness.asm",
+    "bytes": 438,
+    "sha256": "3b17321988da648f803167112f1362ae3de74586f3c9c088cb4a2fe8f8509920"
+  }
+]

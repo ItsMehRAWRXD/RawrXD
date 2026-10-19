@@ -1,0 +1,53 @@
+NEMOTRON_HYBRID_TOPOLOGY_001
+DATE=2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+BAK=build-fd\bin\deep2_streamer_parity.exe.bak_pre_hybrid
+PROMOTE=0
+OLLAMA_HTTP=0
+DEEP2_MINIMAL_ENHANCE=1
+RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+
+## Closed this drop — open past layer_topology / SealLadder FFN
+
+PREVIOUS
+  BLOCKED_AT=layer_topology (manifest) + BindLlamaSchema / SealFromLoad FFN
+
+LANDED (header + Deep2Engine.obj refresh under MINIMAL enhance)
+  DynamicPersistentModelManifest.hpp — hybrid SSM / FFN-only ready
+  Gemma4LayerTopologyBind.hpp — HasSsm / ffn_only / GeometryReady hybrid
+  AuthorityBridge.hpp
+    SealFromLoad heal via session geom when array-FFN SealFromLoad fails
+    nemotron_h schema+quant DEFER; SealTokEog with VOCAB from metadata
+
+SMOKE — tinyllama tok8
+  AUTHORITY_LADDER=PASS
+  ENHANCEMENT STACK: MINIMAL
+  Generation complete 8 tokens (E2E ~5.45 TPS)
+  CRASH_OBSERVED=0 CLEAN_EXIT=1
+  (process exit code may be non-zero from parity/cert remappers when tok!=64)
+
+SMOKE — Nemotron-3-Nano-4B-Q8 tok8 (SSM allow)
+  MANIFEST_READY=1 BLOCKED_AT=NONE
+  GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_HYBRID_SSM
+    layers=42 split=4 ssm=21 ffn_only=17 unknown=0
+  SEAL_FROM_LOAD_HEAL=1 arch=nemotron_h FFN=12544
+  NEMOTRON_H_SCHEMA_DEFER=1 vocab=131072
+  AUTHORITY_LADDER=PASS schema=0 quant=0 tok=131072
+  PREFILL_OBSERVED + DECODE_OBSERVED TOKENS_COMMITTED=8
+  Generation complete ~0.28 E2E TPS (approx SSM; text not quality-certified)
+  STREAM_ERROR cleared (was open_failed)
+
+## Still open (not closed)
+
+1) enableVulkan heap (C0000374) — full enhance stack still unsafe;
+   production decode for product path should not rely on MINIMAL forever.
+2) SSM-CERT-001 — production refuse without RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1;
+   approximate selective-scan is scaffolding only (NOT_CERTIFIED).
+3) False cert remap when maxTok!=64 (BLOCKED_AT=64_TOKEN_PRODUCT_RUN cosmetic).
+4) Product/agent binaries not yet relinked to this IE; agent broker modelDecision
+   is still a counter, not ProductDeep2.
+
+## Law
+  TIP_CLIMB=HOLD PROMOTE=0
+  Hybrid topology + schema defer = open/compat only, not champion promote

@@ -1,0 +1,44 @@
+﻿{
+    "receipt_id":  "WALL_ATTRIB_XR_64_001",
+    "result":  "PASS_ATTRIB",
+    "promote":  0,
+    "date":  "2026-09-08",
+    "decode_tps_real":  2.567,
+    "generation_wall_ns":  24758109000,
+    "q_branch_us":  3449377,
+    "qkv_readback_us":  0,
+    "qkv_exposed_us":  10697145,
+    "logits_exposed_us":  7555017,
+    "mla_q_device_ops":  0,
+    "mla_q_device_fail":  0,
+    "argmax_parity":  1,
+    "actual_e2e":  1,
+    "product_floor_tps":  5,
+    "wall_within_budget":  0,
+    "product_pass":  0,
+    "k2_product_5tps":  "OPEN",
+    "prior_seal_tps":  3.556,
+    "champion_generation":  "wall64_xr_20260908-083020",
+    "witness_log":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/wall64_xr_20260908-083020.log",
+    "attrib_receipt":  "evidence/RAWRXD_PERFORMANCE_001/WALL_ATTRIB_XR_64_001.txt",
+    "next_runtime_action":  "QKV_EXPOSURE_CUT",
+    "forced_off":  {
+                       "TOKEN_PACING":  "OFF",
+                       "DEEP2_CERT_STEP_LOG":  "0",
+                       "DEEP2_LOGITS_GPU_SPLIT":  "0",
+                       "DEEP2_MLA_Q_DEVICE_FORCE_OFF":  "0",
+                       "QKV_OWNER_RESI_LOG":  "0",
+                       "TOK_RESIDUAL_SPAM":  "0"
+                   },
+    "forced_on":  {
+                      "DEEP2_MLA_Q_DEVICE":  "1",
+                      "DEEP2_WEIGHT_PIN":  "1",
+                      "DEEP2_MLA_FUSED_Q4KT":  "1",
+                      "DEEP2_LOGITS_THREADS":  "32",
+                      "TOKEN_PACING":  "OFF"
+                  },
+    "do_not_reopen":  [
+                          "KvaRowsClimb",
+                          "ProductAuthority"
+                      ]
+}

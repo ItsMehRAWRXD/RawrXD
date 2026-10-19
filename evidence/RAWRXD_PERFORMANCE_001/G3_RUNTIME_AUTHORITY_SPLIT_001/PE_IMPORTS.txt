@@ -1,0 +1,242 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Section contains the following imports:
+
+    dxgi.dll
+             14018C460 Import Address Table
+             1401DBEA8 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                           3 CreateDXGIFactory
+
+    vulkan-1.dll
+             14018C4A0 Import Address Table
+             1401DBEE8 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                          34 vkCmdPipelineBarrier
+                          F8 vkResetCommandBuffer
+                          FC vkResetFences
+                          36 vkCmdPushConstants
+                          23 vkCmdDispatch
+                           E vkCmdBindDescriptorSets
+                          12 vkCmdBindPipeline
+                          C2 vkGetFenceStatus
+                           3 vkAllocateDescriptorSets
+                          88 vkDestroyDescriptorPool
+                          6A vkCreateDescriptorPool
+                          89 vkDestroyDescriptorSetLayout
+                          6B vkCreateDescriptorSetLayout
+                          94 vkDestroyPipelineLayout
+                          79 vkCreatePipelineLayout
+                          92 vkDestroyPipeline
+                          69 vkCreateComputePipelines
+                          9B vkDestroyShaderModule
+                          81 vkCreateShaderModule
+                          1A vkCmdCopyBuffer
+                          9F vkEndCommandBuffer
+                         106 vkUpdateDescriptorSets
+                          A8 vkFreeCommandBuffers
+                           2 vkAllocateCommandBuffers
+                          87 vkDestroyCommandPool
+                          68 vkCreateCommandPool
+                          85 vkDestroyBuffer
+                          66 vkCreateBuffer
+                         107 vkWaitForFences
+                          8D vkDestroyFence
+                          71 vkCreateFence
+                          AC vkGetBufferMemoryRequirements
+                           6 vkBindBufferMemory
+                         103 vkUnmapMemory
+                          F0 vkMapMemory
+                          AA vkFreeMemory
+                           4 vkAllocateMemory
+                          9E vkDeviceWaitIdle
+                          F7 vkQueueWaitIdle
+                          F5 vkQueueSubmit
+                          BA vkGetDeviceQueue
+                          8B vkDestroyDevice
+                          6D vkCreateDevice
+                          D7 vkGetPhysicalDeviceMemoryProperties
+                          DC vkGetPhysicalDeviceQueueFamilyProperties
+                          DA vkGetPhysicalDeviceProperties
+                          A6 vkEnumeratePhysicalDevices
+                          91 vkDestroyInstance
+                          77 vkCreateInstance
+                           5 vkBeginCommandBuffer
+
+    pdh.dll
+             14018C470 Import Address Table
+             1401DBEB8 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                           E PdhCollectQueryData
+                           0 PdhAddCounterA
+                          4E PdhOpenQueryA
+                           D PdhCloseQuery
+                          3D PdhGetFormattedCounterValue
+
+    KERNEL32.dll
+             14018C000 Import Address Table
+             1401DBA48 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                         556 SetEndOfFile
+                         65F WriteConsoleW
+                         593 SetStdHandle
+                         1D3 FreeEnvironmentStringsW
+                         262 GetEnvironmentStringsW
+                         2C6 GetOEMCP
+                         1DB GetACP
+                         3BE IsValidCodePage
+                         382 HeapQueryInformation
+                         385 HeapSize
+                         383 HeapReAlloc
+                         4A6 ReadConsoleW
+                         55A SetEnvironmentVariableW
+                         225 GetConsoleMode
+                         229 GetConsoleOutputCP
+                         1C8 FlushFileBuffers
+                         27A GetFileType
+                         17B EnumSystemLocalesW
+                         349 GetUserDefaultLCID
+                         3C0 IsValidLocale
+                         291 GetLocaleInfoW
+                         3E4 LCMapStringW
+                          B3 CompareStringW
+                         1C3 FlsFree
+                         1C6 FlsSetValue
+                         1C4 FlsGetValue
+                         1C2 FlsAlloc
+                         380 HeapFree
+                         37C HeapAlloc
+                         200 GetCommandLineW
+                         1FF GetCommandLineA
+                         186 ExitProcess
+                         2A1 GetModuleFileNameW
+                         303 GetStdHandle
+                         1D5 FreeLibraryAndExitThread
+                         187 ExitThread
+                         10F CreateThread
+                         3F6 LoadLibraryExW
+                         5EB TlsFree
+                         5EE TlsSetValue
+                         5EC TlsGetValue
+                         5EA TlsAlloc
+                         396 InitializeCriticalSectionAndSpinCount
+                         517 RtlUnwindEx
+                         5D8 TerminateProcess
+                         301 GetStartupInfoW
+                         5FB UnhandledExceptionFilter
+                         3B0 IsDebuggerPresent
+                         518 RtlVirtualUnwind
+                         2A5 GetModuleHandleW
+                         559 SetEnvironmentVariableA
+                         2A0 GetModuleFileNameA
+                         19D FindClose
+                         1A1 FindFirstFileA
+                         1B2 FindNextFileA
+                         26B GetFileAttributesA
+                         2E4 GetProcessHeap
+                         388 HeapValidate
+                         614 VirtualAlloc
+                         617 VirtualFree
+                         246 GetCurrentThreadId
+                         481 QueryPerformanceCounter
+                         482 QueryPerformanceFrequency
+                          DE CreateFileA
+                         660 WriteFile
+                          9D CloseHandle
+                         64C WideCharToMultiByte
+                         278 GetFileSizeEx
+                         242 GetCurrentProcessId
+                         5FE UnmapViewOfFile
+                         245 GetCurrentThread
+                         59C SetThreadAffinityMask
+                         61C VirtualQuery
+                         4A9 ReadFile
+                         28D GetLastError
+                         412 MapViewOfFile
+                          DF CreateFileMappingA
+                         241 GetCurrentProcess
+                         5A7 SetThreadPriority
+                         5A8 SetThreadPriorityBoost
+                         2DE GetProcessAffinityMask
+                         371 GlobalMemoryStatusEx
+                         1D4 FreeLibrary
+                         3F4 LoadLibraryA
+                          E6 CreateFileW
+                         423 MultiByteToWideChar
+                         2C7 GetOverlappedResult
+                         1C9 FlushInstructionCache
+                         61A VirtualProtect
+                         583 SetProcessAffinityMask
+                         2DD GetProcAddress
+                         5B8 SetUnhandledExceptionFilter
+                         263 GetEnvironmentVariableA
+                         578 SetLastError
+                         569 SetFilePointerEx
+                         511 RtlLookupFunctionEntry
+                         402 LocalFree
+                         1CF FormatMessageA
+                         290 GetLocaleInfoEx
+                          D4 CreateDirectoryW
+                         1A8 FindFirstFileW
+                         1A3 FindFirstFileExW
+                         1B4 FindNextFileW
+                         270 GetFileAttributesW
+                         26D GetFileAttributesExW
+                         27C GetFinalPathNameByHandleW
+                         516 RtlUnwind
+                         566 SetFileInformationByHandle
+                         329 GetTempPathW
+                          25 AreFileApisANSI
+                         273 GetFileInformationByHandleEx
+                         4EA ReleaseSRWLockExclusive
+                           0 AcquireSRWLockExclusive
+                         5F2 TryAcquireSRWLockExclusive
+                         513 RtlPcToFileHeader
+                         498 RaiseException
+                         5CA SleepConditionVariableSRW
+                         5C8 Sleep
+                         62E WakeConditionVariable
+                         62D WakeAllConditionVariable
+                         626 WaitForSingleObjectEx
+                         5D3 SwitchToThread
+                         268 GetExitCodeThread
+                         2B2 GetNativeSystemInfo
+                         2A4 GetModuleHandleExW
+                         3B8 IsProcessorFeaturePresent
+                         397 InitializeCriticalSectionEx
+                         31A GetSystemTimeAsFileTime
+                         157 EnterCriticalSection
+                         3F0 LeaveCriticalSection
+                         12F DeleteCriticalSection
+                         153 EncodePointer
+                         128 DecodePointer
+                         3E3 LCMapStringEx
+                          B1 CompareStringEx
+                         1EA GetCPInfo
+                         308 GetStringTypeW
+                         39A InitializeSListHead
+                         509 RtlCaptureContext
+
+  Summary
+
+      39F000 .data
+        1000 .fptable
+        F000 .pdata
+       52000 .rdata
+        1000 .reloc
+        1000 .rsrc
+      18B000 .text

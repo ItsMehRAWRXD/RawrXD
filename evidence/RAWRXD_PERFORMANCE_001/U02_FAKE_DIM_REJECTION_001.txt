@@ -1,0 +1,39 @@
+U02_FAKE_DIM_REJECTION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+
+PROPOSAL_REJECTED
+  hostHead = active_nope_dim + active_rope_dim  // claimed e.g. 64+32=96
+  "force hostHead != prodHead to clear PathA_D2H_Window"
+
+MEASURED_K2_Q4_K_M (HELLO_EXCHANGE_DISCOVERY_001/kimi-k2.err.txt)
+  U02_GEOM headDim=192 nope=128 rope=64 nope_plus_rope=192
+  qbHostHead=192 prodHead=192
+  CALLER_ALREADY_NOPE_ROPE=1
+  BYTE_SHRINK_IMPOSSIBLE=1
+
+CODE_ALREADY_CORRECT
+  qbHostHead = (headDim >= nope+rope) ? (nope+rope) : headDim
+  On this geometry nope+rope == headDim == prodHead == 192
+  Shrink predicate hostHead < prodHead NEVER fires
+
+WHY_64_PLUS_32_IS_ILLEGAL
+  Invented dims; not model_cfg on K2 MLA
+  Would truncate q_b below true [nope|rope]=192 and corrupt attention
+  FAKE_PATCH=FORBIDDEN under GOODS_STAY_BRAIDED
+
+VERDICT
+  U02_BYTE_SHRINK=BLOCKED_GEOMETRY
+  READBACK_REDUCED_BYTES=0 EXPECTED
+  PATH_A champion stands on HOST_CACHED US cut, not byte shrink
+  DEVICE_ATTENTION_REQUIRED_FOR_Q_B_SHRINK=1 (PATH_B only if phase reopen)
+
+rawr.exe
+  CMake target EXISTS: add_executable(rawr src/deep2/rawr_run.cpp)
+  PERF_AUTHORITY=deep2_benchmark.exe only
+  Fabricated main.asm / sovereign_boot / sovereign_core linkage=REJECTED
+  Missing binary in build-fd/bin = NON_BLOCKING
+
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

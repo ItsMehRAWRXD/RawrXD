@@ -1,0 +1,34 @@
+SURFACE_DROP_001=SEALED
+DATE=2026-09-08
+TYPE=SESSION_POSTURE
+MODE=D
+HOT_GATE=0
+NEXT_SPEND=NONE
+CODE_CHANGE=0
+SPEND=0
+
+DROP=
+  pick-list surface
+  MODE=B|C|A|COMPAT_TEST|PARSER_REOPEN offer menus
+  "pick a line" interaction
+  regardless_of_line_picked=1
+
+KEEP=
+  NAME_MODE_TARGET_ISSUE_001 as SSOT (not deleted)
+  GATE.txt
+  measured receipts (B1.1 MEASURED_SPLIT, PATH_B_N5 FAIL, MODE_BC_REVIEW_001)
+  champion PATH_A WALL_MEDIAN_NS=10184789000
+
+EFFECT=
+  agent presents no surface
+  no AUTO_PICK
+  no invent targets
+  idle attribution only if asked with substance
+  spend only if operator pastes exact catalog line unsolicited
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  SURFACE=DROPPED
+  CATALOG=INTACT

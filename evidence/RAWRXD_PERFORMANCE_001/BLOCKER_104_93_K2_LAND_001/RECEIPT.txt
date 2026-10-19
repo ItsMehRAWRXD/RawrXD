@@ -1,0 +1,55 @@
+BLOCKER_104_93_K2_LAND_001=SEALED
+DATE=2026-09-09
+TYPE=CORRECTNESS_GATE_OBSERVED
+SURFACE=Deep2 K2 generateStream (NOT Markov/IDE)
+PROMOTE=0
+SIMULATION=0
+TIP_CLIMB=HOLD
+
+CODE_LAND=1
+OBSERVED_WITNESS=PASS
+STAMP=20260909-011253
+SSOT=witness_20260909-011253.log
+EXE=build-fd/bin/deep2_benchmark.exe (rebuilt 2026-09-09 01:11)
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+ARGV=--phase single --prompt "def fib(n):" --max-tokens 64
+ENV=DEEP2_K2_SHARD_DIR + DEEP2_REAL_K2_GENERATE=1 (MARS unset)
+
+BLOCKER_104=
+  OWNER=K2NativeStreamGate::ForwardMLALayers
+    RoPE = g_streamTlsKv.currentLength(); Commit → NotePositions(len)
+  OBSERVE=Finalize(Acc.kvPos | r.kvLength | ModelKvCurrentLength)
+  LIVE=
+    POS_DUMP TOKEN_INDEX=0 ROPE_POSITION=1 KV_POSITION=1 POSITION_MATCH=1
+    POS_DUMP TOKEN_INDEX=1 ROPE_POSITION=2 KV_POSITION=2 POSITION_MATCH=1
+    POS_DUMP TOKEN_INDEX=2 ROPE_POSITION=3 KV_POSITION=3 POSITION_MATCH=1
+    FINAL TOKEN_INDEX=64 ROPE_POSITION=64 KV_POSITION=64 POSITION_MATCH=1
+  GATE=BLOCKER_104_POSITION_COUNTER_AUTHORITY=PASS
+
+BLOCKER_93=
+  OWNER=GGUFTokenizerLoad → NoteSpecials + Config.eosTokenId
+  LOAD=[Deep2Engine] K2 tokenizer loaded: vocab=163840 bos=163584 eos=163586
+  LIVE=BOS_ID=163584 EOS_ID=163586 PAD_ID=163839 UNK_ID=0
+       SPECIAL_TOKEN_SOURCE=gguf SPECIAL_TOKEN_VALID=1
+  GATE=BLOCKER_93_SPECIAL_TOKEN_AUTHORITY=PASS
+
+VS_PRIOR_mars_off_clean=
+  THEN BOS/EOS=-1 SPECIAL=none → BLOCKER_93=BLOCKED (positions already matched)
+  NOW  BOS/EOS live from gguf → BLOCKER_93=PASS
+
+PARENT=REVERSE_ENGINEERED_BLOCKERS_001
+DISCARD=
+  CPU_FALLBACK_001 narrative
+  Simulated nano generate_stream / RawrNanoAuthority mock Tokenizer+Orchestrator
+  Misattr: NotePositions(prompt+count) in streamer — REMOVED; owner is KV Commit
+  Claim: LivePath_BeginGenerate = always-on multi-stream artificial aiming — FALSE
+    LivePath ≠ best-of-N / virtual stream inflation; no HardwareReflector::max_streams
+    in product K2 generateStream hotpath
+
+BENCH_NOTE=
+  ARGMAX_PARITY=1 TOKENS_COMMITTED=64
+  GENERATION_WALL_NS=13728266000 DECODE_TPS_REAL=4.656 (leg)
+  Not a TPS promote; floor retain remains MARS_OFF 5.323 / SEARCH_BASELINE.
+
+NEXT_PERF=O_PROJ overlap → QKV readback → PrefetchLayer arm
+  (TIP_CLIMB=HOLD; correctness closed, not TPS promote)

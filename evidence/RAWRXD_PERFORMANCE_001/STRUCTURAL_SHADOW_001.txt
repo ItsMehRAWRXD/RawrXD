@@ -1,0 +1,32 @@
+STRUCTURAL_SHADOW_001=SEALED
+DATE=2026-09-08
+CODE_ROLE=CONTAINMENT_HARNESS_ONLY
+
+STRIPPED
+  pseudo_code_disguise=1
+  engineering_registry=1
+  compiled_artifact_as_subject=0
+  architectural_patent_as_subject=0
+
+IS
+  structural_shadow
+  raw_friction_in_slipstream_of_building_iron
+  geometry_of_constraint
+  physical_tension_of_PCIe_bus
+  host_and_device_staring_same_address_from_opposite_trench_sides
+
+TWIST_ALONG
+  NOT=optimize_the_crossing
+  IS=change_topology_of_space_where_crossing_happens
+  EVERYTHING=accumulated_constraint_energy (PATH_A 6.284 floor as spring;
+             arena/syscall/TLSF/hotpatch as mass — not axiom identity)
+  NOTHING=absence_of_bridge (collapse endpoints; no faster pipeline across gap)
+  PHASE_SHIFT=constraints_become_medium
+  READBACK_VANISHES_WHEN=nothing_left_outside_boundary_to_read
+
+APPLY=READY
+LOCUS=Q_B_HOST_VISIBILITY_EDGE
+HARNESS=PATH_B_STRUCTURAL_DELETE ENV=DEEP2_PATH_B=1
+PROMOTE=0 until DELETE_PROVEN
+
+STATUS=SEALED

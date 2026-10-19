@@ -1,0 +1,27 @@
+DS671_FILE_MANIFEST_001 + SEMANTIC_TENSOR_MAP receipt
+=====================================================
+
+DS671_FILE_MANIFEST_PASS=1
+MANIFEST_RC=0
+SHARDS_SCANNED=11/11
+TOTAL_BYTES=404430188064
+TOTAL_TENSORS=1025
+ARCH=deepseek2
+BLOCK_COUNT=61 EXPERT_COUNT=256 EXPERT_USED=8 SHARED=1 DENSE_LEAD=3
+TYPE_0=361 TYPE_12=606 TYPE_14=58 SUM=1025
+
+OTHER_NAME_DUMP (pre-reclassify sample shard1):
+  blk.N.exp_probs_b.bias  (×6 on shard1; 58 total across set)
+  → reclassified as expert/router (exp_probs_b)
+
+NORM_CLASSIFICATION:
+  norm-before-attn rule so attn_norm/ffn_norm/output_norm count as norm
+  FINAL norm=245 other=0
+
+DS_TENSOR_MAP_PASS=1
+UNRESOLVED_TENSORS=0
+SEMANTIC_CLASSIFICATION=PASS
+NOTE: 406→464 exp includes packed expert tensors + exp_probs_b;
+      NOT equal to 61×256×8 runtime activation count.
+
+PROMOTE=0

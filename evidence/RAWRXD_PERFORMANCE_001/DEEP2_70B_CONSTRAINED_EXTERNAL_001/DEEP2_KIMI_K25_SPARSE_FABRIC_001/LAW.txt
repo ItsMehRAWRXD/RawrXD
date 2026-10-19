@@ -1,0 +1,52 @@
+GATE=DEEP2_KIMI_K25_SPARSE_FABRIC_001
+DATE=2026-09-13
+KIND=SOURCE_READY_UPSIDE
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+ACTIVATE_IF=V7_ACCEPT AND PHASE_A_GEOMETRY_PASS
+# Live owner remains V7 hetero cost matrix until ACCEPT
+
+TARGET_CLASS=
+  Kimi K2.5-class 1T total / ~32B active / 256K context
+  constraint ≠ trillion weights alone
+  constraint = keep active experts + long-context state + multi-agent working set local
+               so sparse 32B-active advantage survives on constrained DualStick hardware
+
+VIEW=
+  OLD: 1T → move weights → execute token
+  NEW: predict ~32B active → preserve experts → preserve shared 256K
+       → prefetch → share across agents → schedule only token-critical work
+       → MINIMIZE TOKEN_COMMIT_NS
+
+# Top 15
+# 1  Active-Parameter Critical-Path Compiler
+# 2  256K Tiered KV Fabric (VRAM→DDR5→mmap/NVMe)
+# 3  Expert-Future-Reuse Predictor (≠ LRU)
+# 4  Cross-Token Expert Prefetch
+# 5  DualStick Expert Replication Budget
+# 6  Context-Aware Expert Residency
+# 7  Prefix-KV Persistence
+# 8  Agent-Swarm Context Deduplication
+# 9  Agent Critical-Path Scheduler
+# 10 MoE+KV Joint Residency Optimizer
+# 11 Reasoning-Burst Adaptive Scheduling
+# 12 Long-Context Attention Tiling
+# 13 Cross-Agent Expert Heat Sharing
+# 14 Hardware-Trained K2.5 Cost Surface
+# 15 Local-Cost-per-Million Token Meter
+
+HIGHEST_VALUE_ORDER=
+  EXPERT_FUTURE_REUSE
+  → CROSS_TOKEN_PREFETCH
+  → MOE+KV_JOINT_RESIDENCY
+  → 256K_TIERED_KV
+  → PREFIX_KV_PERSISTENCE
+  → AGENT_CONTEXT_DEDUP
+  → CROSS_AGENT_EXPERT_HEAT
+  → HARDWARE_TRAINED_K2.5_SURFACE
+
+FEEDS_FROM=
+  V7 cost matrix / MachineExperience (after PRODUCT_BOUND)
+  DualStick 2+2 geometry
+  Token-graph compiler roadmap

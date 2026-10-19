@@ -1,0 +1,52 @@
+[
+  {
+    "file": "SOURCE_AUTHORITY.txt",
+    "bytes": 1063,
+    "sha256": "30246117fb66f6f5005f2fece8caae32fd5d924f935f382fe589ad0e591727d4"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 1402,
+    "sha256": "d59b4a6fec4db0991c1b6b3899712eb138893c94f1933d6d5729fa49f9b1ff03"
+  },
+  {
+    "file": "abi_smoke.asm",
+    "bytes": 2161,
+    "sha256": "92b39222c4b149b85498b24cb8b75af96fedd5851edc123c176e7a0f75912773"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 559,
+    "sha256": "61517fe863fd3898b7019050569243543e0804c38826a62c71880e9aba112402"
+  },
+  {
+    "file": "deep2_r671_primitive.asm",
+    "bytes": 3286,
+    "sha256": "ec5a6a01e863fcbc51a8c6b46e8579e5bc2139eb1c168ea9c066f12a1bc76d3c"
+  },
+  {
+    "file": "r671_abi.h",
+    "bytes": 1735,
+    "sha256": "67a560f3555a34702756ebe2e7e72b229a7745fb7bb01ac9c03f6dce5774a8b4"
+  },
+  {
+    "file": "r671_abi.inc",
+    "bytes": 2335,
+    "sha256": "2d6d18a932089dc8acc5a7befe39349ff41e3f652c3bf2c573de3dac89b1d395"
+  },
+  {
+    "file": "r671_core.asm",
+    "bytes": 7211,
+    "sha256": "352d388b1d68b31e9a90b191551ac773b2baf1d85b81af890fb4f7c5fe89ee52"
+  },
+  {
+    "file": "real_tensor_gate.asm",
+    "bytes": 1647,
+    "sha256": "2aa17278c0d69c50616f823e1d7d1cc6a031c18f991012bf8164ed5762835897"
+  },
+  {
+    "file": "real_tensor_gate.inc",
+    "bytes": 991,
+    "sha256": "5b84fabfa71504482a52a78d054fdbb7cce0052117ba28c47eb83a850bf57aac"
+  }
+]

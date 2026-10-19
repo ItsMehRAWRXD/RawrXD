@@ -1,0 +1,118 @@
+GATE=G3_IDE_RESIDUAL_AUDIT_001
+ASOF=2026-09-10T13:50
+KIND=RECEIPT_WITH_AMENDMENT
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+AUTHORITY_CHAIN=
+  RESIDUAL_TABLE          = CURRENT_DISPOSITION_AUTHORITY
+  KEY_WITNESSES           = CURRENT_SOURCE/WITNESS SNAPSHOT (see KEY_WITNESSES.txt ASOF)
+  RECEIPT T01:00          = HISTORICAL_TRIAGE_ONLY (body below; not current disposition)
+  RECEIPT T13:50 AMENDMENT= CURRENT_GATE_SUMMARY (this header + AMENDMENT section)
+
+PRIOR_RECEIPT_ASOF=2026-09-10T01:00
+PRIOR_RECEIPT_STATUS=SUPERSEDED_FOR_CURRENT_DISPOSITION
+PRIOR_TRIAGE_RETAINED_AS_HISTORY=1
+
+# =============================================================================
+# AMENDMENT ASOF=2026-09-10T13:50 — CURRENT_GATE_SUMMARY
+# Does not erase T01:00 observations; supersedes them for current disposition only.
+# =============================================================================
+
+DISPOSITION_AUTHORITY=RESIDUAL_TABLE
+
+R05=CLOSED
+R06=CLOSED
+AGENTIC_MODE_DEFAULT=false
+OLLAMA_DIRECT_URL=:11435
+GUI_11434_SCAN=0
+
+R01_R04=CLOSED_PER_SEAL_REFS
+R02=CLOSED_PER_SEAL_REF
+R01=CLOSED
+R01_REOPEN=0
+R01_PRE_FIX_ONESHOT_EXIT=-1=HISTORICAL_ONLY (see G3_IDE_RESIDUAL_R01_001/R01_AUTHORITY_UPDATE.txt)
+R01_PRE_FIX_NOT_CURRENT_REGRESSION=1
+R25_FORWARD_OPEN=0
+
+PARTIALS=R09,R12,R13,R14,R15,R20
+PARTIALS_REMAIN_OPEN=1
+R11=CLOSED
+R26=CLOSED
+
+GENERATE_AV=CLOSED
+BACKEND_11435=CLOSED
+OLLAMA_HEADLESS_REOPEN=0
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+DISPOSITION=PARTIAL_REMAINING_RESIDUALS_ONLY
+ACTIVE_AUDIT_SURFACE=R12-R15,R20 (R09/R11/R26 CLOSED)
+R05_R06_11434_GUI_DRIFT=NO_LONGER_OPEN_WORK
+NEXT_BURN_PREFERENCE=R13_AGENTS_WIRE_OR_HOLD
+
+VERDICT=IDE_RESIDUAL_AUDIT_AMENDED
+  Full residual table: RESIDUAL_TABLE.txt (disposition authority)
+  Witnesses: KEY_WITNESSES.txt (current source/witness snapshot)
+  Next spend: prefer R13; do not reopen R01–R08 / R11 / R26 / DualStick / TIP_CLIMB
+  Pre-fix oneshot EXIT=-1 is not fresh R01 evidence
+  PROMOTE=0 TIP_CLIMB=HOLD
+
+# =============================================================================
+# HISTORICAL RECEIPT ASOF=2026-09-10T01:00 — TRIAGE_ONLY / NOT CURRENT DISPOSITION
+# Retained verbatim for provenance. TOP_PRODUCT_BLOCKERS R01–R05 were true at T01:00;
+# they are CLOSED or policy-restored as of the T13:50 amendment above.
+# =============================================================================
+
+GATE=G3_IDE_RESIDUAL_AUDIT_001
+PURPOSE=Full residual IDE audit after parity/tool unstub closure — map open product gaps without reopening CLOSED lanes
+PARENT=G3_STREAMER_AGENTIC_IDE_PARITY_001 / G3_HEADLESS_API_TOOL_UNSTUB_001
+ASOF=2026-09-10T01:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+MODE=AUDIT_ONLY
+
+METHOD=
+  1) Stub/TODO/NOT_IMPLEMENTED/veto/disabled scan under src/win32app + gui + native_e2e
+  2) Route map: Win32IDE_LocalServer.cpp (~118 /api path== matches) vs HeadlessIDE::routeHttpRequest
+  3) Cross-check gui/ide_chatbot_standalone.html EngineAPI._get/_post vs server handlers
+  4) Sample seals under evidence/RAWRXD_PERFORMANCE_001/ for sealed vs unobserved
+  5) Classify each residual; no reopen CLOSED_EXCLUDE; no agenticMode flip; no DualStick; no TPS
+
+KEY_SEALS_SAMPLED=
+  G3_STREAMER_AGENTIC_IDE_PARITY_001 — E2E_SEALED tool parity + streamer stack
+  G3_HEADLESS_API_TOOL_UNSTUB_001 / UNBLOCK_E2E_001 — /api/tool unstub CLOSED
+  G3_STREAMER_AGENTIC_IDE_001 — ProductStreamerPrep wire READY; generate AV residual OPEN
+  G3_IDE_BACKEND_FULLFIX_001 — Origin null + bunnyhop on :11435
+  G3_STREAMER_AGENTIC_SESSION_VERIFY_001 — streamer+agentic MOTD coherence
+  G3_E2E_PRODUCT_DUALSTICK_E2E_CLOSURE_001 — DualStick CLOSED (untouched)
+
+ROUTE_SUMMARY=
+  LocalServer: rich surface (generate/ask/v1/chat, model load/unload, tool+full file ops,
+    agents/history/replay, backends/router, lsp/debug/swarm/governor/safety/cot/hybrid/…)
+  Headless: core generate/ask/v1/chat + model/tags/caps/bunnyhop + tool/read/write/list-dir/cli
+    + thin status JSON for many /api/*/status; 404 for policies/extensions/browse/native prepare
+    + most LocalServer file-op HTTP aliases (delete/rename/copy/move/search/mkdir/stat)
+  GUI EngineAPI: expects complete_server/tool_server routes (policies, extensions, browse,
+    agents/explain, backends/use, /complete, /metrics) that Headless/LocalServer do not own
+  Native E2E adapter: /api/native/generation/prepare seeded only for qwen*/rawrxd-e2e
+
+TOP_PRODUCT_BLOCKERS=
+  R01 IDE ProductDeep2Infer AV on live /api/generate|oneshot (dbgcore 0xc0000005)
+  R02 Native prepare model_profile_not_found for BigDaddyG-Q2_K-ULTRA.gguf
+  R03 GUI EngineAPI dead routes on product Headless/:11435 (policies/extensions/browse/explain)
+  R04 Headless file-op HTTP surface incomplete vs EngineAPI (delete/rename/copy/move/search/…)
+  R05 Product HTML agenticMode:true vs policy hold agenticMode=false (drift)
+
+CLOSED_LEFT_UNTOUCHED=
+  G3_STREAMER_AGENTIC_IDE_PARITY_001
+  HEADLESS_/api/tool_UNSTUB (UNSTUB_001 + UNBLOCK_E2E_001)
+  DUALSTICK_ARMSPEED / DualStick E2E closure
+  TIP_CLIMB
+
+VERDICT=IDE_RESIDUAL_AUDIT_SEALED
+  Full residual table: RESIDUAL_TABLE.txt
+  Witnesses: KEY_WITNESSES.txt
+  Next spend: triage R01–R05 only; PROMOTE=0 TIP_CLIMB=HOLD

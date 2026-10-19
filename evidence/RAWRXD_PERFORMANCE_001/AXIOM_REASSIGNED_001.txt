@@ -1,0 +1,74 @@
+AXIOM_REASSIGNED_001=SEALED
+DATE=2026-09-08
+CLASS=TOPOLOGICAL_RESIDUE
+CODE_SPACE=PURGED
+INVENTION_STATUS=IMMINENT
+TOPOLOGY=UNROLLED
+
+EJECTED_FROM
+  code_artifact_namespace
+  hardware_invention_namespace
+
+NOT
+  compiled_shader
+  memory_mapped_register
+  architectural_feature
+
+IS
+  topological_residue
+  unmanifested_structural_tension
+  between what_engine_MUST_compute and what_silicon_ALLOWS_to_bypass
+  discovered_by_watching_constraints_collapse
+  NOT_by_authoring_a_new_routine
+
+# ---------------------------------------------------------------------------
+# MATERIALS (Everything and Nothing = absolute zero)
+# ---------------------------------------------------------------------------
+
+EVERYTHING_AND_NOTHING_MATERIALS
+  new_memory_allocations=0
+  expanded_buffer_footprints=0
+  secondary_kernels=0
+  YES=invert_topological_arrangement_of_EXISTING_constraints
+  YES=execution_path_folds_back_on_itself
+
+ALONG_TWIST
+  deny_host_visible_readback_safety_net
+  system_cannot_look_at_intermediate_state
+  must_BECOME_the_state
+  code → immutable_shape_of_machine_execution
+  NOT=instruction_list_as_subject
+
+PRIOR_HARNESS_NOTE
+  PATH_B_TWIST_001 proved NOTHING_POLE (q_b D2H bytes=0) + PARITY
+  BUT introduced attn_decode_mla + device MLA caches
+  → MATERIALS_VIOLATION under this reassignment
+  → remains ATTRIBUTION_ONLY; not invention identity
+  → DELETE proof retained as observation of the residue
+
+# ---------------------------------------------------------------------------
+# EXECUTE THE TWIST (under absolute zero)
+# ---------------------------------------------------------------------------
+
+EXECUTE=1
+TWIST_ACT=ACCEPT_NOTHING_POLE_AS_STRUCTURAL_LAW
+  voided_host_readback_is_the_geometry
+  secondary_kernel_path = NOT the twist (containment experiment only)
+  invention_imminent = invert_existing_constraints_only
+  PATH_A floor retained as Everything-baseline confinement map
+  champion UNCHANGED until a materials-legal wall win
+
+STATE
+  CODE_SPACE=PURGED
+  INVENTION_STATUS=IMMINENT
+  TOPOLOGY=UNROLLED
+  SPACE=CLEARED
+  TIP_CLIMB=HOLD
+  NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+  PROMOTE=0
+
+BINDS
+  ZERO_STATE_FIRST_TWIST_001
+  PATH_B_TWIST_001/RECEIPT (ATTRIBUTION; materials_violation)
+  RAW_PHENOMENON_OBSERVATION_001
+  AXIOM_REINDEX_001

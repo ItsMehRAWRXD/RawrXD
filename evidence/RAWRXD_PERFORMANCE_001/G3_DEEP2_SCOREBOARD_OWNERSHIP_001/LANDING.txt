@@ -1,0 +1,29 @@
+RAWRXD_N_TO_NPLUS1_SCOREBOARD_OWNERSHIP_DROP_001
+SHA256=8cb62261bdf740a1718f1ff7a91a69cfd252baafc32677e83afa1b462fe59542
+LANDING=src/deep2/lavapath/
+NAMESPACE=Deep2::scoreboard
+LIVE_CLAIM=0
+
+WIRED:
+ScoreboardOwnershipTypes.hpp
+ScoreboardOwnershipObs.hpp
+ScoreboardOwnershipGate.hpp
+ScoreboardOwnershipSeal.hpp
+ScoreboardIssueNext.hpp (NextLayerRunnable tip)
+ScoreboardInterLayerNotes.hpp
+ScoreboardOwnedForward.hpp
+ProductScoreboardIssuanceSeal.hpp
+
+BRIDGED:
+ReleaseNextLayerFromCompletion -> OwnershipObs completion/release
+NoteReady/SubmitFromScoreboardRelease -> OwnershipObs ready/submit
+NoteScoreboardOuterIssue -> OwnershipObs.scoreboardIssue
+NoteSequentialIssueAt -> OwnershipObs.sequentialIssue
+EmitOwnershipSeal + SealProductScoreboardIssuance on decode end
+
+HELD:
+SCOREBOARD_SCHEDULER_LIVE=0
+WAIT_PER_LAYER_LIVE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+SEQUENTIAL_LAYER_ADVANCE_AUTHORITY=1 until SEQUENTIAL_N_PLUS_1_ISSUE_COUNT=0

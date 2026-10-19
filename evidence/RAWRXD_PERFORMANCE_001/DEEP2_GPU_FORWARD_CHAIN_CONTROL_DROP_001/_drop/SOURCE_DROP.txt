@@ -1,0 +1,109 @@
+DEEP2_GPU_FORWARD_CHAIN_CONTROL_DROP_001
+TARGET: G:\~dev\rawrxd
+CLASS: NON-RUNTIME CONTROL PLANE + SOURCE-LEVEL RECEIPT PARSER
+DEPS: Windows PowerShell + existing Deep2 streamer; C++ component is stdlib-only.
+
+PURPOSE
+-------
+Run the already-sealed GPU-forward diagnostic chain instead of merely defining it.
+
+RUNTIME REMAINS AUTHORITY
+-------------------------
+The control plane:
+  - launches G0..G8
+  - captures stdout/stderr
+  - verifies emitted receipt invariants
+  - compares same-build/same-fingerprint wall time
+  - ranks observed candidates
+  - refuses promotion
+  - can launch tok20/tok64 re-cert witnesses
+
+The control plane does NOT:
+  - emit RUNTIME_AUTHORITY=1
+  - invent missing child evidence
+  - set PROMOTE=1
+  - zero tensors
+  - alter model fingerprint
+  - convert SAFE_BYPASS into PASS
+  - rename GPU_FORWARD owner from process-of-elimination alone
+
+FILES
+-----
+src/deep2/control/GpuForwardChain.hpp
+src/deep2/control/GpuForwardChain.cpp
+tools/deep2/Invoke-GpuForwardChain.ps1
+tools/deep2/Invoke-GpuForwardRecert.ps1
+tools/deep2/run_gpu_forward_chain.cmd
+cmake/Deep2GpuForwardChainControl.cmake
+tests/test_gpu_forward_chain.cpp
+
+INSTALL
+-------
+Copy preserving paths into G:\~dev\rawrxd.
+
+The PowerShell controller can be used immediately and does not require CMake wiring.
+The C++ parser/comparator is for native IDE/agent/control-plane integration.
+
+RUN
+---
+cd /d G:\~dev\rawrxd
+tools\deep2\run_gpu_forward_chain.cmd ^
+  -Exe "G:\~dev\rawrxd\build-fd\deep2_streamer_parity.exe" ^
+  -Model "G:\OllamaModels\<EXACT_TINYLLAMA_GGUF>" ^
+  -MaxTokens 20
+
+If the executable path differs, pass the actual one.
+
+OPTIONAL
+--------
+-ContinueAfterSafeBypass
+    Continues the canonical ladder after a safe-bypass refusal.
+    Default is fail/stop at that gate.
+
+-RunRecert
+    Runs untouched tok20 and tok64 only after an observed winner.
+    Multi-model matrix remains the existing separate authority.
+
+CHAIN
+-----
+G0_REFERENCE
+G1_GPU_QKV
+G2_DEVICE_ATTENTION
+G3_FFN
+G4_GEMV
+G5_OUTPUT_PROJECTION
+G6_KV
+G7_SYNC
+G8_READBACK
+
+OUTPUT
+------
+evidence\GPU_FORWARD_CHILD_ONE_IGNORE\<timestamp>\
+    G*.stdout.txt
+    G*.stderr.txt
+    G*.receipt.txt
+    CHAIN_RESULTS.csv
+    CHAIN_SUMMARY.txt
+
+WINNER RULE
+-----------
+A child becomes an OBSERVED CANDIDATE only when all are true:
+  ignore applied by runtime
+  child calls > 0 from own emission
+  material GPU_FORWARD collapse
+  own child timing approximately agrees with removed wall
+  same model fingerprint
+  runtime authority = 1
+  provenance match = 1
+  20 tokens committed
+  OLLAMA_HTTP=0
+  PROMOTE=0
+
+Even that result says NEXT=DECOMPOSE_WINNER_CHILD, not PROMOTE.
+
+EXTENDED CHILDREN
+-----------------
+INPUT_NORM, ROPE, POST_ATTENTION_NORM, FFN_UP_GATE, ACTIVATION,
+DOWN_PROJECTION, MOE_ROUTING, EXPERTS, RESIDUAL, H2D_UPLOAD,
+COMMAND_SUBMISSION, OTHER remain decomposition children. They are deliberately
+not inserted into canonical G0-G8, preserving the sealed ladder.

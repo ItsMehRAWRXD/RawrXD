@@ -1,0 +1,49 @@
+GATE=G3_RXOW_NORUN_CLASSIFY_001
+ASOF=2026-09-10T05:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK=HOLD
+OLLAMA=0
+EXE=build-fd/bin/rawr.exe (RxOW hooks in ProductRuntime/ProductRun/ProductRunDecode/RXEV surface)
+HOST_DECODE=1 MINIMAL_ENHANCE=1 DEEP2_EV512=0
+
+## Unit
+test_rxow.exe EXIT=0
+  empty_graph → BR_NOT_PREPARED PASS
+  dispatch_gate → BR_DISPATCH_GATE PASS
+  control_decode0 → BR_NONE PASS
+WITNESS=RAWRXD_OVERWATCH_NORUN_SOURCE_DROP_001/drop/
+
+## Live classify (same EXE)
+
+| ID | PRODUCT_PASS | LAST_BR / owner | NORUN surface | Notes |
+|----|--------------|-----------------|---------------|-------|
+| tinyllama | 1 | BR_NONE (after decode0) | 1 | CONTROL PASS; RXOW armed→prepared→generate→decode0; norun_surface_after_decode0_ok |
+| qwen35_40b | 0 | BR_OPEN_FAILED → BR_NO_RUN_STATE | 1 | GGUF validation failed (tensor extends beyond file); never prepared — NOT_PREPARED family |
+| codestral22b | 0 | BR_OPEN_FAILED → BR_NO_RUN_STATE | 1 | Digestion LAYERS=56 TENSORS_DISCOVERED=507 then RAW_RUN_OPEN_FAIL before RxOw OnArmed — owner=open/dispatch after topology bind (not empty graph) |
+| bigdaddy_cheetah | 0 | BR_OPEN_FAILED → BR_NO_RUN_STATE | 1 | Open fail / never prepared — NOT_PREPARED family |
+
+## Expected vs observed
+BigDaddy/Qwen: plan expected BR_NOT_PREPARED graph_empty if layers=0 tensors=0.
+  OBSERVED: open fails before prepare (layers=0 tensors=0 at RxOw); equivalent ownership class.
+Codestral: plan expected dispatch gate if layers=56 tensors=507 + NO_RUN.
+  OBSERVED: 507 tensors registered + layers=56 in engine log; OpenSession returns false (RAW_RUN_OPEN_FAIL);
+  RxOw never reached OnArmed — classify OPEN_AFTER_TOPOLOGY / dispatch-adjacent, not graph_empty.
+TinyLlama: CONTROL still PASS.
+
+## Intake
+VENDOR_ZIP sandbox unavailable on host.
+LOCAL_ZIP SHA256=63455520dd80302b405bb8d6d5fae66b62c68c2070cf3be99a10e63209fc02b5
+VENDOR_SHA_EXPECTED=d72017ce45be9579918ddeefc610884b7df096d87766c68daf32ca4ade861d7e
+SHA_MATCH_VENDOR=0 INTAKE=CLEANROOM_MATCHING_SPEC (see OVERWATCH drop INTAKE.txt)
+
+## Files landed
+src/deep2/lavapath/RxNoDeps.hpp
+src/deep2/lavapath/RxRunStateOverwatch.hpp
+src/deep2/lavapath/RxRunStateHooks.hpp
+src/deep2/lavapath/RxRunStateHooks.cpp
+Wired: ProductRuntime.hpp, ProductRun.hpp, ProductRunDecode.hpp, RuntimeEvidence512Surface.hpp
+
+## Non-goals held
+No DualStick reopen, no editbin LAA for this gate, no CompletionEngine greenfield,
+no universal multi-model PASS claim, R01 AV seal untouched.

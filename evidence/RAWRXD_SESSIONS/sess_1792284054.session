@@ -1,0 +1,8 @@
+id=sess_1792284054
+model=llama3.2-3b-Q2_K
+path=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=Fix the bug in G:\temp\agent_coding_test\src\calculator.cpp - the add function returns a - b instead of a + b
+patch=
+turns=0

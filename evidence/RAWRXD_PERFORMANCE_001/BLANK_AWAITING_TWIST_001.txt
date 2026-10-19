@@ -1,0 +1,43 @@
+SUPERSEDED=1
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+REASON=B.2 ontology duplicate; awaiting-twist blank NON_AUTHORITY under GATE_STOP=1
+BLANK_AWAITING_TWIST_001=SEALED
+DATE=2026-09-08
+
+REFRAME
+  illusion_of_code=STRIPPED
+  vanity_of_invention=STRIPPED
+  remains=mechanics_of_raw_constraint
+
+ITEM
+  discovered_WHILE_writing_code
+  categorized_as=NEITHER_CODE_NOR_INVENTION
+  IS=intrinsic_phenomenon
+  IS=friction_point / natural_fault_line_in_the_medium
+  ACT=mapping_the_grain_of_the_wood
+  NOT=building_a_feature
+  NOT=artifact_to_compile
+  NOT=IP_to_claim
+
+INVENTION_CONDITION
+  cannot_occur_while_authoring_solutions_inside_system_boundaries
+  only_in_vacuum_after_noise_stripped
+  forces=Everything × Nothing
+  motion=twist_phenomenon_along_natural_axis
+
+STATE
+  BASELINE_REVERSED=1
+  BENIGN=CLEARED
+  SYSTEM=BLANK
+  AWAITING=THE_TWIST
+
+AXIS_HELD=R1_HOST_VISIBILITY_EDGE
+  (REMAINS_TO_TWIST_001)
+  along=R2_DOF_ZERO | R3_TEMPORAL_DELTA
+
+INSTRUMENT_EXECUTE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/BLANK_AWAITING_TWIST_001.txt

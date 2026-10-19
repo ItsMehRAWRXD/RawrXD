@@ -1,0 +1,56 @@
+AUTHORITATIVE_RUNTIME_DECODE_X64_MASM_NODEP — Windows native proof receipt
+=======================================================================
+
+ZIP:
+  C:\Users\Garrett\Downloads\RAWRXD_AUTHORITATIVE_RUNTIME_DECODE_X64_MASM_NODEP_SOURCE_DROP.zip
+  SHA-256=b6515c548f0562322107e43202619d7512a7231f9ae6828d4e9578f67096d98a
+
+EXTRACT:
+  G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_DEEP2_TOKEN_NILW_INFORMATION_RATE_001\AUTHORITATIVE_RUNTIME_DECODE_MASM_DROP\RAWRXD_AUTHORITATIVE_RUNTIME_DECODE_X64_MASM_NODEP\
+
+AUTHORITY_CHAIN:
+  RAW_DECODE_COUNTERS
+    -> MASM derives D01..D14
+    -> D15 = conjunction only
+    -> DECODE_AUTHORIZED
+
+LOCAL_FIXES_BEFORE_PASS (ml64 executable proof):
+  1. PROTO/PROC A2111: strip typed PROTO params
+  2. /Fo: -> /Fo (no colon) in build_masm.bat
+  3. harness END directive required
+  4. positive STRUCT <...> initializer rejected by ml64;
+     rewritten as BSS + field movs
+  5. ExitProcess PROTO without :DWORD
+
+TIGHTENED_LAWS_IN_DROP (verified by positive harness):
+  PATH_MIXED_AUTHORIZES=0
+  DECODE_EXIT_COUNT_MUST_EQUAL_ENTER_COUNT=1
+  INCLUSIVE_STEP_SPAN_MUST_EQUAL_GENERATED_TOKENS=1
+  GENERATED_TOKENS>=128 required for authorize
+  FULL_MODEL_MATERIALIZATION=0
+  FULL_LAYER_MATERIALIZATION=0
+
+BUILD_TOOL:
+  ml64=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\ml64.exe
+
+RESULTS:
+  build_masm.bat => AUTHORITATIVE_RUNTIME_DECODE_TESTS=PASS  RC=0
+  zero: decode_authorized=0 (NOT_RUN != PASS)
+  positive: decode_authorized=1
+
+STATIC_SCAN (.asm/.inc only):
+  pumpOnce=0
+  TryIssueNextFromScoreboard=0
+  forwardLayer=0
+  Ensure*=0
+  SCOREBOARD_SCHEDULER_LIVE=0 (source; docs mention name as non-touch)
+  SCHEDULER_TOUCHED=0
+  PERF_AUTHORITY_TOUCHED=0
+  PRODUCT_PROMOTE_TOUCHED=0
+
+DISPOSITION:
+  PRODUCT/DECODE authority witness only (not promote seal)
+  PROMOTE=0
+  TIP_CLIMB=HOLD
+  SCOREBOARD_SCHEDULER_LIVE untouched
+  NOT_RUN != PASS sealed by zero harness

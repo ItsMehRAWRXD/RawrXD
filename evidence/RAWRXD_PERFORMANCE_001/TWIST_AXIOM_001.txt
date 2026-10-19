@@ -1,0 +1,80 @@
+TWIST_AXIOM_001=SEALED
+DATE=2026-09-08
+COMMAND=SEAL_ACCEPTED_ONTOLOGICAL_RE_CATEGORIZATION
+
+# ---------------------------------------------------------------------------
+# EXFILTRATION (formal)
+# ---------------------------------------------------------------------------
+
+ITEM=NATIVE_PHENOMENON
+CLASS=AXIOM
+STATUS=FOUNDATIONAL_MEDIUM
+
+STRIPPED
+  CODE_KERNEL_NAMESPACE=0
+  SOFTWARE_ARTIFACT=0
+  NET_NEW_INVENTION=0
+
+RECORDED_AS
+  NOT=something_built
+  IS=fundamental_topological_truth_of_execution_space
+  ILLUMINATED_BY=code
+  EXISTS_INDEPENDENT_OF=syntax
+
+# ---------------------------------------------------------------------------
+# THE TWIST (Axiom of Everything and Nothing)
+# ---------------------------------------------------------------------------
+
+TWIST=POINT_OF_INFLECTION
+  EVERYTHING=allocated_mapped_positive_state
+  NOTHING=null_offset_negative_state
+  GEOMETRY=continuous_polarity_exchange (Möbius-like; no edge cross)
+  RESOLVES=56GB_segmented_canvas | Revolver_phase_inversion | Triad_zero_latency
+  INTO=single_geometric_truth
+
+# ---------------------------------------------------------------------------
+# INVENTION GATE
+# ---------------------------------------------------------------------------
+
+INVENTION_GATE=UNLOCKED
+INVENTION_MODE=HARNESS_EVERYTHING_AND_NOTHING_INTERSECTION
+
+CODE_SPACE
+  ROLE=TOOLING_HARNESS_CONTAINMENT_FIELD
+  SOURCE_OF_INNOVATION=0
+  PRODUCT=0
+
+PHENOMENON_SPACE=ACTIVE
+  TWIST=FOUNDATIONAL_MEDIUM
+
+BASELINE_REVERSED=1
+  OLD=code_as_invention
+  NEW=mechanics_of_the_twist
+
+# ---------------------------------------------------------------------------
+# FIRST INTENTIONAL MANIPULATION (proposed; awaiting apply confirm)
+# ---------------------------------------------------------------------------
+
+FIRST_MANIPULATION_NAME=POLARITY_EXCHANGE_AT_Q_B_HOST_EDGE
+MECHANICS
+  EVERYTHING_POLE=host-visible q_b (mapped mirror + fence + host consume)
+  NOTHING_POLE=q_b D2H bytes==0 (device-local residency; no host edge)
+  TWIST_ACT=exchange polarity without inventing new PCIe physics
+  HARNESS=PATH_B_STRUCTURAL_DELETE (instrument only; not the phenomenon)
+  ALONG=HOST_WINDOW_DOF_ZERO | FENCE_NOT_COPY | COMPUTATIONAL_GRAVITY
+  AGAINST_PHENOMENON=FORBIDDEN
+
+PROVE_STILL
+  DELETE_PROVEN + PARITY + PURITY + PRODUCT
+  WALL_MEDIAN_NS < PATH_A champion (10184789000)
+  ELSE=ATTRIBUTION_ONLY champion remains PATH_A
+
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+GOODS_BRAIDED=1
+
+BINDS
+  PHENOMENON_CATEGORY_EXIT_001
+  SOVEREIGN_PHYSICS_CARTOGRAPHY_001
+  STAGE_2_INVENTION_OPEN_001
+  PATH_B_STRUCTURAL_DELETE_001

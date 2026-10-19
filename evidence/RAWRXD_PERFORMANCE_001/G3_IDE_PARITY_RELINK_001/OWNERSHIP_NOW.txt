@@ -1,0 +1,17 @@
+﻿HEADLESS_/api/tool_UNBLOCK = SEALED
+GATE_SEQUENCE              = 12/12 PASS
+LIVE_HEALTH                = 200
+PRE_MOTD_/api/tool         = 403 motd_required
+ROUTES_DISABLED_VETO       = NOT_PRESENT
+
+PARITY_SOURCE              = PRESENT
+LIVE_PARITY_ROUTES         = SHIPPED
+CURRENT_BLOCKER            = NONE (parity relink complete)
+FAILURES                   = CLEARED (CVT1107/LNK2019)
+
+LIVE_BINARY                = RawrXD-Win32IDE_headless_live.exe
+LIVE_PORT                  = 11435
+/api/backends              = 200
+/api/agents*               = 200
+/api/failures              = 200
+/api/chat                  = 503 model_not_loaded (routed)

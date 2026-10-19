@@ -1,0 +1,70 @@
+RUNTIME_EVIDENCE_512_IDE_SITE_WIRING_001
+DATE=2026-09-08
+TYPE=OWNER_SITE_WIRING_GUIDE
+
+RULE_1=
+  Emit at the claim owner, not at a caller that merely hopes the work happened.
+
+RULE_2=
+  Do not place multiple semantic claims behind one "success" callback.
+  Example:
+    real token callback may emit TOKEN_CALLBACK
+    tokenizer decode may emit TOKEN_DECODED
+    UI append may emit UI_STREAM_APPEND
+  None of those records substitutes for either of the others.
+
+RULE_3=
+  Failure paths are real evidence only when the corresponding failure emitter
+  runs from the owning failure site. Never backfill absent success/failure rows.
+
+RULE_4=
+  Preserve the original ClaimIds 1..17. Do not renumber them.
+
+RULE_5=
+  Use one EvidenceState/RunId for one measured end-to-end run. Do not merge
+  records across runs to fabricate completeness.
+
+RULE_6=
+  Call the collector only after the real run completion/join boundary.
+  CLOSED_SNAPSHOT means collector integrity, not product completion.
+
+HIGH_PRIORITY OWNER INSERTION ORDER=
+  1. ProjectLogitsArgmax:
+       EvidenceEmitLogitsEntry at real entry
+       EvidenceEmitLogitsComplete only after real argmax/logits completion
+  2. Deep2 generateStream:
+       EvidenceEmitGenerateStreamEntry
+       EvidenceEmitFirstTokenBoundary
+       EvidenceEmitDecodeStepEntry
+       EvidenceEmitAttnComplete / EvidenceEmitForwardComplete
+       EvidenceEmitSampleComplete
+       EvidenceEmitTokenCallback
+       EvidenceEmitEndReason
+       EvidenceEmitStreamComplete or EvidenceEmitStreamError/StreamAbort
+  3. Token decoder and UI:
+       EvidenceEmitTokenDecoded at tokenizer decoder
+       EvidenceEmitUIStreamAppend after real UI append
+       EvidenceEmitUIStreamFinalize after final flush
+  4. Model/session:
+       discovery/identity/load/contracts/schema/session/prefill/unload/reload
+  5. Agent engineering loop:
+       agent entry/model return/tool dispatch/tool complete/edit/build/test/git
+  6. Lifecycle:
+       boot/window/core/session persist/unload/teardown/exit/fault
+  7. Measurement:
+       wall + actual decode TPS + parity from the measured run
+
+DO_NOT_WIRE=
+  - UI pre-calls as forward/sample/decode
+  - hardcoded success metadata
+  - stub responses
+  - tokenish counters
+  - feature-manifest "Real" labels
+  - orphan/unlinked files merely to make masks look complete
+  - route selection as device execution
+  - path text as model identity
+
+ARGUMENT_CONTRACT=
+  Use the Arg0/Arg1 meanings in RUNTIME_EVIDENCE_512_IDE_CLAIM_MAP_001.tsv.
+  Hashes should be stable for the run and derived from the actual object/path/
+  result being witnessed. Do not use a constant hash to satisfy a field.

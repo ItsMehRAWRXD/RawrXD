@@ -1,0 +1,57 @@
+﻿{
+    "receipt_id":  "EPOCH0_QB64_QA128_QKV128",
+    "result":  "FAIL",
+    "promote":  0,
+    "date":  "2026-09-08",
+    "DECODE_TPS_REAL":  0,
+    "generation_wall_ns":  0,
+    "generated_tokens":  null,
+    "q_branch_us":  null,
+    "qkv_readback_us":  null,
+    "qkv_exposed_us":  null,
+    "o_proj_exposed_us":  null,
+    "logits_exposed_us":  null,
+    "logits_dot_ms":  null,
+    "mla_q_device_ops":  null,
+    "mla_q_device_fail":  0,
+    "argmax_parity":  null,
+    "kva_rows_per_wg":  16,
+    "product_floor_tps":  5,
+    "wall_within_budget":  0,
+    "product_pass":  0,
+    "k2_product_5tps":  "OPEN",
+    "champion_generation":  "ep0_QB64_QA128_QKV128_20260908-172655",
+    "witness_log":  "G:/~dev/rawrxd/evidence/K2_USEFUL_TPS_001/ep0_QB64_QA128_QKV128_20260908-172655.log",
+    "attrib_receipt":  "evidence/RAWRXD_PERFORMANCE_001/COVERAGE_MATRIX_001/EPOCH0/QB64_QA128_QKV128",
+    "next_runtime_action":  "EPOCH0_COVERAGE",
+    "forced_off":  {
+                       "TOKEN_PACING":  "OFF",
+                       "DEEP2_CERT_STEP_LOG":  "0",
+                       "DEEP2_LOGITS_GPU_SPLIT":  "0",
+                       "DEEP2_MLA_Q_DEVICE_FORCE_OFF":  "0",
+                       "QKV_OWNER_RESI_LOG":  "0",
+                       "TOK_RESIDUAL_SPAM":  "0"
+                   },
+    "forced_on":  {
+                      "DEEP2_MLA_Q_DEVICE":  "1",
+                      "DEEP2_WEIGHT_PIN":  "1",
+                      "DEEP2_MLA_FUSED_Q4KT":  "1",
+                      "DEEP2_LOGITS_THREADS":  "32",
+                      "RAWRXD_NO_TP":  "1"
+                  },
+    "do_not_reopen":  [
+                          "KvaRowsClimb",
+                          "ProductAuthority"
+                      ],
+    "config":  {
+                   "CONFIG_ID":  "QB64_QA128_QKV128",
+                   "DEEP2_QB_SX_ROWS":  64,
+                   "DEEP2_QA_SX_ROWS":  128,
+                   "DEEP2_QKV_SX_ROWS":  128,
+                   "EPOCH":  0,
+                   "MEASUREMENT_INDEX_FOR_CONFIG":  1
+               },
+    "PARITY":  0,
+    "CONFIG_ID":  "QB64_QA128_QKV128",
+    "EPOCH":  0
+}

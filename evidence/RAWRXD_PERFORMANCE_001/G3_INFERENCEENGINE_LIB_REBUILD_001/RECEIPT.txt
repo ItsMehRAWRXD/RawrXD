@@ -1,0 +1,58 @@
+G3_INFERENCEENGINE_LIB_REBUILD_001
+PURPOSE=Rebuild InferenceEngine.lib link substrate; relink RawrXD-Win32IDE parity aliases; no API route edits
+
+AUTHORITY=user disposition 2026-09-10
+CURRENT_OWNER=INFERENCEENGINE_LIB_REBUILD
+API_UNSTUB_REOPEN=0
+MOTD_REPROOF=0
+HEADLESS_PARITY_SOURCE=READY
+LIVE_PARITY_ALIASES=SHIPPED
+BLOCKER=CORRUPT_OR_INCOMPLETE_INFERENCEENGINE_LINK_INPUT (CLEARED)
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPENED=0
+
+PRIOR_FAILURE_SEQUENCE=
+  LNK1181 cannot open InferenceEngine.lib
+  LNK1201 PDB
+  CVT1107 build-fd\InferenceEngine.lib corrupt
+  thin substitute lib → LNK2019 MLA_QPathDeviceFused + DualStickMarkRequested
+
+ACTIONS=
+  1. Killed competing ninja/cl owning build-fd (RawrNativeWebBridge + Win32IDE race)
+  2. Pinned CMake ninja 1.13.2 (VS 1.12.1 resets .ninja_log → mass rebuild)
+  3. InferenceEngine.lib present + dumpbin External symbols:
+       Deep2::DualStickMarkRequested(int)
+       Deep2::MLA_QPathDeviceFused(...)
+  4. Direct link via build.ninja LINK_* recipe + existing objs (ninja hash log wiped)
+  5. Rebuilt 5 corrupt objs (LNK1136) incl Win32IDE_LocalServer + HeadlessIDE carriers
+  6. link.exe PASS: CVT1107=0 LNK2019=0 LNK1120=0 LNK1181=0 LNK1201=0
+
+ARTIFACTS=
+  InferenceEngine.lib BYTES=215506798 SHA256=E898D90E1F54538010675FCDFA1DA4551AECE085CA17DE72A6B0CE3D896A6044
+  RawrXD-Win32IDE.exe LINK_PASS SHA256=54FEC3E5A5839873F93CD146075DF160E2FBDFE15CA03E46DDAA4745826236DD
+  (first direct link CB4E4D64…; subsequent same-size rewrite under build-fd race — smoke used frozen TEMP copy)
+
+CLOSURE_SMOKE (curl, owner-bound port, --dir G:\~dev\rawrxd)=
+  /health=200
+  /api/backends=200
+  /api/agents/status=200
+  /api/failures=200
+  /api/chat=400 invalid_prompt (!=404)
+  /api/tool=403 motd_required (NOT public_command_and_file_routes_disabled)
+  SEALED_TOOL_PATH_UNCHANGED=1
+  GATE_OK=1
+
+GATE=
+  InferenceEngine.lib_REBUILT=1
+  CVT1107=0
+  LNK2019=0
+  LNK1120=0
+  RawrXD-Win32IDE.exe_LINK=PASS
+  SEALED_TOOL_PATH_UNCHANGED=1
+  DUALSTICK_REOPENED=0
+  PROMOTE=0
+
+NOTE=
+  Do not use VS BuildTools ninja 1.12.1 against this tree (log v7 / version mismatch).
+  Exclusive build ownership required — concurrent ninja truncates objs → LNK1136/CVT1107.

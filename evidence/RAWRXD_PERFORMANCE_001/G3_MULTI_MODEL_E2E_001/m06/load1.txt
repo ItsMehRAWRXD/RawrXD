@@ -1,0 +1,2 @@
+﻿{"success":true,"model":"ministral3_q4_0.gguf"}
+HTTP_CODE=200

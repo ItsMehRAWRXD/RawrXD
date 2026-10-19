@@ -1,0 +1,57 @@
+PATH_B_N5_001=SEALED
+DATE=2026-09-08
+MODE=A
+HOT_GATE=1
+TARGET=PATH_B_N5
+SPEND=1
+OUTCOME=FAIL
+PROMOTE=0
+TRIALS_RUN=1 of 5
+STOP_REASON=trial_1_fail_no_path_to_median
+
+TRIAL_01=
+  STREAM_ABORT=1 (Gate 12: RoPE not applied)
+  GENERATION_WALL_NS=32249219700
+  DECODE_TPS_REAL=1.985
+  PRODUCT_FLOOR_TPS=5.000
+  PRODUCT_PASS=0
+  FUNCTIONAL_PASS=1
+  PARITY_PASS=1
+  EXIT=0xC0000005 (ACCESS_VIOLATION on teardown)
+  WITNESS_EXIT_VALID=0
+  WALL_VS_FLOOR=+22064430700 ns (3.16x OVER floor)
+
+BAR_CHECK=
+  DEEP2_PATH_B=1 (env set)
+  n=5 NOT_REACHED (1/5)
+  WALL_MEDIAN_NS < 10184789000 = FAIL (trial 1 = 32249219700)
+  DELETE_PROVEN = NOT_ASSESSED (witness invalid from crash)
+  PARITY=1 (PARITY_PASS=1)
+  PURITY=NOT_ASSESSED
+  PRODUCT=0 (PRODUCT_PASS=0)
+  WITNESS_EXIT_VALID=0
+
+PROMOTE=0 (all gates failed)
+
+CRASH_NOTE=
+  PATH_A_HOLD_ACK_001 noted: Q_B_GEMV_DIRECT_HOST_OUT crashed on R9700; reverted to RecordCopy for PATH_A.
+  PATH_B trial 1 hit STREAM_ABORT at Gate 12 + ACCESS_VIOLATION on teardown.
+  Consistent with known R9700 instability on the device-side q_b path.
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  PATH_B_N5=FAIL
+  CHAMPION=PATH_A_HOST_CACHED_OUT_INVALIDATE (unchanged)
+  WALL_MEDIAN_NS=10184789000 (unchanged)
+
+LOGS=
+  evidence/RAWRXD_PERFORMANCE_001/PATH_B_N5_001/trial_01.stderr.txt
+  evidence/RAWRXD_PERFORMANCE_001/PATH_B_N5_001/trial_01.stdout.txt
+
+NO_FORGERY=
+  no receipt override
+  no floor waiver
+  no promotion
+  measured truth sealed

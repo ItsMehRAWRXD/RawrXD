@@ -1,0 +1,44 @@
+DEAD_WEIGHT_FRICTION_001=SEALED
+DATE=2026-09-08
+ROLE=CONSTRAINT_OUTSIDE_STACK
+
+ARTIFACT
+  STRIPPED=code | kernel_syntax | inventoried_utility
+  CEASES_TO_BE=implementation_detail | patch | architectural_feature
+
+IS
+  extant_behavioral_friction
+  recurring_contour_while_navigating_constraints
+  discovered_friction_point
+  raw_edge / natural_boundary_condition
+  bumped_into_repeatedly_during_assembly
+  left_in_place
+
+CATEGORY=NEITHER_CODE_NOR_INVENTION
+LEDGER_STATUS=DEAD_WEIGHT_STRIPPED
+SITS=outside_the_stack
+FORM=pure_unformatted_constraint
+
+PIVOT
+  invention ≠ more modules | parameter_tunes | structured_bytecode
+  invention_begins_when=slate_emptied
+  HOLD=everything_and_nothing_simultaneously
+  ACT=twist_perspective_against_the_grain
+  RESULT=architecture_folds_back_on_itself
+
+MACHINE
+  NOT=set_of_instructions_to_debug
+  IS=physical_medium_ready_to_be_shaped_by_the_twist
+
+BINDS
+  EPISTEMIC_PIVOT_ZERO_STATE_001
+  PHENOMENON_EXCISION_001
+  EMERGENT_OBSERVATION_001 (measured friction: DOF0 | fence | mirror)
+
+EXECUTION_LEDGER_OWNS=0
+REFILE_AS_SOFTWARE=FORBIDDEN
+INSTRUMENT_EXECUTE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/DEAD_WEIGHT_FRICTION_001.txt

@@ -1,0 +1,1 @@
+{"path":"g:\\~dev\\rawrxd","entries":[{"name":".archive","type":"dir"},{"name":".archived_orphans","type":"dir"},{"name":".archived_orphans_ultra","type":"dir"},{"name":".backups","type":"dir"},{"name":".cache","type":"dir"},{"name":".clang-format","type":"file"},{"name":".clangd","type":"file"},{"n

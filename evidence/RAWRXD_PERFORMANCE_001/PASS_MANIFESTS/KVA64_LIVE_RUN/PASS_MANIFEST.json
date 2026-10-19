@@ -1,0 +1,47 @@
+﻿{
+    "receipt_id":  "KVA64_LIVE_RUN",
+    "result":  "PASS_CLIMB_MEASURED",
+    "promote":  0,
+    "date":  "2026-09-08",
+    "decode_tps_real":  1.174,
+    "generation_wall_ns":  54500032600,
+    "generated_tokens":  64,
+    "q_branch_us":  6185987,
+    "qkv_readback_us":  null,
+    "qkv_exposed_us":  null,
+    "o_proj_exposed_us":  4726616,
+    "logits_exposed_us":  null,
+    "logits_dot_ms":  0,
+    "mla_q_device_ops":  0,
+    "mla_q_device_fail":  0,
+    "argmax_parity":  1,
+    "kva_rows_per_wg":  16,
+    "product_floor_tps":  5,
+    "wall_within_budget":  0,
+    "product_pass":  0,
+    "k2_product_5tps":  "OPEN",
+    "champion_generation":  "kva64_live_run",
+    "witness_log":  "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/kva64_live_run.txt",
+    "attrib_receipt":  "evidence/RAWRXD_PERFORMANCE_001/KVA_64TOK_REMEASURE.txt",
+    "next_runtime_action":  "KVA_SEALED",
+    "forced_off":  {
+                       "TOKEN_PACING":  "OFF",
+                       "DEEP2_CERT_STEP_LOG":  "0",
+                       "DEEP2_LOGITS_GPU_SPLIT":  "0",
+                       "DEEP2_MLA_Q_DEVICE_FORCE_OFF":  "0",
+                       "QKV_OWNER_RESI_LOG":  "0",
+                       "TOK_RESIDUAL_SPAM":  "0"
+                   },
+    "forced_on":  {
+                      "DEEP2_MLA_Q_DEVICE":  "1",
+                      "DEEP2_WEIGHT_PIN":  "1",
+                      "DEEP2_MLA_FUSED_Q4KT":  "1",
+                      "DEEP2_LOGITS_THREADS":  "32",
+                      "RAWRXD_NO_TP":  "1"
+                  },
+    "do_not_reopen":  [
+                          "KvaRowsClimb",
+                          "ProductAuthority",
+                          "XR_correctness"
+                      ]
+}

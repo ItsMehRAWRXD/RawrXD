@@ -1,0 +1,1 @@
+m06	phi3-medium-14b	OK	TOK1=8	78523ms	OK	TOK2=8	97599ms	AV=0	PASS

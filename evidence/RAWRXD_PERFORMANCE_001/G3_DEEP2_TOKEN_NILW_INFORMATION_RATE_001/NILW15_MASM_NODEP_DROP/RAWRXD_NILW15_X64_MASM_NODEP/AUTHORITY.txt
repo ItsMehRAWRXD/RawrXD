@@ -1,0 +1,19 @@
+AUTHORITY=PERF/SUSTAINABILITY
+
+SCHEDULER:
+    LIVE=1
+    DO_NOT_REOPEN=1
+    THIS_MODULE_SCHEDULER_CALLS=0
+
+PRODUCT/PROMOTE:
+    independent
+
+PERF/SUSTAINABILITY:
+    NILW15 owns only witness derivation for NILW/runtime sustainability.
+
+This source contains:
+    no N+1 issue
+    no pumpOnce
+    no Ensure*
+    no forwardLayer
+    no GPU submit

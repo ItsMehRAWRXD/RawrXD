@@ -1,0 +1,37 @@
+[
+  {
+    "file": "AUTHORITY.txt",
+    "bytes": 345,
+    "sha256": "917e5fc934b7e56711d5d4f42cc2f7e2beeefd3a3c813ed0934bf357efd055b0"
+  },
+  {
+    "file": "README.md",
+    "bytes": 443,
+    "sha256": "72c1bf7d7118eb99ec943743594b66bec447441d69a52f0f502d16cd54a08cf2"
+  },
+  {
+    "file": "WITNESSES.txt",
+    "bytes": 539,
+    "sha256": "403c3fa6da3df9be76591d5d63e27acc0c3714db56a9785f8acc74894fcc8ba6"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 304,
+    "sha256": "db5014aa19b95b82adf43f1e44da46a0bc2d6690a5f7897243ea291cca55673e"
+  },
+  {
+    "file": "harness.asm",
+    "bytes": 964,
+    "sha256": "502e073d46f20e31590391be96c9f1fad92c05a6af0d5a76f38f2c6d5045baeb"
+  },
+  {
+    "file": "nilw15.asm",
+    "bytes": 3833,
+    "sha256": "b1eb78f2d1f4f96edaa3211dc1131cfac8a95183e7c824bd1894f8fa51ed9187"
+  },
+  {
+    "file": "nilw15.inc",
+    "bytes": 2323,
+    "sha256": "92a42aa1c067b83a01daf04636a36daf4bc5af638e87a0bb7ef1c2ddddf5b035"
+  }
+]

@@ -1,0 +1,905 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV_RAW_BEFORE_HOST_FLOOR
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="E8B0M"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=59568
+WEIGHT_BUDGET_EFFECTIVE_MIB=2048
+RESIDENCY_BUDGET_MIB=2048
+BUDGET_RELATION_VALID=1
+NOTE=MODEL_SIZE_NE_PHYSICAL_RESIDENCY; RESIDENCY_LE_PHYSICAL_BUDGET; MODEL_SIZE_LE_LOGICAL_ADDRESSABILITY_REQUIRES_LAA
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2
+HIDDEN=7168 LAYERS=61 HEADS=64 KV_HEADS=1 HEAD_DIM=112 VOCAB=163840 INTERMEDIATE=18432
+SPLIT_QKV_LAYERS=0 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=6 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=1 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf.ac7f10aa0.1dd25d7a505afe2.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+K2_MLA_SCHEMA_DEFER=1 layers=61 vocab=163840
+[BUF] hidden=7168 heads=64 headDim=192 qOut=12288 headScratch=12288 kvDim=192 ffn=28672 ffnGateScratch=28672
+[MLA_ALLOC] hidden=7168 heads=64 headDim=192 qProjSize=12288 q_b=12288 kv_a=576 k_b=8192 v_b=8192
+SSM_BUF stPer=32 cvPer=28672 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=deepseek2 L=61 H=7168 FFN=2048 heads=64 kv=1 hd=576 ctx=4096
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=2048 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[NVMeStream] SHARD_IO bridge path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M warmed=13 (RANDOM_ACCESS)
+[Deep2Engine] NVMe lane armed via SHARD_IO (warmed=13)
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+[Deep2Engine] K2 tokenizer loaded: vocab=163840 bos=163584 eos=163586
+[Deep2Engine] AUTHORITY_LADDER=PASS (K2_INDEX shard0)
+[Deep2Engine] loadModel=INDEX_AND_ADDRESS (F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M) ModelState=Indexed — weights not resident
+MODEL_SIZE_INDEPENDENT_LOAD=1
+RAWRXD_NO_TP=1
+QUANTIZED_STORAGE_PRESERVED=1
+FULL_MODEL_RESIDENCY_REQUIRED=0
+FULL_LAYER_RESIDENCY_REQUIRED=0
+VRAM_REQUIRED=0
+VRAM_BYTES_REQUIRED=0
+WEIGHT_RESIDENCY_BOUNDED=1
+KV_RESIDENCY_BOUNDED=1
+EXECUTION_OWNER_PER_TENSOR=1
+TENSOR_PARTITIONS=0
+CROSS_DEVICE_COLLECTIVES=0
+ALL_REDUCE_OPS=0
+ONE_TENSOR_ONE_OWNER=1
+WEIGHT_WINDOW_BYTES=0
+ACTIVATION_LIVE_BYTES=86016
+KV_HOT_BYTES=0
+SCRATCH_BYTES=28672
+WORKING_SET_BYTES=114688
+SPACE_CAPACITY_BYTES=536870912
+SPACE_OCCUPIED_BYTES=0
+SPACE_RECLAIMABLE_BYTES=0
+SPACE_SUFFICIENT=1
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 192
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Addressable: layers=61 virtualSeq=4096 kv_heads=1 headDim=192 (hot pages only)
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=4096 heads=1 dim=192
+[KVCache] HOT_BYTES=749568 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF7BD89C5C0 dequant=00007FF7BD899C50 GetGEMV(12)=00007FF7BD89C5C0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[Deep2Engine] NVMe streaming: ENABLED
+[NVMeStream] Mapped F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf (43.12 GB)
+[NVMeStream] Max resident: 4.00 GB
+[Deep2Engine] GPU open failed slot 0 (AMD Radeon AI PRO R9700) — keep opened sticks (no clear-all)
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon RX 7800 XT) — keep opened sticks (no clear-all)
+[Deep2Engine] Vulkan open failed — GPU inference required (RAWRXD_HOST_DECODE=1 for CPU opt-in only)
+GEN=0 BIND16_LINKED=0 PACKED_Q2K_READY=0 SSVK_READY=0 DUALSTICK_ARMED=0 GPU_RESIDENT=0 MODEL_LOADED=1 DEVICE_COUNT=0 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=0 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=deepseek2 LAYERS=61 KV_HEADS=1 HEAD_DIM=192
+HOST_DECODE_SANITIZE=1 elastic=0 cyclone=0 ckv=0 mars=0 medusa=0 livepath=0 BASE_FORWARD=1 OPTIONAL_ONLY_SKIPPED=1
+[Deep2Engine] Initialization complete
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BCC7
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=1
+DEEP2_DEVICE_1_DUTY=EXCLUDED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018BF1
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.265362
+DEEP2_COST_CUT=33
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-32
+DEEP2_COST_SLOT1_LAYERS=33-60
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] vkCreateInstance failed
+[VulkanCompute] vkCreateInstance failed
+[VulkanCompute] vkCreateInstance failed
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'deepseek' from model metadata (arch=deepseek2)
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream?runK2NativeStreamPartial
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=OFF
+K2_LIVE_POLICY_MODE=0
+K2_LIVE_POLICY_REASON=force_off
+K2_LIVE_POLICY_REUSE_STEPS=1952
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=32
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=0 MECH_ENV=none WANTED=0
+STEP_ENTER STEP=0/32
+STREAM_HEARTBEAT STEP=0/32 TEARDOWN_WITNESS=0
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=1
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=2
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=3
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=4
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=5
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=6
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=7
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=8
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=9
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=10
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=11
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=12
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=13
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=13 decode=1 ctr=14
+LIVE_K2_MOE_PLACE layer=13 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=14 decode=1 ctr=15
+LIVE_K2_MOE_PLACE layer=14 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=15 decode=1 ctr=16
+LIVE_K2_MOE_PLACE layer=15 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=16 decode=1 ctr=17
+LIVE_K2_MOE_PLACE layer=16 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=17 decode=1 ctr=18
+LIVE_K2_MOE_PLACE layer=17 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=18 decode=1 ctr=19
+LIVE_K2_MOE_PLACE layer=18 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=19 decode=1 ctr=20
+LIVE_K2_MOE_PLACE layer=19 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=20 decode=1 ctr=21
+LIVE_K2_MOE_PLACE layer=20 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=21 decode=1 ctr=22
+LIVE_K2_MOE_PLACE layer=21 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=22 decode=1 ctr=23
+LIVE_K2_MOE_PLACE layer=22 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=23 decode=1 ctr=24
+LIVE_K2_MOE_PLACE layer=23 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=24 decode=1 ctr=25
+LIVE_K2_MOE_PLACE layer=24 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=25 decode=1 ctr=26
+LIVE_K2_MOE_PLACE layer=25 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=26 decode=1 ctr=27
+LIVE_K2_MOE_PLACE layer=26 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=27 decode=1 ctr=28
+LIVE_K2_MOE_PLACE layer=27 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=28 decode=1 ctr=29
+LIVE_K2_MOE_PLACE layer=28 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=29 decode=1 ctr=30
+LIVE_K2_MOE_PLACE layer=29 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=30 decode=1 ctr=31
+LIVE_K2_MOE_PLACE layer=30 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=31 decode=1 ctr=32
+LIVE_K2_MOE_PLACE layer=31 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=32 decode=1 ctr=33
+LIVE_K2_MOE_PLACE layer=32 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=33 decode=1 ctr=34
+LIVE_K2_MOE_PLACE layer=33 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=34 decode=1 ctr=35
+LIVE_K2_MOE_PLACE layer=34 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=35 decode=1 ctr=36
+LIVE_K2_MOE_PLACE layer=35 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=36 decode=1 ctr=37
+LIVE_K2_MOE_PLACE layer=36 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=37 decode=1 ctr=38
+LIVE_K2_MOE_PLACE layer=37 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=38 decode=1 ctr=39
+LIVE_K2_MOE_PLACE layer=38 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=39 decode=1 ctr=40
+LIVE_K2_MOE_PLACE layer=39 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=40 decode=1 ctr=41
+LIVE_K2_MOE_PLACE layer=40 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=41 decode=1 ctr=42
+LIVE_K2_MOE_PLACE layer=41 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=42 decode=1 ctr=43
+LIVE_K2_MOE_PLACE layer=42 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=43 decode=1 ctr=44
+LIVE_K2_MOE_PLACE layer=43 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=44 decode=1 ctr=45
+LIVE_K2_MOE_PLACE layer=44 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=45 decode=1 ctr=46
+LIVE_K2_MOE_PLACE layer=45 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=46 decode=1 ctr=47
+LIVE_K2_MOE_PLACE layer=46 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=47 decode=1 ctr=48
+LIVE_K2_MOE_PLACE layer=47 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=48 decode=1 ctr=49
+LIVE_K2_MOE_PLACE layer=48 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=49 decode=1 ctr=50
+LIVE_K2_MOE_PLACE layer=49 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=50 decode=1 ctr=51
+LIVE_K2_MOE_PLACE layer=50 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=51 decode=1 ctr=52
+LIVE_K2_MOE_PLACE layer=51 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=52 decode=1 ctr=53
+LIVE_K2_MOE_PLACE layer=52 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=53 decode=1 ctr=54
+LIVE_K2_MOE_PLACE layer=53 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=54 decode=1 ctr=55
+LIVE_K2_MOE_PLACE layer=54 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=55 decode=1 ctr=56
+LIVE_K2_MOE_PLACE layer=55 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=56 decode=1 ctr=57
+LIVE_K2_MOE_PLACE layer=56 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=57 decode=1 ctr=58
+LIVE_K2_MOE_PLACE layer=57 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=58 decode=1 ctr=59
+LIVE_K2_MOE_PLACE layer=58 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=59 decode=1 ctr=60
+LIVE_K2_MOE_PLACE layer=59 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=60 decode=1 ctr=61
+LIVE_K2_MOE_PLACE layer=60 n=8 hits=0 misses=8 miss_bytes=117440512
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000021451419080
+FINAL_NORM_DST_PTR=000002145140D060
+FINAL_NORM_WEIGHT_PTR=00000214514A9020
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=227401.505
+FINAL_NORM_MEAN_SQ=31.7245403
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.177542478
+FINAL_NORM_SRC_0=-2.00844336
+FINAL_NORM_DST_0=-0.384442151
+FINAL_NORM_AFTER_L2=90.1073109
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=0/32 LAST_INDEX=7167 LAST_VALUE=-0.699774325
+HIDDEN_PROBE_ATTEMPT STEP=0/32
+HIDDEN_PROBE STEP=0/32 INDEX=2946 COUNT=7168 VALUE=-0.358390927 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=0/32 INDEX=7167 VALUE=-0.699774325 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=0/32 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=0/32
+LOGITS_ENTRY STEP=0/32 HIDDEN=0000021451419080 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=0/32 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=000002203DFD5060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=0/32
+LOGITS_PROJECT_END STEP=0/32
+LOGITS_ARGMAX_END STEP=0/32 TOK=66971
+LOGITS_RETURN_OK STEP=0/32 TOK=66971
+STEP_EXIT STEP=0/32
+STEP_ENTER STEP=1/32
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=62
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=63
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=1 misses=7 miss_bytes=102760448
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=64
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=1 misses=7 miss_bytes=102760448
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=65
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=1 misses=7 miss_bytes=102760448
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=66
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=67
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=68
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=69
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=70
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=71
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=1 misses=7 miss_bytes=102760448
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=72
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=73
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=74
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=13 decode=1 ctr=75
+LIVE_K2_MOE_PLACE layer=13 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=14 decode=1 ctr=76
+LIVE_K2_MOE_PLACE layer=14 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=15 decode=1 ctr=77
+LIVE_K2_MOE_PLACE layer=15 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=16 decode=1 ctr=78
+LIVE_K2_MOE_PLACE layer=16 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=17 decode=1 ctr=79
+LIVE_K2_MOE_PLACE layer=17 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=18 decode=1 ctr=80
+LIVE_K2_MOE_PLACE layer=18 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=19 decode=1 ctr=81
+LIVE_K2_MOE_PLACE layer=19 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=20 decode=1 ctr=82
+LIVE_K2_MOE_PLACE layer=20 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=21 decode=1 ctr=83
+LIVE_K2_MOE_PLACE layer=21 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=22 decode=1 ctr=84
+LIVE_K2_MOE_PLACE layer=22 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=23 decode=1 ctr=85
+LIVE_K2_MOE_PLACE layer=23 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=24 decode=1 ctr=86
+LIVE_K2_MOE_PLACE layer=24 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=25 decode=1 ctr=87
+LIVE_K2_MOE_PLACE layer=25 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=26 decode=1 ctr=88
+LIVE_K2_MOE_PLACE layer=26 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=27 decode=1 ctr=89
+LIVE_K2_MOE_PLACE layer=27 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=28 decode=1 ctr=90
+LIVE_K2_MOE_PLACE layer=28 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=29 decode=1 ctr=91
+LIVE_K2_MOE_PLACE layer=29 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=30 decode=1 ctr=92
+LIVE_K2_MOE_PLACE layer=30 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=31 decode=1 ctr=93
+LIVE_K2_MOE_PLACE layer=31 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=32 decode=1 ctr=94
+LIVE_K2_MOE_PLACE layer=32 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=33 decode=1 ctr=95
+LIVE_K2_MOE_PLACE layer=33 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=34 decode=1 ctr=96
+LIVE_K2_MOE_PLACE layer=34 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=35 decode=1 ctr=97
+LIVE_K2_MOE_PLACE layer=35 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=36 decode=1 ctr=98
+LIVE_K2_MOE_PLACE layer=36 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=37 decode=1 ctr=99
+LIVE_K2_MOE_PLACE layer=37 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=38 decode=1 ctr=100
+LIVE_K2_MOE_PLACE layer=38 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=39 decode=1 ctr=101
+LIVE_K2_MOE_PLACE layer=39 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=40 decode=1 ctr=102
+LIVE_K2_MOE_PLACE layer=40 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=41 decode=1 ctr=103
+LIVE_K2_MOE_PLACE layer=41 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=42 decode=1 ctr=104
+LIVE_K2_MOE_PLACE layer=42 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=43 decode=1 ctr=105
+LIVE_K2_MOE_PLACE layer=43 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=44 decode=1 ctr=106
+LIVE_K2_MOE_PLACE layer=44 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=45 decode=1 ctr=107
+LIVE_K2_MOE_PLACE layer=45 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=46 decode=1 ctr=108
+LIVE_K2_MOE_PLACE layer=46 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=47 decode=1 ctr=109
+LIVE_K2_MOE_PLACE layer=47 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=48 decode=1 ctr=110
+LIVE_K2_MOE_PLACE layer=48 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=49 decode=1 ctr=111
+LIVE_K2_MOE_PLACE layer=49 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=50 decode=1 ctr=112
+LIVE_K2_MOE_PLACE layer=50 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=51 decode=1 ctr=113
+LIVE_K2_MOE_PLACE layer=51 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=52 decode=1 ctr=114
+LIVE_K2_MOE_PLACE layer=52 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=53 decode=1 ctr=115
+LIVE_K2_MOE_PLACE layer=53 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=54 decode=1 ctr=116
+LIVE_K2_MOE_PLACE layer=54 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=55 decode=1 ctr=117
+LIVE_K2_MOE_PLACE layer=55 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=56 decode=1 ctr=118
+LIVE_K2_MOE_PLACE layer=56 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=57 decode=1 ctr=119
+LIVE_K2_MOE_PLACE layer=57 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=58 decode=1 ctr=120
+LIVE_K2_MOE_PLACE layer=58 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=59 decode=1 ctr=121
+LIVE_K2_MOE_PLACE layer=59 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=60 decode=1 ctr=122
+LIVE_K2_MOE_PLACE layer=60 n=8 hits=6 misses=2 miss_bytes=29360128
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000021451419080
+FINAL_NORM_DST_PTR=000002145140D060
+FINAL_NORM_WEIGHT_PTR=00000214514A9020
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=218690.51
+FINAL_NORM_MEAN_SQ=30.5092788
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.181043923
+FINAL_NORM_SRC_0=3.32991385
+FINAL_NORM_DST_0=0.649959207
+FINAL_NORM_AFTER_L2=90.0820157
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=1/32 LAST_INDEX=7167 LAST_VALUE=-1.00790322
+HIDDEN_PROBE_ATTEMPT STEP=1/32
+HIDDEN_PROBE STEP=1/32 INDEX=1492 COUNT=7168 VALUE=0.244870067 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=1/32 INDEX=7167 VALUE=-1.00790322 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=1/32 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=1/32
+LOGITS_ENTRY STEP=1/32 HIDDEN=0000021451419080 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=1/32 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=000002203DFD5060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=1/32
+LOGITS_PROJECT_END STEP=1/32
+LOGITS_ARGMAX_END STEP=1/32 TOK=13628
+LOGITS_RETURN_OK STEP=1/32 TOK=13628
+STEP_EXIT STEP=1/32
+STEP_ENTER STEP=2/32
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=123
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=124
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=125
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=126
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=127
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=1 misses=7 miss_bytes=102760448
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=128
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=129
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=130
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=131
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=132
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=133
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=134
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=135
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=13 decode=1 ctr=136
+LIVE_K2_MOE_PLACE layer=13 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=14 decode=1 ctr=137
+LIVE_K2_MOE_PLACE layer=14 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=15 decode=1 ctr=138
+LIVE_K2_MOE_PLACE layer=15 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=16 decode=1 ctr=139
+LIVE_K2_MOE_PLACE layer=16 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=17 decode=1 ctr=140
+LIVE_K2_MOE_PLACE layer=17 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=18 decode=1 ctr=141
+LIVE_K2_MOE_PLACE layer=18 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=19 decode=1 ctr=142
+LIVE_K2_MOE_PLACE layer=19 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=20 decode=1 ctr=143
+LIVE_K2_MOE_PLACE layer=20 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=21 decode=1 ctr=144
+LIVE_K2_MOE_PLACE layer=21 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=22 decode=1 ctr=145
+LIVE_K2_MOE_PLACE layer=22 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=23 decode=1 ctr=146
+LIVE_K2_MOE_PLACE layer=23 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=24 decode=1 ctr=147
+LIVE_K2_MOE_PLACE layer=24 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=25 decode=1 ctr=148
+LIVE_K2_MOE_PLACE layer=25 n=8 hits=8 misses=0 miss_bytes=0
+LIVE_K2_MOE_ENTER layer=26 decode=1 ctr=149
+LIVE_K2_MOE_PLACE layer=26 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=27 decode=1 ctr=150
+LIVE_K2_MOE_PLACE layer=27 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=28 decode=1 ctr=151
+LIVE_K2_MOE_PLACE layer=28 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=29 decode=1 ctr=152
+LIVE_K2_MOE_PLACE layer=29 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=30 decode=1 ctr=153
+LIVE_K2_MOE_PLACE layer=30 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=31 decode=1 ctr=154
+LIVE_K2_MOE_PLACE layer=31 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=32 decode=1 ctr=155
+LIVE_K2_MOE_PLACE layer=32 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=33 decode=1 ctr=156
+LIVE_K2_MOE_PLACE layer=33 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=34 decode=1 ctr=157
+LIVE_K2_MOE_PLACE layer=34 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=35 decode=1 ctr=158
+LIVE_K2_MOE_PLACE layer=35 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=36 decode=1 ctr=159
+LIVE_K2_MOE_PLACE layer=36 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=37 decode=1 ctr=160
+LIVE_K2_MOE_PLACE layer=37 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=38 decode=1 ctr=161
+LIVE_K2_MOE_PLACE layer=38 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=39 decode=1 ctr=162
+LIVE_K2_MOE_PLACE layer=39 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=40 decode=1 ctr=163
+LIVE_K2_MOE_PLACE layer=40 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=41 decode=1 ctr=164
+LIVE_K2_MOE_PLACE layer=41 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=42 decode=1 ctr=165
+LIVE_K2_MOE_PLACE layer=42 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=43 decode=1 ctr=166
+LIVE_K2_MOE_PLACE layer=43 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=44 decode=1 ctr=167
+LIVE_K2_MOE_PLACE layer=44 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=45 decode=1 ctr=168
+LIVE_K2_MOE_PLACE layer=45 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=46 decode=1 ctr=169
+LIVE_K2_MOE_PLACE layer=46 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=47 decode=1 ctr=170
+LIVE_K2_MOE_PLACE layer=47 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=48 decode=1 ctr=171
+LIVE_K2_MOE_PLACE layer=48 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=49 decode=1 ctr=172
+LIVE_K2_MOE_PLACE layer=49 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=50 decode=1 ctr=173
+LIVE_K2_MOE_PLACE layer=50 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=51 decode=1 ctr=174
+LIVE_K2_MOE_PLACE layer=51 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=52 decode=1 ctr=175
+LIVE_K2_MOE_PLACE layer=52 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=53 decode=1 ctr=176
+LIVE_K2_MOE_PLACE layer=53 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=54 decode=1 ctr=177
+LIVE_K2_MOE_PLACE layer=54 n=8 hits=8 misses=0 miss_bytes=0
+LIVE_K2_MOE_ENTER layer=55 decode=1 ctr=178
+LIVE_K2_MOE_PLACE layer=55 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=56 decode=1 ctr=179
+LIVE_K2_MOE_PLACE layer=56 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=57 decode=1 ctr=180
+LIVE_K2_MOE_PLACE layer=57 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=58 decode=1 ctr=181
+LIVE_K2_MOE_PLACE layer=58 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=59 decode=1 ctr=182
+LIVE_K2_MOE_PLACE layer=59 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=60 decode=1 ctr=183
+LIVE_K2_MOE_PLACE layer=60 n=8 hits=7 misses=1 miss_bytes=14680064
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000021451419080
+FINAL_NORM_DST_PTR=000002145140D060
+FINAL_NORM_WEIGHT_PTR=00000214514A9020
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=219087.245
+FINAL_NORM_MEAN_SQ=30.5646268
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.180879936
+FINAL_NORM_SRC_0=2.9722333
+FINAL_NORM_DST_0=0.579618752
+FINAL_NORM_AFTER_L2=89.7875529
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=2/32 LAST_INDEX=7167 LAST_VALUE=-0.850472629
+HIDDEN_PROBE_ATTEMPT STEP=2/32
+HIDDEN_PROBE STEP=2/32 INDEX=6112 COUNT=7168 VALUE=0.617328405 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=2/32 INDEX=7167 VALUE=-0.850472629 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=2/32 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=2/32
+LOGITS_ENTRY STEP=2/32 HIDDEN=0000021451419080 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=2/32 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=000002203DFD5060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=2/32
+LOGITS_PROJECT_END STEP=2/32
+LOGITS_ARGMAX_END STEP=2/32 TOK=13557
+LOGITS_RETURN_OK STEP=2/32 TOK=13557
+STEP_EXIT STEP=2/32
+STEP_ENTER STEP=3/32
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=184
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=185
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=186
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=187
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=188
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=189
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=190
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=191
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=192
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=193
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=194
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=195
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=196
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=13 decode=1 ctr=197
+LIVE_K2_MOE_PLACE layer=13 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=14 decode=1 ctr=198
+LIVE_K2_MOE_PLACE layer=14 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=15 decode=1 ctr=199
+LIVE_K2_MOE_PLACE layer=15 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=16 decode=1 ctr=200
+LIVE_K2_MOE_PLACE layer=16 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=17 decode=1 ctr=201
+LIVE_K2_MOE_PLACE layer=17 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=18 decode=1 ctr=202
+LIVE_K2_MOE_PLACE layer=18 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=19 decode=1 ctr=203
+LIVE_K2_MOE_PLACE layer=19 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=20 decode=1 ctr=204
+LIVE_K2_MOE_PLACE layer=20 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=21 decode=1 ctr=205
+LIVE_K2_MOE_PLACE layer=21 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=22 decode=1 ctr=206
+LIVE_K2_MOE_PLACE layer=22 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=23 decode=1 ctr=207
+LIVE_K2_MOE_PLACE layer=23 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=24 decode=1 ctr=208
+LIVE_K2_MOE_PLACE layer=24 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=25 decode=1 ctr=209
+LIVE_K2_MOE_PLACE layer=25 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=26 decode=1 ctr=210
+LIVE_K2_MOE_PLACE layer=26 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=27 decode=1 ctr=211
+LIVE_K2_MOE_PLACE layer=27 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=28 decode=1 ctr=212
+LIVE_K2_MOE_PLACE layer=28 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=29 decode=1 ctr=213
+LIVE_K2_MOE_PLACE layer=29 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=30 decode=1 ctr=214
+LIVE_K2_MOE_PLACE layer=30 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=31 decode=1 ctr=215
+LIVE_K2_MOE_PLACE layer=31 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=32 decode=1 ctr=216
+LIVE_K2_MOE_PLACE layer=32 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=33 decode=1 ctr=217
+LIVE_K2_MOE_PLACE layer=33 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=34 decode=1 ctr=218
+LIVE_K2_MOE_PLACE layer=34 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=35 decode=1 ctr=219
+LIVE_K2_MOE_PLACE layer=35 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=36 decode=1 ctr=220
+LIVE_K2_MOE_PLACE layer=36 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=37 decode=1 ctr=221
+LIVE_K2_MOE_PLACE layer=37 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=38 decode=1 ctr=222
+LIVE_K2_MOE_PLACE layer=38 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=39 decode=1 ctr=223
+LIVE_K2_MOE_PLACE layer=39 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=40 decode=1 ctr=224
+LIVE_K2_MOE_PLACE layer=40 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=41 decode=1 ctr=225
+LIVE_K2_MOE_PLACE layer=41 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=42 decode=1 ctr=226
+LIVE_K2_MOE_PLACE layer=42 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=43 decode=1 ctr=227
+LIVE_K2_MOE_PLACE layer=43 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=44 decode=1 ctr=228
+LIVE_K2_MOE_PLACE layer=44 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=45 decode=1 ctr=229
+LIVE_K2_MOE_PLACE layer=45 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=46 decode=1 ctr=230
+LIVE_K2_MOE_PLACE layer=46 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=47 decode=1 ctr=231
+LIVE_K2_MOE_PLACE layer=47 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=48 decode=1 ctr=232
+LIVE_K2_MOE_PLACE layer=48 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=49 decode=1 ctr=233
+LIVE_K2_MOE_PLACE layer=49 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=50 decode=1 ctr=234
+LIVE_K2_MOE_PLACE layer=50 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=51 decode=1 ctr=235
+LIVE_K2_MOE_PLACE layer=51 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=52 decode=1 ctr=236
+LIVE_K2_MOE_PLACE layer=52 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=53 decode=1 ctr=237
+LIVE_K2_MOE_PLACE layer=53 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=54 decode=1 ctr=238
+LIVE_K2_MOE_PLACE layer=54 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=55 decode=1 ctr=239
+LIVE_K2_MOE_PLACE layer=55 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=56 decode=1 ctr=240
+LIVE_K2_MOE_PLACE layer=56 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=57 decode=1 ctr=241
+LIVE_K2_MOE_PLACE layer=57 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=58 decode=1 ctr=242
+LIVE_K2_MOE_PLACE layer=58 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=59 decode=1 ctr=243
+LIVE_K2_MOE_PLACE layer=59 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=60 decode=1 ctr=244
+LIVE_K2_MOE_PLACE layer=60 n=8 hits=6 misses=2 miss_bytes=29360128
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000021451419080
+FINAL_NORM_DST_PTR=000002145140D060
+FINAL_NORM_WEIGHT_PTR=00000214514A9020
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=219473.863
+FINAL_NORM_MEAN_SQ=30.6185635
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.180720538
+FINAL_NORM_SRC_0=3.76955748
+FINAL_NORM_DST_0=0.734458029
+FINAL_NORM_AFTER_L2=89.8633834
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=3/32 LAST_INDEX=7167 LAST_VALUE=-0.547298014
+HIDDEN_PROBE_ATTEMPT STEP=3/32
+HIDDEN_PROBE STEP=3/32 INDEX=2289 COUNT=7168 VALUE=-0.436321914 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=3/32 INDEX=7167 VALUE=-0.547298014 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=3/32 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=3/32
+LOGITS_ENTRY STEP=3/32 HIDDEN=0000021451419080 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=3/32 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=000002203DFD5060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=3/32
+LOGITS_PROJECT_END STEP=3/32
+LOGITS_ARGMAX_END STEP=3/32 TOK=69391
+LOGITS_RETURN_OK STEP=3/32 TOK=69391
+STEP_EXIT STEP=3/32
+STEP_ENTER STEP=4/32
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=245
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=246
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=247
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=248
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=249
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=1 misses=7 miss_bytes=102760448
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=250
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=251
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=252
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=3 misses=5 miss_bytes=73400320
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=253
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=254
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=2 misses=6 miss_bytes=88080384
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=255
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=256
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=257
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=13 decode=1 ctr=258
+LIVE_K2_MOE_PLACE layer=13 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=14 decode=1 ctr=259
+LIVE_K2_MOE_PLACE layer=14 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=15 decode=1 ctr=260
+LIVE_K2_MOE_PLACE layer=15 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=16 decode=1 ctr=261
+LIVE_K2_MOE_PLACE layer=16 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=17 decode=1 ctr=262
+LIVE_K2_MOE_PLACE layer=17 n=8 hits=4 misses=4 miss_bytes=58720256
+LIVE_K2_MOE_ENTER layer=18 decode=1 ctr=263
+LIVE_K2_MOE_PLACE layer=18 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=19 decode=1 ctr=264
+LIVE_K2_MOE_PLACE layer=19 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=20 decode=1 ctr=265
+LIVE_K2_MOE_PLACE layer=20 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=21 decode=1 ctr=266
+LIVE_K2_MOE_PLACE layer=21 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=22 decode=1 ctr=267
+LIVE_K2_MOE_PLACE layer=22 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=23 decode=1 ctr=268
+LIVE_K2_MOE_PLACE layer=23 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=24 decode=1 ctr=269
+LIVE_K2_MOE_PLACE layer=24 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=25 decode=1 ctr=270
+LIVE_K2_MOE_PLACE layer=25 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=26 decode=1 ctr=271
+LIVE_K2_MOE_PLACE layer=26 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=27 decode=1 ctr=272
+LIVE_K2_MOE_PLACE layer=27 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=28 decode=1 ctr=273
+LIVE_K2_MOE_PLACE layer=28 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=29 decode=1 ctr=274
+LIVE_K2_MOE_PLACE layer=29 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=30 decode=1 ctr=275
+LIVE_K2_MOE_PLACE layer=30 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=31 decode=1 ctr=276
+LIVE_K2_MOE_PLACE layer=31 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=32 decode=1 ctr=277
+LIVE_K2_MOE_PLACE layer=32 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=33 decode=1 ctr=278
+LIVE_K2_MOE_PLACE layer=33 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=34 decode=1 ctr=279
+LIVE_K2_MOE_PLACE layer=34 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=35 decode=1 ctr=280
+LIVE_K2_MOE_PLACE layer=35 n=8 hits=7 misses=1 miss_bytes=14680064
+LIVE_K2_MOE_ENTER layer=36 decode=1 ctr=281
+LIVE_K2_MOE_PLACE layer=36 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=37 decode=1 ctr=282
+LIVE_K2_MOE_PLACE layer=37 n=8 hits=6 misses=2 miss_bytes=29360128
+LIVE_K2_MOE_ENTER layer=38 decode=1 ctr=283
+LIVE_K2_MOE_PLACE layer=38 n=8 hits=5 misses=3 miss_bytes=44040192
+LIVE_K2_MOE_ENTER layer=39 decode=1 ctr=284
+LIVE_K2_MOE_PLACE layer=39 n=8 hits=6 misses=2 miss_bytes=29360128

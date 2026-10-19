@@ -1,0 +1,33 @@
+FUTURE_CONSUMER_SPACE_001
+DATE=2026-09-09
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+INVARIANT
+  future consumer address space grows; the physical pool does not.
+
+SEAL
+  FUTURE_CONSUMER_SPACE_GROWS=1
+  LOGICAL_ADDRESS_SPACE_GROWS=1
+  PHYSICAL_PAGE_POOL_GROWS=0
+  HOTPATH_ALLOCATIONS=0  (FreeToken allocsAfterInit)
+  PAST_OWNER → FUTURE_OWNER
+  FREE_REQUIRED=0
+  REUSE_REQUIRED=1
+  CACHE_METRIC=TIME_UNTIL_CONSUMER
+
+MODEL
+  FutureConsumer / FutureAddress  → grow with 20/70/120/300/671+
+  PhysicalPage[FREETOKEN_ZONE_COUNT] → constant (FreeToken VirtualAlloc once)
+  Priority = (Reuse×Stall×Prob)/(TimeUntilUse×Bytes)
+
+CODE
+  lavapath/FutureConsumerLaw.hpp
+  lavapath/FutureConsumerSpace.hpp|.cpp|_Emit.cpp|_Internal.hpp
+  FreeToken Overwrite → AdvanceOwnership
+  MoEWeightProxy Prefetch → Register future consumers
+  Elastic init → InitFromPhysicalPool + EmitLaw
+  StreamerMechanicsReceipt → EmitLaw with FreeToken mechanics
+
+TIERS
+  FUTURE-5..1 → CURRENT → PAST (page immediately recyclable to ownerNext)

@@ -1,0 +1,88 @@
+PATH_B_N5_003_ATTR_SPLIT_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_ATTRIBUTION
+SPEND=0
+CODE_CHANGE=0
+RERUN=0
+PROMOTE=0
+DELETE_PROVEN=NOT_ASSESSED
+MEMORY_OVERRIDE=0
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  PATH_B_N5=FAIL
+  CHAMPION=PATH_A WALL_MEDIAN_NS=10184789000
+
+RECEIPT_CORRECTION=
+  PATH_B_N5_003 STOP_REASON was trial_1_fail_no_path_to_median
+  CORRECTED_TO=trial_1_invalid_witness_stream_abort_teardown_av
+  REASON=one invalid/slow trial does not mathematically eliminate n=5 median;
+         defensible stop is invalid witness (abort + teardown AV), not median math.
+
+TRIAL_01_PROVES=
+  PATH_B_Q_BUFFER_NULL_BUG=FIXED_NO_LONGER_OBSERVED
+  GATE12_ROPE_MESSAGE=GONE
+  PARITY=PASS (as recorded on spend receipt)
+  STREAM_CONTRACT=FAIL_CLASSIFIED (see DEFECT_A)
+  TEARDOWN=FAIL EXIT=0xC0000005 / exit.txt EXIT=-1
+  WITNESS_EXIT_VALID=0
+  DELETE_PROVEN=NOT_ASSESSED
+  PERFORMANCE_PROMOTION=0
+  PATH_A_CHAMPION=RETAINED
+
+# --- LOG FACTS (trial_01.*) — SOURCE→MEASUREMENT attribution only ----------
+
+LOG_FACTS=
+  stderr STREAM_HEARTBEAT count=1 (STEP=0/64 TEARDOWN_WITNESS=0 only)
+  stderr STREAM_ABORT=1 OWNER=* lines=0
+  stderr "Stream contract not satisfied" literal=ABSENT
+  stderr Gate12 "RoPE not applied"=ABSENT
+  stderr FINAL_NORM blocks=MANY (decode progressed past first token)
+  stdout lines=151 truncated mid KVA_CLIMB / no Gate10 contract footer
+  exit.txt=EXIT=-1 (AV class; harness mapped 0xC0000005)
+
+# --- TWO DEFECTS (do not conflate with fixed Gate12/Q-buffer) --------------
+
+DEFECT_A=STREAM_CONTRACT_COMPLETION
+  CHAIN=Attend/PathB → generateStream contract → STREAM_ABORT class → invalid witness
+  OBSERVED_IN_LOG=
+    No orderly STREAM_ABORT=1 OWNER=TOKEN_EMBED|MLA_FORWARD|FINAL_NORM|LOGITS
+    No explicit Gate12 kvLength/rope/softmax fail string in trial_01 files
+    Opaque "Stream contract not satisfied" appears on spend RECEIPT text,
+    not as a literal in trial_01.stdout/stderr for this run
+  IMPLICATION=
+    Either (1) contract fail was classified by harness/parent without stderr echo,
+    or (2) process never reached K2NativeStreamGate end-of-Run ok-assembly
+    because DEFECT_B killed mid-stream after STEP=0 heartbeat.
+  NOT=
+    PATH_B_Q null VkBuffer
+    Gate12 "RoPE not applied" message
+  STATUS=OPEN_ATTRIBUTION
+  NEXT_FIX_POLICY=SOURCE→BUILD→RUNTIME→MEASUREMENT (requires HOT_GATE spend to close)
+
+DEFECT_B=TEARDOWN_AV_0xC0000005
+  CHAIN=… → teardown / mid-run unload → EXIT=0xC0000005
+  OBSERVED_IN_LOG=
+    TEARDOWN_WITNESS never advanced to 1
+    stdout incomplete (no clean shutdown banner after init)
+    exit class AV
+  PRIOR_FIX_CLAIM=PathB_ClearQDev at Run() exit (POST_FT RC9 LANDED in source)
+  STATUS=OPEN — LANDED_IN_SOURCE_UNCONFIRMED_BY_VALID_WITNESS
+  NOTE=remeasure under authorized spend only; Mode D does not claim AV gone
+
+SEPARATION_RULE=
+  Gate12/Q-buffer closure is RETAINED as observed-absent on PATH_B_N5_003.
+  DEFECT_A and DEFECT_B remain distinct open items.
+  Do not attribute either to the already-fixed Q-buffer / Gate12 RoPE path.
+
+PERF_NOTE=
+  DECODE_TPS_REAL=2.096 WALL=30540823900 vs PATH_A floor 10184789000
+  is recorded but NOT a promote bar input while WITNESS_EXIT_VALID=0.
+  FLOOR_TPS=5.000 unchanged. No floor waiver. No manifestation flip.
+
+CLOSED_THIS_NOTE=
+  STOP_REASON correction on PATH_B_N5_003/RECEIPT.txt
+  Split attribution sealed
+  No rerun, no DELETE_PROVEN claim, no promotion

@@ -1,0 +1,240 @@
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-08 00:35:00 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[WO_DIAG] GGUF wo.data=0000000021AA0000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000000145D49F0  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000145D49F0  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=00000000145D49F0  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000000145D49F0  registered=201 tensors  bytes=667078656  max=536870912
+[RMV_MOUNT_001]=PASS
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=0000000001C86450 dequant=0000000001C83820 GetGEMV(12)=0000000001C86450 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 2048
+  Num Layers: 22
+  Num Heads: 32
+  Num KV Heads: 4
+  Head Dim: 64
+  Max Seq Len: 512
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Addressable: layers=22 virtualSeq=512 kv_heads=4 headDim=64 (hot pages only)
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=512 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=0000000001C86450 dequant=0000000001C83820 GetGEMV(12)=0000000001C86450 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: SEMANTIC_SAFE (no vulkan/speed features)
+[Deep2Engine] Initialization complete
+[ChatTemplate] PHI3 heal=eos_token stop=2
+[ChatTemplate] Detected 'phi3' from template string
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] PHI3 heal=eos_token stop=2
+[ChatTemplate] Detected 'phi3' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=20
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=MIN
+K2_LIVE_POLICY_MODE=1
+K2_LIVE_POLICY_REASON=force_min
+K2_LIVE_POLICY_REUSE_STEPS=352
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=16
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=none WANTED=1
+[HotPatcher] Registered decoder mode: 0 (patch_7c94c60485be354a)
+[HotPatcher] GENERATE_DECODER_ALG=0
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000000001E200000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=0000000021CE0000 type=12 wk.data=0000000019320000 wv.data=00000000197F0000 wo.data=0000000021AA0000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000000018CE0000 ffnNorm.data=0000000018D40000
+[KVCache] page grow 8 -> 16 hot (virtualMax=512 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=512 pos=16)
+[AGENT] PREFILL_DONE prompt_tokens=20 prefill_ms=961.645
+[AGENT] DECODE_BEGIN max_out=16
+[KVCache] page grow 24 -> 32 hot (virtualMax=512 pos=24)
+[KVCache] page grow 32 -> 40 hot (virtualMax=512 pos=32)
+[Deep2Engine] Generation complete: 16 tokens in 1908.43 ms (E2E 8.38 TPS)
+[Deep2Engine] PREFILL: 20 tok in 961.65 ms (20.80 tok/s) | DECODE: 16 tok in 946.77 ms (16.90 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=35
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=770
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=770
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+LIVE_DECODE_COMMITTED=0
+DEEP2_CPU_FALLBACK_USED=0
+DEEP2_UNPLANNED_DEVICE_FALLBACKS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+RECEIPT_BEGIN=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_E2E_BLOCKERS_105
+BATCH_007_BEGIN=91
+BATCH_007_END=105
+VOCAB_EXT_PRESENT=1 VOCAB_EXT_RUNTIME_BACKED=1 TOKEN_ID_TO_TEXT_VALID=1
+BYTE_FALLBACK_ENABLED=1 UNKNOWN_TOKEN_COUNT=0 DROPPED_TEXT_BYTES=0
+BOS_ID=1 EOS_ID=2 PAD_ID=2 UNK_ID=0 SPECIAL_TOKEN_SOURCE=gguf SPECIAL_TOKEN_VALID=1
+CHAT_TEMPLATE_PRESENT=1 CHAT_TEMPLATE_SOURCE=gguf CHAT_TEMPLATE_RUNTIME_BACKED=1
+PROMPT_FORMATTED_BY_RUNTIME=1 CHAT_TEMPLATE_HASH=15395906581517818860 CHAT_TEMPLATE_POLICY=APPLY_TEMPLATE
+PROMPT_TOKENS=20 GENERATED_TOKENS=16 BOUNDARY_TOKEN_INDEX=20 BOUNDARY_VALID=1
+UTF8_PENDING_BYTES=0 UTF8_VALID_FINAL=1 STREAM_UTF8_ERRORS=0
+DETOK_STATE_CARRY_VALID=1 PARTIAL_TOKEN_FLUSH_VALID=1
+CHUNK_SEQ_ID=16 TOKEN_SEQ_ID=16 CHUNK_ORDER_VALID=1
+TOKEN_COMMIT_COUNT_PER_INDEX=1 DUPLICATE_TOKEN_COMMITS=0
+RETRY_COUNT=0 RETRY_STAGE=NONE RETRY_ROLLBACK_VALID=1
+CANCEL_OBSERVED_AT=NONE CANCEL_SAFE_POINT=1 PARTIAL_OUTPUT_VALID=1
+MAX_TOKENS_REQUESTED=16 TOKENS_COMMITTED=16 STOPPED_BY_MAXTOK_VALID=1
+CTX_SIZE=512 POSITION_INDEX=36 CTX_LIMIT_REACHED=0 CTX_OVERFLOW=0
+TOKEN_INDEX=16 ROPE_POSITION=35 KV_POSITION=35 POSITION_MATCH=1
+STREAM_HASH=428922495206375335 STREAM_HASH_MATCH=1 RECEIPT_ATOMIC=1
+BLOCKER_91_STREAMER_VOCAB_EXT_RUNTIME=PASS
+BLOCKER_92_BYTE_FALLBACK_TOKENIZATION=PASS
+BLOCKER_93_SPECIAL_TOKEN_AUTHORITY=PASS
+BLOCKER_94_CHAT_TEMPLATE_RUNTIME=PASS
+BLOCKER_95_PROMPT_BOUNDARY_GUARD=PASS
+BLOCKER_96_UTF8_STREAM_INTEGRITY=PASS
+BLOCKER_97_DETOKENIZER_STATE_CARRY=PASS
+BLOCKER_98_STREAM_CHUNK_ORDERING=PASS
+BLOCKER_99_TOKEN_COMMIT_IDEMPOTENCE=PASS
+BLOCKER_100_TOKEN_RETRY_SAFETY=PASS
+BLOCKER_101_CANCEL_BOUNDARY_RUNTIME=PASS
+BLOCKER_102_MAX_TOKEN_LIMIT_AUTHORITY=PASS
+BLOCKER_103_CONTEXT_LIMIT_GUARD=PASS
+BLOCKER_104_POSITION_COUNTER_AUTHORITY=PASS
+BLOCKER_105_GENERATION_RECEIPT_ATOMICITY=PASS
+BATCH_007_PASS_COUNT=15
+BATCH_007_UNFINISHED_COUNT=0
+RECEIPT_END=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_PRODUCT_E2E_001
+INPUT_ACCEPTED=1
+MODEL_AUTHORITY=1
+RUNTIME_BACKED=1
+PRODUCTION_DECODE_PATH=1
+HOST_FORWARD_LAYER_CALLS=0
+CPU_F32_EXPANDS=0
+TOKENS_REQUESTED=16
+TOKENS_COMMITTED=16
+STREAM_OUTPUT_PRESENT=1
+COMPLETION_RECEIPT_PRESENT=1
+DECODE_TPS_REAL=8.367
+PRODUCT_FLOOR_TPS=5.000
+FUNCTIONAL_PASS=1
+PRODUCT_PASS=1
+RAWRXD_PRODUCT_E2E_001=PASS
+WALL_BUDGET_IN_PRODUCT=0
+SPIN_CLOSE_BLOCKER=NONE
+SPIN_CLOSE_BLOCKER_OWNER=NONE
+RAWRXD_NO_MORE_BASELINE_STUBS_001=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete
+[Scheduler] Shutdown complete

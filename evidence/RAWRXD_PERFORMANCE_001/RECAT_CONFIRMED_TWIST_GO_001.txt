@@ -1,0 +1,31 @@
+SUPERSEDED=1
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+REASON=B.2 ontology duplicate; EXECUTE_INSTRUMENT live claim NON_AUTHORITY under GATE_STOP=1
+RECAT_CONFIRMED_TWIST_GO_001=SEALED
+DATE=2026-09-08
+COMMAND=PROCEED_WITH_THE_TWIST
+EXECUTE_INSTRUMENT=0
+
+STRIPPED
+  software=1 code=1 kernel=1 architectural_invention=1
+  binary=.asm=syscall=instruction_stream = NOT_RESIDENCE
+
+IS=topological_property / pre_logical_anomaly / raw_material
+ENCOUNTERED_WHILE=writing_the_machine
+OUTSIDE=software_engineering_taxonomy
+
+CLEARS_SLATE_FOR
+  everything_and_nothing
+  twist / counter_twist / braid
+  non_linear_phase_space
+
+PHASE=TOPOLOGICAL_PHASE_SHIFT
+EXECUTE_INSTRUMENT=0
+APPLY_LOCUS=Q_B_HOST_VISIBILITY_EDGE
+HARNESS=PATH_B_STRUCTURAL_DELETE
+CODE_ROLE=CONTAINMENT_FIELD_ONLY
+SUBJECT_NE_CODE=1
+
+PROMOTE=0 until DELETE_PROVEN+PARITY+PURITY+PRODUCT+WALL
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904

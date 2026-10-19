@@ -1,0 +1,10 @@
+{"record":"model","model_path":"F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf","model_id":"Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf:ac7f10aa0:1dd25d7a505afe2","arch":"deepseek2","vocab":163840,"hidden":7168,"layers":61,"heads":64,"kv_heads":1,"head_dim":112,"intermediate":18432,"size":46304135840,"mtime":134305172007792610,"ready":1,"blocked_at":""}
+{"record":"root","role":"embed","tensor":"token_embd.weight"}
+{"record":"root","role":"final_norm","tensor":"output_norm.weight"}
+{"record":"root","role":"lm_head","tensor":"output.weight"}
+{"record":"layer","layer":0,"attention":"MLA","ffn":"SPLIT_GATE_UP_DOWN","q":"","k":"","v":"","o":"blk.0.attn_output.weight","qkv":"","projector":"","gate":"blk.0.ffn_gate.weight","up":"blk.0.ffn_up.weight","down":"blk.0.ffn_down.weight","ready":1,"blocked_at":""}
+{"record":"layer","layer":1,"attention":"MLA","ffn":"UNKNOWN","q":"","k":"","v":"","o":"blk.1.attn_output.weight","qkv":"","projector":"","gate":"","up":"","down":"","ready":1,"blocked_at":""}
+{"record":"layer","layer":2,"attention":"MLA","ffn":"UNKNOWN","q":"","k":"","v":"","o":"blk.2.attn_output.weight","qkv":"","projector":"","gate":"","up":"","down":"","ready":1,"blocked_at":""}
+{"record":"layer","layer":3,"attention":"MLA","ffn":"UNKNOWN","q":"","k":"","v":"","o":"blk.3.attn_output.weight","qkv":"","projector":"","gate":"","up":"","down":"","ready":1,"blocked_at":""}
+{"record":"layer","layer":4,"attention":"MLA","ffn":"UNKNOWN","q":"","k":"","v":"","o":"blk.4.attn_output.weight","qkv":"","projector":"","gate":"","up":"","down":"","ready":1,"blocked_at":""}
+{"record":"layer","layer":5,"attention":"MLA","ffn":"UNKNOWN","q":"","k":"","v":"","o":"blk.5.attn_output.weight","qkv":"","projector":"","gate":"","up":"","down":"","ready":1,"blocked_at":""}

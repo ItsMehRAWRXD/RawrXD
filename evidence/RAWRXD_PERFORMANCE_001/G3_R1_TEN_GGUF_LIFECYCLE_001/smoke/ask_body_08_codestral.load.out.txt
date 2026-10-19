@@ -1,0 +1,1 @@
+{"modelPath":"G:/~dev/rawrxd/_r1_iso/07_codestral/Codestral-22B-v0.1-Q4_K_M.gguf"}

@@ -1,0 +1,49 @@
+EMISSION_OWNERSHIP_001=SEALED
+DATE=2026-09-08
+TYPE=EPISTEMOLOGY
+SPEND=0
+
+LAW=
+  Each claim's own runtime evidence is owned by its corresponding emission from that run.
+  No claim inherits authority from another claim's emission.
+
+OWNS=
+  printed line L in run R  →  sole evidence owner for claims about the field L names in R
+  HIDDEN_PROBE from R      →  only R may claim OBSERVED(actual) for probe
+  HIDDEN_PROBE_DISPOSITION →  only that print owns NOT_REACHED / OBSERVED disposition
+  STEP_ENTER / STEP_EXIT   →  only that run's prints own execute/interrupt classification
+  FINAL_NORM from PATH_B_N5_003 → owns step=22 boundary for that trial only
+
+NO_INHERIT=
+  FINAL_NORM emit does not authorize HIDDEN_PROBE / LOGITS claims
+  HIDDEN_PROBE emit does not authorize LOGITS_ENTRY / DELETE_PROVEN
+  DISPOSITION(NOT_REACHED) does not invent index/value
+  STEP_ENTER does not imply probe OBSERVED(actual)
+  PATH_A champion wall does not authorize PATH_B PASS
+  one step's emissions do not authorize another step's fields
+
+DOES_NOT_OWN=
+  source presence
+  binary armed
+  capability available
+  another run's emissions
+  another claim's emission in the same run
+  developer labels without a matching print
+  silence / missing line
+
+CROSS_RUN=
+  forbidden to backfill R1 claims from R2 emissions
+  forbidden to export R1 emissions into R2 receipt as if R2 observed them
+  PATH_B_N5_003 and HIDDEN_PROBE_RUNTIME_001 are separate ownership domains
+
+CLASSIFY=
+  developer may only classify what that run printed
+  failure-to-fire is an observation only when that run printed DISPOSITION
+  AV with STEP_ENTER and no STEP_EXIT ⇒ INTERRUPTED only for that run
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  SSOT=REVERSE_EMISSION_CONTRACT_001 + HIDDEN_PROBE_WITNESS_001

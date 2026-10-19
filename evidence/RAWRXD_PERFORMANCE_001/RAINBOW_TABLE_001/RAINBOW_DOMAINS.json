@@ -1,0 +1,43 @@
+﻿{
+    "rng_used":  false,
+    "enumerator":  "mixed-radix",
+    "manifest_count":  64,
+    "dimension_count":  3,
+    "finite_pass_size":  "18",
+    "forced_config":  {
+                          "TOKEN_PACING":  0,
+                          "CERT_STEP_LOG":  0,
+                          "LOGITS_GPU_SPLIT":  0,
+                          "QKV_OWNER_RESI_LOG":  0,
+                          "TOK_RESIDUAL_SPAM":  0
+                      },
+    "dimensions":  [
+                       {
+                           "name":  "DEEP2_QA_SX_ROWS",
+                           "values":  [
+                                          32,
+                                          64,
+                                          128
+                                      ],
+                           "count":  3
+                       },
+                       {
+                           "name":  "DEEP2_QB_SX_ROWS",
+                           "values":  [
+                                          32,
+                                          64,
+                                          128
+                                      ],
+                           "count":  3
+                       },
+                       {
+                           "name":  "DEEP2_QKV_SX_ROWS",
+                           "values":  [
+                                          64,
+                                          128
+                                      ],
+                           "count":  2
+                       }
+                   ],
+    "override_file":  "G:\\~dev\\rawrxd\\evidence\\RAWRXD_PERFORMANCE_001\\RAINBOW_TABLE_001\\RAINBOW_DOMAINS.override.json"
+}

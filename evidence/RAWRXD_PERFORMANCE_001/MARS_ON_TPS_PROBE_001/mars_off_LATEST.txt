@@ -1,0 +1,9 @@
+TAG=mars_off_clean
+STAMP=20260909-001037
+LOG=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_off_clean_20260909-001037.log
+ERR=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_off_clean_20260909-001037.err.log
+EXITF=G:\~dev\rawrxd\evidence\K2_USEFUL_TPS_001\mars_off_clean_20260909-001037.exit.txt
+MAX_TOKENS=64
+HARNESS_ORPHAN_REAPER=0
+OWNERSHIP=GEN_PID_WaitForExit
+GEN_PID=13788

@@ -1,0 +1,268 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+ARCH=llama
+HIDDEN=2048 LAYERS=22 HEADS=32 KV_HEADS=4 HEAD_DIM=64 VOCAB=32000 INTERMEDIATE=5632
+SPLIT_QKV_LAYERS=22 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=22 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf.27dce580.1dd1b8ec56ca6b1.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=32000 cols=2048 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=2048 cols=1 type=0
+FFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=5632 old_meta=5632 old_model=5632 old_config=5632
+PHI3_FUSED_FFN_RUNTIME layers=22 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=2048 layers=22 vocab=32000 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=22 split=22 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=22 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=2048 vocab=32000 layers=22
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_CANONICAL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_EXISTS=1 MODEL_IS_DIRECTORY=0 MODEL_BYTES=668788096 MODEL_WRITE_STAMP=134293863902521009
+MODEL_LOCATOR_HASH=9729931391662331815 TENSOR_NAME_SHAPE_HASH=4068251988755313353 MODEL_EXPECTED_FP=6100753368161504131
+DIGEST_FP=6100753368161504131 MANIFEST_FP=6100753368161504131 BIND_FP=6100753368161504131 AUTHORITY_FP=6100753368161504131 RUNTIME_FP=6100753368161504131
+MANIFEST_LOADED=1 MANIFEST_THIS_RUN=1 MANIFEST_ID=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf:27dce580:1dd1b8ec56ca6b1
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=1 BLOCKED_AT=NONE WHY=SAME_MODEL_FINGERPRINT
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=5632 ffnGateScratch=5632
+INIT_FROM_PATH=LOAD_ONLY maxSeq_req=512 live=2048
+[TRANSFER] tensor=9 UNKNOWN→VRAM bytes=2359296 prio=Blocking duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=7 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=9 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=10 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=7 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=8 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=10 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=4 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=8 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=5 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=4 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=3 UNKNOWN→VRAM bytes=9461760 prio=Blocking duration_ms=0.00 throughput_GBps=88119.51
+[TRANSFER] tensor=5 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=18 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=3 VRAM→RAM bytes=9461760 prio=Opportunistic status=OK
+[TRANSFER] tensor=16 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=18 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=19 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=16 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=17 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=19 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=13 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=17 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=14 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=13 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=12 UNKNOWN→VRAM bytes=9461760 prio=Blocking status=OK
+[TRANSFER] tensor=14 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=117 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=12 VRAM→RAM bytes=9461760 prio=Opportunistic status=OK
+[TRANSFER] tensor=115 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=117 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=118 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=115 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=116 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=118 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=112 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=116 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=113 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=112 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=111 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=113 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=144 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=111 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=142 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=144 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=145 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=142 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=143 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=145 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=139 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=143 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=140 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=139 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=138 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=140 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=153 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=138 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=151 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=153 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=154 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=151 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=152 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=154 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=148 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=152 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=149 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=148 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=147 UNKNOWN→VRAM bytes=9461760 prio=Blocking status=OK
+[TRANSFER] tensor=149 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=162 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=147 VRAM→RAM bytes=9461760 prio=Opportunistic duration_ms=0.00 throughput_GBps=88119.51
+[TRANSFER] tensor=160 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=162 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=163 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=160 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=161 UNKNOWN→VRAM bytes=2359296 prio=Blocking duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=163 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=157 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=161 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=158 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=157 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=156 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=158 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=171 UNKNOWN→VRAM bytes=2359296 prio=Blocking duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=156 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=169 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=171 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=172 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=169 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=170 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=172 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=166 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=170 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=167 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=166 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=165 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=167 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=180 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=165 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=178 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=180 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=181 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=178 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=179 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=181 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=175 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=179 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=176 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=175 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=174 UNKNOWN→VRAM bytes=9461760 prio=Blocking status=OK
+[TRANSFER] tensor=176 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=189 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=174 VRAM→RAM bytes=9461760 prio=Opportunistic status=OK
+[TRANSFER] tensor=187 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=189 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=190 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=187 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=188 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=190 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=184 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=188 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=185 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=8632.11
+[TRANSFER] tensor=184 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=183 UNKNOWN→VRAM bytes=9461760 prio=Blocking status=OK
+[TRANSFER] tensor=185 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=198 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=183 VRAM→RAM bytes=9461760 prio=Opportunistic duration_ms=0.00 throughput_GBps=88119.51
+[TRANSFER] tensor=196 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=198 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=199 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=196 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=197 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=199 VRAM→RAM bytes=430080 prio=Opportunistic duration_ms=0.00 throughput_GBps=4005.43
+[TRANSFER] tensor=193 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=197 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=194 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=193 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=192 UNKNOWN→VRAM bytes=9461760 prio=Blocking duration_ms=0.00 throughput_GBps=88119.51
+[TRANSFER] tensor=194 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=27 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=192 VRAM→RAM bytes=9461760 prio=Opportunistic duration_ms=0.00 throughput_GBps=88119.51
+[TRANSFER] tensor=25 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=27 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=28 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=25 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=26 UNKNOWN→VRAM bytes=2359296 prio=Blocking duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=28 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=22 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=26 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=23 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=22 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=21 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=23 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=36 UNKNOWN→VRAM bytes=2359296 prio=Blocking duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=21 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=34 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=36 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=37 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=34 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=35 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=37 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=31 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=35 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=32 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=31 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=30 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=32 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=45 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=30 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=43 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=45 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=46 UNKNOWN→VRAM bytes=430080 prio=Blocking status=OK
+[TRANSFER] tensor=43 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=44 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=46 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=40 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=44 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=41 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=40 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=39 UNKNOWN→VRAM bytes=9461760 prio=Blocking duration_ms=0.00 throughput_GBps=88119.51
+[TRANSFER] tensor=41 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=54 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=39 VRAM→RAM bytes=9461760 prio=Opportunistic status=OK
+[TRANSFER] tensor=52 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=54 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=55 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=52 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=53 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=55 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=49 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=53 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=50 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=49 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=48 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=50 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=63 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=48 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=61 UNKNOWN→VRAM bytes=294912 prio=Blocking status=OK
+[TRANSFER] tensor=63 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=64 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=61 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=62 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=64 VRAM→RAM bytes=294912 prio=Opportunistic status=OK
+[TRANSFER] tensor=58 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=62 VRAM→RAM bytes=2359296 prio=Opportunistic duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=59 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=58 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=57 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=59 VRAM→RAM bytes=6488064 prio=Opportunistic duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=72 UNKNOWN→VRAM bytes=2359296 prio=Blocking duration_ms=0.00 throughput_GBps=21972.66
+[TRANSFER] tensor=57 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=70 UNKNOWN→VRAM bytes=294912 prio=Blocking duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=72 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=73 UNKNOWN→VRAM bytes=430080 prio=Blocking duration_ms=0.00 throughput_GBps=4005.43
+[TRANSFER] tensor=70 VRAM→RAM bytes=294912 prio=Opportunistic duration_ms=0.00 throughput_GBps=2746.58
+[TRANSFER] tensor=71 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=73 VRAM→RAM bytes=430080 prio=Opportunistic status=OK
+[TRANSFER] tensor=67 UNKNOWN→VRAM bytes=6488064 prio=Blocking status=OK
+[TRANSFER] tensor=71 VRAM→RAM bytes=2359296 prio=Opportunistic status=OK
+[TRANSFER] tensor=68 UNKNOWN→VRAM bytes=6488064 prio=Blocking duration_ms=0.00 throughput_GBps=60424.80
+[TRANSFER] tensor=67 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=66 UNKNOWN→VRAM bytes=9461760 prio=Blocking status=OK
+[TRANSFER] tensor=68 VRAM→RAM bytes=6488064 prio=Opportunistic status=OK
+[TRANSFER] tensor=9 UNKNOWN→VRAM bytes=2359296 prio=Blocking status=OK
+[TRANSFER] tensor=66 VRAM→RAM bytes=9461760 prio=Opportunistic status=OK

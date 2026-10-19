@@ -1,0 +1,109 @@
+PATH_B_N5_003_LOGITS_SOURCE_AUDIT_001=SEALED
+DATE=2026-09-08
+MODE=SOURCE_AUDIT
+TARGET=ProjectLogitsArgmax
+START_BOUNDARY=FINAL_NORM(step22)->ProjectLogitsArgmax(step22)
+CODE_CHANGE=0
+RERUN=0
+PROMOTE=0
+VALID_WITNESS=0
+DELETE_PROVEN=NOT_ASSESSED
+DO_NOT_REOPEN=Gate12/Q-null
+DO_NOT_CLAIM=LOGITS_FAILED
+RUNTIME_RESULT=UNPROVEN
+
+SOURCE_LOCATIONS=
+  body=src/deep2/K2NativeStreamGate.cpp:833-999  ProjectLogitsArgmax
+  call=src/deep2/K2NativeStreamGate.cpp:1268-1310
+  ProduceFinalHidden=src/deep2/FinalNormProduce.hpp:22-53
+  FinalNorm::Apply emit=src/deep2/FinalNormAcquire.hpp:102-127
+  climb=src/deep2/K2LogitsClimb.cpp:589-671
+  split=src/deep2/K2LogitsSplit.cpp:233-369 (only if DEEP2_LOGITS_GPU_SPLIT=1)
+
+# --- REQUIRED AUDIT (1-10) -------------------------------------------------
+
+1_FUNCTION_BODY=
+  Streaming Q6_K packed argmax; no full F32 logits warehouse.
+  ResolveWeight("output.weight") -> LogitsClimb_ArgmaxPacked OR
+  LogitsSplit_ArgmaxPacked OR legacy thread pool.
+  Returns bestTok in [0,vocab) on success; false + error string on fail.
+
+2_CALL_SITE_step22=
+  after ProduceFinalHidden + memcpy(hidden,scratch,hiddenDim*4)
+  ProjectLogitsArgmax(index,outRef,hiddenDim,vocabSize,hidden.data(),curToken,stepErr)
+  on false: STREAM_ABORT OWNER=LOGITS (NOT seen in PATH_B_N5_003)
+  on true: ghostTok.push + optional onToken callback
+
+3_HIDDEN_PTR_SPAN=
+  ProduceFinalHidden(dst=scratch, src=hidden, n=hiddenDim)
+  then memcpy -> hidden.data() is FinalHidden for logits
+  lifetime=loop-local std::vector<float> hidden(hiddenDim); stable across steps
+
+4_HIDDEN_DIM=
+  hiddenDim = k2cfg.hiddenDim
+  trial witness: Hidden Dim: 7168 / [BUF] hidden=7168
+
+5_VOCAB_OUT_DIM=
+  vocabSize = k2cfg.vocabSize
+  trial witness: vocab=163840
+
+6_LM_HEAD_TENSOR=
+  name=output.weight
+  ggmlType must be 14 (Q6_K) at Find + again in ProjectLogitsArgmax
+  geometry: blocksPerRow=ceil(7168/256)=28 rowBytes=5880
+  needBytes=163840*5880=963379200 (~918.75 MiB)
+  guards: vocab*rowBytes <= outRef.byteSize; span.bytes >= need;
+          LogitsClimb: baseBytes/rowBytes >= vocabSize
+
+7_LOGITS_ALLOC=
+  Hot path: NO vocab-sized float buffer
+  Destination = scalar bestTok (int32&)
+  Scratch for FinalNorm only: scratch(hiddenDim)
+
+8_CPU_GPU_OWNERSHIP=
+  Default: CPU LogitsClimb (thread pool, Q6×Q8_K when hiddenDim%256==0)
+  GPU split only if DEEP2_LOGITS_GPU_SPLIT=1 && MLA_GpuGemvWanted
+  PATH_B_N5_003 env: DEEP2_PATH_B=1 RAWRXD_NO_TP=1 — no LOGITS_GPU_SPLIT set
+  => climb path presumed for this trial (not proven by emit)
+
+9_ARGMAX_BOUNDS=
+  climb returns bestR in [0,vocabSize); cast to int32 bestTok
+  false if base/hidden null or size OOB — orderly return, not AV
+
+10_CALLBACK=
+  after successful ProjectLogitsArgmax; cfg.onToken(curToken,user)
+  abort => STREAM_ABORT OWNER=TOKEN_CALLBACK (unobserved this trial)
+
+# --- DIMENSION-MISMATCH CLASS (historical analogy) -------------------------
+
+HISTORICAL_PATTERN=
+  loader dim A vs LinearW dim B => overrun/AV (other path; later fixed)
+
+THIS_BOUNDARY=
+  Explicit Q6_K type gate + byteSize/span/rowBytes guards present.
+  Permanent static mismatch is INCONSISTENT with evidence:
+    FINAL_NORM_AFTER_L2 ×23 => steps 0..22 FinalNorm completed
+    steps 0..21 must have returned from ProjectLogitsArgmax without
+    STREAM_ABORT OWNER=LOGITS (absent) => 22 prior logits returns.
+  Therefore: do NOT claim same historical defect here.
+  Dimension/span checks remain justified audit targets; not a found bug.
+
+# --- A/B STILL OPEN --------------------------------------------------------
+
+GAP_A=crash after FINAL_NORM(step22) before ProjectLogitsArgmax entry
+GAP_B=entered ProjectLogitsArgmax; hard fault before STREAM_ABORT emit
+DISTINGUISH=IMPOSSIBLE without entry/exit witnesses
+NOTE=catch(std::exception) only — SEH/AV => EXIT=-1, no STREAM_ABORT
+
+# --- AUTHORITY -------------------------------------------------------------
+
+MODE=D (after audit seal; SOURCE_AUDIT complete for this pass)
+HOT_GATE=0
+NEXT_SPEND=NONE until explicit HOT_GATE for instrument+remeasure
+CHAMPION=PATH_A
+CHAMPION_WALL_MEDIAN_NS=10184789000
+
+JUSTIFIED_NEXT_SOURCE_ACTION_NOT_DONE=
+  Add fflush'd LOGITS_ENTER / LOGITS_OK (STEP=) around call site
+  to resolve GAP_A vs GAP_B — requires separate HOT_GATE rebuild+run
+  Do not invent a logits "fix" from this audit alone.

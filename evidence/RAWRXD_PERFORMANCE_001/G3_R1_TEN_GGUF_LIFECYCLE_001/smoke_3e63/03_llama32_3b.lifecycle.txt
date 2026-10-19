@@ -1,0 +1,11 @@
+﻿MODEL=llama3.2-3b-Q3_K_S.gguf
+PATH=G:\~dev\rawrxd\llama3.2-3b-Q3_K_S.gguf
+SIZE_MB=1471.4 SHA16=87D059B6BDD196FA
+HEADLESS_PID=7752
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":1,"model":"llama3.2-3b-Q3_K_S.gguf","profile_source":"runtime_gguf","profile_id":9678,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_mi
+LOAD=200 {"success":true,"model":"llama3.2-3b-Q3_K_S.gguf"}
+GENERATE=0 TOKENS=0 PROCS=0
+GEN_SNIP=
+VERDICT=FAIL OWNER=AV_C0000005 DETAIL=died

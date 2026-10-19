@@ -1,0 +1,34 @@
+G4 PATCH MAP — baseline c270b9a574417ac7be8cd1c5b38490e4e941dc5a
+
+ADD src/win32app/HeadlessIDE_ProductLocalOnly.hpp
+  - process-wide runtime-ready/local-only atomics
+  - CPUInferenceEngine::GetSharedInstance bridge
+  - native LoadModel/Tokenize/GenerateStreaming helpers
+  - HTTP reason phrases
+
+PATCH src/win32app/HeadlessIDE.cpp
+  A. include HeadlessIDE_ProductLocalOnly.hpp
+  B. parse --local => m_config.backend="local"
+  C. after initWinsock(): startServer immediately for Server/REPL; runtime remains warming
+  D. end initialize(): SetRuntimeReady(true)
+  E. requestShutdown(): SetRuntimeReady(false) before stopServer
+  F. initBackendManager(): default/local never probe 11434; only explicit --backend ollama may probe
+  G. setActiveBackend/probeBackendHealth: Ollama rejected without network I/O under local-only
+  H. loadModel(): local-only bypasses ModelSourceResolver remote/Ollama reinterpretation
+  I. loadModel(): CPUInferenceEngine native LoadModel must succeed before m_modelLoaded=true
+  J. runInferenceStreaming(): LocalGGUF -> CPUInferenceEngine directly
+  K. routeInferenceRequest(): LocalGGUF -> CPUInferenceEngine directly; no AgentOllamaClient fallthrough
+  L. handleClient(): OPTIONS=204 + CORS methods/headers; runtime-warming gate
+  M. add /api/chat alias to /api/generate
+  N. add /api/backends, /api/backends/status, /api/agents/status, /api/failures diagnostic aliases
+  O. /api/model/load accepts modelPath or path aliases
+  P. correct HTTP status reason phrases
+
+UNCHANGED
+  - Win32IDE_LocalServer certification path
+  - /api/tool / MOTD authorization path
+  - rawr.exe
+  - R01/R02 evidence
+  - DualStick
+  - InferenceEngine.lib evidence
+  - CMake target/source list

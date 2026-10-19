@@ -1,0 +1,53 @@
+GATE=G3_NATIVE_MODEL_PROFILE_001
+PURPOSE=Unstub Native E2E /api/native/generation/prepare model_profile_not_found for on-disk GGUF (BigDaddyG-Q2_K-ULTRA.gguf)
+ASOF=2026-09-10T01:29
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK=CLOSED
+CONFIRMED=1
+R02=CLOSED
+
+ROOT_CAUSE=
+  prepare looked up exact model string in runtime registry + ModelBridge static table.
+  seed_default_runtime_models only registered qwen2.5:1.5b / qwen / rawrxd-e2e.
+  ModelBridge has BigDaddyG-Q4_K_M only — not BigDaddyG-Q2_K-ULTRA.gguf.
+  UI sent bare filename BigDaddyG-Q2_K-ULTRA.gguf; file EXISTS at F:\OllamaModels\...
+  No lazy RawrNative_RegisterRuntimeModel on disk hit / load.
+
+FIX=
+  native_e2e/runtime_gguf_roots.cpp — collect F:/G:/D:/C: OllamaModels + env + exe\models
+  native_e2e/runtime_gguf_disk_resolve.cpp — RegisterRuntimeGgufPath / PathEx
+  native_e2e/runtime_gguf_disk_try.cpp — TryRegisterRuntimeGgufFromDisk on prepare miss
+  native_e2e/rawr_native_http_adapter.cpp — prepare disk-register; POST /api/native/runtime/register; optional path/model_path
+  HeadlessIDE::loadModel — RegisterRuntimeGgufPath(stem + .gguf)
+  Win32IDE::setLoadedModelPath — RegisterRuntimeGgufPath(stem + .gguf)
+  gui ide_chatbot_standalone(+_e2e).html — changeModel register + prepare path passthrough
+
+PROOF_SMOKE=
+  native_prepare_smoke / http smoke: BigDaddyG-Q2_K-ULTRA.gguf → HTTP 200 profile_source=runtime_gguf
+  Witnesses: HTTP_PREPARE_ULTRA.txt HANDLEHTTP_ULTRA.txt
+
+PROOF_LIVE_PRODUCT=
+  EXE_SHA=54FEC3E5A5839873F93CD146075DF160E2FBDFE15CA03E46DDAA4745826236DD
+  Listener: RawrXD-Win32IDE_headless_live.exe --headless --port 11435 (same SHA as build-fd\bin\RawrXD-Win32IDE.exe)
+  POST /api/native/generation/prepare model=BigDaddyG-Q2_K-ULTRA.gguf → HTTP 200
+    ok:true profile_source=runtime_gguf profile_id=9231
+  POST /api/native/runtime/register → HTTP 200 profile_id=9231
+  NopeMissing.gguf → HTTP 404 model_profile_not_found (fail-closed)
+  PROCESS_SURVIVED=1 HEALTH_AFTER=200
+  Witnesses: LIVE_PREPARE_ULTRA.txt LIVE_REGISTER.txt LIVE_CAPS.txt LIVE_PREPARE_MISSING.txt
+
+PRODUCT_EXE=
+  STILL_VETO=PRODUCT_EXE_RELINK CLEARED
+  Strings: /api/native/runtime/register + "GGUF not found under" present; old "register exact GGUF metadata" absent
+
+GGUF=
+  F:\OllamaModels\BigDaddyG-Q2_K-ULTRA.gguf EXISTS (GGUF_ON_DISK.txt)
+
+HELD=
+  PROMOTE=0 TIP_CLIMB=HOLD DualStick CLOSED MOTD sealed untouched
+  agenticMode default false (product GUI HELD restore present)
+  No TPS climb invented
+
+VERDICT=R02_CLOSED_LIVE_PREPARE_200
+  MODEL_PROFILE_NOT_FOUND=0 for BigDaddyG-Q2_K-ULTRA.gguf on live :11435

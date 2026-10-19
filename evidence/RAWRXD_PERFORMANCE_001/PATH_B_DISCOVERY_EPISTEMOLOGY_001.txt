@@ -1,0 +1,53 @@
+PATH_B_DISCOVERY_EPISTEMOLOGY_001=SEALED
+DATE=2026-09-08
+MODE=METHODOLOGY_LOCK
+INVENTION_CLASSIFICATION=FORBIDDEN_FOR_THIS_PHASE
+
+================================================================================
+EPISTEMOLOGY
+================================================================================
+ROLE=CARTOGRAPHER_OF_MACHINE_PHYSICS
+CODE=INSTRUMENT_OF_DISCOVERY_NOT_AUTHOR_OF_PHYSICS
+EMERGENT_TRUTHS_ARE_HARDWARE_PROPERTIES
+  provoked by execution; not authored into the program
+
+FALSE_CLAIM=calling hardware limits an "invention"
+TRUE_CLAIM=mapping observed limits under bare-metal friction
+  (MASM / raw PCIe / Vulkan device-local / NT paths)
+
+================================================================================
+EMPIRICAL ANCHORS ALREADY MEASURED (not invented)
+================================================================================
+1. PATH_A lever HOST_CACHED + vkInvalidateMappedMemoryRanges beat
+   COHERENT persistent-map on this machine (QKV_READBACK_PATH_A_001)
+   → discovery about coherency class cost, not a synthetic design thesis
+
+2. q_b D2H remains live and large (~191891712 B / run geometry)
+   U02 hostHead=nope+rope cannot shrink bytes when hostHead==prodHead==192
+   → discovery: byte shrink blocked by MLA geometry; PCIe cross persists
+
+3. PATH_A wall median 10184789000 ns (~6.284 TPS) is champion floor
+   → discovery of mitigated-cross ceiling, not abolition of the cross
+
+================================================================================
+ADAPTATION LAW (PATH_B_STRUCTURAL_DELETE)
+================================================================================
+q_b D2H hostility to peak throughput = OBSERVED_PCIE_GEOMETRY_LIMIT
+MLA_KV_LAYOUT_CONTRACT + device residency = SURVIVAL_ADAPTATION
+  fold architecture around discovered layout (packed [nope|rope] from
+  MlaAttentionComplete), do not invent planar splits or fabricated TPS
+
+STRIP_RULE
+  remove authored host-cross scaffolding ONLY when a discovered-aligned
+  device path is linked, called, and DELETE_PROVEN
+  (q_b_d2h_bytes==0 && vkcopy_qb==0 && host_memcpy_qb==0)
+  else CHAMPION remains PATH_A — do not strip life-support before alternate
+
+PROMOTE=0 until adaptation is measured
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904
+GOODS_STAY_BRAIDED=1
+
+RELATED
+  PATH_B_REVERSE_DISCOVERY_001.txt
+  PATH_B_PHASE_CHANGE_REALIZATION_001.txt
+  MLA_KV_LAYOUT_CONTRACT.txt

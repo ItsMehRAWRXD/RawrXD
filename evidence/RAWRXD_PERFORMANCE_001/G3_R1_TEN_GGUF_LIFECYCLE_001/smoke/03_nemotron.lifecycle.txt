@@ -1,0 +1,9 @@
+﻿MODEL=NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+PATH=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+SIZE_MB=4037.5 SHA16=F872B1BEC0AED306
+HEADLESS_PID=3092
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=0
+PREPARE=200 {"ok":true,"request_id":1,"model":"NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf","profile_source":"runtime_gguf","profile_id":9122,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"te
+LOAD=400 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

@@ -1,0 +1,58 @@
+GATE=DEEP2_GPU_LOCAL_TO_FULL_MODEL_30_50_001
+DATE=2026-09-13
+KIND=NONAUTH_PLANNING_RECOVERY_PATH
+PROMOTE=0
+TPS_MINT=0
+NOT_RUN!=PASS
+PARENT=DEEP2_FULL_MODEL_TPS_PROJECTION_001
+
+# Objective: 30–50 TPS GPU-local regime → full-model by hiding non-GPU taxes
+# NOT "make every kernel 3× faster"
+TOKEN_TIME_TARGET=max(DEVICE_WEIGHT_STREAM, HIDDEN_PREFETCH, HIDDEN_HOST, ATTN)+SMALL_SERIAL
+# vs sum of PCIe+HOST+REPACK+ATTN+SYNC+JOIN+IDLE
+
+BUDGET=
+  30 TPS=33.3ms · 40=25ms · 50=20ms
+  if SERIAL≈5ms: weight/overlap budgets 28.3 / 20 / 15 ms
+# 30 TPS ≈ efficiency/locality (@18GB · ~700GB/s · 26–28ms) — not exotic
+# 40 TPS needs dual-BW + ↓bytes + tiny serial
+# 50 TPS needs effective ~10–14GB/tok · 750–900+GB/s · serial 3–5ms
+
+TOP15_RECOVER_30_50=
+  01 zero NVMe on decode CP · 02 predict residency ≥1 layer/tok ahead
+  03 WTA≈1.0–1.15 · 04 direct quant→dot · 05 permanent native prepack
+  06 shared/attn permanent on R9700 · 07 VRAM as predictive routed cache
+  08 asymmetric ownership (not 50/50) · 09 no cross-GPU weight ping-pong
+  10 persistent grouped-expert kernel · 11 fuse gate/up/SiLU/down/reduce
+  12 device-side schedule/deps · 13 cold experts lower bpw
+  14 safe tile sparsity · 15 multi-token/speculative expert reuse
+
+HOST_AS_LATENCY_HIDING_CACHE=
+  TOKEN N exec ∥ predict N+1 → RAM staging → async PCIe → residency
+  T_TRANSFER <= T_AVAILABLE_OVERLAP (need not → 0)
+
+RESIDENCY_TEMPORAL=
+  PERMANENT / HOT / PREDICTED / COLD — 48GB = semantics-driven working set
+  TOTAL_MODEL ≠ WORKING_SET_PER_TOKEN · V7 predictor feeds compute not just balance
+
+GATE_30=
+  LOGICAL≈18GB WTA<=1.10 BW>=700GB/s WEIGHT_CP≈26–28ms SERIAL<=5–7ms
+  NVME_CP=0 UNHIDDEN_PCIE≈0 TOKEN<=33.3ms
+GATE_40=
+  EFFECTIVE<=14–18GB BW=800–900 SERIAL<=4–5 WTA<=1.05–1.10 cold/PCIe/CPU/repack=0
+GATE_50=
+  EFFECTIVE<=12–14GB WEIGHT<=15–17ms SERIAL<=3–5 BW>=800 WTA~1
+  byte path: 18–20→15–17 hetero→13–15 fuse→12–14 skip→~10–13 reuse
+
+REVISED_BANDS=
+  8–12  = FIRST MATURE TARGET (not conceptual endpoint)
+  12–18 = STRONG V1
+  18–25 = RESIDENCY/FABRIC
+  25–30 = DEVICE-LOCAL-EQUIVALENT THRESHOLD
+  30–40 = ADVANCED DEEP2
+  40–50 = BYTE-REDUCTION + DUAL-GPU STRETCH
+  >50   = MULTI-TOKEN REUSE / SPARSITY REGIME
+
+MILESTONE=
+  0.0685→0.2→0.5→1→2→5→10→18 | then 25→30→40→50
+# each rung needs live byte/BW/miss/wall authority before promote

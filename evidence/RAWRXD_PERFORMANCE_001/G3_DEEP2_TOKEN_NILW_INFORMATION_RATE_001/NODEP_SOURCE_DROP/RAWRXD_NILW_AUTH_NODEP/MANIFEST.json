@@ -1,0 +1,32 @@
+[
+  {
+    "file": "LAW.txt",
+    "bytes": 1499,
+    "sha256": "e464bc08faffcf6e425f16653c87c38b0ce4315671c7d09f855985528b671650"
+  },
+  {
+    "file": "README.md",
+    "bytes": 991,
+    "sha256": "cbbd42b843ef24ded19ffc6b907d343fcd93a0c1c24489cec215e8850f70845d"
+  },
+  {
+    "file": "build.bat",
+    "bytes": 123,
+    "sha256": "25bd83685e14472df79895351e769cc2e6eae113ef86c787d8ed008dc9e9c712"
+  },
+  {
+    "file": "main.cpp",
+    "bytes": 1529,
+    "sha256": "80c0f33585315daf688be22124b4d50bac56f62dd79e571e2f066673e241f371"
+  },
+  {
+    "file": "nilw_auth.cpp",
+    "bytes": 4015,
+    "sha256": "9b7e0cc26329af9c688f071c75de791be0bc770a1a30d29b186732cd8a250a05"
+  },
+  {
+    "file": "nilw_auth.hpp",
+    "bytes": 1628,
+    "sha256": "be7270721d82dfe404e1491756cfb996bf1b82766ae0e45915e73c2bf0379af1"
+  }
+]

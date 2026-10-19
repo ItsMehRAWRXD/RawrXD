@@ -1,0 +1,17 @@
+HEALTH status=200 body={"status":"ok","mode":"local","authConfigured":false,"uptime":1381}
+PRE_MOTD_LIST status=403 body={"error":"motd_required","message":"Read Message of the Day (PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool"}
+READ_MOTD status=200 len=1558 passive=True
+READ_FILE_ABS status=200
+API_READ_FILE status=200
+LIST_DIR status=200 entries=True
+EXEC_CMD status=200 ok=True
+WRITE_FILE status=200 body={"success":true,"path":"g:\\~dev\\rawrxd\\evidence\\RAWRXD_PERFORMANCE_001\\G3_HEADLESS_API_TOOL_UNSTUB_001\\e2e_write_probe.txt","name":"e2e_write_probe.txt","size":14,"message":"File written successfully"}
+READ_BACK status=200 probe=True
+RUN_TOOL_GIT status=200 output=True
+FAIL_COUNT=0
+EXE=g:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+EXE_SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+EXE_MTIME=2026-09-10T00:28:54
+EXE_SIZE=329302016
+PID=4852
+PORT=11441

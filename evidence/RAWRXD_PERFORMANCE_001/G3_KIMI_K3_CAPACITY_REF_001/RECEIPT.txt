@@ -1,0 +1,18 @@
+GATE=G3_KIMI_K3_CAPACITY_REF_001
+STATUS=POINTER
+DATE=2026-09-10
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+## Canonical full RE brief
+CANONICAL=G3_KIMI_K3_UNMATRIX_DECODE_001
+PATH=../G3_KIMI_K3_UNMATRIX_DECODE_001/
+FILES=RECEIPT.txt KEY_LINES.txt DECODE_MAP.md
+
+This alias gate keeps the original CAPACITY_REF name. Full un-matrix decode map lives
+in UNMATRIX_DECODE_001 (expanded user ask 2026-09-10).
+
+## One-line authority
+kimi-k3-in-c proves MODEL_SIZE != REQUIRED_RESIDENT_MEMORY (~8.24 GB RSS vs ~1.56 TB).
+Deep2 value = FutureConsumer-driven async move hiding the residual I/O wall.
+R1 MATRIX_001 remains FAIL_CLOSED 7/10. PROMOTE=0 TIP_CLIMB=HOLD.

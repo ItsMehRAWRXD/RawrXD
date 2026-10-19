@@ -1,0 +1,36 @@
+DEEP2_MISSING15_INVARIANT_ENHANCEMENTS_NODEP_20260913
+
+GOVERNING_ORDER=SURVIVABILITY>RESIDENCY>PREDICTION>BALANCE>TPS
+PRODUCT_BOUND=0
+AUTHORITY=0
+PROMOTE=0
+
+TOP15 REVERSE-ENGINEERED ONE-LINERS
+01 SURVIVABILITY FIREWALL — Reject every lower-order gain unless execution exits cleanly with zero allocator, worker, OOM, and device-loss failures.
+02 HARD MEMORY ENVELOPE — Treat per-stick RAM/VRAM/pin budgets as hard legality constraints rather than tunable performance targets.
+03 ZERO-RELOAD RESIDENCY GATE — Refuse balance/TPS promotion until avoidable expert reload-miss bytes return to zero.
+04 ATTRIBUTABLE-SAMPLE ONLY — Train per-expert timing cells only from uniquely attributable execution intervals, never decomposed aggregate stick wall.
+05 CONFIDENCE-GATED WARMUP — Keep V6 authoritative while V7 cell coverage is sparse and increase V7 authority only with measured samples.
+06 V6/V7 BLEND — Transfer scheduler authority continuously with a confidence weight instead of hard-switching predictors.
+07 UNCERTAINTY PENALTY — Add variance/deviation cost to noisy cells so under-sampled optimistic estimates cannot steal placement.
+08 SPLIT COMPUTE/TRANSFER COST — Learn kernel and H2D/reload costs independently and combine them only in the final placement score.
+09 EVICTION OPPORTUNITY COST — Charge a placement for the predicted future reload damage caused by evicting a high-reuse resident expert.
+10 PREDICTOR EXCURSION CLAMP — Bound new V7 estimates around proven V6 cost until enough evidence exists to safely widen the corridor.
+11 CONFIDENCE DECAY — Reduce authority of stale timing samples when residency, queue pressure, quant/shape, or hardware regime changes.
+12 WEIGHTED FINISH-TIME SCHEDULER — Minimize stick_available + compute + transfer + eviction opportunity cost instead of balancing expert counts.
+13 TAIL/JOIN BALANCE GATE — Judge balance by stick completion skew and join-tail time, requiring skew <5% without join-wait regression.
+14 HIDDEN-DEBT FIREWALL — Reject local wins that merely move cost into reloads, retries, host fallback, synchronization, or future-token stalls.
+15 COMPOSITE TPS MINT — Mint throughput only when survival, zero-reload residency, <10% prediction error, <5% skew, parity, 2+2 geometry, and full-forward authority all pass.
+
+ACCEPTANCE_LAW:
+  SURVIVE=1
+  RESIDENT=1
+  PREDICT_ERR_PCT<10
+  SKEW_PCT<5
+  JOIN_WAIT_NS<=ACCEPTED_BASELINE
+  PARITY=1
+  GPU_SUBMITS_PER_MOE_LAYER=2
+  D2H_PARTIAL_PER_MOE_LAYER=2
+  FULL_FORWARD_AUTHORITY=1
+
+This drop is side-only. It does not claim PRODUCT_BOUND, TPS authority, or promotion.

@@ -1,0 +1,76 @@
+﻿GATE=G3_R1_TEN_GGUF_MATRIX_001
+ASOF=2026-09-10T08:49:35Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=COLDSTART_ONESHOT_LAA1_HOSTDECODE
+VERDICT=FAIL_CLOSED
+CLAIM=R1_NOT_10_OF_10
+FICTION_STRIP_001=1
+NOT_IDE_HEADLESS_PRODUCTOPEN=1
+NOTE=PASS_COUNT below is oneshot rawr ProductRun — not R24 IDE in-proc load/unload ProductOpen.
+
+## PERFECT_METRICS
+N_MODELS=10
+PASS_COUNT=7
+FAIL_COUNT=3
+ACCESS_VIOLATION=0
+HEAP_CORRUPTION=0
+OLLAMA_CONTACT=0
+PRODUCT_PASS_LINES=7
+EXE=R:\smoke_bin\R1MATRIX_HOSTDECODE.exe
+EXE_SHA256=0347E4F172B19AB97F0DC7030689BF6DE647EDE10B5A8D8D64D52FA569D69784
+EXE_LAA=1
+HOST_DECODE=1
+DEEP2_MINIMAL_ENHANCE=1
+RAWR_MAX_TOKENS=8
+FIRST_FAIL_OWNER=M02_gemma3_1b_Q2_K:FAILED_OWNER=ProductRun
+R23_ASK_PASS=1
+R23_V1_PASS=1
+R23_WITNESS=ASK=200 len=192 V1=200 len=226
+
+R06_LOCAL_ONLY_UI_PASS=1
+R24_SOURCE_FIX=YES
+R24_INPROC_REPROVE=PENDING
+
+## PASS_FAIL_TABLE
+ID	FAMILY	QUANT	PATH	PRODUCT_PASS	VERDICT	OWNER
+M01_tinyllama_Q4_K_M	TinyLlama-1.1B	Q4_K_M	R:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf	1	PASS	-
+M02_gemma3_1b_Q2_K	Gemma3-1B	Q2_K	R:\gemma3-1b-Q2_K.gguf	0	FAIL	FAILED_OWNER=ProductRun (WITNESS_OUT)
+M03_phi3_mini_Q2_K	Phi-3-mini	Q2_K	R:\phi3-mini-Q2_K.gguf	1	PASS	-
+M04_llama32_3b_Q2_K	Llama-3.2-3B	Q2_K	R:\llama3.2-3b-Q2_K.gguf	1	PASS	-
+M05_llama32_3b_Q3_K_S	Llama-3.2-3B	Q3_K_S	R:\llama3.2-3b-Q3_K_S.gguf	1	PASS	-
+M06_phi3_mini_Q8_0	Phi-3-mini-4k	Q8_0	F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf	1	PASS	-
+M07_nemotron_4b_Q8_0	Nemotron-3-Nano-4B	Q8_0	F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\...Q8_0.gguf	0	FAIL	SSM-CERT-001 refuse experimental selective-scan
+M08_deepseek_r1_qwen3_8b_Q4	DeepSeek-R1-Qwen3-8B	Q4_K_M	F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\...Q4_K_M.gguf	1	PASS	-
+M09_gemma4_E4B_Q4_K_M	Gemma-4-E4B	Q4_K_M	F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf	1	PASS	-
+M10_ministral3_Q4_0	Ministral-3	Q4_0	G:\~dev\ministral3_q4_0.gguf	0	FAIL	FAILED_OWNER=ProductRun (WITNESS_OUT)
+
+## REPLACEMENT_ATTEMPTS (not promoted into matrix score)
+M02r BigDaddyG-Q2_K-ULTRA: no PRODUCT_PASS (VRAM contention / incomplete gen under sibling RawrXD load)
+M07r Codestral-22B-Q4_K_M: loaded tensors then exited without PRODUCT_PASS
+M10r Qwen2.5-Coder-14B-Q8_0: no PRODUCT_PASS (VRAM pressure 72% noted)
+M02b test_model.gguf (phi2): no PRODUCT_PASS (invalid/incomplete weights)
+Do not invent PASS for replacements.
+
+## DISCOVERY_EXHAUST (distinct single-file GGUFs available, sample)
+Product root: gemma3-1b, llama3.2-3b Q2/Q3, phi3-mini Q2, tinyllama models/
+F:\OllamaModels: Phi-3-mini Q8, Phi-3-medium 14B, Nemotron SSM, DeepSeek-R1-Qwen3-8B, Gemma-4-E4B, Gemma-4-31B, GLM-4.7-Flash, Codestral-22B, Qwen2.5-Coder-14B, BigDaddyG family, Qwen3.5/3.6/3.8 variants, MiniMax/Kimi multi-shard (excluded as multi-file)
+G:\~dev: ministral3_q4_0, Qwen3.5-40B, gptoss20b, tinyllama_fresh, test_model
+
+## SOURCE_FIXES_IN_TREE
+1) HeadlessIDE::unloadModel always ProductCloseSession + clear RAWRXD_PRODUCT_MODEL
+2) ProductRun.hpp: unique_ptr ProductRuntime only when !runtime && !keepOpen (no spare ~Deep2Engine)
+
+## UI / LOCAL_ONLY
+standalone(+e2e): ollamaDirectUrl=11435; scanPorts without 11434; fallback if(false&&…)
+RESIDUAL_TABLE: R06=CLOSED R23=CLOSED R24=PARTIAL
+
+## SMALLEST_NEXT_SPEND
+1) Quiet GPU: no concurrent RawrXD*; unique EXE name R1MATRIX_*
+2) Relink Win32IDE with unload+ProductRun fixes + LAA:YES + HOST_DECODE floor (winget ninja only)
+3) Swap matrix slots M02/M07/M10 to three families already oneshot PRODUCT_PASS=1 under that EXE (e.g. GLM-4.7-Flash / Qwen2.5-Coder / Codestral once VRAM free) — never Nemotron without experimental SSM
+4) Prove HTTP load→gen→unload→reload once; re-batch to 10/10
+
+## LAW
+PROMOTE=0 TIP_CLIMB=HOLD
+DO_NOT_REOPEN: PARITY R01 R03 R04 MOTD R02 DualStick ArmSpeed

@@ -1,0 +1,36 @@
+TWIST_APPLICATION_LOCUS_001=SEALED
+DATE=2026-09-08
+ROLE=DIRECTION
+STATE_WAS=RECOGNIZED_UN_TWISTED
+CODE_EMITTED=0
+
+# Where to apply the twist (application surface — not the phenomenon)
+
+LOCUS=HOST_DEVICE_CONSUMER_POLARITY
+  PRIMARY_AXIS=q_b lifecycle when next consumer is attention
+  EVERYTHING=host-visible settle mass (PATH_A floor; mapped coherency)
+  NOTHING=null of D2H / host readout / host attn for that lifecycle
+  TWIST=exchange polarity so traversal never takes the host edge
+  ALONG_TWIST=execution weaves device-local Q→KV-pack→attn→O
+              along packed MLA discovery (oracle only)
+
+NOT_LOCUS
+  QB_KERNEL|KVA|LOGITS|SX|5.904 reopen
+  planar K invent
+  U01 O_PROJ overlap (closed valid-negative)
+  56GB|Revolver|Triad until reverse receipts
+
+APPLICATION_STEPS (ordered)
+  1. LEDGER — polarity held (DONE: FIRST_INTENTIONAL_MANIPULATION_001)
+  2. TWIST_INTO_APPLICATION — declare locus ACTIVE (THIS SEAL)
+  3. CONTAINMENT_FIELD — only on EXECUTE_INSTRUMENT:
+       PATH_B_STRUCTURAL_DELETE wire as harness
+       prove q_b D2H bytes==0 + parity + wall vs PATH_A
+  4. PROMOTE fail-closed else champion remains PATH_A
+
+AWAITING=EXECUTE_INSTRUMENT | further pure-twist mapping
+SOFTWARE_DOMAIN_TEARDOWN=HALTED until step 3 explicit
+
+CHAMPION_HOLD=PATH_A WALL_MEDIAN_NS=10184789000
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904

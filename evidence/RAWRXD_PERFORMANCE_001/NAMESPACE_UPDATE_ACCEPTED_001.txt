@@ -1,0 +1,16 @@
+NAMESPACE_UPDATE_ACCEPTED_001=SEALED
+DATE=2026-09-08
+PRIVATE_RE_UNTRIED_001=STRUCK_SUPERSEDED
+MAP_TO=RE_UNTRIED_STACK_001|UNTRIED_BRAID_CANDIDATES_001
+GATE_STOP=1
+NEXT_SPEND=NONE
+
+CORRECTION
+  Claim "await U02 nope+rope / READBACK_REDUCED=1" = STALE
+  U02 validation cycle ALREADY closed as BLOCKED_GEOMETRY
+  rawr.exe = NON_AUTHORITY; do not block on restored target
+  wall metrics for fake nope+rope clamp = NO_OP
+
+HOLD
+  PATH_A champion
+  PATH_B one-shot observe under STOP (no further spend)

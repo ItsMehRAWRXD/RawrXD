@@ -1,0 +1,46 @@
+GATE=G3_E2E_ELASTIC_LIVE_UNSTUB_001
+PURPOSE=restore elastic on DualStick Vulkan E2E (pre-incident C0000005 veto)
+PARENT=G3_E2E_CYCLONE_LIVE_UNSTUB_001
+ASOF=2026-09-09T22:04
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+EXE=G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+SHA256=7DC9AC6A5312F45B5C76FA60056F1BC56143698399F1F89241947A224DC21B64
+
+PRE_INCIDENT_VETO=
+  D_elastic AV C0000005 with devices=3 (VDD dup) then devices=2
+  cyclone RebindElastic + OnTensorUsed→Acquire + host VirtualAlloc "Hot"
+  harness fail-closed ALLOW_ELASTIC=0 ENHANCE_SKIP=elastic
+  prior ELASTIC_EFFECTIVE=1 seals were env-snap only (STACK elastic=0)
+
+ROOT_CAUSE=
+  Vulkan DualStick owns device weights; elastic host→fake-VRAM + cyclone
+  Acquire raced final-norm/logits → C0000005
+
+UNSTUBBED=
+  ElasticResidencyConfig.suppressHostVramMoves when vulkanEnabled_
+  Prefetch/Predict hit-only (no EnqueueUnifiedAsyncMove); Acquire refused
+  Cyclone Initialize/RebindElastic null under Vulkan
+  LinearW OnTensorUsed gated !vulkanEnabled_
+  Harness: ALLOW_ELASTIC=1, LIVE_MECH+=elastic, no default ENHANCE_SKIP=elastic
+
+N5=5/5 PASS (product defaults)
+  EXIT=0 SAFE_SKIP=0 STACK elastic=1
+  TRUE=1 FWD_G0=348 FWD_G1=290 (every run)
+  FT=1 FC=1 SURV=1 FB=0
+  LIVE_PATH_CYCLONE=1 LIVE_PATH_ELASTIC=1
+  BATCH_D B011_hit=100% devices=2
+  STACK=vk+mars+elastic+cyclone+medusa+nu+warmup+ckv+nvme+slide+chamber+torus+plasma+sov+prefetch
+  PROMOTE=0
+
+STILL_HELD=
+  TIP_CLIMB=HOLD
+  PROMOTE=0 (not 64-token champion)
+  MoE Vulkan async prefetch (TinyLlama dense N/A)
+  HOTPATH_ELASTIC=0 by design when vulkanEnabled_ (GPU owns GEMV)
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700
+
+Full: SUMMARY_N5.txt runs_n5/ KEY_LINES.txt AUTHORITY.txt

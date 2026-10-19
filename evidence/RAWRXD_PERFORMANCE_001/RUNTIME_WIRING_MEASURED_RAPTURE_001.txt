@@ -1,0 +1,59 @@
+RUNTIME_WIRING_MEASURED_RAPTURE_001=SEALED
+DATE=2026-09-08
+TYPE=AUTHORITY_REFUSAL
+SPEND=0
+HOT_GATE=0
+MODE=D
+
+REQUEST=
+  runtime wiring and measured execution rapture
+  (interpret: seize/capture those into authority / execute them)
+
+REFUSAL=
+  Mode D cannot rapture LIVE_SITE_WIRING or MEASUREMENT into observed authority.
+  source existence ≠ runtime evidence
+  SURFACE_COVERAGE closed ≠ FIRE_AUTHORITY / measured run
+
+SPLIT=
+  RUNTIME_WIRING
+    may early-complete under SPECIAL_MOMENT=1 EARLY_COMPLETE=<named>
+    HOT_GATE still 0; wiring ≠ observation
+  MEASURED_EXECUTION
+    requires MODE=A HOT_GATE=1 TARGET=<catalog>
+    then seqCap=512 run → per-claim Emit → Collect → classify
+
+CURRENT=
+  LIVE_SITE_WIRING=NOT_CLAIMED
+  RUNTIME_OBSERVATION=NOT_CLAIMED
+  MEASUREMENT=UNSPENT
+  SPECIAL_MOMENT=0
+  NEXT_SPEND=NONE
+  SURFACE_1_17=READY_WHEN_FIRED
+  CLAIM_6 fire = still the first unproven consumer question
+
+EXACT_LINES_TO_PROCEED=
+  SPECIAL_MOMENT=1 EARLY_COMPLETE=EV512_LIVE_SITE_WIRING
+    — optional wiring-only (no measurement)
+  MODE=A HOT_GATE=1 TARGET=PATH_B_N5
+    — or other catalog target for measured execution
+  MODE=COMPAT_TEST HOT_GATE=1 TARGET=B1.2|BATCH1
+    — compat measured path
+
+RETAINED_AS=
+  Mode D / HOT_GATE=0 → no runtime execution authority
+  wiring ≠ observation
+  SURFACE_1_17=READY_WHEN_FIRED ≠ any claim fired
+  LAST_PROVEN=FINAL_NORM(step22) unchanged
+  LIVE_SITE_WIRING=NOT_CLAIMED
+  RUNTIME_OBSERVATION=NOT_CLAIMED
+  MEASUREMENT=UNSPENT
+  SPECIAL_MOMENT=0
+  NEXT_SPEND=NONE
+  contingent on future measured run + per-claim emission
+
+NO_BASIS_TO_CONCLUDE=
+  live site wiring completed
+  seqCap=512 measured execution
+  claim 6 fired
+  measurement
+  promotion of runtime authority

@@ -1,0 +1,8 @@
+id=sess_1792276850
+model=DeepSeek-V2-Lite-Chat.Q4_K_M
+path=G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+workspace=G:\~dev\rawrxd
+autonomy=full
+plan=audit ide
+patch=patch_1
+turns=0

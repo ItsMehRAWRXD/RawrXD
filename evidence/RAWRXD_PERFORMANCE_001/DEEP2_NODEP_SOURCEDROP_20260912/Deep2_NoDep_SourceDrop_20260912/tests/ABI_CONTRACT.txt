@@ -1,0 +1,24 @@
+DECODE CALLBACK ABI
+===================
+ForwardFn(user, position, &opaque_logits_handle, &vocab) -> nonzero on real successful 61-block forward.
+  Before returning success it must call Deep2ObserveForward(ctx, entered, completed, flags=7)
+  only after real continuity + final norm + LM head are observed.
+
+SelectFn(user, opaque_logits_handle, vocab, &token) -> nonzero on actual selection.
+  The opaque handle is intentionally not specified as a CPU float pointer; GPU token selection may stay GPU-resident.
+
+CommitFn(user, token, position, ctx) -> nonzero only after the token is committed to product decode state.
+AdvanceFn(user, new_position, ctx, 0) -> nonzero only after KV/input/position state is ready for the next forward.
+
+MANDATORY PRODUCT SEED
+======================
+Deep2DecodeSeedLiveState(ctx, kv_position, prompt_tokens, expected_next_position)
+Do not assume zero. For prompt length N, expected_next_position is normally N after prefill, but product state is authoritative.
+
+LEGAL PER-TOKEN RESET
+=====================
+block cursor, block counters, continuity generation, ping/pong role, operation-ticket generation, fail stage.
+
+FORBIDDEN RESET
+===============
+KV -> empty; position -> 0; activation -> original prompt embedding; weights -> synthetic; arbitrary block input seed.

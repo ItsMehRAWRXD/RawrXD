@@ -1,0 +1,44 @@
+GATE=DEEP2_NEXT25_NODEP_SOURCE_DROPS_001
+DATE=2026-09-13
+KIND=SOURCE_DROP_INVENTORY
+NODEP=1
+PROMOTE=0
+TPS_MINT=0
+AUTHORITY_ONLY_FROM_LIVE_RUNS=1
+NOT_RUN!=PASS
+PARENT=DEEP2_END_TO_END_RUNTIME_COMPLETION_001
+FIRST_LAND=DEEP2_RECEIPT_SCHEMA_V1
+LIVE_OWNER_NOW=V7_HOT_MATURITY_RELOAD_001 (do not divert until AB/HOT PASS)
+
+# Independently buildable/testable/authority-safe · selftest PASS ≠ TPS mint
+
+D01=DEEP2_RECEIPT_SCHEMA_V1 — token/layer/expert/gpu + bytes + kernel/wait/join/sync + WTA/gbps
+D02=DEEP2_EXPERT_TIMER_PROBES — T_ACQUIRE H2D PREPACK QDECODE_DOT REDUCE WAIT; sum=total
+D03=DEEP2_WEIGHT_BYTE_ACCOUNTING — logical/device/host/pcie/nvme/metadata; WTA computable
+D04=DEEP2_WTA_RECEIPT_GATE — physical/logical; div0 guard; fail-closed field
+D05=DEEP2_EFFECTIVE_GBPS_GATE — logical/physical gbps + ns_per_logical_mib
+D06=DEEP2_ZERO_TEMP_DEQUANT_AUDIT — dequant write/reread + fp16_temp_alloc (~8× trap)
+D07=DEEP2_DIRECT_QDOT_KERNEL_STUB — prepare/dispatch/validate; CPU_REF_PARITY; GPU_BIND=0
+D08=DEEP2_NATIVE_PACK_FORMAT_V1 — aligned tile + colocated scale/zero + descriptor + span
+D09=DEEP2_PREPACK_ONCE_CACHE — pack_once lookup_forever; SECOND_LOOKUP_REPACK_BYTES=0
+D10=DEEP2_EXPERT_DESCRIPTOR_TABLE — id/layer/owner/offsets/bytes/quant; O(1); fail-closed
+D11=DEEP2_PERMANENT_SET_PINNER — emb/router/dense/shared/attn_static/lm_head?; evict fails
+D12=DEEP2_HOT_EXPERT_CACHE_V1 — freq/recency/layer/owner/reload_cost; deterministic eviction
+D13=DEEP2_PREDICTED_SET_QUEUE — token/layer/expert/confidence/deadline/target_gpu
+D14=DEEP2_ASYNC_PCIE_RING — staging/gpu/bytes/fence/deadline; overlap+foreground wait ctrs
+D15=DEEP2_NVME_BACKING_STORE_AUDIT — nvme bytes total vs decode-CP; wait_ns_decode
+D16=DEEP2_GPU_OWNER_MAP — owner stable; activations move; weights no migrate/token
+D17=DEEP2_ASYMMETRIC_ASSIGNER_V1 — BW/queue/finish/resident/xfer; NO_50_50_FORCED
+D18=DEEP2_DUAL_GPU_OVERLAP_RECEIPT — start/end both GPUs; same_token_overlap_ns; pct
+D19=DEEP2_GROUPED_EXPERT_DISPATCH — layer/token/experts[8]+shared; CPU boundary count
+D20=DEEP2_DEVICE_WORK_QUEUE_STUB — op/layer/expert/io/deps/completion; GPU_BIND=0
+D21=DEEP2_FUSED_EXPERT_OP_PLAN — gate/up/silu/mul/down/router_reduce; intermediate count
+D22=DEEP2_HETERO_QUANT_POLICY_V1 — sensitivity/hotness/layer/freq→bpw; no global drop
+D23=DEEP2_TILE_SKIP_POLICY_V1 — skip_reason/bytes/ops/parity_risk
+D24=DEEP2_EFFECTIVE_ACTIVE_BYTES_GATE — effective/logical/skipped/reused/compressed /token
+D25=DEEP2_E2E_RUNTIME_LADDER_V1 — rungs 0–10 receipt→timing→WTA→gbps→…→live decode complete
+  NO_TPS_MINT_WITHOUT_LIVE_RUN=1
+
+AUTHORITY_PATH=
+  measure buckets → WTA↓ temp↓ repack↓ wait↓ PCIe↓ NVMe_CP=0 → overlap↑ gbps↑ bytes/tok↓
+  THEN milestones 0.2→…→50 (still live-only)

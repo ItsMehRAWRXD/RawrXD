@@ -1,0 +1,47 @@
+MODE_C_C2_REVIEW_001=SEALED
+DATE=2026-09-08
+ISSUE=MODE=C TARGET=C.2
+STAR=full_review
+SPEND=0
+HOT_GATE=0
+MODE_AFTER=D
+
+SUBJECT=TERMINAL_TWIST_OBSERVE_001
+TAG=twist_path_b_obs_20260908-185108
+EXE=deep2_benchmark.exe
+ENV=DEEP2_PATH_B=1
+MAX_TOKENS=16
+
+WHAT_IT_IS=
+  one-shot PATH_B polarity observe
+  NOT n=5
+  NOT promote
+  NOT COMPAT_TEST
+  NOT MODE_A spend authorization for future runs
+
+OBSERVED=
+  q_b_d2h_deleted bytes=0 ops=976
+  QB_X_D2H_TO_HOST_MIRROR_B=0
+  attn_decode_mla_device D2D live bytes=31981568 ops=976
+  QKV_READBACK_BYTES=2304 (vs ~191M PATH_A)
+  GENERATION_WALL_NS=8486137000 ONE-SHOT
+  ARGMAX_PARITY=1
+  CHAMPION_HOLD=PATH_A 10184789000
+
+DELETE_PROVEN_THIS_SHOT=
+  provisional q_b face zeros + device attn live
+  STRICT_PROMOTE still needs n=5 wall < floor + PARITY/PURITY/PRODUCT
+
+CAVEAT=
+  ERR_NOTE PARITY_PASS=0 in err.log section — do not promote; investigate if n5
+
+RELATED=
+  TERMINAL_TWIST_PROCEED_001=observe act only
+  PATH_B_TWIST_001=earlier attribution; wall >> champion; PROMOTE=0
+
+AUTHORITY_AFTER=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  PATH_B_SPEND=FROZEN
+  ONE_SHOT_NE_N5=1

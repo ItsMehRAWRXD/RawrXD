@@ -1,0 +1,216 @@
+G3_DEEP2_671B_REAL_TOKEN_001 — finishing model (RE)
+====================================================
+DATE=2026-09-11
+TARGET=REAL_DEEPSEEK_671B_TOKEN1
+ROLE=RUNTIME_COMPATIBILITY_WITNESS  (≠ promote)
+
+FAIL_CLOSED:
+  NOT_RUN != PASS
+  SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED
+  AUTHORIZED_PASS=0
+  PROMOTE=0
+  DS671_EXPERIMENTAL_RUN_ALLOWED=1
+  TOKEN_NILW_ML64_RUNTIME_MATRIX_001 = NOT_BLOCKER_FOR_TOKEN1
+  RX7800XT_vkCreateDevice = NOT_HOSTAGE_FOR_TOKEN1
+  MTP = OFF_FOR_TOKEN1
+  FULL_SCHEDULER / NILW_AUTH = NOT_REQUIRED_FOR_TOKEN1
+
+###############################################################################
+# ON-DISK MODEL FACTS (probe, not full manifest PASS)
+###############################################################################
+MODEL_DIR=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE
+SHARDS=11
+TOTAL_BYTES=404430188064 (~376.65 GiB)
+SHARD1_MAGIC=GGUF VER=3 N_TENSOR_SHARD1=133 N_KV=51
+general.architecture=deepseek2
+general.name=DeepSeek R1
+general.size_label=256x20B
+tokenizer.ggml.model=gpt2
+tokenizer.ggml.pre=deepseek-v3
+
+DECODED_KV (shard1 header scan; type UINT32):
+  deepseek2.block_count=61
+  deepseek2.embedding_length=7168
+  deepseek2.feed_forward_length=18432
+  deepseek2.context_length=163840
+  deepseek2.vocab_size=129280
+  deepseek2.expert_count=256
+  deepseek2.expert_used_count=8
+  deepseek2.expert_shared_count=1
+  deepseek2.leading_dense_block_count=3
+  deepseek2.attention.q_lora_rank=1536
+  deepseek2.attention.kv_lora_rank=512
+  deepseek2.rope.dimension_count=64
+
+HARDWARE_CONSTRAINT:
+  SYS_RAM~128GiB  AGG_VRAM~48GiB
+  FULL_MODEL_RESIDENT=IMPOSSIBLE_ON_CURRENT_RAM_VRAM
+  STREAMED_MODEL_EXECUTION=REQUIRED
+  MODEL_ADDRESS_SPACE >> PHYSICAL_RESIDENCY
+  ~37B activated/token ⇒ ~18.5GiB raw Q4 payload/token if cold (before overhead)
+
+###############################################################################
+# FIVE FINISHING AXES (what actually blocks token-1)
+###############################################################################
+
+1) MODEL-FORMAT
+   NEED: complete multishard GGUF manifest + tensor index + quant inventory
+   HAVE: 11 real shards on disk; GGUF v3; arch string deepseek2
+   SEALED_HELPERS: r671 ABI smoke PASS; open-diag stage1/err32 closed
+   GAP: DS671_FILE_MANIFEST_PASS / MULTISHARD_OFFSET_PASS / QUANT_TYPE_COVERAGE_PASS
+        not closed on this complete set
+
+2) ARCHITECTURE
+   NEED: deepseek2 graph (MLA + DeepSeekMoE), not Llama/Qwen fallback
+   HAVE_SOURCE: Deep2Engine isDeepSeek2; KimiK2Config deepseek2.* keys;
+                K2NativeStreamGate::ForwardMlaLayer; DeepSeekMoELoader
+   GAP: DEEPSEEK_ARCH_DISPATCH live on THIS 11-shard open;
+        DS_TENSOR_MAP UNRESOLVED_TENSORS=0 not witnessed
+
+3) ROUTING
+   NEED: router logits → top-k/group → stable expert IDs → routed+shared forward
+   HAVE_SOURCE: MoE loader / ExpertCacheEntry paths exist in tree
+   GAP: MOE_ROUTER_PASS + EXPERT_FORWARD_PASS live on 671B weights = NOT_RUN
+
+4) RESIDENCY
+   NEED: streamed zones + expert cache/prefetch + hard budget planner
+   LOCKED: G3_DEEP2_671B_STREAM_PHYSICALIZATION_001
+           STREAM_PROBE=PASS (384GiB-class sparse logical, peak map 256MiB)
+           WSC15 CONTRACT_PASS=1
+           LAW: MODEL_SIZE_NE_RESIDENCY=1
+           BOUNDED_WEIGHT_RESIDENCY=PARTIAL_REAL
+           BOUNDED_KV_RESIDENCY=NOT_YET
+   ARG5: static-only residual (native harness ABSENT; TU>99)
+   GAP: 671B_STREAMING_PASS against REAL GGUF experts (not sparse probe alone);
+        EXPERT_CACHE_PASS; RESIDENCY_PLANNER_PASS for RAM/VRAM/KV/scratch/windows
+
+5) DECODE COMPLETENESS
+   NEED: tokenize → all 61 layers MLA+MoE → norm → lm_head → finite logits → 1 token
+   ACCEPTANCE_BOUNDARY: OPEN_NOT_RUN (GENERATED_TOKENS=1 …)
+   GAP: DS671_TOKEN1_E2E_PASS + TOKEN1_CORRECTNESS_RECEIPT absent
+
+###############################################################################
+# TOP-15 GATES — DISPOSITION (fail-closed)
+###############################################################################
+
+ #  GATE                         STATUS
+ 1  DS671_FILE_MANIFEST_PASS     PARTIAL_PROBE (files+magic+arch KV); FULL_AUDIT=NOT_RUN
+ 2  DEEPSEEK_ARCH_DISPATCH_PASS  SOURCE_WIRED; LIVE_ON_DS671=NOT_RUN
+ 3  DS_TENSOR_MAP_PASS           NOT_RUN (UNRESOLVED_TENSORS unproven)
+ 4  QUANT_TYPE_COVERAGE_PASS     NOT_RUN
+ 5  MLA_FORWARD_PASS             SOURCE_WIRED (K2 MLA); DS671_LIVE=NOT_RUN
+ 6  MOE_ROUTER_PASS              SOURCE_PRESENT; DS671_LIVE=NOT_RUN
+ 7  EXPERT_FORWARD_PASS          SOURCE_PRESENT; DS671_LIVE=NOT_RUN
+ 8  671B_STREAMING_PASS          SPARSE_PROBE=PASS; REAL_GGUF_EXPERT_STREAM=NOT_RUN
+ 9  EXPERT_CACHE_PASS            SOURCE_PARTIAL; LIVE=NOT_RUN
+10  MULTISHARD_OFFSET_PASS       SOURCE_PRESENT (GGUFShardRouter); FULL_SET=NOT_RUN
+11  RESIDENCY_PLANNER_PASS       LAW_WIRED; PRODUCT_PLANNER=PARTIAL/NOT_YET
+12  DEEPSEEK_KV_CACHE_PASS       SOURCE_PARTIAL (ProdKv); TOKEN1_MLA_KV=NOT_RUN
+13  TOKENIZER_TEMPLATE_PASS      FILE_HAS_deepseek-v3_pre; PRODUCT_TOKEN1=NOT_RUN
+14  DS671_TOKEN1_E2E_PASS        OPEN_NOT_RUN
+15  TOKEN1_CORRECTNESS_RECEIPT   ABSENT
+
+REDUCED_P0_FIVE (most likely stoppers):
+  COMPLETE_DEEPSEEK_TENSOR_MAP
+  REAL_MLA_FORWARD
+  REAL_DEEPSEEK_MOE_ROUTER_AND_EXPERT_FORWARD
+  671B_RANDOM_EXPERT_STREAMING_CACHE
+  TOKEN1_FULL_GRAPH_WITH_ZERO_STUBS
+
+###############################################################################
+# CRITICAL PATH (order)
+###############################################################################
+
+REAL FILE
+  → GGUF/SHARD MANIFEST
+  → DEEPSEEK TENSOR MAP
+  → QUANT KERNEL COVERAGE
+  → MLA
+  → MOE ROUTER
+  → EXPERT STREAM/CACHE
+  → RESIDENCY PLANNER
+  → ALL LAYERS
+  → LM_HEAD
+  → TOKEN 1
+
+FINISH_TOKEN1_IF =
+    DS671_FILE_MANIFEST_PASS
+ && DEEPSEEK_ARCH_DISPATCH_PASS
+ && DS_TENSOR_MAP_PASS
+ && QUANT_TYPE_COVERAGE_PASS
+ && MLA_FORWARD_PASS
+ && MOE_ROUTER_PASS
+ && EXPERT_FORWARD_PASS
+ && 671B_STREAMING_PASS
+ && EXPERT_CACHE_PASS
+ && MULTISHARD_OFFSET_PASS
+ && RESIDENCY_PLANNER_PASS
+ && DEEPSEEK_KV_CACHE_PASS
+ && TOKENIZER_TEMPLATE_PASS
+ && DS671_TOKEN1_E2E_PASS
+ && TOKEN1_CORRECTNESS_RECEIPT
+
+EVEN_THEN:
+  DECODE_AUTHORITY / SCHEDULER_AUTHORITY / PROMOTE unchanged unless separate seals say so
+  PROMOTE=0
+
+###############################################################################
+# FIRST REAL TEST PROFILE (narrow)
+###############################################################################
+
+TARGET=REAL_DEEPSEEK_671B
+PROMPT_TOKENS=1..8
+MAX_NEW_TOKENS=1
+CONTEXT=MINIMAL
+MTP=OFF
+BATCH=1
+PARALLEL_SEQUENCES=1
+MODEL_STREAMING=ON
+EXPERT_CACHE=ON
+GPU0=R9700
+GPU1=OPTIONAL_NOT_REQUIRED
+CPU_FALLBACK=EXPLICIT_ONLY
+
+REQUIRE:
+  REAL_WEIGHTS=1
+  ALL_MODEL_LAYERS_EXECUTED=1
+  MLA_EXECUTED=1
+  MOE_ROUTER_EXECUTED=1
+  ROUTED_EXPERT_EXECUTED=1
+  LM_HEAD_EXECUTED=1
+  FINITE_LOGITS=1
+  GENERATED_TOKENS=1
+  STUB_PATHS=0
+
+NOT_IN_FIRST_RUN:
+  128K context | 64 tokens | dual GPU required | MTP | full scheduler | NILW authorization
+
+###############################################################################
+# EXPLICIT NON-BLOCKERS FOR TOKEN1
+###############################################################################
+TOKEN_NILW_* fixture/live accounting matrix  — keep AUTHORIZED_PASS=0; do not gate token1
+SCOREBOARD_SCHEDULER promote tetrad          — separate authority
+Arg5 native harness residual                 — static; prefer locked stream slots
+Stage3 CreateFileMapping diagnosis           — SUPERSEDED (r10 handle bug closed)
+
+NEXT_EXECUTABLE_GATE=SHARD_AWARE_TENSOR_RANGE_MAP
+  then REAL_TOP8_TO_EXPERT_SLICE_BIND
+  then ONE_REAL_MOE_LAYER_SYNC_LOAD
+  then ALL_58_MOE_LAYERS_TOKEN1
+  then DS671_LIVE_POLICY_BIND (Eval passMask==0x1F on live counters)
+
+CLOSED_PARTIAL_UPDATE:
+  DS671_FILE_MANIFEST_PASS=1
+  DS_TENSOR_MAP_PASS=1
+  FIXED_GATE_POLICY_RUNTIME=PASS
+  DEEP2_PORTABLE_NOSTREAM_SMOKE=PASS
+  DS671_ROUTE_LOAD_SMOKE=PASS
+  GGUF_NUMERIC_METADATA_PROBE=PASS
+
+CROSSLINK_THREE_AUTHORITY=../THREE_AUTHORITY_SPLIT.txt
+  SCHEDULER_LIVE sealed ≠ PROMOTE ≠ NILW AUTHORIZED_PASS
+CROSSLINK_MOE_HOST=
+  ../G3_HOST_MOE_ASYNC_PREFETCH_001/HOST_INVENTORY_SUPERSESSION_001.txt
+  (MOE_GGUF_ON_HOST=1 discovery; prefetch PASS still NOT_RUN)
+CROSSLINK_NOSTREAM=DEEP2_PORTABLE_NOSTREAM_DROP/WINDOWS_NATIVE_PROOF_RECEIPT.txt
+RE_SUBAGENT_MAP=aligned; NILW live matrix not on token-1 critical path

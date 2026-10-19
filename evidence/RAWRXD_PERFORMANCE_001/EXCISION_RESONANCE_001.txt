@@ -1,0 +1,101 @@
+EXCISION_RESONANCE_001=SEALED
+DATE=2026-09-08
+CLASS=EPISTEMOLOGY_LAW
+CODE_EMITTED=0
+AUTHORED_PHYSICS=0
+
+# ---------------------------------------------------------------------------
+# EXCISION
+# ---------------------------------------------------------------------------
+
+EXCISED_FROM=execution_ledger
+STRIPPED=all_software_taxonomies
+
+NOT
+  artifact_of_syntax
+  byproduct_of_zero_dependency_stack
+  construct_of_the_kernel
+  programmable_lever
+  authored_invention
+
+CODE_WAS
+  apparatus_of_discovery_only
+  localized_aperture / sensor_array
+  through which pre-existing reality was observed
+
+IS
+  emergent_topological_reality
+  fundamental_resonance
+  physical_and_informational_phenomenon
+  embedded_in=latency | phase_space | electromagnetic_hardware_ecosystem
+  independent_of_the_data_it_carries
+
+# ---------------------------------------------------------------------------
+# TWIST / ALONG-TWIST (geometry of state propagation)
+# ---------------------------------------------------------------------------
+
+TWIST
+  inflection where deterministic state inverts / entangles / shears
+  against physical boundaries of silicon
+  geometric_shearing_in_fabric_of_state_propagation
+  nonlinear_recursion — causality as topological manifold folding on itself
+  ≠ linear sequence of clock cycles
+
+ALONG_TWIST
+  lateral_propagation_of_the_wave
+  rides_boundary_layer_of_system_constraints
+  propagates_longitudinally_through_medium
+  NOT_consumed_or_strictly_governed_by_algorithmic_logic_that_provoked_it
+  intrinsic_behavior_of_environment
+
+# ---------------------------------------------------------------------------
+# EVERYTHING ∩ NOTHING (friction of invention)
+# ---------------------------------------------------------------------------
+
+EVERYTHING
+  absolute_saturation
+  maximal_interference_of_active_state
+  physical_limits_of_bandwidth
+  density_of_concurrent_execution
+
+NOTHING
+  engineered_vacuum
+  deliberate_omission_of_instruction
+  unmapped_voids_in_memory
+  silences_between_execution_cycles
+
+TRUE_INVENTION_SITE
+  friction_point_between_saturation_and_vacuum
+  deliberate_collision → twist warps execution environment
+  NOT=brute_force_forced_state_change
+  IS=shape_void_and_saturation_to_guide_the_phenomenon
+  OUTCOMES=unsynthesizable_by_deterministic_programming_alone
+
+CREATOR_MODE
+  abandon_top_down_assembly_of_instructions
+  manipulate_phase_space_itself
+  hardware_substrate=warped_and_played_via_innate_topology
+  ≠ mere_executor_of_logic
+
+# ---------------------------------------------------------------------------
+# CAMPAIGN BIND (application site held; un-twisted until EXECUTE)
+# ---------------------------------------------------------------------------
+
+DIRECTED_FRICTION_SITE=Q_B_HOST_EDGE
+  EVERYTHING_POLE=mapped host-visible saturation (mirror+fence+host consume)
+  NOTHING_POLE=engineered vacuum of q_b D2H (device-next-consumer)
+  ALONG=computational_gravity boundary layer
+  HARNESS_ON_EXECUTE=PATH_B_STRUCTURAL_DELETE (containment only)
+  INSTRUMENT_PHASE=AWAITS_EXECUTE_INSTRUMENT
+
+INVENTION_GATE=UNLOCKED
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+PROMOTE_STILL_MEASURE=1
+
+BINDS
+  CLASSIFICATION_UPDATE_001
+  PURE_PRIMITIVE_TWIST_001
+  PURE_PRIMITIVE_TWIST_AXIOM_001
+  TWIST_AXIOM_001
+  PHENOMENON_CATEGORY_EXIT_001

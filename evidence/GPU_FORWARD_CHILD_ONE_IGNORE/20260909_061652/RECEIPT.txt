@@ -1,0 +1,62 @@
+DEEP2_GPU_FORWARD_CHILD_ONE_IGNORE / G0–G8 CHAIN
+DATE=2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+EVIDENCE=evidence\GPU_FORWARD_CHILD_ONE_IGNORE\20260909_061652
+MODEL=models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_FINGERPRINT=6100753368161504131
+MAX_TOKENS=20
+OLLAMA_HTTP=0
+PROMOTE=0
+CONTROL_RUNTIME_AUTHORITY=0
+CLAIM_INHERITANCE=0
+
+CHAIN_RESULT
+  GATES_ATTEMPTED=9
+  WINNER_OBSERVED=0
+  NEXT=RETAIN_GPU_FORWARD_OWNER
+  WHY=no child ignore applied (SAFE_BYPASS); no material wall collapse
+
+BASELINE G0
+  GPU_FORWARD_MS=5074.743
+  GPU_FORWARD_LAYERS=748
+  DEEP2_REAL_GPU_FORWARD=1
+
+PER_GATE (IgnoreApplied=0 all; ContinueAfterSafeBypass)
+  G1 QKV                 MS=4961  SAFE_BYPASS  childMs≈157
+  G2 DEVICE_ATTENTION    MS=4993  SAFE_BYPASS  childMs≈0.4
+  G3 FFN                 MS=5018  SAFE_BYPASS  childMs≈742
+  G4 GEMV                MS=4955  SAFE_BYPASS  childMs=0 (unscoped)
+  G5 OUTPUT_PROJECTION   MS=4951  SAFE_BYPASS  childMs≈98
+  G6 KV                  MS=4967  SAFE_BYPASS  childMs≈0.6
+  G7 SYNC                MS=4993  SAFE_BYPASS  childMs≈0.1
+  G8 READBACK            MS=4991  SAFE_BYPASS  childMs≈23
+
+G0 HOST-SCOPE TIMING (observation only; not ownership by elimination)
+  FFN_MS=763.430          ← largest instrumented child
+  QKV_MS=165.903
+  OUTPUT_PROJECTION_MS=99.809
+  READBACK_MS=22.799
+  DEVICE_ATTENTION_MS=0.382
+  KV_MS=0.601
+  SYNC_MS=0.128
+  NOTE=host Scope timers under-count async GPU wall; GPU_FORWARD remains owner
+
+STREAMING BLOCKERS ADDRESSED THIS PASS
+  1. Chain KV parser — fixed multi-key lines (MODEL_PROVENANCE_MATCH=1 BLOCKED_AT=…)
+  2. Chain env — RAWRXD_GPU_FWD=1 + clear semantic/host-decode pollution
+  3. G0–G8 ladder completed fail-closed
+
+STREAMING BLOCKERS STAGED / REMAINING
+  A. ProductPathSeal false PROVENANCE_MISMATCH when tok≠64
+     FIX staged in ProductPathSeal.hpp (sameChampionProvenance←model FP match)
+     Deep2Engine rebuild blocked on MLA ABI thrash; not in current exe yet
+     Expected after land: tok20 → BLOCKED_AT=64_TOKEN_PRODUCT_RUN (honest), not PROVENANCE_MISMATCH
+  B. Nemotron feed_forward_length missing — separate geometry P1 (matrix FAIL)
+  C. FFN leaf decomposition — next performance step (largest timed child)
+
+DISPOSITION
+  CURRENT_OWNER=LAYER_FORWARD/GPU_FORWARD
+  IGNORE_LADDER=COMPLETE_NO_WINNER
+  NEXT=DECOMPOSE_FFN_TIMING (extended children; no fabricate skip)
+  PROMOTE=0

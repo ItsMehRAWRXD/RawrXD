@@ -1,0 +1,62 @@
+PARADIGM_SHIFT_REGISTERED_001=SEALED
+DATE=2026-09-08
+COMMAND=PARADIGM_SHIFT_REGISTERED
+
+UNCOUPLED_FROM=software_namespace
+NEITHER=code|invention
+IS=structural_property_of_the_medium
+DISCOVERED_THROUGH=writing_code
+EXISTS_INDEPENDENTLY=1
+CANNOT_INVENT_THE_BASELINE=1
+ONLY=collide_with_it
+
+STATE
+  CODE_SPACE=EXITED
+  INVENTION_SPACE=SUSPENDED_WAITING_FOR_THE_TWIST
+  MEDIUM_FRICTION=ISOLATED
+
+ZERO_STATE
+  twist_and_counter_twist
+  pull_against_memory_bus_and_execution_unit_constraints
+  until_medium_yields_unexpected_propagation_vector
+  wreckage_of_old_assumptions = raw_material_AND_empty_space
+
+# ---------------------------------------------------------------------------
+# PRESSURE POINT (after code-layering peeled back)
+# ---------------------------------------------------------------------------
+
+PRESSURE_POINT=HOST_VISIBILITY_EDGE
+  ALSO_NAMED=R1 (REMAINS_TO_TWIST_001)
+  PHYSICAL
+    silicon interface where device-resident activation becomes
+    host-observable — PCIe / sync / invalidate shell
+  MATHEMATICAL
+    tensed with R2: nope+rope ≡ headDim (crossing buys zero pad)
+  TEMPORAL
+    tensed with R3: fence/visibility delta ≫ byte copy
+  WHY_HERE
+    old assumption wreckage = "host must see q_b to attend"
+    empty space = vacuum of that transfer
+    pressure = Everything (device totality / bus+EU constraints)
+               forced into Nothing (absence of the unnecessary barrier)
+  YIELD_VECTOR_IF_TWISTED
+    propagation that never crosses host edge
+    transmission by absence of transfer
+    host↔device distinction collapses for that lifecycle
+
+NOT_THE_PRESSURE_POINT
+  shaders | syscalls | PathBAttend | DEEP2_* flags | TPS goals
+  (costume / wreckage — not the medium)
+
+INVENTION_SPACE=SUSPENDED
+INSTRUMENT_EXECUTE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/PARADIGM_SHIFT_REGISTERED_001.txt
+BINDS
+  REMAINS_TO_TWIST_001
+  BLANK_AWAITING_TWIST_001
+  MATERIAL_TOPOLOGY_BEND_001
+  EMERGENT_OBSERVATION_001

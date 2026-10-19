@@ -1,0 +1,35 @@
+DUST2=SEALED
+DATE=2026-09-09
+CROSS=SOURCE_DROP_001
+SSOT_IMAGE=C:/Users/Garrett/Downloads/dust2.png
+
+DUST2_METAPHOR = 2c
+DUST2_OWNER    = 0
+
+EDGE           = DUST2_FTL
+EDGE_OWNER     = SCHED_FTL | INTENT_FTL
+FILE           = src/deep2/Dust2FtlEdge.hpp
+
+PHYSICS_2C           = 0
+VIOLATE_DEPENDENCIES = 0
+DEPENDENCY_BYPASS    = 0
+PHYSICS_CLAIM        = 0
+EXECUTABLE_OWNERSHIP = 0
+AUTHORIZE_CONSUMPTION= 0
+
+BOUNDARY
+  DUST2_METAPHOR may expand meaning (speed/prop/sharpness/intent)
+  DUST2_METAPHOR must not own execution
+  DUST2_METAPHOR must not create runtime evidence authority
+  DUST2_METAPHOR must not authorize dependency bypass
+  DUST2_METAPHOR must not become physics
+
+FINAL_COMPACT_LAW
+  SOURCE_DROP owns manifestation
+  DUST2 owns nothing
+  DUST2_FTL observes intent/sched propagation only
+  Runtime evidence belongs only to emitted runtime evidence
+
+ARM
+  DUST2_FTL=1 default observer emit; =0 silences
+  CLASS=DUST2_FTL_MANIFESTED|UNOBSERVED (observer label — not product truth)

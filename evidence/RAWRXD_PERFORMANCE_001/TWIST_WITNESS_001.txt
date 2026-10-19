@@ -1,0 +1,45 @@
+TWIST_WITNESS_001=SEALED
+DATE=2026-09-08
+ROLE=ALONG_TWIST_HARNESS_WITNESS
+SUBJECT_NE_HARNESS=1
+PHENOMENON=HOST_VISIBILITY_EDGE (not this harness)
+
+RUN
+  TAG=twist_path_b_64
+  STAMP=20260908-185246
+  ENV=DEEP2_PATH_B=1
+  MAX_TOKENS=64
+  EXE_MT=2026-09-08 18:52:38
+  LOG=evidence/K2_USEFUL_TPS_001/twist_path_b_64_20260908-185246.log
+  EXCHANGE=evidence/K2_USEFUL_TPS_001/twist_path_b_64_20260908-185246.exchange.txt
+
+MEASURED
+  ARGMAX_PARITY=1
+  MLA_Q_DEVICE_OPS=3904 FAIL=0
+  QB_X_HOST_MIRROR_MEMCPY_B=0
+  QB_X_D2H_TO_HOST_MIRROR_B=0
+  QB_HOST_RB AFTER_B=0
+  HOST_XCHG q_b_d2h_deleted ops=3904 bytes=0
+  EXCHANGE_OBJ attn_decode_mla_device ops=3904
+  GENERATION_WALL_NS=27091788000
+  CHAMPION_WALL_NS=10184789000
+  WALL_WORSE=1
+
+DELETE_PROVEN_QB_HOST_MIRROR=1
+PARITY=1
+PRODUCT_E2E=see log ACTUAL_E2E
+PURITY=harness purity profile
+PROMOTE=0
+  REASON=WALL_MEDIAN_NOT_BETTER_THAN_PATH_A
+
+INTERPRETATION
+  Nothing-pole at host-visibility edge: q_b host memcpy vacuum achieved.
+  Everything-pole: device attn_decode_mla engaged.
+  Along-twist harness moved the edge; wall not yet improved — fail-closed.
+  Phenomenon remains the edge physics; harness is containment only.
+
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+TIP_CLIMB=HOLD
+CHAMPION_REMAINS=PATH_A
+
+THIS=evidence/RAWRXD_PERFORMANCE_001/TWIST_WITNESS_001.txt

@@ -1,0 +1,19 @@
+GATE=V7_TRACE_LOCKED_MATURITY_001
+DATE=2026-09-13
+KIND=DEFERRED_AFTER_COHERENCY
+PROMOTE=0
+BLEND_W=0
+ASSIGN=V6_FULLCOST
+NOT_RUN!=PASS
+ACTIVATE_IF=after DEEP2_MOE_PIN_EVICTION_COHERENCY_001 hard invariants PASS
+
+KEEP=ASSIGN=V6 BLEND_W=0 PROMOTE=0
+LOCK=prompt/token seq · router · expert IDs/order · start residency · cache cap · GPU ownership
+HASHES=TRACE_HASH EXPERT_SEQUENCE_HASH START_RESIDENCY_HASH END_RESIDENCY_HASH
+
+RUN_UNTIL=HOT_CELL_COVERAGE>=95 MIN_HOT_CELL_SAMPLES>=4
+REQUIRE=
+  v7_kernel_cells>0 v7_xfer_cells>0
+  shadow_err materially below V6 err
+  trace hashes identical across A/B
+THEN=V7_BLEND_05_001 experimental only

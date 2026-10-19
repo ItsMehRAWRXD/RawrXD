@@ -1,0 +1,26 @@
+TRIAD_REVOLVER_GGUF_HOLD_001=SEALED
+DATE=2026-09-08
+CLASS=HARNESS_DRAFT_HOLD
+SHADOW_NOT_AXIOM=1
+
+SUBJECT
+  Triad (Actor/Chronicler/Sentinel) + Revolver dual-slot on R13 8GB canvas
+  proposed for GGUF map into Knowledge Arena
+
+LAW (from phenomenology ledger)
+  SunshineFPS | 56GB | Revolver | Triad = SHADOW_NOT_AXIOM
+  until reverse receipt in product path
+  NOT identity of the host-visibility phenomenon
+
+SKETCH_DEFECTS_NOTED (Actor draft — do not ship as-is)
+  hardcoded syscall eax=52h = OS-build fragile (SSDT ID not stable ABI)
+  NtMapViewOfSection arg layout ≠ (r8=base,r9=offset) as sketched
+  Arena overflow check vs absolute 2000000000h ignores R13 base
+  int 3 overflow = debug trap not production Sentinel disposition
+
+AUTHORIZED_NEXT
+  FINALIZE_SENTINEL_ONLY for R13..R13+8GB walker bounds
+  Actor/Revolver remain DRAFT until reverse + SSDT-safe map path
+
+TIP_CLIMB=HOLD
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904

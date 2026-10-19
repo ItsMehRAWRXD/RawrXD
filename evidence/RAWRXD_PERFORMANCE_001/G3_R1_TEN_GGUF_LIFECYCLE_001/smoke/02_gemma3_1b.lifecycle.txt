@@ -1,0 +1,9 @@
+﻿MODEL=gemma3-1b-Q2_K.gguf
+PATH=G:\~dev\rawrxd\gemma3-1b-Q2_K.gguf
+SIZE_MB=666.7 SHA16=ADBD048B1738782B
+HEADLESS_PID=17764
+PORT_11434_NOT_REQUIRED=1 OLLAMA_PROCESS_REQUIRED=NO LOCAL_ONLY_NO_OLLAMA=1 OLLAMA_CONTACT=0
+REGISTER=200
+PREPARE=200 {"ok":true,"request_id":2,"model":"gemma3-1b-Q2_K.gguf","profile_source":"runtime_gguf","profile_id":9857,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli"
+LOAD=0 {"success":false,"model":""}
+VERDICT=FAIL OWNER=model_load DETAIL={"success":false,"model":""}

@@ -1,0 +1,1 @@
+{"model":"DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf","path":"G:\\~dev\\rawrxd\\_r1_iso\\04_ds_r1_qwen3\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"}

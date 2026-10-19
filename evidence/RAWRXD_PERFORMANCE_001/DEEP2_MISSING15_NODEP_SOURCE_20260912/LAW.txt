@@ -1,0 +1,29 @@
+GATE=DEEP2_MISSING15_NODEP_SOURCE_20260912
+STATUS=SOURCE_DROP
+PRODUCT_LINKED=0
+AGGREGATE_BW_AUTHORITY=0
+PROMOTE=0
+
+PURPOSE:
+  Source-only Missing-15 for post-TPS production binds.
+  Preserves STORAGE≠RESIDENCY≠EXECUTION and fail-closed authority.
+
+BIND_ORDER_HIGHEST_VALUE=
+  04 d2_deviceio_ssvk_bind.cpp   D2DeviceIo → SsVk callbacks
+  05 d2_fabric_submit.cpp        same-token dual enqueue before collect
+  06 d2_overlap_authority.cpp    OVERLAP_NS + critical path + effective B/s
+  07 d2_compact_reduce.cpp       compact merge boundary
+  → DEEP2_DUAL_AGGREGATE_SSVK_BIND_001 live predicates
+
+REJECT:
+  SERIAL_GPU_CHAIN fallback
+  weight migration on critical path
+  minting AGGREGATE_BW_AUTHORITY from mock smoke
+  CRITICAL_PATH_NVME_READS_PER_TOKEN > 0
+  FULL_DEQUANT / full materialization of Q2_K/Q4_K
+
+RELATES=
+  DEEP2_DUAL_AGGREGATE_FABRIC_NODEP_20260912 (mock fabric PASS)
+  DEEP2_DUAL_AGGREGATE_SSVK_BIND_001 (next live gate)
+  DEEP2_MODEL_SIZE_INDEPENDENCE_TOP15_20260912 (capability map)
+  DEEP2_STILL_REQUIRES_AUDIT_E2E_20260912 (P2–P4/P6)

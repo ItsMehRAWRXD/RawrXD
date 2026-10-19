@@ -1,0 +1,51 @@
+QB_KERNEL_CUT_001 — RECEIPT
+DATE=2026-09-08
+
+SPEND
+  Q_DEVICE fused Q_A→RMS→Q_B (one submit, one q_b host crossing).
+  DispatchGemvPacked uses shared-x SPV for tag1/2 (was base q4k 64-row).
+  Keep host-KV overlap + Q prepin. sx=256 for Q_B measured WORSE → not default.
+  No KVA rows reopen.
+
+REJECTED
+  DEEP2_QB_SX_ROWS=256 → Q_B_KERNEL_US↑ (1.36M→1.58M), TPS↓ vs 128.
+
+SOURCE
+  src/vulkan_fwd_q4k.cpp              (DispatchGemvPacked → sx)
+  src/deep2/K2MLA_QPathDevice.cpp     (device fuse; unchanged contract)
+  scripts/Run-K2-TeardownWitness.ps1  (DEEP2_MLA_Q_DEVICE=1)
+  LOG=evidence/K2_USEFUL_TPS_001/qb_kern_dev64_*.log
+  A/B_SX128=evidence/K2_USEFUL_TPS_001/qb_sx128_*.log
+
+MEASURE (64 tok Kimi-K2 Q4_K_M)
+  PRIOR_SEAL_TPS=3.910 (QB_KERNEL_UPLOAD_CUT)
+  SAME_SESSION_HOST_SX128_TPS≈5.690 (logits warm; not this spend)
+  CURRENT_TPS=5.904
+  DELTA_VS_SEAL=+1.994
+  DELTA_VS_HOST_SX128≈+0.214
+  GENERATION_WALL_NS=10673060000
+  MLA_Q_DEVICE_OPS=3904 FAIL=0
+  Q_BRANCH_US=2192487 (host sx128≈2838916; cut≈0.65M)
+  KV_BRANCH_US=1956921
+  QKV_SUB_OWNER=READBACK SUB_OWNER_US=1972945
+  ARGMAX_PARITY=1
+  FUNCTIONAL_PASS=1 ACTUAL_E2E_GENERATION_001=PASS
+  PRODUCT_PASS=1 PRODUCT_FLOOR_TPS=5.000
+  WALL_WITHIN_BUDGET=1 (product floor)
+
+PROMOTE_IF
+  TPS > 3.910 && PARITY=PASS && Q_DEVICE_OPS>0
+RESULT
+  PROMOTE=1
+  NEW_SEAL_TPS=5.904
+  CHAMPION_GENERATION=qb_kern_dev64
+  K2_PRODUCT_5TPS=PASS (floor 5.0)
+  RAWRXD_PERFORMANCE_001 still OPEN vs TARGET_150
+
+FIRST_DELTA=QKV_READBACK_CUT (q_b download still SUB_OWNER)
+  OR continue Q_BRANCH vs KV join bubble
+THEN=LOGITS (warm ~1.4M exposed; not largest if readback owns QKV)
+
+NO_REOPEN_PRODUCT_AUTHORITY=1
+KVA_ROWS_CLIMB=SEALED_UNTOUCHED
+DO_NOT_DEFAULT_QB_SX_256=1

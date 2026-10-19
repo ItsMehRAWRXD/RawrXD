@@ -1,0 +1,86 @@
+DS671 ROUTE-LOAD TENSOR INDEX ADAPTER — RECEIPT
+================================================
+DATE: 2026-09-11
+DROP: G3_DEEP2_671B_REAL_TOKEN_001/DS671_ROUTE_LOAD_NODEP_DROP/EXTRACT
+MODEL: F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE (11 shards)
+
+FAIL-CLOSED DISPOSITION
+-----------------------
+SOURCE_WIRED=1
+RUNTIME_REACHED=0
+TOKEN_SURVIVED=0
+PERFORMANCE_PASS=0
+PROMOTE=0
+AUTHORIZED_PASS=0
+TOKEN1_PASS=0 (not claimed)
+SCHEDULER_SEALS=UNTOUCHED
+
+WHAT SOURCE_WIRED MEANS HERE
+----------------------------
+Caller callbacks measure/load/release are implemented against a real GGUF
+tensor-index slot table using Deep2's established deepseek2 expert names:
+
+  blk.{L}.ffn_gate_exps.weight
+  blk.{L}.ffn_up_exps.weight
+  blk.{L}.ffn_down_exps.weight
+
+Expert axis = last GGUF dimension (matches MoEWeightsLoader / probe).
+moe_layer -> blk = moe_layer + leading_dense_block_count.
+R1 COMPLETE KV: arch=deepseek2 block_count=61 leading_dense=3
+expert_count=256 expert_used_count=8 MoE blk starts at 3.
+
+BUILD EVIDENCE
+--------------
+build_adapter.bat => DS671_ADAPTER_BUILD=PASS
+  DS671_ROUTE_LOAD_SMOKE=PASS
+  DS671_TENSOR_ADAPTER_SMOKE=PASS  (synthetic slots; no disk expert I/O)
+  DS671_GGUF_INDEX_BIND=PASS       (shard-00001 scan; blk.3 gate/up/down)
+    SLOTS=15 DATA_OFF=5245280
+    BLK3_GATE_BPE=8257536 UP=8257536 DOWN=12042240
+
+FILES ADDED/CHANGED (evidence drop only; no src/deep2 product wire)
+------------------------------------------------------------------
+ADDED:
+  ds671_tensor_adapter.h
+  ds671_tensor_names.c
+  ds671_tensor_io.h / ds671_tensor_io.c
+  ds671_tensor_cb.c
+  ds671_gguf_rd.h / ds671_gguf_rd.c
+  ds671_gguf_index.h / ds671_gguf_index.c
+  ds671_moe_bridge.cpp          (stub/notes; not required for smoke)
+  smoke_adapter.c
+  smoke_index_bind.c
+  build_adapter.bat
+  probe_gguf_exps.c             (model KV/name probe)
+  ADAPTER_RECEIPT.txt           (this file)
+UNCHANGED product path:
+  rawrxd/src/deep2/*            (no Deep2Engine / router hotpatch land)
+
+REMAINING BLOCKERS — EXPERT_CACHE / MOE_ROUTER LIVE
+---------------------------------------------------
+1. PRODUCT_WIRE: insert ds671_require_route() AFTER real router Top-8 and
+   BEFORE expert GEMV in Deep2 forward (see Deep2_HOTPATCH_INTEGRATION.c).
+   Not landed. RUNTIME_REACHED stays 0 until that call site executes.
+
+2. MULTI_SHARD_INDEX: smoke scanned shard-00001 only (15 slots). Full R1
+   needs all 11 shards scanned into one slot table (or MoEWeightsLoader /
+   GGUFShardRouter / GlobalTensorIndex bind). Adapter API ready; full
+   58-layer slot fill not run in this receipt.
+
+3. EXPERT_CACHE: adapter allocates owned packs (_aligned_malloc) and frees
+   on release. Product EXPERT_CACHE / MoEWeightProxy LRU residency is a
+   separate owner — optional bridge notes in ds671_moe_bridge.cpp.
+   DS671_LINK_MOE_WEIGHTS_LOADER not enabled.
+
+4. MOE_ROUTER LIVE: router math + Top-8 production path not hooked to
+   ds671_require_route. No decode/prompt seal exercised on product engine.
+
+5. FOOTGUN NOTE: DeepSeekMoELoader::DiscoverExpertTensors uses
+   dimensions[0] as expert count; this GGUF stores experts in dims.back()
+   (256). MoEWeightsLoader uses dims.back() — prefer that for product bind.
+
+AUTHORITY
+---------
+This receipt does not reopen scheduler seals.
+This receipt does not authorize PROMOTE / TIP_CLIMB.
+NOT_RUN != PASS for product E2E.

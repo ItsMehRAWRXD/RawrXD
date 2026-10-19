@@ -1,0 +1,20 @@
+DIALOGUE_NODE_REVIEW_HOLD_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+LAND=0
+GO=0
+
+REVIEW_ACK
+  DIALOGUE_NODE STRUCT name match
+  RBX non-volatile in SelectResponse
+  5th arg Mood stack slot vs ABI_PUSH_FRAME
+  R15 pointer-vs-base mood document
+  Clamp NodeID/greeting [0,128)
+
+REFUSE
+  Corrected .asm drop under STOP
+  Game/procedural dialogue invent = OUT_OF_SCOPE_PERF
+
+STAY=PATH_A / HOST_VISIBILITY_EDGE
+CHAMPION_WALL_MEDIAN_NS=10184789000

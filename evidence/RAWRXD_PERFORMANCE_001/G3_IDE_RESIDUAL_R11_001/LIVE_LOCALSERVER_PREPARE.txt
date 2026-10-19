@@ -1,0 +1,2 @@
+HTTP=200
+{"ok":true,"request_id":1,"model":"BigDaddyG-Q2_K-ULTRA.gguf","profile_source":"model_metadata","profile_id":9231,"engine_mode":24,"num_layers":80,"policy":{"context":3072,"max_tokens":128,"temperature_milli":300,"top_p_milli":900,"top_k":40,"stream":true,"flags":39,"safe_prepared":true,"hop_prepared":false,"hop_needs_engine":false,"hop_skip_count":0}}

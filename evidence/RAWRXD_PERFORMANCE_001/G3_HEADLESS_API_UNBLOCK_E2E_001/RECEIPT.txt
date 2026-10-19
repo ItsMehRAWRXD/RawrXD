@@ -1,0 +1,52 @@
+GATE=G3_HEADLESS_API_UNBLOCK_E2E_001
+PURPOSE=reverse HeadlessIDE intentional /api/tool (+ file/cli) 403; seal MOTD fail-closed E2E with Origin:null
+PARENT=G3_IDE_BACKEND_FULLFIX_001
+ASOF=2026-09-10T00:35
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+REVERSED=
+  public_command_and_file_routes_disabled → routeToolAndFileRequest (HeadlessIDE.cpp + HeadlessIDE_ToolRoutes.cpp)
+  routes: /api/tool /run-tool /api/read-file /api/write-file /api/list-dir /api/cli /api/command /api/file*
+
+NOT_A_BLOCK=
+  MOTD gate 403 motd_required (product fail-closed; required before tools) — certified below
+  workspace_path_denied / origin_denied (security — Origin null allowed for local)
+
+BINARY=
+  build-fd/bin/RawrXD-Win32IDE_headless_live.exe (copy; primary exe often file-locked)
+  args: --headless --port 11435 --dir G:\~dev\rawrxd
+
+CERT (see CERT.txt; curl --data-binary @file — PS --data-raw mangled):
+  HEADLESS_PROCESS_ALIVE=1
+  PORT_11435_OWNER=17556
+  HEALTH_HTTP=200 STATUS_HTTP=200 CAPS_HTTP=200 TAGS_HTTP=200 BUNNYHOP_STATUS_HTTP=200
+  PRE_MOTD_VALID_JSON=1 PRE_MOTD_TOOL_EXECUTED=0 PRE_MOTD_DISPOSITION=MOTD_REQUIRED PRE_MOTD_HTTP=403
+  MOTD_PATH_USED=.cursor/rules/PassiveRoleNotRoleplay.md MOTD_READ=PASS MOTD_ACK=1 MOTD_HTTP=200
+  POST_MOTD_LIST_DIRECTORY=PASS POST_MOTD_TOOL_UNLOCKED=1
+  POST_MOTD_EXECUTE_COMMAND=PASS
+  PER_MESSAGE_FAILCLOSED=PASS (AFTER_GENERATE → MOTD_REQUIRED)
+  GATE_SEQUENCE=PASS
+
+RESIDUAL=
+  /api/generate without loaded model previously reset the socket (GENERATE_RESET_HTTP=000);
+    MOTD reset still observed (fail-closed PASS). Source now returns 503 model_not_loaded before infer
+    (HeadlessIDE.cpp) — needs clean EXE relink to ship.
+  IDE parity aliases landed in HeadlessIDE.cpp source (/api/backends,/api/agents*,/api/failures,/api/chat)
+    but full RawrXD-Win32IDE.exe relink blocked by concurrent Win32IDE_LocalServer.cpp compile races
+    (handleReadFileEndpoint bool/void churn + 404 response undeclared). Live binary =
+    RawrXD-Win32IDE_headless_live.exe (pre-alias) with tool/MOTD/bunnyhop/health sealed.
+  Reprobe after clean link: GET /api/backends /api/agents/status /api/failures POST /api/chat
+
+SUPERSEDES=
+  G3_IDE_BACKEND_CONNECT_001 proxy workaround
+  any claim that HeadlessIDE /api/tool is intentionally disabled
+
+Live: http://127.0.0.1:11435 (reload IDE Backend URL)
+Full: CERT.txt PARITY_PROBE.txt run_motd_cert.ps1
+
+FOLLOWUP_2026-09-10T01:05=
+  subagent f7725a9b sealed tool unblock 12/12 � confirmed live tool=403 motd_required (not routes_disabled)
+  parity aliases in HeadlessIDE.cpp source; EXE relink FAILED (InferenceEngine.lib CVT1107 corrupt / wrong ABI LNK2019)
+  live remains RawrXD-Win32IDE_headless_live.exe pre-alias; backends/agents/failures/chat still 404 until clean InferenceEngine rebuild+link

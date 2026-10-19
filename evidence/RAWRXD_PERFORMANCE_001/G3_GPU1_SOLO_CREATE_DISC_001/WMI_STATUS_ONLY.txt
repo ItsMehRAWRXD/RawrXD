@@ -1,0 +1,13 @@
+WMI_AdapterRAM=DO_NOT_USE
+WMI_AdapterRAM_NOTE=UINT32 clamp 0xFFF00000 (4GiB-1MiB); identical for any adapter >=4GB; not VRAM provenance
+R9700_WMI_STATUS=OK
+R9700_WMI_AVAILABILITY=3
+R9700_WMI_AVAILABILITY_STR=Running_Full_Power
+R9700_WMI_CONFIG_MANAGER_ERROR=0
+RX7800XT_WMI_STATUS=OK
+RX7800XT_WMI_AVAILABILITY=8
+RX7800XT_WMI_AVAILABILITY_STR=Off_Line
+RX7800XT_WMI_CONFIG_MANAGER_ERROR=0
+NOTE=Availability=8 on 7800 while Status=OK is unusual; may correlate with Vulkan ICD create fail; DX may still wake card
+WMI_AVAILABILITY_CAUSAL=UNPROVEN
+NOTE2=Availability=8 is CIM correlated state only; not proof Windows disabled the adapter

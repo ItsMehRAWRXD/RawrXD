@@ -1,0 +1,25 @@
+RAINBOW_DIMENSIONS=3
+FINITE_PASS_SIZE=18
+START_ORDINAL=4096
+EMITTED=4096
+NEXT_ORDINAL=8192
+
+UNIQUE_CONFIGURATIONS=18
+ORDINAL_EPOCHS_WRAP=1
+RNG_USED=0
+
+# Cursor progress ≠ unique coverage.
+# NEXT_ORDINAL=8192 means ordinals 0..8191 were emitted (8192 steps).
+# 8192 / 18 = 455 complete epochs + remainder 2.
+# Repeated ordinals within the 18-tuple space are NOT additional search coverage.
+
+ENUMERATION=GO
+LIVE_MEASUREMENT=HOLD
+TIP_CLIMB=HOLD
+
+HISTORICAL_CHAMPION_TPS=5.904
+PROMOTABLE_BASELINE=NONE
+NEXT_LIVE_COMPUTE=CHAMPION_REPRODUCTION
+
+# After champion reproduction closes: measure each of the 18 unique tuples once,
+# then winner endurance. Do not burn live 64-tok witnesses on ordinal wrapping.

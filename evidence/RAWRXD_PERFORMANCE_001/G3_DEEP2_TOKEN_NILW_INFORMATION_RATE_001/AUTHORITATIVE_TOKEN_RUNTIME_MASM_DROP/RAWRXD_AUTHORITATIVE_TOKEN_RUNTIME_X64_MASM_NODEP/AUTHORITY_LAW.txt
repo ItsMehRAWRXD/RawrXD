@@ -1,0 +1,43 @@
+AUTHORITATIVE TOKEN RUNTIME LAW
+
+Input authority:
+    raw counters only.
+
+Forbidden input authority:
+    caller PASS states
+    caller TOKEN_NILW
+    caller ACTIVE_BPW
+    caller TPS
+    caller information rate
+    caller bytes/token
+
+Derived internally:
+    ACTIVE_BPW
+    TOKEN_NILW
+    PHYSICALIZATION_RATIO
+    NEW_INFORMATION_FRACTION
+    NEW_PAYLOAD_BYTES_PER_TOKEN
+    TPS
+    INFORMATION_RATE
+
+W01..W14:
+    derived independently from raw counters.
+
+W15:
+    AND/reporter only.
+
+Hard gates:
+    TOKEN_NILW <= 0.0008
+    NEW_PAYLOAD_BYTES_PER_TOKEN <= 100 MB
+    TPS >= 10
+    INFORMATION_RATE_Bps <= 1,000,000,000 bytes/s
+    GENERATED_TOKENS >= 128
+    FULL_MODEL_MATERIALIZATION = 0
+    FULL_LAYER_MATERIALIZATION = 0
+    LONGRUN_FAILURES = 0
+    PAYLOAD_BUDGET_OVERFLOW = 0
+    STALE_GENERATION_FAULTS = 0
+    UNACCOUNTED_BITS = 0
+
+Scheduler authority:
+    NONE.

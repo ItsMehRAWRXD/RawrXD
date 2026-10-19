@@ -1,0 +1,87 @@
+REMAINING_SHOUTS_GAPS_AUDIT_001=SEALED
+DATE=2026-09-08
+MODE=D
+TYPE=ATTRIBUTION_AUDIT
+EXECUTION=0
+AUTHORITY_NOW=CANONICAL_STATE_MACHINE_001
+
+# SHOUTS = \=- / TWIST / ontology noise still on disk (not live spend)
+
+SHOUT.TWIST_AND_SHOUT_001
+  STATUS=SEALED_OPERATOR \=-≡NOT
+  GAP=none (policy view only)
+
+SHOUT.ontology_TWIST_*_cluster
+  STATUS=HISTORICAL_DISK_NOISE
+  GAP=B.2 optional SUPERSEDE stamp on duplicate TWIST_*/STAGE_2 invent-open restatements
+  LIVE_OVERRIDE=GATE.txt NEXT_SPEND=NONE
+
+SHOUT.PHENOMENOLOGY_*_AUDITS
+  STATUS=HISTORICAL (still cite GATE_STOP=0 in body)
+  GAP=audit text not rewritten; live files B1-superseded
+  RISK=agent reads audit as live
+
+SHOUT.GE_GATE.txt / HOTPATH TARGET_150 OPEN
+  STATUS=STALE_OR_SIDE_FILE
+  GAP=reconcile vs GATE.txt LOCKED (B.3 residual)
+
+# GAPS — real unfinished work (not shouts)
+
+GAP.PERF
+  PATH_A=CHAMPION HELD
+  PATH_B=code PRESENT_UNWIRED; n5 FROZEN; needs MODE=A HOT_GATE=1
+  U02=CLOSED
+  U15=HOLD crash risk
+  U04-U13=HELD inventory
+
+GAP.COMPAT
+  SEEDS=5; B1.1 ONESHOT=MEASURED_SPLIT (stages PASS / floor FAIL)
+  B1.2-B1.5 NOT_RUN
+  COMPAT_TEST HOT_GATE=0 (returned after B1.1)
+  FIRST_KNOWN_FAIL=CODESTRAL decode
+  Ollama rows mostly ?
+  ALL_ARCHITECTURES_COMPATIBLE=UNPROVEN
+  PRODUCT_vs_K2_path=separate
+  gap_fill_20260908=NON_AUTHORITY contaminated
+
+GAP.IMPL
+  QuadBuffer ALIGN32_before_tensor_info=OBSERVED edit blocked
+  general.alignment=ABSENT
+  q_b=PRESENT theory-equivalence UNPROVEN
+  BADF107/TIP_CLIMB literals=UNKNOWN
+  ACTUAL_PASS/NO_REOPEN=POLICY_ONLY unenforced in binary
+
+GAP.PARSER
+  ALIGN8 reject FINAL
+  LIVE_CURSOR_DIVERGENCE=UNPROVEN
+  PARSER_REOPEN=UNAVAILABLE
+
+GAP.SECURITY_AGENT
+  HELD_NOT_ACTIVATED
+
+GAP.VALUATION
+  tech/IP framing only; no commercial evidence in receipts
+
+# ORDER MISMATCH (non-blocking)
+
+NOTE.B1_order
+  COMPAT_BATCH_MANIFEST B1: llama,nemotron,gemma,granite,qwen
+  TIER1 narrative: llama,gemma,nemotron,qwen,granite
+  SSOT_RUN_ORDER=COMPAT_BATCH_MANIFEST_001|COMPAT_UNCONFLICTED_SEEDS_001
+
+# CLOSED / NOT GAPS
+
+CLOSED=
+  unconflicted seed set
+  mode catalog A/COMPAT/PARSER separation
+  ALIGN8 hypothesis rejected
+  U02 closed
+  gap AV non-authority
+  ping-pong STOPPED
+  IMPLEMENTATION_AUTHORITY three-concept split
+
+NEXT_UNDER_D_ONLY=
+  C.* reviews (B.2/B.3 DONE)
+NEXT_SPEND_REQUIRES_HOT_GATE=
+  COMPAT_TEST B1.2 (B1.1 oneshot done MEASURED_SPLIT)
+  MODE=A PATH_B_N5

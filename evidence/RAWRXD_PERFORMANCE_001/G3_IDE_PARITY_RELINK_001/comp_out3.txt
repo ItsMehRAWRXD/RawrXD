@@ -1,0 +1,2 @@
+Win32IDE.cpp
+EXIT=!ERRORLEVEL!

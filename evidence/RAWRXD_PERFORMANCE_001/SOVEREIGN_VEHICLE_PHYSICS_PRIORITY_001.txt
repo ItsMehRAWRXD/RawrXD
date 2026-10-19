@@ -1,0 +1,26 @@
+SOVEREIGN_VEHICLE_PHYSICS_PRIORITY_001=SEALED
+DATE=2026-09-08
+ROLE=PRIORITY_CHOICE
+BRAID=SunshineFPS_vehicle_physics (distinct from PATH_A / K2 GATE)
+
+QUESTION
+  A=current 1D Euler SIMD enough for suburbs + military base?
+  B=add friction-coefficient / surface-type lookup?
+
+ANSWER=B_REQUIRED
+  suburbs≈asphalt μ high; military_base≈dirt/gravel/sand μ low + slip
+  without surface μ, NetForce = Drive - aero_drag only → wrong off-road behavior
+
+PHASE_NEXT
+  1. Surface μ table (asphalt|concrete|dirt|gravel|sand|mud) per contact
+  2. Longitudinal: DriveForce - Drag - RollingResist(μ,N) - Brake
+  3. Keep CalculateTorque; prefer type dispatch table (ICE|EV) over cmp/je
+  4. Fix DeltaTime: entry XMM0 clobbered — spill/reload before torque call
+     (XMM0-XMM5 caller-volatile across CALL)
+  5. Euler OK for prototype; Verlet/semi-implicit if jitter at high v
+
+NOT_NOW
+  full 3D chassis / soft unless surface μ lands first
+
+STATUS=SURFACE_FRICTION_NEXT
+AWAITING=user_go surface_mu_table

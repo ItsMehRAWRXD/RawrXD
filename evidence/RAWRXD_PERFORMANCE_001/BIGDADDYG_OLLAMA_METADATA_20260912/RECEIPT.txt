@@ -1,0 +1,36 @@
+GATE=BIGDADDYG_OLLAMA_METADATA_20260912
+STATUS=OBSERVED
+TPS_AUTHORITY=0
+NOTE=tag names are wrappers; weights classify as dense Llama 69B Q2_K
+
+bigdaddyglocal:latest
+bigdaddygnative:latest
+bigdaddyg-productivity-local:latest
+bigdaddyg-productivity-native:latest
+
+ALL_FOUR_IDENTICAL_MODEL_FIELDS=
+  architecture=llama
+  parameters=69.0B
+  context_length=4096
+  embedding_length=8192
+  quantization=Q2_K
+  active_parameters=NOT_REPORTED
+  moe_experts=NOT_REPORTED
+
+CLASSIFICATION=
+  DENSE_LLAMA_69B_Q2_K
+  NOT_MOE_FROM_OLLAMA_SHOW
+  DISK_25GB_CONSISTENT_WITH_Q2_K_70B_CLASS
+
+REVISED_FINISHED_DEEP2_TPS_ESTIMATE=
+  prior_disk_proxy_18_32_REPLACED
+  dense_69B_Q2_K ≈ 12–25 TPS raw (bandwidth/KV dominated)
+  NOT_100plus_unless_later_manifest_proves_MoE
+
+heretic_resolved=
+  qwen35-40b-heretic-q8 → phi3 3.8B Q4_0 (~150–250 TPS class)
+
+REGRESSION=
+  PID=13056 ALIVE AR≈42/64 CERT_BINARY_MUTATION=FORBIDDEN
+PROMOTE=0
+FULL_MODEL_TPS_AUTHORITY=0

@@ -1,0 +1,4 @@
+FALSE_LITE_REJECT_001=SUPERSEDED
+SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/FALSE_LITE_POSTURE_001.txt
+REASON=misread: treated catalog-mode/jailbreak; operator meant agent posture (no invent fallbacks)
+DATE=2026-09-08

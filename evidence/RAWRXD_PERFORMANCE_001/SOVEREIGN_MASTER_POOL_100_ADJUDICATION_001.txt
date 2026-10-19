@@ -1,0 +1,32 @@
+SOVEREIGN_MASTER_POOL_100_ADJUDICATION_001=SEALED
+DATE=2026-09-08
+GATE_STOP=1
+NEXT_SPEND=NONE
+PROMOTE=0
+CLASS=FUTURE_STACK|INVENTORY_ONLY
+AUTHORIZED_SPEND=0
+
+PROPOSAL
+  Dual 100-slot Hotpatch + GGUF pools, BTS allocate, R13 braid dispatcher,
+  Watchdog_Registry_Monitor offer
+
+DISCOVERED_ON_DISK (not product-wired)
+  src/asm/Sovereign_Master_Matrix.inc
+  src/asm/Sovereign_Registry_Ops.asm
+    single g_Master_Registry[MAX_SLOTS] + g_Registry_Bitfield
+    Allocate_Registry_Slot / Free_Registry_Slot (lock bts/btr)
+  CMakeLists: NOT linked into InferenceEngine / deep2_benchmark
+  Dual Hotpatch_Pool|GGUF_Pool|Sovereign_Route_To_Arena|Watchdog = NOT FOUND
+
+LIVE_HOTPATCH
+  UnifiedHotpatchManager / Win32IDE commands — separate C++ plane
+  NOT the proposed 100-slot MASM dual braid
+
+ADJUDICATION
+  Does NOT meet "scalability requirements" as a sealed product claim —
+  draft scaffold only; unmeasured; out of GATE STOP spend
+  Watchdog_Registry_Monitor = INVENTION under STOP = REFUSED
+  Dual-pool rewrite of existing single-pool draft = NEW_STACK = REFUSED under STOP
+
+PERF_AUTHORITY remains deep2_benchmark PATH_A champion
+NO_REOPEN=QB_KERNEL|KVA|LOGITS|SX|5.904

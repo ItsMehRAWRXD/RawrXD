@@ -1,0 +1,44 @@
+GATE=DEEP2_MACHINE_EXPERIENCE_UNITS_001
+DATE=2026-09-13
+KIND=SOURCE_READY
+PRODUCT_BOUND=0
+PROMOTE=0
+AUTH_BASELINE=c1e90fcdf5
+DROP=DEEP2_MACHINE_EXPERIENCE_NODEP_20260913
+
+# Key.cpp
+# 1 Epoch Fingerprint Hashing
+# 2 Regime Fingerprint Hashing
+# 3 Normalized Regime Distance
+
+# Core.cpp
+# 4 Fixed-Capacity Experience Cache
+# 5 Adaptive EWMA Learning Rate
+# 6 Truth-Gated Cell Recovery
+
+# Predict.cpp
+# 7 Confidence from Samples×Variance×Age
+# 8 Nearest-Compatible Cost Fallback
+# 9 Staleness-Risk Arbitration
+
+# Persist.cpp
+# 10 Truth-First Persistence
+# 11 Checksummed Experience Image
+# 12 Selective Reload Degradation
+
+# DualStickExperienceAdapter.cpp
+# 13 V6-Compatible Fallback Bridge
+# 14 Expert×GPU Runtime Training Hook
+# 15 Incremental Product Binding Seam
+
+ARCHITECTURE=
+  Key     → identify machine + operating regime
+  Core    → learn and repair experience
+  Predict → decide whether experience is trustworthy
+  Persist → carry only validated experience across runs
+  Adapter → inject into live DualStick without opaque merge
+
+BINDING=
+  query experience first; fall back DualStickImbalance when confidence inadequate
+  train from live (layer,expert,GPU,quant,shape,residency) completions
+  narrow seam — preserve sealed 2+2 placement/execution geometry

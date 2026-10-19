@@ -1,0 +1,41 @@
+build bin\deep2_streamer_parity.exe: CXX_EXECUTABLE_LINKER__deep2_streamer_parity_Release CMakeFiles\deep2_streamer_parity.dir\src\deep2\deep2_streamer_parity.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\StreamerParity_Harness.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\StreamerParity_Post.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\Deep2StreamApi.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\DualStickStreamWindow.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\DualStickStreamWindow_Acquire.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\DualStickStreamWindow_Emit.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FutureConsumer_Space.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FutureConsumer_Emit.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FutureConsumer_EmitExec.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FutureConsumer_Advance.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FutureConsumer_Register.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FutureConsumer_Notes.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FreeTokenMicroZone.cpp.obj CMakeFiles\deep2_streamer_parity.dir\src\deep2\lavapath\FreeTokenMicroZone_Query.cpp.obj | deflate_brutal_masm.obj InferenceEngine.lib G$:\~dev\rawrxd\src\deep2\ResidencyTrace.obj G$:\~dev\rawrxd\src\deep2\QuantKB.obj C$:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib C$:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib quickjs_static.lib deep2_c1_c9.lib deep2_vwa_range_core.lib || InferenceEngine.lib deep2_c1_c9.lib deep2_vwa_range_core.lib quickjs_static.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = deflate_brutal_masm.obj  InferenceEngine.lib  dxgi.lib  G:\~dev\rawrxd\src\deep2\ResidencyTrace.obj  G:\~dev\rawrxd\src\deep2\QuantKB.obj  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  pdh.lib  C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  pdh.lib  dxgi.lib  quickjs_static.lib  deep2_c1_c9.lib  deep2_vwa_range_core.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\x64   -LIBPATH:C:\PROGRA~2\MICROS~2\2022\BUILDT~1\VC\Tools\MSVC\1444~1.352\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100261~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\deep2_streamer_parity.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\deep2_streamer_parity.dir\
+  TARGET_FILE = bin\deep2_streamer_parity.exe
+  TARGET_IMPLIB = deep2_streamer_parity.lib
+  TARGET_PDB = bin\deep2_streamer_parity.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\deep2_streamer_parity.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target deep2_gpu_solo_cert
+
+
+#############################################
+# Order-only phony target for deep2_gpu_solo_cert
+
+build cmake_object_order_depends_target_deep2_gpu_solo_cert: phony || .
+
+build CMakeFiles\deep2_gpu_solo_cert.dir\src\deep2\deep2_gpu_solo_cert.cpp.obj: CXX_COMPILER__deep2_gpu_solo_cert_unscanned_Release G$:\~dev\rawrxd\src\deep2\deep2_gpu_solo_cert.cpp || cmake_object_order_depends_target_deep2_gpu_solo_cert
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /O2 /EHsc /W4 /std:c++20
+  INCLUDES = -IG:\~dev\rawrxd\include -IG:\~dev\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\deep2_gpu_solo_cert.dir
+  OBJECT_FILE_DIR = CMakeFiles\deep2_gpu_solo_cert.dir\src\deep2
+  TARGET_COMPILE_PDB = CMakeFiles\deep2_gpu_solo_cert.dir\
+  TARGET_PDB = bin\deep2_gpu_solo_cert.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\deep2_gpu_solo_cert.dir
+
+build CMakeFiles\deep2_gpu_solo_cert.dir\src\deep2\StreamerGpuSoloGate.cpp.obj: CXX_COMPILER__deep2_gpu_solo_cert_unscanned_Release G$:\~dev\rawrxd\src\deep2\StreamerGpuSoloGate.cpp || cmake_object_order_depends_target_deep2_gpu_solo_cert
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /O2 /EHsc /W4 /std:c++20
+  INCLUDES = -IG:\~dev\rawrxd\include -IG:\~dev\rawrxd\src\deep2 -IC:\VulkanSDK\1.4.357.0\Include -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\deep2_gpu_solo_cert.dir

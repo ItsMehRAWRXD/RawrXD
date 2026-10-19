@@ -1,0 +1,39 @@
+DEEP2_MISSING15_NODEP_SOURCE_20260912
+
+Purpose: source-only bridge for the next missing production resources.
+Authority: scaffold/reference logic only. It must not mint TPS, aggregate bandwidth authority, or PROMOTE from the mock smoke.
+
+Top-15 core source files:
+01. src/d2_nodep.h
+02. src/d2_partition_planner.cpp
+03. src/d2_range_locality.cpp
+04. src/d2_deviceio_ssvk_bind.cpp
+05. src/d2_overlap_authority.cpp
+06. src/d2_compact_reduce.cpp
+07. src/d2_fabric_submit.cpp
+08. src/d2_packed_q2k_contract.cpp
+09. src/d2_packed_q4k_contract.cpp
+10. src/d2_residency_budget.cpp
+11. src/d2_fit_class.cpp
+12. src/d2_expert_predictor.cpp
+13. src/d2_adaptive_kv.cpp
+14. src/d2_nvme_coldpath_guard.cpp
+15. src/d2_authority_gate.cpp
+
+Integration order:
+1) D2DeviceIo -> real SsVk binding
+2) bandwidth-weighted row/range plan
+3) enqueue both same-token lanes before collecting either
+4) measure device-timestamp overlap
+5) compact reduce
+6) enforce packed no-materialization contracts
+7) residency + FIT + expert/KV policies
+8) authority gate only after product-linked real receipts
+
+Hard laws preserved:
+- FULL_DEQUANT_BUFFER=0
+- MATERIALIZED_WEIGHT_BYTES=0
+- CRITICAL_PATH_NVME_READS_PER_TOKEN=0
+- SERIAL_GPU_CHAIN=0 for aggregate claim
+- WEIGHT_MIGRATION_BYTES=0 for aggregate claim
+- PRODUCT_LINKED/REAL_BIND/real forwards/device overlap required for authority

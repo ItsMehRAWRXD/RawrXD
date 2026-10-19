@@ -1,0 +1,5 @@
+﻿CANDIDATE_SMOKE IMMUTABLE=3E631BBB port=11441
+nemotron FAIL prep=200 load=400 gen=503 tok=0 un=200 rel=400 g2=503 tok2=0 alive=1
+ministral FAIL prep=200 load=400 gen=503 tok=0 un=200 rel=400 g2=503 tok2=0 alive=1
+qwen35 FAIL prep=200 load=400 gen=503 tok=0 un=200 rel=400 g2=503 tok2=0 alive=1
+deepseek FAIL prep=200 load=200 gen=0 tok=0 un=0 rel=0 g2=0 tok2=0 alive=0

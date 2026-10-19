@@ -1,0 +1,23 @@
+﻿ASOF=2026-09-09T23:48:44.3040942-04:00
+BASE=http://127.0.0.1:11435
+ORIGIN=null
+PROXY=none
+PASS /status status=200 acao=null body={
+  "mode": "local",
+  "version": "20.0.0-headless-enterprise",
+  "phase": "Phase 20 Enterprise",
+  "session": "headless-1789012099184",
+  "uptime_ms": 25169,
+  "model_loaded": false,
+  "model_name": "",
+  "server_running": true,
+  "subsyst...
+PASS /health status=200 acao=null body={"status":"ok","mode":"local","authConfigured":false,"uptime":25248}
+PASS /api/engine/capabilities status=200 acao=null body={"server":"RawrXD-HeadlessIDE","version":"20.0.0-headless-enterprise","phase":"Phase 20 Enterprise","backends":["cpu","vulkan","ollama","openai","claude","gemini"],"features":["moe","flash_attention","quantization","streaming","hotpatch","l...
+PASS /api/tags status=200 acao=null body={"models":[]}
+PASS /api/nvme/bunnyhop/status status=200 acao=null body={"feature":"nvme_reverse_bunnyhop","mode":"UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP","force":false,"unlaidout":true,"hotpatch_relive":true,"chunk_mib":4,"fallback_policy":"FORCE_ON_MMAP_FAIL","endpoints":["/api/nvme/bunnyhop/status","/api/...
+PASS /api/nvme/bunnyhop/arm status=200 body={"feature":"nvme_reverse_bunnyhop","mode":"UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP","force":true,"unlaidout":true,"hotpatch_relive":true,"chunk_mib":4,"fallback_policy":"FORCE_ON_MMAP_FAIL","endpoin
+SERVER_HEADER=
+HAS_HTTPAPI=False
+ALL_OK=True
+OWNER_PID=7004

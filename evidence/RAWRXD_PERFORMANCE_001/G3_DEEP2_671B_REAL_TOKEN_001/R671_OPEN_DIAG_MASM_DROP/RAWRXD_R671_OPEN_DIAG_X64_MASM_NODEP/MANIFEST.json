@@ -1,0 +1,37 @@
+[
+  {
+    "file": "OPEN_ERROR_MAP.txt",
+    "bytes": 1025,
+    "sha256": "159c40e7b248998729598ba08f6550371e56dfbb0c067c50a6941b46de88b21a"
+  },
+  {
+    "file": "README.md",
+    "bytes": 714,
+    "sha256": "b4771d4514acff971ad55465b05333893f833111d8151352e90adc07d7d02b9b"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 871,
+    "sha256": "6765ec91f4f1fe539a7649799d8358b42f8ad57327c2e5f8af39327ae7da5636"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 446,
+    "sha256": "bc7b13b5db393e0c9e6e095dd917b15307985ec9f2eb1ee2e710d0c2059deecc"
+  },
+  {
+    "file": "r671_open_diag.asm",
+    "bytes": 5218,
+    "sha256": "5681761131514e6a373369f577e37d1837caf529f621018e01de62cd1cf29dec"
+  },
+  {
+    "file": "r671_open_diag.inc",
+    "bytes": 1023,
+    "sha256": "85bf9a8c46cf8bc2ca7045c9678a0ee080552959607ce2c40b78c4f45dbdd5b1"
+  },
+  {
+    "file": "smoke_diag.asm",
+    "bytes": 634,
+    "sha256": "cb502f5e5091d91b10d4b0ad1cc37a24c9d3a3453156cafebfadd84b57823310"
+  }
+]

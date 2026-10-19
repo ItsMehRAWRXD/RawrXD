@@ -1,0 +1,41 @@
+﻿B011_FETCH_COST_FRAME_001
+DATE=2026-09-09
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+GOVERNING_QUESTION
+  Not: can I fit the model in VRAM?
+  Yes: how often do I pay the cost of fetching something that is not resident?
+
+B011_CERTIFIED_BASELINE (B011/performance/b011_vs_b010.json)
+  residency_hit_rate_pct   ~79.96
+  io_bytes_reduction_pct   ~77.6 (json sibling 78.6; conclusion 77.6)
+  mapping_reduction_pct    ~99.7 (74693 -> 197 maps)
+
+WHY_THIS_MATTERS_NOW
+  Dual-GPU Batch D braid treats Hot VRAM as a working-set cache, not a model silo.
+  MoE router announces the next expert IDs before compute — perfect prefetch signal.
+  Stable active expert set => small GPU cache can service a gigantic model.
+
+BATCH_D_BRAID
+  Router prediction -> Expert IDs -> Residency priority
+    -> UnifiedAsyncMove (one scheduler job)
+    -> GPU cache
+  Ownership transfer waits on readiness only (DEEP2_COST_VRAM_GATE=0).
+
+CODE_LANDING
+  lavapath/BatchD_UnifiedAsyncMove.hpp  — B011 refs + BATCH_D_B011_FETCH_COST_FRAME
+  ElasticResidencyManager::PrefetchExperts / PredictLayerNeeds -> UnifiedAsyncMove
+  ElasticResidencyManager::PrintTelemetry emits B011_FETCH_COST_FRAME
+  Deep2Engine::computeMoEFFN router path calls PrefetchExperts + hit-rate witness
+  Prefill/decode Batch-15 prefetch no longer gated behind !vulkanEnabled_
+  Deep2Engine_GpuForward ownership witness prints live hit vs B011 ref
+
+SUCCESS_METRIC
+  Live PrefetchHitRatePct approaching B011 ~79.96% under MoE decode.
+  Fetch misses (not VRAM capacity) are the cost signal to optimize.
+
+NOT_DONE
+  Q6_K logits GPU decode still open.
+  Dual open smoke R9700+7800XT for BATCH_D_* / B011_* witnesses still pending.
+  WaitHotReady not yet bound to named tensors at ownership copy.

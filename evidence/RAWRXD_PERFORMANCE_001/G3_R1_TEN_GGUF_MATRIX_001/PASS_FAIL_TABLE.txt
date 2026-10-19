@@ -1,0 +1,11 @@
+﻿ID	FAMILY	QUANT	PATH	EXIT	PRODUCT_PASS	VERDICT	OWNER
+M01_tinyllama_Q4_K_M	TinyLlama-1.1B	Q4_K_M	R:\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf	0	1	PASS	-
+M02_gemma3_1b_Q2_K	Gemma3-1B	Q2_K	R:\gemma3-1b-Q2_K.gguf	0	0	FAIL	ProductRun/FAILED_OWNER=ProductRun (load/gen)
+M03_phi3_mini_Q2_K	Phi-3-mini	Q2_K	R:\phi3-mini-Q2_K.gguf	0	1	PASS	-
+M04_llama32_3b_Q2_K	Llama-3.2-3B	Q2_K	R:\llama3.2-3b-Q2_K.gguf	0	1	PASS	-
+M05_llama32_3b_Q3_K_S	Llama-3.2-3B	Q3_K_S	R:\llama3.2-3b-Q3_K_S.gguf	0	1	PASS	-
+M06_phi3_mini_Q8_0	Phi-3-mini-4k	Q8_0	F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf	0	1	PASS	-
+M07_nemotron_4b_Q8_0	Nemotron-3-Nano-4B	Q8_0	F:\OllamaModels\...\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf	0	0	FAIL	SSM-CERT-001 refuse experimental selective-scan
+M08_deepseek_r1_qwen3_8b_Q4	DeepSeek-R1-Qwen3-8B	Q4_K_M	F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\...Q4_K_M.gguf	0	1	PASS	-
+M09_gemma4_E4B_Q4_K_M	Gemma-4-E4B	Q4_K_M	F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf	0	1	PASS	-
+M10_ministral3_Q4_0	Ministral-3	Q4_0	G:\~dev\ministral3_q4_0.gguf	0	0	FAIL	ProductRun fail (no PRODUCT_PASS)

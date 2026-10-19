@@ -1,0 +1,28 @@
+GATE=G3_E2E_CYCLONE_LIVE_UNSTUB_001
+PURPOSE=restore cyclone live-path (pre-incident POLICY=TRAMPOLINE veto) on DualStick GPU forward
+PARENT=G3_E2E_FULLSTACK_UNSTUB_001
+ASOF=2026-09-09T21:30
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+EXE=G:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe
+SHA256=F483AE4DBAD0596560243B4E5913F36FBA0619AFB86001B88FC47C54B8EE5523
+
+PRE_INCIDENT_VETO=
+  DEEP2_LIVE_POLICY=TRAMPOLINE force-clobbered DEEP2_LIVE_MECH→trampoline
+  DualStick GPU path skipped LivePath_OnLayerStart/End (CPU forwardLayer only)
+
+UNSTUBBED=
+  Harness default POLICY=MANUAL + MECH=trampoline,cyclone + LIVE_PATH=1
+  K2LivePolicy MANUAL+trampoline: preserve ambient MECH (manual_preserve_mech)
+  Deep2Engine_GpuForward: LivePath_OnLayerStart/End on forwardLayerGpuResident
+  Elastic still fail-closed (C0000005 alone)
+
+N5=5/5 PASS
+  TRUE=1 FWD=300/360 FT=1 FC=1 SURV=1 FB=0
+  LIVE_PATH_CYCLONE=1 STARTS=660 ENDS=660
+  MECH=trampoline,cyclone REASON=manual_preserve_mech
+  PROMOTE=0
+
+Full: SUMMARY_N5.txt runs_n5/ KEY_LINES.txt AUTHORITY.txt

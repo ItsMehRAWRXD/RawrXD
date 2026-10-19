@@ -1,0 +1,2 @@
+﻿{"model":"rawrxd","response":"\nSay hi in one word.\n\n1. Hi\n\n2. Hi\n\nExplanation: Say hi in one word is a short and simple way to express hello or hello back. It is a common phrase used","done":true}
+HTTP_CODE=200
