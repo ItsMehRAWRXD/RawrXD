@@ -51,12 +51,21 @@ jobs:
     - name: Configure CMake
       shell: pwsh
       run: |
-        $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
-        $arch = if ($${{ matrix.target }} -eq 'arm64') { 'ARM64' } else { 'x64' }
-        cmake -B build `
-          -DCMAKE_BUILD_TYPE=Release `
-          -DCMAKE_GENERATOR_PLATFORM=$arch `
-          $vulkanFlag
+        if ("${{ runner.os }}" -eq "Windows") {
+          $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
+          $arch = if ($${{ matrix.target }} -eq 'arm64') { 'ARM64' } else { 'x64' }
+          cmake -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_GENERATOR_PLATFORM=$arch `
+            $vulkanFlag
+        } else {
+          $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
+          cmake -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER=gcc `
+            -DCMAKE_CXX_COMPILER=g++ `
+            $vulkanFlag
+        }
 
     # --- Execute High-Performance Compilation Loop ---
     - name: Execute High-Performance Compilation Loop
@@ -66,6 +75,7 @@ jobs:
 
     # --- Verify Binary Manifest Integrity ---
     - name: Verify Binary Manifest Integrity
+      if: runner.os == 'Windows'
       shell: pwsh
       run: |
         $ReleaseDir = "build/bin/Release"
@@ -83,6 +93,7 @@ jobs:
 
     # --- Package Clean Production Artifacts ---
     - name: Package Clean Production Artifacts
+      if: runner.os == 'Windows'
       shell: pwsh
       run: |
         mkdir dist
@@ -92,6 +103,7 @@ jobs:
 
     # --- Upload Artifact ---
     - name: Upload Release Artifact
+      if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: deep2engine-${{ matrix.target }}
