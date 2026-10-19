@@ -79,10 +79,10 @@ namespace Deep2Rom::Compute {
             buffer_info.size = size;
             buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
             buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            if (::vkCreateBuffer(m_device, &buffer_info, nullptr, &buffer) != VK_SUCCESS) return false;
+            if (::vkCreateBuffer(m_device, &buffer_info, nullptr, &out_buffer) != VK_SUCCESS) return false;
 
             VkMemoryRequirements mem_reqs;
-            ::vkGetBufferMemoryRequirements(m_device, buffer, &mem_reqs);
+            ::vkGetBufferMemoryRequirements(m_device, out_buffer, &mem_reqs);
             VkPhysicalDeviceMemoryProperties mem_props;
             ::vkGetPhysicalDeviceMemoryProperties(m_gpu, &mem_props);
             
@@ -92,15 +92,30 @@ namespace Deep2Rom::Compute {
                     type_index = i; break;
                 }
             }
-            if (type_index == 0xFFFFFFFF) return false;
+            if (type_index == 0xFFFFFFFF) {
+                ::vkDestroyBuffer(m_device, out_buffer, nullptr);
+                out_buffer = VK_NULL_HANDLE;
+                return false;
+            }
 
             VkMemoryAllocateInfo alloc_info{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
             alloc_info.allocationSize = mem_reqs.size;
             alloc_info.memoryTypeIndex = type_index;
-            if (::vkAllocateMemory(m_device, &alloc_info, nullptr, &memory) != VK_SUCCESS) return false;
+            if (::vkAllocateMemory(m_device, &alloc_info, nullptr, &out_memory) != VK_SUCCESS) {
+                ::vkDestroyBuffer(m_device, out_buffer, nullptr);
+                out_buffer = VK_NULL_HANDLE;
+                return false;
+            }
 
-            ::vkBindBufferMemory(m_device, buffer, memory, 0);
-            ::vkMapMemory(m_device, memory, 0, size, 0, &out_mapped_ptr);
+            if (::vkBindBufferMemory(m_device, out_buffer, out_memory, 0) != VK_SUCCESS ||
+                ::vkMapMemory(m_device, out_memory, 0, size, 0, &out_mapped_ptr) != VK_SUCCESS) {
+                ::vkFreeMemory(m_device, out_memory, nullptr);
+                ::vkDestroyBuffer(m_device, out_buffer, nullptr);
+                out_memory = VK_NULL_HANDLE;
+                out_buffer = VK_NULL_HANDLE;
+                out_mapped_ptr = nullptr;
+                return false;
+            }
             return true;
         }
 
