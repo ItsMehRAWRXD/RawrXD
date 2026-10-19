@@ -14,6 +14,11 @@
 #include <sstream>
 #include <cmath>
 #include <cstring>
+#include <unordered_set>
+
+namespace {
+std::unordered_set<const void*> g_quant_batch_pinned_weights;
+}
 
 VulkanCompute::VulkanCompute()
     : instance_(nullptr), physical_device_(nullptr), device_(nullptr),
@@ -1457,6 +1462,7 @@ bool VulkanCompute::BeginQuantDotBatch() {
     if (!EnsureQuantFastPath()) return false;
 
     quant_batch_entries_.clear();
+    g_quant_batch_pinned_weights.clear();
     quant_batch_q8_host_used_ = 0;
     quant_batch_out_host_used_ = 0;
     // Descriptor sets: one distinct set per queued dot (updating a set that an
@@ -1532,6 +1538,7 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     // a cache hit costs nothing).
     QuantWeight* w = EnsureQuantWeight(packed, packed_bytes, kind);
     if (!w) return false;
+    g_quant_batch_pinned_weights.insert(packed);
 
     // Region at the END of the current batch usage. The host buffers GROW
     // CONTENT-PRESERVING: EnsureHostVisible would destroy and recreate them and
@@ -1595,6 +1602,7 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
 bool VulkanCompute::EndQuantDotBatch() {
     if (!quant_batch_active_) return false;
     quant_batch_active_ = false;
+    g_quant_batch_pinned_weights.clear();
     const size_t n = quant_batch_entries_.size();
     if (n == 0) return true;
 
@@ -1634,9 +1642,24 @@ bool VulkanCompute::EndQuantDotBatch() {
                 break;
             }
         }
-        if (ai.memoryTypeIndex == UINT32_MAX) return false;
-        if (vkAllocateMemory(device_, &ai, nullptr, &mem) != VK_SUCCESS) return false;
-        if (vkBindBufferMemory(device_, buf, mem, 0) != VK_SUCCESS) return false;
+        if (ai.memoryTypeIndex == UINT32_MAX) {
+            vkDestroyBuffer(device_, buf, nullptr);
+            buf = nullptr;
+            return false;
+        }
+        if (vkAllocateMemory(device_, &ai, nullptr, &mem) != VK_SUCCESS) {
+            vkDestroyBuffer(device_, buf, nullptr);
+            buf = nullptr;
+            mem = nullptr;
+            return false;
+        }
+        if (vkBindBufferMemory(device_, buf, mem, 0) != VK_SUCCESS) {
+            vkFreeMemory(device_, mem, nullptr);
+            vkDestroyBuffer(device_, buf, nullptr);
+            buf = nullptr;
+            mem = nullptr;
+            return false;
+        }
         cap = need;
         ++gpu_counters_.buffer_allocations;
         if (gpu_counters_.device_bytes_live > gpu_counters_.device_bytes_peak)
@@ -2129,6 +2152,8 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
             ++gpu_counters_.weight_cache_hits;
             return &e;
         }
+        if (g_quant_batch_pinned_weights.find(packed) != g_quant_batch_pinned_weights.end())
+            return nullptr;
         // Stale entry (pointer reuse): destroy and re-upload below.
         if (e.buffer) vkDestroyBuffer(device_, e.buffer, nullptr);
         if (e.memory) vkFreeMemory(device_, e.memory, nullptr);
@@ -2141,21 +2166,26 @@ VulkanCompute::QuantWeight* VulkanCompute::EnsureQuantWeight(const void* packed,
     // than assuming infinite device memory.
     while (!quant_weight_cache_.empty() &&
            gpu_counters_.device_bytes_live + bytes > quant_weight_budget_bytes_) {
-        auto victim = quant_weight_cache_.begin();
+        auto victim = quant_weight_cache_.end();
         for (auto cit = quant_weight_cache_.begin(); cit != quant_weight_cache_.end(); ++cit) {
+            if (g_quant_batch_pinned_weights.find(cit->first) != g_quant_batch_pinned_weights.end())
+                continue;
             if (weight_cache_policy_ == 1) {
                 // Hotness policy (STRATA_S08): evict the coldest entry by
                 // dispatch count, breaking ties by recency. A weight the MoE
                 // router keeps selecting stays resident across tokens; a
                 // one-shot weight is the first to go.
-                if (cit->second.use_count < victim->second.use_count ||
+                if (victim == quant_weight_cache_.end() ||
+                    cit->second.use_count < victim->second.use_count ||
                     (cit->second.use_count == victim->second.use_count &&
                      cit->second.last_used < victim->second.last_used))
                     victim = cit;
             } else {
-                if (cit->second.last_used < victim->second.last_used) victim = cit;
+                if (victim == quant_weight_cache_.end() ||
+                    cit->second.last_used < victim->second.last_used) victim = cit;
             }
         }
+        if (victim == quant_weight_cache_.end()) return nullptr;
         if (victim->second.buffer) vkDestroyBuffer(device_, victim->second.buffer, nullptr);
         if (victim->second.memory) vkFreeMemory(device_, victim->second.memory, nullptr);
         gpu_counters_.device_bytes_live -= victim->second.bytes;
@@ -2375,6 +2405,7 @@ void VulkanCompute::ReleaseQuantFastPath() {
     }
     quant_batch_sets_.clear();
     quant_batch_entries_.clear();
+    g_quant_batch_pinned_weights.clear();
     quant_batch_active_ = false;
     for (auto& up : quant_scratch_pool_) {
         if (up->buffer) vkDestroyBuffer(device_, up->buffer, nullptr);

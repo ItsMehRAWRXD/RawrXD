@@ -87,6 +87,7 @@ bool DotF16(const void* wBytes, size_t wBytesCount,
 //     keeps the compared path deterministic.
 bool BeginBatch();
 bool EndBatch();
+size_t BatchCapacity();
 
 // Diagnostic receipt describing the last DotBlocked call.
 struct Receipt {

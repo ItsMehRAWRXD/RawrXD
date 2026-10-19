@@ -124,16 +124,17 @@ bool EndBatchImpl()
     qs.swap(g_queued);
     if (qs.empty()) return true;
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
-    bool ok = true;
+    bool queue_ok = true;
     size_t total_rows = 0;
     for (const QueuedDot& e : qs) {
-        ok = ok && Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
-                                       e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
+        const bool queued = Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
+                                                e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
+        queue_ok = queued && queue_ok;
         total_rows += e.n_out;
     }
-    ok = ok && Gpu().EndQuantDotBatch();
+    const bool submit_ok = Gpu().EndQuantDotBatch();
     g_receipt = Receipt{};
-    if (ok) {
+    if (queue_ok && submit_ok) {
         g_receipt.used_gpu = true;
         g_receipt.gpu_rows = total_rows;
         return true;
@@ -201,6 +202,10 @@ void SetPreferredDevice(int index) {
     // Applied by Gpu() at first initialisation; calling this after the first
     // dispatch has no effect (the device already exists).
     g_preferred_device = (int32_t)index;
+}
+
+size_t BatchCapacity() {
+    return 32;
 }
 
 const Receipt& LastReceipt() { return g_receipt; }
@@ -324,6 +329,10 @@ bool DotBlocked(int kind,
     if (g_batch_active && !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
+            return false;
+        }
+        if (q8_bytes < n_sb * 273u * sizeof(float)) {
+            g_receipt.fallback_reason = "batch queue with a short Q8 activation buffer";
             return false;
         }
         QueuedDot qd;
