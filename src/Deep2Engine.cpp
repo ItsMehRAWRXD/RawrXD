@@ -70,6 +70,9 @@ void Deep2Engine::Shutdown() {
     // The resident weights are device buffers. They have to go back before
     // the device does, or the device is torn down with live allocations.
     releaseResidentWeights();
+    m_tokenEmb.data.clear();
+    m_tokenEmb.data.shrink_to_fit();
+    m_tokenEmbReady = false;
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
 }
@@ -745,13 +748,16 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         return false;
     }
 
-    deep2::DequantizedTensor tokenEmbDq;
-    std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
-    if (!dequantTensor(*tokenEmb, tokenEmbDq)) {
-        fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
-        return false;
+    if (!m_tokenEmbReady) {
+        std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
+        if (!dequantTensor(*tokenEmb, m_tokenEmb)) {
+            fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
+            return false;
+        }
+        m_tokenEmbReady = true;
+        std::cout << "[Move 10] token_embd.weight dequantized: " << m_tokenEmb.rows << "x" << m_tokenEmb.cols << "\n" << std::flush;
     }
-    std::cout << "[Move 10] token_embd.weight dequantized: " << tokenEmbDq.rows << "x" << tokenEmbDq.cols << "\n" << std::flush;
+    const deep2::DequantizedTensor& tokenEmbDq = m_tokenEmb;
 
     // Use first token's embedding as initial hidden state
     if (inputTokens.empty()) return false;

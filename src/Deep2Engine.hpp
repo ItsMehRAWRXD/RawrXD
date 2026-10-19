@@ -245,8 +245,15 @@ struct Deep2Engine {
     bool uploadResidentSplitWeight(const deep2::TensorView& wView, ResidentSplitWeight& out);
     void releaseResidentSplitWeight(ResidentSplitWeight& w);
 
-    // The layer projections, resident on the devices.
+    // The token embedding table, dequantized once.
     //
+    // It is 32064 x 3072 floats, about 394 MB, and a forward pass needs
+    // exactly one row of it. Expanding it per pass put a quarter of a
+    // second of host work in front of every token.
+    deep2::DequantizedTensor m_tokenEmb;
+    bool m_tokenEmbReady = false;
+
+    // The layer projections, resident on the devices.
     // Placing them is expensive: every weight is read out of the ROM,
     // expanded to f32 on the host and copied across the bus. That is a
     // property of the model, not of the forward pass, so it is done once
