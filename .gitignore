@@ -36,7 +36,9 @@ install_manifest.txt
 move10_output.txt
 run_converter.bat
 run_move10.bat
-shaders/
+# The GLSL compute shader sources are tracked; the SPIR-V is generated from
+# them at build time by glslangValidator, which ships with the Vulkan SDK.
+shaders/*.spv
 
 # IDE
 .idea/

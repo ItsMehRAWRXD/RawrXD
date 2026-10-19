@@ -74,6 +74,14 @@ add_executable(tokenizer_test
     src/core/GgufTokenizer.cpp
 )
 
+# Procedural weight generator benchmark. The release packager verifies that
+# this binary ships, so it has to be a real target: the source existed but
+# nothing built it, and the packager failed on the missing file.
+add_executable(waaf_procedural_test
+    src/tools/waaf_procedural_test.cpp
+)
+
+
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
     src/core/VulkanStagingPipeline.cpp
@@ -105,20 +113,60 @@ target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_
 target_include_directories(rom_audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ggml/include)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ggml/include)
 
-# Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
+# Compile the GLSL compute shaders to SPIR-V and deploy them next to the
+# executables for the Vulkan path.
+#
+# The GLSL sources are tracked; the SPIR-V is generated from them at build
+# time, so a fresh checkout has working shaders without a prebuilt binary
+# in the tree. glslangValidator ships with the Vulkan SDK, which every
+# workflow installs.
+#
+# Two things were wrong here. The shader directory was ignored outright, so
+# a fresh checkout had no shaders at all and the engine's GPU path could
+# not find its SPIR-V. And the deploy step copied into a subdirectory it
+# never created, so the copy failed and took the whole link step with it.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
-    file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*")
-    foreach(shader ${SHADER_FILES})
-        get_filename_component(shaderName "${shader}" NAME)
+    file(GLOB SHADER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.comp")
+    # glslangValidator ships with the Vulkan SDK. FindVulkan only looks for
+    # it on the PATH, and the SDK's bin directory is not always on it, so
+    # the SDK the environment points at is searched as well.
+    if(NOT Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
+        find_program(Vulkan_GLSLANG_VALIDATOR_EXECUTABLE
+            NAMES glslangValidator glslang
+            HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin"
+                  "$ENV{VULKAN_SDK}/Bin32" "$ENV{VULKAN_SDK}/bin32")
+    endif()
+    if(SHADER_SOURCES AND NOT Vulkan_GLSLANG_VALIDATOR_EXECUTABLE)
+        message(FATAL_ERROR
+            "The GLSL compute shaders need to be compiled to SPIR-V, and glslangValidator "
+            "was not found. It ships with the Vulkan SDK; install the SDK or point CMake at it.")
+    endif()
+    set(SHADER_SPV_OUTPUTS "")
+    foreach(shader ${SHADER_SOURCES})
+        get_filename_component(shaderName "${shader}" NAME_WE)
+        set(shaderSpv "${CMAKE_CURRENT_BINARY_DIR}/shaders/${shaderName}.spv")
+        add_custom_command(
+            OUTPUT "${shaderSpv}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/shaders"
+            COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} -V --target-env vulkan1.2
+                    "${shader}" -o "${shaderSpv}"
+            DEPENDS "${shader}"
+            COMMENT "Compiling ${shaderName}.comp to SPIR-V")
+        list(APPEND SHADER_SPV_OUTPUTS "${shaderSpv}")
         add_custom_command(TARGET Deep2Engine_Benchmark POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "${shader}"
-                     $<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/${shaderName}
-            COMMENT "Deploying shader ${shaderName}")
+            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders
+            COMMAND ${CMAKE_COMMAND} -E copy "${shaderSpv}"
+                     $<TARGET_FILE_DIR:Deep2Engine_Benchmark>/shaders/${shaderName}.spv
+            COMMENT "Deploying shader ${shaderName}.spv")
         add_custom_command(TARGET rom_audit POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "${shader}"
-                     $<TARGET_FILE_DIR:rom_audit>/shaders/${shaderName}
-            COMMENT "Deploying shader ${shaderName}")
+            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:rom_audit>/shaders
+            COMMAND ${CMAKE_COMMAND} -E copy "${shaderSpv}"
+                     $<TARGET_FILE_DIR:rom_audit>/shaders/${shaderName}.spv
+            COMMENT "Deploying shader ${shaderName}.spv")
     endforeach()
+    if(SHADER_SPV_OUTPUTS)
+        add_custom_target(compile_shaders ALL DEPENDS ${SHADER_SPV_OUTPUTS})
+    endif()
 endif()
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
@@ -158,13 +206,36 @@ else()
 endif()
 
 # Vulkan linkage for multi-GPU support
+#
+# The Vulkan SDK is a build requirement, not an optional one: the device
+# layer is part of the engine's public headers, so the tree does not
+# compile without vulkan/vulkan.h. The SDK is therefore located
+# unconditionally, and ENABLE_VULKAN only decides whether the engine looks
+# for a device at runtime.
+#
+# Previously find_package(Vulkan) sat inside the ENABLE_VULKAN guard while
+# the Vulkan::Vulkan linkage sat outside it, so -DENABLE_VULKAN=OFF was a
+# hard configure error ("links to target Vulkan::Vulkan but the target was
+# not found") rather than a build without Vulkan. Every workflow that
+# passed the flag failed at configure for that reason.
+find_package(Vulkan REQUIRED)
+if(Vulkan_FOUND)
+    target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_include_directories(rom_audit PRIVATE ${Vulkan_INCLUDE_DIRS})
+    message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+endif()
+# The runtime half of ENABLE_VULKAN. The device layer is always built, so the
+# flag reaches the engine as a definition rather than as a link change.
 if(ENABLE_VULKAN)
-    find_package(Vulkan REQUIRED)
-    if(Vulkan_FOUND)
-        target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
-        target_include_directories(rom_audit PRIVATE ${Vulkan_INCLUDE_DIRS})
-        message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
-    endif()
+    set(RAWRXD_VULKAN_RUNTIME_VALUE 1)
+else()
+    set(RAWRXD_VULKAN_RUNTIME_VALUE 0)
+endif()
+target_compile_definitions(Deep2Engine_Benchmark PRIVATE RAWRXD_ENABLE_VULKAN_RUNTIME=${RAWRXD_VULKAN_RUNTIME_VALUE})
+target_compile_definitions(rom_audit PRIVATE RAWRXD_ENABLE_VULKAN_RUNTIME=${RAWRXD_VULKAN_RUNTIME_VALUE})
+if(NOT ENABLE_VULKAN)
+    message(STATUS "[BUILD] ENABLE_VULKAN=OFF: the device layer is still built and linked, "
+                   "but the engine will not initialise a Vulkan device at runtime.")
 endif()
 
 # Link libraries

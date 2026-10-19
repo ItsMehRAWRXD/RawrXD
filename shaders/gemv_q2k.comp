@@ -1,0 +1,106 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int16 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int32 : require
+
+// Q2_K quantized matrix-vector multiplication: y = dequantize(Q2_K_weight) @ x
+// Weight layout: each block of 256 quantized values is 84 bytes:
+//   qs[64] = 64 bytes of 2-bit packed values (2 bits per value, 4 values per byte)
+//   scales[16] = 16 uint8_t scale values
+//   d = fp16 at offset 80 (2 bytes)
+// Total: 64 + 16 + 2 = 82 bytes, padded to 84 for alignment
+
+// Push constants
+layout(push_constant) uniform PushConst {
+    uint num_rows;      // Number of output rows (hidden_dim)
+    uint num_cols;      // Number of input columns (hidden_dim)
+    uint block_size;    // 256 for Q2_K
+    uint pad0;
+} pc;
+
+// Storage buffers
+//
+// GLSL has no runtime-sized array of 8-bit types, so the packed weight
+// bytes are carried in 32-bit words and read a byte at a time. The block is
+// 84 bytes, which is not a whole number of words, so the byte offset has to
+// be handled explicitly rather than by a word index.
+layout(set = 0, binding = 0, std430) readonly buffer WeightBuffer {
+    uint w[];
+} weights;
+
+layout(set = 0, binding = 1, std430) readonly buffer InputBuffer {
+    float x[];          // Input vector (num_cols floats)
+} inBuf;
+
+layout(set = 0, binding = 2, std430) writeonly buffer OutputBuffer {
+    float y[];          // Output vector (num_rows floats)
+} outBuf;
+
+// One byte of the packed weight buffer.
+uint weight_byte(uint byte_offset) {
+    return (weights.w[byte_offset >> 2] >> ((byte_offset & 3u) * 8u)) & 0xFFu;
+}
+
+// Dequantize one element of a Q2_K block.
+//
+// `block_offset` is the byte offset of the block inside the weight buffer.
+float dequant_q2k_block_value(uint block_offset, uint32_t elem_idx) {
+    // Read fp16 d at offset 80
+    uint d_raw = (weight_byte(block_offset + 80u)) |
+                 ((weight_byte(block_offset + 81u)) << 8);
+
+    // Convert fp16 to float
+    uint sign = (d_raw & 0x8000u) << 16;
+    uint exp = (d_raw & 0x7C00u) >> 10;
+    uint frac = d_raw & 0x03FFu;
+    uint f32 = 0;
+    if (exp == 31u) {
+        f32 = sign | 0x7F800000u | (frac << 13);
+    } else if (exp == 0u) {
+        if (frac != 0u) {
+            while ((frac & 0x0400u) == 0u) { frac <<= 1u; exp--; }
+            exp++;
+            frac &= ~0x0400u;
+            f32 = sign | ((exp + (127u - 15u)) << 23) | (frac << 13);
+        } else {
+            f32 = sign;
+        }
+    } else {
+        f32 = sign | ((exp + (127u - 15u)) << 23) | (frac << 13);
+    }
+    float d = uintBitsToFloat(f32);
+    if (isnan(d) || isinf(d)) d = 0.0f;
+
+    // Get the 2-bit quantized value (0-3)
+    uint byte_idx = elem_idx / 4u;
+    uint bit_offset = (3u - (elem_idx % 4u)) * 2u;
+    uint q = (weight_byte(block_offset + byte_idx) >> bit_offset) & 0x03u;
+
+    // Get the scale for this group
+    uint group_idx = byte_idx / 4u;
+    float scale = float(weight_byte(block_offset + 64u + group_idx)) / 64.0f;
+
+    return (float(q) - 1.5f) * scale * d;
+}
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= pc.num_rows) return;
+
+    float acc = 0.0f;
+
+    for (uint col_block = 0; col_block < pc.num_cols; col_block += pc.block_size) {
+        uint block_idx = (row * pc.num_cols + col_block) / pc.block_size;
+        uint block_offset = block_idx * 84u;
+
+        uint elements_in_block = min(pc.block_size, pc.num_cols - col_block);
+
+        for (uint e = 0; e < elements_in_block; ++e) {
+            uint col = col_block + e;
+            float w = dequant_q2k_block_value(block_offset, e);
+            acc += w * inBuf.x[col];
+        }
+    }
+
+    outBuf.y[row] = acc;
+}
