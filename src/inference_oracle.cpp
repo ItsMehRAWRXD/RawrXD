@@ -1094,6 +1094,85 @@ int cmdDumpTensor(int argc, char** argv) {
 }
 
 // ---------------------------------------------------------------------------
+// Row-split GEMV parity.
+//
+// A GEMV is row-parallel, so splitting the output rows across two devices
+// and concatenating the results has to reproduce the unsplit GEMV exactly.
+// This checks the CPU form of the split that the multi-device Vulkan path
+// performs, so it can be verified on a machine with a single GPU.
+// ---------------------------------------------------------------------------
+int cmdGemvSplit(int argc, char** argv) {
+    const uint32_t colsList[] = {1, 7, 32, 100, 256, 333};
+    const uint32_t rowsList[] = {1, 3, 16, 64, 129};
+    const float weights[] = {0.0f, 0.1f, 0.35f, 0.5f, 0.9f, 1.0f};
+
+    Deep2Engine engine;
+    size_t checked = 0;
+    size_t splitCases = 0;
+    size_t mismatches = 0;
+
+    for (uint32_t cols : colsList) {
+        for (uint32_t rows : rowsList) {
+            // A deterministic pseudo-random matrix, so the comparison is not
+            // accidentally satisfied by a degenerate input.
+            std::vector<float> W(static_cast<size_t>(rows) * cols);
+            uint32_t state = 0x9E3779B9u ^ (cols * 2654435761u) ^ (rows * 40503u);
+            for (size_t i = 0; i < W.size(); ++i) {
+                state = state * 1664525u + 1013904223u;
+                W[i] = static_cast<float>(static_cast<int32_t>(state >> 8) % 2001 - 1000) / 512.0f;
+            }
+            std::vector<float> x(cols);
+            for (uint32_t i = 0; i < cols; ++i) {
+                state = state * 1664525u + 1013904223u;
+                x[i] = static_cast<float>(static_cast<int32_t>(state >> 8) % 2001 - 1000) / 1024.0f;
+            }
+
+            std::vector<float> reference(static_cast<size_t>(rows), 0.0f);
+            if (!engine.gemvFloat(W.data(), x.data(), reference.data(), rows, cols)) {
+                std::cerr << "[ORACLE] reference GEMV failed\n";
+                return 1;
+            }
+
+            for (float w : weights) {
+                const auto plan = deep2::Quant::CalculateRowSplitIndex(
+                    rows, cols, GGML_TYPE_F32, w);
+                if (plan.device0Rows > 0 && plan.device0Rows < rows) ++splitCases;
+
+                std::vector<float> split(static_cast<size_t>(rows), 0.0f);
+                if (!engine.gemvFloatSplit(W.data(), x.data(), split.data(), rows, cols, w)) {
+                    std::cerr << "[ORACLE] split GEMV failed\n";
+                    return 1;
+                }
+                ++checked;
+
+                for (uint32_t r = 0; r < rows; ++r) {
+                    if (split[r] != reference[r]) {
+                        std::cerr << "[ORACLE] mismatch at row " << r
+                                  << " weight=" << w << " rows=" << rows
+                                  << " cols=" << cols
+                                  << " split=" << split[r] << " ref=" << reference[r]
+                                  << " W=" << W[(size_t)r * cols]
+                                  << " x0=" << x[0] << "\n";
+                        ++mismatches;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    std::cout << "[ORACLE] row-split GEMV parity: " << checked << " cases, "
+              << splitCases << " with a non-trivial split\n";
+    if (mismatches) {
+        std::cerr << "[ORACLE] " << mismatches
+                  << " case(s) did not reproduce the single-device GEMV\n";
+        return 1;
+    }
+    std::cout << "[ORACLE] the row-split GEMV reproduces the single-device GEMV exactly\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
 // Tokenizer diagnostics: print the ids and pieces a prompt encodes to.
 // ---------------------------------------------------------------------------
 int cmdTokenize(int argc, char** argv) {
@@ -1157,8 +1236,10 @@ int main(int argc, char** argv) {
     if (cmd == "tokenize")     return cmdTokenize(argc, argv);
     if (cmd == "info")         return cmdInfo(argc, argv);
     if (cmd == "dump-tensor")  return cmdDumpTensor(argc, argv);
+    if (cmd == "gemv-split")   return cmdGemvSplit(argc, argv);
 
     std::cerr << "unknown command: " << cmd << "\n";
-    std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor> <model.gguf> [args]\n";
+    std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor|gemv-split> "
+                 "<model.gguf> [args]\n";
     return 2;
 }

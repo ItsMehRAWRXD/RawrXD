@@ -39,14 +39,23 @@ bool VulkanDevice::init() {
     std::vector<VkPhysicalDevice> pds(gpuCount);
     vkEnumeratePhysicalDevices(m_instance, &gpuCount, pds.data());
 
-    struct Scored { VkPhysicalDevice pd; uint64_t vram; int rank; };
-    std::vector<Scored> scored;
-    for (auto pd : pds) {
-        VkPhysicalDeviceProperties props{};
-        vkGetPhysicalDeviceProperties(pd, &props);
-        if (props.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) continue;
-        if (props.vendorID != 0x1002u) continue; // AMD only in this milestone
-        VkPhysicalDeviceMemoryProperties mem{};
+      struct Scored { VkPhysicalDevice pd; uint64_t vram; int rank; };
+      std::vector<Scored> scored;
+      for (auto pd : pds) {
+          VkPhysicalDeviceProperties props{};
+          vkGetPhysicalDeviceProperties(pd, &props);
+          if (props.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) continue;
+          if (props.vendorID != 0x1002u) continue; // AMD only in this milestone
+          // Skip the D3D12 interop proxies. Mesa's "Dozen" exposes the same
+          // physical GPU as the native AMD device, so a two-device split that
+          // picked one of these would put both halves of a matrix on a single
+          // card while reporting two devices. The interop devices announce
+          // themselves as "Microsoft Direct3D12 (<card>)".
+          if (std::strncmp(props.deviceName, "Microsoft Direct3D12", 19) == 0) {
+              fprintf(stderr, "[VULKAN] skipping D3D12 interop proxy: %s\n", props.deviceName);
+              continue;
+          }
+          VkPhysicalDeviceMemoryProperties mem{};
         vkGetPhysicalDeviceMemoryProperties(pd, &mem);
         uint64_t localHeap = 0;
         for (uint32_t i = 0; i < mem.memoryHeapCount; ++i) {

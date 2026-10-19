@@ -199,7 +199,7 @@ bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::Dequanti
 }
 
 bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
-                            uint64_t rows, uint64_t cols) {
+                            uint64_t rows, uint64_t cols) const {
     return deep2::gemvFloat(W, x, y, rows, cols);
 }
 
@@ -212,7 +212,8 @@ static std::string exeDir() {
 }
 
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                             const deep2::TensorView& xView, std::vector<float>& y) {
+                             const deep2::TensorView& xView, std::vector<float>& y,
+                             uint32_t rowOffset, uint32_t rowCount) {
     if (!vulkanReady || !vulkan) return false;
 
     if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
@@ -222,9 +223,34 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     }
 
     if (wView.dims.size() < 2) return false;
-    uint64_t rows = wView.dims[0];
-    uint64_t cols = wView.dims[1];
-    y.assign(static_cast<size_t>(rows), 0.0f);
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+
+    // rowCount == 0 means the whole matrix.
+    if (rowCount == 0) {
+        if (rowOffset != 0) {
+            fprintf(stderr, "[VULKAN_GEMV] rowOffset without a row count\n");
+            return false;
+        }
+        rowCount = static_cast<uint32_t>(rows);
+    }
+    if (rowOffset > rows || rowCount > rows - rowOffset) {
+        fprintf(stderr, "[VULKAN_GEMV] invalid row range: offset=%u count=%u rows=%llu\n",
+                rowOffset, rowCount, (unsigned long long)rows);
+        return false;
+    }
+
+    // The weight matrix is f32 and row major, so a row is cols*4 bytes and
+    // the requested range must lie inside the view.
+    const size_t rowBytes = static_cast<size_t>(cols) * sizeof(float);
+    const size_t rangeBytes = static_cast<size_t>(rowCount) * rowBytes;
+    if (static_cast<size_t>(rowOffset) * rowBytes + rangeBytes > wView.byteSize) {
+        fprintf(stderr, "[VULKAN_GEMV] row range %u..%u exceeds the view (%zu bytes)\n",
+                rowOffset, rowOffset + rowCount, wView.byteSize);
+        return false;
+    }
+
+    y.assign(rowCount, 0.0f);
 
     static deep2::VulkanProgram program;
     static VkDevice boundDevice = VK_NULL_HANDLE;
@@ -245,9 +271,11 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     VkDeviceMemory Wmem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
     void* Wmapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
 
-    VkDeviceSize Wsize = (VkDeviceSize)rows * cols * 4;
+    // Only the selected rows are uploaded, so the shader's W[i * cols + k]
+    // addressing is relative to the start of the range.
+    VkDeviceSize Wsize = (VkDeviceSize)rangeBytes;
     VkDeviceSize xsize = (VkDeviceSize)cols * 4;
-    VkDeviceSize ysize = (VkDeviceSize)rows * 4;
+    VkDeviceSize ysize = (VkDeviceSize)rowCount * 4;
 
     auto cleanup = [&]() {
         vulkan->destroyBuffer(gpu, Wbuf, Wmem);
@@ -262,17 +290,30 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) { cleanup(); return false; }
     if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) { cleanup(); return false; }
 
-    std::memcpy(Wmapped, wView.data, static_cast<size_t>(Wsize));
+    std::memcpy(Wmapped, wView.data + (static_cast<size_t>(rowOffset) * rowBytes), rangeBytes);
     std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
 
-    if (!program.dispatch(gpu, Wbuf, xbuf, ybuf, (uint32_t)rows, (uint32_t)cols)) {
+    if (!program.dispatch(gpu, Wbuf, xbuf, ybuf, rowCount, (uint32_t)cols)) {
         cleanup(); return false;
     }
 
     std::memcpy(y.data(), ymapped, static_cast<size_t>(ysize));
     cleanup();
     return true;
+}
+
+bool Deep2Engine::vulkanGemvSplit(const deep2::TensorView& wView, const deep2::TensorView& xView,
+                                  std::vector<float>& y, uint32_t* outSplitRow) {
+    if (!vulkanReady || !vulkan) return false;
+
+    const auto* g0 = vulkan->primary();
+    const auto* g1 = vulkan->secondary();
+    if (!g0 || !g1) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] needs two devices, found %zu\n", vulkan->gpuCount());
+        return false;
+    }
+    return vulkanGemvSplit(*g0, *g1, wView, xView, y, outSplitRow);
 }
 
 void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
@@ -335,6 +376,42 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
             for (float v : yVulkan) vs += v;
             std::cout << "[VERIFY] Vulkan GEMV on " << g->name << ": " << (ok ? "OK" : "FAILED")
                       << " sum = " << vs << "\n";
+        }
+
+        // Asymmetric split: device 0 takes the leading rows, device 1 the
+        // remainder. The concatenated result must match the single-device
+        // result, because the split is a partitioning of the same rows.
+        if (engine.vulkan->gpuCount() >= 2 && testRows >= 2) {
+            std::vector<float> ySplit;
+            uint32_t splitRow = 0;
+            bool splitOk = engine.vulkanGemvSplit(wSlice, xSlice, ySplit, &splitRow);
+            float splitSum = 0.0f;
+            for (float v : ySplit) splitSum += v;
+            std::cout << "[VERIFY] Vulkan split GEMV across 2 devices: "
+                      << (splitOk ? "OK" : "FAILED")
+                      << " splitRow=" << splitRow << "/" << testRows
+                      << " sum = " << splitSum << "\n";
+
+            // Reference: the CPU GEMV over the same rows.
+            std::vector<float> yRef(testRows, 0.0f);
+            engine.gemvFloat(dq.data.data(), x.data(), yRef.data(), testRows, dq.cols);
+            float refSum = 0.0f;
+            for (float v : yRef) refSum += v;
+
+            // The split is exact when every row matches, not just the sum.
+            size_t mismatches = 0;
+            float worst = 0.0f;
+            if (splitOk && ySplit.size() == yRef.size()) {
+                for (size_t i = 0; i < yRef.size(); ++i) {
+                    const float diff = std::fabs(ySplit[i] - yRef[i]);
+                    if (diff > worst) worst = diff;
+                    if (diff > 1e-3f) ++mismatches;
+                }
+            } else {
+                mismatches = yRef.size();
+            }
+            std::cout << "[VERIFY] split vs CPU GEMV: mismatched rows = " << mismatches
+                      << "/" << yRef.size() << ", worst abs diff = " << worst << "\n";
         }
     }
     std::cout << "[STATUS] ROM execution bridge complete\n";

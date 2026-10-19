@@ -101,13 +101,52 @@ struct Deep2Engine {
     // Dequantize a ROM tensor into contiguous f32 memory (paged read + dequant).
     bool dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out);
 
-    // CPU GEMV wrapper.
+    // CPU GEMV wrapper. It only reads the engine's inputs, so it is const
+    // and can be called from the const split helpers.
     bool gemvFloat(const float* W, const float* x, float* y,
-                   uint64_t rows, uint64_t cols);
+                   uint64_t rows, uint64_t cols) const;
+
+    // CPU GEMV that splits the output rows across two devices with the shared
+    // row-split plan and concatenates the per-device results. The result is
+    // identical to a single-device GEMV over the whole matrix; this is the
+    // form the multi-device path mirrors on the GPU, and the form the
+    // regression test compares against.
+    bool gemvFloatSplit(const float* W, const float* x, float* y,
+                        uint64_t rows, uint64_t cols,
+                        float weightOverride = -1.0f) const;
 
     // Vulkan GEMV consuming TensorViews (dequant on CPU, real compute on GPU).
+    //
+    // `rowOffset` / `rowCount` select a row range of the weight matrix.
+    // rowCount == 0 means the whole matrix. Only the selected rows are
+    // uploaded, and the result vector holds one float per selected row, so
+    // the same function serves both a whole-matrix GEMV and one device's
+    // slice of a split tensor.
     bool vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                    const deep2::TensorView& xView, std::vector<float>& y);
+                    const deep2::TensorView& xView, std::vector<float>& y,
+                    uint32_t rowOffset = 0, uint32_t rowCount = 0);
+
+    // Run one GEMV across two devices: device 0 takes the leading rows and
+    // device 1 the remainder, with the boundary chosen by the measured VRAM
+    // ratio. The two results are concatenated into `y`, which holds one
+    // float per row of the whole matrix.
+    //
+    // `outSplitRow` receives the first row owned by device 1.
+    // Returns false when fewer than two devices are present.
+    bool vulkanGemvSplit(const deep2::TensorView& wView, const deep2::TensorView& xView,
+                         std::vector<float>& y, uint32_t* outSplitRow = nullptr);
+
+    // Multi-device Vulkan GEMV. The weight matrix is split into two row
+    // ranges with the shared row-split plan, each device runs the GEMV over
+    // the rows it owns, and the results are concatenated.
+    //
+    // The split weight is the VRAM ratio of the two devices passed in.
+    bool vulkanGemvSplit(const deep2::VulkanDevice::Gpu& gpu0,
+                          const deep2::VulkanDevice::Gpu& gpu1,
+                          const deep2::TensorView& wView,
+                          const deep2::TensorView& xView,
+                          std::vector<float>& y,
+                          uint32_t* outSplitRow = nullptr);
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path

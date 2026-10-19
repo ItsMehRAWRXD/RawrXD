@@ -106,3 +106,124 @@ size_t Deep2Engine::CalculateRowSplitIndex(uint32_t totalRows,
     return PlanRowSplit(totalRows, cols, type, weightOverride,
                         budgetBytes0, budgetBytes1).device0Rows;
 }
+
+// ---------------------------------------------------------------------------
+// Row-split GEMV
+// ---------------------------------------------------------------------------
+//
+// The row-split plan decides how many output rows each device owns. A GEMV
+// is row-parallel, so a device can compute any contiguous range of output
+// rows as long as it holds the matching range of the weight matrix. The
+// split therefore does not change the arithmetic: device 0 computes rows
+// [0, device0Rows) and device 1 computes the rest, and concatenating the two
+// results gives exactly the single-device result.
+//
+// This is the CPU form of that split. It is what the multi-device path
+// mirrors on the GPU, and it is what the regression test compares against a
+// single-device GEMV, so the split is verified on machines with one GPU.
+
+bool Deep2Engine::gemvFloatSplit(const float* W, const float* x, float* y,
+                                 uint64_t rows, uint64_t cols,
+                                 float weightOverride) const {
+    if (!W || !x || !y || rows == 0 || cols == 0) return false;
+
+    // The split is expressed in the quantized block layout, so the plan is
+    // taken for the F32 row stride of this matrix.
+    const deep2::Quant::RowSplitPlan plan =
+        PlanRowSplit(static_cast<uint32_t>(rows), static_cast<uint32_t>(cols),
+                     GGML_TYPE_F32, weightOverride);
+
+    const uint64_t splitRow = plan.device0Rows;
+    if (splitRow == 0 || splitRow >= rows) {
+        // One device owns everything (or the other owns nothing): run the
+        // whole matrix on one device.
+        return gemvFloat(W, x, y, rows, cols);
+    }
+
+    // Device 0 owns rows [0, splitRow).
+    if (!gemvFloat(W, x, y, splitRow, cols)) return false;
+
+    // Device 1 owns rows [splitRow, rows). The matrix is row major, so the
+    // first element of row r is W[r * cols]; the stride here is in elements,
+    // not bytes.
+    if (!gemvFloat(W + (splitRow * cols), x, y + splitRow, rows - splitRow, cols)) {
+        return false;
+    }
+    return true;
+}
+
+// Multi-device GEMV.
+//
+// The weight matrix is split into two row ranges with the shared row-split
+// plan, each device runs the GEMV over the rows it owns, and the two results
+// are concatenated. Each device sees a contiguous slice of the same weight
+// matrix, so the result is identical to a single-device GEMV.
+bool Deep2Engine::vulkanGemvSplit(const deep2::VulkanDevice::Gpu& gpu0,
+                                  const deep2::VulkanDevice::Gpu& gpu1,
+                                  const deep2::TensorView& wView,
+                                  const deep2::TensorView& xView,
+                                  std::vector<float>& y,
+                                  uint32_t* outSplitRow) {
+    if (!vulkanReady || !vulkan) return false;
+    if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
+        !wView.data || !xView.data) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] requires contiguous f32 views\n");
+        return false;
+    }
+    if (wView.dims.size() < 2) return false;
+
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+    if (rows == 0 || cols == 0) return false;
+
+    // The split weight is the VRAM ratio of the two devices that will
+    // actually run the GEMV. Deriving it here rather than from
+    // InitializeMultiGPU()'s separately created Vulkan instance means the
+    // split always matches the devices in use, and it stays correct when
+    // InitializeMultiGPU() has not been called. Each device's own VRAM is
+    // also the allowance a single tensor has on that device.
+    const uint64_t totalVram = gpu0.vramBytes + gpu1.vramBytes;
+    const float weight = totalVram ? static_cast<float>(gpu0.vramBytes) / static_cast<float>(totalVram) : 0.5f;
+
+    const deep2::Quant::RowSplitPlan plan =
+        PlanRowSplit(static_cast<uint32_t>(rows), static_cast<uint32_t>(cols),
+                     GGML_TYPE_F32, weight, gpu0.vramBytes, gpu1.vramBytes);
+    const uint64_t splitRow = plan.device0Rows;
+
+    y.assign(static_cast<size_t>(rows), 0.0f);
+    if (outSplitRow) *outSplitRow = static_cast<uint32_t>(splitRow);
+
+    if (splitRow == 0 || splitRow >= rows) {
+        // A single device owns the whole matrix.
+        return vulkanGemv(gpu0, wView, xView, y);
+    }
+
+    const uint64_t rowStride = cols * sizeof(float);
+
+    // Device 0 owns rows [0, splitRow).
+    deep2::TensorView w0 = wView;
+    w0.dims[0] = splitRow;
+    std::vector<float> y0;
+    if (!vulkanGemv(gpu0, w0, xView, y0)) return false;
+    if (y0.size() != splitRow) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] device 0 produced %zu rows, expected %llu\n",
+                y0.size(), static_cast<unsigned long long>(splitRow));
+        return false;
+    }
+
+    // Device 1 owns rows [splitRow, rows).
+    deep2::TensorView w1 = wView;
+    w1.dims[0] = rows - splitRow;
+    w1.data = wView.data + (splitRow * rowStride);
+    std::vector<float> y1;
+    if (!vulkanGemv(gpu1, w1, xView, y1)) return false;
+    if (y1.size() != rows - splitRow) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] device 1 produced %zu rows, expected %llu\n",
+                y1.size(), static_cast<unsigned long long>(rows - splitRow));
+        return false;
+    }
+
+    std::copy(y0.begin(), y0.end(), y.begin());
+    std::copy(y1.begin(), y1.end(), y.begin() + splitRow);
+    return true;
+}
