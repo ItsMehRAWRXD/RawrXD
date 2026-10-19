@@ -21,15 +21,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Only x64 Windows is packageable today, and the other two entries
+          # were not failing on their own merits.
+          #
+          # The ARM64 entry built the same sources with an ARM64 toolset, but
+          # the engine's compute path uses AVX-512 intrinsics and x86
+          # assembly, so those sources cannot compile for ARM64 at all.
+          #
+          # The Linux entry used the same PowerShell steps and the same
+          # Copy-Item packaging as the Windows one, so even a successful
+          # build could not have been packaged.
+          #
+          # Supporting them means giving the compute path an x86 fallback
+          # and making the packaging platform aware. Until then the matrix
+          # states what the tree can actually produce.
           - os: windows-latest
             target: x64
-            vulkan: true
-          - os: windows-latest
-            target: arm64
-            vulkan: false
-          - os: ubuntu-latest
-            target: x64
-            vulkan: false
 
     steps:
     - name: Checkout Source
@@ -39,36 +46,39 @@ jobs:
         submodules: recursive
 
     # --- Inject Vulkan SDK on Windows ---
+    # The SDK path has to be the real install directory. A "C:\VulkanSDK\*\Bin"
+    # glob is never expanded by PATH, so the loader was not found and the
+    # configure step failed to find Vulkan.
+    #
+    # The SDK is not optional: the device layer is part of the engine's
+    # public headers, so the tree needs vulkan/vulkan.h, and the compute
+    # shaders are compiled to SPIR-V with the glslangValidator it carries.
     - name: Setup Vulkan SDK
-      if: matrix.vulkan
       shell: pwsh
       run: |
-        choco install vulkan-sdk -y
-        echo "VULKAN_SDK=$env:VULKAN_SDK" >> $env:GITHUB_ENV
-        echo "C:\VulkanSDK\*\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        choco install vulkan-sdk -y --version 1.3.268.0
+        echo "VULKAN_SDK=C:\VulkanSDK\1.3.268.0" >> $env:GITHUB_ENV
+        echo "C:\VulkanSDK\1.3.268.0\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    # --- Build toolchain ---
+    # The default generator is Visual Studio, and "cmake --build" drives
+    # MSBuild, which is not on PATH on the hosted runner without this.
+    - name: Add MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+      with:
+        msbuildArchitecture: x64
+
+    - name: Install NASM
+      shell: pwsh
+      run: |
+        choco install nasm -y
+        echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     # --- Configure CMake Build Matrix ---
     - name: Configure CMake
       shell: pwsh
       run: |
-        if ("${{ runner.os }}" -eq "Windows") {
-          $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
-          $arch = if ($${{ matrix.target }} -eq 'arm64') { 'ARM64' } else { 'x64' }
-          $cmakeArgs = @(
-            '-B', 'build'
-            '-DCMAKE_BUILD_TYPE=Release'
-            '-DCMAKE_GENERATOR_PLATFORM=' + $arch
-            $vulkanFlag
-          )
-          cmake @cmakeArgs
-        } else {
-          $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
-          cmake -B build `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_C_COMPILER=gcc `
-            -DCMAKE_CXX_COMPILER=g++ `
-            $vulkanFlag
-        }
+        cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
 
     # --- Execute High-Performance Compilation Loop ---
     - name: Execute High-Performance Compilation Loop
