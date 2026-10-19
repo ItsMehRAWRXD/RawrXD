@@ -1,6 +1,9 @@
 #include "Deep2Engine.hpp"
 #include "core/KvWindowPlan.hpp"
 #include "core/HostKvRing.hpp"
+#include "core/DecodeSession.hpp"
+#include "core/GgufTokenizer.hpp"
+#include "core/Sampling.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -19,6 +22,104 @@ class NullStreamBuf : public std::streambuf {
 protected:
     int overflow(int c) override { return c; }
 };
+
+// Generate text.
+//
+// This is the mode that exercises the engine as an inference engine rather
+// than as a benchmark. A session owns the key and value cache and the
+// position in the context, so every generated token costs the work for that
+// token instead of the work for the whole prefix.
+//
+// The engine narrates every pass on stdout, which is thousands of lines for
+// a generation. The narration is muted for the measured region and the
+// generated text is printed at the end, so the timing is of the work.
+static int runGeneration(Deep2Engine& engine, const std::string& modelPath,
+                          const std::string& prompt, uint32_t maxTokens,
+                          Deep2Rom::Inference::SamplingParams sampling,
+                          bool greedy) {
+    Deep2Rom::Inference::GgufTokenizer tokenizer;
+    if (!tokenizer.loadFromGGUF(modelPath)) {
+        std::cerr << "[GEN] the tokenizer could not be loaded\n";
+        return 1;
+    }
+
+    std::vector<uint32_t> promptTokens = tokenizer.encode(prompt);
+    if (promptTokens.empty()) {
+        std::cerr << "[GEN] the prompt produced no tokens\n";
+        return 1;
+    }
+    // The tokenizer does not prepend the beginning-of-sequence token, and
+    // the caller has to decide. A decoder-only model expects it: without it
+    // the model starts in a state it was never trained on and the text it
+    // produces is not the text the model would have produced.
+    if (tokenizer.bosTokenId() != 0xFFFFFFFFu) {
+        promptTokens.insert(promptTokens.begin(), tokenizer.bosTokenId());
+    }
+
+    const auto& geometry = engine.rom.geometry();
+    const uint32_t layers = static_cast<uint32_t>(geometry.numLayers);
+    const uint32_t hiddenDim = static_cast<uint32_t>(geometry.hiddenDim);
+
+    // The context window the cache holds. It is bounded by what the host
+    // can hold, because the cache lives on the host for now.
+    const uint64_t hostBudget = 4ull * 1024ull * 1024ull * 1024ull;
+    uint32_t window = deep2::DetermineSafeContextWindow(
+        static_cast<uint32_t>(geometry.maxSeqLen), layers,
+        static_cast<uint32_t>(geometry.numKVHeads),
+        static_cast<uint32_t>(geometry.hiddenDim / geometry.numHeads),
+        deep2::kKvBytesFp16, hostBudget);
+    if (window == 0) window = 1024;
+    // The window has to be at least as long as the prompt.
+    if (window < promptTokens.size()) window = static_cast<uint32_t>(promptTokens.size());
+
+    deep2::DecodeSession session;
+    if (!session.begin(layers, window, hiddenDim)) {
+        std::cerr << "[GEN] the session could not be prepared\n";
+        return 1;
+    }
+
+    Deep2Rom::Inference::Sampler sampler;
+    sampler.setParams(sampling);
+
+    // The engine narrates every layer of every pass. That is useful when a
+    // human is watching and it is pure overhead when the run is timed.
+    NullStreamBuf nullBuf;
+    std::streambuf* saved = std::cout.rdbuf(&nullBuf);
+
+    std::vector<float> logits;
+    deep2::DecodeSession::Result result;
+    {
+        deep2::DecodeSession::Step step =
+            [&engine, &session, &logits](const std::vector<uint32_t>& tokens,
+                                         uint32_t position,
+                                         std::vector<float>& out) -> bool {
+                return engine.executePhi3ROMForwardStep(tokens, out, logits,
+                                                        session.kv(), position);
+            };
+        result = session.generate(step, promptTokens, maxTokens, sampler, greedy,
+                                   tokenizer.eosTokenId());
+    }
+
+    std::cout.rdbuf(saved);
+
+    const std::string text = tokenizer.decode(result.generatedTokens);
+    std::cout << "\n=== GENERATION ===\n";
+    std::cout << "prompt   : " << prompt << "\n";
+    std::cout << "prompt tokens : " << result.promptTokens.size() << "\n";
+    std::cout << "generated     : " << result.generatedTokens.size() << " token(s)\n";
+    std::cout << "text          : " << text << "\n";
+    std::cout << "context length: " << result.contextLength << "\n";
+    std::cout << "prompt time   : " << (result.promptSeconds * 1000.0) << " ms ("
+              << result.promptTokensPerSecond << " tok/s)\n";
+    std::cout << "decode time   : " << (result.decodeSeconds * 1000.0) << " ms ("
+              << result.decodeTokensPerSecond << " tok/s)\n";
+    std::cout << "stop reason   : "
+              << (result.stopReason == deep2::DecodeSession::kStoppedAtEndOfText
+                      ? "end of sequence" : "token limit") << "\n";
+    std::cout.flush();
+    return 0;
+}
+
 
 // Run a fixed number of single-token forward passes and report the sustained
 // decode rate.
@@ -234,12 +335,30 @@ static int runKvWindowChecks() {
 
     // The model's advertised context does not fit; the window is bounded.
     {
+        // The advertised context is bounded by the budget, to the largest
+        // power of two that fits.
+        const uint64_t budget = 29 * gib;
         const uint32_t w = deep2::DetermineSafeContextWindow(
-            131072, layers, kvHeads, headDim, deep2::kKvBytesFp16, 47 * gib);
-        expect(w == 4096, "131072 tokens at 47 GB of VRAM admits a 4096 token window");
+            131072, layers, kvHeads, headDim, deep2::kKvBytesFp16, budget);
         const uint64_t bytes = deep2::KvWindowBytes(layers, kvHeads, headDim,
                                                      deep2::kKvBytesFp16, w);
-        std::cout << "       window=" << w << " costs " << (bytes / gib) << " GiB\n";
+        const bool fits = bytes <= budget;
+        const bool isPowerOfTwo = (w != 0) && ((w & (w - 1)) == 0);
+        const uint64_t nextUp = static_cast<uint64_t>(w) * 2;
+        const bool nextWouldNotFit =
+            deep2::KvWindowBytes(layers, kvHeads, headDim, deep2::kKvBytesFp16, nextUp) > budget;
+        expect(fits && isPowerOfTwo && nextWouldNotFit && w < 131072,
+               "the advertised context is bounded to the largest power of two that fits");
+        std::cout << "       window=" << w << " costs " << (bytes / gib)
+                  << " GiB of a " << (budget / gib) << " GiB budget\n";
+    }
+    // The resident weights come out of the same budget, so the window has
+    // to be chosen from what is left rather than from the whole card.
+    {
+        const uint64_t resident = deep2::KvResidentWeightBytes(32, 3072, 8192, 32064);
+        std::cout << "       resident f32 weights: " << (resident / gib) << " GiB\n";
+        expect(resident > 10 * gib && resident < 20 * gib,
+               "the resident weights are about 12 GiB for this model");
     }
     // A context that fits is used as advertised.
     {
@@ -286,10 +405,10 @@ static int runKvWindowChecks() {
         // Every retained position reads back what was written for it.
         bool rowsIntact = true;
         for (uint32_t p = deep2::KvWindowStart(count, window); p < count; ++p) {
-            const float* k = ring.keyRow(0, p);
+            const uint16_t* k = ring.keyRow(0, p);
             if (!k) { rowsIntact = false; break; }
             for (uint32_t i = 0; i < hidden; ++i) {
-                if (k[i] != written[p][i]) { rowsIntact = false; break; }
+                if (deep2::KvHalfToFloat(k[i]) != written[p][i]) { rowsIntact = false; break; }
             }
         }
         expect(rowsIntact, "every retained position reads back the row written for it");
@@ -300,7 +419,7 @@ static int runKvWindowChecks() {
         expect(deep2::KvPhysicalIndex(11, window) == 3, "logical position 11 lives in slot 3");
         bool oldestGone = true;
         for (uint32_t p = 0; p < 4; ++p) {
-            const float* k = ring.keyRow(0, p);
+            const uint16_t* k = ring.keyRow(0, p);
             for (uint32_t i = 0; i < hidden; ++i) {
                 if (k[i] != written[p][i]) { oldestGone = false; break; }
             }
@@ -314,8 +433,9 @@ static int runKvWindowChecks() {
         expect(deep2::KvFloatToHalf(1.0f) == 0x3C00, "1.0 converts to half 1.0");
         expect(deep2::KvFloatToHalf(-2.0f) == 0xC000, "-2.0 converts to half -2.0");
         // 0.1 is not representable; the result must still be within 0.1%.
-        const float back = (float)deep2::KvFloatToHalf(0.1f);
+        const float back = deep2::KvHalfToFloat(deep2::KvFloatToHalf(0.1f));
         expect(std::fabs(back - 0.1f) < 0.001f, "0.1 survives the half conversion");
+        expect(deep2::KvHalfToFloat(deep2::KvFloatToHalf(1.0f)) == 1.0f, "1.0 round-trips exactly");
     }
 
     std::cout << (failures == 0 ? "[OK] bounded window checks PASSED\n"
@@ -468,6 +588,11 @@ int main(int argc, char* argv[]) {
     int benchmarkSteps = 3;
     std::string modelPath;
     std::string manifestPath;
+    std::string generatePrompt;
+    int generateTokens = 16;
+    bool runGenerate = false;
+    bool generateGreedy = true;
+    Deep2Rom::Inference::SamplingParams sampling;
 
     int argIndex = 1;
     while (argIndex < argc) {
@@ -490,6 +615,46 @@ int main(int argc, char* argv[]) {
         if (a == "--benchmark") {
             runBenchmark = true;
             argIndex++;
+            continue;
+        }
+        if (a == "--generate") {
+            runGenerate = true;
+            argIndex++;
+            continue;
+        }
+        if (a == "--prompt") {
+            generatePrompt = (argIndex + 1 < argc) ? argv[argIndex + 1] : "";
+            argIndex += 2;
+            continue;
+        }
+        if (a == "--max-tokens") {
+            generateTokens = (argIndex + 1 < argc) ? std::atoi(argv[argIndex + 1]) : 16;
+            argIndex += 2;
+            continue;
+        }
+        if (a == "--temperature") {
+            sampling.temperature = (argIndex + 1 < argc) ? (float)std::atof(argv[argIndex + 1]) : 1.0f;
+            argIndex += 2;
+            continue;
+        }
+        if (a == "--top-p") {
+            sampling.topP = (argIndex + 1 < argc) ? (float)std::atof(argv[argIndex + 1]) : 1.0f;
+            argIndex += 2;
+            continue;
+        }
+        if (a == "--top-k") {
+            sampling.topK = (argIndex + 1 < argc) ? std::atoi(argv[argIndex + 1]) : 50;
+            argIndex += 2;
+            continue;
+        }
+        if (a == "--sample") {
+            generateGreedy = false;
+            argIndex++;
+            continue;
+        }
+        if (a == "--seed") {
+            sampling.seed = (argIndex + 1 < argc) ? (uint64_t)std::atoi(argv[argIndex + 1]) : 42u;
+            argIndex += 2;
             continue;
         }
         if (a == "--kv-cache-plan") {
@@ -534,6 +699,9 @@ int main(int argc, char* argv[]) {
     // Check for Move 10 validation flag (already parsed above)
     if (runKvPlan) {
         runKvCachePlan(engine);
+    } else if (runGenerate) {
+        return runGeneration(engine, modelPath, generatePrompt,
+                             (uint32_t)generateTokens, sampling, generateGreedy);
     } else if (runParity) {
         runForwardParity(engine);
     } else if (runMove10) {

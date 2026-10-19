@@ -34,6 +34,7 @@ set(DEEP2_ENGINE_CORE_SOURCES
     src/core/GgufTokenizer.cpp
     src/core/KVCache.cpp
     src/core/Sampling.cpp
+    src/core/DecodeSession.cpp
     src/core/GenerationLoop.cpp
     src/core/InferenceEngine.cpp
 )
@@ -108,6 +109,7 @@ add_executable(production_smoke_test
     src/core/Tokenizer.cpp
     src/core/KVCache.cpp
     src/core/Sampling.cpp
+    src/core/DecodeSession.cpp
     src/core/GenerationLoop.cpp
     src/core/InferenceEngine.cpp
 )

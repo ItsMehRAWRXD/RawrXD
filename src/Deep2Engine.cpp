@@ -752,6 +752,26 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                                              std::vector<float>& outputLogits,
                                              std::vector<float>& baselineLogits,
                                              bool forceCpuPath) {
+    return executePhi3ROMForwardImpl(inputTokens, outputLogits, baselineLogits,
+                                     nullptr, 0, forceCpuPath);
+}
+
+bool Deep2Engine::executePhi3ROMForwardStep(const std::vector<uint32_t>& inputTokens,
+                                             std::vector<float>& outputLogits,
+                                             std::vector<float>& baselineLogits,
+                                             deep2::HostKvRing& kvRing,
+                                             uint32_t startPosition,
+                                             bool forceCpuPath) {
+    return executePhi3ROMForwardImpl(inputTokens, outputLogits, baselineLogits,
+                                     &kvRing, startPosition, forceCpuPath);
+}
+
+bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTokens,
+                                             std::vector<float>& outputLogits,
+                                             std::vector<float>& baselineLogits,
+                                             deep2::HostKvRing* externalRingPtr,
+                                             uint32_t startPosition,
+                                             bool forceCpuPath) {
     if (!initialized || !romMode) {
         fprintf(stderr, "[Move 10] Engine not initialized or not in ROM mode\n");
         return false;
@@ -904,7 +924,6 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 (unsigned long long)(deep2::KvWindowBytes((uint32_t)numLayers, kvHeads, headDim,
                                                            deep2::kKvBytesFp16, kvWindow) / (1024ull * 1024ull)));
     }
-    deep2::HostKvRing kvRing;
     // The ring holds the positions this pass actually processes. Reserving
     // the whole advertised window instead cost 24 GB of host memory for a
     // three-token pass, and that allocation is what made the run fail
@@ -913,11 +932,25 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     // The ring's window and the window the logical-to-physical mapping uses
     // have to be the same number, or the reference attention and the device
     // attention would read different tokens from different slots.
-    const uint32_t ringWindow = (kvWindow < (uint32_t)inputTokens.size())
-                                    ? kvWindow
-                                    : (uint32_t)inputTokens.size();
+    //
+    // A caller that supplies its own ring is generating: the ring already
+    // holds the positions that came before, and its window is the context
+    // window. It is not cleared, and the pass appends to it at the
+    // positions that follow.
+    const bool externalRing = (externalRingPtr != nullptr);
+    deep2::HostKvRing& kvRing = externalRing ? *externalRingPtr : m_scratchKvRing;
+    const uint32_t ringWindow = externalRing
+                                    ? kvRing.window()
+                                    : ((kvWindow < (uint32_t)inputTokens.size())
+                                           ? kvWindow
+                                           : (uint32_t)inputTokens.size());
     if (ringWindow == 0) return false;
-    kvRing.reset((uint32_t)numLayers, ringWindow, (uint32_t)hiddenDim);
+    if (!externalRing) {
+        kvRing.reset((uint32_t)numLayers, ringWindow, (uint32_t)hiddenDim);
+    } else if (kvRing.window() != ringWindow || kvRing.hiddenDim() != (uint32_t)hiddenDim) {
+        fprintf(stderr, "[Move 10] the supplied cache does not match the model\n");
+        return false;
+    }
 
     // The placement phase is over. Everything from here to the end of the
     // token loop is the compute phase.
@@ -1018,14 +1051,19 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             std::vector<float> K(qkvOut.begin() + qSize, qkvOut.begin() + 2 * qSize);
             std::vector<float> V(qkvOut.begin() + 2 * qSize, qkvOut.end());
 
+            // The position in the context, which is not the same as the
+            // index within this call when a generation is running: the
+            // earlier positions are already in the cache.
+            const uint32_t logicalPos = startPosition + (uint32_t)tokenPos;
+
             // Apply RoPE to Q and K
-            ApplyRotaryEmbeddings(Q.data(), 0, static_cast<size_t>(tokenPos));
-            ApplyRotaryEmbeddings(K.data(), 0, static_cast<size_t>(tokenPos));
+            ApplyRotaryEmbeddings(Q.data(), 0, logicalPos);
+            ApplyRotaryEmbeddings(K.data(), 0, logicalPos);
 
             // Append this position's key and value to the layer's ring, then
             // attend over the window the ring holds.
-            kvRing.append(layer, (uint32_t)tokenPos, K.data(), V.data());
-            const uint32_t logicalCount = (uint32_t)tokenPos + 1;
+            kvRing.append(layer, logicalPos, K.data(), V.data());
+            const uint32_t logicalCount = logicalPos + 1;
             const uint32_t windowStart = deep2::KvWindowStart(logicalCount, ringWindow);
             const uint32_t windowCount = deep2::KvWindowCount(logicalCount, ringWindow);
 
@@ -1165,20 +1203,6 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             // the first layer where they differ localises the divergence.
             // It is off by default because it flushes a line per layer.
             if (m_layerTrace) {
-                // Diagnostic: where does the first non-finite value appear?
-                {
-                    size_t nanQ = 0, nanK = 0, nanV = 0, nanAttn = 0, nanState = 0;
-                    for (float v : Q) if (!std::isfinite(v)) ++nanQ;
-                    for (float v : K) if (!std::isfinite(v)) ++nanK;
-                    for (float v : V) if (!std::isfinite(v)) ++nanV;
-                    for (float v : attnOut) if (!std::isfinite(v)) ++nanAttn;
-                    for (float v : hiddenStates) if (!std::isfinite(v)) ++nanState;
-                    const uint16_t* ringK = kvRing.keyRow(layer, (uint32_t)tokenPos);
-                    size_t nanRing = 0;
-                    if (ringK) for (uint32_t i = 0; i < hiddenDim; ++i) if (!std::isfinite(deep2::KvHalfToFloat(ringK[i]))) ++nanRing;
-                    fprintf(stderr, "[NANPROBE] layer=%zu token=%zu nanQ=%zu nanK=%zu nanV=%zu nanAttn=%zu nanState=%zu nanRing=%zu\\n",
-                            layer, tokenPos, nanQ, nanK, nanV, nanAttn, nanState, nanRing);
-                }
                 double sum = 0.0;
                 float absMax = 0.0f;
                 for (size_t i = 0; i < hiddenDim; ++i) {

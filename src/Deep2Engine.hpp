@@ -9,6 +9,7 @@
 #include "MasmCoreKernels.hpp"
 #include "ggml.h"
 #include "core/QuantBlockTraits.hpp"
+#include "core/HostKvRing.hpp"
 
 #include <vector>
 #include <string>
@@ -390,6 +391,39 @@ struct Deep2Engine {
                                    std::vector<float>& outputLogits,
                                    std::vector<float>& baselineLogits,
                                    bool forceCpuPath = false);
+
+    // The same pass, with the cache and the position supplied.
+    //
+    // A pass on its own starts from an empty cache at position zero, so a
+    // loop that fed a token back into it would recompute the whole prefix
+    // at every step. Passing a cache in and a starting position makes the
+    // pass incremental: the cache keeps the positions that came before and
+    // the pass only computes the new one.
+    //
+    // `kvRing` is used as it stands and is not cleared, so the caller owns
+    // it and it has to survive from one call to the next. Passing null
+    // gives the original behaviour: a fresh cache at position zero.
+    bool executePhi3ROMForwardStep(const std::vector<uint32_t>& inputTokens,
+                                   std::vector<float>& outputLogits,
+                                   std::vector<float>& baselineLogits,
+                                   deep2::HostKvRing& kvRing,
+                                   uint32_t startPosition,
+                                   bool forceCpuPath = false);
+
+    // The body of the forward pass.
+    //
+    // A null ring means the pass uses the engine's scratch ring, which is
+    // cleared and holds only the positions this pass produces. A ring
+    // supplied by the caller is used as it stands.
+    bool executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTokens,
+                                   std::vector<float>& outputLogits,
+                                   std::vector<float>& baselineLogits,
+                                   deep2::HostKvRing* ring,
+                                   uint32_t startPosition,
+                                   bool forceCpuPath);
+
+    // The cache a pass uses when the caller does not supply one.
+    deep2::HostKvRing m_scratchKvRing;
     // Validate logits parity against baseline
     bool validateLogitsParity(const std::vector<float>& romLogits,
                               const std::vector<float>& baselineLogits,

@@ -98,6 +98,24 @@ inline uint32_t DetermineSafeContextWindow(uint32_t modelMaxLen,
     return window;
 }
 
+// The bytes the f32 resident weights occupy, so the key and value budget
+// can be taken from what the cards have left rather than from all of it.
+//
+// The projections are the f32 expansion of the quantized weights:
+//     attn_qkv : 3 * hiddenDim x hiddenDim
+//     ffn_up   : 2 * intermediateDim x hiddenDim
+//     ffn_down : hiddenDim x intermediateDim
+//     output   : vocab x hiddenDim
+inline uint64_t KvResidentWeightBytes(uint32_t layers, uint32_t hiddenDim,
+                                      uint32_t intermediateDim, uint32_t vocabSize) {
+    const uint64_t perLayer =
+        (3ull * hiddenDim * hiddenDim) +
+        (2ull * intermediateDim * hiddenDim) +
+        (1ull * hiddenDim * intermediateDim);
+    const uint64_t total = perLayer * layers + (1ull * vocabSize * hiddenDim);
+    return total * kKvBytesFp32;
+}
+
 // Convert a float to IEEE 754 half precision, rounding to nearest even.
 //
 // The cache is stored in fp16 because that is what halves its footprint,
@@ -144,6 +162,38 @@ inline uint16_t KvFloatToHalf(float value) {
         }
     }
     return static_cast<uint16_t>(sign | (static_cast<uint32_t>(halfExponent) << 10) | rounded);
+}
+
+// Convert an IEEE 754 half back to a float.
+//
+// The verification needs this to check the conversion in both directions:
+// casting the bit pattern to a float would give the integer pattern, not
+// the value it represents.
+inline float KvHalfToFloat(uint16_t half) {
+    const uint32_t sign = static_cast<uint32_t>(half & 0x8000u) << 16;
+    const uint32_t exponent = (half >> 10) & 0x1Fu;
+    const uint32_t mantissa = half & 0x03FFu;
+
+    uint32_t bits = 0;
+    if (exponent == 0) {
+        if (mantissa == 0) {
+            bits = sign;
+        } else {
+            // Subnormal: normalise it.
+            uint32_t e = 0;
+            uint32_t m = mantissa;
+            while ((m & 0x0400u) == 0) { m <<= 1; e++; }
+            m &= 0x03FFu;
+            bits = sign | ((127u - 15u - e + 1u) << 23) | (m << 13);
+        }
+    } else if (exponent == 0x1F) {
+        bits = sign | 0x7F800000u | (mantissa << 13);
+    } else {
+        bits = sign | ((exponent + 127u - 15u) << 23) | (mantissa << 13);
+    }
+    float value = 0.0f;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
 }
 
 }  // namespace deep2
