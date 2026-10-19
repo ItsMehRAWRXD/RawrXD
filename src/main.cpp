@@ -974,6 +974,7 @@ int main(int argc, char* argv[]) {
         std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
     std::cout << "       " << argv[0] << " --forward-parity <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --benchmark <path_to_model.gguf> [manifest.json] [steps]\n";
+        std::cout << "       " << argv[0] << " --gemv-benchmark <path_to_model.gguf> [manifest.json] [iterations]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -985,6 +986,7 @@ int main(int argc, char* argv[]) {
         std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
     std::cout << "       " << argv[0] << " --forward-parity <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --benchmark <path_to_model.gguf> [manifest.json] [steps]\n";
+        std::cout << "       " << argv[0] << " --gemv-benchmark <path_to_model.gguf> [manifest.json] [iterations]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -1028,6 +1030,16 @@ int main(int argc, char* argv[]) {
         if (a == "--benchmark") {
             runBenchmark = true;
             argIndex++;
+            continue;
+        }
+        if (a == "--gemv-benchmark") {
+            runGemvBench = true;
+            argIndex++;
+            // The iteration count is the next argument when it is a number.
+            if (argIndex < argc && argv[argIndex][0] >= '0' && argv[argIndex][0] <= '9') {
+                gemvBenchIterations = std::atoi(argv[argIndex]);
+                argIndex++;
+            }
             continue;
         }
         if (a == "--generate") {
@@ -1121,6 +1133,8 @@ int main(int argc, char* argv[]) {
         runMove10Validation(engine);
     } else if (runBenchmark) {
         runThroughputBenchmark(engine, benchmarkSteps);
+    } else if (runGemvBench) {
+        runGemvBenchmark(engine, gemvBenchIterations);
     } else {
         Deep2EngineExecuteInferenceStep(engine);
     }
