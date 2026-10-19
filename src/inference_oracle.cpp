@@ -278,6 +278,20 @@ struct DeepSeek2Model {
     uint32_t moeExpertFF = 0;
     uint32_t moeSharedFF = 0;
 
+    // One routed expert's weights, dequantized on demand.
+    struct ExpertWeights {
+        std::vector<float> gate;  // [expertFF, hidden]
+        std::vector<float> up;    // [expertFF, hidden]
+        std::vector<float> down;  // [hidden, expertFF]
+    };
+
+    // Experts currently resident, and their total footprint. The peak of this
+    // number is the quantity the demand paging exists to bound.
+    std::unordered_map<int, ExpertWeights> m_expertCache;
+    size_t m_expertResidentBytes = 0;
+    size_t m_expertPeakBytes = 0;
+    size_t m_expertLoads = 0;
+
     std::vector<float> tokenEmbdW;   // [vocab, hidden]
     std::vector<float> outputNormW;  // [hidden]
     std::vector<float> outputW;      // [vocab, hidden]
@@ -296,12 +310,14 @@ struct DeepSeek2Model {
         std::vector<float> ffnDownW;     // [hidden, intermediate]
         // MoE layers 1-26 (loaded on demand from ROM):
         std::vector<float> ffnGateInpW;  // [hidden, numExperts] router
-        std::vector<float> ffnGateExpsW; // [numExperts, intermediate, hidden]
-        std::vector<float> ffnUpExpsW;   // [numExperts, intermediate, hidden]
-        std::vector<float> ffnDownExpsW; // [numExperts, hidden, intermediate]
-        std::vector<float> ffnGateShexpW;// [hidden, 2*intermediate]
-        std::vector<float> ffnUpShexpW;  // [hidden, 2*intermediate]
-        std::vector<float> ffnDownShexpW;// [2*intermediate, hidden]
+        // The shared expert is small enough to keep resident for the layer.
+        std::vector<float> ffnGateShexpW;// [sharedFF, hidden]
+        std::vector<float> ffnUpShexpW;  // [sharedFF, hidden]
+        std::vector<float> ffnDownShexpW;// [hidden, sharedFF]
+        // The routed experts are demand-paged per position; only the ones the
+        // router selects are materialized, and they are released again when
+        // the layer finishes.
+        std::unordered_map<int, ExpertWeights> experts;
         bool moeLoaded = false;
     };
     std::vector<LayerW> layersW;
@@ -396,7 +412,14 @@ struct DeepSeek2Model {
         return true;
     }
 
-    // Load MoE weights for a specific layer from ROM (on demand, to save memory)
+    // Load a layer's weights that are needed for every position: the
+    // attention projections, the norms, and the dense or MoE feed-forward.
+    //
+    // The routed experts are NOT loaded here. They are the bulk of a MoE
+    // layer (2.28 GB dequantized for DeepSeek-V2-Lite) and only the topK=6
+    // the router picks are ever used, so they are demand-paged per position
+    // by loadMoEExpert(). Keeping all 64 of them resident for all 26 MoE
+    // layers was a 59 GB allocation on a 63 GB host.
     bool loadMoELayer(const TensorROM& rom, int layerIdx) {
         auto get = [&](const std::string& name) { return rom.findTensor(name); };
         auto readF32 = [&](const TensorEntry* e, std::vector<float>& out) -> bool {
@@ -416,26 +439,119 @@ struct DeepSeek2Model {
         os << "blk." << layerIdx << ".";
         const std::string p = os.str();
 
-        if (!readF32(get(p + "ffn_gate_inp.weight"), lw.ffnGateInpW)) return false;
-        if (!readF32(get(p + "ffn_gate_exps.weight"), lw.ffnGateExpsW)) return false;
-        if (!readF32(get(p + "ffn_up_exps.weight"), lw.ffnUpExpsW)) return false;
-        if (!readF32(get(p + "ffn_down_exps.weight"), lw.ffnDownExpsW)) return false;
-        if (!readF32(get(p + "ffn_gate_shexp.weight"), lw.ffnGateShexpW)) return false;
-        if (!readF32(get(p + "ffn_up_shexp.weight"), lw.ffnUpShexpW)) return false;
-        if (!readF32(get(p + "ffn_down_shexp.weight"), lw.ffnDownShexpW)) return false;
+        // The attention projections and the norms are needed by every layer.
+        if (!readF32(get(p + "attn_norm.weight"), lw.attnNormW)) return false;
+        if (!readF32(get(p + "attn_q.weight"), lw.qW)) return false;
+        if (!readF32(get(p + "attn_kv_a_norm.weight"), lw.kvANormW)) return false;
+        if (!readF32(get(p + "attn_kv_a_mqa.weight"), lw.kvAMqaW)) return false;
+        if (!readF32(get(p + "attn_kv_b.weight"), lw.kvBW)) return false;
+        if (!readF32(get(p + "attn_output.weight"), lw.attnOutW)) return false;
+        if (!readF32(get(p + "ffn_norm.weight"), lw.ffnNormW)) return false;
+
+        if (layerIdx == 0) {
+            // The leading dense block has a plain feed-forward.
+            if (!readF32(get(p + "ffn_up.weight"), lw.ffnUpW)) return false;
+            if (!readF32(get(p + "ffn_gate.weight"), lw.ffnGateW)) return false;
+            if (!readF32(get(p + "ffn_down.weight"), lw.ffnDownW)) return false;
+        } else {
+            // The router and the shared expert stay resident for the layer.
+            if (!readF32(get(p + "ffn_gate_inp.weight"), lw.ffnGateInpW)) return false;
+            if (!readF32(get(p + "ffn_gate_shexp.weight"), lw.ffnGateShexpW)) return false;
+            if (!readF32(get(p + "ffn_up_shexp.weight"), lw.ffnUpShexpW)) return false;
+            if (!readF32(get(p + "ffn_down_shexp.weight"), lw.ffnDownShexpW)) return false;
+        }
 
         lw.moeLoaded = true;
-        std::cerr << "[DS2] MoE layer " << layerIdx << " weights resident\n";
+        std::cerr << "[DS2] layer " << layerIdx << " weights resident"
+                  << (layerIdx == 0 ? " (dense)" : " (router + shared expert)") << "\n";
         return true;
+    }
+
+    // Load one routed expert.
+    //
+    // The expert weights live in a single 3-D tensor per projection
+    // (ffn_gate_exps, ffn_up_exps, ffn_down_exps) whose outermost dimension
+    // is the expert index, so an expert is a contiguous slice of that tensor
+    // rather than a tensor of its own. The slice starts at a quant block
+    // boundary, because the per-expert element count is a multiple of the
+    // block size, so only the expert's own bytes are read and dequantized.
+    bool loadMoEExpert(const TensorROM& rom, int layerIdx, int expertId, ExpertWeights& out) {
+        const int expertFF = (int)moeExpertFF;
+        const uint32_t expertBytes = (uint32_t)expertFF * hidden;
+
+        auto loadSlice = [&](const char* suffix, uint32_t rows, uint32_t cols,
+                             std::vector<float>& dst) -> bool {
+            const TensorEntry* e = rom.findTensor("blk." + std::to_string(layerIdx) + "." + suffix);
+            if (!e) {
+                std::cerr << "[DS2] missing expert tensor: blk." << layerIdx << "." << suffix << "\n";
+                return false;
+            }
+            const ggml_type gtype = static_cast<ggml_type>(e->type);
+            const uint32_t blockElems = deep2::Quant::ElementsPerBlock(gtype);
+            const uint32_t blockBytes = deep2::Quant::BlockBytes(gtype);
+            const uint64_t elementsPerExpert = (uint64_t)rows * cols;
+            if (blockElems == 0 || blockBytes == 0 || (elementsPerExpert % blockElems) != 0) {
+                std::cerr << "[DS2] expert slice is not block aligned: " << e->name
+                          << " elements=" << elementsPerExpert << " blockElems=" << blockElems << "\n";
+                return false;
+            }
+            const uint64_t bytesPerExpert = (elementsPerExpert / blockElems) * blockBytes;
+            const uint64_t offset = (uint64_t)expertId * bytesPerExpert;
+            if (offset + bytesPerExpert > e->byteSize()) {
+                std::cerr << "[DS2] expert " << expertId << " out of range in " << e->name << "\n";
+                return false;
+            }
+
+            std::vector<uint8_t> raw(bytesPerExpert);
+            if (!rom.readTensorRange(*e, offset, bytesPerExpert, raw.data())) {
+                std::cerr << "[DS2] readTensorRange failed for expert " << expertId
+                          << " of " << e->name << "\n";
+                return false;
+            }
+
+            // The slice is a 2-D [rows, cols] block of the original tensor.
+            TensorView view{ e->type, raw.data(), raw.size(), { rows, cols }, true };
+            DequantizedTensor dq;
+            if (!dequantizeTensor(view, dq)) {
+                std::cerr << "[DS2] dequant failed for expert " << expertId
+                          << " of " << e->name << "\n";
+                return false;
+            }
+            dst = std::move(dq.data);
+            return true;
+        };
+
+        // gate and up are [expertFF, hidden]; down is [hidden, expertFF].
+        std::cerr << "[DS2-DBG] paging expert " << expertId << " of layer " << layerIdx << "\n";
+        if (!loadSlice("ffn_gate_exps.weight", expertFF, hidden, out.gate)) return false;
+        if (!loadSlice("ffn_up_exps.weight", expertFF, hidden, out.up)) return false;
+        if (!loadSlice("ffn_down_exps.weight", hidden, expertFF, out.down)) return false;
+        std::cerr << "[DS2-DBG] expert " << expertId << " paged: gate=" << out.gate.size()
+                  << " up=" << out.up.size() << " down=" << out.down.size() << "\n";
+
+        m_expertResidentBytes += out.gate.size() * sizeof(float)
+                               + out.up.size() * sizeof(float)
+                               + out.down.size() * sizeof(float);
+        return true;
+    }
+
+    // Drop every cached expert. The router and the shared expert stay.
+    void releaseMoEExperts() {
+        for (auto& kv : m_expertCache) {
+            m_expertResidentBytes -= (kv.second.gate.size() + kv.second.up.size()
+                                      + kv.second.down.size()) * sizeof(float);
+        }
+        m_expertCache.clear();
     }
 
     static float silu(float x) { return x / (1.0f + std::expf(-x)); }
 
     // MoE forward pass for a single position
-    void moeForward(int layerIdx, float* h, int t, int numExperts, int topK, int numShared,
+    void moeForward(const TensorROM& rom, int layerIdx, float* h, int t, int numExperts, int topK, int numShared,
                     int intermediate) {
         LayerW& lw = layersW[layerIdx];
         if (!lw.moeLoaded) return;
+        std::cerr << "[DS2-DBG] moeForward layer " << layerIdx << " t=" << t << "\n";
         float* ht = &h[t * hidden];
 
         // The routed experts use the expert feed-forward width, not the dense
@@ -476,17 +592,31 @@ struct DeepSeek2Model {
             int e = expertScores[k].second;
             float w = expertScores[k].first;
 
+            // Demand-page this expert: only the selected experts are ever
+            // materialized, and they are released when the layer finishes.
+            auto cit = lw.experts.find(e);
+            if (cit == lw.experts.end()) {
+                ExpertWeights ew;
+                if (!loadMoEExpert(rom, layerIdx, e, ew)) {
+                    std::cerr << "[DS2] failed to page expert " << e
+                              << " of layer " << layerIdx << "\n";
+                    return;
+                }
+                cit = lw.experts.emplace(e, std::move(ew)).first;
+                ++m_expertLoads;
+                if (m_expertResidentBytes > m_expertPeakBytes) {
+                    m_expertPeakBytes = m_expertResidentBytes;
+                }
+            }
+            const ExpertWeights& ew = cit->second;
+
             // Gate: x @ gate_exps[e] -> [expertFF]
-            // gate_exps[e] is at [e * expertFF * hidden .. (e+1) * expertFF * hidden]
-            const float* gateE = lw.ffnGateExpsW.data() + (size_t)e * expertFF * hidden;
             std::vector<float> gateVal(expertFF);
-            gemvFloat(gateE, ht, gateVal.data(), expertFF, hidden);
+            gemvFloat(ew.gate.data(), ht, gateVal.data(), expertFF, hidden);
 
             // Up: x @ up_exps[e] -> [expertFF]
-            // up_exps[e] is at [e * expertFF * hidden .. (e+1) * expertFF * hidden]
-            const float* upE = lw.ffnUpExpsW.data() + (size_t)e * expertFF * hidden;
             std::vector<float> upVal(expertFF);
-            gemvFloat(upE, ht, upVal.data(), expertFF, hidden);
+            gemvFloat(ew.up.data(), ht, upVal.data(), expertFF, hidden);
 
             // SwiGLU: silu(gate) * up
             std::vector<float> intermediateVec(expertFF);
@@ -495,14 +625,12 @@ struct DeepSeek2Model {
             }
 
             // Down: intermediate @ down_exps[e] -> [hidden]
-            // down_exps[e] is at [e * hidden * expertFF .. (e+1) * hidden * expertFF]
-            const float* downE = lw.ffnDownExpsW.data() + (size_t)e * hidden * expertFF;
-            std::vector<float> expertOut(hidden);
-            gemvFloat(downE, intermediateVec.data(), expertOut.data(), hidden, expertFF);
+            std::vector<float> expertOutE(hidden);
+            gemvFloat(ew.down.data(), intermediateVec.data(), expertOutE.data(), hidden, expertFF);
 
             // Weighted combination
             for (int i = 0; i < hidden; ++i)
-                ht[i] += w * expertOut[i];
+                ht[i] += w * expertOutE[i];
         }
 
         // Shared expert. Its feed-forward width is twice the routed expert
@@ -547,25 +675,26 @@ struct DeepSeek2Model {
             LayerW& lw = layersW[layer];
             bool isMoE = (layer > 0);
 
-            // Load MoE weights on demand for MoE layers
-            if (isMoE && !lw.moeLoaded) {
-                std::cerr << "[DS2] Loading MoE weights for layer " << layer << "...\n";
+            // Every layer's attention projections and norms are needed, not
+            // just layer 0's. Loading only layer 0 left the rest empty and
+            // the first MoE layer dereferenced a null norm vector.
+            if (!lw.moeLoaded) {
+                std::cerr << "[DS2] Loading weights for layer " << layer << "...\n";
                 if (!loadMoELayer(rom, layer)) {
-                    std::cerr << "[DS2] Failed to load MoE weights for layer " << layer << "\n";
+                    std::cerr << "[DS2] Failed to load weights for layer " << layer << "\n";
                     return {};
                 }
-                std::cerr << "[DS2] MoE layer " << layer << " weights loaded\n";
+            }
+
+            // The previous layer's experts are released before the next
+            // layer's are paged, so the resident footprint stays at one
+            // layer's worth of selected experts.
+            if (layer > 0) {
+                layersW[layer - 1].experts.clear();
+                m_expertResidentBytes = 0;
             }
 
             std::cerr << "[DS2] Starting layer " << layer << " forward pass\n";
-
-            // Load MoE weights on demand for MoE layers
-            if (isMoE && !lw.moeLoaded) {
-                if (!loadMoELayer(rom, layer)) {
-                    std::cerr << "[DS2] Failed to load MoE weights for layer " << layer << "\n";
-                    return {};
-                }
-            }
 
             for (uint32_t t = 0; t < seq; ++t) {
                 float* ht = &h[t * hidden];
@@ -651,12 +780,31 @@ struct DeepSeek2Model {
                     for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
                 } else {
                     // MoE FFN (layers 1+): routed experts + shared experts
-                    moeForward(layer, h.data(), t, (int)moeNumExperts, (int)moeTopK,
+                    moeForward(rom, layer, h.data(), t, (int)moeNumExperts, (int)moeTopK,
                                (int)moeNumShared, intermediate);
             }
         }
         std::cerr << "[DS2] Layer " << layer << " complete\n";
+        {
+            double n2 = 0.0; int nnan = 0;
+            for (uint32_t i = 0; i < hidden; ++i) {
+                const float v = h[i];
+                if (!(v == v)) { ++nnan; continue; }
+                n2 += (double)v * v;
+            }
+            std::cerr << "[DS2-DBG] layer " << layer << " h0norm=" << std::sqrt(n2)
+                      << " nan=" << nnan << "/" << hidden << "\n";
+        }
     }
+
+        // The demand-paged experts are released as each layer finishes, so the
+        // peak resident footprint is one layer's worth of selected experts
+        // rather than every expert of every layer.
+        releaseMoEExperts();
+        std::cerr << "[DS2] expert paging: " << m_expertLoads << " expert loads, peak resident "
+                  << (m_expertPeakBytes / (1024 * 1024)) << " MB, now "
+                  << (m_expertResidentBytes / (1024 * 1024)) << " MB\n";
+
 
         // Debug: norm of position-0 hidden after all layers
         double h0Norm = 0.0;
@@ -837,58 +985,81 @@ struct DeepSeek2Model {
                     float maxLogit = -1e30f;
                     for (int e = 0; e < (int)moeNumExperts; ++e)
                         if (routerLogits[e] > maxLogit) maxLogit = routerLogits[e];
-                    float sumExp = 0.0f;
-                    std::vector<float> routerWeights(moeNumExperts);
+                    // DeepSeek-V2 gates with a sigmoid, and renormalises the
+                    // selected top-k.
+                    std::vector<float> routerScores(moeNumExperts);
                     for (int e = 0; e < (int)moeNumExperts; ++e) {
-                        routerWeights[e] = std::expf(routerLogits[e] - maxLogit);
-                        sumExp += routerWeights[e];
+                        routerScores[e] = 1.0f / (1.0f + std::expf(-routerLogits[e]));
                     }
-                    for (int e = 0; e < (int)moeNumExperts; ++e)
-                        routerWeights[e] /= sumExp;
 
                     std::vector<std::pair<float, int>> expertScores(moeNumExperts);
                     for (int e = 0; e < (int)moeNumExperts; ++e)
-                        expertScores[e] = { routerWeights[e], e };
+                        expertScores[e] = { routerScores[e], e };
                     std::sort(expertScores.begin(), expertScores.end(),
                               [](const auto& a, const auto& b) { return a.first > b.first; });
 
+                    float topSum = 0.0f;
+                    for (int k = 0; k < (int)moeTopK && k < (int)moeNumExperts; ++k)
+                        topSum += expertScores[k].first;
+                    if (topSum > 0.0f) {
+                        for (int k = 0; k < (int)moeTopK && k < (int)moeNumExperts; ++k)
+                            expertScores[k].first /= topSum;
+                    }
+
+                    const int expertFF = (int)moeExpertFF;
                     std::vector<float> expertAccum(hidden, 0.0f);
                     for (int k = 0; k < (int)moeTopK && k < (int)moeNumExperts; ++k) {
                         int e = expertScores[k].second;
                         float w = expertScores[k].first;
 
-                        const float* gateE = lw.ffnGateExpsW.data() + e * intermediate * hidden;
-                        std::vector<float> gateVal(intermediate);
+                        // Demand-page this expert, same as the CPU path.
+                        auto cit = lw.experts.find(e);
+                        if (cit == lw.experts.end()) {
+                            ExpertWeights ew;
+                            if (!loadMoEExpert(rom, layer, e, ew)) {
+                                std::cerr << "[DS2] failed to page expert " << e
+                                          << " of layer " << layer << "\n";
+                                return {};
+                            }
+                            cit = lw.experts.emplace(e, std::move(ew)).first;
+                            ++m_expertLoads;
+                            if (m_expertResidentBytes > m_expertPeakBytes) {
+                                m_expertPeakBytes = m_expertResidentBytes;
+                            }
+                        }
+                        const ExpertWeights& ew = cit->second;
+
+                        std::vector<float> gateVal(expertFF);
                         deep2::TensorView gateEView{ deep2::TensorType::F32,
-                            reinterpret_cast<const uint8_t*>(gateE),
-                            intermediate * hidden * 4, { intermediate, hidden }, true };
+                            reinterpret_cast<const uint8_t*>(ew.gate.data()),
+                            ew.gate.size() * sizeof(float), { (uint64_t)expertFF, (uint64_t)hidden }, true };
                         if (!engine.vulkanGemv(*gpu, gateEView, xView, gateVal)) {
                             std::cerr << "[DS2] Vulkan GEMV failed for MoE gate on layer " << layer << " expert " << e << "\n";
                             return {};
                         }
 
-                        const float* upE = lw.ffnUpExpsW.data() + e * intermediate * hidden;
-                        std::vector<float> upVal(intermediate);
+                        std::vector<float> upVal(expertFF);
                         deep2::TensorView upEView{ deep2::TensorType::F32,
-                            reinterpret_cast<const uint8_t*>(upE),
-                            intermediate * hidden * 4, { intermediate, hidden }, true };
+                            reinterpret_cast<const uint8_t*>(ew.up.data()),
+                            ew.up.size() * sizeof(float), { (uint64_t)expertFF, (uint64_t)hidden }, true };
                         if (!engine.vulkanGemv(*gpu, upEView, xView, upVal)) {
                             std::cerr << "[DS2] Vulkan GEMV failed for MoE up on layer " << layer << " expert " << e << "\n";
                             return {};
                         }
 
-                        std::vector<float> intermediateVec(intermediate);
-                        for (int i = 0; i < intermediate; ++i)
-                            intermediateVec[i] = gateVal[i] / (1.0f + std::expf(-upVal[i]));
+                        // SwiGLU: silu(gate) * up
+                        std::vector<float> intermediateVec(expertFF);
+                        for (int i = 0; i < expertFF; ++i) {
+                            intermediateVec[i] = (gateVal[i] / (1.0f + std::expf(-gateVal[i]))) * upVal[i];
+                        }
 
-                        const float* downE = lw.ffnDownExpsW.data() + e * hidden * intermediate;
                         std::vector<float> expertOut(hidden);
                         deep2::TensorView downEView{ deep2::TensorType::F32,
-                            reinterpret_cast<const uint8_t*>(downE),
-                            hidden * intermediate * 4, { hidden, intermediate }, true };
+                            reinterpret_cast<const uint8_t*>(ew.down.data()),
+                            ew.down.size() * sizeof(float), { (uint64_t)hidden, (uint64_t)expertFF }, true };
                         deep2::TensorView intView{ deep2::TensorType::F32,
                             reinterpret_cast<const uint8_t*>(intermediateVec.data()),
-                            intermediate * 4, { intermediate }, true };
+                            intermediateVec.size() * sizeof(float), { (uint64_t)expertFF }, true };
                         if (!engine.vulkanGemv(*gpu, downEView, intView, expertOut)) {
                             std::cerr << "[DS2] Vulkan GEMV failed for MoE down on layer " << layer << " expert " << e << "\n";
                             return {};
@@ -1363,6 +1534,99 @@ int cmdGemvResident(int argc, char** argv) {
 }
 
 // ---------------------------------------------------------------------------
+// Resident-weight parity against a real ROM tensor.
+//
+// The synthetic benchmark proves the resident path against a matrix built in
+// memory. This repeats the comparison with a tensor dequantized from the
+// model, which is what the forward pass actually uses, so a layout or
+// dequantization mismatch shows up here rather than as a wrong logits value
+// thirty layers downstream.
+// ---------------------------------------------------------------------------
+int cmdResidentParity(int argc, char** argv) {
+    if (argc < 4) {
+        std::cerr << "usage: rom_audit resident-parity <model.gguf> <tensor> [tensor...]\n";
+        return 1;
+    }
+
+    Deep2Engine engine;
+    engine.vulkan = std::make_unique<deep2::VulkanDevice>();
+    engine.vulkanReady = engine.vulkan->init();
+    if (!engine.vulkanReady) {
+        std::cerr << "[ORACLE] no Vulkan device available\n";
+        return 1;
+    }
+    if (!engine.rom.addShard(argv[2]) || !engine.rom.finalizeIndex()) {
+        std::cerr << "[ORACLE] could not index the model\n";
+        return 1;
+    }
+
+    int failures = 0;
+    for (int a = 3; a < argc; ++a) {
+        const std::string name = argv[a];
+        const deep2::TensorEntry* entry = engine.rom.findTensor(name);
+        if (!entry) {
+            std::cerr << "[ORACLE] tensor not found: " << name << "\n";
+            ++failures;
+            continue;
+        }
+        deep2::DequantizedTensor dq;
+        if (!engine.dequantTensor(*entry, dq)) {
+            std::cerr << "[ORACLE] dequant failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+        const uint32_t rows = static_cast<uint32_t>(dq.rows);
+        const uint32_t cols = static_cast<uint32_t>(dq.cols);
+        std::vector<float> x(cols, 1.0f);
+
+        std::vector<float> reference(rows, 0.0f);
+        if (!engine.gemvFloat(dq.data.data(), x.data(), reference.data(), rows, cols)) {
+            std::cerr << "[ORACLE] CPU GEMV failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+
+        const deep2::TensorView wView{ deep2::TensorType::F32,
+                                       reinterpret_cast<const uint8_t*>(dq.data.data()),
+                                       dq.data.size() * sizeof(float),
+                                       { dq.rows, dq.cols }, true };
+        const deep2::TensorView xView{ deep2::TensorType::F32,
+                                       reinterpret_cast<const uint8_t*>(x.data()),
+                                       x.size() * sizeof(float),
+                                       { cols }, true };
+
+        Deep2Engine::ResidentSplitWeight resident;
+        if (!engine.uploadResidentSplitWeight(wView, resident)) {
+            std::cerr << "[ORACLE] resident upload failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+        std::vector<float> result;
+        if (!engine.vulkanGemvResident(resident, xView, result)) {
+            std::cerr << "[ORACLE] resident GEMV failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+
+        float maxDiff = 0.0f;
+        size_t maxIdx = 0;
+        size_t mismatches = 0;
+        for (uint32_t r = 0; r < rows; ++r) {
+            const float d = std::fabs(result[r] - reference[r]);
+            if (d > maxDiff) { maxDiff = d; maxIdx = r; }
+            if (d > 1e-3f) ++mismatches;
+        }
+        std::cout << "[ORACLE] " << name << " " << rows << "x" << cols
+                  << " split=" << resident.splitRow
+                  << " max_diff=" << maxDiff << " at row " << maxIdx
+                  << " mismatched=" << mismatches << "/" << rows
+                  << (mismatches == 0 ? "  PASS" : "  FAIL") << "\n";
+        if (mismatches != 0) ++failures;
+        engine.releaseResidentSplitWeight(resident);
+    }
+    return failures == 0 ? 0 : 1;
+}
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 int main(int argc, char** argv) {
@@ -1378,6 +1642,7 @@ int main(int argc, char** argv) {
     if (cmd == "dump-tensor")  return cmdDumpTensor(argc, argv);
     if (cmd == "gemv-split")   return cmdGemvSplit(argc, argv);
     if (cmd == "gemv-resident") return cmdGemvResident(argc, argv);
+    if (cmd == "resident-parity") return cmdResidentParity(argc, argv);
 
     std::cerr << "unknown command: " << cmd << "\n";
     std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor|gemv-split|gemv-resident> "

@@ -807,6 +807,25 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 hiddenStates[i] += downOut[i];
             }
 
+            // Layer trace: the running state after each layer. The resident
+            // path and the CPU path must produce the same sequence here, so
+            // the first layer where they differ localises the divergence.
+            // It is off by default because it flushes a line per layer.
+            if (m_layerTrace) {
+                double sum = 0.0;
+                float absMax = 0.0f;
+                for (size_t i = 0; i < hiddenDim; ++i) {
+                    sum += hiddenStates[i];
+                    const float a = std::fabs(hiddenStates[i]);
+                    if (a > absMax) absMax = a;
+                }
+                std::cout << "[LAYERTRACE] layer=" << layer
+                          << " sum=" << sum
+                          << " absmax=" << absMax
+                          << " path=" << (resident ? "resident" : "cpu")
+                          << "\n" << std::flush;
+            }
+
             // ORACLE-TRACE: Layer boundary audit at blocks 3↔4
             inspect_layer_boundary_tensors(static_cast<uint32_t>(layer), hiddenStates.data(), hiddenDim);
         }

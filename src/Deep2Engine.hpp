@@ -102,6 +102,11 @@ struct Deep2Engine {
     std::vector<float>  m_deviceAllocationWeights;
     std::vector<size_t> m_deviceVramBytes;
 
+    // Print the running hidden state after every layer. Off by default: it
+    // flushes a line per layer, and it is only useful when comparing two
+    // execution paths against each other.
+    bool m_layerTrace = false;
+
     // ---- ROM exec bridge (Move 5) ----
     struct TensorHandle {
         deep2::TensorLease lease;

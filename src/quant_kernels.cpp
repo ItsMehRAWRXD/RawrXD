@@ -81,12 +81,15 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q8_0: {
-        // Block: 32 x int8 + fp16 d (34 bytes).
+        // block_q8_0 (34 bytes): fp16 d @0, int8 qs[32] @2.
+        // The scale comes FIRST in the ggml block; reading it from the end of
+        // the block produced NaN scales, which is what made the DeepSeek
+        // expert down-projection produce NaN hidden states.
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
-            float d = fp16ToF32(readU16(p + 32));
-            const int8_t* qs = reinterpret_cast<const int8_t*>(p);
+            const float d = fp16ToF32(readU16(p));
+            const int8_t* qs = reinterpret_cast<const int8_t*>(p + 2);
             uint64_t take = n - v; if (take > 32) take = 32;
             for (uint64_t k = 0; k < take; ++k) out[v + k] = static_cast<float>(qs[k]) * d;
             v += take;
@@ -94,6 +97,109 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         }
         return true;
     }
+
+    case TensorType::Q4_0: {
+        // block_q4_0 (18 bytes): fp16 d @0, uint8 qs[16] @2.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            uint64_t take = n - v; if (take > 32) take = 32;
+            for (uint64_t j = 0; j < take / 2; ++j) {
+                const int x0 = (p[2 + j] & 0x0F) - 8;
+                const int x1 = (p[2 + j] >> 4) - 8;
+                out[v + j] = static_cast<float>(x0) * d;
+                out[v + j + 16] = static_cast<float>(x1) * d;
+            }
+            v += take;
+            p += 18;
+        }
+        return true;
+    }
+
+    case TensorType::Q5_0: {
+        // block_q5_0 (22 bytes): fp16 d @0, uint8 qh[4] @2, uint8 qs[16] @6.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            uint32_t qh;
+            std::memcpy(&qh, p + 2, sizeof(qh));
+            uint64_t take = n - v; if (take > 32) take = 32;
+            for (uint64_t j = 0; j < take / 2; ++j) {
+                const uint8_t xh0 = static_cast<uint8_t>(((qh >> j) << 4) & 0x10);
+                const uint8_t xh1 = static_cast<uint8_t>((qh >> (j + 12)) & 0x10);
+                const int x0 = ((p[6 + j] & 0x0F) | xh0) - 16;
+                const int x1 = ((p[6 + j] >> 4) | xh1) - 16;
+                out[v + j] = static_cast<float>(x0) * d;
+                out[v + j + 16] = static_cast<float>(x1) * d;
+            }
+            v += take;
+            p += 22;
+        }
+        return true;
+    }
+
+    case TensorType::Q4_1: {
+        // block_q4_1 (20 bytes): fp16 d @0, fp16 m @2, uint8 qs[16] @4.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const float m = fp16ToF32(readU16(p + 2));
+            uint64_t take = n - v; if (take > 32) take = 32;
+            for (uint64_t j = 0; j < take / 2; ++j) {
+                const int x0 = p[4 + j] & 0x0F;
+                const int x1 = p[4 + j] >> 4;
+                out[v + j] = static_cast<float>(x0) * d + m;
+                out[v + j + 16] = static_cast<float>(x1) * d + m;
+            }
+            v += take;
+            p += 20;
+        }
+        return true;
+    }
+
+    case TensorType::Q5_1: {
+        // block_q5_1 (24 bytes): fp16 d @0, fp16 m @2, uint8 qh[4] @4, uint8 qs[16] @8.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const float m = fp16ToF32(readU16(p + 2));
+            uint32_t qh;
+            std::memcpy(&qh, p + 4, sizeof(qh));
+            uint64_t take = n - v; if (take > 32) take = 32;
+            for (uint64_t j = 0; j < take / 2; ++j) {
+                const uint8_t xh0 = static_cast<uint8_t>(((qh >> j) << 4) & 0x10);
+                const uint8_t xh1 = static_cast<uint8_t>((qh >> (j + 12)) & 0x10);
+                const int x0 = ((p[8 + j] & 0x0F) | xh0);
+                const int x1 = ((p[8 + j] >> 4) | xh1);
+                out[v + j] = static_cast<float>(x0) * d + m;
+                out[v + j + 16] = static_cast<float>(x1) * d + m;
+            }
+            v += take;
+            p += 24;
+        }
+        return true;
+    }
+
+    case TensorType::Q8_1: {
+        // block_q8_1 (36 bytes): fp16 d @0, fp16 s @2, int8 qs[32] @4.
+        const uint8_t* p = src.data;
+        uint64_t v = 0;
+        while (v < n) {
+            const float d = fp16ToF32(readU16(p));
+            const float s = fp16ToF32(readU16(p + 2));
+            const int8_t* qs = reinterpret_cast<const int8_t*>(p + 4);
+            uint64_t take = n - v; if (take > 32) take = 32;
+            for (uint64_t k = 0; k < take; ++k) out[v + k] = static_cast<float>(qs[k]) * d + s;
+            v += take;
+            p += 36;
+        }
+        return true;
+    }
+
 
     case TensorType::Q2_K: {
         // block_q2_K (84 bytes): scales[16] @0, qs[64] @16, d @80, dmin @82.
@@ -321,12 +427,8 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
         return true;
     }
 
-    case TensorType::Q4_0:
-    case TensorType::Q4_1:
-    case TensorType::Q5_0:
-    case TensorType::Q5_1:
-    case TensorType::Q8_1:
-        // Legacy block formats not yet implemented in this milestone.
+    default:
+        // Layouts not yet implemented in this milestone.
         return false;
     }
     return false;
