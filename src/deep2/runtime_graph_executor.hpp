@@ -106,11 +106,48 @@ public:
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);
 
+    // ---- RAWRXD_DEEP2_D1: batched multi-token prefill ----------------------
+    // Run `count` tokens at successive positions starting at `start_position`,
+    // with causal KV ordering (position P attends only to positions <= P) and
+    // the graph executed per position. This is the batched-prefill correctness
+    // baseline: it must produce full-logit parity with the serial
+    // ExecuteToken loop and leave identical causal KV state, at every batch
+    // length. Performance work (submission batching across positions) is the
+    // D2 layer on top; nothing here changes arithmetic, so any D2 change must
+    // keep these parities green.
+    struct TokenTiming {
+        size_t position = 0;
+        double ms = 0.0;
+        size_t nonfinite_logits = 0;
+    };
+    struct PrefillStats {
+        size_t tokens = 0;
+        double total_ms = 0.0;
+        double first_token_ms = 0.0;
+        double steady_token_ms = 0.0;   // mean over tokens 2..N
+        std::vector<TokenTiming> per_token;
+        size_t kv_k_bytes = 0;          // causal KV state after the batch
+        size_t kv_v_bytes = 0;
+    };
+    // When enable_parity_capture is true, the full logits of every position
+    // are retained in PrefillLogits() so callers can diff against the serial
+    // path (disabled by default; the capture is O(tokens x vocab)).
+    bool ExecuteTokens(const uint32_t* tokens, size_t count, size_t start_position = 0,
+                       bool enable_parity_capture = false);
+    const std::vector<std::vector<float>>& PrefillLogits() const { return prefill_logits_; }
+    const PrefillStats& LastPrefill() const { return last_prefill_; }
+
     const std::vector<float>& Logits() const { return logits_; }
     size_t Position() const { return position_; }
     bool Ok() const { return bound_ && !last_error_.empty() == false; }
     const std::string& LastError() const { return last_error_; }
     uint32_t LastToken() const { return last_token_; }
+
+    // Read-only KV accessor for parity certification (D1): lets a verifier
+    // compare the causal KV footprint between the serial and batched paths
+    // without touching execution state.
+    const std::vector<std::vector<float>>& kv_k_debug() const { return kv_k_; }
+    const std::vector<std::vector<float>>& kv_v_debug() const { return kv_v_; }
 
     // Diagnostics for activation health (prefill/decode gates).
     size_t NonFiniteLogits() const { return nonfinite_logits_; }
@@ -266,6 +303,10 @@ private:
       // per-layer KV cache: kv_k_[layer][pos * kvW + i]
       std::vector<std::vector<float>> kv_k_, kv_v_;
       std::vector<std::vector<float>> kvat_;   // latent cache for MLA
+
+      // RAWRXD_DEEP2_D1: batched-prefill receipts (last ExecuteTokens run).
+      std::vector<std::vector<float>> prefill_logits_;  // per-position full logits
+      PrefillStats last_prefill_;
 
       // RAWRXD_RESOURCE_GOVERNOR_001: KV residency is admitted, not unbounded.
       // Every cache growth acquires a lease against the process host budget;
