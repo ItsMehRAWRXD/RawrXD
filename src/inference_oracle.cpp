@@ -73,6 +73,15 @@ static void rope(float* x, uint32_t pos, uint32_t dim, float theta) {
     }
 }
 
+// The root mean square of a vector's components, for the component
+// decomposition. The engine prints the same shape, so the two traces can be
+// read side by side.
+static double ComponentRms(const float* v, size_t n) {
+    double s = 0.0;
+    for (size_t i = 0; i < n; ++i) s += static_cast<double>(v[i]) * v[i];
+    return (n ? std::sqrt(s / n) : 0.0);
+}
+
 // Print the reference's per-layer trace, so the first layer where it and
 // the engine diverge can be read off directly.
 static bool g_traceLayers = false;
@@ -87,6 +96,8 @@ struct Phi3Model {
     std::vector<LayerW> layersW;
     std::vector<float> kCache, vCache; // [layers][heads][seq][headDim]
     uint32_t seqCap = 0;
+    // The model reads its layer weights from here, one layer at a time.
+    const TensorROM* m_rom = nullptr;
 
     bool loadRom(const TensorROM& rom) {
         auto get = [&](const std::string& name) { return rom.findTensor(name); };
@@ -137,31 +148,60 @@ struct Phi3Model {
         }
 
         seqCap = 1536;
-        kCache.assign(layers * heads * seqCap * headDim, 0.0f);
-        vCache.assign(layers * heads * seqCap * headDim, 0.0f);
-        layersW.resize(layers);
-
-        for (uint32_t l = 0; l < layers; ++l) {
-            std::ostringstream os; os << "blk." << l << ".";
-            const std::string p = os.str();
-            LayerW& lw = layersW[l];
-            if (!readF32(get(p + "attn_norm.weight"), lw.attnNormW)) return false;
-            if (!readF32(get(p + "attn_qkv.weight"), lw.qkvW)) return false;
-            if (!readF32(get(p + "attn_output.weight"), lw.attnOutW)) return false;
-            if (!readF32(get(p + "ffn_norm.weight"), lw.ffnNormW)) return false;
-            if (!readF32(get(p + "ffn_up.weight"), lw.ffnUpW)) return false;
-            if (!readF32(get(p + "ffn_down.weight"), lw.ffnDownW)) return false;
-            std::cerr << "[ORACLE] layer " << l << " weights resident\n";
-        }
-        std::cerr << "[ORACLE] model resident: hidden=" << hidden << " layers=" << layers
-                  << " heads=" << heads << " headDim=" << headDim
-                  << " ffn=" << intermediate << " vocab=" << vocab << "\n";
+        m_rom = &rom;
         return true;
     }
 
+    // Read one layer's weights out of the ROM.
+    //
+    // The weights are read where they are used and released afterwards, so
+    // the peak memory is one layer rather than the whole model.
+    bool loadLayer(uint32_t l, LayerW& lw) {
+        if (!m_rom) return false;
+        std::ostringstream os; os << "blk." << l << ".";
+        const std::string p = os.str();
+        auto readF32 = [&](const std::string& name, std::vector<float>& out) -> bool {
+            const TensorEntry* e = m_rom->findTensor(name);
+            if (!e) { std::cerr << "[ORACLE] missing tensor: " << name << "\n"; return false; }
+            const uint64_t size = e->byteSize();
+            std::vector<uint8_t> raw(size);
+            if (!m_rom->readTensor(*e, raw.data())) {
+                std::cerr << "[ORACLE] readTensor failed: " << name << "\n"; return false;
+            }
+            TensorView view{ e->type, raw.data(), size, e->dims, true };
+            DequantizedTensor dq;
+            if (!dequantizeTensor(view, dq)) {
+                std::cerr << "[ORACLE] dequant failed: " << name
+                          << " type=" << tensorTypeName(e->type) << "\n"; return false;
+            }
+            out = std::move(dq.data);
+            return true;
+        };
+        return readF32(p + "attn_norm.weight", lw.attnNormW) &&
+               readF32(p + "attn_qkv.weight", lw.qkvW) &&
+               readF32(p + "attn_output.weight", lw.attnOutW) &&
+               readF32(p + "ffn_norm.weight", lw.ffnNormW) &&
+               readF32(p + "ffn_up.weight", lw.ffnUpW) &&
+               readF32(p + "ffn_down.weight", lw.ffnDownW);
+    }
+
     // Logits for the last token of `tokens` (full recompute each step; KV cache holds K/V).
+    //
+    // The layer weights are read from the ROM one layer at a time and
+    // released before the next one is read. Holding all of them at once
+    // costs about 16 GB of host memory for a 32 layer model, which is more
+    // than a build machine has to spare, and it made the parity gate fail
+    // with an out-of-memory abort rather than with a result. Reading them
+    // on demand brings the peak down to about a gigabyte, which is what
+    // makes the gate usable as a check that runs everywhere.
     std::vector<float> forward(const std::vector<uint32_t>& tokens) {
         const uint32_t seq = (uint32_t)tokens.size();
+        if (!m_rom || seq == 0) return {};
+
+        // The cache only has to hold the positions this call produces.
+        std::vector<float> kCache(static_cast<size_t>(layers) * heads * seq * headDim, 0.0f);
+        std::vector<float> vCache(static_cast<size_t>(layers) * heads * seq * headDim, 0.0f);
+
         std::vector<float> h(seq * hidden, 0.0f);
         for (uint32_t t = 0; t < seq; ++t) {
             const float* emb = &tokenEmbdW[tokens[t] * hidden];
@@ -171,9 +211,13 @@ struct Phi3Model {
         const float invSqrtD = 1.0f / std::sqrtf((float)headDim);
 
         for (uint32_t l = 0; l < layers; ++l) {
-            LayerW& lw = layersW[l];
-            float* kLayer = &kCache[l * heads * seqCap * headDim];
-            float* vLayer = &vCache[l * heads * seqCap * headDim];
+            // This layer's weights, read now and released at the end of the
+            // iteration.
+            LayerW lw;
+            if (!loadLayer(l, lw)) return {};
+
+            float* kLayer = &kCache[l * heads * seq * headDim];
+            float* vLayer = &vCache[l * heads * seq * headDim];
 
             for (uint32_t t = 0; t < seq; ++t) {
                 float* ht = &h[t * hidden];
@@ -246,6 +290,16 @@ struct Phi3Model {
                 float attnProj[3072];
                 gemvFloat(lw.attnOutW.data(), attnOut, attnProj, hidden, hidden);
                 for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
+
+                // The component trace, matching the engine's, so the first
+                // branch where the two differ is visible.
+                if (g_traceLayers && t == seq - 1) {
+                    std::cout << "[ORACLE-COMP] layer=" << l
+                              << " attnOutRms=" << ComponentRms(attnOut, hidden)
+                              << " attnProjRms=" << ComponentRms(attnProj, hidden)
+                              << " streamRms=" << ComponentRms(ht, hidden)
+                              << "\n" << std::flush;
+                }
 
                 // ---- ffn branch ----
                 // Phi-3 uses a gated SwiGLU: ffn_up produces 2*intermediate
@@ -1255,10 +1309,17 @@ int cmdKvIncremental(int argc, char** argv) {
     const auto& g = engine.rom.geometry();
 
     // 2. The full-prefix pass.
+    //
+    // The CPU mode runs the engine's own CPU path, which is the path the
+    // GPU path is checked against. The three bugs that made the engine
+    // produce noise were all in the code the two paths share, so the CPU
+    // mode catches every one of them, and it needs no GPU. That is what
+    // makes the gate runnable on a build machine.
+    const bool cpuMode = (argc > 4) && (std::string(argv[4]) == "--cpu");
     std::vector<float> fullLogits;
     std::vector<float> baseline;
     engine.m_layerTrace = true;
-    if (!engine.executePhi3ROMForwardPass(tokens, fullLogits, baseline)) {
+    if (!engine.executePhi3ROMForwardPass(tokens, fullLogits, baseline, cpuMode)) {
         std::cerr << "[KVPARITY] the full-prefix pass failed\n";
         return 1;
     }
@@ -1272,7 +1333,7 @@ int cmdKvIncremental(int argc, char** argv) {
         for (size_t i = 0; i < tokens.size(); ++i) {
             const std::vector<uint32_t> one{ tokens[i] };
             if (!engine.executePhi3ROMForwardStep(one, incrementalLogits, baseline,
-                                                   ring, static_cast<uint32_t>(i))) {
+                                                   ring, static_cast<uint32_t>(i), cpuMode)) {
                 std::cerr << "[KVPARITY] the incremental pass failed at position " << i << "\n";
                 return 1;
             }

@@ -1316,13 +1316,6 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                     return false;
                 }
             } else {
-                if (m_phaseTiming) {
-                    fprintf(stderr, "[DIM] layer=%zu token=%zu qkv=%zux%zu up=%zux%zu down=%zux%zu\n",
-                            layer, tokenPos,
-                            (size_t)qkvDq.rows, (size_t)qkvDq.cols,
-                            (size_t)upDq.rows, (size_t)upDq.cols,
-                            (size_t)downDq.rows, (size_t)downDq.cols);
-                }
                 gemvFloat(upDq.data.data(), ffnIn.data(), upOut.data(), upRows, upDq.cols);
             }
             const auto tDownStart = std::chrono::steady_clock::now();

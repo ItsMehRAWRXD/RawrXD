@@ -334,3 +334,50 @@ add_test(NAME MlaKvBLayout
     COMMAND mla_layout_test --model "G:/~dev/rawrxd/models/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+# The engine must reproduce an independent reference.
+#
+# Every other check in this file compares the engine against a path derived
+# from the engine. That is a consistency check, not a correctness check, and
+# three real defects passed them: the attention output projection was never
+# applied, the final norm was not the model's, and most of the vocabulary was
+# silently replaced by the embedding of token zero. The engine agreed with
+# itself on all of them, because the defect was in the code both paths
+# shared.
+#
+# The oracle in rom_audit is the only reference that is not derived from the
+# engine, and the three-way check compares the oracle, the engine's
+# full-prefix pass and the engine's incremental pass against each other.
+#
+# The prompt is one word whose token id is above the model's hidden size.
+# That is what makes the check cover the vocabulary bound as well as the
+# attention and the norms: a token id in the upper half of the vocabulary is
+# what a check of the embedding lookup needs.
+#
+# The CPU mode is the one a build machine can run, because it needs no GPU.
+# The GPU mode is the one that runs the resident path, and it needs two
+# devices. Both skip themselves when the model is not present.
+set(DEEP2_ORACLE_MODEL "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf" CACHE STRING
+    "The model the oracle parity gate checks against")
+set(DEEP2_ORACLE_PROMPT "capital" CACHE STRING
+    "The prompt the oracle parity gate checks with")
+
+add_test(NAME OracleParity_Cpu
+    COMMAND ${CMAKE_COMMAND}
+        -DORACLE=$<TARGET_FILE:rom_audit>
+        -DMODEL=${DEEP2_ORACLE_MODEL}
+        -DPROMPT=${DEEP2_ORACLE_PROMPT}
+        -DMODE=cpu
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_oracle_parity.cmake
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+add_test(NAME OracleParity_Gpu
+    COMMAND ${CMAKE_COMMAND}
+        -DORACLE=$<TARGET_FILE:rom_audit>
+        -DMODEL=${DEEP2_ORACLE_MODEL}
+        -DPROMPT=${DEEP2_ORACLE_PROMPT}
+        -DMODE=gpu
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_oracle_parity.cmake
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
