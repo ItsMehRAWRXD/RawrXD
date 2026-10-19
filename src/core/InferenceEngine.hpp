@@ -81,7 +81,8 @@ namespace Deep2Rom::Inference {
         bool forwardPass(uint32_t layerIdx,
                          const float* input,
                          float* output,
-                         uint64_t tokenPos);
+                         uint64_t tokenPos,
+                         uint32_t tokenId);
 
         bool runLayer(uint32_t layerIdx,
                       const float* hiddenStates,
@@ -103,7 +104,7 @@ namespace Deep2Rom::Inference {
                         uint32_t hiddenDim,
                         uint32_t intermediateDim);
 
-        void rmsNorm(const float* input, float* output, uint32_t dim, float eps);
+        void rmsNorm(const float* input, float* output, uint32_t dim, const float* weight, float eps);
 
         const float* getTensorData(const std::string& name) const;
 

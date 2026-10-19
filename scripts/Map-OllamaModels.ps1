@@ -48,8 +48,13 @@ foreach ($file in $manifestFiles) {
                 $targetSymlinkPath = Join-Path $TargetMappingDir "$friendlyName.gguf"
                 
                 if (-not (Test-Path $targetSymlinkPath)) {
-                    Write-Host "[MAPPING] Thread link created: $friendlyName.gguf -> Blobs Folder" -ForegroundColor Green
-                    New-Item -ItemType SymbolicLink -Path $targetSymlinkPath -Target $sourceBlobPath -Force | Out-Null
+                    Write-Host "[MAPPING] Creating symlink: $friendlyName.gguf -> $sourceBlobPath" -ForegroundColor Green
+                    try {
+                        New-Item -ItemType SymbolicLink -Path $targetSymlinkPath -Target $sourceBlobPath -Force | Out-Null
+                    } catch {
+                        Write-Host "[WARN] Could not create symlink (requires admin): $friendlyName.gguf" -ForegroundColor Yellow
+                        Write-Host "  -> Manual step: mklink /D `"$targetSymlinkPath`" `"$sourceBlobPath`"" -ForegroundColor Gray
+                    }
                 } else {
                     Write-Host "[PRESENT] $friendlyName.gguf structural link already allocated." -ForegroundColor Gray
                 }

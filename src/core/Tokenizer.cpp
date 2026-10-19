@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
+#include <cstdio>
 
 namespace Deep2Rom::Inference {
 
@@ -14,7 +16,7 @@ namespace Deep2Rom::Inference {
 
     void Tokenizer::initByteEncoder() {
         int n = 0;
-        for (uint8_t b = 0; b < 256; ++b) {
+        for (int b = 0; b < 256; ++b) {
             char32_t ch;
             if (b >= 33 && b <= 126) {
                 ch = static_cast<char32_t>(b);
@@ -26,8 +28,8 @@ namespace Deep2Rom::Inference {
                 ch = 256 + n;
                 ++n;
             }
-            m_byteEncoder[b] = ch;
-            m_byteDecoder[ch] = b;
+            m_byteEncoder[static_cast<uint8_t>(b)] = ch;
+            m_byteDecoder[ch] = static_cast<uint8_t>(b);
         }
     }
 
@@ -84,10 +86,11 @@ namespace Deep2Rom::Inference {
         std::vector<std::string> tokens;
         std::vector<float> scores;
         std::vector<uint32_t> tokenTypes;
+        std::vector<std::pair<std::string, std::string>> merges;
 
-        uint64_t tokensPos = 0, scoresPos = 0, typesPos = 0;
-        bool foundTokens = false, foundScores = false, foundTypes = false;
-        uint32_t tokensType = 0, scoresType = 0, typesType = 0;
+        uint64_t tokensPos = 0, scoresPos = 0, typesPos = 0, mergesPos = 0;
+        bool foundTokens = false, foundScores = false, foundTypes = false, foundMerges = false;
+        uint32_t tokensType = 0, scoresType = 0, typesType = 0, mergesType = 0;
 
         for (uint64_t i = 0; i < kvCount; ++i) {
             std::string key = ReadGGUFStr(f);
@@ -98,19 +101,7 @@ namespace Deep2Rom::Inference {
                 tokensPos = static_cast<uint64_t>(f.tellg());
                 tokensType = type;
                 foundTokens = true;
-                if (type == 9) {
-                    uint32_t at = 0; uint64_t al = 0;
-                    f.read(reinterpret_cast<char*>(&at), 4);
-                    f.read(reinterpret_cast<char*>(&al), 8);
-                    if (at == 8) {
-                        for (uint64_t j = 0; j < al; ++j) ReadGGUFStr(f);
-                    } else {
-                        uint32_t sz[] = {1,1,2,2,4,4,4,8};
-                        f.seekg(al * sz[at & 7], std::ios::cur);
-                    }
-                } else {
-                    SkipGGUFValue(type, f);
-                }
+                SkipGGUFValue(type, f);
             } else if (key == "tokenizer.ggml.scores") {
                 scoresPos = static_cast<uint64_t>(f.tellg());
                 scoresType = type;
@@ -120,6 +111,11 @@ namespace Deep2Rom::Inference {
                 typesPos = static_cast<uint64_t>(f.tellg());
                 typesType = type;
                 foundTypes = true;
+                SkipGGUFValue(type, f);
+            } else if (key == "tokenizer.ggml.merges") {
+                mergesPos = static_cast<uint64_t>(f.tellg());
+                mergesType = type;
+                foundMerges = true;
                 SkipGGUFValue(type, f);
             } else if (key == "tokenizer.ggml.bos_token_id") {
                 uint32_t v = 0; f.read(reinterpret_cast<char*>(&v), 4);
@@ -139,7 +135,7 @@ namespace Deep2Rom::Inference {
         }
 
         if (!foundTokens || !foundScores || !foundTypes) {
-            std::cerr << "[Tokenizer] Missing tokenizer metadata" << std::endl;
+            std::cerr << "[Tokenizer] Missing required tokenizer metadata" << std::endl;
             return false;
         }
 
@@ -196,7 +192,27 @@ namespace Deep2Rom::Inference {
             return false;
         }
 
-        // Build vocab maps (skip expensive merge detection for fast load)
+        // Re-read merges
+        if (foundMerges) {
+            f.clear();
+            f.seekg(static_cast<std::streampos>(mergesPos), std::ios::beg);
+            if (mergesType == 9) {
+                uint32_t at = 0; uint64_t al = 0;
+                f.read(reinterpret_cast<char*>(&at), 4);
+                f.read(reinterpret_cast<char*>(&al), 8);
+                merges.reserve(al);
+                for (uint64_t j = 0; j < al; ++j) {
+                    std::string left = ReadGGUFStr(f);
+                    std::string right = ReadGGUFStr(f);
+                    merges.emplace_back(left, right);
+                }
+            } else {
+                std::cerr << "[Tokenizer] Unexpected merges array type: " << mergesType << std::endl;
+                return false;
+            }
+        }
+
+        // Build vocab maps
         m_vocab.clear();
         m_reverseVocab.clear();
         m_merges.clear();
@@ -220,10 +236,27 @@ namespace Deep2Rom::Inference {
             m_tokenTypes[i] = tt;
         }
 
+        // Build merge rules: (left_piece, right_piece) -> score
+        // Merges are ordered by score (lowest score = highest priority)
+        for (size_t mergeIdx = 0; mergeIdx < merges.size(); ++mergeIdx) {
+            const auto& [left, right] = merges[mergeIdx];
+            auto lit = m_vocab.find(left);
+            auto rit = m_vocab.find(right);
+            if (lit == m_vocab.end() || rit == m_vocab.end()) continue;
+
+            uint64_t key = makeMergeKey(lit->second, rit->second);
+            float score = -static_cast<float>(mergeIdx);
+            auto mit = m_merges.find(key);
+            if (mit == m_merges.end() || score < mit->second) {
+                m_merges[key] = score;
+            }
+        }
+
         initByteEncoder();
         m_ready = true;
 
-        std::cout << "[Tokenizer] Loaded " << tokens.size() << " tokens, vocabSize=" << m_config.vocabSize << std::endl;
+        std::cout << "[Tokenizer] Loaded " << tokens.size() << " tokens, "
+                  << m_merges.size() << " merges, vocabSize=" << m_config.vocabSize << std::endl;
         return true;
     }
 
@@ -241,25 +274,72 @@ namespace Deep2Rom::Inference {
         std::vector<uint32_t> result;
         if (addBos) result.push_back(m_config.bosTokenId);
 
-        // Simple greedy longest-match from vocab
-        size_t pos = 0;
-        while (pos < text.size()) {
-            // Try longest match first
-            bool matched = false;
-            for (size_t len = std::min(text.size() - pos, static_cast<size_t>(64)); len >= 1; --len) {
-                std::string piece = text.substr(pos, len);
-                auto it = m_vocab.find(piece);
-                if (it != m_vocab.end()) {
-                    result.push_back(it->second);
-                    pos += len;
-                    matched = true;
-                    break;
+        // Convert text to UTF-32
+        std::vector<char32_t> utf32;
+        for (size_t i = 0; i < text.size(); ) {
+            unsigned char c = static_cast<unsigned char>(text[i]);
+            char32_t ch = 0;
+            if (c < 0x80) {
+                ch = c;
+                i += 1;
+            } else if ((c & 0xE0) == 0xC0) {
+                ch = ((c & 0x1F) << 6) | (static_cast<unsigned char>(text[i+1]) & 0x3F);
+                i += 2;
+            } else if ((c & 0xF0) == 0xE0) {
+                ch = ((c & 0x0F) << 12) | ((static_cast<unsigned char>(text[i+1]) & 0x3F) << 6)
+                     | (static_cast<unsigned char>(text[i+2]) & 0x3F);
+                i += 3;
+            } else if ((c & 0xF8) == 0xF0) {
+                ch = ((c & 0x07) << 18) | ((static_cast<unsigned char>(text[i+1]) & 0x3F) << 12)
+                     | ((static_cast<unsigned char>(text[i+2]) & 0x3F) << 6)
+                     | (static_cast<unsigned char>(text[i+3]) & 0x3F);
+                i += 4;
+            } else {
+                ch = c;
+                i += 1;
+            }
+            utf32.push_back(ch);
+        }
+
+        // Convert to byte-units
+        std::vector<std::string> pieces;
+        for (char32_t ch : utf32) {
+            auto dit = m_byteDecoder.find(ch);
+            if (dit != m_byteDecoder.end()) {
+                pieces.push_back(byteToUnicode(static_cast<uint8_t>(dit->second)));
+            } else {
+                std::string utf8Bytes;
+                if (ch < 0x80) {
+                    utf8Bytes.push_back(static_cast<char>(ch));
+                } else if (ch < 0x800) {
+                    utf8Bytes.push_back(static_cast<char>(0xC0 | (ch >> 6)));
+                    utf8Bytes.push_back(static_cast<char>(0x80 | (ch & 0x3F)));
+                } else if (ch < 0x10000) {
+                    utf8Bytes.push_back(static_cast<char>(0xE0 | (ch >> 12)));
+                    utf8Bytes.push_back(static_cast<char>(0x80 | ((ch >> 6) & 0x3F)));
+                    utf8Bytes.push_back(static_cast<char>(0x80 | (ch & 0x3F)));
+                } else {
+                    utf8Bytes.push_back(static_cast<char>(0xF0 | (ch >> 18)));
+                    utf8Bytes.push_back(static_cast<char>(0x80 | ((ch >> 12) & 0x3F)));
+                    utf8Bytes.push_back(static_cast<char>(0x80 | ((ch >> 6) & 0x3F)));
+                    utf8Bytes.push_back(static_cast<char>(0x80 | (ch & 0x3F)));
+                }
+                for (unsigned char b : utf8Bytes) {
+                    pieces.push_back(byteToUnicode(b));
                 }
             }
-            if (!matched) {
-                // No vocab match — emit unknown or byte-by-byte
+        }
+
+        // Apply BPE merges
+        applyBPE(pieces);
+
+        // Convert pieces to token IDs
+        for (const auto& piece : pieces) {
+            auto it = m_vocab.find(piece);
+            if (it != m_vocab.end()) {
+                result.push_back(it->second);
+            } else {
                 result.push_back(m_config.unkTokenId);
-                pos += 1;
             }
         }
 
@@ -298,8 +378,22 @@ namespace Deep2Rom::Inference {
     void Tokenizer::applyBPE(std::vector<std::string>& pieces) const {
         if (pieces.size() < 2) return;
         while (true) {
-            float bestScore = 0.0f;
-            int bestIdx = findBestMerge(pieces, bestScore);
+            float bestScore = std::numeric_limits<float>::max();
+            int bestIdx = -1;
+
+            for (size_t i = 0; i + 1 < pieces.size(); ++i) {
+                auto lit = m_vocab.find(pieces[i]);
+                auto rit = m_vocab.find(pieces[i + 1]);
+                if (lit == m_vocab.end() || rit == m_vocab.end()) continue;
+
+                uint64_t key = makeMergeKey(lit->second, rit->second);
+                auto mit = m_merges.find(key);
+                if (mit != m_merges.end() && mit->second < bestScore) {
+                    bestScore = mit->second;
+                    bestIdx = static_cast<int>(i);
+                }
+            }
+
             if (bestIdx < 0) break;
             mergePair(pieces, bestIdx);
         }

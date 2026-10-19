@@ -12,9 +12,6 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithD
 # Vulkan support option
 option(ENABLE_VULKAN "Enable Vulkan support" ON)
 
-# Build configuration
-set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build")
-
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -38,34 +35,9 @@ add_executable(Deep2Engine_Benchmark
     src/core/InferenceEngine.cpp
 )
 
-# CLI executable with rawr run command
-if(WIN32)
-    add_executable(deep2_cli
-        src/rawrxd_cli.cpp
-        src/GGUFLoader.cpp
-        src/api_server.cpp
-        src/core/Tokenizer.cpp
-        src/core/KVCache.cpp
-        src/core/Sampling.cpp
-        src/core/GenerationLoop.cpp
-        src/core/InferenceEngine.cpp
-    )
-    target_link_libraries(deep2_cli PRIVATE Vulkan::Vulkan ws2_32)
-    target_include_directories(deep2_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
-endif()
-
-# Only build Windows-specific targets on Windows
-if(WIN32)
-    add_executable(gguf2rom
-        src/gguf2rom.cpp
-    )
-
-    add_executable(gguf2rom_ms
-        src/gguf2rom_ms.cpp
-    )
-
-    target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
-endif()
+add_executable(gguf2rom
+    src/gguf2rom.cpp
+)
 
 add_executable(test_metadata_parity
     src/test_metadata_parity.cpp
@@ -74,13 +46,13 @@ add_executable(test_metadata_parity
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
-    src/GGUFLoader.cpp
     src/core/VulkanStagingPipeline.cpp
     src/core/MultiShardFlickerManager.cpp
     src/core/PrefetchQueue.cpp
     src/core/PerformanceProfiler.cpp
     src/core/HereticWeightModifier.cpp
     src/core/UniversalRunner.cpp
+    src/GGUFLoader.cpp
     src/core/Tokenizer.cpp
     src/core/KVCache.cpp
     src/core/Sampling.cpp
@@ -89,7 +61,6 @@ add_executable(production_smoke_test
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
-# target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
@@ -106,23 +77,22 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 endif()
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
-# Only apply C++ flags to C++ sources using generator expressions
 if(MSVC)
     # Check if the host compiler version explicitly supports 512-bit vector processing arguments
     if(MSVC_VERSION GREATER_EQUAL 1910)
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
-            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
+            $<$<CXX_COMPILER_ID:MSVC>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
         )
         message(STATUS "[BUILD] MSVC compiler target assigned to native AVX2 (256-bit YMM) for Zen 4 / 7800X3D.")
     else()
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
-            $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /arch:AVX2>
+            $<$<CXX_COMPILER_ID:MSVC>:/O2 /Oi /Ot /EHsc /W4 /arch:AVX2>
         )
         message(STATUS "[BUILD] Standard AVX2 micro-architectural fallbacks configured.")
     endif()
 else()
     target_compile_options(Deep2Engine_Benchmark PRIVATE 
-        $<$<COMPILE_LANGUAGE:CXX>:-O3 -Wall -Wextra -ffast-math -pthread>
+        $<$<CXX_COMPILER_ID:GNU>:-O3 -Wall -Wextra -ffast-math -pthread>
     )
     # Check for native AVX-512 hardware compliance strings automatically under GCC/Clang
     include(CheckCXXCompilerFlag)
@@ -131,14 +101,14 @@ else()
     CHECK_CXX_COMPILER_FLAG("-mavx512dq" HAS_AVX512DQ)
     CHECK_CXX_COMPILER_FLAG("-mavx512vnni" HAS_AVX512VNNI)
     if(HAS_AVX512F AND HAS_AVX512BW AND HAS_AVX512DQ)
-        target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mavx512bw -mavx512dq>)
+        target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<CXX_COMPILER_ID:GNU>:-mavx512f -mavx512bw -mavx512dq>)
         if(HAS_AVX512VNNI)
-            target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512vnni>)
+            target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<CXX_COMPILER_ID:GNU>:-mavx512vnni>)
         endif()
         message(STATUS "[BUILD] GCC/Clang: AVX-512 vectorization enabled (F, BW, DQ, VNNI)")
     else()
         message(STATUS "[BUILD] GCC/Clang: AVX-512 not fully supported, using AVX2 fallback")
-        target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma>)
+        target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<CXX_COMPILER_ID:GNU>:-mavx2 -mfma>)
     endif()
 endif()
 
@@ -154,7 +124,6 @@ endif()
 
 # Link libraries
 if(MSVC)
-    # Explicitly avoid ON.lib linkage (not a standard library)
     target_link_libraries(Deep2Engine_Benchmark 
         PRIVATE Vulkan::Vulkan
         kernel32 user32 advapi32
@@ -169,20 +138,6 @@ elseif(UNIX AND NOT APPLE)
 elseif(APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
-endif()
-
-# Ensure ON.lib is never linked (not a standard Windows library)
-if(MSVC)
-    if(DEFINED ON_LIBRARY)
-        unset(ON_LIBRARY)
-    endif()
-    if(DEFINED ON)
-        unset(ON)
-    endif()
-    # Explicitly remove ON.lib from any link libraries
-    string(REPLACE "ON.lib" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-    string(REPLACE "ON.lib" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
-    string(REPLACE "ON.lib" "" CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS}")
 endif()
 
 # Install target
@@ -204,9 +159,3 @@ add_test(NAME ProductionSmokeTest
     COMMAND production_smoke_test
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
-
-
-
-
-
-

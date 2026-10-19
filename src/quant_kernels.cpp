@@ -84,14 +84,14 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q4_K_S: {
-        // Block: qs[128] nibbles, scales[16] int8, d fp16 (146 bytes).
+        // Block: qs[128] nibbles, scales[16] int8 (144 bytes, no d field).
+        // GGUF Q4_K_S variant without separate d scale factor.
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
-            float d = fp16ToF32(readU16(p + 144));
             float scale[16];
             const int8_t* scl = reinterpret_cast<const int8_t*>(p + 128);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q4K_SCALE_DIV;
+            for (int g = 0; g < 16; ++g) scale[g] = static_cast<float>(scl[g]) / QuantLayoutH1::Q4K_SCALE_DIV;
             const uint8_t* qs = p;
             uint64_t take = n - v; if (take > 256) take = 256;
             for (uint64_t k = 0; k < take; ++k) {
@@ -101,7 +101,7 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                 out[v + k] = (static_cast<float>(nib) - QuantLayoutH1::Q4K_ZERO_POINT) * scale[g];
             }
             v += take;
-            p += 146;
+            p += 144;
         }
         return true;
     }
@@ -158,15 +158,14 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q3_K_M: {
-        // Block: qs[96] 3-bit packed at offset 0, scales[16] int8 at offset 96, d fp16 at offset 112.
-        // Layout verified end-to-end on DeepSeek-V2-Lite attn_q.weight.
+        // Block: qs[96] 3-bit packed at offset 0, scales[16] int8 at offset 96.
+        // Block size 112 bytes, NO separate d scale factor (scales used directly).
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
-            float d = fp16ToF32(readU16(p + 112));
             float scale[16];
             const int8_t* scl = reinterpret_cast<const int8_t*>(p + 96);
-            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
+            for (int g = 0; g < 16; ++g) scale[g] = static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
             const uint8_t* qs = p;
             uint64_t take = n - v; if (take > 256) take = 256;
             for (uint64_t k = 0; k < take; ++k) {
@@ -179,7 +178,7 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                 out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q3K_ZERO_POINT) * scale[g];
             }
             v += take;
-            p += 114;
+            p += 112;
         }
         return true;
     }

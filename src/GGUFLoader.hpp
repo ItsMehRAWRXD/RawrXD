@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -28,6 +27,7 @@ struct GGUFTensorMeta {
     std::vector<uint64_t> dims;
     uint64_t offset = 0;
     void* dataData = nullptr;
+    uint32_t shard_id = 0;  // Which shard file this tensor's data lives in (0 = first shard)
 };
 
 struct EngineContext {
@@ -50,3 +50,19 @@ bool ParseOllamaManifest(const std::string& manifestPath, EngineContext* ctx);
 
 // Main loading function
 bool LoadUniversalBlob(const std::string& path, EngineContext* ctx);
+
+// --- Multi-Shard GGUF Loader ---
+// Loads a model split across multiple .gguf shard files.
+// Each shard is a complete GGUF file with its own header, metadata,
+// and tensor data. The first shard contains the master metadata;
+// subsequent shards contain additional tensor data.
+// Tensor offsets are relative to each shard's data section start.
+bool LoadUniversalBlobMultiShard(const std::vector<std::string>& shardPaths, EngineContext* ctx);
+
+// --- Multi-Shard GGUF Loading ---
+// Load a model whose tensors are split across multiple .gguf shard files.
+// Each shard is a separate GGUF file with its own header and metadata.
+// The first shard contains the master metadata; subsequent shards contain
+// additional weight data. Tensor offsets are relative to each shard's
+// data section start.
+bool LoadUniversalBlobMultiShard(const std::vector<std::string>& shardPaths, EngineContext* ctx);

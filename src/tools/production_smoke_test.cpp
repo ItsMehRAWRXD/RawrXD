@@ -147,6 +147,7 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
             cfg.addBos = true;
             cfg.addEos = false;
 
+            std::cout << "    [*] Starting generation (1 token, may take a while on CPU)..." << std::endl;
             InferenceResult result = engine.generate("Hi", cfg);
 
             if (result.success) {

@@ -10,16 +10,18 @@
 
 namespace Deep2Rom::Inference {
 
-    // Callback for running a single forward pass through the model
+    // Callback for running a single transformer layer forward pass
     // layerIdx: which layer (0..numLayers-1)
-    // input: hidden states (size hiddenDim)
-    // output: logits or next hidden states (size vocabSize or hiddenDim)
+    // input: hidden states (size hiddenDim) or nullptr for embedding lookup on layer 0
+    // output: hidden states or logits (size hiddenDim or vocabSize)
     // tokenPos: current position in sequence
+    // tokenId: token ID for embedding lookup (used when input is nullptr and layerIdx == 0)
     // Returns true on success
     using ForwardFn = std::function<bool(uint32_t layerIdx,
                                          const float* input,
                                          float* output,
-                                         uint64_t tokenPos)>;
+                                         uint64_t tokenPos,
+                                         uint32_t tokenId)>;
 
     // Generation result
     struct GenerationResult {
@@ -46,27 +48,22 @@ namespace Deep2Rom::Inference {
         GenerationLoop() = default;
         ~GenerationLoop() = default;
 
-        // Configure the generation loop
         void setTokenizer(const Tokenizer& tokenizer) { m_tokenizer = &tokenizer; }
         void setKVCache(KVCache* cache) { m_kvCache = cache; }
         void setSampler(const Sampler& sampler) { m_sampler = sampler; }
         void setForwardFn(ForwardFn fn) { m_forwardFn = std::move(fn); }
         void setConfig(const GenerationConfig& config) { m_config = config; }
+        void setNumLayers(uint32_t numLayers) { m_numLayers = numLayers; }
+        void setHiddenDim(uint32_t hiddenDim) { m_hiddenDim = hiddenDim; }
+        void setVocabSize(uint32_t vocabSize) { m_vocabSize = vocabSize; }
 
-        // Check if configured
         bool isConfigured() const {
-            return m_tokenizer != nullptr && m_sampler.params().temperature >= 0.0f && m_forwardFn != nullptr;
+            return m_tokenizer != nullptr && m_forwardFn != nullptr && m_numLayers > 0;
         }
 
-        // Generate text from a prompt
-        // prompt: input text
-        // onToken: callback for each generated token (token ID, text)
-        // Returns generation result
         GenerationResult generate(const std::string& prompt,
                                   std::function<void(uint32_t tokenId, const std::string& tokenText)> onToken = nullptr);
 
-        // Generate with a callback that can request early stopping
-        // onToken should return true to continue, false to stop
         GenerationResult generateWithControl(const std::string& prompt,
                                              std::function<bool(uint32_t tokenId, const std::string& tokenText)> onToken);
 
@@ -78,11 +75,9 @@ namespace Deep2Rom::Inference {
         ForwardFn m_forwardFn;
         std::atomic<bool> m_stopRequested{ false };
 
-        // Run a single generation step
-        // Returns the sampled token ID
-        uint32_t generateStep(const std::vector<uint32_t>& inputTokens,
-                              uint64_t position,
-                              std::vector<uint32_t>& tokenHistory);
+        uint32_t m_numLayers = 0;
+        uint32_t m_hiddenDim = 3072;
+        uint32_t m_vocabSize = 32064;
     };
 
 } // namespace Deep2Rom::Inference

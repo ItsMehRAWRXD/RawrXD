@@ -361,6 +361,8 @@ struct DeepSeek2Model {
     uint32_t qkNope = 0, qkRope = 0, vHead = 0, kvLora = 0;
     float eps = 1e-6f, theta = 10000.0f;
     uint32_t seqCap = 0;
+    // MoE geometry
+    uint32_t moeNumExperts = 0, moeTopK = 0, moeNumShared = 0;
 
     std::vector<float> tokenEmbdW;   // [vocab, hidden]
     std::vector<float> outputNormW;  // [hidden]
@@ -368,15 +370,25 @@ struct DeepSeek2Model {
 
     struct LayerW {
         std::vector<float> attnNormW;    // [hidden]
-        std::vector<float> qW;           // [3*? , hidden] -> logical [3072, hidden]: q_nope[heads][qkNope] + q_rope[heads][qkRope]
+        std::vector<float> qW;           // [3072, hidden] logical
         std::vector<float> kvANormW;     // [kvLora]
         std::vector<float> kvAMqaW;      // [kvLora + qkRope, hidden]
         std::vector<float> kvBW;         // [(qkNope + vHead)*heads, kvLora]
         std::vector<float> attnOutW;     // [hidden, hidden]
         std::vector<float> ffnNormW;     // [hidden]
+        // Dense layer 0 only:
         std::vector<float> ffnUpW;       // [intermediate, hidden]
         std::vector<float> ffnGateW;     // [intermediate, hidden]
         std::vector<float> ffnDownW;     // [hidden, intermediate]
+        // MoE layers 1-26 (loaded on demand from ROM):
+        std::vector<float> ffnGateInpW;  // [hidden, numExperts] router
+        std::vector<float> ffnGateExpsW; // [numExperts, intermediate, hidden]
+        std::vector<float> ffnUpExpsW;   // [numExperts, intermediate, hidden]
+        std::vector<float> ffnDownExpsW; // [numExperts, hidden, intermediate]
+        std::vector<float> ffnGateShexpW;// [hidden, 2*intermediate]
+        std::vector<float> ffnUpShexpW;  // [hidden, 2*intermediate]
+        std::vector<float> ffnDownShexpW;// [2*intermediate, hidden]
+        bool moeLoaded = false;
     };
     std::vector<LayerW> layersW;
 
@@ -426,6 +438,7 @@ struct DeepSeek2Model {
         intermediate = (uint32_t)g.intermediateDim; vocab = (uint32_t)g.vocabSize;
         theta = (float)g.ropeTheta;
         qkNope = g.qkNopeHeadDim; qkRope = g.qkRopeHeadDim; vHead = g.vHeadDim; kvLora = g.kvLoraRank;
+        moeNumExperts = g.nRoutedExperts; moeTopK = g.moeTopK; moeNumShared = g.nSharedExperts;
         seqCap = 256;
 
         layersW.resize(1);
@@ -462,130 +475,253 @@ struct DeepSeek2Model {
         return true;
     }
 
+    // Load MoE weights for a specific layer from ROM (on demand, to save memory)
+    bool loadMoELayer(const TensorROM& rom, int layerIdx) {
+        auto get = [&](const std::string& name) { return rom.findTensor(name); };
+        auto readF32 = [&](const TensorEntry* e, std::vector<float>& out) -> bool {
+            if (!e) { std::cerr << "[DS2] missing tensor: " << (e ? e->name : std::string("null")) << "\n"; return false; }
+            uint64_t size = e->byteSize();
+            std::vector<uint8_t> raw(size);
+            if (!rom.readTensor(*e, raw.data())) { std::cerr << "[DS2] readTensor failed: " << e->name << "\n"; return false; }
+            TensorView view{ e->type, raw.data(), size, e->dims, true };
+            DequantizedTensor dq;
+            if (!dequantizeTensor(view, dq)) { std::cerr << "[DS2] dequant failed: " << e->name << " type=" << tensorTypeName(e->type) << "\n"; return false; }
+            out = std::move(dq.data);
+            return true;
+        };
+
+        LayerW& lw = layersW[layerIdx];
+        std::ostringstream os;
+        os << "blk." << layerIdx << ".";
+        const std::string p = os.str();
+
+        if (!readF32(get(p + "ffn_gate_inp.weight"), lw.ffnGateInpW)) return false;
+        if (!readF32(get(p + "ffn_gate_exps.weight"), lw.ffnGateExpsW)) return false;
+        if (!readF32(get(p + "ffn_up_exps.weight"), lw.ffnUpExpsW)) return false;
+        if (!readF32(get(p + "ffn_down_exps.weight"), lw.ffnDownExpsW)) return false;
+        if (!readF32(get(p + "ffn_gate_shexp.weight"), lw.ffnGateShexpW)) return false;
+        if (!readF32(get(p + "ffn_up_shexp.weight"), lw.ffnUpShexpW)) return false;
+        if (!readF32(get(p + "ffn_down_shexp.weight"), lw.ffnDownShexpW)) return false;
+
+        lw.moeLoaded = true;
+        std::cerr << "[DS2] MoE layer " << layerIdx << " weights resident\n";
+        return true;
+    }
+
     static float silu(float x) { return x / (1.0f + std::expf(-x)); }
 
-    // Logits for the last token of `tokens` (layer 0 only, full recompute with KV cache).
-    std::vector<float> forwardLayer0(const std::vector<uint32_t>& tokens) {
+    // MoE forward pass for a single position
+    void moeForward(int layerIdx, float* h, int t, int numExperts, int topK, int numShared,
+                    int intermediate) {
+        LayerW& lw = layersW[layerIdx];
+        if (!lw.moeLoaded) return;
+
+        float* ht = &h[t * hidden];
+
+        // Router: x @ ffn_gate_inpW -> [numExperts]
+        std::vector<float> routerLogits(numExperts);
+        gemvFloat(lw.ffnGateInpW.data(), ht, routerLogits.data(), numExperts, hidden);
+
+        // Softmax
+        float maxLogit = -1e30f;
+        for (int e = 0; e < numExperts; ++e) if (routerLogits[e] > maxLogit) maxLogit = routerLogits[e];
+        float sumExp = 0.0f;
+        std::vector<float> routerWeights(numExperts);
+        for (int e = 0; e < numExperts; ++e) {
+            routerWeights[e] = std::expf(routerLogits[e] - maxLogit);
+            sumExp += routerWeights[e];
+        }
+        for (int e = 0; e < numExperts; ++e) routerWeights[e] /= sumExp;
+
+        // Top-k selection
+        std::vector<std::pair<float, int>> expertScores(numExperts);
+        for (int e = 0; e < numExperts; ++e) expertScores[e] = {routerWeights[e], e};
+        std::sort(expertScores.begin(), expertScores.end(),
+                  [](const auto& a, const auto& b) { return a.first > b.first; });
+
+        // Accumulate expert outputs
+        std::vector<float> expertOut(hidden, 0.0f);
+        for (int k = 0; k < topK && k < numExperts; ++k) {
+            int e = expertScores[k].second;
+            float w = expertScores[k].first;
+
+            // Gate: x @ gate_exps[e] -> [intermediate]
+            // gate_exps[e] is at [e * intermediate * hidden .. (e+1) * intermediate * hidden]
+            const float* gateE = lw.ffnGateExpsW.data() + e * intermediate * hidden;
+            std::vector<float> gateVal(intermediate);
+            gemvFloat(gateE, ht, gateVal.data(), intermediate, hidden);
+
+            // Up: x @ up_exps[e] -> [intermediate]
+            // up_exps[e] is at [e * intermediate * hidden .. (e+1) * intermediate * hidden]
+            const float* upE = lw.ffnUpExpsW.data() + e * intermediate * hidden;
+            std::vector<float> upVal(intermediate);
+            gemvFloat(upE, ht, upVal.data(), intermediate, hidden);
+
+            // Intermediate: gate_val * silu(up_val)
+            std::vector<float> intermediateVec(intermediate);
+            for (int i = 0; i < intermediate; ++i)
+                intermediateVec[i] = gateVal[i] * silu(upVal[i]);
+
+            // Down: intermediate @ down_exps[e] -> [hidden]
+            // down_exps[e] is at [e * hidden * intermediate .. (e+1) * hidden * intermediate]
+            const float* downE = lw.ffnDownExpsW.data() + e * hidden * intermediate;
+            std::vector<float> expertOut(hidden);
+            gemvFloat(downE, intermediateVec.data(), expertOut.data(), hidden, intermediate);
+
+            // Weighted combination
+            for (int i = 0; i < hidden; ++i)
+                ht[i] += w * expertOut[i];
+        }
+
+        // Shared expert
+        // shared_gate = silu(x @ gate_shexpW) -> [2*intermediate]
+        std::vector<float> sharedGate(2 * intermediate);
+        gemvFloat(lw.ffnGateShexpW.data(), ht, sharedGate.data(), 2 * intermediate, hidden);
+
+        // shared_up = x @ up_shexpW -> [2*intermediate]
+        std::vector<float> sharedUp(2 * intermediate);
+        gemvFloat(lw.ffnUpShexpW.data(), ht, sharedUp.data(), 2 * intermediate, hidden);
+
+        // shared_intermediate = shared_gate * silu(shared_up)
+        std::vector<float> sharedIntermediate(2 * intermediate);
+        for (int i = 0; i < 2 * intermediate; ++i)
+            sharedIntermediate[i] = sharedGate[i] * silu(sharedUp[i]);
+
+        // shared_out = shared_intermediate @ down_shexpW -> [hidden]
+        // down_shexpW: [2*intermediate, hidden]
+        std::vector<float> sharedOut(hidden);
+        gemvFloat(lw.ffnDownShexpW.data(), sharedIntermediate.data(), sharedOut.data(), hidden, 2 * intermediate);
+
+        // Add shared expert output
+        for (int i = 0; i < hidden; ++i)
+            ht[i] += sharedOut[i];
+    }
+
+    // Logits for all tokens of `tokens` (full recompute with KV cache), layer-major.
+    // Processes all tokens through layer 0, then all through layer 1, etc.
+    // Loads MoE weights on demand from ROM for MoE layers (1+).
+    std::vector<float> forwardAllLayers(const TensorROM& rom, const std::vector<uint32_t>& tokens) {
         const uint32_t seq = (uint32_t)tokens.size();
         std::vector<float> h(seq * hidden, 0.0f);
         for (uint32_t t = 0; t < seq; ++t)
             std::memcpy(&h[t * hidden], &tokenEmbdW[tokens[t] * hidden], hidden * sizeof(float));
 
-        LayerW& lw = layersW[0];
         const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
 
-        for (uint32_t t = 0; t < seq; ++t) {
-            float* ht = &h[t * hidden];
+        for (uint32_t layer = 0; layer < layers; ++layer) {
+            LayerW& lw = layersW[layer];
+            bool isMoE = (layer > 0);
 
-            float normIn[2048];
-            std::memcpy(normIn, ht, hidden * sizeof(float));
-            rmsNorm(normIn, lw.attnNormW.data(), hidden, 1e-6f);
-            {
-                double nmax = -1e30, nmin = 1e30; bool nnan = false;
-                for (uint32_t i = 0; i < hidden; ++i) { if (!(normIn[i] == normIn[i])) { nnan = true; break; } if (normIn[i] > nmax) nmax = normIn[i]; if (normIn[i] < nmin) nmin = normIn[i]; }
-                std::cerr << "[DS2-DBG] t=" << t << " normIn: min=" << nmin << " max=" << nmax << " nan=" << nnan << "\n";
+            // Load MoE weights on demand for MoE layers
+            if (isMoE && !lw.moeLoaded) {
+                if (!loadMoELayer(rom, layer)) {
+                    std::cerr << "[DS2] Failed to load MoE weights for layer " << layer << "\n";
+                    return {};
+                }
             }
 
-            // Q projection: [3072] = q_nope[heads][qkNope] + q_rope[heads][qkRope]
-            std::vector<float> qAll(heads * (qkNope + qkRope));
-            gemvFloat(lw.qW.data(), normIn, qAll.data(), heads * (qkNope + qkRope), hidden);
-            {
-                double qmax = -1e30, qmin = 1e30; bool qnan = false;
-                for (uint32_t i = 0; i < qAll.size(); ++i) { if (!(qAll[i] == qAll[i])) { qnan = true; break; } if (qAll[i] > qmax) qmax = qAll[i]; if (qAll[i] < qmin) qmin = qAll[i]; }
-                std::cerr << "[DS2-DBG] t=" << t << " qAll: min=" << qmin << " max=" << qmax << " nan=" << qnan << "\n";
+            // Load MoE weights on demand for MoE layers
+            if (isMoE && !lw.moeLoaded) {
+                if (!loadMoELayer(rom, layer)) {
+                    std::cerr << "[DS2] Failed to load MoE weights for layer " << layer << "\n";
+                    return {};
+                }
             }
 
-            // KV-A projection: [kvLora + qkRope]
-            std::vector<float> kvA(kvLora + qkRope);
-            gemvFloat(lw.kvAMqaW.data(), normIn, kvA.data(), kvLora + qkRope, hidden);
-            {
-                double kmax = -1e30, kmin = 1e30; bool knan = false;
-                for (uint32_t i = 0; i < kvA.size(); ++i) { if (!(kvA[i] == kvA[i])) { knan = true; break; } if (kvA[i] > kmax) kmax = kvA[i]; if (kvA[i] < kmin) kmin = kvA[i]; }
-                std::cerr << "[DS2-DBG] t=" << t << " kvA: min=" << kmin << " max=" << kmax << " nan=" << knan << "\n";
-            }
+            for (uint32_t t = 0; t < seq; ++t) {
+                float* ht = &h[t * hidden];
 
-            // KV-B projection: [(qkNope+vHead)*heads]
-            std::vector<float> kAll(heads * (qkNope + vHead));
-            gemvFloat(lw.kvBW.data(), kvA.data(), kAll.data(), heads * (qkNope + vHead), kvLora);
-            {
-                double kmax = -1e30, kmin = 1e30; bool knan = false;
-                for (uint32_t i = 0; i < kAll.size(); ++i) { if (!(kAll[i] == kAll[i])) { knan = true; break; } if (kAll[i] > kmax) kmax = kAll[i]; if (kAll[i] < kmin) kmin = kAll[i]; }
-                std::cerr << "[DS2-DBG] t=" << t << " kAll: min=" << kmin << " max=" << kmax << " nan=" << knan << "\n";
-            }
+                // ---- attention branch ----
+                float normIn[2048];
+                std::memcpy(normIn, ht, hidden * sizeof(float));
+                rmsNorm(normIn, lw.attnNormW.data(), hidden, 1e-6f);
 
-            float* kRopeT = &kRopeCache[t * qkRope];
+                // Q projection
+                std::vector<float> qAll(heads * (qkNope + qkRope));
+                gemvFloat(lw.qW.data(), normIn, qAll.data(), heads * (qkNope + qkRope), hidden);
 
-            for (uint32_t hh = 0; hh < heads; ++hh) {
-                const float* qRow = &qAll[hh * (qkNope + qkRope)];
-                const float* kRow = &kAll[hh * (qkNope + vHead)];
-                // Store K_nope into KV cache at (hh, t): index = hh*seqCap*qkNope + t*qkNope + d
-                for (uint32_t d = 0; d < qkNope; ++d) kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = kRow[d];
-                // Store V into KV cache at (hh, t): index = hh*seqCap*vHead + t*vHead + d
-                for (uint32_t d = 0; d < vHead; ++d) vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
-            }
-            // k_rope shared across heads: from kvA tail
-            for (uint32_t d = 0; d < qkRope; ++d) kRopeT[d] = kvA[kvLora + d];
+                // KV-A projection
+                std::vector<float> kvA(kvLora + qkRope);
+                gemvFloat(lw.kvAMqaW.data(), normIn, kvA.data(), kvLora + qkRope, hidden);
 
-            // RoPE on q_rope and k_rope (position t)
-            for (uint32_t hh = 0; hh < heads; ++hh) {
-                float* qR = &qAll[hh * (qkNope + qkRope) + qkNope];
-                rope(qR, t, qkRope, theta);
-            }
-            rope(kRopeT, t, qkRope, theta);
+                // KV-B projection
+                std::vector<float> kAll(heads * (qkNope + vHead));
+                gemvFloat(lw.kvBW.data(), kvA.data(), kAll.data(), heads * (qkNope + vHead), kvLora);
 
-            // Causal softmax attention per head
-            float attnOut[2048] = {0};
-            for (uint32_t hh = 0; hh < heads; ++hh) {
-                float* outH = attnOut + hh * vHead;
-                float scores[256];
-                float maxSc = -1e30f;
-                for (uint32_t tt = 0; tt <= t; ++tt) {
-                    float s = 0.0f;
+                // Store K/V in cache
+                for (uint32_t hh = 0; hh < heads; ++hh) {
+                    const float* kRow = &kAll[hh * (qkNope + vHead)];
                     for (uint32_t d = 0; d < qkNope; ++d)
-                        s += qAll[hh * (qkNope + qkRope) + d] * kNopeCache[hh * seqCap * qkNope + tt * qkNope + d];
-                    for (uint32_t d = 0; d < qkRope; ++d)
-                        s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
-                    scores[tt] = s * invSqrtD;
-                    if (scores[tt] > maxSc) maxSc = scores[tt];
+                        kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = kRow[d];
+                    for (uint32_t d = 0; d < vHead; ++d)
+                        vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
                 }
-                {
-                    double smax = -1e30, smin = 1e30; bool snan = false;
-                    for (uint32_t tt = 0; tt <= t; ++tt) { if (!(scores[tt] == scores[tt])) { snan = true; break; } if (scores[tt] > smax) smax = scores[tt]; if (scores[tt] < smin) smin = scores[tt]; }
-                    std::cerr << "[DS2-DBG] t=" << t << " hh=0 scores: min=" << smin << " max=" << smax << " nan=" << snan << "\n";
+                // k_rope shared across heads
+                for (uint32_t d = 0; d < qkRope; ++d) kRopeCache[t * qkRope + d] = kvA[kvLora + d];
+
+                // RoPE on q_rope and k_rope
+                for (uint32_t hh = 0; hh < heads; ++hh) {
+                    float* qR = &qAll[hh * (qkNope + qkRope) + qkNope];
+                    rope(qR, t, qkRope, theta);
                 }
-                float sum = 0.0f;
-                for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
-                for (uint32_t d = 0; d < vHead; ++d) {
-                    float acc = 0.0f;
-                    for (uint32_t tt = 0; tt <= t; ++tt) acc += scores[tt] * vCache[hh * seqCap * vHead + tt * vHead + d];
-                    outH[d] = acc / sum;
+                rope(kRopeCache.data() + t * qkRope, t, qkRope, theta);
+
+                // Causal softmax attention per head
+                float attnOut[2048] = {0};
+                for (uint32_t hh = 0; hh < heads; ++hh) {
+                    float* outH = attnOut + hh * vHead;
+                    float scores[256];
+                    float maxSc = -1e30f;
+                    for (uint32_t tt = 0; tt <= t; ++tt) {
+                        float s = 0.0f;
+                        for (uint32_t d = 0; d < qkNope; ++d)
+                            s += qAll[hh * (qkNope + qkRope) + d] * kNopeCache[hh * seqCap * qkNope + tt * qkNope + d];
+                        for (uint32_t d = 0; d < qkRope; ++d)
+                            s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
+                        scores[tt] = s * invSqrtD;
+                        if (scores[tt] > maxSc) maxSc = scores[tt];
+                    }
+                    float sum = 0.0f;
+                    for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
+                    for (uint32_t d = 0; d < vHead; ++d) {
+                        float acc = 0.0f;
+                        for (uint32_t tt = 0; tt <= t; ++tt) acc += scores[tt] * vCache[hh * seqCap * vHead + tt * vHead + d];
+                        outH[d] = acc / sum;
+                    }
+                }
+
+                // residual: h += attn_output @ attn_out
+                float attnProj[2048];
+                gemvFloat(lw.attnOutW.data(), attnOut, attnProj, hidden, hidden);
+                for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
+
+                // ---- FFN branch ----
+                std::memcpy(normIn, ht, hidden * sizeof(float));
+                rmsNorm(normIn, lw.ffnNormW.data(), hidden, 1e-6f);
+
+                if (!isMoE) {
+                    // Dense FFN (layer 0): down(silu(gate(x)) * up(x))
+                    std::vector<float> fup(intermediate);
+                    gemvFloat(lw.ffnUpW.data(), normIn, fup.data(), intermediate, hidden);
+                    std::vector<float> fgate(intermediate);
+                    gemvFloat(lw.ffnGateW.data(), normIn, fgate.data(), intermediate, hidden);
+                    for (uint32_t i = 0; i < intermediate; ++i) fup[i] *= silu(fgate[i]);
+
+                    std::vector<float> fdown(hidden);
+                    gemvFloat(lw.ffnDownW.data(), fup.data(), fdown.data(), hidden, intermediate);
+                    for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
+                } else {
+                    // MoE FFN (layers 1+): routed experts + shared experts
+                    moeForward(layer, h.data(), t, (int)moeNumExperts, (int)moeTopK,
+                               (int)moeNumShared, intermediate);
                 }
             }
-
-            // residual: h += attn_output @ attn_out
-            float attnProj[2048];
-            gemvFloat(lw.attnOutW.data(), attnOut, attnProj, hidden, hidden);
-            for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
-
-            // FFN (dense, layer 0): down(silu(gate(x)) * up(x))
-            std::memcpy(normIn, ht, hidden * sizeof(float));
-            rmsNorm(normIn, lw.ffnNormW.data(), hidden, 1e-6f);
-
-            std::vector<float> fup(intermediate);
-            gemvFloat(lw.ffnUpW.data(), normIn, fup.data(), intermediate, hidden);
-            std::vector<float> fgate(intermediate);
-            gemvFloat(lw.ffnGateW.data(), normIn, fgate.data(), intermediate, hidden);
-            for (uint32_t i = 0; i < intermediate; ++i) fup[i] *= silu(fgate[i]);
-
-            std::vector<float> fdown(hidden);
-            gemvFloat(lw.ffnDownW.data(), fup.data(), fdown.data(), hidden, intermediate);
-            for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
         }
 
-        // Debug: norm of position-0 hidden after layer 0
+        // Debug: norm of position-0 hidden after all layers
         double h0Norm = 0.0;
         for (uint32_t i = 0; i < hidden; ++i) h0Norm += h[i] * h[i];
-        std::cerr << "[DS2-DBG] h0Norm after layer0=" << std::sqrt(h0Norm) << "\n";
+        std::cerr << "[DS2-DBG] h0Norm after all layers=" << std::sqrt(h0Norm) << "\n";
         float* last = &h[(seq - 1) * hidden];
         double lastNorm = 0.0;
         for (uint32_t i = 0; i < hidden; ++i) lastNorm += last[i] * last[i];
@@ -662,7 +798,7 @@ int cmdOracle(int argc, char** argv) {
         for (uint32_t id : tokens) std::cout << tok.decode(id);
         std::cout << "\n[ORACLE] DeepSeek-V2-Lite layer-0 forward pass...\n";
 
-        std::vector<float> logits = model.forwardLayer0(run);
+        std::vector<float> logits = model.forwardAllLayers(rom, run);
         // top-8 candidates
         std::vector<std::pair<float, uint32_t>> cand;
         cand.reserve(model.vocab);

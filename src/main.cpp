@@ -32,7 +32,8 @@ int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cout << "Deep2Engine - Native GGUF Execution Layer\n";
         std::cout << "Usage: " << argv[0] << " <path_to_model.gguf> [manifest.json] [--whole-loader]\n";
-        std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json] [--whole-loader]\n";
+        std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json]\n";
+        std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -40,7 +41,8 @@ int main(int argc, char* argv[]) {
     if (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h") {
         std::cout << "Deep2Engine - Native GGUF Execution Layer\n";
         std::cout << "Usage: " << argv[0] << " <path_to_model.gguf> [manifest.json] [--whole-loader]\n";
-        std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json] [--whole-loader]\n";
+        std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json]\n";
+        std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -52,16 +54,18 @@ int main(int argc, char* argv[]) {
     std::string manifestPath;
 
     int argIndex = 1;
-    if (std::string(argv[argIndex]) == "--verify-init-only") {
-        verifyOnly = true;
-        argIndex++;
-    }
-    if (argIndex < argc && std::string(argv[argIndex]) == "--move10-validate") {
-        runMove10 = true;
-        argIndex++;
-    }
     while (argIndex < argc) {
         std::string a = argv[argIndex];
+        if (a == "--verify-init-only") {
+            verifyOnly = true;
+            argIndex++;
+            continue;
+        }
+        if (a == "--move10-validate") {
+            runMove10 = true;
+            argIndex++;
+            continue;
+        }
         if (a == "--whole-loader") { forceWholeLoader = true; argIndex++; continue; }
         if (modelPath.empty()) { modelPath = a; argIndex++; continue; }
         manifestPath = a; argIndex++;
