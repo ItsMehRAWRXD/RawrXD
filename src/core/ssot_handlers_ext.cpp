@@ -4154,7 +4154,7 @@ CommandResult handleTier1SmoothScrollToggle(const CommandContext& ctx)
 }
 CommandResult handleTier1MinimapEnhanced(const CommandContext& ctx)
 {
-    return delegateToGui(ctx, 12001, "tier1.minimapEnhanced");
+    return delegateToGui(ctx, 12010, "tier1.minimapEnhanced");
 }
 CommandResult handleTier1BreadcrumbsToggle(const CommandContext& ctx)
 {
@@ -4206,7 +4206,350 @@ CommandResult handleTier1AutoUpdateCheck(const CommandContext& ctx)
 }
 CommandResult handleTier1UpdateDismiss(const CommandContext& ctx)
 {
-    return delegateToGui(ctx, 12091, "tier1.updateDismiss");
+    return delegateToGui(ctx, 12092, "tier1.updateDismiss");
+}
+
+// ============================================================================
+// TIER 2: HIGH-VISIBILITY COSMETICS (11700-11799)
+// ============================================================================
+
+CommandResult handleTier2GitDiff(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11700, "tier2.gitdiff");
+}
+CommandResult handleTier2GitDiffClose(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11701, "tier2.gitdiff.close");
+}
+CommandResult handleTier2GitDiffPrev(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11702, "tier2.gitdiff.prev");
+}
+CommandResult handleTier2GitDiffNext(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11703, "tier2.gitdiff.next");
+}
+CommandResult handleTier2TerminalNew(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11710, "tier2.terminal.new");
+}
+CommandResult handleTier2TerminalClose(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11711, "tier2.terminal.close");
+}
+CommandResult handleTier2Hover(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11720, "tier2.hover");
+}
+CommandResult handleTier2SigHelp(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11721, "tier2.sighelp");
+}
+CommandResult handleTier2OutlineRefresh(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11730, "tier2.outline.refresh");
+}
+CommandResult handleTier2OutlineFilter(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11731, "tier2.outline.filter");
+}
+CommandResult handleTier2OutlineSort(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11732, "tier2.outline.sort");
+}
+CommandResult handleTier2FindRefs(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11740, "tier2.findrefs");
+}
+CommandResult handleTier2RenamePreview(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11750, "tier2.rename.preview");
+}
+CommandResult handleTier2CodeLensToggle(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11760, "tier2.codelens.toggle");
+}
+CommandResult handleTier2CodeLensRefresh(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11761, "tier2.codelens.refresh");
+}
+CommandResult handleTier2InlayToggle(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11770, "tier2.inlay.toggle");
+}
+CommandResult handleTier2InlayRefresh(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 11771, "tier2.inlay.refresh");
+}
+
+// ============================================================================
+// TIER 3: COSMETICS (12100-12199)
+// ============================================================================
+
+CommandResult handleTier3BracketPairs(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12100, "tier3.bracketPairs");
+}
+CommandResult handleTier3IndentGuides(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12101, "tier3.indentGuides");
+}
+CommandResult handleTier3WhitespaceToggle(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12102, "tier3.whitespaceToggle");
+}
+CommandResult handleTier3WordWrapIndicator(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12103, "tier3.wordWrapIndicator");
+}
+CommandResult handleTier3RelativeLines(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12104, "tier3.relativeLines");
+}
+CommandResult handleTier3ZenMode(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12105, "tier3.zenMode");
+}
+CommandResult handleTier3PinTab(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12106, "tier3.pinTab");
+}
+CommandResult handleTier3UnpinTab(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12107, "tier3.unpinTab");
+}
+CommandResult handleTier3CodeFoldToggle(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12108, "tier3.codeFoldToggle");
+}
+CommandResult handleTier3FoldAll(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12110, "tier3.foldAll");
+}
+CommandResult handleTier3UnfoldAll(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12111, "tier3.unfoldAll");
+}
+
+// ============================================================================
+// TIER 5: COSMETIC FEATURES (12200-12314)
+// ============================================================================
+
+CommandResult handleTier5LineEndingDetect(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12200, "tier5.lineending.detect");
+}
+CommandResult handleTier5LineEndingToCRLF(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12201, "tier5.lineending.to_crlf");
+}
+CommandResult handleTier5LineEndingToLF(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12202, "tier5.lineending.to_lf");
+}
+CommandResult handleTier5LineEndingToCR(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12203, "tier5.lineending.to_cr");
+}
+CommandResult handleTier5NetworkShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12210, "tier5.network.show");
+}
+CommandResult handleTier5NetworkAddPort(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12211, "tier5.network.add_port");
+}
+CommandResult handleTier5NetworkRemovePort(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12212, "tier5.network.remove_port");
+}
+CommandResult handleTier5NetworkToggle(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12213, "tier5.network.toggle");
+}
+CommandResult handleTier5NetworkList(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12214, "tier5.network.list");
+}
+CommandResult handleTier5NetworkStatus(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12219, "tier5.network.status");
+}
+CommandResult handleTier5TestExplorerShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12220, "tier5.testexplorer.show");
+}
+CommandResult handleTier5TestExplorerRun(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12221, "tier5.testexplorer.run");
+}
+CommandResult handleTier5TestExplorerRefresh(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12222, "tier5.testexplorer.refresh");
+}
+CommandResult handleTier5TestExplorerFilter(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12229, "tier5.testexplorer.filter");
+}
+CommandResult handleTier5DbgWatchShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12230, "tier5.dbgwatch.show");
+}
+CommandResult handleTier5DbgWatchClear(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12239, "tier5.dbgwatch.clear");
+}
+CommandResult handleTier5CallStackCapture(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12240, "tier5.callstack.capture");
+}
+CommandResult handleTier5CallStackShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12241, "tier5.callstack.show");
+}
+CommandResult handleTier5CallStackCopy(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12242, "tier5.callstack.copy");
+}
+CommandResult handleTier5CallStackResolve(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12249, "tier5.callstack.resolve");
+}
+CommandResult handleTier5MarketplaceShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12250, "tier5.marketplace.show");
+}
+CommandResult handleTier5MarketplaceSearch(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12251, "tier5.marketplace.search");
+}
+CommandResult handleTier5MarketplaceInstall(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12252, "tier5.marketplace.install");
+}
+CommandResult handleTier5MarketplaceUninstall(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12253, "tier5.marketplace.uninstall");
+}
+CommandResult handleTier5MarketplaceList(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12254, "tier5.marketplace.list");
+}
+CommandResult handleTier5MarketplaceStatus(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12259, "tier5.marketplace.status");
+}
+CommandResult handleTier5TelDashLog(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12265, "tier5.teldash.log");
+}
+CommandResult handleTier5TelDashClear(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12266, "tier5.teldash.clear");
+}
+CommandResult handleTier5TelDashExport(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12267, "tier5.teldash.export");
+}
+CommandResult handleTier5TelDashShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12268, "tier5.teldash.show");
+}
+CommandResult handleTier5TelDashStats(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12269, "tier5.teldash.stats");
+}
+CommandResult handleTier5ShortcutShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12270, "tier5.shortcut.show");
+}
+CommandResult handleTier5ShortcutRecord(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12271, "tier5.shortcut.record");
+}
+CommandResult handleTier5ShortcutReset(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12272, "tier5.shortcut.reset");
+}
+CommandResult handleTier5ShortcutSave(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12273, "tier5.shortcut.save");
+}
+CommandResult handleTier5ShortcutList(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12279, "tier5.shortcut.list");
+}
+CommandResult handleTier5ColorPickScan(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12280, "tier5.colorpick.scan");
+}
+CommandResult handleTier5ColorPickPick(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12281, "tier5.colorpick.pick");
+}
+CommandResult handleTier5ColorPickInsert(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12282, "tier5.colorpick.insert");
+}
+CommandResult handleTier5ColorPickList(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12289, "tier5.colorpick.list");
+}
+CommandResult handleTier5EmojiPicker(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12290, "tier5.emoji.picker");
+}
+CommandResult handleTier5EmojiInsert(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12291, "tier5.emoji.insert");
+}
+CommandResult handleTier5EmojiConfig(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12292, "tier5.emoji.config");
+}
+CommandResult handleTier5EmojiTest(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12299, "tier5.emoji.test");
+}
+CommandResult handleTier5CrashShow(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12300, "tier5.crash.show");
+}
+CommandResult handleTier5CrashTest(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12301, "tier5.crash.test");
+}
+CommandResult handleTier5CrashLog(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12302, "tier5.crash.log");
+}
+CommandResult handleTier5CrashClear(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12303, "tier5.crash.clear");
+}
+CommandResult handleTier5CrashStats(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12309, "tier5.crash.stats");
+}
+CommandResult handleTier5IRCConnect(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12310, "tier5.irc.connect");
+}
+CommandResult handleTier5IRCDisconnect(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12311, "tier5.irc.disconnect");
+}
+CommandResult handleTier5IRCStatus(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12312, "tier5.irc.status");
+}
+CommandResult handleTier5IRCConfig(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12313, "tier5.irc.config");
+}
+CommandResult handleTier5IRCSend(const CommandContext& ctx)
+{
+    return delegateToGui(ctx, 12314, "tier5.irc.send");
 }
 
 static CommandResult applyTransparencyPreset(const CommandContext& ctx, int guiCommandId, const char* commandName,
@@ -7726,12 +8069,6 @@ CommandResult handleRevengFindVulnerabilities(const CommandContext& ctx)
 
 CommandResult handleDiskListDrives(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11100, 0);
-        return CommandResult::ok("disk.listDrives");
-    }
 
     char drives[1024] = {};
     const DWORD len = GetLogicalDriveStringsA(static_cast<DWORD>(sizeof(drives)), drives);
@@ -7792,12 +8129,6 @@ CommandResult handleDiskListDrives(const CommandContext& ctx)
 
 CommandResult handleDiskScanPartitions(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11101, 0);
-        return CommandResult::ok("disk.scanPartitions");
-    }
 
     std::string drive = extractStringParam(ctx.args, "drive");
     if (drive.empty())
@@ -7938,12 +8269,6 @@ CommandResult handleDiskScanPartitions(const CommandContext& ctx)
 
 CommandResult handleGovernorStatus(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11200, 0);
-        return CommandResult::ok("governor.status");
-    }
 
     GovernorRuntimeState snapshot;
     {
@@ -7993,12 +8318,6 @@ CommandResult handleGovernorStatus(const CommandContext& ctx)
 
 CommandResult handleGovernorSetPowerLevel(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11201, 0);
-        return CommandResult::ok("governor.setPowerLevel");
-    }
 
     std::string level = extractStringParam(ctx.args, "level");
     if (level.empty())
@@ -8078,12 +8397,6 @@ CommandResult handleGovernorSetPowerLevel(const CommandContext& ctx)
 
 CommandResult handleMarketplaceList(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11300, 0);
-        return CommandResult::ok("marketplace.list");
-    }
 
     auto& state = pluginRuntimeState();
     std::lock_guard<std::mutex> lock(state.mtx);
@@ -8125,12 +8438,6 @@ CommandResult handleMarketplaceList(const CommandContext& ctx)
 
 CommandResult handleMarketplaceInstall(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11301, 0);
-        return CommandResult::ok("marketplace.install");
-    }
 
     std::string request = trimAscii(ctx.args);
     auto& state = pluginRuntimeState();
@@ -8309,12 +8616,6 @@ CommandResult handleMarketplaceInstall(const CommandContext& ctx)
 
 CommandResult handleEmbeddingEncode(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11400, 0);
-        return CommandResult::ok("embedding.encode");
-    }
 
     std::string text = trimAscii(ctx.args);
     if (text.empty())
@@ -8384,12 +8685,6 @@ CommandResult handleEmbeddingEncode(const CommandContext& ctx)
 
 CommandResult handleVisionAnalyzeImage(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11500, 0);
-        return CommandResult::ok("vision.analyzeImage");
-    }
 
     std::string path = trimAscii(ctx.args);
     const char* patterns[] = {"*.png",         "*.jpg",         "*.jpeg",         "*.bmp",         "*.gif",
@@ -8655,12 +8950,6 @@ CommandResult handleVisionAnalyzeImage(const CommandContext& ctx)
 
 CommandResult handlePromptClassifyContext(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11600, 0);
-        return CommandResult::ok("prompt.classifyContext");
-    }
 
     std::string prompt = trimAscii(ctx.args);
     if (prompt.empty())
@@ -26067,12 +26356,6 @@ CommandResult handleHelpPsDocs(const CommandContext& ctx)
 
 CommandResult handleModelLoad(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 8001, 0);
-        return CommandResult::ok("model.load");
-    }
 
     // CLI mode: load model
     std::string model = extractStringParam(ctx.args, "model");
@@ -26086,12 +26369,6 @@ CommandResult handleModelLoad(const CommandContext& ctx)
 
 CommandResult handleModelUnload(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 8002, 0);
-        return CommandResult::ok("model.unload");
-    }
 
     // CLI mode: unload model
     ctx.output("Model unloaded\n");
@@ -26100,12 +26377,6 @@ CommandResult handleModelUnload(const CommandContext& ctx)
 
 CommandResult handleModelList(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 8003, 0);
-        return CommandResult::ok("model.list");
-    }
 
     // CLI mode: list models
     ctx.output("Available models:\n");
@@ -26117,12 +26388,6 @@ CommandResult handleModelList(const CommandContext& ctx)
 
 CommandResult handleModelFinetune(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 8004, 0);
-        return CommandResult::ok("model.finetune");
-    }
 
     // CLI mode: finetune model
     ctx.output("Model fine-tuning started\n");
@@ -26131,12 +26396,6 @@ CommandResult handleModelFinetune(const CommandContext& ctx)
 
 CommandResult handleModelQuantize(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 8005, 0);
-        return CommandResult::ok("model.quantize");
-    }
 
     // CLI mode: quantize model
     ctx.output("Model quantization started\n");
@@ -26528,12 +26787,6 @@ CommandResult handleSettingsReset(const CommandContext& ctx)
 
 CommandResult handleExtensionsInstall(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11001, 0);
-        return CommandResult::ok("extensions.install");
-    }
 
     // CLI mode: install extension
     std::string ext = extractStringParam(ctx.args, "extension");
@@ -26547,12 +26800,6 @@ CommandResult handleExtensionsInstall(const CommandContext& ctx)
 
 CommandResult handleExtensionsUninstall(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11002, 0);
-        return CommandResult::ok("extensions.uninstall");
-    }
 
     // CLI mode: uninstall extension
     std::string ext = extractStringParam(ctx.args, "extension");
@@ -26566,12 +26813,6 @@ CommandResult handleExtensionsUninstall(const CommandContext& ctx)
 
 CommandResult handleExtensionsList(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11003, 0);
-        return CommandResult::ok("extensions.list");
-    }
 
     // CLI mode: list extensions
     ctx.output("Installed extensions:\n");
@@ -26584,12 +26825,6 @@ CommandResult handleExtensionsList(const CommandContext& ctx)
 
 CommandResult handleExtensionsEnable(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11004, 0);
-        return CommandResult::ok("extensions.enable");
-    }
 
     // CLI mode: enable extension
     std::string ext = extractStringParam(ctx.args, "extension");
@@ -26603,12 +26838,6 @@ CommandResult handleExtensionsEnable(const CommandContext& ctx)
 
 CommandResult handleExtensionsDisable(const CommandContext& ctx)
 {
-    if (ctx.isGui && ctx.idePtr)
-    {
-        HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11005, 0);
-        return CommandResult::ok("extensions.disable");
-    }
 
     // CLI mode: disable extension
     std::string ext = extractStringParam(ctx.args, "extension");

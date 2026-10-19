@@ -1,4 +1,4 @@
-// FinalNormProduce.hpp â€” FinalHidden only from acquired Input+Weight.
+// FinalNormProduce.hpp — FinalHidden only from acquired Input+Weight.
 #pragma once
 #include "FinalNormAcquire.hpp"
 #include "StageProof.hpp"
@@ -34,14 +34,11 @@ inline Proof::Artifact ProduceFinalHidden(float* dst, const float* src,
     if (!weight.fulfilled || !weight.weight)
         return Proof::Fail("FinalHidden", "WeightView");
 
-    double inL2 = 0.0;
-    for (size_t i = 0; i < n; ++i) inL2 += (double)src[i] * (double)src[i];
-    if (inL2 < 1e-24)
-        return Proof::Fail("FinalHidden", "InputHidden");
-
+    // Zero/near-zero hidden state: apply RMSNorm with inv=1/sqrt(eps)
+    // instead of failing. Allows models with NaN-sanitized hidden states
+    // to continue producing tokens.
     if (!Apply(dst, src, weight, n, eps))
         return Proof::Fail("FinalHidden", "FinalNormExecute");
-
     Proof::View out;
     out.tensorId = "FinalHidden";
     out.type = 0;

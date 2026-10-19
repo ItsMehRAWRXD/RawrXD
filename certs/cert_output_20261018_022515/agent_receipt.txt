@@ -1,0 +1,12 @@
+﻿
+rawr: unknown argument '--model'
+Use 'rawr --help' for usage.
+Usage:
+  rawr list [--verbose] [--refresh]
+  rawr show <model>
+  rawr paths
+  rawr run <model> [prompt|-p P|--prompt P] [--max-tokens N]
+  rawr run <model> [--verbose|--trace]  # stdin if prompt empty
+  rawr chat|agent|steer|resume|term|serve ...
+[StreamEngine] Shutdown
+

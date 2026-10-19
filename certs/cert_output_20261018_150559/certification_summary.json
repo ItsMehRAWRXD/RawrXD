@@ -1,0 +1,24 @@
+﻿{
+    "Passed":  false,
+    "CliResult":  {
+                      "EosObserved":  false,
+                      "EngineError":  false,
+                      "DecodeMs":  0,
+                      "PrefillMs":  0,
+                      "OutputText":  "",
+                      "StopReason":  "Unknown",
+                      "GeneratedTokens":  0,
+                      "WeightCacheMisses":  0,
+                      "WeightLoadMs":  0,
+                      "CommittedTokens":  0,
+                      "CallbackCancelled":  false,
+                      "PromptTokens":  0,
+                      "FirstTokenId":  -1,
+                      "DiagnosticLoggingMs":  0,
+                      "StopTokenId":  -1
+                  },
+    "Timestamp":  "2026-10-18T15:05:59.3100659-04:00",
+    "Prompt":  "Write a short poem about token generation. Exactly 4 lines.",
+    "Model":  "G:\\~dev\\rawrxd\\models\\phi3-mini-Q2_K.gguf",
+    "MaxTokens":  64
+}

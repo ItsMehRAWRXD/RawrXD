@@ -185,36 +185,56 @@ constexpr uint32_t MODULES_MAX = 3052;
 constexpr uint32_t CLI_ONLY   = 0;
 
 // ============================================================================
-// RELOCATED CATEGORIES (previously collided with 9xxx ranges)
+// RELOCATED CATEGORIES (previously collided with 9xxx ranges, then 11xxx)
 // ============================================================================
+//
+// These categories originally sat in the 11000-11650 range. That range is
+// claimed by Win32IDE::routeCommand for unrelated features (the 11000 band is
+// the Distributed Pipeline Orchestrator, 11500 is Telemetry Export), so a
+// command registered there was dispatched to the wrong IDE action - e.g.
+// "!model_list" ran "Pipeline: Submit Task".
+//
+// They now live in a dedicated SSOT-owned band that routeCommand does not
+// claim. A command in this band is dispatched through the SSOT handler, which
+// performs the work and reports the result through ctx.output (the IDE output
+// panel) instead of bouncing a WM_COMMAND round-trip through the IDE.
+//
+// Keep this band clear of every band listed above. Adding a command here
+// requires: the registry entry in command_registry.hpp, the handler in
+// ssot_handlers.cpp and ssot_handlers_ext.cpp, and the beacon entries in
+// ssot_beacon.symbols.txt and ssot_beacon_table.inc.
 
-// Model Management (range 11001-11050)
-constexpr uint32_t MODEL_MIN  = 11001;
-constexpr uint32_t MODEL_MAX  = 11050;
+// SSOT-owned band (range 10920-10933)
+constexpr uint32_t SSOT_MIN = 10920;
+constexpr uint32_t SSOT_MAX = 10933;
 
-// Disk Recovery    (range 11100-11150)
-constexpr uint32_t DISK_MIN   = 11100;
-constexpr uint32_t DISK_MAX   = 11150;
+// Model Management (range 10920-10924)
+constexpr uint32_t MODEL_MIN  = 10920;
+constexpr uint32_t MODEL_MAX  = 10924;
 
-// Performance Governance (range 11200-11250)
-constexpr uint32_t PERFGOV_MIN = 11200;
-constexpr uint32_t PERFGOV_MAX = 11250;
+// Disk Recovery    (range 10925-10926)
+constexpr uint32_t DISK_MIN   = 10925;
+constexpr uint32_t DISK_MAX   = 10926;
 
-// Marketplace & Extensions (range 11300-11350)
-constexpr uint32_t MARKETPLACE_MIN = 11300;
-constexpr uint32_t MARKETPLACE_MAX = 11350;
+// Performance Governance (range 10927-10928)
+constexpr uint32_t PERFGOV_MIN = 10927;
+constexpr uint32_t PERFGOV_MAX = 10928;
 
-// Embeddings & Vectors (range 11400-11450)
-constexpr uint32_t EMBED_MIN  = 11400;
-constexpr uint32_t EMBED_MAX  = 11450;
+// Marketplace & Extensions (range 10929-10930)
+constexpr uint32_t MARKETPLACE_MIN = 10929;
+constexpr uint32_t MARKETPLACE_MAX = 10930;
 
-// Vision & Image Analysis (range 11500-11550)
-constexpr uint32_t VISION_MIN = 11500;
-constexpr uint32_t VISION_MAX = 11550;
+// Embeddings & Vectors (range 10931-10931)
+constexpr uint32_t EMBED_MIN  = 10931;
+constexpr uint32_t EMBED_MAX  = 10931;
 
-// Prompt Engine    (range 11600-11650)
-constexpr uint32_t PROMPT_MIN = 11600;
-constexpr uint32_t PROMPT_MAX = 11650;
+// Vision & Image Analysis (range 10932-10932)
+constexpr uint32_t VISION_MIN = 10932;
+constexpr uint32_t VISION_MAX = 10932;
+
+// Prompt Engine    (range 10933-10933)
+constexpr uint32_t PROMPT_MIN = 10933;
+constexpr uint32_t PROMPT_MAX = 10933;
 
 } // namespace RawrXD::Ranges
 

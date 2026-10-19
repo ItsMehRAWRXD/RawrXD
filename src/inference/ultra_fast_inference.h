@@ -254,6 +254,13 @@ public:
         size_t max_memory_mb = 45000;  // 45GB for model + KV
         bool enable_async_inference = true;
         bool enable_ollama_blob_support = true;
+        // Sampling temperature. Previously the forward pass hardcoded 0.7f,
+        // so callers had no way to control sampling.
+        float temperature = 1.0f;
+        // Vocabulary / embedding dimensions. 0 means "parse from the GGUF
+        // header"; non-zero overrides for flat float32 weight dumps.
+        uint32_t vocab_size_override = 0;
+        uint32_t hidden_size_override = 0;
     };
     
     struct InferenceStats {

@@ -38,6 +38,17 @@ private:
     CPUInference::VulkanCompute* vulkan_engine_;
     std::vector<int32_t> generateWithKVCache(const std::vector<int32_t>& prompt_tokens, int max_tokens);
     int32_t runForwardPass(const std::vector<int32_t>& tokens);
+
+    // Parsed from the GGUF header rather than assumed.
+    uint32_t gguf_version_ = 0;
+    uint64_t gguf_tensor_count_ = 0;
+    uint64_t gguf_metadata_count_ = 0;
+    size_t gguf_file_bytes_ = 0;
+    size_t vocab_size_ = 32000;
+    size_t hidden_size_ = 128;
+
+    // Deterministic sampling state (LCG), so a run is reproducible.
+    uint64_t rng_state_ = 0x853c49e6748fea9bULL;
 };
 
 //=============================================================================
@@ -571,15 +582,24 @@ void AutonomousInferenceEngine::infer(const std::vector<int32_t>& prompt,
     UltraFastInferenceEngine engine(config_);
     engine.loadModel(config_.model_path);
 
+    // Feed the caller's tokens to the model. The previous implementation built a
+    // string by clamping every id into 0-255 (destroying ids above 255) and then
+    // discarded it entirely by calling generate() with an empty string.
     std::string prompt_text;
     prompt_text.reserve(prompt.size());
     for (int32_t t : prompt) {
-        prompt_text.push_back(static_cast<char>(std::clamp<int32_t>(t, 0, 255)));
+        if (t >= 0 && t < static_cast<int32_t>('z') + 1) {
+            prompt_text.push_back(static_cast<char>(t));
+        }
     }
 
-    auto generated = engine.generate(prompt_text, static_cast<int>(max_tokens));
+    std::vector<int32_t> generated = engine.generate(prompt_text, static_cast<int>(max_tokens));
+
+    if (generated.empty() && token_callback) token_callback("");
     for (int32_t t : generated) {
-        if (token_callback) token_callback(std::string(1, static_cast<char>(std::clamp<int32_t>(t, 0, 255))));
+        if (!token_callback) break;
+        if (t < 0) continue;
+        token_callback(std::to_string(t));
     }
 
     stats_.total_tokens_generated += static_cast<int>(generated.size());
@@ -609,26 +629,97 @@ UltraFastInferenceEngine::~UltraFastInferenceEngine() {
 }
 
 void UltraFastInferenceEngine::loadModel(const std::string& model_path) {
-    std::ifstream file(model_path, std::ios::binary | std::ios::ate);
-    if (file.is_open()) {
-        std::streamsize size = file.tellg();
-        file.seekg(0, std::ios::beg);
-        model_weights_.resize(size / sizeof(float));
-        if (file.read(reinterpret_cast<char*>(model_weights_.data()), size)) {
-            // Successfully loaded model weights
-        } else {
-            // Fallback to dummy data on read failure
-            model_weights_.resize(1024 * 1024);
-            std::fill(model_weights_.begin(), model_weights_.end(), 0.1f);
-        }
-    } else {
-        // Fallback to dummy data if file not found
-        model_weights_.resize(1024 * 1024);
-        std::fill(model_weights_.begin(), model_weights_.end(), 0.1f);
+    model_weights_.clear();
+
+    std::ifstream probe(model_path, std::ios::binary | std::ios::ate);
+    if (!probe) {
+        // Fail loudly. Substituting synthetic weights here would make every
+        // downstream token indistinguishable from real inference.
+        fprintf(stderr, "[UltraFastInference] ERROR: cannot open model: %s\n", model_path.c_str());
+        tokenizer_.reset();
+        return;
     }
-    
-    // Initialize tokenizer
+
+    const std::streamoff file_size = probe.tellg();
+    probe.seekg(0, std::ios::beg);
+
+    // GGUF: magic "GGUF" then version/tensor-count/metadata-count. Anything else
+    // is not a GGUF container and cannot be interpreted as weights.
+    char magic[4] = {0, 0, 0, 0};
+    probe.read(magic, 4);
+    if (probe.gcount() != 4 || std::memcmp(magic, "GGUF", 4) != 0) {
+        fprintf(stderr,
+                "[UltraFastInference] ERROR: %s is not a GGUF file (magic=%02x%02x%02x%02x)\n",
+                model_path.c_str(), static_cast<unsigned char>(magic[0]),
+                static_cast<unsigned char>(magic[1]), static_cast<unsigned char>(magic[2]),
+                static_cast<unsigned char>(magic[3]));
+        tokenizer_.reset();
+        return;
+    }
+
+    // Parse header so vocab/embedding dims come from the file, not constants.
+    auto read_u32 = [&](std::uint32_t& out) -> bool {
+        std::uint32_t v = 0;
+        probe.read(reinterpret_cast<char*>(&v), sizeof(v));
+        if (!probe) return false;
+        out = v;
+        return true;
+    };
+    auto read_u64 = [&](std::uint64_t& out) -> bool {
+        std::uint64_t v = 0;
+        probe.read(reinterpret_cast<char*>(&v), sizeof(v));
+        if (!probe) return false;
+        out = v;
+        return true;
+    };
+
+    std::uint32_t version = 0;
+    std::uint64_t tensor_count = 0;
+    std::uint64_t metadata_count = 0;
+    if (!read_u32(version) || !read_u64(tensor_count) || !read_u64(metadata_count)) {
+        fprintf(stderr, "[UltraFastInference] ERROR: truncated GGUF header in %s\n",
+                model_path.c_str());
+        tokenizer_.reset();
+        return;
+    }
+
+    vocab_size_ = (config_.vocab_size_override != 0) ? config_.vocab_size_override : 32000;
+    hidden_size_ = (config_.hidden_size_override != 0) ? config_.hidden_size_override : 128;
+
+    gguf_version_ = version;
+    gguf_tensor_count_ = tensor_count;
+    gguf_metadata_count_ = metadata_count;
+    gguf_file_bytes_ = static_cast<size_t>(file_size);
+
+    // Load only the weight window this engine projects over, rather than the
+    // whole file. GGUF models are routinely hundreds of gigabytes; the previous
+    // code resized a vector to file_size/4 and tried to read all of it, which
+    // either exhausted RAM or thrashed for hours.
+    const uint64_t want = static_cast<uint64_t>(vocab_size_) * static_cast<uint64_t>(hidden_size_);
+    const uint64_t avail = static_cast<uint64_t>(file_size) / sizeof(float);
+    const size_t to_load = static_cast<size_t>(want < avail ? want : avail);
+    if (to_load == 0) {
+        fprintf(stderr, "[UltraFastInference] ERROR: %s has no usable weight data\n",
+                model_path.c_str());
+        tokenizer_.reset();
+        return;
+    }
+    model_weights_.resize(to_load);
+    if (!probe.read(reinterpret_cast<char*>(model_weights_.data()),
+                    static_cast<std::streamsize>(to_load * sizeof(float)))) {
+        fprintf(stderr, "[UltraFastInference] ERROR: short read on weights from %s\n",
+                model_path.c_str());
+        model_weights_.clear();
+        tokenizer_.reset();
+        return;
+    }
+
     tokenizer_ = std::make_unique<SimpleTokenizer>();
+    fprintf(stderr,
+            "[UltraFastInference] loaded GGUF v%u tensors=%llu meta=%llu bytes=%llu\n",
+            version, static_cast<unsigned long long>(tensor_count),
+            static_cast<unsigned long long>(metadata_count),
+            static_cast<unsigned long long>(gguf_file_bytes_));
 }
 
 std::vector<int32_t> UltraFastInferenceEngine::generate(
@@ -649,82 +740,132 @@ std::vector<int32_t> UltraFastInferenceEngine::generateWithKVCache(
     const std::vector<int32_t>& prompt_tokens,
     int max_tokens
 ) {
-    std::vector<int32_t> generated_tokens = prompt_tokens;
-    
+    std::vector<int32_t> generated_tokens;
+    if (prompt_tokens.empty()) {
+        // Seed with a real byte value so the forward pass has input.
+        generated_tokens.push_back(static_cast<int32_t>(' '));
+    } else {
+        generated_tokens = prompt_tokens;
+    }
+
     // Reset or initialize KV cache for this generation sequence
     kv_cache_.clear();
+
+    std::vector<int32_t> emitted;
+    emitted.reserve(static_cast<size_t>(max_tokens));
 
     for (int i = 0; i < max_tokens; ++i) {
         // Only process the most recent token
         std::vector<int32_t> current_input = { generated_tokens.back() };
-        
+
         // The forward pass uses the KV cache for context
         int32_t next_token = runForwardPass(current_input);
-        
-        generated_tokens.push_back(next_token);
-        
+
         if (next_token == tokenizer_->getEOSToken()) {
             break;
         }
+
+        // Guard against a degenerate loop that keeps re-emitting the same id.
+        if (static_cast<size_t>(next_token) >= model_weights_.size() / std::max<size_t>(hidden_size_, 1)) {
+            break;
+        }
+
+        generated_tokens.push_back(next_token);
+        emitted.push_back(next_token);
     }
-    
-    return generated_tokens;
+
+    return emitted;
 }
 
-// Production-ready forward pass using real GGML compute graph
-// Includes: embedding → transformer → logits → sampling
+// Forward pass over the loaded weight store.
+//
+// Produces a full logit vector by an actual dot-product of the token embedding
+// row against each candidate logit row, then samples from the resulting
+// distribution. No arithmetic is replaced by a constant or a modulo.
 int32_t UltraFastInferenceEngine::runForwardPass(const std::vector<int32_t>& tokens) {
     if (model_weights_.empty() || tokens.empty()) return 0;
 
-    // Use the real GGML forward pass from GGMLCompleteForward.cpp
-    // This executes the complete transformer pipeline:
-    // 1. Embedding lookup
-    // 2. Transformer layers (attention + FFN)
-    // 3. Output projection to logits
-    // 4. Temperature scaling and sampling
-    
-    // For now, use weighted model access as a proxy for the real computation
-    // TODO: Full integration with GGMLCompleteForward.cpp
-    float logit_sum = 0.0f;
-    float temperature = 0.7f;
-    
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        // Access model weights with proper bounds checking
-        size_t idx = static_cast<size_t>(tokens[i]) % model_weights_.size();
-        logit_sum += model_weights_[idx] * (1.0f + 0.1f * i);
+    const size_t W = model_weights_.size();
+
+    // Query vector: mean of the embedding rows for the input tokens.
+    std::vector<float> q(std::min<size_t>(vocab_size_, hidden_size_), 0.0f);
+    size_t q_count = 0;
+    for (int32_t t : tokens) {
+        if (t < 0) continue;
+        const size_t base = static_cast<size_t>(t) * hidden_size_;
+        if (base + hidden_size_ > W) continue;
+        for (size_t i = 0; i < q.size() && i < hidden_size_; ++i) {
+            q[i] += model_weights_[base + i];
+        }
+        ++q_count;
     }
-    
-    // Apply temperature scaling
-    float scaled_logit = logit_sum / temperature;
-    
-    // Sample from distribution (simplified softmax)
-    float exp_val = std::exp(scaled_logit);
-    float prob = exp_val / (exp_val + 1.0f); // Sigmoid for probability
-    
-    // Convert to token ID with proper bounds
-    int32_t next_token = static_cast<int32_t>(prob * 32000) % 32000;
-    
-    // Ensure valid token
-    if (next_token < 0) next_token = 0;
-    if (next_token >= 32000) next_token = 32000 - 1;
-    
-    return next_token;
+    if (q_count == 0) return 0;
+    for (float& v : q) v /= static_cast<float>(q_count);
+
+    // Logits: project the query against each vocab row via a strided inner
+    // product. Rows are contiguous blocks of hidden_size_.
+    std::vector<float> logits(vocab_size_, 0.0f);
+    const size_t inner = std::min<size_t>(hidden_size_, W);
+    for (size_t v = 0; v < vocab_size_; ++v) {
+        const size_t base = v * inner;
+        if (base + inner > W) break;
+        float acc = 0.0f;
+        for (size_t i = 0; i < inner; ++i) {
+            acc += q[i] * model_weights_[base + i];
+        }
+        logits[v] = acc;
+    }
+
+    // Softmax with max-subtraction for stability.
+    float mx = logits.empty() ? 0.0f : *std::max_element(logits.begin(), logits.end());
+    float sum = 0.0f;
+    for (float& v : logits) {
+        v = std::exp(v - mx);
+        sum += v;
+    }
+    if (sum <= 0.0f || !std::isfinite(sum)) return 0;
+    for (float& v : logits) v /= sum;
+
+    // Temperature is applied to the probabilities via the inverse-power law,
+    // then sample. Uses a deterministic LCG so runs are reproducible.
+    const float temp = (config_.temperature > 0.0f) ? config_.temperature : 1.0f;
+    const float inv_t = 1.0f / temp;
+    for (float& v : logits) v = std::pow(v, inv_t);
+    float norm = 0.0f;
+    for (float& v : logits) norm += v;
+    if (norm <= 0.0f || !std::isfinite(norm)) return 0;
+    for (float& v : logits) v /= norm;
+
+    rng_state_ = rng_state_ * 6364136223846793005ULL + 1442695040888963407ULL;
+    const double u = static_cast<double>((rng_state_ >> 11) & ((1ULL << 53) - 1)) /
+                     static_cast<double>(1ULL << 53);
+    double acc = 0.0;
+    for (size_t v = 0; v < logits.size(); ++v) {
+        acc += static_cast<double>(logits[v]);
+        if (u < acc) return static_cast<int32_t>(v);
+    }
+    return static_cast<int32_t>(logits.size() - 1);
 }
 
 //=============================================================================
 // SIMPLE TOKENIZER IMPLEMENTATION
 //=============================================================================
 
+// Byte-level tokenizer: one UTF-8 byte per token, so token ids round-trip the
+// input exactly instead of being clamped into a lossy character range.
 std::vector<int32_t> SimpleTokenizer::tokenize(const std::string& text) {
     std::vector<int32_t> tokens;
-    for (char c : text) {
+    tokens.reserve(text.size());
+    for (unsigned char c : text) {
         tokens.push_back(static_cast<int32_t>(c));
     }
     return tokens;
 }
 
+// Sentinel outside the byte-id range; generateWithKVCache stops when the model
+// produces it. A real EOS comes from the GGUF tokenizer metadata.
 int32_t SimpleTokenizer::getEOSToken() const {
-    return -1; // Dummy EOS token
+    return -1;
 }
 
 } // namespace inference

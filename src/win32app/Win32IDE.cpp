@@ -1005,6 +1005,27 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_GGUF_INSPECTOR, L"GGUF Model &Inspector");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
 
+    // Tier 2: Editor Enhancements submenu
+    HMENU hTier2Menu = CreatePopupMenu();
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_TERMINAL_NEW, L"&New Terminal Tab");
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_TERMINAL_CLOSE, L"&Close Terminal Tab");
+    AppendMenuW(hTier2Menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_HOVER, L"&Show Hover Tooltip");
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_SIGHELP, L"&Signature Help");
+    AppendMenuW(hTier2Menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_OUTLINE_REFRESH, L"&Refresh Outline");
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_OUTLINE_FILTER, L"&Filter Outline");
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_OUTLINE_SORT, L"&Sort Outline");
+    AppendMenuW(hTier2Menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_FIND_REFS, L"&Find References");
+    AppendMenuW(hTier2Menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_CODELENS_TOGGLE, L"&Toggle CodeLens");
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_CODELENS_REFRESH, L"&Refresh CodeLens");
+    AppendMenuW(hTier2Menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_INLAY_TOGGLE, L"&Toggle Inlay Hints");
+    AppendMenuW(hTier2Menu, MF_STRING, IDM_TIER2_INLAY_REFRESH, L"&Refresh Inlay Hints");
+    AppendMenuW(hToolsMenu, MF_POPUP, (UINT_PTR)hTier2Menu, L"&Editor Enhancements");
+
     // Voice Chat submenu (Unicode — Qt removal / pure Win32)
     HMENU hVoiceMenu = CreatePopupMenu();
     AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_TOGGLE_PANEL, L"Show/Hide &Voice Panel\tCtrl+Shift+U");
@@ -1137,6 +1158,12 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hGitMenu, MF_STRING, IDM_GIT_PUSH, L"&Push");
     AppendMenuW(hGitMenu, MF_STRING, IDM_GIT_PULL, L"P&ull");
     AppendMenuW(hGitMenu, MF_STRING, IDM_GIT_PANEL, L"&Git Panel\tCtrl+Shift+G");
+    AppendMenuW(hGitMenu, MF_SEPARATOR, 0, nullptr);
+    // Tier 2: Git Diff Viewer
+    AppendMenuW(hGitMenu, MF_STRING, IDM_TIER2_GITDIFF, L"&Side-by-Side Diff\tCtrl+Shift+D");
+    AppendMenuW(hGitMenu, MF_STRING, IDM_TIER2_GITDIFF_PREV, L"&Prev Diff\tAlt+Up");
+    AppendMenuW(hGitMenu, MF_STRING, IDM_TIER2_GITDIFF_NEXT, L"&Next Diff\tAlt+Down");
+    AppendMenuW(hGitMenu, MF_STRING, IDM_TIER2_GITDIFF_CLOSE, L"&Close Diff");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hGitMenu, L"&Git");
 
     // Agent menu (Unicode — Qt removal / pure Win32)
@@ -5121,7 +5148,23 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     info += "Context: " + std::to_string(m_currentModelMetadata.context_length) + "\n";
     info += "Vocab: " + std::to_string(m_currentModelMetadata.vocab_size) + "\n";
     info += "Current Memory: " + std::to_string(currentMemory / 1024 / 1024) + " MB\n";
-    info += "Max Memory: ~500 MB (zone-based streaming)\n\n";
+    
+    // Live static residency bounds from GGUF tensor directory (RAWRXD_GGUF_DYNAMIC_GEOMETRY_001)
+    Deep2::GgufDynamicGeometry geom{};
+    bool geomOk = Deep2::GgufResolveDynamicGeometry(filepath.c_str(), &geom);
+    if (geomOk && Deep2::GgufComputeStaticResidency(filepath.c_str(), &geom)) {
+        info += "Min Weight Residency: " + std::to_string(geom.mMinPinEmbedAndHead / 1024 / 1024) + " MB\n";
+        info += "Ring Depth 1 Peak: " + std::to_string(geom.ringK1 / 1024 / 1024) + " MB\n";
+        info += "Encoded Weights: " + std::to_string(geom.totalWeightBytes / 1024 / 1024 / 1024) + " GB\n";
+        double maxRed = geom.totalWeightBytes > 0 ? 
+            (double)geom.totalWeightBytes / (double)geom.ringK1 : 0.0;
+        char redBuf[64];
+        snprintf(redBuf, sizeof(redBuf), "Max Reduction: %.1fx", maxRed);
+        info += redBuf;
+        info += "\n";
+    } else {
+        info += "Max Memory: ~500 MB (zone-based streaming)\n\n";
+    }
 
     auto zones = m_ggufLoader->GetLoadedZones();
     if (!zones.empty())
@@ -5192,7 +5235,23 @@ std::string Win32IDE::getModelInfo() const
     info += "📊 Memory Status:\n";
     info += "  Current RAM: " + std::to_string(currentMemory / 1024 / 1024) + " MB\n";
     info += "  Max Per Zone: ~400 MB\n";
-    info += "  Total Capacity: ~500 MB (92x reduction from full load!)\n";
+    
+    // Live static residency bounds from GGUF tensor directory (RAWRXD_GGUF_DYNAMIC_GEOMETRY_001)
+    Deep2::GgufDynamicGeometry geom{};
+    bool geomOk = Deep2::GgufResolveDynamicGeometry(m_loadedModelPath.c_str(), &geom);
+    if (geomOk && Deep2::GgufComputeStaticResidency(m_loadedModelPath.c_str(), &geom)) {
+        info += "  Min Weight Residency: " + std::to_string(geom.mMinPinEmbedAndHead / 1024 / 1024) + " MB\n";
+        info += "  Ring Depth 1 Peak: " + std::to_string(geom.ringK1 / 1024 / 1024) + " MB\n";
+        info += "  Encoded Weights: " + std::to_string(geom.totalWeightBytes / 1024 / 1024 / 1024) + " GB\n";
+        double maxRed = geom.totalWeightBytes > 0 ? 
+            (double)geom.totalWeightBytes / (double)geom.ringK1 : 0.0;
+        char redBuf[64];
+        snprintf(redBuf, sizeof(redBuf), "  Max Reduction: %.1fx", maxRed);
+        info += redBuf;
+        info += "\n";
+    } else {
+        info += "  Total Capacity: ~500 MB (92x reduction from full load!)\n";
+    }
     info += "  Loaded Zones: " + std::to_string(loadedZones.size()) + "\n\n";
 
     if (!loadedZones.empty())
@@ -7734,6 +7793,8 @@ LRESULT CALLBACK Win32IDE::LineNumberProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
             RECT rc;
             GetClientRect(hwnd, &rc);
             ide->paintLineNumbers(hdc, rc);
+            // Tier 3 Cosmetics: paint code folding controls (+/- buttons), lightbulb, word wrap indicators
+            ide->paintTier3CosmeticsGutter(hdc, rc);
         }
         EndPaint(hwnd, &ps);
         return 0;
@@ -9495,6 +9556,17 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         if (hdc)
                         {
                             pThis->renderGhostText(hdc);
+                            ReleaseDC(hwnd, hdc);
+                        }
+                    }
+                    // Tier 3 Cosmetics: paint indentation guides, whitespace glyphs on editor
+                    {
+                        RECT editorRect;
+                        GetClientRect(hwnd, &editorRect);
+                        HDC hdc = GetDC(hwnd);
+                        if (hdc)
+                        {
+                            pThis->paintTier3CosmeticsEditor(hdc, editorRect);
                             ReleaseDC(hwnd, hdc);
                         }
                     }

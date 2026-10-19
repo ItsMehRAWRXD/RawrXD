@@ -6,6 +6,8 @@
 #include "cpu_inference_engine.h"
 #include "deep2/Deep2Engine.h"
 #include "deep2/Tokenizer.hpp"
+#include "deep2/RawrRunSession.hpp"
+#include "deep2/lavapath/ProductRun.hpp"
 #include "agentic/BoundedAgentLoop.h"
 #include "agentic/AgentToolHandlers.h"
 #include <chrono>
@@ -214,25 +216,50 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
     ExecutionResult result;
     result.status = ExecutionResult::Status::SUCCESS;
     result.statusMessage = "Inference complete";
-    
-    // Use Deep2Engine for actual inference
+
+    // Use the canonical ProductRun pipeline (same path as rawr run) so that
+    // generated text is actually propagated back to the caller.
     try {
         ::Deep2::Deep2Engine engine;
-        if (!engine.loadModel(req.modelPath)) {
+
+        // Load model via the same authority as rawr run (loadModel + initialize)
+        ::Deep2::rawr_run::RunWitness witness{};
+        if (!::Deep2::rawr_run::OpenSession(engine, req.modelPath.c_str(), witness)) {
             result.status = ExecutionResult::Status::FAILED_RUNTIME;
-            result.statusMessage = "Failed to load model for inference";
+            result.statusMessage = "Failed to open model session for inference";
             return result;
         }
-        
-        // Tokenize prompt
-        auto tokens = engine.tokenize(req.prompt);
-        result.telemetry.tokensPrompt = (uint32_t)tokens.size();
-        
-        // Generate using high-level API
-        std::string response = engine.generateText(req.prompt, req.maxTokens);
-        result.generatedText = response;
-        result.telemetry.tokensGenerated = (uint32_t)(response.size() / 4); // Approximate
-        
+        result.telemetry.tokensPrompt = (uint32_t)witness.nTokensEmitted;
+
+        // Run generation through ProductRun which properly accumulates text
+        // via the generateStream callback.
+        rawr::product_run::ProductRequest pr{};
+        pr.modelAlias = witness.modelName.empty() ? req.modelPath.c_str()
+                                                  : witness.modelName.c_str();
+        pr.prompt = req.prompt.c_str();
+        pr.maxTokens = req.maxTokens ? req.maxTokens : 256u;
+        pr.engine = &engine;
+        pr.keepOpen = 0;
+        pr.stream = 0;
+        pr.onPiece = [](const std::string&) -> bool { return true; };
+
+        auto presult = rawr::product_run::ProductRun(pr);
+
+        if (presult.text.empty()) {
+            result.status = ExecutionResult::Status::FAILED_RUNTIME;
+            result.statusMessage = "Generation produced no output tokens";
+            ExecutionResult::ErrorInfo err;
+            err.category = "RUNTIME";
+            err.component = "SovereignRuntime::executeInference";
+            err.message = "ProductRun returned empty generated text";
+            err.context = nlohmann::json::object();
+            result.error = std::move(err);
+            return result;
+        }
+
+        result.generatedText = presult.text;
+        result.telemetry.tokensGenerated = presult.generatedTokens;
+
     } catch (const std::exception& e) {
         result.status = ExecutionResult::Status::FAILED_RUNTIME;
         result.statusMessage = std::string("Inference error: ") + e.what();
@@ -244,7 +271,7 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
         err.context = nlohmann::json::object();
         result.error = std::move(err);
     }
-    
+
     return result;
 }
 

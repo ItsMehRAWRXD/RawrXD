@@ -49,9 +49,10 @@ inline bool SealLadderOnLoad(const Deep2::GGUFLoadResult& load, const char* path
     const bool gemma = a.geom.ARCH.rfind("gemma", 0) == 0;
     const bool nemo = a.geom.ARCH.find("nemotron") != std::string::npos;
     const bool k2 = a.geom.ARCH == "deepseek2" || a.geom.ARCH == "deepseek";
+    const bool qwen = a.geom.ARCH.find("qwen") != std::string::npos;
     if (gemma) {
         if (!BindGemma4Schema(load, a.geom, path, a.schema) || !a.schema.PASS) return false;
-    } else if (nemo || k2) {
+    } else if (nemo || k2 || qwen) {
         /* Hybrid/K2 multi-shard: dense llama schema does not bind on shard0. */
         a.schema = SchemaSeal{};
         a.schema.geom = a.geom;
@@ -60,16 +61,16 @@ inline bool SealLadderOnLoad(const Deep2::GGUFLoadResult& load, const char* path
         a.schema.PASS = 1;
         a.schema.VOCAB = load.metadata.vocabSize;
         a.schema.BLOCKED_AT = "NONE";
-        a.schema.REASON = k2 ? "K2_MLA_SCHEMA_DEFER" : "NEMOTRON_H_HYBRID_SCHEMA_DEFER";
+        a.schema.REASON = k2 ? "K2_MLA_SCHEMA_DEFER" : (qwen ? "QWEN_HYBRID_SCHEMA_DEFER" : "NEMOTRON_H_HYBRID_SCHEMA_DEFER");
         a.quant = QuantDispatchSeal{};
         a.quant.geom = a.geom;
         a.quant.ONE_LOCAL_MODEL_AUTHORITY = 1;
         a.quant.QUANT_FROM_TENSOR = 1;
         a.quant.PASS = 1;
         a.quant.BLOCKED_AT = "NONE";
-        a.quant.REASON = k2 ? "K2_MLA_QUANT_DEFER" : "NEMOTRON_H_QUANT_DEFER";
+        a.quant.REASON = k2 ? "K2_MLA_QUANT_DEFER" : (qwen ? "QWEN_HYBRID_QUANT_DEFER" : "NEMOTRON_H_QUANT_DEFER");
         std::fprintf(stderr, "%s=1 layers=%u vocab=%u\n",
-                     k2 ? "K2_MLA_SCHEMA_DEFER" : "NEMOTRON_H_SCHEMA_DEFER",
+                     k2 ? "K2_MLA_SCHEMA_DEFER" : (qwen ? "QWEN_HYBRID_SCHEMA_DEFER" : "NEMOTRON_H_SCHEMA_DEFER"),
                      a.geom.LAYERS, a.schema.VOCAB);
         if (!SealTokEog(load, a.geom, a.schema, a.tok) || !a.tok.PASS) return false;
         a.PASS = 1;

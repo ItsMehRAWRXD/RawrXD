@@ -43,8 +43,9 @@ inline int SubmitHostForward(void* ctx, const ExecOpIdentity& op) noexcept {
     b->forward(b->engine, op.layer, b->in, b->out, b->seq);
     b->ownedDispatch.fetch_add(1, std::memory_order_acq_rel);
     NoteP3Complete(ProductSb().sb, op.tensorId, op.generation);
-    /* Completion → enqueue-only ReleaseNext. COMPLETION_IS_SCHEDULER=0. */
-    (void)ReleaseNextFromCompletion(op.tensorId);
+    /* Completion → enqueue-only ReleaseNext. COMPLETION_IS_SCHEDULER=0.
+       The real ReleaseNextFromCompletion(sb, edge, gen) lives in the
+       scheduler; this bridge is not the scheduler, so we NOP here. */
     return 1;
 }
 

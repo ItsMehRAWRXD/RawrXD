@@ -195,6 +195,31 @@ private:
     };
     std::vector<LayerWeights> layer_weights_;
 
+    // Host-side weights backing the fused kernels. The GPU pointers above are
+    // residency descriptors; the math runs against these host copies so the
+    // kernels perform real computation rather than copying their input.
+    std::vector<float> w_qkv_;        // [hidden_dim][qkv_dim]
+    std::vector<float> w_attn_out_;  // [hidden_dim][hidden_dim]
+    std::vector<float> w_ffn_gate_;  // [hidden_dim][intermediate_dim]
+    std::vector<float> w_ffn_up_;    // [hidden_dim][intermediate_dim]
+    std::vector<float> w_ffn_down_;  // [intermediate_dim][hidden_dim]
+    std::vector<float> w_router_;    // [hidden_dim][num_experts]
+    std::vector<float> w_experts_;   // [num_experts][hidden_dim][intermediate_dim]
+    std::vector<float> w_lm_head_;   // [vocab_size][hidden_dim], lazily built
+
+    // KV cache: [seq][kv_head][head_dim]
+    std::vector<float> k_cache_;
+    std::vector<float> v_cache_;
+    uint32_t kv_len_ = 0;
+
+    // Scratch buffers reused across steps.
+    std::vector<float> scratch_q_;
+    std::vector<float> scratch_attn_;
+    std::vector<float> scratch_hidden_;
+    std::vector<float> scratch_ffn_;   // [intermediate_dim]
+
+    void ResetKvCache() noexcept;
+
     // Internal fused kernels
     void AttentionFused(const float* qkv, uint32_t seq_pos,
                         float* out) noexcept;

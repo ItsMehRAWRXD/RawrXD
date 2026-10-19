@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -17,6 +18,16 @@ inline bool FileOk(const char* p) {
 #ifdef _WIN32
     DWORD a = GetFileAttributesA(p);
     return a != INVALID_FILE_ATTRIBUTES && !(a & FILE_ATTRIBUTE_DIRECTORY);
+#else
+    (void)p;
+    return false;
+#endif
+}
+
+inline bool DirOk(const char* p) {
+#ifdef _WIN32
+    DWORD a = GetFileAttributesA(p);
+    return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
 #else
     (void)p;
     return false;
@@ -70,6 +81,47 @@ inline bool ManifestModelBlob(const char* manPath, std::string& outDigest) {
     return true;
 }
 
+/* Collect all tag names under a model directory in the Ollama manifests tree. */
+inline void CollectOllamaTags(const char* modelDir, std::vector<std::string>& outTags) {
+#ifdef _WIN32
+    char pat[MAX_PATH];
+    snprintf(pat, sizeof(pat), "%s\\*", modelDir);
+    WIN32_FIND_DATAA fd{};
+    HANDLE h = FindFirstFileA(pat, &fd);
+    if (h == INVALID_HANDLE_VALUE) return;
+    do {
+        if (fd.cFileName[0] == '.' &&
+            (fd.cFileName[1] == 0 ||
+             (fd.cFileName[1] == '.' && fd.cFileName[2] == 0)))
+            continue;
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            outTags.emplace_back(fd.cFileName);
+        }
+    } while (FindNextFileA(h, &fd));
+    FindClose(h);
+#endif
+}
+
+/* Try to resolve a model:tag → blob path. Returns true on success. */
+inline bool TryOllamaManifestTag(const char* root, const char* name,
+                                  const char* tag, std::string& outPath) {
+    char man[MAX_PATH];
+    std::snprintf(man, sizeof(man),
+                  "%s\\manifests\\registry.ollama.ai\\library\\%s\\%s",
+                  root, name, tag);
+    std::string dig;
+    if (!ManifestModelBlob(man, dig)) return false;
+    std::string hex = dig;
+    if (hex.rfind("sha256:", 0) == 0) hex = "sha256-" + hex.substr(7);
+    char blob[MAX_PATH];
+    std::snprintf(blob, sizeof(blob), "%s\\blobs\\%s", root, hex.c_str());
+    if (FileOk(blob)) {
+        outPath = blob;
+        return true;
+    }
+    return false;
+}
+
 inline bool ResolveOllamaLocalBlob(const char* aliasOrTag, std::string& outPath) {
     if (!aliasOrTag || !aliasOrTag[0]) return false;
     std::string a(aliasOrTag);
@@ -86,26 +138,34 @@ inline bool ResolveOllamaLocalBlob(const char* aliasOrTag, std::string& outPath)
         tag = a.substr(colon + 1);
     }
     const char* roots[] = {"F:\\OllamaModels", "F:\\OllamaModels\\models", nullptr};
-    for (int r = 0; roots[r]; ++r) {
-        char man[MAX_PATH];
-        std::snprintf(man, sizeof(man),
-                      "%s\\manifests\\registry.ollama.ai\\library\\%s\\%s",
-                      roots[r], name.c_str(), tag.c_str());
-        std::string dig;
-        if (!ManifestModelBlob(man, dig)) continue;
-        /* sha256:hex → blobs\sha256-hex */
-        std::string hex = dig;
-        if (hex.rfind("sha256:", 0) == 0) hex = "sha256-" + hex.substr(7);
-        char blob[MAX_PATH];
-        std::snprintf(blob, sizeof(blob), "%s\\blobs\\%s", roots[r], hex.c_str());
-        if (FileOk(blob)) {
-            outPath = blob;
-            return true;
+
+    /* If an explicit tag was given, try just that tag. */
+    if (colon != std::string::npos) {
+        for (int r = 0; roots[r]; ++r) {
+            if (TryOllamaManifestTag(roots[r], name.c_str(), tag.c_str(), outPath))
+                return true;
         }
-        std::snprintf(blob, sizeof(blob), "F:\\OllamaModels\\blobs\\%s", hex.c_str());
-        if (FileOk(blob)) {
-            outPath = blob;
+        return false;
+    }
+
+    /* No explicit tag: try "latest" first, then scan all available tags. */
+    for (int r = 0; roots[r]; ++r) {
+        if (TryOllamaManifestTag(roots[r], name.c_str(), "latest", outPath))
             return true;
+    }
+
+    /* :latest not found — enumerate every tag dir under this model name. */
+    for (int r = 0; roots[r]; ++r) {
+        char modelDir[MAX_PATH];
+        std::snprintf(modelDir, sizeof(modelDir),
+                      "%s\\manifests\\registry.ollama.ai\\library\\%s",
+                      roots[r], name.c_str());
+        if (!DirOk(modelDir)) continue;
+        std::vector<std::string> tags;
+        CollectOllamaTags(modelDir, tags);
+        for (const auto& t : tags) {
+            if (TryOllamaManifestTag(roots[r], name.c_str(), t.c_str(), outPath))
+                return true;
         }
     }
     return false;

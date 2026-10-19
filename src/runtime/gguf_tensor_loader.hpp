@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../model/model_context.h"
+#include "deep2/lavapath/ResidencyPlan.generated.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -165,6 +166,16 @@ private:
     int file_fd_ = -1;
 #endif
 
+    // Static residency plan from GGUF tensor directory (RAWRXD_GGUF_ROM_INTEGRITY_001)
+    Deep2::ResidencyPlan residency_plan_;
+    bool residency_plan_valid_ = false;
+    
+    /**
+     * Get the static residency plan (valid after successful Open).
+     */
+    const Deep2::ResidencyPlan& GetResidencyPlan() const { return residency_plan_; }
+    bool HasResidencyPlan() const { return residency_plan_valid_; }
+    
     // Tensor metadata from GGUF
     struct TensorMetadata {
         std::string name;

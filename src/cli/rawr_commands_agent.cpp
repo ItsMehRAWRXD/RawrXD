@@ -25,18 +25,24 @@ int CmdAgent(const CliArgs& a) {
     ResolveModel(a.model, ag.session.modelPath);
     SaveSession(ag.session);
     Diag("SESSION_CREATED=1\n");
-    Diag("agent session=%s workspace=%s auto=%s\n", ag.session.id.c_str(),
-         ag.session.workspace.c_str(), AutonomyName(a.autoLevel));
+    Diag("agent session=%s workspace=%s auto=%s model=%s\n",
+         ag.session.id.c_str(), ag.session.workspace.c_str(),
+         AutonomyName(a.autoLevel), a.model.c_str());
     AgentLiveWitness wit{};
-    int rc = RunAgentLoop(ag, a.autoLevel, 16, &wit, /*acceptSteer=*/true);
+    int rc = RunAgentLoop(ag, a.autoLevel, 32, &wit, /*acceptSteer=*/true, a.model);
     SaveSession(ag.session);
-    Diag("WORKSPACE_OPENED=%d\nFILES_READ=%d\nPLAN_CREATED=%d\n",
+    Diag("WORKSPACE_OPENED=%d FILES_READ=%d PLAN_CREATED=%d\n",
          wit.workspaceOpened, wit.filesRead, wit.planCreated);
-    Diag("PATCH_CREATED=%d\nPATCH_APPLIED=%d\nDIFF_RENDERED=%d\nUNDO_AVAILABLE=%d\n",
+    Diag("PATCH_CREATED=%d PATCH_APPLIED=%d DIFF_RENDERED=%d UNDO_AVAILABLE=%d\n",
          wit.patchCreated, wit.patchApplied, wit.diffRendered, wit.undoAvailable);
-    Diag("BUILD_STARTED=%d\nBUILD_COMPLETED=%d\nBUILD_EXIT_CODE_CAPTURED=%d\n",
+    Diag("BUILD_STARTED=%d BUILD_COMPLETED=%d BUILD_EXIT_CODE_CAPTURED=%d\n",
          wit.buildStarted, wit.buildCompleted, wit.buildExitCaptured);
-    Diag("AGENT_RESULT_EMITTED=%d\n", wit.agentResultEmitted);
+    Diag("AGENT_RESULT_EMITTED=%d AGENT_VERIFIED=%d\n",
+         wit.agentResultEmitted, wit.agentVerified);
+    Diag("MODEL_LOADED=%d MODEL_INFERENCE_CALLS=%d MODEL_SELECTED_TOOL=%d\n",
+         wit.modelLoaded, wit.modelInferenceCalls, wit.modelSelectedTool);
+    Diag("TOOL_EXECUTIONS=%d OBSERVATION_RETURNED=%d REPLAN_COUNT=%d\n",
+         wit.toolExecutions, wit.observationReturned, wit.replanCount);
     SealEvidence("G:\\~dev\\rawrxd\\evidence\\RAWRXD_PRODUCT_E2E_001",
                  "AGENT_LOOP", rc == 0 ? "PASS" : "FAIL");
     return rc == 0 ? ExitCode::Ok : ExitCode::ToolDenied;

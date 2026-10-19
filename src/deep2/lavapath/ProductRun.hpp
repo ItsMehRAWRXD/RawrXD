@@ -7,8 +7,12 @@
 #include "ProductTokenBudget.hpp"
 #include "RxRunStateHooks.hpp"
 #include "../StreamCorrupt.hpp"
+#include "../RawrAutoBackendPolicy.hpp"
 #include <cstdio>
+#include <cstring>
 #include <memory>
+#include <chrono>
+#include <string>
 
 namespace rawr::product_run {
 
@@ -44,7 +48,64 @@ inline Result ProductRun(const ProductRequest& req) {
         EmitReceipt(stderr, r);
         return r;
     }
-    TokenBudget budget = ResolveTokenBudget(req.maxTokens);
+    // ========================================================================
+    // AUTO-BACKEND POLICY: inspect model, measure resources, select backend
+    // ========================================================================
+    Deep2::AutoBackendController abc;
+    Deep2::ModelFit fit{};
+    Deep2::DeviceBudget budget{};
+    Deep2::ExecutionPolicy policy{};
+
+    // CLI/env overrides
+    if (const char* e = std::getenv("RAWR_FORCE_CPU")) policy.forceCPU = (e[0] == '1');
+    if (const char* e = std::getenv("RAWR_FORCE_GPU")) policy.forceGPU = (e[0] == '1');
+    if (const char* e = std::getenv("RAWR_NO_CPU_FALLBACK")) policy.allowCPUFallback = (e[0] != '1');
+    if (const char* e = std::getenv("RAWR_MIN_CPU_TPS")) policy.minimumCpuTPS = std::atof(e);
+    if (const char* e = std::getenv("RAWR_PREFILL_TIMEOUT_MS")) policy.prefillTimeoutMs = std::atof(e);
+    if (const char* e = std::getenv("RAWR_DECODE_TIMEOUT_MS")) policy.decodeTimeoutMs = std::atof(e);
+
+    // Inspect model
+    if (!abc.InspectModel(alias, fit)) {
+        r.failedStage = "INSPECT";
+        r.failedOwner = "GGUF_OPEN";
+        r.exitReason = "FAIL";
+        rt->alreadyGenerating.store(0);
+        EmitReceipt(stderr, r);
+        return r;
+    }
+
+    // Measure host budget
+    abc.MeasureHostBudget(budget);
+
+    // Measure GPU budget (preflight + Vulkan ICD)
+    abc.MeasureGpuBudget(budget);
+
+    // Select backend
+    auto decision = abc.Decide(fit, budget, policy);
+    fprintf(stderr,
+        "[AUTO_BACKEND] decision=%s reason=%s\n",
+        Deep2::BackendName(decision.backend), decision.reason.c_str());
+    fflush(stderr);
+
+    if (decision.backend == Deep2::Backend::Reject) {
+        r.failedStage = "BACKEND_SELECT";
+        r.failedOwner = "NO_FEASIBLE_BACKEND";
+        r.exitReason = decision.reason.c_str();
+        rt->alreadyGenerating.store(0);
+        EmitReceipt(stderr, r);
+        return r;
+    }
+
+    // Configure engine for selected backend
+    if (decision.backend == Deep2::Backend::CPU) {
+        rt->Eng().enableVulkan(false);
+    } else if (decision.backend == Deep2::Backend::VulkanPrimary ||
+               decision.backend == Deep2::Backend::VulkanDual ||
+               decision.backend == Deep2::Backend::MoEStreaming) {
+        rt->Eng().enableVulkan(true);
+    }
+
+    TokenBudget tokenBudget = ResolveTokenBudget(req.maxTokens);
     rxow::Reset();
     if (req.engine && !req.runtime) rt->BindExternal(req.engine, alias, nullptr);
     if (!rt->IsOpen() && !rt->OpenSession(alias)) {
@@ -66,7 +127,7 @@ inline Result ProductRun(const ProductRequest& req) {
     const char* prompt = (req.prompt && req.prompt[0]) ? req.prompt : "hi";
     int userCancel = 0;
     Deep2::StreamCorrupt_Clear();
-    RunDecodeStream(*rt, prompt, budget.effective, req.onPiece, r, userCancel);
+    RunDecodeStream(*rt, prompt, tokenBudget.effective, req.onPiece, r, userCancel);
     if (Deep2::StreamCorrupt()) {
         r.exitReason = "CORRUPT";
         r.productPass = 0;
@@ -87,8 +148,8 @@ inline Result ProductRun(const ProductRequest& req) {
     std::fprintf(stderr,
                  "REQUESTED_MAX_TOKENS=%u\nEFFECTIVE_MAX_TOKENS=%u\n"
                  "MAX_TOKENS_SOURCE=%s\n",
-                 budget.requested, budget.effective,
-                 MaxTokensSourceName(budget.source));
+                 tokenBudget.requested, tokenBudget.effective,
+                 MaxTokensSourceName(tokenBudget.source));
     rt->lastReceipt = r;
     rt->alreadyGenerating.store(0);
     if (!req.keepOpen) rt->CloseSession();

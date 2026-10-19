@@ -1,5 +1,5 @@
 // ============================================================================
-// command_registry.hpp — Single Source of Truth (SSOT) Command Registry
+// command_registry.hpp â€” Single Source of Truth (SSOT) Command Registry
 // ============================================================================
 // Architecture: C++20, Win32, no Qt, no exceptions
 //
@@ -28,7 +28,7 @@
 #include <string_view>
 
 // ============================================================================
-// COMMAND EXPOSURE — Where a command is accessible
+// COMMAND EXPOSURE â€” Where a command is accessible
 // ============================================================================
 
 enum class CmdExposure : uint8_t
@@ -40,7 +40,7 @@ enum class CmdExposure : uint8_t
 };
 
 // ============================================================================
-// COMMAND FLAGS — Behavioral metadata
+// COMMAND FLAGS â€” Behavioral metadata
 // ============================================================================
 
 enum CmdFlags : uint32_t
@@ -65,7 +65,7 @@ enum CmdFlags : uint32_t
 #include "shared_feature_dispatch.h"
 
 // ============================================================================
-// COMMAND TABLE — THE SINGLE SOURCE OF TRUTH
+// COMMAND TABLE â€” THE SINGLE SOURCE OF TRUTH
 // ============================================================================
 // Format: X(ID, SYMBOL, canonical_name, cli_alias, exposure, category, handler, flags)
 //
@@ -80,7 +80,7 @@ enum CmdFlags : uint32_t
 // ============================================================================
 
 #define COMMAND_TABLE(X)                                                                                               \
-    /* ═══════════════════ FILE OPERATIONS (1001-1099) ═══════════════════ */                                          \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FILE OPERATIONS (1001-1099) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                          \
     X(1001, FILE_NEW, "file.new", "!new", BOTH, "File", handleFileNew, CMD_NONE)                                       \
     X(1002, FILE_OPEN, "file.open", "!open", BOTH, "File", handleFileOpen, CMD_NONE)                                   \
     X(1003, FILE_SAVE, "file.save", "!save", BOTH, "File", handleFileSave, CMD_REQUIRES_FILE)                          \
@@ -98,7 +98,7 @@ enum CmdFlags : uint32_t
     X(1035, FILE_QUICK_LOAD, "file.quickLoad", "!quick_load", BOTH, "File", handleFileQuickLoad, CMD_NONE)             \
     X(1099, FILE_EXIT, "file.exit", "!exit", BOTH, "File", handleFileExit, CMD_NONE)                                   \
                                                                                                                        \
-    /* ═══════════════════ EDIT OPERATIONS (2001-2019) ═══════════════════ */                                          \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EDIT OPERATIONS (2001-2019) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                          \
     X(2001, EDIT_UNDO, "edit.undo", "!undo", BOTH, "Edit", handleEditUndo, CMD_REQUIRES_FILE)                          \
     X(2002, EDIT_REDO, "edit.redo", "!redo", BOTH, "Edit", handleEditRedo, CMD_REQUIRES_FILE)                          \
     X(2003, EDIT_CUT, "edit.cut", "!cut", BOTH, "Edit", handleEditCut, CMD_REQUIRES_SELECT)                            \
@@ -117,7 +117,7 @@ enum CmdFlags : uint32_t
     X(2018, EDIT_FIND_NEXT, "edit.findNext", "!find_next", BOTH, "Edit", handleEditFindNext, CMD_NONE)                 \
     X(2019, EDIT_FIND_PREV, "edit.findPrev", "!find_prev", BOTH, "Edit", handleEditFindPrev, CMD_NONE)                 \
                                                                                                                        \
-    /* ═══════════════════ VIEW OPERATIONS (2020-2029) ═══════════════════ */                                          \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• VIEW OPERATIONS (2020-2029) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                          \
     X(2020, VIEW_MINIMAP, "view.minimap", "!minimap", BOTH, "View", handleViewMinimap, CMD_NONE)                       \
     X(2021, VIEW_OUTPUT_TABS, "view.outputTabs", "!output_tabs", BOTH, "View", handleViewOutputTabs, CMD_NONE)         \
     X(2022, VIEW_MODULE_BROWSER, "view.moduleBrowser", "!modules", BOTH, "View", handleViewModuleBrowser, CMD_NONE)    \
@@ -131,14 +131,14 @@ enum CmdFlags : uint32_t
     X(2028, VIEW_SIDEBAR, "view.sidebar", "!sidebar", BOTH, "View", handleViewSidebar, CMD_NONE)                       \
     X(2029, VIEW_TERMINAL, "view.terminal", "!view_terminal", BOTH, "View", handleViewTerminal, CMD_NONE)              \
                                                                                                                        \
-    /* ═══════════════════ GIT (3020-3024) ═══════════════════ */                                                      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• GIT (3020-3024) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                      \
     X(3020, GIT_STATUS, "git.status", "!git_status", BOTH, "Git", handleGitStatus, CMD_NONE)                           \
     X(3021, GIT_COMMIT, "git.commit", "!git_commit", BOTH, "Git", handleGitCommit, CMD_NONE)                           \
     X(3022, GIT_PUSH, "git.push", "!git_push", BOTH, "Git", handleGitPush, CMD_REQUIRES_NET)                           \
     X(3023, GIT_PULL, "git.pull", "!git_pull", BOTH, "Git", handleGitPull, CMD_REQUIRES_NET)                           \
     X(3024, GIT_PANEL, "git.diff", "!git_diff", BOTH, "Git", handleGitDiff, CMD_NONE)                                  \
                                                                                                                        \
-    /* ═══════════════════ THEMES (3100-3117) ═══════════════════ */                                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• THEMES (3100-3117) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                   \
     X(3100, THEME_BASE, "theme.base", "!theme_list", BOTH, "Theme", handleThemeList, CMD_NONE)                         \
     X(3101, THEME_DARK_PLUS, "theme.darkPlus", "!theme dark+", BOTH, "Theme", handleThemeSet, CMD_NONE)                \
     X(3102, THEME_LIGHT_PLUS, "theme.lightPlus", "!theme light+", BOTH, "Theme", handleThemeLightPlus, CMD_NONE)       \
@@ -157,7 +157,7 @@ enum CmdFlags : uint32_t
     X(3115, THEME_SYNTHWAVE, "theme.synthwave84", "!theme synthwave", BOTH, "Theme", handleThemeSynthwave, CMD_NONE)   \
     X(3116, THEME_ABYSS, "theme.abyss", "!theme abyss", BOTH, "Theme", handleThemeAbyss, CMD_NONE)                     \
                                                                                                                        \
-    /* ═══════════════════ TRANSPARENCY (3200-3211) ═══════════════════ */                                             \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TRANSPARENCY (3200-3211) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                             \
     X(3200, TRANS_100, "view.transparency100", "!opacity 100", BOTH, "Transparency", handleTrans100, CMD_NONE)         \
     X(3201, TRANS_90, "view.transparency90", "!opacity 90", BOTH, "Transparency", handleTrans90, CMD_NONE)             \
     X(3202, TRANS_80, "view.transparency80", "!opacity 80", BOTH, "Transparency", handleTrans80, CMD_NONE)             \
@@ -169,13 +169,13 @@ enum CmdFlags : uint32_t
     X(3211, TRANS_TOGGLE, "view.transparencyToggle", "!opacity toggle", BOTH, "Transparency", handleTransToggle,       \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ HELP (legacy 4001-4004) ═══════════════════ */                                              \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HELP (legacy 4001-4004) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                              \
     X(4001, HELP_ABOUT, "help.about", "!about", BOTH, "Help", handleHelpAbout, CMD_NONE)                               \
     X(4002, HELP_CMDREF, "help.cmdref", "!cmdref", BOTH, "Help", handleHelpCmdRef, CMD_NONE)                           \
     X(4003, HELP_PSDOCS, "help.psdocs", "!psdocs", BOTH, "Help", handleHelpPsDocs, CMD_NONE)                           \
     X(4004, HELP_SEARCH, "help.search", "!help_search", BOTH, "Help", handleHelpSearch, CMD_NONE)                      \
                                                                                                                        \
-    /* ═══════════════════ TERMINAL (4006-4010) ═══════════════════ */                                                 \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TERMINAL (4006-4010) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                 \
     X(4005, TERMINAL_NEW, "terminal.new", "!terminal_new", BOTH, "Terminal", handleTerminalNew, CMD_NONE)            \
     X(4006, TERMINAL_KILL, "terminal.kill", "!terminal_kill", BOTH, "Terminal", handleTerminalKill, CMD_NONE)          \
     X(4007, TERMINAL_SPLIT_H, "terminal.splitH", "!terminal_split", BOTH, "Terminal", handleTerminalSplitH, CMD_NONE)  \
@@ -185,7 +185,7 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(4010, TERMINAL_LIST, "terminal.list", "!terminal_list", BOTH, "Terminal", handleTerminalList, CMD_NONE)          \
                                                                                                                        \
-    /* ═══════════════════ AGENT (4100-4121) ═══════════════════ */                                                    \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AGENT (4100-4121) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                    \
     X(4100, AGENT_START_LOOP, "agent.loop", "!agent_loop", BOTH, "Agent", handleAgentLoop, CMD_ASYNC)                  \
     X(4101, AGENT_EXECUTE_CMD, "agent.execute", "!agent_execute", BOTH, "Agent", handleAgentExecute, CMD_ASYNC)        \
     X(4102, AGENT_CONFIGURE, "agent.configure", "!agent_config", BOTH, "Agent", handleAgentConfigure, CMD_NONE)        \
@@ -209,7 +209,7 @@ enum CmdFlags : uint32_t
     X(4120, AGENT_BOUNDED_LOOP, "agent.boundedLoop", "!agent_bounded", BOTH, "Agent", handleAgentBoundedLoop,          \
       CMD_ASYNC)                                                                                                       \
                                                                                                                        \
-    /* ═══════════════════ AUTONOMY (4150-4155) ═══════════════════ */                                                 \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AUTONOMY (4150-4155) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                 \
     X(4150, AUTONOMY_TOGGLE, "autonomy.toggle", "!autonomy_toggle", BOTH, "Autonomy", handleAutonomyToggle, CMD_NONE)  \
     X(4151, AUTONOMY_START, "autonomy.start", "!autonomy_start", BOTH, "Autonomy", handleAutonomyStart, CMD_ASYNC)     \
     X(4152, AUTONOMY_STOP, "autonomy.stop", "!autonomy_stop", BOTH, "Autonomy", handleAutonomyStop, CMD_NONE)          \
@@ -217,13 +217,13 @@ enum CmdFlags : uint32_t
     X(4154, AUTONOMY_STATUS, "autonomy.status", "!autonomy_status", BOTH, "Autonomy", handleAutonomyStatus, CMD_NONE)  \
     X(4155, AUTONOMY_MEMORY, "autonomy.memory", "!autonomy_memory", BOTH, "Autonomy", handleAutonomyMemory, CMD_NONE)  \
                                                                                                                        \
-    /* ═══════════════════ AI MODE (4200-4203) ═══════════════════ */                                                  \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AI MODE (4200-4203) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                  \
     X(4200, AI_MODE_MAX, "ai.maxMode", "!max", BOTH, "AIMode", handleAIMaxMode, CMD_NONE)                              \
     X(4201, AI_MODE_DEEP_THINK, "ai.deepThinking", "!deep", BOTH, "AIMode", handleAIDeepThinking, CMD_NONE)            \
     X(4202, AI_MODE_DEEP_RESEARCH, "ai.deepResearch", "!research", BOTH, "AIMode", handleAIDeepResearch, CMD_NONE)     \
     X(4203, AI_MODE_NO_REFUSAL, "ai.noRefusal", "!no_refusal", BOTH, "AIMode", handleAINoRefusal, CMD_NONE)            \
                                                                                                                        \
-    /* ═══════════════════ AI CONTEXT WINDOW (4210-4216) ═══════════════════ */                                        \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AI CONTEXT WINDOW (4210-4216) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                        \
     X(4210, AI_CTX_4K, "ai.context4k", "!ctx 4k", BOTH, "AIContext", handleAICtx4K, CMD_NONE)                          \
     X(4211, AI_CTX_32K, "ai.context32k", "!ctx 32k", BOTH, "AIContext", handleAICtx32K, CMD_NONE)                      \
     X(4212, AI_CTX_64K, "ai.context64k", "!ctx 64k", BOTH, "AIContext", handleAICtx64K, CMD_NONE)                      \
@@ -232,7 +232,7 @@ enum CmdFlags : uint32_t
     X(4215, AI_CTX_512K, "ai.context512k", "!ctx 512k", BOTH, "AIContext", handleAICtx512K, CMD_NONE)                  \
     X(4216, AI_CTX_1M, "ai.context1m", "!ctx 1m", BOTH, "AIContext", handleAICtx1M, CMD_NONE)                          \
                                                                                                                        \
-    /* ═══════════════════ REVERSE ENGINEERING (4300-4319) ═══════════════════ */                                      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REVERSE ENGINEERING (4300-4319) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                      \
     X(4300, REVENG_ANALYZE, "re.analyze", "!decision_tree", BOTH, "ReverseEng", handleREDecisionTree,                  \
       CMD_REQUIRES_FILE)                                                                                               \
     X(4301, REVENG_DISASM, "re.disassemble", "!disasm", BOTH, "ReverseEng", handleREDisassemble, CMD_REQUIRES_FILE)    \
@@ -264,7 +264,7 @@ enum CmdFlags : uint32_t
       CMD_REQUIRES_FILE)                                                                                               \
     X(4319, REVENG_DECOMP_CLOSE, "re.decompClose", "!decomp_close", BOTH, "ReverseEng", handleREDecompClose, CMD_NONE) \
                                                                                                                        \
-    /* ═══════════════════ BACKEND SWITCHER (5037-5047) ═══════════════════ */                                         \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BACKEND SWITCHER (5037-5047) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                         \
     X(5037, BACKEND_LOCAL, "backend.switchLocal", "!backend local", BOTH, "Backend", handleBackendSwitchLocal,         \
       CMD_NONE)                                                                                                        \
     X(5038, BACKEND_OLLAMA, "backend.switchOllama", "!backend ollama", BOTH, "Backend", handleBackendSwitchOllama,     \
@@ -288,13 +288,13 @@ enum CmdFlags : uint32_t
     X(5047, BACKEND_SAVE_CFG, "backend.saveConfigs", "!backend_save", BOTH, "Backend", handleBackendSaveConfigs,       \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ BEACON (50600-50602) ═══════════════════ */                                               \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BEACON (50600-50602) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                               \
     X(50600, BEACON_HALF_PULSE, "beacon.halfPulse", "!beacon_half", BOTH, "Performance", handleBeaconHalfPulse,         \
       CMD_NONE)                                                                                                        \
     X(50601, BEACON_FULL, "beacon.full", "!beacon_full", BOTH, "Performance", handleBeaconFullBeacon, CMD_NONE)        \
     X(50602, BEACON_STATUS, "beacon.status", "!beacon_status", BOTH, "Performance", handleBeaconStatus, CMD_NONE)       \
                                                                                                                        \
-    /* ═══════════════════ ROUTER (5048-5081) ═══════════════════ */                                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ROUTER (5048-5081) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                   \
     X(5048, ROUTER_ENABLE, "router.enable", "!router_enable", BOTH, "Router", handleRouterEnable, CMD_NONE)             \
     X(5049, ROUTER_DISABLE, "router.disable", "!router_disable", BOTH, "Router", handleRouterDisable, CMD_NONE)       \
     X(5050, ROUTER_STATUS, "router.status", "!router_status", BOTH, "Router", handleRouterStatus, CMD_NONE)            \
@@ -326,7 +326,7 @@ enum CmdFlags : uint32_t
     X(5081, ROUTER_COST_STATS, "router.costStats", "!router cost", BOTH, "Router", handleRouterShowCostStats,          \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ LSP CLIENT (5058-5070) ═══════════════════ */                                               \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LSP CLIENT (5058-5070) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                               \
     X(5058, LSP_START_ALL, "lsp.startAll", "!lsp start", BOTH, "LSP", handleLspStartAll, CMD_ASYNC)                    \
     X(5059, LSP_STOP_ALL, "lsp.stopAll", "!lsp stop", BOTH, "LSP", handleLspStopAll, CMD_NONE)                         \
     X(5060, LSP_STATUS, "lsp.status", "!lsp status", BOTH, "LSP", handleLspStatus, CMD_NONE)                           \
@@ -341,7 +341,7 @@ enum CmdFlags : uint32_t
     X(5069, LSP_CONFIGURE, "lsp.configure", "!lsp config", BOTH, "LSP", handleLspConfigure, CMD_NONE)                  \
     X(5070, LSP_SAVE_CONFIG, "lsp.saveConfig", "!lsp save", BOTH, "LSP", handleLspSaveConfig, CMD_NONE)                \
                                                                                                                        \
-    /* ═══════════════════ ASM SEMANTIC (5082-5093) ═══════════════════ */                                             \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ASM SEMANTIC (5082-5093) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                             \
     X(5082, ASM_PARSE_SYMBOLS, "asm.parseSymbols", "!asm parse", BOTH, "ASM", handleAsmParse,                          \
       CMD_REQUIRES_FILE | CMD_ASM_HOTPATH)                                                                             \
     X(5083, ASM_GOTO_LABEL, "asm.gotoLabel", "!asm goto", BOTH, "ASM", handleAsmGoto,                                  \
@@ -364,7 +364,7 @@ enum CmdFlags : uint32_t
     X(5092, ASM_SECTIONS, "asm.showSections", "!asm sections", BOTH, "ASM", handleAsmSections, CMD_REQUIRES_FILE)      \
     X(5093, ASM_CLEAR_SYMBOLS, "asm.clearSymbols", "!asm clear", BOTH, "ASM", handleAsmClearSymbols, CMD_CONFIRM)      \
                                                                                                                        \
-    /* ═══════════════════ HYBRID LSP-AI (5094-5105) ═══════════════════ */                                            \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HYBRID LSP-AI (5094-5105) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                            \
     X(5094, HYBRID_COMPLETE, "hybrid.complete", "!hybrid complete", BOTH, "Hybrid", handleHybridComplete,              \
       CMD_REQUIRES_CARET | CMD_REQUIRES_LSP)                                                                           \
     X(5095, HYBRID_DIAGNOSTICS, "hybrid.diagnostics", "!hybrid diag", BOTH, "Hybrid", handleHybridDiagnostics,         \
@@ -389,7 +389,7 @@ enum CmdFlags : uint32_t
     X(5105, HYBRID_CORRECTION_LOOP, "hybrid.correctionLoop", "!hybrid correct", BOTH, "Hybrid",                        \
       handleHybridCorrectionLoop, CMD_ASYNC)                                                                           \
                                                                                                                        \
-    /* ═══════════════════ MULTI-RESPONSE (5106-5117) ═══════════════════ */                                           \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MULTI-RESPONSE (5106-5117) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                           \
     X(5106, MULTI_GENERATE, "multi.generate", "!multi generate", BOTH, "MultiResp", handleMultiRespGenerate,           \
       CMD_ASYNC)                                                                                                       \
     X(5107, MULTI_SET_MAX, "multi.setMax", "!multi setmax", BOTH, "MultiResp", handleMultiRespSetMax, CMD_NONE)        \
@@ -409,13 +409,13 @@ enum CmdFlags : uint32_t
     X(5117, MULTI_APPLY_PREF, "multi.applyPreferred", "!multi apply", BOTH, "MultiResp",                               \
       handleMultiRespApplyPreferred, CMD_NONE)                                                                         \
                                                                                                                        \
-    /* ═══════════════════ GOVERNOR (5118-5121) ═══════════════════ */                                                 \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• GOVERNOR (5118-5121) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                 \
     X(5118, GOV_STATUS, "gov.status", "!gov status", BOTH, "Governor", handleGovStatus, CMD_NONE)                      \
     X(5119, GOV_SUBMIT, "gov.submit", "!gov submit", BOTH, "Governor", handleGovSubmitCommand, CMD_ASYNC)              \
     X(5120, GOV_KILL_ALL, "gov.killAll", "!gov killall", BOTH, "Governor", handleGovKillAll, CMD_CONFIRM)              \
     X(5121, GOV_TASK_LIST, "gov.taskList", "!gov tasks", BOTH, "Governor", handleGovTaskList, CMD_NONE)                \
                                                                                                                        \
-    /* ═══════════════════ SAFETY (5122-5125) ═══════════════════ */                                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SAFETY (5122-5125) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                   \
     X(5122, SAFETY_STATUS, "safety.status", "!safety status", BOTH, "Safety", handleSafetyStatus, CMD_NONE)            \
     X(5123, SAFETY_RESET_BUDGET, "safety.resetBudget", "!safety reset", BOTH, "Safety", handleSafetyResetBudget,       \
       CMD_CONFIRM)                                                                                                     \
@@ -424,20 +424,20 @@ enum CmdFlags : uint32_t
     X(5125, SAFETY_VIOLATIONS, "safety.violations", "!safety violations", BOTH, "Safety", handleSafetyShowViolations,  \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ REPLAY (5126-5129) ═══════════════════ */                                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REPLAY (5126-5129) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                   \
     X(5126, REPLAY_STATUS, "replay.status", "!replay status", BOTH, "Replay", handleReplayStatus, CMD_NONE)            \
     X(5127, REPLAY_SHOW_LAST, "replay.showLast", "!replay last", BOTH, "Replay", handleReplayShowLast, CMD_NONE)       \
     X(5128, REPLAY_EXPORT, "replay.export", "!replay export", BOTH, "Replay", handleReplayExportSession, CMD_NONE)     \
     X(5129, REPLAY_CHECKPOINT, "replay.checkpoint", "!replay checkpoint", BOTH, "Replay", handleReplayCheckpoint,      \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ CONFIDENCE (5130-5131) ═══════════════════ */                                               \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CONFIDENCE (5130-5131) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                               \
     X(5130, CONFIDENCE_STATUS, "confidence.status", "!confidence status", BOTH, "Confidence", handleConfidenceStatus,  \
       CMD_NONE)                                                                                                        \
     X(5131, CONFIDENCE_POLICY, "confidence.setPolicy", "!confidence policy", BOTH, "Confidence",                       \
       handleConfidenceSetPolicy, CMD_NONE)                                                                             \
                                                                                                                        \
-    /* ═══════════════════ SWARM (5132-5156) ═══════════════════ */                                                    \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SWARM (5132-5156) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                    \
     X(5132, SWARM_STATUS, "swarm.status", "!swarm_status", BOTH, "Swarm", handleSwarmStatus, CMD_NONE)                 \
     X(5133, SWARM_LEADER, "swarm.startLeader", "!swarm leader", BOTH, "Swarm", handleSwarmStartLeader, CMD_ASYNC)      \
     X(5134, SWARM_WORKER, "swarm.startWorker", "!swarm worker", BOTH, "Swarm", handleSwarmStartWorker, CMD_ASYNC)      \
@@ -470,7 +470,7 @@ enum CmdFlags : uint32_t
       handleSwarmWorkerDisconnect, CMD_NONE)                                                                           \
     X(5156, SWARM_FITNESS, "swarm.fitnessTest", "!swarm fitness", BOTH, "Swarm", handleSwarmFitness, CMD_ASYNC)        \
                                                                                                                        \
-    /* ═══════════════════ DEBUG/DBG (5157-5184) ═══════════════════ */                                                \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DEBUG/DBG (5157-5184) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                \
     X(5157, DBG_LAUNCH, "dbg.launch", "!debug_start", BOTH, "Debug", handleDbgLaunch, CMD_NONE)                        \
     X(5158, DBG_ATTACH, "dbg.attach", "!dbg attach", BOTH, "Debug", handleDbgAttach, CMD_NONE)                         \
     X(5159, DBG_DETACH, "dbg.detach", "!dbg detach", BOTH, "Debug", handleDbgDetach, CMD_REQUIRES_DEBUG)               \
@@ -503,7 +503,7 @@ enum CmdFlags : uint32_t
     X(5183, DBG_SYMBOL_PATH, "dbg.symbolPath", "!dbg sympath", BOTH, "Debug", handleDbgSymbolPath, CMD_NONE)           \
     X(5184, DBG_STATUS, "dbg.status", "!dbg status", BOTH, "Debug", handleDbgStatus, CMD_NONE)                         \
                                                                                                                        \
-    /* ═══════════════════ PLUGIN (5200-5208) ═══════════════════ */                                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PLUGIN (5200-5208) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                   \
     X(5200, PLUGIN_PANEL, "plugin.panel", "!plugin panel", BOTH, "Plugin", handlePluginShowPanel, CMD_NONE)            \
     X(5201, PLUGIN_LOAD, "plugin.load", "!plugin load", BOTH, "Plugin", handlePluginLoad, CMD_NONE)                    \
     X(5202, PLUGIN_UNLOAD, "plugin.unload", "!plugin unload", BOTH, "Plugin", handlePluginUnload, CMD_NONE)            \
@@ -516,7 +516,7 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(5208, PLUGIN_CONFIGURE, "plugin.configure", "!plugin config", BOTH, "Plugin", handlePluginConfigure, CMD_NONE)   \
                                                                                                                        \
-    /* ═══════════════════ HOTPATCH (9001-9017) ═══════════════════ */                                                 \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HOTPATCH (9001-9017) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                 \
     X(9001, HOTPATCH_STATUS, "hotpatch.status", "!hotpatch_status", BOTH, "Hotpatch", handleHotpatchStatus, CMD_NONE)  \
     X(9002, HOTPATCH_MEM_APPLY, "hotpatch.memApply", "!hotpatch_mem", BOTH, "Hotpatch", handleHotpatchMemory,          \
       CMD_ASM_HOTPATH)                                                                                                 \
@@ -551,7 +551,7 @@ enum CmdFlags : uint32_t
     X(9017, HOTPATCH_PROXY_STATS, "hotpatch.proxyStats", "!hotpatch_pstats", BOTH, "Hotpatch",                         \
       handleHotpatchProxyStats, CMD_NONE)                                                                              \
                                                                                                                        \
-    /* ═══════════════════ MONACO/VIEW (9100-9105) ═══════════════════ */                                              \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MONACO/VIEW (9100-9105) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                              \
     X(9100, MONACO_TOGGLE, "view.monacoToggle", "!monaco toggle", BOTH, "Monaco", handleMonacoToggle, CMD_NONE)        \
     X(9101, MONACO_DEVTOOLS, "view.monacoDevtools", "!monaco devtools", BOTH, "Monaco", handleMonacoDevtools,          \
       CMD_NONE)                                                                                                        \
@@ -562,7 +562,7 @@ enum CmdFlags : uint32_t
     X(9105, MONACO_SYNC_THEME, "view.monacoSyncTheme", "!monaco sync", BOTH, "Monaco", handleMonacoSyncTheme,          \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ LSP SERVER (9200-9208) ═══════════════════ */                                               \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LSP SERVER (9200-9208) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                               \
     X(9200, LSPSRV_START, "lspServer.start", "!lspsrv start", BOTH, "LSPServer", handleLspSrvStart, CMD_ASYNC)         \
     X(9201, LSPSRV_STOP, "lspServer.stop", "!lspsrv stop", BOTH, "LSPServer", handleLspSrvStop, CMD_NONE)              \
     X(9202, LSPSRV_STATUS, "lspServer.status", "!lspsrv status", BOTH, "LSPServer", handleLspSrvStatus, CMD_NONE)      \
@@ -576,7 +576,7 @@ enum CmdFlags : uint32_t
     X(9208, LSPSRV_LAUNCH_STDIO, "lspServer.launchStdio", "!lspsrv stdio", BOTH, "LSPServer", handleLspSrvLaunchStdio, \
       CMD_ASYNC)                                                                                                       \
                                                                                                                        \
-    /* ═══════════════════ EDITOR ENGINE (9300-9304) ═══════════════════ */                                            \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EDITOR ENGINE (9300-9304) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                            \
     X(9300, EDITOR_RICHEDIT, "editor.richedit", "!editor richedit", BOTH, "Editor", handleEditorRichEdit, CMD_NONE)    \
     X(9301, EDITOR_WEBVIEW2, "editor.webview2", "!editor webview", BOTH, "Editor", handleEditorWebView2, CMD_NONE)     \
     X(9302, EDITOR_MONACOCORE, "editor.monacocore", "!editor monaco", BOTH, "Editor", handleEditorMonacoCore,          \
@@ -584,7 +584,7 @@ enum CmdFlags : uint32_t
     X(9303, EDITOR_CYCLE, "editor.cycle", "!editor cycle", BOTH, "Editor", handleEditorCycle, CMD_NONE)                \
     X(9304, EDITOR_STATUS, "editor.status", "!editor status", BOTH, "Editor", handleEditorStatus, CMD_NONE)            \
                                                                                                                        \
-    /* ═══════════════════ PDB (9400-9412) ═══════════════════ */                                                      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PDB (9400-9412) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                      \
     X(9400, PDB_LOAD, "pdb.load", "!pdb load", BOTH, "PDB", handlePdbLoad, CMD_REQUIRES_FILE)                          \
     X(9401, PDB_FETCH, "pdb.fetch", "!pdb fetch", BOTH, "PDB", handlePdbFetch, CMD_REQUIRES_NET | CMD_ASYNC)           \
     X(9402, PDB_STATUS, "pdb.status", "!pdb status", BOTH, "PDB", handlePdbStatus, CMD_NONE)                           \
@@ -595,7 +595,7 @@ enum CmdFlags : uint32_t
     X(9411, PDB_EXPORTS, "pdb.exports", "!pdb exports", BOTH, "PDB", handlePdbExports, CMD_REQUIRES_FILE)              \
     X(9412, PDB_IAT_STATUS, "pdb.iatStatus", "!pdb iat", BOTH, "PDB", handlePdbIatStatus, CMD_NONE)                    \
                                                                                                                        \
-    /* ═══════════════════ AUDIT (9500-9506) ═══════════════════ */                                                    \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AUDIT (9500-9506) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                    \
     X(9500, AUDIT_DASHBOARD, "audit.dashboard", "!audit dashboard", BOTH, "Audit", handleAuditDashboard, CMD_NONE)     \
     X(9501, AUDIT_RUN_FULL, "audit.runFull", "!audit full", BOTH, "Audit", handleAuditRunFull, CMD_ASYNC)              \
     X(9502, AUDIT_DETECT_STUBS, "audit.detectStubs", "!audit stubs", BOTH, "Audit", handleAuditDetectStubs, CMD_NONE)  \
@@ -605,11 +605,11 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(9506, AUDIT_QUICK_STATS, "audit.quickStats", "!audit stats", BOTH, "Audit", handleAuditQuickStats, CMD_NONE)     \
                                                                                                                        \
-    /* ═══════════════════ GAUNTLET (9600-9601) ═══════════════════ */                                                 \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• GAUNTLET (9600-9601) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                 \
     X(9600, GAUNTLET_RUN, "gauntlet.run", "!gauntlet run", BOTH, "Gauntlet", handleGauntletRun, CMD_ASYNC)             \
     X(9601, GAUNTLET_EXPORT, "gauntlet.export", "!gauntlet export", BOTH, "Gauntlet", handleGauntletExport, CMD_NONE)  \
                                                                                                                        \
-    /* ═══════════════════ VOICE (9700-9709) ═══════════════════ */                                                    \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• VOICE (9700-9709) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                    \
     X(9700, VOICE_RECORD, "voice.record", "!voice record", BOTH, "Voice", handleVoiceRecord, CMD_NONE)                 \
     X(9701, VOICE_PTT, "voice.ptt", "!voice ptt", BOTH, "Voice", handleVoicePTT, CMD_NONE)                             \
     X(9702, VOICE_SPEAK, "voice.speak", "!voice speak", BOTH, "Voice", handleVoiceSpeak, CMD_NONE)                     \
@@ -622,7 +622,7 @@ enum CmdFlags : uint32_t
       handleVoiceModeContinuous, CMD_NONE)                                                                             \
     X(9709, VOICE_MODE_DISABLED, "voice.modeDisabled", "!voice off", BOTH, "Voice", handleVoiceModeDisabled, CMD_NONE) \
                                                                                                                        \
-    /* ═══════════════════ QW (Quality/Workflow 9800-9830) ═══════════════════ */                                      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• QW (Quality/Workflow 9800-9830) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                      \
     X(9800, QW_SHORTCUT_EDITOR, "qw.shortcutEditor", "!qw shortcuts", BOTH, "QW", handleQwShortcutEditor, CMD_NONE)    \
     X(9801, QW_SHORTCUT_RESET, "qw.shortcutReset", "!qw reset_keys", BOTH, "QW", handleQwShortcutReset, CMD_CONFIRM)   \
     X(9810, QW_BACKUP_CREATE, "qw.backupCreate", "!qw backup", BOTH, "QW", handleQwBackupCreate, CMD_NONE)             \
@@ -637,7 +637,7 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(9830, QW_SLO_DASHBOARD, "qw.sloDashboard", "!qw slo", BOTH, "QW", handleQwSloDashboard, CMD_NONE)                \
                                                                                                                        \
-    /* ═══════════════════ TELEMETRY (9900-9905) ═══════════════════ */                                                \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TELEMETRY (9900-9905) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                                \
     X(9900, TELEMETRY_TOGGLE, "telemetry.toggle", "!telemetry toggle", BOTH, "Telemetry", handleTelemetryToggle,       \
       CMD_NONE)                                                                                                        \
     X(9901, TELEMETRY_EXPORT_JSON, "telemetry.exportJson", "!telemetry json", BOTH, "Telemetry",                       \
@@ -651,7 +651,7 @@ enum CmdFlags : uint32_t
     X(9905, TELEMETRY_SNAPSHOT, "telemetry.snapshot", "!telemetry snap", BOTH, "Telemetry", handleTelemetrySnapshot,   \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ LEGACY ALIASES (Win32IDE.cpp alternate IDs) ═══════════════════ */                          \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LEGACY ALIASES (Win32IDE.cpp alternate IDs) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                          \
     /* These are legacy IDM_* values from Win32IDE.cpp that differ from the canonical     */                           \
     /* IDs above. They route to the same handlers so both old menus and new menus work.   */                           \
     X(2007, EDIT_UNDO_LEGACY, "edit.undo.legacy", "!undo_alt", GUI_ONLY, "Edit", handleEditUndo, CMD_REQUIRES_FILE)    \
@@ -682,7 +682,7 @@ enum CmdFlags : uint32_t
     X(3051, MODULES_IMPORT, "modules.import", "!modules_import", BOTH, "Modules", handleViewModuleBrowser, CMD_NONE)   \
     X(3052, MODULES_EXPORT, "modules.export", "!modules_export", BOTH, "Modules", handleViewModuleBrowser, CMD_NONE)   \
                                                                                                                        \
-    /* ═══════════════════ CLI-ONLY (ID=0, no GUI routing) ═══════════════════ */                                      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CLI-ONLY (ID=0, no GUI routing) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                      \
     X(0, CLI_SEARCH, "cli.search", "!search", CLI_ONLY, "CLI", handleSearch, CMD_NONE)                                 \
     X(0, CLI_ANALYZE, "cli.analyze", "!analyze", CLI_ONLY, "CLI", handleAnalyze, CMD_NONE)                             \
     X(0, CLI_PROFILE, "cli.profile", "!profile", CLI_ONLY, "CLI", handleProfile, CMD_ASYNC)                            \
@@ -715,14 +715,14 @@ enum CmdFlags : uint32_t
     X(0, CLI_MANIFEST_MD, "cli.manifestMd", "!manifest_md", CLI_ONLY, "CLI", handleManifestMarkdown, CMD_NONE)         \
     X(0, CLI_SELF_TEST, "cli.selfTest", "!self_test", CLI_ONLY, "CLI", handleManifestSelfTest, CMD_ASYNC)              \
                                                                                                                        \
-    /* ═══════════════════ IDE CORE (ide_constants.h 105-110) ═══════════════════ */                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IDE CORE (ide_constants.h 105-110) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                   \
     X(105, FILE_AUTOSAVE, "file.autoSave", "!autosave", BOTH, "File", handleFileAutoSave, CMD_NONE)                    \
     X(106, FILE_CLOSE_FOLDER, "file.closeFolder", "!close_folder", BOTH, "File", handleFileCloseFolder, CMD_NONE)      \
     X(108, FILE_OPEN_FOLDER, "file.openFolder", "!open_folder", BOTH, "File", handleFileOpenFolder, CMD_NONE)          \
     X(109, FILE_NEW_WINDOW, "file.newWindow", "!new_window", BOTH, "File", handleFileNewWindow, CMD_NONE)              \
     X(110, FILE_CLOSE_TAB, "file.closeTab", "!close_tab", BOTH, "File", handleFileCloseTab, CMD_REQUIRES_FILE)         \
                                                                                                                        \
-    /* ═══════════════════ IDE EDIT (ide_constants.h 208-211) ═══════════════════ */                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IDE EDIT (ide_constants.h 208-211) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                   \
     X(208, EDIT_SELECTALL_IDE, "edit.selectAll.ide", "!selectall_ide", GUI_ONLY, "Edit", handleEditSelectAll,          \
       CMD_REQUIRES_FILE)                                                                                               \
     X(209, EDIT_MULTICURSOR_ADD, "edit.multicursorAdd", "!multicursor_add", BOTH, "Edit", handleEditMulticursorAdd,    \
@@ -731,7 +731,7 @@ enum CmdFlags : uint32_t
       handleEditMulticursorRemove, CMD_REQUIRES_FILE)                                                                  \
     X(211, EDIT_GOTO_LINE, "edit.gotoLine", "!goto_line", BOTH, "Edit", handleEditGotoLine, CMD_REQUIRES_FILE)         \
                                                                                                                        \
-    /* ═══════════════════ IDE VIEW (ide_constants.h 301-307) ═══════════════════ */                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IDE VIEW (ide_constants.h 301-307) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                   \
     X(301, VIEW_TOGGLE_SIDEBAR, "view.toggleSidebar", "!toggle_sidebar", BOTH, "View", handleViewToggleSidebar,        \
       CMD_NONE)                                                                                                        \
     X(302, VIEW_TOGGLE_TERMINAL, "view.toggleTerminal", "!toggle_terminal", BOTH, "View", handleViewToggleTerminal,    \
@@ -743,7 +743,7 @@ enum CmdFlags : uint32_t
     X(306, VIEW_ZOOM_OUT, "view.zoomOut", "!zoom_out", BOTH, "View", handleViewZoomOut, CMD_NONE)                      \
     X(307, VIEW_ZOOM_RESET, "view.zoomReset", "!zoom_reset", BOTH, "View", handleViewZoomReset, CMD_NONE)              \
                                                                                                                        \
-    /* ═══════════════════ IDE AI FEATURES (ide_constants.h 401-410) ═══════════════════ */                            \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IDE AI FEATURES (ide_constants.h 401-410) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                            \
     X(401, AI_INLINE_COMPLETE, "ai.inlineComplete", "!ai_complete", BOTH, "AIMode", handleAIInlineComplete,            \
       CMD_REQUIRES_FILE | CMD_REQUIRES_CARET)                                                                          \
     X(402, AI_CHAT_MODE, "ai.chatMode", "!ai_chat", BOTH, "AIMode", handleAIChatMode, CMD_NONE)                        \
@@ -760,7 +760,7 @@ enum CmdFlags : uint32_t
     X(409, AI_MODEL_SELECT, "ai.modelSelect", "!ai_model", BOTH, "AIMode", handleAIModelSelect, CMD_NONE)              \
     X(410, AI_STOP_GENERATION, "ai.stopGeneration", "!ai_stop", BOTH, "AIMode", handleAIStopGeneration, CMD_NONE)      \
                                                                                                                        \
-    /* ═══════════════════ IDE TOOLS (ide_constants.h 501-506) ═══════════════════ */                                  \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IDE TOOLS (ide_constants.h 501-506) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                  \
     X(501, TOOLS_CMD_PALETTE, "tools.commandPalette", "!palette", BOTH, "Tools", handleToolsCommandPalette, CMD_NONE)  \
     X(502, TOOLS_SETTINGS, "tools.settings", "!tools_settings", BOTH, "Tools", handleToolsSettings, CMD_NONE)          \
     X(503, TOOLS_EXTENSIONS, "tools.extensions", "!extensions", BOTH, "Tools", handleToolsExtensions, CMD_NONE)        \
@@ -768,11 +768,11 @@ enum CmdFlags : uint32_t
     X(505, TOOLS_BUILD, "tools.build", "!build", BOTH, "Tools", handleToolsBuild, CMD_ASYNC)                           \
     X(506, TOOLS_DEBUG, "tools.debug", "!tools_debug", BOTH, "Tools", handleToolsDebug, CMD_NONE)                      \
                                                                                                                        \
-    /* ═══════════════════ IDE HELP (ide_constants.h 601, 603) ═══════════════════ */                                  \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• IDE HELP (ide_constants.h 601, 603) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                  \
     X(601, HELP_DOCS, "help.docs", "!docs", BOTH, "Help", handleHelpDocs, CMD_NONE)                                    \
     X(603, HELP_SHORTCUTS, "help.shortcuts", "!shortcuts", BOTH, "Help", handleHelpShortcuts, CMD_NONE)                \
                                                                                                                        \
-    /* ═══════════════════ DECOMPILER CONTEXT MENU (8001-8006) ═══════════════════ */                                  \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DECOMPILER CONTEXT MENU (8001-8006) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                  \
     X(8001, DECOMP_RENAME_VAR, "decomp.renameVar", "!decomp_rename_var", BOTH, "ReverseEng", handleDecompRenameVar,    \
       CMD_REQUIRES_FILE | CMD_REQUIRES_CARET)                                                                          \
     X(8002, DECOMP_GOTO_DEF, "decomp.gotoDef", "!decomp_goto", BOTH, "ReverseEng", handleDecompGotoDef,                \
@@ -786,7 +786,7 @@ enum CmdFlags : uint32_t
     X(8006, DECOMP_GOTO_ADDR, "decomp.gotoAddr", "!decomp_addr", BOTH, "ReverseEng", handleDecompGotoAddr,             \
       CMD_REQUIRES_FILE)                                                                                               \
                                                                                                                        \
-    /* ═══════════════════ VSCODE EXTENSION API (10000-10009) ═══════════════════ */                                   \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• VSCODE EXTENSION API (10000-10009) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                   \
     X(10000, VSCEXT_STATUS, "vscext.status", "!vscext status", BOTH, "Plugin", handleVscExtStatus, CMD_NONE)           \
     X(10001, VSCEXT_RELOAD, "vscext.reload", "!vscext reload", BOTH, "Plugin", handleVscExtReload, CMD_NONE)           \
     X(10002, VSCEXT_LIST_CMDS, "vscext.listCommands", "!vscext commands", BOTH, "Plugin", handleVscExtListCommands,    \
@@ -804,7 +804,7 @@ enum CmdFlags : uint32_t
     X(10009, VSCEXT_EXPORT_CONFIG, "vscext.exportConfig", "!vscext export", BOTH, "Plugin", handleVscExtExportConfig,  \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ VOICE AUTOMATION (10200-10206) ═══════════════════ */                                       \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• VOICE AUTOMATION (10200-10206) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                       \
     X(10200, VOICE_AUTO_TOGGLE, "voice.autoToggle", "!voice auto", BOTH, "Voice", handleVoiceAutoToggle, CMD_NONE)     \
     X(10201, VOICE_AUTO_SETTINGS, "voice.autoSettings", "!voice settings", BOTH, "Voice", handleVoiceAutoSettings,     \
       CMD_NONE)                                                                                                        \
@@ -815,14 +815,14 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(10206, VOICE_AUTO_STOP, "voice.autoStop", "!voice auto_stop", BOTH, "Voice", handleVoiceAutoStop, CMD_NONE)      \
                                                                                                                        \
-    /* ═══════════════════ GAME ENGINE INTEGRATION (10619-10622) ═══════════════════ */                                \
-    /* IDs 7001-7006 are reserved by resource.h for the Win32 Build menu — do not alias here. */                       \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• GAME ENGINE INTEGRATION (10619-10622) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                \
+    /* IDs 7001-7006 are reserved by resource.h for the Win32 Build menu â€” do not alias here. */                       \
     X(10619, UNREAL_INIT, "unreal.init", "!unreal_init", BOTH, "GameEngine", handleUnrealInit, CMD_ASYNC)              \
     X(10620, UNREAL_ATTACH, "unreal.attach", "!unreal_attach", BOTH, "GameEngine", handleUnrealAttach, CMD_ASYNC)      \
     X(10621, UNITY_INIT, "unity.init", "!unity_init", BOTH, "GameEngine", handleUnityInit, CMD_ASYNC)                  \
     X(10622, UNITY_ATTACH, "unity.attach", "!unity_attach", BOTH, "GameEngine", handleUnityAttach, CMD_ASYNC)          \
                                                                                                                        \
-    /* ═══════════════════ REVERSE ENGINEERING (8100-8150) ═══════════════════ */                                      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REVERSE ENGINEERING (8100-8150) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                      \
     X(8100, REVENG_DISASSEMBLE, "reveng.disassemble", "!reveng_dis", BOTH, "ReverseEng", handleRevengDisassemble,      \
       CMD_REQUIRES_FILE)                                                                                               \
     X(8101, REVENG_DECOMPILE, "reveng.decompile", "!reveng_decomp", BOTH, "ReverseEng", handleRevengDecompile,         \
@@ -830,44 +830,44 @@ enum CmdFlags : uint32_t
     X(8102, REVENG_FIND_VULN, "reveng.findVulns", "!reveng_vuln", BOTH, "ReverseEng", handleRevengFindVulnerabilities, \
       CMD_REQUIRES_FILE | CMD_ASYNC)                                                                                   \
                                                                                                                        \
-    /* ═══════════════════ MODEL MANAGEMENT (11001-11050) ═══════════════════ */                                       \
-    X(11001, MODEL_LIST, "model.list", "!model_list", BOTH, "Models", handleModelList, CMD_NONE)                       \
-    X(11002, MODEL_LOAD, "model.load", "!load_model", BOTH, "Models", handleModelLoad, CMD_NONE)                       \
-    X(11003, MODEL_UNLOAD, "model.unload", "!model_unload", BOTH, "Models", handleModelUnload, CMD_NONE)               \
-    X(11004, MODEL_QUANTIZE, "model.quantize", "!model_quantize", BOTH, "Models", handleModelQuantize, CMD_ASYNC)      \
-    X(11005, MODEL_FINETUNE, "model.finetune", "!model_finetune", BOTH, "Models", handleModelFinetune, CMD_ASYNC)      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MODEL MANAGEMENT (11001-11050) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                       \
+    X(10920, MODEL_LIST, "model.list", "!model_list", BOTH, "Models", handleModelList, CMD_NONE)                       \
+    X(10921, MODEL_LOAD, "model.load", "!load_model", BOTH, "Models", handleModelLoad, CMD_NONE)                       \
+    X(10922, MODEL_UNLOAD, "model.unload", "!model_unload", BOTH, "Models", handleModelUnload, CMD_NONE)               \
+    X(10923, MODEL_QUANTIZE, "model.quantize", "!model_quantize", BOTH, "Models", handleModelQuantize, CMD_ASYNC)      \
+    X(10924, MODEL_FINETUNE, "model.finetune", "!model_finetune", BOTH, "Models", handleModelFinetune, CMD_ASYNC)      \
                                                                                                                        \
-    /* ═══════════════════ DISK RECOVERY (11100-11150) ═══════════════════ */                                          \
-    X(11100, DISK_LIST_DRIVES, "disk.listDrives", "!disk_drives", BOTH, "Disk", handleDiskListDrives, CMD_NONE)        \
-    X(11101, DISK_SCAN_PARTS, "disk.scanPartitions", "!disk_scan", BOTH, "Disk", handleDiskScanPartitions, CMD_ASYNC)  \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DISK RECOVERY (11100-11150) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                          \
+    X(10925, DISK_LIST_DRIVES, "disk.listDrives", "!disk_drives", BOTH, "Disk", handleDiskListDrives, CMD_NONE)        \
+    X(10926, DISK_SCAN_PARTS, "disk.scanPartitions", "!disk_scan", BOTH, "Disk", handleDiskScanPartitions, CMD_ASYNC)  \
                                                                                                                        \
-    /* ═══════════════════ PERFORMANCE GOVERNANCE (11200-11250) ═══════════════════ */                                 \
-    X(11200, GOVERNOR_STATUS, "governor.status", "!governor_status", BOTH, "Governor", handleGovernorStatus, CMD_NONE) \
-    X(11201, GOVERNOR_POWER, "governor.setPowerLevel", "!governor_power", BOTH, "Governor",                            \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PERFORMANCE GOVERNANCE (11200-11250) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                 \
+    X(10927, GOVERNOR_STATUS, "governor.status", "!governor_status", BOTH, "Governor", handleGovernorStatus, CMD_NONE) \
+    X(10928, GOVERNOR_POWER, "governor.setPowerLevel", "!governor_power", BOTH, "Governor",                            \
       handleGovernorSetPowerLevel, CMD_NONE)                                                                           \
                                                                                                                        \
-    /* ═══════════════════ MARKETPLACE & EXTENSIONS (11300-11350) ═══════════════════ */                               \
-    X(11300, MARKETPLACE_LIST, "marketplace.list", "!marketplace_list", BOTH, "Marketplace", handleMarketplaceList,    \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MARKETPLACE & EXTENSIONS (11300-11350) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                               \
+    X(10929, MARKETPLACE_LIST, "marketplace.list", "!marketplace_list", BOTH, "Marketplace", handleMarketplaceList,    \
       CMD_NONE)                                                                                                        \
-    X(11301, MARKETPLACE_INSTALL, "marketplace.install", "!marketplace_install", BOTH, "Marketplace",                  \
+    X(10930, MARKETPLACE_INSTALL, "marketplace.install", "!marketplace_install", BOTH, "Marketplace",                  \
       handleMarketplaceInstall, CMD_ASYNC)                                                                             \
                                                                                                                        \
-    /* ═══════════════════ EMBEDDINGS & VECTORS (11400-11450) ═══════════════════ */                                   \
-    X(11400, EMBEDDING_ENCODE, "embedding.encode", "!embedding_encode", BOTH, "Embedding", handleEmbeddingEncode,      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EMBEDDINGS & VECTORS (11400-11450) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                   \
+    X(10931, EMBEDDING_ENCODE, "embedding.encode", "!embedding_encode", BOTH, "Embedding", handleEmbeddingEncode,      \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ VISION & IMAGE ANALYSIS (11500-11550) ═══════════════════ */                                \
-    X(11500, VISION_ANALYZE, "vision.analyze", "!vision_analyze", BOTH, "Vision", handleVisionAnalyzeImage,            \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• VISION & IMAGE ANALYSIS (11500-11550) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                \
+    X(10932, VISION_ANALYZE, "vision.analyze", "!vision_analyze", BOTH, "Vision", handleVisionAnalyzeImage,            \
       CMD_REQUIRES_FILE)                                                                                               \
                                                                                                                        \
-    /* ═══════════════════ PROMPT ENGINE (11600-11650) ═══════════════════ */                                          \
-    X(11600, PROMPT_CLASSIFY, "prompt.classify", "!prompt_classify", BOTH, "Prompt", handlePromptClassifyContext,      \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PROMPT ENGINE (11600-11650) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                          \
+    X(10933, PROMPT_CLASSIFY, "prompt.classify", "!prompt_classify", BOTH, "Prompt", handlePromptClassifyContext,      \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ TIER 1: CRITICAL COSMETICS (12000-12099) ═══════════════════ */                             \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TIER 1: CRITICAL COSMETICS (12000-12099) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                             \
     X(12000, T1_SMOOTH_SCROLL, "tier1.smoothScroll", "!smooth_scroll", BOTH, "Cosmetic",                               \
       handleTier1SmoothScrollToggle, CMD_NONE)                                                                         \
-    X(12001, T1_MINIMAP_ENHANCED, "tier1.minimapEnhanced", "!minimap_enhanced", BOTH, "Cosmetic",                      \
+    X(12010, T1_MINIMAP_ENHANCED, "tier1.minimapEnhanced", "!minimap_enhanced", BOTH, "Cosmetic",                      \
       handleTier1MinimapEnhanced, CMD_NONE)                                                                            \
     X(12020, T1_BREADCRUMBS, "tier1.breadcrumbs", "!breadcrumbs", BOTH, "Cosmetic", handleTier1BreadcrumbsToggle,      \
       CMD_NONE)                                                                                                        \
@@ -886,10 +886,98 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(12090, T1_AUTO_UPDATE, "tier1.autoUpdate", "!auto_update", BOTH, "Cosmetic", handleTier1AutoUpdateCheck,         \
       CMD_ASYNC)                                                                                                       \
-    X(12091, T1_UPDATE_DISMISS, "tier1.updateDismiss", "!update_dismiss", BOTH, "Cosmetic", handleTier1UpdateDismiss,  \
-      CMD_NONE)                                                                                                        \
-                                                                                                                       \
-    /* ═══════════════════ TRANSCENDENCE SYSTEMS (43000-43099) ═══════════════════ */                                  \
+    X(12092, T1_UPDATE_DISMISS, "tier1.updateDismiss", "!update_dismiss", BOTH, "Cosmetic", handleTier1UpdateDismiss,  \
+CMD_NONE)                                                                                                        \
+                                                                                                                        \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TIER 2: HIGH-VISIBILITY COSMETICS (11700-11799) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                       \
+    X(11700, T2_GITDIFF, "tier2.gitdiff", "!gitdiff", BOTH, "Cosmetic", handleTier2GitDiff, CMD_NONE)                \
+    X(11701, T2_GITDIFF_CLOSE, "tier2.gitdiff.close", "!gitdiff_close", BOTH, "Cosmetic", handleTier2GitDiffClose, CMD_NONE) \
+    X(11702, T2_GITDIFF_PREV, "tier2.gitdiff.prev", "!gitdiff_prev", BOTH, "Cosmetic", handleTier2GitDiffPrev, CMD_NONE) \
+    X(11703, T2_GITDIFF_NEXT, "tier2.gitdiff.next", "!gitdiff_next", BOTH, "Cosmetic", handleTier2GitDiffNext, CMD_NONE) \
+    X(11710, T2_TERMINAL_NEW, "tier2.terminal.new", "!term_new", BOTH, "Cosmetic", handleTier2TerminalNew, CMD_NONE)   \
+    X(11711, T2_TERMINAL_CLOSE, "tier2.terminal.close", "!term_close", BOTH, "Cosmetic", handleTier2TerminalClose, CMD_NONE) \
+    X(11720, T2_HOVER, "tier2.hover", "!hover", BOTH, "Cosmetic", handleTier2Hover, CMD_NONE)                         \
+    X(11721, T2_SIGHELP, "tier2.sighelp", "!sighelp", BOTH, "Cosmetic", handleTier2SigHelp, CMD_NONE)                 \
+    X(11730, T2_OUTLINE_REFRESH, "tier2.outline.refresh", "!outline_refresh", BOTH, "Cosmetic", handleTier2OutlineRefresh, CMD_NONE) \
+    X(11731, T2_OUTLINE_FILTER, "tier2.outline.filter", "!outline_filter", BOTH, "Cosmetic", handleTier2OutlineFilter, CMD_NONE) \
+    X(11732, T2_OUTLINE_SORT, "tier2.outline.sort", "!outline_sort", BOTH, "Cosmetic", handleTier2OutlineSort, CMD_NONE) \
+    X(11740, T2_FIND_REFS, "tier2.findrefs", "!findrefs", BOTH, "Cosmetic", handleTier2FindRefs, CMD_NONE)            \
+    X(11750, T2_RENAME_PREVIEW, "tier2.rename.preview", "!rename_preview", BOTH, "Cosmetic", handleTier2RenamePreview, CMD_NONE) \
+    X(11760, T2_CODELENS_TOGGLE, "tier2.codelens.toggle", "!codelens_toggle", BOTH, "Cosmetic", handleTier2CodeLensToggle, CMD_NONE) \
+    X(11761, T2_CODELENS_REFRESH, "tier2.codelens.refresh", "!codelens_refresh", BOTH, "Cosmetic", handleTier2CodeLensRefresh, CMD_NONE) \
+    X(11770, T2_INLAY_TOGGLE, "tier2.inlay.toggle", "!inlay_toggle", BOTH, "Cosmetic", handleTier2InlayToggle, CMD_NONE) \
+    X(11771, T2_INLAY_REFRESH, "tier2.inlay.refresh", "!inlay_refresh", BOTH, "Cosmetic", handleTier2InlayRefresh, CMD_NONE) \
+                                                                                                                          \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TIER 3: COSMETICS (12100-12199) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                     \
+    X(12100, T3_BRACKET_PAIRS, "tier3.bracketPairs", "!bracket_pairs", BOTH, "Cosmetic", handleTier3BracketPairs, CMD_NONE) \
+    X(12101, T3_INDENT_GUIDES, "tier3.indentGuides", "!indent_guides", BOTH, "Cosmetic", handleTier3IndentGuides, CMD_NONE) \
+    X(12102, T3_WHITESPACE_TOGGLE, "tier3.whitespaceToggle", "!whitespace", BOTH, "Cosmetic", handleTier3WhitespaceToggle, CMD_NONE) \
+    X(12103, T3_WORD_WRAP_IND, "tier3.wordWrapIndicator", "!word_wrap_indicator", BOTH, "Cosmetic", handleTier3WordWrapIndicator, CMD_NONE) \
+    X(12104, T3_RELATIVE_LINES, "tier3.relativeLines", "!relative_lines", BOTH, "Cosmetic", handleTier3RelativeLines, CMD_NONE) \
+    X(12105, T3_ZEN_MODE, "tier3.zenMode", "!zen_mode", BOTH, "Cosmetic", handleTier3ZenMode, CMD_NONE)                 \
+    X(12106, T3_PIN_TAB, "tier3.pinTab", "!pin_tab", BOTH, "Cosmetic", handleTier3PinTab, CMD_NONE)                     \
+    X(12107, T3_UNPIN_TAB, "tier3.unpinTab", "!unpin_tab", BOTH, "Cosmetic", handleTier3UnpinTab, CMD_NONE)             \
+    X(12108, T3_CODE_FOLD_TOGGLE, "tier3.codeFoldToggle", "!code_fold", BOTH, "Cosmetic", handleTier3CodeFoldToggle, CMD_NONE) \
+    X(12110, T3_FOLD_ALL, "tier3.foldAll", "!fold_all", BOTH, "Cosmetic", handleTier3FoldAll, CMD_NONE)                 \
+    X(12111, T3_UNFOLD_ALL, "tier3.unfoldAll", "!unfold_all", BOTH, "Cosmetic", handleTier3UnfoldAll, CMD_NONE)         \
+                                                                                                                          \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TIER 5: COSMETIC FEATURES (12200-12314) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                             \
+    X(12200, T5_LINEENDING_DETECT, "tier5.lineending.detect", "!le_detect", BOTH, "Cosmetic", handleTier5LineEndingDetect, CMD_NONE) \
+    X(12201, T5_LINEENDING_TO_CRLF, "tier5.lineending.to_crlf", "!le_crlf", BOTH, "Cosmetic", handleTier5LineEndingToCRLF, CMD_NONE) \
+    X(12202, T5_LINEENDING_TO_LF, "tier5.lineending.to_lf", "!le_lf", BOTH, "Cosmetic", handleTier5LineEndingToLF, CMD_NONE) \
+    X(12203, T5_LINEENDING_TO_CR, "tier5.lineending.to_cr", "!le_cr", BOTH, "Cosmetic", handleTier5LineEndingToCR, CMD_NONE) \
+    X(12210, T5_NETWORK_SHOW, "tier5.network.show", "!network_show", BOTH, "Cosmetic", handleTier5NetworkShow, CMD_NONE) \
+    X(12211, T5_NETWORK_ADD_PORT, "tier5.network.add_port", "!network_add", BOTH, "Cosmetic", handleTier5NetworkAddPort, CMD_NONE) \
+    X(12212, T5_NETWORK_REMOVE_PORT, "tier5.network.remove_port", "!network_remove", BOTH, "Cosmetic", handleTier5NetworkRemovePort, CMD_NONE) \
+    X(12213, T5_NETWORK_TOGGLE, "tier5.network.toggle", "!network_toggle", BOTH, "Cosmetic", handleTier5NetworkToggle, CMD_NONE) \
+    X(12214, T5_NETWORK_LIST, "tier5.network.list", "!network_list", BOTH, "Cosmetic", handleTier5NetworkList, CMD_NONE) \
+    X(12219, T5_NETWORK_STATUS, "tier5.network.status", "!network_status", BOTH, "Cosmetic", handleTier5NetworkStatus, CMD_NONE) \
+    X(12220, T5_TESTEXPLORER_SHOW, "tier5.testexplorer.show", "!test_show", BOTH, "Cosmetic", handleTier5TestExplorerShow, CMD_NONE) \
+    X(12221, T5_TESTEXPLORER_RUN, "tier5.testexplorer.run", "!test_run", BOTH, "Cosmetic", handleTier5TestExplorerRun, CMD_NONE) \
+    X(12222, T5_TESTEXPLORER_REFRESH, "tier5.testexplorer.refresh", "!test_refresh", BOTH, "Cosmetic", handleTier5TestExplorerRefresh, CMD_NONE) \
+    X(12229, T5_TESTEXPLORER_FILTER, "tier5.testexplorer.filter", "!test_filter", BOTH, "Cosmetic", handleTier5TestExplorerFilter, CMD_NONE) \
+    X(12230, T5_DBGWATCH_SHOW, "tier5.dbgwatch.show", "!dbgwatch_show", BOTH, "Cosmetic", handleTier5DbgWatchShow, CMD_NONE) \
+    X(12239, T5_DBGWATCH_CLEAR, "tier5.dbgwatch.clear", "!dbgwatch_clear", BOTH, "Cosmetic", handleTier5DbgWatchClear, CMD_NONE) \
+    X(12240, T5_CALLSTACK_CAPTURE, "tier5.callstack.capture", "!callstack_capture", BOTH, "Cosmetic", handleTier5CallStackCapture, CMD_NONE) \
+    X(12241, T5_CALLSTACK_SHOW, "tier5.callstack.show", "!callstack_show", BOTH, "Cosmetic", handleTier5CallStackShow, CMD_NONE) \
+    X(12242, T5_CALLSTACK_COPY, "tier5.callstack.copy", "!callstack_copy", BOTH, "Cosmetic", handleTier5CallStackCopy, CMD_NONE) \
+    X(12249, T5_CALLSTACK_RESOLVE, "tier5.callstack.resolve", "!callstack_resolve", BOTH, "Cosmetic", handleTier5CallStackResolve, CMD_NONE) \
+    X(12250, T5_MARKETPLACE_SHOW, "tier5.marketplace.show", "!market_show", BOTH, "Cosmetic", handleTier5MarketplaceShow, CMD_NONE) \
+    X(12251, T5_MARKETPLACE_SEARCH, "tier5.marketplace.search", "!market_search", BOTH, "Cosmetic", handleTier5MarketplaceSearch, CMD_NONE) \
+    X(12252, T5_MARKETPLACE_INSTALL, "tier5.marketplace.install", "!market_install", BOTH, "Cosmetic", handleTier5MarketplaceInstall, CMD_NONE) \
+    X(12253, T5_MARKETPLACE_UNINSTALL, "tier5.marketplace.uninstall", "!market_uninstall", BOTH, "Cosmetic", handleTier5MarketplaceUninstall, CMD_NONE) \
+    X(12254, T5_MARKETPLACE_LIST, "tier5.marketplace.list", "!market_list", BOTH, "Cosmetic", handleTier5MarketplaceList, CMD_NONE) \
+    X(12259, T5_MARKETPLACE_STATUS, "tier5.marketplace.status", "!market_status", BOTH, "Cosmetic", handleTier5MarketplaceStatus, CMD_NONE) \
+    X(12265, T5_TELDASH_LOG, "tier5.teldash.log", "!teldash_log", BOTH, "Cosmetic", handleTier5TelDashLog, CMD_NONE) \
+    X(12266, T5_TELDASH_CLEAR, "tier5.teldash.clear", "!teldash_clear", BOTH, "Cosmetic", handleTier5TelDashClear, CMD_NONE) \
+    X(12267, T5_TELDASH_EXPORT, "tier5.teldash.export", "!teldash_export", BOTH, "Cosmetic", handleTier5TelDashExport, CMD_NONE) \
+    X(12268, T5_TELDASH_SHOW, "tier5.teldash.show", "!teldash_show", BOTH, "Cosmetic", handleTier5TelDashShow, CMD_NONE) \
+    X(12269, T5_TELDASH_STATS, "tier5.teldash.stats", "!teldash_stats", BOTH, "Cosmetic", handleTier5TelDashStats, CMD_NONE) \
+    X(12270, T5_SHORTCUT_SHOW, "tier5.shortcut.show", "!shortcut_show", BOTH, "Cosmetic", handleTier5ShortcutShow, CMD_NONE) \
+    X(12271, T5_SHORTCUT_RECORD, "tier5.shortcut.record", "!shortcut_record", BOTH, "Cosmetic", handleTier5ShortcutRecord, CMD_NONE) \
+    X(12272, T5_SHORTCUT_RESET, "tier5.shortcut.reset", "!shortcut_reset", BOTH, "Cosmetic", handleTier5ShortcutReset, CMD_NONE) \
+    X(12273, T5_SHORTCUT_SAVE, "tier5.shortcut.save", "!shortcut_save", BOTH, "Cosmetic", handleTier5ShortcutSave, CMD_NONE) \
+    X(12279, T5_SHORTCUT_LIST, "tier5.shortcut.list", "!shortcut_list", BOTH, "Cosmetic", handleTier5ShortcutList, CMD_NONE) \
+    X(12280, T5_COLORPICK_SCAN, "tier5.colorpick.scan", "!colorpick_scan", BOTH, "Cosmetic", handleTier5ColorPickScan, CMD_NONE) \
+    X(12281, T5_COLORPICK_PICK, "tier5.colorpick.pick", "!colorpick_pick", BOTH, "Cosmetic", handleTier5ColorPickPick, CMD_NONE) \
+    X(12282, T5_COLORPICK_INSERT, "tier5.colorpick.insert", "!colorpick_insert", BOTH, "Cosmetic", handleTier5ColorPickInsert, CMD_NONE) \
+    X(12289, T5_COLORPICK_LIST, "tier5.colorpick.list", "!colorpick_list", BOTH, "Cosmetic", handleTier5ColorPickList, CMD_NONE) \
+    X(12290, T5_EMOJI_PICKER, "tier5.emoji.picker", "!emoji_picker", BOTH, "Cosmetic", handleTier5EmojiPicker, CMD_NONE) \
+    X(12291, T5_EMOJI_INSERT, "tier5.emoji.insert", "!emoji_insert", BOTH, "Cosmetic", handleTier5EmojiInsert, CMD_NONE) \
+    X(12292, T5_EMOJI_CONFIG, "tier5.emoji.config", "!emoji_config", BOTH, "Cosmetic", handleTier5EmojiConfig, CMD_NONE) \
+    X(12299, T5_EMOJI_TEST, "tier5.emoji.test", "!emoji_test", BOTH, "Cosmetic", handleTier5EmojiTest, CMD_NONE) \
+    X(12300, T5_CRASH_SHOW, "tier5.crash.show", "!crash_show", BOTH, "Cosmetic", handleTier5CrashShow, CMD_NONE) \
+    X(12301, T5_CRASH_TEST, "tier5.crash.test", "!crash_test", BOTH, "Cosmetic", handleTier5CrashTest, CMD_NONE) \
+    X(12302, T5_CRASH_LOG, "tier5.crash.log", "!crash_log", BOTH, "Cosmetic", handleTier5CrashLog, CMD_NONE) \
+    X(12303, T5_CRASH_CLEAR, "tier5.crash.clear", "!crash_clear", BOTH, "Cosmetic", handleTier5CrashClear, CMD_NONE) \
+    X(12309, T5_CRASH_STATS, "tier5.crash.stats", "!crash_stats", BOTH, "Cosmetic", handleTier5CrashStats, CMD_NONE) \
+    X(12310, T5_IRC_CONNECT, "tier5.irc.connect", "!irc_connect", BOTH, "Cosmetic", handleTier5IRCConnect, CMD_NONE) \
+    X(12311, T5_IRC_DISCONNECT, "tier5.irc.disconnect", "!irc_disconnect", BOTH, "Cosmetic", handleTier5IRCDisconnect, CMD_NONE) \
+    X(12312, T5_IRC_STATUS, "tier5.irc.status", "!irc_status", BOTH, "Cosmetic", handleTier5IRCStatus, CMD_NONE) \
+    X(12313, T5_IRC_CONFIG, "tier5.irc.config", "!irc_config", BOTH, "Cosmetic", handleTier5IRCConfig, CMD_NONE) \
+    X(12314, T5_IRC_SEND, "tier5.irc.send", "!irc_send", BOTH, "Cosmetic", handleTier5IRCSend, CMD_NONE) \
+                                                                                                                         \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TRANSCENDENCE SYSTEMS (43000-43099) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                  \
     X(43000, CURSOR_PARITY_BRIDGE, "transcendence.cursorParity", "!cursor_parity", BOTH, "Transcendence",              \
       HandleCursorParityBridge, CMD_NONE)                                                                              \
     X(43001, OMEGA_ORCHESTRATOR, "transcendence.omegaOrch", "!omega_orch", BOTH, "Transcendence",                      \
@@ -917,7 +1005,7 @@ enum CmdFlags : uint32_t
     X(43013, CONSENT_PROMPT, "transcendence.consentPrompt", "!consent", BOTH, "Transcendence", HandleConsentPrompt,    \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ UI & INFRASTRUCTURE (44014-44020) ═══════════════════ */                                    \
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• UI & INFRASTRUCTURE (44014-44020) â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */                                    \
     X(44014, AUTONOMOUS_AGENT, "agent.autonomous", "!autonomous", BOTH, "Agent", HandleAutonomousAgent, CMD_NONE)      \
     X(44015, CHAT_MSG_RENDERER, "ui.chatRenderer", "!chat_render", BOTH, "UI", HandleChatMessageRenderer, CMD_NONE)    \
     X(44016, TOOL_ACTION_STATUS, "ui.toolStatus", "!tool_status", BOTH, "Tools", HandleToolActionStatus, CMD_NONE)     \
@@ -925,7 +1013,7 @@ enum CmdFlags : uint32_t
     X(44018, PERF_TELEMETRY, "telemetry.perf", "!perf_tele", BOTH, "Telemetry", HandlePerfTelemetry, CMD_NONE)         \
     X(44019, UPDATE_SIGNATURE, "security.updateSig", "!update_sig", BOTH, "Security", HandleUpdateSignature, CMD_NONE) \
     X(44020, PLUGIN_SIGNATURE, "security.pluginSig", "!plugin_sig", BOTH, "Security", HandlePluginSignature, CMD_NONE) \
-    /* ═══════════════════ END OF TABLE ═══════════════════ */
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• END OF TABLE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 // ============================================================================
 // GENERATED: Command ID Enum

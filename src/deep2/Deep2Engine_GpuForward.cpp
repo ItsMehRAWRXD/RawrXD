@@ -227,10 +227,18 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail("ffn_norm");
     const WeightTensor* woWt = lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
     if (!woWt) return fail("wo_missing");
+    const bool forceQ4kF32 = [&]() -> bool {
+        const char* e = std::getenv("DEEP2_Q4K_FORCE_F32_VULKAN");
+        return e && e[0] == '1';
+    }();
+
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
                     CPUInference::VulkanCompute::DeviceBuf& out,
                     uint32_t rows, uint32_t cols) -> bool {
-        if (PackedQuant(wt)) {
+        bool usePacked = PackedQuant(wt);
+        if (usePacked && wt.type == (int)GGMLType::GGML_TYPE_Q4_K && forceQ4kF32)
+            usePacked = false;
+        if (usePacked) {
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
@@ -339,7 +347,14 @@ bool Deep2Engine::forwardLayerGpuResident(
             return gemv(wa, in, outA, rA, cols) && gemv(wb, in, outB, rB, cols) &&
                    gemv(wc, in, outC, rC, cols);
         }
-        if (PackedQuant(wa) && PackedQuant(wb) && PackedQuant(wc)) {
+        bool allPacked = PackedQuant(wa) && PackedQuant(wb) && PackedQuant(wc);
+        if (allPacked && forceQ4kF32) {
+            bool anyQ4k = (wa.type == (int)GGMLType::GGML_TYPE_Q4_K) ||
+                          (wb.type == (int)GGMLType::GGML_TYPE_Q4_K) ||
+                          (wc.type == (int)GGMLType::GGML_TYPE_Q4_K);
+            if (anyQ4k) allPacked = false;
+        }
+        if (allPacked) {
             auto bumpQ = [&](const WeightTensor& wt) {
                 if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
                 else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;

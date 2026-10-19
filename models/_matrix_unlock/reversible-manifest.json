@@ -1,0 +1,8 @@
+{
+  "model": "125m",
+  "gguf": "unlock-125M-Q2_K.gguf",
+  "pt_stub": "reversible-stub.pt",
+  "hf_stub": "model.safetensors",
+  "reversible": false,
+  "limitation": "No original F32 weights available; stubs only."
+}

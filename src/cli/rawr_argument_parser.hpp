@@ -30,6 +30,7 @@ struct CliArgs {
     bool help = false;
     bool verbose = false;
     bool refresh = false;
+    bool vulkan = false;
 };
 
 inline void ReadStdinPrompt(std::string& prompt) {
@@ -82,11 +83,39 @@ inline CliArgs ParseArgs(int argc, char** argv) {
     for (int i = 2; i < argc; ++i) {
         const char* s = argv[i];
         if (!s) continue;
+        // Reject unknown flags (anything starting with '-' that isn't a known option)
+        if (s[0] == '-' && s[1] != '\0') {
+            bool known = false;
+            if (!std::strcmp(s, "--help") || !std::strcmp(s, "-h")) known = true;
+            else if (!std::strcmp(s, "--verbose") || !std::strcmp(s, "--trace") ||
+                     !std::strcmp(s, "-v")) known = true;
+            else if (!std::strcmp(s, "--refresh")) known = true;
+            else if (!std::strcmp(s, "--no-vulkan")) known = true;
+            else if (!std::strcmp(s, "--vulkan")) known = true;
+            else if (!std::strcmp(s, "-p") || !std::strcmp(s, "--prompt")) known = true;
+            else if (!std::strcmp(s, "--workspace")) known = true;
+            else if (!std::strcmp(s, "--term")) known = true;
+            else if (!std::strncmp(s, "--profile=", 10)) known = true;
+            else if (!std::strncmp(s, "--auto=", 7)) known = true;
+            else if (!std::strcmp(s, "--max-tokens") || !std::strcmp(s, "-n") ||
+                     !std::strcmp(s, "--tokens")) known = true;
+            else if (!std::strncmp(s, "--max-tokens=", 13) ||
+                     !std::strncmp(s, "--tokens=", 9)) known = true;
+            if (!known) {
+                std::fprintf(stderr,
+                    "rawr: unknown argument '%s'\n"
+                    "Use 'rawr --help' for usage.\n", s);
+                a.help = true;
+                return a;
+            }
+        }
         if (!std::strcmp(s, "--help") || !std::strcmp(s, "-h")) a.help = true;
         else if (!std::strcmp(s, "--verbose") || !std::strcmp(s, "--trace") ||
                  !std::strcmp(s, "-v"))
             a.verbose = true;
         else if (!std::strcmp(s, "--refresh")) a.refresh = true;
+        else if (!std::strcmp(s, "--no-vulkan")) a.vulkan = false;
+        else if (!std::strcmp(s, "--vulkan")) a.vulkan = true;
         else if ((!std::strcmp(s, "-p") || !std::strcmp(s, "--prompt")) &&
                  i + 1 < argc)
             a.prompt = argv[++i];
@@ -97,10 +126,11 @@ inline CliArgs ParseArgs(int argc, char** argv) {
         else if (!std::strncmp(s, "--profile=", 10)) a.styleProfile = s + 10;
         else if (!std::strncmp(s, "--auto=", 7))
             a.autoLevel = ParseAutonomy(s + 7);
-        else if ((!std::strcmp(s, "--max-tokens") || !std::strcmp(s, "-n")) &&
-                 i + 1 < argc)
+        else if ((!std::strcmp(s, "--max-tokens") || !std::strcmp(s, "-n") ||
+                  !std::strcmp(s, "--tokens")) && i + 1 < argc)
             a.maxTokens = (uint32_t)std::atoi(argv[++i]);
-        else if (!std::strncmp(s, "--max-tokens=", 13))
+        else if (!std::strncmp(s, "--max-tokens=", 13) ||
+                 !std::strncmp(s, "--tokens=", 9))
             a.maxTokens = (uint32_t)std::atoi(s + 13);
         else if (a.cmd == "resume" && a.sessionId.empty()) a.sessionId = s;
         else if (a.cmd == "show" && a.model.empty()) a.model = s;

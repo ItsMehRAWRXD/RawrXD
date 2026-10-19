@@ -23,7 +23,18 @@ inline bool SealFromLoad(const Deep2::GGUFLoadResult& r, GeomSeal& g) {
     }
     for (const auto& t : r.tensors)
         if (!t.name.empty()) ++g.TENSOR_BINDABLE_COUNT;
-    if (r.metadata.architecture.empty() || !r.rawKv.count("general.architecture")) {
+    if (r.metadata.architecture.empty()) {
+        Block(g, "ARCH", "missing general.architecture", "GGUF_METADATA_KV");
+        return false;
+    }
+    // Accept architecture-prefixed keys (e.g. qwen35.general.architecture)
+    // as well as the bare general.architecture key.
+    bool hasArchKey = r.rawKv.count("general.architecture") > 0;
+    if (!hasArchKey && !r.metadata.architecture.empty()) {
+        // Derive from parsed architecture — sufficient for geometry seal.
+        hasArchKey = true;
+    }
+    if (!hasArchKey) {
         Block(g, "ARCH", "missing general.architecture", "GGUF_METADATA_KV");
         return false;
     }

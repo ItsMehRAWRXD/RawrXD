@@ -247,8 +247,14 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                 if (key.substr(0, prefix.size()) == prefix) {
                     std::string subkey = key.substr(prefix.size());
 
-                    if (subkey == "vocab_size") {
-                        metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+if (subkey == "vocab_size") {
+                    char* end = nullptr;
+                    unsigned long v = std::strtoul(valueStr.c_str(), &end, 10);
+                    if (end == valueStr.c_str() || *end != '\0') {
+                        printf("[GGUF] ERROR: Invalid vocab_size value: '%s'\n", valueStr.c_str());
+                        return false;
+                    }
+                    metadata.vocabSize = (uint32_t)v;
                     } else if (subkey == "embedding_length") {
                         metadata.hiddenSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "block_count") {
@@ -765,7 +771,7 @@ struct GgufMmapKeep {
     HANDLE file = nullptr;
     HANDLE map = nullptr;
     void* view = nullptr;
-    ~GgufMmapKeep() {
+~GgufMmapKeep() {
         if (view) UnmapViewOfFile(view);
         if (map) CloseHandle(map);
         if (file) CloseHandle(file);

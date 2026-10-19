@@ -9,6 +9,9 @@
 
 #include "gguf_tensor_loader.hpp"
 
+#include "deep2/lavapath/GgufDynamicGeometry.hpp"
+#include "deep2/lavapath/GgufStaticResidency.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -170,8 +173,31 @@ GGUFTensorLoader& GGUFTensorLoader::operator=(GGUFTensorLoader&& other) noexcept
 // File Operations
 // ============================================================================
 
+// RAWRXD_GGUF_ROM_INTEGRITY_001 — integrity gate before model admission
+// Validates ALL tensor extents fit within file BEFORE mapping/mmap.
+// If failed, model is quarantined and load is denied.
+
 bool GGUFTensorLoader::Open(const std::string& path) {
     Close();
+    
+    // RAWRXD_GGUF_ROM_INTEGRITY_001 — pre-mmap integrity gate
+    Deep2::GgufDynamicGeometry geom{};
+    if (!Deep2::GgufVerifyRomIntegrity(path.c_str(), &geom)) {
+        last_error_ = "ROM integrity check failed: " + std::string(geom.reason);
+        if (geom.integrityVerdict == 2) { // TRUNCATED
+            last_error_ += " (file truncated by " + std::to_string(geom.shortfallBytes) + " bytes)";
+        } else if (geom.integrityVerdict == 4) {
+            last_error_ += " (" + std::to_string(geom.unknownTypeCount) + " unknown GGML types weaken extent proof)";
+        }
+        return false;
+    }
+    
+    // Store static residency plan for runtime use
+    if (!Deep2::GenerateResidencyPlan(geom, residency_plan_)) {
+        last_error_ = "Failed to generate residency plan from GGUF geometry";
+        return false;
+    }
+    residency_plan_valid_ = true;
     
     if (!MapFile(path)) {
         return false;

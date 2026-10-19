@@ -54,9 +54,16 @@ inline Geo ResolveFromLayer(const LayerWeights& lw, size_t hidden) {
     g.ssmState = g.ssmGroups ? g.ssmGroupState / g.ssmGroups : 0;
     if (g.ssmHeads && g.ssmInner % g.ssmHeads == 0)
         g.ssmHeadDim = g.ssmInner / g.ssmHeads;
-    g.ok = (g.ssmState == 128 && g.ssmHeads == 96 && g.ssmInner == 7680 &&
-            g.ssmGroups == 8 && g.ssmConvDim == 9728 && g.ssmInRows == 17504 &&
-            g.ssmHeadDim == 80)
+    /* Accept internally-consistent SSM geometry rather than one exact
+       fingerprint.  Nemotron-H checkpoints can vary in inner dim / conv
+       dim / dt rank across sizes; what matters is that state derives
+       cleanly from (convDim − inner) / groups and headDim derives from
+       inner / heads. */
+    g.ok = (g.ssmState > 0 && g.ssmHeads > 0 && g.ssmInner > 0 &&
+            g.ssmConvDim > 0 && g.ssmInRows > 0 && g.ssmGroupState > 0 &&
+            g.ssmInner % g.ssmHeads == 0 &&
+            g.ssmGroupState % g.ssmGroups == 0 &&
+            g.ssmGroupState / g.ssmGroups == g.ssmState)
                ? 1
                : 0;
     return g;

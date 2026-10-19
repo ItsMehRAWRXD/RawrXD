@@ -72,6 +72,10 @@ bool finalize(Scratch& s) {
     } else if (s.hasKeyLength && s.headDim > 0) {
         s.ropeDim = s.headDim;
         s.hasRopeDim = true;
+    } else if (s.headDim > 0) {
+        // Derive ropeDim from derived headDim when no explicit key_length exists
+        s.ropeDim = s.headDim;
+        s.hasRopeDim = true;
     } else {
         return block(s, "ROPE_DIM",
                      "rope.dimension_count missing; no key_length alternate");

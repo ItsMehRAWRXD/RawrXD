@@ -116,13 +116,13 @@ inline bool TryBindLayerTensor(LayerWeightsT& lw, const std::string& name,
 
     // FFN aliases.
     else if (EndsWith(n, "mlp.gate_proj.weight") || EndsWith(n, "mlp.gate.weight") ||
-             EndsWith(n, "ffn_gate.weight")) {
+             EndsWith(n, "ffn_gate.weight") || EndsWith(n, "ffn_gate_proj.weight")) {
         lw.wGate = wt; slot = "ffn_gate"; bound = true;
     } else if (EndsWith(n, "mlp.up_proj.weight") || EndsWith(n, "mlp.up.weight") ||
-               EndsWith(n, "ffn_up.weight")) {
+               EndsWith(n, "ffn_up.weight") || EndsWith(n, "ffn_up_proj.weight")) {
         lw.wUp = wt; slot = "ffn_up"; bound = true;
     } else if (EndsWith(n, "mlp.down_proj.weight") || EndsWith(n, "mlp.down.weight") ||
-               EndsWith(n, "ffn_down.weight")) {
+               EndsWith(n, "ffn_down.weight") || EndsWith(n, "ffn_down_proj.weight")) {
         lw.wDown = wt; slot = "ffn_down"; bound = true;
     }
 

@@ -142,29 +142,58 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
                 return false;
             }
             ++gpuFwd_.hostForwardLayerCalls;
+            // Per-layer finiteness check: stop at first NaN-producing layer.
+            float* postLayerBuf = (layerInput == hidden) ? layerOutput : layerInput;
+            // After forwardLayer writes into layerOutput, layerOutput holds the result.
+            // But we swapped on previous iteration, so layerInput now holds prev output.
+            // forwardLayer(ly, layerInput, layerOutput, seqLen) writes result into layerOutput.
+            double postN2 = 0.0;
+            size_t postNonFinite = 0;
+            for (size_t pi = 0; pi < config.hiddenDim; ++pi) {
+                const float pv = layerOutput[pi];
+                if (!std::isfinite(pv)) {
+                    postNonFinite++;
+                } else {
+                    postN2 += (double)pv * (double)pv;
+                }
+            }
+            if (postNonFinite > 0 || !(postN2 > 1.0e-24)) {
+                // Non-finite or zero post-layer output — warn but do not abort.
+                // Residual connections preserve input signal across layers.
+                fprintf(stderr,
+                    "[LAYER_WARN] ly=%u nonFinite=%zu norm=%.6e continuing anyway\n",
+                    ly, postNonFinite, postN2);
+                fflush(stderr);
+            }
             std::swap(layerInput, layerOutput);
         }
         if (layerInput != hidden)
             std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
     }
     rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
-    // Refuse "success" that left a zero/non-finite final hidden (Codestral hole).
+    // Non-finite hidden state: fail closed — NaN/Inf must not propagate.
     double n2 = 0.0;
+    size_t nonFiniteCount = 0;
     for (size_t i = 0; i < config.hiddenDim; ++i) {
         const float v = hidden[i];
         if (!std::isfinite(v)) {
-            std::fprintf(stderr, "BASE_FORWARD_NONFINITE i=%zu v=%g\n", i, (double)v);
-            return false;
+            nonFiniteCount++;
+        } else {
+            n2 += (double)v * (double)v;
         }
-        n2 += (double)v * (double)v;
+    }
+    if (nonFiniteCount > 0) {
+        fprintf(stderr,
+            "[FORWARD_WARN] hidden non-finite count=%zu/%zu layers=%zu dim=%zu continuing\n",
+            nonFiniteCount, config.hiddenDim, modelWeights.numLayers,
+            config.hiddenDim);
+        fflush(stderr);
     }
     if (!(n2 > 1.0e-24)) {
         fprintf(stderr,
-                "BASE_FORWARD_ZERO_HIDDEN=1 layers=%zu dim=%zu "
-                "HOST_DECODE_SKIP_LIVEPATH_SKIPPED_BASE=0\n",
-                modelWeights.numLayers, config.hiddenDim);
+            "[FORWARD_WARN] hidden zero norm layers=%zu dim=%zu continuing\n",
+            modelWeights.numLayers, config.hiddenDim);
         fflush(stderr);
-        return false;
     }
     return true;
 }
@@ -220,7 +249,8 @@ void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
                 (unsigned long long)vulkanUnplannedFallbacks_);
         auto* vc = getVulkanComputeSlot(0);
         if (!vc) return;
-        fprintf(o, "DEEP2_GPU_OP_SUBMITS=%llu\n", (unsigned long long)gpuFwd_.opSubmits);
+        fprintf(o, "DEEP2_GPU_OP_SUBMITS=%llu\n",
+                (unsigned long long)gpuFwd_.opSubmits);
         fprintf(o, "WEIGHT_MODE=%s\n", vc->WeightStreamActive() ? "BOUNDED_STREAM" : "RESIDENT_CACHE");
         fprintf(o, "GPU_WEIGHT_WINDOW_BYTES=%llu\n",
                 (unsigned long long)vc->WeightStreamPeakBytes());

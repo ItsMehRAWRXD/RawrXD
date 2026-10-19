@@ -114,6 +114,8 @@ inline bool ResolveModelAlias(const char* alias, AliasResolve& out) {
     std::vector<std::string> roots;
     if (const char* e = std::getenv("RAWRXD_MODEL_ROOT")) PushRoot(roots, e);
     PushRoot(roots, "F:\\OllamaModels");
+    PushRoot(roots, "F:\\models");
+    PushRoot(roots, "F:\\models\\gguf");
     PushRoot(roots, "G:\\~dev\\rawrxd\\models");
     PushRoot(roots, "G:\\~dev\\rawrxd");
     PushRoot(roots, "F:\\OllamaModels\\rawrxd_test_models");

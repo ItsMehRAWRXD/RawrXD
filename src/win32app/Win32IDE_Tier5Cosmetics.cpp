@@ -27,7 +27,7 @@ void Win32IDE::initLineEndingSelector() {
 
 bool Win32IDE::handleLineEndingCommand(int commandId) {
     if (!m_lineEndingSelectorInitialized) initLineEndingSelector();
-    if (commandId < IDM_LINEENDING_DETECT || commandId > IDM_LINEENDING_TO_LF) return false;
+    if (commandId < IDM_LINEENDING_DETECT || commandId > IDM_LINEENDING_TO_CR) return false;
     if (!m_hwndEditor || !IsWindow(m_hwndEditor)) return true;
 
     std::string content = getWindowText(m_hwndEditor);
@@ -54,9 +54,9 @@ bool Win32IDE::handleLineEndingCommand(int commandId) {
 
     const char* newEol = nullptr;
     int mode = -1;
-    if (commandId == 11501) { newEol = "\r\n"; mode = 0; }
-    else if (commandId == 11502) { newEol = "\n"; mode = 1; }
-    else if (commandId == 11503) { newEol = "\r"; mode = 2; }
+    if (commandId == IDM_LINEENDING_TO_CRLF) { newEol = "\r\n"; mode = 0; }
+    else if (commandId == IDM_LINEENDING_TO_LF) { newEol = "\n"; mode = 1; }
+    else if (commandId == IDM_LINEENDING_TO_CR) { newEol = "\r"; mode = 2; }
     if (!newEol) return true;  // other IDs in range: no convert
 
     std::string normalized;
@@ -149,51 +149,52 @@ void Win32IDE::initTier5Cosmetics() {
 // ============================================================================
 
 bool Win32IDE::handleTier5Command(int commandId) {
-    // Line Ending Selector (11500-11509)
-    if (commandId >= IDM_LINEENDING_DETECT && commandId <= IDM_LINEENDING_TO_LF)
+    // Line Ending Selector (12200-12203)
+    if (commandId >= IDM_LINEENDING_DETECT && commandId <= IDM_LINEENDING_TO_CR)
         return handleLineEndingCommand(commandId);
 
-    // Network Panel (11510-11519)
+    // Network Panel (12210-12219)
     if (commandId >= IDM_NETWORK_SHOW && commandId <= IDM_NETWORK_STATUS)
         return handleNetworkCommand(commandId);
 
-    // Test Explorer (11520-11529)
+    // Test Explorer (12220-12229)
     if (commandId >= IDM_TESTEXPLORER_SHOW && commandId <= IDM_TESTEXPLORER_FILTER)
         return handleTestExplorerCommand(commandId);
 
-    // Debug Watch Format (11530-11539)
+    // Debug Watch Format (12230-12239)
     if (commandId >= IDM_DBGWATCH_SHOW && commandId <= IDM_DBGWATCH_CLEAR)
         return handleDebugWatchCommand(commandId);
 
-    // Call Stack Symbols (11540-11549)
+    // Call Stack Symbols (12240-12249)
     if (commandId >= IDM_CALLSTACK_CAPTURE && commandId <= IDM_CALLSTACK_RESOLVE)
         return handleCallStackCommand(commandId);
 
-    // Marketplace (11550-11559)
+    // Marketplace (12250-12259)
     if (commandId >= IDM_MARKETPLACE_SHOW && commandId <= IDM_MARKETPLACE_STATUS)
         return handleMarketplaceCommand(commandId);
 
-    // Telemetry Dashboard (11560-11569)
-    if (commandId >= IDM_TELDASH_SHOW && commandId <= IDM_TELDASH_STATS)
+    // Telemetry Dashboard (12265-12269) — LOG/CLEAR/EXPORT precede SHOW, so the
+    // range must start at IDM_TELDASH_LOG or those three commands never dispatch.
+    if (commandId >= IDM_TELDASH_LOG && commandId <= IDM_TELDASH_STATS)
         return handleTelemetryDashboardCommand(commandId);
 
-    // Shortcut Editor (11570-11579)
+    // Shortcut Editor (12270-12279)
     if (commandId >= IDM_SHORTCUT_SHOW && commandId <= IDM_SHORTCUT_LIST)
         return handleShortcutEditorCommand(commandId);
 
-    // Color Picker (11580-11589)
+    // Color Picker (12280-12289)
     if (commandId >= IDM_COLORPICK_SCAN && commandId <= IDM_COLORPICK_LIST)
         return handleColorPickerCommand(commandId);
 
-    // Emoji Support (11590-11599)
+    // Emoji Support (12290-12299)
     if (commandId >= IDM_EMOJI_PICKER && commandId <= IDM_EMOJI_TEST)
         return handleEmojiCommand(commandId);
 
-    // Crash Reporter (11600-11609)
+    // Crash Reporter (12300-12309)
     if (commandId >= IDM_CRASH_SHOW && commandId <= IDM_CRASH_STATS)
         return handleCrashReporterCommand(commandId);
 
-    // Phase 51: mIRC Control Bridge (11610-11614)
+    // Phase 51: mIRC Control Bridge (12310-12314)
     if (commandId >= IDM_IRC_CONNECT && commandId <= IDM_IRC_SEND)
         return handleIRCBridgeCommand(commandId);
 

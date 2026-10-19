@@ -1,12 +1,12 @@
 {
-  "generated": "2026-08-09T18:51:39.761270",
+  "generated": "2026-10-19T13:12:34.214658",
   "summary": {
-    "total_idm_defines": 782,
-    "total_table_entries": 493,
+    "total_idm_defines": 797,
+    "total_table_entries": 575,
     "total_handlers": 280,
-    "gui_routable": 467,
-    "cli_accessible": 482,
-    "coverage_pct": 57.8,
+    "gui_routable": 549,
+    "cli_accessible": 564,
+    "coverage_pct": 56.71,
     "is_clean": false
   },
   "categories": {
@@ -58,7 +58,7 @@
     "Embedding": 1,
     "Vision": 1,
     "Prompt": 1,
-    "Cosmetic": 13,
+    "Cosmetic": 95,
     "Transcendence": 6,
     "UI": 2,
     "Security": 2
@@ -614,7 +614,7 @@
       "name": "IDM_BUILD_PROJECT",
       "value": 2801,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 25,
+      "line": 27,
       "category": "BUILD"
     },
     {
@@ -642,49 +642,49 @@
       "name": "IDM_TOOLS_GGUF_INSPECTOR",
       "value": 3014,
       "file": "win32app/Win32IDE.cpp",
-      "line": 716,
+      "line": 733,
       "category": "TOOLS"
     },
     {
       "name": "IDM_ENT_MULTI_GPU_BALANCE",
       "value": 3042,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 252,
+      "line": 254,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_DYNAMIC_BATCH",
       "value": 3043,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 255,
+      "line": 257,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_API_KEY_MGMT",
       "value": 3044,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 258,
+      "line": 260,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_AUDIT_LOGS",
       "value": 3045,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 261,
+      "line": 263,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_RAWR_TUNER",
       "value": 3046,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 264,
+      "line": 266,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_DUAL_ENGINE",
       "value": 3047,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 267,
+      "line": 269,
       "category": "ENT"
     },
     {
@@ -1206,745 +1206,829 @@
       "category": "REVENG"
     },
     {
+      "name": "IDM_AGENT_HEXMAG_START",
+      "value": 4130,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 131,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_HEALTH",
+      "value": 4131,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 132,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_TOGGLE_FALLBACK",
+      "value": 4132,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 133,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_ROUTE_COPILOT",
+      "value": 4133,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 134,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_CYCLE_SWARM",
+      "value": 4134,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 135,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_SWARM_1",
+      "value": 4135,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 136,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_SWARM_2",
+      "value": 4136,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 137,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_SWARM_3",
+      "value": 4137,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 138,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_SWARM_4",
+      "value": 4138,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 139,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_SWARM_6",
+      "value": 4139,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 140,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_SWARM_8",
+      "value": 4140,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 141,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_HEXMAG_TELEMETRY",
+      "value": 4141,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 142,
+      "category": "AGENT"
+    },
+    {
       "name": "IDM_PIPELINE_RUN",
       "value": 4160,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 138,
+      "line": 165,
       "category": "PIPELINE"
     },
     {
       "name": "IDM_PIPELINE_AUTONOMY_START",
       "value": 4161,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 139,
+      "line": 166,
       "category": "PIPELINE"
     },
     {
       "name": "IDM_PIPELINE_AUTONOMY_STOP",
       "value": 4162,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 140,
+      "line": 167,
       "category": "PIPELINE"
     },
     {
       "name": "IDM_AGENT_AUTONOMOUS_COMMUNICATOR",
       "value": 4163,
       "file": "win32app/Win32IDE.cpp",
-      "line": 739,
+      "line": 756,
       "category": "AGENT"
     },
     {
       "name": "IDM_TELEMETRY_UNIFIED_CORE",
       "value": 4164,
       "file": "win32app/Win32IDE.cpp",
-      "line": 740,
+      "line": 757,
       "category": "TELEMETRY"
     },
     {
       "name": "IDM_GGUF_TREE",
       "value": 4204,
       "file": "win32app/resource.h",
-      "line": 90,
+      "line": 100,
       "category": "GGUF"
     },
     {
       "name": "IDM_AI_MODE_SWARM",
       "value": 4204,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 147,
+      "line": 174,
       "category": "AI"
     },
     {
       "name": "IDM_GGUF_DETAILS",
       "value": 4205,
       "file": "win32app/resource.h",
-      "line": 91,
+      "line": 101,
       "category": "GGUF"
     },
     {
       "name": "IDM_AI_LOAD_SWARM_DIR",
       "value": 4205,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 148,
+      "line": 175,
       "category": "AI"
     },
     {
       "name": "IDM_AI_CONTEXT_UNLIMITED",
       "value": 4217,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 158,
+      "line": 185,
       "category": "AI"
     },
     {
       "name": "IDM_AI_AGENT_CYCLES_SET",
       "value": 4217,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 159,
+      "line": 186,
       "category": "AI"
     },
     {
       "name": "IDM_AI_AGENT_MULTI_ENABLE",
       "value": 4218,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 160,
+      "line": 187,
       "category": "AI"
     },
     {
       "name": "IDM_AI_AGENT_MULTI_DISABLE",
       "value": 4219,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 161,
+      "line": 188,
       "category": "AI"
     },
     {
       "name": "IDM_ENGINE_UNLOCK_800B",
       "value": 4220,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 164,
+      "line": 191,
       "category": "ENGINE"
     },
     {
       "name": "IDM_ENGINE_LOAD_800B",
       "value": 4221,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 165,
+      "line": 192,
       "category": "ENGINE"
     },
     {
       "name": "IDM_TITAN_TOGGLE",
       "value": 4230,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 166,
+      "line": 193,
       "category": "TITAN"
     },
     {
       "name": "IDM_AI_AGENT_MULTI_STATUS",
       "value": 4240,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 170,
+      "line": 197,
       "category": "AI"
     },
     {
       "name": "IDM_AI_TITAN_TOGGLE",
       "value": 4241,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 171,
+      "line": 198,
       "category": "AI"
     },
     {
       "name": "IDM_AI_800B_STATUS",
       "value": 4242,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 172,
+      "line": 199,
       "category": "AI"
     },
     {
       "name": "IDM_OMEGA_START",
       "value": 4243,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 176,
+      "line": 203,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_STOP",
       "value": 4244,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 177,
+      "line": 204,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SUBMIT_TASK",
       "value": 4245,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 178,
+      "line": 205,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_RUN_CYCLE",
       "value": 4246,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 179,
+      "line": 206,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SHOW_STATUS",
       "value": 4247,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 180,
+      "line": 207,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_VIEW_PIPELINE",
       "value": 4248,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 181,
+      "line": 208,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SET_QUALITY_AUTO",
       "value": 4250,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 183,
+      "line": 210,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SET_QUALITY_BALANCE",
       "value": 4251,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 184,
+      "line": 211,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_WORLD_MODEL",
       "value": 4254,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 187,
+      "line": 214,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_EXPORT_STATS",
       "value": 4255,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 188,
+      "line": 215,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_DIAGNOSTICS",
       "value": 4256,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 189,
+      "line": 216,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_VERSION",
       "value": 4257,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 190,
+      "line": 217,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_HELP",
       "value": 4258,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 191,
+      "line": 218,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_ADVANCED_SETTINGS",
       "value": 4259,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 192,
+      "line": 219,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SHELL_INTEGRATION",
       "value": 4260,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 193,
+      "line": 220,
       "category": "OMEGA"
     },
     {
       "name": "IDM_PLANNING_START",
       "value": 4261,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 197,
+      "line": 224,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_SHOW_QUEUE",
       "value": 4262,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 198,
+      "line": 225,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_APPROVE_STEP",
       "value": 4263,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 199,
+      "line": 226,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_REJECT_STEP",
       "value": 4264,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 200,
+      "line": 227,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_EXECUTE_STEP",
       "value": 4265,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 201,
+      "line": 228,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_EXECUTE_ALL",
       "value": 4266,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 202,
+      "line": 229,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_ROLLBACK",
       "value": 4267,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 203,
+      "line": 230,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_SET_POLICY",
       "value": 4268,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 204,
+      "line": 231,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_VIEW_STATUS",
       "value": 4269,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 205,
+      "line": 232,
       "category": "PLANNING"
     },
     {
       "name": "IDM_PLANNING_DIAGNOSTICS",
       "value": 4270,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 206,
+      "line": 233,
       "category": "PLANNING"
     },
     {
       "name": "IDM_KNOWLEDGE_INIT",
       "value": 4271,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 210,
+      "line": 237,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_RECORD",
       "value": 4272,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 211,
+      "line": 238,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_SEARCH",
       "value": 4273,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 212,
+      "line": 239,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_DECISIONS",
       "value": 4274,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 213,
+      "line": 240,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_PREFERENCES",
       "value": 4275,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 214,
+      "line": 241,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_ARCHAEOLOGY",
       "value": 4276,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 215,
+      "line": 242,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_GRAPH",
       "value": 4277,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 216,
+      "line": 243,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_EXPORT",
       "value": 4278,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 217,
+      "line": 244,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_STATS",
       "value": 4279,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 218,
+      "line": 245,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_KNOWLEDGE_FLUSH",
       "value": 4280,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 219,
+      "line": 246,
       "category": "KNOWLEDGE"
     },
     {
       "name": "IDM_FAILURE_DETECT",
       "value": 4281,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 223,
+      "line": 250,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_ANALYZE",
       "value": 4282,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 224,
+      "line": 251,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_SHOW_QUEUE",
       "value": 4283,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 225,
+      "line": 252,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_SHOW_HISTORY",
       "value": 4284,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 226,
+      "line": 253,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_GENERATE_RECOVERY",
       "value": 4285,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 227,
+      "line": 254,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_EXECUTE_RECOVERY",
       "value": 4286,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 228,
+      "line": 255,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_AUTONOMOUS_HEAL",
       "value": 4287,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 229,
+      "line": 256,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_VIEW_PATTERNS",
       "value": 4288,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 230,
+      "line": 257,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_LEARN_PATTERN",
       "value": 4289,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 231,
+      "line": 258,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_STATS",
       "value": 4290,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 232,
+      "line": 259,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_SET_POLICY",
       "value": 4291,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 233,
+      "line": 260,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_SHOW_HEALTH",
       "value": 4292,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 234,
+      "line": 261,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_EXPORT_ANALYSIS",
       "value": 4293,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 235,
+      "line": 262,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_CLEAR_HISTORY",
       "value": 4294,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 236,
+      "line": 263,
       "category": "FAILURE"
     },
     {
       "name": "IDM_FAILURE_DIAGNOSTICS",
       "value": 4295,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 237,
+      "line": 264,
       "category": "FAILURE"
     },
     {
       "name": "IDM_REVENG_SET_BINARY_FROM_ACTIVE",
       "value": 4320,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 277,
+      "line": 304,
       "category": "REVENG"
     },
     {
       "name": "IDM_REVENG_SET_BINARY_FROM_DEBUG_TARGET",
       "value": 4321,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 278,
+      "line": 305,
       "category": "REVENG"
     },
     {
       "name": "IDM_REVENG_SET_BINARY_FROM_BUILD_OUTPUT",
       "value": 4322,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 279,
+      "line": 306,
       "category": "REVENG"
     },
     {
       "name": "IDM_REVENG_DISASM_AT_RIP",
       "value": 4323,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 280,
+      "line": 307,
       "category": "REVENG"
     },
     {
       "name": "IDM_IMPACT_ANALYZE_STAGED",
       "value": 4350,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 244,
+      "line": 271,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_ANALYZE_UNSTAGED",
       "value": 4351,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 245,
+      "line": 272,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_ANALYZE_FILE",
       "value": 4352,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 246,
+      "line": 273,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_SHOW_REPORT",
       "value": 4353,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 247,
+      "line": 274,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_SHOW_ZONES",
       "value": 4354,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 248,
+      "line": 275,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_RISK_SCORE",
       "value": 4355,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 249,
+      "line": 276,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_CHECK_COMMIT",
       "value": 4356,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 250,
+      "line": 277,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_SET_CONFIG",
       "value": 4357,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 251,
+      "line": 278,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_HISTORY",
       "value": 4358,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 252,
+      "line": 279,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_DIAGNOSTICS",
       "value": 4359,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 253,
+      "line": 280,
       "category": "IMPACT"
     },
     {
       "name": "IDM_IMPACT_EXPORT_JSON",
       "value": 4360,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 254,
+      "line": 281,
       "category": "IMPACT"
     },
     {
       "name": "IDM_ROUTER_ENSEMBLE_ENABLE",
       "value": 5076,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 340,
+      "line": 367,
       "category": "ROUTER"
     },
     {
       "name": "IDM_ROUTER_ENSEMBLE_DISABLE",
       "value": 5077,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 341,
+      "line": 368,
       "category": "ROUTER"
     },
     {
       "name": "IDM_ROUTER_ENSEMBLE_STATUS",
       "value": 5078,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 342,
+      "line": 369,
       "category": "ROUTER"
     },
     {
       "name": "IDM_HYBRID_EXPLAIN_SYMBOL",
       "value": 5101,
       "file": "win32app/Win32IDE.h",
-      "line": 3763,
+      "line": 3966,
       "category": "HYBRID"
     },
     {
       "name": "IDM_HYBRID_STREAM_ANALYZE",
       "value": 5103,
       "file": "win32app/Win32IDE.h",
-      "line": 3765,
+      "line": 3968,
       "category": "HYBRID"
     },
     {
       "name": "IDM_HYBRID_SEMANTIC_PREFETCH",
       "value": 5104,
       "file": "win32app/Win32IDE.h",
-      "line": 3766,
+      "line": 3969,
       "category": "HYBRID"
     },
     {
       "name": "IDM_HYBRID_CORRECTION_LOOP",
       "value": 5105,
       "file": "win32app/Win32IDE.h",
-      "line": 3767,
+      "line": 3970,
       "category": "HYBRID"
     },
     {
       "name": "IDM_MULTI_RESP_SELECT_PREFERRED",
       "value": 5108,
       "file": "win32app/Win32IDE.h",
-      "line": 3916,
+      "line": 4119,
       "category": "MULTI"
     },
     {
       "name": "IDM_MULTI_RESP_TOGGLE_TEMPLATE",
       "value": 5112,
       "file": "win32app/Win32IDE.h",
-      "line": 3920,
+      "line": 4123,
       "category": "MULTI"
     },
     {
       "name": "IDM_MULTI_RESP_APPLY_PREFERRED",
       "value": 5117,
       "file": "win32app/Win32IDE.h",
-      "line": 3925,
+      "line": 4128,
       "category": "MULTI"
     },
     {
       "name": "IDM_CONFIDENCE_SET_POLICY",
       "value": 5131,
       "file": "win32app/Win32IDE.h",
-      "line": 3976,
+      "line": 4179,
       "category": "CONFIDENCE"
     },
     {
       "name": "IDM_SWARM_WORKER_DISCONNECT",
       "value": 5155,
       "file": "win32app/Win32IDE.h",
-      "line": 4008,
+      "line": 4211,
       "category": "SWARM"
     },
     {
       "name": "IDM_AI_MODEL_REGISTRY",
       "value": 5300,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 359,
+      "line": 386,
       "category": "AI"
     },
     {
       "name": "IDM_AI_CHECKPOINT_MGR",
       "value": 5301,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 360,
+      "line": 387,
       "category": "AI"
     },
     {
       "name": "IDM_AI_INTERPRET_PANEL",
       "value": 5302,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 361,
+      "line": 388,
       "category": "AI"
     },
     {
       "name": "IDM_AI_CICD_SETTINGS",
       "value": 5303,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 362,
+      "line": 389,
       "category": "AI"
     },
     {
       "name": "IDM_AI_MULTI_FILE_SEARCH",
       "value": 5304,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 363,
+      "line": 390,
       "category": "AI"
     },
     {
       "name": "IDM_AI_BENCHMARK_MENU",
       "value": 5305,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 364,
+      "line": 391,
       "category": "AI"
     },
     {
       "name": "IDM_VIEW_MONACO_SETTINGS",
       "value": 5310,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 365,
+      "line": 392,
       "category": "VIEW"
     },
     {
       "name": "IDM_VIEW_THERMAL_DASHBOARD",
       "value": 5311,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 366,
+      "line": 393,
       "category": "VIEW"
     },
     {
       "name": "IDM_AGENT_SMOKE_TEST",
       "value": 5320,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 367,
+      "line": 394,
       "category": "AGENT"
     },
     {
       "name": "IDM_AGENT_SET_CYCLE_AGENT_COUNTER",
       "value": 5321,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 368,
+      "line": 395,
       "category": "AGENT"
     },
     {
@@ -2007,126 +2091,126 @@
       "name": "IDM_HOTPATCH_BYTE_SEARCH",
       "value": 9005,
       "file": "win32app/Win32IDE.h",
-      "line": 4264,
+      "line": 4467,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_SERVER_REMOVE",
       "value": 9007,
       "file": "win32app/Win32IDE.h",
-      "line": 4266,
+      "line": 4469,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_PROXY_REWRITE",
       "value": 9009,
       "file": "win32app/Win32IDE.h",
-      "line": 4268,
+      "line": 4471,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_PROXY_TERMINATE",
       "value": 9010,
       "file": "win32app/Win32IDE.h",
-      "line": 4269,
+      "line": 4472,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_PROXY_VALIDATE",
       "value": 9011,
       "file": "win32app/Win32IDE.h",
-      "line": 4270,
+      "line": 4473,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_RESET_STATS",
       "value": 9015,
       "file": "win32app/Win32IDE.h",
-      "line": 4274,
+      "line": 4477,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_SHOW_PROXY_STATS",
       "value": 9017,
       "file": "win32app/Win32IDE.h",
-      "line": 4276,
+      "line": 4479,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_HOTPATCH_SET_TARGET_TPS",
       "value": 9018,
       "file": "win32app/Win32IDE.h",
-      "line": 4277,
+      "line": 4480,
       "category": "HOTPATCH"
     },
     {
       "name": "IDM_LSP_SERVER_EXPORT_SYMBOLS",
       "value": 9207,
       "file": "win32app/Win32IDE.h",
-      "line": 4299,
+      "line": 4502,
       "category": "LSP"
     },
     {
       "name": "IDM_SECURITY_SCAN_SECRETS",
       "value": 9550,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 406,
+      "line": 433,
       "category": "SECURITY"
     },
     {
       "name": "IDM_SECURITY_SCAN_SAST",
       "value": 9551,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 407,
+      "line": 434,
       "category": "SECURITY"
     },
     {
       "name": "IDM_SECURITY_SCAN_DEPENDENCIES",
       "value": 9552,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 408,
+      "line": 435,
       "category": "SECURITY"
     },
     {
       "name": "IDM_SECURITY_DASHBOARD",
       "value": 9553,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 409,
+      "line": 436,
       "category": "SECURITY"
     },
     {
       "name": "IDM_SECURITY_EXPORT_SBOM",
       "value": 9554,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 410,
+      "line": 437,
       "category": "SECURITY"
     },
     {
       "name": "IDM_VOICE_MODE_CONTINUOUS",
       "value": 9708,
       "file": "win32app/Win32IDE.h",
-      "line": 4369,
+      "line": 4572,
       "category": "VOICE"
     },
     {
       "name": "IDM_TELEMETRY_EXPORT_JSON",
       "value": 9901,
       "file": "win32app/Win32IDE.h",
-      "line": 4330,
+      "line": 4533,
       "category": "TELEMETRY"
     },
     {
       "name": "IDM_TELEMETRY_EXPORT_CSV",
       "value": 9902,
       "file": "win32app/Win32IDE.h",
-      "line": 4331,
+      "line": 4534,
       "category": "TELEMETRY"
     },
     {
       "name": "IDM_TELEMETRY_SHOW_DASHBOARD",
       "value": 9903,
       "file": "win32app/Win32IDE.h",
-      "line": 4332,
+      "line": 4535,
       "category": "TELEMETRY"
     },
     {
@@ -2147,35 +2231,35 @@
       "name": "IDM_EDITOR_GOTO_WORKSPACE_SYMBOL",
       "value": 10207,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 420,
+      "line": 447,
       "category": "EDITOR"
     },
     {
       "name": "IDM_EDITOR_PEEK_DEFINITION",
       "value": 10208,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 421,
+      "line": 448,
       "category": "EDITOR"
     },
     {
       "name": "IDM_EDITOR_PEEK_REFERENCES",
       "value": 10209,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 422,
+      "line": 449,
       "category": "EDITOR"
     },
     {
       "name": "IDM_VIEW_TOGGLE_BOTTOM_PANEL",
       "value": 10250,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 433,
+      "line": 460,
       "category": "VIEW"
     },
     {
       "name": "IDM_FILE_QUICK_OPEN",
       "value": 10251,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 434,
+      "line": 461,
       "category": "FILE"
     },
     {
@@ -2210,169 +2294,190 @@
       "name": "IDM_BUILD_SOLUTION",
       "value": 10400,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 438,
+      "line": 465,
       "category": "BUILD"
     },
     {
       "name": "IDM_DEBUG_TOGGLE_BREAKPOINT",
       "value": 10506,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 450,
+      "line": 477,
       "category": "DEBUG"
     },
     {
       "name": "IDM_DEBUG_SHOW_CALLSTACK",
       "value": 10507,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 451,
+      "line": 478,
       "category": "DEBUG"
     },
     {
       "name": "IDM_DEBUG_SHOW_VARIABLES",
       "value": 10508,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 452,
+      "line": 479,
       "category": "DEBUG"
     },
     {
       "name": "IDM_DEBUG_SHOW_WATCH",
       "value": 10509,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 453,
+      "line": 480,
       "category": "DEBUG"
     },
     {
       "name": "IDM_DEBUG_DETACH",
       "value": 10511,
       "file": "win32app/Win32IDE_Commands.h",
-      "line": 455,
+      "line": 482,
       "category": "DEBUG"
     },
     {
       "name": "IDM_ENT_MODEL_COMPARE",
       "value": 12330,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 210,
+      "line": 212,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_BATCH_PROCESS",
       "value": 12331,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 213,
+      "line": 215,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_CUSTOM_STOP_SEQ",
       "value": 12332,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 216,
+      "line": 218,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_GRAMMAR_CONSTRAINTS",
       "value": 12333,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 219,
+      "line": 221,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_LORA_ADAPTER",
       "value": 12334,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 222,
+      "line": 224,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_RESPONSE_CACHE",
       "value": 12335,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 225,
+      "line": 227,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_PROMPT_LIBRARY",
       "value": 12336,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 228,
+      "line": 230,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_SESSION_EXPORT_IMPORT",
       "value": 12337,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 231,
+      "line": 233,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_MODEL_SHARDING",
       "value": 12338,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 234,
+      "line": 236,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_TENSOR_PARALLEL",
       "value": 12339,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 237,
+      "line": 239,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_PIPELINE_PARALLEL",
       "value": 12340,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 240,
+      "line": 242,
       "category": "ENT"
     },
     {
       "name": "IDM_ENT_CUSTOM_QUANT",
       "value": 12341,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 243,
+      "line": 245,
       "category": "ENT"
     },
     {
       "name": "IDM_OMEGA_START_AUTONOMOUS",
       "value": 12400,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 274,
+      "line": 276,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SET_GOAL",
       "value": 12401,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 277,
+      "line": 279,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_OBSERVE_PIPELINE",
       "value": 12402,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 280,
+      "line": 282,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_CANCEL_TASK",
       "value": 12403,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 283,
+      "line": 285,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_SPAWN_AGENT",
       "value": 12404,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 286,
+      "line": 288,
       "category": "OMEGA"
     },
     {
       "name": "IDM_OMEGA_GET_STATS",
       "value": 12405,
       "file": "win32app/Win32IDE_Commands.cpp",
-      "line": 289,
+      "line": 291,
       "category": "OMEGA"
+    },
+    {
+      "name": "IDM_CMD_ENTER_WORK",
+      "value": 12520,
+      "file": "win32app/resource.h",
+      "line": 128,
+      "category": "CMD"
+    },
+    {
+      "name": "IDM_CMD_ENTER_COMMAND",
+      "value": 12521,
+      "file": "win32app/resource.h",
+      "line": 129,
+      "category": "CMD"
+    },
+    {
+      "name": "IDM_CMD_NEW_TASK",
+      "value": 12522,
+      "file": "win32app/resource.h",
+      "line": 130,
+      "category": "CMD"
     }
   ],
   "orphan_handlers": [
@@ -6966,7 +7071,7 @@
       "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
-      "id": 11001,
+      "id": 10920,
       "symbol": "MODEL_LIST",
       "canonical": "model.list",
       "cli": "!model_list",
@@ -6976,7 +7081,7 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 11002,
+      "id": 10921,
       "symbol": "MODEL_LOAD",
       "canonical": "model.load",
       "cli": "!load_model",
@@ -6986,7 +7091,7 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 11003,
+      "id": 10922,
       "symbol": "MODEL_UNLOAD",
       "canonical": "model.unload",
       "cli": "!model_unload",
@@ -6996,7 +7101,7 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 11004,
+      "id": 10923,
       "symbol": "MODEL_QUANTIZE",
       "canonical": "model.quantize",
       "cli": "!model_quantize",
@@ -7006,7 +7111,7 @@
       "flags": "CMD_ASYNC"
     },
     {
-      "id": 11005,
+      "id": 10924,
       "symbol": "MODEL_FINETUNE",
       "canonical": "model.finetune",
       "cli": "!model_finetune",
@@ -7016,7 +7121,7 @@
       "flags": "CMD_ASYNC"
     },
     {
-      "id": 11100,
+      "id": 10925,
       "symbol": "DISK_LIST_DRIVES",
       "canonical": "disk.listDrives",
       "cli": "!disk_drives",
@@ -7026,7 +7131,7 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 11101,
+      "id": 10926,
       "symbol": "DISK_SCAN_PARTS",
       "canonical": "disk.scanPartitions",
       "cli": "!disk_scan",
@@ -7036,7 +7141,7 @@
       "flags": "CMD_ASYNC"
     },
     {
-      "id": 11200,
+      "id": 10927,
       "symbol": "GOVERNOR_STATUS",
       "canonical": "governor.status",
       "cli": "!governor_status",
@@ -7046,7 +7151,7 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 11300,
+      "id": 10929,
       "symbol": "MARKETPLACE_LIST",
       "canonical": "marketplace.list",
       "cli": "!marketplace_list",
@@ -7056,7 +7161,7 @@
       "flags": "\\\n      CMD_NONE"
     },
     {
-      "id": 11400,
+      "id": 10931,
       "symbol": "EMBEDDING_ENCODE",
       "canonical": "embedding.encode",
       "cli": "!embedding_encode",
@@ -7066,7 +7171,7 @@
       "flags": "\\\n      CMD_NONE"
     },
     {
-      "id": 11500,
+      "id": 10932,
       "symbol": "VISION_ANALYZE",
       "canonical": "vision.analyze",
       "cli": "!vision_analyze",
@@ -7076,7 +7181,7 @@
       "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
-      "id": 11600,
+      "id": 10933,
       "symbol": "PROMPT_CLASSIFY",
       "canonical": "prompt.classify",
       "cli": "!prompt_classify",
@@ -7206,14 +7311,834 @@
       "flags": "\\\n      CMD_ASYNC"
     },
     {
-      "id": 12091,
+      "id": 12092,
       "symbol": "T1_UPDATE_DISMISS",
       "canonical": "tier1.updateDismiss",
       "cli": "!update_dismiss",
       "exposure": "BOTH",
       "category": "Cosmetic",
       "handler": "handleTier1UpdateDismiss",
-      "flags": "\\\n      CMD_NONE"
+      "flags": "\\\nCMD_NONE"
+    },
+    {
+      "id": 11700,
+      "symbol": "T2_GITDIFF",
+      "canonical": "tier2.gitdiff",
+      "cli": "!gitdiff",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2GitDiff",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11701,
+      "symbol": "T2_GITDIFF_CLOSE",
+      "canonical": "tier2.gitdiff.close",
+      "cli": "!gitdiff_close",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2GitDiffClose",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11702,
+      "symbol": "T2_GITDIFF_PREV",
+      "canonical": "tier2.gitdiff.prev",
+      "cli": "!gitdiff_prev",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2GitDiffPrev",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11703,
+      "symbol": "T2_GITDIFF_NEXT",
+      "canonical": "tier2.gitdiff.next",
+      "cli": "!gitdiff_next",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2GitDiffNext",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11710,
+      "symbol": "T2_TERMINAL_NEW",
+      "canonical": "tier2.terminal.new",
+      "cli": "!term_new",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2TerminalNew",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11711,
+      "symbol": "T2_TERMINAL_CLOSE",
+      "canonical": "tier2.terminal.close",
+      "cli": "!term_close",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2TerminalClose",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11720,
+      "symbol": "T2_HOVER",
+      "canonical": "tier2.hover",
+      "cli": "!hover",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2Hover",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11721,
+      "symbol": "T2_SIGHELP",
+      "canonical": "tier2.sighelp",
+      "cli": "!sighelp",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2SigHelp",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11730,
+      "symbol": "T2_OUTLINE_REFRESH",
+      "canonical": "tier2.outline.refresh",
+      "cli": "!outline_refresh",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2OutlineRefresh",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11731,
+      "symbol": "T2_OUTLINE_FILTER",
+      "canonical": "tier2.outline.filter",
+      "cli": "!outline_filter",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2OutlineFilter",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11732,
+      "symbol": "T2_OUTLINE_SORT",
+      "canonical": "tier2.outline.sort",
+      "cli": "!outline_sort",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2OutlineSort",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11740,
+      "symbol": "T2_FIND_REFS",
+      "canonical": "tier2.findrefs",
+      "cli": "!findrefs",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2FindRefs",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11750,
+      "symbol": "T2_RENAME_PREVIEW",
+      "canonical": "tier2.rename.preview",
+      "cli": "!rename_preview",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2RenamePreview",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11760,
+      "symbol": "T2_CODELENS_TOGGLE",
+      "canonical": "tier2.codelens.toggle",
+      "cli": "!codelens_toggle",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2CodeLensToggle",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11761,
+      "symbol": "T2_CODELENS_REFRESH",
+      "canonical": "tier2.codelens.refresh",
+      "cli": "!codelens_refresh",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2CodeLensRefresh",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11770,
+      "symbol": "T2_INLAY_TOGGLE",
+      "canonical": "tier2.inlay.toggle",
+      "cli": "!inlay_toggle",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2InlayToggle",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11771,
+      "symbol": "T2_INLAY_REFRESH",
+      "canonical": "tier2.inlay.refresh",
+      "cli": "!inlay_refresh",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier2InlayRefresh",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12100,
+      "symbol": "T3_BRACKET_PAIRS",
+      "canonical": "tier3.bracketPairs",
+      "cli": "!bracket_pairs",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3BracketPairs",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12101,
+      "symbol": "T3_INDENT_GUIDES",
+      "canonical": "tier3.indentGuides",
+      "cli": "!indent_guides",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3IndentGuides",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12102,
+      "symbol": "T3_WHITESPACE_TOGGLE",
+      "canonical": "tier3.whitespaceToggle",
+      "cli": "!whitespace",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3WhitespaceToggle",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12103,
+      "symbol": "T3_WORD_WRAP_IND",
+      "canonical": "tier3.wordWrapIndicator",
+      "cli": "!word_wrap_indicator",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3WordWrapIndicator",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12104,
+      "symbol": "T3_RELATIVE_LINES",
+      "canonical": "tier3.relativeLines",
+      "cli": "!relative_lines",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3RelativeLines",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12105,
+      "symbol": "T3_ZEN_MODE",
+      "canonical": "tier3.zenMode",
+      "cli": "!zen_mode",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3ZenMode",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12106,
+      "symbol": "T3_PIN_TAB",
+      "canonical": "tier3.pinTab",
+      "cli": "!pin_tab",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3PinTab",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12107,
+      "symbol": "T3_UNPIN_TAB",
+      "canonical": "tier3.unpinTab",
+      "cli": "!unpin_tab",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3UnpinTab",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12108,
+      "symbol": "T3_CODE_FOLD_TOGGLE",
+      "canonical": "tier3.codeFoldToggle",
+      "cli": "!code_fold",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3CodeFoldToggle",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12110,
+      "symbol": "T3_FOLD_ALL",
+      "canonical": "tier3.foldAll",
+      "cli": "!fold_all",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3FoldAll",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12111,
+      "symbol": "T3_UNFOLD_ALL",
+      "canonical": "tier3.unfoldAll",
+      "cli": "!unfold_all",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier3UnfoldAll",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12200,
+      "symbol": "T5_LINEENDING_DETECT",
+      "canonical": "tier5.lineending.detect",
+      "cli": "!le_detect",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5LineEndingDetect",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12201,
+      "symbol": "T5_LINEENDING_TO_CRLF",
+      "canonical": "tier5.lineending.to_crlf",
+      "cli": "!le_crlf",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5LineEndingToCRLF",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12202,
+      "symbol": "T5_LINEENDING_TO_LF",
+      "canonical": "tier5.lineending.to_lf",
+      "cli": "!le_lf",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5LineEndingToLF",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12203,
+      "symbol": "T5_LINEENDING_TO_CR",
+      "canonical": "tier5.lineending.to_cr",
+      "cli": "!le_cr",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5LineEndingToCR",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12210,
+      "symbol": "T5_NETWORK_SHOW",
+      "canonical": "tier5.network.show",
+      "cli": "!network_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5NetworkShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12211,
+      "symbol": "T5_NETWORK_ADD_PORT",
+      "canonical": "tier5.network.add_port",
+      "cli": "!network_add",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5NetworkAddPort",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12212,
+      "symbol": "T5_NETWORK_REMOVE_PORT",
+      "canonical": "tier5.network.remove_port",
+      "cli": "!network_remove",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5NetworkRemovePort",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12213,
+      "symbol": "T5_NETWORK_TOGGLE",
+      "canonical": "tier5.network.toggle",
+      "cli": "!network_toggle",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5NetworkToggle",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12214,
+      "symbol": "T5_NETWORK_LIST",
+      "canonical": "tier5.network.list",
+      "cli": "!network_list",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5NetworkList",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12219,
+      "symbol": "T5_NETWORK_STATUS",
+      "canonical": "tier5.network.status",
+      "cli": "!network_status",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5NetworkStatus",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12220,
+      "symbol": "T5_TESTEXPLORER_SHOW",
+      "canonical": "tier5.testexplorer.show",
+      "cli": "!test_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TestExplorerShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12221,
+      "symbol": "T5_TESTEXPLORER_RUN",
+      "canonical": "tier5.testexplorer.run",
+      "cli": "!test_run",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TestExplorerRun",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12222,
+      "symbol": "T5_TESTEXPLORER_REFRESH",
+      "canonical": "tier5.testexplorer.refresh",
+      "cli": "!test_refresh",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TestExplorerRefresh",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12229,
+      "symbol": "T5_TESTEXPLORER_FILTER",
+      "canonical": "tier5.testexplorer.filter",
+      "cli": "!test_filter",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TestExplorerFilter",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12230,
+      "symbol": "T5_DBGWATCH_SHOW",
+      "canonical": "tier5.dbgwatch.show",
+      "cli": "!dbgwatch_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5DbgWatchShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12239,
+      "symbol": "T5_DBGWATCH_CLEAR",
+      "canonical": "tier5.dbgwatch.clear",
+      "cli": "!dbgwatch_clear",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5DbgWatchClear",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12240,
+      "symbol": "T5_CALLSTACK_CAPTURE",
+      "canonical": "tier5.callstack.capture",
+      "cli": "!callstack_capture",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CallStackCapture",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12241,
+      "symbol": "T5_CALLSTACK_SHOW",
+      "canonical": "tier5.callstack.show",
+      "cli": "!callstack_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CallStackShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12242,
+      "symbol": "T5_CALLSTACK_COPY",
+      "canonical": "tier5.callstack.copy",
+      "cli": "!callstack_copy",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CallStackCopy",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12249,
+      "symbol": "T5_CALLSTACK_RESOLVE",
+      "canonical": "tier5.callstack.resolve",
+      "cli": "!callstack_resolve",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CallStackResolve",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12250,
+      "symbol": "T5_MARKETPLACE_SHOW",
+      "canonical": "tier5.marketplace.show",
+      "cli": "!market_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5MarketplaceShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12251,
+      "symbol": "T5_MARKETPLACE_SEARCH",
+      "canonical": "tier5.marketplace.search",
+      "cli": "!market_search",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5MarketplaceSearch",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12252,
+      "symbol": "T5_MARKETPLACE_INSTALL",
+      "canonical": "tier5.marketplace.install",
+      "cli": "!market_install",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5MarketplaceInstall",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12253,
+      "symbol": "T5_MARKETPLACE_UNINSTALL",
+      "canonical": "tier5.marketplace.uninstall",
+      "cli": "!market_uninstall",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5MarketplaceUninstall",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12254,
+      "symbol": "T5_MARKETPLACE_LIST",
+      "canonical": "tier5.marketplace.list",
+      "cli": "!market_list",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5MarketplaceList",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12259,
+      "symbol": "T5_MARKETPLACE_STATUS",
+      "canonical": "tier5.marketplace.status",
+      "cli": "!market_status",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5MarketplaceStatus",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12265,
+      "symbol": "T5_TELDASH_LOG",
+      "canonical": "tier5.teldash.log",
+      "cli": "!teldash_log",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TelDashLog",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12266,
+      "symbol": "T5_TELDASH_CLEAR",
+      "canonical": "tier5.teldash.clear",
+      "cli": "!teldash_clear",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TelDashClear",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12267,
+      "symbol": "T5_TELDASH_EXPORT",
+      "canonical": "tier5.teldash.export",
+      "cli": "!teldash_export",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TelDashExport",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12268,
+      "symbol": "T5_TELDASH_SHOW",
+      "canonical": "tier5.teldash.show",
+      "cli": "!teldash_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TelDashShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12269,
+      "symbol": "T5_TELDASH_STATS",
+      "canonical": "tier5.teldash.stats",
+      "cli": "!teldash_stats",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5TelDashStats",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12270,
+      "symbol": "T5_SHORTCUT_SHOW",
+      "canonical": "tier5.shortcut.show",
+      "cli": "!shortcut_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ShortcutShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12271,
+      "symbol": "T5_SHORTCUT_RECORD",
+      "canonical": "tier5.shortcut.record",
+      "cli": "!shortcut_record",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ShortcutRecord",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12272,
+      "symbol": "T5_SHORTCUT_RESET",
+      "canonical": "tier5.shortcut.reset",
+      "cli": "!shortcut_reset",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ShortcutReset",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12273,
+      "symbol": "T5_SHORTCUT_SAVE",
+      "canonical": "tier5.shortcut.save",
+      "cli": "!shortcut_save",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ShortcutSave",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12279,
+      "symbol": "T5_SHORTCUT_LIST",
+      "canonical": "tier5.shortcut.list",
+      "cli": "!shortcut_list",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ShortcutList",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12280,
+      "symbol": "T5_COLORPICK_SCAN",
+      "canonical": "tier5.colorpick.scan",
+      "cli": "!colorpick_scan",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ColorPickScan",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12281,
+      "symbol": "T5_COLORPICK_PICK",
+      "canonical": "tier5.colorpick.pick",
+      "cli": "!colorpick_pick",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ColorPickPick",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12282,
+      "symbol": "T5_COLORPICK_INSERT",
+      "canonical": "tier5.colorpick.insert",
+      "cli": "!colorpick_insert",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ColorPickInsert",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12289,
+      "symbol": "T5_COLORPICK_LIST",
+      "canonical": "tier5.colorpick.list",
+      "cli": "!colorpick_list",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5ColorPickList",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12290,
+      "symbol": "T5_EMOJI_PICKER",
+      "canonical": "tier5.emoji.picker",
+      "cli": "!emoji_picker",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5EmojiPicker",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12291,
+      "symbol": "T5_EMOJI_INSERT",
+      "canonical": "tier5.emoji.insert",
+      "cli": "!emoji_insert",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5EmojiInsert",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12292,
+      "symbol": "T5_EMOJI_CONFIG",
+      "canonical": "tier5.emoji.config",
+      "cli": "!emoji_config",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5EmojiConfig",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12299,
+      "symbol": "T5_EMOJI_TEST",
+      "canonical": "tier5.emoji.test",
+      "cli": "!emoji_test",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5EmojiTest",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12300,
+      "symbol": "T5_CRASH_SHOW",
+      "canonical": "tier5.crash.show",
+      "cli": "!crash_show",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CrashShow",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12301,
+      "symbol": "T5_CRASH_TEST",
+      "canonical": "tier5.crash.test",
+      "cli": "!crash_test",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CrashTest",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12302,
+      "symbol": "T5_CRASH_LOG",
+      "canonical": "tier5.crash.log",
+      "cli": "!crash_log",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CrashLog",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12303,
+      "symbol": "T5_CRASH_CLEAR",
+      "canonical": "tier5.crash.clear",
+      "cli": "!crash_clear",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CrashClear",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12309,
+      "symbol": "T5_CRASH_STATS",
+      "canonical": "tier5.crash.stats",
+      "cli": "!crash_stats",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5CrashStats",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12310,
+      "symbol": "T5_IRC_CONNECT",
+      "canonical": "tier5.irc.connect",
+      "cli": "!irc_connect",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5IRCConnect",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12311,
+      "symbol": "T5_IRC_DISCONNECT",
+      "canonical": "tier5.irc.disconnect",
+      "cli": "!irc_disconnect",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5IRCDisconnect",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12312,
+      "symbol": "T5_IRC_STATUS",
+      "canonical": "tier5.irc.status",
+      "cli": "!irc_status",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5IRCStatus",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12313,
+      "symbol": "T5_IRC_CONFIG",
+      "canonical": "tier5.irc.config",
+      "cli": "!irc_config",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5IRCConfig",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12314,
+      "symbol": "T5_IRC_SEND",
+      "canonical": "tier5.irc.send",
+      "cli": "!irc_send",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier5IRCSend",
+      "flags": "CMD_NONE"
     },
     {
       "id": 43002,

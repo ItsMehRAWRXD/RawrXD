@@ -1,23 +1,24 @@
 # COMMAND_TABLE Coverage Audit Report
-Generated: 2026-08-09 18:51:39
-Source root: `D:\rawrxd\src`
+Generated: 2026-10-19 13:12:34
+Source root: `G:\~dev\rawrxd\src`
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| IDM_* defines (non-zero, non-range) | 782 |
-| COMMAND_TABLE entries | 493 |
+| IDM_* defines (non-zero, non-range) | 797 |
+| COMMAND_TABLE entries | 575 |
 | Handler declarations | 280 |
-| GUI-routable (ID ≠ 0) | 467 |
-| CLI-accessible (BOTH + CLI_ONLY) | 482 |
-| **Coverage** | **57.8%** |
+| GUI-routable (ID ≠ 0) | 549 |
+| CLI-accessible (BOTH + CLI_ONLY) | 564 |
+| **Coverage** | **56.7%** |
 | Status | ⚠️ ISSUES FOUND |
 
 ## Categories
 
 | Category | Commands |
 |----------|----------|
+| Cosmetic | 95 |
 | ReverseEng | 29 |
 | Debug | 28 |
 | CLI | 26 |
@@ -32,7 +33,6 @@ Source root: `D:\rawrxd\src`
 | AIMode | 14 |
 | Agent | 13 |
 | LSP | 13 |
-| Cosmetic | 13 |
 | ASM | 12 |
 | QW | 12 |
 | Backend | 11 |
@@ -156,17 +156,17 @@ To fix: add an X(...) row in `command_registry.hpp`.
 | `IDM_CRUCIBLE_BENCHMARK` | 2602 | ide/RawrXD_IDE_Win32.h | 204 |
 | `IDM_GAP_ANALYZE` | 2701 | ide/RawrXD_IDE_Win32.h | 207 |
 | `IDM_GAP_FIX` | 2702 | ide/RawrXD_IDE_Win32.h | 208 |
-| `IDM_BUILD_PROJECT` | 2801 | win32app/Win32IDE_Commands.cpp | 25 |
+| `IDM_BUILD_PROJECT` | 2801 | win32app/Win32IDE_Commands.cpp | 27 |
 | `IDM_FEATURES_ENABLE` | 2801 | ide/RawrXD_IDE_Win32.h | 211 |
 | `IDM_FEATURES_DISABLE` | 2802 | ide/RawrXD_IDE_Win32.h | 212 |
 | `IDM_COMMANDS_PALETTE` | 2901 | ide/RawrXD_IDE_Win32.h | 215 |
-| `IDM_TOOLS_GGUF_INSPECTOR` | 3014 | win32app/Win32IDE.cpp | 716 |
-| `IDM_ENT_MULTI_GPU_BALANCE` | 3042 | win32app/Win32IDE_Commands.cpp | 252 |
-| `IDM_ENT_DYNAMIC_BATCH` | 3043 | win32app/Win32IDE_Commands.cpp | 255 |
-| `IDM_ENT_API_KEY_MGMT` | 3044 | win32app/Win32IDE_Commands.cpp | 258 |
-| `IDM_ENT_AUDIT_LOGS` | 3045 | win32app/Win32IDE_Commands.cpp | 261 |
-| `IDM_ENT_RAWR_TUNER` | 3046 | win32app/Win32IDE_Commands.cpp | 264 |
-| `IDM_ENT_DUAL_ENGINE` | 3047 | win32app/Win32IDE_Commands.cpp | 267 |
+| `IDM_TOOLS_GGUF_INSPECTOR` | 3014 | win32app/Win32IDE.cpp | 733 |
+| `IDM_ENT_MULTI_GPU_BALANCE` | 3042 | win32app/Win32IDE_Commands.cpp | 254 |
+| `IDM_ENT_DYNAMIC_BATCH` | 3043 | win32app/Win32IDE_Commands.cpp | 257 |
+| `IDM_ENT_API_KEY_MGMT` | 3044 | win32app/Win32IDE_Commands.cpp | 260 |
+| `IDM_ENT_AUDIT_LOGS` | 3045 | win32app/Win32IDE_Commands.cpp | 263 |
+| `IDM_ENT_RAWR_TUNER` | 3046 | win32app/Win32IDE_Commands.cpp | 266 |
+| `IDM_ENT_DUAL_ENGINE` | 3047 | win32app/Win32IDE_Commands.cpp | 269 |
 | `IDM_VIEW_COLLABORATION` | 3060 | win32app/Win32IDE_Commands.h | 67 |
 | `IDM_PLATFORM_EXT_CREATOR` | 3301 | ide/RawrXD_IDE_Win32.h | 234 |
 | `IDM_PLATFORM_MODEL_CREATOR` | 3302 | ide/RawrXD_IDE_Win32.h | 235 |
@@ -241,112 +241,124 @@ To fix: add an X(...) row in `command_registry.hpp`.
 | `IDM_REVENG_UNPACK` | 3522 | ide/RawrXD_IDE_Win32.h | 308 |
 | `IDM_REVENG_DIFF` | 3523 | ide/RawrXD_IDE_Win32.h | 309 |
 | `IDM_REVENG_SIGNATURE` | 3524 | ide/RawrXD_IDE_Win32.h | 310 |
-| `IDM_PIPELINE_RUN` | 4160 | win32app/Win32IDE_Commands.h | 138 |
-| `IDM_PIPELINE_AUTONOMY_START` | 4161 | win32app/Win32IDE_Commands.h | 139 |
-| `IDM_PIPELINE_AUTONOMY_STOP` | 4162 | win32app/Win32IDE_Commands.h | 140 |
-| `IDM_AGENT_AUTONOMOUS_COMMUNICATOR` | 4163 | win32app/Win32IDE.cpp | 739 |
-| `IDM_TELEMETRY_UNIFIED_CORE` | 4164 | win32app/Win32IDE.cpp | 740 |
-| `IDM_GGUF_TREE` | 4204 | win32app/resource.h | 90 |
-| `IDM_AI_MODE_SWARM` | 4204 | win32app/Win32IDE_Commands.h | 147 |
-| `IDM_GGUF_DETAILS` | 4205 | win32app/resource.h | 91 |
-| `IDM_AI_LOAD_SWARM_DIR` | 4205 | win32app/Win32IDE_Commands.h | 148 |
-| `IDM_AI_CONTEXT_UNLIMITED` | 4217 | win32app/Win32IDE_Commands.h | 158 |
-| `IDM_AI_AGENT_CYCLES_SET` | 4217 | win32app/Win32IDE_Commands.h | 159 |
-| `IDM_AI_AGENT_MULTI_ENABLE` | 4218 | win32app/Win32IDE_Commands.h | 160 |
-| `IDM_AI_AGENT_MULTI_DISABLE` | 4219 | win32app/Win32IDE_Commands.h | 161 |
-| `IDM_ENGINE_UNLOCK_800B` | 4220 | win32app/Win32IDE_Commands.h | 164 |
-| `IDM_ENGINE_LOAD_800B` | 4221 | win32app/Win32IDE_Commands.h | 165 |
-| `IDM_TITAN_TOGGLE` | 4230 | win32app/Win32IDE_Commands.h | 166 |
-| `IDM_AI_AGENT_MULTI_STATUS` | 4240 | win32app/Win32IDE_Commands.h | 170 |
-| `IDM_AI_TITAN_TOGGLE` | 4241 | win32app/Win32IDE_Commands.h | 171 |
-| `IDM_AI_800B_STATUS` | 4242 | win32app/Win32IDE_Commands.h | 172 |
-| `IDM_OMEGA_START` | 4243 | win32app/Win32IDE_Commands.h | 176 |
-| `IDM_OMEGA_STOP` | 4244 | win32app/Win32IDE_Commands.h | 177 |
-| `IDM_OMEGA_SUBMIT_TASK` | 4245 | win32app/Win32IDE_Commands.h | 178 |
-| `IDM_OMEGA_RUN_CYCLE` | 4246 | win32app/Win32IDE_Commands.h | 179 |
-| `IDM_OMEGA_SHOW_STATUS` | 4247 | win32app/Win32IDE_Commands.h | 180 |
-| `IDM_OMEGA_VIEW_PIPELINE` | 4248 | win32app/Win32IDE_Commands.h | 181 |
-| `IDM_OMEGA_SET_QUALITY_AUTO` | 4250 | win32app/Win32IDE_Commands.h | 183 |
-| `IDM_OMEGA_SET_QUALITY_BALANCE` | 4251 | win32app/Win32IDE_Commands.h | 184 |
-| `IDM_OMEGA_WORLD_MODEL` | 4254 | win32app/Win32IDE_Commands.h | 187 |
-| `IDM_OMEGA_EXPORT_STATS` | 4255 | win32app/Win32IDE_Commands.h | 188 |
-| `IDM_OMEGA_DIAGNOSTICS` | 4256 | win32app/Win32IDE_Commands.h | 189 |
-| `IDM_OMEGA_VERSION` | 4257 | win32app/Win32IDE_Commands.h | 190 |
-| `IDM_OMEGA_HELP` | 4258 | win32app/Win32IDE_Commands.h | 191 |
-| `IDM_OMEGA_ADVANCED_SETTINGS` | 4259 | win32app/Win32IDE_Commands.h | 192 |
-| `IDM_OMEGA_SHELL_INTEGRATION` | 4260 | win32app/Win32IDE_Commands.h | 193 |
-| `IDM_PLANNING_START` | 4261 | win32app/Win32IDE_Commands.h | 197 |
-| `IDM_PLANNING_SHOW_QUEUE` | 4262 | win32app/Win32IDE_Commands.h | 198 |
-| `IDM_PLANNING_APPROVE_STEP` | 4263 | win32app/Win32IDE_Commands.h | 199 |
-| `IDM_PLANNING_REJECT_STEP` | 4264 | win32app/Win32IDE_Commands.h | 200 |
-| `IDM_PLANNING_EXECUTE_STEP` | 4265 | win32app/Win32IDE_Commands.h | 201 |
-| `IDM_PLANNING_EXECUTE_ALL` | 4266 | win32app/Win32IDE_Commands.h | 202 |
-| `IDM_PLANNING_ROLLBACK` | 4267 | win32app/Win32IDE_Commands.h | 203 |
-| `IDM_PLANNING_SET_POLICY` | 4268 | win32app/Win32IDE_Commands.h | 204 |
-| `IDM_PLANNING_VIEW_STATUS` | 4269 | win32app/Win32IDE_Commands.h | 205 |
-| `IDM_PLANNING_DIAGNOSTICS` | 4270 | win32app/Win32IDE_Commands.h | 206 |
-| `IDM_KNOWLEDGE_INIT` | 4271 | win32app/Win32IDE_Commands.h | 210 |
-| `IDM_KNOWLEDGE_RECORD` | 4272 | win32app/Win32IDE_Commands.h | 211 |
-| `IDM_KNOWLEDGE_SEARCH` | 4273 | win32app/Win32IDE_Commands.h | 212 |
-| `IDM_KNOWLEDGE_DECISIONS` | 4274 | win32app/Win32IDE_Commands.h | 213 |
-| `IDM_KNOWLEDGE_PREFERENCES` | 4275 | win32app/Win32IDE_Commands.h | 214 |
-| `IDM_KNOWLEDGE_ARCHAEOLOGY` | 4276 | win32app/Win32IDE_Commands.h | 215 |
-| `IDM_KNOWLEDGE_GRAPH` | 4277 | win32app/Win32IDE_Commands.h | 216 |
-| `IDM_KNOWLEDGE_EXPORT` | 4278 | win32app/Win32IDE_Commands.h | 217 |
-| `IDM_KNOWLEDGE_STATS` | 4279 | win32app/Win32IDE_Commands.h | 218 |
-| `IDM_KNOWLEDGE_FLUSH` | 4280 | win32app/Win32IDE_Commands.h | 219 |
-| `IDM_FAILURE_DETECT` | 4281 | win32app/Win32IDE_Commands.h | 223 |
-| `IDM_FAILURE_ANALYZE` | 4282 | win32app/Win32IDE_Commands.h | 224 |
-| `IDM_FAILURE_SHOW_QUEUE` | 4283 | win32app/Win32IDE_Commands.h | 225 |
-| `IDM_FAILURE_SHOW_HISTORY` | 4284 | win32app/Win32IDE_Commands.h | 226 |
-| `IDM_FAILURE_GENERATE_RECOVERY` | 4285 | win32app/Win32IDE_Commands.h | 227 |
-| `IDM_FAILURE_EXECUTE_RECOVERY` | 4286 | win32app/Win32IDE_Commands.h | 228 |
-| `IDM_FAILURE_AUTONOMOUS_HEAL` | 4287 | win32app/Win32IDE_Commands.h | 229 |
-| `IDM_FAILURE_VIEW_PATTERNS` | 4288 | win32app/Win32IDE_Commands.h | 230 |
-| `IDM_FAILURE_LEARN_PATTERN` | 4289 | win32app/Win32IDE_Commands.h | 231 |
-| `IDM_FAILURE_STATS` | 4290 | win32app/Win32IDE_Commands.h | 232 |
-| `IDM_FAILURE_SET_POLICY` | 4291 | win32app/Win32IDE_Commands.h | 233 |
-| `IDM_FAILURE_SHOW_HEALTH` | 4292 | win32app/Win32IDE_Commands.h | 234 |
-| `IDM_FAILURE_EXPORT_ANALYSIS` | 4293 | win32app/Win32IDE_Commands.h | 235 |
-| `IDM_FAILURE_CLEAR_HISTORY` | 4294 | win32app/Win32IDE_Commands.h | 236 |
-| `IDM_FAILURE_DIAGNOSTICS` | 4295 | win32app/Win32IDE_Commands.h | 237 |
-| `IDM_REVENG_SET_BINARY_FROM_ACTIVE` | 4320 | win32app/Win32IDE_Commands.h | 277 |
-| `IDM_REVENG_SET_BINARY_FROM_DEBUG_TARGET` | 4321 | win32app/Win32IDE_Commands.h | 278 |
-| `IDM_REVENG_SET_BINARY_FROM_BUILD_OUTPUT` | 4322 | win32app/Win32IDE_Commands.h | 279 |
-| `IDM_REVENG_DISASM_AT_RIP` | 4323 | win32app/Win32IDE_Commands.h | 280 |
-| `IDM_IMPACT_ANALYZE_STAGED` | 4350 | win32app/Win32IDE_Commands.h | 244 |
-| `IDM_IMPACT_ANALYZE_UNSTAGED` | 4351 | win32app/Win32IDE_Commands.h | 245 |
-| `IDM_IMPACT_ANALYZE_FILE` | 4352 | win32app/Win32IDE_Commands.h | 246 |
-| `IDM_IMPACT_SHOW_REPORT` | 4353 | win32app/Win32IDE_Commands.h | 247 |
-| `IDM_IMPACT_SHOW_ZONES` | 4354 | win32app/Win32IDE_Commands.h | 248 |
-| `IDM_IMPACT_RISK_SCORE` | 4355 | win32app/Win32IDE_Commands.h | 249 |
-| `IDM_IMPACT_CHECK_COMMIT` | 4356 | win32app/Win32IDE_Commands.h | 250 |
-| `IDM_IMPACT_SET_CONFIG` | 4357 | win32app/Win32IDE_Commands.h | 251 |
-| `IDM_IMPACT_HISTORY` | 4358 | win32app/Win32IDE_Commands.h | 252 |
-| `IDM_IMPACT_DIAGNOSTICS` | 4359 | win32app/Win32IDE_Commands.h | 253 |
-| `IDM_IMPACT_EXPORT_JSON` | 4360 | win32app/Win32IDE_Commands.h | 254 |
-| `IDM_ROUTER_ENSEMBLE_ENABLE` | 5076 | win32app/Win32IDE_Commands.h | 340 |
-| `IDM_ROUTER_ENSEMBLE_DISABLE` | 5077 | win32app/Win32IDE_Commands.h | 341 |
-| `IDM_ROUTER_ENSEMBLE_STATUS` | 5078 | win32app/Win32IDE_Commands.h | 342 |
-| `IDM_HYBRID_EXPLAIN_SYMBOL` | 5101 | win32app/Win32IDE.h | 3763 |
-| `IDM_HYBRID_STREAM_ANALYZE` | 5103 | win32app/Win32IDE.h | 3765 |
-| `IDM_HYBRID_SEMANTIC_PREFETCH` | 5104 | win32app/Win32IDE.h | 3766 |
-| `IDM_HYBRID_CORRECTION_LOOP` | 5105 | win32app/Win32IDE.h | 3767 |
-| `IDM_MULTI_RESP_SELECT_PREFERRED` | 5108 | win32app/Win32IDE.h | 3916 |
-| `IDM_MULTI_RESP_TOGGLE_TEMPLATE` | 5112 | win32app/Win32IDE.h | 3920 |
-| `IDM_MULTI_RESP_APPLY_PREFERRED` | 5117 | win32app/Win32IDE.h | 3925 |
-| `IDM_CONFIDENCE_SET_POLICY` | 5131 | win32app/Win32IDE.h | 3976 |
-| `IDM_SWARM_WORKER_DISCONNECT` | 5155 | win32app/Win32IDE.h | 4008 |
-| `IDM_AI_MODEL_REGISTRY` | 5300 | win32app/Win32IDE_Commands.h | 359 |
-| `IDM_AI_CHECKPOINT_MGR` | 5301 | win32app/Win32IDE_Commands.h | 360 |
-| `IDM_AI_INTERPRET_PANEL` | 5302 | win32app/Win32IDE_Commands.h | 361 |
-| `IDM_AI_CICD_SETTINGS` | 5303 | win32app/Win32IDE_Commands.h | 362 |
-| `IDM_AI_MULTI_FILE_SEARCH` | 5304 | win32app/Win32IDE_Commands.h | 363 |
-| `IDM_AI_BENCHMARK_MENU` | 5305 | win32app/Win32IDE_Commands.h | 364 |
-| `IDM_VIEW_MONACO_SETTINGS` | 5310 | win32app/Win32IDE_Commands.h | 365 |
-| `IDM_VIEW_THERMAL_DASHBOARD` | 5311 | win32app/Win32IDE_Commands.h | 366 |
-| `IDM_AGENT_SMOKE_TEST` | 5320 | win32app/Win32IDE_Commands.h | 367 |
-| `IDM_AGENT_SET_CYCLE_AGENT_COUNTER` | 5321 | win32app/Win32IDE_Commands.h | 368 |
+| `IDM_AGENT_HEXMAG_START` | 4130 | win32app/Win32IDE_Commands.h | 131 |
+| `IDM_AGENT_HEXMAG_HEALTH` | 4131 | win32app/Win32IDE_Commands.h | 132 |
+| `IDM_AGENT_HEXMAG_TOGGLE_FALLBACK` | 4132 | win32app/Win32IDE_Commands.h | 133 |
+| `IDM_AGENT_HEXMAG_ROUTE_COPILOT` | 4133 | win32app/Win32IDE_Commands.h | 134 |
+| `IDM_AGENT_HEXMAG_CYCLE_SWARM` | 4134 | win32app/Win32IDE_Commands.h | 135 |
+| `IDM_AGENT_HEXMAG_SWARM_1` | 4135 | win32app/Win32IDE_Commands.h | 136 |
+| `IDM_AGENT_HEXMAG_SWARM_2` | 4136 | win32app/Win32IDE_Commands.h | 137 |
+| `IDM_AGENT_HEXMAG_SWARM_3` | 4137 | win32app/Win32IDE_Commands.h | 138 |
+| `IDM_AGENT_HEXMAG_SWARM_4` | 4138 | win32app/Win32IDE_Commands.h | 139 |
+| `IDM_AGENT_HEXMAG_SWARM_6` | 4139 | win32app/Win32IDE_Commands.h | 140 |
+| `IDM_AGENT_HEXMAG_SWARM_8` | 4140 | win32app/Win32IDE_Commands.h | 141 |
+| `IDM_AGENT_HEXMAG_TELEMETRY` | 4141 | win32app/Win32IDE_Commands.h | 142 |
+| `IDM_PIPELINE_RUN` | 4160 | win32app/Win32IDE_Commands.h | 165 |
+| `IDM_PIPELINE_AUTONOMY_START` | 4161 | win32app/Win32IDE_Commands.h | 166 |
+| `IDM_PIPELINE_AUTONOMY_STOP` | 4162 | win32app/Win32IDE_Commands.h | 167 |
+| `IDM_AGENT_AUTONOMOUS_COMMUNICATOR` | 4163 | win32app/Win32IDE.cpp | 756 |
+| `IDM_TELEMETRY_UNIFIED_CORE` | 4164 | win32app/Win32IDE.cpp | 757 |
+| `IDM_GGUF_TREE` | 4204 | win32app/resource.h | 100 |
+| `IDM_AI_MODE_SWARM` | 4204 | win32app/Win32IDE_Commands.h | 174 |
+| `IDM_GGUF_DETAILS` | 4205 | win32app/resource.h | 101 |
+| `IDM_AI_LOAD_SWARM_DIR` | 4205 | win32app/Win32IDE_Commands.h | 175 |
+| `IDM_AI_CONTEXT_UNLIMITED` | 4217 | win32app/Win32IDE_Commands.h | 185 |
+| `IDM_AI_AGENT_CYCLES_SET` | 4217 | win32app/Win32IDE_Commands.h | 186 |
+| `IDM_AI_AGENT_MULTI_ENABLE` | 4218 | win32app/Win32IDE_Commands.h | 187 |
+| `IDM_AI_AGENT_MULTI_DISABLE` | 4219 | win32app/Win32IDE_Commands.h | 188 |
+| `IDM_ENGINE_UNLOCK_800B` | 4220 | win32app/Win32IDE_Commands.h | 191 |
+| `IDM_ENGINE_LOAD_800B` | 4221 | win32app/Win32IDE_Commands.h | 192 |
+| `IDM_TITAN_TOGGLE` | 4230 | win32app/Win32IDE_Commands.h | 193 |
+| `IDM_AI_AGENT_MULTI_STATUS` | 4240 | win32app/Win32IDE_Commands.h | 197 |
+| `IDM_AI_TITAN_TOGGLE` | 4241 | win32app/Win32IDE_Commands.h | 198 |
+| `IDM_AI_800B_STATUS` | 4242 | win32app/Win32IDE_Commands.h | 199 |
+| `IDM_OMEGA_START` | 4243 | win32app/Win32IDE_Commands.h | 203 |
+| `IDM_OMEGA_STOP` | 4244 | win32app/Win32IDE_Commands.h | 204 |
+| `IDM_OMEGA_SUBMIT_TASK` | 4245 | win32app/Win32IDE_Commands.h | 205 |
+| `IDM_OMEGA_RUN_CYCLE` | 4246 | win32app/Win32IDE_Commands.h | 206 |
+| `IDM_OMEGA_SHOW_STATUS` | 4247 | win32app/Win32IDE_Commands.h | 207 |
+| `IDM_OMEGA_VIEW_PIPELINE` | 4248 | win32app/Win32IDE_Commands.h | 208 |
+| `IDM_OMEGA_SET_QUALITY_AUTO` | 4250 | win32app/Win32IDE_Commands.h | 210 |
+| `IDM_OMEGA_SET_QUALITY_BALANCE` | 4251 | win32app/Win32IDE_Commands.h | 211 |
+| `IDM_OMEGA_WORLD_MODEL` | 4254 | win32app/Win32IDE_Commands.h | 214 |
+| `IDM_OMEGA_EXPORT_STATS` | 4255 | win32app/Win32IDE_Commands.h | 215 |
+| `IDM_OMEGA_DIAGNOSTICS` | 4256 | win32app/Win32IDE_Commands.h | 216 |
+| `IDM_OMEGA_VERSION` | 4257 | win32app/Win32IDE_Commands.h | 217 |
+| `IDM_OMEGA_HELP` | 4258 | win32app/Win32IDE_Commands.h | 218 |
+| `IDM_OMEGA_ADVANCED_SETTINGS` | 4259 | win32app/Win32IDE_Commands.h | 219 |
+| `IDM_OMEGA_SHELL_INTEGRATION` | 4260 | win32app/Win32IDE_Commands.h | 220 |
+| `IDM_PLANNING_START` | 4261 | win32app/Win32IDE_Commands.h | 224 |
+| `IDM_PLANNING_SHOW_QUEUE` | 4262 | win32app/Win32IDE_Commands.h | 225 |
+| `IDM_PLANNING_APPROVE_STEP` | 4263 | win32app/Win32IDE_Commands.h | 226 |
+| `IDM_PLANNING_REJECT_STEP` | 4264 | win32app/Win32IDE_Commands.h | 227 |
+| `IDM_PLANNING_EXECUTE_STEP` | 4265 | win32app/Win32IDE_Commands.h | 228 |
+| `IDM_PLANNING_EXECUTE_ALL` | 4266 | win32app/Win32IDE_Commands.h | 229 |
+| `IDM_PLANNING_ROLLBACK` | 4267 | win32app/Win32IDE_Commands.h | 230 |
+| `IDM_PLANNING_SET_POLICY` | 4268 | win32app/Win32IDE_Commands.h | 231 |
+| `IDM_PLANNING_VIEW_STATUS` | 4269 | win32app/Win32IDE_Commands.h | 232 |
+| `IDM_PLANNING_DIAGNOSTICS` | 4270 | win32app/Win32IDE_Commands.h | 233 |
+| `IDM_KNOWLEDGE_INIT` | 4271 | win32app/Win32IDE_Commands.h | 237 |
+| `IDM_KNOWLEDGE_RECORD` | 4272 | win32app/Win32IDE_Commands.h | 238 |
+| `IDM_KNOWLEDGE_SEARCH` | 4273 | win32app/Win32IDE_Commands.h | 239 |
+| `IDM_KNOWLEDGE_DECISIONS` | 4274 | win32app/Win32IDE_Commands.h | 240 |
+| `IDM_KNOWLEDGE_PREFERENCES` | 4275 | win32app/Win32IDE_Commands.h | 241 |
+| `IDM_KNOWLEDGE_ARCHAEOLOGY` | 4276 | win32app/Win32IDE_Commands.h | 242 |
+| `IDM_KNOWLEDGE_GRAPH` | 4277 | win32app/Win32IDE_Commands.h | 243 |
+| `IDM_KNOWLEDGE_EXPORT` | 4278 | win32app/Win32IDE_Commands.h | 244 |
+| `IDM_KNOWLEDGE_STATS` | 4279 | win32app/Win32IDE_Commands.h | 245 |
+| `IDM_KNOWLEDGE_FLUSH` | 4280 | win32app/Win32IDE_Commands.h | 246 |
+| `IDM_FAILURE_DETECT` | 4281 | win32app/Win32IDE_Commands.h | 250 |
+| `IDM_FAILURE_ANALYZE` | 4282 | win32app/Win32IDE_Commands.h | 251 |
+| `IDM_FAILURE_SHOW_QUEUE` | 4283 | win32app/Win32IDE_Commands.h | 252 |
+| `IDM_FAILURE_SHOW_HISTORY` | 4284 | win32app/Win32IDE_Commands.h | 253 |
+| `IDM_FAILURE_GENERATE_RECOVERY` | 4285 | win32app/Win32IDE_Commands.h | 254 |
+| `IDM_FAILURE_EXECUTE_RECOVERY` | 4286 | win32app/Win32IDE_Commands.h | 255 |
+| `IDM_FAILURE_AUTONOMOUS_HEAL` | 4287 | win32app/Win32IDE_Commands.h | 256 |
+| `IDM_FAILURE_VIEW_PATTERNS` | 4288 | win32app/Win32IDE_Commands.h | 257 |
+| `IDM_FAILURE_LEARN_PATTERN` | 4289 | win32app/Win32IDE_Commands.h | 258 |
+| `IDM_FAILURE_STATS` | 4290 | win32app/Win32IDE_Commands.h | 259 |
+| `IDM_FAILURE_SET_POLICY` | 4291 | win32app/Win32IDE_Commands.h | 260 |
+| `IDM_FAILURE_SHOW_HEALTH` | 4292 | win32app/Win32IDE_Commands.h | 261 |
+| `IDM_FAILURE_EXPORT_ANALYSIS` | 4293 | win32app/Win32IDE_Commands.h | 262 |
+| `IDM_FAILURE_CLEAR_HISTORY` | 4294 | win32app/Win32IDE_Commands.h | 263 |
+| `IDM_FAILURE_DIAGNOSTICS` | 4295 | win32app/Win32IDE_Commands.h | 264 |
+| `IDM_REVENG_SET_BINARY_FROM_ACTIVE` | 4320 | win32app/Win32IDE_Commands.h | 304 |
+| `IDM_REVENG_SET_BINARY_FROM_DEBUG_TARGET` | 4321 | win32app/Win32IDE_Commands.h | 305 |
+| `IDM_REVENG_SET_BINARY_FROM_BUILD_OUTPUT` | 4322 | win32app/Win32IDE_Commands.h | 306 |
+| `IDM_REVENG_DISASM_AT_RIP` | 4323 | win32app/Win32IDE_Commands.h | 307 |
+| `IDM_IMPACT_ANALYZE_STAGED` | 4350 | win32app/Win32IDE_Commands.h | 271 |
+| `IDM_IMPACT_ANALYZE_UNSTAGED` | 4351 | win32app/Win32IDE_Commands.h | 272 |
+| `IDM_IMPACT_ANALYZE_FILE` | 4352 | win32app/Win32IDE_Commands.h | 273 |
+| `IDM_IMPACT_SHOW_REPORT` | 4353 | win32app/Win32IDE_Commands.h | 274 |
+| `IDM_IMPACT_SHOW_ZONES` | 4354 | win32app/Win32IDE_Commands.h | 275 |
+| `IDM_IMPACT_RISK_SCORE` | 4355 | win32app/Win32IDE_Commands.h | 276 |
+| `IDM_IMPACT_CHECK_COMMIT` | 4356 | win32app/Win32IDE_Commands.h | 277 |
+| `IDM_IMPACT_SET_CONFIG` | 4357 | win32app/Win32IDE_Commands.h | 278 |
+| `IDM_IMPACT_HISTORY` | 4358 | win32app/Win32IDE_Commands.h | 279 |
+| `IDM_IMPACT_DIAGNOSTICS` | 4359 | win32app/Win32IDE_Commands.h | 280 |
+| `IDM_IMPACT_EXPORT_JSON` | 4360 | win32app/Win32IDE_Commands.h | 281 |
+| `IDM_ROUTER_ENSEMBLE_ENABLE` | 5076 | win32app/Win32IDE_Commands.h | 367 |
+| `IDM_ROUTER_ENSEMBLE_DISABLE` | 5077 | win32app/Win32IDE_Commands.h | 368 |
+| `IDM_ROUTER_ENSEMBLE_STATUS` | 5078 | win32app/Win32IDE_Commands.h | 369 |
+| `IDM_HYBRID_EXPLAIN_SYMBOL` | 5101 | win32app/Win32IDE.h | 3966 |
+| `IDM_HYBRID_STREAM_ANALYZE` | 5103 | win32app/Win32IDE.h | 3968 |
+| `IDM_HYBRID_SEMANTIC_PREFETCH` | 5104 | win32app/Win32IDE.h | 3969 |
+| `IDM_HYBRID_CORRECTION_LOOP` | 5105 | win32app/Win32IDE.h | 3970 |
+| `IDM_MULTI_RESP_SELECT_PREFERRED` | 5108 | win32app/Win32IDE.h | 4119 |
+| `IDM_MULTI_RESP_TOGGLE_TEMPLATE` | 5112 | win32app/Win32IDE.h | 4123 |
+| `IDM_MULTI_RESP_APPLY_PREFERRED` | 5117 | win32app/Win32IDE.h | 4128 |
+| `IDM_CONFIDENCE_SET_POLICY` | 5131 | win32app/Win32IDE.h | 4179 |
+| `IDM_SWARM_WORKER_DISCONNECT` | 5155 | win32app/Win32IDE.h | 4211 |
+| `IDM_AI_MODEL_REGISTRY` | 5300 | win32app/Win32IDE_Commands.h | 386 |
+| `IDM_AI_CHECKPOINT_MGR` | 5301 | win32app/Win32IDE_Commands.h | 387 |
+| `IDM_AI_INTERPRET_PANEL` | 5302 | win32app/Win32IDE_Commands.h | 388 |
+| `IDM_AI_CICD_SETTINGS` | 5303 | win32app/Win32IDE_Commands.h | 389 |
+| `IDM_AI_MULTI_FILE_SEARCH` | 5304 | win32app/Win32IDE_Commands.h | 390 |
+| `IDM_AI_BENCHMARK_MENU` | 5305 | win32app/Win32IDE_Commands.h | 391 |
+| `IDM_VIEW_MONACO_SETTINGS` | 5310 | win32app/Win32IDE_Commands.h | 392 |
+| `IDM_VIEW_THERMAL_DASHBOARD` | 5311 | win32app/Win32IDE_Commands.h | 393 |
+| `IDM_AGENT_SMOKE_TEST` | 5320 | win32app/Win32IDE_Commands.h | 394 |
+| `IDM_AGENT_SET_CYCLE_AGENT_COUNTER` | 5321 | win32app/Win32IDE_Commands.h | 395 |
 | `IDM_AGENTIC_TOGGLE` | 6001 | agentic/Win32IDE_AgenticIntegration.h | 36 |
 | `IDM_AGENTIC_PASSIVE` | 6002 | agentic/Win32IDE_AgenticIntegration.h | 37 |
 | `IDM_AGENTIC_SUGGESTIVE` | 6003 | agentic/Win32IDE_AgenticIntegration.h | 38 |
@@ -355,59 +367,62 @@ To fix: add an X(...) row in `command_registry.hpp`.
 | `IDM_APPROVE_ACTION` | 6006 | agentic/Win32IDE_AgenticIntegration.h | 41 |
 | `IDM_REJECT_ACTION` | 6007 | agentic/Win32IDE_AgenticIntegration.h | 42 |
 | `IDM_VIEW_AGENT_PANEL` | 7057 | win32app/Win32IDE_Commands.h | 69 |
-| `IDM_HOTPATCH_BYTE_SEARCH` | 9005 | win32app/Win32IDE.h | 4264 |
-| `IDM_HOTPATCH_SERVER_REMOVE` | 9007 | win32app/Win32IDE.h | 4266 |
-| `IDM_HOTPATCH_PROXY_REWRITE` | 9009 | win32app/Win32IDE.h | 4268 |
-| `IDM_HOTPATCH_PROXY_TERMINATE` | 9010 | win32app/Win32IDE.h | 4269 |
-| `IDM_HOTPATCH_PROXY_VALIDATE` | 9011 | win32app/Win32IDE.h | 4270 |
-| `IDM_HOTPATCH_RESET_STATS` | 9015 | win32app/Win32IDE.h | 4274 |
-| `IDM_HOTPATCH_SHOW_PROXY_STATS` | 9017 | win32app/Win32IDE.h | 4276 |
-| `IDM_HOTPATCH_SET_TARGET_TPS` | 9018 | win32app/Win32IDE.h | 4277 |
-| `IDM_LSP_SERVER_EXPORT_SYMBOLS` | 9207 | win32app/Win32IDE.h | 4299 |
-| `IDM_SECURITY_SCAN_SECRETS` | 9550 | win32app/Win32IDE_Commands.h | 406 |
-| `IDM_SECURITY_SCAN_SAST` | 9551 | win32app/Win32IDE_Commands.h | 407 |
-| `IDM_SECURITY_SCAN_DEPENDENCIES` | 9552 | win32app/Win32IDE_Commands.h | 408 |
-| `IDM_SECURITY_DASHBOARD` | 9553 | win32app/Win32IDE_Commands.h | 409 |
-| `IDM_SECURITY_EXPORT_SBOM` | 9554 | win32app/Win32IDE_Commands.h | 410 |
-| `IDM_VOICE_MODE_CONTINUOUS` | 9708 | win32app/Win32IDE.h | 4369 |
-| `IDM_TELEMETRY_EXPORT_JSON` | 9901 | win32app/Win32IDE.h | 4330 |
-| `IDM_TELEMETRY_EXPORT_CSV` | 9902 | win32app/Win32IDE.h | 4331 |
-| `IDM_TELEMETRY_SHOW_DASHBOARD` | 9903 | win32app/Win32IDE.h | 4332 |
+| `IDM_HOTPATCH_BYTE_SEARCH` | 9005 | win32app/Win32IDE.h | 4467 |
+| `IDM_HOTPATCH_SERVER_REMOVE` | 9007 | win32app/Win32IDE.h | 4469 |
+| `IDM_HOTPATCH_PROXY_REWRITE` | 9009 | win32app/Win32IDE.h | 4471 |
+| `IDM_HOTPATCH_PROXY_TERMINATE` | 9010 | win32app/Win32IDE.h | 4472 |
+| `IDM_HOTPATCH_PROXY_VALIDATE` | 9011 | win32app/Win32IDE.h | 4473 |
+| `IDM_HOTPATCH_RESET_STATS` | 9015 | win32app/Win32IDE.h | 4477 |
+| `IDM_HOTPATCH_SHOW_PROXY_STATS` | 9017 | win32app/Win32IDE.h | 4479 |
+| `IDM_HOTPATCH_SET_TARGET_TPS` | 9018 | win32app/Win32IDE.h | 4480 |
+| `IDM_LSP_SERVER_EXPORT_SYMBOLS` | 9207 | win32app/Win32IDE.h | 4502 |
+| `IDM_SECURITY_SCAN_SECRETS` | 9550 | win32app/Win32IDE_Commands.h | 433 |
+| `IDM_SECURITY_SCAN_SAST` | 9551 | win32app/Win32IDE_Commands.h | 434 |
+| `IDM_SECURITY_SCAN_DEPENDENCIES` | 9552 | win32app/Win32IDE_Commands.h | 435 |
+| `IDM_SECURITY_DASHBOARD` | 9553 | win32app/Win32IDE_Commands.h | 436 |
+| `IDM_SECURITY_EXPORT_SBOM` | 9554 | win32app/Win32IDE_Commands.h | 437 |
+| `IDM_VOICE_MODE_CONTINUOUS` | 9708 | win32app/Win32IDE.h | 4572 |
+| `IDM_TELEMETRY_EXPORT_JSON` | 9901 | win32app/Win32IDE.h | 4533 |
+| `IDM_TELEMETRY_EXPORT_CSV` | 9902 | win32app/Win32IDE.h | 4534 |
+| `IDM_TELEMETRY_SHOW_DASHBOARD` | 9903 | win32app/Win32IDE.h | 4535 |
 | `IDM_VSCEXT_API_LIST_PROVIDERS` | 10003 | modules/vscode_extension_api.h | 1905 |
 | `IDM_VSCEXT_API_DEACTIVATE_ALL` | 10008 | modules/vscode_extension_api.h | 1910 |
-| `IDM_EDITOR_GOTO_WORKSPACE_SYMBOL` | 10207 | win32app/Win32IDE_Commands.h | 420 |
-| `IDM_EDITOR_PEEK_DEFINITION` | 10208 | win32app/Win32IDE_Commands.h | 421 |
-| `IDM_EDITOR_PEEK_REFERENCES` | 10209 | win32app/Win32IDE_Commands.h | 422 |
-| `IDM_VIEW_TOGGLE_BOTTOM_PANEL` | 10250 | win32app/Win32IDE_Commands.h | 433 |
-| `IDM_FILE_QUICK_OPEN` | 10251 | win32app/Win32IDE_Commands.h | 434 |
+| `IDM_EDITOR_GOTO_WORKSPACE_SYMBOL` | 10207 | win32app/Win32IDE_Commands.h | 447 |
+| `IDM_EDITOR_PEEK_DEFINITION` | 10208 | win32app/Win32IDE_Commands.h | 448 |
+| `IDM_EDITOR_PEEK_REFERENCES` | 10209 | win32app/Win32IDE_Commands.h | 449 |
+| `IDM_VIEW_TOGGLE_BOTTOM_PANEL` | 10250 | win32app/Win32IDE_Commands.h | 460 |
+| `IDM_FILE_QUICK_OPEN` | 10251 | win32app/Win32IDE_Commands.h | 461 |
 | `IDM_VOICE_TOGGLE_LISTENING` | 10300 | voice_automation.h | 276 |
 | `IDM_VOICE_TOGGLE_TTS` | 10301 | voice_automation.h | 277 |
 | `IDM_VOICE_SETTINGS` | 10302 | voice_automation.h | 278 |
 | `IDM_VOICE_TTS_TEST` | 10303 | voice_automation.h | 279 |
-| `IDM_BUILD_SOLUTION` | 10400 | win32app/Win32IDE_Commands.h | 438 |
-| `IDM_DEBUG_TOGGLE_BREAKPOINT` | 10506 | win32app/Win32IDE_Commands.h | 450 |
-| `IDM_DEBUG_SHOW_CALLSTACK` | 10507 | win32app/Win32IDE_Commands.h | 451 |
-| `IDM_DEBUG_SHOW_VARIABLES` | 10508 | win32app/Win32IDE_Commands.h | 452 |
-| `IDM_DEBUG_SHOW_WATCH` | 10509 | win32app/Win32IDE_Commands.h | 453 |
-| `IDM_DEBUG_DETACH` | 10511 | win32app/Win32IDE_Commands.h | 455 |
-| `IDM_ENT_MODEL_COMPARE` | 12330 | win32app/Win32IDE_Commands.cpp | 210 |
-| `IDM_ENT_BATCH_PROCESS` | 12331 | win32app/Win32IDE_Commands.cpp | 213 |
-| `IDM_ENT_CUSTOM_STOP_SEQ` | 12332 | win32app/Win32IDE_Commands.cpp | 216 |
-| `IDM_ENT_GRAMMAR_CONSTRAINTS` | 12333 | win32app/Win32IDE_Commands.cpp | 219 |
-| `IDM_ENT_LORA_ADAPTER` | 12334 | win32app/Win32IDE_Commands.cpp | 222 |
-| `IDM_ENT_RESPONSE_CACHE` | 12335 | win32app/Win32IDE_Commands.cpp | 225 |
-| `IDM_ENT_PROMPT_LIBRARY` | 12336 | win32app/Win32IDE_Commands.cpp | 228 |
-| `IDM_ENT_SESSION_EXPORT_IMPORT` | 12337 | win32app/Win32IDE_Commands.cpp | 231 |
-| `IDM_ENT_MODEL_SHARDING` | 12338 | win32app/Win32IDE_Commands.cpp | 234 |
-| `IDM_ENT_TENSOR_PARALLEL` | 12339 | win32app/Win32IDE_Commands.cpp | 237 |
-| `IDM_ENT_PIPELINE_PARALLEL` | 12340 | win32app/Win32IDE_Commands.cpp | 240 |
-| `IDM_ENT_CUSTOM_QUANT` | 12341 | win32app/Win32IDE_Commands.cpp | 243 |
-| `IDM_OMEGA_START_AUTONOMOUS` | 12400 | win32app/Win32IDE_Commands.cpp | 274 |
-| `IDM_OMEGA_SET_GOAL` | 12401 | win32app/Win32IDE_Commands.cpp | 277 |
-| `IDM_OMEGA_OBSERVE_PIPELINE` | 12402 | win32app/Win32IDE_Commands.cpp | 280 |
-| `IDM_OMEGA_CANCEL_TASK` | 12403 | win32app/Win32IDE_Commands.cpp | 283 |
-| `IDM_OMEGA_SPAWN_AGENT` | 12404 | win32app/Win32IDE_Commands.cpp | 286 |
-| `IDM_OMEGA_GET_STATS` | 12405 | win32app/Win32IDE_Commands.cpp | 289 |
+| `IDM_BUILD_SOLUTION` | 10400 | win32app/Win32IDE_Commands.h | 465 |
+| `IDM_DEBUG_TOGGLE_BREAKPOINT` | 10506 | win32app/Win32IDE_Commands.h | 477 |
+| `IDM_DEBUG_SHOW_CALLSTACK` | 10507 | win32app/Win32IDE_Commands.h | 478 |
+| `IDM_DEBUG_SHOW_VARIABLES` | 10508 | win32app/Win32IDE_Commands.h | 479 |
+| `IDM_DEBUG_SHOW_WATCH` | 10509 | win32app/Win32IDE_Commands.h | 480 |
+| `IDM_DEBUG_DETACH` | 10511 | win32app/Win32IDE_Commands.h | 482 |
+| `IDM_ENT_MODEL_COMPARE` | 12330 | win32app/Win32IDE_Commands.cpp | 212 |
+| `IDM_ENT_BATCH_PROCESS` | 12331 | win32app/Win32IDE_Commands.cpp | 215 |
+| `IDM_ENT_CUSTOM_STOP_SEQ` | 12332 | win32app/Win32IDE_Commands.cpp | 218 |
+| `IDM_ENT_GRAMMAR_CONSTRAINTS` | 12333 | win32app/Win32IDE_Commands.cpp | 221 |
+| `IDM_ENT_LORA_ADAPTER` | 12334 | win32app/Win32IDE_Commands.cpp | 224 |
+| `IDM_ENT_RESPONSE_CACHE` | 12335 | win32app/Win32IDE_Commands.cpp | 227 |
+| `IDM_ENT_PROMPT_LIBRARY` | 12336 | win32app/Win32IDE_Commands.cpp | 230 |
+| `IDM_ENT_SESSION_EXPORT_IMPORT` | 12337 | win32app/Win32IDE_Commands.cpp | 233 |
+| `IDM_ENT_MODEL_SHARDING` | 12338 | win32app/Win32IDE_Commands.cpp | 236 |
+| `IDM_ENT_TENSOR_PARALLEL` | 12339 | win32app/Win32IDE_Commands.cpp | 239 |
+| `IDM_ENT_PIPELINE_PARALLEL` | 12340 | win32app/Win32IDE_Commands.cpp | 242 |
+| `IDM_ENT_CUSTOM_QUANT` | 12341 | win32app/Win32IDE_Commands.cpp | 245 |
+| `IDM_OMEGA_START_AUTONOMOUS` | 12400 | win32app/Win32IDE_Commands.cpp | 276 |
+| `IDM_OMEGA_SET_GOAL` | 12401 | win32app/Win32IDE_Commands.cpp | 279 |
+| `IDM_OMEGA_OBSERVE_PIPELINE` | 12402 | win32app/Win32IDE_Commands.cpp | 282 |
+| `IDM_OMEGA_CANCEL_TASK` | 12403 | win32app/Win32IDE_Commands.cpp | 285 |
+| `IDM_OMEGA_SPAWN_AGENT` | 12404 | win32app/Win32IDE_Commands.cpp | 288 |
+| `IDM_OMEGA_GET_STATS` | 12405 | win32app/Win32IDE_Commands.cpp | 291 |
+| `IDM_CMD_ENTER_WORK` | 12520 | win32app/resource.h | 128 |
+| `IDM_CMD_ENTER_COMMAND` | 12521 | win32app/resource.h | 129 |
+| `IDM_CMD_NEW_TASK` | 12522 | win32app/resource.h | 130 |
 
 ## ℹ️ Declared Handlers Not in COMMAND_TABLE
 

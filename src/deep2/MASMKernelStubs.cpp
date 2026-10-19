@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cstdio>
 #include <vector>
+#include <new>
 #include <cmath>
 
 extern "C" {
@@ -296,59 +297,311 @@ void bpe_encode(const char* text, uint32_t* tokens, uint32_t* count,
     *count = n;
 }
 
+// Byte/UTF-8 aware decode used when no vocabulary is registered.
+//
+// The previous implementation emitted the literal string "[tok] " for every
+// token regardless of the id, so any output routed through here rendered as
+// "[tok] [tok] [tok]". Ids in the 0..255 range are emitted as their byte value;
+// higher ids are rendered as hex so distinct tokens stay distinguishable.
 void bpe_decode(const uint32_t* tokens, uint32_t count, char* text,
-                 uint32_t maxChars) {
-    // Stub: emit placeholder tokens
+                uint32_t maxChars) {
+    if (!text || maxChars == 0) return;
     uint32_t pos = 0;
-    for (uint32_t i = 0; i < count && pos + 8 < maxChars; ++i) {
-        const char* t = "[tok] ";
-        uint32_t len = (uint32_t)strlen(t);
+
+    for (uint32_t i = 0; i < count; ++i) {
+        const uint32_t t = tokens[i];
+        char buf[16];
+        uint32_t len = 0;
+
+        if (t < 256u) {
+            buf[0] = static_cast<char>(t);
+            len = 1;
+        } else {
+            buf[0] = '<';
+            len = 1;
+            // Emit hex digits of the token id.
+            char digits[8];
+            uint32_t nd = 0;
+            uint32_t v = t;
+            if (v == 0) {
+                digits[nd++] = '0';
+            }
+            while (v > 0 && nd < 8) {
+                const uint32_t d = v & 0xFu;
+                digits[nd++] = static_cast<char>(d < 10 ? ('0' + d) : ('a' + (d - 10)));
+                v >>= 4;
+            }
+            while (nd > 0) buf[len++] = digits[--nd];
+            buf[len++] = '>';
+        }
+
         if (pos + len >= maxChars) break;
-        memcpy(text + pos, t, len);
+        memcpy(text + pos, buf, len);
         pos += len;
     }
-    if (pos < maxChars) text[pos] = '\0';
-    else text[maxChars - 1] = '\0';
+
+    text[(pos < maxChars) ? pos : (maxChars - 1)] = '\0';
 }
 
 // ============================================================================
-// GGUF Reader stubs
+// GGUF Reader — real header parsing
 // ============================================================================
-struct StubGGUFHandle {
-    char path[256];
-    uint32_t numTensors;
-    bool valid;
+// Previous behaviour: gguf_reader_open never opened the file, returned a handle
+// with valid=true and numTensors=42 for ANY path (including nonexistent ones),
+// gguf_reader_get_tensor had an empty body, and gguf_reader_load_tensor always
+// returned nullptr. Callers therefore received a "loaded" model that contained
+// no tensor data at all.
+namespace {
+
+struct GguftensorEntry {
+    char name[128];
+    uint64_t offset;
+    uint64_t nDims;
+    uint32_t ggmlType;
+    uint64_t dims[4];
 };
 
-static StubGGUFHandle g_stubHandle = {};
+struct GgufHandleImpl {
+    char path[512];
+    bool valid;
+    uint32_t version;
+    uint64_t tensorCount;
+    uint64_t metadataCount;
+    uint64_t dataOffset;
+    uint64_t fileSize;
+    std::vector<GguftensorEntry> tensors;
+    std::vector<uint8_t> blob;   // mmap/file contents
+};
+
+GgufHandleImpl* ImplOf(void* h) { return static_cast<GgufHandleImpl*>(h); }
+
+// Read helpers are plain functions (not templates) because this translation unit
+// is wrapped in extern "C", where templates are ill-formed.
+bool ReadU32(const std::vector<uint8_t>& buf, uint64_t off, uint32_t* out) {
+    if (off + 4 > buf.size()) return false;
+    memcpy(out, buf.data() + off, 4);
+    return true;
+}
+
+bool ReadU64(const std::vector<uint8_t>& buf, uint64_t off, uint64_t* out) {
+    if (off + 8 > buf.size()) return false;
+    memcpy(out, buf.data() + off, 8);
+    return true;
+}
+
+bool ReadI64(const std::vector<uint8_t>& buf, uint64_t off, int64_t* out) {
+    if (off + 8 > buf.size()) return false;
+    memcpy(out, buf.data() + off, 8);
+    return true;
+}
+
+bool ReadStrAt(const std::vector<uint8_t>& buf, uint64_t* pos, char* out, size_t outCap) {
+    uint64_t len = 0;
+    if (!ReadU64(buf, *pos, &len)) return false;
+    *pos += sizeof(len);
+    if (len + 1 > outCap) return false;
+    if (*pos + len > buf.size()) return false;
+    memcpy(out, buf.data() + *pos, static_cast<size_t>(len));
+    out[len] = '\0';
+    *pos += len;
+    return true;
+}
+
+// Skip a GGUF metadata value of the given type without decoding it.
+bool SkipValue(const std::vector<uint8_t>& buf, uint64_t* pos, uint32_t type) {
+    switch (type) {
+        case 0: case 1: case 7:            *pos += 1; return *pos <= buf.size();
+        case 2: case 3:                    *pos += 2; return *pos <= buf.size();
+        case 4: case 5: case 6:            *pos += 4; return *pos <= buf.size();
+        case 10: case 11: case 12:         *pos += 8; return *pos <= buf.size();
+        case 8: {
+            uint64_t len = 0;
+            if (!ReadU64(buf, *pos, &len)) return false;
+            *pos += sizeof(len) + len;
+            return *pos <= buf.size();
+        }
+        case 9: {
+            uint32_t et = 0;
+            uint64_t n = 0;
+            if (!ReadU32(buf, *pos, &et)) return false;
+            *pos += 4;
+            if (!ReadU64(buf, *pos, &n)) return false;
+            *pos += 8;
+            for (uint64_t i = 0; i < n; ++i) {
+                if (!SkipValue(buf, pos, et)) return false;
+            }
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
+}  // namespace
+
+// Reports the byte offset where GGUF parsing failed, then releases the handle.
+#define GGUF_PARSE_FAIL()                                                            \
+    do {                                                                             \
+        fprintf(stderr, "[gguf_reader] parse failure at offset %llu\n",              \
+                (unsigned long long)pos);                                           \
+        delete h;                                                                    \
+        return nullptr;                                                              \
+    } while (0)
 
 void* gguf_reader_open(const char* path) {
-    g_stubHandle.valid = true;
-    g_stubHandle.numTensors = 42; // simulated
-    size_t len = strlen(path);
-    if (len > 255) len = 255;
-    memcpy(g_stubHandle.path, path, len);
-    g_stubHandle.path[len] = '\0';
-    return &g_stubHandle;
+    if (!path) return nullptr;
+
+    auto* h = new (std::nothrow) GgufHandleImpl();
+    if (!h) return nullptr;
+    memset(h, 0, sizeof(*h));
+
+    FILE* f = fopen(path, "rb");
+    if (!f) {
+        // Report failure. Returning a handle for a file that does not exist
+        // makes every later tensor access read uninitialised memory.
+        fprintf(stderr, "[gguf_reader] cannot open '%s'\n", path);
+        delete h;
+        return nullptr;
+    }
+    fseek(f, 0, SEEK_END);
+    const long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (fsize < 24) {
+        fprintf(stderr, "[gguf_reader] '%s' too small to be GGUF (%ld bytes)\n", path, fsize);
+        fclose(f);
+        delete h;
+        return nullptr;
+    }
+
+    h->blob.resize(static_cast<size_t>(fsize));
+    const size_t got = fread(h->blob.data(), 1, h->blob.size(), f);
+    fclose(f);
+    if (got != h->blob.size()) {
+        fprintf(stderr, "[gguf_reader] short read on '%s'\n", path);
+        delete h;
+        return nullptr;
+    }
+    h->fileSize = h->blob.size();
+
+    if (memcmp(h->blob.data(), "GGUF", 4) != 0) {
+        fprintf(stderr, "[gguf_reader] '%s' has bad magic (not GGUF)\n", path);
+        delete h;
+        return nullptr;
+    }
+
+    uint64_t pos = 4;
+    if (!ReadU32(h->blob, pos, &h->version)) { GGUF_PARSE_FAIL(); }
+    pos += 4;
+    if (!ReadU64(h->blob, pos, &h->tensorCount)) { GGUF_PARSE_FAIL(); }
+    pos += 8;
+    if (!ReadU64(h->blob, pos, &h->metadataCount)) { GGUF_PARSE_FAIL(); }
+    pos += 8;
+
+    // Skip metadata key/value pairs.
+    char key[128];
+    for (uint64_t i = 0; i < h->metadataCount; ++i) {
+        if (!ReadStrAt(h->blob, &pos, key, sizeof(key))) { GGUF_PARSE_FAIL(); }
+        uint32_t type = 0;
+        if (!ReadU32(h->blob, pos, &type)) { GGUF_PARSE_FAIL(); }
+        pos += 4;
+        if (!SkipValue(h->blob, &pos, type)) { GGUF_PARSE_FAIL(); }
+    }
+
+    // Tensor directory.
+    h->tensors.reserve(static_cast<size_t>(h->tensorCount));
+    for (uint64_t i = 0; i < h->tensorCount; ++i) {
+        GguftensorEntry e;
+        memset(&e, 0, sizeof(e));
+        if (!ReadStrAt(h->blob, &pos, e.name, sizeof(e.name))) { GGUF_PARSE_FAIL(); }
+        // GGUF stores n_dims as uint32, then ne[i] as uint64 per dimension.
+        uint32_t nDims = 0;
+        if (!ReadU32(h->blob, pos, &nDims)) { GGUF_PARSE_FAIL(); }
+        pos += 4;
+        e.nDims = nDims;
+        if (e.nDims > 4) { GGUF_PARSE_FAIL(); }
+        for (uint64_t d = 0; d < e.nDims; ++d) {
+            int64_t dim = 0;
+            if (!ReadI64(h->blob, pos, &dim)) { GGUF_PARSE_FAIL(); }
+            e.dims[d] = static_cast<uint64_t>(dim);
+            pos += 8;
+        }
+        if (!ReadU32(h->blob, pos, &e.ggmlType)) { GGUF_PARSE_FAIL(); }
+        pos += 4;
+        if (!ReadU64(h->blob, pos, &e.offset)) { GGUF_PARSE_FAIL(); }
+        pos += 8;
+        h->tensors.push_back(e);
+    }
+
+    // Tensor data begins at the next 32-byte aligned offset.
+    h->dataOffset = (pos + 31u) & ~static_cast<uint64_t>(31u);
+
+    snprintf(h->path, sizeof(h->path), "%s", path);
+    h->valid = true;
+    fprintf(stderr, "[gguf_reader] '%s' v%u tensors=%llu meta=%llu data@%llu\n",
+            path, h->version, (unsigned long long)h->tensorCount,
+            (unsigned long long)h->metadataCount, (unsigned long long)h->dataOffset);
+    return h;
 }
 
 void gguf_reader_close(void* handle) {
-    if (handle) {
-        static_cast<StubGGUFHandle*>(handle)->valid = false;
-    }
+    if (!handle) return;
+    GgufHandleImpl* h = ImplOf(handle);
+    h->valid = false;
+    h->blob.clear();
+    h->blob.shrink_to_fit();
+    h->tensors.clear();
+    delete h;
 }
 
 uint32_t gguf_reader_num_tensors(void* handle) {
     if (!handle) return 0;
-    return static_cast<StubGGUFHandle*>(handle)->numTensors;
+    GgufHandleImpl* h = ImplOf(handle);
+    if (!h->valid) return 0;
+    return static_cast<uint32_t>(h->tensors.size());
 }
 
+// Populates a TensorInfo-shaped structure for `idx`.
+// Layout mirrors ggml_tensor_info: {name, data ptr, n_dims, ne[], type}.
 void gguf_reader_get_tensor(void* handle, uint32_t idx, void* info) {
-    (void)handle; (void)idx; (void)info;
+    if (!handle || !info) return;
+    GgufHandleImpl* h = ImplOf(handle);
+    memset(info, 0, sizeof(uint64_t) * 16);
+    if (!h->valid || idx >= h->tensors.size()) return;
+
+    const GguftensorEntry& e = h->tensors[idx];
+    // TensorInfo is { char* name; void* data; int n_dims; int64_t ne[4]; int type; }
+    auto* ti = static_cast<uint8_t*>(info);
+    std::memcpy(ti, e.name, sizeof(e.name));                       // offset 0
+    const uint64_t dataPtr = h->dataOffset + e.offset;              // offset 128
+    std::memcpy(ti + 128, &dataPtr, sizeof(dataPtr));
+    const uint32_t nDims = static_cast<uint32_t>(e.nDims);           // offset 136
+    std::memcpy(ti + 136, &nDims, sizeof(nDims));
+    for (uint32_t d = 0; d < 4; ++d) {                              // offset 144
+        const int64_t dim = static_cast<int64_t>(e.dims[d]);
+        std::memcpy(ti + 144 + d * 8, &dim, sizeof(dim));
+    }
+    const uint32_t type = e.ggmlType;                               // offset 176
+    std::memcpy(ti + 176, &type, sizeof(type));
 }
 
+// Returns a pointer into the mapped file for the named tensor, or nullptr when
+// the tensor is absent or its data would fall outside the file.
 void* gguf_reader_load_tensor(void* handle, const char* name) {
-    (void)handle; (void)name;
+    if (!handle || !name) return nullptr;
+    GgufHandleImpl* h = ImplOf(handle);
+    if (!h->valid) return nullptr;
+
+    for (const GguftensorEntry& e : h->tensors) {
+        if (strcmp(e.name, name) != 0) continue;
+        const uint64_t abs = h->dataOffset + e.offset;
+        if (abs >= h->blob.size()) {
+            fprintf(stderr, "[gguf_reader] tensor '%s' offset %llu outside file\n",
+                    name, (unsigned long long)abs);
+            return nullptr;
+        }
+        return const_cast<uint8_t*>(h->blob.data() + abs);
+    }
+    fprintf(stderr, "[gguf_reader] tensor '%s' not found\n", name);
     return nullptr;
 }
 

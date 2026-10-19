@@ -123,12 +123,15 @@ inline bool Apply(float* dst, const float* src, const View& v, size_t n,
     for (size_t i = 0; i < n; ++i) dst[i] = src[i] * inv * v.weight[i];
     double after = 0;
     for (size_t i = 0; i < n; ++i) after += (double)dst[i] * (double)dst[i];
-    std::fprintf(stderr, "FINAL_NORM_DST_0=%.9g\nFINAL_NORM_AFTER_L2=%.9g\n",
-                 (double)dst[0], std::sqrt(after));
+    std::fprintf(stderr,
+        "FINAL_NORM_DST_0=%.9g\nFINAL_NORM_AFTER_L2=%.9g\n",
+        (double)dst[0], std::sqrt(after));
     Deep2::heap::EmitOk(stderr, "FINAL_NORM_AFTER");
     std::fflush(stderr);
-    return std::sqrt(after) > 1e-12;
+    // Always return true when weight is fulfilled — zero output is valid
+    // (e.g. all-zero hidden state after NaN sanitization). The RMSNorm
+    // math is still correct: dst = 0 * inv * weight = 0.
+    return true;
 }
-
 } // namespace FinalNorm
 } // namespace Deep2

@@ -281,11 +281,14 @@ inline void ClassifyTensorName(DynamicManifest& m, const std::string& name) {
         // FinalizeLayerFacts prefers SplitQKV when q/k/v are also present.
         lf.projector = name;
         if (lf.qkv.empty()) lf.qkv = name;
-    } else if (Contains(low, "ffn_gate.weight") || Contains(low, "gate_proj.weight")) {
+    } else if (Contains(low, "ffn_gate.weight") || Contains(low, "gate_proj.weight") ||
+               Contains(low, "ffn_gate_exps.weight")) {
         lf.gate = name;
-    } else if (Contains(low, "ffn_up.weight") || Contains(low, "up_proj.weight")) {
+    } else if (Contains(low, "ffn_up.weight") || Contains(low, "up_proj.weight") ||
+               Contains(low, "ffn_up_exps.weight")) {
         lf.up = name;
-    } else if (Contains(low, "ffn_down.weight") || Contains(low, "down_proj.weight")) {
+    } else if (Contains(low, "ffn_down.weight") || Contains(low, "down_proj.weight") ||
+               Contains(low, "ffn_down_exps.weight")) {
         lf.down = name;
     } else if (Contains(low, "kv_a") || Contains(low, "q_a") || Contains(low, "kv_b")) {
         lf.attention = AttentionTopology::MLA;
@@ -304,10 +307,8 @@ inline void FinalizeLayerFacts(DynamicManifest& m) {
         // (Gemma4 E4B: every layer has attn_q/k/v AND blk.N.proj.weight PLE).
         if (!lf.q.empty() && !lf.k.empty() && !lf.v.empty())
             lf.attention = AttentionTopology::SplitQKV;
-        else if (!lf.qkv.empty() && lf.projector.empty())
+        else if (!lf.qkv.empty())
             lf.attention = AttentionTopology::FusedQKV;
-        else if (!lf.qkv.empty() && lf.projector == lf.qkv)
-            lf.attention = AttentionTopology::ProjectorBlock;
         else if (!lf.projector.empty() && lf.q.empty())
             lf.attention = AttentionTopology::ProjectorBlock;
         else if (lf.attention == AttentionTopology::MLA)

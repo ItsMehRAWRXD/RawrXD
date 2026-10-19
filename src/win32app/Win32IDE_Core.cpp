@@ -1264,6 +1264,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 return 0;
             }
+            // Tier 3 Cosmetics timers (bracket pair colorization, lightbulb)
+            if (handleTier3CosmeticsTimer(wParam))
+            {
+                return 0;
+            }
             // Tier 1: Critical cosmetic timers (smooth scroll, minimap, auto-update)
             if (handleTier1Timer(wParam))
             {
@@ -4347,6 +4352,32 @@ void Win32IDE::deferredHeavyInitBody()
         catch (...)
         {
             OutputDebugStringA("ERROR: initTier1Cosmetics failed\n");
+        }
+    }
+
+    // Initialize Tier 2: High-Visibility Cosmetics (git diff, terminal tabs, hover, signature help, codelens, inlay hints)
+    {
+        P1PRA_DHI_SCOPE("tier2_cosmetics", P1PRA_DHI_TIER2_COSMETICS);
+        try
+        {
+            initTier2Cosmetics();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initTier2Cosmetics failed\n");
+        }
+    }
+
+    // Initialize Tier 3 Cosmetics: Bracket pairs, indent guides, whitespace, word wrap, relative lines, zen mode, folding, lightbulb
+    {
+        P1PRA_DHI_SCOPE("tier3_cosmetics", P1PRA_DHI_TIER3_COSMETICS);
+        try
+        {
+            initTier3Cosmetics();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initTier3Cosmetics failed\n");
         }
     }
 

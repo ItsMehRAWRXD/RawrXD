@@ -24,11 +24,10 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
-extern "C"
-{
-    typedef struct VkBuffer_T* VkBuffer;
-}
+#include <vulkan/vulkan.h>
 
 namespace RawrXD
 {
@@ -63,7 +62,34 @@ static_assert(sizeof(FlashAttentionFP8PushConstants) == 36u,
 static_assert(sizeof(FlashAttentionFP8PushConstants) <= 128u,
               "Vulkan push constant range must cover FlashAttentionFP8PushConstants");
 
-bool DispatchFlashAttentionVulkanFP8(VkBuffer qBuffer, VkBuffer kBuffer, VkBuffer vBuffer, VkBuffer oBuffer,
+/// Validate push constants against shader + host limits.
+/// Returns false and fills `error` when the request cannot be dispatched.
+bool ValidateFlashAttentionFP8Push(const FlashAttentionFP8PushConstants& constants, std::string& error);
+
+/// Record the compute pipeline for `flash_attention_fp8_e4m3.spv` on `device`.
+/// Idempotent: repeated calls with the same device are a no-op.
+/// Returns false and fills `error` on failure.
+bool CreateFlashAttentionFP8Pipeline(VkDevice device, std::string& error);
+
+/// Bind Q/K/V/O buffers into the pipeline's descriptor set.
+bool BindFlashAttentionFP8Buffers(VkDevice device,
+                                  VkDescriptorPool descriptorPool,
+                                  VkBuffer qBuffer,
+                                  VkBuffer kBuffer,
+                                  VkBuffer vBuffer,
+                                  VkBuffer oBuffer);
+
+/// Record + submit the dispatch. `queue` must belong to `device`.
+bool DispatchFlashAttentionVulkanFP8(VkDevice device,
+                                     VkQueue queue,
+                                     VkCommandPool commandPool,
+                                     VkBuffer qBuffer,
+                                     VkBuffer kBuffer,
+                                     VkBuffer vBuffer,
+                                     VkBuffer oBuffer,
                                      const FlashAttentionFP8PushConstants& constants);
+
+/// Destroy pipeline objects created by CreateFlashAttentionFP8Pipeline.
+void DestroyFlashAttentionFP8Pipeline(VkDevice device);
 
 }  // namespace RawrXD

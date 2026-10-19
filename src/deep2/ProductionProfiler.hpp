@@ -95,11 +95,14 @@ public:
 
     TokenProfile endToken();
 
+    const std::vector<TokenProfile>& getProfileHistory() const { return profileHistory_; }
+
     static std::string toJSONSummary(const TokenProfile* profiles, size_t count);
 
 private:
     TokenProfile current_;
     bool active_ = false;
+    std::vector<TokenProfile> profileHistory_;
 };
 
 #endif // PRODUCTION_PROFILER_HPP

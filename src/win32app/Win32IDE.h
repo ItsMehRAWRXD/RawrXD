@@ -6687,71 +6687,75 @@ class Win32IDE
                             const std::string& replyTarget, bool isDirectMessage);
 
   public:
-    // Tier 5 Command IDs (11500–11609)
-    static constexpr int IDM_LINEENDING_DETECT = 11500;
-    static constexpr int IDM_LINEENDING_TO_LF = 11509;
+    // Tier 5 Command IDs (12200–12314) — MUST NOT overlap feature-module band 11500–11599 (handleFeaturesCommand).
+    // Line ending band (12200–12203) must stay in lockstep with the T5_LINEENDING_*
+    // entries in src/core/command_registry.hpp — the SSOT table routes these IDs here.
+    static constexpr int IDM_LINEENDING_DETECT = 12200;
+    static constexpr int IDM_LINEENDING_TO_CRLF = 12201;
+    static constexpr int IDM_LINEENDING_TO_LF = 12202;
+    static constexpr int IDM_LINEENDING_TO_CR = 12203;
 
-    static constexpr int IDM_NETWORK_SHOW = 11510;
-    static constexpr int IDM_NETWORK_ADD_PORT = 11511;
-    static constexpr int IDM_NETWORK_REMOVE_PORT = 11512;
-    static constexpr int IDM_NETWORK_TOGGLE = 11513;
-    static constexpr int IDM_NETWORK_LIST = 11514;
-    static constexpr int IDM_NETWORK_STATUS = 11519;
+    static constexpr int IDM_NETWORK_SHOW = 12210;
+    static constexpr int IDM_NETWORK_ADD_PORT = 12211;
+    static constexpr int IDM_NETWORK_REMOVE_PORT = 12212;
+    static constexpr int IDM_NETWORK_TOGGLE = 12213;
+    static constexpr int IDM_NETWORK_LIST = 12214;
+    static constexpr int IDM_NETWORK_STATUS = 12219;
 
-    static constexpr int IDM_TESTEXPLORER_SHOW = 11520;
-    static constexpr int IDM_TESTEXPLORER_RUN = 11521;
-    static constexpr int IDM_TESTEXPLORER_REFRESH = 11522;
-    static constexpr int IDM_TESTEXPLORER_FILTER = 11529;
+    static constexpr int IDM_TESTEXPLORER_SHOW = 12220;
+    static constexpr int IDM_TESTEXPLORER_RUN = 12221;
+    static constexpr int IDM_TESTEXPLORER_REFRESH = 12222;
+    static constexpr int IDM_TESTEXPLORER_FILTER = 12229;
 
-    static constexpr int IDM_DBGWATCH_SHOW = 11530;
-    static constexpr int IDM_DBGWATCH_CLEAR = 11539;
+    static constexpr int IDM_DBGWATCH_SHOW = 12230;
+    static constexpr int IDM_DBGWATCH_CLEAR = 12239;
 
-    static constexpr int IDM_CALLSTACK_CAPTURE = 11540;
-    static constexpr int IDM_CALLSTACK_SHOW = 11541;
-    static constexpr int IDM_CALLSTACK_COPY = 11542;
-    static constexpr int IDM_CALLSTACK_RESOLVE = 11549;
+    static constexpr int IDM_CALLSTACK_CAPTURE = 12240;
+    static constexpr int IDM_CALLSTACK_SHOW = 12241;
+    static constexpr int IDM_CALLSTACK_COPY = 12242;
+    static constexpr int IDM_CALLSTACK_RESOLVE = 12249;
 
-    static constexpr int IDM_MARKETPLACE_SHOW = 11550;
-    static constexpr int IDM_MARKETPLACE_SEARCH = 11551;
-    static constexpr int IDM_MARKETPLACE_INSTALL = 11552;
-    static constexpr int IDM_MARKETPLACE_UNINSTALL = 11553;
-    static constexpr int IDM_MARKETPLACE_LIST = 11554;
-    static constexpr int IDM_MARKETPLACE_STATUS = 11559;
+    static constexpr int IDM_MARKETPLACE_SHOW = 12250;
+    static constexpr int IDM_MARKETPLACE_SEARCH = 12251;
+    static constexpr int IDM_MARKETPLACE_INSTALL = 12252;
+    static constexpr int IDM_MARKETPLACE_UNINSTALL = 12253;
+    static constexpr int IDM_MARKETPLACE_LIST = 12254;
+    static constexpr int IDM_MARKETPLACE_STATUS = 12259;
 
-    static constexpr int IDM_TELDASH_LOG = 11565;
-    static constexpr int IDM_TELDASH_CLEAR = 11566;
-    static constexpr int IDM_TELDASH_EXPORT = 11567;
-    static constexpr int IDM_TELDASH_SHOW = 11568;  // avoid conflict with IDM_SEMANTIC_BUILD_INDEX 11560
-    static constexpr int IDM_TELDASH_STATS = 11569;
+    static constexpr int IDM_TELDASH_LOG = 12265;
+    static constexpr int IDM_TELDASH_CLEAR = 12266;
+    static constexpr int IDM_TELDASH_EXPORT = 12267;
+    static constexpr int IDM_TELDASH_SHOW = 12268;
+    static constexpr int IDM_TELDASH_STATS = 12269;
 
-    static constexpr int IDM_SHORTCUT_SHOW = 11570;
-    static constexpr int IDM_SHORTCUT_RECORD = 11571;
-    static constexpr int IDM_SHORTCUT_RESET = 11572;
-    static constexpr int IDM_SHORTCUT_SAVE = 11573;
-    static constexpr int IDM_SHORTCUT_LIST = 11579;
+    static constexpr int IDM_SHORTCUT_SHOW = 12270;
+    static constexpr int IDM_SHORTCUT_RECORD = 12271;
+    static constexpr int IDM_SHORTCUT_RESET = 12272;
+    static constexpr int IDM_SHORTCUT_SAVE = 12273;
+    static constexpr int IDM_SHORTCUT_LIST = 12279;
 
-    static constexpr int IDM_COLORPICK_SCAN = 11580;
-    static constexpr int IDM_COLORPICK_PICK = 11581;
-    static constexpr int IDM_COLORPICK_INSERT = 11582;
-    static constexpr int IDM_COLORPICK_LIST = 11589;
+    static constexpr int IDM_COLORPICK_SCAN = 12280;
+    static constexpr int IDM_COLORPICK_PICK = 12281;
+    static constexpr int IDM_COLORPICK_INSERT = 12282;
+    static constexpr int IDM_COLORPICK_LIST = 12289;
 
-    static constexpr int IDM_EMOJI_PICKER = 11590;
-    static constexpr int IDM_EMOJI_INSERT = 11591;
-    static constexpr int IDM_EMOJI_CONFIG = 11592;
-    static constexpr int IDM_EMOJI_TEST = 11599;
+    static constexpr int IDM_EMOJI_PICKER = 12290;
+    static constexpr int IDM_EMOJI_INSERT = 12291;
+    static constexpr int IDM_EMOJI_CONFIG = 12292;
+    static constexpr int IDM_EMOJI_TEST = 12299;
 
-    static constexpr int IDM_CRASH_SHOW = 11600;
-    static constexpr int IDM_CRASH_TEST = 11601;
-    static constexpr int IDM_CRASH_LOG = 11602;
-    static constexpr int IDM_CRASH_CLEAR = 11603;
-    static constexpr int IDM_CRASH_STATS = 11609;
+    static constexpr int IDM_CRASH_SHOW = 12300;
+    static constexpr int IDM_CRASH_TEST = 12301;
+    static constexpr int IDM_CRASH_LOG = 12302;
+    static constexpr int IDM_CRASH_CLEAR = 12303;
+    static constexpr int IDM_CRASH_STATS = 12309;
 
     // Phase 51: mIRC Control Bridge
-    static constexpr int IDM_IRC_CONNECT = 11610;
-    static constexpr int IDM_IRC_DISCONNECT = 11611;
-    static constexpr int IDM_IRC_STATUS = 11612;
-    static constexpr int IDM_IRC_CONFIG = 11613;
-    static constexpr int IDM_IRC_SEND = 11614;
+    static constexpr int IDM_IRC_CONNECT = 12310;
+    static constexpr int IDM_IRC_DISCONNECT = 12311;
+    static constexpr int IDM_IRC_STATUS = 12312;
+    static constexpr int IDM_IRC_CONFIG = 12313;
+    static constexpr int IDM_IRC_SEND = 12314;
 
     bool m_telemetryDashboardInitialized = false;
     bool m_crashReporterInitialized = false;

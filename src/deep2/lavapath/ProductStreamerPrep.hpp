@@ -48,26 +48,52 @@ inline int ProductStreamerPrep() {
             }
             rawBud[n] = 0;
         }
-        SetEnv("DEEP2_WEIGHT_BUDGET_MIB", "2048");
-        /* Deep2Engine ResidencyManager reads WEIGHT_BUDGET_* not DEEP2_*. */
-        SetEnv("WEIGHT_BUDGET_MIB", "2048");
-        SetEnv("WEIGHT_BUDGET_BYTES", "2147483648");
-        {
+        /* Honor user-configured weight budget if present; otherwise derive a
+         * hardware-aware default from available system RAM rather than forcing
+         * an arbitrarily small 2 GiB cap. MoE models stream; residency does not
+         * require full model materialization. */
+        const char* explicitBudget = std::getenv("WEIGHT_BUDGET_MIB");
+        if (!explicitBudget || explicitBudget[0] == '\0') {
+            MEMORYSTATUSEX memStatus{};
+            memStatus.dwLength = sizeof(memStatus);
+            GlobalMemoryStatusEx(&memStatus);
+            const unsigned __int64 totalRAM = memStatus.ullTotalPhys;
+            const unsigned __int64 eighthRAM = totalRAM / 8;
+            unsigned __int64 defaultMib = 2048ULL;
+            if (eighthRAM > defaultMib * 1024ULL * 1024ULL)
+                defaultMib = eighthRAM / (1024ULL * 1024ULL);
+            if (defaultMib > 32768ULL)
+                defaultMib = 32768ULL;
+            char buf[64] = {};
+            _snprintf_s(buf, sizeof(buf), "%llu", (unsigned long long)defaultMib);
+            SetEnv("WEIGHT_BUDGET_MIB", buf);
+            SetEnv("DEEP2_WEIGHT_BUDGET_MIB", buf);
+        } else {
+            SetEnv("DEEP2_WEIGHT_BUDGET_MIB", explicitBudget);
+        }
+        /* WEIGHT_BUDGET_BYTES intentionally unset so WEIGHT_BUDGET_MIB path is
+         * evaluated in Deep2Engine. */
+{
             MibParseResult raw = ParseMibTokenEx(rawBud[0] ? rawBud : "E8B0M");
             EmitWeightBudgetReceipt(stderr, raw, "ENV_RAW_BEFORE_HOST_FLOOR");
+            unsigned long long residencyBudget = raw.ok ? raw.mib : 0ULL;
+            int budgetRelation = (raw.ok && raw.mib > 0) ? 1 : 0;
             std::fprintf(stderr,
                          "WEIGHT_BUDGET_ENV_PRESENT=1\n"
                          "WEIGHT_BUDGET_ENV_RAW=\"%s\"\n"
                          "WEIGHT_BUDGET_PARSE_OK=%d\n"
                          "WEIGHT_BUDGET_INPUT_MIB=%llu\n"
-                         "WEIGHT_BUDGET_EFFECTIVE_MIB=2048\n"
-                         "RESIDENCY_BUDGET_MIB=2048\n"
-                         "BUDGET_RELATION_VALID=1\n"
+                         "WEIGHT_BUDGET_EFFECTIVE_MIB=%llu\n"
+                         "RESIDENCY_BUDGET_MIB=%llu\n"
+                         "BUDGET_RELATION_VALID=%d\n"
                          "NOTE=MODEL_SIZE_NE_PHYSICAL_RESIDENCY; "
                          "RESIDENCY_LE_PHYSICAL_BUDGET; "
                          "MODEL_SIZE_LE_LOGICAL_ADDRESSABILITY_REQUIRES_LAA\n",
                          raw.input && raw.input[0] ? raw.input : "(empty)",
-                         raw.ok, (unsigned long long)raw.mib);
+                         raw.ok, (unsigned long long)raw.mib,
+                         (unsigned long long)raw.mib,
+                         residencyBudget,
+                         budgetRelation);
             std::fflush(stderr);
         }
         SetEnv("DEEP2_GPU_FWD", "0");

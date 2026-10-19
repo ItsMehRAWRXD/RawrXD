@@ -13,6 +13,8 @@
 #include <windows.h>
 #endif
 
+#include "OllamaLocalBlobResolve.hpp"
+
 namespace Deep2 {
 namespace rawr_run {
 
@@ -156,10 +158,76 @@ inline void CollectModelRoots(std::vector<std::string>& roots) {
     };
     if (const char* e = std::getenv("RAWRXD_MODEL_ROOT")) push(e);
     push("F:\\OllamaModels");
+    push("F:\\models");
+    push("F:\\models\\gguf");
     push("G:\\~dev\\rawrxd\\models");
     push("G:\\~dev\\rawrxd");
     push("G:\\~dev\\rawrxd\\rawrxd_test_models");
     push("F:\\OllamaModels\\rawrxd_test_models");
+}
+
+inline void CollectOllamaModelUnits(std::vector<LocalModelUnit>& out) {
+#ifdef _WIN32
+    const char* roots[] = {"F:\\OllamaModels", "F:\\OllamaModels\\models", nullptr};
+    for (int r = 0; roots[r]; ++r) {
+        char libDir[MAX_PATH];
+        std::snprintf(libDir, sizeof(libDir),
+                      "%s\\manifests\\registry.ollama.ai\\library", roots[r]);
+        if (!DirOk(libDir)) continue;
+
+        char pat[MAX_PATH];
+        snprintf(pat, sizeof(pat), "%s\\*", libDir);
+        WIN32_FIND_DATAA fd{};
+        HANDLE h = FindFirstFileA(pat, &fd);
+        if (h == INVALID_HANDLE_VALUE) continue;
+        do {
+            if (fd.cFileName[0] == '.' &&
+                (fd.cFileName[1] == 0 ||
+                 (fd.cFileName[1] == '.' && fd.cFileName[2] == 0)))
+                continue;
+            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+
+            char modelDir[MAX_PATH];
+            std::snprintf(modelDir, sizeof(modelDir), "%s\\%s", libDir, fd.cFileName);
+
+            char tagPat[MAX_PATH];
+            snprintf(tagPat, sizeof(tagPat), "%s\\*", modelDir);
+            WIN32_FIND_DATAA tfd{};
+            HANDLE th = FindFirstFileA(tagPat, &tfd);
+            if (th == INVALID_HANDLE_VALUE) continue;
+            do {
+                if (tfd.cFileName[0] == '.' &&
+                    (tfd.cFileName[1] == 0 ||
+                     (tfd.cFileName[1] == '.' && tfd.cFileName[2] == 0)))
+                    continue;
+                if (tfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+
+                LocalModelUnit u;
+                u.isDir = false;
+                u.shards = 1;
+                u.alias = std::string(fd.cFileName) + ":" + std::string(tfd.cFileName);
+                /* Resolve manifest → blob path so the entry is loadable. */
+                std::string blob;
+                if (TryOllamaManifestTag(roots[r], fd.cFileName,
+                                         tfd.cFileName, blob)) {
+                    u.path = blob;
+                } else {
+                    u.path = std::string(modelDir) + "\\" +
+                             std::string(tfd.cFileName);
+                }
+                PushUnique(out, std::move(u));
+            } while (FindNextFileA(th, &tfd));
+            FindClose(th);
+        } while (FindNextFileA(h, &fd));
+        FindClose(h);
+    }
+#endif
+}
+
+/* Resolve a specific model:tag → blob path. Returns true on success. */
+inline bool ResolveOllamaManifestTag(const char* root, const char* name,
+                                      const char* tag, std::string& outPath) {
+    return TryOllamaManifestTag(root, name, tag, outPath);
 }
 
 inline void DiscoverLocalModels(std::vector<LocalModelUnit>& out) {
@@ -167,6 +235,7 @@ inline void DiscoverLocalModels(std::vector<LocalModelUnit>& out) {
     std::vector<std::string> roots;
     CollectModelRoots(roots);
     for (const auto& r : roots) ScanDirRecursive(r.c_str(), 0, out);
+    CollectOllamaModelUnits(out);
 }
 
 inline int MatchScore(const std::string& want, const LocalModelUnit& u) {

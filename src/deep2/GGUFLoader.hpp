@@ -40,7 +40,7 @@ struct block_q4_0 { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 32 elements
 struct block_q4_1 { uint16_t d; uint16_t m; uint8_t qs[16]; }; // 20 bytes
 struct block_q5_0 { uint16_t d; uint8_t qh[4]; uint8_t qs[16]; }; // 22 bytes
 struct block_q5_1 { uint16_t d; uint16_t m; uint8_t qh[4]; uint8_t qs[16]; }; // 24 bytes
-struct block_q8_0 { uint16_t d; int8_t qs[32]; }; // 34 bytes
+struct block_q8_0 { uint16_t d; int8_t qs[32]; }; // 34 bytes — d first, then qs (standard ggml Q8_0)
 struct block_q8_1 { uint16_t d; uint16_t s; int8_t qs[32]; }; // 36 bytes
 // ggml-common.h layout: scales + qs FIRST, then d/dmin at end (NOT d-first).
 struct block_q2_K { uint8_t scales[16]; uint8_t qs[64]; uint16_t d; uint16_t dmin; }; // 84 bytes
@@ -128,6 +128,13 @@ struct TensorInfo {
     uint64_t offset = 0;
     uint64_t size = 0;
     void* data = nullptr;
+
+    // Memory-mapped file support for large tensors
+    bool isMmap = false;
+    void* mmapHandle = nullptr;      // Platform handle (HANDLE on Windows, fd on Unix)
+    void* mmapView = nullptr;        // Base address of mapped region
+    size_t mmapOffset = 0;           // Offset within mapped region where tensor data starts
+    size_t mmapSize = 0;             // Total size of mapped region
 
     size_t GetNumElements() const {
         if (dimensions.empty()) return 0;

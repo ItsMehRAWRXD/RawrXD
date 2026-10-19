@@ -25,11 +25,11 @@ inline int BindProductOpen(const char* path, uint32_t layers) {
     InterLayer().reset();
     FenceObs().reset();
     Issuance().reset();
-    OwnershipObs().reset();
+    rawrxd::deep2::OwnershipObs().reset();
     PumpArm().pumpIssue.store(0, std::memory_order_relaxed);
     PumpArm().outerLoopInit.store(0, std::memory_order_relaxed);
     PumpArm().lastIssued.store(0xffffffffu, std::memory_order_relaxed);
-    WalkEnsureCrutch().store(0, std::memory_order_relaxed);
+    rawrxd::deep2::WalkEnsureCrutch().store(0, std::memory_order_relaxed);
     s.index = OpenModelIndex{};
     if (!s.index.openPath(path))
         return 0;

@@ -95,6 +95,7 @@ TokenProfile ProductionProfiler::endToken() {
         current_.ffnSwiGLUUs + current_.ffnDownUs + current_.ffnResidualUs +
         current_.finalNormUs + current_.logitsUs + current_.samplingUs +
         current_.ropeUs + current_.kvStoreUs + current_.attnComputeUs;
+    profileHistory_.push_back(current_);
     return current_;
 }
 

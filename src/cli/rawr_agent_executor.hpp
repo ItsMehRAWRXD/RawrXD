@@ -242,12 +242,13 @@ wit.modelInferenceCalls++;
             initialPath = "src/main.cpp";
         }
         std::string prompt = "Reply with exactly one JSON tool decision. Available tools: read(path), patch(path, content), build(cmd), test(cmd), report, done.\n";
+        prompt += "Required format: {\"tool\": \"read\", \"path\": \"...\"} or {\"tool\": \"patch\", \"path\": \"...\", \"content\": \"...\"} or {\"tool\": \"build\", \"cmd\": \"...\"} or {\"tool\": \"test\", \"cmd\": \"...\"} or {\"tool\": \"report\"} or {\"tool\": \"done\"}.\n";
         prompt += "Task: " + plan + "\n";
         prompt += "Workspace: " + a.session.workspace + "\n";
         if (!observation.empty()) {
             prompt += "Observation: " + observation + "\n";
         }
-        prompt += "Output only the JSON object.";
+        prompt += "Output only the JSON object. Do not use markdown code fences. Do not add any explanation.";
         fprintf(stderr, "[AGENT_MODEL] prompt='%s'\n", prompt.c_str());
         fflush(stderr);
         Deep2::GenerationOptions opts{};

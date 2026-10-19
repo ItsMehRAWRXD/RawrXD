@@ -650,9 +650,9 @@ bool Win32IDE::routeCommand(int commandId)
         // Feature modules (refactor, language, vision, etc.)
         return handleFeaturesCommand(commandId);
     }
-    else if (commandId >= 11600 && commandId < 11615)
+    else if (commandId >= 12200 && commandId < 12315)
     {
-        // Tier 5 and Phase 51: Crash Reporter + IRC Bridge
+        // Tier 5 and Phase 51: Cosmetic features (LineEnding, Network, TestExplorer, DbgWatch, CallStack, Marketplace, TelDash, Shortcut, ColorPick, Emoji, CrashReporter, IRC Bridge)
         return handleTier5Command(commandId);
     }
     else if (commandId >= 9400 && commandId < 9500)
@@ -663,6 +663,11 @@ bool Win32IDE::routeCommand(int commandId)
     {
         handleHotpatchCommand(commandId);
         return true;
+    }
+    else if (commandId >= 11700 && commandId < 11800)
+    {
+        // Tier 2: High-Visibility Cosmetics (git diff, terminal tabs, hover, signature help, codelens, inlay hints)
+        return handleTier2Command(commandId);
     }
     else if (commandId >= 12000 && commandId < 12100)
     {

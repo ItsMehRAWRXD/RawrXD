@@ -59,7 +59,16 @@ target_link_libraries(sovereign_core PUBLIC
     kernel32.lib
     user32.lib
     gdi32.lib
+    ucrt.lib
 )
+
+# Add Windows SDK library directories for CRT resolution
+if(WIN32)
+    target_link_directories(sovereign_core PUBLIC
+        "C:/Program Files (x86)/Windows Kits/10/lib/10.0.26100.0/ucrt/x64"
+        "C:/Program Files (x86)/Windows Kits/10/lib/10.0.26100.0/um/x64"
+    )
+endif()
 
 #=============================================================================
 # Export: Include dirs for IDE integration

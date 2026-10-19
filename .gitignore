@@ -264,3 +264,19 @@ smoke_bin/
 **/blobs/**
 **/.cache/huggingface/**
 **/huggingface/**
+
+# Multi-GB model weight artifacts (exceed GitHub's 100 MB per-file limit;
+# the small *.rom manifests and split indices stay tracked)
+models/*.nqb
+models/*.gguf.[0-9][0-9]
+models/split/*.gguf.[0-9][0-9]
+models/nemotron30b.rom
+
+# Transient run logs and scratch output from headless/GPU test sweeps
+vulkan_run*.txt
+stderr_*.txt
+_run_*_telemetry.txt
+rawrxd_headless_history
+rawrxd_subagent_jobs.jsonl
+act_*.f32
+*.bak_*

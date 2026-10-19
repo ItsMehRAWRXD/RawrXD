@@ -4,29 +4,15 @@ project(Deep2EngineOptimization LANGUAGES CXX ASM_MASM)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(MASM_PATH "f:/~dev/RawrXD-production-lazy-init/src/masm/final-ide")
+set(MASM_PATH "${CMAKE_SOURCE_DIR}/../asm")
 
 set(MASM_SOURCES
-    "${MASM_PATH}/masm_core_transform_aes_ni.asm"
-    "${MASM_PATH}/masm_transform_ring_buffer.asm"
-    "${MASM_PATH}/masm_core_gemv_avx512.asm"
-    "${MASM_PATH}/masm_7800x3d_unmethoded.asm"
-    "${MASM_PATH}/masm_core_profiler.asm"
-    "${MASM_PATH}/engineering_unreverse_core_extension.asm"
-    "${MASM_PATH}/masm_host_zero_engineer.asm"
-    "${MASM_PATH}/masm_dual_gpu_mirror.asm"
-    "${MASM_PATH}/masm_nugenperf_hotpatch.asm"
-    "${MASM_PATH}/masm_large_content_zero_overhead.asm"
-    "${MASM_PATH}/masm_1m_context_core.asm"
-    "${MASM_PATH}/avx512_tensor_quant.asm"
-    "${MASM_PATH}/avx512_negative_scale.asm"
-    "${MASM_PATH}/masm_kv_cache_multiplier.asm"
-    "${MASM_PATH}/masm_smt_prefetch_kernel.asm"
-    "f:/~dev/rawrxd/src/asm/StreamRingBufferToVramAperture_x64.asm"
+    "${MASM_PATH}/inference_kernels.asm"
+    "${MASM_PATH}/StreamRingBufferToVramAperture_x64.asm"
 )
 
 set(CPP_LIB_SOURCES
-    "f:/~dev/rawrxd/src/deep2/Deep2EngineExtensions.cpp"
+    "${CMAKE_SOURCE_DIR}/Deep2EngineExtensions.cpp"
 )
 
 # Check all MASM sources exist

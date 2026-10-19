@@ -24,14 +24,16 @@
 #include "TeardownWitness.hpp"
 #include "RawrChoreography.hpp"
 #include "ChoreographyResidencyLaw.hpp"
-#include "RawrLiveSeal.hpp"
+#include "RawrChoreography.hpp"
 #include "RawrReverseCompletion.hpp"
 #include "NemotronHSsmMap.hpp"
 #include "NemotronHSsmExperimental.hpp"
+#include <array>
 #include "NemotronHGeometry.hpp"
 #include "NemotronHMamba2Step.hpp"
 #include "HostQ8GemvSafe.hpp"
 #include "FinalNormAcquire.hpp"
+#include "RawrLiveSeal.hpp"
 #include "FinalNormProduce.hpp"
 #include "SemanticSafe.hpp"
 #include "FusedLiveController.hpp"
@@ -475,9 +477,19 @@ static bool EnhanceWanted(const char* name);
 // Aligned allocation helpers â€” count is NUMBER OF FLOATS (not bytes).
 static float* alignedAlloc(size_t count) {
 #ifdef _WIN32
-    return (float*)_aligned_malloc(count * sizeof(float), 32);
+    float* ptr = (float*)_aligned_malloc(count * sizeof(float), 32);
+    if (!ptr) {
+        fprintf(stderr, "[Deep2Engine] ERROR: _aligned_malloc failed for %zu floats\n", count);
+        return nullptr;
+    }
+    return ptr;
 #else
-    return (float*)aligned_alloc(32, count * sizeof(float));
+    float* ptr = (float*)aligned_alloc(32, count * sizeof(float));
+    if (!ptr) {
+        fprintf(stderr, "[Deep2Engine] ERROR: aligned_alloc failed for %zu floats\n", count);
+        return nullptr;
+    }
+    return ptr;
 #endif
 }
 
@@ -3006,6 +3018,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.lmHead = modelWeights.tokenEmbed;
         modelWeights.tieEmbeddings = true;
         printf("[Deep2Engine] Using tied embeddings\n");
+    } else if (modelWeights.lmHead.data == nullptr && modelWeights.tokenEmbed.data == nullptr) {
+        fprintf(stderr, "[RawrXD] FATAL: No embedding weights found - neither lmHead nor tokenEmbed available\n");
+        return false;
     }
 
     // â”€â”€ VAL-051.7: Initialize ResidencyManager and register all tensors â”€â”€
@@ -3040,7 +3055,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             if (r.ok)
                 mib = r.mib;
         }
-        unsigned long long v = mib * 1024ULL * 1024ULL;
+        unsigned long long v;
+        if (mib > (std::numeric_limits<unsigned long long>::max() / (1024ULL * 1024ULL))) {
+            v = std::numeric_limits<unsigned long long>::max();
+        } else {
+            v = mib * 1024ULL * 1024ULL;
+        }
         if (v > resConfig.maxResidentBytes)
             resConfig.maxResidentBytes = static_cast<size_t>(v);
     }
@@ -4918,6 +4938,13 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
                 const auto* blk =
                     reinterpret_cast<const block_q8_0*>(row + b * kBlk);
                 const float d = fp16ToFloat(blk->d);
+                // Debug: print Q8_0 scale values for output.weight
+                if (wt.name == "output.weight" && r == 0 && b < 3) {
+                    fprintf(stderr,
+                        "[Q8_DEBUG] output.weight r=%zu b=%zu d_raw=0x%04x d_float=%.6e qs[0]=%d qs[1]=%d\n",
+                        r, b, blk->d, d, (int)blk->qs[0], (int)blk->qs[1]);
+                    fflush(stderr);
+                }
                 const size_t off = b * 32;
                 const size_t n = (off + 32 <= cols) ? 32u : (cols - off);
                 float blockAcc = 0.0f;
@@ -9042,6 +9069,27 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     // otherwise Q4_K dequantization reads wrong offsets and produces garbage.
     // Detect fused gate/up pattern (e.g. Phi-3): wUp.rows == 2 * wDown.cols.
     // In that case, wDown.cols is the true intermediateDim, while wUp.rows = 2 * intermediateDim.
+// BUT first check if this is an attention-only layer that should skip FFN entirely.
+            // Nemotron-3.5-Lightning-30B has attention-only layers at specific indices.
+            static const std::array<size_t, 7> kAttentionOnlyLayers = {5, 12, 19, 26, 33, 42, 52};
+            fprintf(stderr, "[DEBUG] ly=%zu entering attention check, array size=%zu, layer=%zu\n", layer, kAttentionOnlyLayers.size(), layer);
+            fflush(stderr);
+            for (size_t i = 0; i < kAttentionOnlyLayers.size(); ++i) {
+                fprintf(stderr, "  [%zu]=%zu\n", i, kAttentionOnlyLayers[i]);
+                fflush(stderr);
+            }
+            bool isAttentionOnly = std::binary_search(kAttentionOnlyLayers.begin(), kAttentionOnlyLayers.end(), layer);
+            fprintf(stderr, "[DEBUG] ly=%zu isAttentionOnly=%d (layer=%zu)\n", layer, isAttentionOnly, layer);
+            fflush(stderr);
+            if (isAttentionOnly) {
+                fprintf(stderr, "[FFN_SKIP] ly=%zu attention-only layer — attention residual passes through\n", layer);
+                fflush(stderr);
+                memset(ffnOutput, 0, hiddenDim * sizeof(float));
+                return;
+            }
+
+    // Detect fused gate/up pattern (e.g. Phi-3): wUp.rows == 2 * wDown.cols.
+    // In that case, wDown.cols is the true intermediateDim, while wUp.rows = 2 * intermediateDim.
     if (lw.wUp.rows != 0 && lw.wDown.cols != 0 && lw.wUp.rows == 2 * lw.wDown.cols) {
         // Fused gate/up pattern: wUp.rows = 2 * intermediateDim, wDown.cols = intermediateDim
         intermediateDim = lw.wDown.cols;
@@ -9065,24 +9113,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
                 layer);
         fflush(stderr);
         return;
-    }
-
-    // Validate FFN geometry before executing fused or standard path.
-    // Attention layers in hybrid architectures may have wGate/wUp/wDown with
-    // mismatched dimensions that accidentally satisfy fused-path conditions.
-    // Only layers where wDown.cols matches intermediateDim, wUp.cols matches
-    // hiddenDim, and wGate.cols matches hiddenDim are genuine FFN layers.
-    if (lw.wDown.cols != intermediateDim || lw.wUp.cols != hiddenDim ||
-        lw.wGate.cols != hiddenDim) {
-        fprintf(stderr,
-            "[FFN_SKIP] ly=%zu wDown.cols=%zu != intermediateDim=%zu or "
-            "wUp.cols=%zu != hiddenDim=%zu or wGate.cols=%zu != hiddenDim=%zu — "
-            "attention residual passes through\n",
-            layer, lw.wDown.cols, intermediateDim, lw.wUp.cols, hiddenDim,
-            lw.wGate.cols, hiddenDim);
-        fflush(stderr);
-        return;
-    }
+}
 
     if (Deep2::phi3_fused_ffn::TryExecuteLayer(
             lw, input, output, hiddenDim, intermediateDim,
