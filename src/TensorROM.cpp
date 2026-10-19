@@ -124,31 +124,24 @@ static double dequant_q3km_block_rms(const uint8_t* p) {
 // Scan for the correct dataOffset by finding where token_embd's first blocks
 // dequantize to sane values with the Q3_K_M layout. Corrects m_shards[0].dataOffset
 // if the header-parsed offset is wrong (e.g. due to KV parsing drift).
-// Uses coefficient-of-variation across the 8 blocks to reject false positives
-// (random bytes that happen to dequantize to low RMS in one block but not all).
+// Two-stage scan: coarse ±4MB around dataOffset+te->offset, then fine ±4096.
+// Uses coefficient-of-variation across the 8 blocks to reject false positives.
 static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream& f) {
-    // Find token_embd.weight in shard 0
     const TensorEntry* te = nullptr;
     for (const auto& t : shards[0].tensors) {
         if (t.name == "token_embd.weight") { te = &t; break; }
     }
     if (!te) return;
 
-    // Scan near te->offset (the tensor-directory offset relative to dataStart).
-    // Tensor offsets are relative to the data section start, so
-    //   true_file_position = true_dataStart + te->offset
-    // We scan around te->offset to find true_dataStart.
-    uint64_t baseAbs = te->offset;
+    uint64_t baseAbs = shards[0].dataOffset + te->offset;
     int64_t bestDelta = 0;
     double bestScore = 1e18;
 
     std::vector<uint8_t> block(114);
-    for (int64_t delta = -16384; delta <= 16384; delta += 4) {
-        int64_t testAbs = (int64_t)baseAbs + delta;
-        if (testAbs < 0) continue;
+    auto scoreOffset = [&](int64_t testAbs) -> double {
+        if (testAbs < 0) return 1e18;
         f.clear();
         f.seekg(static_cast<std::streamoff>(testAbs), std::ios::beg);
-
         double rmsVals[8];
         bool allValid = true;
         for (int b = 0; b < 8; ++b) {
@@ -158,10 +151,7 @@ static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream
             rmsVals[b] = r;
             if (r > 3.0 || r < 0.01 || !(r == r)) { allValid = false; break; }
         }
-        if (!allValid) continue;
-
-        // Coefficient of variation: correct embeddings have similar RMS per block;
-        // random bytes won't.
+        if (!allValid) return 1e18;
         double meanRms = 0;
         for (int b = 0; b < 8; ++b) meanRms += rmsVals[b];
         meanRms /= 8.0;
@@ -169,24 +159,33 @@ static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream
         for (int b = 0; b < 8; ++b) varRms += (rmsVals[b] - meanRms) * (rmsVals[b] - meanRms);
         varRms /= 8.0;
         double cv = meanRms > 0 ? std::sqrt(varRms) / meanRms : 1e9;
-
-        // Score: low max RMS AND low CV (consistent across blocks)
         double maxRms = rmsVals[0];
         for (int b = 1; b < 8; ++b) if (rmsVals[b] > maxRms) maxRms = rmsVals[b];
-        double score = maxRms + 5.0 * cv;
-        if (score < bestScore) {
-            bestScore = score;
-            bestDelta = delta;
+        return maxRms + 5.0 * cv;
+    };
+
+    // Coarse scan: ±4MB in 4096-byte steps around dataOffset + te->offset
+    for (int64_t coarse = -4000000; coarse <= 4000000; coarse += 4096) {
+        double s = scoreOffset((int64_t)baseAbs + coarse);
+        if (s < bestScore) {
+            bestScore = s;
+            bestDelta = coarse;
+        }
+    }
+    // Fine scan: ±4096 in 4-byte steps around the best coarse position
+    for (int64_t fine = -4096; fine <= 4096; fine += 4) {
+        double s = scoreOffset((int64_t)baseAbs + bestDelta + fine);
+        if (s < bestScore) {
+            bestScore = s;
+            bestDelta += fine;
         }
     }
 
     if (bestDelta != 0) {
-        // testAbs = te->offset + bestDelta = true_dataStart + te->offset
-        // So true_dataStart = testAbs - te->offset = bestDelta
-        uint64_t newDataOffset = (uint64_t)bestDelta;
-        fprintf(stderr, "[ROM] dataOffset corrected: %llu -> %llu (score=%.4f)\n",
+        int64_t newDataOffset = (int64_t)shards[0].dataOffset + bestDelta - (int64_t)te->offset;
+        fprintf(stderr, "[ROM] dataOffset corrected: %llu -> %lld (score=%.4f)\n",
                 (unsigned long long)shards[0].dataOffset, newDataOffset, bestScore);
-        shards[0].dataOffset = newDataOffset;
+        shards[0].dataOffset = (uint64_t)newDataOffset;
     }
 }
 
