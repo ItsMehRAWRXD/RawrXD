@@ -28,3 +28,15 @@
 | A024 | CLI | `rawr` target omits `rawrxd_run_modelname_001.cpp` (link error); option off by default; no EOS stop, per-token debug prints, success reported on 0 tokens, no chat template/manifest lookup/REPL | High | Product | M | No | A023 | Open (Session 3) |
 | A025 | Stale copies | `src/deep2/Q.txt`, `Deep2Engine*.bak`, `vulkan_compute*.h` variants | Low | Maintainability | S | No | — | Open (candidates only) |
 | A026 | Dead code | 55 non-vendored `#if 0` blocks | Low | Maintainability | S | No | — | Closed (Session 2; `ssot_handlers_ext.cpp` not compile-verified) |
+
+## Acceptance snapshot — 2026-10-19
+
+| Gate / item | Status | Evidence / constraint |
+|---|---|---|
+| Gate 5 | PARTIAL | IDE authority, quantization, and build gaps remain open below |
+| S07 | OPEN | No accepted IDE receipt closes the execution/authority path |
+| S12 | FAIL | Integrated IDE build and parity evidence are not acceptance-ready |
+| Gates 16–18 | OPEN | No complete IDE receipts recorded |
+| D1 batched prefill | PASS | `F:\rawrxd\.worktrees\codex-d1-batched-prefill\evidence\D1_PREFILL_ACCEPTANCE_20261019\RECEIPT.md` |
+| D2 quant-dot batching | CORRECTNESS PASS | `F:\rawrxd\.worktrees\codex-d2-gpu-batching\evidence\D2_GPU_BATCH_ACCEPTANCE_20261019\RECEIPT.md`; performance comparison intentionally not claimed |
+| IDE worktree isolation | PASS | Prior 436 dirty entries preserved in stash `preserve IDE contamination before isolation 2026-10-19`; checkout is clean |
