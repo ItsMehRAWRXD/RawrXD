@@ -106,6 +106,7 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
         // tensor that was being placed, because a bare terminate() says
         // nothing about where it came from.
         try {
+        fprintf(stderr, "[PLACE] %s begin\n", name.c_str());
         // A format with a packed shader is placed in its packed form: the
         // bytes go from the ROM to the device and are dequantized there.
         // The host never sees them expanded, so neither the host work nor
@@ -131,6 +132,7 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
             fprintf(stderr, "[Move 10] Failed to dequantize %s\n", name.c_str());
             return false;
         }
+        fprintf(stderr, "[PLACE] %s dequantized\n", name.c_str());
         const auto tUploaded = std::chrono::steady_clock::now();
         slot.rows = dq.rows;
         slot.cols = dq.cols;
@@ -139,6 +141,7 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
                                       dq.data.size() * sizeof(float),
                                       { dq.rows, dq.cols }, true };
         const bool ok = uploadResidentSplitWeight(view, slot.f32);
+        fprintf(stderr, "[PLACE] %s uploaded\n", name.c_str());
         // Release the host copy straight away: only the device buffers are
         // needed from here on.
         dq.data.clear();
@@ -147,6 +150,7 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
         dequantMs += std::chrono::duration<double, std::milli>(tUploaded - tDequant).count();
         uploadMs += std::chrono::duration<double, std::milli>(tDone - tUploaded).count();
         ++tensorCount;
+        fprintf(stderr, "[PLACE] %s end\n", name.c_str());
         return ok;
         }
         catch (const std::exception& e) {
@@ -1072,7 +1076,6 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
         deep2::DequantizedTensor qkvDq;
-        deep2::DequantizedTensor attnOutDq;
         deep2::DequantizedTensor upDq;
         deep2::DequantizedTensor downDq;
         deep2::DequantizedTensor outputDq;
@@ -1210,17 +1213,22 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                         return false;
                     }
                 } else {
-                    if (attnOutDq.data.empty()) {
-                        const deep2::TensorEntry* attnOutEntry =
-                            rom.findTensor("blk." + std::to_string(layer) + ".attn_output.weight");
-                        if (!attnOutEntry) {
-                            fprintf(stderr, "[Move 10] Layer %zu: attn_output.weight not found\n", layer);
-                            return false;
-                        }
-                        if (!dequantTensor(*attnOutEntry, attnOutDq)) {
-                            fprintf(stderr, "[Move 10] Layer %zu: attn_output dequant failed\n", layer);
-                            return false;
-                        }
+                    // Each layer has its own attention output projection, so
+                    // this is dequantized per layer and not shared between
+                    // them. The tensor is declared inside the layer loop for
+                    // that reason: held across the loop, the "already
+                    // dequantized" check kept the first layer's weights and
+                    // used them for all of them.
+                    const deep2::TensorEntry* attnOutEntry =
+                        rom.findTensor("blk." + std::to_string(layer) + ".attn_output.weight");
+                    if (!attnOutEntry) {
+                        fprintf(stderr, "[Move 10] Layer %zu: attn_output.weight not found\n", layer);
+                        return false;
+                    }
+                    deep2::DequantizedTensor attnOutDq;
+                    if (!dequantTensor(*attnOutEntry, attnOutDq)) {
+                        fprintf(stderr, "[Move 10] Layer %zu: attn_output dequant failed\n", layer);
+                        return false;
                     }
                     attnProj.assign(hiddenDim, 0.0f);
                     gemvFloat(attnOutDq.data.data(), attnOut.data(), attnProj.data(),
@@ -1308,6 +1316,13 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                     return false;
                 }
             } else {
+                if (m_phaseTiming) {
+                    fprintf(stderr, "[DIM] layer=%zu token=%zu qkv=%zux%zu up=%zux%zu down=%zux%zu\n",
+                            layer, tokenPos,
+                            (size_t)qkvDq.rows, (size_t)qkvDq.cols,
+                            (size_t)upDq.rows, (size_t)upDq.cols,
+                            (size_t)downDq.rows, (size_t)downDq.cols);
+                }
                 gemvFloat(upDq.data.data(), ffnIn.data(), upOut.data(), upRows, upDq.cols);
             }
             const auto tDownStart = std::chrono::steady_clock::now();
@@ -1346,6 +1361,35 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
             }
 
             if (m_layerTrace) {
+                // Record the layer's state so a second run can be compared
+                // against it element by element.
+                if (m_layerTraceStates.size() <= layer) m_layerTraceStates.resize(layer + 1);
+                m_layerTraceStates[layer] = hiddenStates;
+
+                // The relative difference, as a sum of absolute differences
+                // over a sum of absolute magnitudes.
+                //
+                // A sum of the differences would let positive and negative
+                // errors cancel, and a difference in the magnitude of the
+                // largest element would hide a difference in the direction
+                // of the whole state. The L1 form uses every element and
+                // cannot cancel.
+                if (m_layerTraceCompare && layer < m_layerTraceBaseline.size() &&
+                    m_layerTraceBaseline[layer].size() == hiddenStates.size()) {
+                    double absError = 0.0;
+                    double magnitude = 0.0;
+                    for (size_t i = 0; i < hiddenStates.size(); ++i) {
+                        absError += std::fabs(static_cast<double>(hiddenStates[i]) -
+                                             m_layerTraceBaseline[layer][i]);
+                        magnitude += std::fabs(static_cast<double>(m_layerTraceBaseline[layer][i]));
+                    }
+                    const double rel = (magnitude > 1e-9) ? (absError / magnitude) : 0.0;
+                    std::cout << "[LAYERDIFF] layer=" << layer
+                              << " abs_error_sum=" << absError
+                              << " magnitude_sum=" << magnitude
+                              << " relative=" << rel << "\n" << std::flush;
+                }
+
                 std::cout << "[COMPTRACE] layer=" << layer
                           << " upOutRms=" << ComponentRms(upOut.data(), upOut.size())
                           << " downOutRms=" << ComponentRms(downOut, hiddenDim)

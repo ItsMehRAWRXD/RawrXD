@@ -415,7 +415,9 @@ public:
         std::string path;
     };
 
+    struct Diff { size_t layer = 0; double relative = 0.0; };
     std::vector<Entry> entries;
+    std::vector<Diff> diffs;
     // Lines that are not the layer trace are passed through, so the rest of
     // the engine's output is still visible while the trace is captured.
     std::streambuf* passthrough = nullptr;
@@ -451,6 +453,15 @@ private:
                 e.path = l.substr(pathAt + 5, (end == std::string::npos ? l.size() : end) - (pathAt + 5));
             }
             entries.push_back(e);
+        } else if (l.find("[LAYERDIFF]") != std::string::npos) {
+            const size_t relAt = l.find("relative=");
+            if (relAt != std::string::npos) {
+                Diff df;
+                const size_t layAt = l.find("layer=");
+                if (layAt != std::string::npos) df.layer = static_cast<size_t>(std::strtoull(l.c_str() + layAt + 6, nullptr, 10));
+                df.relative = std::strtod(l.c_str() + relAt + 9, nullptr);
+                diffs.push_back(df);
+            }
         } else if (passthrough && !l.empty()) {
             passthrough->sputn(l.data(), static_cast<std::streamsize>(l.size()));
             passthrough->pubsync();
@@ -915,6 +926,11 @@ static void runForwardParity(Deep2Engine& engine) {
         std::cout << "\n[PARITY] resident path: " << (ok ? "OK" : "FAILED") << "\n" << std::flush;
     }
 
+    // The second run is compared against the first element by element.
+    engine.m_layerTraceBaseline = engine.m_layerTraceStates;
+    engine.m_layerTraceStates.clear();
+    engine.m_layerTraceCompare = true;
+
     std::vector<float> cpuLogits, cpuBaseline;
     TraceBuf cpuTrace;
     {
@@ -940,8 +956,11 @@ static void runForwardParity(Deep2Engine& engine) {
             if (r.path != "resident") continue;
             for (const auto& c : cpuTrace.entries) {
                 if (c.path != "cpu" || c.layer != r.layer) continue;
-                const double scale = (r.absMax > 0.0) ? r.absMax : 1.0;
-                const double rel = std::fabs(r.sum - c.sum) / scale;
+                // The magnitude, not the sum: the sum of a residual stream
+                // cancels, so a difference in it is not a difference in the
+                // state. The largest element does not cancel.
+                const double scale = (r.absMax > c.absMax) ? r.absMax : c.absMax;
+                const double rel = std::fabs(r.absMax - c.absMax) / (scale > 0.0 ? scale : 1.0);
                 if (compared == 0) firstRel = rel;
                 if (rel > 1e-2 && divergedAt == 0) divergedAt = r.layer;
                 ++compared;
@@ -952,6 +971,17 @@ static void runForwardParity(Deep2Engine& engine) {
                   << firstRel << ", first layer over 1e-2 relative: " << divergedAt << "\n";
         std::cout << "[PARITY] gate (execution path, first layer): "
                   << (compared > 0 && firstRel < 1e-3 ? "PASSED" : "FAILED") << "\n";
+        // The element-wise comparison the second run produced.
+        double worstLayer = 0.0;
+        size_t worstLayerIndex = 0;
+        for (const auto& d : cpuTrace.diffs) {
+            if (d.relative > worstLayer) { worstLayer = d.relative; worstLayerIndex = d.layer; }
+        }
+        std::cout << "[PARITY] element-wise: " << cpuTrace.diffs.size()
+                  << " layers compared, worst relative difference " << worstLayer
+                  << " at layer " << worstLayerIndex << "\n";
+        std::cout << "[PARITY] gate (element-wise, worst layer): "
+                  << (!cpuTrace.diffs.empty() && worstLayer < 1e-3 ? "PASSED" : "FAILED") << "\n";
     }
 
     if (residentLogits.empty() || cpuLogits.empty()) {

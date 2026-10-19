@@ -115,6 +115,13 @@ struct Deep2Engine {
     // flushes a line per layer, and it is only useful when comparing two
     // execution paths against each other.
     bool m_layerTrace = false;
+    // The per-layer hidden states of the last traced run, so a second run can
+    // be compared against the first element by element.
+    std::vector<std::vector<float>> m_layerTraceStates;
+    // The states the current run is compared against, and whether to compare
+    // at all.
+    std::vector<std::vector<float>> m_layerTraceBaseline;
+    bool m_layerTraceCompare = false;
 
     // Where the time in a forward pass went.
     //
