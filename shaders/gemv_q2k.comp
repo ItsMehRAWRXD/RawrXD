@@ -1,104 +1,121 @@
 #version 450
-#extension GL_EXT_shader_explicit_arithmetic_types_int8 : require
-#extension GL_EXT_shader_explicit_arithmetic_types_int16 : require
-#extension GL_EXT_shader_explicit_arithmetic_types_int32 : require
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-// Q2_K quantized matrix-vector multiplication: y = dequantize(Q2_K_weight) @ x
-// Weight layout: each block of 256 quantized values is 84 bytes:
-//   qs[64] = 64 bytes of 2-bit packed values (2 bits per value, 4 values per byte)
-//   scales[16] = 16 uint8_t scale values
-//   d = fp16 at offset 80 (2 bytes)
-// Total: 64 + 16 + 2 = 82 bytes, padded to 84 for alignment
+// Q2_K quantized matrix-vector multiplication: y = dequantize(W) @ x
+//
+// The block layout is the one ggml uses and the one the CPU dequantizer in
+// src/quant_kernels.cpp implements. A block_q2_K is 84 bytes:
+//
+//   scales[16]  @ 0    the super-block scales
+//   qs[64]      @ 16   256 values, 2 bits each
+//   d           @ 80   fp16
+//   dmin        @ 82   fp16
+//
+// A value is reconstructed as
+//
+//   value = d * (sc & 0xF) * q - dmin * (sc >> 4)
+//
+// where sc is the scale byte for the value's sub-block. That byte carries a
+// 4-bit scale in the low nibble and a 4-bit minimum in the high nibble, so
+// the quantisation is affine rather than symmetric, and the minimum term is
+// not optional: dropping it changes every value.
+//
+// The 256 values of a block are laid out as two halves of 128. Each half is
+// four groups of 32 values, and each group is two sub-blocks of 16. The
+// group index picks which 2-bit field inside the quant byte holds the
+// value, and the sub-block index picks which of the group's two scale bytes
+// applies.
+//
+// The previous version of this shader read the scales from offset 64 and
+// the quants from offset 0, used a symmetric (q - 1.5) * scale * d
+// reconstruction with no minimum term, and took the first value of a byte
+// from the high bits. Every one of those was wrong. The parity gate in
+// rom_audit (q2k-parity) is what catches it.
 
-// Push constants
-layout(push_constant) uniform PushConst {
-    uint num_rows;      // Number of output rows (hidden_dim)
-    uint num_cols;      // Number of input columns (hidden_dim)
-    uint block_size;    // 256 for Q2_K
+layout(push_constant) uniform push_const {
+    uint num_rows;
+    uint num_cols;
+    uint block_size;
     uint pad0;
 } pc;
 
-// Storage buffers
+layout(set = 0, binding = 0, std430) readonly buffer WeightBuffer { uint w[]; } weights;
+layout(set = 0, binding = 1, std430) readonly buffer InputBuffer { float x[]; } inBuf;
+layout(set = 0, binding = 2, std430) writeonly buffer OutputBuffer { float y[]; } outBuf;
+
+// The block being decoded.
 //
-// GLSL has no runtime-sized array of 8-bit types, so the packed weight
-// bytes are carried in 32-bit words and read a byte at a time. The block is
-// 84 bytes, which is not a whole number of words, so the byte offset has to
-// be handled explicitly rather than by a word index.
-layout(set = 0, binding = 0, std430) readonly buffer WeightBuffer {
-    uint w[];
-} weights;
+// 84 bytes is 21 words, and a block always starts on a word boundary, so the
+// whole block is read with 21 aligned word loads rather than one load per
+// byte.
+uint g_block[21];
 
-layout(set = 0, binding = 1, std430) readonly buffer InputBuffer {
-    float x[];          // Input vector (num_cols floats)
-} inBuf;
-
-layout(set = 0, binding = 2, std430) writeonly buffer OutputBuffer {
-    float y[];          // Output vector (num_rows floats)
-} outBuf;
-
-// One byte of the packed weight buffer.
-uint weight_byte(uint byte_offset) {
-    return (weights.w[byte_offset >> 2] >> ((byte_offset & 3u) * 8u)) & 0xFFu;
+uint block_byte(uint off) {
+    return (g_block[off >> 2] >> ((off & 3u) * 8u)) & 0xFFu;
 }
 
-// Dequantize one element of a Q2_K block.
-//
-// `block_offset` is the byte offset of the block inside the weight buffer.
-float dequant_q2k_block_value(uint block_offset, uint32_t elem_idx) {
-    // Read fp16 d at offset 80
-    uint d_raw = (weight_byte(block_offset + 80u)) |
-                 ((weight_byte(block_offset + 81u)) << 8);
+// fp16 to fp32, without depending on the shaderFloat16 feature.
+float fp16_to_f32(uint h) {
+    const uint sign = (h & 0x8000u) << 16;
+    const uint exp = (h & 0x7C00u) >> 10;
+    const uint frac = h & 0x03FFu;
 
-    // Convert fp16 to float
-    uint sign = (d_raw & 0x8000u) << 16;
-    uint exp = (d_raw & 0x7C00u) >> 10;
-    uint frac = d_raw & 0x03FFu;
-    uint f32 = 0;
-    if (exp == 31u) {
-        f32 = sign | 0x7F800000u | (frac << 13);
-    } else if (exp == 0u) {
-        if (frac != 0u) {
-            while ((frac & 0x0400u) == 0u) { frac <<= 1u; exp--; }
-            exp++;
-            frac &= ~0x0400u;
-            f32 = sign | ((exp + (127u - 15u)) << 23) | (frac << 13);
-        } else {
-            f32 = sign;
-        }
-    } else {
-        f32 = sign | ((exp + (127u - 15u)) << 23) | (frac << 13);
+    if (exp == 0x1Fu) {
+        // Infinity or NaN.
+        return uintBitsToFloat(sign | 0x7F800000u | (frac << 13));
     }
-    float d = uintBitsToFloat(f32);
-    if (isnan(d) || isinf(d)) d = 0.0f;
-
-    // Get the 2-bit quantized value (0-3)
-    uint byte_idx = elem_idx / 4u;
-    uint bit_offset = (3u - (elem_idx % 4u)) * 2u;
-    uint q = (weight_byte(block_offset + byte_idx) >> bit_offset) & 0x03u;
-
-    // Get the scale for this group
-    uint group_idx = byte_idx / 4u;
-    float scale = float(weight_byte(block_offset + 64u + group_idx)) / 64.0f;
-
-    return (float(q) - 1.5f) * scale * d;
+    if (exp == 0u) {
+        if (frac == 0u) return uintBitsToFloat(sign);
+        // Subnormal. Shift the mantissa up until the hidden bit appears and
+        // adjust the exponent to match.
+        int e = -1;
+        uint f = frac;
+        while ((f & 0x0400u) == 0u) { f <<= 1; e--; }
+        e++;
+        f &= 0x03FFu;
+        return uintBitsToFloat(sign | (uint(e + 112) << 23) | (f << 13));
+    }
+    return uintBitsToFloat(sign | ((exp + 112u) << 23) | (frac << 13));
 }
 
 void main() {
-    uint row = gl_GlobalInvocationID.x;
+    const uint row = gl_GlobalInvocationID.x;
     if (row >= pc.num_rows) return;
+
+    // The column count has to be a whole number of blocks, otherwise the
+    // last block of a row would not be a block. The host side rejects a
+    // shape that does not satisfy this.
+    const uint blocks_per_row = pc.num_cols / pc.block_size;
 
     float acc = 0.0f;
 
-    for (uint col_block = 0; col_block < pc.num_cols; col_block += pc.block_size) {
-        uint block_idx = (row * pc.num_cols + col_block) / pc.block_size;
-        uint block_offset = block_idx * 84u;
+    for (uint b = 0; b < blocks_per_row; ++b) {
+        const uint block_idx = row * blocks_per_row + b;
+        const uint word_base = (block_idx * 84u) >> 2;
+        for (uint w = 0; w < 21u; ++w) {
+            g_block[w] = weights.w[word_base + w];
+        }
 
-        uint elements_in_block = min(pc.block_size, pc.num_cols - col_block);
+        const float d = fp16_to_f32(uint(block_byte(80u)) | (uint(block_byte(81u)) << 8));
+        const float dmin = fp16_to_f32(uint(block_byte(82u)) | (uint(block_byte(83u)) << 8));
 
-        for (uint e = 0; e < elements_in_block; ++e) {
-            uint col = col_block + e;
-            float w = dequant_q2k_block_value(block_offset, e);
-            acc += w * inBuf.x[col];
+        const uint base_col = b * pc.block_size;
+
+        for (uint halfIdx = 0; halfIdx < 2u; ++halfIdx) {
+            for (uint j = 0; j < 4u; ++j) {
+                const uint shift = j * 2u;
+                for (uint sub = 0; sub < 2u; ++sub) {
+                    const uint sc = block_byte(halfIdx * 8u + j * 2u + sub);
+                    const float dl = d * float(sc & 0x0Fu);
+                    const float ml = dmin * float(sc >> 4u);
+                    const uint qbase = 16u + halfIdx * 32u + sub * 16u;
+                    for (uint l = 0; l < 16u; ++l) {
+                        const uint q = (block_byte(qbase + l) >> shift) & 3u;
+                        const uint col = base_col + halfIdx * 128u + j * 32u + sub * 16u + l;
+                        acc += (dl * float(q) - ml) * inBuf.x[col];
+                    }
+                }
+            }
         }
     }
 

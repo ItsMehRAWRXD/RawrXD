@@ -1,6 +1,7 @@
 #include "VulkanDevice.hpp"
 
 #include <cstdio>
+#include <windows.h>
 #include <cstring>
 #include <fstream>
 #include <algorithm>
@@ -9,6 +10,27 @@
 namespace deep2 {
 
 static VkResult check(VkResult r) { return r; }
+
+namespace {
+
+// The deployed shaders sit next to the executable, in a shaders directory.
+//
+// The path is resolved from the running image rather than the working
+// directory, so the engine finds its shaders however it is launched.
+std::string ShaderPath(const char* fileName) {
+    char path[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, path, sizeof(path));
+    std::string s(path);
+    const size_t slash = s.find_last_of("\\/");
+    if (slash != std::string::npos) s = s.substr(0, slash + 1);
+    else s = "./";
+    return s + "shaders\\" + fileName;
+}
+
+std::string F32ShaderName() { return ShaderPath("gemv_f32.spv"); }
+std::string Q2KShaderName() { return ShaderPath("gemv_q2k.spv"); }
+
+} // namespace
 
 VulkanDevice::VulkanDevice() = default;
 VulkanDevice::~VulkanDevice() { shutdown(); }
@@ -149,15 +171,17 @@ void VulkanDevice::shutdown() {
     }
 }
 
-bool VulkanDevice::ensureProgram(const Gpu& gpu, const std::string& spvPath) {
+bool VulkanDevice::ensureProgram(const Gpu& gpu, const std::string& spvPath,
+                                  uint32_t pushConstantBytes) {
     std::lock_guard<std::mutex> lock(m_programMutex);
-    if (m_programs.find(gpu.device) != m_programs.end()) return true;
+    const auto key = std::make_pair(gpu.device, spvPath);
+    if (m_programs.find(key) != m_programs.end()) return true;
 
     auto program = std::make_unique<VulkanProgram>();
-    if (!program->init(gpu.device, spvPath)) return false;
+    if (!program->init(gpu.device, spvPath, pushConstantBytes)) return false;
     fprintf(stderr, "[VULKAN] compute program created for device %p (%s)\n",
             (void*)gpu.device, spvPath.c_str());
-    m_programs.emplace(gpu.device, std::move(program));
+    m_programs.emplace(key, std::move(program));
     return true;
 }
 
@@ -166,11 +190,25 @@ bool VulkanDevice::dispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuf
     VulkanProgram* program = nullptr;
     {
         std::lock_guard<std::mutex> lock(m_programMutex);
-        auto it = m_programs.find(gpu.device);
+        auto it = m_programs.find(std::make_pair(gpu.device, F32ShaderName()));
         if (it == m_programs.end()) return false;
         program = it->second.get();
     }
-    return program->dispatch(gpu, W, x, y, rows, cols);
+    const uint32_t push[2] = { rows, cols };
+    return program->dispatch(gpu, W, x, y, push, 2);
+}
+
+bool VulkanDevice::dispatchProgramQ2K(const Gpu& gpu, VkBuffer Wpacked, VkBuffer x, VkBuffer y,
+                                      uint32_t rows, uint32_t cols, uint32_t blockSize) {
+    VulkanProgram* program = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_programMutex);
+        auto it = m_programs.find(std::make_pair(gpu.device, Q2KShaderName()));
+        if (it == m_programs.end()) return false;
+        program = it->second.get();
+    }
+    const uint32_t push[4] = { rows, cols, blockSize, 0 };
+    return program->dispatch(gpu, Wpacked, x, y, push, 4);
 }
 
 bool VulkanDevice::beginDispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
@@ -181,28 +219,48 @@ bool VulkanDevice::beginDispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, 
         // the program's own dispatch lock, so two devices can be dispatched
         // at the same time.
         std::lock_guard<std::mutex> lock(m_programMutex);
-        auto it = m_programs.find(gpu.device);
+        auto it = m_programs.find(std::make_pair(gpu.device, F32ShaderName()));
         if (it == m_programs.end()) return false;
         program = it->second.get();
     }
-    return program->beginDispatch(gpu, W, x, y, rows, cols, out);
+    const uint32_t push[2] = { rows, cols };
+    return program->beginDispatch(gpu, W, x, y, push, 2, out);
+}
+
+bool VulkanDevice::beginDispatchProgramQ2K(const Gpu& gpu, VkBuffer Wpacked, VkBuffer x, VkBuffer y,
+                                           uint32_t rows, uint32_t cols, uint32_t blockSize,
+                                           VulkanDispatch& out) {
+    VulkanProgram* program = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_programMutex);
+        auto it = m_programs.find(std::make_pair(gpu.device, Q2KShaderName()));
+        if (it == m_programs.end()) return false;
+        program = it->second.get();
+    }
+    const uint32_t push[4] = { rows, cols, blockSize, 0 };
+    return program->beginDispatch(gpu, Wpacked, x, y, push, 4, out);
 }
 
 void VulkanDevice::destroyPrograms() {
     std::lock_guard<std::mutex> lock(m_programMutex);
     for (auto& entry : m_programs) {
-        // The map key is the device the program was created on.
-        entry.second->destroy(entry.first);
+        // The map key holds the device the program was created on.
+        entry.second->destroy(entry.first.first);
     }
     m_programs.clear();
 }
 
-bool VulkanDevice::createKvCache(const Gpu& gpu, uint32_t layers, uint32_t seqCapacity,
-                                 uint32_t hiddenDim, VkDeviceSize budgetBytes, KvCache& out) {
+bool VulkanDevice::createKvCache(const Gpu& gpu, uint32_t layers, uint32_t window,
+                                 uint32_t hiddenDim, uint32_t bytesPerElement,
+                                 VkDeviceSize budgetBytes, KvCache& out) {
     destroyKvCache(gpu, out);
-    if (layers == 0 || seqCapacity == 0 || hiddenDim == 0) return false;
+    if (layers == 0 || window == 0 || hiddenDim == 0) return false;
+    if (bytesPerElement != deep2::kKvBytesFp16 && bytesPerElement != deep2::kKvBytesFp32) {
+        fprintf(stderr, "[VULKAN] KV cache element size must be 2 (fp16) or 4 (fp32)\n");
+        return false;
+    }
 
-    const VkDeviceSize required = KvCacheBytes(layers, seqCapacity, hiddenDim);
+    const VkDeviceSize required = KvCacheBytes(layers, window, hiddenDim, bytesPerElement);
     const VkDeviceSize budget = budgetBytes ? budgetBytes : gpu.vramBytes;
     if (required > budget) {
         fprintf(stderr, "[VULKAN] KV cache of %llu bytes does not fit in %llu bytes on %s\n",
@@ -219,8 +277,9 @@ bool VulkanDevice::createKvCache(const Gpu& gpu, uint32_t layers, uint32_t seqCa
         return false;
     }
     out.layers = layers;
-    out.seqCapacity = seqCapacity;
+    out.window = window;
     out.hiddenDim = hiddenDim;
+    out.bytesPerElement = bytesPerElement;
     return true;
 }
 
@@ -232,19 +291,42 @@ void VulkanDevice::destroyKvCache(const Gpu& gpu, KvCache& cache) {
     cache.keyMemory = VK_NULL_HANDLE;
     cache.valueMemory = VK_NULL_HANDLE;
     cache.layers = 0;
-    cache.seqCapacity = 0;
+    cache.window = 0;
     cache.hiddenDim = 0;
+    cache.bytesPerElement = 0;
 }
 
 bool VulkanDevice::appendKvPosition(const Gpu& gpu, KvCache& cache, uint32_t layer,
-                                     uint32_t position, const float* keys, const float* values) {
+                                     uint32_t logicalPos, const float* keys, const float* values) {
     if (cache.keyBuffer == VK_NULL_HANDLE || !keys || !values) return false;
-    if (layer >= cache.layers || position >= cache.seqCapacity) return false;
+    if (layer >= cache.layers || cache.window == 0) return false;
 
-    const VkDeviceSize rowBytes = static_cast<VkDeviceSize>(cache.hiddenDim) * sizeof(float);
-    const VkDeviceSize layerStride = static_cast<VkDeviceSize>(cache.seqCapacity) * rowBytes;
+    // The cache is a ring: the logical position lives in the slot
+    // logicalPos % window, so writing past the window overwrites the oldest
+    // token. The key keeps its absolute RoPE position, because the rotation
+    // is applied here and never to the position the key was computed for.
+    const uint32_t physical = deep2::KvPhysicalIndex(logicalPos, cache.window);
+
+    const VkDeviceSize rowBytes =
+        static_cast<VkDeviceSize>(cache.hiddenDim) * cache.bytesPerElement;
+    const VkDeviceSize layerStride = static_cast<VkDeviceSize>(cache.window) * rowBytes;
     const VkDeviceSize offset = (static_cast<VkDeviceSize>(layer) * layerStride) +
-                                (static_cast<VkDeviceSize>(position) * rowBytes);
+                                (static_cast<VkDeviceSize>(physical) * rowBytes);
+
+    if (cache.bytesPerElement == deep2::kKvBytesFp16) {
+        // The cache is stored in half precision, so the row is converted
+        // before it goes up.
+        std::vector<uint16_t> halves(cache.hiddenDim);
+        for (uint32_t i = 0; i < cache.hiddenDim; ++i) {
+            halves[i] = deep2::KvFloatToHalf(keys[i]);
+        }
+        if (!uploadToBuffer(gpu, cache.keyBuffer, offset, halves.data(), rowBytes)) return false;
+        for (uint32_t i = 0; i < cache.hiddenDim; ++i) {
+            halves[i] = deep2::KvFloatToHalf(values[i]);
+        }
+        if (!uploadToBuffer(gpu, cache.valueBuffer, offset, halves.data(), rowBytes)) return false;
+        return true;
+    }
 
     if (!uploadToBuffer(gpu, cache.keyBuffer, offset, keys, rowBytes)) return false;
     if (!uploadToBuffer(gpu, cache.valueBuffer, offset, values, rowBytes)) return false;
@@ -376,8 +458,9 @@ static std::vector<uint8_t> readFileSpv(const std::string& path) {
     return buf;
 }
 
-bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
+bool VulkanProgram::init(VkDevice device, const std::string& spvPath, uint32_t pushConstantBytes) {
     m_device = device;
+    m_pushConstantBytes = pushConstantBytes;
     auto spv = readFileSpv(spvPath);
     if (spv.empty()) {
         fprintf(stderr, "[VULKAN] could not read SPIR-V: %s\n", spvPath.c_str());
@@ -416,7 +499,9 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pcr.offset = 0;
-    pcr.size = 8; // uint rows, uint cols
+    // The size is a property of the shader. The f32 GEMV passes two words,
+    // the packed Q2_K GEMV passes four.
+    pcr.size = pushConstantBytes;
 
     VkPipelineLayoutCreateInfo plci{};
     plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -469,14 +554,15 @@ void VulkanProgram::destroy(VkDevice device) {
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                             uint32_t rows, uint32_t cols) {
+                             const uint32_t* pushConstants, uint32_t pushWordCount) {
     Dispatch d;
-    if (!beginDispatch(gpu, W, x, y, rows, cols, d)) return false;
+    if (!beginDispatch(gpu, W, x, y, pushConstants, pushWordCount, d)) return false;
     return d.wait();
 }
 
 bool VulkanProgram::beginDispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                                  uint32_t rows, uint32_t cols, Dispatch& out) {
+                                  const uint32_t* pushConstants, uint32_t pushWordCount,
+                                  Dispatch& out) {
     if (m_device == VK_NULL_HANDLE) return false;
 
     // Take the program's dispatch lock for the whole lifetime of the
@@ -522,9 +608,11 @@ bool VulkanProgram::beginDispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBu
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_layout, 0, 1, &m_set, 0, nullptr);
-    uint32_t pc[2] = {rows, cols};
-    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
-    uint32_t groups = (rows + 255) / 256;
+    // The shader decides what the words mean; the program only knows how
+    // many there are.
+    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
+                       pushWordCount * 4, pushConstants);
+    uint32_t groups = (pushConstants[0] + 255) / 256;
     vkCmdDispatch(cmd, groups, 1, 1);
 
     vkEndCommandBuffer(cmd);

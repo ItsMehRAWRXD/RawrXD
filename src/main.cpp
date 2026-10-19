@@ -1,4 +1,6 @@
 #include "Deep2Engine.hpp"
+#include "core/KvWindowPlan.hpp"
+#include "core/HostKvRing.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -213,11 +215,119 @@ static void runResidentTensorParity(Deep2Engine& engine) {
 // question about the cards rather than about the model, because a model's
 // declared maximum context is often far larger than the VRAM on the
 // machine. This reports the plan and exercises the allocator's refusal.
+// Verify the bounded window admission and the ring semantics.
+//
+// The admission decides how many tokens of context the engine retains, and
+// the ring decides where a token physically lives once the window has
+// wrapped. Both are the kind of arithmetic that is easy to get subtly
+// wrong and hard to see in a forward pass, so they are checked directly.
+static int runKvWindowChecks() {
+    const uint32_t layers = 32, kvHeads = 32, headDim = 96;
+    int failures = 0;
+    auto expect = [&](bool ok, const char* what) {
+        std::cout << (ok ? "[PASS] " : "[FAIL] ") << what << "\n";
+        if (!ok) ++failures;
+    };
+
+    std::cout << "\n=== BOUNDED WINDOW ADMISSION ===\n";
+    const uint64_t gib = 1024ull * 1024ull * 1024ull;
+
+    // The model's advertised context does not fit; the window is bounded.
+    {
+        const uint32_t w = deep2::DetermineSafeContextWindow(
+            131072, layers, kvHeads, headDim, deep2::kKvBytesFp16, 47 * gib);
+        expect(w == 4096, "131072 tokens at 47 GB of VRAM admits a 4096 token window");
+        const uint64_t bytes = deep2::KvWindowBytes(layers, kvHeads, headDim,
+                                                     deep2::kKvBytesFp16, w);
+        std::cout << "       window=" << w << " costs " << (bytes / gib) << " GiB\n";
+    }
+    // A context that fits is used as advertised.
+    {
+        const uint32_t w = deep2::DetermineSafeContextWindow(
+            2048, layers, kvHeads, headDim, deep2::kKvBytesFp16, 47 * gib);
+        expect(w == 2048, "a context that fits is admitted unchanged");
+    }
+    // Even the floor does not fit: the context is refused rather than run
+    // at a size it was not certified for.
+    {
+        const uint32_t w = deep2::DetermineSafeContextWindow(
+            131072, layers, kvHeads, headDim, deep2::kKvBytesFp16, 1 * gib);
+        expect(w == 0, "a budget too small for the floor refuses the context");
+    }
+    // fp16 halves the footprint against the same window.
+    {
+        const uint64_t f32 = deep2::KvWindowBytes(layers, kvHeads, headDim,
+                                                  deep2::kKvBytesFp32, 4096);
+        const uint64_t f16 = deep2::KvWindowBytes(layers, kvHeads, headDim,
+                                                  deep2::kKvBytesFp16, 4096);
+        expect(f16 * 2 == f32, "the fp16 cache is exactly half the f32 cache");
+        std::cout << "       4096 tokens: f32=" << (f32 / gib) << " GiB, fp16="
+                  << (f16 / gib) << " GiB\n";
+    }
+
+    std::cout << "\n=== RING SEMANTICS ===\n";
+    {
+        const uint32_t window = 8, hidden = 4;
+        deep2::HostKvRing ring;
+        ring.reset(1, window, hidden);
+
+        // Write twelve positions of distinct data into an eight slot ring.
+        std::vector<std::vector<float>> written(12, std::vector<float>(hidden));
+        for (uint32_t p = 0; p < 12; ++p) {
+            for (uint32_t i = 0; i < hidden; ++i) written[p][i] = (float)(p * 100 + i);
+            ring.append(0, p, written[p].data(), written[p].data());
+        }
+
+        // The window holds the last eight logical positions.
+        const uint32_t count = 12;
+        expect(deep2::KvWindowCount(count, window) == 8, "the window holds eight positions");
+        expect(deep2::KvWindowStart(count, window) == 4, "the window starts at the oldest retained position");
+
+        // Every retained position reads back what was written for it.
+        bool rowsIntact = true;
+        for (uint32_t p = deep2::KvWindowStart(count, window); p < count; ++p) {
+            const float* k = ring.keyRow(0, p);
+            if (!k) { rowsIntact = false; break; }
+            for (uint32_t i = 0; i < hidden; ++i) {
+                if (k[i] != written[p][i]) { rowsIntact = false; break; }
+            }
+        }
+        expect(rowsIntact, "every retained position reads back the row written for it");
+
+        // The physical mapping is a rotation, and the oldest positions were
+        // overwritten rather than shifted.
+        expect(deep2::KvPhysicalIndex(8, window) == 0, "logical position 8 lives in slot 0");
+        expect(deep2::KvPhysicalIndex(11, window) == 3, "logical position 11 lives in slot 3");
+        bool oldestGone = true;
+        for (uint32_t p = 0; p < 4; ++p) {
+            const float* k = ring.keyRow(0, p);
+            for (uint32_t i = 0; i < hidden; ++i) {
+                if (k[i] != written[p][i]) { oldestGone = false; break; }
+            }
+        }
+        expect(oldestGone == false, "the overwritten positions no longer hold their old rows");
+    }
+
+    std::cout << "\n=== fp16 conversion ===\n";
+    {
+        expect(deep2::KvFloatToHalf(0.0f) == 0x0000, "0.0 converts to half zero");
+        expect(deep2::KvFloatToHalf(1.0f) == 0x3C00, "1.0 converts to half 1.0");
+        expect(deep2::KvFloatToHalf(-2.0f) == 0xC000, "-2.0 converts to half -2.0");
+        // 0.1 is not representable; the result must still be within 0.1%.
+        const float back = (float)deep2::KvFloatToHalf(0.1f);
+        expect(std::fabs(back - 0.1f) < 0.001f, "0.1 survives the half conversion");
+    }
+
+    std::cout << (failures == 0 ? "[OK] bounded window checks PASSED\n"
+                                : "[FAIL] bounded window checks FAILED\n");
+    return failures;
+}
 static void runKvCachePlan(Deep2Engine& engine) {
     const auto& geometry = engine.rom.geometry();
     const uint32_t layers = static_cast<uint32_t>(geometry.numLayers);
     const uint32_t hidden = static_cast<uint32_t>(geometry.hiddenDim);
 
+    runKvWindowChecks();
     std::cout << "\n=== DEVICE KV CACHE PLAN ===\n";
     std::cout << "layers=" << layers << " hidden=" << hidden
               << " declared max context=" << geometry.maxSeqLen << "\n";
@@ -251,7 +361,8 @@ static void runKvCachePlan(Deep2Engine& engine) {
         deep2::VulkanDevice::KvCache cache;
         const auto* g = engine.vulkan->primary();
         if (g) {
-            const bool ok = engine.vulkan->createKvCache(*g, layers, seq, hidden, totalVram, cache);
+            const bool ok = engine.vulkan->createKvCache(*g, layers, seq, hidden,
+                                             deep2::kKvBytesFp16, totalVram, cache);
             std::cout << "      allocate on " << g->name << ": "
                       << (ok ? "accepted" : "REFUSED") << "\n";
             if (ok) {

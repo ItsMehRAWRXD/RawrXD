@@ -400,7 +400,7 @@ bool Deep2Engine::uploadResidentSplitWeight(const deep2::TensorView& wView,
 
     const std::string spv = Deep2EngineExeDir() + "shaders\\gemv_f32.spv";
     for (const Placement& p : placements) {
-        if (!vulkan->ensureProgram(*p.gpu, spv)) {
+        if (!vulkan->ensureProgram(*p.gpu, spv, 8)) {
             fprintf(stderr, "[RESIDENT] failed to create the compute program\n");
             releaseResidentSplitWeight(out);
             return false;
@@ -451,6 +451,185 @@ void Deep2Engine::releaseResidentSplitWeight(ResidentSplitWeight& w) {
     w.totalRows = 0;
     w.cols = 0;
     w.splitRow = 0;
+}
+
+// ---------------------------------------------------------------------------
+// The packed quantized weight.
+//
+// The bytes go from the ROM straight to the device. The host never expands
+// them, so the placement costs one copy instead of a copy and a full
+// dequantization, and the resident footprint is the size of the model
+// rather than four times it.
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// Q2_K packs 256 values into one 84-byte block.
+constexpr uint32_t kQ2KBlockSize = 256;
+constexpr uint32_t kQ2KBlockBytes = 84;
+
+} // namespace
+
+bool Deep2Engine::uploadResidentQuantWeight(const deep2::TensorEntry& entry,
+                                             ResidentQuantWeight& out) {
+    releaseResidentQuantWeight(out);
+    if (!vulkanReady || !vulkan) return false;
+    if (entry.type != deep2::TensorType::Q2_K) {
+        fprintf(stderr, "[RESIDENT_Q2K] only Q2_K is supported, got type %d\n", (int)entry.type);
+        return false;
+    }
+    if (entry.dims.size() < 2) return false;
+
+    const uint64_t rows = entry.dims[0];
+    const uint64_t cols = entry.dims[1];
+    if (rows == 0 || cols == 0) return false;
+
+    // A row has to be a whole number of blocks, or the packed bytes of a row
+    // would not be self-contained and a row split would not land on a block
+    // boundary.
+    if (cols % kQ2KBlockSize != 0) {
+        fprintf(stderr, "[RESIDENT_Q2K] %llu columns is not a whole number of %u-value blocks\n",
+                (unsigned long long)cols, kQ2KBlockSize);
+        return false;
+    }
+
+    const uint64_t blocksPerRow = cols / kQ2KBlockSize;
+    const uint64_t bytesPerRow = blocksPerRow * kQ2KBlockBytes;
+
+    // The split weight is the VRAM ratio of the two devices, the same rule
+    // the f32 path uses.
+    const auto* g0 = vulkan->primary();
+    const auto* g1 = vulkan->secondary();
+    uint32_t splitRow = static_cast<uint32_t>(rows);
+    if (g0 && g1) {
+        const uint64_t totalVram = g0->vramBytes + g1->vramBytes;
+        const float weight = totalVram ? static_cast<float>(g0->vramBytes) / static_cast<float>(totalVram) : 0.5f;
+        splitRow = static_cast<uint32_t>(CalculateRowSplitIndex(
+            static_cast<uint32_t>(rows), static_cast<uint32_t>(cols), GGML_TYPE_Q2_K,
+            weight, g0->vramBytes, g1->vramBytes));
+    }
+
+    struct Placement { const deep2::VulkanDevice::Gpu* gpu; uint32_t offset; uint32_t count; };
+    std::vector<Placement> placements;
+    if (g0 && g1 && splitRow > 0 && splitRow < rows) {
+        placements.push_back({g0, 0, splitRow});
+        placements.push_back({g1, splitRow, static_cast<uint32_t>(rows) - splitRow});
+    } else if (g0) {
+        placements.push_back({g0, 0, static_cast<uint32_t>(rows)});
+    } else {
+        return false;
+    }
+
+    const std::string spv = Deep2EngineExeDir() + "shaders\\gemv_q2k.spv";
+
+    for (const Placement& p : placements) {
+        if (!vulkan->ensureProgram(*p.gpu, spv, 16)) {
+            fprintf(stderr, "[RESIDENT_Q2K] failed to create the compute program\n");
+            releaseResidentQuantWeight(out);
+            return false;
+        }
+
+        // The bytes for these rows, read straight out of the ROM.
+        const uint64_t byteOffset = static_cast<uint64_t>(p.offset) * bytesPerRow;
+        const uint64_t byteCount = static_cast<uint64_t>(p.count) * bytesPerRow;
+        std::vector<uint8_t> staged(static_cast<size_t>(byteCount));
+        if (!rom.readTensorRange(entry, byteOffset, byteCount, staged.data())) {
+            fprintf(stderr, "[RESIDENT_Q2K] failed to read the packed bytes from the ROM\n");
+            releaseResidentQuantWeight(out);
+            return false;
+        }
+
+        VkBuffer buf = VK_NULL_HANDLE;
+        VkDeviceMemory mem = VK_NULL_HANDLE;
+        if (!vulkan->createBuffer(*p.gpu, byteCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buf, mem)) {
+            fprintf(stderr, "[RESIDENT_Q2K] failed to allocate the weight buffer\n");
+            releaseResidentQuantWeight(out);
+            return false;
+        }
+        if (!vulkan->uploadToBuffer(*p.gpu, buf, 0, staged.data(), byteCount)) {
+            fprintf(stderr, "[RESIDENT_Q2K] failed to upload the weight buffer\n");
+            vulkan->destroyBuffer(*p.gpu, buf, mem);
+            releaseResidentQuantWeight(out);
+            return false;
+        }
+
+        ResidentQuantWeight::Part part;
+        part.gpu = p.gpu;
+        part.buffer = buf;
+        part.memory = mem;
+        part.rowOffset = p.offset;
+        part.rowCount = p.count;
+        out.parts.push_back(part);
+    }
+
+    out.totalRows = static_cast<uint32_t>(rows);
+    out.cols = static_cast<uint32_t>(cols);
+    out.blockSize = kQ2KBlockSize;
+    out.splitRow = splitRow;
+    out.valid = true;
+    return true;
+}
+
+void Deep2Engine::releaseResidentQuantWeight(ResidentQuantWeight& w) {
+    if (vulkan) {
+        for (auto& part : w.parts) {
+            if (part.gpu && part.buffer != VK_NULL_HANDLE) {
+                vulkan->destroyBuffer(*part.gpu, part.buffer, part.memory);
+            }
+        }
+    }
+    w.parts.clear();
+    w.valid = false;
+    w.totalRows = 0;
+    w.cols = 0;
+    w.blockSize = 0;
+    w.splitRow = 0;
+}
+
+bool Deep2Engine::vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                         std::vector<float>& y) {
+    if (!vulkanReady || !vulkan || !w.valid) return false;
+    if (xView.type != deep2::TensorType::F32 || !xView.data) return false;
+
+    const size_t xBytes = static_cast<size_t>(w.cols) * sizeof(float);
+    y.assign(w.totalRows, 0.0f);
+
+    for (const auto& part : w.parts) {
+        VkBuffer xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
+        VkDeviceMemory xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
+        void* xmapped = nullptr; void* ymapped = nullptr;
+
+        const VkDeviceSize yBytes = static_cast<VkDeviceSize>(part.rowCount) * sizeof(float);
+        const VkMemoryPropertyFlags hostVisible =
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+        auto cleanup = [&]() {
+            vulkan->destroyBuffer(*part.gpu, xbuf, xmem);
+            vulkan->destroyBuffer(*part.gpu, ybuf, ymem);
+        };
+
+        if (!vulkan->createBuffer(*part.gpu, xBytes, usage, hostVisible, xbuf, xmem, &xmapped) ||
+            !vulkan->createBuffer(*part.gpu, yBytes, usage, hostVisible, ybuf, ymem, &ymapped)) {
+            cleanup();
+            return false;
+        }
+
+        std::memcpy(xmapped, xView.data, xBytes);
+        std::memset(ymapped, 0, static_cast<size_t>(yBytes));
+
+        if (!vulkan->dispatchProgramQ2K(*part.gpu, part.buffer, xbuf, ybuf,
+                                        part.rowCount, w.cols, w.blockSize)) {
+            cleanup();
+            return false;
+        }
+
+        std::memcpy(y.data() + part.rowOffset, ymapped, static_cast<size_t>(yBytes));
+        cleanup();
+    }
+
+    return true;
 }
 
 bool Deep2Engine::vulkanGemvResident(const ResidentSplitWeight& w, const deep2::TensorView& xView,

@@ -4,6 +4,8 @@
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
+#include "core/KvWindowPlan.hpp"
+#include "core/HostKvRing.hpp"
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
@@ -383,7 +385,7 @@ bool Deep2Engine::prepareGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::
     // switching between the two halves of a split costs a map lookup rather
     // than a pipeline rebuild.
     const std::string spv = Deep2EngineExeDir() + "shaders\\gemv_f32.spv";
-    if (!vulkan->ensureProgram(gpu, spv)) {
+    if (!vulkan->ensureProgram(gpu, spv, 8)) {
         fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
         return false;
     }
@@ -652,26 +654,30 @@ __declspec(align(64)) thread_local float tls_dequant_scratchpad[16384];
 // keeps the exponentials in range and stops the attention output from
 // growing with the magnitude of the scores, which is the property the
 // residual stream depends on.
-static void ComputeStandardAttention(float* outputStates,
-                                     const float* Q,
-                                     const float* K_cache,
-                                     const float* V_cache,
-                                     uint32_t currentSeqLen,
-                                     uint32_t numHeads,
-                                     uint32_t headDim) {
-    if (!outputStates || !Q || !K_cache || !V_cache || currentSeqLen == 0) return;
+static void ComputeWindowAttention(float* outputStates,
+                                   const float* Q,
+                                   const deep2::HostKvRing& kv,
+                                   uint32_t layer,
+                                   uint32_t startLogical,
+                                   uint32_t count,
+                                   uint32_t numHeads,
+                                   uint32_t headDim) {
+    if (!outputStates || !Q || count == 0) return;
 
-    const uint32_t hiddenDim = numHeads * headDim;
     const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
-    std::vector<float> scores(currentSeqLen);
+    std::vector<float> scores(count);
 
     for (uint32_t h = 0; h < numHeads; ++h) {
         const float* headQ = Q + (h * headDim);
 
-        // Scores for this head against every cached position.
+        // Scores for this head against every position in the window. The
+        // rows are read through the ring, so a wrapped window is read in
+        // the order the positions were produced.
         float maxScore = -std::numeric_limits<float>::infinity();
-        for (uint32_t t = 0; t < currentSeqLen; ++t) {
-            const float* headK = K_cache + (static_cast<size_t>(t) * hiddenDim) + (h * headDim);
+        for (uint32_t t = 0; t < count; ++t) {
+            const float* headK = kv.keyRow(layer, startLogical + t);
+            if (!headK) return;
+            headK += h * headDim;
             float dotProduct = 0.0f;
             for (uint32_t d = 0; d < headDim; ++d) {
                 dotProduct += headQ[d] * headK[d];
@@ -683,20 +689,22 @@ static void ComputeStandardAttention(float* outputStates,
 
         // Softmax with the maximum subtracted out.
         float expSum = 0.0f;
-        for (uint32_t t = 0; t < currentSeqLen; ++t) {
+        for (uint32_t t = 0; t < count; ++t) {
             scores[t] = std::exp(scores[t] - maxScore);
             expSum += scores[t];
         }
         const float invExpSum = (expSum > 0.0f) ? (1.0f / expSum) : 0.0f;
-        for (uint32_t t = 0; t < currentSeqLen; ++t) {
+        for (uint32_t t = 0; t < count; ++t) {
             scores[t] *= invExpSum;
         }
 
         // Weighted sum of the values.
         float* headOutput = outputStates + (h * headDim);
         std::memset(headOutput, 0, headDim * sizeof(float));
-        for (uint32_t t = 0; t < currentSeqLen; ++t) {
-            const float* headV = V_cache + (static_cast<size_t>(t) * hiddenDim) + (h * headDim);
+        for (uint32_t t = 0; t < count; ++t) {
+            const float* headV = kv.valueRow(layer, startLogical + t);
+            if (!headV) return;
+            headV += h * headDim;
             const float weight = scores[t];
             for (uint32_t d = 0; d < headDim; ++d) {
                 headOutput[d] += weight * headV[d];
@@ -804,14 +812,46 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         lastTiming.residentTensors = m_residentTensorCount;
     }
 
-    // Keys and values for every layer, for every position processed so far.
+    // Keys and values for every layer, held in a bounded ring.
     //
     // A decoder-only transformer carries the context in this cache. The
     // residual stream itself does not run from one position to the next:
     // each position starts from its own token embedding, and the context
     // reaches it through the cached keys and values.
-    std::vector<std::vector<float>> kCache(numLayers);
-    std::vector<std::vector<float>> vCache(numLayers);
+    //
+    // The window is chosen from the memory budget rather than from the
+    // model's advertised maximum context, which for this model is 131072
+    // tokens and would cost 96 GiB in f32 against 47 GiB of VRAM across
+    // two cards. A model that advertises more context than the machine
+    // has is a fact about the model, not about the machine.
+    // The window the engine runs with, chosen from the memory budget
+    // rather than from the model's advertised maximum context.
+    //
+    // The advertised maximum is a fact about the model, not about the
+    // machine. For this model it is 131072 tokens, which costs 96 GiB of
+    // key and value storage in f32 against 47 GiB of VRAM across the two
+    // cards, so the advertised context is not one this machine can serve.
+    uint32_t kvWindow = 4096;
+    {
+        const uint32_t kvHeads = (uint32_t)geometry.numKVHeads;
+        const uint32_t heads = (uint32_t)(geometry.numHeads ? geometry.numHeads : 1);
+        const uint32_t headDim = (uint32_t)(geometry.hiddenDim / heads);
+        uint64_t budget = 0;
+        if (vulkan) {
+            for (size_t i = 0; i < vulkan->gpuCount(); ++i) budget += vulkan->gpu(i)->vramBytes;
+        }
+        const uint32_t chosen = deep2::DetermineSafeContextWindow(
+            (uint32_t)geometry.maxSeqLen, (uint32_t)numLayers, kvHeads, headDim,
+            deep2::kKvBytesFp16, budget);
+        if (chosen) kvWindow = chosen;
+        fprintf(stderr, "[KV_WINDOW] advertised=%u budget=%llu GB -> window=%u (fp16, %llu MB)\n",
+                (uint32_t)geometry.maxSeqLen, (unsigned long long)(budget / (1024ull * 1024ull * 1024ull)),
+                kvWindow,
+                (unsigned long long)(deep2::KvWindowBytes((uint32_t)numLayers, kvHeads, headDim,
+                                                           deep2::kKvBytesFp16, kvWindow) / (1024ull * 1024ull)));
+    }
+    deep2::HostKvRing kvRing;
+    kvRing.reset((uint32_t)numLayers, kvWindow, (uint32_t)hiddenDim);
 
     // The placement phase is over. Everything from here to the end of the
     // token loop is the compute phase.
@@ -916,17 +956,18 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             ApplyRotaryEmbeddings(Q.data(), 0, static_cast<size_t>(tokenPos));
             ApplyRotaryEmbeddings(K.data(), 0, static_cast<size_t>(tokenPos));
 
-            // Append this position's key and value to the layer's cache, then
-            // attend over every position cached so far.
-            kCache[layer].insert(kCache[layer].end(), K.begin(), K.end());
-            vCache[layer].insert(vCache[layer].end(), V.begin(), V.end());
-            const uint32_t seqLen = static_cast<uint32_t>(kCache[layer].size() / hiddenDim);
+            // Append this position's key and value to the layer's ring, then
+            // attend over the window the ring holds.
+            kvRing.append(layer, (uint32_t)tokenPos, K.data(), V.data());
+            const uint32_t logicalCount = (uint32_t)tokenPos + 1;
+            const uint32_t windowStart = deep2::KvWindowStart(logicalCount, kvWindow);
+            const uint32_t windowCount = deep2::KvWindowCount(logicalCount, kvWindow);
 
             std::vector<float> attnOut(hiddenDim, 0.0f);
-            ComputeStandardAttention(attnOut.data(), Q.data(),
-                                     kCache[layer].data(), vCache[layer].data(),
-                                     seqLen, static_cast<uint32_t>(numHeads),
-                                     static_cast<uint32_t>(headDim));
+            ComputeWindowAttention(attnOut.data(), Q.data(), kvRing, layer,
+                                    windowStart, windowCount,
+                                    static_cast<uint32_t>(numHeads),
+                                    static_cast<uint32_t>(headDim));
             const auto tFfnStart = std::chrono::steady_clock::now();
 
             if (m_phaseTiming) {

@@ -245,6 +245,43 @@ struct Deep2Engine {
     bool uploadResidentSplitWeight(const deep2::TensorView& wView, ResidentSplitWeight& out);
     void releaseResidentSplitWeight(ResidentSplitWeight& w);
 
+    // The quantized weight, resident on the devices in its packed form.
+    //
+    // The bytes go from the ROM straight to the device and are never
+    // expanded to f32 on the host. The placement then costs a copy rather
+    // than a copy and a full dequantization, and the resident footprint is
+    // the size of the model rather than four times it.
+    //
+    // A row of a quantized tensor is a whole number of quantization blocks,
+    // so a split by rows lands on a block boundary and each device gets a
+    // self-contained slice of the packed bytes.
+    struct ResidentQuantWeight {
+        struct Part {
+            const deep2::VulkanDevice::Gpu* gpu = nullptr;
+            VkBuffer buffer = VK_NULL_HANDLE;
+            VkDeviceMemory memory = VK_NULL_HANDLE;
+            uint32_t rowOffset = 0;
+            uint32_t rowCount = 0;
+        };
+        std::vector<Part> parts;
+        uint32_t totalRows = 0;
+        uint32_t cols = 0;
+        uint32_t blockSize = 0;
+        uint32_t splitRow = 0;
+        bool valid = false;
+    };
+
+    // Place a quantized tensor on the devices in its packed form.
+    bool uploadResidentQuantWeight(const deep2::TensorEntry& entry, ResidentQuantWeight& out);
+    void releaseResidentQuantWeight(ResidentQuantWeight& w);
+
+    // The packed quantized GEMV over a resident weight.
+    //
+    // The shader dequantizes as it reads, so the f32 expansion does not
+    // happen at all.
+    bool vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                std::vector<float>& y);
+
     // The token embedding table, dequantized once.
     //
     // It is 32064 x 3072 floats, about 394 MB, and a forward pass needs

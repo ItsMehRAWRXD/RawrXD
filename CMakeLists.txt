@@ -81,6 +81,18 @@ add_executable(waaf_procedural_test
     src/tools/waaf_procedural_test.cpp
 )
 
+# Regression test for the fused attn_kv_b expansion layout. The layout was
+# silently changed twice, and each change made the DeepSeek attention produce
+# NaN hidden states, so the contract is pinned by a test.
+add_executable(mla_layout_test
+    src/tools/mla_layout_test.cpp
+    src/TensorROM.cpp
+    src/ShardPager.cpp
+    src/quant_kernels.cpp
+)
+target_include_directories(mla_layout_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+                                                  ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ggml/include)
+
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
@@ -308,5 +320,15 @@ add_test(NAME TokenizerRoundTrip_Phi3
 # multi-device path cannot change the arithmetic.
 add_test(NAME RowSplitGemvParity
     COMMAND rom_audit gemv-split
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# The fused attn_kv_b expansion layout is a contract. It was silently changed
+# twice, and each change made the DeepSeek attention produce NaN hidden
+# states, so it is pinned by a test. The synthetic check needs no model; the
+# golden vector check reads the real weight matrix and skips itself when the
+# model is not present.
+add_test(NAME MlaKvBLayout
+    COMMAND mla_layout_test --model "G:/~dev/rawrxd/models/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

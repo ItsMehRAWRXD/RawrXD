@@ -65,4 +65,41 @@ namespace Deep2Rom {
                   "metadata_offset must sit at byte 44 of the ROM header");
     static_assert(offsetof(RomHeaderMultiShard, metadata_count) == 52,
                   "metadata_count must sit at byte 52 of the ROM header");
+
+    // The layout of DeepSeek's fused attn_kv_b matrix.
+    //
+    // Multi-head Latent Attention keeps the compressed latent c_kv (kvLora
+    // wide) and expands it into the per-head keys and values with a single
+    // up-projection matrix. llama.cpp's deepseek2.cpp expands the fused
+    // matrix one row block per head: head h owns qkNope + vHead consecutive
+    // rows, the first qkNope of which are that head's key and the remaining
+    // vHead its value.
+    //
+    // The MLA absorption optimization, which projects the query through the
+    // key up-projection instead and keeps the cache kvLora wide, needs the
+    // *split* attn_k_b and attn_v_b tensors. A GGUF that carries the fused
+    // attn_kv_b has to be expanded the interleaved way. Treating the rows as
+    // if they were grouped by projection gives every head the wrong weights
+    // and the attention produces NaN hidden states.
+    //
+    // This is a layout contract, not an implementation detail, so it lives
+    // here next to the ROM layout and is covered by a regression test.
+    struct MlaKvBLayout {
+        uint32_t numHeads = 0;
+        uint32_t qkNope   = 0;
+        uint32_t vHead    = 0;
+        uint32_t kvLora   = 0;
+
+        // Rows of the fused matrix that belong to one head.
+        uint32_t rowsPerHead() const { return qkNope + vHead; }
+        uint32_t totalRows() const { return numHeads * rowsPerHead(); }
+
+        // First row of head h's key, and of head h's value.
+        uint32_t keyRow(uint32_t head) const { return head * rowsPerHead(); }
+        uint32_t valueRow(uint32_t head) const { return head * rowsPerHead() + qkNope; }
+
+        // Element offsets into the row-major matrix.
+        uint64_t keyOffset(uint32_t head) const { return (uint64_t)keyRow(head) * kvLora; }
+        uint64_t valueOffset(uint32_t head) const { return (uint64_t)valueRow(head) * kvLora; }
+    };
 }

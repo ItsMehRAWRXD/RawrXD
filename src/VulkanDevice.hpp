@@ -7,7 +7,12 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <map>
 #include <vulkan/vulkan.h>
+
+// The bounded window layout: sizing, admission, and the ring mapping that
+// says where a logical position lives.
+#include "core/KvWindowPlan.hpp"
 
 namespace deep2 {
 
@@ -110,9 +115,23 @@ public:
     // between two devices costs a map lookup rather than a pipeline rebuild.
     // Rebuilding a pipeline on every device switch is what made the earlier
     // static-singleton form of this slower than it had to be.
-    bool ensureProgram(const Gpu& gpu, const std::string& spvPath);
+    //
+    // The cache is keyed by the device and the shader, so a device can hold
+    // more than one program. The f32 GEMV and the packed Q2_K GEMV are
+    // different shaders with different push constant layouts, and they live
+    // side by side on the same device.
+    bool ensureProgram(const Gpu& gpu, const std::string& spvPath, uint32_t pushConstantBytes);
     bool dispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                          uint32_t rows, uint32_t cols);
+
+    // The packed quantized GEMV.
+    //
+    // The weight buffer holds the raw quantized bytes rather than f32, so
+    // the shader dequantizes as it reads and the f32 expansion never
+    // happens. The weight is laid out row major, with each row a whole
+    // number of blocks.
+    bool dispatchProgramQ2K(const Gpu& gpu, VkBuffer Wpacked, VkBuffer x, VkBuffer y,
+                            uint32_t rows, uint32_t cols, uint32_t blockSize);
 
     // A device-resident cache of the per-layer key and value rows.
     //
@@ -122,45 +141,60 @@ public:
     // them in place instead of pulling the whole context back across PCIe on
     // every layer.
     //
-    // The layout is [layer][position][hiddenDim], so a position's rows for
-    // one layer are contiguous and a position's rows for every layer are
-    // evenly spaced.
+    // The layout is [layer][window][hiddenDim], so a position's rows for
+    // one layer are contiguous. The cache is a ring: the logical position p
+    // lives in the physical slot p % window. The keys keep their absolute
+    // RoPE position, because the rotation is applied when a row is stored
+    // and never to the position the key was computed for.
     struct KvCache {
         VkBuffer keyBuffer = VK_NULL_HANDLE;
         VkBuffer valueBuffer = VK_NULL_HANDLE;
         VkDeviceMemory keyMemory = VK_NULL_HANDLE;
         VkDeviceMemory valueMemory = VK_NULL_HANDLE;
         uint32_t layers = 0;
-        uint32_t seqCapacity = 0;   // positions the cache can hold
+        uint32_t window = 0;        // tokens the cache retains
         uint32_t hiddenDim = 0;
+        uint32_t bytesPerElement = 2;  // 2 = fp16, 4 = f32
 
         VkDeviceSize bytesPerBuffer() const {
-            return static_cast<VkDeviceSize>(layers) * seqCapacity * hiddenDim * sizeof(float);
+            return static_cast<VkDeviceSize>(layers) * window * hiddenDim * bytesPerElement;
         }
         VkDeviceSize totalBytes() const { return bytesPerBuffer() * 2; }
     };
 
     // Bytes a KV cache of the given shape needs on one device.
-    static VkDeviceSize KvCacheBytes(uint32_t layers, uint32_t seqCapacity, uint32_t hiddenDim) {
-        return static_cast<VkDeviceSize>(layers) * seqCapacity * hiddenDim * sizeof(float) * 2;
+    static VkDeviceSize KvCacheBytes(uint32_t layers, uint32_t window, uint32_t hiddenDim,
+                                     uint32_t bytesPerElement = 2) {
+        return static_cast<VkDeviceSize>(deep2::KvWindowBytes(layers, 1, hiddenDim,
+                                                              bytesPerElement, window));
     }
 
     // Allocate the cache on `gpu`. `budgetBytes` is what the caller has
     // left for it; the allocation is refused rather than allowed to push
     // the device past its VRAM. A zero budget means the device's whole
     // VRAM.
-    bool createKvCache(const Gpu& gpu, uint32_t layers, uint32_t seqCapacity,
-                       uint32_t hiddenDim, VkDeviceSize budgetBytes, KvCache& out);
+    bool createKvCache(const Gpu& gpu, uint32_t layers, uint32_t window,
+                       uint32_t hiddenDim, uint32_t bytesPerElement,
+                       VkDeviceSize budgetBytes, KvCache& out);
     void destroyKvCache(const Gpu& gpu, KvCache& cache);
 
     // Append one position's key and value rows for `layer`.
+    //
+    // `logicalPos` is the position in the sequence; the row is stored in the
+    // ring slot logicalPos % window, so writing past the window overwrites
+    // the oldest token.
     bool appendKvPosition(const Gpu& gpu, KvCache& cache, uint32_t layer,
-                           uint32_t position, const float* keys, const float* values);
+                           uint32_t logicalPos, const float* keys, const float* values);
 
     // Record and submit a dispatch on `gpu` without waiting for it to
     // finish. The caller waits on the returned handle.
     bool beginDispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                               uint32_t rows, uint32_t cols, VulkanDispatch& out);
+
+    // The packed quantized form of the same dispatch.
+    bool beginDispatchProgramQ2K(const Gpu& gpu, VkBuffer Wpacked, VkBuffer x, VkBuffer y,
+                                 uint32_t rows, uint32_t cols, uint32_t blockSize,
+                                 VulkanDispatch& out);
 
 private:
     bool pickMemoryType(const Gpu& gpu, uint32_t typeBits, VkMemoryPropertyFlags props,
@@ -168,7 +202,7 @@ private:
     // Destroys the cached programs. Must run before the devices are destroyed.
     void destroyPrograms();
 
-    std::unordered_map<VkDevice, std::unique_ptr<VulkanProgram>> m_programs;
+    std::map<std::pair<VkDevice, std::string>, std::unique_ptr<VulkanProgram>> m_programs;
     std::mutex m_programMutex;
 
     VkInstance m_instance = VK_NULL_HANDLE;
@@ -190,18 +224,22 @@ public:
     using Dispatch = VulkanDispatch;
 
     // Load SPIR-V from `spvPath` and create the compute pipeline on `device`.
-    bool init(VkDevice device, const std::string& spvPath);
+    //
+    // `pushConstantBytes` is the size of the shader's push constant block.
+    // It is a property of the shader, so the caller states it once and the
+    // program does not have to know what the shader does with it.
+    bool init(VkDevice device, const std::string& spvPath, uint32_t pushConstantBytes);
     void destroy(VkDevice device);
 
     // Dispatch gemv-style compute on `gpu`. Buffers must already live on `gpu` memory.
     // This form submits the work and waits for it to finish before it returns.
     bool dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                  uint32_t rows, uint32_t cols);
+                  const uint32_t* pushConstants, uint32_t pushWordCount);
 
     // Record and submit the same work without waiting for it. The caller
     // waits on the returned handle.
     bool beginDispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
-                       uint32_t rows, uint32_t cols, Dispatch& out);
+                       const uint32_t* pushConstants, uint32_t pushWordCount, Dispatch& out);
 
 private:
     VkDevice m_device = VK_NULL_HANDLE;
@@ -214,6 +252,7 @@ private:
     VkCommandBuffer m_cmd = VK_NULL_HANDLE;
     VkFence m_fence = VK_NULL_HANDLE;
     VkQueue m_queue = VK_NULL_HANDLE;
+    uint32_t m_pushConstantBytes = 8;
     // A program belongs to exactly one device, and dispatch mutates its
     // descriptor set and fence, so dispatches on one program are serialised.
     // Programs on different devices have separate locks, so the two halves of

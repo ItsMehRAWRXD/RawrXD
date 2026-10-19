@@ -10,6 +10,7 @@
 #include "Deep2Engine.hpp"
 #include "quant_kernels.hpp"
 #include "core/GgufTokenizer.hpp"
+#include "core/MlaLayout.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -591,23 +592,30 @@ struct DeepSeek2Model {
 
         // Expand the latent into this position's per-head keys and values.
         //
-        // This GGUF carries the *fused* attn_kv_b, so the expansion is the
-        // one llama.cpp's legacy path performs: one row per head, each row
-        // holding that head's key (qkNope values) followed by its value
-        // (vHead values). The MLA absorption optimization, which would
-        // project the query through the key up-projection instead and keep
-        // the cache kvLora wide, needs the split attn_k_b and attn_v_b
-        // tensors; this file has neither, and treating the fused rows as if
-        // they were grouped by projection gives every head the wrong weights.
+        // The expansion is the one llama.cpp's deepseek2.cpp performs for a
+        // fused attn_kv_b: one row block per head, the key rows first and the
+        // value rows second. The MLA absorption optimization, which projects
+        // the query through the key up-projection instead and keeps the cache
+        // kvLora wide, needs the split attn_k_b and attn_v_b tensors; this
+        // file has neither.
         {
-            std::vector<float> kv((size_t)heads * (qkNope + vHead));
-            gemvFloat(lw.kvBW.data(), cKV, kv.data(), heads * (qkNope + vHead), kvLora);
+            Deep2Rom::MlaKvBLayout kvLayout;
+            kvLayout.numHeads = heads;
+            kvLayout.qkNope   = qkNope;
+            kvLayout.vHead    = vHead;
+            kvLayout.kvLora   = kvLora;
+
+            std::vector<float> kv;
+            gemvFloat(lw.kvBW.data(), cKV, kv.data(), kvLayout.totalRows(), kvLora);
+
+            std::vector<float> keys, values;
+            Deep2Rom::expandFusedAttnKvB(kv.data(), kvLayout, keys, values);
+
             for (uint32_t hh = 0; hh < heads; ++hh) {
-                const float* row = &kv[(size_t)hh * (qkNope + vHead)];
-                std::memcpy(&kNopeCache[((size_t)hh * seqCap + t) * qkNope], row,
-                            qkNope * sizeof(float));
-                std::memcpy(&vCache[((size_t)hh * seqCap + t) * vHead], row + qkNope,
-                            vHead * sizeof(float));
+                std::memcpy(&kNopeCache[((size_t)hh * seqCap + t) * qkNope],
+                            &keys[(size_t)hh * qkNope], qkNope * sizeof(float));
+                std::memcpy(&vCache[((size_t)hh * seqCap + t) * vHead],
+                            &values[(size_t)hh * vHead], vHead * sizeof(float));
             }
         }
 
@@ -1389,6 +1397,198 @@ int cmdGemvSplit(int argc, char** argv) {
 }
 
 // ---------------------------------------------------------------------------
+// Packed Q2_K GEMV parity.
+//
+// The packed shader dequantizes as it reads, so the f32 expansion never
+// happens. That is only worth anything if the shader reconstructs exactly
+// the same values the CPU dequantizer does, so this compares the two on the
+// model's own quantized tensors.
+//
+// The reference is the dot product of the dequantized weights in double
+// precision, so it is not a product of the thing being tested. The CPU f32
+// GEMV is measured against the same reference as a control: if the CPU path
+// and the GPU path are both close to it, the two agree with each other.
+//
+// The previous version of the shader read the scales and the quants from
+// the wrong offsets and left the minimum term out, and it produced values
+// that were wrong by the size of the values themselves. This gate is what
+// would have caught that.
+// ---------------------------------------------------------------------------
+int cmdQ2KParity(int argc, char** argv) {
+    if (argc < 3) {
+        std::cerr << "usage: rom_audit q2k-parity <model.gguf> [tensor...]\n";
+        return 1;
+    }
+
+    Deep2Engine engine;
+    engine.vulkan = std::make_unique<deep2::VulkanDevice>();
+    engine.vulkanReady = engine.vulkan->init();
+    if (!engine.vulkanReady) {
+        std::cerr << "[ORACLE] no Vulkan device available\n";
+        return 1;
+    }
+    if (!engine.rom.addShard(argv[2]) || !engine.rom.finalizeIndex()) {
+        std::cerr << "[ORACLE] could not index the model\n";
+        return 1;
+    }
+
+    // The tensors to test. When none are named, the quantized projections
+    // are the ones that matter, because they are the ones the forward pass
+    // would place.
+    std::vector<std::string> names;
+    for (int a = 3; a < argc; ++a) names.push_back(argv[a]);
+    if (names.empty()) {
+        const auto& g = engine.rom.geometry();
+        for (size_t layer = 0; layer < g.numLayers; ++layer) {
+            const std::string prefix = "blk." + std::to_string(layer) + ".";
+            names.push_back(prefix + "attn_qkv.weight");
+            names.push_back(prefix + "ffn_up.weight");
+            names.push_back(prefix + "ffn_down.weight");
+        }
+        names.push_back("output.weight");
+    }
+
+    int failures = 0;
+    size_t tensorsTested = 0;
+    double worstGpuError = 0.0;
+    double worstCpuError = 0.0;
+
+    for (const std::string& name : names) {
+        const deep2::TensorEntry* entry = engine.rom.findTensor(name);
+        if (!entry) {
+            std::cerr << "[ORACLE] tensor not found: " << name << "\n";
+            ++failures;
+            continue;
+        }
+        if (entry->type != deep2::TensorType::Q2_K) {
+            // Only Q2_K has a packed shader. The others are reported and
+            // skipped rather than failed, so the command can be pointed at a
+            // whole model.
+            continue;
+        }
+        if (entry->dims.size() < 2) continue;
+
+        const uint64_t rows = entry->dims[0];
+        const uint64_t cols = entry->dims[1];
+
+        deep2::DequantizedTensor dq;
+        if (!engine.dequantTensor(*entry, dq)) {
+            std::cerr << "[ORACLE] dequant failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+
+        // A deterministic input vector, so the comparison is reproducible.
+        std::vector<float> x(static_cast<size_t>(cols));
+        uint32_t state = 0x9E3779B9u ^ static_cast<uint32_t>(cols) ^ static_cast<uint32_t>(rows);
+        for (size_t i = 0; i < x.size(); ++i) {
+            state = state * 1664525u + 1013904223u;
+            x[i] = static_cast<float>(static_cast<int32_t>(state >> 8) % 2001 - 1000) / 1024.0f;
+        }
+
+        // The reference: the same dot product in double precision.
+        std::vector<double> reference(static_cast<size_t>(rows), 0.0);
+        for (uint64_t r = 0; r < rows; ++r) {
+            const float* w = dq.data.data() + static_cast<size_t>(r) * static_cast<size_t>(cols);
+            double acc = 0.0;
+            for (uint64_t c = 0; c < cols; ++c) {
+                acc += static_cast<double>(w[c]) * static_cast<double>(x[c]);
+            }
+            reference[static_cast<size_t>(r)] = acc;
+        }
+
+        // The CPU f32 GEMV, as a control.
+        std::vector<float> cpu(static_cast<size_t>(rows), 0.0f);
+        if (!engine.gemvFloat(dq.data.data(), x.data(), cpu.data(),
+                              static_cast<uint32_t>(rows), static_cast<uint32_t>(cols))) {
+            std::cerr << "[ORACLE] the CPU GEMV failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+
+        // The packed GPU GEMV.
+        Deep2Engine::ResidentQuantWeight packed;
+        if (!engine.uploadResidentQuantWeight(*entry, packed)) {
+            std::cerr << "[ORACLE] the packed upload failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+        const deep2::TensorView xView{ deep2::TensorType::F32,
+                                       reinterpret_cast<const uint8_t*>(x.data()),
+                                       x.size() * sizeof(float),
+                                       { cols }, true };
+        std::vector<float> gpu;
+        if (!engine.vulkanGemvQ2KResident(packed, xView, gpu)) {
+            std::cerr << "[ORACLE] the packed GEMV failed: " << name << "\n";
+            engine.releaseResidentQuantWeight(packed);
+            ++failures;
+            continue;
+        }
+        engine.releaseResidentQuantWeight(packed);
+
+        // The tolerance is scaled by the size of the answer, so it says
+        // "this row is wrong by more than a thousandth of the row's own
+        // magnitude" rather than "this row is wrong by a thousandth of
+        // one".
+        double maxRef = 0.0;
+        for (double v : reference) maxRef = (std::max)(maxRef, std::fabs(v));
+        const double atol = (std::max)(1e-6, 1e-4 * maxRef);
+        const double rtol = 1e-4;
+
+        double worstGpu = 0.0;
+        double worstCpu = 0.0;
+        uint64_t badRows = 0;
+        uint64_t worstRow = 0;
+        for (uint64_t r = 0; r < rows; ++r) {
+            const double ref = reference[static_cast<size_t>(r)];
+            const double gpuErr = std::fabs(static_cast<double>(gpu[static_cast<size_t>(r)]) - ref);
+            const double cpuErr = std::fabs(static_cast<double>(cpu[static_cast<size_t>(r)]) - ref);
+            if (gpuErr > worstGpu) { worstGpu = gpuErr; worstRow = r; }
+            worstCpu = (std::max)(worstCpu, cpuErr);
+            if (gpuErr > atol + rtol * std::fabs(ref)) ++badRows;
+        }
+
+        worstGpuError = (std::max)(worstGpuError, worstGpu);
+        worstCpuError = (std::max)(worstCpuError, worstCpu);
+        ++tensorsTested;
+
+        const bool ok = badRows == 0;
+        if (!ok) ++failures;
+        std::cout << "[Q2K] " << (ok ? "PASS " : "FAIL ") << name
+                  << " (" << rows << "x" << cols << ")"
+                  << " gpu_err=" << worstGpu
+                  << " cpu_err=" << worstCpu
+                  << " bad_rows=" << badRows;
+        if (!ok) {
+            std::cout << " worst_row=" << worstRow
+                      << " gpu=" << gpu[static_cast<size_t>(worstRow)]
+                      << " ref=" << reference[static_cast<size_t>(worstRow)];
+        }
+        std::cout << "\n";
+    }
+
+    if (!tensorsTested) {
+        std::cerr << "[ORACLE] no Q2_K tensors were tested\n";
+        return 1;
+    }
+
+    std::cout << "[Q2K] " << tensorsTested << " tensor(s) tested, "
+              << "worst gpu error " << worstGpuError
+              << " against a worst CPU f32 error of " << worstCpuError << "\n";
+    if (worstCpuError > 0.0) {
+        std::cout << "[Q2K] the packed path is "
+                  << (worstGpuError <= worstCpuError * 4.0 ? "as accurate as" : "less accurate than")
+                  << " the CPU f32 path\n";
+    }
+    if (failures) {
+        std::cerr << "[ORACLE] " << failures << " tensor(s) did not reproduce the reference\n";
+        return 1;
+    }
+    std::cout << "[ORACLE] the packed Q2_K GEMV reproduces the reference on every row\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
 // Tokenizer diagnostics: print the ids and pieces a prompt encodes to.
 // ---------------------------------------------------------------------------
 int cmdTokenize(int argc, char** argv) {
@@ -1703,6 +1903,7 @@ int main(int argc, char** argv) {
     if (cmd == "gemv-split")   return cmdGemvSplit(argc, argv);
     if (cmd == "gemv-resident") return cmdGemvResident(argc, argv);
     if (cmd == "resident-parity") return cmdResidentParity(argc, argv);
+    if (cmd == "q2k-parity")    return cmdQ2KParity(argc, argv);
 
     std::cerr << "unknown command: " << cmd << "\n";
     std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor|gemv-split|gemv-resident> "
