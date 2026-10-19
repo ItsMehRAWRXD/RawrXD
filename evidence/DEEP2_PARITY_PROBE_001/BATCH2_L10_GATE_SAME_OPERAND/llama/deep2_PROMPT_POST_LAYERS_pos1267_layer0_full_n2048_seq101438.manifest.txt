@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_POST_LAYERS
+pos=1267
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=789e9a8ec03bb671
+l2=32.398699596037908
+seq=101438
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_PROMPT_POST_LAYERS_pos1267_layer0_full_n2048_seq101438.bin

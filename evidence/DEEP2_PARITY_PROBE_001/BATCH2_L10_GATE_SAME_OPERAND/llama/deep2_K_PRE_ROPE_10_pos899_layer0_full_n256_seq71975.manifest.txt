@@ -1,0 +1,13 @@
+side=deep2
+stage=K_PRE_ROPE_10
+pos=899
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=51e3c571fd1ad0aa
+l2=46.732727045116441
+seq=71975
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_K_PRE_ROPE_10_pos899_layer0_full_n256_seq71975.bin

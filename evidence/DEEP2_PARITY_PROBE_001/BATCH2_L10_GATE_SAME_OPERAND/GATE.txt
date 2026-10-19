@@ -1,0 +1,59 @@
+BATCH2_L10_GATE_SAME_OPERAND — TODO_L10_GATE_SAME_OPERAND
+==========================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=10
+frozen_X=deep2_FFN_NORM_10_pos0 (fnv=107e38ac59308a62)
+SAME_OPERAND_BYTES=PASS
+SAME_WEIGHT_BYTES=PASS (single GGUF mapping; weight SHA in SHA256.txt)
+
+LANES
+-----
+A1/B1 = Deep2 QuantKernelRegistry GEMV (Q4_K × Q8_K production)
+A2/B2 = independent ggml-style Q4_K × Q8_K scalar
++ llama FORCE_FFN_NORM (identical Deep2 X injected into ffn_norm-10)
+INFO   = f32 dequant × sequential f32/f64 (NOT authority; expected Q8_K gap)
+
+RESULTS (gate authoritative; up confirms shared path)
+-----------------------------------------------------
+ffn_gate:
+  A1 vs A2_q8k     dual=PASS  max_abs=0
+  A1 vs engine dump dual=PASS  max_abs=0
+  A1 vs llama FORCE dual=PASS  max_abs=2.09e-7  (ULP≤7)
+  INFO vs f32       max_abs=2.45e-2  (EXPECTED; Q8_K≠f32)
+
+ffn_up:
+  A1 vs A2_q8k     dual=PASS  max_abs=0
+  A1 vs engine dump dual=PASS  max_abs=0
+  A1 vs llama FORCE dual=PASS  max_abs=1.49e-7  (ULP≤5)
+  INFO vs f32       max_abs=1.75e-2  (EXPECTED)
+
+DOT (first/worst probe row)
+---------------------------
+DOT_1 (Deep2) == DOT_2_q8k  exact
+DOT_1 != DOT_2_f32          (~2e-2) → ordinary Q8_K vs f32 class
+DOT_2_f32 ≈ DOT_3_f64       (~1e-8) → not f32 accum defect
+
+DECISION TREE VERDICT
+---------------------
+GATE MATCHES (A1==A2_q8k==llama FORCE) AND UP MATCHES similarly
+⇒ L10 FFN_GATE / FFN_UP GEMV CLOSED under same operand
+⇒ the ~3.6e-5 FFN_GATE_10 body dual-FAIL is INHERITED from upstream
+   (FFN_NORM / FFN_INP discrepancy), NOT a gate/up kernel defect
+
+DO NOT reopen SiLU / L11+ / GEMV dequant for this class.
+
+NEXT
+----
+TODO_L10_FFN_INP_SAME_SOURCE
+  Freeze FFN_INP_10 (or ATTN_OUT residual path) and prove whether
+  FFN_NORM production amplifies the inherited ULP footprint into the
+  observed GATE dual-FAIL under native (non-forced) operands.
+
+Artifacts
+---------
+REPORT.txt  SHA256.txt  frozen_FFN_NORM_10.bin
+y_deep2_*.bin  y_ref_q8k_*.bin  y_ref_f32_*.bin  weight_bytes_*.bin
+llama/ (FORCE dumps)  run2.stdout.txt  llama.stdout.txt
+harness=src/deep2/test_l10_gate_same_operand.cpp
+exe=build/bin/test_l10_gate_same_operand.exe
+llama_force=RAWRXD_FORCE_FFN_NORM_BIN + RAWRXD_FORCE_FFN_NORM_LAYER=10

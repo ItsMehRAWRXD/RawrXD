@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_NORM
+pos=810
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=a73eb65c9125ee67
+l2=85.123326655714365
+seq=64880
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_FINAL_NORM_pos810_layer0_full_n2048_seq64880.bin

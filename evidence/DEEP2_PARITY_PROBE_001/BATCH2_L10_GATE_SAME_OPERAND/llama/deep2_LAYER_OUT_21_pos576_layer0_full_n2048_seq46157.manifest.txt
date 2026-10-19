@@ -1,0 +1,13 @@
+side=deep2
+stage=LAYER_OUT_21
+pos=576
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=4e3f680de5fdc865
+l2=36.26381992158079
+seq=46157
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_LAYER_OUT_21_pos576_layer0_full_n2048_seq46157.bin

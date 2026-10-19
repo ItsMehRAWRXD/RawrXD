@@ -1,0 +1,13 @@
+side=deep2
+stage=K_POST_ROPE_0
+pos=170
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=c2131746b37401ed
+l2=19.841340141008246
+seq=13607
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_K_POST_ROPE_0_pos170_layer0_full_n256_seq13607.bin

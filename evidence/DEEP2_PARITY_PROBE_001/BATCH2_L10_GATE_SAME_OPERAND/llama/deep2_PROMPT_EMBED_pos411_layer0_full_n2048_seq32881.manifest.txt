@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_EMBED
+pos=411
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=4736ee17660f8747
+l2=0.68048833025993161
+seq=32881
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_PROMPT_EMBED_pos411_layer0_full_n2048_seq32881.bin

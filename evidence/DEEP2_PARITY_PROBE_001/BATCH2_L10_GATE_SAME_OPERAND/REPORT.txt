@@ -1,0 +1,98 @@
+BATCH2_L10_GATE_SAME_OPERAND
+TODO=TODO_L10_GATE_SAME_OPERAND
+ids=[1,21521,9312] pos=0 layer=10
+frozen_input=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_FFN_NORM_10_pos0_layer0_full_n2048_seq060.bin
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+policy: dual PASS if abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6)
+authority_lane=independent Q4_K x Q8_K scalar (matches llama mul_mat class)
+lanes: A1/A2=ffn_gate  B1/B2=ffn_up  (identical frozen X)
+SAME_OPERAND_BYTES=PASS input_fnv=107e38ac59308a62
+engine_dump_gate=1 engine_dump_up=1
+llama_force_gate=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\llama_FFN_GATE_FORCE_DEEP2_X_10_pos0_layer0_full_n5632_seq2906.bin
+llama_force_up=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\llama_FFN_UP_FORCE_DEEP2_X_10_pos0_layer0_full_n5632_seq2907.bin
+
+======== blk.10.ffn_gate.weight ========
+tensor_name=blk.10.ffn_gate.weight
+actual_GGUF_quant_type=12 (Q4_K)
+rows=5632
+cols=2048
+input_fnv=107e38ac59308a62
+input_n=2048
+weight_offset=152915968
+weight_fnv=9bad82ed8a7c174b
+weight_bytes=6488064
+SAME_OPERAND_BYTES=PASS
+SAME_WEIGHT_BYTES=PASS
+lane_1=Deep2_GEMV (Q4_K x Q8_K)
+lane_2=independent_scalar_Q4_K_x_Q8_K (AUTHORITATIVE)
+lane_info=f32_dequant_dot (expected Q8_K gap; NOT authority)
+max_abs=0.000000e+00
+max_rel=0.000000e+00
+l2_diff=0.000000e+00
+dual_gate=PASS
+first_diff_index=-1
+largest_index=-1
+INFO_vs_f32_dequant max_abs=2.448252e-02 dual=FAIL (expected_nonzero)
+probe_index=3215
+deep2_f32=-0.2202954441
+reference_f32=-0.2202954441
+abs_diff=0.000000e+00
+ULP_diff=0
+DOT_1_deep2_kernel=-0.2202954441
+DOT_2_scalar_f32_dequant=-0.2447779626
+DOT_2_scalar_Q8K=-0.2202954441
+DOT_3_scalar_f64_dequant=-0.24477794465651881
+DOT_1_vs_DOT_2_f32_abs=2.448252e-02 ulp=1642994
+DOT_1_vs_DOT_2_q8k_abs=0.000000e+00 ulp=0
+DOT_2_f32_vs_DOT_3_abs=1.790890e-08
+deep2_gemv_vs_engine_dump dual=PASS max_abs=0.000000e+00 first=-1 largest=-1
+deep2_vs_llama_FORCE_same_X dual=PASS max_abs=2.086163e-07 max_rel=2.086163e-07 l2=3.046993e-06 first=-1 largest=2890
+llama_force_probe_index=2890 deep2=-0.280388087 llama=-0.2803882957 abs=2.086163e-07 ulp=7
+CLASS_ffn_gate=GEMV_MATCHES_SCALAR_Q8K_REF
+SUBCLASS_ffn_gate=A1_EQ_A2_q8k → production GEMV self-consistent; decide via llama FORCE or FFN_INP inheritance
+
+======== blk.10.ffn_up.weight ========
+tensor_name=blk.10.ffn_up.weight
+actual_GGUF_quant_type=12 (Q4_K)
+rows=5632
+cols=2048
+input_fnv=107e38ac59308a62
+input_n=2048
+weight_offset=159404032
+weight_fnv=9d35f708968fabb7
+weight_bytes=6488064
+SAME_OPERAND_BYTES=PASS
+SAME_WEIGHT_BYTES=PASS
+lane_1=Deep2_GEMV (Q4_K x Q8_K)
+lane_2=independent_scalar_Q4_K_x_Q8_K (AUTHORITATIVE)
+lane_info=f32_dequant_dot (expected Q8_K gap; NOT authority)
+max_abs=0.000000e+00
+max_rel=0.000000e+00
+l2_diff=0.000000e+00
+dual_gate=PASS
+first_diff_index=-1
+largest_index=-1
+INFO_vs_f32_dequant max_abs=1.751508e-02 dual=FAIL (expected_nonzero)
+probe_index=4857
+deep2_f32=0.04150337353
+reference_f32=0.04150337353
+abs_diff=0.000000e+00
+ULP_diff=0
+DOT_1_deep2_kernel=0.04150337353
+DOT_2_scalar_f32_dequant=0.05901845172
+DOT_2_scalar_Q8K=0.04150337353
+DOT_3_scalar_f64_dequant=0.059018498918391366
+DOT_1_vs_DOT_2_f32_abs=1.751508e-02 ulp=4701668
+DOT_1_vs_DOT_2_q8k_abs=0.000000e+00 ulp=0
+DOT_2_f32_vs_DOT_3_abs=4.719792e-08
+deep2_gemv_vs_engine_dump dual=PASS max_abs=0.000000e+00 first=-1 largest=-1
+deep2_vs_llama_FORCE_same_X dual=PASS max_abs=1.490116e-07 max_rel=1.490116e-07 l2=2.383395e-06 first=-1 largest=4474
+llama_force_probe_index=4474 deep2=-0.3905980885 llama=-0.3905982375 abs=1.490116e-07 ulp=5
+CLASS_ffn_up=GEMV_MATCHES_SCALAR_Q8K_REF
+SUBCLASS_ffn_up=A1_EQ_A2_q8k → production GEMV self-consistent; decide via llama FORCE or FFN_INP inheritance
+
+=== DECISION ===
+If A1==A2_q8k PASS for gate+up AND llama FORCE PASS → GEMV CLOSED; NEXT=L10_FFN_INP_SAME_SOURCE (inherited).
+If A1==A2_q8k PASS but llama FORCE FAIL → Deep2↔llama Q8_K kernel divergence (not f32 dequant).
+If A1!=A2_q8k → registry GEMV defect.
+INFO f32 gap alone does NOT authorize GEMV reopen (Q8_K is production).

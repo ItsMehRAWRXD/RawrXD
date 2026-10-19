@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_GATE_1
+pos=77
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=5632
+nbytes=22528
+fnv=51032d502c73c80e
+l2=4.7854100843310325
+seq=6186
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_GATE_SAME_OPERAND\llama\deep2_FFN_GATE_1_pos77_layer0_full_n5632_seq6186.bin
