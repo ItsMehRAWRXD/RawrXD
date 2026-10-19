@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <cstdio>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -15,54 +16,93 @@
 
 namespace Deep2Engine::Emulator {
 
-    // GGUF parsing helpers
-    std::string ReadGGUFStr(std::ifstream& f) {
-        uint64_t len = 0;
-        f.read(reinterpret_cast<char*>(&len), sizeof(len));
-        if (!f || len > 4096) return "";
-        std::vector<char> buf(len);
-        f.read(buf.data(), len);
-        return std::string(buf.data(), len);
-    }
+    // ------------------------------------------------------------------
+    // Memory-buffer GGUF parser (avoids FILE* positioning issues)
+    // ------------------------------------------------------------------
+    struct GgufBuffer {
+        std::vector<uint8_t> data;
+        size_t pos = 0;
 
-    void SkipGGUFValue(uint32_t type, std::ifstream& f) {
+        GgufBuffer() = default;
+        explicit GgufBuffer(const std::wstring& path) {
+            FILE* f = _wfopen(path.c_str(), L"rb");
+            if (!f) return;
+            if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return; }
+            long sz = _ftelli64(f);
+            if (sz <= 0) { fclose(f); return; }
+            fseek(f, 0, SEEK_SET);
+            data.resize(static_cast<size_t>(sz));
+            if (fread(data.data(), 1, data.size(), f) != data.size()) {
+                data.clear();
+            }
+            fclose(f);
+        }
+
+        bool valid() const { return !data.empty(); }
+
+        template<typename T>
+        bool read(T& out) {
+            if (pos + sizeof(T) > data.size()) return false;
+            memcpy(&out, data.data() + pos, sizeof(T));
+            pos += sizeof(T);
+            return true;
+        }
+
+        bool read_bytes(void* dst, size_t n) {
+            if (pos + n > data.size()) return false;
+            memcpy(dst, data.data() + pos, n);
+            pos += n;
+            return true;
+        }
+
+        std::string read_str() {
+            uint64_t len = 0;
+            if (!read(len)) return "";
+            if (len > data.size() - pos) return "";
+            std::string s(reinterpret_cast<const char*>(data.data() + pos), len);
+            pos += len;
+            return s;
+        }
+
+        void skip(size_t n) { pos += n; }
+    };
+
+    void SkipGGUFValue(uint32_t type, GgufBuffer& buf) {
         if (type <= 7) {
             uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
-            f.seekg(sz[type & 7], std::ios::cur);
+            buf.skip(sz[type & 7]);
         } else if (type == 8) {
-            ReadGGUFStr(f);
+            (void)buf.read_str();
         } else if (type == 9) {
             uint32_t arrayType = 0;
             uint64_t arrayLen = 0;
-            f.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
-            f.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
+            buf.read(arrayType);
+            buf.read(arrayLen);
             if (arrayType == 8) {
-                for (uint64_t i = 0; i < arrayLen; ++i) ReadGGUFStr(f);
+                for (uint64_t i = 0; i < arrayLen; ++i) buf.read_str();
             } else if (arrayType == 9) {
-                for (uint64_t i = 0; i < arrayLen; ++i) SkipGGUFValue(arrayType, f);
+                for (uint64_t i = 0; i < arrayLen; ++i) SkipGGUFValue(arrayType, buf);
             } else {
-                // Array element size by GGUF type
                 uint64_t elem_size = 0;
                 if (arrayType <= 7) {
                     uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
                     elem_size = sz[arrayType];
                 } else if (arrayType == 10 || arrayType == 11 || arrayType == 12) {
-                    elem_size = 8; // UINT64 / INT64 / FLOAT64
+                    elem_size = 8;
                 } else {
                     elem_size = 4;
                 }
-                f.seekg(static_cast<std::streamoff>(arrayLen * elem_size), std::ios::cur);
+                buf.skip(static_cast<size_t>(arrayLen * elem_size));
             }
         } else if (type == 10 || type == 11 || type == 12) {
-            // UINT64 / INT64 / FLOAT64: simple 8-byte value
-            f.seekg(8, std::ios::cur);
+            buf.skip(8);
         } else {
             uint32_t sub = 0;
             uint64_t len = 0;
-            f.read(reinterpret_cast<char*>(&sub), sizeof(sub));
-            f.read(reinterpret_cast<char*>(&len), sizeof(len));
+            buf.read(sub);
+            buf.read(len);
             if (sub == 9) {
-                for (uint64_t i = 0; i < len; ++i) ReadGGUFStr(f);
+                for (uint64_t i = 0; i < len; ++i) buf.read_str();
             } else {
                 uint64_t elem_size = 0;
                 if (sub <= 7) {
@@ -73,22 +113,23 @@ namespace Deep2Engine::Emulator {
                 } else {
                     elem_size = 4;
                 }
-                f.seekg(static_cast<std::streamoff>(len * elem_size), std::ios::cur);
+                buf.skip(static_cast<size_t>(len * elem_size));
             }
         }
     }
 
     uint16_t MapGGUFTypeToROM(uint32_t gguf_type) {
         switch (gguf_type) {
-            case 8: return 2;   // Q2_K
-            case 9: return 3;   // Q3_K
-            case 10: return 4;  // Q4_K
-            case 11: return 5;  // Q5_K
-            case 12: return 6;  // Q6_K
-            case 13: return 7;  // Q8_K
-            case 0: return 1;   // F32
-            case 1: return 0;   // F16
-            case 6: return 8;   // Q8_0
+            case 8:  return 2;   // Q2_K
+            case 9:  return 3;   // Q3_K
+            case 10: return 4;   // Q4_K
+            case 11: return 5;   // Q5_K
+            case 12: return 6;   // Q6_K
+            case 13: return 7;   // Q8_K
+            case 14: return 2;   // Q2_K (newer GGUF type code)
+            case 0:  return 1;   // F32
+            case 1:  return 0;   // F16
+            case 6:  return 8;   // Q8_0
             default: return 0xFFFF;
         }
     }
@@ -146,7 +187,7 @@ int wmain(int argc, wchar_t* argv[]) {
     }
 
     std::wstring output_path = argv[1];
-    std::wstring base_pattern = argv[2];   // e.g. "G:\\models\\DeepSeek-R1" -> opens .gguf.00, .gguf.01...
+    std::wstring base_pattern = argv[2];
     uint32_t shard_count = static_cast<uint32_t>(_wtoi(argv[3]));
     std::string arch = "deepseek";
     if (argc >= 5) {
@@ -166,11 +207,11 @@ int wmain(int argc, wchar_t* argv[]) {
     std::wcout.flush();
 
     // ------------------------------------------------------------------
-    // Pass 1: Open each shard, read header + KV metadata + tensor directory
+    // Pass 1: Load each shard into memory, parse header + KV metadata
     // ------------------------------------------------------------------
     struct ShardContext {
         std::wstring path;
-        std::ifstream file;
+        GgufBuffer buf;
         uint64_t tensor_count = 0;
         uint64_t kv_count = 0;
         uint64_t data_offset = 0;   // Start of tensor DATA section (64-byte aligned)
@@ -192,55 +233,48 @@ int wmain(int argc, wchar_t* argv[]) {
 
         ShardContext ctx;
         ctx.path = shard_path;
-        ctx.file.open(shard_path, std::ios::binary);
-        if (!ctx.file.is_open()) {
+        ctx.buf = GgufBuffer(shard_path);
+        if (!ctx.buf.valid()) {
             std::wcerr << L"[-] Failed to open shard: " << shard_path << L"\n";
             return 1;
         }
 
         uint32_t magic = 0, version = 0;
-        ctx.file.read(reinterpret_cast<char*>(&magic), 4);
-        ctx.file.read(reinterpret_cast<char*>(&version), 4);
+        if (!ctx.buf.read(magic)) { std::wcerr << L"[-] Failed reading magic\n"; return 1; }
+        if (!ctx.buf.read(version)) { std::wcerr << L"[-] Failed reading version\n"; return 1; }
         if (magic != 0x46554747u) {
             std::wcerr << L"[-] Shard " << s << " bad magic 0x" << std::hex << magic << L"\n";
             return 1;
         }
 
-        ctx.file.read(reinterpret_cast<char*>(&ctx.tensor_count), 8);
-        ctx.file.read(reinterpret_cast<char*>(&ctx.kv_count), 8);
+        if (!ctx.buf.read(ctx.tensor_count)) { std::wcerr << L"[-] Failed reading tensor_count\n"; return 1; }
+        if (!ctx.buf.read(ctx.kv_count)) { std::wcerr << L"[-] Failed reading kv_count\n"; return 1; }
 
         // Parse KV metadata for architecture info
         for (uint64_t i = 0; i < ctx.kv_count; ++i) {
-            uint64_t kv_start = ctx.file.tellg();
-            std::string key = ReadGGUFStr(ctx.file);
+            std::string key = ctx.buf.read_str();
             uint32_t type = 0;
-            ctx.file.read(reinterpret_cast<char*>(&type), sizeof(type));
-            uint64_t kv_end = ctx.file.tellg();
-            if (s == 0) {
-                std::wcout << L"    [KV" << i << L"] key='" << key.c_str() << L"' type=" << type
-                           << L" start=0x" << std::hex << kv_start << std::dec
-                           << L" end=0x" << std::hex << kv_end << std::dec << L"\n";
-            }
+            if (!ctx.buf.read(type)) { std::wcerr << L"[-] Failed reading KV type\n"; return 1; }
 
             if (key == "general.architecture") {
-                ctx.detected_arch = ReadGGUFStr(ctx.file);
+                ctx.detected_arch = ctx.buf.read_str();
             } else if (key == "llama.block_count" || key == "phi3.block_count" ||
                        key == "deepseek.block_count" || key == "general.block_count") {
                 uint32_t val = 0;
-                ctx.file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                if (!ctx.buf.read(val)) { std::wcerr << L"[-] Failed reading KV value\n"; return 1; }
                 ctx.num_layers = val;
             } else if (key == "llama.embedding_length" || key == "phi3.embedding_length" ||
                        key == "deepseek.embedding_length" || key == "general.embedding_length") {
                 uint32_t val = 0;
-                ctx.file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                if (!ctx.buf.read(val)) { std::wcerr << L"[-] Failed reading KV value\n"; return 1; }
                 ctx.hidden_dim = val;
             } else if (key == "llama.attention.head_count" || key == "phi3.attention.head_count" ||
                        key == "deepseek.attention.head_count" || key == "general.attention.head_count") {
                 uint32_t val = 0;
-                ctx.file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                if (!ctx.buf.read(val)) { std::wcerr << L"[-] Failed reading KV value\n"; return 1; }
                 ctx.kv_heads = val;
             } else {
-                SkipGGUFValue(type, ctx.file);
+                SkipGGUFValue(type, ctx.buf);
             }
         }
 
@@ -249,13 +283,11 @@ int wmain(int argc, wchar_t* argv[]) {
         if (ctx.hidden_dim == 0) ctx.hidden_dim = 3072;
         if (ctx.kv_heads == 0) ctx.kv_heads = 32;
 
-        // Align to 64 bytes: tensor DATA payload starts here
-        uint64_t pos = static_cast<uint64_t>(ctx.file.tellg());
-        ctx.tensor_dir_offset = pos;       // Tensor directory starts right after KV metadata
-        ctx.data_offset = Align64(pos);    // Tensor data starts at 64-byte aligned offset
-        ctx.file.seekg(0, std::ios::end);
-        uint64_t end = static_cast<uint64_t>(ctx.file.tellg());
-        ctx.data_size = (end > ctx.data_offset) ? (end - ctx.data_offset) : 0;
+        // Tensor directory starts here; data starts at 64-byte aligned offset
+        ctx.tensor_dir_offset = ctx.buf.pos;
+        ctx.data_offset = Align64(ctx.buf.pos);
+        // File size = data size (buf.data.size() - 0 since we loaded whole file)
+        ctx.data_size = static_cast<uint64_t>(ctx.buf.data.size()) - ctx.data_offset;
         ctx.valid = true;
 
         shards.push_back(std::move(ctx));
@@ -272,7 +304,7 @@ int wmain(int argc, wchar_t* argv[]) {
     struct GlobalTensor {
         std::string name;
         uint32_t shard_id;
-        uint64_t absolute_offset;  // offset within shard data section
+        uint64_t absolute_offset;
         uint64_t tensor_bytes;
         uint32_t type;
         uint32_t dimensions[4] = {0, 0, 0, 0};
@@ -284,50 +316,30 @@ int wmain(int argc, wchar_t* argv[]) {
 
     for (uint32_t s = 0; s < shard_count; ++s) {
         auto& ctx = shards[s];
-        // Re-open and re-parse to reach the tensor directory reliably.
-        // Tensor directory starts immediately after KV metadata; tensor DATA starts
-        // at 64-byte aligned data_offset. GGUF tensor offsets are relative to data_offset.
-        ctx.file.close();
-        ctx.file.open(ctx.path, std::ios::binary);
-        if (!ctx.file.is_open()) {
-            std::wcerr << L"[-] Failed to reopen shard " << s << L"\n";
-            return 1;
-        }
-        // Skip magic + version
-        ctx.file.seekg(8, std::ios::beg);
-        uint64_t tc, kvc;
-        ctx.file.read(reinterpret_cast<char*>(&tc), 8);
-        ctx.file.read(reinterpret_cast<char*>(&kvc), 8);
-        // Skip KV directory
-        for (uint64_t i = 0; i < kvc; ++i) {
-            std::string key = ReadGGUFStr(ctx.file);
-            uint32_t type = 0;
-            ctx.file.read(reinterpret_cast<char*>(&type), sizeof(type));
-            SkipGGUFValue(type, ctx.file);
-        }
-        // Now at tensor directory
-        for (uint64_t t = 0; t < tc; ++t) {
+        // Reset buffer position to tensor directory start
+        ctx.buf.pos = ctx.tensor_dir_offset;
+
+        for (uint64_t t = 0; t < ctx.tensor_count; ++t) {
             GlobalTensor gt;
-            gt.name = ReadGGUFStr(ctx.file);
+            gt.name = ctx.buf.read_str();
             uint32_t n_dims = 0;
-            ctx.file.read(reinterpret_cast<char*>(&n_dims), 4);
-            if (s == 0 && t == 0) {
-                std::wcout << L"    [T0 DEBUG] n_dims=" << n_dims << L"\n";
+            if (!ctx.buf.read(n_dims)) { std::wcerr << L"[-] Failed reading n_dims\n"; return 1; }
+            if (s == 0 && t < 10) {
+                std::wcout << L"    [T" << t << L"] '" << gt.name.c_str() << L"' n_dims=" << n_dims << L"\n";
             }
             if (n_dims > 4) n_dims = 4;
             if (n_dims > 0) {
                 for (uint32_t d = 0; d < n_dims; ++d) {
-                    ctx.file.read(reinterpret_cast<char*>(&gt.dimensions[d]), 4);
-                    if (s == 0 && t == 0 && d < 2) {
-                        std::wcout << L"    [T0 DEBUG] dims[" << d << L"]=" << gt.dimensions[d] << L" pos=0x" << std::hex << ctx.file.tellg() << std::dec << L"\n";
-                    }
+                    uint64_t val = 0;
+                    if (!ctx.buf.read(val)) { std::wcerr << L"[-] Failed reading dim\n"; return 1; }
+                    gt.dimensions[d] = static_cast<uint32_t>(val);
                 }
             }
-            ctx.file.read(reinterpret_cast<char*>(&gt.type), sizeof(gt.type));
+            if (!ctx.buf.read(gt.type)) { std::wcerr << L"[-] Failed reading type\n"; return 1; }
             // GGUF tensor offsets are relative to the start of the tensor DATA section;
             // add data_offset to get the absolute file offset.
             uint64_t gguf_offset = 0;
-            ctx.file.read(reinterpret_cast<char*>(&gguf_offset), 8);
+            if (!ctx.buf.read(gguf_offset)) { std::wcerr << L"[-] Failed reading offset\n"; return 1; }
             gt.absolute_offset = ctx.data_offset + gguf_offset;
             gt.shard_id = s;
 
@@ -348,7 +360,7 @@ int wmain(int argc, wchar_t* argv[]) {
             global_tensors.push_back(std::move(gt));
         }
 
-        std::wcout << L"[+] Indexed Shard [" << s << "]: Tensors Found = " << tc << L"\n";
+        std::wcout << L"[+] Indexed Shard [" << s << "]: Tensors Found = " << ctx.tensor_count << L"\n";
         std::wcout.flush();
     }
 

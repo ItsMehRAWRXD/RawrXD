@@ -550,9 +550,15 @@ struct DeepSeek2Model {
         for (uint32_t i = 0; i < hidden; ++i) h0Norm += h[i] * h[i];
         std::cerr << "[DS2-DBG] h0Norm after layer0=" << std::sqrt(h0Norm) << "\n";
         float* last = &h[(seq - 1) * hidden];
+        double lastNorm = 0.0;
+        for (uint32_t i = 0; i < hidden; ++i) lastNorm += last[i] * last[i];
+        std::cerr << "[DS2-DBG] lastNorm=" << std::sqrt(lastNorm) << "\n";
         rmsNorm(last, outputNormW.data(), hidden, 1e-6f);
         std::vector<float> logits(vocab);
         gemvFloat(outputW.data(), last, logits.data(), vocab, hidden);
+        double lmin=1e18,lmax=-1e18,lnorm=0; int lz=0;
+        for (uint32_t i=0;i<vocab;++i){float v=logits[i]; if(v<lmin)lmin=v; if(v>lmax)lmax=v; lnorm+=v*v; if(v==0)lz++;}
+        std::cerr << "[DS2-DBG] logits min="<<lmin<<" max="<<lmax<<" norm="<<std::sqrt(lnorm)<<" zeros="<<lz<<"/"<<vocab<<"\n";
         return logits;
     }
 };
