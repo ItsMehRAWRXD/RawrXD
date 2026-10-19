@@ -196,9 +196,6 @@ std::wcout << L"Args parsed\n";
         uint32_t type = 0;
         input.read(reinterpret_cast<char*>(&type), sizeof(type));
         
-        std::wcout << L"  KV[" << i << L"]: " << key.c_str() << L" type=" << type << L" pos=" << input.tellg() << L"\n";
-        std::wcout.flush();
-        
         if (key == "general.architecture") {
             detected_arch = ReadGGUFStr(input);
         } else if (key == "general.architecture.block_count" || key == "phi3.block_count" || key == "llama.block_count") {
@@ -220,8 +217,6 @@ std::wcout << L"Args parsed\n";
         } else {
             SkipGGUFValue(type, input);
         }
-        std::wcout << L"  -> pos after: " << input.tellg() << L"\n";
-        std::wcout.flush();
     }
 
     if (detected_arch.empty()) detected_arch = arch;
@@ -236,21 +231,9 @@ std::wcout << L"Args parsed\n";
     // GGUF spec: tensor info begins IMMEDIATELY after metadata (no alignment).
     // Only tensor DATA is aligned to 64-byte boundary.
     uint64_t pos_after_kvs = input.tellg();
-    uint64_t tensor_info_start = pos_after_kvs;  // No alignment for tensor info
+    uint64_t tensor_info_start = pos_after_kvs;  // No alignment for tensor info per GGUF spec
     input.seekg(static_cast<std::streamoff>(tensor_info_start), std::ios::beg);
     std::wcout << L"Tensor info starts at offset: " << tensor_info_start << L"\n";
-    std::wcout << L"Stream pos after seek: " << input.tellg() << L"\n";
-    std::wcout.flush();
-
-    // Debug: peek first few bytes at tensor info start
-    char peek[32];
-    input.read(peek, 32);
-    std::wcout << L"Peek bytes: ";
-    for (int i = 0; i < 32; ++i) {
-        std::wcout << std::hex << (int)(unsigned char)peek[i] << L" ";
-    }
-    std::wcout << std::dec << L"\n";
-    input.seekg(static_cast<std::streamoff>(tensor_info_start), std::ios::beg);
     std::wcout.flush();
 
     struct TensorInfo {
@@ -312,16 +295,8 @@ std::wcout << L"Args parsed\n";
             return 1;
         }
         
-        // Debug confirmation to verify structural health during pass
-        if (i < 3 || i == tensor_count - 1) {
-            std::printf("  [Parsed] Tensor #%zu: %-35s | Rank: %u | Type: %u | Offset: %llu\n", 
-                        i, ti.name.c_str(), ti.n_dims, ti.type, (unsigned long long)ti.offset);
-        }
-        
         tensors.push_back(std::move(ti));
     }
-    
-    std::wcout << L"\nFinished reading tensor info, count: " << tensors.size() << L"\n";
     std::wcout.flush();
 
     uint64_t current_pos = input.tellg();
