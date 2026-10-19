@@ -3237,6 +3237,65 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     return true;
 }
 
+// ---------------------------------------------------------------------------
+// RAWRXD_DEEP2_D1: batched multi-token prefill (correctness baseline)
+//
+// Each token is executed through the same per-position graph in causal order,
+// so the batch is numerically equivalent to `count` serial ExecuteToken calls
+// by construction. What the batch entry adds is the contract D2 optimizes
+// against:
+//   * per-position timing (first vs steady token, mean steady ms),
+//   * the causal KV footprint after the batch,
+//   * optional full-logit capture per position for the parity diff,
+//   * a single fail-closed error surface (any position's failure fails the
+//     batch and names the position).
+// Any submission reordering (D2) must keep the parity capture bit-equal.
+// ---------------------------------------------------------------------------
+bool Executor::ExecuteTokens(const uint32_t* tokens, size_t count, size_t start_position,
+                              bool enable_parity_capture) {
+    if (!bound_) { last_error_ = "not bound"; return false; }
+    if (!tokens && count > 0) { last_error_ = "prefill: null token array"; return false; }
+    last_error_.clear();
+    prefill_logits_.clear();
+    last_prefill_ = PrefillStats{};
+    last_prefill_.tokens = count;
+    if (enable_parity_capture && count > 0) {
+        prefill_logits_.reserve(count);
+    }
+    for (size_t i = 0; i < count; ++i) {
+        const auto t0 = std::chrono::steady_clock::now();
+        if (!ExecuteToken(tokens[i], start_position + i)) {
+            last_error_ = "prefill: position " + std::to_string(start_position + i) +
+                          " failed: " + last_error_;
+            return false;
+        }
+        const double ms = std::chrono::duration<double, std::milli>(
+                              std::chrono::steady_clock::now() - t0).count();
+        TokenTiming tt;
+        tt.position = start_position + i;
+        tt.ms = ms;
+        tt.nonfinite_logits = nonfinite_logits_;
+        last_prefill_.per_token.push_back(tt);
+        last_prefill_.total_ms += ms;
+        if (i == 0) {
+            last_prefill_.first_token_ms = ms;
+        } else {
+            last_prefill_.steady_token_ms += ms;
+        }
+        if (enable_parity_capture) prefill_logits_.push_back(logits_);
+    }
+    if (count > 1) {
+        last_prefill_.steady_token_ms /= (double)(count - 1);
+    }
+    // Causal KV footprint: both caches hold exactly the positions written.
+    size_t k_bytes = 0, v_bytes = 0;
+    for (const auto& k : kv_k_) k_bytes += k.size() * sizeof(float);
+    for (const auto& v : kv_v_) v_bytes += v.size() * sizeof(float);
+    last_prefill_.kv_k_bytes = k_bytes;
+    last_prefill_.kv_v_bytes = v_bytes;
+    return true;
+}
+
 
 // ---------------------------------------------------------------------------
 // OpSsmScan - Mamba2 selective scan (RAWRXD_GATE7_MAMBA2_001).
