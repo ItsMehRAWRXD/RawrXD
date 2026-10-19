@@ -101,20 +101,30 @@ void Deep2Engine::SynchronizeRoPEScaling(double modelThetaConfig) {
     }
 }
 
-void Deep2Engine::ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position) {
-    size_t dim = ctx.cfg.hiddenDim / ctx.cfg.numHeads;
-    (void)headIndex;
-    for (size_t i = 0; i < dim; i += 2) {
-        double frequency = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i) / dim);
-        double scaledArgument = static_cast<double>(position) * frequency * ctx.cfg.ropeScaleFactor;
-        float sinValue = std::sin(scaledArgument);
-        float cosValue = std::cos(scaledArgument);
-        float v0 = vectorData[i];
-        float v1 = vectorData[i + 1];
-        vectorData[i]     = (v0 * cosValue) - (v1 * sinValue);
-        vectorData[i + 1] = (v0 * sinValue) + (v1 * cosValue);
+    void Deep2Engine::ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position) {
+        const size_t hiddenDim = ctx.cfg.hiddenDim;
+        const size_t heads = ctx.cfg.numHeads;
+        const size_t dim = hiddenDim / heads;
+        (void)headIndex;
+        // RoPE rotates the pairs inside a head, and the frequency of a pair
+        // depends only on its index within the head, so every head is rotated
+        // with the same frequency sequence. The previous version rotated only
+        // the first headDim elements of the vector, which left every head
+        // after the first unrotated.
+        for (size_t h = 0; h < heads; ++h) {
+            float* head = vectorData + (h * dim);
+            for (size_t i = 0; i < dim; i += 2) {
+                double frequency = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i) / dim);
+                double scaledArgument = static_cast<double>(position) * frequency * ctx.cfg.ropeScaleFactor;
+                float sinValue = std::sin(scaledArgument);
+                float cosValue = std::cos(scaledArgument);
+                float v0 = head[i];
+                float v1 = head[i + 1];
+                head[i]     = (v0 * cosValue) - (v1 * sinValue);
+                head[i + 1] = (v0 * sinValue) + (v1 * cosValue);
+            }
+        }
     }
-}
 
 void Deep2Engine::DequantizeQ2_K_AVX512(const void* __restrict source, float* __restrict destination, size_t 
 blockCount) {
@@ -203,6 +213,17 @@ Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
     h.view.byteSize = entry->byteSize();
     h.view.contiguous = true;
     h.view.data = h.lease.direct(0, entry->byteSize());
+    if (!h.view.data) {
+        // direct() only serves a tensor that fits inside a single page. A
+        // larger one has to be copied out, and reporting success with a null
+        // pointer would hand the caller a null it never checks for.
+        fprintf(stderr, "[ROM_EXEC_BRIDGE] tensor %s spans more than one page (%zu bytes); "
+                        "use readTensor() instead of a direct view\n",
+                name.c_str(), (size_t)entry->byteSize());
+        h.lease = deep2::TensorLease();
+        h.ok = false;
+        return h;
+    }
     h.ok = true;
     return h;
 }
@@ -485,6 +506,70 @@ __declspec(align(64)) thread_local float tls_query_vector[3072];
 __declspec(align(64)) thread_local float tls_logits[32064];
 __declspec(align(64)) thread_local float tls_dequant_scratchpad[16384];
 
+// Standard scaled dot-product attention over the cached keys and values.
+//
+// Q is the current position's query, already RoPE-rotated. K_cache and
+// V_cache hold the keys and values of every position seen so far, laid out
+// as [position][hiddenDim]. The attention is causal: the cache only ever
+// holds positions up to and including the current one.
+//
+// The softmax subtracts the row maximum before exponentiating. That is what
+// keeps the exponentials in range and stops the attention output from
+// growing with the magnitude of the scores, which is the property the
+// residual stream depends on.
+static void ComputeStandardAttention(float* outputStates,
+                                     const float* Q,
+                                     const float* K_cache,
+                                     const float* V_cache,
+                                     uint32_t currentSeqLen,
+                                     uint32_t numHeads,
+                                     uint32_t headDim) {
+    if (!outputStates || !Q || !K_cache || !V_cache || currentSeqLen == 0) return;
+
+    const uint32_t hiddenDim = numHeads * headDim;
+    const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+    std::vector<float> scores(currentSeqLen);
+
+    for (uint32_t h = 0; h < numHeads; ++h) {
+        const float* headQ = Q + (h * headDim);
+
+        // Scores for this head against every cached position.
+        float maxScore = -std::numeric_limits<float>::infinity();
+        for (uint32_t t = 0; t < currentSeqLen; ++t) {
+            const float* headK = K_cache + (static_cast<size_t>(t) * hiddenDim) + (h * headDim);
+            float dotProduct = 0.0f;
+            for (uint32_t d = 0; d < headDim; ++d) {
+                dotProduct += headQ[d] * headK[d];
+            }
+            const float score = dotProduct * scale;
+            scores[t] = score;
+            if (score > maxScore) maxScore = score;
+        }
+
+        // Softmax with the maximum subtracted out.
+        float expSum = 0.0f;
+        for (uint32_t t = 0; t < currentSeqLen; ++t) {
+            scores[t] = std::exp(scores[t] - maxScore);
+            expSum += scores[t];
+        }
+        const float invExpSum = (expSum > 0.0f) ? (1.0f / expSum) : 0.0f;
+        for (uint32_t t = 0; t < currentSeqLen; ++t) {
+            scores[t] *= invExpSum;
+        }
+
+        // Weighted sum of the values.
+        float* headOutput = outputStates + (h * headDim);
+        std::memset(headOutput, 0, headDim * sizeof(float));
+        for (uint32_t t = 0; t < currentSeqLen; ++t) {
+            const float* headV = V_cache + (static_cast<size_t>(t) * hiddenDim) + (h * headDim);
+            const float weight = scores[t];
+            for (uint32_t d = 0; d < headDim; ++d) {
+                headOutput[d] += weight * headV[d];
+            }
+        }
+    }
+}
+
 bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
                                              std::vector<float>& outputLogits,
                                              std::vector<float>& baselineLogits,
@@ -620,9 +705,26 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         }
     }
 
+    // Keys and values for every layer, for every position processed so far.
+    //
+    // A decoder-only transformer carries the context in this cache. The
+    // residual stream itself does not run from one position to the next:
+    // each position starts from its own token embedding, and the context
+    // reaches it through the cached keys and values.
+    std::vector<std::vector<float>> kCache(numLayers);
+    std::vector<std::vector<float>> vCache(numLayers);
+
     // Process each token position
     for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
         std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
+
+        // Each position starts from its own token embedding.
+        {
+            uint32_t token = inputTokens[tokenPos];
+            if (token >= tokenEmbDq.cols) token = 0;
+            std::memcpy(hiddenStates.data(), &tokenEmbDq.data[static_cast<size_t>(token) * hiddenDim],
+                        hiddenDim * sizeof(float));
+        }
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
         deep2::DequantizedTensor qkvDq;
@@ -706,9 +808,25 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             ApplyRotaryEmbeddings(Q.data(), 0, static_cast<size_t>(tokenPos));
             ApplyRotaryEmbeddings(K.data(), 0, static_cast<size_t>(tokenPos));
 
-            // Simplified attention: softmax(Q @ K^T / sqrt(d)) @ V
-            // For parity test, use V as attention output
-            std::memcpy(hiddenStates.data(), V.data(), hiddenDim * sizeof(float));
+            // Append this position's key and value to the layer's cache, then
+            // attend over every position cached so far.
+            kCache[layer].insert(kCache[layer].end(), K.begin(), K.end());
+            vCache[layer].insert(vCache[layer].end(), V.begin(), V.end());
+            const uint32_t seqLen = static_cast<uint32_t>(kCache[layer].size() / hiddenDim);
+
+            std::vector<float> attnOut(hiddenDim, 0.0f);
+            ComputeStandardAttention(attnOut.data(), Q.data(),
+                                     kCache[layer].data(), vCache[layer].data(),
+                                     seqLen, static_cast<uint32_t>(numHeads),
+                                     static_cast<uint32_t>(headDim));
+
+            // The attention block is a residual: the block adds its output to
+            // the stream. The previous code overwrote the stream with V
+            // instead, which is not an attention output and leaves the
+            // residual stream unbounded.
+            for (size_t i = 0; i < hiddenDim; ++i) {
+                hiddenStates[i] += attnOut[i];
+            }
 
             // --- FFN (UP + DOWN) ---
             std::string upName = "blk." + std::to_string(layer) + ".ffn_up.weight";

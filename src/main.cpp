@@ -142,10 +142,17 @@ static void runForwardParity(Deep2Engine& engine) {
         if (d > 1e-3f) ++over;
     }
     const double rms = std::sqrt(sumSq / (cpuLogits.size() ? cpuLogits.size() : 1));
+    float logitAbsMax = 0.0f;
+    for (float v : cpuLogits) {
+        const float a = std::fabs(v);
+        if (a > logitAbsMax) logitAbsMax = a;
+    }
     std::cout << "[PARITY] logits compared: " << cpuLogits.size()
               << "  max_diff=" << maxDiff << " at idx " << maxIdx
               << "  rms_diff=" << rms
-              << "  rows over 1e-3: " << over << "\n";
+              << "  rows over 1e-3: " << over
+              << "  max|logit|=" << logitAbsMax
+              << "  relative=" << (logitAbsMax > 0.0f ? maxDiff / logitAbsMax : 0.0f) << "\n";
     // The logit difference is not a correctness signal for the resident
     // path. The projections themselves are bit-exact (see the per-tensor
     // table above), but this forward pass is a parity stub: it computes Q
