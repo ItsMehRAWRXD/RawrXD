@@ -13,7 +13,9 @@
 #include <iostream>
 #include <cmath>
 #include <cstring>
+#include <exception>
 #include <fstream>
+#include <typeinfo>
 #include <windows.h>
 
 namespace {
@@ -99,6 +101,11 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
             return false;
         }
 
+        // The placement reads megabytes out of the ROM and hands them to the
+        // driver. An exception anywhere in that is reported against the
+        // tensor that was being placed, because a bare terminate() says
+        // nothing about where it came from.
+        try {
         // A format with a packed shader is placed in its packed form: the
         // bytes go from the ROM to the device and are dequantized there.
         // The host never sees them expanded, so neither the host work nor
@@ -141,6 +148,18 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
         uploadMs += std::chrono::duration<double, std::milli>(tDone - tUploaded).count();
         ++tensorCount;
         return ok;
+        }
+        catch (const std::exception& e) {
+            fprintf(stderr, "[Move 10] placing %s threw (%s): %s\n",
+                    name.c_str(), typeid(e).name(), e.what());
+            releaseResidentWeights();
+            return false;
+        }
+        catch (...) {
+            fprintf(stderr, "[Move 10] placing %s threw a non-standard exception\n", name.c_str());
+            releaseResidentWeights();
+            return false;
+        }
     };
 
     bool ok = true;
