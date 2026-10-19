@@ -556,7 +556,15 @@ uint64_t GGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& shape, GGM
         // Q5_1: 32 elements per block, 24 bytes per block
         case GGMLType::Q5_1:
             return block_aligned_size(32, 24);
-        
+
+        // Q5_0: 32 elements per block, 22 bytes per block
+        case GGMLType::Q5_0:
+            return block_aligned_size(32, 22);
+
+        // Q8_1: 32 elements per block, 36 bytes per block
+        case GGMLType::Q8_1:
+            return block_aligned_size(32, 36);
+
         // K-quantization (256 elements per super-block)
         // Q2_K: 256 elements, 84 bytes per super-block
         case GGMLType::Q2_K: 
@@ -575,22 +583,17 @@ uint64_t GGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& shape, GGM
             return block_aligned_size(256, 176);
         
         // Q6_K: 256 elements, 210 bytes per super-block
-        case GGMLType::Q6_K: 
+        case GGMLType::Q6_K:
             return block_aligned_size(256, 210);
-        
-        // F16_HALF
-        case GGMLType::F16_HALF:
-            return num_elements * 2;
-        
+
+        // Q8_K: 256 elements, 292 bytes per super-block
+        case GGMLType::Q8_K:
+            return block_aligned_size(256, 292);
+
         default:
-            // Type 14 is Q8_K (256 elements, 128 bytes per super-block)
-            // We handle it here as a fallback case since it's not in the enum
-            if (static_cast<uint32_t>(type) == 14) {
-                return block_aligned_size(256, 128);  // Q8_K: 256 elements, 128 bytes per block
-            }
             // In production, log the unsupported type and use a safe default
-            std::cerr << "[GGUFLoader] WARNING: Unsupported GGMLType " << static_cast<uint32_t>(type) 
-                     << " encountered, assuming F32 size" << std::endl;
+            std::cerr << "[GGUFLoader] WARNING: Unsupported GGMLType " << static_cast<uint32_t>(type)
+                      << " encountered, assuming F32 size" << std::endl;
             return num_elements * 4;  // Default to F32 size
     }
 }

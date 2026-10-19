@@ -35,6 +35,19 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     for (uint32_t i = 0; i < shards; ++i) {
         wchar_t current_shard[MAX_PATH];
         swprintf_s(current_shard, L"%s.gguf.%02d", base_shard_path.c_str(), i);
+
+        // Resolve the shard file:
+        //   1. "<base>.gguf.NN" - the multi-shard layout
+        //   2. "<base>"          - a single GGUF used directly
+        //   3. the ROM manifest  - a self-contained ROM carries its payloads
+        if (::GetFileAttributesW(current_shard) == INVALID_FILE_ATTRIBUTES) {
+            if (::GetFileAttributesW(base_shard_path.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                wcscpy_s(current_shard, base_shard_path.c_str());
+            } else {
+                wcscpy_s(current_shard, rom_path.c_str());
+            }
+        }
+
         uint64_t file_size = 0;
         {
             HANDLE h = ::CreateFileW(current_shard, GENERIC_READ, FILE_SHARE_READ,
@@ -128,6 +141,9 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
             // Load model from the GGUF shard
             wchar_t ggufPath[MAX_PATH];
             swprintf_s(ggufPath, L"%s.gguf.00", base_shard_path.c_str());
+            if (::GetFileAttributesW(ggufPath) == INVALID_FILE_ATTRIBUTES) {
+                wcscpy_s(ggufPath, base_shard_path.c_str());
+            }
             std::string ggufPathStr(ggufPath, ggufPath + wcslen(ggufPath));
 
             if (!engine.loadModel(ggufPathStr)) {

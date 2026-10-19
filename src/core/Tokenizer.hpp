@@ -72,6 +72,10 @@ namespace Deep2Rom::Inference {
         // Byte-level encoding (GPT-2 style): map each byte to a printable Unicode char
         void initByteEncoder();
 
+        // Turn a vocabulary entry back into the text it represents, undoing
+        // the SentencePiece (U+2581) or byte-level BPE (GPT-2) encoding.
+        std::string decodePiece(const std::string& piece) const;
+
         // Convert a single UTF-8 character to its byte representation
         std::string byteToUnicode(uint8_t byte) const;
         uint8_t unicodeToByte(char32_t ch) const;
@@ -105,6 +109,10 @@ namespace Deep2Rom::Inference {
 
         TokenizerConfig m_config;
         bool m_ready = false;
+        // Vocabulary flavour: SentencePiece (U+2581 word boundary) or
+        // byte-level BPE (GPT-2 byte-to-unicode).
+        bool m_sentencePiece = false;
+        bool m_byteLevelBpe = false;
     };
 
 } // namespace Deep2Rom::Inference

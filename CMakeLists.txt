@@ -199,7 +199,22 @@ add_test(NAME MetadataParity_Phi3
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
+# Converts a GGUF to a ROM and runs the production validation suite against
+# the result. The model path is machine specific; the test skips itself when
+# the model is not present.
 add_test(NAME ProductionSmokeTest
-    COMMAND production_smoke_test
+    COMMAND ${CMAKE_COMMAND}
+        -DGGUF=G:/~dev/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+        -DROM=${CMAKE_BINARY_DIR}/test-model.rom
+        -DCONVERTER=$<TARGET_FILE:gguf2rom>
+        -DSMOKE=$<TARGET_FILE:production_smoke_test>
+        -DARCH=llama
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_production_smoke.cmake
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# The tokenizer must agree with the reference HuggingFace tokenizers.
+add_test(NAME TokenizerRoundTrip_Phi3
+    COMMAND tokenizer_test "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

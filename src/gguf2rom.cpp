@@ -9,35 +9,17 @@
 #include <algorithm>
 #include <filesystem>
 
+// The ROM container layout is owned by Win32RomEmulator.hpp so that the
+// writer and the engine's zero-copy loader (Win32RomLoader) can never drift
+// apart. The previous local copies of these structs differed from the
+// reader's (different magic and a missing shard_id field), which made every
+// generated .rom unreadable by the engine.
+#include "Win32RomEmulator.hpp"
+
 namespace Deep2Engine::Emulator {
 
-    #pragma pack(push, 1)
-    struct alignas(64) RomHeaderMultiShard {
-        uint8_t  magic[8];
-        uint32_t engine_version;
-        uint32_t architecture_id;
-        uint64_t total_rom_size;
-        uint32_t num_layers;
-        uint32_t num_experts;
-        uint32_t top_k_experts;
-        uint32_t hidden_dimension;
-        uint32_t kv_heads;
-        uint64_t metadata_offset;
-        uint32_t metadata_count;
-        uint32_t total_shards;
-        uint8_t  reserved[12];
-    };
-
-    struct TensorDescriptor {
-        char     tensor_name[64];
-        uint64_t absolute_offset;
-        uint64_t tensor_bytes;
-        uint32_t dimensions[4];
-        uint16_t quantization_type;
-        uint8_t  target_device_id;
-        uint8_t  reserved[5];
-    };
-    #pragma pack(pop)
+    using RomHeaderMultiShard = Deep2Rom::RomHeaderMultiShard;
+    using TensorDescriptor     = Deep2Rom::TensorDescriptorMultiShard;
 
     // GGUF Type System (per GGUF spec)
     enum GGUFValueType : uint32_t {
@@ -109,27 +91,26 @@ namespace Deep2Engine::Emulator {
 
 // GGUF type to ROM quantization type mapping (GGUF type code -> TensorType enum)
     uint16_t MapGGUFTypeToROM(uint32_t gguf_type) {
-        // GGUF type codes per GGUF spec:
-        // 0=F32, 1=F16, 2=Q4_0, 3=Q4_1, 4=Q5_0, 5=Q5_1, 6=Q8_0, 7=Q8_1,
-        // 8=Q2_K, 9=Q3_K, 10=Q4_K, 11=Q5_K, 12=Q6_K, 13=Q8_K, 14=IQ2_XX, etc.
-        // Map to TensorType enum values (from TensorView.hpp)
+        // GGUF type codes as they appear in a tensor directory:
+        // 0=F32, 1=F16, 2=Q4_0, 3=Q4_1, 6=Q5_0, 7=Q5_1, 8=Q8_0, 9=Q8_1,
+        // 10=Q2_K, 11=Q3_K, 12=Q4_K, 13=Q5_K, 14=Q6_K, 15=Q8_K.
+        // TensorType uses the same numbering, so this is the identity for every
+        // type the engine implements.
         switch (gguf_type) {
-            case 0:  return 0;    // F32 -> TensorType::F32 (0)
-            case 1:  return 1;    // F16 -> TensorType::F16 (1)
-            case 2:  return 2;    // Q4_0 -> TensorType::Q4_0 (2)
-            case 3:  return 3;    // Q4_1 -> TensorType::Q4_1 (3)
-            case 4:  return 6;    // Q5_0 -> TensorType::Q5_0 (6) [not in enum yet]
-            case 5:  return 7;    // Q5_1 -> TensorType::Q5_1 (7) [not in enum yet]
-            case 6:  return 8;    // Q8_0 -> TensorType::Q8_0 (8)
-            case 7:  return 9;    // Q8_1 -> TensorType::Q8_1 (9)
-            case 8:  return 10;   // Q2_K -> TensorType::Q2_K (10)
-            case 9:  return 11;   // Q3_K -> TensorType::Q3_K_S (11) [base type]
-            case 10: return 14;   // Q4_K -> TensorType::Q4_K_S (14) [base type]
-            case 11: return 16;   // Q5_K -> TensorType::Q5_K_S (16) [base type]
-            case 12: return 18;   // Q6_K -> TensorType::Q6_K (18)
-            case 13: return 8;    // Q8_K -> TensorType::Q8_0 (8) [approximate]
-            case 14: return 10;   // IQ2_XX -> TensorType::Q2_K (10) [approximate]
-            case 15: return 10;   // IQ3_XX -> TensorType::Q2_K (10) [approximate]
+            case 0:  return 0;    // F32
+            case 1:  return 1;    // F16
+            case 2:  return 2;    // Q4_0
+            case 3:  return 3;    // Q4_1
+            case 6:  return 6;    // Q5_0
+            case 7:  return 7;    // Q5_1
+            case 8:  return 8;    // Q8_0
+            case 9:  return 9;    // Q8_1
+            case 10: return 10;   // Q2_K
+            case 11: return 11;   // Q3_K
+            case 12: return 12;   // Q4_K
+            case 13: return 13;   // Q5_K
+            case 14: return 14;   // Q6_K
+            case 15: return 15;   // Q8_K
             default: return 0xFFFF;
         }
     }
@@ -379,7 +360,9 @@ int wmain(int argc, wchar_t* argv[]) {
 
 // Build ROM header
     RomHeaderMultiShard header{};
-    std::memcpy(header.magic, "GGUF\0\0\0\0", 8);
+    // The engine's loader validates the "RAW" signature before it will map
+    // the manifest, so the ROM must carry the RAWRXD2 magic.
+    std::memcpy(header.magic, "RAWRXD2\0", 8);
     header.engine_version = 2;
     header.architecture_id = MapArchToID(detected_arch);
     header.num_layers = num_layers;
@@ -416,6 +399,7 @@ int wmain(int argc, wchar_t* argv[]) {
         
         desc.quantization_type = MapGGUFTypeToROM(tensors[i].type);
         desc.target_device_id = 0;
+        desc.shard_id = 0;  // single-shard conversion
         
         for (int d = 0; d < 4; ++d) {
             desc.dimensions[d] = (d < static_cast<int>(tensors[i].dims.size())) ? 
@@ -426,10 +410,11 @@ int wmain(int argc, wchar_t* argv[]) {
         desc.absolute_offset = 0;  // Will update after copy
         
         output.write(reinterpret_cast<char*>(&desc), sizeof(TensorDescriptor));
-std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::flush;
-    
-    // Track total file size
-    uint64_t file_size = 0;
+    }
+    std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::flush;
+
+    // Track total tensor bytes written to the ROM
+    uint64_t rom_data_bytes = 0;
     
     // Pad to tensor data start
     if (output.tellp() < static_cast<std::streampos>(tensor_data_start)) {
@@ -478,61 +463,67 @@ std::wcout << L"  Tensor data starts at ROM offset: " << rom_tensor_data_start <
             std::wcerr << L"[WARNING] Read 0 bytes for tensor " << std::wstring(tensors[i].name.begin(), tensors[i].name.end()) << L"\n";
         }
         
-        // Write to ROM
+        // Write to ROM. Remember where the payload starts so the write
+        // position can be restored after the descriptor is updated.
+        const std::streampos data_pos = output.tellp();
         output.write(buffer.data(), static_cast<std::streamsize>(bytes_read));
         if (!output.good()) {
             std::wcerr << L"[ERROR] Failed to write tensor " << i << L" (" << std::wstring(tensors[i].name.begin(), tensors[i].name.end()) << L")\n";
             return 1;
         }
-        
+
         // Update file size
-        file_size += bytes_read;
-        
-        std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
-        std::wcout << bytes_read << L" bytes\r";
-        std::wcout.flush();
-        
+        rom_data_bytes += bytes_read;
+
         // Update descriptor with actual values
         if (i < descriptor_positions.size()) {
-            std::streampos cur = output.tellp();
             output.seekp(descriptor_positions[i]);
-            
             TensorDescriptor desc{};
             size_t name_len = std::min<size_t>(tensors[i].name.size(), 63);
             std::memcpy(desc.tensor_name, tensors[i].name.c_str(), std::min<size_t>(name_len, 63));
             desc.tensor_name[std::min<size_t>(name_len, 63)] = '\0';
-            
+
             desc.quantization_type = MapGGUFTypeToROM(tensors[i].type);
             desc.target_device_id = 0;
-            
+            desc.shard_id = 0;  // single-shard conversion
+
             for (int d = 0; d < 4; ++d) {
-                desc.dimensions[d] = (d < static_cast<int>(tensors[i].dims.size())) ? 
+                desc.dimensions[d] = (d < static_cast<int>(tensors[i].dims.size())) ?
                     static_cast<uint32_t>(tensors[i].dims[d]) : 0;
             }
-            
+
             desc.tensor_bytes = static_cast<uint64_t>(bytes_read);
-            desc.absolute_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(rom_tensor_data_start));
-            
+            // Absolute offset of the payload inside the ROM file. The engine
+            // resolves this against the shard the descriptor points at, so
+            // registering the ROM itself as shard 0 makes the container
+            // self-contained.
+            desc.absolute_offset = static_cast<uint64_t>(static_cast<std::streamoff>(data_pos));
+
             output.write(reinterpret_cast<char*>(&desc), sizeof(TensorDescriptor));
             if (!output.good()) {
                 std::wcerr << L"[ERROR] Failed to update descriptor " << i << L"\n";
                 return 1;
             }
-            
-            output.seekp(output.tellp()); // Continue from current position
+
+            // Restore the write position so the next payload is appended
+            // after this one instead of overwriting the descriptor table.
+            const std::streampos resume_pos = data_pos + static_cast<std::streamoff>(bytes_read);
+            output.seekp(resume_pos);
+            if (!output.good()) {
+                std::wcerr << L"[ERROR] Failed to restore write position after tensor " << i << L"\n";
+                return 1;
+            }
         }
-        
+
         std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
         std::wcout << bytes_read << L" bytes\r";
         std::wcout.flush();
-        
+
         if ((i + 1) % 32 == 0 || i + 1 == tensors.size()) {
             std::wcout << L"  Copied " << (i + 1) << L"/" << tensors.size() << L" tensors\r";
             std::wcout.flush();
         }
     }
-
-}
 
     output.flush();
     output.close();

@@ -219,6 +219,24 @@ static std::string readValueAsString(uint32_t type, std::ifstream& f) {
         int64_t v = 0; f.read(reinterpret_cast<char*>(&v), 8); std::snprintf(buf, sizeof(buf), "%lld", (long long)v); return buf;
     } else if (type == 12) {
         double v = 0; f.read(reinterpret_cast<char*>(&v), 8); std::snprintf(buf, sizeof(buf), "%.17g", v); return buf;
+    } else if (type == 9) {
+        // Array: report the element count. This is how callers learn the
+        // vocabulary size from tokenizer.ggml.tokens, which is an array.
+        uint32_t arrayType = 0;
+        uint64_t arrayLen = 0;
+        f.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
+        f.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
+        if (arrayLen > 10000000ull) return "";
+        if (arrayType == 8) {
+            for (uint64_t i = 0; i < arrayLen; ++i) readGGUFStr(f);
+        } else if (arrayType == 9) {
+            for (uint64_t i = 0; i < arrayLen; ++i) skipArray(f);
+        } else {
+            const uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
+            f.seekg(static_cast<std::streamoff>(arrayLen * sz[arrayType & 7]), std::ios::cur);
+        }
+        std::snprintf(buf, sizeof(buf), "%llu", (unsigned long long)arrayLen);
+        return buf;
     } else {
         skipValue(type, f);
         return "";
@@ -288,9 +306,19 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         return false;
     }
 
-    // Align to 64 bytes: payload starts here (GGUF spec).
+    // The GGUF spec aligns the tensor data section to general.alignment
+    // (default 32). Using a fixed 64-byte alignment here shifts every tensor
+    // by up to 32 bytes and corrupts the dequantized weights.
+    uint64_t alignment = 32;
+    if (isMaster) {
+        if (auto it = m_kvStrings.find("general.alignment"); it != m_kvStrings.end()) {
+            try { alignment = std::stoull(it->second); } catch (...) { alignment = 32; }
+            if (alignment == 0) alignment = 32;
+        }
+    }
+
     uint64_t pos = static_cast<uint64_t>(f.tellg());
-    uint64_t aligned = (pos + 63) & ~63ull;
+    uint64_t aligned = ((pos + alignment - 1) / alignment) * alignment;
     manifest.dataOffset = aligned;
     f.seekg(0, std::ios::end);
     uint64_t end = static_cast<uint64_t>(f.tellg());
@@ -351,6 +379,18 @@ bool TensorROM::finalizeIndex() {
         parseU64(lookup(p + ".attention.head_count"), m_geom.numHeads);
         parseU64(lookup(p + ".attention.head_count_kv"), m_geom.numKVHeads);
         parseU64(lookup(p + ".feed_forward_length"), m_geom.intermediateDim);
+    }
+
+    // Architecture identity. The engine has specialised forward passes for a
+    // small set of architectures; everything else stays Unknown.
+    if (auto* s = lookup("general.architecture")) {
+        if (*s == "phi3") {
+            m_geom.arch = ModelArch::Phi3;
+        } else if (*s == "llama" || *s == "qwen2" || *s == "gemma2" ||
+                   *s == "nemotron" || *s == "granite" || *s == "starcoder2" ||
+                   *s == "glm") {
+            m_geom.arch = ModelArch::Llama;
+        }
     }
     if (auto* s = lookup("general.embedding_length")) parseU64(s, m_geom.hiddenDim);
     if (auto* s = lookup("general.block_count")) parseU64(s, m_geom.numLayers);
@@ -439,7 +479,7 @@ bool TensorROM::finalizeIndex() {
                     "hidden=%llu layers=%llu heads=%llu kvHeads=%llu ffn=%llu vocab=%llu "
                     "ctx=%llu theta=%.2f\n",
             m_shards.size(), m_nameIndex.size(),
-            m_geom.arch == ModelArch::DeepSeek2 ? "deepseek2" : (m_geom.arch == ModelArch::Phi3 ? "phi3" : "unknown"),
+                m_geom.arch == ModelArch::DeepSeek2 ? "deepseek2" : (m_geom.arch == ModelArch::Phi3 ? "phi3" : (m_geom.arch == ModelArch::Llama ? "llama" : "unknown")),
             (unsigned long long)m_geom.hiddenDim, (unsigned long long)m_geom.numLayers,
             (unsigned long long)m_geom.numHeads, (unsigned long long)m_geom.numKVHeads,
             (unsigned long long)m_geom.intermediateDim, (unsigned long long)m_geom.vocabSize,

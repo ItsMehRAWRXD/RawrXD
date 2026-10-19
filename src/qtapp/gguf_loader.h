@@ -20,19 +20,25 @@ enum class CompressionType : uint32_t {
     ZLIB = 3,
 };
 
+// GGML tensor type ids as they appear in a GGUF tensor directory.
+//   ggml: F32=0, F16=1, Q4_0=2, Q4_1=3, Q5_0=6, Q5_1=7, Q8_0=8, Q8_1=9,
+//         Q2_K=10, Q3_K=11, Q4_K=12, Q5_K=13, Q6_K=14, Q8_K=15
+// Ids 4 and 5 (Q4_2 / Q4_3) were removed from the format and are not reused.
 enum class GGMLType : uint32_t {
     F32 = 0,
     F16 = 1,
     Q4_0 = 2,
     Q4_1 = 3,
-    Q4_K = 10,
-    Q5_K = 11,
-    Q3_K = 12,
-    Q2_K = 9,
-    Q6_K = 13,
-    Q8_0 = 7,
-    Q5_1 = 5,
-    F16_HALF = 4,
+    Q5_0 = 6,
+    Q5_1 = 7,
+    Q8_0 = 8,
+    Q8_1 = 9,
+    Q2_K = 10,
+    Q3_K = 11,
+    Q4_K = 12,
+    Q5_K = 13,
+    Q6_K = 14,
+    Q8_K = 15,
 };
 
 struct GGUFHeader {

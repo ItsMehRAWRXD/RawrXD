@@ -222,6 +222,15 @@ namespace Deep2Rom::Inference {
             m_vocab[tokens[i]] = i;
             m_reverseVocab[i] = tokens[i];
 
+            // Detect the vocabulary flavour. SentencePiece models mark word
+            // boundaries with U+2581; byte-level BPE models use the GPT-2
+            // byte-to-unicode mapping (a leading space becomes U+0120).
+            if (tokens[i].find("\xE2\x96\x81") != std::string::npos) {
+                m_sentencePiece = true;
+            } else if (tokens[i].find("\xC4\xA0") != std::string::npos) {
+                m_byteLevelBpe = true;
+            }
+
             TokenType tt = TokenType::Normal;
             if (i < tokenTypes.size()) {
                 switch (tokenTypes[i]) {
@@ -359,12 +368,76 @@ namespace Deep2Rom::Inference {
             }
             auto it = m_reverseVocab.find(id);
             if (it != m_reverseVocab.end()) {
-                result += it->second;
+                result += decodePiece(it->second);
             } else {
-                result += "\ufffd";
+                result += "\xEF\xBF\xBD";  // U+FFFD replacement character
             }
         }
         return result;
+    }
+
+    // Turn a vocabulary entry back into the text it represents.
+    //
+    // SentencePiece entries use U+2581 for a space; byte-level BPE entries
+    // use the GPT-2 byte-to-unicode mapping, where each codepoint stands for
+    // one original byte. Both have to be undone, otherwise chat output shows
+    // "▁word" and "Ġword" instead of " word".
+    std::string Tokenizer::decodePiece(const std::string& piece) const {
+        // Byte-fallback token: "<0x41>" -> 'A'.
+        if (piece.size() == 6 && piece[0] == '<' && piece[1] == '0' && piece[2] == 'x' &&
+            piece[5] == '>') {
+            auto hexVal = [](char c) -> int {
+                if (c >= '0' && c <= '9') return c - '0';
+                if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+                if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+                return -1;
+            };
+            const int hi = hexVal(piece[3]);
+            const int lo = hexVal(piece[4]);
+            if (hi >= 0 && lo >= 0) {
+                return std::string(1, static_cast<char>((hi << 4) | lo));
+            }
+        }
+
+        std::string out;
+        out.reserve(piece.size());
+
+        size_t i = 0;
+        while (i < piece.size()) {
+            const uint8_t b = static_cast<uint8_t>(piece[i]);
+            size_t len = 1;
+            char32_t cp = b;
+            if (b >= 0xF0)      { len = 4; cp = b & 0x07u; }
+            else if (b >= 0xE0) { len = 3; cp = b & 0x0Fu; }
+            else if (b >= 0xC0) { len = 2; cp = b & 0x1Fu; }
+            if (i + len > piece.size()) { len = 1; cp = b; }
+
+            if (len == 3) {
+                cp = (cp << 6) | (static_cast<uint8_t>(piece[i + 1]) & 0x3Fu);
+                cp = (cp << 6) | (static_cast<uint8_t>(piece[i + 2]) & 0x3Fu);
+            } else if (len == 4) {
+                cp = (cp << 6) | (static_cast<uint8_t>(piece[i + 1]) & 0x3Fu);
+                cp = (cp << 6) | (static_cast<uint8_t>(piece[i + 2]) & 0x3Fu);
+                cp = (cp << 6) | (static_cast<uint8_t>(piece[i + 3]) & 0x3Fu);
+            } else if (len == 2) {
+                cp = (cp << 6) | (static_cast<uint8_t>(piece[i + 1]) & 0x3Fu);
+            }
+
+            if (m_sentencePiece && cp == 0x2581) {
+                out.push_back(' ');
+            } else if (m_byteLevelBpe) {
+                auto it = m_byteDecoder.find(cp);
+                if (it != m_byteDecoder.end()) {
+                    out.push_back(static_cast<char>(it->second));
+                } else {
+                    out.append(piece, i, len);
+                }
+            } else {
+                out.append(piece, i, len);
+            }
+            i += len;
+        }
+        return out;
     }
 
     std::vector<int> Tokenizer::encodeInt(const std::string& text, bool addBos, bool addEos) const {

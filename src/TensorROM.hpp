@@ -42,6 +42,7 @@ enum class ModelArch : uint8_t {
     Unknown = 0,
     Phi3    = 1,
     DeepSeek2 = 2,
+    Llama   = 3,   // llama / qwen2 / gemma2 / nemotron / granite / starcoder2 / glm
 };
 
 struct ModelGeometry {
