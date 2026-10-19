@@ -116,8 +116,16 @@ struct Deep2Engine {
     // flushes a line per layer, and it is only useful when comparing two
     // execution paths against each other.
     bool m_layerTrace = false;
-    // The per-layer hidden states of the last traced run, so a second run can
-    // be compared against the first element by element.
+    // The per-layer, per-position hidden states of the last traced run, so a
+    // second run can be compared against the first element by element.
+    //
+    // The position is part of the slot. The forward pass runs every layer for
+    // every position, so a state array indexed by layer alone is overwritten
+    // on each position, and a comparison taken afterwards lines the last
+    // position of one run up against the first position of the next. Those
+    // are different states, and the difference between them is large enough
+    // to look like a divergence when it is only a mismatch of which
+    // position was being compared.
     std::vector<std::vector<float>> m_layerTraceStates;
     // The states the current run is compared against, and whether to compare
     // at all.
