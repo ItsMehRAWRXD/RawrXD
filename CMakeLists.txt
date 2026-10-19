@@ -9,6 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build")
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
 
+# Vulkan support option
+option(ENABLE_VULKAN "Enable Vulkan support" ON)
+
+# Build configuration
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build")
+
 # Output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -110,28 +116,31 @@ else()
 endif()
 
 # Vulkan linkage for multi-GPU support
-find_package(Vulkan REQUIRED)
-if(Vulkan_FOUND)
-    target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
-    message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+option(ENABLE_VULKAN "Enable Vulkan support" ON)
+if(ENABLE_VULKAN)
+    find_package(Vulkan REQUIRED)
+    if(Vulkan_FOUND)
+        target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+        message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+    endif()
 endif()
 
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
-        PRIVATE Vulkan::Vulkan
+        PRIVATE ${ENABLE_VULKAN} Vulkan::Vulkan
         kernel32.lib user32.lib advapi32.lib
     )
     target_link_libraries(production_smoke_test
-        PRIVATE Vulkan::Vulkan
+        PRIVATE ${ENABLE_VULKAN} Vulkan::Vulkan
         kernel32.lib user32.lib advapi32.lib
     )
 elseif(UNIX AND NOT APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
-    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
 elseif(APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
-    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
 endif()
 
 # Install target
