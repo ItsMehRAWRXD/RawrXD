@@ -299,17 +299,36 @@ struct Deep2Engine {
     // Doing it per pass meant every pass paid the whole cost again, and
     // that the device buffers it allocated were never released, so a
     // second pass had to find room for another copy of every weight.
+    // A resident projection, in whichever form the model stores it.
+    //
+    // A model can mix quantization formats: phi3-mini-Q2_K keeps its
+    // ffn_up projections in Q2_K and everything else in Q3_K or Q6_K. A
+    // projection whose format has a packed shader is placed in its packed
+    // form and dequantizes on the device; the rest are expanded to f32 on
+    // the host as before.
+    struct ResidentProjection {
+        bool packed = false;
+        ResidentSplitWeight f32;
+        ResidentQuantWeight quant;
+        uint64_t rows = 0;
+        uint64_t cols = 0;
+    };
+
     struct ResidentLayer {
-        ResidentSplitWeight qkv, up, down;
+        ResidentProjection qkv, up, down;
         uint64_t qkvRows = 0, qkvCols = 0;
         uint64_t upRows = 0, upCols = 0;
         uint64_t downRows = 0, downCols = 0;
         bool ready = false;
     };
     std::vector<ResidentLayer> m_residentLayers;
-    ResidentSplitWeight m_residentOutput;
+    ResidentProjection m_residentOutput;
     uint64_t m_residentOutputRows = 0, m_residentOutputCols = 0;
     bool m_residentPlaced = false;
+
+    // Run one resident projection, in whichever form it was placed.
+    bool gemvResidentProjection(const ResidentProjection& p, const deep2::TensorView& xView,
+                                 std::vector<float>& y);
 
     // How long the one-time placement took, in milliseconds.
     double m_residentPlacementMs = 0.0;

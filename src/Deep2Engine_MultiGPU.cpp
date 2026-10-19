@@ -480,8 +480,14 @@ bool Deep2Engine::uploadResidentQuantWeight(const deep2::TensorEntry& entry,
     }
     if (entry.dims.size() < 2) return false;
 
-    const uint64_t rows = entry.dims[0];
-    const uint64_t cols = entry.dims[1];
+    // The dimensions are in the ggml order, and the dequantizer reverses
+    // them: the fastest-varying dimension comes first there, and the
+    // matrix shape the GEMV sees has it last. The packed bytes are laid out
+    // in the dequantized order, so the rows and columns have to be taken
+    // the same way the CPU dequantizer takes them, or every row is
+    // transposed.
+    const uint64_t rows = entry.dims[entry.dims.size() - 1];
+    const uint64_t cols = entry.dims[entry.dims.size() - 2];
     if (rows == 0 || cols == 0) return false;
 
     // A row has to be a whole number of blocks, or the packed bytes of a row
@@ -585,6 +591,15 @@ void Deep2Engine::releaseResidentQuantWeight(ResidentQuantWeight& w) {
     w.cols = 0;
     w.blockSize = 0;
     w.splitRow = 0;
+}
+
+bool Deep2Engine::gemvResidentProjection(const ResidentProjection& p,
+                                         const deep2::TensorView& xView,
+                                         std::vector<float>& y) {
+    if (p.packed) {
+        return vulkanGemvQ2KResident(p.quant, xView, y);
+    }
+    return vulkanGemvResident(p.f32, xView, y);
 }
 
 bool Deep2Engine::vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep2::TensorView& xView,

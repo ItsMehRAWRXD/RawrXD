@@ -1468,12 +1468,24 @@ int cmdQ2KParity(int argc, char** argv) {
         }
         if (entry->dims.size() < 2) continue;
 
-        const uint64_t rows = entry->dims[0];
-        const uint64_t cols = entry->dims[1];
+        // The matrix shape the GEMV sees is the dequantizer's shape, not
+        // the raw ggml dimension order. The packed bytes are laid out in
+        // the dequantized order, so testing anything else would compare
+        // two consistent transpositions and pass.
+        const uint64_t rows = entry->dims[entry->dims.size() - 1];
+        const uint64_t cols = entry->dims[entry->dims.size() - 2];
 
         deep2::DequantizedTensor dq;
         if (!engine.dequantTensor(*entry, dq)) {
             std::cerr << "[ORACLE] dequant failed: " << name << "\n";
+            ++failures;
+            continue;
+        }
+        // The dequantized matrix has to have the shape the GEMV assumes.
+        if (dq.rows != rows || dq.cols != cols) {
+            std::cerr << "[ORACLE] shape mismatch on " << name << ": the tensor is "
+                      << rows << "x" << cols << " but it dequantizes to "
+                      << dq.rows << "x" << dq.cols << "\n";
             ++failures;
             continue;
         }
