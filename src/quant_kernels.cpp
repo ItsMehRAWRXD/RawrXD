@@ -158,14 +158,14 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q3_K_M: {
-        // Block: qs[96] 3-bit packed, scales[16] int8, d fp16 (114 bytes).
-        // H2: same packing as Q3_K_S; scales stored as int8.
+        // Block: qs[96] 3-bit packed, d fp16[2] at offset 96, scales[16] int8 at offset 98.
+        // Layout validated end-to-end on DeepSeek-V2-Lite token_embd.
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
-            float d = fp16ToF32(readU16(p + 112));
+            float d = fp16ToF32(readU16(p + 96));
             float scale[16];
-            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 96);
+            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 98);
             for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
             const uint8_t* qs = p;
             uint64_t take = n - v; if (take > 256) take = 256;

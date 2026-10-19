@@ -62,6 +62,134 @@ static void skipValue(uint32_t type, std::ifstream& f) {
     }
 }
 
+static inline uint16_t readU16(const uint8_t* p) {
+    uint16_t v;
+    std::memcpy(&v, p, 2);
+    return v;
+}
+
+static inline float fp16ToF32(uint16_t v) {
+    uint32_t sign = (v & 0x8000u) << 16;
+    uint32_t exp  = (v & 0x7C00u) >> 10;
+    uint32_t frac = (v & 0x03FFu);
+    uint32_t f32  = 0;
+    if (exp == 31) {
+        f32 = sign | 0x7F800000u | (frac << 13);
+    } else if (exp == 0) {
+        if (frac != 0) {
+            while ((frac & 0x0400u) == 0) { frac <<= 1; exp--; }
+            exp++;
+            frac &= ~0x0400u;
+            f32 = sign | ((exp + (127 - 15)) << 23) | (frac << 13);
+        } else {
+            f32 = sign;
+        }
+    } else {
+        f32 = sign | ((exp + (127 - 15)) << 23) | (frac << 13);
+    }
+    float r;
+    std::memcpy(&r, &f32, 4);
+    return r;
+}
+
+static inline uint8_t get_q3(const uint8_t* qs, uint64_t k) {
+    uint64_t bitOff = k * 3;
+    uint64_t i = bitOff >> 3;
+    unsigned bo = bitOff & 7u;
+    uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
+    return (uint8_t)((bits >> bo) & 0x07u);
+}
+
+static double rms_f32(const float* out, int n) {
+    double s = 0;
+    for (int i = 0; i < n; ++i) s += out[i] * out[i];
+    return std::sqrt(s / n);
+}
+
+// Dequantize one Q3_K_M block (114 bytes): qs[0..95], d[96..97] fp16, scales[98..113] int8
+static double dequant_q3km_block_rms(const uint8_t* p) {
+    float d = fp16ToF32(readU16(p + 96));
+    const int8_t* scl = (const int8_t*)(p + 98);
+    const uint8_t* qs = p;
+    float out[256];
+    for (uint64_t k = 0; k < 256; ++k) {
+        uint8_t q = get_q3(qs, k);
+        int g = (int)((k * 3) / 48);
+        float scale = d * static_cast<float>(scl[g]) / 32.0f;
+        out[k] = (float)((int)q - 4) * scale;
+    }
+    return rms_f32(out, 256);
+}
+
+// Scan for the correct dataOffset by finding where token_embd's first blocks
+// dequantize to sane values with the Q3_K_M layout. Corrects m_shards[0].dataOffset
+// if the header-parsed offset is wrong (e.g. due to KV parsing drift).
+// Uses coefficient-of-variation across the 8 blocks to reject false positives
+// (random bytes that happen to dequantize to low RMS in one block but not all).
+static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream& f) {
+    // Find token_embd.weight in shard 0
+    const TensorEntry* te = nullptr;
+    for (const auto& t : shards[0].tensors) {
+        if (t.name == "token_embd.weight") { te = &t; break; }
+    }
+    if (!te) return;
+
+    // Scan near te->offset (the tensor-directory offset relative to dataStart).
+    // Tensor offsets are relative to the data section start, so
+    //   true_file_position = true_dataStart + te->offset
+    // We scan around te->offset to find true_dataStart.
+    uint64_t baseAbs = te->offset;
+    int64_t bestDelta = 0;
+    double bestScore = 1e18;
+
+    std::vector<uint8_t> block(114);
+    for (int64_t delta = -16384; delta <= 16384; delta += 4) {
+        int64_t testAbs = (int64_t)baseAbs + delta;
+        if (testAbs < 0) continue;
+        f.clear();
+        f.seekg(static_cast<std::streamoff>(testAbs), std::ios::beg);
+
+        double rmsVals[8];
+        bool allValid = true;
+        for (int b = 0; b < 8; ++b) {
+            f.read(reinterpret_cast<char*>(block.data()), 114);
+            if (f.gcount() < 114) { allValid = false; break; }
+            double r = dequant_q3km_block_rms(block.data());
+            rmsVals[b] = r;
+            if (r > 5.0 || r < 0.001 || !(r == r)) { allValid = false; break; }
+        }
+        if (!allValid) continue;
+
+        // Coefficient of variation: correct embeddings have similar RMS per block;
+        // random bytes won't.
+        double meanRms = 0;
+        for (int b = 0; b < 8; ++b) meanRms += rmsVals[b];
+        meanRms /= 8.0;
+        double varRms = 0;
+        for (int b = 0; b < 8; ++b) varRms += (rmsVals[b] - meanRms) * (rmsVals[b] - meanRms);
+        varRms /= 8.0;
+        double cv = meanRms > 0 ? std::sqrt(varRms) / meanRms : 1e9;
+
+        // Score: low max RMS AND low CV (consistent across blocks)
+        double maxRms = rmsVals[0];
+        for (int b = 1; b < 8; ++b) if (rmsVals[b] > maxRms) maxRms = rmsVals[b];
+        double score = maxRms + 5.0 * cv;
+        if (score < bestScore) {
+            bestScore = score;
+            bestDelta = delta;
+        }
+    }
+
+    if (bestDelta != 0) {
+        // testAbs = te->offset + bestDelta = true_dataStart + te->offset
+        // So true_dataStart = testAbs - te->offset = bestDelta
+        uint64_t newDataOffset = (uint64_t)bestDelta;
+        fprintf(stderr, "[ROM] dataOffset corrected: %llu -> %llu (score=%.4f)\n",
+                (unsigned long long)shards[0].dataOffset, newDataOffset, bestScore);
+        shards[0].dataOffset = newDataOffset;
+    }
+}
+
 static std::string readValueAsString(uint32_t type, std::ifstream& f) {
     char buf[64];
     if (type <= 7) {
@@ -285,6 +413,11 @@ bool TensorROM::finalizeIndex() {
             }
         }
     }
+
+    // Correct dataOffset if KV/tensor-directory parsing drifted from the true
+    // payload start (e.g. long KV values mis-parsed). Scans near token_embd's
+    // offset for a position where Q3_K_M blocks dequantize to sane values.
+    correct_dataOffset(m_shards, *m_shards[0].file);
 
     // Default pager: a few GiB bounded budget, overridable via env.
     if (!m_pager) {

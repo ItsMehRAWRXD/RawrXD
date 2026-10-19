@@ -128,19 +128,19 @@ endif()
 # Link libraries
 if(MSVC)
     target_link_libraries(Deep2Engine_Benchmark 
-        PRIVATE ${ENABLE_VULKAN} Vulkan::Vulkan
-        kernel32.lib user32.lib advapi32.lib
+        PRIVATE Vulkan::Vulkan
+        kernel32 user32 advapi32
     )
     target_link_libraries(production_smoke_test
-        PRIVATE ${ENABLE_VULKAN} Vulkan::Vulkan
-        kernel32.lib user32.lib advapi32.lib
+        PRIVATE Vulkan::Vulkan
+        kernel32 user32 advapi32
     )
 elseif(UNIX AND NOT APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
-    target_link_libraries(production_smoke_test pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 elseif(APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
-    target_link_libraries(production_smoke_test pthread dl ${ENABLE_VULKAN} Vulkan::Vulkan)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
 # Install target
@@ -162,3 +162,6 @@ add_test(NAME ProductionSmokeTest
     COMMAND production_smoke_test
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+
+
