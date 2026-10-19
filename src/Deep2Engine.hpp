@@ -107,6 +107,33 @@ struct Deep2Engine {
     // execution paths against each other.
     bool m_layerTrace = false;
 
+    // Where the time in a forward pass went.
+    //
+    // The pass has two very different phases. The placement phase reads
+    // every quantized weight out of the ROM, expands it to f32 on the host
+    // and uploads it to the devices. The compute phase runs the layers.
+    // The placement is a fixed cost per pass and the compute is the part
+    // that scales with the work, so a throughput number that folds them
+    // together does not say anything about the engine's speed.
+    struct ForwardPassTiming {
+        double placementDequantMs = 0.0;   // host-side Q2_K to f32 expansion
+        double placementUploadMs = 0.0;    // host-to-device copy of the weights
+        double placementTotalMs = 0.0;
+        double computeMs = 0.0;            // the layer loop
+        double qkvMs = 0.0;                // QKV projections, all layers
+        double attentionMs = 0.0;          // RoPE plus the attention itself
+        double ffnUpMs = 0.0;              // ffn_up projections
+        double ffnDownMs = 0.0;            // ffn_down projections
+        double normMs = 0.0;               // the per-layer RMSNorms
+        size_t layers = 0;
+        size_t residentTensors = 0;
+    };
+    ForwardPassTiming lastTiming;
+
+    // Print the phase breakdown as the pass runs. Off by default: it adds a
+    // clock read around every step.
+    bool m_phaseTiming = false;
+
     // ---- ROM exec bridge (Move 5) ----
     struct TensorHandle {
         deep2::TensorLease lease;
@@ -217,6 +244,45 @@ struct Deep2Engine {
     // the available devices. The source is f32 and row major.
     bool uploadResidentSplitWeight(const deep2::TensorView& wView, ResidentSplitWeight& out);
     void releaseResidentSplitWeight(ResidentSplitWeight& w);
+
+    // The layer projections, resident on the devices.
+    //
+    // Placing them is expensive: every weight is read out of the ROM,
+    // expanded to f32 on the host and copied across the bus. That is a
+    // property of the model, not of the forward pass, so it is done once
+    // and kept until the engine is shut down.
+    //
+    // Doing it per pass meant every pass paid the whole cost again, and
+    // that the device buffers it allocated were never released, so a
+    // second pass had to find room for another copy of every weight.
+    struct ResidentLayer {
+        ResidentSplitWeight qkv, up, down;
+        uint64_t qkvRows = 0, qkvCols = 0;
+        uint64_t upRows = 0, upCols = 0;
+        uint64_t downRows = 0, downCols = 0;
+        bool ready = false;
+    };
+    std::vector<ResidentLayer> m_residentLayers;
+    ResidentSplitWeight m_residentOutput;
+    uint64_t m_residentOutputRows = 0, m_residentOutputCols = 0;
+    bool m_residentPlaced = false;
+
+    // How long the one-time placement took, in milliseconds.
+    double m_residentPlacementMs = 0.0;
+    double m_residentDequantMs = 0.0;
+    double m_residentUploadMs = 0.0;
+    size_t m_residentTensorCount = 0;
+
+    // Place the layer projections and the output projection on the devices.
+    // Returns false if they cannot be placed; the caller then uses the CPU
+    // path.
+    bool ensureResidentWeights(size_t numLayers);
+
+    // Release the resident weights. This has to happen before the Vulkan
+    // device goes away, and it has to happen at all: the buffers are
+    // device allocations and a device that is torn down with live buffers
+    // does not shut down cleanly.
+    void releaseResidentWeights();
 
     // GEMV against a resident weight matrix. The weight matrix is not
     // uploaded again; only the input vector and the output rows move.

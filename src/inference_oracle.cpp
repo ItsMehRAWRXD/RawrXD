@@ -332,6 +332,8 @@ struct DeepSeek2Model {
     // numHeads * (qkNope + vHead).
     std::vector<float> cKVCache;    // [seqCap][kvLora]
     std::vector<float> kRopeCache;  // [seqCap][qkRope]
+    // The fused attn_kv_b is expanded per position into the per-head keys
+    // and values, which are cached for the causal attention.
     std::vector<float> kNopeCache;  // [heads][seqCap][qkNope]
     std::vector<float> vCache;     // [heads][seqCap][vHead]
 
@@ -557,22 +559,22 @@ struct DeepSeek2Model {
     // MoE forward pass for a single position
     // Multi-head Latent Attention for one position.
     //
-    // The KV-A projection produces the compressed latent c_kv (kvLora wide)
-    // and the shared rope key (qkRope wide). The latent is RMS normalized
-    // and then expanded into the per-head keys and values by attn_kv_b.
+    // MLA never materialises the per-head key and value vectors: it caches the
+    // compressed latent c_kv (kvLora wide) and the single shared rope key,
+    // and recovers the per-head keys and values from the latent on the fly.
+    // That is what makes the cache kvLora wide instead of
+    // numHeads * (qkNope + vHead), and it is also what lets the key up
+    // projection be applied to the query instead of to every cached key.
     //
-    // This GGUF carries the *fused* attn_kv_b, so the expansion is the one
-    // llama.cpp's legacy path performs: one row per head, each row holding
-    // that head's key (qkNope values) followed by its value (vHead values).
-    // The MLA absorption optimization, which would project the query
-    // through the key up-projection instead and keep the cache kvLora wide,
-    // needs the split attn_k_b and attn_v_b tensors; this file has neither.
+    // The caller supplies the query projection and the KV-A projection; this
+    // applies the rope, updates the cache, and produces the attention output
+    // projected back into the residual stream.
     void mlaAttention(int layerIdx, float* ht, std::vector<float>& qAll,
                       const std::vector<float>& kvA, uint32_t t) {
         LayerW& lw = layersW[layerIdx];
         const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
 
-        // The latent is RMS normalized before it is expanded; the rope key is
+        // The latent is RMS normalized before it is cached; the rope key is
         // the tail of the same projection.
         float* cKV = cKVCache.data() + (size_t)t * kvLora;
         std::memcpy(cKV, kvA.data(), kvLora * sizeof(float));
@@ -588,6 +590,15 @@ struct DeepSeek2Model {
         rope(kRope, t, qkRope, theta);
 
         // Expand the latent into this position's per-head keys and values.
+        //
+        // This GGUF carries the *fused* attn_kv_b, so the expansion is the
+        // one llama.cpp's legacy path performs: one row per head, each row
+        // holding that head's key (qkNope values) followed by its value
+        // (vHead values). The MLA absorption optimization, which would
+        // project the query through the key up-projection instead and keep
+        // the cache kvLora wide, needs the split attn_k_b and attn_v_b
+        // tensors; this file has neither, and treating the fused rows as if
+        // they were grouped by projection gives every head the wrong weights.
         {
             std::vector<float> kv((size_t)heads * (qkNope + vHead));
             gemvFloat(lw.kvBW.data(), cKV, kv.data(), heads * (qkNope + vHead), kvLora);
@@ -639,6 +650,26 @@ struct DeepSeek2Model {
         std::vector<float> attnProj(hidden);
         gemvFloat(lw.attnOutW.data(), attnOut.data(), attnProj.data(), hidden, hidden);
         for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
+
+        {
+            auto bad = [](const std::vector<float>& v) {
+                int c = 0;
+                for (float x : v) if (!std::isfinite(x)) ++c;
+                return c;
+            };
+            const int nQ = bad(qAll), nKvA = bad(kvA);
+            const int nC = bad(std::vector<float>(cKV, cKV + kvLora));
+            const int nO = bad(attnOut), nP = bad(attnProj);
+            int nH = 0;
+            for (uint32_t i = 0; i < hidden; ++i) if (!std::isfinite(ht[i])) ++nH;
+            if (nQ || nKvA || nC || nO || nP || nH) {
+                std::cerr << "[MLA-DBG] layer " << layerIdx << " t=" << t
+                          << " nonfinite: q=" << nQ << " kvA=" << nKvA << " cKV=" << nC
+                          << " attnOut=" << nO << " attnProj=" << nP << " ht=" << nH
+                          << " kvANormW=" << lw.kvANormW.size()
+                          << " kvBW=" << lw.kvBW.size() << "\n";
+            }
+        }
     }
 
     // MoE forward pass for a single position.

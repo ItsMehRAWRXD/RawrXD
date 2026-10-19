@@ -1,4 +1,6 @@
 #include "Deep2Engine.hpp"
+
+#include <chrono>
 #include "TensorROM.hpp"
 #include "quant_kernels.hpp"
 #include "VulkanDevice.hpp"
@@ -65,8 +67,101 @@ bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& ma
 }
 
 void Deep2Engine::Shutdown() {
+    // The resident weights are device buffers. They have to go back before
+    // the device does, or the device is torn down with live allocations.
+    releaseResidentWeights();
     if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
     initialized = false;
+}
+
+bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
+    if (m_residentPlaced) return true;
+    if (!vulkanReady || !vulkan) return false;
+    if (numLayers == 0) return false;
+
+    std::cout << "[Move 10] Placing the layer projections in device memory...\n" << std::flush;
+
+    m_residentLayers.assign(numLayers, ResidentLayer());
+
+    double dequantMs = 0.0;
+    double uploadMs = 0.0;
+    size_t tensorCount = 0;
+
+    auto place = [&](const std::string& name, ResidentSplitWeight& slot,
+                     uint64_t& rows, uint64_t& cols) -> bool {
+        const deep2::TensorEntry* entry = rom.findTensor(name);
+        if (!entry) {
+            fprintf(stderr, "[Move 10] %s not found\n", name.c_str());
+            return false;
+        }
+        deep2::DequantizedTensor dq;
+        const auto tDequant = std::chrono::steady_clock::now();
+        if (!dequantTensor(*entry, dq)) {
+            fprintf(stderr, "[Move 10] Failed to dequantize %s\n", name.c_str());
+            return false;
+        }
+        const auto tUploaded = std::chrono::steady_clock::now();
+        rows = dq.rows;
+        cols = dq.cols;
+        const deep2::TensorView view{ deep2::TensorType::F32,
+                                      reinterpret_cast<const uint8_t*>(dq.data.data()),
+                                      dq.data.size() * sizeof(float),
+                                      { dq.rows, dq.cols }, true };
+        const bool ok = uploadResidentSplitWeight(view, slot);
+        // Release the host copy straight away: only the device buffers are
+        // needed from here on.
+        dq.data.clear();
+        dq.data.shrink_to_fit();
+        const auto tDone = std::chrono::steady_clock::now();
+        dequantMs += std::chrono::duration<double, std::milli>(tUploaded - tDequant).count();
+        uploadMs += std::chrono::duration<double, std::milli>(tDone - tUploaded).count();
+        ++tensorCount;
+        return ok;
+    };
+
+    bool ok = true;
+    for (size_t layer = 0; layer < numLayers && ok; ++layer) {
+        const std::string prefix = "blk." + std::to_string(layer) + ".";
+        ResidentLayer& lw = m_residentLayers[layer];
+        lw.ready = place(prefix + "attn_qkv.weight", lw.qkv, lw.qkvRows, lw.qkvCols) &&
+                   place(prefix + "ffn_up.weight", lw.up, lw.upRows, lw.upCols) &&
+                   place(prefix + "ffn_down.weight", lw.down, lw.downRows, lw.downCols);
+        if (!lw.ready) {
+            ok = false;
+            break;
+        }
+    }
+    if (ok) {
+        ok = place("output.weight", m_residentOutput, m_residentOutputRows, m_residentOutputCols);
+    }
+
+    if (!ok) {
+        // Release whatever was placed before the failure, so a failed
+        // placement does not leave half the weights on the devices.
+        releaseResidentWeights();
+        return false;
+    }
+
+    m_residentPlaced = true;
+    m_residentDequantMs = dequantMs;
+    m_residentUploadMs = uploadMs;
+    m_residentTensorCount = tensorCount;
+    m_residentPlacementMs = dequantMs + uploadMs;
+    return true;
+}
+
+void Deep2Engine::releaseResidentWeights() {
+    if (!m_residentLayers.empty()) {
+        for (auto& lw : m_residentLayers) {
+            releaseResidentSplitWeight(lw.qkv);
+            releaseResidentSplitWeight(lw.up);
+            releaseResidentSplitWeight(lw.down);
+        }
+        m_residentLayers.clear();
+    }
+    releaseResidentSplitWeight(m_residentOutput);
+    m_residentPlaced = false;
+    m_residentTensorCount = 0;
 }
 
 void MatrixWorkerStub(size_t index, void* args) {
@@ -639,6 +734,11 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     std::vector<float> hiddenStates(hiddenDim, 0.0f);
     size_t qkvRows = 0, qkvCols = 0;
 
+    // The pass is timed in two halves: the one-time placement of the
+    // weights on the devices, and the layer loop that uses them.
+    lastTiming = ForwardPassTiming();
+    const auto tPassStart = std::chrono::steady_clock::now();
+
     auto tokenEmb = rom.findTensor("token_embd.weight");
     if (!tokenEmb) {
         fprintf(stderr, "[Move 10] token_embd.weight not found\n");
@@ -672,74 +772,30 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     //
     // The break-even is about 1.3 tokens, so this pays for itself as soon
     // as there is a second token.
+    //
+    // The placement belongs to the model, not to the pass, so it is done
+    // once and kept on the engine. Placing it per pass made every pass pay
+    // the whole cost again: the placement was over 95% of a forward pass,
+    // and the device buffers it allocated were never released, so a second
+    // pass had to find room for another copy of every weight.
     // -------------------------------------------------------------------
-    struct LayerResident {
-        ResidentSplitWeight qkv, up, down;
-        uint64_t qkvRows = 0, qkvCols = 0;
-        uint64_t upRows = 0, upCols = 0;
-        uint64_t downRows = 0, downCols = 0;
-        bool ready = false;
-    };
-    std::vector<LayerResident> layerResident(numLayers);
-    ResidentSplitWeight outputResident;
-    uint64_t outputRows = 0, outputCols = 0;
     bool useResident = !forceCpuPath && vulkanReady && vulkan && vulkan->gpuCount() >= 2;
 
     if (useResident) {
-        std::cout << "[Move 10] Placing the layer projections in device memory...\n" << std::flush;
-        auto place = [&](const std::string& name, ResidentSplitWeight& slot,
-                         uint64_t& rows, uint64_t& cols) -> bool {
-            const deep2::TensorEntry* entry = rom.findTensor(name);
-            if (!entry) {
-                fprintf(stderr, "[Move 10] %s not found\n", name.c_str());
-                return false;
-            }
-            deep2::DequantizedTensor dq;
-            if (!dequantTensor(*entry, dq)) {
-                fprintf(stderr, "[Move 10] Failed to dequantize %s\n", name.c_str());
-                return false;
-            }
-            rows = dq.rows;
-            cols = dq.cols;
-            const deep2::TensorView view{ deep2::TensorType::F32,
-                                          reinterpret_cast<const uint8_t*>(dq.data.data()),
-                                          dq.data.size() * sizeof(float),
-                                          { dq.rows, dq.cols }, true };
-            const bool ok = uploadResidentSplitWeight(view, slot);
-            // Release the host copy straight away: only the device buffers
-            // are needed from here on.
-            dq.data.clear();
-            dq.data.shrink_to_fit();
-            return ok;
-        };
-
-        for (size_t layer = 0; layer < numLayers && useResident; ++layer) {
-            const std::string prefix = "blk." + std::to_string(layer) + ".";
-            LayerResident& lw = layerResident[layer];
-            lw.ready = place(prefix + "attn_qkv.weight", lw.qkv, lw.qkvRows, lw.qkvCols) &&
-                       place(prefix + "ffn_up.weight", lw.up, lw.upRows, lw.upCols) &&
-                       place(prefix + "ffn_down.weight", lw.down, lw.downRows, lw.downCols);
-            if (!lw.ready) {
+        if (!m_residentPlaced) {
+            if (!ensureResidentWeights(numLayers)) {
                 useResident = false;
-                break;
+                std::cout << "[Move 10] Resident placement unavailable; using the CPU path\n" << std::flush;
+            } else {
+                std::cout << "[Move 10] Projections resident on the devices; the token loop reads them in place\n"
+                          << std::flush;
             }
         }
-        if (useResident) {
-            useResident = place("output.weight", outputResident, outputRows, outputCols);
-        }
-        if (!useResident) {
-            // Release anything that was placed before the failure.
-            for (auto& lw : layerResident) {
-                releaseResidentSplitWeight(lw.qkv);
-                releaseResidentSplitWeight(lw.up);
-                releaseResidentSplitWeight(lw.down);
-            }
-            releaseResidentSplitWeight(outputResident);
-            std::cout << "[Move 10] Resident placement unavailable; using the CPU path\n" << std::flush;
-        } else {
-            std::cout << "[Move 10] Projections resident on the devices; the token loop reads them in place\n"
-                      << std::flush;
-        }
+        // The dequantization and upload figures describe the one-time
+        // placement, so they stay the same however many passes have run.
+        lastTiming.placementDequantMs = m_residentDequantMs;
+        lastTiming.placementUploadMs = m_residentUploadMs;
+        lastTiming.residentTensors = m_residentTensorCount;
     }
 
     // Keys and values for every layer, for every position processed so far.
@@ -750,6 +806,12 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     // reaches it through the cached keys and values.
     std::vector<std::vector<float>> kCache(numLayers);
     std::vector<std::vector<float>> vCache(numLayers);
+
+    // The placement phase is over. Everything from here to the end of the
+    // token loop is the compute phase.
+    const auto tComputeStart = std::chrono::steady_clock::now();
+    lastTiming.placementTotalMs = std::chrono::duration<double, std::milli>(
+        tComputeStart - tPassStart).count();
 
     // Process each token position
     for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
@@ -781,7 +843,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            const bool resident = useResident && layerResident[layer].ready;
+            const bool resident = useResident && m_residentLayers[layer].ready;
             if (!resident) {
                 std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
                 if (!dequantTensor(*qkv, qkvDq)) {
@@ -793,14 +855,15 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 qkvRows = qkvDq.rows;
                 qkvCols = qkvDq.cols;
             } else {
-                qkvRows = layerResident[layer].qkvRows;
-                qkvCols = layerResident[layer].qkvCols;
+                qkvRows = m_residentLayers[layer].qkvRows;
+                qkvCols = m_residentLayers[layer].qkvCols;
             }
 
             // --- ATTENTION COMPUTATION ---
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
 
+            const auto tNormStart = std::chrono::steady_clock::now();
             // RMSNorm before the QKV projection. Every transformer block
             // normalizes first, and so does the final norm before the output
             // projection. Omitting them lets the residual stream grow without
@@ -822,18 +885,20 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             }
 
             std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
+            const auto tQkvStart = std::chrono::steady_clock::now();
             if (resident) {
                 const deep2::TensorView xView{ deep2::TensorType::F32,
                                                reinterpret_cast<const uint8_t*>(hiddenStatesCopy.data()),
                                                hiddenStatesCopy.size() * sizeof(float),
                                                { static_cast<uint64_t>(hiddenDim) }, true };
-                if (!vulkanGemvResident(layerResident[layer].qkv, xView, qkvOut)) {
+                if (!vulkanGemvResident(m_residentLayers[layer].qkv, xView, qkvOut)) {
                     fprintf(stderr, "[Move 10] Layer %zu: resident QKV GEMV failed\n", layer);
                     return false;
                 }
             } else {
                 gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
             }
+            const auto tAttentionStart = std::chrono::steady_clock::now();
 
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
@@ -856,6 +921,17 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                                      kCache[layer].data(), vCache[layer].data(),
                                      seqLen, static_cast<uint32_t>(numHeads),
                                      static_cast<uint32_t>(headDim));
+            const auto tFfnStart = std::chrono::steady_clock::now();
+
+            if (m_phaseTiming) {
+                lastTiming.normMs += std::chrono::duration<double, std::milli>(
+                    tQkvStart - tNormStart).count();
+                lastTiming.qkvMs += std::chrono::duration<double, std::milli>(
+                    tAttentionStart - tQkvStart).count();
+                lastTiming.attentionMs += std::chrono::duration<double, std::milli>(
+                    tFfnStart - tAttentionStart).count();
+            }
+
 
             // The attention block is a residual: the block adds its output to
             // the stream. The previous code overwrote the stream with V
@@ -914,22 +990,24 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 rmsNormWeighted(ffnIn.data(), ffnNormDq.data.data(), hiddenDim, 1e-5f);
             }
 
-            const size_t upRows = resident ? static_cast<size_t>(layerResident[layer].upRows)
+            const size_t upRows = resident ? static_cast<size_t>(m_residentLayers[layer].upRows)
                                            : static_cast<size_t>(upDq.rows);
             const size_t gateRows = upRows / 2;
             std::vector<float> upOut(upRows, 0.0f);
+            const auto tUpStart = std::chrono::steady_clock::now();
             if (resident) {
                 const deep2::TensorView xView{ deep2::TensorType::F32,
                                                reinterpret_cast<const uint8_t*>(ffnIn.data()),
                                                ffnIn.size() * sizeof(float),
                                                { static_cast<uint64_t>(hiddenDim) }, true };
-                if (!vulkanGemvResident(layerResident[layer].up, xView, upOut)) {
+                if (!vulkanGemvResident(m_residentLayers[layer].up, xView, upOut)) {
                     fprintf(stderr, "[Move 10] Layer %zu: resident ffn_up GEMV failed\n", layer);
                     return false;
                 }
             } else {
                 gemvFloat(upDq.data.data(), ffnIn.data(), upOut.data(), upRows, upDq.cols);
             }
+            const auto tDownStart = std::chrono::steady_clock::now();
 
             // SwiGLU: silu(gate) * up
             for (size_t i = 0; i < gateRows; ++i) {
@@ -947,7 +1025,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                                                upOut.size() * sizeof(float),
                                                { static_cast<uint64_t>(upOut.size()) }, true };
                 std::vector<float> downRowsOut;
-                if (!vulkanGemvResident(layerResident[layer].down, xView, downRowsOut)) {
+                if (!vulkanGemvResident(m_residentLayers[layer].down, xView, downRowsOut)) {
                     fprintf(stderr, "[Move 10] Layer %zu: resident ffn_down GEMV failed\n", layer);
                     return false;
                 }
@@ -955,6 +1033,13 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                             (std::min)(downRowsOut.size(), static_cast<size_t>(hiddenDim)) * sizeof(float));
             } else {
                 gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
+            }
+            const auto tLayerEnd = std::chrono::steady_clock::now();
+            if (m_phaseTiming) {
+                lastTiming.ffnUpMs += std::chrono::duration<double, std::milli>(
+                    tDownStart - tUpStart).count();
+                lastTiming.ffnDownMs += std::chrono::duration<double, std::milli>(
+                    tLayerEnd - tDownStart).count();
             }
 
             // Residual connection
@@ -1012,7 +1097,7 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                                            reinterpret_cast<const uint8_t*>(hiddenStates.data()),
                                            hiddenStates.size() * sizeof(float),
                                            { static_cast<uint64_t>(hiddenDim) }, true };
-            if (!vulkanGemvResident(outputResident, xView, outputLogits)) {
+            if (!vulkanGemvResident(m_residentOutput, xView, outputLogits)) {
                 fprintf(stderr, "[Move 10] resident output GEMV failed\n");
                 return false;
             }
@@ -1023,6 +1108,28 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
         if (tokenPos == 0) {
             baselineLogits = outputLogits;
         }
+    }
+
+    const auto tPassEnd = std::chrono::steady_clock::now();
+    lastTiming.computeMs = std::chrono::duration<double, std::milli>(
+        tPassEnd - tComputeStart).count();
+    lastTiming.layers = numLayers;
+
+    if (m_phaseTiming) {
+        // The breakdown is printed to stderr on purpose: the throughput
+        // benchmark mutes stdout while it measures, and a diagnostic that
+        // disappears into the mute is no diagnostic at all.
+        fprintf(stderr,
+                "[TIMING] placement %.1f ms (host dequant %.1f ms, device upload %.1f ms, "
+                "%zu tensors)\n",
+                lastTiming.placementTotalMs, lastTiming.placementDequantMs,
+                lastTiming.placementUploadMs, lastTiming.residentTensors);
+        fprintf(stderr,
+                "[TIMING] compute   %.1f ms (norm %.1f, qkv %.1f, attention %.1f, "
+                "ffn_up %.1f, ffn_down %.1f) over %zu layers\n",
+                lastTiming.computeMs, lastTiming.normMs, lastTiming.qkvMs,
+                lastTiming.attentionMs, lastTiming.ffnUpMs, lastTiming.ffnDownMs,
+                lastTiming.layers);
     }
 
     std::cout << "[Move 10] Forward pass complete. Generated logits for " << inputTokens.size() << " tokens\n";

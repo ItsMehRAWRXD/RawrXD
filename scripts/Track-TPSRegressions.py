@@ -29,6 +29,7 @@ overridden through the environment:
     DEEP2_TPS_HISTORY  path to the CSV history file
 """
 
+import argparse
 import csv
 import math
 import os
@@ -43,6 +44,7 @@ MAX_SIGMA = 0.05                 # maximum relative standard deviation, 5%
 MIN_MEAN_TPS = 0.0               # a model that reports no throughput has failed
 RUN_TIMEOUT_SECONDS = 600
 DEFAULT_STEPS = 3                # decode steps per sweep
+DEFAULT_SWEEPS = REQUIRED_SWEEPS  # sweeps per model
 
 # A model larger than this is skipped by default. The 5 GB and 10 GB models
 # in the local set take longer than a sweep is allowed to take, and running
@@ -55,20 +57,31 @@ MAX_MODEL_BYTES = 2 * 1024 * 1024 * 1024
 # form of the same thing.
 MODEL_SUFFIXES = (".gguf", ".rom", ".nqb")
 
-# The metric line the engine prints.
-TPS_PATTERN = re.compile(r"^\[TPS\]\s+decode_tps=([0-9.]+)\s+tokens=(\d+)\s+elapsed_ms=([0-9.]+)")
+# The metric line the engine prints. The compute fields are optional, so
+# they are matched separately.
+TPS_PATTERN = re.compile(
+    r"^\[TPS\]\s+decode_tps=([0-9.]+)\s+tokens=(\d+)\s+elapsed_ms=([0-9.]+)"
+    r"(?:\s+steps=(\d+))?(?:\s+compute_ms=([0-9.]+))?(?:\s+placement_ms=([0-9.]+))?"
+    r"(?:\s+wall_tps=([0-9.]+))?"
+)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 
 
-def resolve_engine():
+
+def resolve_engine(override=None):
     """Locate the engine binary."""
-    override = os.environ.get("DEEP2_ENGINE_EXE")
     if override:
         if not os.path.isfile(override):
-            raise SystemExit(f"[CRITICAL] DEEP2_ENGINE_EXE does not exist: {override}")
+            raise SystemExit(f"[CRITICAL] the engine binary does not exist: {override}")
         return override
+
+    env = os.environ.get("DEEP2_ENGINE_EXE")
+    if env:
+        if not os.path.isfile(env):
+            raise SystemExit(f"[CRITICAL] DEEP2_ENGINE_EXE does not exist: {env}")
+        return env
 
     candidates = [
         os.path.join(REPO_ROOT, "build", "bin", "Release", "Deep2Engine_Benchmark.exe"),
@@ -83,17 +96,23 @@ def resolve_engine():
     raise SystemExit(
         "[CRITICAL] Compiled benchmark executable not found.\n"
         "  Looked for:\n" + "".join(f"    {c}\n" for c in candidates) +
-        "  Build it with: cmake -S . -B build && cmake --build build --target Deep2Engine_Benchmark\n"
-        "  Or set DEEP2_ENGINE_EXE to the binary."
+        "  Build it with: cmake -S . -B build && cmake --build build --config Release "
+        "--target Deep2Engine_Benchmark\n"
+        "  Or pass --bin, or set DEEP2_ENGINE_EXE."
     )
 
 
-def resolve_models_dir():
-    override = os.environ.get("DEEP2_MODELS_DIR")
+def resolve_models_dir(override=None):
     if override:
         if not os.path.isdir(override):
-            raise SystemExit(f"[CRITICAL] DEEP2_MODELS_DIR does not exist: {override}")
+            raise SystemExit(f"[CRITICAL] the models directory does not exist: {override}")
         return override
+
+    env = os.environ.get("DEEP2_MODELS_DIR")
+    if env:
+        if not os.path.isdir(env):
+            raise SystemExit(f"[CRITICAL] DEEP2_MODELS_DIR does not exist: {env}")
+        return env
 
     candidates = [
         r"G:\~dev\rawrxd\models",
@@ -109,18 +128,23 @@ def resolve_models_dir():
     )
 
 
-def discover_models(models_dir):
+def discover_models(models_dir, explicit_models=None):
     """Find the models the gate will sweep.
 
-    An explicit list in DEEP2_BENCH_MODELS wins. Otherwise the directory is
+    An explicit list wins: the --model arguments, then the
+    DEEP2_BENCH_MODELS environment variable. Otherwise the directory is
     scanned for the container formats the engine can open.
     """
-    explicit = os.environ.get("DEEP2_BENCH_MODELS", "").strip()
-    if explicit:
-        models = [p for p in explicit.split(";") if p.strip()]
+    if explicit_models:
+        models = list(explicit_models)
+    else:
+        env = os.environ.get("DEEP2_BENCH_MODELS", "").strip()
+        models = [p for p in env.split(";") if p.strip()] if env else []
+
+    if models:
         missing = [p for p in models if not os.path.isfile(p)]
         if missing:
-            raise SystemExit("[CRITICAL] DEEP2_BENCH_MODELS names files that do not exist:\n" +
+            raise SystemExit("[CRITICAL] these models do not exist:\n" +
                              "".join(f"  {p}\n" for p in missing))
         return models
 
@@ -151,11 +175,20 @@ def parse_tps(output):
     for line in output.splitlines():
         match = TPS_PATTERN.match(line.strip())
         if match:
-            return float(match.group(1)), int(match.group(2)), float(match.group(3))
+            tps = float(match.group(1))
+            tokens = int(match.group(2))
+            elapsed = float(match.group(3))
+            steps = int(match.group(4)) if match.group(4) else tokens
+            compute = float(match.group(5)) if match.group(5) else None
+            placement = float(match.group(6)) if match.group(6) else None
+            wall = float(match.group(7)) if match.group(7) else None
+            return {"decode_tps": tps, "tokens": tokens, "elapsed_ms": elapsed,
+                    "steps": steps, "compute_ms": compute, "placement_ms": placement,
+                    "wall_tps": wall}
     return None
 
 
-def run_sweep(engine, model, steps, timeout):
+def run_sweep(engine, model, steps, timeout, verbose=False):
     """Run the engine once and return its throughput."""
     cmd = [engine, "--benchmark", model, str(steps)]
     try:
@@ -171,6 +204,11 @@ def run_sweep(engine, model, steps, timeout):
     except subprocess.TimeoutExpired:
         return None, "execution exceeded the sweep deadline"
 
+    if verbose:
+        for line in completed.stdout.splitlines():
+            if line.startswith("[TIMING]") or line.startswith("[BENCH]"):
+                print(f"    {line}")
+
     metric = parse_tps(completed.stdout)
     if metric is None:
         tail = "\n".join(completed.stdout.splitlines()[-8:])
@@ -181,9 +219,8 @@ def run_sweep(engine, model, steps, timeout):
 def verify_production_performance_gate(runs):
     """Certify a model from its sweeps.
 
-    `runs` is a list of (decode_tps, tokens, elapsed_ms) tuples, oldest
-    first. The gate needs at least REQUIRED_SWEEPS of them and looks at the
-    most recent ones.
+    `runs` is a list of metric dicts, oldest first. The gate needs at least
+    REQUIRED_SWEEPS of them and looks at the most recent ones.
 
     The measure of consistency is the sample standard deviation of the
     decode rates, taken as a fraction of their mean. A model whose three
@@ -196,7 +233,7 @@ def verify_production_performance_gate(runs):
         return False
 
     target = runs[-REQUIRED_SWEEPS:]
-    decode_rates = [run[0] for run in target]
+    decode_rates = [run["decode_tps"] for run in target]
 
     mean_tps = sum(decode_rates) / len(decode_rates)
     if mean_tps <= MIN_MEAN_TPS:
@@ -218,6 +255,14 @@ def verify_production_performance_gate(runs):
     print(f"[METRIC] Std Dev: {stdev:.4f} TPS ({relative_stdev * 100:.2f}% of the mean)")
     print(f"[METRIC] Peak to Peak: {spread:.4f} TPS ({relative_spread * 100:.2f}% of the mean)")
 
+    # The placement is reported because it is a large fixed cost that a
+    # change in the residency policy moves. It is not part of the gate: the
+    # gate is about the compute rate, and the placement is setup.
+    placements = [r["placement_ms"] for r in target if r.get("placement_ms") is not None]
+    if placements:
+        print(f"[METRIC] Placement per step: {sum(placements) / len(placements):.1f} ms "
+              f"(host dequantization and device upload)")
+
     if relative_stdev > MAX_SIGMA:
         print(f"[GATE FAILED] Throughput variance {relative_stdev * 100:.2f}% exceeds the "
               f"{MAX_SIGMA * 100:.0f}% sigma threshold.")
@@ -227,21 +272,65 @@ def verify_production_performance_gate(runs):
     return True
 
 
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="Track-TPSRegressions.py",
+        description="Phase 2 throughput regression gate. Runs each model three times and "
+                    "certifies it only when the three runs agree with each other.",
+    )
+    parser.add_argument("--bin", dest="binary", default=None,
+                        help="path to the engine binary (default: the local build)")
+    parser.add_argument("--model", dest="models", action="append", default=None,
+                        help="a model to sweep; repeat the flag for more than one")
+    parser.add_argument("--models-dir", dest="models_dir", default=None,
+                        help="directory to scan for models when --model is not given")
+    parser.add_argument("--steps", dest="steps", type=int, default=DEFAULT_STEPS,
+                        help="decode steps per sweep")
+    parser.add_argument("--sweeps", dest="sweeps", type=int, default=DEFAULT_SWEEPS,
+                        help="sweeps per model; the gate needs at least 3")
+    parser.add_argument("--timeout", dest="timeout", type=int, default=RUN_TIMEOUT_SECONDS,
+                        help="per-sweep deadline in seconds")
+    parser.add_argument("--history", dest="history", default=None,
+                        help="path to the CSV history file")
+    parser.add_argument("--verbose", dest="verbose", action="store_true",
+                        help="print the engine's phase timing for every sweep")
+    parser.add_argument("--self-test", dest="self_test", action="store_true",
+                        help="check the gate arithmetic and exit")
+    return parser
+
+
 def main():
-    if "--self-test" in sys.argv:
+    args = build_parser().parse_args()
+
+    if args.self_test:
         # Exercises the gate arithmetic without a model or a GPU.
-        good = [(10.0, 8, 800.0), (10.1, 8, 792.0), (9.9, 8, 808.0)]
-        bad = [(10.0, 8, 800.0), (14.0, 8, 571.0), (9.0, 8, 888.0)]
+        good = [{"decode_tps": 10.0, "tokens": 8, "elapsed_ms": 800.0, "placement_ms": 100.0},
+                {"decode_tps": 10.1, "tokens": 8, "elapsed_ms": 792.0, "placement_ms": 100.0},
+                {"decode_tps": 9.9, "tokens": 8, "elapsed_ms": 808.0, "placement_ms": 100.0}]
+        bad = [{"decode_tps": 10.0, "tokens": 8, "elapsed_ms": 800.0, "placement_ms": 100.0},
+               {"decode_tps": 14.0, "tokens": 8, "elapsed_ms": 571.0, "placement_ms": 100.0},
+               {"decode_tps": 9.0, "tokens": 8, "elapsed_ms": 888.0, "placement_ms": 100.0}]
         assert verify_production_performance_gate(good) is True, "a stable set must pass"
         assert verify_production_performance_gate(bad) is False, "a spread set must fail"
         assert verify_production_performance_gate(good[:2]) is False, "two sweeps must not pass"
         print("[SELF TEST] the gate arithmetic is correct")
         return 0
 
-    engine = resolve_engine()
-    models_dir = resolve_models_dir()
-    models = discover_models(models_dir)
-    history_path = os.environ.get(
+    sweeps = max(args.sweeps, REQUIRED_SWEEPS)
+    if args.sweeps < REQUIRED_SWEEPS:
+        print(f"[NOTE] The gate needs at least {REQUIRED_SWEEPS} sweeps; using {sweeps}.")
+
+    engine = resolve_engine(args.binary)
+
+    if args.models:
+        models = discover_models(None, args.models)
+        models_label = ", ".join(os.path.basename(m) for m in models)
+    else:
+        models_dir = resolve_models_dir(args.models_dir)
+        models = discover_models(models_dir)
+        models_label = models_dir
+
+    history_path = args.history or os.environ.get(
         "DEEP2_TPS_HISTORY",
         os.path.join(REPO_ROOT, "build", "tps_regression_history.csv"),
     )
@@ -250,8 +339,9 @@ def main():
     print("  PHASE 2 THROUGHPUT REGRESSION GATE")
     print("=" * 60)
     print(f"  engine : {engine}")
-    print(f"  models : {models_dir}")
-    print(f"  sweeps : {REQUIRED_SWEEPS} per model, {MAX_SIGMA * 100:.0f}% sigma threshold")
+    print(f"  models : {models_label}")
+    print(f"  sweeps : {sweeps} per model, {args.steps} steps per sweep, "
+          f"{MAX_SIGMA * 100:.0f}% sigma threshold")
     print(f"  history: {history_path}")
     print()
 
@@ -268,27 +358,27 @@ def main():
         writer = csv.writer(handle)
         if not history_exists:
             writer.writerow(["Timestamp", "ModelName", "Throughput_TPS", "StdDev_TPS",
-                             "RelativeStdDev", "Status"])
+                             "RelativeStdDev", "PlacementMs", "Status"])
 
         for model in models:
             name = os.path.basename(model)
             print(f"[PROFILING] {name}")
 
             runs = []
-            for sweep in range(REQUIRED_SWEEPS):
-                metric, error = run_sweep(engine, model, DEFAULT_STEPS, RUN_TIMEOUT_SECONDS)
+            for sweep in range(sweeps):
+                metric, error = run_sweep(engine, model, args.steps, args.timeout, args.verbose)
                 if metric is None:
                     print(f"  -> [FAIL] sweep {sweep + 1}: {error}")
                     runs = []
                     break
-                tps, tokens, elapsed = metric
-                print(f"  -> sweep {sweep + 1}: {tps:.4f} TPS "
-                      f"({tokens} tokens in {elapsed:.1f} ms)")
+                print(f"  -> sweep {sweep + 1}: {metric['decode_tps']:.4f} TPS "
+                      f"({metric['tokens']} tokens in {metric['elapsed_ms']:.1f} ms)")
                 runs.append(metric)
 
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if not runs:
-                writer.writerow([timestamp, name, "0.000", "0.000", "0.000", "EXECUTION_FAILED"])
+                writer.writerow([timestamp, name, "0.000", "0.000", "0.000", "0.000",
+                                 "EXECUTION_FAILED"])
                 failures += 1
                 continue
 
@@ -296,14 +386,17 @@ def main():
             if not passed:
                 failures += 1
 
-            mean_tps = sum(r[0] for r in runs[-REQUIRED_SWEEPS:]) / min(len(runs), REQUIRED_SWEEPS)
-            variance = sum((r[0] - mean_tps) ** 2 for r in runs[-REQUIRED_SWEEPS:]) / max(
-                1, (min(len(runs), REQUIRED_SWEEPS) - 1))
+            scored = runs[-REQUIRED_SWEEPS:]
+            mean_tps = sum(r["decode_tps"] for r in scored) / len(scored)
+            variance = sum((r["decode_tps"] - mean_tps) ** 2 for r in scored) / max(
+                1, (len(scored) - 1))
             stdev = math.sqrt(variance)
             relative = stdev / mean_tps if mean_tps > 0 else 0.0
+            placements = [r["placement_ms"] for r in scored if r.get("placement_ms") is not None]
+            mean_placement = sum(placements) / len(placements) if placements else 0.0
             status = "CERTIFIED" if passed else "VARIANCE_EXCEEDED"
             writer.writerow([timestamp, name, f"{mean_tps:.4f}", f"{stdev:.4f}",
-                             f"{relative:.4f}", status])
+                             f"{relative:.4f}", f"{mean_placement:.1f}", status])
             results.append((name, mean_tps, relative, passed))
             print()
 

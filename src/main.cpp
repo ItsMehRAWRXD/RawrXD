@@ -21,10 +21,16 @@ protected:
 // Run a fixed number of single-token forward passes and report the sustained
 // decode rate.
 //
-// The metric is printed on one line with fixed key=value pairs so the
-// regression gate can parse it without guessing at the prose around it:
+// A forward pass has two parts. The placement phase reads every quantized
+// weight out of the ROM, expands it to f32 on the host and uploads it to the
+// devices; the compute phase runs the layers. The placement is a fixed cost
+// that every pass pays again, and it dominates, so a number that folds the
+// two together measures the setup and not the engine.
+//
+// Both are reported, and the gate's metric is the compute-only rate:
 //
 //   [TPS] decode_tps=0.6482 tokens=8 elapsed_ms=12345.6 steps=8
+//         compute_ms=4210.3 placement_ms=8135.3
 //
 // The engine's own progress output is muted for the measured region, so the
 // number reflects the work rather than the logging.
@@ -35,9 +41,24 @@ void runThroughputBenchmark(Deep2Engine& engine, int steps) {
     std::vector<float> logits;
     std::vector<float> baseline;
 
+    // A forward pass that throws has to be reported, not turned into a
+    // silent abort: the regression gate reads this output, and an
+    // unexplained crash is a failed run, not a missing metric.
+    auto forward = [&](std::vector<float>& out) -> bool {
+        try {
+            return engine.executePhi3ROMForwardPass(inputTokens, out, baseline);
+        } catch (const std::exception& e) {
+            fprintf(stderr, "[BENCH] forward pass threw: %s\n", e.what());
+            return false;
+        } catch (...) {
+            fprintf(stderr, "[BENCH] forward pass threw a non-standard exception\n");
+            return false;
+        }
+    };
+
     // Warm the path up once so the first timed step is not paying for the
     // one-off setup the loader and the first dequantization do.
-    if (!engine.executePhi3ROMForwardPass(inputTokens, logits, baseline)) {
+    if (!forward(logits)) {
         std::cerr << "[BENCH] warmup forward pass failed\n";
         return;
     }
@@ -47,9 +68,13 @@ void runThroughputBenchmark(Deep2Engine& engine, int steps) {
 
     const auto start = std::chrono::steady_clock::now();
     int completed = 0;
+    double computeMs = 0.0;
+    double placementMs = 0.0;
     for (int i = 0; i < steps; ++i) {
-        if (!engine.executePhi3ROMForwardPass(inputTokens, logits, baseline)) break;
+        if (!forward(logits)) break;
         ++completed;
+        computeMs += engine.lastTiming.computeMs;
+        placementMs += engine.lastTiming.placementTotalMs;
     }
     const double elapsedMs = std::chrono::duration<double, std::milli>(
         std::chrono::steady_clock::now() - start).count();
@@ -61,12 +86,21 @@ void runThroughputBenchmark(Deep2Engine& engine, int steps) {
         return;
     }
 
-    const double tps = elapsedMs > 0.0 ? (static_cast<double>(completed) * 1000.0 / elapsedMs) : 0.0;
+    // Two rates are reported. The wall-clock rate covers the whole pass,
+    // placement included, and is what a caller that has to redo the
+    // placement every time actually sees. The compute rate covers the layer
+    // loop alone, and is what the engine's own speed is.
+    const double wallTps = elapsedMs > 0.0 ? (static_cast<double>(completed) * 1000.0 / elapsedMs) : 0.0;
+    const double computeTps = computeMs > 0.0 ? (static_cast<double>(completed) * 1000.0 / computeMs) : 0.0;
+
     std::cout << "[BENCH] steps=" << completed << " elapsed_ms=" << elapsedMs << "\n";
-    std::cout << "[TPS] decode_tps=" << tps
+    std::cout << "[TPS] decode_tps=" << computeTps
               << " tokens=" << completed
               << " elapsed_ms=" << elapsedMs
-              << " steps=" << completed << "\n";
+              << " steps=" << completed
+              << " compute_ms=" << computeMs
+              << " placement_ms=" << placementMs
+              << " wall_tps=" << wallTps << "\n";
     std::cout.flush();
 }
 
@@ -319,6 +353,7 @@ int main(int argc, char* argv[]) {
     bool runParity = false;
     bool runKvPlan = false;
     bool runBenchmark = false;
+    bool phaseTiming = false;
     int benchmarkSteps = 3;
     std::string modelPath;
     std::string manifestPath;
@@ -351,6 +386,11 @@ int main(int argc, char* argv[]) {
             argIndex++;
             continue;
         }
+        if (a == "--phase-timing") {
+            phaseTiming = true;
+            argIndex++;
+            continue;
+        }
         if (a == "--whole-loader") { forceWholeLoader = true; argIndex++; continue; }
         if (modelPath.empty()) { modelPath = a; argIndex++; continue; }
         if (a.size() > 1 && a[0] >= '0' && a[0] <= '9') {
@@ -376,6 +416,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Deep2Engine::initialize SUCCESS\n";
         return 0;
     }
+
+    // The phase breakdown is what says where a slow pass spends its time.
+    engine.m_phaseTiming = phaseTiming;
 
     // Check for Move 10 validation flag (already parsed above)
     if (runKvPlan) {
