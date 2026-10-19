@@ -166,6 +166,13 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
     endforeach()
     if(SHADER_SPV_OUTPUTS)
         add_custom_target(compile_shaders ALL DEPENDS ${SHADER_SPV_OUTPUTS})
+        # The deploy steps run after the target links, so the SPIR-V has to
+        # exist by then. Making the compilation a dependency of the targets
+        # that deploy it also means building one target by name compiles the
+        # shaders, rather than leaving the deploy step to copy a file that
+        # was never built.
+        add_dependencies(Deep2Engine_Benchmark compile_shaders)
+        add_dependencies(rom_audit compile_shaders)
     endif()
 endif()
 
