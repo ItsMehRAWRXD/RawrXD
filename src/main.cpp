@@ -11,6 +11,8 @@
 #include <pmmintrin.h>
 #include <chrono>
 #include <streambuf>
+#include <exception>
+#include <typeinfo>
 
 // A streambuf that swallows everything written to it.
 //
@@ -414,6 +416,9 @@ public:
     };
 
     std::vector<Entry> entries;
+    // Lines that are not the layer trace are passed through, so the rest of
+    // the engine's output is still visible while the trace is captured.
+    std::streambuf* passthrough = nullptr;
 
 protected:
     int overflow(int c) override {
@@ -446,6 +451,9 @@ private:
                 e.path = l.substr(pathAt + 5, (end == std::string::npos ? l.size() : end) - (pathAt + 5));
             }
             entries.push_back(e);
+        } else if (passthrough && !l.empty()) {
+            passthrough->sputn(l.data(), static_cast<std::streamsize>(l.size()));
+            passthrough->pubsync();
         }
         m_line.clear();
     }
@@ -455,6 +463,7 @@ private:
 static void runResidentTensorParity(Deep2Engine& engine) {
     const char* names[] = {
         "blk.0.attn_qkv.weight",
+        "blk.0.attn_output.weight",
         "blk.0.ffn_up.weight",
         "blk.0.ffn_down.weight",
         "output.weight",
@@ -720,7 +729,8 @@ static void runKvCachePlan(Deep2Engine& engine) {
 //   cpu-f32    vs cpu-q2-k   the quantisation deviation, if the sources differ
 //   gpu-f32    vs gpu-q2-k   the device representation deviation
 static void runQuantisationParity(Deep2Engine& engine, const std::string& tensorName,
-                                  const Deep2Engine::ResidentProjection& projection) {
+                                  const Deep2Engine::ResidentProjection& projection,
+                                  uint32_t layerIndex) {
     const auto* entry = engine.rom.findTensor(tensorName);
     if (!entry) {
         std::cout << "[QPARITY] " << tensorName << ": not present\n";
@@ -763,6 +773,71 @@ static void runQuantisationParity(Deep2Engine& engine, const std::string& tensor
     if (!engine.gemvResidentProjection(projection, xView, gpuOut)) {
         std::cout << "[QPARITY] " << tensorName << ": the device GEMV failed\n";
         return;
+    }
+
+    // The magnitude of every layer's ffn_up, as the ROM reads it.
+    //
+    // This is the measurement that separates "the data is wrong" from "the
+    // data is used wrongly": a layer whose weights dequantize to a far
+    // larger magnitude than its neighbours is being read from the wrong
+    // place, and the forward pass cannot fix that.
+    {
+        const uint32_t probeLayers[] = {1, 2, 3, 4, 7, 29, 30, 31};
+        for (uint32_t probe : probeLayers) {
+            const uint32_t l = probe;
+            const std::string name = "blk." + std::to_string(l) + ".ffn_up.weight";
+            const deep2::TensorEntry* e = engine.rom.findTensor(name);
+            if (!e) { std::cout << "[QRMS] " << name << ": absent\n"; continue; }
+            deep2::DequantizedTensor dq;
+            if (!engine.dequantTensor(*e, dq)) { std::cout << "[QRMS] " << name << ": dequant failed\n"; continue; }
+            double s = 0.0, mx = 0.0;
+            const size_t n = dq.data.size();
+            for (size_t i = 0; i < n; ++i) {
+                s += static_cast<double>(dq.data[i]) * dq.data[i];
+                const double a = std::fabs(dq.data[i]);
+                if (a > mx) mx = a;
+            }
+            std::cout << "[QRMS] " << name << " offset=" << e->offset
+                      << " bytes=" << e->byteSize()
+                      << " rms=" << std::sqrt(s / (n ? n : 1))
+                      << " max=" << mx << "\n";
+        }
+    }
+
+    // The ROM's own read of the tensor, against a direct read of the file at
+    // the offset the manifest names.
+    //
+    // The ROM does not take the data section's offset from the file: it
+    // scans for where token_embd's first blocks dequantize to sane values and
+    // corrects the offset by that guess. Every tensor read depends on that
+    // guess, and the expander comparison above cannot see it, because both
+    // expanders read the same bytes.
+    {
+        std::vector<uint8_t> viaRom(entry->byteSize());
+        std::vector<uint8_t> viaFile(entry->byteSize());
+        const bool romOk = engine.rom.readTensorRange(*entry, 0, viaRom.size(), viaRom.data());
+        uint64_t fileOffset = 0;
+        bool fileOk = false;
+        if (entry->shardIndex < engine.rom.shards().size()) {
+            fileOffset = engine.rom.shards()[entry->shardIndex].dataOffset + entry->offset;
+            fileOk = engine.rom.readShardRange(entry->shardIndex, fileOffset, viaFile.data(), viaFile.size());
+        }
+        size_t differing = 0;
+        size_t firstDiff = 0;
+        if (romOk && fileOk) {
+            for (size_t i = 0; i < viaRom.size(); ++i) {
+                if (viaRom[i] != viaFile[i]) {
+                    if (differing == 0) firstDiff = i;
+                    ++differing;
+                }
+            }
+        }
+        std::cout << "[QPARITY] rom read vs file read for " << tensorName
+                  << ": bytes=" << viaRom.size()
+                  << " romOk=" << (romOk ? 1 : 0) << " fileOk=" << (fileOk ? 1 : 0)
+                  << " differing=" << differing
+                  << (differing ? (" first at byte " + std::to_string(firstDiff)) : "")
+                  << "\n";
     }
 
     // The AVX-512 host expander, against the reference expander, on the very
@@ -819,16 +894,21 @@ static void runForwardParity(Deep2Engine& engine) {
     // they are only placed during the forward pass, so place them here.
     engine.ensureResidentWeights(static_cast<size_t>(engine.rom.geometry().numLayers));
     if (!engine.m_residentLayers.empty()) {
-        const auto& L0 = engine.m_residentLayers[0];
-        runQuantisationParity(engine, "blk.0.attn_qkv.weight", L0.qkv);
-        runQuantisationParity(engine, "blk.0.ffn_up.weight", L0.up);
-        runQuantisationParity(engine, "blk.0.ffn_down.weight", L0.down);
+        for (uint32_t li : {0u, 2u, 4u, 7u, 29u, 30u, 31u}) {
+            if (li >= engine.m_residentLayers.size()) continue;
+            const auto& L = engine.m_residentLayers[li];
+            const std::string pfx = "blk." + std::to_string(li) + ".";
+            runQuantisationParity(engine, pfx + "attn_qkv.weight", L.qkv, li);
+            runQuantisationParity(engine, pfx + "ffn_up.weight", L.up, li);
+            runQuantisationParity(engine, pfx + "ffn_down.weight", L.down, li);
+        }
     }
     engine.m_layerTrace = true;
 
     std::vector<float> residentLogits, residentBaseline;
     TraceBuf residentTrace;
     {
+        residentTrace.passthrough = std::cout.rdbuf();
         std::streambuf* saved = std::cout.rdbuf(&residentTrace);
         const bool ok = engine.executePhi3ROMForwardPass(inputTokens, residentLogits, residentBaseline, false);
         std::cout.rdbuf(saved);
@@ -838,6 +918,7 @@ static void runForwardParity(Deep2Engine& engine) {
     std::vector<float> cpuLogits, cpuBaseline;
     TraceBuf cpuTrace;
     {
+        cpuTrace.passthrough = std::cout.rdbuf();
         std::streambuf* saved = std::cout.rdbuf(&cpuTrace);
         const bool ok = engine.executePhi3ROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true);
         std::cout.rdbuf(saved);
@@ -1136,21 +1217,41 @@ int main(int argc, char* argv[]) {
     engine.m_gemvOverlap = gemvOverlap;
 
     // Check for Move 10 validation flag (already parsed above)
-    if (runKvPlan) {
-        runKvCachePlan(engine);
-    } else if (runGenerate) {
-        return runGeneration(engine, modelPath, generatePrompt,
-                             (uint32_t)generateTokens, sampling, generateGreedy);
-    } else if (runParity) {
-        runForwardParity(engine);
-    } else if (runMove10) {
-        runMove10Validation(engine);
-    } else if (runBenchmark) {
-        runThroughputBenchmark(engine, benchmarkSteps);
-    } else if (runGemvBench) {
-        runGemvBenchmark(engine, gemvBenchIterations);
-    } else {
-        Deep2EngineExecuteInferenceStep(engine);
+    //
+    // The whole run is inside a handler. An unhandled exception terminates
+    // the process through the C runtime's fail-fast path, which reports
+    // 0xC0000409 and says nothing about what went wrong; a handler that
+    // names the exception is the difference between a crash that has to be
+    // diagnosed from a dump and a crash that says what it was.
+    try {
+        if (runKvPlan) {
+            runKvCachePlan(engine);
+        } else if (runGenerate) {
+            const int rc = runGeneration(engine, modelPath, generatePrompt,
+                                         (uint32_t)generateTokens, sampling, generateGreedy);
+            engine.Shutdown();
+            return rc;
+        } else if (runParity) {
+            runForwardParity(engine);
+        } else if (runMove10) {
+            runMove10Validation(engine);
+        } else if (runBenchmark) {
+            runThroughputBenchmark(engine, benchmarkSteps);
+        } else if (runGemvBench) {
+            runGemvBenchmark(engine, gemvBenchIterations);
+        } else {
+            Deep2EngineExecuteInferenceStep(engine);
+        }
+    }
+    catch (const std::exception& e) {
+        fprintf(stderr, "[FATAL] unhandled exception (%s): %s\n", typeid(e).name(), e.what());
+        engine.Shutdown();
+        return 1;
+    }
+    catch (...) {
+        fprintf(stderr, "[FATAL] unhandled non-standard exception\n");
+        engine.Shutdown();
+        return 1;
     }
     engine.Shutdown();
     return 0;
