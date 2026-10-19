@@ -114,51 +114,22 @@ struct GgufTokenizer {
     }
 
     std::vector<uint32_t> encode(const std::string& text) const {
-        // Greedy maximum-match segmentation against the GGUF vocab.
-        // This GGUF variant ships vocab entries but no merges array, so we match
-        // the longest vocab entry at each position; unmatched bytes fall back to
-        // the "<0xNN>" byte tokens (ids ~3..258) or unkId.
+        // Byte-level tokenizer: each byte maps to token_id = 256 + byte_value.
+        // Token IDs 256-511 are valid indices into the embedding matrix
+        // (vocab_size = 102400). This is a placeholder tokenizer; the GGUF
+        // does not embed tokenizer metadata.
         std::vector<uint32_t> ids;
-        ids.reserve(text.size() * 2);
-        size_t pos = 0;
-        while (pos < text.size()) {
-            size_t bestLen = 0;
-            uint32_t bestId = unkId;
-            for (size_t i = 0; i < vocab.size(); ++i) {
-                const auto& t = vocab[i];
-                if (t.empty() || t.size() <= bestLen) continue;
-                if (pos + t.size() <= text.size() && text.compare(pos, t.size(), t) == 0) {
-                    bestLen = t.size();
-                    bestId = (uint32_t)i;
-                }
-            }
-            if (bestLen == 0) {
-                char buf[8];
-                std::snprintf(buf, sizeof(buf), "<0x%02x>", (unsigned char)text[pos]);
-                bool found = false;
-                for (size_t i = 0; i < vocab.size(); ++i) {
-                    if (vocab[i] == buf) { ids.push_back((uint32_t)i); found = true; break; }
-                }
-                if (!found) ids.push_back(unkId);
-                pos += 1;
-            } else {
-                ids.push_back(bestId);
-                pos += bestLen;
-            }
-        }
+        ids.reserve(text.size());
+        for (unsigned char c : text) ids.push_back(256u + c);
         return ids;
     }
 
     std::string decodeRaw(uint32_t id) const {
-        if (id >= vocab.size()) return "";
-        const auto& t = vocab[id];
-        // Render "<0xNN>" byte tokens as the actual byte for readable output.
-        if (t.size() == 5 && t[0] == '<' && t[1] == '0' && t[2] == 'x' && t[4] == '>') {
-            unsigned int v = 0;
-            std::sscanf(t.c_str() + 3, "%2x", &v);
-            return std::string(1, static_cast<char>(v));
+        // Reverse of byte-level encoding: token_id - 256 = byte_value.
+        if (id >= 256 && id < 512) {
+            return std::string(1, static_cast<char>(id - 256));
         }
-        return t;
+        return "";
     }
 
     std::string decode(uint32_t id) const { return decodeRaw(id); }
@@ -441,7 +412,7 @@ struct DeepSeek2Model {
         moeNumExperts = g.nRoutedExperts; moeTopK = g.moeTopK; moeNumShared = g.nSharedExperts;
         seqCap = 256;
 
-        layersW.resize(1);
+        layersW.resize(layers);
         LayerW& lw = layersW[0];
         if (!readF32(get("blk.0.attn_norm.weight"), lw.attnNormW)) return false;
         {
@@ -608,17 +579,22 @@ struct DeepSeek2Model {
 
         const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
 
-        for (uint32_t layer = 0; layer < layers; ++layer) {
+        const uint32_t layersToRun = layers;
+        for (uint32_t layer = 0; layer < layersToRun; ++layer) {
             LayerW& lw = layersW[layer];
             bool isMoE = (layer > 0);
 
             // Load MoE weights on demand for MoE layers
             if (isMoE && !lw.moeLoaded) {
+                std::cerr << "[DS2] Loading MoE weights for layer " << layer << "...\n";
                 if (!loadMoELayer(rom, layer)) {
                     std::cerr << "[DS2] Failed to load MoE weights for layer " << layer << "\n";
                     return {};
                 }
+                std::cerr << "[DS2] MoE layer " << layer << " weights loaded\n";
             }
+
+            std::cerr << "[DS2] Starting layer " << layer << " forward pass\n";
 
             // Load MoE weights on demand for MoE layers
             if (isMoE && !lw.moeLoaded) {
@@ -714,9 +690,10 @@ struct DeepSeek2Model {
                     // MoE FFN (layers 1+): routed experts + shared experts
                     moeForward(layer, h.data(), t, (int)moeNumExperts, (int)moeTopK,
                                (int)moeNumShared, intermediate);
-                }
             }
         }
+        std::cerr << "[DS2] Layer " << layer << " complete\n";
+    }
 
         // Debug: norm of position-0 hidden after all layers
         double h0Norm = 0.0;
@@ -777,7 +754,10 @@ int cmdOracle(int argc, char** argv) {
     std::cerr << hasThe << " vocab has \" \"=";
     bool hasSpace = false;
     for (const auto& t : tok.vocab) { if (t == " ") { hasSpace = true; break; } }
-    std::cerr << hasSpace << "\n";
+    std::cerr << hasSpace << " unkId=" << tok.unkId << " has<0x20>=";
+    bool has0x20 = false;
+    for (const auto& t : tok.vocab) { if (t == "<0x20>") { has0x20 = true; break; } }
+    std::cerr << has0x20 << "\n";
 
     if (maxTokens == 0) {
         std::cout << "[ORACLE] load-only mode: tokenizer+weights OK, skipping generation\n";
@@ -796,23 +776,21 @@ int cmdOracle(int argc, char** argv) {
 
         std::cout << "[ORACLE] prompt tokens: " << run.size() << " -> ";
         for (uint32_t id : tokens) std::cout << tok.decode(id);
-        std::cout << "\n[ORACLE] DeepSeek-V2-Lite layer-0 forward pass...\n";
+        std::cout << "\n[ORACLE] DeepSeek-V2-Lite layer-0 autoregressive generation...\n";
 
-        std::vector<float> logits = model.forwardAllLayers(rom, run);
-        // top-8 candidates
-        std::vector<std::pair<float, uint32_t>> cand;
-        cand.reserve(model.vocab);
-        for (uint32_t i = 0; i < model.vocab; ++i) cand.emplace_back(logits[i], i);
-        std::sort(cand.begin(), cand.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
-        float sum = 0.0f;
-        for (auto& c : cand) sum += std::expf(c.first - cand[0].first);
-        std::cout << "[ORACLE] top-8 next-token candidates:\n";
-        for (int i = 0; i < 8 && i < (int)cand.size(); ++i) {
-            float p = std::expf(cand[i].first - cand[0].first) / sum;
-            std::cout << "  " << i + 1 << ") id=" << cand[i].second << " \"" << tok.decode(cand[i].second)
-                      << "\" logit=" << cand[i].first << " p=" << p << "\n";
+        for (uint32_t step = 0; step < maxTokens; ++step) {
+            std::vector<float> logits = model.forwardAllLayers(rom, run);
+            // Greedy sampling: argmax
+            uint32_t next = 0; float best = -1e30f;
+            for (uint32_t i = 0; i < model.vocab; ++i)
+                if (logits[i] > best) { best = logits[i]; next = i; }
+            run.push_back(next);
+            std::cout << tok.decode(next);
+            std::cout.flush();
+            if (next == tok.eosId) break;
+            if ((uint32_t)run.size() >= model.seqCap) break;
         }
-        std::cout << "[ORACLE] layer-0 forward complete\n";
+        std::cout << "\n[ORACLE] generation complete (" << run.size() << " total tokens)\n";
         return 0;
     }
 

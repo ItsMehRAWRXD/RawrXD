@@ -27,6 +27,7 @@ struct GGUFTensorMeta {
     std::vector<uint64_t> dims;
     uint64_t offset = 0;
     void* dataData = nullptr;
+    float* dequantizedData = nullptr;  // Cached FP32 dequantized data (for Q2_K etc.)
     uint32_t shard_id = 0;  // Which shard file this tensor's data lives in (0 = first shard)
 };
 

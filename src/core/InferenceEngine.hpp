@@ -3,6 +3,7 @@
 #include "KVCache.hpp"
 #include "Sampling.hpp"
 #include "GenerationLoop.hpp"
+#include "VulkanComputeEngine.hpp"
 #include "../GGUFLoader.hpp"
 #include <vulkan/vulkan.h>
 #include <cstdint>
@@ -12,6 +13,10 @@
 #include <atomic>
 #include <mutex>
 #include <chrono>
+
+namespace Deep2Rom::Compute {
+    class VulkanGEMV;
+}
 
 namespace Deep2Rom::Inference {
 
@@ -107,6 +112,7 @@ namespace Deep2Rom::Inference {
         void rmsNorm(const float* input, float* output, uint32_t dim, const float* weight, float eps);
 
         const float* getTensorData(const std::string& name) const;
+        const float* getTensorFP32(const std::string& name) const;
 
         EngineConfig m_config;
         ModelConfig m_modelConfig;

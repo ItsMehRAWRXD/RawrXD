@@ -7,12 +7,54 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include <fstream>
+#include <vector>
 
 namespace Deep2Rom::Inference {
 
+    void dequantize_q2k_block(const uint8_t* block_data, uint32_t num_elements, float* out) {
+        const uint8_t* qs = block_data;
+        const uint8_t* scales = block_data + 64;
+        uint16_t d_raw = uint16_t(block_data[80]) | (uint16_t(block_data[81]) << 8);
+
+        uint32_t sign = (d_raw & 0x8000u) << 16;
+        uint32_t exp = (d_raw & 0x7C00u) >> 10;
+        uint32_t frac = d_raw & 0x03FFu;
+        uint32_t f32 = 0;
+        if (exp == 31) {
+            f32 = sign | 0x7F800000u | (frac << 13);
+        } else if (exp == 0) {
+            if (frac != 0) {
+                while ((frac & 0x0400u) == 0) { frac <<= 1u; exp--; }
+                exp++;
+                frac &= ~0x0400u;
+                f32 = sign | ((exp + (127u - 15u)) << 23) | (frac << 13);
+            } else {
+                f32 = sign;
+            }
+        } else {
+            f32 = sign | ((exp + (127u - 15u)) << 23) | (frac << 13);
+        }
+        float d;
+        memcpy(&d, &f32, 4);
+        if (isnan(d) || isinf(d)) d = 0.0f;
+
+        for (uint32_t e = 0; e < num_elements; ++e) {
+            uint32_t byte_idx = e / 4;
+            uint32_t bit_offset = (3u - (e % 4u)) * 2u;
+            uint8_t q = (qs[byte_idx] >> bit_offset) & 0x03u;
+            uint32_t group_idx = byte_idx / 4u;
+            float scale = static_cast<float>(scales[group_idx]) / 64.0f;
+            out[e] = (static_cast<float>(q) - 1.5f) * scale * d;
+        }
+    }
+
     InferenceEngine::~InferenceEngine() {
-        if (m_vulkanDevice != VK_NULL_HANDLE) {
-            // Vulkan device cleanup handled by caller
+        for (auto& [name, meta] : m_engineContext.tensors) {
+            if (meta.dequantizedData != nullptr) {
+                delete[] meta.dequantizedData;
+                meta.dequantizedData = nullptr;
+            }
         }
     }
 
@@ -46,7 +88,7 @@ namespace Deep2Rom::Inference {
 
         KVCacheConfig kvConfig;
         kvConfig.numLayers = static_cast<uint32_t>(m_modelConfig.numLayers);
-        kvConfig.maxSeqLen = std::min(m_modelConfig.maxSeqLen, static_cast<uint64_t>(4096)); // Cap for CPU
+        kvConfig.maxSeqLen = std::min<uint64_t>(m_modelConfig.maxSeqLen, 4096);
         kvConfig.headDim = m_modelConfig.hiddenDim / m_modelConfig.numHeads;
         kvConfig.numHeads = m_modelConfig.numHeads;
         kvConfig.device = m_vulkanDevice;
@@ -155,33 +197,6 @@ namespace Deep2Rom::Inference {
         return result;
     }
 
-    // Helper: get tensor pointer as float array
-    const float* InferenceEngine::getTensorData(const std::string& name) const {
-        auto it = m_engineContext.tensors.find(name);
-        if (it != m_engineContext.tensors.end() && it->second.dataData) {
-            return static_cast<const float*>(it->second.dataData);
-        }
-        return nullptr;
-    }
-
-    // RoPE rotation for a single position
-    static void applyRoPE(float* q, float* k, uint32_t headDim, uint32_t pos, float thetaBase) {
-        for (uint32_t i = 0; i < headDim; i += 2) {
-            float freq = 1.0f / std::powf(thetaBase, static_cast<float>(i) / static_cast<float>(headDim));
-            float angle = static_cast<float>(pos) * freq;
-            float cos_a = std::cosf(angle);
-            float sin_a = std::sinf(angle);
-
-            float q0 = q[i], q1 = q[i + 1];
-            float k0 = k[i], k1 = k[i + 1];
-
-            q[i] = q0 * cos_a - q1 * sin_a;
-            q[i + 1] = q0 * sin_a + q1 * cos_a;
-            k[i] = k0 * cos_a - k1 * sin_a;
-            k[i + 1] = k0 * sin_a + k1 * cos_a;
-        }
-    }
-
     bool InferenceEngine::forwardPass(uint32_t layerIdx, const float* input, float* output, uint64_t tokenPos, uint32_t tokenId) {
         uint32_t hiddenDim = m_modelConfig.hiddenDim;
         uint32_t numHeads = m_modelConfig.numHeads;
@@ -193,7 +208,6 @@ namespace Deep2Rom::Inference {
         if (headDim == 0) headDim = hiddenDim / numHeads;
         if (intermediateDim == 0) intermediateDim = hiddenDim * 8 / 3;
 
-        // Buffers (stack-allocated with max size)
         static thread_local float hidden[16384];
         static thread_local float normed[16384];
         static thread_local float attnOut[16384];
@@ -206,9 +220,7 @@ namespace Deep2Rom::Inference {
         static thread_local float up[16384];
         static thread_local float activated[16384];
 
-        // --- Input handling ---
         if (input == nullptr) {
-            // First call: embedding lookup using tokenId parameter
             const float* embedData = getTensorData("token_embd.weight");
             if (embedData && tokenId < m_modelConfig.vocabSize) {
                 const float* tokenEmbed = embedData + tokenId * hiddenDim;
@@ -222,56 +234,25 @@ namespace Deep2Rom::Inference {
 
         std::string layerPrefix = "blk." + std::to_string(layerIdx) + ".";
 
-        // --- Pre-attention RMSNorm ---
-        const float* attnNormW = getTensorData(layerPrefix + "attn_norm.weight");
+        const float* attnNormW = getTensorFP32(layerPrefix + "attn_norm.weight");
         float attnNormEps = 1e-5f;
         rmsNorm(hidden, normed, hiddenDim, attnNormW, attnNormEps);
 
-        // --- QKV projections ---
-        const float* wQKV = getTensorData(layerPrefix + "attn_qkv.weight");
+        const float* wQKV = getTensorFP32(layerPrefix + "attn_qkv.weight");
         if (!wQKV) {
-            // No weights - pass through
             for (uint32_t i = 0; i < hiddenDim; ++i) output[i] = hidden[i];
             return true;
         }
 
-        // attn_qkv.weight shape: [3 * hiddenDim, hiddenDim] (rows: Q then K then V)
-        // Q = normed * W_Q^T  => Q[i] = sum_j normed[j] * wQKV[i * hiddenDim + j]
-        // K = normed * W_K^T  => K[i] = sum_j normed[j] * wQKV[(hiddenDim + i) * hiddenDim + j]
-        // V = normed * W_V^T  => V[i] = sum_j normed[j] * wQKV[(2*hiddenDim + i) * hiddenDim + j]
-
-        // Use AVX2 GEMV for Q, K, V
-        const uint32_t rows = hiddenDim;
-        const uint32_t cols = hiddenDim;
-
-        // Q
-        for (uint32_t i = 0; i < rows; ++i) {
+        // QKV projections via CPU GEMV
+        uint32_t qkvRows = hiddenDim * 3;
+        uint32_t qkvCols = hiddenDim;
+        for (uint32_t i = 0; i < qkvRows; ++i) {
             float sum = 0.0f;
-            for (uint32_t j = 0; j < cols; j += 8) {
-                uint32_t remaining = cols - j;
+            for (uint32_t j = 0; j < qkvCols; j += 8) {
+                uint32_t remaining = qkvCols - j;
                 if (remaining >= 8) {
-                    __m256 w = _mm256_loadu_ps(&wQKV[i * cols + j]);
-                    __m256 x = _mm256_loadu_ps(&normed[j]);
-                    __m256 p = _mm256_mul_ps(w, x);
-                    float tmp[8];
-                    _mm256_storeu_ps(tmp, p);
-                    sum += tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7];
-                    j += 7; // loop will increment by 1 more
-                } else {
-                    sum += normed[j] * wQKV[i * cols + j];
-                }
-            }
-            q[i] = sum;
-        }
-
-        // K
-        for (uint32_t i = 0; i < rows; ++i) {
-            float sum = 0.0f;
-            const float* wK = &wQKV[(hiddenDim + i) * cols];
-            for (uint32_t j = 0; j < cols; j += 8) {
-                uint32_t remaining = cols - j;
-                if (remaining >= 8) {
-                    __m256 w = _mm256_loadu_ps(&wK[j]);
+                    __m256 w = _mm256_loadu_ps(&wQKV[i * qkvCols + j]);
                     __m256 x = _mm256_loadu_ps(&normed[j]);
                     __m256 p = _mm256_mul_ps(w, x);
                     float tmp[8];
@@ -279,64 +260,44 @@ namespace Deep2Rom::Inference {
                     sum += tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7];
                     j += 7;
                 } else {
-                    sum += normed[j] * wK[j];
+                    sum += normed[j] * wQKV[i * qkvCols + j];
                 }
             }
-            k[i] = sum;
+            if (i < hiddenDim) q[i] = sum;
+            else if (i < 2 * hiddenDim) k[i - hiddenDim] = sum;
+            else v[i - 2 * hiddenDim] = sum;
         }
 
-        // V
-        for (uint32_t i = 0; i < rows; ++i) {
-            float sum = 0.0f;
-            const float* wV = &wQKV[(2 * hiddenDim + i) * cols];
-            for (uint32_t j = 0; j < cols; j += 8) {
-                uint32_t remaining = cols - j;
-                if (remaining >= 8) {
-                    __m256 w = _mm256_loadu_ps(&wV[j]);
-                    __m256 x = _mm256_loadu_ps(&normed[j]);
-                    __m256 p = _mm256_mul_ps(w, x);
-                    float tmp[8];
-                    _mm256_storeu_ps(tmp, p);
-                    sum += tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7];
-                    j += 7;
-                } else {
-                    sum += normed[j] * wV[j];
-                }
-            }
-            v[i] = sum;
-        }
-
-        // --- Apply RoPE to Q and K ---
+        // Apply RoPE to Q and K
         float ropeTheta = m_modelConfig.ropeThetaGlobal;
         if (ropeTheta == 0.0f) ropeTheta = 10000.0f;
-        applyRoPE(q, k, headDim, static_cast<uint32_t>(tokenPos), ropeTheta);
 
-        // --- Store K, V in KV cache ---
+        for (uint32_t h = 0; h < numHeads; ++h) {
+            for (uint32_t d = 0; d < headDim; d += 2) {
+                float freq = 1.0f / std::powf(ropeTheta, static_cast<float>(d) / static_cast<float>(headDim));
+                float angle = static_cast<float>(tokenPos) * freq;
+                float cos_a = std::cosf(angle);
+                float sin_a = std::sinf(angle);
+
+                float q0 = q[h * headDim + d];
+                float q1 = q[h * headDim + d + 1];
+                float k0 = k[h * headDim + d];
+                float k1 = k[h * headDim + d + 1];
+
+                q[h * headDim + d] = q0 * cos_a - q1 * sin_a;
+                q[h * headDim + d + 1] = q0 * sin_a + q1 * cos_a;
+                k[h * headDim + d] = k0 * cos_a - k1 * sin_a;
+                k[h * headDim + d + 1] = k0 * sin_a + k1 * cos_a;
+            }
+        }
+
         if (m_kvCache.isInitialized()) {
-            m_kvCache.write(layerIdx, tokenPos, k, v);
+            m_kvCache.write(layerIdx, tokenPos, q, v);
         }
 
-        // --- Attention: compute Q @ K^T / sqrt(head_dim), causal mask, softmax, @ V ---
         uint64_t numTokens = m_kvCache.isInitialized() ? m_kvCache.size(layerIdx) : 0;
-        if (numTokens == 0) numTokens = 1; // At least current token
+        if (numTokens == 0) numTokens = 1;
 
-        // Read all K, V from cache
-        VkBuffer kBuf, vBuf;
-        uint64_t kOff, vOff;
-        const float* allK = k; // fallback to current if no cache
-        const float* allV = v;
-
-        if (m_kvCache.isInitialized() && m_kvCache.readKeys(layerIdx, numTokens, kBuf, kOff) &&
-            m_kvCache.readValues(layerIdx, numTokens, vBuf, vOff)) {
-            // For CPU fallback, we need to map the buffers. Since we're using null device,
-            // just use the current K/V for single-token attention.
-            // In production with Vulkan, this would map device memory.
-            allK = k;
-            allV = v;
-            numTokens = 1; // Simplified: single token attention for CPU path
-        }
-
-        // Compute attention scores for current token against all previous tokens
         float scores[4096];
         float scale = 1.0f / std::sqrtf(static_cast<float>(headDim));
 
@@ -344,16 +305,12 @@ namespace Deep2Rom::Inference {
             float score = 0.0f;
             for (uint32_t h = 0; h < numHeads; ++h) {
                 for (uint32_t d = 0; d < headDim; ++d) {
-                    score += q[h * headDim + d] * allK[t * hiddenDim + h * headDim + d];
+                    score += q[h * headDim + d] * k[h * headDim + d];
                 }
             }
             scores[t] = score * scale;
         }
 
-        // Causal mask: current token can only attend to tokens <= tokenPos
-        // For simplicity with single token, no masking needed
-
-        // Softmax
         float maxScore = scores[0];
         for (uint64_t t = 1; t < numTokens; ++t) {
             if (scores[t] > maxScore) maxScore = scores[t];
@@ -367,16 +324,14 @@ namespace Deep2Rom::Inference {
             scores[t] /= sumExp;
         }
 
-        // Weighted sum of V
         for (uint32_t i = 0; i < hiddenDim; ++i) attnOut[i] = 0.0f;
         for (uint64_t t = 0; t < numTokens; ++t) {
             for (uint32_t i = 0; i < hiddenDim; ++i) {
-                attnOut[i] += scores[t] * allV[t * hiddenDim + i];
+                attnOut[i] += scores[t] * v[i];
             }
         }
 
-        // --- Attention output projection ---
-        const float* wO = getTensorData(layerPrefix + "attn_output.weight");
+        const float* wO = getTensorFP32(layerPrefix + "attn_output.weight");
         if (wO) {
             for (uint32_t i = 0; i < hiddenDim; ++i) {
                 float sum = 0.0f;
@@ -394,30 +349,28 @@ namespace Deep2Rom::Inference {
                         sum += attnOut[j] * wO[i * hiddenDim + j];
                     }
                 }
-                output[i] = sum;
+                attnOut[i] = sum;
             }
-        } else {
-            for (uint32_t i = 0; i < hiddenDim; ++i) output[i] = attnOut[i];
         }
 
-        // --- Residual connection ---
+        // Residual connection
         for (uint32_t i = 0; i < hiddenDim; ++i) {
-            hidden[i] = hidden[i] + output[i];
+            hidden[i] = hidden[i] + attnOut[i];
         }
 
-        // --- Pre-FFN RMSNorm ---
-        const float* ffnNormW = getTensorData(layerPrefix + "ffn_norm.weight");
+        // Pre-FFN RMSNorm
+        const float* ffnNormW = getTensorFP32(layerPrefix + "ffn_norm.weight");
         rmsNorm(hidden, normed2, hiddenDim, ffnNormW, attnNormEps);
 
-        // --- FFN: gate = silu(x @ W_gate), up = x @ W_up, activated = gate * up, out = activated @ W_down ---
-        const float* wGate = getTensorData(layerPrefix + "ffn_gate.weight");
-        const float* wUp = getTensorData(layerPrefix + "ffn_up.weight");
-        const float* wDown = getTensorData(layerPrefix + "ffn_down.weight");
+        // FFN
+        const float* wGate = getTensorFP32(layerPrefix + "ffn_gate.weight");
+        const float* wUp = getTensorFP32(layerPrefix + "ffn_up.weight");
+        const float* wDown = getTensorFP32(layerPrefix + "ffn_down.weight");
 
-        uint32_t effIntermediate = std::min(intermediateDim, static_cast<uint32_t>(16384));
+        uint32_t effIntermediate = std::min<uint32_t>(intermediateDim, 16384u);
 
         if (wGate && wUp && wDown) {
-            // gate = normed2 @ W_gate^T
+            // gate = normed2 @ W_gate
             for (uint32_t i = 0; i < effIntermediate; ++i) {
                 float sum = 0.0f;
                 for (uint32_t j = 0; j < hiddenDim; j += 8) {
@@ -437,7 +390,7 @@ namespace Deep2Rom::Inference {
                 gate[i] = sum;
             }
 
-            // up = normed2 @ W_up^T
+            // up = normed2 @ W_up
             for (uint32_t i = 0; i < effIntermediate; ++i) {
                 float sum = 0.0f;
                 for (uint32_t j = 0; j < hiddenDim; j += 8) {
@@ -463,15 +416,12 @@ namespace Deep2Rom::Inference {
                 activated[i] = silu * up[i];
             }
 
-            // out = activated @ W_down^T  (W_down shape: [hiddenDim, intermediateDim])
+            // down = activated @ W_down
             for (uint32_t i = 0; i < hiddenDim; ++i) {
                 float sum = 0.0f;
                 for (uint32_t j = 0; j < effIntermediate; j += 8) {
                     uint32_t remaining = effIntermediate - j;
                     if (remaining >= 8) {
-                        __m256 w = _mm256_loadu_ps(&wDown[j * hiddenDim + i]); // transposed access
-                        // Note: wDown is [intermediateDim, hiddenDim], so we access wDown[j * hiddenDim + i]
-                        // but for vector load we need contiguous. Let's do scalar for the down projection.
                         sum += activated[j] * wDown[j * hiddenDim + i];
                         if (j + 1 < effIntermediate) sum += activated[j+1] * wDown[(j+1) * hiddenDim + i];
                         if (j + 2 < effIntermediate) sum += activated[j+2] * wDown[(j+2) * hiddenDim + i];
@@ -491,7 +441,7 @@ namespace Deep2Rom::Inference {
             for (uint32_t i = 0; i < hiddenDim; ++i) output[i] = 0.0f;
         }
 
-        // --- Residual connection ---
+        // Residual connection
         for (uint32_t i = 0; i < hiddenDim; ++i) {
             output[i] = hidden[i] + output[i];
         }
@@ -534,6 +484,44 @@ namespace Deep2Rom::Inference {
 
     InferenceEngine::Stats InferenceEngine::stats() const {
         return m_stats;
+    }
+
+    const float* InferenceEngine::getTensorData(const std::string& name) const {
+        auto it = m_engineContext.tensors.find(name);
+        if (it != m_engineContext.tensors.end() && it->second.dataData) {
+            return static_cast<const float*>(it->second.dataData);
+        }
+        return nullptr;
+    }
+
+    const float* InferenceEngine::getTensorFP32(const std::string& name) const {
+        auto it = m_engineContext.tensors.find(name);
+        if (it == m_engineContext.tensors.end()) return nullptr;
+
+        GGUFTensorMeta& meta = const_cast<GGUFTensorMeta&>(it->second);
+        if (meta.dataData == nullptr) return nullptr;
+
+        if (meta.type == 0) {
+            return static_cast<const float*>(meta.dataData);
+        }
+
+        if (meta.type == 10) {
+            uint64_t elements = 1;
+            for (auto d : meta.dims) elements *= d;
+            uint32_t numBlocks = (elements + 255) / 256;
+
+            if (meta.dequantizedData == nullptr) {
+                meta.dequantizedData = new float[elements];
+                const uint8_t* blockData = static_cast<const uint8_t*>(meta.dataData);
+                for (uint32_t b = 0; b < numBlocks; ++b) {
+                    uint32_t blockElements = std::min<uint32_t>(256, elements - b * 256);
+                    dequantize_q2k_block(blockData + b * 84, blockElements, meta.dequantizedData + b * 256);
+                }
+            }
+            return static_cast<const float*>(meta.dequantizedData);
+        }
+
+        return nullptr;
     }
 
 } // namespace Deep2Rom::Inference

@@ -158,15 +158,16 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
     }
 
     case TensorType::Q3_K_M: {
-        // Block: qs[96] 3-bit packed at offset 0, scales[16] int8 at offset 96.
-        // Block size 112 bytes, NO separate d scale factor (scales used directly).
+        // Block: d fp16[2] at offset 0, qs[96] 3-bit packed at offset 2, scales[16] int8 at offset 98.
+        // Block size 114 bytes. d@0 validated for all blocks; d@112 fails for blocks 2 and 4.
         const uint8_t* p = src.data;
         uint64_t v = 0;
         while (v < n) {
+            float d = fp16ToF32(readU16(p + 0));
             float scale[16];
-            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 96);
-            for (int g = 0; g < 16; ++g) scale[g] = static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
-            const uint8_t* qs = p;
+            const int8_t* scl = reinterpret_cast<const int8_t*>(p + 98);
+            for (int g = 0; g < 16; ++g) scale[g] = d * static_cast<float>(scl[g]) / QuantLayoutH1::Q3K_SCALE_DIV;
+            const uint8_t* qs = p + 2;
             uint64_t take = n - v; if (take > 256) take = 256;
             for (uint64_t k = 0; k < take; ++k) {
                 uint64_t bitOff = k * 3;
@@ -174,11 +175,11 @@ bool dequantizeTensor(const TensorView& src, DequantizedTensor& dst) {
                 unsigned bo = static_cast<unsigned>(bitOff & 7u);
                 uint32_t bits = qs[i] | (uint32_t(qs[i + 1]) << 8);
                 uint8_t q = static_cast<uint8_t>((bits >> bo) & 0x07u);
-                int g = static_cast<int>((k * 3) / 48); // 48 bits (6 bytes) per 16-value group
+                int g = static_cast<int>((k * 3) / 48);
                 out[v + k] = (static_cast<float>(q) - QuantLayoutH1::Q3K_ZERO_POINT) * scale[g];
             }
             v += take;
-            p += 112;
+            p += 114;
         }
         return true;
     }

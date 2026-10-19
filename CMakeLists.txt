@@ -28,6 +28,7 @@ add_executable(Deep2Engine_Benchmark
     src/VulkanDevice.cpp
     src/VulkanDeviceAllocator.cpp
     src/VulkanStagingPipeline.cpp
+    src/core/VulkanComputeEngine.cpp
     src/core/Tokenizer.cpp
     src/core/KVCache.cpp
     src/core/Sampling.cpp
@@ -47,6 +48,7 @@ add_executable(test_metadata_parity
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
     src/core/VulkanStagingPipeline.cpp
+    src/core/VulkanComputeEngine.cpp
     src/core/MultiShardFlickerManager.cpp
     src/core/PrefetchQueue.cpp
     src/core/PerformanceProfiler.cpp
