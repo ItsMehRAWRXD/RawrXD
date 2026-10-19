@@ -38,7 +38,7 @@ namespace Deep2Engine::Emulator {
     };
     #pragma pack(pop)
 
-    // GGUF Type System
+    // GGUF Type System (per GGUF spec)
     enum GGUFValueType : uint32_t {
         GGUF_TYPE_UINT8   = 0,
         GGUF_TYPE_INT8    = 1,
@@ -55,7 +55,8 @@ namespace Deep2Engine::Emulator {
         GGUF_TYPE_FLOAT64 = 12,
     };
 
-    // GGML quantization types
+    // GGML quantization types (per GGML/GGUF spec)
+    // https://github.com/ggerganov/ggml/blob/master/src/ggml.h
     enum GGMLType : uint32_t {
         GGML_TYPE_F32     = 0,
         GGML_TYPE_F16     = 1,
@@ -63,8 +64,8 @@ namespace Deep2Engine::Emulator {
         GGML_TYPE_Q4_1    = 4,
         GGML_TYPE_Q5_0    = 6,
         GGML_TYPE_Q5_1    = 8,
-        GGML_TYPE_Q8_0    = 6,
-        GGML_TYPE_Q8_1    = 7,
+        GGML_TYPE_Q8_0    = 8,
+        GGML_TYPE_Q8_1    = 9,
         GGML_TYPE_Q2_K    = 10,
         GGML_TYPE_Q3_K    = 11,
         GGML_TYPE_Q4_K    = 12,
@@ -73,7 +74,7 @@ namespace Deep2Engine::Emulator {
         GGML_TYPE_Q8_K    = 15,
     };
 
-    // GGML block layout for exact tensor size calculation
+    // GGML block layout for exact tensor size calculation (per GGML spec)
     struct GGMLLayout {
         uint32_t elements_per_block;
         uint32_t bytes_per_block;
@@ -93,7 +94,8 @@ namespace Deep2Engine::Emulator {
             case 13: return {256, 176}; // Q5_K
             case 14: return {256, 210}; // Q6_K
             case 15: return {256, 292}; // Q8_K
-            default: return {1, 2}; // fallback to F16
+            default: 
+                throw std::runtime_error("Unsupported GGML tensor type: " + std::to_string(gguf_type));
         }
     }
 
@@ -104,21 +106,29 @@ namespace Deep2Engine::Emulator {
         return blocks * layout.bytes_per_block;
     }
 
-    // GGUF type to ROM quantization type mapping
+// GGUF type to ROM quantization type mapping (GGUF type code -> TensorType enum)
     uint16_t MapGGUFTypeToROM(uint32_t gguf_type) {
+        // GGUF type codes per GGUF spec:
+        // 0=F32, 1=F16, 2=Q4_0, 3=Q4_1, 4=Q5_0, 5=Q5_1, 6=Q8_0, 7=Q8_1,
+        // 8=Q2_K, 9=Q3_K, 10=Q4_K, 11=Q5_K, 12=Q6_K, 13=Q8_K, 14=IQ2_XX, etc.
+        // Map to TensorType enum values (from TensorView.hpp)
         switch (gguf_type) {
-            case 10: return 2;   // Q2_K
-            case 11: return 3;   // Q3_K
-            case 12: return 4;   // Q4_K
-            case 13: return 5;   // Q5_K
-            case 14: return 6;   // Q6_K
-            case 15: return 7;   // Q8_K
-            case 0:  return 1;   // F32
-            case 1:  return 0;   // F16
-            case 6:  return 8;   // Q8_0
-            case 2:  return 2;   // Q4_0
-            case 4:  return 4;   // Q4_1
-            case 8:  return 8;   // Q8_0
+            case 0:  return 0;    // F32 -> TensorType::F32 (0)
+            case 1:  return 1;    // F16 -> TensorType::F16 (1)
+            case 2:  return 2;    // Q4_0 -> TensorType::Q4_0 (2)
+            case 3:  return 3;    // Q4_1 -> TensorType::Q4_1 (3)
+            case 4:  return 6;    // Q5_0 -> TensorType::Q5_0 (6) [not in enum yet]
+            case 5:  return 7;    // Q5_1 -> TensorType::Q5_1 (7) [not in enum yet]
+            case 6:  return 8;    // Q8_0 -> TensorType::Q8_0 (8)
+            case 7:  return 9;    // Q8_1 -> TensorType::Q8_1 (9)
+            case 8:  return 10;   // Q2_K -> TensorType::Q2_K (10)
+            case 9:  return 11;   // Q3_K -> TensorType::Q3_K_S (11) [base type]
+            case 10: return 14;   // Q4_K -> TensorType::Q4_K_S (14) [base type]
+            case 11: return 16;   // Q5_K -> TensorType::Q5_K_S (16) [base type]
+            case 12: return 18;   // Q6_K -> TensorType::Q6_K (18)
+            case 13: return 8;    // Q8_K -> TensorType::Q8_0 (8) [approximate]
+            case 14: return 10;   // IQ2_XX -> TensorType::Q2_K (10) [approximate]
+            case 15: return 10;   // IQ3_XX -> TensorType::Q2_K (10) [approximate]
             default: return 0xFFFF;
         }
     }
@@ -179,12 +189,11 @@ namespace Deep2Engine::Emulator {
             f.seekg(8, std::ios::cur);
         } else if (type == 12) { // FLOAT64
             f.seekg(8, std::ios::cur);
-        } else {
+} else {
             // Unknown type - skip conservatively
             f.seekg(8, std::ios::cur);
         }
     }
-
 } // namespace Deep2Engine::Emulator
 
 int wmain(int argc, wchar_t* argv[]) {
@@ -252,6 +261,7 @@ int wmain(int argc, wchar_t* argv[]) {
     uint32_t num_layers = 0;
     uint32_t hidden_dim = 0;
     uint32_t kv_heads = 0;
+    uint32_t gguf_alignment = 32; // Default GGUF alignment per spec
 
     for (uint64_t i = 0; i < kv_count; ++i) {
         std::string key = ReadGGUFStr(input);
@@ -260,6 +270,10 @@ int wmain(int argc, wchar_t* argv[]) {
         
         if (key == "general.architecture") {
             detected_arch = ReadGGUFStr(input);
+        } else if (key == "general.alignment") {
+            uint32_t val = 0;
+            input.read(reinterpret_cast<char*>(&val), sizeof(val));
+            gguf_alignment = val;
         } else if (key == "general.architecture.block_count" || key == "phi3.block_count" || key == "llama.block_count") {
             uint32_t val = 0;
             input.read(reinterpret_cast<char*>(&val), sizeof(val));
@@ -282,7 +296,7 @@ int wmain(int argc, wchar_t* argv[]) {
     }
 
     // GGUF spec: tensor info begins IMMEDIATELY after metadata (no alignment).
-    // Only tensor DATA is aligned to 64-byte boundary.
+    // Only tensor DATA is aligned to the GGUF alignment (default 32 bytes).
     uint64_t pos_after_kvs = input.tellg();
     uint64_t tensor_info_start = pos_after_kvs;  // No alignment for tensor info per GGUF spec
     input.seekg(static_cast<std::streamoff>(tensor_info_start), std::ios::beg);
@@ -355,7 +369,7 @@ int wmain(int argc, wchar_t* argv[]) {
     std::wcout.flush();
 
     uint64_t current_pos = input.tellg();
-    uint64_t aligned_data_start = Align64(current_pos);
+    uint64_t aligned_data_start = AlignUp(current_pos, 64); // ROM internal alignment
     input.seekg(aligned_data_start);
 
     input.seekg(0, std::ios::end);
@@ -393,6 +407,7 @@ int wmain(int argc, wchar_t* argv[]) {
     std::vector<std::streampos> descriptor_positions(tensors.size());
     for (size_t i = 0; i < tensors.size(); ++i) {
         std::streampos pos = output.tellp();
+        descriptor_positions[i] = pos;
         
         TensorDescriptor desc{};
         size_t name_len = std::min<size_t>(tensors[i].name.size(), 63);
@@ -422,6 +437,9 @@ int wmain(int argc, wchar_t* argv[]) {
     // Copy tensor data from GGUF to ROM
     std::wcout << L"Copying tensor data...\n";
 
+    // Track actual tensor data offset in ROM
+    uint64_t rom_tensor_data_start = output.tellp();
+    
     for (size_t i = 0; i < tensors.size(); ++i) {
         // Calculate tensor size
         uint64_t elements = 1;
@@ -433,8 +451,45 @@ int wmain(int argc, wchar_t* argv[]) {
         input.seekg(static_cast<std::streamoff>(aligned_data_start + tensors[i].offset), std::ios::beg);
         std::vector<char> buffer(bytes_to_read);
         std::streamsize bytes_read = input.read(buffer.data(), static_cast<std::streamsize>(bytes_to_read)).gcount();
-        std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
+        
+        // Write to ROM
+        uint64_t rom_tensor_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(rom_tensor_data_start));
         output.write(buffer.data(), static_cast<std::streamsize>(bytes_read));
+        std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
+        std::wcout << bytes_read << L" bytes\r";
+        std::wcout.flush();
+        
+        // Update descriptor with actual values
+        if (i < descriptor_positions.size()) {
+            std::streampos cur = output.tellp();
+            output.seekp(descriptor_positions[i]);
+            
+            TensorDescriptor desc{};
+            size_t name_len = std::min<size_t>(tensors[i].name.size(), 63);
+            std::memcpy(desc.tensor_name, tensors[i].name.c_str(), std::min<size_t>(name_len, 63));
+            desc.tensor_name[std::min<size_t>(name_len, 63)] = '\0';
+            
+            desc.quantization_type = MapGGUFTypeToROM(tensors[i].type);
+            desc.target_device_id = 0;
+            
+            for (int d = 0; d < 4; ++d) {
+                desc.dimensions[d] = (d < static_cast<int>(tensors[i].dims.size())) ? 
+                    static_cast<uint32_t>(tensors[i].dims[d]) : 0;
+            }
+            
+            desc.tensor_bytes = static_cast<uint64_t>(bytes_read);
+            desc.absolute_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(sizeof(RomHeader)) - static_cast<std::streamoff>(i * sizeof(TensorDescriptor))); // relative to metadata start
+            
+            // Actually write correct values
+            desc.tensor_bytes = static_cast<uint64_t>(bytes_read);
+            desc.absolute_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(rom_tensor_data_start));
+            
+            output.write(reinterpret_cast<char*>(&desc), sizeof(TensorDescriptor));
+            
+            output.seekp(cur);
+        }
+        
+        std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
         std::wcout << bytes_read << L" bytes\r";
         std::wcout.flush();
         

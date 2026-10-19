@@ -31,6 +31,11 @@ add_executable(Deep2Engine_Benchmark
     src/VulkanDevice.cpp
     src/VulkanDeviceAllocator.cpp
     src/VulkanStagingPipeline.cpp
+    src/core/Tokenizer.cpp
+    src/core/KVCache.cpp
+    src/core/Sampling.cpp
+    src/core/GenerationLoop.cpp
+    src/core/InferenceEngine.cpp
 )
 
 # Only build Windows-specific targets on Windows
@@ -59,10 +64,15 @@ add_executable(production_smoke_test
     src/core/PerformanceProfiler.cpp
     src/core/HereticWeightModifier.cpp
     src/core/UniversalRunner.cpp
+    src/core/Tokenizer.cpp
+    src/core/KVCache.cpp
+    src/core/Sampling.cpp
+    src/core/GenerationLoop.cpp
+    src/core/InferenceEngine.cpp
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
-target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+# target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
