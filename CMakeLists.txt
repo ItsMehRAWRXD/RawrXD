@@ -103,29 +103,58 @@ else()
     endif()
 endif()
 
+# ARM64: disable Vulkan by default (can be overridden)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64" AND NOT ENABLE_VULKAN)
+    set(ENABLE_VULKAN OFF CACHE BOOL "Disable Vulkan on ARM64 by default" FORCE)
+endif()
+
+option(ENABLE_VULKAN "Enable Vulkan support" ON)
+
 # Vulkan linkage for multi-GPU support
-find_package(Vulkan REQUIRED)
-if(Vulkan_FOUND)
-    target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
-    message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+if(ENABLE_VULKAN)
+    find_package(Vulkan REQUIRED)
+    if(Vulkan_FOUND)
+        target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+        message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
+    endif()
+else()
+    message(STATUS "[BUILD] Vulkan disabled - CPU-only build")
+    add_compile_definitions(VULKAN_DISABLED)
 endif()
 
 # Link libraries
-if(MSVC)
-    target_link_libraries(Deep2Engine_Benchmark 
-        PRIVATE Vulkan::Vulkan
-        kernel32.lib user32.lib advapi32.lib
-    )
-    target_link_libraries(production_smoke_test
-        PRIVATE Vulkan::Vulkan
-        kernel32.lib user32.lib advapi32.lib
-    )
-elseif(UNIX AND NOT APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
-    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
-elseif(APPLE)
-    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
-    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+if(ENABLE_VULKAN)
+    if(MSVC)
+        target_link_libraries(Deep2Engine_Benchmark 
+            PRIVATE Vulkan::Vulkan
+            kernel32.lib user32.lib advapi32.lib
+        )
+        target_link_libraries(production_smoke_test
+            PRIVATE Vulkan::Vulkan
+            kernel32.lib user32.lib advapi32.lib
+        )
+    elseif(UNIX AND NOT APPLE)
+        target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+        target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+    elseif(APPLE)
+        target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+        target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+    endif()
+else()
+    if(MSVC)
+        target_link_libraries(Deep2Engine_Benchmark 
+            PRIVATE kernel32.lib user32.lib advapi32.lib
+        )
+        target_link_libraries(production_smoke_test
+            PRIVATE kernel32.lib user32.lib advapi32.lib
+        )
+    elseif(UNIX AND NOT APPLE)
+        target_link_libraries(Deep2Engine_Benchmark pthread dl)
+        target_link_libraries(production_smoke_test pthread dl)
+    elseif(APPLE)
+        target_link_libraries(Deep2Engine_Benchmark pthread dl)
+        target_link_libraries(production_smoke_test pthread dl)
+    endif()
 endif()
 
 # Install target
