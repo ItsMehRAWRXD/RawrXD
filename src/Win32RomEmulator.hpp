@@ -186,8 +186,15 @@ namespace Deep2Rom {
             }
 
             const auto& shard = it->second;
-            if (absolute_offset + tensor_bytes > file_size) {
+            if (absolute_offset >= file_size) {
                 return { false, nullptr, 0, nullptr, shard_id, tensor_id, 0, 0 };
+            }
+
+            // Clamp tensor_bytes to available file data (CalcTensorBytes rounds up
+            // to 64-byte alignment, which can extend past EOF for the last tensor).
+            uint64_t available = file_size - absolute_offset;
+            if (tensor_bytes > available) {
+                tensor_bytes = available;
             }
 
             const uint64_t offset = absolute_offset;

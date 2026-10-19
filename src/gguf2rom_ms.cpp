@@ -119,19 +119,9 @@ namespace Deep2Engine::Emulator {
     }
 
     uint16_t MapGGUFTypeToROM(uint32_t gguf_type) {
-        switch (gguf_type) {
-            case 8:  return 2;   // Q2_K
-            case 9:  return 3;   // Q3_K
-            case 10: return 4;   // Q4_K
-            case 11: return 5;   // Q5_K
-            case 12: return 6;   // Q6_K
-            case 13: return 7;   // Q8_K
-            case 14: return 2;   // Q2_K (newer GGUF type code)
-            case 0:  return 1;   // F32
-            case 1:  return 0;   // F16
-            case 6:  return 8;   // Q8_0
-            default: return 0xFFFF;
-        }
+        // Store GGUF type codes directly in the ROM manifest so that
+        // CalcTensorBytes (which uses GGUF type codes) interprets them correctly.
+        return static_cast<uint16_t>(gguf_type);
     }
 
     uint32_t MapArchToID(const std::string& arch) {
@@ -164,6 +154,7 @@ namespace Deep2Engine::Emulator {
             case 11: bytes = elements * 5 / 8 + 16; break;  // Q5_K
             case 12: bytes = elements * 6 / 8 + 16; break;  // Q6_K
             case 13: bytes = elements + 16; break;  // Q8_K
+            case 14: bytes = elements / 4 + 16; break;  // Q2_K
             default: bytes = elements * 2; break;
         }
         return Align64(bytes);
