@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 project(Deep2Engine LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -36,6 +36,8 @@ if(WIN32)
     add_executable(gguf2rom_ms
         src/gguf2rom_ms.cpp
     )
+
+    target_include_directories(gguf2rom_ms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 endif()
 
 add_executable(test_metadata_parity
@@ -71,7 +73,9 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 endif()
 
 # Enable deep hardware optimization flags dynamically based on active toolchain mappings
+# Only apply C++ flags to C++ sources using generator expressions
 if(MSVC)
+    # Check if the host compiler version explicitly supports 512-bit vector processing arguments
     if(MSVC_VERSION GREATER_EQUAL 1910)
         target_compile_options(Deep2Engine_Benchmark PRIVATE 
             $<$<COMPILE_LANGUAGE:CXX>:/O2 /Oi /Ot /EHsc /W4 /permissive- /arch:AVX2>
@@ -87,10 +91,12 @@ else()
     target_compile_options(Deep2Engine_Benchmark PRIVATE 
         $<$<COMPILE_LANGUAGE:CXX>:-O3 -Wall -Wextra -ffast-math -pthread>
     )
+    # Check for native AVX-512 hardware compliance strings automatically under GCC/Clang
     include(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-mavx512f" HAS_AVX512F)
     CHECK_CXX_COMPILER_FLAG("-mavx512bw" HAS_AVX512BW)
     CHECK_CXX_COMPILER_FLAG("-mavx512dq" HAS_AVX512DQ)
+    CHECK_CXX_COMPILER_FLAG("-mavx512vnni" HAS_AVX512VNNI)
     if(HAS_AVX512F AND HAS_AVX512BW AND HAS_AVX512DQ)
         target_compile_options(Deep2Engine_Benchmark PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx512f -mavx512bw -mavx512dq>)
         if(HAS_AVX512VNNI)
@@ -103,58 +109,29 @@ else()
     endif()
 endif()
 
-# ARM64: disable Vulkan by default (can be overridden)
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64" AND NOT ENABLE_VULKAN)
-    set(ENABLE_VULKAN OFF CACHE BOOL "Disable Vulkan on ARM64 by default" FORCE)
-endif()
-
-option(ENABLE_VULKAN "Enable Vulkan support" ON)
-
 # Vulkan linkage for multi-GPU support
-if(ENABLE_VULKAN)
-    find_package(Vulkan REQUIRED)
-    if(Vulkan_FOUND)
-        target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
-        message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
-    endif()
-else()
-    message(STATUS "[BUILD] Vulkan disabled - CPU-only build")
-    add_compile_definitions(VULKAN_DISABLED)
+find_package(Vulkan REQUIRED)
+if(Vulkan_FOUND)
+    target_include_directories(Deep2Engine_Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+    message(STATUS "[BUILD] Bound hardware graphics layers to Vulkan libraries natively.")
 endif()
 
 # Link libraries
-if(ENABLE_VULKAN)
-    if(MSVC)
-        target_link_libraries(Deep2Engine_Benchmark 
-            PRIVATE Vulkan::Vulkan
-            kernel32.lib user32.lib advapi32.lib
-        )
-        target_link_libraries(production_smoke_test
-            PRIVATE Vulkan::Vulkan
-            kernel32.lib user32.lib advapi32.lib
-        )
-    elseif(UNIX AND NOT APPLE)
-        target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
-        target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
-    elseif(APPLE)
-        target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
-        target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
-    endif()
-else()
-    if(MSVC)
-        target_link_libraries(Deep2Engine_Benchmark 
-            PRIVATE kernel32.lib user32.lib advapi32.lib
-        )
-        target_link_libraries(production_smoke_test
-            PRIVATE kernel32.lib user32.lib advapi32.lib
-        )
-    elseif(UNIX AND NOT APPLE)
-        target_link_libraries(Deep2Engine_Benchmark pthread dl)
-        target_link_libraries(production_smoke_test pthread dl)
-    elseif(APPLE)
-        target_link_libraries(Deep2Engine_Benchmark pthread dl)
-        target_link_libraries(production_smoke_test pthread dl)
-    endif()
+if(MSVC)
+    target_link_libraries(Deep2Engine_Benchmark 
+        PRIVATE Vulkan::Vulkan
+        kernel32.lib user32.lib advapi32.lib
+    )
+    target_link_libraries(production_smoke_test
+        PRIVATE Vulkan::Vulkan
+        kernel32.lib user32.lib advapi32.lib
+    )
+elseif(UNIX AND NOT APPLE)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+elseif(APPLE)
+    target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
+    target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
 endif()
 
 # Install target
@@ -169,5 +146,10 @@ add_test(NAME Deep2Engine_SmokeTest
 
 add_test(NAME MetadataParity_Phi3
     COMMAND test_metadata_parity "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+add_test(NAME ProductionSmokeTest
+    COMMAND production_smoke_test
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

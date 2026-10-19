@@ -311,8 +311,18 @@ int wmain(int argc, wchar_t* argv[]) {
             gt.name = ReadGGUFStr(ctx.file);
             uint32_t n_dims = 0;
             ctx.file.read(reinterpret_cast<char*>(&n_dims), 4);
+            if (s == 0 && t == 0) {
+                std::wcout << L"    [T0 DEBUG] n_dims=" << n_dims << L"\n";
+            }
             if (n_dims > 4) n_dims = 4;
-            if (n_dims > 0) ctx.file.read(reinterpret_cast<char*>(gt.dimensions), n_dims * 4);
+            if (n_dims > 0) {
+                for (uint32_t d = 0; d < n_dims; ++d) {
+                    ctx.file.read(reinterpret_cast<char*>(&gt.dimensions[d]), 4);
+                    if (s == 0 && t == 0 && d < 2) {
+                        std::wcout << L"    [T0 DEBUG] dims[" << d << L"]=" << gt.dimensions[d] << L" pos=0x" << std::hex << ctx.file.tellg() << std::dec << L"\n";
+                    }
+                }
+            }
             ctx.file.read(reinterpret_cast<char*>(&gt.type), sizeof(gt.type));
             // GGUF tensor offsets are relative to the start of the tensor DATA section;
             // add data_offset to get the absolute file offset.

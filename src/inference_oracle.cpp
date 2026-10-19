@@ -545,6 +545,10 @@ struct DeepSeek2Model {
             for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
         }
 
+        // Debug: norm of position-0 hidden after layer 0
+        double h0Norm = 0.0;
+        for (uint32_t i = 0; i < hidden; ++i) h0Norm += h[i] * h[i];
+        std::cerr << "[DS2-DBG] h0Norm after layer0=" << std::sqrt(h0Norm) << "\n";
         float* last = &h[(seq - 1) * hidden];
         rmsNorm(last, outputNormW.data(), hidden, 1e-6f);
         std::vector<float> logits(vocab);
