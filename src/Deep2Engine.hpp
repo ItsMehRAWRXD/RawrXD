@@ -21,6 +21,18 @@
 #include <queue>
 #include <functional>
 
+// Directory of the running executable, used to locate the deployed SPIR-V
+// shaders. Shared so every translation unit resolves the same path.
+inline std::string Deep2EngineExeDir() {
+    char path[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, path, sizeof(path));
+    std::string s(path);
+    const size_t slash = s.find_last_of("\\/");
+    if (slash != std::string::npos) s = s.substr(0, slash + 1);
+    else s = "./";
+    return s;
+}
+
 // Forward declarations for VulkanDeviceAllocator types
 namespace Deep2EngineVulkan {
     struct GpuDeviceProfile;
@@ -136,6 +148,39 @@ struct Deep2Engine {
     bool vulkanGemvSplit(const deep2::TensorView& wView, const deep2::TensorView& xView,
                          std::vector<float>& y, uint32_t* outSplitRow = nullptr);
 
+    // A weight matrix resident in device memory, split across the devices by
+    // output rows.
+    //
+    // The point of residency is that the hot loop must not re-upload the
+    // matrix on every call. A GEMV over a matrix this size is memory bound,
+    // so a per-call upload across PCIe costs more than the arithmetic it
+    // replaces; with the matrix already on the device, the loop only moves
+    // the input vector and the output rows.
+    struct ResidentSplitWeight {
+        struct Part {
+            const deep2::VulkanDevice::Gpu* gpu = nullptr;
+            VkBuffer buffer = VK_NULL_HANDLE;
+            VkDeviceMemory memory = VK_NULL_HANDLE;
+            uint32_t rowOffset = 0;   // first source row held by this part
+            uint32_t rowCount = 0;    // rows held by this part
+        };
+        std::vector<Part> parts;
+        uint32_t totalRows = 0;
+        uint32_t cols = 0;
+        uint32_t splitRow = 0;       // first row owned by the second device
+        bool valid = false;
+    };
+
+    // Place a weight matrix in device memory, split by output rows across
+    // the available devices. The source is f32 and row major.
+    bool uploadResidentSplitWeight(const deep2::TensorView& wView, ResidentSplitWeight& out);
+    void releaseResidentSplitWeight(ResidentSplitWeight& w);
+
+    // GEMV against a resident weight matrix. The weight matrix is not
+    // uploaded again; only the input vector and the output rows move.
+    bool vulkanGemvResident(const ResidentSplitWeight& w, const deep2::TensorView& xView,
+                             std::vector<float>& y);
+
     // Multi-device Vulkan GEMV. The weight matrix is split into two row
     // ranges with the shared row-split plan, each device runs the GEMV over
     // the rows it owns, and the results are concatenated.
@@ -150,9 +195,17 @@ struct Deep2Engine {
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path
+    //
+    // When two GPUs are present and forceCpuPath is false, the layer
+    // projections are placed in device memory once, before the token loop,
+    // split across the devices by output rows. The token loop then reads
+    // them from where they already are instead of dequantizing and
+    // re-uploading them for every token. Set forceCpuPath to run the
+    // original CPU path, which is the reference for the parity check.
     bool executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
                                    std::vector<float>& outputLogits,
-                                   std::vector<float>& baselineLogits);
+                                   std::vector<float>& baselineLogits,
+                                   bool forceCpuPath = false);
     // Validate logits parity against baseline
     bool validateLogitsParity(const std::vector<float>& romLogits,
                               const std::vector<float>& baselineLogits,

@@ -12,6 +12,24 @@
 #include <fstream>
 #include <windows.h>
 
+namespace {
+
+// Weighted RMSNorm: out = weight * x / sqrt(mean(x^2) + eps).
+//
+// Every transformer block normalizes before the projection, and so does the
+// final norm before the output projection. A forward pass that omits them
+// lets the residual stream grow without bound, which is what the Move 10
+// boundary probe was flagging as a math explosion.
+void rmsNormWeighted(float* x, const float* weight, size_t n, float eps) {
+    if (n == 0) return;
+    float ss = 0.0f;
+    for (size_t i = 0; i < n; ++i) ss += x[i] * x[i];
+    const float inv = 1.0f / std::sqrtf(ss / static_cast<float>(n) + eps);
+    for (size_t i = 0; i < n; ++i) x[i] = x[i] * inv * weight[i];
+}
+
+}  // namespace
+
 bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
     if (!manifestPath.empty()) {
         ParseOllamaManifest(manifestPath, &ctx);
@@ -203,14 +221,6 @@ bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
     return deep2::gemvFloat(W, x, y, rows, cols);
 }
 
-static std::string exeDir() {
-    char path[MAX_PATH] = {};
-    GetModuleFileNameA(nullptr, path, sizeof(path));
-    std::string s(path);
-    size_t slash = s.find_last_of("\\/");
-    return (slash != std::string::npos) ? s.substr(0, slash + 1) : std::string("./");
-}
-
 bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
                              const deep2::TensorView& xView, std::vector<float>& y,
                              uint32_t rowOffset, uint32_t rowCount) {
@@ -252,19 +262,13 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
 
     y.assign(rowCount, 0.0f);
 
-    static deep2::VulkanProgram program;
-    static VkDevice boundDevice = VK_NULL_HANDLE;
-    if (boundDevice != gpu.device) {
-        if (boundDevice != VK_NULL_HANDLE) {
-            program.destroy(boundDevice);
-        }
-        std::string spv = exeDir() + "shaders\\gemv_f32.spv";
-        if (!program.init(gpu.device, spv)) {
-            fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
-            boundDevice = VK_NULL_HANDLE;
-            return false;
-        }
-        boundDevice = gpu.device;
+    // The compute program is cached per device inside VulkanDevice, so
+    // switching between the two halves of a split costs a map lookup rather
+    // than a pipeline rebuild.
+    const std::string spv = Deep2EngineExeDir() + "shaders\\gemv_f32.spv";
+    if (!vulkan->ensureProgram(gpu, spv)) {
+        fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
+        return false;
     }
 
     VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
@@ -294,7 +298,7 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
     std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
     std::memset(ymapped, 0, static_cast<size_t>(ysize));
 
-    if (!program.dispatch(gpu, Wbuf, xbuf, ybuf, rowCount, (uint32_t)cols)) {
+    if (!vulkan->dispatchProgram(gpu, Wbuf, xbuf, ybuf, rowCount, (uint32_t)cols)) {
         cleanup(); return false;
     }
 
@@ -482,8 +486,9 @@ __declspec(align(64)) thread_local float tls_logits[32064];
 __declspec(align(64)) thread_local float tls_dequant_scratchpad[16384];
 
 bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
-                                            std::vector<float>& outputLogits,
-                                            std::vector<float>& baselineLogits) {
+                                             std::vector<float>& outputLogits,
+                                             std::vector<float>& baselineLogits,
+                                             bool forceCpuPath) {
     if (!initialized || !romMode) {
         fprintf(stderr, "[Move 10] Engine not initialized or not in ROM mode\n");
         return false;
@@ -533,6 +538,88 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
     std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
+    // -------------------------------------------------------------------
+    // Phase 1: place the layer projections in device memory, once.
+    //
+    // The token loop is the outer loop, so without this the projections
+    // would be dequantized and re-uploaded for every token. A GEMV over a
+    // matrix this size is memory bound, so the cost that matters is the
+    // number of bytes that cross the bus per call. Re-uploading the matrix
+    // every call puts all of it on the PCIe link and is slower than the CPU
+    // path; keeping it on the device is several times faster than the CPU.
+    //
+    // The break-even is about 1.3 tokens, so this pays for itself as soon
+    // as there is a second token.
+    // -------------------------------------------------------------------
+    struct LayerResident {
+        ResidentSplitWeight qkv, up, down;
+        uint64_t qkvRows = 0, qkvCols = 0;
+        uint64_t upRows = 0, upCols = 0;
+        uint64_t downRows = 0, downCols = 0;
+        bool ready = false;
+    };
+    std::vector<LayerResident> layerResident(numLayers);
+    ResidentSplitWeight outputResident;
+    uint64_t outputRows = 0, outputCols = 0;
+    bool useResident = !forceCpuPath && vulkanReady && vulkan && vulkan->gpuCount() >= 2;
+
+    if (useResident) {
+        std::cout << "[Move 10] Placing the layer projections in device memory...\n" << std::flush;
+        auto place = [&](const std::string& name, ResidentSplitWeight& slot,
+                         uint64_t& rows, uint64_t& cols) -> bool {
+            const deep2::TensorEntry* entry = rom.findTensor(name);
+            if (!entry) {
+                fprintf(stderr, "[Move 10] %s not found\n", name.c_str());
+                return false;
+            }
+            deep2::DequantizedTensor dq;
+            if (!dequantTensor(*entry, dq)) {
+                fprintf(stderr, "[Move 10] Failed to dequantize %s\n", name.c_str());
+                return false;
+            }
+            rows = dq.rows;
+            cols = dq.cols;
+            const deep2::TensorView view{ deep2::TensorType::F32,
+                                          reinterpret_cast<const uint8_t*>(dq.data.data()),
+                                          dq.data.size() * sizeof(float),
+                                          { dq.rows, dq.cols }, true };
+            const bool ok = uploadResidentSplitWeight(view, slot);
+            // Release the host copy straight away: only the device buffers
+            // are needed from here on.
+            dq.data.clear();
+            dq.data.shrink_to_fit();
+            return ok;
+        };
+
+        for (size_t layer = 0; layer < numLayers && useResident; ++layer) {
+            const std::string prefix = "blk." + std::to_string(layer) + ".";
+            LayerResident& lw = layerResident[layer];
+            lw.ready = place(prefix + "attn_qkv.weight", lw.qkv, lw.qkvRows, lw.qkvCols) &&
+                       place(prefix + "ffn_up.weight", lw.up, lw.upRows, lw.upCols) &&
+                       place(prefix + "ffn_down.weight", lw.down, lw.downRows, lw.downCols);
+            if (!lw.ready) {
+                useResident = false;
+                break;
+            }
+        }
+        if (useResident) {
+            useResident = place("output.weight", outputResident, outputRows, outputCols);
+        }
+        if (!useResident) {
+            // Release anything that was placed before the failure.
+            for (auto& lw : layerResident) {
+                releaseResidentSplitWeight(lw.qkv);
+                releaseResidentSplitWeight(lw.up);
+                releaseResidentSplitWeight(lw.down);
+            }
+            releaseResidentSplitWeight(outputResident);
+            std::cout << "[Move 10] Resident placement unavailable; using the CPU path\n" << std::flush;
+        } else {
+            std::cout << "[Move 10] Projections resident on the devices; the token loop reads them in place\n"
+                      << std::flush;
+        }
+    }
+
     // Process each token position
     for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
         std::cout << "[Move 10] Processing token " << tokenPos << "\n" << std::flush;
@@ -555,22 +642,59 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
-            if (!dequantTensor(*qkv, qkvDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
-                return false;
-            }
-            std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
+            const bool resident = useResident && layerResident[layer].ready;
+            if (!resident) {
+                std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
+                if (!dequantTensor(*qkv, qkvDq)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
+                    return false;
+                }
+                std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq.rows << "x" << qkvDq.cols << "\n" << std::flush;
 
-            qkvRows = qkvDq.rows;
-            qkvCols = qkvDq.cols;
+                qkvRows = qkvDq.rows;
+                qkvCols = qkvDq.cols;
+            } else {
+                qkvRows = layerResident[layer].qkvRows;
+                qkvCols = layerResident[layer].qkvCols;
+            }
 
             // --- ATTENTION COMPUTATION ---
             std::vector<float> hiddenStatesCopy(hiddenDim);
             std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
 
-            std::vector<float> qkvOut(qkvRows, 0.0f);
-            gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            // RMSNorm before the QKV projection. Every transformer block
+            // normalizes first, and so does the final norm before the output
+            // projection. Omitting them lets the residual stream grow without
+            // bound, which is what the boundary probe reported as a math
+            // explosion at layer 4.
+            {
+                const deep2::TensorEntry* attnNorm =
+                    rom.findTensor("blk." + std::to_string(layer) + ".attn_norm.weight");
+                if (!attnNorm) {
+                    fprintf(stderr, "[Move 10] Layer %zu: attn_norm.weight not found\n", layer);
+                    return false;
+                }
+                deep2::DequantizedTensor attnNormDq;
+                if (!dequantTensor(*attnNorm, attnNormDq)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: attn_norm dequant failed\n", layer);
+                    return false;
+                }
+                rmsNormWeighted(hiddenStatesCopy.data(), attnNormDq.data.data(), hiddenDim, 1e-5f);
+            }
+
+            std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
+            if (resident) {
+                const deep2::TensorView xView{ deep2::TensorType::F32,
+                                               reinterpret_cast<const uint8_t*>(hiddenStatesCopy.data()),
+                                               hiddenStatesCopy.size() * sizeof(float),
+                                               { static_cast<uint64_t>(hiddenDim) }, true };
+                if (!vulkanGemvResident(layerResident[layer].qkv, xView, qkvOut)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: resident QKV GEMV failed\n", layer);
+                    return false;
+                }
+            } else {
+                gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            }
 
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
@@ -598,31 +722,85 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
                 return false;
             }
 
-            if (!dequantTensor(*upEntry, upDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN up dequant failed\n", layer);
-                return false;
+            if (!resident) {
+                if (!dequantTensor(*upEntry, upDq)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: FFN up dequant failed\n", layer);
+                    return false;
+                }
+
+                if (!dequantTensor(*downEntry, downDq)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: FFN down dequant failed\n", layer);
+                    return false;
+                }
             }
 
-            if (!dequantTensor(*downEntry, downDq)) {
-                fprintf(stderr, "[Move 10] Layer %zu: FFN down dequant failed\n", layer);
-                return false;
+            // FFN: hidden = down(silu(gate) * up(hidden))
+            //
+            // Phi-3's ffn_up is a *gated* projection: it produces 2 *
+            // intermediate rows, the first half the gate and the second half
+            // the up projection. Sizing the buffer at intermediateDim
+            // overran it by 2x, which is the heap corruption this pass died
+            // with. The activation is SwiGLU, not GELU.
+            // RMSNorm before the FFN projection.
+            std::vector<float> ffnIn(hiddenDim);
+            std::memcpy(ffnIn.data(), hiddenStates.data(), hiddenDim * sizeof(float));
+            {
+                const deep2::TensorEntry* ffnNorm =
+                    rom.findTensor("blk." + std::to_string(layer) + ".ffn_norm.weight");
+                if (!ffnNorm) {
+                    fprintf(stderr, "[Move 10] Layer %zu: ffn_norm.weight not found\n", layer);
+                    return false;
+                }
+                deep2::DequantizedTensor ffnNormDq;
+                if (!dequantTensor(*ffnNorm, ffnNormDq)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: ffn_norm dequant failed\n", layer);
+                    return false;
+                }
+                rmsNormWeighted(ffnIn.data(), ffnNormDq.data.data(), hiddenDim, 1e-5f);
             }
 
-            // FFN: hidden = down(gelu(up(hidden)))
-            std::vector<float> upOut(intermediateDim, 0.0f);
-            gemvFloat(upDq.data.data(), hiddenStates.data(), upOut.data(), upDq.rows, upDq.cols);
+            const size_t upRows = resident ? static_cast<size_t>(layerResident[layer].upRows)
+                                           : static_cast<size_t>(upDq.rows);
+            const size_t gateRows = upRows / 2;
+            std::vector<float> upOut(upRows, 0.0f);
+            if (resident) {
+                const deep2::TensorView xView{ deep2::TensorType::F32,
+                                               reinterpret_cast<const uint8_t*>(ffnIn.data()),
+                                               ffnIn.size() * sizeof(float),
+                                               { static_cast<uint64_t>(hiddenDim) }, true };
+                if (!vulkanGemvResident(layerResident[layer].up, xView, upOut)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: resident ffn_up GEMV failed\n", layer);
+                    return false;
+                }
+            } else {
+                gemvFloat(upDq.data.data(), ffnIn.data(), upOut.data(), upRows, upDq.cols);
+            }
 
-            // GELU activation (approximate)
-            for (size_t i = 0; i < intermediateDim; ++i) {
-                float x = upOut[i];
-                float gelu = 0.5f * x * (1.0f + std::tanh(0.79788456f * (x + 0.044715f * x * x * x)));
-                upOut[i] = gelu;
+            // SwiGLU: silu(gate) * up
+            for (size_t i = 0; i < gateRows; ++i) {
+                const float gate = upOut[i];
+                const float up = upOut[gateRows + i];
+                upOut[i] = (gate / (1.0f + std::expf(-gate))) * up;
             }
 
             static thread_local float downOutStatic[3072];
             float* downOut = downOutStatic;
             std::fill_n(downOut, hiddenDim, 0.0f);
-            gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
+            if (resident) {
+                const deep2::TensorView xView{ deep2::TensorType::F32,
+                                               reinterpret_cast<const uint8_t*>(upOut.data()),
+                                               upOut.size() * sizeof(float),
+                                               { static_cast<uint64_t>(upOut.size()) }, true };
+                std::vector<float> downRowsOut;
+                if (!vulkanGemvResident(layerResident[layer].down, xView, downRowsOut)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: resident ffn_down GEMV failed\n", layer);
+                    return false;
+                }
+                std::memcpy(downOut, downRowsOut.data(),
+                            (std::min)(downRowsOut.size(), static_cast<size_t>(hiddenDim)) * sizeof(float));
+            } else {
+                gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
+            }
 
             // Residual connection
             for (size_t i = 0; i < hiddenDim; ++i) {
@@ -648,13 +826,24 @@ bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTo
             return false;
         }
 
-        if (!dequantTensor(*outputEntry, outputDq)) {
-            fprintf(stderr, "[Move 10] Failed to dequantize output.weight\n");
-            return false;
+        if (!useResident) {
+            if (!dequantTensor(*outputEntry, outputDq)) {
+                fprintf(stderr, "[Move 10] Failed to dequantize output.weight\n");
+                return false;
+            }
+            outputLogits.resize(vocabSize, 0.0f);
+            gemvFloat(outputDq.data.data(), hiddenStates.data(), outputLogits.data(), outputDq.rows, outputDq.cols);
+        } else {
+            const deep2::TensorView xView{ deep2::TensorType::F32,
+                                           reinterpret_cast<const uint8_t*>(hiddenStates.data()),
+                                           hiddenStates.size() * sizeof(float),
+                                           { static_cast<uint64_t>(hiddenDim) }, true };
+            if (!vulkanGemvResident(outputResident, xView, outputLogits)) {
+                fprintf(stderr, "[Move 10] resident output GEMV failed\n");
+                return false;
+            }
+            outputLogits.resize(vocabSize, 0.0f);
         }
-
-        outputLogits.resize(vocabSize, 0.0f);
-        gemvFloat(outputDq.data.data(), hiddenStates.data(), outputLogits.data(), outputDq.rows, outputDq.cols);
 
         // Store baseline logits for first token (for parity check)
         if (tokenPos == 0) {

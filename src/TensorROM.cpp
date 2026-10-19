@@ -435,6 +435,7 @@ bool TensorROM::finalizeIndex() {
             if (gU64("deepseek2.expert_count", tmp)) m_geom.nRoutedExperts = static_cast<uint32_t>(tmp);
             if (gU64("deepseek2.expert_shared_count", tmp)) m_geom.nSharedExperts = static_cast<uint32_t>(tmp);
             if (gU64("deepseek2.expert_used_count", tmp)) m_geom.moeTopK = static_cast<uint32_t>(tmp);
+            if (gU64("deepseek2.expert_feed_forward_length", tmp)) m_geom.nFfExp = static_cast<uint32_t>(tmp);
         }
         uint64_t leadDense = 0;
         gU64("deepseek2.leading_dense_block_count", leadDense);

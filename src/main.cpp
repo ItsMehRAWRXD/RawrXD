@@ -26,6 +26,52 @@ void runMove10Validation(Deep2Engine& engine) {
     }
 }
 
+// Run the forward pass twice, once with the resident multi-GPU path and
+// once with the CPU path, and compare the logits.
+//
+// The forward pass is the real test of the resident path: it exercises the
+// device weight buffers across every layer of the model and all the
+// projections, not just one matrix.
+static void runForwardParity(Deep2Engine& engine) {
+    const std::vector<uint32_t> inputTokens = { 1, 100, 200 };
+
+    std::cout << "\n=== FORWARD PASS PARITY: RESIDENT GPU vs CPU ===\n" << std::flush;
+
+    std::vector<float> residentLogits, residentBaseline;
+    const bool residentOk = engine.executePhi3ROMForwardPass(inputTokens, residentLogits, residentBaseline, false);
+    std::cout << "\n[PARITY] resident path: " << (residentOk ? "OK" : "FAILED") << "\n" << std::flush;
+
+    std::vector<float> cpuLogits, cpuBaseline;
+    const bool cpuOk = engine.executePhi3ROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true);
+    std::cout << "\n[PARITY] cpu path: " << (cpuOk ? "OK" : "FAILED") << "\n" << std::flush;
+
+    if (!residentOk || !cpuOk) {
+        std::cerr << "[PARITY] one of the two paths failed\n";
+        return;
+    }
+    if (residentLogits.size() != cpuLogits.size()) {
+        std::cerr << "[PARITY] logits size mismatch: " << residentLogits.size()
+                  << " vs " << cpuLogits.size() << "\n";
+        return;
+    }
+
+    float maxDiff = 0.0f;
+    size_t maxIdx = 0;
+    double sumSq = 0.0;
+    size_t over = 0;
+    for (size_t i = 0; i < cpuLogits.size(); ++i) {
+        const float d = std::abs(residentLogits[i] - cpuLogits[i]);
+        sumSq += static_cast<double>(d) * d;
+        if (d > maxDiff) { maxDiff = d; maxIdx = i; }
+        if (d > 1e-3f) ++over;
+    }
+    const double rms = std::sqrt(sumSq / (cpuLogits.size() ? cpuLogits.size() : 1));
+    std::cout << "[PARITY] logits compared: " << cpuLogits.size()
+              << "  max_diff=" << maxDiff << " at idx " << maxIdx
+              << "  rms_diff=" << rms
+              << "  rows over 1e-3: " << over << "\n";
+    std::cout << "[PARITY] " << (over == 0 ? "PASSED" : "FAILED") << "\n";
+}
 int main(int argc, char* argv[]) {
     _mm_setcsr(_mm_getcsr() | 0x8040);
 
@@ -34,6 +80,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Usage: " << argv[0] << " <path_to_model.gguf> [manifest.json] [--whole-loader]\n";
         std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
+    std::cout << "       " << argv[0] << " --forward-parity <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -43,6 +90,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Usage: " << argv[0] << " <path_to_model.gguf> [manifest.json] [--whole-loader]\n";
         std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
+    std::cout << "       " << argv[0] << " --forward-parity <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -50,6 +98,7 @@ int main(int argc, char* argv[]) {
     bool verifyOnly = false;
     bool forceWholeLoader = false;
     bool runMove10 = false;
+    bool runParity = false;
     std::string modelPath;
     std::string manifestPath;
 
@@ -63,6 +112,11 @@ int main(int argc, char* argv[]) {
         }
         if (a == "--move10-validate") {
             runMove10 = true;
+            argIndex++;
+            continue;
+        }
+        if (a == "--forward-parity") {
+            runParity = true;
             argIndex++;
             continue;
         }
@@ -87,7 +141,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Check for Move 10 validation flag (already parsed above)
-    if (runMove10) {
+    if (runParity) {
+        runForwardParity(engine);
+    } else if (runMove10) {
         runMove10Validation(engine);
     } else {
         Deep2EngineExecuteInferenceStep(engine);

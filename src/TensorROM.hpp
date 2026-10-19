@@ -62,9 +62,13 @@ struct ModelGeometry {
     uint32_t qkNopeHeadDim = 0;
     uint32_t qkRopeHeadDim = 0;
     uint32_t vHeadDim = 0;
-    uint32_t nRoutedExperts = 0;
-    uint32_t nSharedExperts = 0;
-    uint32_t moeTopK = 0;
+uint32_t nRoutedExperts = 0;
+uint32_t nSharedExperts = 0;
+uint32_t moeTopK = 0;
+// Feed-forward width of a single routed expert. This is NOT the dense
+// intermediateDim: DeepSeek-V2-Lite uses a dense width of 10944 and an
+// expert width of 1408, and the shared expert is twice the expert width.
+uint32_t nFfExp = 0;
     std::vector<uint32_t> moeLayerIndex;
     bool hasMla = false;
 };

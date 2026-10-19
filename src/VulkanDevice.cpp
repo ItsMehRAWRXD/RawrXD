@@ -134,6 +134,9 @@ bool VulkanDevice::init() {
 }
 
 void VulkanDevice::shutdown() {
+    // The cached programs own objects created on the devices, so they have to
+    // be destroyed while those devices are still alive.
+    destroyPrograms();
     for (auto& g : m_gpus) {
         vkDeviceWaitIdle(g.device);
         vkDestroyCommandPool(g.device, g.pool, nullptr);
@@ -144,6 +147,39 @@ void VulkanDevice::shutdown() {
         vkDestroyInstance(m_instance, nullptr);
         m_instance = VK_NULL_HANDLE;
     }
+}
+
+bool VulkanDevice::ensureProgram(const Gpu& gpu, const std::string& spvPath) {
+    std::lock_guard<std::mutex> lock(m_programMutex);
+    if (m_programs.find(gpu.device) != m_programs.end()) return true;
+
+    auto program = std::make_unique<VulkanProgram>();
+    if (!program->init(gpu.device, spvPath)) return false;
+    fprintf(stderr, "[VULKAN] compute program created for device %p (%s)\n",
+            (void*)gpu.device, spvPath.c_str());
+    m_programs.emplace(gpu.device, std::move(program));
+    return true;
+}
+
+bool VulkanDevice::dispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
+                                   uint32_t rows, uint32_t cols) {
+    VulkanProgram* program = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_programMutex);
+        auto it = m_programs.find(gpu.device);
+        if (it == m_programs.end()) return false;
+        program = it->second.get();
+    }
+    return program->dispatch(gpu, W, x, y, rows, cols);
+}
+
+void VulkanDevice::destroyPrograms() {
+    std::lock_guard<std::mutex> lock(m_programMutex);
+    for (auto& entry : m_programs) {
+        // The map key is the device the program was created on.
+        entry.second->destroy(entry.first);
+    }
+    m_programs.clear();
 }
 
 bool VulkanDevice::pickMemoryType(const Gpu& gpu, uint32_t typeBits,
@@ -353,17 +389,22 @@ bool VulkanProgram::init(VkDevice device, const std::string& spvPath) {
 }
 
 void VulkanProgram::destroy(VkDevice device) {
-    if (m_fence) vkDestroyFence(device, m_fence, nullptr);
-    if (m_pool) vkDestroyDescriptorPool(device, m_pool, nullptr);
-    if (m_dsl) vkDestroyDescriptorSetLayout(device, m_dsl, nullptr);
-    if (m_pipeline) vkDestroyPipeline(device, m_pipeline, nullptr);
-    if (m_layout) vkDestroyPipelineLayout(device, m_layout, nullptr);
-    if (m_shader) vkDestroyShaderModule(device, m_shader, nullptr);
+    if (m_fence) { vkDestroyFence(device, m_fence, nullptr); m_fence = VK_NULL_HANDLE; }
+    if (m_pool) { vkDestroyDescriptorPool(device, m_pool, nullptr); m_pool = VK_NULL_HANDLE; }
+    if (m_dsl) { vkDestroyDescriptorSetLayout(device, m_dsl, nullptr); m_dsl = VK_NULL_HANDLE; }
+    if (m_pipeline) { vkDestroyPipeline(device, m_pipeline, nullptr); m_pipeline = VK_NULL_HANDLE; }
+    if (m_layout) { vkDestroyPipelineLayout(device, m_layout, nullptr); m_layout = VK_NULL_HANDLE; }
+    if (m_shader) { vkDestroyShaderModule(device, m_shader, nullptr); m_shader = VK_NULL_HANDLE; }
+    m_set = VK_NULL_HANDLE;
+    m_device = VK_NULL_HANDLE;
 }
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                              uint32_t rows, uint32_t cols) {
     if (m_device == VK_NULL_HANDLE) return false;
+    // The descriptor set and the fence belong to this program, so a second
+    // dispatch on the same device has to wait for the first one.
+    std::lock_guard<std::mutex> lock(m_dispatchMutex);
     m_queue = gpu.queue;
 
     VkDescriptorBufferInfo binfos[3] = {};

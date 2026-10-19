@@ -227,3 +227,156 @@ bool Deep2Engine::vulkanGemvSplit(const deep2::VulkanDevice::Gpu& gpu0,
     std::copy(y1.begin(), y1.end(), y.begin() + splitRow);
     return true;
 }
+
+// ---------------------------------------------------------------------------
+// Resident split weights
+// ---------------------------------------------------------------------------
+//
+// A GEMV over a matrix of this size is memory bound, so the cost that
+// matters is how many bytes cross the bus per call. Re-uploading the matrix
+// on every call puts the whole matrix on the PCIe link, which costs more
+// than the arithmetic it replaces. Keeping the matrix in device memory
+// leaves only the input vector and the output rows crossing the link.
+//
+// The matrix is therefore placed once, split by output rows across the
+// devices, and every later GEMV reads it from where it already is.
+
+bool Deep2Engine::uploadResidentSplitWeight(const deep2::TensorView& wView,
+                                            ResidentSplitWeight& out) {
+    releaseResidentSplitWeight(out);
+    if (!vulkanReady || !vulkan) return false;
+    if (wView.type != deep2::TensorType::F32 || !wView.data) return false;
+    if (wView.dims.size() < 2) return false;
+
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+    if (rows < 2 || cols == 0) return false;
+
+    const size_t rowBytes = static_cast<size_t>(cols) * sizeof(float);
+    if (rows * rowBytes > wView.byteSize) {
+        fprintf(stderr, "[RESIDENT] weight view is smaller than its shape\n");
+        return false;
+    }
+
+    // The split boundary comes from the same plan the transient path uses.
+    const auto* g0 = vulkan->primary();
+    const auto* g1 = vulkan->secondary();
+    uint32_t splitRow;
+    if (g0 && g1) {
+        const uint64_t totalVram = g0->vramBytes + g1->vramBytes;
+        const float weight = totalVram ? static_cast<float>(g0->vramBytes) / static_cast<float>(totalVram) : 0.5f;
+        splitRow = static_cast<uint32_t>(CalculateRowSplitIndex(
+            static_cast<uint32_t>(rows), static_cast<uint32_t>(cols), GGML_TYPE_F32,
+            weight, g0->vramBytes, g1->vramBytes));
+    } else {
+        splitRow = static_cast<uint32_t>(rows);
+    }
+
+    struct Placement { const deep2::VulkanDevice::Gpu* gpu; uint32_t offset; uint32_t count; };
+    std::vector<Placement> placements;
+    if (g0 && g1 && splitRow > 0 && splitRow < rows) {
+        placements.push_back({g0, 0, splitRow});
+        placements.push_back({g1, splitRow, static_cast<uint32_t>(rows) - splitRow});
+    } else if (g0) {
+        placements.push_back({g0, 0, static_cast<uint32_t>(rows)});
+    } else {
+        return false;
+    }
+
+    const std::string spv = Deep2EngineExeDir() + "shaders\\gemv_f32.spv";
+    for (const Placement& p : placements) {
+        if (!vulkan->ensureProgram(*p.gpu, spv)) {
+            fprintf(stderr, "[RESIDENT] failed to create the compute program\n");
+            releaseResidentSplitWeight(out);
+            return false;
+        }
+
+        VkBuffer buf = VK_NULL_HANDLE;
+        VkDeviceMemory mem = VK_NULL_HANDLE;
+        const VkDeviceSize bytes = static_cast<VkDeviceSize>(p.count) * rowBytes;
+        if (!vulkan->createBuffer(*p.gpu, bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buf, mem)) {
+            fprintf(stderr, "[RESIDENT] failed to allocate the weight buffer\n");
+            releaseResidentSplitWeight(out);
+            return false;
+        }
+        if (!vulkan->uploadToBuffer(*p.gpu, buf, 0, wView.data + (static_cast<size_t>(p.offset) * rowBytes), bytes)) {
+            fprintf(stderr, "[RESIDENT] failed to upload the weight buffer\n");
+            vulkan->destroyBuffer(*p.gpu, buf, mem);
+            releaseResidentSplitWeight(out);
+            return false;
+        }
+
+        ResidentSplitWeight::Part part;
+        part.gpu = p.gpu;
+        part.buffer = buf;
+        part.memory = mem;
+        part.rowOffset = p.offset;
+        part.rowCount = p.count;
+        out.parts.push_back(part);
+    }
+
+    out.totalRows = static_cast<uint32_t>(rows);
+    out.cols = static_cast<uint32_t>(cols);
+    out.splitRow = splitRow;
+    out.valid = true;
+    return true;
+}
+
+void Deep2Engine::releaseResidentSplitWeight(ResidentSplitWeight& w) {
+    if (vulkan) {
+        for (auto& part : w.parts) {
+            if (part.gpu && part.buffer != VK_NULL_HANDLE) {
+                vulkan->destroyBuffer(*part.gpu, part.buffer, part.memory);
+            }
+        }
+    }
+    w.parts.clear();
+    w.valid = false;
+    w.totalRows = 0;
+    w.cols = 0;
+    w.splitRow = 0;
+}
+
+bool Deep2Engine::vulkanGemvResident(const ResidentSplitWeight& w, const deep2::TensorView& xView,
+                                     std::vector<float>& y) {
+    if (!vulkanReady || !vulkan || !w.valid) return false;
+    if (xView.type != deep2::TensorType::F32 || !xView.data) return false;
+
+    const size_t xBytes = static_cast<size_t>(w.cols) * sizeof(float);
+    y.assign(w.totalRows, 0.0f);
+
+    for (const auto& part : w.parts) {
+        VkBuffer xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
+        VkDeviceMemory xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
+        void* xmapped = nullptr; void* ymapped = nullptr;
+
+        const VkDeviceSize yBytes = static_cast<VkDeviceSize>(part.rowCount) * sizeof(float);
+        const VkMemoryPropertyFlags hostVisible =
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+        auto cleanup = [&]() {
+            vulkan->destroyBuffer(*part.gpu, xbuf, xmem);
+            vulkan->destroyBuffer(*part.gpu, ybuf, ymem);
+        };
+
+        if (!vulkan->createBuffer(*part.gpu, xBytes, usage, hostVisible, xbuf, xmem, &xmapped) ||
+            !vulkan->createBuffer(*part.gpu, yBytes, usage, hostVisible, ybuf, ymem, &ymapped)) {
+            cleanup();
+            return false;
+        }
+
+        std::memcpy(xmapped, xView.data, xBytes);
+        std::memset(ymapped, 0, static_cast<size_t>(yBytes));
+
+        if (!vulkan->dispatchProgram(*part.gpu, part.buffer, xbuf, ybuf, part.rowCount, w.cols)) {
+            cleanup();
+            return false;
+        }
+
+        std::memcpy(y.data() + part.rowOffset, ymapped, static_cast<size_t>(yBytes));
+        cleanup();
+    }
+    return true;
+}

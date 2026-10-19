@@ -272,6 +272,11 @@ struct DeepSeek2Model {
     uint32_t seqCap = 0;
     // MoE geometry
     uint32_t moeNumExperts = 0, moeTopK = 0, moeNumShared = 0;
+    // Feed-forward width of one routed expert. This is not the dense
+    // intermediateDim: DeepSeek-V2-Lite has a dense width of 10944 and an
+    // expert width of 1408, and the shared expert is twice the expert width.
+    uint32_t moeExpertFF = 0;
+    uint32_t moeSharedFF = 0;
 
     std::vector<float> tokenEmbdW;   // [vocab, hidden]
     std::vector<float> outputNormW;  // [hidden]
@@ -348,6 +353,13 @@ struct DeepSeek2Model {
         theta = (float)g.ropeTheta;
         qkNope = g.qkNopeHeadDim; qkRope = g.qkRopeHeadDim; vHead = g.vHeadDim; kvLora = g.kvLoraRank;
         moeNumExperts = g.nRoutedExperts; moeTopK = g.moeTopK; moeNumShared = g.nSharedExperts;
+        moeExpertFF = g.nFfExp;
+        moeSharedFF = 2 * moeExpertFF;
+        if (moeNumExperts == 0 || moeTopK == 0 || moeExpertFF == 0) {
+            std::cerr << "[DS2] incomplete MoE geometry: experts=" << moeNumExperts
+                      << " topK=" << moeTopK << " expertFF=" << moeExpertFF << "\n";
+            return false;
+        }
         seqCap = 256;
 
         layersW.resize(layers);
@@ -424,29 +436,39 @@ struct DeepSeek2Model {
                     int intermediate) {
         LayerW& lw = layersW[layerIdx];
         if (!lw.moeLoaded) return;
-
         float* ht = &h[t * hidden];
+
+        // The routed experts use the expert feed-forward width, not the dense
+        // intermediate width. DeepSeek-V2-Lite: dense 10944, expert 1408.
+        const int expertFF = (int)moeExpertFF;
+        const int sharedFF = (int)moeSharedFF;
+
 
         // Router: x @ ffn_gate_inpW -> [numExperts]
         std::vector<float> routerLogits(numExperts);
         gemvFloat(lw.ffnGateInpW.data(), ht, routerLogits.data(), numExperts, hidden);
 
-        // Softmax
-        float maxLogit = -1e30f;
-        for (int e = 0; e < numExperts; ++e) if (routerLogits[e] > maxLogit) maxLogit = routerLogits[e];
-        float sumExp = 0.0f;
-        std::vector<float> routerWeights(numExperts);
+        // DeepSeek-V2 gates with a sigmoid, not a softmax: an expert's score
+        // is independent of the other experts.
+        std::vector<float> routerScores(numExperts);
         for (int e = 0; e < numExperts; ++e) {
-            routerWeights[e] = std::expf(routerLogits[e] - maxLogit);
-            sumExp += routerWeights[e];
+            routerScores[e] = 1.0f / (1.0f + std::expf(-routerLogits[e]));
         }
-        for (int e = 0; e < numExperts; ++e) routerWeights[e] /= sumExp;
 
         // Top-k selection
         std::vector<std::pair<float, int>> expertScores(numExperts);
-        for (int e = 0; e < numExperts; ++e) expertScores[e] = {routerWeights[e], e};
+        for (int e = 0; e < numExperts; ++e) expertScores[e] = {routerScores[e], e};
         std::sort(expertScores.begin(), expertScores.end(),
                   [](const auto& a, const auto& b) { return a.first > b.first; });
+
+        // Renormalise the selected gates over the top-k, as DeepSeek-V2 does.
+        float topSum = 0.0f;
+        for (int k = 0; k < topK && k < numExperts; ++k) topSum += expertScores[k].first;
+        if (topSum > 0.0f) {
+            for (int k = 0; k < topK && k < numExperts; ++k) {
+                expertScores[k].first /= topSum;
+            }
+        }
 
         // Accumulate expert outputs
         std::vector<float> expertOut(hidden, 0.0f);
@@ -454,52 +476,55 @@ struct DeepSeek2Model {
             int e = expertScores[k].second;
             float w = expertScores[k].first;
 
-            // Gate: x @ gate_exps[e] -> [intermediate]
-            // gate_exps[e] is at [e * intermediate * hidden .. (e+1) * intermediate * hidden]
-            const float* gateE = lw.ffnGateExpsW.data() + e * intermediate * hidden;
-            std::vector<float> gateVal(intermediate);
-            gemvFloat(gateE, ht, gateVal.data(), intermediate, hidden);
+            // Gate: x @ gate_exps[e] -> [expertFF]
+            // gate_exps[e] is at [e * expertFF * hidden .. (e+1) * expertFF * hidden]
+            const float* gateE = lw.ffnGateExpsW.data() + (size_t)e * expertFF * hidden;
+            std::vector<float> gateVal(expertFF);
+            gemvFloat(gateE, ht, gateVal.data(), expertFF, hidden);
 
-            // Up: x @ up_exps[e] -> [intermediate]
-            // up_exps[e] is at [e * intermediate * hidden .. (e+1) * intermediate * hidden]
-            const float* upE = lw.ffnUpExpsW.data() + e * intermediate * hidden;
-            std::vector<float> upVal(intermediate);
-            gemvFloat(upE, ht, upVal.data(), intermediate, hidden);
+            // Up: x @ up_exps[e] -> [expertFF]
+            // up_exps[e] is at [e * expertFF * hidden .. (e+1) * expertFF * hidden]
+            const float* upE = lw.ffnUpExpsW.data() + (size_t)e * expertFF * hidden;
+            std::vector<float> upVal(expertFF);
+            gemvFloat(upE, ht, upVal.data(), expertFF, hidden);
 
-            // Intermediate: gate_val * silu(up_val)
-            std::vector<float> intermediateVec(intermediate);
-            for (int i = 0; i < intermediate; ++i)
-                intermediateVec[i] = gateVal[i] * silu(upVal[i]);
+            // SwiGLU: silu(gate) * up
+            std::vector<float> intermediateVec(expertFF);
+            for (int i = 0; i < expertFF; ++i) {
+                intermediateVec[i] = silu(gateVal[i]) * upVal[i];
+            }
 
             // Down: intermediate @ down_exps[e] -> [hidden]
-            // down_exps[e] is at [e * hidden * intermediate .. (e+1) * hidden * intermediate]
-            const float* downE = lw.ffnDownExpsW.data() + e * hidden * intermediate;
+            // down_exps[e] is at [e * hidden * expertFF .. (e+1) * hidden * expertFF]
+            const float* downE = lw.ffnDownExpsW.data() + (size_t)e * hidden * expertFF;
             std::vector<float> expertOut(hidden);
-            gemvFloat(downE, intermediateVec.data(), expertOut.data(), hidden, intermediate);
+            gemvFloat(downE, intermediateVec.data(), expertOut.data(), hidden, expertFF);
 
             // Weighted combination
             for (int i = 0; i < hidden; ++i)
                 ht[i] += w * expertOut[i];
         }
 
-        // Shared expert
-        // shared_gate = silu(x @ gate_shexpW) -> [2*intermediate]
-        std::vector<float> sharedGate(2 * intermediate);
-        gemvFloat(lw.ffnGateShexpW.data(), ht, sharedGate.data(), 2 * intermediate, hidden);
+        // Shared expert. Its feed-forward width is twice the routed expert
+        // width (DeepSeek-V2-Lite: 2816 against 1408).
+        // shared_gate = x @ gate_shexpW -> [sharedFF]
+        std::vector<float> sharedGate(sharedFF);
+        gemvFloat(lw.ffnGateShexpW.data(), ht, sharedGate.data(), sharedFF, hidden);
 
-        // shared_up = x @ up_shexpW -> [2*intermediate]
-        std::vector<float> sharedUp(2 * intermediate);
-        gemvFloat(lw.ffnUpShexpW.data(), ht, sharedUp.data(), 2 * intermediate, hidden);
+        // shared_up = x @ up_shexpW -> [sharedFF]
+        std::vector<float> sharedUp(sharedFF);
+        gemvFloat(lw.ffnUpShexpW.data(), ht, sharedUp.data(), sharedFF, hidden);
 
-        // shared_intermediate = shared_gate * silu(shared_up)
-        std::vector<float> sharedIntermediate(2 * intermediate);
-        for (int i = 0; i < 2 * intermediate; ++i)
-            sharedIntermediate[i] = sharedGate[i] * silu(sharedUp[i]);
+        // shared_intermediate = silu(shared_gate) * shared_up
+        std::vector<float> sharedIntermediate(sharedFF);
+        for (int i = 0; i < sharedFF; ++i) {
+            sharedIntermediate[i] = silu(sharedGate[i]) * sharedUp[i];
+        }
 
         // shared_out = shared_intermediate @ down_shexpW -> [hidden]
-        // down_shexpW: [2*intermediate, hidden]
+        // down_shexpW: [sharedFF, hidden]
         std::vector<float> sharedOut(hidden);
-        gemvFloat(lw.ffnDownShexpW.data(), sharedIntermediate.data(), sharedOut.data(), hidden, 2 * intermediate);
+        gemvFloat(lw.ffnDownShexpW.data(), sharedIntermediate.data(), sharedOut.data(), hidden, sharedFF);
 
         // Add shared expert output
         for (int i = 0; i < hidden; ++i)
@@ -1223,6 +1248,121 @@ int cmdInfo(int argc, char** argv) {
 }
 
 // ---------------------------------------------------------------------------
+// Resident-weight GEMV benchmark.
+//
+// A GEMV over a matrix this size is memory bound, so what matters is how
+// many bytes cross the bus per call. This compares three ways of running the
+// same GEMV:
+//
+//   cpu       - the AVX2 CPU path,
+//   gpu-eager - the GPU path that re-uploads the matrix on every call,
+//   gpu-resident - the GPU path with the matrix already in device memory,
+//                  split across the devices by output rows.
+//
+// The three produce the same numbers; only the cost differs. That is the
+// measurement that decides whether the forward pass should move to the GPU.
+// ---------------------------------------------------------------------------
+int cmdGemvResident(int argc, char** argv) {
+    // The default shape is the real one: phi3-mini's fused QKV projection.
+    uint32_t rows = 9216, cols = 3072;
+    if (argc >= 4) rows = static_cast<uint32_t>(std::atoi(argv[2]));
+    if (argc >= 5) cols = static_cast<uint32_t>(std::atoi(argv[3]));
+
+    Deep2Engine engine;
+    engine.vulkan = std::make_unique<deep2::VulkanDevice>();
+    engine.vulkanReady = engine.vulkan->init();
+    if (!engine.vulkanReady) {
+        std::cerr << "[ORACLE] no Vulkan device available\n";
+        return 1;
+    }
+
+    std::vector<float> W(static_cast<size_t>(rows) * cols);
+    uint32_t state = 0x9E3779B9u ^ (cols * 2654435761u) ^ (rows * 40503u);
+    for (size_t i = 0; i < W.size(); ++i) {
+        state = state * 1664525u + 1013904223u;
+        W[i] = static_cast<float>(static_cast<int32_t>(state >> 8) % 2001 - 1000) / 512.0f;
+    }
+    std::vector<float> x(cols);
+    for (uint32_t i = 0; i < cols; ++i) {
+        state = state * 1664525u + 1013904223u;
+        x[i] = static_cast<float>(static_cast<int32_t>(state >> 8) % 2001 - 1000) / 1024.0f;
+    }
+
+    const deep2::TensorView wView{ deep2::TensorType::F32,
+                                   reinterpret_cast<const uint8_t*>(W.data()),
+                                   W.size() * sizeof(float),
+                                   { rows, cols }, true };
+    const deep2::TensorView xView{ deep2::TensorType::F32,
+                                   reinterpret_cast<const uint8_t*>(x.data()),
+                                   x.size() * sizeof(float),
+                                   { cols }, true };
+
+    const int kIters = 8;
+    std::vector<float> reference(rows, 0.0f), result(rows, 0.0f);
+
+    // CPU reference.
+    auto t0 = std::chrono::steady_clock::now();
+    for (int i = 0; i < kIters; ++i) {
+        if (!engine.gemvFloat(W.data(), x.data(), reference.data(), rows, cols)) {
+            std::cerr << "[ORACLE] CPU GEMV failed\n";
+            return 1;
+        }
+    }
+    const double cpuMs = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - t0).count() / kIters;
+
+    // GPU, re-uploading the matrix on every call.
+    t0 = std::chrono::steady_clock::now();
+    for (int i = 0; i < kIters; ++i) {
+        if (!engine.vulkanGemvSplit(wView, xView, result)) {
+            std::cerr << "[ORACLE] GPU eager GEMV failed\n";
+            return 1;
+        }
+    }
+    const double eagerMs = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - t0).count() / kIters;
+
+    // GPU, with the matrix resident in device memory.
+    Deep2Engine::ResidentSplitWeight resident;
+    t0 = std::chrono::steady_clock::now();
+    const bool residentOk = engine.uploadResidentSplitWeight(wView, resident);
+    const double uploadMs = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - t0).count();
+    if (!residentOk) {
+        std::cerr << "[ORACLE] resident upload failed\n";
+        return 1;
+    }
+    t0 = std::chrono::steady_clock::now();
+    for (int i = 0; i < kIters; ++i) {
+        if (!engine.vulkanGemvResident(resident, xView, result)) {
+            std::cerr << "[ORACLE] resident GEMV failed\n";
+            return 1;
+        }
+    }
+    const double residentMs = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - t0).count() / kIters;
+
+    // The resident path must still reproduce the CPU result exactly.
+    size_t mismatches = 0;
+    for (uint32_t r = 0; r < rows; ++r) {
+        if (std::fabs(result[r] - reference[r]) > 1e-3f) ++mismatches;
+    }
+
+    const double matrixMb = (static_cast<double>(rows) * cols * sizeof(float)) / (1024.0 * 1024.0);
+    std::cout << "[ORACLE] GEMV " << rows << "x" << cols
+              << " f32 (" << matrixMb << " MB), " << kIters << " iterations\n";
+    std::cout << "[ORACLE]   cpu          : " << cpuMs << " ms/call\n";
+    std::cout << "[ORACLE]   gpu-eager    : " << eagerMs << " ms/call (matrix re-uploaded every call)\n";
+    std::cout << "[ORACLE]   gpu-resident : " << residentMs << " ms/call (matrix already on the devices)\n";
+    std::cout << "[ORACLE]   one-time resident upload: " << uploadMs << " ms\n";
+    std::cout << "[ORACLE]   split row: " << resident.splitRow << " of " << resident.totalRows
+              << " across " << resident.parts.size() << " device(s)\n";
+    std::cout << "[ORACLE]   resident vs cpu: " << mismatches << " mismatched rows of " << rows << "\n";
+    engine.releaseResidentSplitWeight(resident);
+    return mismatches == 0 ? 0 : 1;
+}
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 int main(int argc, char** argv) {
@@ -1237,9 +1377,10 @@ int main(int argc, char** argv) {
     if (cmd == "info")         return cmdInfo(argc, argv);
     if (cmd == "dump-tensor")  return cmdDumpTensor(argc, argv);
     if (cmd == "gemv-split")   return cmdGemvSplit(argc, argv);
+    if (cmd == "gemv-resident") return cmdGemvResident(argc, argv);
 
     std::cerr << "unknown command: " << cmd << "\n";
-    std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor|gemv-split> "
+    std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor|gemv-split|gemv-resident> "
                  "<model.gguf> [args]\n";
     return 2;
 }

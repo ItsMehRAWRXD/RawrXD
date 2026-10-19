@@ -4,9 +4,16 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 
 namespace deep2 {
+
+// One precompiled SPIR-V compute shader bound to a device. Defined at the
+// bottom of this header; VulkanDevice only holds pointers to it.
+class VulkanProgram;
 
 // Minimal Vulkan compute context for the emulator's GPU path.
 // Discovers AMD discrete GPUs (R9700 primary, 7800 XT secondary) and exposes
@@ -56,9 +63,23 @@ public:
     bool writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,
                      const void* data, VkDeviceSize size);
 
+    // Cached per-device compute programs. A program is built the first time a
+    // device is used and kept until that device is torn down, so alternating
+    // between two devices costs a map lookup rather than a pipeline rebuild.
+    // Rebuilding a pipeline on every device switch is what made the earlier
+    // static-singleton form of this slower than it had to be.
+    bool ensureProgram(const Gpu& gpu, const std::string& spvPath);
+    bool dispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
+                         uint32_t rows, uint32_t cols);
+
 private:
     bool pickMemoryType(const Gpu& gpu, uint32_t typeBits, VkMemoryPropertyFlags props,
                         uint32_t& index) const;
+    // Destroys the cached programs. Must run before the devices are destroyed.
+    void destroyPrograms();
+
+    std::unordered_map<VkDevice, std::unique_ptr<VulkanProgram>> m_programs;
+    std::mutex m_programMutex;
 
     VkInstance m_instance = VK_NULL_HANDLE;
     std::vector<Gpu> m_gpus;
@@ -92,6 +113,11 @@ private:
     VkCommandBuffer m_cmd = VK_NULL_HANDLE;
     VkFence m_fence = VK_NULL_HANDLE;
     VkQueue m_queue = VK_NULL_HANDLE;
+    // A program belongs to exactly one device, and dispatch mutates its
+    // descriptor set and fence, so dispatches on one program are serialised.
+    // Programs on different devices have separate locks, so the two halves of
+    // a split can still run concurrently.
+    std::mutex m_dispatchMutex;
 };
 
 } // namespace deep2
