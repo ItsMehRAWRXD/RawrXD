@@ -48,6 +48,13 @@ add_executable(gguf2rom
     src/gguf2rom.cpp
 )
 
+# Multi-shard GGUF -> sharded TensorROM converter. It consumes the same ROM
+# container layout as gguf2rom and the zero-copy loader, so it is built here
+# to keep that layout from drifting again.
+add_executable(gguf2rom_ms
+    src/tools/gguf2rom_ms.cpp
+)
+
 # Real-token autoregressive oracle. Runs the paged ROM path end-to-end so a
 # wrong quantized dequant surfaces immediately as garbage tokens.
 add_executable(rom_audit
