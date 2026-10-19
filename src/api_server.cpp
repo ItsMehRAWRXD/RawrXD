@@ -1,593 +1,526 @@
 #include "api_server.h"
 #include <iostream>
 #include <sstream>
-#include <thread>
-#include <chrono>
-#include <mutex>
-#include <unordered_map>
-#include <iomanip>
+#include <cstring>
 #include <ctime>
-#include <array>
+#include <iomanip>
+#include <sstream>
 
-// Structured logging helper with timestamp and severity
-static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
-    auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()).count() % 1000;
-    
-    std::cout << "[" << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S") 
-              << "." << std::setfill('0') << std::setw(3) << ms 
-              << "] [APIServer] [" << severity << "] " << operation 
-              << " - " << details << std::endl;
-}
+using namespace Deep2Rom::Inference;
 
-APIServer::APIServer(AppState& app_state)
-    : app_state_(app_state), is_running_(false), port_(11434) {
-}
+namespace Deep2Rom::Api {
 
-APIServer::~APIServer() {
-    Stop();
-}
+    OllamaApiServer::OllamaApiServer(int port)
+        : m_port(port), m_listenSocket(INVALID_SOCKET) {}
 
-bool APIServer::Start(uint16_t port) {
-    if (is_running_.load()) {
-        LogApiOperation("WARN", "START", "Server already running on port " + std::to_string(port_));
-        return false;
+    OllamaApiServer::~OllamaApiServer() {
+        stop();
     }
-    
-    port_ = port;
-    is_running_ = true;
-    
-    // Start server thread
-    server_thread_ = std::make_unique<std::thread>([this]() {
-        try {
-            LogApiOperation("INFO", "START", "API Server initialization started on port " + std::to_string(port_));
-            
-            // Log available endpoints
-            LogApiOperation("INFO", "ENDPOINTS", "POST /api/generate");
-            LogApiOperation("INFO", "ENDPOINTS", "POST /v1/chat/completions");
-            LogApiOperation("INFO", "ENDPOINTS", "GET /api/tags");
-            LogApiOperation("INFO", "ENDPOINTS", "POST /api/pull");
-            
-            // Production HTTP Server Implementation
-            InitializeHttpServer();
-            
-            LogApiOperation("INFO", "STATUS", "Server ready to accept connections");
-            
-            // Main server loop with request handling
-            int iteration = 0;
-            while (is_running_.load()) {
-                try {
-                    ProcessPendingRequests();
-                    HandleClientConnections();
-                    
-                    // Log metrics periodically (every 600 iterations = ~6 seconds at 100ms sleep)
-                    if (++iteration % 600 == 0) {
-                        LogApiOperation("METRICS", "STATISTICS", 
-                            "Total=" + std::to_string(total_requests_.load()) +
-                            " Success=" + std::to_string(successful_requests_.load()) +
-                            " Failed=" + std::to_string(failed_requests_.load()) +
-                            " Active=" + std::to_string(active_connections_.load()));
-                    }
-                    
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    
-                } catch (const std::exception& e) {
-                    LogApiOperation("ERROR", "LOOP", std::string("Request processing error: ") + e.what());
-                    // Continue processing despite errors
+
+    bool OllamaApiServer::start() {
+        WSADATA wsa;
+        if (::WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+            std::cerr << "[OllamaApi] WSAStartup failed\n";
+            return false;
+        }
+
+        m_listenSocket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (m_listenSocket == INVALID_SOCKET) {
+            std::cerr << "[OllamaApi] socket() failed\n";
+            ::WSACleanup();
+            return false;
+        }
+
+        // Allow address reuse
+        int optval = 1;
+        ::setsockopt(m_listenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval));
+
+        sockaddr_in addr{};
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_port = ::htons(static_cast<USHORT>(m_port));
+
+        if (::bind(m_listenSocket, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR) {
+            std::cerr << "[OllamaApi] bind() failed on port " << m_port << "\n";
+            ::closesocket(m_listenSocket);
+            ::WSACleanup();
+            return false;
+        }
+
+        if (::listen(m_listenSocket, SOMAXCONN) == SOCKET_ERROR) {
+            std::cerr << "[OllamaApi] listen() failed\n";
+            ::closesocket(m_listenSocket);
+            ::WSACleanup();
+            return false;
+        }
+
+        m_running = true;
+        m_serverThread = std::thread([this]() {
+            while (m_running.load()) {
+                fd_set fds;
+                FD_ZERO(&fds);
+                FD_SET(m_listenSocket, &fds);
+
+                timeval tv{};
+                tv.tv_sec = 1;
+                tv.tv_usec = 0;
+
+                int result = ::select(static_cast<int>(m_listenSocket) + 1, &fds, nullptr, nullptr, &tv);
+                if (result == SOCKET_ERROR || result == 0) continue;
+
+                SOCKET client = ::accept(m_listenSocket, nullptr, nullptr);
+                if (client != INVALID_SOCKET) {
+                    // Set recv timeout
+                    int timeout = 5000;
+                    ::setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+                    std::thread([this, client]() {
+                        handleClient(client);
+                        ::closesocket(client);
+                    }).detach();
                 }
             }
-            
-        } catch (const std::exception& e) {
-            LogApiOperation("ERROR", "INIT", std::string("Server initialization failed: ") + e.what());
-            is_running_ = false;
-        }
-    });
-    
-    LogApiOperation("INFO", "START", "Server thread created successfully");
-    return true;
-}
+        });
 
-bool APIServer::Stop() {
-    try {
-        if (!is_running_.load()) {
-            LogApiOperation("WARN", "STOP", "Server not running");
-            return true;
-        }
-        
-        is_running_ = false;
-        
-        if (server_thread_ && server_thread_->joinable()) {
-            LogApiOperation("INFO", "STOP", "Waiting for server thread to finish");
-            server_thread_->join();
-        }
-        
-        // Log final statistics
-        LogApiOperation("INFO", "SHUTDOWN", 
-            "Server stopped. Total requests=" + std::to_string(total_requests_.load()) +
-            " Successful=" + std::to_string(successful_requests_.load()) +
-            " Failed=" + std::to_string(failed_requests_.load()));
-        
+        std::cout << "[OllamaApi] Server listening on port " << m_port << "\n";
         return true;
-        
-    } catch (const std::exception& e) {
-        LogApiOperation("ERROR", "STOP", std::string("Stop failed: ") + e.what());
-        return false;
     }
-}
 
-void APIServer::HandleGenerateRequest(const std::string& request, std::string& response) {
-    auto start_time = std::chrono::steady_clock::now();
-    bool success = false;
-    
-    try {
-        LogApiOperation("DEBUG", "GENERATE_REQUEST", "Content length: " + std::to_string(request.length()) + " bytes");
-        
-        // Validate request size
-        if (request.length() > 10 * 1024 * 1024) { // 10MB limit
-            response = CreateErrorResponse("Request body exceeds 10MB limit");
-            LogApiOperation("WARN", "GENERATE_REQUEST", "Request too large: " + std::to_string(request.length()) + " bytes");
-            return;
+    void OllamaApiServer::stop() {
+        m_running = false;
+        if (m_listenSocket != INVALID_SOCKET) {
+            ::closesocket(m_listenSocket);
+            m_listenSocket = INVALID_SOCKET;
         }
-        
-        // Parse and validate JSON request
-        auto parsed_request = ParseJsonRequest(request);
-        std::string prompt = ExtractPromptFromRequest(parsed_request);
-        
-        if (prompt.empty()) {
-            response = CreateErrorResponse("Missing or empty prompt field");
-            LogApiOperation("WARN", "GENERATE_REQUEST", "Empty prompt provided");
-            return;
+        if (m_serverThread.joinable()) {
+            m_serverThread.join();
         }
-        
-        LogApiOperation("DEBUG", "GENERATE_REQUEST", "Prompt: " + prompt.substr(0, 50) + (prompt.length() > 50 ? "..." : ""));
-        
-        // Generate completion with proper error handling
-        std::string completion = GenerateCompletion(prompt);
-        
-        // Create structured JSON response
-        response = CreateGenerateResponse(completion);
-        success = true;
-        
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start_time);
-        LogApiOperation("INFO", "GENERATE_REQUEST", 
-            "Completed in " + std::to_string(duration.count()) + "ms, response=" + std::to_string(response.length()) + " bytes");
-        
-        total_requests_++;
-        successful_requests_++;
-        
-    } catch (const std::exception& e) {
-        response = CreateErrorResponse(std::string("Request processing error: ") + e.what());
-        LogApiOperation("ERROR", "GENERATE_REQUEST", std::string(e.what()));
-        total_requests_++;
-        failed_requests_++;
+        ::WSACleanup();
     }
-}
 
-void APIServer::HandleChatCompletionsRequest(const std::string& request, std::string& response) {
-    auto start_time = std::chrono::steady_clock::now();
-    
-    try {
-        LogApiOperation("DEBUG", "CHAT_REQUEST", "Content length: " + std::to_string(request.length()) + " bytes");
-        
-        // Validate request size
-        if (request.length() > 10 * 1024 * 1024) { // 10MB limit
-            response = CreateErrorResponse("Request body exceeds 10MB limit");
-            LogApiOperation("WARN", "CHAT_REQUEST", "Request too large: " + std::to_string(request.length()) + " bytes");
-            return;
-        }
-        
-        // Parse and validate OpenAI-compatible request
-        auto parsed_request = ParseJsonRequest(request);
-        auto messages = ExtractMessagesFromRequest(parsed_request);
-        
-        if (messages.empty()) {
-            response = CreateErrorResponse("Missing or empty messages field");
-            LogApiOperation("WARN", "CHAT_REQUEST", "No messages in request");
-            return;
-        }
-        
-        // Validate message format
-        if (!ValidateMessageFormat(messages)) {
-            response = CreateErrorResponse("Invalid message format");
-            LogApiOperation("WARN", "CHAT_REQUEST", "Message format validation failed");
-            return;
-        }
-        
-        LogApiOperation("DEBUG", "CHAT_REQUEST", "Processing " + std::to_string(messages.size()) + " messages");
-        
-        // Generate chat completion
-        std::string completion = GenerateChatCompletion(messages);
-        
-        // Create OpenAI-compatible response
-        response = CreateChatCompletionResponse(completion, parsed_request);
-        
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start_time);
-        LogApiOperation("INFO", "CHAT_REQUEST", 
-            "Completed in " + std::to_string(duration.count()) + "ms, response=" + std::to_string(response.length()) + " bytes");
-        
-        total_requests_++;
-        successful_requests_++;
-        
-    } catch (const std::exception& e) {
-        response = CreateErrorResponse(std::string("Chat completion error: ") + e.what());
-        LogApiOperation("ERROR", "CHAT_REQUEST", std::string(e.what()));
-        total_requests_++;
-        failed_requests_++;
+    std::string OllamaApiServer::extractPath(const std::string& request) {
+        // First line: "GET /api/tags HTTP/1.1"
+        size_t firstSpace = request.find(' ');
+        if (firstSpace == std::string::npos) return "";
+        size_t secondSpace = request.find(' ', firstSpace + 1);
+        if (secondSpace == std::string::npos) return "";
+        return request.substr(firstSpace + 1, secondSpace - firstSpace - 1);
     }
-}
 
-void APIServer::HandleTagsRequest(std::string& response) {
-    try {
-        LogApiOperation("INFO", "TAGS_REQUEST", "Retrieving loaded models");
-        
-        // Return list of loaded models with proper JSON structure
-        response = R"({"models":[{"name":"loaded-model","modified_at":"2025-01-01T00:00:00Z","size":0}]})";
-        
-        LogApiOperation("DEBUG", "TAGS_REQUEST", "Response: " + std::to_string(response.length()) + " bytes");
-        total_requests_++;
-        successful_requests_++;
-        
-    } catch (const std::exception& e) {
-        response = CreateErrorResponse(std::string("Tags request error: ") + e.what());
-        LogApiOperation("ERROR", "TAGS_REQUEST", std::string(e.what()));
-        total_requests_++;
-        failed_requests_++;
+    std::string OllamaApiServer::extractBody(const std::string& request) {
+        size_t headerEnd = request.find("\r\n\r\n");
+        if (headerEnd == std::string::npos) return "";
+        return request.substr(headerEnd + 4);
     }
-}
 
-void APIServer::HandlePullRequest(const std::string& request, std::string& response) {
-    try {
-        LogApiOperation("INFO", "PULL_REQUEST", "Model download request - size: " + std::to_string(request.length()) + " bytes");
-        
-        // Parse request JSON
-        auto parsed_request = ParseJsonRequest(request);
-        
-        // Extract model name
-        std::string model_name;
-        if (parsed_request.is_object && parsed_request.object_value.count("name")) {
-            const auto& name_val = parsed_request.object_value.at("name");
-            if (name_val.is_string) {
-                model_name = name_val.string_value;
-                LogApiOperation("DEBUG", "PULL_REQUEST", "Model name: " + model_name);
-            }
-        }
-        
-        if (model_name.empty()) {
-            response = CreateErrorResponse("Missing model name in pull request");
-            LogApiOperation("WARN", "PULL_REQUEST", "No model name provided");
-            total_requests_++;
-            failed_requests_++;
-            return;
-        }
-        
-        // Start HuggingFace download simulation
-        LogApiOperation("INFO", "PULL_REQUEST", "Starting download for model: " + model_name);
-        response = R"({"status":"downloading","model":")" + model_name + R"("})";
-        
-        LogApiOperation("INFO", "PULL_REQUEST", "Download initiated");
-        total_requests_++;
-        successful_requests_++;
-        
-    } catch (const std::exception& e) {
-        response = CreateErrorResponse(std::string("Pull request error: ") + e.what());
-        LogApiOperation("ERROR", "PULL_REQUEST", std::string(e.what()));
-        total_requests_++;
-        failed_requests_++;
+    std::string OllamaApiServer::extractHeaderValue(const std::string& request, const std::string& headerName) {
+        std::string search = headerName + ": ";
+        size_t pos = request.find(search);
+        if (pos == std::string::npos) return "";
+        pos += search.length();
+        size_t end = request.find("\r\n", pos);
+        if (end == std::string::npos) return "";
+        return request.substr(pos, end - pos);
     }
-}
 
-std::string APIServer::GenerateCompletion(const std::string& prompt) {
-    try {
-        LogApiOperation("DEBUG", "INFERENCE", "Generating completion for prompt (" + std::to_string(prompt.length()) + " chars)");
-        
-        if (!app_state_.loaded_model || !app_state_.gpu_context) {
-            LogApiOperation("WARN", "INFERENCE", "No model loaded or GPU context unavailable");
-            return "Error: No model loaded";
-        }
-        
-        // Simulate inference with timing
-        auto start = std::chrono::steady_clock::now();
-        
-        // Production inference logic would interface with GGML/GGUF loader here
-        std::string completion = "This is a generated response from the model";
-        
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
-        LogApiOperation("DEBUG", "INFERENCE", 
-            "Completion generated in " + std::to_string(duration.count()) + "ms");
-        
-        return completion;
-        
-    } catch (const std::exception& e) {
-        LogApiOperation("ERROR", "INFERENCE", std::string(e.what()));
-        return std::string("Error: ") + e.what();
-    }
-}
-
-std::string APIServer::GenerateChatCompletion(const std::vector<ChatMessage>& messages) {
-    try {
-        LogApiOperation("DEBUG", "CHAT_INFERENCE", "Generating chat completion for " + std::to_string(messages.size()) + " messages");
-        
-        if (!app_state_.loaded_model || !app_state_.gpu_context) {
-            LogApiOperation("WARN", "CHAT_INFERENCE", "No model loaded or GPU context unavailable");
-            return "Error: No model loaded";
-        }
-        
-        // Log message summary
-        for (size_t i = 0; i < messages.size(); ++i) {
-            LogApiOperation("DEBUG", "CHAT_INFERENCE", 
-                "Message[" + std::to_string(i) + "]: role=" + messages[i].role + 
-                " length=" + std::to_string(messages[i].content.length()));
-        }
-        
-        // Simulate inference with timing
-        auto start = std::chrono::steady_clock::now();
-        
-        // Production inference logic would interface with GGML/GGUF loader here
-        std::string completion = "Assistant response to the conversation.";
-        
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start);
-        LogApiOperation("DEBUG", "CHAT_INFERENCE", 
-            "Chat completion generated in " + std::to_string(duration.count()) + "ms");
-        
-        return completion;
-        
-    } catch (const std::exception& e) {
-        LogApiOperation("ERROR", "CHAT_INFERENCE", std::string(e.what()));
-        return std::string("Error: ") + e.what();
-    }
-}
-
-// Production HTTP server utility implementations
-void APIServer::InitializeHttpServer() {
-    try {
-        start_time_ = std::chrono::steady_clock::now();
-        LogApiOperation("INFO", "HTTP_INIT", "Initializing HTTP server on port " + std::to_string(port_));
-        
-        // Initialize socket, bind to port, start listening
-        LogApiOperation("DEBUG", "HTTP_INIT", "Socket configuration in progress");
-        LogApiOperation("INFO", "HTTP_INIT", "HTTP server initialized successfully");
-        
-    } catch (const std::exception& e) {
-        LogApiOperation("ERROR", "HTTP_INIT", std::string("Initialization failed: ") + e.what());
-        throw;
-    }
-}
-
-void APIServer::ProcessPendingRequests() {
-    try {
-        std::lock_guard<std::mutex> lock(request_queue_mutex_);
-        
-        int processed = 0;
-        while (!pending_requests_.empty() && is_running_.load()) {
-            auto request = pending_requests_.front();
-            pending_requests_.pop();
-            
-            try {
-                // Process request asynchronously
-                std::string response_body;
-                if (request.path == "/api/generate") {
-                    HandleGenerateRequest(request.body, response_body);
-                } else if (request.path == "/v1/chat/completions") {
-                    HandleChatCompletionsRequest(request.body, response_body);
-                } else if (request.path == "/api/tags") {
-                    HandleTagsRequest(response_body);
-                } else if (request.path == "/api/pull") {
-                    HandlePullRequest(request.body, response_body);
+    void OllamaApiServer::handleClient(SOCKET clientSocket) {
+        // Read request
+        std::string request;
+        char buf[4096];
+        int totalRead = 0;
+        while (true) {
+            int bytes = ::recv(clientSocket, buf, sizeof(buf) - 1, 0);
+            if (bytes <= 0) break;
+            buf[bytes] = '\0';
+            request += buf;
+            totalRead += bytes;
+            if (request.find("\r\n\r\n") != std::string::npos) {
+                // Check Content-Length
+                std::string clStr = extractHeaderValue(request, "Content-Length");
+                if (!clStr.empty()) {
+                    size_t contentLength = std::stoul(clStr);
+                    size_t headerEnd = request.find("\r\n\r\n");
+                    size_t bodyStart = headerEnd + 4;
+                    size_t bodySize = request.size() - bodyStart;
+                    if (bodySize >= contentLength) break;
                 } else {
-                    response_body = CreateErrorResponse("Unknown endpoint: " + request.path);
-                }
-                
-                // Send response back to client (would interface with actual socket)
-                processed++;
-                
-            } catch (const std::exception& e) {
-                LogApiOperation("ERROR", "PROCESS", 
-                    "Failed to process request for " + request.path + ": " + e.what());
-            }
-        }
-        
-        if (processed > 0) {
-            LogApiOperation("DEBUG", "PROCESS", "Processed " + std::to_string(processed) + " pending requests");
-        }
-        
-    } catch (const std::exception& e) {
-        LogApiOperation("ERROR", "PROCESS", std::string(e.what()));
-    }
-}
-
-void APIServer::HandleClientConnections() {
-    try {
-        // Accept new connections, add them to request queue
-        // This would interface with actual socket implementation
-        
-    } catch (const std::exception& e) {
-        LogApiOperation("ERROR", "CONNECTION", std::string(e.what()));
-    }
-}
-
-// JSON parsing utilities
-JsonValue APIServer::ParseJsonRequest(const std::string& request) {
-    // Simple JSON parsing implementation
-    JsonValue result;
-    result.is_object = true;
-    
-    // Basic JSON parsing - would be replaced with proper JSON library in production
-    size_t prompt_pos = request.find("\"prompt\"");
-    if (prompt_pos != std::string::npos) {
-        size_t colon_pos = request.find(":", prompt_pos);
-        if (colon_pos != std::string::npos) {
-            size_t quote_start = request.find("\"", colon_pos);
-            if (quote_start != std::string::npos) {
-                size_t quote_end = request.find("\"", quote_start + 1);
-                if (quote_end != std::string::npos) {
-                    JsonValue prompt_val;
-                    prompt_val.is_string = true;
-                    prompt_val.string_value = request.substr(quote_start + 1, quote_end - quote_start - 1);
-                    result.object_value["prompt"] = prompt_val;
+                    break;
                 }
             }
         }
-    }
-    
-    return result;
-}
 
-std::string APIServer::ExtractPromptFromRequest(const JsonValue& request) {
-    if (request.is_object && request.object_value.count("prompt")) {
-        const auto& prompt_val = request.object_value.at("prompt");
-        if (prompt_val.is_string) {
-            return prompt_val.string_value;
+        if (request.empty()) return;
+
+        std::string path = extractPath(request);
+        std::string method;
+        size_t firstSpace = request.find(' ');
+        if (firstSpace != std::string::npos) {
+            method = request.substr(0, firstSpace);
         }
-    }
-    return "";
-}
 
-std::vector<ChatMessage> APIServer::ExtractMessagesFromRequest(const JsonValue& request) {
-    std::vector<ChatMessage> messages;
-    // Simple message extraction - would be enhanced for production
-    if (request.is_object && request.object_value.count("messages")) {
-        // For now, create a default message
-        ChatMessage msg;
-        msg.role = "user";
-        msg.content = "Hello";
-        messages.push_back(msg);
-    }
-    return messages;
-}
+        std::string response;
 
-bool APIServer::ValidateMessageFormat(const std::vector<ChatMessage>& messages) {
-    for (const auto& msg : messages) {
-        if (msg.role.empty() || msg.content.empty()) {
-            return false;
+        if (method == "GET" && path == "/api/tags") {
+            response = handleGetTags();
+        } else if (method == "POST" && path == "/api/generate") {
+            std::string body = extractBody(request);
+            response = handlePostGenerate(body);
+        } else if (method == "POST" && path == "/api/chat") {
+            std::string body = extractBody(request);
+            response = handlePostChat(body);
+        } else {
+            // 404
+            std::string body = R"({"error":"not found"})";
+            sendResponse(clientSocket, 404, "application/json", body);
+            return;
         }
-        if (msg.role != "user" && msg.role != "assistant" && msg.role != "system") {
-            return false;
+
+        sendResponse(clientSocket, 200, "application/json", response);
+    }
+
+    std::string OllamaApiServer::handleGetTags() {
+        std::lock_guard<std::mutex> lock(m_modelsMutex);
+
+        std::ostringstream oss;
+        oss << R"({"models":[)";
+        bool first = true;
+        for (const auto& [name, path] : m_models) {
+            if (!first) oss << ",";
+            first = false;
+            oss << R"({"name":")" << escapeJson(name)
+                << R"(","modified_at":"2026-01-01T00:00:00Z","size":0,"digest":"sha256:")" 
+                << escapeJson(name) << R"(","details":{}})";
         }
+        oss << "]}";
+        return oss.str();
     }
-    return !messages.empty();
-}
 
-// Response generation utilities
-std::string APIServer::CreateErrorResponse(const std::string& error_message) {
-    std::stringstream ss;
-    ss << "{\n";
-    ss << "  \"error\": {\n";
-    ss << "    \"message\": \"" << error_message << "\",\n";
-    ss << "    \"type\": \"invalid_request_error\",\n";
-    ss << "    \"code\": \"invalid_request\"\n";
-    ss << "  }\n";
-    ss << "}";
-    return ss.str();
-}
+    std::string OllamaApiServer::handlePostGenerate(const std::string& body) {
+        // Minimal JSON parsing (dependency-free)
+        GenerateRequest req;
+        req.num_predict = 128;
+        req.temperature = 0.7f;
+        req.top_p = 0.9f;
+        req.top_k = 50;
+        req.seed = 42;
 
-std::string APIServer::CreateGenerateResponse(const std::string& completion) {
-    auto now = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-        
-    std::stringstream ss;
-    ss << "{\n";
-    ss << "  \"response\": \"" << completion << "\",\n";
-    ss << "  \"done\": true,\n";
-    ss << "  \"created_at\": " << now << "\n";
-    ss << "}";
-    return ss.str();
-}
+        // Parse "model": "..."
+        size_t pos = body.find("\"model\"");
+        if (pos != std::string::npos) {
+            pos = body.find('"', pos + 8);
+            if (pos != std::string::npos) {
+                size_t end = body.find('"', pos + 1);
+                if (end != std::string::npos) req.model = body.substr(pos + 1, end - pos - 1);
+            }
+        }
 
-std::string APIServer::CreateChatCompletionResponse(const std::string& completion, const JsonValue& request) {
-    auto now = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-        
-    std::stringstream ss;
-    ss << "{\n";
-    ss << "  \"id\": \"chatcmpl-" << now << "\",\n";
-    ss << "  \"object\": \"chat.completion\",\n";
-    ss << "  \"created\": " << now << ",\n";
-    ss << "  \"model\": \"unknown\",\n";
-    ss << "  \"choices\": [\n";
-    ss << "    {\n";
-    ss << "      \"index\": 0,\n";
-    ss << "      \"message\": {\n";
-    ss << "        \"role\": \"assistant\",\n";
-    ss << "        \"content\": \"" << completion << "\"\n";
-    ss << "      },\n";
-    ss << "      \"finish_reason\": \"stop\"\n";
-    ss << "    }\n";
-    ss << "  ],\n";
-    ss << "  \"usage\": {\n";
-    ss << "    \"prompt_tokens\": 0,\n";
-    ss << "    \"completion_tokens\": 0,\n";
-    ss << "    \"total_tokens\": 0\n";
-    ss << "  }\n";
-    ss << "}";
-    return ss.str();
-}
+        // Parse "prompt": "..."
+        pos = body.find("\"prompt\"");
+        if (pos != std::string::npos) {
+            pos = body.find('"', pos + 8);
+            if (pos != std::string::npos) {
+                size_t end = body.find('"', pos + 1);
+                if (end != std::string::npos) req.prompt = body.substr(pos + 1, end - pos - 1);
+            }
+        }
 
-// Logging utilities - Structured logging with timestamps
-void APIServer::LogRequestReceived(const std::string& endpoint, size_t content_length) {
-    LogApiOperation("DEBUG", "REQUEST_IN", 
-        "Endpoint: " + endpoint + " Size: " + std::to_string(content_length) + " bytes");
-}
+        // Parse "num_predict"
+        pos = body.find("\"num_predict\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.num_predict = static_cast<uint32_t>(std::stoi(body.substr(pos)));
+            }
+        }
 
-void APIServer::LogRequestCompleted(const std::string& endpoint, size_t response_length) {
-    LogApiOperation("INFO", "REQUEST_OUT", 
-        "Endpoint: " + endpoint + " Size: " + std::to_string(response_length) + " bytes");
-}
+        // Parse "temperature"
+        pos = body.find("\"temperature\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.temperature = std::stof(body.substr(pos));
+            }
+        }
 
-void APIServer::LogRequestError(const std::string& endpoint, const std::string& error) {
-    LogApiOperation("ERROR", "REQUEST_FAIL", 
-        "Endpoint: " + endpoint + " Error: " + error);
-}
+        // Parse "top_p"
+        pos = body.find("\"top_p\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.top_p = std::stof(body.substr(pos));
+            }
+        }
 
-void APIServer::LogServerError(const std::string& error) {
-    LogApiOperation("ERROR", "SERVER", error);
-}
+        // Parse "top_k"
+        pos = body.find("\"top_k\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.top_k = static_cast<uint32_t>(std::stoi(body.substr(pos)));
+            }
+        }
 
-// Performance monitoring utilities
-void APIServer::RecordRequestMetrics(const std::string& endpoint, 
-                                    std::chrono::milliseconds duration,
-                                    bool success) {
-    // Record request duration and success rate for monitoring
-    std::cout << "Request metrics - Endpoint: " << endpoint 
-              << ", Duration: " << duration.count() << "ms"
-              << ", Success: " << (success ? "true" : "false") << std::endl;
-}
+        // Parse "seed"
+        pos = body.find("\"seed\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.seed = static_cast<uint64_t>(std::stoull(body.substr(pos)));
+            }
+        }
 
-void APIServer::UpdateConnectionMetrics(int active_connections) {
-    active_connections_.store(active_connections);
-}
+        // Generate using the inference engine
+        if (!m_engine || !m_engine->isLoaded()) {
+            GenerateResponse resp;
+            resp.model = req.model;
+            resp.created_at = "2026-01-01T00:00:00Z";
+            resp.response = "Error: No model loaded";
+            resp.done = true;
+            return buildJsonResponse(resp);
+        }
 
-// Security utilities
-bool APIServer::ValidateRequest(const HttpRequest& request) {
-    // Implement request validation (size limits, content type, etc.)
-    if (request.body.length() > 10 * 1024 * 1024) { // 10MB limit
-        return false;
+        Deep2Rom::Inference::EngineConfig cfg;
+        cfg.maxGenTokens = req.num_predict;
+        cfg.temperature = req.temperature;
+        cfg.topP = req.top_p;
+        cfg.topK = req.top_k;
+        cfg.seed = req.seed;
+        cfg.addBos = true;
+        cfg.addEos = true;
+        cfg.skipSpecialTokens = true;
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+        InferenceResult result = m_engine->generate(req.prompt, cfg);
+        auto endTime = std::chrono::high_resolution_clock::now();
+        double totalTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
+
+        GenerateResponse resp;
+        resp.model = req.model;
+        resp.created_at = "2026-01-01T00:00:00Z";
+        resp.response = result.text;
+        resp.done = true;
+        resp.total_duration = static_cast<uint32_t>(totalTimeMs * 1000000); // nanoseconds
+        resp.eval_count = result.tokensGenerated;
+        resp.eval_duration = static_cast<uint32_t>(totalTimeMs * 1000000);
+
+        return buildJsonResponse(resp);
     }
-    return true;
-}
 
-bool APIServer::CheckRateLimit(const std::string& client_id) {
-    std::lock_guard<std::mutex> lock(rate_limit_mutex_);
-    auto now = std::chrono::steady_clock::now();
-    auto& last_time = last_request_times_[client_id];
-    auto& count = request_counts_[client_id];
-    
-    // Reset counter if more than 1 minute has passed
-    if (now - last_time > std::chrono::minutes(1)) {
-        count = 0;
-        last_time = now;
+    std::string OllamaApiServer::handlePostChat(const std::string& body) {
+        ChatRequest req;
+        req.num_predict = 128;
+        req.temperature = 0.7f;
+        req.top_p = 0.9f;
+        req.top_k = 50;
+        req.seed = 42;
+
+        // Parse "model"
+        size_t pos = body.find("\"model\"");
+        if (pos != std::string::npos) {
+            pos = body.find('"', pos + 8);
+            if (pos != std::string::npos) {
+                size_t end = body.find('"', pos + 1);
+                if (end != std::string::npos) req.model = body.substr(pos + 1, end - pos - 1);
+            }
+        }
+
+        // Parse messages — extract the last user message content
+        std::string userContent;
+        pos = 0;
+        while ((pos = body.find("\"role\":\"user\"", pos)) != std::string::npos) {
+            // Find the content after this user role
+            size_t contentPos = body.find("\"content\"", pos);
+            if (contentPos != std::string::npos) {
+                contentPos = body.find('"', contentPos + 9);
+                if (contentPos != std::string::npos) {
+                    size_t end = body.find('"', contentPos + 1);
+                    if (end != std::string::npos) {
+                        userContent = body.substr(contentPos + 1, end - contentPos - 1);
+                    }
+                }
+            }
+            pos += 12;
+        }
+
+        // Parse generation params (same as generate)
+        pos = body.find("\"num_predict\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.num_predict = static_cast<uint32_t>(std::stoi(body.substr(pos)));
+            }
+        }
+
+        pos = body.find("\"temperature\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.temperature = std::stof(body.substr(pos));
+            }
+        }
+
+        pos = body.find("\"top_p\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.top_p = std::stof(body.substr(pos));
+            }
+        }
+
+        pos = body.find("\"top_k\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.top_k = static_cast<uint32_t>(std::stoi(body.substr(pos)));
+            }
+        }
+
+        pos = body.find("\"seed\"");
+        if (pos != std::string::npos) {
+            pos = body.find(':', pos);
+            if (pos != std::string::npos) {
+                pos++;
+                while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) pos++;
+                req.seed = static_cast<uint64_t>(std::stoull(body.substr(pos)));
+            }
+        }
+
+        // Generate
+        if (!m_engine || !m_engine->isLoaded()) {
+            ChatResponse resp;
+            resp.model = req.model;
+            resp.created_at = "2026-01-01T00:00:00Z";
+            resp.message.role = "assistant";
+            resp.message.content = "Error: No model loaded";
+            resp.done = true;
+            return buildJsonResponse(resp);
+        }
+
+        Deep2Rom::Inference::EngineConfig cfg;
+        cfg.maxGenTokens = req.num_predict;
+        cfg.temperature = req.temperature;
+        cfg.topP = req.top_p;
+        cfg.topK = req.top_k;
+        cfg.seed = req.seed;
+        cfg.addBos = true;
+        cfg.addEos = true;
+        cfg.skipSpecialTokens = true;
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+        InferenceResult result = m_engine->generate(userContent, cfg);
+        auto endTime = std::chrono::high_resolution_clock::now();
+        double totalTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
+
+        ChatResponse resp;
+        resp.model = req.model;
+        resp.created_at = "2026-01-01T00:00:00Z";
+        resp.message.role = "assistant";
+        resp.message.content = result.text;
+        resp.done = true;
+
+        return buildJsonResponse(resp);
     }
-    
-    // Allow max 60 requests per minute
-    return count < 60;
-}
 
-void APIServer::UpdateRateLimit(const std::string& client_id) {
-    std::lock_guard<std::mutex> lock(rate_limit_mutex_);
-    request_counts_[client_id]++;
-}
+    std::string OllamaApiServer::escapeJson(const std::string& s) {
+        std::ostringstream oss;
+        for (char c : s) {
+            switch (c) {
+                case '"': oss << "\\\""; break;
+                case '\\': oss << "\\\\"; break;
+                case '\b': oss << "\\b"; break;
+                case '\f': oss << "\\f"; break;
+                case '\n': oss << "\\n"; break;
+                case '\r': oss << "\\r"; break;
+                case '\t': oss << "\\t"; break;
+                default:
+                    if (static_cast<unsigned char>(c) < 0x20) {
+                        oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(c);
+                    } else {
+                        oss << c;
+                    }
+            }
+        }
+        return oss.str();
+    }
+
+    std::string OllamaApiServer::buildJsonResponse(const GenerateResponse& resp) {
+        std::ostringstream oss;
+        oss << "{";
+        oss << R"("model":")" << escapeJson(resp.model) << R"(",)";
+        oss << R"("created_at":")" << escapeJson(resp.created_at) << R"(",)";
+        oss << R"("response":")" << escapeJson(resp.response) << R"(",)";
+        oss << R"("done":)" << (resp.done ? "true" : "false") << ",";
+        oss << R"("total_duration":)" << resp.total_duration << ",";
+        oss << R"("load_duration":)" << resp.load_duration << ",";
+        oss << R"("prompt_eval_count":)" << resp.prompt_eval_count << ",";
+        oss << R"("prompt_eval_duration":)" << resp.prompt_eval_duration << ",";
+        oss << R"("eval_count":)" << resp.eval_count << ",";
+        oss << R"("eval_duration":)" << resp.eval_duration;
+        oss << "}";
+        return oss.str();
+    }
+
+    std::string OllamaApiServer::buildJsonResponse(const ChatResponse& resp) {
+        std::ostringstream oss;
+        oss << "{";
+        oss << R"("model":")" << escapeJson(resp.model) << R"(",)";
+        oss << R"("created_at":")" << escapeJson(resp.created_at) << R"(",)";
+        oss << R"("message":{"role":")" << escapeJson(resp.message.role) << R"(","content":")" 
+            << escapeJson(resp.message.content) << R"(")},)";
+        oss << R"("done":)" << (resp.done ? "true" : "false");
+        oss << "}";
+        return oss.str();
+    }
+
+    std::string OllamaApiServer::buildJsonTagsResponse() {
+        std::lock_guard<std::mutex> lock(m_modelsMutex);
+        std::ostringstream oss;
+        oss << R"({"models":[)";
+        bool first = true;
+        for (const auto& [name, path] : m_models) {
+            if (!first) oss << ",";
+            first = false;
+            oss << R"({"name":")" << escapeJson(name)
+                << R"(","modified_at":"2026-01-01T00:00:00Z","size":0,"digest":"sha256:")" 
+                << escapeJson(name) << R"(","details":{}})";
+        }
+        oss << "]}";
+        return oss.str();
+    }
+
+    void OllamaApiServer::sendResponse(SOCKET sock, int statusCode, const std::string& contentType, const std::string& body) {
+        std::ostringstream oss;
+        oss << "HTTP/1.1 " << statusCode << " OK\r\n";
+        oss << "Content-Type: " << contentType << "\r\n";
+        oss << "Content-Length: " << body.size() << "\r\n";
+        oss << "Connection: close\r\n";
+        oss << "\r\n";
+        oss << body;
+
+        std::string response = oss.str();
+        ::send(sock, response.c_str(), static_cast<int>(response.size()), 0);
+    }
+
+    void OllamaApiServer::registerModel(const std::string& name, const std::string& path) {
+        std::lock_guard<std::mutex> lock(m_modelsMutex);
+        m_models[name] = path;
+    }
+
+} // namespace Deep2Rom::Api

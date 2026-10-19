@@ -448,11 +448,8 @@ std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::
     
     // Track actual tensor data offset in ROM
     uint64_t rom_tensor_data_start = output.tellp();
-    std::wcout << L"  Tensor data starts at ROM offset: " << rom_tensor_data_start << L" bytes\n";
+std::wcout << L"  Tensor data starts at ROM offset: " << rom_tensor_data_start << L" bytes\n";
     std::wcout.flush();
-
-    // Track total file size
-    uint64_t file_size = output.tellp();
     
     for (size_t i = 0; i < tensors.size(); ++i) {
         // Calculate tensor size
@@ -487,6 +484,9 @@ std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::
             std::wcerr << L"[ERROR] Failed to write tensor " << i << L" (" << std::wstring(tensors[i].name.begin(), tensors[i].name.end()) << L")\n";
             return 1;
         }
+        
+        // Update file size
+        file_size += bytes_read;
         
         std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
         std::wcout << bytes_read << L" bytes\r";
@@ -532,7 +532,8 @@ std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::
         }
     }
 
-// Update header with actual total size
+}
+
     output.flush();
     output.close();
     
@@ -544,7 +545,8 @@ std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::
     }
     
     output2.seekp(0);
-    header.total_rom_size = static_cast<uint64_t>(file_size); // We'll calculate this
+    uint64_t final_size = static_cast<uint64_t>(std::filesystem::file_size(output_path));
+    header.total_rom_size = final_size;
     output2.write(reinterpret_cast<char*>(&header), sizeof(RomHeaderMultiShard));
     if (!output2.good()) {
         std::wcerr << L"[ERROR] Failed to update header\n";
@@ -554,7 +556,7 @@ std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::
     
     std::wcout << L"\n=== CONVERSION COMPLETE ===\n";
     std::wcout << L"Output ROM: " << output_path << L"\n";
-    std::wcout << L"ROM size:   " << file_size << L" bytes (" << (file_size / 1024 / 1024) << L" MB)\n";
+    std::wcout << L"ROM size:   " << final_size << L" bytes (" << (final_size / 1024 / 1024) << L" MB)\n";
     std::wcout << L"Tensors:    " << tensors.size() << L"\n";
     std::wcout.flush();
     

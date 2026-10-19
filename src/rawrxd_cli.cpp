@@ -142,9 +142,22 @@ int main(int argc, char** argv) {
     // Initialize telemetry
     telemetry::Initialize();
 
-    // Start API server
-    APIServer api(state);
-    api.Start(11434);
+    // Initialize Deep2 Inference Engine (for Ollama API and rawr run)
+    static Deep2Rom::Inference::InferenceEngine deep2Engine;
+    deep2Engine.init(VK_NULL_HANDLE, VK_NULL_HANDLE);
+
+    // Start Ollama-compatible API server on port 11434
+    Deep2Rom::Api::OllamaApiServer apiServer(11434);
+    apiServer.setEngine(&deep2Engine);
+    // Register any models found in common locations
+    apiServer.registerModel("phi3-mini", "G:\\~dev\\rawrxd\\models\\phi3-mini-Q2_K.gguf");
+    apiServer.registerModel("tinyllama", "G:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf");
+    apiServer.registerModel("llama3.2-3b", "G:\\~dev\\rawrxd\\models\\llama3.2-3b-Q2_K.gguf");
+    apiServer.registerModel("gemma3-1b", "G:\\~dev\\rawrxd\\models\\gemma3-1b-Q2_K.gguf");
+    std::thread apiThread([&apiServer]() {
+        apiServer.start();
+    });
+    std::cout << "[Ollama API] Server starting on port 11434\n";
 
     // Start governor if requested
     OverclockGovernor governor;
@@ -154,7 +167,7 @@ int main(int argc, char** argv) {
         governor_running = true;
     }
 
-    // Initialize Inference Engine and Agent
+    // Initialize Native Agent (separate from Deep2 engine)
     std::cout << "Initializing Native Inference Engine..." << std::endl;
     static CPUInference::CPUInferenceEngine engine;
     static RawrXD::NativeAgent agent(&engine);
@@ -190,6 +203,30 @@ int main(int argc, char** argv) {
                         std::cout << "Failed to load model." << std::endl;
                     }
                 }
+                else if (action == "/api-load") {
+                    std::string path;
+                    std::getline(ss, path);
+                    if (!path.empty()) path = path.substr(1); // remove leading space
+
+                    if (path.empty()) {
+                        std::cout << "Usage: /api-load <model_path>" << std::endl;
+                        break;
+                    }
+
+                    // Load model into the shared Deep2 engine (used by Ollama API)
+                    if (!deep2Engine.loadModel(path)) {
+                        std::cerr << "[api-load] Failed to load model: " << path << std::endl;
+                        break;
+                    }
+                    // Register with API server
+                    size_t lastSlash = path.find_last_of("\\/");
+                    std::string modelName = (lastSlash != std::string::npos) ? path.substr(lastSlash + 1) : path;
+                    apiServer.registerModel(modelName, path);
+                    std::cout << "[api-load] Model loaded and registered as '" << modelName << "'\n";
+                    std::cout << "[api-load] Layers: " << deep2Engine.modelConfig().numLayers
+                              << ", Hidden: " << deep2Engine.modelConfig().hiddenDim
+                              << ", Vocab: " << deep2Engine.vocabSize() << std::endl;
+                }
                 else if (action == "/run") {
                     std::string modelPath;
                     std::getline(ss, modelPath);
@@ -199,20 +236,21 @@ int main(int argc, char** argv) {
                         std::cout << "Usage: /run <model_path> [prompt]" << std::endl;
                         break;
                     }
-
-                    // Initialize the Deep2 Inference Engine with this model
-                    Deep2Rom::Inference::InferenceEngine infEngine;
-                    if (!infEngine.init(VK_NULL_HANDLE, VK_NULL_HANDLE)) {
-                        std::cerr << "[rawr run] Failed to initialize inference engine (Vulkan not available, CPU fallback)\n";
-                    }
-                    if (!infEngine.loadModel(modelPath)) {
-                        std::cerr << "[rawr run] Failed to load model: " << modelPath << std::endl;
-                        break;
+                    // Use the shared Deep2 Inference Engine (same one used by Ollama API)
+                    if (!deep2Engine.isLoaded()) {
+                        if (!deep2Engine.loadModel(modelPath)) {
+                            std::cerr << "[rawr run] Failed to load model: " << modelPath << std::endl;
+                            break;
+                        }
+                        // Register with API server
+                        size_t lastSlash = modelPath.find_last_of("\\/");
+                        std::string modelName = (lastSlash != std::string::npos) ? modelPath.substr(lastSlash + 1) : modelPath;
+                        apiServer.registerModel(modelName, modelPath);
                     }
                     std::cout << "[rawr run] Model loaded: " << modelPath << std::endl;
-                    std::cout << "[rawr run] Layers: " << infEngine.modelConfig().numLayers
-                              << ", Hidden: " << infEngine.modelConfig().hiddenDim
-                              << ", Vocab: " << infEngine.vocabSize() << std::endl;
+                    std::cout << "[rawr run] Layers: " << deep2Engine.modelConfig().numLayers
+                              << ", Hidden: " << deep2Engine.modelConfig().hiddenDim
+                              << ", Vocab: " << deep2Engine.vocabSize() << std::endl;
 
                     // Read optional prompt from command line, else interactive mode
                     std::string prompt;
@@ -233,7 +271,7 @@ int main(int argc, char** argv) {
                         std::cout << "[rawr run] Generating response to: \"" << prompt << "\"\n";
                         std::cout << "[rawr run] Response: ";
 
-                        auto result = infEngine.generate(prompt, cfg);
+                        auto result = deep2Engine.generate(prompt, cfg);
                         if (result.success) {
                             std::cout << result.text << std::endl;
                             std::cout << "[rawr run] Tokens: " << result.tokensGenerated
@@ -245,6 +283,7 @@ int main(int argc, char** argv) {
                     } else {
                         // Interactive chat mode
                         std::cout << "[rawr run] Interactive chat mode. Type 'exit' or 'quit' to leave.\n";
+
                         Deep2Rom::Inference::EngineConfig cfg;
                         cfg.maxGenTokens = 256;
                         cfg.temperature = 0.7f;
@@ -260,7 +299,7 @@ int main(int argc, char** argv) {
                             std::getline(std::cin, userInput);
                             if (userInput == "exit" || userInput == "quit" || userInput.empty()) break;
 
-                            auto result = infEngine.generate(userInput, cfg);
+                            auto result = deep2Engine.generate(userInput, cfg);
                             if (result.success) {
                                 std::cout << "Deep2: " << result.text << std::endl;
                             } else {
@@ -384,9 +423,12 @@ int main(int argc, char** argv) {
                 std::cout << "Increased offset to " << state.applied_core_offset_mhz << " MHz" << std::endl;
                 break;
             case '-':
-                state.applied_core_offset_mhz = std::max(0, state.applied_core_offset_mhz - (int)state.boost_step_mhz);
-                overclock_vendor::ApplyCpuOffsetMhz(state.applied_core_offset_mhz);
-                std::cout << "Decreased offset to " << state.applied_core_offset_mhz << " MHz" << std::endl;
+                {
+                    int newVal = state.applied_core_offset_mhz - (int)state.boost_step_mhz;
+                    state.applied_core_offset_mhz = newVal < 0 ? 0 : newVal;
+                    overclock_vendor::ApplyCpuOffsetMhz(state.applied_core_offset_mhz);
+                    std::cout << "Decreased offset to " << state.applied_core_offset_mhz << " MHz" << std::endl;
+                }
                 break;
             case 's':
                 Settings::SaveCompute(state);
@@ -492,7 +534,7 @@ int main(int argc, char** argv) {
     }
 
     if (governor_running) governor.Stop();
-    api.Stop();
+    // apiServer is a background thread; it runs until process exit
     telemetry::Shutdown();
     std::cout << "Exiting RawrXD CLI" << std::endl;
     return 0;

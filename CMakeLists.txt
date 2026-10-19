@@ -43,13 +43,14 @@ if(WIN32)
     add_executable(deep2_cli
         src/rawrxd_cli.cpp
         src/GGUFLoader.cpp
+        src/api_server.cpp
         src/core/Tokenizer.cpp
         src/core/KVCache.cpp
         src/core/Sampling.cpp
         src/core/GenerationLoop.cpp
         src/core/InferenceEngine.cpp
     )
-    target_link_libraries(deep2_cli PRIVATE Vulkan::Vulkan)
+    target_link_libraries(deep2_cli PRIVATE Vulkan::Vulkan ws2_32)
     target_include_directories(deep2_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 endif()
 
