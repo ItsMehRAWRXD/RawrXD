@@ -784,6 +784,16 @@ static void ComputeWindowAttention(float* outputStates,
     }
 }
 
+// The magnitude of a vector's components, for the component decomposition.
+//
+// The forward pass needs to say which part of a block is running away: the
+// attention output, its projection, the FFN, or the residual stream itself.
+// Without that, a runaway can only be guessed at.
+static double ComponentRms(const float* v, size_t n) {
+    double s = 0.0;
+    for (size_t i = 0; i < n; ++i) s += static_cast<double>(v[i]) * v[i];
+    return (n ? std::sqrt(s / n) : 0.0);
+}
 bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
                                              std::vector<float>& outputLogits,
                                              std::vector<float>& baselineLogits,
@@ -873,10 +883,30 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
     }
     const deep2::DequantizedTensor& outputNormDq = m_outputNorm;
 
+    // The vocabulary size bounds the token ids.
+    //
+    // The embedding table is [vocab, hidden], so its column count is the
+    // hidden size and not the vocabulary size. Checking a token id against
+    // it rejects every id above the hidden size and silently substitutes
+    // the embedding of token zero, which for a 32064 token vocabulary and a
+    // 3072 wide model is most of the vocabulary. The prompt "The capital
+    // of France is" has two tokens above 3072, and both of them were
+    // quietly replaced.
+    //
+    // This reads the ROM's own value rather than the geometry copy above,
+    // which falls back to a hard-coded 32064 when the metadata has none.
+    // A model that does not report its vocabulary is a model this pass
+    // cannot bound a token id against, so it is refused here.
+    const uint32_t romVocabSize = static_cast<uint32_t>(rom.geometry().vocabSize);
+    if (romVocabSize == 0) {
+        fprintf(stderr, "[Move 10] the model reports no vocabulary size\n");
+        return false;
+    }
+
     // Use first token's embedding as initial hidden state
     if (inputTokens.empty()) return false;
     uint32_t firstToken = inputTokens[0];
-    if (firstToken >= tokenEmbDq.cols) firstToken = 0;
+    if (firstToken >= romVocabSize) firstToken = 0;
     std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
 
@@ -1016,7 +1046,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
         // Each position starts from its own token embedding.
         {
             uint32_t token = inputTokens[tokenPos];
-            if (token >= tokenEmbDq.cols) token = 0;
+            if (token >= romVocabSize) token = 0;
             std::memcpy(hiddenStates.data(), &tokenEmbDq.data[static_cast<size_t>(token) * hiddenDim],
                         hiddenDim * sizeof(float));
         }
@@ -1178,6 +1208,14 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                               static_cast<uint32_t>(hiddenDim), static_cast<uint32_t>(hiddenDim));
                 }
 
+                if (m_layerTrace) {
+                    std::cout << "[COMPTRACE] layer=" << layer
+                              << " attnOutRms=" << ComponentRms(attnOut.data(), attnOut.size())
+                              << " attnProjRms=" << ComponentRms(attnProj.data(), attnProj.size())
+                              << " streamRms=" << ComponentRms(hiddenStates.data(), hiddenDim)
+                              << "\n" << std::flush;
+                }
+
                 // The attention block is a residual: the block adds its
                 // output to the stream. The previous code overwrote the
                 // stream with V instead, which is not an attention output
@@ -1288,6 +1326,13 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                     tLayerEnd - tDownStart).count();
             }
 
+            if (m_layerTrace) {
+                std::cout << "[COMPTRACE] layer=" << layer
+                          << " upOutRms=" << ComponentRms(upOut.data(), upOut.size())
+                          << " downOutRms=" << ComponentRms(downOut, hiddenDim)
+                          << " streamRms=" << ComponentRms(hiddenStates.data(), hiddenDim)
+                          << "\n" << std::flush;
+            }
             // Residual connection
             for (size_t i = 0; i < hiddenDim; ++i) {
                 hiddenStates[i] += downOut[i];

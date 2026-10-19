@@ -999,6 +999,7 @@ int main(int argc, char* argv[]) {
     bool runBenchmark = false;
     bool runGemvBench = false;
     int gemvBenchIterations = 20;
+    bool gemvOverlap = true;
     bool phaseTiming = false;
     int benchmarkSteps = 3;
     std::string modelPath;
@@ -1092,6 +1093,16 @@ int main(int argc, char* argv[]) {
             argIndex++;
             continue;
         }
+        if (a == "--no-gemv-overlap") {
+            // Run the two devices in series instead of at the same time.
+            // This is the reference the overlapped path is measured against,
+            // and it has to be the same model, the same prompt, the same
+            // context and the same token count for the comparison to mean
+            // anything.
+            gemvOverlap = false;
+            argIndex++;
+            continue;
+        }
         if (a == "--whole-loader") { forceWholeLoader = true; argIndex++; continue; }
         if (modelPath.empty()) { modelPath = a; argIndex++; continue; }
         if (a.size() > 1 && a[0] >= '0' && a[0] <= '9') {
@@ -1120,6 +1131,9 @@ int main(int argc, char* argv[]) {
 
     // The phase breakdown is what says where a slow pass spends its time.
     engine.m_phaseTiming = phaseTiming;
+    // Whether the two devices run at the same time. The default is the
+    // overlapped form; the flag turns it off for the comparison.
+    engine.m_gemvOverlap = gemvOverlap;
 
     // Check for Move 10 validation flag (already parsed above)
     if (runKvPlan) {
