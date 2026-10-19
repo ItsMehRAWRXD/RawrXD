@@ -522,12 +522,9 @@ struct DeepSeek2Model {
         };
 
         // gate and up are [expertFF, hidden]; down is [hidden, expertFF].
-        std::cerr << "[DS2-DBG] paging expert " << expertId << " of layer " << layerIdx << "\n";
         if (!loadSlice("ffn_gate_exps.weight", expertFF, hidden, out.gate)) return false;
         if (!loadSlice("ffn_up_exps.weight", expertFF, hidden, out.up)) return false;
         if (!loadSlice("ffn_down_exps.weight", hidden, expertFF, out.down)) return false;
-        std::cerr << "[DS2-DBG] expert " << expertId << " paged: gate=" << out.gate.size()
-                  << " up=" << out.up.size() << " down=" << out.down.size() << "\n";
 
         m_expertResidentBytes += out.gate.size() * sizeof(float)
                                + out.up.size() * sizeof(float)
@@ -547,12 +544,18 @@ struct DeepSeek2Model {
     static float silu(float x) { return x / (1.0f + std::expf(-x)); }
 
     // MoE forward pass for a single position
-    void moeForward(const TensorROM& rom, int layerIdx, float* h, int t, int numExperts, int topK, int numShared,
+    // MoE forward pass for a single position.
+    //
+    // `ht` is the residual stream, which the MoE output is added to. `ffnIn`
+    // is the *normalized* hidden state the feed-forward projections consume.
+    // They are not the same: the block normalizes before the projection, and
+    // feeding the raw residual to the experts makes the stream grow without
+    // bound across layers.
+    void moeForward(const TensorROM& rom, int layerIdx, float* ht, const float* ffnIn,
+                    int t, int numExperts, int topK, int numShared,
                     int intermediate) {
         LayerW& lw = layersW[layerIdx];
         if (!lw.moeLoaded) return;
-        std::cerr << "[DS2-DBG] moeForward layer " << layerIdx << " t=" << t << "\n";
-        float* ht = &h[t * hidden];
 
         // The routed experts use the expert feed-forward width, not the dense
         // intermediate width. DeepSeek-V2-Lite: dense 10944, expert 1408.
@@ -562,7 +565,7 @@ struct DeepSeek2Model {
 
         // Router: x @ ffn_gate_inpW -> [numExperts]
         std::vector<float> routerLogits(numExperts);
-        gemvFloat(lw.ffnGateInpW.data(), ht, routerLogits.data(), numExperts, hidden);
+        gemvFloat(lw.ffnGateInpW.data(), ffnIn, routerLogits.data(), numExperts, hidden);
 
         // DeepSeek-V2 gates with a sigmoid, not a softmax: an expert's score
         // is independent of the other experts.
@@ -612,11 +615,11 @@ struct DeepSeek2Model {
 
             // Gate: x @ gate_exps[e] -> [expertFF]
             std::vector<float> gateVal(expertFF);
-            gemvFloat(ew.gate.data(), ht, gateVal.data(), expertFF, hidden);
+            gemvFloat(ew.gate.data(), ffnIn, gateVal.data(), expertFF, hidden);
 
             // Up: x @ up_exps[e] -> [expertFF]
             std::vector<float> upVal(expertFF);
-            gemvFloat(ew.up.data(), ht, upVal.data(), expertFF, hidden);
+            gemvFloat(ew.up.data(), ffnIn, upVal.data(), expertFF, hidden);
 
             // SwiGLU: silu(gate) * up
             std::vector<float> intermediateVec(expertFF);
@@ -637,11 +640,11 @@ struct DeepSeek2Model {
         // width (DeepSeek-V2-Lite: 2816 against 1408).
         // shared_gate = x @ gate_shexpW -> [sharedFF]
         std::vector<float> sharedGate(sharedFF);
-        gemvFloat(lw.ffnGateShexpW.data(), ht, sharedGate.data(), sharedFF, hidden);
+        gemvFloat(lw.ffnGateShexpW.data(), ffnIn, sharedGate.data(), sharedFF, hidden);
 
         // shared_up = x @ up_shexpW -> [sharedFF]
         std::vector<float> sharedUp(sharedFF);
-        gemvFloat(lw.ffnUpShexpW.data(), ht, sharedUp.data(), sharedFF, hidden);
+        gemvFloat(lw.ffnUpShexpW.data(), ffnIn, sharedUp.data(), sharedFF, hidden);
 
         // shared_intermediate = silu(shared_gate) * shared_up
         std::vector<float> sharedIntermediate(sharedFF);
@@ -780,21 +783,12 @@ struct DeepSeek2Model {
                     for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
                 } else {
                     // MoE FFN (layers 1+): routed experts + shared experts
-                    moeForward(rom, layer, h.data(), t, (int)moeNumExperts, (int)moeTopK,
+                    moeForward(rom, layer, h.data() + (size_t)t * hidden, normIn, t,
+                               (int)moeNumExperts, (int)moeTopK,
                                (int)moeNumShared, intermediate);
             }
         }
         std::cerr << "[DS2] Layer " << layer << " complete\n";
-        {
-            double n2 = 0.0; int nnan = 0;
-            for (uint32_t i = 0; i < hidden; ++i) {
-                const float v = h[i];
-                if (!(v == v)) { ++nnan; continue; }
-                n2 += (double)v * v;
-            }
-            std::cerr << "[DS2-DBG] layer " << layer << " h0norm=" << std::sqrt(n2)
-                      << " nan=" << nnan << "/" << hidden << "\n";
-        }
     }
 
         // The demand-paged experts are released as each layer finishes, so the
