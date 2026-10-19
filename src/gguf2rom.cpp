@@ -12,7 +12,7 @@
 namespace Deep2Engine::Emulator {
 
     #pragma pack(push, 1)
-    struct alignas(64) RomHeader {
+    struct alignas(64) RomHeaderMultiShard {
         uint8_t  magic[8];
         uint32_t engine_version;
         uint32_t architecture_id;
@@ -24,7 +24,8 @@ namespace Deep2Engine::Emulator {
         uint32_t kv_heads;
         uint64_t metadata_offset;
         uint32_t metadata_count;
-        uint8_t  reserved[16];
+        uint32_t total_shards;
+        uint8_t  reserved[12];
     };
 
     struct TensorDescriptor {
@@ -369,16 +370,16 @@ int wmain(int argc, wchar_t* argv[]) {
     std::wcout.flush();
 
     uint64_t current_pos = input.tellg();
-    uint64_t aligned_data_start = AlignUp(current_pos, 64); // ROM internal alignment
+    uint64_t aligned_data_start = AlignUp(current_pos, gguf_alignment); // GGUF alignment (default 32)
     input.seekg(aligned_data_start);
 
     input.seekg(0, std::ios::end);
     uint64_t file_size = static_cast<uint64_t>(input.tellg());
     input.seekg(aligned_data_start);
 
-    // Build ROM header
-    RomHeader header{};
-    std::memcpy(header.magic, "RAWRXD2\0", 8);
+// Build ROM header
+    RomHeaderMultiShard header{};
+    std::memcpy(header.magic, "GGUF\0\0\0\0", 8);
     header.engine_version = 2;
     header.architecture_id = MapArchToID(detected_arch);
     header.num_layers = num_layers;
@@ -386,22 +387,21 @@ int wmain(int argc, wchar_t* argv[]) {
     header.top_k_experts = 0;
     header.hidden_dimension = hidden_dim;
     header.kv_heads = kv_heads;
+    header.metadata_offset = sizeof(RomHeaderMultiShard);
     header.metadata_count = static_cast<uint32_t>(tensors.size());
-    header.metadata_offset = sizeof(RomHeader);
+    header.total_shards = 1;
+    header.total_rom_size = 0;  // placeholder
 
-    uint64_t tensor_table_size = static_cast<uint64_t>(tensors.size()) * sizeof(TensorDescriptor);
-    uint64_t tensor_data_start = Align64(sizeof(RomHeader) + tensor_count * sizeof(TensorDescriptor));
-    header.total_rom_size = tensor_count * sizeof(TensorDescriptor);  // placeholder
-    header.metadata_offset = sizeof(RomHeader);
-
-    std::ofstream output(output_path, std::ios::binary | std::ios::trunc);
-    if (!output.is_open()) {
-        std::wcerr << L"Failed to create output file: " << output_path << L"\n";
+    std::fstream output(output_path, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
+    if (!output.is_open() || !output.good()) {
+        std::wcerr << L"[ERROR] Failed to create output file: " << output_path << L"\n";
         return 1;
     }
 
     // Write header (placeholder)
-    output.write(reinterpret_cast<char*>(&header), sizeof(RomHeader));
+    output.write(reinterpret_cast<char*>(&header), sizeof(RomHeaderMultiShard));
+
+    uint64_t tensor_data_start = Align64(sizeof(RomHeaderMultiShard) + tensor_count * sizeof(TensorDescriptor));
 
     // Write tensor descriptors with placeholder sizes
     std::vector<std::streampos> descriptor_positions(tensors.size());
@@ -426,19 +426,33 @@ int wmain(int argc, wchar_t* argv[]) {
         desc.absolute_offset = 0;  // Will update after copy
         
         output.write(reinterpret_cast<char*>(&desc), sizeof(TensorDescriptor));
-    }
-
+std::wcout << L"  Wrote " << tensors.size() << L" tensor descriptors\n" << std::flush;
+    
+    // Track total file size
+    uint64_t file_size = 0;
+    
     // Pad to tensor data start
     if (output.tellp() < static_cast<std::streampos>(tensor_data_start)) {
         std::vector<char> pad(tensor_data_start - output.tellp(), 0);
         output.write(pad.data(), pad.size());
+        if (!output.good()) {
+            std::wcerr << L"[ERROR] Failed to write padding\n";
+            return 1;
+        }
     }
-
+    
+    std::wcout << L"  Padded to tensor data start: " << output.tellp() << L" bytes\n" << std::flush;
+    
     // Copy tensor data from GGUF to ROM
     std::wcout << L"Copying tensor data...\n";
-
+    
     // Track actual tensor data offset in ROM
     uint64_t rom_tensor_data_start = output.tellp();
+    std::wcout << L"  Tensor data starts at ROM offset: " << rom_tensor_data_start << L" bytes\n";
+    std::wcout.flush();
+
+    // Track total file size
+    uint64_t file_size = output.tellp();
     
     for (size_t i = 0; i < tensors.size(); ++i) {
         // Calculate tensor size
@@ -449,12 +463,31 @@ int wmain(int argc, wchar_t* argv[]) {
         
         // GGUF tensor offsets are relative to the start of tensor data section
         input.seekg(static_cast<std::streamoff>(aligned_data_start + tensors[i].offset), std::ios::beg);
+        if (!input.good()) {
+            std::wcerr << L"[ERROR] Failed to seek to tensor " << i << L" data at offset " << tensors[i].offset << L"\n";
+            return 1;
+        }
+        
+        std::wcout << L"  Tensor " << (i+1) << L": seek OK, pos=" << input.tellg() << L"\n";
+        std::wcout.flush();
+        
         std::vector<char> buffer(bytes_to_read);
         std::streamsize bytes_read = input.read(buffer.data(), static_cast<std::streamsize>(bytes_to_read)).gcount();
         
+        std::wcout << L"  Tensor " << (i+1) << L": read " << bytes_read << L" bytes (expected " << bytes_to_read << L")\n";
+        std::wcout.flush();
+        
+        if (bytes_read == 0) {
+            std::wcerr << L"[WARNING] Read 0 bytes for tensor " << std::wstring(tensors[i].name.begin(), tensors[i].name.end()) << L"\n";
+        }
+        
         // Write to ROM
-        uint64_t rom_tensor_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(rom_tensor_data_start));
         output.write(buffer.data(), static_cast<std::streamsize>(bytes_read));
+        if (!output.good()) {
+            std::wcerr << L"[ERROR] Failed to write tensor " << i << L" (" << std::wstring(tensors[i].name.begin(), tensors[i].name.end()) << L")\n";
+            return 1;
+        }
+        
         std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
         std::wcout << bytes_read << L" bytes\r";
         std::wcout.flush();
@@ -478,15 +511,15 @@ int wmain(int argc, wchar_t* argv[]) {
             }
             
             desc.tensor_bytes = static_cast<uint64_t>(bytes_read);
-            desc.absolute_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(sizeof(RomHeader)) - static_cast<std::streamoff>(i * sizeof(TensorDescriptor))); // relative to metadata start
-            
-            // Actually write correct values
-            desc.tensor_bytes = static_cast<uint64_t>(bytes_read);
             desc.absolute_offset = static_cast<uint64_t>(static_cast<std::streamoff>(output.tellp()) - static_cast<std::streamoff>(rom_tensor_data_start));
             
             output.write(reinterpret_cast<char*>(&desc), sizeof(TensorDescriptor));
+            if (!output.good()) {
+                std::wcerr << L"[ERROR] Failed to update descriptor " << i << L"\n";
+                return 1;
+            }
             
-            output.seekp(cur);
+            output.seekp(output.tellp()); // Continue from current position
         }
         
         std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
@@ -499,16 +532,31 @@ int wmain(int argc, wchar_t* argv[]) {
         }
     }
 
-    // Update header with actual total size
-    output.seekp(0);
-    header.total_rom_size = static_cast<uint64_t>(output.tellp());
-    output.write(reinterpret_cast<char*>(&header), sizeof(RomHeader));
-
+// Update header with actual total size
+    output.flush();
+    output.close();
+    
+    // Reopen to update header without truncation
+    std::fstream output2(output_path, std::ios::in | std::ios::out | std::ios::binary);
+    if (!output2.is_open() || !output2.good()) {
+        std::wcerr << L"[ERROR] Failed to reopen output file for header update: " << output_path << L"\n";
+        return 1;
+    }
+    
+    output2.seekp(0);
+    header.total_rom_size = static_cast<uint64_t>(file_size); // We'll calculate this
+    output2.write(reinterpret_cast<char*>(&header), sizeof(RomHeaderMultiShard));
+    if (!output2.good()) {
+        std::wcerr << L"[ERROR] Failed to update header\n";
+        return 1;
+    }
+    output2.close();
+    
     std::wcout << L"\n=== CONVERSION COMPLETE ===\n";
     std::wcout << L"Output ROM: " << output_path << L"\n";
-    std::wcout << L"ROM size:   " << output.tellp() << L" bytes (" << (output.tellp() / 1024 / 1024) << L" MB)\n";
+    std::wcout << L"ROM size:   " << file_size << L" bytes (" << (file_size / 1024 / 1024) << L" MB)\n";
     std::wcout << L"Tensors:    " << tensors.size() << L"\n";
     std::wcout.flush();
-
+    
     return 0;
 }

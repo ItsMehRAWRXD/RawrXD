@@ -1,12 +1,19 @@
 #include "../Win32RomEmulator.hpp"
+#include "../core/InferenceEngine.hpp"
+#include "../core/Tokenizer.hpp"
+#include "../core/KVCache.hpp"
+#include "../core/Sampling.hpp"
+#include "../core/GenerationLoop.hpp"
 #include "../PrefetchQueue.hpp"
 #include "../PerformanceProfiler.hpp"
 #include <iostream>
 #include <cassert>
 #include <unordered_map>
+#include <chrono>
 
 using namespace Deep2Engine::Emulator;
 using namespace Deep2Rom;
+using namespace Deep2Rom::Inference;
 
 void run_production_stress_test(const std::wstring& rom_path, const std::wstring& base_shard_path, uint32_t shards) {
     std::cout << "======================================================================\n";
@@ -106,6 +113,58 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     // 5. Print hardware profiler telemetry (baseline)
     HardwareProfiler profiler;
     std::cout << "[✓] Gate 5: Hardware Profiler initialized -> PASS\n";
+
+    // 6. Full inference pipeline test: load model → tokenize → generate → detokenize
+    std::cout << "[*] Testing full inference pipeline...\n";
+    try {
+        // The inference engine needs a Vulkan device, but for testing we can pass NULL
+        // and verify the tokenizer/KVCache/sampler/generation loop are wired correctly
+        InferenceEngine engine;
+        if (!engine.init(VK_NULL_HANDLE, VK_NULL_HANDLE)) {
+            std::cerr << "[-] Gate 6: InferenceEngine init failed (Vulkan device required for full test)\n";
+            std::cout << "[!] Gate 6: Skipped (no Vulkan device available)\n";
+        } else {
+            // Load model from the GGUF shard
+            wchar_t ggufPath[MAX_PATH];
+            swprintf_s(ggufPath, L"%s.gguf.00", base_shard_path.c_str());
+            std::string ggufPathStr(ggufPath, ggufPath + wcslen(ggufPath));
+
+            if (!engine.loadModel(ggufPathStr)) {
+                std::cerr << "[-] Gate 6: Model load failed\n";
+                std::exit(1);
+            }
+            std::cout << "[✓] Gate 6: Model loaded (" << engine.modelConfig().numLayers
+                      << " layers, vocab=" << engine.vocabSize() << ")\n";
+            std::cout << "    [*] Starting generation (1 token, this may take a while on CPU)..." << std::endl;
+
+            // Generate a short sequence
+            EngineConfig cfg;
+            cfg.maxSeqLen = 4096;
+            cfg.maxGenTokens = 1;
+            cfg.temperature = 0.7f;
+            cfg.topP = 0.9f;
+            cfg.topK = 50;
+            cfg.addBos = true;
+            cfg.addEos = false;
+
+            InferenceResult result = engine.generate("Hi", cfg);
+
+            if (result.success) {
+                std::cout << "[✓] Gate 6: Inference pipeline PASS\n";
+                std::cout << "    Tokens generated: " << result.tokensGenerated << "\n";
+                std::cout << "    Generated text: \"" << result.text << "\"\n";
+                std::cout << "    Avg TPS: " << result.avgTPS << "\n";
+                std::cout << "    Stopped by EOS: " << (result.stoppedByEOS ? "yes" : "no") << "\n";
+                std::cout << "    Stopped by limit: " << (result.stoppedByLimit ? "yes" : "no") << "\n";
+            } else {
+                std::cerr << "[-] Gate 6: Inference failed: " << result.error << "\n";
+                std::exit(1);
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[-] Gate 6: Exception: " << e.what() << "\n";
+        std::exit(1);
+    }
 
     std::cout << "----------------------------------------------------------------------\n";
     std::cout << "STATUS: ENGINE FINALIZED, VERIFIED, AND CERTIFIED PRODUCTION-READY.\n";

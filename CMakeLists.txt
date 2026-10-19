@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(Deep2Engine LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -38,6 +38,21 @@ add_executable(Deep2Engine_Benchmark
     src/core/InferenceEngine.cpp
 )
 
+# CLI executable with rawr run command
+if(WIN32)
+    add_executable(deep2_cli
+        src/rawrxd_cli.cpp
+        src/GGUFLoader.cpp
+        src/core/Tokenizer.cpp
+        src/core/KVCache.cpp
+        src/core/Sampling.cpp
+        src/core/GenerationLoop.cpp
+        src/core/InferenceEngine.cpp
+    )
+    target_link_libraries(deep2_cli PRIVATE Vulkan::Vulkan)
+    target_include_directories(deep2_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+endif()
+
 # Only build Windows-specific targets on Windows
 if(WIN32)
     add_executable(gguf2rom
@@ -58,6 +73,7 @@ add_executable(test_metadata_parity
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
+    src/GGUFLoader.cpp
     src/core/VulkanStagingPipeline.cpp
     src/core/MultiShardFlickerManager.cpp
     src/core/PrefetchQueue.cpp

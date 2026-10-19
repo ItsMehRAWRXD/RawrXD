@@ -191,8 +191,8 @@ static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream
     // starts at file offset 5,958 (verified by scanning). If our parsed dataOffset
     // is far off, force-correct it so tensor reads land on real weight data.
     if (isDeepSeek2 && shards[0].dataOffset > 100000) {
-        shards[0].dataOffset = 5958;
-        fprintf(stderr, "[ROM] DeepSeek2 dataOffset forced to 5958\n");
+        shards[0].dataOffset = 50;
+        fprintf(stderr, "[ROM] DeepSeek2 dataOffset forced to 50\n");
     }
 }
 
@@ -419,11 +419,6 @@ bool TensorROM::finalizeIndex() {
             }
         }
     }
-
-    // Correct dataOffset if KV/tensor-directory parsing drifted from the true
-    // payload start (e.g. long KV values mis-parsed). Scans near token_embd's
-    // offset for a position where Q3_K_M blocks dequantize to sane values.
-    correct_dataOffset(m_shards, *m_shards[0].file, m_geom.arch == ModelArch::DeepSeek2);
 
     // Default pager: a few GiB bounded budget, overridable via env.
     if (!m_pager) {

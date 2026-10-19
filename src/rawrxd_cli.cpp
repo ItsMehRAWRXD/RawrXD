@@ -5,7 +5,7 @@
 #include "overclock_governor.h"
 #include "overclock_vendor.h"
 #include "native_agent.hpp"
-#include "cpu_inference_engine.h"
+#include "../core/InferenceEngine.hpp"
 #include <iostream>
 #include <thread>
 #include <atomic>
@@ -188,6 +188,85 @@ int main(int argc, char** argv) {
                         std::cout << "Model loaded successfully: " << path << std::endl;
                     } else {
                         std::cout << "Failed to load model." << std::endl;
+                    }
+                }
+                else if (action == "/run") {
+                    std::string modelPath;
+                    std::getline(ss, modelPath);
+                    if (!modelPath.empty()) modelPath = modelPath.substr(1); // remove leading space
+
+                    if (modelPath.empty()) {
+                        std::cout << "Usage: /run <model_path> [prompt]" << std::endl;
+                        break;
+                    }
+
+                    // Initialize the Deep2 Inference Engine with this model
+                    Deep2Rom::Inference::InferenceEngine infEngine;
+                    if (!infEngine.init(VK_NULL_HANDLE, VK_NULL_HANDLE)) {
+                        std::cerr << "[rawr run] Failed to initialize inference engine (Vulkan not available, CPU fallback)\n";
+                    }
+                    if (!infEngine.loadModel(modelPath)) {
+                        std::cerr << "[rawr run] Failed to load model: " << modelPath << std::endl;
+                        break;
+                    }
+                    std::cout << "[rawr run] Model loaded: " << modelPath << std::endl;
+                    std::cout << "[rawr run] Layers: " << infEngine.modelConfig().numLayers
+                              << ", Hidden: " << infEngine.modelConfig().hiddenDim
+                              << ", Vocab: " << infEngine.vocabSize() << std::endl;
+
+                    // Read optional prompt from command line, else interactive mode
+                    std::string prompt;
+                    std::getline(ss, prompt);
+                    if (!prompt.empty()) prompt = prompt.substr(1); // remove leading space
+
+                    if (!prompt.empty()) {
+                        // Single-shot generation
+                        Deep2Rom::Inference::EngineConfig cfg;
+                        cfg.maxGenTokens = 128;
+                        cfg.temperature = 0.7f;
+                        cfg.topP = 0.9f;
+                        cfg.topK = 50;
+                        cfg.addBos = true;
+                        cfg.addEos = true;
+                        cfg.skipSpecialTokens = true;
+
+                        std::cout << "[rawr run] Generating response to: \"" << prompt << "\"\n";
+                        std::cout << "[rawr run] Response: ";
+
+                        auto result = infEngine.generate(prompt, cfg);
+                        if (result.success) {
+                            std::cout << result.text << std::endl;
+                            std::cout << "[rawr run] Tokens: " << result.tokensGenerated
+                                      << ", TPS: " << result.avgTPS
+                                      << ", EOS: " << (result.stoppedByEOS ? "yes" : "no") << std::endl;
+                        } else {
+                            std::cerr << "[rawr run] Generation failed: " << result.error << std::endl;
+                        }
+                    } else {
+                        // Interactive chat mode
+                        std::cout << "[rawr run] Interactive chat mode. Type 'exit' or 'quit' to leave.\n";
+                        Deep2Rom::Inference::EngineConfig cfg;
+                        cfg.maxGenTokens = 256;
+                        cfg.temperature = 0.7f;
+                        cfg.topP = 0.9f;
+                        cfg.topK = 50;
+                        cfg.addBos = true;
+                        cfg.addEos = true;
+                        cfg.skipSpecialTokens = true;
+
+                        while (true) {
+                            std::cout << "\nYou: ";
+                            std::string userInput;
+                            std::getline(std::cin, userInput);
+                            if (userInput == "exit" || userInput == "quit" || userInput.empty()) break;
+
+                            auto result = infEngine.generate(userInput, cfg);
+                            if (result.success) {
+                                std::cout << "Deep2: " << result.text << std::endl;
+                            } else {
+                                std::cerr << "[rawr run] Generation failed: " << result.error << std::endl;
+                            }
+                        }
                     }
                 }
                 else if (action == "/agent") {
@@ -396,27 +475,6 @@ int main(int argc, char** argv) {
             case 'i': { 
                 std::cout << "\n=== Interactive Agent Mode (Full Agentic) ===\n";
                 std::cout << "Type /help for commands.\n";
-                // Ensure engine is ready
-                if (!RawrXD::AIIntegrationHub::getInstance().isInitialized()) {
-                    RawrXD::AIIntegrationHub::getInstance().initialize("models/model.gguf");
-                }
-                auto agent = RawrXD::AIIntegrationHub::getInstance().getAgenticEngine();
-                
-                std::string input;
-                bool agentLoop = true;
-                while(agentLoop) {
-                    std::cout << "\nRawrXD> ";
-                    std::getline(std::cin, input);
-                    if (input == "exit" || input == "quit") { agentLoop = false; break; }
-                    
-                    if (input.empty()) continue;
-                    
-                    // Direct pass to AgenticEngine::processQuery for handling:
-                    // /plan, /react-server, /bugreport, /research, etc.
-                    std::string response = agent->processQuery(input);
-                    std::cout << "\n[Agent]: " << response << "\n";
-                }
-                std::cout << "Exiting Agent Mode.\n";
                 break;
             }
             case 'q':

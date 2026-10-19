@@ -414,6 +414,12 @@ struct DeepSeek2Model {
                   << " max=" << mx << " nz=" << nz << "/" << peek << "\n";
         te = get("output_norm.weight");  if (!readF32(te, outputNormW)) return false;
         te = get("output.weight");       if (!readF32(te, outputW)) return false;
+        {
+            std::cerr << "[DS2-DBG] output.weight (offset=0) first 8 f32:";
+            for (size_t i = 0; i < std::min<size_t>(8, outputW.size()); ++i)
+                std::cerr << " " << outputW[i];
+            std::cerr << "\n";
+        }
 
         const auto& g = rom.geometry();
         hidden = (uint32_t)g.hiddenDim; layers = (uint32_t)g.numLayers; heads = (uint32_t)g.numHeads;
@@ -425,7 +431,17 @@ struct DeepSeek2Model {
         layersW.resize(1);
         LayerW& lw = layersW[0];
         if (!readF32(get("blk.0.attn_norm.weight"), lw.attnNormW)) return false;
+        {
+            double nmax = -1e30, nmin = 1e30; bool nnan = false;
+            for (size_t i = 0; i < lw.attnNormW.size(); ++i) { if (!(lw.attnNormW[i] == lw.attnNormW[i])) { nnan = true; break; } if (lw.attnNormW[i] > nmax) nmax = lw.attnNormW[i]; if (lw.attnNormW[i] < nmin) nmin = lw.attnNormW[i]; }
+            std::cerr << "[DS2-DBG] attn_norm.weight: min=" << nmin << " max=" << nmax << " nan=" << nnan << "/" << lw.attnNormW.size() << "\n";
+        }
         if (!readF32(get("blk.0.attn_q.weight"), lw.qW)) return false;
+        {
+            double qmax = -1e30, qmin = 1e30; int qnan = 0;
+            for (size_t i = 0; i < lw.qW.size(); ++i) { if (!(lw.qW[i] == lw.qW[i])) { qnan++; } if (lw.qW[i] > qmax) qmax = lw.qW[i]; if (lw.qW[i] < qmin) qmin = lw.qW[i]; }
+            std::cerr << "[DS2-DBG] attn_q.weight: min=" << qmin << " max=" << qmax << " nan=" << qnan << "/" << lw.qW.size() << "\n";
+        }
         if (!readF32(get("blk.0.attn_kv_a_norm.weight"), lw.kvANormW)) return false;
         if (!readF32(get("blk.0.attn_kv_a_mqa.weight"), lw.kvAMqaW)) return false;
         if (!readF32(get("blk.0.attn_kv_b.weight"), lw.kvBW)) return false;
@@ -464,31 +480,47 @@ struct DeepSeek2Model {
             float normIn[2048];
             std::memcpy(normIn, ht, hidden * sizeof(float));
             rmsNorm(normIn, lw.attnNormW.data(), hidden, 1e-6f);
+            {
+                double nmax = -1e30, nmin = 1e30; bool nnan = false;
+                for (uint32_t i = 0; i < hidden; ++i) { if (!(normIn[i] == normIn[i])) { nnan = true; break; } if (normIn[i] > nmax) nmax = normIn[i]; if (normIn[i] < nmin) nmin = normIn[i]; }
+                std::cerr << "[DS2-DBG] t=" << t << " normIn: min=" << nmin << " max=" << nmax << " nan=" << nnan << "\n";
+            }
 
             // Q projection: [3072] = q_nope[heads][qkNope] + q_rope[heads][qkRope]
             std::vector<float> qAll(heads * (qkNope + qkRope));
             gemvFloat(lw.qW.data(), normIn, qAll.data(), heads * (qkNope + qkRope), hidden);
+            {
+                double qmax = -1e30, qmin = 1e30; bool qnan = false;
+                for (uint32_t i = 0; i < qAll.size(); ++i) { if (!(qAll[i] == qAll[i])) { qnan = true; break; } if (qAll[i] > qmax) qmax = qAll[i]; if (qAll[i] < qmin) qmin = qAll[i]; }
+                std::cerr << "[DS2-DBG] t=" << t << " qAll: min=" << qmin << " max=" << qmax << " nan=" << qnan << "\n";
+            }
 
             // KV-A projection: [kvLora + qkRope]
             std::vector<float> kvA(kvLora + qkRope);
             gemvFloat(lw.kvAMqaW.data(), normIn, kvA.data(), kvLora + qkRope, hidden);
+            {
+                double kmax = -1e30, kmin = 1e30; bool knan = false;
+                for (uint32_t i = 0; i < kvA.size(); ++i) { if (!(kvA[i] == kvA[i])) { knan = true; break; } if (kvA[i] > kmax) kmax = kvA[i]; if (kvA[i] < kmin) kmin = kvA[i]; }
+                std::cerr << "[DS2-DBG] t=" << t << " kvA: min=" << kmin << " max=" << kmax << " nan=" << knan << "\n";
+            }
 
             // KV-B projection: [(qkNope+vHead)*heads]
             std::vector<float> kAll(heads * (qkNope + vHead));
             gemvFloat(lw.kvBW.data(), kvA.data(), kAll.data(), heads * (qkNope + vHead), kvLora);
+            {
+                double kmax = -1e30, kmin = 1e30; bool knan = false;
+                for (uint32_t i = 0; i < kAll.size(); ++i) { if (!(kAll[i] == kAll[i])) { knan = true; break; } if (kAll[i] > kmax) kmax = kAll[i]; if (kAll[i] < kmin) kmin = kAll[i]; }
+                std::cerr << "[DS2-DBG] t=" << t << " kAll: min=" << kmin << " max=" << kmax << " nan=" << knan << "\n";
+            }
 
-            float* kNopeT = &kNopeCache[t * heads * qkNope];
-            float* vT = &vCache[t * heads * vHead];
             float* kRopeT = &kRopeCache[t * qkRope];
 
             for (uint32_t hh = 0; hh < heads; ++hh) {
                 const float* qRow = &qAll[hh * (qkNope + qkRope)];
-                for (uint32_t d = 0; d < qkNope; ++d) kNopeT[hh * qkNope + d] = qRow[d];
-                for (uint32_t d = 0; d < qkRope; ++d) kRopeT[d] = qRow[qkNope + d];
                 const float* kRow = &kAll[hh * (qkNope + vHead)];
-                for (uint32_t d = 0; d < qkNope; ++d) { /* k_nope stored below with cache index (hh, t) */ }
-                // store k_nope at (hh, t): index = hh*seqCap*qkNope + t*qkNope + d
-                for (uint32_t d = 0; d < qkNope; ++d) kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = qRow[d];
+                // Store K_nope into KV cache at (hh, t): index = hh*seqCap*qkNope + t*qkNope + d
+                for (uint32_t d = 0; d < qkNope; ++d) kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = kRow[d];
+                // Store V into KV cache at (hh, t): index = hh*seqCap*vHead + t*vHead + d
                 for (uint32_t d = 0; d < vHead; ++d) vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
             }
             // k_rope shared across heads: from kvA tail
@@ -515,6 +547,11 @@ struct DeepSeek2Model {
                         s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
                     scores[tt] = s * invSqrtD;
                     if (scores[tt] > maxSc) maxSc = scores[tt];
+                }
+                {
+                    double smax = -1e30, smin = 1e30; bool snan = false;
+                    for (uint32_t tt = 0; tt <= t; ++tt) { if (!(scores[tt] == scores[tt])) { snan = true; break; } if (scores[tt] > smax) smax = scores[tt]; if (scores[tt] < smin) smin = scores[tt]; }
+                    std::cerr << "[DS2-DBG] t=" << t << " hh=0 scores: min=" << smin << " max=" << smax << " nan=" << snan << "\n";
                 }
                 float sum = 0.0f;
                 for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
