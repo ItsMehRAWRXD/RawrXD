@@ -1,0 +1,45 @@
+IDE_PRODUCT_BATCH_105=PASS
+
+NOTE=Architecture acceptance. SharedProductRuntime + token-budget wiring
+were code-completed alongside IDE_PRODUCT_BATCH_106 (serve/HTTP adapters).
+Do not treat this file as a live 256-token IDE witness.
+
+PRODUCT_DEFAULT_MAX_TOKENS=256
+CMDRUN_HARDCODED_64=0
+CMDCHAT_HARDCODED_TOKEN_DEFAULT=0
+EXPLICIT_TOKEN_OVERRIDE_PRESERVED=1
+
+PRODUCT_RUNTIME_STATE_OWNER=1
+PRODUCT_RUNTIME_DECODE_OWNER=0
+
+CMDRUN_PRODUCT_RUNTIME=1
+CMDCHAT_PRODUCT_RUNTIME=1
+IDE_PRODUCT_RUNTIME=1
+
+ADHOC_DEEP2ENGINE_CLI_OWNER=0
+SESSION_LIFETIME_OWNER_COUNT=1
+DECODE_OWNER_COUNT=1
+
+MOCK_GATEWAY_PRODUCT_LINK=0
+DEEP2_API_SERVER_PRODUCT_LINK=0
+SOVEREIGN_800B_PRODUCT_DECODE=0
+
+PRODUCT_PATH_COUNT=1
+IDE_COMPLETE=0
+
+ARCHITECTURE=
+  ProductRuntime = lifetime/state authority
+  ProductRun     = product orchestration authority
+  Deep2Engine    = decode authority (generateStream only)
+
+TOKEN_DEFAULT=
+  rawr::product_run::kDefaultMaxTokens = 256
+  no explicit maxTokens → PRODUCT_DEFAULT
+  --max-tokens N / IDE maxTokens → CALLER_OVERRIDE
+
+WAVE3_STANDALONE_WITNESS=HOLD
+  (separate from BATCH_103_PRODUCT_COMMANDS=PASS)
+
+NEXT=
+  Batch 106 serve/HTTP/settings/session/search — PASS
+  Batch 107 hard IDE 256-token product witness

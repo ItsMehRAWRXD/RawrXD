@@ -1,0 +1,17 @@
+﻿S01 src/deep2/lavapath/ProductRun.hpp
+S02 src/deep2/lavapath/ProductReceipt.hpp
+S03 src/product/gateway/product_deep2_infer.cpp
+S04 src/product/gateway/product_deep2_infer.hpp
+S05 src/cli/rawr_commands.cpp
+S06 src/cli/rawr_main.cpp
+S07 src/cli/rawr_product_serve.hpp
+S08 src/cli/rawr_local_api.hpp
+S09 src/product/gateway/local_api.hpp
+S10 src/product/gateway/local_api_http.hpp
+S13 src/deep2/lavapath/ProductTensorGuard.hpp
+S14 src/product/ide/chat_panel.hpp
+S15 src/product/agent/agent_product_run.hpp
+S17 src/product/product_layer.hpp
+S18 src/masm/rawr_product_x64.asm
+S19 src/deep2/Deep2Engine.cpp
+S20 src/deep2/RawrRunSession.hpp

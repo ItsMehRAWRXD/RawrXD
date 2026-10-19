@@ -1,0 +1,170 @@
+﻿[
+    {
+        "Id":  "S01",
+        "Path":  "src/deep2/lavapath/ProductRun.hpp",
+        "Need":  "Product entry",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_commands.cpp; HEADER include from rawr_commands / product_deep2_infer"
+    },
+    {
+        "Id":  "S02",
+        "Path":  "src/deep2/lavapath/ProductReceipt.hpp",
+        "Need":  "Receipt",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/deep2/lavapath/ProductRun.hpp; HEADER include from ProductRun.hpp"
+    },
+    {
+        "Id":  "S03",
+        "Path":  "src/product/gateway/product_deep2_infer.cpp",
+        "Need":  "IDE/CLI infer TU",
+        "Status":  "WIRED",
+        "Reason":  "COMPILED into rawr + Win32IDE + rawr_product_cert"
+    },
+    {
+        "Id":  "S04",
+        "Path":  "src/product/gateway/product_deep2_infer.hpp",
+        "Need":  "Infer decl",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_product_serve.hpp; HEADER"
+    },
+    {
+        "Id":  "S05",
+        "Path":  "src/cli/rawr_commands.cpp",
+        "Need":  "CLI ProductRun",
+        "Status":  "WIRED",
+        "Reason":  "COMPILED into rawr"
+    },
+    {
+        "Id":  "S06",
+        "Path":  "src/cli/rawr_main.cpp",
+        "Need":  "CLI main",
+        "Status":  "WIRED",
+        "Reason":  "COMPILED into rawr"
+    },
+    {
+        "Id":  "S07",
+        "Path":  "src/cli/rawr_product_serve.hpp",
+        "Need":  "pipe serve",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_commands.cpp; HEADER into rawr via rawr_product_serve.cpp"
+    },
+    {
+        "Id":  "S08",
+        "Path":  "src/cli/rawr_local_api.hpp",
+        "Need":  "HTTP serve",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_commands.cpp; HEADER included by rawr_commands.cpp CmdServe --http"
+    },
+    {
+        "Id":  "S09",
+        "Path":  "src/product/gateway/local_api.hpp",
+        "Need":  "OpenAI JSON",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_commands.cpp; HEADER via rawr_local_api.hpp"
+    },
+    {
+        "Id":  "S10",
+        "Path":  "src/product/gateway/local_api_http.hpp",
+        "Need":  "Winsock loopback",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_local_api.hpp; HEADER via rawr_local_api.hpp"
+    },
+    {
+        "Id":  "S11",
+        "Path":  "src/deep2/lavapath/ProductRuntime.hpp",
+        "Need":  "Runtime owner",
+        "Status":  "PARTIAL",
+        "Reason":  "Header included by src/deep2/lavapath/ProductGraph.hpp only; not main product exe hot path"
+    },
+    {
+        "Id":  "S12",
+        "Path":  "src/deep2/lavapath/ProductGraph.hpp",
+        "Need":  "ExecutionGraph",
+        "Status":  "PARTIAL",
+        "Reason":  "Header included by certs/rawrxd_product_runtime_001.cpp only; not main product exe hot path"
+    },
+    {
+        "Id":  "S13",
+        "Path":  "src/deep2/lavapath/ProductTensorGuard.hpp",
+        "Need":  "validateTensor",
+        "Status":  "WIRED",
+        "Reason":  "Header included by certs/rawrxd_product_layer_003.cpp; HEADER layer_003 cert"
+    },
+    {
+        "Id":  "S14",
+        "Path":  "src/product/ide/chat_panel.hpp",
+        "Need":  "ChatPanel ProductRun",
+        "Status":  "WIRED",
+        "Reason":  "Header included by certs/rawrxd_product_runtime_001.cpp; HEADER not in product_layer.hpp umbrella"
+    },
+    {
+        "Id":  "S15",
+        "Path":  "src/product/agent/agent_product_run.hpp",
+        "Need":  "agent ProductRun",
+        "Status":  "WIRED",
+        "Reason":  "Header included by certs/rawrxd_product_runtime_001.cpp; HEADER cert runtime only"
+    },
+    {
+        "Id":  "S16",
+        "Path":  "src/product/win32/ide_product_run.hpp",
+        "Need":  "IDE ProductRun helper",
+        "Status":  "PARTIAL",
+        "Reason":  "Header included by certs/rawrxd_product_runtime_001.cpp only; not main product exe hot path"
+    },
+    {
+        "Id":  "S17",
+        "Path":  "src/product/product_layer.hpp",
+        "Need":  "Umbrella",
+        "Status":  "WIRED",
+        "Reason":  "Header included by certs/rawrxd_product_layer_001.cpp; HEADER layer_001/002/003 certs"
+    },
+    {
+        "Id":  "S18",
+        "Path":  "src/masm/rawr_product_x64.asm",
+        "Need":  "ABI/caps/FNV",
+        "Status":  "WIRED",
+        "Reason":  "ASSEMBLED+LINKED rawr + product certs"
+    },
+    {
+        "Id":  "S19",
+        "Path":  "src/deep2/Deep2Engine.cpp",
+        "Need":  "generateStream",
+        "Status":  "WIRED",
+        "Reason":  "COMPILED InferenceEngine"
+    },
+    {
+        "Id":  "S20",
+        "Path":  "src/deep2/RawrRunSession.hpp",
+        "Need":  "OpenSession/alias",
+        "Status":  "WIRED",
+        "Reason":  "Header included by src/cli/rawr_commands.cpp; HEADER from ProductRun"
+    },
+    {
+        "Id":  "O01",
+        "Path":  "src/deep2/Deep2APIServer.cpp",
+        "Need":  "HTTP API",
+        "Status":  "ORPHAN",
+        "Reason":  "ORPHAN not in RawrProductLayer / rawr"
+    },
+    {
+        "Id":  "O02",
+        "Path":  "src/deep2/certification/Deep2_Cert_MockGateway.cpp",
+        "Need":  "mock HTTP",
+        "Status":  "ORPHAN",
+        "Reason":  "ORPHAN fiction mock ok; not product path"
+    },
+    {
+        "Id":  "O03",
+        "Path":  "src/engine/sovereign_engines.cpp",
+        "Need":  "800B facade",
+        "Status":  "ORPHAN",
+        "Reason":  "ORPHAN not InferenceEngine product path"
+    },
+    {
+        "Id":  "O04",
+        "Path":  "native_e2e/rawr_native_http_adapter.cpp",
+        "Need":  "route table",
+        "Status":  "ORPHAN",
+        "Reason":  "ORPHAN from rawr; native_e2e island"
+    }
+]

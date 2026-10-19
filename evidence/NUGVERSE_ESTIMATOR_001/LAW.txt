@@ -1,0 +1,308 @@
+# NUGV-1 STRUCTURAL EXTRACTION — CERTIFICATE
+
+```ini
+CERT=RAWRXD_GGUF_PARAMETER_AUTHORITY_001
+DATE=2026-10-05
+TOOLS=nugv_param_probe.exe, nugv_kv_dump.exe, nugv_genie.exe
+BUILD=cl /O2 /W4 clean, zero warnings (MSVC 14.44.35207)
+```
+
+## Claim
+
+Parameter count and encoded weight bytes computed from a GGUF are EXACT, not
+estimated, and require no bits-per-weight assumption. Every ggml type is a
+closed-form block layout:
+
+```
+nbytes = (prod(dims) / blck_size) * type_size
+```
+
+`blck_size` and `type_size` are transcribed from
+`3rdparty/ggml/src/ggml-common.h`. Effective bits-per-parameter is therefore an
+OUTPUT of the scan, never an input.
+
+The conventional estimator
+
+```
+params ~= file_bytes * 8 / nominal_bpw
+```
+
+requires nominal bpw as an input, which is where its error enters.
+
+## Measured: nominal estimator vs exact census
+
+Same file (TinyLlama Q4_K_M), six different nominal assumptions:
+
+| assumed quant | nominal bpw | estimated params | error |
+|---|---:|---:|---:|
+| Q4_K_M | 4.8300 | 1.1077B | **+0.698%** |
+| Q5_K_M | 5.6700 | 0.9436B | −14.220% |
+| Q6_K | 6.5625 | 0.8153B | −25.886% |
+| Q3_K_M | 3.9100 | 1.3684B | +24.391% |
+| IQ2_M | 2.7500 | 1.9456B | +76.862% |
+| Q2_K | 2.6250 | 2.0382B | +85.284% |
+
+The estimator is not intrinsically bad. It is bad when the quant label is
+unknown or wrong. Once the tensor directory has been read there is no reason to
+estimate.
+
+## Falsifiability: the type table checks itself
+
+A dense GGUF lays tensor data out contiguously:
+
+```
+off[i] == off[i-1] + pad(nbytes[i-1], alignment)
+```
+
+So a wrong `(blck_size, type_size)` desynchronizes the running offset chain.
+Across 9 dense models including DeepSeek-V2-Lite (377 tensors) and Qwen3.5-40B:
+
+```ini
+OFFSET_OVERLAPS              = 0
+OFFSET_EXACT_CONTINUATIONS   = hundreds per model
+OFFSET_GAPS                  = 0
+LAYOUT_DENSE                 = 1
+TYPE_TABLE_VERIFIED          = YES
+```
+
+Sparse fixtures are handled separately. `bench_frag.gguf` has 16-byte tensors at
+2 MiB offsets — a layout property, not a type-table error:
+
+```ini
+bench_frag.gguf  OFFSET_GAPS=127  LAYOUT_DENSE=0  TYPE_TABLE_VERIFIED=NOT_APPLICABLE_SPARSE_LAYOUT
+```
+
+An OVERLAP (`off < prev_end`) is always an error. A GAP is only an error if the
+file is dense. A sparse file yields no evidence either way, and is reported as
+unverified rather than falsely condemned.
+
+## Negative control
+
+`dummy_200b.gguf` carries TinyLlama content under a deceptive name. The probe
+did not take the bait:
+
+```ini
+dummy_200b.gguf        EXACT_PARAMS_B = 1.100048
+tinyllama-1.1b-Q4_K_M  EXACT_PARAMS_B = 1.100048
+```
+
+A renamed 1.1B file remains 1.1B.
+
+## Same architecture, different physical image
+
+Two TinyLlama-architecture files, identical parameter count, different encoding:
+
+| file | params | encoded bytes | effective bpw |
+|---|---:|---:|---:|
+| tinyllama-1.1b-chat-v1.0.Q4_K_M | 1,100,048,384 | 667,078,656 | 4.851268 |
+| tinyllama_fresh | 1,100,048,384 | 635,990,016 | 4.625178 |
+
+Difference: 31,088,640 bytes, entirely in layer-owned tensors. Pinned region is
+identical at 142,536,704 bytes. These are different quantization compositions
+sharing an architecture and parameter count. A residency certificate keyed on
+architecture+params would be wrong for one of them. The tensor directory wins.
+
+## Residency shape is measured, not assumed
+
+```ini
+# DeepSeek-V2-Lite (9.65 GB)
+PINNED_SHARE              = 3.4140%
+STREAMABLE_SHARE          = 96.5860%
+MAX_PINNED_OVER_MEAN_LAYER_TENSOR = 5.9655
+MAX_PINNED_TENSOR_NAME    = output.weight
+UNIFORM_SLOT_SUFFICIENT   = 0
+```
+
+The uniform-slot arena question resolves as a measured fact per model, not a
+design opinion:
+
+```ini
+BLOCK_GRAMMAR_RUNS = 2
+RUN_0 blocks=[0..0]   count=1   attn,norm,ffn, no router, no expert   <- dense
+RUN_1 blocks=[1..26]  count=26  attn,norm,ffn, router, expert          <- MoE
+DENSE_RUN_MATCHES_DECLARED = 1
+
+MOE_EXPERT_SLOTS          = 64
+MOE_ACTIVE_EXPERTS        = 6
+MOE_SHARED_EXPERTS        = 2
+EXPERT_SHARE_OF_WEIGHTS   = 91.9592%
+```
+
+Block sizes are not uniform, so a mean-based slot is unsafe:
+
+```ini
+MIN_BLOCK_BYTES               = 352512000
+MEAN_BLOCK_BYTES              = 385139476
+MAX_BLOCK_BYTES               = 423204864
+MEAN_BASED_SLOT_UNSAFE        = 1
+ARENA_SLOT_REQUIRED_BYTES     = 423204864   # window=1 MAX, not mean
+PINNED_PLUS_ONE_MAX_BLOCK     = 776910848
+```
+
+The window bounds are exact sliding sums over actual block bytes, not
+`N × mean`.
+
+## Declared vs physical corroboration
+
+Metadata and tensor anatomy are cross-checked; neither is trusted alone.
+
+```ini
+# DeepSeek-V2-Lite
+BLOCKS_AGREE   = 1     # 27 declared == 27 observed
+VOCAB_AGREE    = 1     # 102400 == 102400
+EXPERTS_AGREE  = 1     # 64 == 64
+EXPERT_FFN_OBSERVED = 1408  # matches declared expert_feed_forward_length
+```
+
+Weight tying is derived, never assumed:
+
+```ini
+tinyllama  LM_HEAD=output.weight      tied=0
+gemma3-1b  LM_HEAD=token_embd.weight  tied=1
+```
+
+## Probe safety invariants
+
+Every byte the tools consume passes through an instrumented reader, so the
+"safe to interrogate a monster" claim is measured rather than asserted:
+
+```ini
+PAYLOAD_BYTES_READ       = 0
+DEQUANT_BYTES            = 0
+RUNTIME_MODEL_ALLOCATIONS= 0
+FULL_MODEL_MMAP          = 0
+```
+
+Across all models including the 12.85 GB gpt-oss and 11.79 GB codestral:
+
+```ini
+STRUCTURAL_SPAN_PCT_OF_FILE = 0.04% – 0.26%
+```
+
+Extraction cost is structural, not proportional to weight bytes. The 400 GB
+`dummy_200b.gguf` and a 0.6 GB TinyLlama cost the same scan.
+
+## Bugs found and fixed during this work
+
+These were real defects in the tooling, each of which would have produced a
+plausible-but-wrong ledger:
+
+1. **32-bit `ftell`/`fseek`.** MSVC `long` is 32-bit, so `ftell` returned −1 on
+   any GGUF over 2 GiB. `FILE_BYTES` silently became `UINT64_MAX`, corrupting
+   every percentage and estimator-error line. Fixed with
+   `_ftelli64`/`_fseeki64`.
+
+2. **`parse_block` returned `v - 1`.** This discarded block 0 and reported
+   TinyLlama as 21 blocks against a declared 22. `BLOCKS_AGREE = 0` on a
+   perfectly valid model.
+
+3. **Vocabulary read from `dims[0]`.** GGUF stores dims in ggml ne-order where
+   `ne[0]` is the row length. A vocab×hidden embedding appears as
+   `{ne0=hidden, ne1=vocab}`, so TinyLlama reported 2048 instead of 32000 — a
+   number that looks reasonable and survives review.
+
+4. **`ftell` rewind for numeric display.** The KV dumper read a scalar then
+   rewound to re-read it, double-counting bytes and printing `rope_freq_base` as
+   `5.8e-315` instead of `10000`. Now read once into a typed union.
+
+5. **LM head matched by name pattern.** `role_of` fell through to ATTN for
+   names containing `attn_`, so `blk.25.attn_output.weight` was identified as
+   the LM head on gemma3. The head is now identified by being
+   block-independent.
+
+6. **Signature check compared everything to block 0.** The expected dense→MoE
+   transition flagged 26 divergences. Replaced with a contiguous-run census that
+   reports grammar structure rather than a false anomaly.
+
+7. **Absent `leading_dense_block_count` read as zero.** llama omits the key
+   because it is all-dense; gpt-oss omits it because every block is MoE.
+   Inferring "absent ⇒ all dense" condemned an all-MoE model as malformed. An
+   absent key is now reported as no-declaration, with the physical grammar
+   authoritative.
+
+8. **Sparse layout read as type corruption.** `bench_frag.gguf` produced 127
+   offset breaks. Those are deliberate gaps, not wrong block sizes.
+
+## Family matrix
+
+```ini
+model                       params          bpw       grammar                 frontier
+gptoss20b                   20,914,757,184  5.270778  UNIFORM_MOE            NONE
+codestral22b                22,247,282,688  4.552327  ALL_DENSE              NONE
+DeepSeek-V2-Lite            15,706,484,224  5.277016  DENSE_PREFIX_THEN_MOE  MLA_DECOMPRESS_FORWARD
+Qwen3.5-40B                 39,072,596,736  4.896774  ALL_DENSE              NONE
+ministral3                  8,918,026,240   4.658422  ALL_DENSE              NONE
+tinyllama-1.1b-Q4_K_M       1,100,048,384   4.851268  ALL_DENSE              NONE
+llama3.2-3b-Q3_K_S          3,212,749,888   3.822298  ALL_DENSE              NONE
+phi3-mini-Q2_K              3,821,079,648   3.156131  ALL_DENSE              NONE
+gemma3-1b-Q2_K                999,885,952   5.466875  ALL_DENSE              NONE
+bench_frag                        512      32.000000  (sparse fixture)        ATTENTION_PROJECTION_GRAMMAR
+```
+
+All: `GRAMMAR_CONTRADICTION=0`, `TYPE_TABLE_VERIFIED=YES` (dense),
+`PAYLOAD_BYTES_READ=0`.
+
+## Discovery frontier
+
+The only model in the family with an unproven boundary is DeepSeek-V2-Lite, and
+the boundary is a specific missing primitive rather than an architecture name:
+
+```ini
+FIRST_UNPROVEN = MLA_DECOMPRESS_FORWARD
+WHY            = latent KV cache expansion requires an MLA reconstruction kernel
+```
+
+The genome is fully reconstructed; execution stops at one operation because
+Deep2 has no kernel for it. That is a far more actionable failure than
+`kExecutableArchs_missing:deepseek2`.
+
+## Evidence-tagged artifacts
+
+`nugv_genie` emits three files kept separate so inferred behaviour cannot
+masquerade as file evidence:
+
+- `model.physical.txt` — literal tensor directory, no interpretation
+- `model.genome.txt` — reconstructed structure, each field tagged
+  `EXPLICIT` / `DIRECTORY` / `SHAPE` / `TOPOLOGY` / `CONTRACT`
+- `model.execution.txt` — derived machine as pseudo-source, with
+  `UNKNOWN_OPERATION_*` blocks where semantics cannot be proven
+
+Evidence vocabulary:
+
+```ini
+EXPLICIT   stated by a metadata key
+DIRECTORY  present in the tensor directory
+SHAPE      derived from tensor dimensions
+TOPOLOGY   derived from tensor grouping/relationships
+CONTRACT   assumed from the architecture's grammar
+```
+
+A missing fact stays unknown. A contradiction is reported, not resolved.
+
+## Verdict
+
+```ini
+EXACT_PARAMS_FROM_DIRECTORY  = PASS
+EXACT_BYTES_FROM_DIRECTORY   = PASS
+TYPE_TABLE_SELF_VERIFIED     = PASS
+NOMINAL_ESTIMATOR_GATED      = PASS
+FILENAME_AUTHORITY           = PASS  (negative control)
+DECLARED_VS_PHYSICAL         = PASS
+PROBE_PAYLOAD_INVARIANTS     = PASS
+STRUCTURAL_COST_INDEPENDENT  = PASS
+SPOT_CHECK_9_MODELS          = PASS
+GRAMMAR_CONTRADICTIONS       = 0
+EXTRACT_TOOLING_DEFECTS      = 8  (found and fixed)
+
+VERDICT = PASS
+```
+
+## Not certified
+
+- No execution. Nothing here proves numerics or forward equivalence.
+- No liveness/residency runtime. The window bounds are closed-form over the
+  tensor directory, not measured allocator behaviour.
+- Type table covers 30 ggml types from this tree's `ggml-common.h`. A type added
+  upstream is reported as `UNKNOWN_TYPE` rather than guessed.
+- Sparse-layout files get no type-table verification. Dense requirement is
+  stated, not assumed.

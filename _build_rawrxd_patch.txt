@@ -1,0 +1,6 @@
+[1/4] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignRuntime.cpp.obj
+[2/4] Building CXX object CMakeFiles\rawrxd.dir\src\sovereign\SovereignRuntime.cpp.obj
+D:\rawrxd\src\deep2\NVMeStream.h(34): warning C4005: 'NOMINMAX': macro redefinition
+D:\rawrxd\src\deep2\NVMeStream.h(34): note: 'NOMINMAX' previously declared on the command line
+[3/4] Linking CXX static library InferenceEngine.lib
+[4/4] Linking CXX executable bin\rawrxd.exe

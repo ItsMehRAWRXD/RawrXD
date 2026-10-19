@@ -1,0 +1,21 @@
+# Push hygiene — oversized dump objects (outside product accounting)
+
+GITHUB_REJECT_REASON=OVERSIZED_DUMP_OBJECTS
+SOURCE_GRAPH_FAILURE=0
+PRODUCT_BINARY_FAILURE=0
+
+Cause: `.dmp` blobs in commits sent to GitHub (not a product/runtime defect).
+
+Required fix (repository hygiene only):
+1. Rewrite the *pushable* branch history so `.dmp` blobs are absent from commits
+   GitHub receives — deleting them in a later commit is not enough.
+2. Dump exclusions are now in `.gitignore`:
+   - `*.dmp`
+   - `**/CrashDumps/**`
+   - `evidence/**/*.dmp`
+   - `**/crash_dumps/**`
+
+Do NOT rewrite accepted `rawrxda` / `closure-origin` history unless you
+intentionally want those remotes to match the cleaned GitHub history.
+
+PRODUCT_RUNTIME_BLOCKED_BY_PUSH=0

@@ -1,0 +1,37 @@
+IDE_PRODUCT_BATCH_106 — authority notes
+=======================================
+
+BATCH_103_PRODUCT_COMMANDS=PASS
+  evidence/IDE_PRODUCT_BATCH_103/RECEIPT.txt
+  Product-command live smoke (/git /search /p100 wave3|wave4 API) PASS.
+  DO NOT collapse with Wave3 standalone witness.
+
+WAVE3_STANDALONE_WITNESS=HOLD
+  Only p100_wave3_witness.obj observed; no linked witness EXE produced
+  WAVE3_API_PASS under standalone Wave3 executable requirement.
+  Separate ledger from Batch 103 product-command PASS.
+
+BATCH_105_RUNTIME_AUTHORITY=PASS
+  evidence/IDE_PRODUCT_FINISH_BATCH_105/ACCEPTANCE.txt
+  Code-landed with Batch 106 foundations (SharedProductRuntime, token budget).
+
+GITHUB_REJECT_REASON=OVERSIZED_DUMP_OBJECTS
+SOURCE_GRAPH_FAILURE=0
+PRODUCT_BINARY_FAILURE=0
+PRODUCT_RUNTIME_BLOCKED_BY_PUSH=0
+
+HYGIENE=
+  .gitignore now excludes *.dmp, **/CrashDumps/**, evidence/**/*.dmp
+  Pushable branch history must be rewritten so .dmp blobs are absent from
+  commits sent to GitHub (not merely deleted in a later commit).
+  Do NOT rewrite accepted rawrxda / closure-origin history unless intentional.
+
+BUILD_FD_ROLE=CLI_ONLY
+BUILD_P1PRA_WIN32IDE_ROLE=IDE_AUTHORITY
+PRIMARY_GITHUB_SYNC_7c0c68f150=OPEN
+
+NEXT_BATCH_107=
+  Hard product witness (not architecture):
+  RawrXD-Win32IDE.exe → ProductRuntime → ProductRun → OpenSession
+  → Deep2Engine::generateStream → FIRST_TOKEN=1 → GENERATED_TOKENS=256
+  → EXIT_REASON=COMPLETE

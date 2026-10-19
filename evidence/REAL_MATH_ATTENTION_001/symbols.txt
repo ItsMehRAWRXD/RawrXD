@@ -1,0 +1,6 @@
+016 00000000 SECT1  notype ()    External     | XR_ExpF32
+017 00000097 SECT1  notype ()    External     | XR_SiLU_F32
+018 000000E1 SECT1  notype ()    External     | XR_Softmax_F32
+019 00000188 SECT1  notype ()    External     | XR_RMSNorm_F32
+01A 0000020C SECT1  notype ()    External     | XR_Dot_F32
+01B 0000022C SECT1  notype ()    External     | XR_AttentionHead_F32

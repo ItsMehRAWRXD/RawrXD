@@ -1,0 +1,18 @@
+# Crash dump push hygiene (Batch 106)
+#
+# GitHub reject cause: OVERSIZED_DUMP_OBJECTS
+# SOURCE_GRAPH_FAILURE=0
+# PRODUCT_BINARY_FAILURE=0
+# PRODUCT_RUNTIME_BLOCKED_BY_PUSH=0
+#
+# Fix: rewrite the *pushable* branch history so .dmp blobs are absent from
+# commits sent to GitHub — not merely delete them in a later commit.
+#
+# Do NOT rewrite accepted rawrxda / closure-origin history unless you
+# intentionally want those remotes to match the cleaned GitHub history.
+#
+# Exclusions are in .gitignore:
+#   *.dmp
+#   **/CrashDumps/**
+#   evidence/**/*.dmp
+#   **/crash_dumps/**

@@ -1,0 +1,14 @@
+﻿S11 [PARTIAL] src/deep2/lavapath/ProductRuntime.hpp
+    Header included by src/deep2/lavapath/ProductGraph.hpp only; not main product exe hot path
+S12 [PARTIAL] src/deep2/lavapath/ProductGraph.hpp
+    Header included by certs/rawrxd_product_runtime_001.cpp only; not main product exe hot path
+S16 [PARTIAL] src/product/win32/ide_product_run.hpp
+    Header included by certs/rawrxd_product_runtime_001.cpp only; not main product exe hot path
+O01 [ORPHAN] src/deep2/Deep2APIServer.cpp
+    ORPHAN not in RawrProductLayer / rawr
+O02 [ORPHAN] src/deep2/certification/Deep2_Cert_MockGateway.cpp
+    ORPHAN fiction mock ok; not product path
+O03 [ORPHAN] src/engine/sovereign_engines.cpp
+    ORPHAN not InferenceEngine product path
+O04 [ORPHAN] native_e2e/rawr_native_http_adapter.cpp
+    ORPHAN from rawr; native_e2e island

@@ -1,0 +1,13 @@
+side=deep2
+stage=V_0
+pos=11
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=eddadf7a952333ac
+l2=0.19993211686470633
+seq=697
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_V_0_pos11_layer0_full_n256_seq697.bin

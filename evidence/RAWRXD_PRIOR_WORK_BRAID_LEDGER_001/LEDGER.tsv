@@ -1,0 +1,36 @@
+prior_id	class	keep	can_run	can_promote	runtime_rule	source
+SLINGSHOT_RESIDENCY	BRAID_CANDIDATE	1	1	endurance_only	fixed_graph+canonical_bytes; prefetch before causal demand; no readback; no new owner	src/deep2/lavapath/SlingshotLaw.hpp
+SLINGSHOT_PINBALL_BENCH	REJECTED_AUTHORITY_PATH	1_archive	0	0	archive disposition; residency GOOD stays	evidence/.../SLINGSHOT_BENCH_DISPOSITION.txt
+PINBALL_BINDING_SELECTION	BRAID_CANDIDATE	1	1	endurance_only	DATA_STAYS; EXECUTION_CURSOR_MOVES; no unnecessary payload bounce	src/deep2/Deep2LivePath_Pinball.cpp
+SBRAID_GPU_NATIVE	TRANSIENT_BINDING_CANDIDATE	1	1	endurance_only	tile-local compressed consumption; no CPU reconstruct on product path	src/sbraid_verify.cpp|BraidedQuantizer
+REVERSE_BEACON	SCHEDULER_HINT	1	1	0	write counters only; propose next binding after witness; no hot-path graph rewrite	src/deep2/Beaconism.hpp
+BOUNCE_CONVERGENCE_META	SCHEDULER_HINT	1	1	0	metadata-only dependency/convergence hints; no payload copy between owners	—
+OOM_SLINGSHOT_SPILL	FAULT_RECOVERY_PATH	1	1	0	recovery only; not steady-state TPS authority	—
+GPU_Q_HOST_KVA_OVERLAP	TRANSIENT_BINDING_CANDIDATE	1	1	endurance_only	true independent overlap; BraidQkvMode::SplitKv	src/deep2/K2BraidExecutionPolicy.hpp
+HIDDEN_REUSE	BRAID_CANDIDATE	1	1	n/a_invariant	permanent: reuse existing hidden; no duplicate intermediates	—
+KVA_OFF_CRITICAL_DEPTH	BRAID_CANDIDATE	1	1	n/a_invariant	permanent: remove unnecessary serial KVA dependence	REMOVE_KVA_FROM_EXPOSED_CAUSAL_DEPTH_001
+QKV_TRUE_OVERLAP	TRANSIENT_BINDING_CANDIDATE	1	1	endurance_only	sibling Q||K||V; no artificial Q→K→V serialize	QKV_KVA_TRUE_OVERLAP_001
+PERSISTENT_LOGITS_WORKER	TRANSIENT_BINDING_CANDIDATE	1	1	endurance_only	persistent resource; no per-token thread spawn/join	LOGITS_OWNER_RESIDUAL_001
+RESIDENCY_WINDOW_FIXED_SLOTS	BRAID_CANDIDATE	1	1	endurance_only	fixed slots + prefetch next; no alloc/free churn on critical path	SlingshotLaw
+QB_KERNEL_SHARED_X	TRANSIENT_BINDING_CANDIDATE	1	1	0_no_reopen_opt	code stays; tip authority historical only	QB_KERNEL_CUT_001
+LOGITS_SPLIT_IDEAS	TRANSIENT_BINDING_CANDIDATE	1	1	endurance_only	candidate descriptors; GPU split default OFF measured	LOGITS_SPLIT_CUT_001
+COVERAGE_QB64_QA32_QKV64	COVERAGE_RANK_ONLY	1	0_direct	0	search direction; endurance retained baseline	COVERAGE_EPOCH_0
+HISTORICAL_5p904	HISTORICAL_SIGNAL	1	0	0	no chase no reopen no authority rewrite	QB_KERNEL_CUT_001
+HISTORICAL_5p946_WALL	HISTORICAL_SIGNAL	1	0	0	wall compare datum; not auto-installed tip	SEARCH_BASELINE / champion wall median
+FIRST_PASS_6p298	HISTORICAL_SIGNAL	1	0	0	coverage first-pass; not endurance winner	PERF_EPOCH_0
+QKV_READBACK_TRICKS	BLOCKED_READBACK_DOWNWARD	1	maybe	host_consumer_only	legal only if next true consumer is host	QKV_READBACK_CUT_001
+QKV_READBACK_HOST_QB	HOST_CONSUMER_READBACK	1	1	maybe	q_b D2H when attention host consumes next; shrink/delete if device attention	PERF_OWNER
+MODEL_STREAMER_TRACE	SCHEDULER_HINT	1	1	0	write-only attribution; TRACE_MAY_PROMOTE_CONFIG=0	ModelStreamerTrace.hpp
+STATIC_GEOMETRY_SECOND_LOADER	REJECTED_AUTHORITY_PATH	1_archive	0	0	never runtime authority	—
+FAKE_MATH_SURROGATE_STRICT	DEAD_FOR_STRICT	1_archive	0	0	extension/demo only	—
+CPU_FULL_TENSOR_RECONSTRUCTION	DEAD_FOR_STRICT	1_archive	0	0	do not recover mechanism; goal→GPU-native binding	—
+EAGER_KVA_STAGING	DEAD_FOR_STRICT	1_archive	0	0	do not recover; use fixed bindings + causal overlap	—
+SHADOW_BUFFER_DUPLICATION	DEAD_FOR_STRICT	1_archive	0	0	do not recover	—
+PER_TOKEN_THREAD_SPAWN_JOIN	DEAD_FOR_STRICT	1_archive	0	0	do not recover; persistent worker candidate instead	—
+GPU_CPU_GPU_ROUNDTRIP	BLOCKED_READBACK_DOWNWARD	1	0	0	illegal by default	—
+READBACK_FOR_LOGGING	BLOCKED_READBACK_DOWNWARD	1	0	0	LOG_METADATA_ONLY	—
+TLS_REGEN_TPS_THEATER	REJECTED_AUTHORITY_PATH	1_archive	0	0	disposition kept; not product decode	BRAID_TLS_DISPOSITION.txt
+BP1_DISK_PROJECTION	HISTORICAL_SIGNAL	1	0	0	size math closed; quality/TPS open	BP1_PROJECTION_REVERSE.txt
+BRAID_DUAL_STREAM_PROTOCOL	BRAID_CANDIDATE	1	1	endurance_only	A/B from snapshot S; loser purge; winner commit	BRAID_DUAL_STREAM_001.txt
+AUTO_QUANT_RESTORE	TRANSIENT_BINDING_CANDIDATE	1	1	endurance_only	rebind not recompress; transient can vanish	AUTO_QUANT_RESTORE_POINT_001.txt
+PURITY_PROFILE	BRAID_CANDIDATE	1	1	n/a_invariant	forced-off profile sealed	PERF_WITNESS_PURITY.txt

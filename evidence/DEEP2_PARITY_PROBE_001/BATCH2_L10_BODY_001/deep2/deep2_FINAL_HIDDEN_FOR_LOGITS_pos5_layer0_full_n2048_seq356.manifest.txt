@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_HIDDEN_FOR_LOGITS
+pos=5
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=6351004a189288e7
+l2=78.49403864701479
+seq=356
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_FINAL_HIDDEN_FOR_LOGITS_pos5_layer0_full_n2048_seq356.bin

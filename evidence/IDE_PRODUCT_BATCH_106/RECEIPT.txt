@@ -1,0 +1,74 @@
+IDE_PRODUCT_BATCH_106=PASS
+
+SERVE_PRODUCT_REQUEST=1
+SERVE_PRODUCT_RUNTIME=1
+
+HTTP_COMPLETIONS_PRODUCT_RUN=1
+HTTP_CHAT_PRODUCT_RUN=1
+HTTP_ALT_DECODE_OWNER=0
+
+HTTP_REAL_STREAM_TOKENS=1
+HTTP_DEFAULT_MAX_TOKENS=256
+HTTP_CALLER_OVERRIDE_PRESERVED=1
+
+HTTP_DISCONNECT_CANCEL=1
+HTTP_BUSY_EXPLICIT=1
+
+SETTINGS_MODEL_CANONICAL=1
+SETTINGS_POLICY_ONLY=1
+
+SESSION_SAVE_REAL=1
+SESSION_RESTORE_OPEN_SESSION=1
+
+IDE_CANCEL_SAME_RUNTIME=1
+MODEL_RELOAD_CANONICAL=1
+
+SEARCH_BACKEND_OWNER_COUNT=1
+
+PRODUCT_RUNTIME_OWNER_COUNT=1
+PRODUCTRUN_OWNER_COUNT=1
+DECODE_OWNER_COUNT=1
+
+IDE_COMPLETE=0
+
+# Authority split (do not collapse)
+BATCH_103_PRODUCT_COMMANDS=PASS
+BATCH_105_RUNTIME_AUTHORITY=PASS
+WAVE3_STANDALONE_WITNESS=HOLD
+
+# Repo hygiene (outside product accounting)
+GITHUB_REJECT_REASON=OVERSIZED_DUMP_OBJECTS
+SOURCE_GRAPH_FAILURE=0
+PRODUCT_BINARY_FAILURE=0
+PRODUCT_RUNTIME_BLOCKED_BY_PUSH=0
+DUMP_GITIGNORE=1
+
+BRANCH=cert/p1pra-rc1
+BUILD_FD_ROLE=CLI_ONLY
+BUILD_P1PRA_WIN32IDE_ROLE=IDE_AUTHORITY
+PRIMARY_GITHUB_SYNC_7c0c68f150=OPEN
+
+LIVE_HOST=build-fd/bin/ide_product_batch_106_wiring.exe
+CERT=certs/ide_product_batch_106_wiring.cpp
+AUTHORITY=evidence/IDE_PRODUCT_BATCH_106/AUTHORITY.txt
+
+ITEMS=
+  211 serve request → ProductRequest
+  212 serve SharedProductRuntime (no local Deep2Engine owner)
+  213 /v1/completions → ProductRun
+  214 /v1/chat/completions → ProductRun
+  215 SSE real ProductRun onPiece tokens
+  216 max_tokens default 256; caller override preserved
+  217 disconnect → CancelGeneration same runtime
+  218 busy explicit BUSY/CONCURRENT (no fallback decoder)
+  219 settings model → OpenSession selector
+  220 generation = RequestPolicy fields only
+  221 session save reconstructible product state
+  222 session restore → ProductRuntime OpenSession
+  223 IDE cancel same SharedProductRuntime
+  224 unload/reload Close→Resolve→Open
+  225 one search_backend owner (search_ws delegates)
+
+NEXT_107=
+  RawrXD-Win32IDE.exe → ProductRuntime → ProductRun → OpenSession
+  → generateStream → FIRST_TOKEN=1 → GENERATED_TOKENS=256 → COMPLETE

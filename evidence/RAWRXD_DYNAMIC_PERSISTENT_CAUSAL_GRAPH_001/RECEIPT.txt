@@ -1,0 +1,13 @@
+RAWRXD_DYNAMIC_PERSISTENT_CAUSAL_GRAPH_001=INTEGRATED
+DATE=2026-09-08
+SHA256=2589c4dc4ac786ba7fd44e58fcf9c991f58d5b990b8dd0afd1aeb5f7ce0267fe
+SOURCE=C:\Users\Garrett\Downloads\RawrXD_DynamicPersistentCausalGraph_001.zip
+EPOCH0_AUTHORITY=UNCHANGED
+SEPARATE_FROM_18_CONFIG_COVERAGE=1
+
+PLACED
+  src/runtime/PersistentGraphState.hpp
+  src/runtime/PersistentGraphState.cpp
+  examples/decode_state.cfg
+  examples/persistent_graph_example.cpp
+  docs/DynamicPersistentCausalGraph_001_README.md

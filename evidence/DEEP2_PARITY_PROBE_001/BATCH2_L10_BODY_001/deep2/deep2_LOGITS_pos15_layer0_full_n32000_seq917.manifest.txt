@@ -1,0 +1,13 @@
+side=deep2
+stage=LOGITS
+pos=15
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=32000
+nbytes=128000
+fnv=6861530fb81e76c8
+l2=909.32616454373124
+seq=917
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_LOGITS_pos15_layer0_full_n32000_seq917.bin

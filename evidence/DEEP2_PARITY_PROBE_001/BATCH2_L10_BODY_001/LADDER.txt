@@ -1,0 +1,19 @@
+BATCH2_L10_BODY_001
+authority=EXPAND_V max_layer=10 + Deep2 STAGE_DUMP_LAYERS=10
+
+ATTN_NORM_10 abs=PASS    dual=PASS    max_abs=9.536743e-07 max_rel=2.980232e-07 first=-1 largest=624
+ATTN_OUT_10  abs=PASS    dual=PASS    max_abs=5.960464e-08 max_rel=5.960464e-08 first=-1 largest=411
+FFN_INP_10   abs=FAIL    dual=INSPECT max_abs=4.577637e-05 max_rel=3.159046e-06 first=14 largest=624
+FFN_NORM_10  abs=INSPECT dual=PASS    max_abs=1.907349e-06 max_rel=3.650963e-07 first=624 largest=624
+FFN_GATE_10  abs=FAIL    dual=FAIL    max_abs=3.599748e-05 max_rel=3.599748e-05 first=0 largest=4741
+FFN_UP_10    abs=FAIL    dual=FAIL    max_abs=2.763420e-05 max_rel=2.763420e-05 first=0 largest=3475
+FFN_ACT_10   abs=INSPECT dual=INSPECT max_abs=3.821682e-06 max_rel=3.821682e-06 first=1 largest=4324
+FFN_DOWN_10  abs=FAIL    dual=FAIL    max_abs=5.810242e-05 max_rel=5.810242e-05 first=0 largest=1198
+L10_OUT      abs=FAIL    dual=FAIL    max_abs=5.829334e-05 max_rel=5.829334e-05 first=0 largest=1198
+ACT_vs_refD  abs=PASS    dual=PASS    max_abs=3.735162e-09
+ACTl_vs_refL abs=PASS    dual=PASS    max_abs=5.778602e-09
+ACT_vs_ACTl  abs=INSPECT dual=INSPECT max_abs=3.821682e-06
+refD_vs_ACTl abs=INSPECT dual=INSPECT max_abs=3.821629e-06
+
+FIRST_ABS_FAIL=FFN_INP_10
+FIRST_DUAL_FAIL=FFN_GATE_10

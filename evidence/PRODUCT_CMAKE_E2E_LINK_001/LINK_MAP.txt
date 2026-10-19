@@ -1,0 +1,150 @@
+﻿RAWRXD_PRODUCT_CMAKE_E2E_LINK_001
+ROOT=G:\~dev\rawrxd
+METHOD=cmake-first (not archive filename scan)
+HUNG_JOB=reverse_product_manifest.ps1 STOPPED
+
+COUNTS WIRED=17 PARTIAL=3 ORPHAN=4 MISSING=0
+
+CMAKE_CHAIN
+00 [PRESENT] CMakeLists.txt :: root
+01 [PRESENT] cmake/P1_ProductRuntimeAuthority.cmake :: P1 PRA asm on Win32IDE
+02 [PRESENT] cmake/RawrXD_Product100.cmake :: Win32IDE Product100 + product_deep2_infer.cpp
+03 [PRESENT] cmake/RawrAgenticCli.fragment.cmake :: rawr exe + ProductRun CLI + product_deep2_infer.cpp
+04 [PRESENT] cmake/Deep2ProductLavapath.fragment.cmake :: lavapath product ops
+05 [PRESENT] cmake/RawrBackgroundTerminals.fragment.cmake :: term host/termctl
+06 [PRESENT] cmake/RawrRemainingStyleCli.fragment.cmake :: style CLI
+07 [PRESENT] cmake/RawrProductLayer.fragment.cmake :: product certs + MASM ABI + ws2_32 on rawr
+08 [PRESENT] cmake/Interstellar.fragment.cmake :: interstellar/choreography certs
+
+TARGETS
+TARGET=InferenceEngine KIND=STATIC
+  WIRED_BY=CMakeLists.txt INFERENCE_ENGINE_LIBRARY_SOURCES
+  SRC[OK]=src/deep2/Deep2Engine.cpp
+  SRC[OK]=src/deep2/GGUFLoader.cpp
+  SRC[OK]=src/deep2/KVCache.cpp
+  SRC[OK]=src/deep2/QuantKernelRegistry.cpp
+  SRC[OK]=src/deep2/MoERouter.cpp
+  NOTE=Canonical Deep2. ProductRun.hpp is header-only on top of this.
+TARGET=rawr KIND=EXE
+  WIRED_BY=RawrAgenticCli.fragment.cmake + RawrProductLayer.fragment.cmake
+  SRC[OK]=src/cli/rawr_main.cpp
+  SRC[OK]=src/cli/rawr_commands.cpp
+  SRC[OK]=src/cli/rawr_product_serve.cpp
+  SRC[OK]=src/product/gateway/product_deep2_infer.cpp
+  SRC[OK]=src/cli/rawr_agent_loop.cpp
+  SRC[OK]=src/deep2/Deep2GenerateStream.cpp
+  SRC[OK]=src/masm/rawr_product_x64.asm
+  SRC[OK]=src/masm/rawr_product_pipe_x64.asm
+  LINKS=InferenceEngine,dxgi,ws2_32
+  NOTE=CmdRun/CmdChat call product_run::ProductRun. CmdServe --http uses local_api headers.
+TARGET=RawrXD-Win32IDE KIND=EXE
+  WIRED_BY=CMakeLists.txt + RawrXD_Product100.cmake + P1_ProductRuntimeAuthority.cmake
+  SRC[OK]=src/win32app/Win32IDE.cpp
+  SRC[OK]=src/win32app/RawrXD_Product100.cpp
+  SRC[OK]=src/win32app/Win32IDE_Product100Wire.cpp
+  SRC[OK]=src/product/gateway/product_deep2_infer.cpp
+  SRC[OK]=src/asm/RawrXD_Product100_x64.asm
+  SRC[OK]=src/asm/P1_ProductRuntimeAuthority_x64.asm
+  LINKS=InferenceEngine,Vulkan optional
+  NOTE=ProductDeep2Infer called from Win32IDE.cpp / GhostText / LocalServer / BackendSwitcher.
+
+SMART_FILES
+S01 [WIRED       ] src/deep2/lavapath/ProductRun.hpp
+      NEED=Product entry
+      REASON=Header included by src/cli/rawr_commands.cpp; HEADER include from rawr_commands / product_deep2_infer
+S02 [WIRED       ] src/deep2/lavapath/ProductReceipt.hpp
+      NEED=Receipt
+      REASON=Header included by src/deep2/lavapath/ProductRun.hpp; HEADER include from ProductRun.hpp
+S03 [WIRED       ] src/product/gateway/product_deep2_infer.cpp
+      NEED=IDE/CLI infer TU
+      REASON=COMPILED into rawr + Win32IDE + rawr_product_cert
+S04 [WIRED       ] src/product/gateway/product_deep2_infer.hpp
+      NEED=Infer decl
+      REASON=Header included by src/cli/rawr_product_serve.hpp; HEADER
+S05 [WIRED       ] src/cli/rawr_commands.cpp
+      NEED=CLI ProductRun
+      REASON=COMPILED into rawr
+S06 [WIRED       ] src/cli/rawr_main.cpp
+      NEED=CLI main
+      REASON=COMPILED into rawr
+S07 [WIRED       ] src/cli/rawr_product_serve.hpp
+      NEED=pipe serve
+      REASON=Header included by src/cli/rawr_commands.cpp; HEADER into rawr via rawr_product_serve.cpp
+S08 [WIRED       ] src/cli/rawr_local_api.hpp
+      NEED=HTTP serve
+      REASON=Header included by src/cli/rawr_commands.cpp; HEADER included by rawr_commands.cpp CmdServe --http
+S09 [WIRED       ] src/product/gateway/local_api.hpp
+      NEED=OpenAI JSON
+      REASON=Header included by src/cli/rawr_commands.cpp; HEADER via rawr_local_api.hpp
+S10 [WIRED       ] src/product/gateway/local_api_http.hpp
+      NEED=Winsock loopback
+      REASON=Header included by src/cli/rawr_local_api.hpp; HEADER via rawr_local_api.hpp
+S11 [PARTIAL     ] src/deep2/lavapath/ProductRuntime.hpp
+      NEED=Runtime owner
+      REASON=Header included by src/deep2/lavapath/ProductGraph.hpp only; not main product exe hot path
+S12 [PARTIAL     ] src/deep2/lavapath/ProductGraph.hpp
+      NEED=ExecutionGraph
+      REASON=Header included by certs/rawrxd_product_runtime_001.cpp only; not main product exe hot path
+S13 [WIRED       ] src/deep2/lavapath/ProductTensorGuard.hpp
+      NEED=validateTensor
+      REASON=Header included by certs/rawrxd_product_layer_003.cpp; HEADER layer_003 cert
+S14 [WIRED       ] src/product/ide/chat_panel.hpp
+      NEED=ChatPanel ProductRun
+      REASON=Header included by certs/rawrxd_product_runtime_001.cpp; HEADER not in product_layer.hpp umbrella
+S15 [WIRED       ] src/product/agent/agent_product_run.hpp
+      NEED=agent ProductRun
+      REASON=Header included by certs/rawrxd_product_runtime_001.cpp; HEADER cert runtime only
+S16 [PARTIAL     ] src/product/win32/ide_product_run.hpp
+      NEED=IDE ProductRun helper
+      REASON=Header included by certs/rawrxd_product_runtime_001.cpp only; not main product exe hot path
+S17 [WIRED       ] src/product/product_layer.hpp
+      NEED=Umbrella
+      REASON=Header included by certs/rawrxd_product_layer_001.cpp; HEADER layer_001/002/003 certs
+S18 [WIRED       ] src/masm/rawr_product_x64.asm
+      NEED=ABI/caps/FNV
+      REASON=ASSEMBLED+LINKED rawr + product certs
+S19 [WIRED       ] src/deep2/Deep2Engine.cpp
+      NEED=generateStream
+      REASON=COMPILED InferenceEngine
+S20 [WIRED       ] src/deep2/RawrRunSession.hpp
+      NEED=OpenSession/alias
+      REASON=Header included by src/cli/rawr_commands.cpp; HEADER from ProductRun
+O01 [ORPHAN      ] src/deep2/Deep2APIServer.cpp
+      NEED=HTTP API
+      REASON=ORPHAN not in RawrProductLayer / rawr
+O02 [ORPHAN      ] src/deep2/certification/Deep2_Cert_MockGateway.cpp
+      NEED=mock HTTP
+      REASON=ORPHAN fiction mock ok; not product path
+O03 [ORPHAN      ] src/engine/sovereign_engines.cpp
+      NEED=800B facade
+      REASON=ORPHAN not InferenceEngine product path
+O04 [ORPHAN      ] native_e2e/rawr_native_http_adapter.cpp
+      NEED=route table
+      REASON=ORPHAN from rawr; native_e2e island
+
+E2E_EDGES
+  CMakeLists.txt --include--> cmake/RawrAgenticCli.fragment.cmake
+  RawrAgenticCli --target_sources--> rawr.exe
+  rawr.exe --compile--> src/cli/rawr_commands.cpp
+  rawr_commands.cpp --include--> src/deep2/lavapath/ProductRun.hpp
+  ProductRun.hpp --calls--> OpenSession + Deep2Engine::generateStream
+  generateStream --links--> InferenceEngine (Deep2Engine.cpp)
+  RawrProductLayer --ASM--> rawr.exe (rawr_product_x64.obj)
+  RawrProductLayer --link--> ws2_32
+  rawr_commands.cpp --include--> rawr_local_api.hpp --> local_api_http.hpp
+  CMakeLists.txt --include--> cmake/RawrXD_Product100.cmake
+  RawrXD_Product100 --sources--> RawrXD-Win32IDE + product_deep2_infer.cpp
+  Win32IDE.cpp --calls--> ProductDeep2Infer / ProductDeep2InferStream
+  product_deep2_infer.cpp --include--> ProductRun.hpp
+  RawrProductLayer --exe--> rawrxd_product_runtime_001 (ProductRuntime.hpp)
+  RawrProductLayer --exe--> rawrxd_local_api_compat_001 (LocalApiHandle)
+  BREAK: Deep2APIServer.cpp NOT on rawr/Win32IDE product cmake path
+  BREAK: ProductRuntime.hpp NOT used by CmdRun
+  BREAK: CmdRun default maxTokens still 64 (ProductRun default 256)
+
+NEXT_FROM_CMAKE_LINK
+  1. Align CmdRun default maxTokens 64 to ProductRun 256
+  2. Wire ProductRuntime into CmdRun/CmdChat as single owner
+  3. Keep Deep2APIServer / MockGateway OFF product path
+  4. Include chat_panel / agent_product_run from live IDE/agent sites
+  5. Rebuild rawr + product_runtime_001 + local_api_compat_001

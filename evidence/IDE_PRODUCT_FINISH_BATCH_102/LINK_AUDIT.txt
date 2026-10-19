@@ -1,0 +1,74 @@
+RAWRXD_WIN32IDE_LINK_AUDIT_001
+==============================
+SOURCE=hung job 695989 LNK1120 + current cmake/ninja/map
+DATE=2026-09-07
+
+## Hung-job failure (then)
+
+Callers already linked into RawrXD-Win32IDE:
+  Win32IDE.cpp
+  Win32IDE_AgenticBridge.cpp
+  Win32IDE_BackendSwitcher.cpp
+  Win32IDE_GhostText.cpp
+  Win32IDE_LocalServer.cpp
+
+Needed but NOT in that link line:
+  ProductOpenSession
+  ProductRequestCancel
+  ProductDeep2Infer
+  ProductDeep2InferStream
+  ProductSessionOpen
+
+Root cause: product_deep2_infer.cpp was only on rawr.exe / cert targets,
+NOT on RawrXD-Win32IDE WIN32IDE_SOURCES.
+
+## CMake E2E wire (now)
+
+CMakeLists.txt
+  add_executable(RawrXD-Win32IDE ${WIN32IDE_SOURCES} ...)
+  include(cmake/RawrXD_Product100.cmake)   # AFTER target exists
+
+RawrXD_Product100.cmake target_sources PRIVATE:
+  LINKED  src/win32app/RawrXD_Product100.cpp
+  LINKED  src/win32app/Win32IDE_Product100Wire.cpp
+  LINKED  src/win32app/Win32IDE_Product100Wave3.cpp
+  LINKED  src/win32app/Win32IDE_Product100Wave4.cpp
+  LINKED  src/asm/RawrXD_Product100_x64.asm
+  LINKED  src/product/gateway/product_deep2_infer.cpp   # fixes LNK2001
+
+define: RAWRXD_PRODUCT100=1
+
+## Map proof (current EXE)
+
+LINKED  ProductOpenSession
+LINKED  ProductDeep2Infer
+LINKED  ProductDeep2InferStream
+LINKED  ProductSessionOpen
+LINKED  ProductRequestCancel
+LINKED  P100_Init
+LINKED  P100_GitStatus
+LINKED  P100_RunSmokeMatrix
+EXE_OK  build_p1pra_win32ide/bin/RawrXD-Win32IDE.exe
+
+## Same .cpp also on other targets (correct)
+
+rawr.exe
+rawrxd_win32_editor_surface_001
+rawrxd_rawr_pipe_001
+rawrxd_editor_agent_e2e_001
+(+ other product certs via RawrProductLayer.fragment.cmake)
+
+## NOT linked as TUs (header-only / orphan until #included)
+
+Almost all of src/product/** except product_deep2_infer.cpp
+  — agent/, complete/, context/, ide/, repo/, tools/, win32/, lavapath/
+  Headers only become live if a linked .cpp #includes them.
+  ProductRun.hpp is header-only; pulled via product_deep2_infer.cpp
+  and CLI/rawr paths — not a separate .obj.
+
+## Smart next owners (still not EXE-wired)
+
+product/ide/*.hpp adapters (chat_panel, settings, session_io, …)
+  → need include from Win32IDE_* .cpp that is already linked
+product/win32/ide_product_run.hpp
+  → thin wrapper; unused until Callers include it

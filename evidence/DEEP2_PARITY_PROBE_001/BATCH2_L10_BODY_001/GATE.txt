@@ -1,0 +1,45 @@
+BATCH2_L10_BODY_001 — L10 first dual-FAIL body
+==============================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=10
+authority=EXPAND_V (llama MAX_LAYER=10) + Deep2 RAWRXD_STAGE_DUMP_LAYERS=10
+prereq=BATCH2_L8_L12_EXPAND_001 FIRST_DUAL_FAIL=L10_OUT
+
+STAGE LADDER (dual policy)
+--------------------------
+ATTN_NORM_10  abs=PASS    dual=PASS     9.54e-7
+ATTN_OUT_10   abs=PASS    dual=PASS     5.96e-8
+FFN_INP_10    abs=FAIL    dual=INSPECT  4.58e-5  (inherits L2..L9 ULP footprint @624)
+FFN_NORM_10   abs=INSPECT dual=PASS     1.91e-6
+FFN_GATE_10   abs=FAIL    dual=FAIL     3.60e-5  << FIRST_DUAL_FAIL (body)
+FFN_UP_10     abs=FAIL    dual=FAIL     2.76e-5
+FFN_ACT_10    abs=INSPECT dual=INSPECT  3.82e-6  (SwiGLU does NOT amplify here)
+FFN_DOWN_10   abs=FAIL    dual=FAIL     5.81e-5
+L10_OUT       abs=FAIL    dual=FAIL     5.83e-5
+
+SCALAR SiLU @ L10
+-----------------
+Deep2 ACT == f32 silu(G)*U     PASS ~3.7e-9
+llama ACT == f32 silu(G)*U     PASS ~5.8e-9
+⇒ SiLU remains CLOSED at L10
+
+CLASSIFICATION
+--------------
+FIRST_DUAL_FAIL = FFN_GATE_10 (then UP/DOWN inherit)
+NOT attn / NOT SiLU / NOT wo reopen
+FFN_INP still only dual-INSPECT (prior ULP amp) — L10 adds new GATE/UP gemv gap
+
+NEXT
+----
+Same-operand Gate A for blk.10.ffn_gate / ffn_up:
+  freeze FFN_NORM_10 X; compare Deep2 vs llama Q4_K GEMV
+OR walk worst GATE indices + block trace (Q8_K sensitivity class)
+
+Instrument note
+---------------
+Deep2Engine: RAWRXD_STAGE_DUMP_LAYERS / RAWRXD_STAGE_DUMP_MAX_LAYER
+now enable body dumps beyond layer<=2 (B3_StageDumpLayer).
+
+Artifacts
+---------
+LADDER.txt  deep2/  llama/  GATE.txt

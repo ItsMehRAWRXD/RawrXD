@@ -1,0 +1,10 @@
+id=batch106
+ws=
+model=llama32
+path=
+max_tokens=256
+keep=1
+gen=0
+crash=0
+prompt=
+text=
