@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <thread>
 #include <atomic>
 #include <xmmintrin.h>
@@ -122,6 +123,20 @@ struct Deep2Engine {
     // at all.
     std::vector<std::vector<float>> m_layerTraceBaseline;
     bool m_layerTraceCompare = false;
+
+    // The checkpoints of the first layer, captured as the pass runs.
+    //
+    // The per-layer comparison answers "do the two paths agree at the end of
+    // the layer". It does not answer "where inside the layer they stop
+    // agreeing", and that is the question a divergence has to be traced
+    // with: a difference that appears in the QKV projection is a weight or
+    // a GEMV problem, and a difference that appears after the attention
+    // assembly is a RoPE or an attention problem.
+    //
+    // The key is the name of the checkpoint and the value is the tensor as
+    // it was at that point in the pass.
+    bool m_layer0Trace = false;
+    std::map<std::string, std::vector<float>> m_layer0Checkpoints;
 
     // Where the time in a forward pass went.
     //

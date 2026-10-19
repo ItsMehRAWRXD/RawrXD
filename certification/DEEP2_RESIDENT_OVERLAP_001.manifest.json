@@ -1,0 +1,91 @@
+{
+  "certification_id": "DEEP2_RESIDENT_OVERLAP_001",
+  "generated_utc": "2026-10-19T23:16:15Z",
+  "subject": {
+    "executable": "G:\\VSC0de\\Deep2Engine\\build\\bin\\Release\\Deep2Engine_Benchmark.exe",
+    "model": "G:\\~dev\\rawrxd\\models\\phi3-mini-Q2_K.gguf",
+    "commit": "51ce15ef1aeebe86cb792730063868b99718443e"
+  },
+  "gates": {
+    "kernel_overlap": {
+      "passed": true,
+      "detail": "the three dispatch forms are bit-identical over 3 projections",
+      "evidence": "[GEMVBENCH] 20 calls per form, per projection | [GEMVBENCH] blk.0.attn_qkv.weight 9216x3072 f32 | [GEMVBENCH]   transient 3.92474 ms/call | [GEMVBENCH]   serial 1.84966 ms/call  (2.12187x vs transient) | [GEMVBENCH]   overlapped 1.0592 ms/call  (1.74627x vs serial)  (3.70536x vs transient) | [GEMVBENCH] blk.0.ffn_up.weight 16384x3072 packed | [GEMVBENCH]   transient 2.78649 ms/call | [GEMVBENCH]   serial 0.74458 ms/call  (3.74237x vs transient) | [GEMVBENCH]   overlapped 0.51689 ms/call  (1.4405x vs serial)  (5.39089x vs transient) | [GEMVBENCH] blk.0.ffn_down.weight 3072x8192 f32 | [GEMVBENCH]   transient 4.92197 ms/call | [GEMVBENCH]   serial 2.81437 ms/call  (1.74888x vs transient) | [GEMVBENCH]   overlapped 1.46545 ms/call  (1.92048x vs serial)  (3.35868x vs transient) | [GEMVBENCH] gate: PASSED (all three forms are bit-identical)"
+    },
+    "overlap_is_faster": {
+      "passed": true,
+      "detail": "the overlapped form is faster than the series form on every projection",
+      "evidence": "[GEMVBENCH]   transient 3.92474 ms/call | [GEMVBENCH]   serial 1.84966 ms/call  (2.12187x vs transient) | [GEMVBENCH]   overlapped 1.0592 ms/call  (1.74627x vs serial)  (3.70536x vs transient) | [GEMVBENCH]   transient 2.78649 ms/call | [GEMVBENCH]   serial 0.74458 ms/call  (3.74237x vs transient) | [GEMVBENCH]   overlapped 0.51689 ms/call  (1.4405x vs serial)  (5.39089x vs transient) | [GEMVBENCH]   transient 4.92197 ms/call | [GEMVBENCH]   serial 2.81437 ms/call  (1.74888x vs transient) | [GEMVBENCH]   overlapped 1.46545 ms/call  (1.92048x vs serial)  (3.35868x vs transient)"
+    },
+    "all_layers_complete": {
+      "passed": true,
+      "detail": "the pass compared 96 layer entries (32 layers x 3 tokens) and both paths reported OK",
+      "evidence": "[PARITY] resident path: OK | [PARITY] cpu path: OK | [PARITY] per-layer: 96 layers compared, first-layer relative 0, first layer over 1e-2 relative: 1"
+    },
+    "quantized_parity": {
+      "passed": true,
+      "detail": "5 device/CPU tensor comparisons and 7 quantization checks passed",
+      "evidence": "[TPARITY] blk.0.attn_qkv.weight 9216x3072 split=6136 max_diff=0 at row 0 mismatched=0/9216  PASS | [TPARITY] blk.0.attn_output.weight 3072x3072 split=2045 max_diff=0 at row 0 mismatched=0/3072  PASS | [TPARITY] blk.0.ffn_up.weight 16384x3072 split=10910 max_diff=0 at row 0 mismatched=0/16384  PASS | [TPARITY] blk.0.ffn_down.weight 3072x8192 split=2045 max_diff=0 at row 0 mismatched=0/3072  PASS | [TPARITY] output.weight 32064x3072 split=21351 max_diff=0 at row 0 mismatched=0/32064  PASS | [QPARITY] rom read vs file read for blk.0.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.0.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=1.19209e-06 at row 101 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.0.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.0.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=1.90735e-06 at row 5849 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.0.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.0.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=3.33786e-06 at row 1113 mismatched=0/3072 cosine=1 | [QPARITY] rom read vs file read for blk.2.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.2.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=2.38419e-06 at row 3121 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.2.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.2.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=9.53674e-07 at row 340 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.2.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.2.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 39 mismatched=0/3072 cosine=1 | [QPARITY] rom read vs file read for blk.4.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.4.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 2328 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.4.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.4.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=9.53674e-07 at row 337 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.4.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.4.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 2527 mismatched=0/3072 cosine=1 | [QPARITY] rom read vs file read for blk.7.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.7.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=1.90735e-06 at row 2727 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.7.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.7.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=9.53674e-07 at row 1858 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.7.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.7.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 697 mismatched=0/3072 cosine=1 | [QPARITY] rom read vs file read for blk.29.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.29.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=1.90735e-06 at row 2002 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.29.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.29.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=9.53674e-07 at row 3602 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.29.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.29.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 1055 mismatched=0/3072 cosine=1 | [QPARITY] rom read vs file read for blk.30.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.30.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=1.90735e-06 at row 6583 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.30.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.30.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=9.53674e-07 at row 1443 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.30.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.30.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 251 mismatched=0/3072 cosine=1 | [QPARITY] rom read vs file read for blk.31.attn_qkv.weight: bytes=12165120 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.31.attn_qkv.weight 9216x3072 romType=11 devicePath=f32 max_diff=2.38419e-06 at row 7226 mismatched=0/9216 cosine=1 | [QPARITY] rom read vs file read for blk.31.ffn_up.weight: bytes=16515072 romOk=1 fileOk=1 differing=0 | [QPARITY] avx512 expander vs reference on 196608 blocks: max_diff=0 mismatched=0/50331648  PASS | [QPARITY] blk.31.ffn_up.weight 16384x3072 romType=10 devicePath=packed max_diff=9.53674e-07 at row 723 mismatched=0/16384 cosine=1 | [QPARITY] rom read vs file read for blk.31.ffn_down.weight: bytes=10813440 romOk=1 fileOk=1 differing=0 | [QPARITY] blk.31.ffn_down.weight 3072x8192 romType=11 devicePath=f32 max_diff=2.86102e-06 at row 2217 mismatched=0/3072 cosine=1"
+    },
+    "execution_path": {
+      "passed": true,
+      "detail": "the resident path and the CPU path agree at the first layer",
+      "evidence": "[PARITY] per-layer: 96 layers compared, first-layer relative 0, first layer over 1e-2 relative: 1 | [PARITY] gate (execution path, first layer): PASSED"
+    },
+    "element_wise_layers": {
+      "passed": true,
+      "detail": "96 layer entries compared, worst relative difference 0.00012872 at layer 30",
+      "evidence": "worst relative 0.00012872 at layer 30; first layer over 1e-3 relative: none"
+    },
+    "same_token": {
+      "passed": true,
+      "detail": "the resident path and the CPU path select the same token",
+      "evidence": "[PARITY] top-1 token: resident=186 cpu=186 same=yes | [PARITY] top-5 overlap: 5/5  cosine similarity: 1"
+    },
+    "resident_path_used": {
+      "passed": true,
+      "detail": "5 resident projections matched the CPU on the device, over 96 layer entries",
+      "evidence": "[TPARITY] blk.0.attn_qkv.weight 9216x3072 split=6136 max_diff=0 at row 0 mismatched=0/9216  PASS | [TPARITY] blk.0.attn_output.weight 3072x3072 split=2045 max_diff=0 at row 0 mismatched=0/3072  PASS | [TPARITY] blk.0.ffn_up.weight 16384x3072 split=10910 max_diff=0 at row 0 mismatched=0/16384  PASS | [TPARITY] blk.0.ffn_down.weight 3072x8192 split=2045 max_diff=0 at row 0 mismatched=0/3072  PASS | [TPARITY] output.weight 32064x3072 split=21351 max_diff=0 at row 0 mismatched=0/32064  PASS"
+    },
+    "layer0_checkpoints": {
+      "passed": true,
+      "detail": "all 12 layer-0 checkpoints agree between the two paths",
+      "evidence": "[L0DIFF] checkpoint        n        max_abs_diff   max_at   l1_relative     first_divergent | [L0DIFF] 0.embedding        3072    0.000000e+00         0    0.0000e+00  no | [L0DIFF] 1.attn_norm_out    3072    0.000000e+00         0    0.0000e+00  no | [L0DIFF] 2.qkv              9216    4.768372e-07       710    4.9373e-08  no | [L0DIFF] 3.q_rope           3072    4.768372e-07       710    5.0739e-08  no | [L0DIFF] 4.k_rope           3072    2.384186e-07       225    4.9437e-08  no | [L0DIFF] 5.attention        3072    9.280629e-07       282    9.5718e-08  no | [L0DIFF] 6.attn_proj        3072    1.192093e-07      2046    7.5093e-07  no | [L0DIFF] 7.ffn_norm_out     3072    9.685755e-08      2664    4.1248e-07  no | [L0DIFF] 8.ffn_up          16384    6.407499e-07      5409    5.5417e-07  no | [L0DIFF] 9.ffn_swiglu      16384    4.470348e-07      5954    6.0859e-07  no | [L0DIFF] 10.ffn_down        3072    1.192093e-06      1113    9.8510e-07  no | [L0DIFF] 11.residual        3072    1.192093e-06      1113    7.3931e-07  no | [L0DIFF] first divergent checkpoint: (none)"
+    },
+    "stability": {
+      "passed": true,
+      "detail": "8/8 runs exited cleanly",
+      "evidence": "no failures"
+    },
+    "decode_measured": {
+      "passed": true,
+      "detail": "series 4.36 tok/s, overlapped 9.06 tok/s",
+      "evidence": "overlapped: 9.06392 tok/s; series: 4.36487 tok/s"
+    },
+    "same_text_both_modes": {
+      "passed": true,
+      "detail": "both modes emitted the same text",
+      "evidence": "overlapped: \"Paris. The capital of France is Paris. The capital of\"; series: \"Paris. The capital of France is Paris. The capital of\""
+    },
+    "decode_speedup": {
+      "passed": true,
+      "detail": "the overlapped decode rate is 2.08x the series rate",
+      "evidence": "series 4.3649 tok/s, overlapped 9.0639 tok/s"
+    },
+    "generated_tokens": {
+      "passed": true,
+      "detail": "overlapped produced 12 token(s), series produced 12",
+      "evidence": "tokens: 12 / 12"
+    },
+    "no_staging_fallback": {
+      "passed": true,
+      "detail": "the persistent staging was used on every call",
+      "evidence": "no fallback message"
+    }
+  },
+  "result": {
+    "passed": true,
+    "of": 15,
+    "failures": []
+  }
+}

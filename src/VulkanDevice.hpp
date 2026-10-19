@@ -207,6 +207,28 @@ private:
 
     VkInstance m_instance = VK_NULL_HANDLE;
     std::vector<Gpu> m_gpus;
+
+    // The staging buffer the uploads are copied through, one per device.
+    //
+    // The placement uploads every weight of the model, and the largest of
+    // them is a few hundred megabytes. Allocating that for every tensor
+    // and freeing it again put tens of driver allocations on the critical
+    // path of the placement, and a driver allocation that large is not
+    // cheap and not always benign. The buffer is grown to the largest
+    // upload it has seen and then reused.
+    struct UploadStaging {
+        VkBuffer buffer = VK_NULL_HANDLE;
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+        void* mapped = nullptr;
+        VkDeviceSize bytes = 0;
+    };
+    std::vector<UploadStaging> m_uploadStaging;
+    // The staging is reused, so two uploads cannot be in flight through it
+    // at the same time.
+    std::mutex m_uploadMutex;
+
+    // The index of a device in m_gpus, by its VkDevice handle.
+    std::size_t gpuIndexOf(const Gpu& gpu) const;
 };
 
 // One precompiled SPIR-V compute shader bound to a device.

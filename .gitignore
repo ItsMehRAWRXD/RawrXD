@@ -49,3 +49,6 @@ shaders/*.spv
 # OS
 .DS_Store
 Thumbs.db
+# The certification build tree: a second copy of the build, used to keep a
+# certification run from colliding with a build that is already in flight.
+build-cert/

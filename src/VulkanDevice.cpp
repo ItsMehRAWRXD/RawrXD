@@ -159,6 +159,17 @@ void VulkanDevice::shutdown() {
     // The cached programs own objects created on the devices, so they have to
     // be destroyed while those devices are still alive.
     destroyPrograms();
+    // The upload staging belongs to the devices as well, so it goes before
+    // they are destroyed.
+    for (std::size_t i = 0; i < m_uploadStaging.size(); ++i) {
+        UploadStaging& staging = m_uploadStaging[i];
+        if (staging.buffer == VK_NULL_HANDLE) continue;
+        if (i < m_gpus.size() && m_gpus[i].device) {
+            destroyBuffer(m_gpus[i], staging.buffer, staging.memory);
+        }
+        staging = UploadStaging();
+    }
+    m_uploadStaging.clear();
     for (auto& g : m_gpus) {
         vkDeviceWaitIdle(g.device);
         vkDestroyCommandPool(g.device, g.pool, nullptr);
@@ -395,16 +406,41 @@ void VulkanDevice::destroyBuffer(const Gpu& gpu, VkBuffer buf, VkDeviceMemory me
 bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dstOffset,
                                   const void* data, VkDeviceSize size) {
     if (size == 0) return true;
-    VkBuffer staging = VK_NULL_HANDLE;
-    VkDeviceMemory smem = VK_NULL_HANDLE;
-    void* mapped = nullptr;
-    if (!createBuffer(gpu, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      staging, smem, &mapped)) {
-        return false;
+
+    // The staging is reused across uploads.
+    //
+    // The placement uploads every weight of the model, and the largest of
+    // them is a few hundred megabytes. A fresh allocation for each one put
+    // tens of driver allocations of that size on the critical path of the
+    // placement. The buffer is grown to the largest upload it has seen and
+    // then reused, so the cost is one allocation per device for the whole
+    // pass.
+    std::lock_guard<std::mutex> lock(m_uploadMutex);
+
+    const std::size_t gpuIndex = gpuIndexOf(gpu);
+    if (gpuIndex >= m_uploadStaging.size()) m_uploadStaging.resize(gpuIndex + 1);
+    UploadStaging& staging = m_uploadStaging[gpuIndex];
+
+    if (staging.bytes < size) {
+        // The buffer is grown by destroying the old one first, so the
+        // device is never asked to free memory it is still using.
+        if (staging.buffer != VK_NULL_HANDLE) {
+            destroyBuffer(gpu, staging.buffer, staging.memory);
+            staging = UploadStaging();
+        }
+        if (!createBuffer(gpu, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                          staging.buffer, staging.memory, &staging.mapped)) {
+            staging = UploadStaging();
+            return false;
+        }
+        staging.bytes = size;
     }
-    std::memcpy(mapped, data, static_cast<size_t>(size));
-    vkUnmapMemory(gpu.device, smem);
+
+    // The staging stays mapped: it is reused by the next upload, and the
+    // memory is coherent, so the copy the host makes is what the device
+    // reads.
+    std::memcpy(staging.mapped, data, static_cast<size_t>(size));
 
     VkCommandBufferAllocateInfo cbai{};
     cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -421,7 +457,7 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
 
     VkBufferCopy region{};
     region.srcOffset = 0; region.dstOffset = dstOffset; region.size = size;
-    vkCmdCopyBuffer(cmd, staging, dst, 1, &region);
+    vkCmdCopyBuffer(cmd, staging.buffer, dst, 1, &region);
 
     vkEndCommandBuffer(cmd);
     VkFence fence = VK_NULL_HANDLE;
@@ -435,8 +471,16 @@ bool VulkanDevice::uploadToBuffer(const Gpu& gpu, VkBuffer dst, VkDeviceSize dst
     vkWaitForFences(gpu.device, 1, &fence, VK_TRUE, UINT64_MAX);
     vkDestroyFence(gpu.device, fence, nullptr);
     vkFreeCommandBuffers(gpu.device, gpu.pool, 1, &cmd);
-    destroyBuffer(gpu, staging, smem);
+    // The staging is kept for the next upload. The copy is complete: the
+    // fence has been waited on.
     return true;
+}
+
+std::size_t VulkanDevice::gpuIndexOf(const Gpu& gpu) const {
+    for (std::size_t i = 0; i < m_gpus.size(); ++i) {
+        if (m_gpus[i].device == gpu.device) return i;
+    }
+    return m_gpus.size();
 }
 
 bool VulkanDevice::writeMapped(const Gpu& gpu, VkDeviceMemory mem, VkDeviceSize offset,

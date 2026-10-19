@@ -1,0 +1,72 @@
+**********************
+PowerShell transcript start
+Start time: 20261019191110
+Username: RAWRXD\Garrett
+RunAs User: RAWRXD\Garrett
+Configuration Name: 
+Machine: RAWRXD (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.6.7.0_x64__8wekyb3d8bbwe\pwsh.dll -NoProfile -File scripts\certify_resident_overlap.ps1 -StabilityRuns 8
+Process ID: 17368
+PSVersion: 7.6.7
+PSEdition: Core
+GitCommitId: 7.6.7
+OS: Microsoft Windows 10.0.26200
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+[certify] === DEEP2_RESIDENT_OVERLAP_001 ===
+[certify] executable : G:\VSC0de\Deep2Engine\build\bin\Release\Deep2Engine_Benchmark.exe
+[certify] model      : G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf
+[certify] commit     : 51ce15ef1aeebe86cb792730063868b99718443e
+[certify] --- A: resident GEMV overlap ---
+[certify] gate kernel_overlap     PASS  the three dispatch forms are bit-identical over 3 projections
+[certify] gate overlap_is_faster  PASS  the overlapped form is faster than the series form on every projection
+[certify] --- B: full resident forward pass ---
+[certify] gate all_layers_complete PASS  the pass compared 96 layer entries (32 layers x 3 tokens) and both paths reported OK
+[certify] gate quantized_parity   PASS  5 device/CPU tensor comparisons and 7 quantization checks passed
+[certify] gate execution_path     PASS  the resident path and the CPU path agree at the first layer
+[certify] gate element_wise_layers PASS  96 layer entries compared, worst relative difference 0.00012872 at layer 30
+[certify] gate same_token         PASS  the resident path and the CPU path select the same token
+[certify] gate resident_path_used PASS  5 resident projections matched the CPU on the device, over 96 layer entries
+[certify] --- B2: layer 0 checkpoint diff ---
+[certify] gate layer0_checkpoints PASS  all 12 layer-0 checkpoints agree between the two paths
+[certify] --- C: stability (8 runs) ---
+[certify]   run 1 clean
+[certify]   run 2 clean
+[certify]   run 3 clean
+[certify]   run 4 clean
+[certify]   run 5 clean
+[certify]   run 6 clean
+[certify]   run 7 clean
+[certify]   run 8 clean
+[certify] gate stability          PASS  8/8 runs exited cleanly
+[certify] --- D: decode throughput, series against overlapped ---
+[certify] gate decode_measured    PASS  series 4.36 tok/s, overlapped 9.06 tok/s
+[certify] gate same_text_both_modes PASS  both modes emitted the same text
+[certify] gate decode_speedup     PASS  the overlapped decode rate is 2.08x the series rate
+[certify] gate generated_tokens   PASS  overlapped produced 12 token(s), series produced 12
+[certify] gate no_staging_fallback PASS  the persistent staging was used on every call
+[certify] manifest : G:\VSC0de\Deep2Engine\certification\DEEP2_RESIDENT_OVERLAP_001.manifest.json
+[certify] === DEEP2_RESIDENT_OVERLAP_001 : PASSED ===
+[certify]   kernel_overlap         PASS
+[certify]   overlap_is_faster      PASS
+[certify]   all_layers_complete    PASS
+[certify]   quantized_parity       PASS
+[certify]   execution_path         PASS
+[certify]   element_wise_layers    PASS
+[certify]   same_token             PASS
+[certify]   resident_path_used     PASS
+[certify]   layer0_checkpoints     PASS
+[certify]   stability              PASS
+[certify]   decode_measured        PASS
+[certify]   same_text_both_modes   PASS
+[certify]   decode_speedup         PASS
+[certify]   generated_tokens       PASS
+[certify]   no_staging_fallback    PASS
+**********************
+PowerShell transcript end
+End time: 20261019191616
+**********************

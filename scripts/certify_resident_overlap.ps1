@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # File: scripts/certify_resident_overlap.ps1
 #
 # DEEP2_RESIDENT_OVERLAP_001 certification harness.
@@ -107,6 +107,19 @@ function Invoke-Engine([string[]]$EngineArgs) {
 # proves it. A row with no evidence is a failure: the run did not prove it.
 $gates = [ordered]@{}
 
+# The settle time between two heavy runs.
+#
+# Each run places about eleven gigabytes of weights on the two devices and
+# then exits. The driver reclaims that memory asynchronously, and a run
+# that starts while the reclamation is still in flight is asking the driver
+# for memory it has not finished giving back. The engine does not survive
+# that: it dies in the middle of the placement, with no error, as a fast
+# fail. The wait is not for the engine, it is for the driver.
+$settleSeconds = 5
+function Wait-Settle() {
+    Start-Sleep -Seconds $settleSeconds
+}
+
 function Add-Gate([string]$name, [bool]$passed, [string]$detail, [string]$evidence) {
     $gates[$name] = [ordered]@{
         passed   = $passed
@@ -127,6 +140,7 @@ try {
     #    they agree bit for bit.
     # ------------------------------------------------------------------
     Log "--- A: resident GEMV overlap ---"
+    Wait-Settle
     $gemv = Invoke-Engine @("--gemv-benchmark", $Model, "$GemvIterations")
     if ($gemv.ExitCode -ne 0) { throw "The GEMV benchmark exited with $($gemv.ExitCode)" }
 
@@ -158,6 +172,7 @@ try {
     #    and device paths agreeing on the quantized projection.
     # ------------------------------------------------------------------
     Log "--- B: full resident forward pass ---"
+    Wait-Settle
     $parity = Invoke-Engine @("--forward-parity", $Model)
     $parityOut = $parity.Output
 
@@ -192,6 +207,36 @@ try {
         "the resident path and the CPU path agree at the first layer" `
         (($parityOut -split "`r?`n" | Where-Object { $_ -like "*per-layer:*" -or $_ -like "*execution path*" }) -join " | ")
 
+    # The element-wise comparison, layer by layer.
+    #
+    # The per-layer gate compares the magnitude of the residual stream. The
+    # element-wise comparison compares every element of it, as a sum of
+    # absolute differences over a sum of absolute magnitudes, and it is the
+    # one that cannot cancel.
+    #
+    # The gate is on the profile, not on a single worst-layer number: the
+    # engine deliberately does not gate the resident path against itself,
+    # because that cannot say whether the engine is right. What this gate
+    # says is that the two paths do not part company inside the pass, which
+    # is the property the oracle comparison then has to stand on.
+    $ewRows = [regex]::Matches($parityOut, "\[PARITYPROF\] token=(\d+) layer=(\d+) relative=([0-9.eE+-]+)")
+    $ewWorst = 0.0
+    $ewWorstLayer = 0
+    foreach ($r in $ewRows) {
+        $v = [double]$r.Groups[3].Value
+        if ($v -gt $ewWorst) { $ewWorst = $v; $ewWorstLayer = [int]$r.Groups[2].Value }
+    }
+    $ewNoDivergence = $parityOut -match "\[PARITY\] first layer over 1e-3 relative: none"
+    Add-Gate "element_wise_layers" ($ewRows.Count -ge 32 -and $ewNoDivergence -and $ewWorst -lt 1e-3) `
+        "$($ewRows.Count) layer entries compared, worst relative difference $ewWorst at layer $ewWorstLayer" `
+        "worst relative $ewWorst at layer $ewWorstLayer; first layer over 1e-3 relative: $(if ($ewNoDivergence) { 'none' } else { 'present' })"
+
+    # The two paths have to select the same token.
+    $tokenGate = $parityOut -match "\[PARITY\] gate: PASSED"
+    Add-Gate "same_token" $tokenGate `
+        "the resident path and the CPU path select the same token" `
+        (($parityOut -split "`r?`n" | Where-Object { $_ -like "*top-1 token*" -or $_ -like "*top-5 overlap*" }) -join " | ")
+
     # The resident path has to be the one that ran. A pass that quietly fell
     # back to the CPU would pass every comparison above and still be the
     # wrong thing. The proof is the tensor comparison: it puts the device's
@@ -199,6 +244,25 @@ try {
     Add-Gate "resident_path_used" ($tparityPass.Count -ge 4 -and $comparedLayers -gt 0) `
         "$($tparityPass.Count) resident projections matched the CPU on the device, over $comparedLayers layer entries" `
         (($parityOut -split "`r?`n" | Where-Object { $_ -like "*TPARITY*" }) -join " | ")
+
+    # ------------------------------------------------------------------
+    # B2. The first layer, checkpoint by checkpoint.
+    #
+    # A divergence is traced by finding the first checkpoint where the two
+    # paths differ. The layer ends up agreeing while the checkpoints inside
+    # it do not would mean the difference is introduced and then removed
+    # inside the layer, which is a different fault from one that is
+    # introduced and then amplified.
+    # ------------------------------------------------------------------
+    Log "--- B2: layer 0 checkpoint diff ---"
+    Wait-Settle
+    $l0 = Invoke-Engine @("--layer0-diff", $Model)
+    $l0Out = $l0.Output
+    $l0Clean = $l0Out -match "\[L0DIFF\] first divergent checkpoint: \(none\)"
+    $l0Rows = [regex]::Matches($l0Out, "\[L0DIFF\] \d+\.")
+    Add-Gate "layer0_checkpoints" ($l0Clean -and $l0Rows.Count -ge 10) `
+        "all $($l0Rows.Count) layer-0 checkpoints agree between the two paths" `
+        (($l0Out -split "`r?`n" | Where-Object { $_ -like "*L0DIFF*" }) -join " | ")
 
     # ------------------------------------------------------------------
     # C. Stability: N consecutive runs, every one of them clean.
@@ -227,7 +291,9 @@ try {
     # ------------------------------------------------------------------
     Log "--- D: decode throughput, series against overlapped ---"
     $genArgs = @("--generate", "--prompt", $Prompt, "--max-tokens", "$Tokens", $Model)
+    Wait-Settle
     $genOverlapped = Invoke-Engine $genArgs
+    Wait-Settle
     $genSerial = Invoke-Engine ($genArgs + @("--no-gemv-overlap"))
 
     function Read-DecodeRate([string]$out) {

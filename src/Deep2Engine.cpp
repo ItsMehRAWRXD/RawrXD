@@ -932,6 +932,10 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
     if (firstToken >= romVocabSize) firstToken = 0;
     std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
     std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
+    if (m_layer0Trace) {
+        m_layer0Checkpoints["0.embedding"].assign(hiddenStates.begin(),
+                                                  hiddenStates.begin() + hiddenDim);
+    }
 
     // -------------------------------------------------------------------
     // Phase 1: place the layer projections in device memory, once.
@@ -1084,6 +1088,17 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
         for (size_t layer = 0; layer < numLayers; ++layer) {
             std::cout << "[Move 10] Starting layer " << layer << "\n" << std::flush;
 
+            // The first layer's checkpoints, captured as the pass runs.
+            //
+            // A divergence is traced by finding the first checkpoint where
+            // the two paths differ, so the capture is in the order the pass
+            // computes them and every stage is recorded, not only the ones
+            // that are suspected.
+            auto capture = [&](const char* name, const float* data, size_t n) {
+                if (!m_layer0Trace || layer != 0 || !data) return;
+                m_layer0Checkpoints[name].assign(data, data + n);
+            };
+
             // --- ATTENTION QKV ---
             std::string qkvName = "blk." + std::to_string(layer) + ".attn_qkv.weight";
             const deep2::TensorEntry* qkv = rom.findTensor(qkvName);
@@ -1132,6 +1147,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 }
                 rmsNormWeighted(hiddenStatesCopy.data(), attnNormDq.data.data(), hiddenDim, 1e-5f);
             }
+            capture("1.attn_norm_out", hiddenStatesCopy.data(), hiddenDim);
 
             std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
             const auto tQkvStart = std::chrono::steady_clock::now();
@@ -1148,6 +1164,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 gemvFloat(qkvDq.data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
             }
             const auto tAttentionStart = std::chrono::steady_clock::now();
+            capture("2.qkv", qkvOut.data(), qkvOut.size());
 
             // Split QKV into Q, K, V
             size_t qSize = qkvOut.size() / 3;
@@ -1163,6 +1180,8 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
             // Apply RoPE to Q and K
             ApplyRotaryEmbeddings(Q.data(), 0, logicalPos);
             ApplyRotaryEmbeddings(K.data(), 0, logicalPos);
+            capture("3.q_rope", Q.data(), Q.size());
+            capture("4.k_rope", K.data(), K.size());
 
             // Append this position's key and value to the layer's ring, then
             // attend over the window the ring holds.
@@ -1176,6 +1195,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                                     windowStart, windowCount,
                                     static_cast<uint32_t>(numHeads),
                                     static_cast<uint32_t>(headDim));
+            capture("5.attention", attnOut.data(), attnOut.size());
             const auto tFfnStart = std::chrono::steady_clock::now();
 
             if (m_phaseTiming) {
@@ -1242,6 +1262,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                               << " streamRms=" << ComponentRms(hiddenStates.data(), hiddenDim)
                               << "\n" << std::flush;
                 }
+                capture("6.attn_proj", attnProj.data(), attnProj.size());
 
                 // The attention block is a residual: the block adds its
                 // output to the stream. The previous code overwrote the
@@ -1300,6 +1321,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 }
                 rmsNormWeighted(ffnIn.data(), ffnNormDq.data.data(), hiddenDim, 1e-5f);
             }
+            capture("7.ffn_norm_out", ffnIn.data(), ffnIn.size());
 
             const size_t upRows = resident ? static_cast<size_t>(m_residentLayers[layer].upRows)
                                            : static_cast<size_t>(upDq.rows);
@@ -1319,6 +1341,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 gemvFloat(upDq.data.data(), ffnIn.data(), upOut.data(), upRows, upDq.cols);
             }
             const auto tDownStart = std::chrono::steady_clock::now();
+            capture("8.ffn_up", upOut.data(), upOut.size());
 
             // SwiGLU: silu(gate) * up
             for (size_t i = 0; i < gateRows; ++i) {
@@ -1326,6 +1349,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 const float up = upOut[gateRows + i];
                 upOut[i] = (gate / (1.0f + std::expf(-gate))) * up;
             }
+            capture("9.ffn_swiglu", upOut.data(), upOut.size());
 
             static thread_local float downOutStatic[3072];
             float* downOut = downOutStatic;
@@ -1346,6 +1370,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 gemvFloat(downDq.data.data(), upOut.data(), downOut, downDq.rows, downDq.cols);
             }
             const auto tLayerEnd = std::chrono::steady_clock::now();
+            capture("10.ffn_down", downOut, hiddenDim);
             if (m_phaseTiming) {
                 lastTiming.ffnUpMs += std::chrono::duration<double, std::milli>(
                     tDownStart - tUpStart).count();
@@ -1354,10 +1379,16 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
             }
 
             if (m_layerTrace) {
-                // Record the layer's state so a second run can be compared
-                // against it element by element.
-                if (m_layerTraceStates.size() <= layer) m_layerTraceStates.resize(layer + 1);
-                m_layerTraceStates[layer] = hiddenStates;
+                // The state is recorded per token as well as per layer.
+                //
+                // A pass runs every layer for every token, and the slot was
+                // indexed by the layer alone, so each token overwrote the
+                // one before it. The comparison was then between a token
+                // and whichever token happened to be last in the run, which
+                // is not a difference between the two paths at all.
+                const size_t slot = tokenPos * numLayers + layer;
+                if (m_layerTraceStates.size() <= slot) m_layerTraceStates.resize(slot + 1);
+                m_layerTraceStates[slot] = hiddenStates;
 
                 // The relative difference, as a sum of absolute differences
                 // over a sum of absolute magnitudes.
@@ -1367,17 +1398,17 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                 // largest element would hide a difference in the direction
                 // of the whole state. The L1 form uses every element and
                 // cannot cancel.
-                if (m_layerTraceCompare && layer < m_layerTraceBaseline.size() &&
-                    m_layerTraceBaseline[layer].size() == hiddenStates.size()) {
+                if (m_layerTraceCompare && slot < m_layerTraceBaseline.size() &&
+                    m_layerTraceBaseline[slot].size() == hiddenStates.size()) {
                     double absError = 0.0;
                     double magnitude = 0.0;
                     for (size_t i = 0; i < hiddenStates.size(); ++i) {
                         absError += std::fabs(static_cast<double>(hiddenStates[i]) -
-                                             m_layerTraceBaseline[layer][i]);
-                        magnitude += std::fabs(static_cast<double>(m_layerTraceBaseline[layer][i]));
+                                             m_layerTraceBaseline[slot][i]);
+                        magnitude += std::fabs(static_cast<double>(m_layerTraceBaseline[slot][i]));
                     }
                     const double rel = (magnitude > 1e-9) ? (absError / magnitude) : 0.0;
-                    std::cout << "[LAYERDIFF] layer=" << layer
+                    std::cout << "[LAYERDIFF] token=" << tokenPos << " layer=" << layer
                               << " abs_error_sum=" << absError
                               << " magnitude_sum=" << magnitude
                               << " relative=" << rel << "\n" << std::flush;
@@ -1393,6 +1424,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
             for (size_t i = 0; i < hiddenDim; ++i) {
                 hiddenStates[i] += downOut[i];
             }
+            capture("11.residual", hiddenStates.data(), hiddenDim);
 
             // Layer trace: the running state after each layer. The resident
             // path and the CPU path must produce the same sequence here, so

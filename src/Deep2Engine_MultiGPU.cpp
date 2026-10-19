@@ -558,12 +558,16 @@ bool Deep2Engine::uploadResidentQuantWeight(const deep2::TensorEntry& entry,
         // The bytes for these rows, read straight out of the ROM.
         const uint64_t byteOffset = static_cast<uint64_t>(p.offset) * bytesPerRow;
         const uint64_t byteCount = static_cast<uint64_t>(p.count) * bytesPerRow;
+        fprintf(stderr, "[RESIDENT_Q2K] staging %llu bytes for %u rows\n",
+                (unsigned long long)byteCount, p.count);
         std::vector<uint8_t> staged(static_cast<size_t>(byteCount));
         if (!rom.readTensorRange(entry, byteOffset, byteCount, staged.data())) {
             fprintf(stderr, "[RESIDENT_Q2K] failed to read the packed bytes from the ROM\n");
             releaseResidentQuantWeight(out);
             return false;
         }
+        fprintf(stderr, "[RESIDENT_Q2K] staged %llu bytes from the ROM\n",
+                (unsigned long long)byteCount);
 
         VkBuffer buf = VK_NULL_HANDLE;
         VkDeviceMemory mem = VK_NULL_HANDLE;
@@ -580,6 +584,8 @@ bool Deep2Engine::uploadResidentQuantWeight(const deep2::TensorEntry& entry,
             releaseResidentQuantWeight(out);
             return false;
         }
+        fprintf(stderr, "[RESIDENT_Q2K] uploaded %llu bytes to the device\n",
+                (unsigned long long)byteCount);
 
         ResidentQuantWeight::Part part;
         part.gpu = p.gpu;
