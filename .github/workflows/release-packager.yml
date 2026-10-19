@@ -54,10 +54,13 @@ jobs:
         if ("${{ runner.os }}" -eq "Windows") {
           $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
           $arch = if ($${{ matrix.target }} -eq 'arm64') { 'ARM64' } else { 'x64' }
-          cmake -B build `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_GENERATOR_PLATFORM=$arch `
+          $cmakeArgs = @(
+            '-B', 'build'
+            '-DCMAKE_BUILD_TYPE=Release'
+            '-DCMAKE_GENERATOR_PLATFORM=' + $arch
             $vulkanFlag
+          )
+          cmake @cmakeArgs
         } else {
           $vulkanFlag = if ($${{ matrix.vulkan }}) { '' } else { '-DENABLE_VULKAN=OFF' }
           cmake -B build `
