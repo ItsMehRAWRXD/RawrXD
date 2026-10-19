@@ -244,15 +244,15 @@ std::wcout << L"Args parsed\n";
     
     std::vector<TensorInfo> tensors;
     tensors.reserve(tensor_count);
-
-    for (uint64_t i = 0; i < tensor_count; ++i) {
+for (uint64_t i = 0; i < tensor_count; ++i) {
         TensorInfo ti;
+        
         ti.name = ReadGGUFStr(input);
-        input.read(reinterpret_cast<char*>(&ti.type), 4);
         uint32_t n_dims = 0;
         input.read(reinterpret_cast<char*>(&n_dims), 4);
         ti.dims.resize(n_dims);
         if (n_dims > 0) input.read(reinterpret_cast<char*>(ti.dims.data()), n_dims * 8);
+        input.read(reinterpret_cast<char*>(&ti.type), 4);
         input.read(reinterpret_cast<char*>(&ti.offset), 8);
         tensors.push_back(std::move(ti));
     }
@@ -354,7 +354,8 @@ std::wcout << L"Args parsed\n";
         }
         bytes_to_read = Align64(bytes_to_read);
         
-        input.seekg(static_cast<std::streamoff>(tensors[i].offset), std::ios::beg);
+        // GGUF tensor offsets are relative to the start of tensor data section
+        input.seekg(static_cast<std::streamoff>(aligned_data_start + tensors[i].offset), std::ios::beg);
         std::vector<char> buffer(bytes_to_read);
         std::streamsize bytes_read = input.read(buffer.data(), static_cast<std::streamsize>(bytes_to_read)).gcount();
         std::wcout << L"  Tensor " << (i+1) << L": off=" << tensors[i].offset << L" read " << bytes_read << L" bytes, wrote ";
