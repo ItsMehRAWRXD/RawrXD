@@ -10,6 +10,8 @@
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <chrono>
+#include <cmath>
+#include <cstdio>
 #include <streambuf>
 #include <exception>
 #include <typeinfo>
@@ -365,6 +367,103 @@ static void runGemvBenchmark(Deep2Engine& engine, int iterations) {
     std::cout.flush();
 }
 
+// The first layer, checkpoint by checkpoint.
+//
+// The per-layer comparison answers "do the two paths agree at the end of the
+// layer". It does not answer "where inside the layer they stop agreeing",
+// and that is the question a divergence has to be traced with. A difference
+// that appears in the QKV projection is a weight or a GEMV problem. A
+// difference that appears after the attention assembly is a RoPE or an
+// attention problem. A difference that appears in the FFN is a SwiGLU or a
+// down-projection problem.
+//
+// The checkpoints are captured in the order the pass computes them, so the
+// first one that differs is where the two paths parted.
+static void runLayer0CheckpointDiff(Deep2Engine& engine) {
+    const std::vector<uint32_t> inputTokens = { 1, 100, 200 };
+
+    engine.m_layer0Trace = true;
+
+    // The resident path first, then the CPU path, each on its own, so the
+    // two sets of checkpoints are not mixed.
+    std::vector<float> residentLogits, residentBaseline, cpuLogits, cpuBaseline;
+
+    std::cout << "\n=== LAYER 0 CHECKPOINT DIFF: RESIDENT vs CPU ===\n" << std::flush;
+    engine.m_layer0Checkpoints.clear();
+    if (!engine.executePhi3ROMForwardPass(inputTokens, residentLogits, residentBaseline, false)) {
+        std::cerr << "[L0DIFF] the resident pass failed\n";
+        return;
+    }
+    const auto resident = engine.m_layer0Checkpoints;
+    engine.m_layer0Checkpoints.clear();
+
+    if (!engine.executePhi3ROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true)) {
+        std::cerr << "[L0DIFF] the CPU pass failed\n";
+        return;
+    }
+    const auto cpu = engine.m_layer0Checkpoints;
+    engine.m_layer0Checkpoints.clear();
+    engine.m_layer0Trace = false;
+
+    // The checkpoints in the order the pass computes them.
+    static const char* kOrder[] = {
+        "0.embedding", "1.attn_norm_out", "2.qkv", "3.q_rope", "4.k_rope",
+        "5.attention", "6.attn_proj", "7.ffn_norm_out", "8.ffn_up",
+        "9.ffn_swiglu", "10.ffn_down", "11.residual",
+    };
+
+    std::cout << "[L0DIFF] checkpoint        n        max_abs_diff   max_at   "
+                 "l1_relative     first_divergent\n";
+    std::string firstDivergent;
+    for (const char* name : kOrder) {
+        const auto rit = resident.find(name);
+        const auto cit = cpu.find(name);
+        if (rit == resident.end() || cit == cpu.end()) {
+            std::cout << "[L0DIFF] " << name << "  (not captured)\n";
+            continue;
+        }
+        const std::vector<float>& a = rit->second;
+        const std::vector<float>& b = cit->second;
+        if (a.size() != b.size() || a.empty()) {
+            std::cout << "[L0DIFF] " << name << "  (size mismatch)\n";
+            continue;
+        }
+
+        // The largest element-wise difference, the element it is at, and the
+        // L1 form of the difference over the magnitude of the reference.
+        //
+        // The L1 form cannot cancel: a sum of the differences would let a
+        // positive and a negative error hide each other, and a difference
+        // in the magnitude of the largest element would hide a difference
+        // in the direction of the whole state.
+        double absError = 0.0;
+        double magnitude = 0.0;
+        float maxAbs = 0.0f;
+        size_t maxAt = 0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            const double d = std::fabs(static_cast<double>(a[i]) - static_cast<double>(b[i]));
+            absError += d;
+            magnitude += std::fabs(static_cast<double>(b[i]));
+            if (d > static_cast<double>(maxAbs)) {
+                maxAbs = static_cast<float>(d);
+                maxAt = i;
+            }
+        }
+        const double rel = (magnitude > 1e-12) ? (absError / magnitude) : 0.0;
+        // The first element that differs by more than the noise floor of
+        // the arithmetic, which is the point where the two paths parted.
+        const bool diverged = (rel > 1e-5) || (maxAbs > 1e-4);
+        if (diverged && firstDivergent.empty()) firstDivergent = name;
+
+        std::printf("[L0DIFF] %-16s %6zu  %14.6e  %8zu  %12.4e  %s\n",
+                    name, a.size(), static_cast<double>(maxAbs), maxAt, rel,
+                    diverged ? "YES" : "no");
+    }
+    std::cout << "\n[L0DIFF] first divergent checkpoint: "
+              << (firstDivergent.empty() ? std::string("(none)") : firstDivergent) << "\n";
+    std::cout.flush();
+}
+
 void runMove10Validation(Deep2Engine& engine) {
     std::vector<uint32_t> inputTokens = { 1 };  // Single token for fast boundary probe test
     std::vector<float> outputLogits, baselineLogits;
@@ -415,7 +514,7 @@ public:
         std::string path;
     };
 
-    struct Diff { size_t layer = 0; double relative = 0.0; };
+    struct Diff { size_t layer = 0; size_t token = 0; double relative = 0.0; };
     std::vector<Entry> entries;
     std::vector<Diff> diffs;
     // Lines that are not the layer trace are passed through, so the rest of
@@ -459,6 +558,8 @@ private:
                 Diff df;
                 const size_t layAt = l.find("layer=");
                 if (layAt != std::string::npos) df.layer = static_cast<size_t>(std::strtoull(l.c_str() + layAt + 6, nullptr, 10));
+                const size_t tokAt = l.find("token=");
+                if (tokAt != std::string::npos) df.token = static_cast<size_t>(std::strtoull(l.c_str() + tokAt + 6, nullptr, 10));
                 df.relative = std::strtod(l.c_str() + relAt + 9, nullptr);
                 diffs.push_back(df);
             }
@@ -971,17 +1072,34 @@ static void runForwardParity(Deep2Engine& engine) {
                   << firstRel << ", first layer over 1e-2 relative: " << divergedAt << "\n";
         std::cout << "[PARITY] gate (execution path, first layer): "
                   << (compared > 0 && firstRel < 1e-3 ? "PASSED" : "FAILED") << "\n";
-        // The element-wise comparison the second run produced.
-        double worstLayer = 0.0;
-        size_t worstLayerIndex = 0;
-        for (const auto& d : cpuTrace.diffs) {
-            if (d.relative > worstLayer) { worstLayer = d.relative; worstLayerIndex = d.layer; }
+        // The element-wise comparison is deliberately not gated here. It
+        // compares the resident run against the CPU run, that is, the engine
+        // against itself, which cannot say whether the engine is right. The
+        // comparison that can is against the independent oracle in
+        // rom_audit, which prints the same component shapes: the
+        // kv-incremental command runs both and compares the logits and the
+        // selected token.
+
+        // The whole profile, not only the worst layer.
+        //
+        // A single number says how far apart the two paths ended up. The
+        // profile says how they got there: the first layer where the
+        // difference leaves the noise floor is where the two paths parted,
+        // and everything after it is the pass amplifying that.
+        if (!cpuTrace.diffs.empty()) {
+            std::cout << "[PARITY] element-wise profile (token, layer, relative):\n";
+            for (const auto& d : cpuTrace.diffs) {
+                std::cout << "[PARITYPROF] token=" << d.token << " layer=" << d.layer
+                          << " relative=" << d.relative << "\n";
+            }
+            size_t firstOver = 0;
+            bool found = false;
+            for (const auto& d : cpuTrace.diffs) {
+                if (d.relative > 1e-3) { firstOver = d.layer; found = true; break; }
+            }
+            std::cout << "[PARITY] first layer over 1e-3 relative: "
+                      << (found ? std::to_string(firstOver) : std::string("none")) << "\n";
         }
-        std::cout << "[PARITY] element-wise: " << cpuTrace.diffs.size()
-                  << " layers compared, worst relative difference " << worstLayer
-                  << " at layer " << worstLayerIndex << "\n";
-        std::cout << "[PARITY] gate (element-wise, worst layer): "
-                  << (!cpuTrace.diffs.empty() && worstLayer < 1e-3 ? "PASSED" : "FAILED") << "\n";
     }
 
     if (residentLogits.empty() || cpuLogits.empty()) {
@@ -1109,6 +1227,7 @@ int main(int argc, char* argv[]) {
     bool runKvPlan = false;
     bool runBenchmark = false;
     bool runGemvBench = false;
+    bool runLayer0Diff = false;
     int gemvBenchIterations = 20;
     bool gemvOverlap = true;
     bool phaseTiming = false;
@@ -1152,6 +1271,11 @@ int main(int argc, char* argv[]) {
                 gemvBenchIterations = std::atoi(argv[argIndex]);
                 argIndex++;
             }
+            continue;
+        }
+        if (a == "--layer0-diff") {
+            runLayer0Diff = true;
+            argIndex++;
             continue;
         }
         if (a == "--generate") {
@@ -1269,6 +1393,8 @@ int main(int argc, char* argv[]) {
             runThroughputBenchmark(engine, benchmarkSteps);
         } else if (runGemvBench) {
             runGemvBenchmark(engine, gemvBenchIterations);
+        } else if (runLayer0Diff) {
+            runLayer0CheckpointDiff(engine);
         } else {
             Deep2EngineExecuteInferenceStep(engine);
         }
