@@ -22,11 +22,14 @@ namespace Deep2Rom::Compute {
                 vkDestroyBuffer(m_engine->device(), m_outputBuf.buffer, nullptr);
                 vkFreeMemory(m_engine->device(), m_outputBuf.memory, nullptr);
             }
-            if (m_descSetF32 != VK_NULL_HANDLE) {
-                vkFreeDescriptorSets(m_engine->device(), m_engine->commandPool() ? m_engine->device() : VK_NULL_HANDLE, 1, &m_descSetF32);
+            // vkFreeDescriptorSets takes a descriptor pool, not a device.
+            // The previous code passed the device here, and passed the
+            // command pool where the descriptor pool belongs.
+            if (m_descSetF32 != VK_NULL_HANDLE && m_engine->descriptorPool() != VK_NULL_HANDLE) {
+                vkFreeDescriptorSets(m_engine->device(), m_engine->descriptorPool(), 1, &m_descSetF32);
             }
-            if (m_descSetQ2K != VK_NULL_HANDLE) {
-                vkFreeDescriptorSets(m_engine->device(), m_engine->device() ? m_engine->device() : VK_NULL_HANDLE, 1, &m_descSetQ2K);
+            if (m_descSetQ2K != VK_NULL_HANDLE && m_engine->descriptorPool() != VK_NULL_HANDLE) {
+                vkFreeDescriptorSets(m_engine->device(), m_engine->descriptorPool(), 1, &m_descSetQ2K);
             }
         }
     }
@@ -43,20 +46,58 @@ namespace Deep2Rom::Compute {
         return true;
     }
 
-    bool VulkanGEMV::uploadWeights(WeightType type, uint32_t rows, uint32_t cols, const void* weightData) {
-        m_weightType = type;
-        m_rows = rows;
-        m_cols = cols;
-
-        VkDeviceSize weightSize;
-        if (type == WeightType::F32) {
-            weightSize = static_cast<VkDeviceSize>(rows) * static_cast<VkDeviceSize>(cols) * sizeof(float);
-        } else {
-            uint32_t numBlocks = (rows * cols + 255) / 256;
-            weightSize = static_cast<VkDeviceSize>(numBlocks) * 84;
+    bool VulkanGEMV::uploadWeights(ggml_type type,
+                                   uint32_t totalRows,
+                                   uint32_t cols,
+                                   uint32_t rowOffset,
+                                   uint32_t rowCount,
+                                   const uint8_t* weightData,
+                                   uint64_t sourceRowStride) {
+        // Only F32 and Q2_K have a shader pipeline in this class.
+        WeightType weightType;
+        switch (type) {
+            case GGML_TYPE_F32: weightType = WeightType::F32; break;
+            case GGML_TYPE_Q2_K: weightType = WeightType::Q2_K; break;
+            default:
+                std::cerr << "[VulkanGEMV] Unsupported weight type id " << static_cast<int>(type)
+                          << "; this class only has F32 and Q2_K pipelines\n";
+                return false;
         }
 
-        if (!m_engine->createBuffer(m_weightBuf, weightSize,
+        if (!weightData || rowCount == 0 || totalRows == 0 ||
+            rowOffset > totalRows || rowCount > totalRows - rowOffset) {
+            std::cerr << "[VulkanGEMV] Invalid upload row range: offset=" << rowOffset
+                      << " count=" << rowCount << " totalRows=" << totalRows << "\n";
+            return false;
+        }
+
+        // Task 1: the size comes from the validated trait. The old expression
+        // ceil(rows*cols/256)*84 disagrees with the kernel's row addressing
+        // (weights + r * ceil(cols/256) * blockBytes) whenever the column
+        // count is not a multiple of 256, and it under-allocates the buffer.
+        const uint64_t stride = deep2::Quant::RowStride(type, cols);
+        if (stride == 0) {
+            std::cerr << "[VulkanGEMV] No block layout for type id " << static_cast<int>(type) << "\n";
+            return false;
+        }
+        const VkDeviceSize uploadSizeBytes = static_cast<VkDeviceSize>(rowCount) * stride;
+
+        m_weightType = weightType;
+        m_rows = rowCount;
+        m_cols = cols;
+        m_rowOffset = rowOffset;
+        m_rowCount = rowCount;
+
+        // Task 2: point at the first byte of the requested row.
+        // sourceRowStride == 0 means the source already uses the device
+        // stride, so the range is one contiguous block and a single copy
+        // region suffices. A different source stride means the rows are
+        // packed differently and have to be repacked one by one.
+        const uint64_t srcStride = (sourceRowStride == 0) ? stride : sourceRowStride;
+        const uint8_t* segmentedSourcePtr = weightData + (static_cast<uint64_t>(rowOffset) * srcStride);
+        const bool contiguous = (srcStride == stride);
+
+        if (!m_engine->createBuffer(m_weightBuf, uploadSizeBytes,
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                     false)) {
             std::cerr << "[VulkanGEMV] Failed to create weight buffer\n";
@@ -64,15 +105,30 @@ namespace Deep2Rom::Compute {
         }
 
         VulkanBuffer stagingBuf;
-        if (!m_engine->createBuffer(stagingBuf, weightSize,
+        if (!m_engine->createBuffer(stagingBuf, uploadSizeBytes,
                                     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true)) {
             std::cerr << "[VulkanGEMV] Failed to create staging buffer\n";
             return false;
         }
 
-        if (!m_engine->uploadBuffer(stagingBuf, weightData, weightSize)) {
-            std::cerr << "[VulkanGEMV] Failed to upload weight data\n";
-            return false;
+        if (contiguous) {
+            if (!m_engine->uploadBuffer(stagingBuf, segmentedSourcePtr, uploadSizeBytes)) {
+                std::cerr << "[VulkanGEMV] Failed to upload weight data\n";
+                return false;
+            }
+        } else {
+            // Repack the rows into the staging buffer so the device sees the
+            // per-row stride the kernels expect.
+            std::vector<uint8_t> packed(static_cast<size_t>(uploadSizeBytes));
+            for (uint32_t r = 0; r < rowCount; ++r) {
+                const uint8_t* src = segmentedSourcePtr + (static_cast<uint64_t>(r) * srcStride);
+                std::memcpy(packed.data() + (static_cast<size_t>(r) * stride), src,
+                            static_cast<size_t>(stride));
+            }
+            if (!m_engine->uploadBuffer(stagingBuf, packed.data(), uploadSizeBytes)) {
+                std::cerr << "[VulkanGEMV] Failed to upload repacked weight data\n";
+                return false;
+            }
         }
 
         VkCommandBuffer cmd;
@@ -81,14 +137,14 @@ namespace Deep2Rom::Compute {
             return false;
         }
 
-        VkBufferCopy region{ 0, 0, weightSize };
+        VkBufferCopy region{ 0, 0, uploadSizeBytes };
         vkCmdCopyBuffer(cmd, stagingBuf.buffer, m_weightBuf.buffer, 1, &region);
 
         VkBufferMemoryBarrier barrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         barrier.buffer = m_weightBuf.buffer;
-        barrier.size = weightSize;
+        barrier.size = uploadSizeBytes;
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                              0, 0, nullptr, 1, &barrier, 0, nullptr);
 
@@ -160,10 +216,16 @@ namespace Deep2Rom::Compute {
 
     bool VulkanGEMV::run(WeightType type, uint32_t rows, uint32_t cols, float* output) {
         m_weightType = type;
-        m_rows = rows;
+
+        // The weight buffer holds only the row range that was uploaded, so the
+        // dispatch and the output buffer are sized for that range. A caller
+        // that uploaded a split of a larger tensor gets the split's result.
+        const uint32_t residentRows = (m_rowCount != 0) ? m_rowCount : rows;
+        if (cols == 0) cols = m_cols;
+        m_rows = residentRows;
         m_cols = cols;
 
-        VkDeviceSize outputSize = static_cast<VkDeviceSize>(rows) * sizeof(float);
+        VkDeviceSize outputSize = static_cast<VkDeviceSize>(residentRows) * sizeof(float);
 
         if (!m_engine->createBuffer(m_outputBuf, outputSize,
                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -207,14 +269,14 @@ namespace Deep2Rom::Compute {
 
         // Push constants
         if (type == WeightType::F32) {
-            uint32_t pc[2] = { rows, cols };
+            uint32_t pc[2] = { residentRows, cols };
             vkCmdPushConstants(cmd, pipeline->layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, pc);
         } else {
-            uint32_t pc[4] = { rows, cols, 256, 0 };
+            uint32_t pc[4] = { residentRows, cols, 256, 0 };
             vkCmdPushConstants(cmd, pipeline->layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, 16, pc);
         }
 
-        uint32_t groupCount = (rows + pipeline->localSizeX - 1) / pipeline->localSizeX;
+        uint32_t groupCount = (residentRows + pipeline->localSizeX - 1) / pipeline->localSizeX;
         vkCmdDispatch(cmd, groupCount, 1, 1);
 
         // Read back output

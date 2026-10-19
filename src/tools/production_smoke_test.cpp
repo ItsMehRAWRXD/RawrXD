@@ -214,6 +214,8 @@ const SplitTestVector kSplitVectors[] = {
     // Column count is not a multiple of the block size: the row is padded out
     // to one whole super-block, so the stride is 144 bytes and not 100*144/256.
     {"q4k_padded_cols_100", GGML_TYPE_Q4_K, 10, 100, 0.5f, 0, 0, 5, 144, 720, true},
+    // Q2_K with 3073 columns: 13 super-blocks per row.
+    {"q2k_unaligned_cols_3073", GGML_TYPE_Q2_K, 10, 3073, 0.5f, 0, 0, 5, 1092, 5460, true},
     // Unquantized types: one element per block.
     {"f32_4096x1024_w50", GGML_TYPE_F32, 1024, 4096, 0.5f, 0, 0, 512, 16384, 8388608, true},
     {"f16_4096x1024_w50", GGML_TYPE_F16, 1024, 4096, 0.5f, 0, 0, 512, 8192, 4194304, true},
@@ -285,6 +287,80 @@ void run_row_split_property_sweep() {
     expect(allAligned, "every row split lands on a quant block boundary");
 }
 
+// Upload-size vectors.
+//
+// VulkanGEMV::uploadWeights used to size its weight buffer as
+//     ceil(rows*cols/256) * 84
+// while the GEMV kernels address row r at
+//     r * ceil(cols/256) * blockBytes
+// The two agree only when cols is a multiple of 256. When it is not, the old
+// expression under-allocates the buffer and the last rows are truncated.
+//
+// The numbers below are derived from the GGML block format, independently of
+// the implementation.
+void run_upload_size_vectors() {
+    struct UploadSizeVector {
+        const char* name;
+        ggml_type   type;
+        uint32_t    rows;
+        uint32_t    cols;
+        uint64_t    expectedStride;
+        uint64_t    expectedUploadBytes;
+        uint64_t    legacyBytes;     // what the old expression produced
+    };
+
+    const UploadSizeVector vectors[] = {
+        // 3073 columns -> 13 super-blocks per row -> 13*84 = 1092 bytes.
+        // 10 rows -> 10920 bytes.
+        // The old expression gave ceil(30730/256) = 121 blocks -> 10164 bytes,
+        // which is 756 bytes short: the tail of the matrix is truncated.
+        {"upload_q2k_3073cols_10rows", GGML_TYPE_Q2_K, 10, 3073, 1092, 10920, 10164},
+        // 3073 columns of Q4_K: 13 super-blocks -> 13*144 = 1872 bytes/row.
+        // The old expression gave ceil(30730/256) = 121 blocks -> 121*144 =
+        // 17424 bytes, 1296 bytes short of the 18720 the buffer needs.
+        {"upload_q4k_3073cols_10rows", GGML_TYPE_Q4_K, 10, 3073, 1872, 18720, 17424},
+        // A column count that is a multiple of 256 must not change: the old
+        // and new expressions agree, so this guards against a regression in
+        // the aligned case.
+        {"upload_q4k_4096cols_10rows", GGML_TYPE_Q4_K, 10, 4096, 2304, 23040, 23040},
+    };
+
+    for (const UploadSizeVector& v : vectors) {
+        const uint64_t stride = deep2::Quant::RowStride(v.type, v.cols);
+        const uint64_t uploadBytes = static_cast<uint64_t>(v.rows) * stride;
+
+        // The old, wrong expression, reproduced here so the regression it
+        // caused stays visible.
+        const uint64_t legacy = ((static_cast<uint64_t>(v.rows) * v.cols + 255) / 256) *
+                                deep2::Quant::BlockBytes(v.type);
+
+        bool ok = stride == v.expectedStride &&
+                  uploadBytes == v.expectedUploadBytes &&
+                  legacy == v.legacyBytes;
+        if (!ok) {
+            std::cout << "  " << v.name << ": got stride=" << stride
+                      << " upload=" << uploadBytes << " legacy=" << legacy
+                      << " | expected stride=" << v.expectedStride
+                      << " upload=" << v.expectedUploadBytes
+                      << " legacy=" << v.legacyBytes << "\n";
+        }
+        expect(ok, v.name);
+    }
+
+    // A split of an unaligned tensor must still land on a block boundary.
+    {
+        const auto plan = deep2::Quant::CalculateRowSplitIndex(10, 3073, GGML_TYPE_Q2_K, 0.5f);
+        const uint64_t blockBytes = deep2::Quant::BlockBytes(GGML_TYPE_Q2_K);
+        const bool aligned = (plan.device0Bytes % blockBytes) == 0 &&
+                             (plan.device1Bytes % blockBytes) == 0;
+        std::cout << "  unaligned split: device0Bytes=" << plan.device0Bytes
+                  << " device1Bytes=" << plan.device1Bytes
+                  << " stride=" << plan.rowStride << "\n";
+        expect(aligned && plan.device0Rows + plan.device1Rows == 10,
+               "unaligned-column split stays block aligned");
+    }
+}
+
 void run_row_split_layout_vectors() {
     std::cout << "----------------------------------------------------------------------\n";
     std::cout << "Gate 0: Asymmetric VRAM Row-Split Layout Vectors\n";
@@ -312,6 +388,7 @@ void run_row_split_layout_vectors() {
     }
 
     run_row_split_property_sweep();
+    run_upload_size_vectors();
 
     if (g_layoutFailures) {
         std::cerr << "[-] Gate 0 FAILED: " << g_layoutFailures << " layout vector(s) wrong\n";

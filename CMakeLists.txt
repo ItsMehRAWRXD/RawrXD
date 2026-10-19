@@ -71,6 +71,7 @@ add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
     src/core/VulkanStagingPipeline.cpp
     src/core/VulkanComputeEngine.cpp
+    src/core/VulkanGEMV.cpp
     src/core/MultiShardFlickerManager.cpp
     src/core/PrefetchQueue.cpp
     src/core/PerformanceProfiler.cpp

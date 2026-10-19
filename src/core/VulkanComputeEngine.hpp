@@ -72,6 +72,10 @@ namespace Deep2Rom::Compute {
     VkPhysicalDevice physicalDevice() const { return m_physicalDevice; }
     VkQueue computeQueue() const { return m_computeQueue; }
     VkCommandPool commandPool() const { return m_commandPool; }
+    // The descriptor pool that owns every set this engine allocates. Callers
+    // that free a set themselves need it: vkFreeDescriptorSets takes a pool,
+    // not a device.
+    VkDescriptorPool descriptorPool() const { return m_descriptorPool; }
 
         // Multi-GPU support
         void setPrimaryDevice(VkDevice device, VkPhysicalDevice physicalDevice);
