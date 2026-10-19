@@ -156,7 +156,7 @@ static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream
             if (f.gcount() < 114) { allValid = false; break; }
             double r = dequant_q3km_block_rms(block.data());
             rmsVals[b] = r;
-            if (r > 5.0 || r < 0.001 || !(r == r)) { allValid = false; break; }
+            if (r > 3.0 || r < 0.01 || !(r == r)) { allValid = false; break; }
         }
         if (!allValid) continue;
 
