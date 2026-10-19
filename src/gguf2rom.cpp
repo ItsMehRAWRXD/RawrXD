@@ -41,10 +41,14 @@ namespace Deep2Engine::Emulator {
     // GGUF parsing helpers
     std::string ReadGGUFStr(std::ifstream& f) {
         uint64_t len = 0;
-        f.read(reinterpret_cast<char*>(&len), sizeof(len));
-        if (!f || len > 4096) return "";
+        if (!f.read(reinterpret_cast<char*>(&len), sizeof(len))) {
+            return "";
+        }
+        if (len == 0 || len > 1024) return "";  // Safety threshold for tensor names
         std::vector<char> buf(len);
-        f.read(buf.data(), len);
+        if (!f.read(buf.data(), len)) {
+            return "";
+        }
         return std::string(buf.data(), len);
     }
 
@@ -192,7 +196,7 @@ std::wcout << L"Args parsed\n";
         uint32_t type = 0;
         input.read(reinterpret_cast<char*>(&type), sizeof(type));
         
-        std::wcout << L"  KV[" << i << L"]: " << key.c_str() << L" type=" << type << L"\n";
+        std::wcout << L"  KV[" << i << L"]: " << key.c_str() << L" type=" << type << L" pos=" << input.tellg() << L"\n";
         std::wcout.flush();
         
         if (key == "general.architecture") {
@@ -216,6 +220,7 @@ std::wcout << L"Args parsed\n";
         } else {
             SkipGGUFValue(type, input);
         }
+        std::wcout << L"  -> pos after: " << input.tellg() << L"\n";
         std::wcout.flush();
     }
 
@@ -228,32 +233,91 @@ std::wcout << L"Args parsed\n";
                << L", Hidden: " << hidden_dim << L", KV Heads: " << kv_heads << L"\n";
     std::wcout.flush();
 
-    // GGUF requires 64-byte alignment after metadata KVs before tensor info
+    // GGUF spec: tensor info begins IMMEDIATELY after metadata (no alignment).
+    // Only tensor DATA is aligned to 64-byte boundary.
     uint64_t pos_after_kvs = input.tellg();
-    uint64_t tensor_info_start = Align64(pos_after_kvs);
+    uint64_t tensor_info_start = pos_after_kvs;  // No alignment for tensor info
     input.seekg(static_cast<std::streamoff>(tensor_info_start), std::ios::beg);
     std::wcout << L"Tensor info starts at offset: " << tensor_info_start << L"\n";
+    std::wcout << L"Stream pos after seek: " << input.tellg() << L"\n";
+    std::wcout.flush();
+
+    // Debug: peek first few bytes at tensor info start
+    char peek[32];
+    input.read(peek, 32);
+    std::wcout << L"Peek bytes: ";
+    for (int i = 0; i < 32; ++i) {
+        std::wcout << std::hex << (int)(unsigned char)peek[i] << L" ";
+    }
+    std::wcout << std::dec << L"\n";
+    input.seekg(static_cast<std::streamoff>(tensor_info_start), std::ios::beg);
     std::wcout.flush();
 
     struct TensorInfo {
         std::string name;
-        uint32_t type;
+        uint32_t n_dims;
         std::vector<uint64_t> dims;
+        uint32_t type;
         uint64_t offset;
     };
     
     std::vector<TensorInfo> tensors;
     tensors.reserve(tensor_count);
-for (uint64_t i = 0; i < tensor_count; ++i) {
+
+    std::wcout << L"[INFO] Commencing structural extraction of " << tensor_count << L" tensor descriptors...\n";
+    std::wcout.flush();
+
+    for (uint64_t i = 0; i < tensor_count; ++i) {
         TensorInfo ti;
         
+        // 1. Read string name
         ti.name = ReadGGUFStr(input);
-        uint32_t n_dims = 0;
-        input.read(reinterpret_cast<char*>(&n_dims), 4);
-        ti.dims.resize(n_dims);
-        if (n_dims > 0) input.read(reinterpret_cast<char*>(ti.dims.data()), n_dims * 8);
-        input.read(reinterpret_cast<char*>(&ti.type), 4);
-        input.read(reinterpret_cast<char*>(&ti.offset), 8);
+        if (ti.name.empty()) {
+            std::cerr << "[ERROR] Tensor index " << i << " failed name parsing or hit EOF/corrupt size.\n";
+            return 1;
+        }
+        
+        // 2. Read number of dimensions (Strictly uint32_t per spec)
+        if (!input.read(reinterpret_cast<char*>(&ti.n_dims), 4)) {
+            std::cerr << "[ERROR] Tensor '" << ti.name << "' hit unexpected stream truncation at n_dims.\n";
+            return 1;
+        }
+        
+        // 3. Read variable dimension parameters (Strictly arrays of uint64_t)
+        ti.dims.resize(ti.n_dims);
+        if (ti.n_dims > 0) {
+            if (!input.read(reinterpret_cast<char*>(ti.dims.data()), ti.n_dims * sizeof(uint64_t))) {
+                std::cerr << "[ERROR] Tensor '" << ti.name << "' hit stream corruption inside dimensions array.\n";
+                return 1;
+            }
+        }
+        
+        // 4. Read tensor underlying type flag (Strictly uint32_t per spec)
+        if (!input.read(reinterpret_cast<char*>(&ti.type), 4)) {
+            std::cerr << "[ERROR] Tensor '" << ti.name << "' hit unexpected stream truncation at type field.\n";
+            return 1;
+        }
+        
+        // 5. Read relative data payload offset (Strictly uint64_t)
+        if (!input.read(reinterpret_cast<char*>(&ti.offset), 8)) {
+            std::cerr << "[ERROR] Tensor '" << ti.name << "' hit stream failure tracking weight offset location.\n";
+            return 1;
+        }
+        
+        // Catch the pattern signature early before writing trash layouts
+        if (ti.offset == 0x6565656565656566ULL || ti.offset == 0x6666666666666666ULL) {
+            std::cerr << "[CRITICAL ALIGNMENT BREAK] Tensor offset reading out-of-phase!\n";
+            std::cerr << "                           Tensor Name: " << ti.name << "\n";
+            std::cerr << "                           Stream Pos:  " << input.tellg() << "\n";
+            return 1;
+        }
+        
+        // Debug confirmation to verify structural health during pass
+        if (i < 3 || i == tensor_count - 1) {
+            std::printf("  [Parsed] Tensor #%zu: %-35s | Rank: %u | Type: %u | Offset: %llu\n", 
+                        i, ti.name.c_str(), ti.n_dims, ti.type, (unsigned long long)ti.offset);
+        }
+        
         tensors.push_back(std::move(ti));
     }
     
