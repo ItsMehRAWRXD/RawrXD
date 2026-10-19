@@ -148,6 +148,7 @@ bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
         const std::string prefix = "blk." + std::to_string(layer) + ".";
         ResidentLayer& lw = m_residentLayers[layer];
         lw.ready = place(prefix + "attn_qkv.weight", lw.qkv) &&
+                   place(prefix + "attn_output.weight", lw.attnOut) &&
                    place(prefix + "ffn_up.weight", lw.up) &&
                    place(prefix + "ffn_down.weight", lw.down);
         lw.qkvRows = lw.qkv.rows; lw.qkvCols = lw.qkv.cols;
@@ -191,6 +192,7 @@ void Deep2Engine::releaseResidentWeights() {
     if (!m_residentLayers.empty()) {
         for (auto& lw : m_residentLayers) {
             releaseProjection(lw.qkv);
+            releaseProjection(lw.attnOut);
             releaseProjection(lw.up);
             releaseProjection(lw.down);
         }
@@ -258,23 +260,57 @@ void Deep2Engine::SynchronizeRoPEScaling(double modelThetaConfig) {
         }
     }
 
-void Deep2Engine::DequantizeQ2_K_AVX512(const void* __restrict source, float* __restrict destination, size_t 
-blockCount) {
-    const Block_Q2_K* blocks = static_cast<const Block_Q2_K*>(source);
-    for (size_t b = 0; b < blockCount; ++b) {
-        const Block_Q2_K& block = blocks[b];
-        float baseScale = ConvertFp16ToFloat32(block.d);
-        __m512 vBaseScale = _mm512_set1_ps(baseScale);
-        for (size_t step = 0; step < 4; ++step) {
-            __m128i rawBytes = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&block.qs[step * 16]));
-            __m512i extendedInts = _mm512_cvtepu8_epi32(rawBytes);
-            __m512i maskedBits = _mm512_and_epi32(extendedInts, _mm512_set1_epi32(0x03));
-            __m512 vWeights = _mm512_cvtepi32_ps(maskedBits);
-            __m512 vFinalLogits = _mm512_mul_ps(vWeights, vBaseScale);
-            _mm512_storeu_ps(&destination[(b * 64) + (step * 16)], vFinalLogits);
+    void Deep2Engine::DequantizeQ2_K_AVX512(const void* __restrict source, float* __restrict destination, size_t blockCount) {
+        // The ROM's Q2_K block is 84 bytes: scales[16] @0, qs[64] @16, d @80,
+        // dmin @82. Each scale byte carries a 4-bit scale in the low nibble
+        // and a 4-bit minimum in the high nibble, and the value is
+        //     value = d * (sc & 0xF) * q - dmin * (sc >> 4)
+        // over 16 sub-blocks of 16 values. The dequantizer in quant_kernels.cpp
+        // is the reference for this, and the shader mirrors it.
+        //
+        // The previous version of this function used a symmetric q * d with no
+        // scales and no minimums, and wrote 64 of a block's 256 values, so it
+        // produced weights unrelated to the ROM's.
+        const uint8_t* p = static_cast<const uint8_t*>(source);
+        const __m512i three = _mm512_set1_epi32(3);
+        const __m512 one = _mm512_set1_ps(1.0f);
+        for (size_t b = 0; b < blockCount; ++b) {
+            const float d    = ConvertFp16ToFloat32(static_cast<uint16_t>(p[80] | (p[81] << 8)));
+            const float dmin = ConvertFp16ToFloat32(static_cast<uint16_t>(p[82] | (p[83] << 8)));
+            const uint8_t* scales = p;
+            const uint8_t* qs = p + 16;
+
+            int is = 0;
+            for (int half = 0; half < 2; ++half) {
+                const uint8_t* q = qs + half * 32;
+                const size_t base = (b * 256) + (size_t)(half * 128);
+                for (int j = 0; j < 4; ++j) {
+                    const uint8_t sc1 = scales[is++];
+                    const uint8_t sc2 = scales[is++];
+                    const __m512 dl1 = _mm512_set1_ps(d * static_cast<float>(sc1 & 0x0F));
+                    const __m512 ml1 = _mm512_set1_ps(dmin * static_cast<float>(sc1 >> 4));
+                    const __m512 dl2 = _mm512_set1_ps(d * static_cast<float>(sc2 & 0x0F));
+                    const __m512 ml2 = _mm512_set1_ps(dmin * static_cast<float>(sc2 >> 4));
+
+                    // 32 outputs: the first 16 from bytes 0..15 with the
+                    // first scale, the last 16 from bytes 16..31 with the
+                    // second. The 2-bit fields sit at increasing offsets
+                    // within each byte.
+                    const __m128i rawA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(q));
+                    const __m128i rawB = _mm_loadu_si128(reinterpret_cast<const __m128i*>(q + 16));
+                    const __m512i extA = _mm512_cvtepu8_epi32(rawA);
+                    const __m512i extB = _mm512_cvtepu8_epi32(rawB);
+                    const __m512 qA = _mm512_cvtepi32_ps(_mm512_and_si512(_mm512_srli_epi32(extA, 2 * j), three));
+                    const __m512 qB = _mm512_cvtepi32_ps(_mm512_and_si512(_mm512_srli_epi32(extB, 2 * j), three));
+                    _mm512_storeu_ps(destination + base + (size_t)(j * 32),
+                                     _mm512_fnmadd_ps(ml1, one, _mm512_mul_ps(qA, dl1)));
+                    _mm512_storeu_ps(destination + base + (size_t)(j * 32) + 16,
+                                     _mm512_fnmadd_ps(ml2, one, _mm512_mul_ps(qB, dl2)));
+                }
+            }
+            p += 84;
         }
     }
-}
 
 inline void FastVectorSinCos256(__m256 x, __m256& sinOut, __m256& cosOut) {
     __m256 c1 = _mm256_set1_ps(1.0f);
@@ -822,6 +858,21 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
     }
     const deep2::DequantizedTensor& tokenEmbDq = m_tokenEmb;
 
+    // The final norm's weight. It is read once and kept, like the token
+    // embedding, because it is needed on every pass and never changes.
+    if (m_outputNorm.data.empty()) {
+        const deep2::TensorEntry* outputNorm = rom.findTensor("output_norm.weight");
+        if (!outputNorm) {
+            fprintf(stderr, "[Move 10] output_norm.weight not found\n");
+            return false;
+        }
+        if (!dequantTensor(*outputNorm, m_outputNorm)) {
+            fprintf(stderr, "[Move 10] output_norm.weight dequant failed\n");
+            return false;
+        }
+    }
+    const deep2::DequantizedTensor& outputNormDq = m_outputNorm;
+
     // Use first token's embedding as initial hidden state
     if (inputTokens.empty()) return false;
     uint32_t firstToken = inputTokens[0];
@@ -972,6 +1023,7 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
 
         // Reusable dequantized tensors to avoid repeated allocation/deallocation
         deep2::DequantizedTensor qkvDq;
+        deep2::DequantizedTensor attnOutDq;
         deep2::DequantizedTensor upDq;
         deep2::DequantizedTensor downDq;
         deep2::DequantizedTensor outputDq;
@@ -1083,13 +1135,56 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
                     tFfnStart - tAttentionStart).count();
             }
 
+            // The attention output is projected before it joins the residual
+            // stream.
+            //
+            // A transformer block does not add the attention output itself
+            // to the stream: it adds the projection of it. Phi-3 has a
+            // separate output projection, blk.N.attn_output.weight, and
+            // adding the raw attention output skipped it. That left the
+            // model producing a stream that is not the model's, and the
+            // text it generated was noise.
+            //
+            // The two paths agreed with each other while both being wrong,
+            // because the projection was missing from the CPU path as well
+            // as from the resident one. The parity check between them
+            // could not see it. The check against the oracle could.
+            {
+                std::vector<float> attnProj;
+                if (resident) {
+                    const deep2::TensorView xView{ deep2::TensorType::F32,
+                                                   reinterpret_cast<const uint8_t*>(attnOut.data()),
+                                                   attnOut.size() * sizeof(float),
+                                                   { static_cast<uint64_t>(hiddenDim) }, true };
+                    if (!gemvResidentProjection(m_residentLayers[layer].attnOut, xView, attnProj)) {
+                        fprintf(stderr, "[Move 10] Layer %zu: resident attention output GEMV failed\n", layer);
+                        return false;
+                    }
+                } else {
+                    if (attnOutDq.data.empty()) {
+                        const deep2::TensorEntry* attnOutEntry =
+                            rom.findTensor("blk." + std::to_string(layer) + ".attn_output.weight");
+                        if (!attnOutEntry) {
+                            fprintf(stderr, "[Move 10] Layer %zu: attn_output.weight not found\n", layer);
+                            return false;
+                        }
+                        if (!dequantTensor(*attnOutEntry, attnOutDq)) {
+                            fprintf(stderr, "[Move 10] Layer %zu: attn_output dequant failed\n", layer);
+                            return false;
+                        }
+                    }
+                    attnProj.assign(hiddenDim, 0.0f);
+                    gemvFloat(attnOutDq.data.data(), attnOut.data(), attnProj.data(),
+                              static_cast<uint32_t>(hiddenDim), static_cast<uint32_t>(hiddenDim));
+                }
 
-            // The attention block is a residual: the block adds its output to
-            // the stream. The previous code overwrote the stream with V
-            // instead, which is not an attention output and leaves the
-            // residual stream unbounded.
-            for (size_t i = 0; i < hiddenDim; ++i) {
-                hiddenStates[i] += attnOut[i];
+                // The attention block is a residual: the block adds its
+                // output to the stream. The previous code overwrote the
+                // stream with V instead, which is not an attention output
+                // and leaves the residual stream unbounded.
+                for (size_t i = 0; i < hiddenDim; ++i) {
+                    hiddenStates[i] += attnProj[i];
+                }
             }
 
             // --- FFN (UP + DOWN) ---
@@ -1221,13 +1316,16 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
             inspect_layer_boundary_tensors(static_cast<uint32_t>(layer), hiddenStates.data(), hiddenDim);
         }
 
-        // After all layers, apply final layer norm and output projection
-        float mean = 0.0f, var = 0.0f;
-        for (float v : hiddenStates) mean += v;
-        mean /= hiddenDim;
-        for (float v : hiddenStates) var += (v - mean) * (v - mean);
-        var = std::sqrt(var / hiddenDim + 1e-5f);
-        for (float& v : hiddenStates) v = (v - mean) / var;
+        // After all layers, apply final layer norm and output projection.
+        //
+        // The final norm is the model's own: a weighted RMSNorm, x * w /
+        // sqrt(mean(x^2) + eps). The previous code standardized the stream
+        // instead, subtracting the mean and applying no weight at all.
+        // Neither is what the model does, and the logits come from the
+        // normalized stream, so the whole output was wrong.
+        if (!outputNormDq.data.empty()) {
+            rmsNormWeighted(hiddenStates.data(), outputNormDq.data.data(), hiddenDim, 1e-5f);
+        }
 
         // Output projection
         const deep2::TensorEntry* outputEntry = rom.findTensor("output.weight");

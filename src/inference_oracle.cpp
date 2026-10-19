@@ -73,6 +73,10 @@ static void rope(float* x, uint32_t pos, uint32_t dim, float theta) {
     }
 }
 
+// Print the reference's per-layer trace, so the first layer where it and
+// the engine diverge can be read off directly.
+static bool g_traceLayers = false;
+
 struct Phi3Model {
     uint32_t hidden = 0, layers = 0, heads = 0, intermediate = 0, vocab = 0;
     uint32_t headDim = 0;
@@ -194,6 +198,18 @@ struct Phi3Model {
 
                 // store K/V for this position
                 for (uint32_t hh = 0; hh < heads; ++hh) {
+                    // The cache holds the keys and values in half precision,
+                    // and so does the reference. A reference that kept them
+                    // in f32 would differ from the engine for a reason that
+                    // has nothing to do with whether the engine is right,
+                    // and the difference would be invisible in the token
+                    // it produces.
+                    for (uint32_t d = 0; d < headDim; ++d) {
+                        k[hh * headDim + d] = deep2::KvHalfToFloat(
+                            deep2::KvFloatToHalf(k[hh * headDim + d]));
+                        v[hh * headDim + d] = deep2::KvHalfToFloat(
+                            deep2::KvFloatToHalf(v[hh * headDim + d]));
+                    }
                     std::memcpy(kLayer + ((hh * seq + t) * headDim), k + hh * headDim, headDim * sizeof(float));
                     std::memcpy(vLayer + ((hh * seq + t) * headDim), v + hh * headDim, headDim * sizeof(float));
                 }
@@ -249,6 +265,23 @@ struct Phi3Model {
                 std::vector<float> fdown(hidden);
                 gemvFloat(lw.ffnDownW.data(), fup.data(), fdown.data(), hidden, intermediate);
                 for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
+            }
+
+            // The layer trace, for locating the first layer where the engine
+            // and the reference diverge. The engine prints the same shape,
+            // so the two traces can be read side by side.
+            if (g_traceLayers) {
+                const float* lastRow = &h[(seq - 1) * hidden];
+                double sum = 0.0;
+                float absMax = 0.0f;
+                for (uint32_t i = 0; i < hidden; ++i) {
+                    sum += lastRow[i];
+                    const float a = std::fabs(lastRow[i]);
+                    if (a > absMax) absMax = a;
+                }
+                std::cout << "[ORACLE-TRACE] layer=" << l
+                          << " sum=" << sum
+                          << " absmax=" << absMax << "\n" << std::flush;
             }
         }
 
@@ -1154,6 +1187,148 @@ struct DeepSeek2Model {
     }
 };
 
+// The index of the largest value, or -1 when the vector is empty.
+static int argmaxOf(const std::vector<float>& v) {
+    if (v.empty()) return -1;
+    int best = 0;
+    for (size_t i = 1; i < v.size(); ++i) {
+        if (v[i] > v[best]) best = static_cast<int>(i);
+    }
+    return best;
+}
+
+// ---------------------------------------------------------------------------
+// Incremental decode parity.
+// The oracle driver re-runs the whole prefix at every step, so it always
+// sees the true context. A decode loop that keeps its cache and only
+// computes the new position has to produce the same answer, and it does
+// not follow that it does: the two can agree on every projection and
+// still disagree on the text, because the attention is the part that
+// depends on the state carried between steps.
+//
+// This compares three things for the same prompt:
+//
+//   1. the oracle, which recomputes the whole prefix,
+//   2. the engine's full-prefix pass, which computes every position in one
+//      pass over a fresh cache,
+//   3. the engine's incremental pass, which computes one position at a time
+//      against a cache that is kept between the calls.
+//
+// If 1 and 2 agree and 3 does not, the cache is what is wrong. If 2 and 3
+// agree and 1 does not, the engine's attention is what is wrong.
+// ---------------------------------------------------------------------------
+int cmdKvIncremental(int argc, char** argv) {
+    if (argc < 3) {
+        std::cerr << "usage: rom_audit kv-incremental <model.gguf> \"<prompt>\"\n";
+        return 1;
+    }
+    const std::string modelPath = argv[2];
+    const std::string prompt = (argc > 3) ? argv[3] : "The capital of France is";
+
+    TensorROM rom;
+    if (!rom.addShard(modelPath) || !rom.finalizeIndex()) return 1;
+
+    GgufTokenizer tok;
+    if (!tok.loadFromGGUF(modelPath)) return 1;
+
+    std::vector<uint32_t> tokens = tok.encode(prompt);
+    tokens.insert(tokens.begin(), tok.bosTokenId());
+    std::cerr << "[KVPARITY] " << tokens.size() << " prompt token(s)\n";
+
+    // 1. The reference: the oracle, which recomputes the whole prefix.
+    std::vector<float> reference;
+    {
+        Phi3Model model;
+        if (!model.loadRom(rom)) return 1;
+        g_traceLayers = true;
+        reference = model.forward(tokens);
+        g_traceLayers = false;
+    }
+
+    // 2 and 3: the engine.
+    Deep2Engine engine;
+    if (!engine.Initialize(modelPath, "", false)) {
+        std::cerr << "[KVPARITY] the engine could not be initialized\n";
+        return 1;
+    }
+
+    const auto& g = engine.rom.geometry();
+
+    // 2. The full-prefix pass.
+    std::vector<float> fullLogits;
+    std::vector<float> baseline;
+    engine.m_layerTrace = true;
+    if (!engine.executePhi3ROMForwardPass(tokens, fullLogits, baseline)) {
+        std::cerr << "[KVPARITY] the full-prefix pass failed\n";
+        return 1;
+    }
+    engine.m_layerTrace = false;
+
+    // 3. The incremental passes, against a cache that is kept between them.
+    std::vector<float> incrementalLogits;
+    {
+        deep2::HostKvRing ring;
+        ring.reset(static_cast<uint32_t>(g.numLayers), 64, static_cast<uint32_t>(g.hiddenDim));
+        for (size_t i = 0; i < tokens.size(); ++i) {
+            const std::vector<uint32_t> one{ tokens[i] };
+            if (!engine.executePhi3ROMForwardStep(one, incrementalLogits, baseline,
+                                                   ring, static_cast<uint32_t>(i))) {
+                std::cerr << "[KVPARITY] the incremental pass failed at position " << i << "\n";
+                return 1;
+            }
+        }
+    }
+
+    auto report = [&](const char* name, const std::vector<float>& a, const std::vector<float>& b) {
+        if (a.size() != b.size()) {
+            std::cout << "[KVPARITY] " << name << ": sizes differ, " << a.size() << " vs " << b.size() << "\n";
+            return 0.0;
+        }
+        double worst = 0.0;
+        for (size_t i = 0; i < a.size(); ++i) {
+            worst = (std::max)(worst, std::fabs(static_cast<double>(a[i]) - static_cast<double>(b[i])));
+        }
+        const int argA = argmaxOf(a);
+        const int argB = argmaxOf(b);
+        std::cout << "[KVPARITY] " << name
+                  << " max_abs_diff=" << worst
+                  << " argmax=" << argA << " vs " << argB
+                  << (argA == argB ? " (same)" : " (DIFFERENT)") << "\n";
+        return worst;
+    };
+
+    std::cout << "[KVPARITY] reference top-5:";
+    {
+        std::vector<std::pair<float, uint32_t>> ranked;
+        for (size_t i = 0; i < reference.size(); ++i) ranked.emplace_back(reference[i], (uint32_t)i);
+        std::partial_sort(ranked.begin(),
+                          ranked.begin() + (std::min)((size_t)5, ranked.size()),
+                          ranked.end(),
+                          [](const auto& a, const auto& b) { return a.first > b.first; });
+        for (size_t i = 0; i < 5 && i < ranked.size(); ++i) {
+            std::cout << " [" << tok.piece(ranked[i].second) << ":" << ranked[i].second << "]";
+        }
+        std::cout << "\n";
+    }
+
+    const double dFull = report("engine full-prefix vs oracle ", fullLogits, reference);
+    const double dIncr = report("engine incremental  vs oracle ", incrementalLogits, reference);
+    report("engine incremental  vs full    ", incrementalLogits, fullLogits);
+
+    if (dIncr > 1e-2 && dFull <= 1e-2) {
+        std::cerr << "[KVPARITY] the full-prefix pass reproduces the oracle and the incremental "
+                     "pass does not: the cache carried between the calls is what is wrong\n";
+        return 1;
+    }
+    if (dFull > 1e-2) {
+        std::cerr << "[KVPARITY] the engine's full-prefix pass does not reproduce the oracle: "
+                     "the discrepancy is in the forward pass, not in the cache\n";
+        return 1;
+    }
+    std::cout << "[KVPARITY] all three agree\n";
+    return 0;
+}
+
 // ---------------------------------------------------------------------------
 // Oracle driver
 // ---------------------------------------------------------------------------
@@ -1916,6 +2091,7 @@ int main(int argc, char** argv) {
     if (cmd == "gemv-resident") return cmdGemvResident(argc, argv);
     if (cmd == "resident-parity") return cmdResidentParity(argc, argv);
     if (cmd == "q2k-parity")    return cmdQ2KParity(argc, argv);
+    if (cmd == "kv-incremental") return cmdKvIncremental(argc, argv);
 
     std::cerr << "unknown command: " << cmd << "\n";
     std::cerr << "usage: rom_audit <oracle|tokenize|info|dump-tensor|gemv-split|gemv-resident> "

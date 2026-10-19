@@ -14,7 +14,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -409,7 +411,13 @@ bool Deep2Engine::uploadResidentSplitWeight(const deep2::TensorView& wView,
         VkBuffer buf = VK_NULL_HANDLE;
         VkDeviceMemory mem = VK_NULL_HANDLE;
         const VkDeviceSize bytes = static_cast<VkDeviceSize>(p.count) * rowBytes;
-        if (!vulkan->createBuffer(*p.gpu, bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        // The buffer is filled with a vkCmdCopyBuffer, so it has to carry the
+        // transfer-destination usage as well as the storage usage. Copying
+        // into a storage-only buffer is undefined behaviour, and the driver's
+        // undefined behaviour was showing up as a sporadic device-side
+        // corruption that killed the run on an arbitrary layer.
+        if (!vulkan->createBuffer(*p.gpu, bytes,
+                                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buf, mem)) {
             fprintf(stderr, "[RESIDENT] failed to allocate the weight buffer\n");
             releaseResidentSplitWeight(out);
@@ -428,6 +436,15 @@ bool Deep2Engine::uploadResidentSplitWeight(const deep2::TensorView& wView,
         part.memory = mem;
         part.rowOffset = p.offset;
         part.rowCount = p.count;
+        // The staging is placed with the weight, so a call does not have to
+        // allocate it. If it cannot be placed the GEMV falls back to the
+        // transient form, which is slower but correct, so a failure here is
+        // a warning and not a failed placement.
+        if (!allocateResidentStaging(*p.gpu, part.staging,
+                                     static_cast<uint32_t>(cols), p.count)) {
+            fprintf(stderr, "[RESIDENT] the staging for %u rows could not be placed; "
+                            "the GEMV will allocate it per call\n", p.count);
+        }
         out.parts.push_back(part);
     }
 
@@ -443,6 +460,9 @@ void Deep2Engine::releaseResidentSplitWeight(ResidentSplitWeight& w) {
         for (auto& part : w.parts) {
             if (part.gpu && part.buffer != VK_NULL_HANDLE) {
                 vulkan->destroyBuffer(*part.gpu, part.buffer, part.memory);
+            }
+            if (part.gpu) {
+                releaseResidentStaging(*part.gpu, part.staging);
             }
         }
     }
@@ -547,7 +567,8 @@ bool Deep2Engine::uploadResidentQuantWeight(const deep2::TensorEntry& entry,
 
         VkBuffer buf = VK_NULL_HANDLE;
         VkDeviceMemory mem = VK_NULL_HANDLE;
-        if (!vulkan->createBuffer(*p.gpu, byteCount, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        if (!vulkan->createBuffer(*p.gpu, byteCount,
+                                  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buf, mem)) {
             fprintf(stderr, "[RESIDENT_Q2K] failed to allocate the weight buffer\n");
             releaseResidentQuantWeight(out);
@@ -566,6 +587,14 @@ bool Deep2Engine::uploadResidentQuantWeight(const deep2::TensorEntry& entry,
         part.memory = mem;
         part.rowOffset = p.offset;
         part.rowCount = p.count;
+        // The staging is placed with the weight, so a call does not have to
+        // allocate it. If it cannot be placed the GEMV falls back to the
+        // transient form, which is slower but correct.
+        if (!allocateResidentStaging(*p.gpu, part.staging,
+                                     static_cast<uint32_t>(cols), p.count)) {
+            fprintf(stderr, "[RESIDENT_Q2K] the staging for %u rows could not be placed; "
+                            "the GEMV will allocate it per call\n", p.count);
+        }
         out.parts.push_back(part);
     }
 
@@ -582,6 +611,9 @@ void Deep2Engine::releaseResidentQuantWeight(ResidentQuantWeight& w) {
         for (auto& part : w.parts) {
             if (part.gpu && part.buffer != VK_NULL_HANDLE) {
                 vulkan->destroyBuffer(*part.gpu, part.buffer, part.memory);
+            }
+            if (part.gpu) {
+                releaseResidentStaging(*part.gpu, part.staging);
             }
         }
     }
@@ -602,31 +634,246 @@ bool Deep2Engine::gemvResidentProjection(const ResidentProjection& p,
     return vulkanGemvResident(p.f32, xView, y);
 }
 
-bool Deep2Engine::vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep2::TensorView& xView,
-                                         std::vector<float>& y) {
-    if (!vulkanReady || !vulkan || !w.valid) return false;
+// ---------------------------------------------------------------------------
+// The resident GEMV
+// ---------------------------------------------------------------------------
+//
+// A resident weight sits in device memory, split by output rows across the
+// devices. The GEMV itself is then three things:
+//
+//   1. the input vector goes into each device's staging buffer,
+//   2. each device computes the rows it owns,
+//   3. the rows come back and are concatenated.
+//
+// The three are separated here for one reason: step 2 on one device does not
+// have to wait for step 2 on the other. Each device has its own program,
+// its own command buffer and its own fence, so the two dispatches can be in
+// flight at the same time, and a device that is waiting on nothing is
+// doing the only thing it can do, which is the work it was given.
+//
+// The staging is persistent, so step 1 and step 3 do not allocate anything.
+// A Vulkan allocation is a driver call, not a malloc, and the forward pass
+// makes four projections per layer: allocating the staging on every call
+// put several hundred driver calls on the critical path of every token.
+//
+// The results are identical in every form. The split is by output rows, a
+// row is computed entirely on the device that owns it, and the two devices
+// compute disjoint sets of rows, so the order in which they finish cannot
+// change a single bit of the result.
+
+// The staging for one part of a resident weight.
+bool Deep2Engine::allocateResidentStaging(const deep2::VulkanDevice::Gpu& gpu,
+                                           ResidentStaging& st,
+                                           uint32_t cols, uint32_t rowCount) {
+    releaseResidentStaging(gpu, st);
+    if (cols == 0 || rowCount == 0) return false;
+
+    const VkMemoryPropertyFlags hostVisible =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+    const VkDeviceSize xBytes = static_cast<VkDeviceSize>(cols) * sizeof(float);
+    const VkDeviceSize yBytes = static_cast<VkDeviceSize>(rowCount) * sizeof(float);
+
+    if (!vulkan->createBuffer(gpu, xBytes, usage, hostVisible, st.x, st.xMemory, &st.xMapped) ||
+        !vulkan->createBuffer(gpu, yBytes, usage, hostVisible, st.y, st.yMemory, &st.yMapped)) {
+        releaseResidentStaging(gpu, st);
+        return false;
+    }
+    return true;
+}
+
+void Deep2Engine::releaseResidentStaging(const deep2::VulkanDevice::Gpu& gpu, ResidentStaging& st) {
+    if (vulkan) {
+        if (st.x != VK_NULL_HANDLE) vulkan->destroyBuffer(gpu, st.x, st.xMemory);
+        if (st.y != VK_NULL_HANDLE) vulkan->destroyBuffer(gpu, st.y, st.yMemory);
+    }
+    st.reset();
+}
+
+bool Deep2Engine::vulkanGemvResidentImpl(const ResidentSplitWeight* f32,
+                                         const ResidentQuantWeight* quant,
+                                         const deep2::TensorView& xView,
+                                         std::vector<float>& y,
+                                         bool overlapped) {
+    if (!vulkanReady || !vulkan) return false;
     if (xView.type != deep2::TensorType::F32 || !xView.data) return false;
 
-    const size_t xBytes = static_cast<size_t>(w.cols) * sizeof(float);
-    y.assign(w.totalRows, 0.0f);
+    const bool packed = (quant != nullptr);
+    const uint32_t totalRows = packed ? quant->totalRows : f32->totalRows;
+    const uint32_t cols      = packed ? quant->cols      : f32->cols;
+    const uint32_t blockSize = packed ? quant->blockSize : 0u;
 
-    for (const auto& part : w.parts) {
+    // One half of the split, in the form the shared body works with. The
+    // staging pointer is into the weight's own part, which is stable: the
+    // weight is not touched while the GEMV runs.
+    struct Part {
+        const deep2::VulkanDevice::Gpu* gpu = nullptr;
+        VkBuffer weight = VK_NULL_HANDLE;
+        uint32_t rowOffset = 0;
+        uint32_t rowCount = 0;
+        ResidentStaging* staging = nullptr;
+    };
+    std::vector<Part> parts;
+    parts.reserve(2);
+    if (packed) {
+        for (const auto& p : quant->parts) {
+            parts.push_back({ p.gpu, p.buffer, p.rowOffset, p.rowCount, &p.staging });
+        }
+    } else {
+        for (const auto& p : f32->parts) {
+            parts.push_back({ p.gpu, p.buffer, p.rowOffset, p.rowCount, &p.staging });
+        }
+    }
+    if (parts.empty() || totalRows == 0 || cols == 0) return false;
+
+    // Without the persistent staging there is nothing to reuse, and the
+    // transient form is the only one that works. It is correct and it is
+    // slower, which is the right trade when the staging could not be
+    // placed.
+    for (const Part& p : parts) {
+        if (!p.staging || !p.staging->ready()) {
+            return vulkanGemvResidentTransient(f32, quant, xView, y);
+        }
+    }
+
+    const size_t xBytes = static_cast<size_t>(cols) * sizeof(float);
+    y.assign(totalRows, 0.0f);
+
+    // The dispatch, recorded and submitted without waiting for it.
+    auto submit = [&](const Part& p, deep2::VulkanProgram::Dispatch& out) -> bool {
+        if (packed) {
+            return vulkan->beginDispatchProgramQ2K(*p.gpu, p.weight,
+                                                   p.staging->x, p.staging->y,
+                                                   p.rowCount, cols, blockSize, out);
+        }
+        return vulkan->beginDispatchProgram(*p.gpu, p.weight,
+                                           p.staging->x, p.staging->y,
+                                           p.rowCount, cols, out);
+    };
+
+    // Stage a part: the input vector goes in, the output rows are cleared.
+    // The shader accumulates into the output rows, so they have to start at
+    // zero.
+    auto stage = [&](const Part& p) {
+        std::memcpy(p.staging->xMapped, xView.data, xBytes);
+        std::memset(p.staging->yMapped, 0, static_cast<size_t>(p.rowCount) * sizeof(float));
+    };
+
+    if (!overlapped) {
+        // The series form: one device is staged, submitted, waited on and
+        // collected before the next one is touched. This is the reference
+        // the overlapped form is measured against.
+        for (const Part& p : parts) {
+            stage(p);
+            deep2::VulkanProgram::Dispatch d;
+            if (!submit(p, d)) return false;
+            if (!d.wait()) return false;
+            std::memcpy(y.data() + p.rowOffset, p.staging->yMapped,
+                        static_cast<size_t>(p.rowCount) * sizeof(float));
+        }
+        return true;
+    }
+
+    // The overlapped form.
+    //
+    // A part is staged and submitted before the next one is staged, so the
+    // first device is already working while the host is preparing the
+    // second. Both dispatches are submitted before either is waited on, so
+    // the two devices are busy at the same time.
+    //
+    // The waits come last, in the order the dispatches were submitted. A
+    // fence wait may not be issued on a device whose submission has not been
+    // made yet, and by this point both have been.
+    std::vector<deep2::VulkanProgram::Dispatch> dispatches;
+    dispatches.reserve(parts.size());
+
+    for (const Part& p : parts) {
+        stage(p);
+        deep2::VulkanProgram::Dispatch d;
+        if (!submit(p, d)) {
+            // The work already submitted still has to be waited on, or the
+            // staging would be read while the device is writing it.
+            for (auto& pending : dispatches) pending.wait();
+            return false;
+        }
+        dispatches.push_back(std::move(d));
+    }
+
+    bool ok = true;
+    for (auto& d : dispatches) {
+        ok = d.wait() && ok;
+    }
+    if (!ok) {
+        fprintf(stderr, "[RESIDENT_GEMV] a device dispatch failed\n");
+        return false;
+    }
+
+    for (const Part& p : parts) {
+        std::memcpy(y.data() + p.rowOffset, p.staging->yMapped,
+                    static_cast<size_t>(p.rowCount) * sizeof(float));
+    }
+    return true;
+}
+
+// The transient form: the staging is allocated and freed on every call.
+//
+// This is what the engine did before the staging was made persistent. It is
+// kept because it is the honest third point of the measurement - the
+// difference between it and the series form is the cost of the allocation,
+// and the difference between the series form and the overlapped form is
+// what running the devices at the same time is worth.
+bool Deep2Engine::vulkanGemvResidentTransient(const ResidentSplitWeight* f32,
+                                              const ResidentQuantWeight* quant,
+                                              const deep2::TensorView& xView,
+                                              std::vector<float>& y) {
+    if (!vulkanReady || !vulkan) return false;
+    if (xView.type != deep2::TensorType::F32 || !xView.data) return false;
+
+    const bool packed = (quant != nullptr);
+    const uint32_t totalRows = packed ? quant->totalRows : f32->totalRows;
+    const uint32_t cols      = packed ? quant->cols      : f32->cols;
+    const uint32_t blockSize = packed ? quant->blockSize : 0u;
+
+    struct Part {
+        const deep2::VulkanDevice::Gpu* gpu = nullptr;
+        VkBuffer weight = VK_NULL_HANDLE;
+        uint32_t rowOffset = 0;
+        uint32_t rowCount = 0;
+    };
+    std::vector<Part> parts;
+    parts.reserve(2);
+    if (packed) {
+        for (const auto& p : quant->parts) {
+            parts.push_back({ p.gpu, p.buffer, p.rowOffset, p.rowCount });
+        }
+    } else {
+        for (const auto& p : f32->parts) {
+            parts.push_back({ p.gpu, p.buffer, p.rowOffset, p.rowCount });
+        }
+    }
+    if (parts.empty() || totalRows == 0 || cols == 0) return false;
+
+    const size_t xBytes = static_cast<size_t>(cols) * sizeof(float);
+    y.assign(totalRows, 0.0f);
+
+    for (const Part& p : parts) {
         VkBuffer xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
         VkDeviceMemory xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
         void* xmapped = nullptr; void* ymapped = nullptr;
 
-        const VkDeviceSize yBytes = static_cast<VkDeviceSize>(part.rowCount) * sizeof(float);
+        const VkDeviceSize yBytes = static_cast<VkDeviceSize>(p.rowCount) * sizeof(float);
         const VkMemoryPropertyFlags hostVisible =
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
         const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
         auto cleanup = [&]() {
-            vulkan->destroyBuffer(*part.gpu, xbuf, xmem);
-            vulkan->destroyBuffer(*part.gpu, ybuf, ymem);
+            vulkan->destroyBuffer(*p.gpu, xbuf, xmem);
+            vulkan->destroyBuffer(*p.gpu, ybuf, ymem);
         };
 
-        if (!vulkan->createBuffer(*part.gpu, xBytes, usage, hostVisible, xbuf, xmem, &xmapped) ||
-            !vulkan->createBuffer(*part.gpu, yBytes, usage, hostVisible, ybuf, ymem, &ymapped)) {
+        if (!vulkan->createBuffer(*p.gpu, xBytes, usage, hostVisible, xbuf, xmem, &xmapped) ||
+            !vulkan->createBuffer(*p.gpu, yBytes, usage, hostVisible, ybuf, ymem, &ymapped)) {
             cleanup();
             return false;
         }
@@ -634,58 +881,53 @@ bool Deep2Engine::vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep
         std::memcpy(xmapped, xView.data, xBytes);
         std::memset(ymapped, 0, static_cast<size_t>(yBytes));
 
-        if (!vulkan->dispatchProgramQ2K(*part.gpu, part.buffer, xbuf, ybuf,
-                                        part.rowCount, w.cols, w.blockSize)) {
+        const bool dispatched = packed
+            ? vulkan->dispatchProgramQ2K(*p.gpu, p.weight, xbuf, ybuf,
+                                         p.rowCount, cols, blockSize)
+            : vulkan->dispatchProgram(*p.gpu, p.weight, xbuf, ybuf, p.rowCount, cols);
+        if (!dispatched) {
             cleanup();
             return false;
         }
 
-        std::memcpy(y.data() + part.rowOffset, ymapped, static_cast<size_t>(yBytes));
+        std::memcpy(y.data() + p.rowOffset, ymapped, static_cast<size_t>(yBytes));
         cleanup();
     }
-
     return true;
 }
 
 bool Deep2Engine::vulkanGemvResident(const ResidentSplitWeight& w, const deep2::TensorView& xView,
                                      std::vector<float>& y) {
-    if (!vulkanReady || !vulkan || !w.valid) return false;
-    if (xView.type != deep2::TensorType::F32 || !xView.data) return false;
+    if (!w.valid) return false;
+    return vulkanGemvResidentImpl(&w, nullptr, xView, y, m_gemvOverlap);
+}
 
-    const size_t xBytes = static_cast<size_t>(w.cols) * sizeof(float);
-    y.assign(w.totalRows, 0.0f);
+bool Deep2Engine::vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                         std::vector<float>& y) {
+    if (!w.valid) return false;
+    return vulkanGemvResidentImpl(nullptr, &w, xView, y, m_gemvOverlap);
+}
 
-    for (const auto& part : w.parts) {
-        VkBuffer xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
-        VkDeviceMemory xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
-        void* xmapped = nullptr; void* ymapped = nullptr;
+bool Deep2Engine::vulkanGemvResidentOverlapped(const ResidentSplitWeight& w, const deep2::TensorView& xView,
+                                                std::vector<float>& y) {
+    if (!w.valid) return false;
+    return vulkanGemvResidentImpl(&w, nullptr, xView, y, true);
+}
 
-        const VkDeviceSize yBytes = static_cast<VkDeviceSize>(part.rowCount) * sizeof(float);
-        const VkMemoryPropertyFlags hostVisible =
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+bool Deep2Engine::vulkanGemvQ2KResidentOverlapped(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                                   std::vector<float>& y) {
+    if (!w.valid) return false;
+    return vulkanGemvResidentImpl(nullptr, &w, xView, y, true);
+}
 
-        auto cleanup = [&]() {
-            vulkan->destroyBuffer(*part.gpu, xbuf, xmem);
-            vulkan->destroyBuffer(*part.gpu, ybuf, ymem);
-        };
+bool Deep2Engine::vulkanGemvResidentSequential(const ResidentSplitWeight& w, const deep2::TensorView& xView,
+                                                std::vector<float>& y) {
+    if (!w.valid) return false;
+    return vulkanGemvResidentImpl(&w, nullptr, xView, y, false);
+}
 
-        if (!vulkan->createBuffer(*part.gpu, xBytes, usage, hostVisible, xbuf, xmem, &xmapped) ||
-            !vulkan->createBuffer(*part.gpu, yBytes, usage, hostVisible, ybuf, ymem, &ymapped)) {
-            cleanup();
-            return false;
-        }
-
-        std::memcpy(xmapped, xView.data, xBytes);
-        std::memset(ymapped, 0, static_cast<size_t>(yBytes));
-
-        if (!vulkan->dispatchProgram(*part.gpu, part.buffer, xbuf, ybuf, part.rowCount, w.cols)) {
-            cleanup();
-            return false;
-        }
-
-        std::memcpy(y.data() + part.rowOffset, ymapped, static_cast<size_t>(yBytes));
-        cleanup();
-    }
-    return true;
+bool Deep2Engine::vulkanGemvQ2KResidentSequential(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                                   std::vector<float>& y) {
+    if (!w.valid) return false;
+    return vulkanGemvResidentImpl(nullptr, &w, xView, y, false);
 }

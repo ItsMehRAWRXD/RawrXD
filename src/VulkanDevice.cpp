@@ -269,9 +269,13 @@ bool VulkanDevice::createKvCache(const Gpu& gpu, uint32_t layers, uint32_t windo
     }
 
     const VkDeviceSize perBuffer = required / 2;
-    if (!createBuffer(gpu, perBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+    // The cache buffers are filled with vkCmdCopyBuffer, so they need the
+    // transfer-destination usage as well as the storage usage.
+    const VkBufferUsageFlags cacheUsage =
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    if (!createBuffer(gpu, perBuffer, cacheUsage,
                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.keyBuffer, out.keyMemory) ||
-        !createBuffer(gpu, perBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        !createBuffer(gpu, perBuffer, cacheUsage,
                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.valueBuffer, out.valueMemory)) {
         destroyKvCache(gpu, out);
         return false;

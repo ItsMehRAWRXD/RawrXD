@@ -61,12 +61,20 @@ struct Deep2Engine {
     void DequantizeQ2_K_AVX512(const void* source, float* destination, size_t blockCount);
     void ApplyRotaryEmbeddingsAVX512(float* vectorData, size_t dim, size_t position);
 
-    // Q2_K block layout (baseline, preserved)
+    // Q2_K block layout.
+    //
+    // The ROM's block is 84 bytes: scales[16] @0, qs[64] @16, d @80, dmin @82.
+    // The struct below was missing dmin and the padding, so it was 82 bytes
+    // and the expander that used it read every block after the first at the
+    // wrong offset.
     struct Block_Q2_K {
-        uint8_t scales[16];
-        uint8_t qs[64];
-        uint16_t d;
+        uint8_t  scales[16];   // per-sub-block scale in the low nibble, min in the high
+        uint8_t  qs[64];       // 256 values, 2 bits each
+        uint16_t d;            // super-block scale, fp16
+        uint16_t dmin;         // super-block minimum, fp16
     };
+    static_assert(sizeof(Block_Q2_K) == 84,
+                  "Block_Q2_K must be the 84-byte ROM block layout");
 
     // Multi-GPU support (real Vulkan device init from Move 5/11)
     bool InitializeMultiGPU();
@@ -218,6 +226,33 @@ struct Deep2Engine {
     bool vulkanGemvSplit(const deep2::TensorView& wView, const deep2::TensorView& xView,
                          std::vector<float>& y, uint32_t* outSplitRow = nullptr);
 
+    // The host-visible staging for one half of a split GEMV.
+    //
+    // The input vector goes in, the output rows come out. The buffers are
+    // allocated once, with the weight, and reused by every call.
+    //
+    // They were not, before. Every call allocated a pair of Vulkan buffers
+    // and freed them again, and the forward pass makes four projections per
+    // layer, so a token paid for several hundred allocations and frees
+    // before any of the arithmetic started. A Vulkan allocation is not a
+    // malloc: it goes to the driver, and on this hardware it costs more
+    // than the GEMV it was supposed to enable.
+    struct ResidentStaging {
+        VkBuffer x = VK_NULL_HANDLE;
+        VkDeviceMemory xMemory = VK_NULL_HANDLE;
+        void* xMapped = nullptr;
+        VkBuffer y = VK_NULL_HANDLE;
+        VkDeviceMemory yMemory = VK_NULL_HANDLE;
+        void* yMapped = nullptr;
+
+        // The staging is usable once both halves are mapped.
+        bool ready() const { return xMapped != nullptr && yMapped != nullptr; }
+        void reset() {
+            x = VK_NULL_HANDLE; xMemory = VK_NULL_HANDLE; xMapped = nullptr;
+            y = VK_NULL_HANDLE; yMemory = VK_NULL_HANDLE; yMapped = nullptr;
+        }
+    };
+
     // A weight matrix resident in device memory, split across the devices by
     // output rows.
     //
@@ -233,6 +268,13 @@ struct Deep2Engine {
             VkDeviceMemory memory = VK_NULL_HANDLE;
             uint32_t rowOffset = 0;   // first source row held by this part
             uint32_t rowCount = 0;    // rows held by this part
+            // The staging for this part, reused by every call.
+            //
+            // It is mutable because it is a scratch area, not part of the
+            // weight: the weight's value is the rows it holds, and those do
+            // not change. The GEMV writes the input vector in and the
+            // output rows out, on a weight it is not allowed to modify.
+            mutable ResidentStaging staging;
         };
         std::vector<Part> parts;
         uint32_t totalRows = 0;
@@ -263,6 +305,10 @@ struct Deep2Engine {
             VkDeviceMemory memory = VK_NULL_HANDLE;
             uint32_t rowOffset = 0;
             uint32_t rowCount = 0;
+            // The staging for this part, reused by every call. Mutable for
+            // the same reason as the f32 weight's staging: it is a scratch
+            // area, not part of the weight.
+            mutable ResidentStaging staging;
         };
         std::vector<Part> parts;
         uint32_t totalRows = 0;
@@ -276,10 +322,6 @@ struct Deep2Engine {
     bool uploadResidentQuantWeight(const deep2::TensorEntry& entry, ResidentQuantWeight& out);
     void releaseResidentQuantWeight(ResidentQuantWeight& w);
 
-    // The packed quantized GEMV over a resident weight.
-    //
-    // The shader dequantizes as it reads, so the f32 expansion does not
-    // happen at all.
     bool vulkanGemvQ2KResident(const ResidentQuantWeight& w, const deep2::TensorView& xView,
                                 std::vector<float>& y);
 
@@ -290,6 +332,12 @@ struct Deep2Engine {
     // second of host work in front of every token.
     deep2::DequantizedTensor m_tokenEmb;
     bool m_tokenEmbReady = false;
+
+    // The final norm's weight, dequantized once.
+    //
+    // The final norm is a weighted RMSNorm and the output projection reads
+    // its output, so the logits are wrong without it.
+    deep2::DequantizedTensor m_outputNorm;
 
     // The layer projections, resident on the devices.
     // Placing them is expensive: every weight is read out of the ROM,
@@ -317,6 +365,11 @@ struct Deep2Engine {
 
     struct ResidentLayer {
         ResidentProjection qkv, up, down;
+        // The attention output projection, blk.N.attn_output.weight.
+        //
+        // A transformer block adds the projection of the attention output
+        // to the residual stream, not the attention output itself.
+        ResidentProjection attnOut;
         uint64_t qkvRows = 0, qkvCols = 0;
         uint64_t upRows = 0, upCols = 0;
         uint64_t downRows = 0, downCols = 0;
@@ -350,8 +403,68 @@ struct Deep2Engine {
 
     // GEMV against a resident weight matrix. The weight matrix is not
     // uploaded again; only the input vector and the output rows move.
+    //
+    // This is the entry point the engine uses. It runs the two devices at
+    // the same time unless the overlap has been turned off.
     bool vulkanGemvResident(const ResidentSplitWeight& w, const deep2::TensorView& xView,
                              std::vector<float>& y);
+
+    // The two halves of a split GEMV, run at the same time.
+    //
+    // Each device has its own program, its own command buffer and its own
+    // fence, so the two dispatches are in flight together and the devices
+    // work in parallel instead of in series. The results are identical to
+    // the series form: the split is by output rows, and a row is computed
+    // entirely on the device that owns it.
+    bool vulkanGemvResidentOverlapped(const ResidentSplitWeight& w, const deep2::TensorView& xView,
+                                       std::vector<float>& y);
+    bool vulkanGemvQ2KResidentOverlapped(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                          std::vector<float>& y);
+
+    // The same split, with the two devices in series. This is the reference
+    // the overlapped form is measured against. The two produce identical
+    // results, so the difference between them is exactly what running the
+    // devices at the same time is worth.
+    bool vulkanGemvResidentSequential(const ResidentSplitWeight& w, const deep2::TensorView& xView,
+                                       std::vector<float>& y);
+    bool vulkanGemvQ2KResidentSequential(const ResidentQuantWeight& w, const deep2::TensorView& xView,
+                                          std::vector<float>& y);
+
+    // The form the engine used before the staging was made persistent: the
+    // staging is allocated and freed on every call, and the two devices run
+    // in series.
+    //
+    // It is kept as the fallback for the case where the staging could not
+    // be placed, and as the third point of the measurement the benchmark
+    // makes. Passing one of the two weights and null for the other selects
+    // which form of the matrix is read.
+    bool vulkanGemvResidentTransient(const ResidentSplitWeight* f32,
+                                      const ResidentQuantWeight* quant,
+                                      const deep2::TensorView& xView,
+                                      std::vector<float>& y);
+
+    // Whether the resident GEMV runs the two devices at the same time.
+    // Turning it off falls back to the series form.
+    bool m_gemvOverlap = true;
+
+    // The shared body of the resident GEMV.
+    //
+    // Exactly one of `f32` and `quant` is set. The packed weight and the
+    // f32 weight differ in which shader reads them and in nothing else:
+    // the split, the staging and the overlap are the same either way, so
+    // they are written once.
+    bool vulkanGemvResidentImpl(const ResidentSplitWeight* f32,
+                                 const ResidentQuantWeight* quant,
+                                 const deep2::TensorView& xView,
+                                 std::vector<float>& y,
+                                 bool overlapped);
+
+    // The staging for one part of a resident weight: the input vector goes
+    // in, the output rows come out. Both are host visible, so the host can
+    // write the vector and read the rows without a staging copy.
+    bool allocateResidentStaging(const deep2::VulkanDevice::Gpu& gpu, ResidentStaging& st,
+                                 uint32_t cols, uint32_t rowCount);
+    void releaseResidentStaging(const deep2::VulkanDevice::Gpu& gpu, ResidentStaging& st);
 
     // Multi-device Vulkan GEMV. The weight matrix is split into two row
     // ranges with the shared row-split plan, each device runs the GEMV over
