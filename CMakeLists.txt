@@ -20,6 +20,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # Engine sources shared by every executable that links the inference core.
 set(DEEP2_ENGINE_CORE_SOURCES
     src/Deep2Engine.cpp
+    src/Deep2Engine_MultiGPU.cpp
     src/GGUFLoader.cpp
     src/TensorROM.cpp
     src/ShardPager.cpp
@@ -88,6 +89,13 @@ target_include_directories(rom_audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${C
 target_include_directories(tokenizer_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 target_include_directories(test_metadata_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
+
+# ggml's canonical type enum. QuantBlockTraits.hpp keys the block-layout
+# traits on ggml_type so that the several differently-numbered GGMLType
+# enums in this tree cannot be mixed up silently.
+target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ggml/include)
+target_include_directories(rom_audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ggml/include)
+target_include_directories(production_smoke_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/ggml/include)
 
 # Deploy GLSL compute shaders (SPIR-V) next to the executable for the Vulkan path.
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/shaders)

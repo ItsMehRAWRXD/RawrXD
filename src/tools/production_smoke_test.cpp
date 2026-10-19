@@ -6,6 +6,7 @@
 #include "../core/GenerationLoop.hpp"
 #include "../PrefetchQueue.hpp"
 #include "../PerformanceProfiler.hpp"
+#include "../core/QuantBlockTraits.hpp"
 #include <iostream>
 #include <cassert>
 #include <unordered_map>
@@ -172,11 +173,165 @@ void run_production_stress_test(const std::wstring& rom_path, const std::wstring
     std::cout << "======================================================================\n";
 }
 
+// ---------------------------------------------------------------------------
+// Gate 0: asymmetric VRAM row-split layout vectors.
+//
+// These validate the block-layout math before any weight is uploaded to a
+// device. Two independent layers are checked:
+//
+//   1. Table-driven vectors with hand-computed expectations. The expected
+//      values were derived from the GGML block format, not from the
+//      implementation, so a regression in the implementation is caught.
+//   2. A property sweep over every supported type. The invariant that
+//      matters is that a row boundary is also a block boundary, so no split
+//      ever lands inside a quant block and the per-block scale/min metadata
+//      stays valid.
+// ---------------------------------------------------------------------------
+
+namespace {
+
+struct SplitTestVector {
+    const char* name;
+    ggml_type   type;
+    uint32_t    totalRows;
+    uint32_t    cols;
+    float       weight;
+    uint64_t    budgetBytes0;   // 0 = unconstrained
+    uint64_t    budgetBytes1;   // 0 = unconstrained
+    uint32_t    expectedDevice0Rows;
+    uint64_t    expectedRowStride;
+    uint64_t    expectedDevice0Bytes;
+    bool        expectedWithinBudget;
+};
+
+const SplitTestVector kSplitVectors[] = {
+    // Q4_K, 16 super-blocks per row.
+    {"q4k_4096x4096_w35", GGML_TYPE_Q4_K, 4096, 4096, 0.35f, 0, 0, 1433, 2304, 3301632, true},
+    // Q6_K, 43 super-blocks per row (Llama-3 8B FFN shape).
+    {"q6k_11008x11008_w35", GGML_TYPE_Q6_K, 11008, 11008, 0.35f, 0, 0, 3852, 9030, 34783560, true},
+    // Q8_0, 128 blocks per row.
+    {"q8_0_4096x4096_w25", GGML_TYPE_Q8_0, 4096, 4096, 0.25f, 0, 0, 1024, 4352, 4456448, true},
+    // Column count is not a multiple of the block size: the row is padded out
+    // to one whole super-block, so the stride is 144 bytes and not 100*144/256.
+    {"q4k_padded_cols_100", GGML_TYPE_Q4_K, 10, 100, 0.5f, 0, 0, 5, 144, 720, true},
+    // Unquantized types: one element per block.
+    {"f32_4096x1024_w50", GGML_TYPE_F32, 1024, 4096, 0.5f, 0, 0, 512, 16384, 8388608, true},
+    {"f16_4096x1024_w50", GGML_TYPE_F16, 1024, 4096, 0.5f, 0, 0, 512, 8192, 4194304, true},
+    // Device 0 cannot hold its proportional share: the split is pulled down to
+    // the largest row count that fits (1000000/2304 = 434 rows).
+    {"q4k_budget0_caps_split", GGML_TYPE_Q4_K, 4096, 4096, 0.35f, 1000000, 0, 434, 2304, 999936, true},
+    // Neither device can hold the tensor: the device-0 cap wins and the plan
+    // is flagged as out of budget.
+    {"q4k_budgets_both_too_small", GGML_TYPE_Q4_K, 4096, 4096, 0.35f, 1000000, 1000000,
+     434, 2304, 999936, false},
+    // Degenerate shapes.
+    {"single_row", GGML_TYPE_Q4_K, 1, 4096, 0.35f, 0, 0, 1, 2304, 2304, true},
+    {"no_rows", GGML_TYPE_Q4_K, 0, 4096, 0.35f, 0, 0, 0, 2304, 0, true},
+};
+
+int g_layoutFailures = 0;
+
+void expect(bool condition, const char* what) {
+    if (condition) {
+        std::cout << "[PASS] " << what << "\n";
+    } else {
+        std::cout << "[FAIL] " << what << "\n";
+        ++g_layoutFailures;
+    }
+}
+
+// Property sweep: for every supported type and a spread of shapes, the split
+// must be block-aligned and the byte accounting must be exact.
+void run_row_split_property_sweep() {
+    const ggml_type types[] = {
+        GGML_TYPE_Q2_K, GGML_TYPE_Q3_K, GGML_TYPE_Q4_K, GGML_TYPE_Q5_K,
+        GGML_TYPE_Q6_K, GGML_TYPE_Q8_K, GGML_TYPE_Q4_0, GGML_TYPE_Q4_1,
+        GGML_TYPE_Q5_0, GGML_TYPE_Q5_1, GGML_TYPE_Q8_0, GGML_TYPE_F32,
+        GGML_TYPE_F16,
+    };
+    const uint32_t colsList[] = {1, 31, 32, 100, 255, 256, 1000, 4096, 11008};
+    const uint32_t rowsList[] = {1, 2, 17, 256, 4096};
+    const float weights[] = {0.0f, 0.1f, 0.35f, 0.5f, 0.9f, 1.0f};
+
+    size_t checked = 0;
+    bool allAligned = true;
+    bool allExact = true;
+
+    for (ggml_type type : types) {
+        const uint32_t blockBytes = deep2::Quant::BlockBytes(type);
+        for (uint32_t cols : colsList) {
+            for (uint32_t rows : rowsList) {
+                for (float w : weights) {
+                    const auto plan = deep2::Quant::CalculateRowSplitIndex(rows, cols, type, w);
+                    ++checked;
+
+                    if (plan.device0Rows + plan.device1Rows != rows) allExact = false;
+
+                    const uint64_t expectTotal = static_cast<uint64_t>(rows) * plan.rowStride;
+                    if (plan.device0Bytes + plan.device1Bytes != expectTotal) allExact = false;
+
+                    // The split point must land on a block boundary.
+                    if (blockBytes > 0) {
+                        if ((plan.device0Bytes % blockBytes) != 0) allAligned = false;
+                        if ((plan.device1Bytes % blockBytes) != 0) allAligned = false;
+                    }
+                }
+            }
+        }
+    }
+
+    std::cout << "[INFO] row-split property sweep: " << checked << " combinations\n";
+    expect(allExact, "row split conserves rows and bytes across every shape");
+    expect(allAligned, "every row split lands on a quant block boundary");
+}
+
+void run_row_split_layout_vectors() {
+    std::cout << "----------------------------------------------------------------------\n";
+    std::cout << "Gate 0: Asymmetric VRAM Row-Split Layout Vectors\n";
+    std::cout << "----------------------------------------------------------------------\n";
+
+    for (const SplitTestVector& v : kSplitVectors) {
+        const auto plan = deep2::Quant::CalculateRowSplitIndex(
+            v.totalRows, v.cols, v.type, v.weight, v.budgetBytes0, v.budgetBytes1);
+
+        bool ok = plan.device0Rows == v.expectedDevice0Rows &&
+                  plan.rowStride == v.expectedRowStride &&
+                  plan.device0Bytes == v.expectedDevice0Bytes &&
+                  plan.withinBudget == v.expectedWithinBudget;
+        if (!ok) {
+            std::cout << "  " << v.name << ": got rows=" << plan.device0Rows
+                      << " stride=" << plan.rowStride
+                      << " bytes0=" << plan.device0Bytes
+                      << " inBudget=" << (plan.withinBudget ? 1 : 0)
+                      << " | expected rows=" << v.expectedDevice0Rows
+                      << " stride=" << v.expectedRowStride
+                      << " bytes0=" << v.expectedDevice0Bytes
+                      << " inBudget=" << (v.expectedWithinBudget ? 1 : 0) << "\n";
+        }
+        expect(ok, v.name);
+    }
+
+    run_row_split_property_sweep();
+
+    if (g_layoutFailures) {
+        std::cerr << "[-] Gate 0 FAILED: " << g_layoutFailures << " layout vector(s) wrong\n";
+        std::exit(1);
+    }
+    std::cout << "[OK] Gate 0: Asymmetric VRAM Row-Split Layout Vectors -> PASS\n";
+}
+
+}  // namespace
+
 int wmain(int argc, wchar_t* argv[]) {
+    // The layout vectors are self-contained and run first, so they also cover
+    // the CTest entry that invokes this binary without a model.
+    run_row_split_layout_vectors();
+
     if (argc < 4) {
         std::wcout << L"Usage: production_smoke_test.exe <manifest.rom> <base_shard_path> <total_shards>\n";
         std::wcout << L"Example: production_smoke_test.exe model.rom G:\\~dev\\rawrxd\\models\\DeepSeek-R1 11\n";
-        return 1;
+        std::wcout << L"(no arguments: only the self-contained layout vectors are run)\n";
+        return 0;
     }
     run_production_stress_test(argv[1], argv[2], static_cast<uint32_t>(_wtoi(argv[3])));
     return 0;

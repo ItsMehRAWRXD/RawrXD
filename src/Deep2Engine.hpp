@@ -7,6 +7,8 @@
 #include "VulkanDeviceAllocator.hpp"
 #include "Win32RomEmulator.hpp"
 #include "MasmCoreKernels.hpp"
+#include "ggml.h"
+#include "core/QuantBlockTraits.hpp"
 
 #include <vector>
 #include <string>
@@ -55,7 +57,38 @@ struct Deep2Engine {
 
     // Multi-GPU support (real Vulkan device init from Move 5/11)
     bool InitializeMultiGPU();
-    size_t CalculateRowSplitIndex(size_t totalRows) const;
+
+    // Split a tensor's rows across two devices of unequal VRAM.
+    //
+    // `weightOverride` >= 0 replaces the weight measured from real VRAM at
+    // InitializeMultiGPU() time. The golden-vector tests pass a fixed value
+    // to get a deterministic split; pass -1 to use the measured weight.
+    //
+    // `budgetBytes0` / `budgetBytes1` are optional per-device VRAM
+    // allowances. 0 means unconstrained.
+    //
+    // The split always lands on a row boundary, which is a block boundary in
+    // this layout, so no block is ever split. Returns the number of rows
+    // assigned to device 0.
+    size_t CalculateRowSplitIndex(uint32_t totalRows,
+                                  uint32_t cols,
+                                  ggml_type type,
+                                  float weightOverride = -1.0f,
+                                  uint64_t budgetBytes0 = 0,
+                                  uint64_t budgetBytes1 = 0) const;
+
+    // Full split plan, including the byte accounting and the budget verdict.
+    deep2::Quant::RowSplitPlan PlanRowSplit(uint32_t totalRows,
+                                             uint32_t cols,
+                                             ggml_type type,
+                                             float weightOverride = -1.0f,
+                                             uint64_t budgetBytes0 = 0,
+                                             uint64_t budgetBytes1 = 0) const;
+
+    // Per-device allocation weights measured from the real VRAM at
+    // InitializeMultiGPU() time. Index 0 is device 0.
+    std::vector<float>  m_deviceAllocationWeights;
+    std::vector<size_t> m_deviceVramBytes;
 
     // ---- ROM exec bridge (Move 5) ----
     struct TensorHandle {
