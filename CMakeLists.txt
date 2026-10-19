@@ -225,3 +225,10 @@ add_test(NAME TokenizerRoundTrip_Phi3
     COMMAND tokenizer_test "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+# The row-split GEMV must reproduce the single-device GEMV exactly, so the
+# multi-device path cannot change the arithmetic.
+add_test(NAME RowSplitGemvParity
+    COMMAND rom_audit gemv-split
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
