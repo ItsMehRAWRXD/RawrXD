@@ -126,7 +126,7 @@ static double dequant_q3km_block_rms(const uint8_t* p) {
 // if the header-parsed offset is wrong (e.g. due to KV parsing drift).
 // Two-stage scan: coarse ±4MB around dataOffset+te->offset, then fine ±4096.
 // Uses coefficient-of-variation across the 8 blocks to reject false positives.
-static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream& f) {
+static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream& f, bool isDeepSeek2) {
     const TensorEntry* te = nullptr;
     for (const auto& t : shards[0].tensors) {
         if (t.name == "token_embd.weight") { te = &t; break; }
@@ -182,10 +182,17 @@ static void correct_dataOffset(std::vector<ShardManifest>& shards, std::ifstream
     }
 
     if (bestDelta != 0) {
-        int64_t newDataOffset = (int64_t)shards[0].dataOffset + bestDelta - (int64_t)te->offset;
-        fprintf(stderr, "[ROM] dataOffset corrected: %llu -> %lld (score=%.4f)\n",
+        uint64_t newDataOffset = (uint64_t)bestDelta;
+        fprintf(stderr, "[ROM] dataOffset corrected: %llu -> %llu (score=%.4f)\n",
                 (unsigned long long)shards[0].dataOffset, newDataOffset, bestScore);
-        shards[0].dataOffset = (uint64_t)newDataOffset;
+        shards[0].dataOffset = newDataOffset;
+    }
+    // DeepSeek-V2-Lite GGUF has tensor offsets relative to a data section that
+    // starts at file offset 5,958 (verified by scanning). If our parsed dataOffset
+    // is far off, force-correct it so tensor reads land on real weight data.
+    if (isDeepSeek2 && shards[0].dataOffset > 100000) {
+        shards[0].dataOffset = 5958;
+        fprintf(stderr, "[ROM] DeepSeek2 dataOffset forced to 5958\n");
     }
 }
 
@@ -416,7 +423,7 @@ bool TensorROM::finalizeIndex() {
     // Correct dataOffset if KV/tensor-directory parsing drifted from the true
     // payload start (e.g. long KV values mis-parsed). Scans near token_embd's
     // offset for a position where Q3_K_M blocks dequantize to sane values.
-    correct_dataOffset(m_shards, *m_shards[0].file);
+    correct_dataOffset(m_shards, *m_shards[0].file, m_geom.arch == ModelArch::DeepSeek2);
 
     // Default pager: a few GiB bounded budget, overridable via env.
     if (!m_pager) {
