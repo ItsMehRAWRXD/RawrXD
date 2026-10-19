@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -40,8 +41,17 @@ namespace Deep2Engine::Emulator {
             } else if (arrayType == 9) {
                 for (uint64_t i = 0; i < arrayLen; ++i) SkipGGUFValue(arrayType, f);
             } else {
-                uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                f.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
+                // Array element size by GGUF type
+                uint64_t elem_size = 0;
+                if (arrayType <= 7) {
+                    uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
+                    elem_size = sz[arrayType];
+                } else if (arrayType == 10 || arrayType == 11 || arrayType == 12) {
+                    elem_size = 8; // UINT64 / INT64 / FLOAT64
+                } else {
+                    elem_size = 4;
+                }
+                f.seekg(static_cast<std::streamoff>(arrayLen * elem_size), std::ios::cur);
             }
         } else if (type == 10 || type == 11 || type == 12) {
             // UINT64 / INT64 / FLOAT64: simple 8-byte value
@@ -54,8 +64,16 @@ namespace Deep2Engine::Emulator {
             if (sub == 9) {
                 for (uint64_t i = 0; i < len; ++i) ReadGGUFStr(f);
             } else {
-                uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                f.seekg(len * sz[sub & 7], std::ios::cur);
+                uint64_t elem_size = 0;
+                if (sub <= 7) {
+                    uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
+                    elem_size = sz[sub];
+                } else if (sub == 10 || sub == 11 || sub == 12) {
+                    elem_size = 8;
+                } else {
+                    elem_size = 4;
+                }
+                f.seekg(static_cast<std::streamoff>(len * elem_size), std::ios::cur);
             }
         }
     }
@@ -155,7 +173,8 @@ int wmain(int argc, wchar_t* argv[]) {
         std::ifstream file;
         uint64_t tensor_count = 0;
         uint64_t kv_count = 0;
-        uint64_t data_offset = 0;
+        uint64_t data_offset = 0;   // Start of tensor DATA section (64-byte aligned)
+        uint64_t tensor_dir_offset = 0; // Start of tensor DIRECTORY (right after KV metadata)
         uint64_t data_size = 0;
         std::string detected_arch;
         uint32_t num_layers = 0;
@@ -192,9 +211,16 @@ int wmain(int argc, wchar_t* argv[]) {
 
         // Parse KV metadata for architecture info
         for (uint64_t i = 0; i < ctx.kv_count; ++i) {
+            uint64_t kv_start = ctx.file.tellg();
             std::string key = ReadGGUFStr(ctx.file);
             uint32_t type = 0;
             ctx.file.read(reinterpret_cast<char*>(&type), sizeof(type));
+            uint64_t kv_end = ctx.file.tellg();
+            if (s == 0) {
+                std::wcout << L"    [KV" << i << L"] key='" << key.c_str() << L"' type=" << type
+                           << L" start=0x" << std::hex << kv_start << std::dec
+                           << L" end=0x" << std::hex << kv_end << std::dec << L"\n";
+            }
 
             if (key == "general.architecture") {
                 ctx.detected_arch = ReadGGUFStr(ctx.file);
@@ -223,13 +249,13 @@ int wmain(int argc, wchar_t* argv[]) {
         if (ctx.hidden_dim == 0) ctx.hidden_dim = 3072;
         if (ctx.kv_heads == 0) ctx.kv_heads = 32;
 
-        // Align to 64 bytes: payload starts here
+        // Align to 64 bytes: tensor DATA payload starts here
         uint64_t pos = static_cast<uint64_t>(ctx.file.tellg());
-        ctx.data_offset = Align64(pos);
+        ctx.tensor_dir_offset = pos;       // Tensor directory starts right after KV metadata
+        ctx.data_offset = Align64(pos);    // Tensor data starts at 64-byte aligned offset
         ctx.file.seekg(0, std::ios::end);
         uint64_t end = static_cast<uint64_t>(ctx.file.tellg());
         ctx.data_size = (end > ctx.data_offset) ? (end - ctx.data_offset) : 0;
-        ctx.file.seekg(ctx.data_offset, std::ios::beg);
         ctx.valid = true;
 
         shards.push_back(std::move(ctx));
@@ -258,21 +284,16 @@ int wmain(int argc, wchar_t* argv[]) {
 
     for (uint32_t s = 0; s < shard_count; ++s) {
         auto& ctx = shards[s];
-        ctx.file.seekg(ctx.data_offset, std::ios::beg); // re-read tensor directory
-
-        // Tensor directory follows KV directory; we already advanced past it in Pass 1,
-        // but we need to re-read from the tensor info start. Re-compute:
-        // The file position after KV parsing is the tensor directory start.
-        // We saved nothing, so re-seek to data_offset then back up is not possible.
-        // Instead, we re-open and re-parse quickly: skip to tensor dir.
-        // Simplest: re-read from data_offset backward is not supported, so re-open.
+        // Re-open and re-parse to reach the tensor directory reliably.
+        // Tensor directory starts immediately after KV metadata; tensor DATA starts
+        // at 64-byte aligned data_offset. GGUF tensor offsets are relative to data_offset.
         ctx.file.close();
         ctx.file.open(ctx.path, std::ios::binary);
         if (!ctx.file.is_open()) {
             std::wcerr << L"[-] Failed to reopen shard " << s << L"\n";
             return 1;
         }
-        // Skip header
+        // Skip magic + version
         ctx.file.seekg(8, std::ios::beg);
         uint64_t tc, kvc;
         ctx.file.read(reinterpret_cast<char*>(&tc), 8);
@@ -293,13 +314,26 @@ int wmain(int argc, wchar_t* argv[]) {
             if (n_dims > 4) n_dims = 4;
             if (n_dims > 0) ctx.file.read(reinterpret_cast<char*>(gt.dimensions), n_dims * 4);
             ctx.file.read(reinterpret_cast<char*>(&gt.type), sizeof(gt.type));
-            ctx.file.read(reinterpret_cast<char*>(&gt.absolute_offset), 8);
+            // GGUF tensor offsets are relative to the start of the tensor DATA section;
+            // add data_offset to get the absolute file offset.
+            uint64_t gguf_offset = 0;
+            ctx.file.read(reinterpret_cast<char*>(&gguf_offset), 8);
+            gt.absolute_offset = ctx.data_offset + gguf_offset;
             gt.shard_id = s;
 
             uint64_t bytes = CalcTensorBytes(gt.type,
                 std::vector<uint64_t>(gt.dimensions, gt.dimensions + n_dims));
             gt.tensor_bytes = bytes;
             cumulative_bytes += bytes;
+
+            if (s == 0 && t < 10) {
+                std::wcout << L"    [T" << t << L"] '" << gt.name.c_str() << L"' n_dims=" << n_dims
+                           << L" type=" << gt.type << L" dims=("
+                           << gt.dimensions[0] << L"," << gt.dimensions[1] << L"," << gt.dimensions[2] << L"," << gt.dimensions[3] << L")"
+                           << L" gguf_off=0x" << std::hex << gguf_offset << std::dec
+                           << L" abs_off=0x" << std::hex << gt.absolute_offset << std::dec
+                           << L" bytes=" << bytes << L"\n";
+            }
 
             global_tensors.push_back(std::move(gt));
         }

@@ -8,8 +8,9 @@
 
 namespace Deep2Rom::Engine {
 
-    ALIGN_64 static float tls_hidden_states[16384];
-    ALIGN_64 static float tls_output_logits[4096];
+    // Forward declare TLS arrays (defined in UniversalRunner.cpp)
+    extern ALIGN_64 float tls_hidden_states[16384];
+    extern ALIGN_64 float tls_output_logits[4096];
 
     class UniversalRunner {
     public:

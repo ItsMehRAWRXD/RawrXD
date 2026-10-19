@@ -27,13 +27,16 @@ add_executable(Deep2Engine_Benchmark
     src/VulkanStagingPipeline.cpp
 )
 
-add_executable(gguf2rom
-    src/gguf2rom.cpp
-)
+# Only build Windows-specific targets on Windows
+if(WIN32)
+    add_executable(gguf2rom
+        src/gguf2rom.cpp
+    )
 
-add_executable(gguf2rom_ms
-    src/gguf2rom_ms.cpp
-)
+    add_executable(gguf2rom_ms
+        src/gguf2rom_ms.cpp
+    )
+endif()
 
 add_executable(test_metadata_parity
     src/test_metadata_parity.cpp
@@ -42,6 +45,12 @@ add_executable(test_metadata_parity
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
+    src/core/VulkanStagingPipeline.cpp
+    src/core/MultiShardFlickerManager.cpp
+    src/core/PrefetchQueue.cpp
+    src/core/PerformanceProfiler.cpp
+    src/core/HereticWeightModifier.cpp
+    src/core/UniversalRunner.cpp
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
