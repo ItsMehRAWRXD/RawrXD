@@ -156,8 +156,10 @@ inline size_t SelectPrefillChunkSize(size_t promptLen, size_t hiddenDim,
     if (promptLen <= 1) return promptLen;
     const char* env = std::getenv("DEEP2_PREFILL_CHUNK");
     if (env && *env) {
-        const long v = std::strtol(env, nullptr, 10);
-        if (v > 0) return static_cast<size_t>(v);
+        char* end = nullptr;
+        errno = 0;
+        const long v = std::strtol(env, &end, 10);
+        if (errno == 0 && end != env && *end == '\0' && v > 0) return static_cast<size_t>(v);
     }
     const size_t target = 32;
     return promptLen < target ? promptLen : target;

@@ -224,3 +224,12 @@ build_ninja/
 __run_output*.txt
 build_qt_free/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp
 
+# ---- 2026-10-19 D1 scaffolding: the local MSVC build tree and the pruned
+# model files are machine artifacts, not source. The pruned model is a
+# multi-GB derivative of a model that is already on disk, and it must never
+# enter the index. The build tree is named with an underscore, which the
+# build-*/ rules above do not cover. ----
+build_msvc/
+*.gguf.pruned
+
+
