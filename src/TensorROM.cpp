@@ -337,6 +337,7 @@ bool TensorROM::addShard(const std::string& path) {
     ShardManifest manifest;
     manifest.path = path;
     manifest.file = std::move(file);
+    manifest.fileMutex = std::make_shared<std::mutex>();
 
     if (!parseShard(*manifest.file, manifest)) return false;
 
@@ -561,6 +562,21 @@ bool TensorROM::readShardRange(size_t shardIndex, uint64_t fileOffset,
     if (fileOffset >= m.dataOffset + m.dataSize) return false;
     uint64_t avail = (m.dataOffset + m.dataSize) - fileOffset;
     if (size > avail) size = avail;
+
+    // The stream carries its own position and error state, so the seek and
+    // the read have to be one transaction. A prefetch thread and a demand
+    // thread can both be inside this function for the same shard, and two
+    // interleaved seek-and-read sequences on one ifstream hand each thread a
+    // mix of the other's bytes.
+    if (m.fileMutex) {
+        std::lock_guard<std::mutex> lock(*m.fileMutex);
+        return readShardRangeLocked(m, fileOffset, buf, size);
+    }
+    return readShardRangeLocked(m, fileOffset, buf, size);
+}
+
+bool TensorROM::readShardRangeLocked(const ShardManifest& m, uint64_t fileOffset,
+                                     uint8_t* buf, uint64_t size) const {
     auto& f = *m.file;
     f.clear();
     f.seekg(static_cast<std::streamoff>(fileOffset), std::ios::beg);

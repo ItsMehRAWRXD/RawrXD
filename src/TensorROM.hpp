@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <memory>
 #include <fstream>
+#include <mutex>
 
 namespace deep2 {
 
@@ -35,6 +36,18 @@ struct ShardManifest {
     uint64_t dataSize = 0;     // payload bytes from dataOffset to EOF
     std::vector<TensorEntry> tensors;   // offsets are relative to dataOffset
     std::unique_ptr<std::ifstream> file; // kept open for paged reads
+
+    // Guards the seek-and-read transaction on `file`.
+    //
+    // std::ifstream keeps its position and error state in the stream object
+    // itself, so two threads that seek and read the same stream interleave
+    // their reads and each gets a mix of the other's bytes. The pager issues
+    // demand loads from the calling thread and prefetch loads from a
+    // background thread, so both can be in flight on the same shard at once.
+    //
+    // A shared_ptr keeps the manifest movable, which std::vector needs when
+    // the shard list grows.
+    std::shared_ptr<std::mutex> fileMutex;
 };
 
 // Master architecture/geometry metadata, merged from shard 0 key-value pairs.
@@ -129,6 +142,10 @@ public:
 
 private:
     bool parseShard(std::ifstream& f, ShardManifest& manifest);
+
+    // The body of readShardRange, run with the shard's file mutex held.
+    bool readShardRangeLocked(const ShardManifest& m, uint64_t fileOffset,
+                              uint8_t* buf, uint64_t size) const;
 
     std::vector<ShardManifest> m_shards;
     // tensor name -> (shard index, entry index within that shard)

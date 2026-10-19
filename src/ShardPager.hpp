@@ -75,8 +75,22 @@ private:
     }
 
     void touch(Page* page);              // move to front of LRU
-    bool loadPage(Page* page);
+    bool loadPage(Page* page);           // issues the storage read; no cache state
     void evictToFit(std::size_t neededBytes);
+    // The page currently being inserted, which the eviction scan must not
+    // remove. Null outside an insert.
+    Page* m_protected = nullptr;
+
+    // Inserts a page whose data has already been read into the index and the
+    // LRU. The caller must hold m_mutex.
+    //
+    // If another thread inserted the same page while this one was being read,
+    // the resident page is returned and `fresh` is discarded, so a page is
+    // never in the index twice.
+    //
+    // `takeLease` adds a lease to the resident page. A demand load takes one;
+    // a prefetch inserts the page unleased, so it can be evicted again.
+    Page* insertResident(Page* fresh, bool takeLease);
 
     std::size_t m_pageSize;
     std::size_t m_capacityBytes;

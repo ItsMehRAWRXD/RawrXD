@@ -158,6 +158,10 @@ bool Deep2Engine::gemvFloatSplit(const float* W, const float* x, float* y,
 // plan, each device runs the GEMV over the rows it owns, and the two results
 // are concatenated. Each device sees a contiguous slice of the same weight
 // matrix, so the result is identical to a single-device GEMV.
+//
+// The two halves are submitted before either is waited on, so the devices run
+// at the same time. vulkanGemvSplitSequential below runs the same split with
+// the devices in series, and the two are measured against each other.
 bool Deep2Engine::vulkanGemvSplit(const deep2::VulkanDevice::Gpu& gpu0,
                                   const deep2::VulkanDevice::Gpu& gpu1,
                                   const deep2::TensorView& wView,
@@ -198,28 +202,139 @@ bool Deep2Engine::vulkanGemvSplit(const deep2::VulkanDevice::Gpu& gpu0,
         return vulkanGemv(gpu0, wView, xView, y);
     }
 
-    const uint64_t rowStride = cols * sizeof(float);
+    // Device 0 owns rows [0, splitRow), device 1 owns rows [splitRow, rows).
+    //
+    // The two halves are prepared, submitted and collected as separate
+    // phases so the work overlaps:
+    //
+    //   prepare(0) -> submit(0) -> prepare(1) -> submit(1) -> wait(0) -> wait(1)
+    //
+    // The first submit puts device 0's dispatch on its queue, so the GPU
+    // starts on it while the host is still copying device 1's weights
+    // across the bus. The waits come last and are sequential, which is what
+    // the Vulkan specification requires: a fence wait must not be issued on
+    // a device whose submission has not been made yet.
+    //
+    // Each device has its own VkDevice, queue, command pool and cached
+    // program, so the two dispatches share no mutable Vulkan state and can
+    // be in flight at the same time.
+    GemvScratch scratch0;
+    GemvScratch scratch1;
+    deep2::VulkanProgram::Dispatch dispatch0;
+    deep2::VulkanProgram::Dispatch dispatch1;
 
     // Device 0 owns rows [0, splitRow).
-    deep2::TensorView w0 = wView;
-    w0.dims[0] = splitRow;
+    if (!prepareGemv(gpu0, wView, xView, 0, static_cast<uint32_t>(splitRow), scratch0)) {
+        return false;
+    }
+    if (!submitGemv(gpu0, scratch0, dispatch0)) {
+        releaseGemv(gpu0, scratch0);
+        return false;
+    }
+
+    // Device 1 owns rows [splitRow, rows). The matrix is row major, so the
+    // first element of row r is W[r * cols].
+    if (!prepareGemv(gpu1, wView, xView, static_cast<uint32_t>(splitRow),
+                     static_cast<uint32_t>(rows - splitRow), scratch1)) {
+        releaseGemv(gpu0, scratch0);
+        return false;
+    }
+    if (!submitGemv(gpu1, scratch1, dispatch1)) {
+        releaseGemv(gpu0, scratch0);
+        releaseGemv(gpu1, scratch1);
+        return false;
+    }
+
+    // Both dispatches are now in flight. Waiting on them in turn lets each
+    // device run to completion while the host is blocked on the other.
+    const bool ok0 = dispatch0.wait();
+    const bool ok1 = dispatch1.wait();
+    if (!ok0 || !ok1) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] a device dispatch failed\n");
+        releaseGemv(gpu0, scratch0);
+        releaseGemv(gpu1, scratch1);
+        return false;
+    }
+
     std::vector<float> y0;
-    if (!vulkanGemv(gpu0, w0, xView, y0)) return false;
+    std::vector<float> y1;
+    collectGemv(gpu0, scratch0, y0);
+    collectGemv(gpu1, scratch1, y1);
+
     if (y0.size() != splitRow) {
         fprintf(stderr, "[VULKAN_GEMV_SPLIT] device 0 produced %zu rows, expected %llu\n",
                 y0.size(), static_cast<unsigned long long>(splitRow));
         return false;
     }
-
-    // Device 1 owns rows [splitRow, rows).
-    deep2::TensorView w1 = wView;
-    w1.dims[0] = rows - splitRow;
-    w1.data = wView.data + (splitRow * rowStride);
-    std::vector<float> y1;
-    if (!vulkanGemv(gpu1, w1, xView, y1)) return false;
     if (y1.size() != rows - splitRow) {
         fprintf(stderr, "[VULKAN_GEMV_SPLIT] device 1 produced %zu rows, expected %llu\n",
                 y1.size(), static_cast<unsigned long long>(rows - splitRow));
+        return false;
+    }
+
+    std::copy(y0.begin(), y0.end(), y.begin());
+    std::copy(y1.begin(), y1.end(), y.begin() + splitRow);
+    return true;
+}
+
+bool Deep2Engine::vulkanGemvSplitSequential(const deep2::VulkanDevice::Gpu& gpu0,
+                                            const deep2::VulkanDevice::Gpu& gpu1,
+                                            const deep2::TensorView& wView,
+                                            const deep2::TensorView& xView,
+                                            std::vector<float>& y,
+                                            uint32_t* outSplitRow) {
+    if (!vulkanReady || !vulkan) return false;
+    if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
+        !wView.data || !xView.data) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] requires contiguous f32 views\n");
+        return false;
+    }
+    if (wView.dims.size() < 2) return false;
+
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+    if (rows == 0 || cols == 0) return false;
+
+    const uint64_t totalVram = gpu0.vramBytes + gpu1.vramBytes;
+    const float weight = totalVram ? static_cast<float>(gpu0.vramBytes) / static_cast<float>(totalVram) : 0.5f;
+
+    const deep2::Quant::RowSplitPlan plan =
+        PlanRowSplit(static_cast<uint32_t>(rows), static_cast<uint32_t>(cols),
+                     GGML_TYPE_F32, weight, gpu0.vramBytes, gpu1.vramBytes);
+    const uint64_t splitRow = plan.device0Rows;
+
+    y.assign(static_cast<size_t>(rows), 0.0f);
+    if (outSplitRow) *outSplitRow = static_cast<uint32_t>(splitRow);
+
+    if (splitRow == 0 || splitRow >= rows) {
+        return vulkanGemv(gpu0, wView, xView, y);
+    }
+
+    // Each device is prepared, submitted, waited on and collected before the
+    // next one is touched.
+    std::vector<float> y0;
+    std::vector<float> y1;
+
+    {
+        GemvScratch scratch;
+        deep2::VulkanProgram::Dispatch dispatch;
+        if (!prepareGemv(gpu0, wView, xView, 0, static_cast<uint32_t>(splitRow), scratch)) return false;
+        if (!submitGemv(gpu0, scratch, dispatch)) { releaseGemv(gpu0, scratch); return false; }
+        if (!dispatch.wait()) { releaseGemv(gpu0, scratch); return false; }
+        collectGemv(gpu0, scratch, y0);
+    }
+    {
+        GemvScratch scratch;
+        deep2::VulkanProgram::Dispatch dispatch;
+        if (!prepareGemv(gpu1, wView, xView, static_cast<uint32_t>(splitRow),
+                         static_cast<uint32_t>(rows - splitRow), scratch)) return false;
+        if (!submitGemv(gpu1, scratch, dispatch)) { releaseGemv(gpu1, scratch); return false; }
+        if (!dispatch.wait()) { releaseGemv(gpu1, scratch); return false; }
+        collectGemv(gpu1, scratch, y1);
+    }
+
+    if (y0.size() != splitRow || y1.size() != rows - splitRow) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] a device produced the wrong row count\n");
         return false;
     }
 

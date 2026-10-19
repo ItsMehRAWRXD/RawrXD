@@ -4,6 +4,71 @@
 #include <vector>
 #include <xmmintrin.h>
 #include <pmmintrin.h>
+#include <chrono>
+#include <streambuf>
+
+// A streambuf that swallows everything written to it.
+//
+// The forward pass narrates what it is doing on stdout. That narration is
+// useful when a human is watching and is pure overhead when the run is being
+// timed, so the benchmark mode points stdout at one of these for the
+// measured region and restores it afterwards.
+class NullStreamBuf : public std::streambuf {
+protected:
+    int overflow(int c) override { return c; }
+};
+
+// Run a fixed number of single-token forward passes and report the sustained
+// decode rate.
+//
+// The metric is printed on one line with fixed key=value pairs so the
+// regression gate can parse it without guessing at the prose around it:
+//
+//   [TPS] decode_tps=0.6482 tokens=8 elapsed_ms=12345.6 steps=8
+//
+// The engine's own progress output is muted for the measured region, so the
+// number reflects the work rather than the logging.
+void runThroughputBenchmark(Deep2Engine& engine, int steps) {
+    if (steps < 1) steps = 1;
+
+    std::vector<uint32_t> inputTokens = { 1 };
+    std::vector<float> logits;
+    std::vector<float> baseline;
+
+    // Warm the path up once so the first timed step is not paying for the
+    // one-off setup the loader and the first dequantization do.
+    if (!engine.executePhi3ROMForwardPass(inputTokens, logits, baseline)) {
+        std::cerr << "[BENCH] warmup forward pass failed\n";
+        return;
+    }
+
+    NullStreamBuf nullBuf;
+    std::streambuf* saved = std::cout.rdbuf(&nullBuf);
+
+    const auto start = std::chrono::steady_clock::now();
+    int completed = 0;
+    for (int i = 0; i < steps; ++i) {
+        if (!engine.executePhi3ROMForwardPass(inputTokens, logits, baseline)) break;
+        ++completed;
+    }
+    const double elapsedMs = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - start).count();
+
+    std::cout.rdbuf(saved);
+
+    if (completed == 0) {
+        std::cerr << "[BENCH] no forward pass completed\n";
+        return;
+    }
+
+    const double tps = elapsedMs > 0.0 ? (static_cast<double>(completed) * 1000.0 / elapsedMs) : 0.0;
+    std::cout << "[BENCH] steps=" << completed << " elapsed_ms=" << elapsedMs << "\n";
+    std::cout << "[TPS] decode_tps=" << tps
+              << " tokens=" << completed
+              << " elapsed_ms=" << elapsedMs
+              << " steps=" << completed << "\n";
+    std::cout.flush();
+}
 
 void runMove10Validation(Deep2Engine& engine) {
     std::vector<uint32_t> inputTokens = { 1 };  // Single token for fast boundary probe test
@@ -106,6 +171,61 @@ static void runResidentTensorParity(Deep2Engine& engine) {
         engine.releaseResidentSplitWeight(resident);
     }
 }
+// Report the device-resident key and value cache plan.
+//
+// The keys and values are produced by the projection GEMV, so the rows
+// already exist on the device when the projection finishes; the cache is
+// where they are kept between positions. How much context fits is a
+// question about the cards rather than about the model, because a model's
+// declared maximum context is often far larger than the VRAM on the
+// machine. This reports the plan and exercises the allocator's refusal.
+static void runKvCachePlan(Deep2Engine& engine) {
+    const auto& geometry = engine.rom.geometry();
+    const uint32_t layers = static_cast<uint32_t>(geometry.numLayers);
+    const uint32_t hidden = static_cast<uint32_t>(geometry.hiddenDim);
+
+    std::cout << "\n=== DEVICE KV CACHE PLAN ===\n";
+    std::cout << "layers=" << layers << " hidden=" << hidden
+              << " declared max context=" << geometry.maxSeqLen << "\n";
+
+    engine.vulkan = std::make_unique<deep2::VulkanDevice>();
+    engine.vulkanReady = engine.vulkan->init();
+    if (!engine.vulkanReady) {
+        std::cout << "no Vulkan device available\n";
+        return;
+    }
+
+    uint64_t totalVram = 0;
+    for (size_t i = 0; i < engine.vulkan->gpuCount(); ++i) {
+        const auto* g = engine.vulkan->gpu(i);
+        totalVram += g->vramBytes;
+        std::cout << "  gpu" << i << ": " << g->name << "  "
+                  << (g->vramBytes / (1024ull * 1024ull * 1024ull)) << " GB\n";
+    }
+    std::cout << "  total VRAM: " << (totalVram / (1024ull * 1024ull * 1024ull)) << " GB\n\n";
+
+    const uint32_t windows[] = {512, 2048, 4096, 8192, 16384,
+                                 static_cast<uint32_t>(geometry.maxSeqLen)};
+    for (uint32_t seq : windows) {
+        const VkDeviceSize need = deep2::VulkanDevice::KvCacheBytes(layers, seq, hidden);
+        std::cout << "  context " << seq << ": cache needs "
+                  << (need / (1024ull * 1024ull * 1024ull)) << " GB"
+                  << (need > totalVram ? "   DOES NOT FIT" : "   fits") << "\n";
+
+        // Exercise the allocator so the refusal path is actually taken, not
+        // just computed.
+        deep2::VulkanDevice::KvCache cache;
+        const auto* g = engine.vulkan->primary();
+        if (g) {
+            const bool ok = engine.vulkan->createKvCache(*g, layers, seq, hidden, totalVram, cache);
+            std::cout << "      allocate on " << g->name << ": "
+                      << (ok ? "accepted" : "REFUSED") << "\n";
+            if (ok) {
+                engine.vulkan->destroyKvCache(*g, cache);
+            }
+        }
+    }
+}
 static void runForwardParity(Deep2Engine& engine) {
     const std::vector<uint32_t> inputTokens = { 1, 100, 200 };
 
@@ -177,6 +297,7 @@ int main(int argc, char* argv[]) {
         std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
     std::cout << "       " << argv[0] << " --forward-parity <path_to_model.gguf> [manifest.json]\n";
+        std::cout << "       " << argv[0] << " --benchmark <path_to_model.gguf> [manifest.json] [steps]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -187,6 +308,7 @@ int main(int argc, char* argv[]) {
         std::cout << "       " << argv[0] << " --verify-init-only <path_to_model.gguf> [manifest.json]\n";
         std::cout << "       " << argv[0] << " --move10-validate <path_to_model.gguf> [manifest.json]\n";
     std::cout << "       " << argv[0] << " --forward-parity <path_to_model.gguf> [manifest.json]\n";
+        std::cout << "       " << argv[0] << " --benchmark <path_to_model.gguf> [manifest.json] [steps]\n";
         std::cout << "       " << argv[0] << " --help\n";
         return 0;
     }
@@ -195,6 +317,9 @@ int main(int argc, char* argv[]) {
     bool forceWholeLoader = false;
     bool runMove10 = false;
     bool runParity = false;
+    bool runKvPlan = false;
+    bool runBenchmark = false;
+    int benchmarkSteps = 3;
     std::string modelPath;
     std::string manifestPath;
 
@@ -216,8 +341,24 @@ int main(int argc, char* argv[]) {
             argIndex++;
             continue;
         }
+        if (a == "--benchmark") {
+            runBenchmark = true;
+            argIndex++;
+            continue;
+        }
+        if (a == "--kv-cache-plan") {
+            runKvPlan = true;
+            argIndex++;
+            continue;
+        }
         if (a == "--whole-loader") { forceWholeLoader = true; argIndex++; continue; }
         if (modelPath.empty()) { modelPath = a; argIndex++; continue; }
+        if (a.size() > 1 && a[0] >= '0' && a[0] <= '9') {
+            // A bare number after the model is the benchmark step count.
+            benchmarkSteps = std::atoi(a.c_str());
+            argIndex++;
+            continue;
+        }
         manifestPath = a; argIndex++;
     }
 
@@ -237,10 +378,14 @@ int main(int argc, char* argv[]) {
     }
 
     // Check for Move 10 validation flag (already parsed above)
-    if (runParity) {
+    if (runKvPlan) {
+        runKvCachePlan(engine);
+    } else if (runParity) {
         runForwardParity(engine);
     } else if (runMove10) {
         runMove10Validation(engine);
+    } else if (runBenchmark) {
+        runThroughputBenchmark(engine, benchmarkSteps);
     } else {
         Deep2EngineExecuteInferenceStep(engine);
     }

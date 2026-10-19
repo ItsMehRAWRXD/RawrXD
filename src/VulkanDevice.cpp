@@ -173,6 +173,21 @@ bool VulkanDevice::dispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuf
     return program->dispatch(gpu, W, x, y, rows, cols);
 }
 
+bool VulkanDevice::beginDispatchProgram(const Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
+                                        uint32_t rows, uint32_t cols, VulkanDispatch& out) {
+    VulkanProgram* program = nullptr;
+    {
+        // The lock is only held for the lookup. The dispatch itself takes
+        // the program's own dispatch lock, so two devices can be dispatched
+        // at the same time.
+        std::lock_guard<std::mutex> lock(m_programMutex);
+        auto it = m_programs.find(gpu.device);
+        if (it == m_programs.end()) return false;
+        program = it->second.get();
+    }
+    return program->beginDispatch(gpu, W, x, y, rows, cols, out);
+}
+
 void VulkanDevice::destroyPrograms() {
     std::lock_guard<std::mutex> lock(m_programMutex);
     for (auto& entry : m_programs) {
@@ -180,6 +195,60 @@ void VulkanDevice::destroyPrograms() {
         entry.second->destroy(entry.first);
     }
     m_programs.clear();
+}
+
+bool VulkanDevice::createKvCache(const Gpu& gpu, uint32_t layers, uint32_t seqCapacity,
+                                 uint32_t hiddenDim, VkDeviceSize budgetBytes, KvCache& out) {
+    destroyKvCache(gpu, out);
+    if (layers == 0 || seqCapacity == 0 || hiddenDim == 0) return false;
+
+    const VkDeviceSize required = KvCacheBytes(layers, seqCapacity, hiddenDim);
+    const VkDeviceSize budget = budgetBytes ? budgetBytes : gpu.vramBytes;
+    if (required > budget) {
+        fprintf(stderr, "[VULKAN] KV cache of %llu bytes does not fit in %llu bytes on %s\n",
+                (unsigned long long)required, (unsigned long long)budget, gpu.name.c_str());
+        return false;
+    }
+
+    const VkDeviceSize perBuffer = required / 2;
+    if (!createBuffer(gpu, perBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.keyBuffer, out.keyMemory) ||
+        !createBuffer(gpu, perBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.valueBuffer, out.valueMemory)) {
+        destroyKvCache(gpu, out);
+        return false;
+    }
+    out.layers = layers;
+    out.seqCapacity = seqCapacity;
+    out.hiddenDim = hiddenDim;
+    return true;
+}
+
+void VulkanDevice::destroyKvCache(const Gpu& gpu, KvCache& cache) {
+    if (cache.keyBuffer != VK_NULL_HANDLE) destroyBuffer(gpu, cache.keyBuffer, cache.keyMemory);
+    if (cache.valueBuffer != VK_NULL_HANDLE) destroyBuffer(gpu, cache.valueBuffer, cache.valueMemory);
+    cache.keyBuffer = VK_NULL_HANDLE;
+    cache.valueBuffer = VK_NULL_HANDLE;
+    cache.keyMemory = VK_NULL_HANDLE;
+    cache.valueMemory = VK_NULL_HANDLE;
+    cache.layers = 0;
+    cache.seqCapacity = 0;
+    cache.hiddenDim = 0;
+}
+
+bool VulkanDevice::appendKvPosition(const Gpu& gpu, KvCache& cache, uint32_t layer,
+                                     uint32_t position, const float* keys, const float* values) {
+    if (cache.keyBuffer == VK_NULL_HANDLE || !keys || !values) return false;
+    if (layer >= cache.layers || position >= cache.seqCapacity) return false;
+
+    const VkDeviceSize rowBytes = static_cast<VkDeviceSize>(cache.hiddenDim) * sizeof(float);
+    const VkDeviceSize layerStride = static_cast<VkDeviceSize>(cache.seqCapacity) * rowBytes;
+    const VkDeviceSize offset = (static_cast<VkDeviceSize>(layer) * layerStride) +
+                                (static_cast<VkDeviceSize>(position) * rowBytes);
+
+    if (!uploadToBuffer(gpu, cache.keyBuffer, offset, keys, rowBytes)) return false;
+    if (!uploadToBuffer(gpu, cache.valueBuffer, offset, values, rowBytes)) return false;
+    return true;
 }
 
 bool VulkanDevice::pickMemoryType(const Gpu& gpu, uint32_t typeBits,
@@ -401,10 +470,23 @@ void VulkanProgram::destroy(VkDevice device) {
 
 bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
                              uint32_t rows, uint32_t cols) {
+    Dispatch d;
+    if (!beginDispatch(gpu, W, x, y, rows, cols, d)) return false;
+    return d.wait();
+}
+
+bool VulkanProgram::beginDispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer x, VkBuffer y,
+                                  uint32_t rows, uint32_t cols, Dispatch& out) {
     if (m_device == VK_NULL_HANDLE) return false;
-    // The descriptor set and the fence belong to this program, so a second
-    // dispatch on the same device has to wait for the first one.
-    std::lock_guard<std::mutex> lock(m_dispatchMutex);
+
+    // Take the program's dispatch lock for the whole lifetime of the
+    // dispatch. The descriptor set and the fence belong to this program, so
+    // a second dispatch on the same device has to wait for the first one:
+    // it would otherwise rewrite the descriptor set the first dispatch is
+    // still using and reset the fence it is still waiting on.
+    out.m_lock = std::unique_lock<std::mutex>(m_dispatchMutex);
+    if (!out.m_lock.owns_lock()) return false;
+
     m_queue = gpu.queue;
 
     VkDescriptorBufferInfo binfos[3] = {};
@@ -428,7 +510,10 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cbai.commandBufferCount = 1;
     VkCommandBuffer cmd = VK_NULL_HANDLE;
-    if (vkAllocateCommandBuffers(m_device, &cbai, &cmd) != VK_SUCCESS) return false;
+    if (vkAllocateCommandBuffers(m_device, &cbai, &cmd) != VK_SUCCESS) {
+        out.m_lock.unlock();
+        return false;
+    }
 
     VkCommandBufferBeginInfo cbi{};
     cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -449,10 +534,86 @@ bool VulkanProgram::dispatch(const VulkanDevice::Gpu& gpu, VkBuffer W, VkBuffer 
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    vkQueueSubmit(gpu.queue, 1, &si, m_fence);
-    vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
-    vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+    if (vkQueueSubmit(gpu.queue, 1, &si, m_fence) != VK_SUCCESS) {
+        vkFreeCommandBuffers(m_device, gpu.pool, 1, &cmd);
+        out.m_lock.unlock();
+        fprintf(stderr, "[VULKAN] vkQueueSubmit failed\n");
+        return false;
+    }
+
+    // The work is in flight. The handle owns the command buffer until the
+    // fence signals, and holds the dispatch lock until then.
+    out.m_program = this;
+    out.m_device = m_device;
+    out.m_pool = gpu.pool;
+    out.m_cmd = cmd;
+    out.m_fence = m_fence;
     return true;
+}
+
+// ---------------- VulkanDispatch ----------------
+
+VulkanDispatch::~VulkanDispatch() {
+    // A dispatch that is dropped without being waited on still has a
+    // command buffer in flight. Wait for it so the buffer is not freed
+    // while the device is still reading it.
+    wait();
+}
+
+VulkanDispatch::VulkanDispatch(VulkanDispatch&& other) noexcept
+    : m_program(other.m_program)
+    , m_device(other.m_device)
+    , m_pool(other.m_pool)
+    , m_cmd(other.m_cmd)
+    , m_fence(other.m_fence)
+    , m_lock(std::move(other.m_lock)) {
+    other.m_program = nullptr;
+    other.m_device = VK_NULL_HANDLE;
+    other.m_pool = VK_NULL_HANDLE;
+    other.m_cmd = VK_NULL_HANDLE;
+    other.m_fence = VK_NULL_HANDLE;
+}
+
+VulkanDispatch& VulkanDispatch::operator=(VulkanDispatch&& other) noexcept {
+    if (this != &other) {
+        wait();
+        m_program = other.m_program;
+        m_device = other.m_device;
+        m_pool = other.m_pool;
+        m_cmd = other.m_cmd;
+        m_fence = other.m_fence;
+        m_lock = std::move(other.m_lock);
+        other.m_program = nullptr;
+        other.m_device = VK_NULL_HANDLE;
+        other.m_pool = VK_NULL_HANDLE;
+        other.m_cmd = VK_NULL_HANDLE;
+        other.m_fence = VK_NULL_HANDLE;
+    }
+    return *this;
+}
+
+bool VulkanDispatch::wait() {
+    if (!m_program) return true;
+
+    const VkResult r = vkWaitForFences(m_device, 1, &m_fence, VK_TRUE, UINT64_MAX);
+
+    // The device is done with the command buffer now, so it can go back to
+    // the pool.
+    if (m_cmd != VK_NULL_HANDLE) {
+        vkFreeCommandBuffers(m_device, m_pool, 1, &m_cmd);
+        m_cmd = VK_NULL_HANDLE;
+    }
+
+    m_program = nullptr;
+    m_fence = VK_NULL_HANDLE;
+    m_device = VK_NULL_HANDLE;
+    m_pool = VK_NULL_HANDLE;
+
+    // Release the program's dispatch lock, so a later dispatch on this
+    // device can proceed.
+    if (m_lock.owns_lock()) m_lock.unlock();
+
+    return r == VK_SUCCESS;
 }
 
 } // namespace deep2

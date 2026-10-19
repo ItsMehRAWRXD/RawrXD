@@ -323,7 +323,17 @@ struct DeepSeek2Model {
     std::vector<LayerW> layersW;
 
     // KV caches: kNope [layers][heads][seq][qkNope], v [layers][heads][seq][vHead], kRope [layers][seq][qkRope] (shared across heads)
-    std::vector<float> kNopeCache, vCache, kRopeCache;
+    // Multi-head Latent Attention caches.
+    //
+    // MLA never materialises the per-head key and value vectors: it keeps the
+    // compressed latent c_kv (kvLora wide) and the single shared rope key.
+    // The per-head keys and values are recovered on the fly from the latent,
+    // which is what makes the cache kvLora wide instead of
+    // numHeads * (qkNope + vHead).
+    std::vector<float> cKVCache;    // [seqCap][kvLora]
+    std::vector<float> kRopeCache;  // [seqCap][qkRope]
+    std::vector<float> kNopeCache;  // [heads][seqCap][qkNope]
+    std::vector<float> vCache;     // [heads][seqCap][vHead]
 
     bool loadRom(const TensorROM& rom) {
         auto get = [&](const std::string& name) { return rom.findTensor(name); };
@@ -401,9 +411,10 @@ struct DeepSeek2Model {
         if (!readF32(get("blk.0.ffn_gate.weight"), lw.ffnGateW)) return false;
         if (!readF32(get("blk.0.ffn_down.weight"), lw.ffnDownW)) return false;
 
-        kNopeCache.assign(layers * heads * seqCap * qkNope, 0.0f);
-        vCache.assign(layers * heads * seqCap * vHead, 0.0f);
-        kRopeCache.assign(layers * seqCap * qkRope, 0.0f);
+        cKVCache.assign(seqCap * kvLora, 0.0f);
+        kRopeCache.assign(seqCap * qkRope, 0.0f);
+        kNopeCache.assign((size_t)heads * seqCap * qkNope, 0.0f);
+        vCache.assign((size_t)heads * seqCap * vHead, 0.0f);
 
         std::cerr << "[DS2] model resident: hidden=" << hidden << " layers=" << layers
                   << " heads=" << heads << " qkNope=" << qkNope << " qkRope=" << qkRope
@@ -544,6 +555,92 @@ struct DeepSeek2Model {
     static float silu(float x) { return x / (1.0f + std::expf(-x)); }
 
     // MoE forward pass for a single position
+    // Multi-head Latent Attention for one position.
+    //
+    // The KV-A projection produces the compressed latent c_kv (kvLora wide)
+    // and the shared rope key (qkRope wide). The latent is RMS normalized
+    // and then expanded into the per-head keys and values by attn_kv_b.
+    //
+    // This GGUF carries the *fused* attn_kv_b, so the expansion is the one
+    // llama.cpp's legacy path performs: one row per head, each row holding
+    // that head's key (qkNope values) followed by its value (vHead values).
+    // The MLA absorption optimization, which would project the query
+    // through the key up-projection instead and keep the cache kvLora wide,
+    // needs the split attn_k_b and attn_v_b tensors; this file has neither.
+    void mlaAttention(int layerIdx, float* ht, std::vector<float>& qAll,
+                      const std::vector<float>& kvA, uint32_t t) {
+        LayerW& lw = layersW[layerIdx];
+        const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
+
+        // The latent is RMS normalized before it is expanded; the rope key is
+        // the tail of the same projection.
+        float* cKV = cKVCache.data() + (size_t)t * kvLora;
+        std::memcpy(cKV, kvA.data(), kvLora * sizeof(float));
+        rmsNorm(cKV, lw.kvANormW.data(), kvLora, 1e-6f);
+
+        float* kRope = kRopeCache.data() + (size_t)t * qkRope;
+        std::memcpy(kRope, kvA.data() + kvLora, qkRope * sizeof(float));
+
+        // RoPE on q_rope and k_rope
+        for (uint32_t hh = 0; hh < heads; ++hh) {
+            rope(&qAll[hh * (qkNope + qkRope) + qkNope], t, qkRope, theta);
+        }
+        rope(kRope, t, qkRope, theta);
+
+        // Expand the latent into this position's per-head keys and values.
+        {
+            std::vector<float> kv((size_t)heads * (qkNope + vHead));
+            gemvFloat(lw.kvBW.data(), cKV, kv.data(), heads * (qkNope + vHead), kvLora);
+            for (uint32_t hh = 0; hh < heads; ++hh) {
+                const float* row = &kv[(size_t)hh * (qkNope + vHead)];
+                std::memcpy(&kNopeCache[((size_t)hh * seqCap + t) * qkNope], row,
+                            qkNope * sizeof(float));
+                std::memcpy(&vCache[((size_t)hh * seqCap + t) * vHead], row + qkNope,
+                            vHead * sizeof(float));
+            }
+        }
+
+        // Causal softmax attention per head.
+        std::vector<float> attnOut((size_t)heads * vHead, 0.0f);
+        std::vector<float> scores(t + 1);
+        for (uint32_t hh = 0; hh < heads; ++hh) {
+            const float* qNope = &qAll[hh * (qkNope + qkRope)];
+            const float* qRope = qNope + qkNope;
+            float* outH = attnOut.data() + (size_t)hh * vHead;
+
+            float maxSc = -1e30f;
+            for (uint32_t tt = 0; tt <= t; ++tt) {
+                const float* kN = &kNopeCache[((size_t)hh * seqCap + tt) * qkNope];
+                const float* kR = &kRopeCache[(size_t)tt * qkRope];
+                float s = 0.0f;
+                for (uint32_t d = 0; d < qkNope; ++d) s += qNope[d] * kN[d];
+                for (uint32_t d = 0; d < qkRope; ++d) s += qRope[d] * kR[d];
+                scores[tt] = s * invSqrtD;
+                if (scores[tt] > maxSc) maxSc = scores[tt];
+            }
+            float sum = 0.0f;
+            for (uint32_t tt = 0; tt <= t; ++tt) {
+                const float e = std::expf(scores[tt] - maxSc);
+                scores[tt] = e;
+                sum += e;
+            }
+            const float invSum = (sum > 0.0f) ? (1.0f / sum) : 0.0f;
+
+            for (uint32_t d = 0; d < vHead; ++d) {
+                float acc = 0.0f;
+                for (uint32_t tt = 0; tt <= t; ++tt) {
+                    acc += scores[tt] * vCache[((size_t)hh * seqCap + tt) * vHead + d];
+                }
+                outH[d] = acc * invSum;
+            }
+        }
+
+        // residual: h += attn_output @ attn_out
+        std::vector<float> attnProj(hidden);
+        gemvFloat(lw.attnOutW.data(), attnOut.data(), attnProj.data(), hidden, hidden);
+        for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
+    }
+
     // MoE forward pass for a single position.
     //
     // `ht` is the residual stream, which the MoE output is added to. `ffnIn`
@@ -711,60 +808,13 @@ struct DeepSeek2Model {
                 std::vector<float> qAll(heads * (qkNope + qkRope));
                 gemvFloat(lw.qW.data(), normIn, qAll.data(), heads * (qkNope + qkRope), hidden);
 
-                // KV-A projection
+                // KV-A projection: the compressed latent c_kv (kvLora wide)
+                // and the shared rope key (qkRope wide) come out of one
+                // matrix.
                 std::vector<float> kvA(kvLora + qkRope);
                 gemvFloat(lw.kvAMqaW.data(), normIn, kvA.data(), kvLora + qkRope, hidden);
 
-                // KV-B projection
-                std::vector<float> kAll(heads * (qkNope + vHead));
-                gemvFloat(lw.kvBW.data(), kvA.data(), kAll.data(), heads * (qkNope + vHead), kvLora);
-
-                // Store K/V in cache
-                for (uint32_t hh = 0; hh < heads; ++hh) {
-                    const float* kRow = &kAll[hh * (qkNope + vHead)];
-                    for (uint32_t d = 0; d < qkNope; ++d)
-                        kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = kRow[d];
-                    for (uint32_t d = 0; d < vHead; ++d)
-                        vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
-                }
-                // k_rope shared across heads
-                for (uint32_t d = 0; d < qkRope; ++d) kRopeCache[t * qkRope + d] = kvA[kvLora + d];
-
-                // RoPE on q_rope and k_rope
-                for (uint32_t hh = 0; hh < heads; ++hh) {
-                    float* qR = &qAll[hh * (qkNope + qkRope) + qkNope];
-                    rope(qR, t, qkRope, theta);
-                }
-                rope(kRopeCache.data() + t * qkRope, t, qkRope, theta);
-
-                // Causal softmax attention per head
-                float attnOut[2048] = {0};
-                for (uint32_t hh = 0; hh < heads; ++hh) {
-                    float* outH = attnOut + hh * vHead;
-                    float scores[256];
-                    float maxSc = -1e30f;
-                    for (uint32_t tt = 0; tt <= t; ++tt) {
-                        float s = 0.0f;
-                        for (uint32_t d = 0; d < qkNope; ++d)
-                            s += qAll[hh * (qkNope + qkRope) + d] * kNopeCache[hh * seqCap * qkNope + tt * qkNope + d];
-                        for (uint32_t d = 0; d < qkRope; ++d)
-                            s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
-                        scores[tt] = s * invSqrtD;
-                        if (scores[tt] > maxSc) maxSc = scores[tt];
-                    }
-                    float sum = 0.0f;
-                    for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
-                    for (uint32_t d = 0; d < vHead; ++d) {
-                        float acc = 0.0f;
-                        for (uint32_t tt = 0; tt <= t; ++tt) acc += scores[tt] * vCache[hh * seqCap * vHead + tt * vHead + d];
-                        outH[d] = acc / sum;
-                    }
-                }
-
-                // residual: h += attn_output @ attn_out
-                float attnProj[2048];
-                gemvFloat(lw.attnOutW.data(), attnOut, attnProj, hidden, hidden);
-                for (uint32_t i = 0; i < hidden; ++i) ht[i] += attnProj[i];
+                mlaAttention(layer, ht, qAll, kvA, t);
 
                 // ---- FFN branch ----
                 std::memcpy(normIn, ht, hidden * sizeof(float));
@@ -883,62 +933,7 @@ struct DeepSeek2Model {
                     return {};
                 }
 
-                std::vector<float> kAll(heads * (qkNope + vHead));
-                deep2::TensorView kvBWView{ deep2::TensorType::F32,
-                    reinterpret_cast<const uint8_t*>(lw.kvBW.data()),
-                    lw.kvBW.size() * 4, { heads * (qkNope + vHead), kvLora }, true };
-                deep2::TensorView kvAView{ deep2::TensorType::F32,
-                    reinterpret_cast<const uint8_t*>(kvA.data()),
-                    kvA.size() * 4, { kvLora + qkRope }, true };
-                if (!engine.vulkanGemv(*gpu, kvBWView, kvAView, kAll)) {
-                    std::cerr << "[DS2] Vulkan GEMV failed for KV-B on layer " << layer << "\n";
-                    return {};
-                }
-
-                for (uint32_t hh = 0; hh < heads; ++hh) {
-                    const float* kRow = &kAll[hh * (qkNope + vHead)];
-                    for (uint32_t d = 0; d < qkNope; ++d)
-                        kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = kRow[d];
-                    for (uint32_t d = 0; d < vHead; ++d)
-                        vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
-                }
-                for (uint32_t d = 0; d < qkRope; ++d) kRopeCache[t * qkRope + d] = kvA[kvLora + d];
-
-                for (uint32_t hh = 0; hh < heads; ++hh) {
-                    float* qR = &qAll[hh * (qkNope + qkRope) + qkNope];
-                    rope(qR, t, qkRope, theta);
-                }
-                rope(kRopeCache.data() + t * qkRope, t, qkRope, theta);
-
-                float attnOut[2048] = {0};
-                for (uint32_t hh = 0; hh < heads; ++hh) {
-                    float* outH = attnOut + hh * vHead;
-                    float scores[256];
-                    float maxSc = -1e30f;
-                    for (uint32_t tt = 0; tt <= t; ++tt) {
-                        float s = 0.0f;
-                        for (uint32_t d = 0; d < qkNope; ++d)
-                            s += qAll[hh * (qkNope + qkRope) + d] * kNopeCache[hh * seqCap * qkNope + tt * qkNope + d];
-                        for (uint32_t d = 0; d < qkRope; ++d)
-                            s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
-                        scores[tt] = s * invSqrtD;
-                        if (scores[tt] > maxSc) maxSc = scores[tt];
-                    }
-                    float sum = 0.0f;
-                    for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
-                    for (uint32_t d = 0; d < vHead; ++d) {
-                        float acc = 0.0f;
-                        for (uint32_t tt = 0; tt <= t; ++tt) acc += scores[tt] * vCache[hh * seqCap * vHead + tt * vHead + d];
-                        outH[d] = acc / sum;
-                    }
-                }
-
-                for (uint32_t i = 0; i < hidden; ++i) {
-                    float acc = 0.0f;
-                    for (uint32_t j = 0; j < hidden; ++j)
-                        acc += attnOut[j] * lw.attnOutW[i * hidden + j];
-                    ht[i] += acc;
-                }
+                mlaAttention(layer, ht, qAll, kvA, t);
 
                 std::memcpy(normIn, ht, hidden * sizeof(float));
                 rmsNorm(normIn, lw.ffnNormW.data(), hidden, 1e-6f);
@@ -1487,6 +1482,31 @@ int cmdGemvResident(int argc, char** argv) {
     const double eagerMs = std::chrono::duration<double, std::milli>(
         std::chrono::steady_clock::now() - t0).count() / kIters;
 
+    // The same split with the two devices run one after the other. This is
+    // the reference the overlapped form is measured against.
+    std::vector<float> sequential(rows, 0.0f);
+    const auto* g0 = engine.vulkan->primary();
+    const auto* g1 = engine.vulkan->secondary();
+    double sequentialMs = 0.0;
+    size_t splitMismatches = 0;
+    if (g0 && g1) {
+        t0 = std::chrono::steady_clock::now();
+        for (int i = 0; i < kIters; ++i) {
+            if (!engine.vulkanGemvSplitSequential(*g0, *g1, wView, xView, sequential)) {
+                std::cerr << "[ORACLE] sequential split GEMV failed\n";
+                return 1;
+            }
+        }
+        sequentialMs = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - t0).count() / kIters;
+
+        // The two forms have to agree exactly: running the devices together
+        // must not change the arithmetic.
+        for (uint32_t r = 0; r < rows; ++r) {
+            if (sequential[r] != result[r]) ++splitMismatches;
+        }
+    }
+
     // GPU, with the matrix resident in device memory.
     Deep2Engine::ResidentSplitWeight resident;
     t0 = std::chrono::steady_clock::now();
@@ -1518,12 +1538,27 @@ int cmdGemvResident(int argc, char** argv) {
               << " f32 (" << matrixMb << " MB), " << kIters << " iterations\n";
     std::cout << "[ORACLE]   cpu          : " << cpuMs << " ms/call\n";
     std::cout << "[ORACLE]   gpu-eager    : " << eagerMs << " ms/call (matrix re-uploaded every call)\n";
+    if (g0 && g1) {
+        std::cout << "[ORACLE]   gpu-split-seq: " << sequentialMs
+                  << " ms/call (both devices in series)\n";
+        std::cout << "[ORACLE]   gpu-split-par: " << eagerMs
+                  << " ms/call (both devices in flight together)\n";
+        if (sequentialMs > 0.0) {
+            std::cout << "[ORACLE]   overlap speedup: " << (sequentialMs / eagerMs) << "x\n";
+        }
+        std::cout << "[ORACLE]   sequential vs overlapped split: " << splitMismatches
+                  << " mismatched rows of " << rows << "\n";
+    }
     std::cout << "[ORACLE]   gpu-resident : " << residentMs << " ms/call (matrix already on the devices)\n";
     std::cout << "[ORACLE]   one-time resident upload: " << uploadMs << " ms\n";
     std::cout << "[ORACLE]   split row: " << resident.splitRow << " of " << resident.totalRows
               << " across " << resident.parts.size() << " device(s)\n";
     std::cout << "[ORACLE]   resident vs cpu: " << mismatches << " mismatched rows of " << rows << "\n";
     engine.releaseResidentSplitWeight(resident);
+    if (splitMismatches) {
+        std::cerr << "[ORACLE] the overlapped split did not reproduce the sequential one\n";
+        return 1;
+    }
     return mismatches == 0 ? 0 : 1;
 }
 

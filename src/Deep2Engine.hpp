@@ -143,6 +143,43 @@ struct Deep2Engine {
                     const deep2::TensorView& xView, std::vector<float>& y,
                     uint32_t rowOffset = 0, uint32_t rowCount = 0);
 
+    // The device-local buffers for one half of a GEMV, held between the
+    // upload and the result readback.
+    //
+    // Splitting a GEMV into an upload phase, a submit phase and a collect
+    // phase is what lets the two halves of a split overlap: the first
+    // device's work can be running on the GPU while the second device's
+    // weights are still being copied across the bus.
+    struct GemvScratch {
+        VkBuffer W = VK_NULL_HANDLE;
+        VkBuffer x = VK_NULL_HANDLE;
+        VkBuffer y = VK_NULL_HANDLE;
+        VkDeviceMemory Wmem = VK_NULL_HANDLE;
+        VkDeviceMemory xmem = VK_NULL_HANDLE;
+        VkDeviceMemory ymem = VK_NULL_HANDLE;
+        void* Wmapped = nullptr;
+        void* xmapped = nullptr;
+        void* ymapped = nullptr;
+        uint32_t rowCount = 0;
+        uint32_t cols = 0;
+    };
+
+    // Upload one device's rows of the weight matrix and the input vector
+    // into device-visible buffers.
+    bool prepareGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
+                     const deep2::TensorView& xView, uint32_t rowOffset, uint32_t rowCount,
+                     GemvScratch& out);
+
+    // Submit the prepared GEMV without waiting for it to finish.
+    bool submitGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch,
+                    deep2::VulkanProgram::Dispatch& out);
+
+    // Read the result back into `y` and release the buffers.
+    bool collectGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch, std::vector<float>& y);
+
+    // Release the buffers without reading the result.
+    void releaseGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch);
+
     // Run one GEMV across two devices: device 0 takes the leading rows and
     // device 1 the remainder, with the boundary chosen by the measured VRAM
     // ratio. The two results are concatenated into `y`, which holds one
@@ -197,6 +234,19 @@ struct Deep2Engine {
                           const deep2::TensorView& xView,
                           std::vector<float>& y,
                           uint32_t* outSplitRow = nullptr);
+
+    // The same split, with the two devices run one after the other instead of
+    // together.
+    //
+    // This is the reference the overlapped form is measured against. The two
+    // produce identical results, so the difference between them is exactly
+    // what running the devices in series costs.
+    bool vulkanGemvSplitSequential(const deep2::VulkanDevice::Gpu& gpu0,
+                                   const deep2::VulkanDevice::Gpu& gpu1,
+                                   const deep2::TensorView& wView,
+                                   const deep2::TensorView& xView,
+                                   std::vector<float>& y,
+                                   uint32_t* outSplitRow = nullptr);
 
     // ---- Move 10: Full Phi-3 ROM-Path Forward Pass ----
     // Execute complete 32-layer Phi-3 forward pass through virtual ROM path

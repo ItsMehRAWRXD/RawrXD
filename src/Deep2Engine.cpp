@@ -242,9 +242,9 @@ bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
     return deep2::gemvFloat(W, x, y, rows, cols);
 }
 
-bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
-                             const deep2::TensorView& xView, std::vector<float>& y,
-                             uint32_t rowOffset, uint32_t rowCount) {
+bool Deep2Engine::prepareGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
+                              const deep2::TensorView& xView, uint32_t rowOffset, uint32_t rowCount,
+                              GemvScratch& out) {
     if (!vulkanReady || !vulkan) return false;
 
     if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
@@ -281,8 +281,6 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         return false;
     }
 
-    y.assign(rowCount, 0.0f);
-
     // The compute program is cached per device inside VulkanDevice, so
     // switching between the two halves of a split costs a map lookup rather
     // than a pipeline rebuild.
@@ -292,40 +290,79 @@ bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::T
         return false;
     }
 
-    VkBuffer Wbuf = VK_NULL_HANDLE, xbuf = VK_NULL_HANDLE, ybuf = VK_NULL_HANDLE;
-    VkDeviceMemory Wmem = VK_NULL_HANDLE, xmem = VK_NULL_HANDLE, ymem = VK_NULL_HANDLE;
-    void* Wmapped = nullptr; void* xmapped = nullptr; void* ymapped = nullptr;
-
     // Only the selected rows are uploaded, so the shader's W[i * cols + k]
     // addressing is relative to the start of the range.
-    VkDeviceSize Wsize = (VkDeviceSize)rangeBytes;
-    VkDeviceSize xsize = (VkDeviceSize)cols * 4;
-    VkDeviceSize ysize = (VkDeviceSize)rowCount * 4;
+    const VkDeviceSize Wsize = static_cast<VkDeviceSize>(rangeBytes);
+    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * 4;
+    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rowCount) * 4;
 
-    auto cleanup = [&]() {
-        vulkan->destroyBuffer(gpu, Wbuf, Wmem);
-        vulkan->destroyBuffer(gpu, xbuf, xmem);
-        vulkan->destroyBuffer(gpu, ybuf, ymem);
-    };
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags memProps =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-    VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    VkMemoryPropertyFlags memProps = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-    if (!vulkan->createBuffer(gpu, Wsize, usage, memProps, Wbuf, Wmem, &Wmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, xsize, usage, memProps, xbuf, xmem, &xmapped)) { cleanup(); return false; }
-    if (!vulkan->createBuffer(gpu, ysize, usage, memProps, ybuf, ymem, &ymapped)) { cleanup(); return false; }
-
-    std::memcpy(Wmapped, wView.data + (static_cast<size_t>(rowOffset) * rowBytes), rangeBytes);
-    std::memcpy(xmapped, xView.data, static_cast<size_t>(xsize));
-    std::memset(ymapped, 0, static_cast<size_t>(ysize));
-
-    if (!vulkan->dispatchProgram(gpu, Wbuf, xbuf, ybuf, rowCount, (uint32_t)cols)) {
-        cleanup(); return false;
+    if (!vulkan->createBuffer(gpu, Wsize, usage, memProps, out.W, out.Wmem, &out.Wmapped) ||
+        !vulkan->createBuffer(gpu, xsize, usage, memProps, out.x, out.xmem, &out.xmapped) ||
+        !vulkan->createBuffer(gpu, ysize, usage, memProps, out.y, out.ymem, &out.ymapped)) {
+        releaseGemv(gpu, out);
+        return false;
     }
 
-    std::memcpy(y.data(), ymapped, static_cast<size_t>(ysize));
-    cleanup();
+    std::memcpy(out.Wmapped, wView.data + (static_cast<size_t>(rowOffset) * rowBytes), rangeBytes);
+    std::memcpy(out.xmapped, xView.data, static_cast<size_t>(xsize));
+    std::memset(out.ymapped, 0, static_cast<size_t>(ysize));
+
+    out.rowCount = rowCount;
+    out.cols = static_cast<uint32_t>(cols);
     return true;
+}
+
+bool Deep2Engine::submitGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch,
+                             deep2::VulkanProgram::Dispatch& out) {
+    if (!vulkanReady || !vulkan) return false;
+    return vulkan->beginDispatchProgram(gpu, scratch.W, scratch.x, scratch.y,
+                                        scratch.rowCount, scratch.cols, out);
+}
+
+bool Deep2Engine::collectGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch,
+                              std::vector<float>& y) {
+    const size_t yBytes = static_cast<size_t>(scratch.rowCount) * sizeof(float);
+    y.assign(scratch.rowCount, 0.0f);
+    std::memcpy(y.data(), scratch.ymapped, yBytes);
+    releaseGemv(gpu, scratch);
+    return true;
+}
+
+void Deep2Engine::releaseGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch) {
+    if (!vulkan) return;
+    vulkan->destroyBuffer(gpu, scratch.W, scratch.Wmem);
+    vulkan->destroyBuffer(gpu, scratch.x, scratch.xmem);
+    vulkan->destroyBuffer(gpu, scratch.y, scratch.ymem);
+    scratch.W = scratch.x = scratch.y = VK_NULL_HANDLE;
+    scratch.Wmem = scratch.xmem = scratch.ymem = VK_NULL_HANDLE;
+    scratch.Wmapped = scratch.xmapped = scratch.ymapped = nullptr;
+    scratch.rowCount = 0;
+    scratch.cols = 0;
+}
+
+bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
+                             const deep2::TensorView& xView, std::vector<float>& y,
+                             uint32_t rowOffset, uint32_t rowCount) {
+    if (!vulkanReady || !vulkan) return false;
+
+    GemvScratch scratch;
+    if (!prepareGemv(gpu, wView, xView, rowOffset, rowCount, scratch)) return false;
+
+    deep2::VulkanProgram::Dispatch dispatch;
+    if (!submitGemv(gpu, scratch, dispatch)) {
+        releaseGemv(gpu, scratch);
+        return false;
+    }
+    if (!dispatch.wait()) {
+        releaseGemv(gpu, scratch);
+        return false;
+    }
+
+    return collectGemv(gpu, scratch, y);
 }
 
 bool Deep2Engine::vulkanGemvSplit(const deep2::TensorView& wView, const deep2::TensorView& xView,
