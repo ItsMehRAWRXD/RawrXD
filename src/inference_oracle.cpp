@@ -5,6 +5,7 @@
 //   rom_audit oracle <model.gguf> "<prompt>" [max_tokens]
 
 #include "TensorROM.hpp"
+#include "Deep2Engine.hpp"
 #include "quant_kernels.hpp"
 
 #include <algorithm>
@@ -579,7 +580,7 @@ struct DeepSeek2Model {
 
         const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
 
-        const uint32_t layersToRun = layers;
+        const uint32_t layersToRun = std::min<uint32_t>(layers, 2u);
         for (uint32_t layer = 0; layer < layersToRun; ++layer) {
             LayerW& lw = layersW[layer];
             bool isMoE = (layer > 0);
@@ -696,6 +697,285 @@ struct DeepSeek2Model {
     }
 
         // Debug: norm of position-0 hidden after all layers
+        double h0Norm = 0.0;
+        for (uint32_t i = 0; i < hidden; ++i) h0Norm += h[i] * h[i];
+        std::cerr << "[DS2-DBG] h0Norm after all layers=" << std::sqrt(h0Norm) << "\n";
+        float* last = &h[(seq - 1) * hidden];
+        double lastNorm = 0.0;
+        for (uint32_t i = 0; i < hidden; ++i) lastNorm += last[i] * last[i];
+        std::cerr << "[DS2-DBG] lastNorm=" << std::sqrt(lastNorm) << "\n";
+        rmsNorm(last, outputNormW.data(), hidden, 1e-6f);
+        std::vector<float> logits(vocab);
+        gemvFloat(outputW.data(), last, logits.data(), vocab, hidden);
+        double lmin=1e18,lmax=-1e18,lnorm=0; int lz=0;
+        for (uint32_t i=0;i<vocab;++i){float v=logits[i]; if(v<lmin)lmin=v; if(v>lmax)lmax=v; lnorm+=v*v; if(v==0)lz++;}
+        std::cerr << "[DS2-DBG] logits min="<<lmin<<" max="<<lmax<<" norm="<<std::sqrt(lnorm)<<" zeros="<<lz<<"/"<<vocab<<"\n";
+        return logits;
+    }
+
+    // Dual-GPU forward pass: layers 0-17 on GPU 0 (R9700, 32GB),
+    // layers 18-26 on GPU 1 (RX 7800 XT, 16GB).
+    std::vector<float> forwardAllLayersDualGPU(const TensorROM& rom, Deep2Engine& engine,
+                                                const std::vector<uint32_t>& tokens) {
+        const uint32_t seq = (uint32_t)tokens.size();
+        std::vector<float> h(seq * hidden, 0.0f);
+        for (uint32_t t = 0; t < seq; ++t)
+            std::memcpy(&h[t * hidden], &tokenEmbdW[tokens[t] * hidden], hidden * sizeof(float));
+
+        const float invSqrtD = 1.0f / std::sqrtf((float)(qkNope + qkRope));
+        const uint32_t layersToRun = layers;
+
+        const uint32_t gpu0LayerCount = 18;
+
+        for (uint32_t layer = 0; layer < layersToRun; ++layer) {
+            LayerW& lw = layersW[layer];
+            bool isMoE = (layer > 0);
+
+            const deep2::VulkanDevice::Gpu* gpu = (layer < gpu0LayerCount)
+                ? engine.vulkan->primary()
+                : engine.vulkan->secondary();
+            if (!gpu) {
+                std::cerr << "[DS2] No GPU available for layer " << layer << "\n";
+                return {};
+            }
+            const char* gpuName = (layer < gpu0LayerCount) ? "R9700 (GPU 0)" : "7800 XT (GPU 1)";
+            std::cerr << "[DS2] Layer " << layer << " on " << gpuName << "\n";
+
+            if (isMoE && !lw.moeLoaded) {
+                std::cerr << "[DS2] Loading MoE weights for layer " << layer << "...\n";
+                if (!loadMoELayer(rom, layer)) {
+                    std::cerr << "[DS2] Failed to load MoE weights for layer " << layer << "\n";
+                    return {};
+                }
+                lw.moeLoaded = true;
+                std::cerr << "[DS2] MoE layer " << layer << " weights resident on " << gpuName << "\n";
+            }
+
+            for (uint32_t t = 0; t < seq; ++t) {
+                float* ht = &h[t * hidden];
+
+                float normIn[2048];
+                std::memcpy(normIn, ht, hidden * sizeof(float));
+                rmsNorm(normIn, lw.attnNormW.data(), hidden, 1e-6f);
+
+                std::vector<float> qAll(heads * (qkNope + qkRope));
+                deep2::TensorView wView{ deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(lw.qW.data()),
+                    lw.qW.size() * 4, { heads * (qkNope + qkRope), hidden }, true };
+                deep2::TensorView xView{ deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(normIn),
+                    hidden * 4, { hidden }, true };
+                if (!engine.vulkanGemv(*gpu, wView, xView, qAll)) {
+                    std::cerr << "[DS2] Vulkan GEMV failed for Q projection on layer " << layer << "\n";
+                    return {};
+                }
+
+                std::vector<float> kvA(kvLora + qkRope);
+                deep2::TensorView kvAMqaView{ deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(lw.kvAMqaW.data()),
+                    lw.kvAMqaW.size() * 4, { kvLora + qkRope, hidden }, true };
+                if (!engine.vulkanGemv(*gpu, kvAMqaView, xView, kvA)) {
+                    std::cerr << "[DS2] Vulkan GEMV failed for KV-A on layer " << layer << "\n";
+                    return {};
+                }
+
+                std::vector<float> kAll(heads * (qkNope + vHead));
+                deep2::TensorView kvBWView{ deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(lw.kvBW.data()),
+                    lw.kvBW.size() * 4, { heads * (qkNope + vHead), kvLora }, true };
+                deep2::TensorView kvAView{ deep2::TensorType::F32,
+                    reinterpret_cast<const uint8_t*>(kvA.data()),
+                    kvA.size() * 4, { kvLora + qkRope }, true };
+                if (!engine.vulkanGemv(*gpu, kvBWView, kvAView, kAll)) {
+                    std::cerr << "[DS2] Vulkan GEMV failed for KV-B on layer " << layer << "\n";
+                    return {};
+                }
+
+                for (uint32_t hh = 0; hh < heads; ++hh) {
+                    const float* kRow = &kAll[hh * (qkNope + vHead)];
+                    for (uint32_t d = 0; d < qkNope; ++d)
+                        kNopeCache[hh * seqCap * qkNope + t * qkNope + d] = kRow[d];
+                    for (uint32_t d = 0; d < vHead; ++d)
+                        vCache[hh * seqCap * vHead + t * vHead + d] = kRow[qkNope + d];
+                }
+                for (uint32_t d = 0; d < qkRope; ++d) kRopeCache[t * qkRope + d] = kvA[kvLora + d];
+
+                for (uint32_t hh = 0; hh < heads; ++hh) {
+                    float* qR = &qAll[hh * (qkNope + qkRope) + qkNope];
+                    rope(qR, t, qkRope, theta);
+                }
+                rope(kRopeCache.data() + t * qkRope, t, qkRope, theta);
+
+                float attnOut[2048] = {0};
+                for (uint32_t hh = 0; hh < heads; ++hh) {
+                    float* outH = attnOut + hh * vHead;
+                    float scores[256];
+                    float maxSc = -1e30f;
+                    for (uint32_t tt = 0; tt <= t; ++tt) {
+                        float s = 0.0f;
+                        for (uint32_t d = 0; d < qkNope; ++d)
+                            s += qAll[hh * (qkNope + qkRope) + d] * kNopeCache[hh * seqCap * qkNope + tt * qkNope + d];
+                        for (uint32_t d = 0; d < qkRope; ++d)
+                            s += qAll[hh * (qkNope + qkRope) + qkNope + d] * kRopeCache[tt * qkRope + d];
+                        scores[tt] = s * invSqrtD;
+                        if (scores[tt] > maxSc) maxSc = scores[tt];
+                    }
+                    float sum = 0.0f;
+                    for (uint32_t tt = 0; tt <= t; ++tt) { float vv = std::expf(scores[tt] - maxSc); scores[tt] = vv; sum += vv; }
+                    for (uint32_t d = 0; d < vHead; ++d) {
+                        float acc = 0.0f;
+                        for (uint32_t tt = 0; tt <= t; ++tt) acc += scores[tt] * vCache[hh * seqCap * vHead + tt * vHead + d];
+                        outH[d] = acc / sum;
+                    }
+                }
+
+                for (uint32_t i = 0; i < hidden; ++i) {
+                    float acc = 0.0f;
+                    for (uint32_t j = 0; j < hidden; ++j)
+                        acc += attnOut[j] * lw.attnOutW[i * hidden + j];
+                    ht[i] += acc;
+                }
+
+                std::memcpy(normIn, ht, hidden * sizeof(float));
+                rmsNorm(normIn, lw.ffnNormW.data(), hidden, 1e-6f);
+
+                if (!isMoE) {
+                    std::vector<float> fup(intermediate);
+                    deep2::TensorView ffnUpView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(lw.ffnUpW.data()),
+                        lw.ffnUpW.size() * 4, { intermediate, hidden }, true };
+                    if (!engine.vulkanGemv(*gpu, ffnUpView, xView, fup)) {
+                        std::cerr << "[DS2] Vulkan GEMV failed for FFN up on layer " << layer << "\n";
+                        return {};
+                    }
+                    for (uint32_t i = 0; i < intermediate; ++i) fup[i] = fup[i] > 0.0f ? fup[i] : 0.0f;
+
+                    std::vector<float> fdown(hidden);
+                    deep2::TensorView ffnDownView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(lw.ffnDownW.data()),
+                        lw.ffnDownW.size() * 4, { hidden, intermediate }, true };
+                    deep2::TensorView fupView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(fup.data()),
+                        fup.size() * 4, { intermediate }, true };
+                    if (!engine.vulkanGemv(*gpu, ffnDownView, fupView, fdown)) {
+                        std::cerr << "[DS2] Vulkan GEMV failed for FFN down on layer " << layer << "\n";
+                        return {};
+                    }
+                    for (uint32_t i = 0; i < hidden; ++i) ht[i] += fdown[i];
+                } else {
+                    std::vector<float> routerLogits(moeNumExperts);
+                    deep2::TensorView routerView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(lw.ffnGateInpW.data()),
+                        lw.ffnGateInpW.size() * 4, { moeNumExperts, hidden }, true };
+                    if (!engine.vulkanGemv(*gpu, routerView, xView, routerLogits)) {
+                        std::cerr << "[DS2] Vulkan GEMV failed for MoE router on layer " << layer << "\n";
+                        return {};
+                    }
+
+                    float maxLogit = -1e30f;
+                    for (int e = 0; e < (int)moeNumExperts; ++e)
+                        if (routerLogits[e] > maxLogit) maxLogit = routerLogits[e];
+                    float sumExp = 0.0f;
+                    std::vector<float> routerWeights(moeNumExperts);
+                    for (int e = 0; e < (int)moeNumExperts; ++e) {
+                        routerWeights[e] = std::expf(routerLogits[e] - maxLogit);
+                        sumExp += routerWeights[e];
+                    }
+                    for (int e = 0; e < (int)moeNumExperts; ++e)
+                        routerWeights[e] /= sumExp;
+
+                    std::vector<std::pair<float, int>> expertScores(moeNumExperts);
+                    for (int e = 0; e < (int)moeNumExperts; ++e)
+                        expertScores[e] = { routerWeights[e], e };
+                    std::sort(expertScores.begin(), expertScores.end(),
+                              [](const auto& a, const auto& b) { return a.first > b.first; });
+
+                    std::vector<float> expertAccum(hidden, 0.0f);
+                    for (int k = 0; k < (int)moeTopK && k < (int)moeNumExperts; ++k) {
+                        int e = expertScores[k].second;
+                        float w = expertScores[k].first;
+
+                        const float* gateE = lw.ffnGateExpsW.data() + e * intermediate * hidden;
+                        std::vector<float> gateVal(intermediate);
+                        deep2::TensorView gateEView{ deep2::TensorType::F32,
+                            reinterpret_cast<const uint8_t*>(gateE),
+                            intermediate * hidden * 4, { intermediate, hidden }, true };
+                        if (!engine.vulkanGemv(*gpu, gateEView, xView, gateVal)) {
+                            std::cerr << "[DS2] Vulkan GEMV failed for MoE gate on layer " << layer << " expert " << e << "\n";
+                            return {};
+                        }
+
+                        const float* upE = lw.ffnUpExpsW.data() + e * intermediate * hidden;
+                        std::vector<float> upVal(intermediate);
+                        deep2::TensorView upEView{ deep2::TensorType::F32,
+                            reinterpret_cast<const uint8_t*>(upE),
+                            intermediate * hidden * 4, { intermediate, hidden }, true };
+                        if (!engine.vulkanGemv(*gpu, upEView, xView, upVal)) {
+                            std::cerr << "[DS2] Vulkan GEMV failed for MoE up on layer " << layer << " expert " << e << "\n";
+                            return {};
+                        }
+
+                        std::vector<float> intermediateVec(intermediate);
+                        for (int i = 0; i < intermediate; ++i)
+                            intermediateVec[i] = gateVal[i] / (1.0f + std::expf(-upVal[i]));
+
+                        const float* downE = lw.ffnDownExpsW.data() + e * hidden * intermediate;
+                        std::vector<float> expertOut(hidden);
+                        deep2::TensorView downEView{ deep2::TensorType::F32,
+                            reinterpret_cast<const uint8_t*>(downE),
+                            hidden * intermediate * 4, { hidden, intermediate }, true };
+                        deep2::TensorView intView{ deep2::TensorType::F32,
+                            reinterpret_cast<const uint8_t*>(intermediateVec.data()),
+                            intermediate * 4, { intermediate }, true };
+                        if (!engine.vulkanGemv(*gpu, downEView, intView, expertOut)) {
+                            std::cerr << "[DS2] Vulkan GEMV failed for MoE down on layer " << layer << " expert " << e << "\n";
+                            return {};
+                        }
+
+                        for (int i = 0; i < hidden; ++i)
+                            expertAccum[i] += w * expertOut[i];
+                    }
+
+                    std::vector<float> sharedGate(2 * intermediate);
+                    deep2::TensorView sharedGateView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(lw.ffnGateShexpW.data()),
+                        lw.ffnGateShexpW.size() * 4, { 2 * intermediate, hidden }, true };
+                    if (!engine.vulkanGemv(*gpu, sharedGateView, xView, sharedGate)) {
+                        std::cerr << "[DS2] Vulkan GEMV failed for MoE shared gate on layer " << layer << "\n";
+                        return {};
+                    }
+
+                    std::vector<float> sharedUp(2 * intermediate);
+                    deep2::TensorView sharedUpView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(lw.ffnUpShexpW.data()),
+                        lw.ffnUpShexpW.size() * 4, { 2 * intermediate, hidden }, true };
+                    if (!engine.vulkanGemv(*gpu, sharedUpView, xView, sharedUp)) {
+                        std::cerr << "[DS2] Vulkan GEMV failed for MoE shared up on layer " << layer << "\n";
+                        return {};
+                    }
+
+                    std::vector<float> sharedIntermediate(2 * intermediate);
+                    for (int i = 0; i < 2 * intermediate; ++i)
+                        sharedIntermediate[i] = sharedGate[i] / (1.0f + std::expf(-sharedUp[i]));
+
+                    std::vector<float> sharedOut(hidden);
+                    deep2::TensorView sharedDownView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(lw.ffnDownShexpW.data()),
+                        lw.ffnDownShexpW.size() * 4, { hidden, 2 * intermediate }, true };
+                    deep2::TensorView sharedIntView{ deep2::TensorType::F32,
+                        reinterpret_cast<const uint8_t*>(sharedIntermediate.data()),
+                        2 * intermediate * 4, { 2 * intermediate }, true };
+                    if (!engine.vulkanGemv(*gpu, sharedDownView, sharedIntView, sharedOut)) {
+                        std::cerr << "[DS2] Vulkan GEMV failed for MoE shared down on layer " << layer << "\n";
+                        return {};
+                    }
+
+                    for (int i = 0; i < hidden; ++i)
+                        ht[i] += sharedOut[i];
+                }
+            }
+        }
+
         double h0Norm = 0.0;
         for (uint32_t i = 0; i < hidden; ++i) h0Norm += h[i] * h[i];
         std::cerr << "[DS2-DBG] h0Norm after all layers=" << std::sqrt(h0Norm) << "\n";

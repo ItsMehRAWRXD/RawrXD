@@ -14,11 +14,12 @@
 #include <mutex>
 #include <chrono>
 
-namespace Deep2Rom::Compute {
-    class VulkanGEMV;
-}
+#include "VulkanGEMV.hpp"
 
 namespace Deep2Rom::Inference {
+
+    using Deep2Rom::Compute::VulkanComputeEngine;
+    using Deep2Rom::Compute::VulkanGEMV;
 
     // Inference engine configuration
     struct EngineConfig {
@@ -121,6 +122,8 @@ namespace Deep2Rom::Inference {
         KVCache m_kvCache;
         GenerationLoop m_generationLoop;
         Sampler m_sampler;
+
+        VulkanComputeEngine m_vkCompute;
 
         bool m_modelLoaded = false;
         bool m_vulkanInitialized = false;

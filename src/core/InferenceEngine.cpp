@@ -244,7 +244,7 @@ namespace Deep2Rom::Inference {
             return true;
         }
 
-        // QKV projections via CPU GEMV
+        // QKV projections via CPU AVX
         uint32_t qkvRows = hiddenDim * 3;
         uint32_t qkvCols = hiddenDim;
         for (uint32_t i = 0; i < qkvRows; ++i) {

@@ -66,8 +66,12 @@ namespace Deep2Rom::Compute {
     // Update an existing descriptor set with new buffer bindings
     bool updateDescriptorSet(VkDescriptorSet descSet,
                              VkBuffer weightBuf, VkBuffer inputBuf, VkBuffer outputBuf);
-        VkQueue computeQueue() const { return m_computeQueue; }
-        VkCommandPool commandPool() const { return m_commandPool; }
+
+    // Accessors
+    VkDevice device() const { return m_device; }
+    VkPhysicalDevice physicalDevice() const { return m_physicalDevice; }
+    VkQueue computeQueue() const { return m_computeQueue; }
+    VkCommandPool commandPool() const { return m_commandPool; }
 
         // Multi-GPU support
         void setPrimaryDevice(VkDevice device, VkPhysicalDevice physicalDevice);
