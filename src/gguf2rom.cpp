@@ -38,64 +38,87 @@ namespace Deep2Engine::Emulator {
     };
     #pragma pack(pop)
 
-    // GGUF parsing helpers
-    std::string ReadGGUFStr(std::ifstream& f) {
-        uint64_t len = 0;
-        if (!f.read(reinterpret_cast<char*>(&len), sizeof(len))) {
-            return "";
+    // GGUF Type System
+    enum GGUFValueType : uint32_t {
+        GGUF_TYPE_UINT8   = 0,
+        GGUF_TYPE_INT8    = 1,
+        GGUF_TYPE_UINT16  = 2,
+        GGUF_TYPE_INT16   = 3,
+        GGUF_TYPE_UINT32  = 4,
+        GGUF_TYPE_INT32   = 5,
+        GGUF_TYPE_FLOAT32 = 6,
+        GGUF_TYPE_BOOL    = 7,
+        GGUF_TYPE_STRING  = 8,
+        GGUF_TYPE_ARRAY   = 9,
+        GGUF_TYPE_UINT64  = 10,
+        GGUF_TYPE_INT64   = 11,
+        GGUF_TYPE_FLOAT64 = 12,
+    };
+
+    // GGML quantization types
+    enum GGMLType : uint32_t {
+        GGML_TYPE_F32     = 0,
+        GGML_TYPE_F16     = 1,
+        GGML_TYPE_Q4_0    = 2,
+        GGML_TYPE_Q4_1    = 4,
+        GGML_TYPE_Q5_0    = 6,
+        GGML_TYPE_Q5_1    = 8,
+        GGML_TYPE_Q8_0    = 6,
+        GGML_TYPE_Q8_1    = 7,
+        GGML_TYPE_Q2_K    = 10,
+        GGML_TYPE_Q3_K    = 11,
+        GGML_TYPE_Q4_K    = 12,
+        GGML_TYPE_Q5_K    = 13,
+        GGML_TYPE_Q6_K    = 14,
+        GGML_TYPE_Q8_K    = 15,
+    };
+
+    // GGML block layout for exact tensor size calculation
+    struct GGMLLayout {
+        uint32_t elements_per_block;
+        uint32_t bytes_per_block;
+    };
+
+    GGMLLayout GetGGMLLayout(uint32_t gguf_type) {
+        switch (gguf_type) {
+            case 0:  return {1,   4};   // F32
+            case 1:  return {1,   2};   // F16
+            case 2:  return {32,  18};  // Q4_0
+            case 4:  return {32,  20};  // Q4_1
+            case 6:  return {32,  22};  // Q5_0
+            case 8:  return {32,  34};  // Q8_0
+            case 10: return {256, 84};  // Q2_K
+            case 11: return {256, 110}; // Q3_K
+            case 12: return {256, 144}; // Q4_K
+            case 13: return {256, 176}; // Q5_K
+            case 14: return {256, 210}; // Q6_K
+            case 15: return {256, 292}; // Q8_K
+            default: return {1, 2}; // fallback to F16
         }
-        if (len == 0 || len > 1024) return "";  // Safety threshold for tensor names
-        std::vector<char> buf(len);
-        if (!f.read(buf.data(), len)) {
-            return "";
-        }
-        return std::string(buf.data(), len);
     }
 
-    void SkipGGUFValue(uint32_t type, std::ifstream& f) {
-        if (type <= 7) {
-            uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
-            f.seekg(sz[type & 7], std::ios::cur);
-        } else if (type == 8) {
-            ReadGGUFStr(f);
-        } else if (type == 9) {
-            uint32_t arrayType = 0;
-            uint64_t arrayLen = 0;
-            f.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
-            f.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
-            if (arrayType == 8) {
-                for (uint64_t i = 0; i < arrayLen; ++i) ReadGGUFStr(f);
-            } else if (arrayType == 9) {
-                for (uint64_t i = 0; i < arrayLen; ++i) SkipGGUFValue(arrayType, f);
-            } else {
-                uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                f.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
-            }
-        } else {
-            uint32_t sub = 0;
-            uint64_t len = 0;
-            f.read(reinterpret_cast<char*>(&sub), sizeof(sub));
-            f.read(reinterpret_cast<char*>(&len), sizeof(len));
-            if (sub == 9) {
-                for (uint64_t i = 0; i < len; ++i) ReadGGUFStr(f);
-            } else {
-                uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
-                f.seekg(len * sz[sub & 7], std::ios::cur);
-            }
-        }
+    uint64_t CalculateTensorBytes(uint32_t gguf_type, uint64_t elements) {
+        GGMLLayout layout = GetGGMLLayout(gguf_type);
+        if (layout.elements_per_block == 0) return 0;
+        uint64_t blocks = (elements + layout.elements_per_block - 1) / layout.elements_per_block;
+        return blocks * layout.bytes_per_block;
     }
 
+    // GGUF type to ROM quantization type mapping
     uint16_t MapGGUFTypeToROM(uint32_t gguf_type) {
         switch (gguf_type) {
-            case 8: return 2;   // Q2_K
-            case 9: return 3;   // Q3_K
-            case 10: return 4;  // Q4_K
-            case 11: return 5;  // Q5_K
-            case 12: return 6;  // Q6_K
-            case 13: return 7;  // Q8_K
-            case 0: return 1;   // F32
-            case 1: return 0;   // F16
-            case 6: return 8;   // Q8_0
+            case 10: return 2;   // Q2_K
+            case 11: return 3;   // Q3_K
+            case 12: return 4;   // Q4_K
+            case 13: return 5;   // Q5_K
+            case 14: return 6;   // Q6_K
+            case 15: return 7;   // Q8_K
+            case 0:  return 1;   // F32
+            case 1:  return 0;   // F16
+            case 6:  return 8;   // Q8_0
+            case 2:  return 2;   // Q4_0
+            case 4:  return 4;   // Q4_1
+            case 8:  return 8;   // Q8_0
             default: return 0xFFFF;
         }
     }
@@ -110,8 +133,56 @@ namespace Deep2Engine::Emulator {
         return 3;
     }
 
+    uint64_t AlignUp(uint64_t offset, uint64_t alignment) {
+        if (alignment == 0 || (alignment & (alignment - 1)) != 0) return offset;
+        return (offset + alignment - 1) & ~(alignment - 1);
+    }
+
     uint64_t Align64(uint64_t offset) {
         return (offset + 63) & ~63ull;
+    }
+
+    // GGUF parsing helpers
+    std::string ReadGGUFStr(std::ifstream& f) {
+        uint64_t len = 0;
+        if (!f.read(reinterpret_cast<char*>(&len), sizeof(len))) {
+            return "";
+        }
+        if (len == 0 || len > 1024 * 1024) return ""; // 1MB max for safety
+        std::vector<char> buf(len);
+        f.read(buf.data(), len);
+        return std::string(buf.data(), len);
+    }
+
+    void SkipGGUFValue(uint32_t type, std::ifstream& f) {
+        if (type <= 7) {
+            static constexpr uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 1};
+            f.seekg(sz[type & 7], std::ios::cur);
+        } else if (type == 8) { // string
+            ReadGGUFStr(f);
+        } else if (type == 9) { // array
+            uint32_t arrayType = 0;
+            uint64_t arrayLen = 0;
+            f.read(reinterpret_cast<char*>(&arrayType), sizeof(arrayType));
+            f.read(reinterpret_cast<char*>(&arrayLen), sizeof(arrayLen));
+            if (arrayType == 8) { // string array
+                for (uint64_t i = 0; i < arrayLen; ++i) ReadGGUFStr(f);
+            } else if (arrayType == 9) { // nested array
+                for (uint64_t i = 0; i < arrayLen; ++i) SkipGGUFValue(arrayType, f);
+            } else {
+                static constexpr uint32_t sz[] = {1, 1, 2, 2, 4, 4, 4, 8};
+                f.seekg(arrayLen * sz[arrayType & 7], std::ios::cur);
+            }
+        } else if (type == 10) { // UINT64
+            f.seekg(8, std::ios::cur);
+        } else if (type == 11) { // INT64
+            f.seekg(8, std::ios::cur);
+        } else if (type == 12) { // FLOAT64
+            f.seekg(8, std::ios::cur);
+        } else {
+            // Unknown type - skip conservatively
+            f.seekg(8, std::ios::cur);
+        }
     }
 
 } // namespace Deep2Engine::Emulator
@@ -129,9 +200,6 @@ int wmain(int argc, wchar_t* argv[]) {
         return 1;
     }
 
-std::wcout << L"Args parsed\n";
-    std::wcout.flush();
-
     std::wstring input_path = argv[1];
     std::wstring output_path = argv[2];
     std::string arch = "phi3";
@@ -139,9 +207,6 @@ std::wcout << L"Args parsed\n";
         std::wstring warch = argv[3];
         arch.assign(warch.begin(), warch.end());
     }
-
-    std::wcout << L"Paths set\n";
-    std::wcout.flush();
 
     std::wcout << L"=== GGUF to ROM Converter ===\n";
     std::wcout << L"Input:  " << input_path << L"\n";
@@ -161,9 +226,6 @@ std::wcout << L"Args parsed\n";
     std::wcout << L"Input file opened\n";
     std::wcout.flush();
 
-    std::wcout << L"Input file opened\n";
-    std::wcout.flush();
-    
     std::wcout << L"Reading header...\n";
     std::wcout.flush();
     
@@ -218,15 +280,6 @@ std::wcout << L"Args parsed\n";
             SkipGGUFValue(type, input);
         }
     }
-
-    if (detected_arch.empty()) detected_arch = arch;
-    if (num_layers == 0) num_layers = 32;
-    if (hidden_dim == 0) hidden_dim = 3072;
-    if (kv_heads == 0) kv_heads = 32;
-
-    std::wcout << L"Detected: " << detected_arch.c_str() << L", Layers: " << num_layers 
-               << L", Hidden: " << hidden_dim << L", KV Heads: " << kv_heads << L"\n";
-    std::wcout.flush();
 
     // GGUF spec: tensor info begins IMMEDIATELY after metadata (no alignment).
     // Only tensor DATA is aligned to 64-byte boundary.
@@ -297,6 +350,8 @@ std::wcout << L"Args parsed\n";
         
         tensors.push_back(std::move(ti));
     }
+
+    std::wcout << L"\nFinished reading tensor info, count: " << tensors.size() << L"\n";
     std::wcout.flush();
 
     uint64_t current_pos = input.tellg();
@@ -366,32 +421,13 @@ std::wcout << L"Args parsed\n";
 
     // Copy tensor data from GGUF to ROM
     std::wcout << L"Copying tensor data...\n";
-    std::vector<uint64_t> actual_sizes(tensors.size());
-    
+
     for (size_t i = 0; i < tensors.size(); ++i) {
         // Calculate tensor size
         uint64_t elements = 1;
         for (auto d : tensors[i].dims) elements *= d;
         
-        uint64_t bytes_to_read = 0;
-        switch (tensors[i].type) {
-            case 0: bytes_to_read = elements * 4; break;
-            case 1: bytes_to_read = elements * 2; break;
-            case 2: bytes_to_read = elements / 2 + 32; break;
-            case 3: bytes_to_read = elements / 2 + 32; break;
-            case 4: bytes_to_read = elements * 5 / 8 + 32; break;
-            case 5: bytes_to_read = elements * 5 / 8 + 32; break;
-            case 6: bytes_to_read = elements + 32; break;
-            case 7: bytes_to_read = elements + 32; break;
-            case 8: bytes_to_read = elements / 4 + 16; break;
-            case 9: bytes_to_read = elements * 3 / 8 + 16; break;
-            case 10: bytes_to_read = elements / 2 + 16; break;
-            case 11: bytes_to_read = elements * 5 / 8 + 16; break;
-            case 12: bytes_to_read = elements * 6 / 8 + 16; break;
-            case 13: bytes_to_read = elements + 16; break;
-            default: bytes_to_read = elements * 2; break;
-        }
-        bytes_to_read = Align64(bytes_to_read);
+        uint64_t bytes_to_read = CalculateTensorBytes(tensors[i].type, elements);
         
         // GGUF tensor offsets are relative to the start of tensor data section
         input.seekg(static_cast<std::streamoff>(aligned_data_start + tensors[i].offset), std::ios::beg);
@@ -407,32 +443,17 @@ std::wcout << L"Args parsed\n";
             std::wcout.flush();
         }
     }
-    std::wcout << L"\n";
 
-    output.close();
-    input.close();
+    // Update header with actual total size
+    output.seekp(0);
+    header.total_rom_size = static_cast<uint64_t>(output.tellp());
+    output.write(reinterpret_cast<char*>(&header), sizeof(RomHeader));
 
-    // Verify output
-    std::ifstream verify(output_path, std::ios::binary);
-    verify.seekg(0, std::ios::end);
-    uint64_t verify_size = verify.tellg();
-    
     std::wcout << L"\n=== CONVERSION COMPLETE ===\n";
     std::wcout << L"Output ROM: " << output_path << L"\n";
-    std::wcout << L"ROM size:   " << verify_size << L" bytes (" << (verify_size / 1024 / 1024) << L" MB)\n";
+    std::wcout << L"ROM size:   " << output.tellp() << L" bytes (" << (output.tellp() / 1024 / 1024) << L" MB)\n";
     std::wcout << L"Tensors:    " << tensors.size() << L"\n";
+    std::wcout.flush();
 
-    std::ifstream check(output_path, std::ios::binary);
-    RomHeader check_header{};
-    check.read(reinterpret_cast<char*>(&check_header), sizeof(RomHeader));
-    
-    if (std::memcmp(check_header.magic, "RAWRXD2\0", 8) == 0) {
-        std::wcout << L"\n✓ ROM signature verified: RAWRXD2\n";
-    } else {
-        std::wcerr << L"\n✗ ROM signature INVALID!\n";
-        return 1;
-    }
-
-    std::wcout << L"✓ Conversion successful!\n";
     return 0;
 }

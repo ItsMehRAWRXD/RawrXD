@@ -127,6 +127,7 @@ endif()
 
 # Link libraries
 if(MSVC)
+    # Explicitly avoid ON.lib linkage (not a standard library)
     target_link_libraries(Deep2Engine_Benchmark 
         PRIVATE Vulkan::Vulkan
         kernel32 user32 advapi32
@@ -141,6 +142,20 @@ elseif(UNIX AND NOT APPLE)
 elseif(APPLE)
     target_link_libraries(Deep2Engine_Benchmark pthread dl Vulkan::Vulkan)
     target_link_libraries(production_smoke_test pthread dl Vulkan::Vulkan)
+endif()
+
+# Ensure ON.lib is never linked (not a standard Windows library)
+if(MSVC)
+    if(DEFINED ON_LIBRARY)
+        unset(ON_LIBRARY)
+    endif()
+    if(DEFINED ON)
+        unset(ON)
+    endif()
+    # Explicitly remove ON.lib from any link libraries
+    string(REPLACE "ON.lib" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    string(REPLACE "ON.lib" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+    string(REPLACE "ON.lib" "" CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS}")
 endif()
 
 # Install target
