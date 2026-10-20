@@ -47,6 +47,11 @@ The controlled D2 135-token capture was verified before resuming GPU work. The f
 
 The separate `nemotron-bolt.gguf` NVFP4 probe produced finite logits but 400 CPU calls because the active top-level `QuantDot` wrapper has no integrated type-40 dispatch. Its evidence is retained under `F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/nemotron30b_probe_20261020T1351/`; this remains an open implementation blocker before certifying NVFP4 models.
 
+The NVFP4 shader source now compiles to a verified 5,268-byte SPIR-V artifact,
+but the active top-level dispatcher still rejects quant-dot kind 7. The shader
+compile is recorded separately; runtime wiring and parity remain open:
+`F:/rawrxd/evidence/LARGE_MODEL_CERT_20261020/nvfp4_shader_compile_20261020T1510/receipt.md`.
+
 The first available Qwen-sized candidate was also probed before moving to a
 larger model. The local `qwen3.8:27b` Ollama blob is a Qwen3.5 hybrid export,
 not a 32B/40B dense model. It ingested and bound 673 operations, then failed

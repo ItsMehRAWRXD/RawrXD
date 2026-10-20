@@ -31,7 +31,7 @@ uint getb(uint byteIndex) {
 
 // E4M3 -> FP32: 1 sign, 4 exponent (bias 7), 3 mantissa
 float e4m3_to_fp32(uint x) {
-    int sign = int(x & 0x80u) ? -1 : 1;
+    int sign = ((x & 0x80u) != 0u) ? -1 : 1;
     int exp = int((x >> 3u) & 0x0Fu);
     int mant = int(x & 0x07u);
     if (exp == 0) return float(sign) * float(mant) * 0.015625f;
