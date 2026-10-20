@@ -43,15 +43,15 @@ Example:
 ```powershell
 & .\rawrxd\scripts\deep2_tps_mutation_gate.ps1 `
   -RepoRoot . `
-  -MutationScript rawrxd/tools/unweightless_bridge_audit.ps1 `
+  -MutationScript rawrxd/tools/mutate_qgemv_q6_algebra.ps1 `
   -Files @('rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp','rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv','rawrxd/src/deep2/vulkan_compute.h') `
-  -BuildCommand cmake `
-  -BuildArguments @('--build','_s12_parity_build','--target','deep2_end_to_end_bench','--config','Release','--parallel','8') `
+  -BuildCommand pwsh `
+  -BuildArguments @('-NoProfile','-File','rawrxd/scripts/build_deep2_candidate.ps1') `
   -ValidationCommand C:\VulkanSDK\1.4.357.0\Bin\spirv-val.exe `
   -ValidationArguments @('--target-env','vulkan1.2','rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv') `
   -BenchmarkScript rawrxd/scripts/deep2_gpu_flight_recorder.ps1 `
   -BenchmarkArguments @('-Exe','_s12_parity_build/bin/deep2_end_to_end_bench.exe','-Model','F:\~dev\qwen2.5-coder-1.5b-base.gguf','-Tokens','32','-WarmupRuns','1','-Runs','3','-Q4Hot','-Q6Hot','-NoTrace') `
-  -BaselineMedianTps 33.832 `
+  -BaselineMedianTps 31.392 `
   -MinRelativeGain 0.01 `
   -ReportPath .rawrxd/tps_mutation_report.json
 ```

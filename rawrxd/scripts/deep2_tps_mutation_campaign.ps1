@@ -3,7 +3,7 @@ param(
     [string]$GateScript = (Join-Path $PSScriptRoot 'deep2_tps_mutation_gate.ps1'),
     [string]$MutationScript = (Join-Path $PSScriptRoot '..\tools\mutate_qgemv_q6_algebra.ps1'),
     [string]$BuildCommand = 'pwsh',
-    [string[]]$BuildArguments = @('-NoProfile', '-File', 'scripts/build_s12_parity.ps1'),
+    [string[]]$BuildArguments = @('-NoProfile', '-File', 'rawrxd/scripts/build_deep2_candidate.ps1'),
     [string]$ValidationCommand = 'C:\VulkanSDK\1.4.357.0\Bin\spirv-val.exe',
     [string[]]$ValidationArguments = @('--target-env', 'vulkan1.2', 'rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv'),
     [string]$BenchmarkScript = (Join-Path $PSScriptRoot 'deep2_gpu_flight_recorder.ps1'),
@@ -28,7 +28,7 @@ $resolvedMutation = [System.IO.Path]::GetFullPath($MutationScript)
 $resolvedBenchmark = [System.IO.Path]::GetFullPath($BenchmarkScript)
 $resolvedExe = [System.IO.Path]::GetFullPath($Exe)
 $resolvedModel = [System.IO.Path]::GetFullPath($Model)
-foreach ($path in @($resolvedGate, $resolvedMutation, $resolvedBenchmark, $resolvedExe, $resolvedModel)) {
+foreach ($path in @($resolvedGate, $resolvedMutation, $resolvedBenchmark)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required path not found: $path" }
 }
 if ($BaselineMedianTps -le 0) { throw 'BaselineMedianTps must be positive.' }
@@ -100,8 +100,7 @@ try {
             '-Q4Tile', $candidate.tile,
             '-Gpu0Weight', $candidate.gpu0,
             '-Gpu1Weight', $candidate.gpu1,
-            '-NoTrace',
-            '-OutputDir', (Join-Path $candidateDir 'benchmark')
+            '-NoTrace'
         )
         if ($candidate.primaryOnly) { $benchmarkArguments += '-PrimaryOnly' }
         if ($candidate.q6SingleRow) { $benchmarkArguments += '-Q6SingleRow' }

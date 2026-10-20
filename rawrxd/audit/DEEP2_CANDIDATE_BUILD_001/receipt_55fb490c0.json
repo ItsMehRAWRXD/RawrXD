@@ -1,0 +1,79 @@
+{
+  "schema": "RAWRXD_DEEP2_ISOLATED_BUILD_EVIDENCE_001",
+  "base_commit": "55fb490c0ff2fa4d5b20b0ce8179d3d12d29b61c",
+  "generated_utc": "2026-10-20T04:22:56.8973010Z",
+  "builder_sha256": "FFE076F719DEDD97DA2037FA8347C096EAD8887D5B92C400C9D26E9491FEB22B",
+  "build": {
+    "schema": "RAWRXD_DEEP2_CANDIDATE_BUILD_001",
+    "generated_utc": "2026-10-20T04:22:21.7356811Z",
+    "source_root": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\rawrxd",
+    "build_root": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\_s12_parity_build",
+    "compiler": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\cl.exe",
+    "executable": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe",
+    "executable_sha256": "DB07A97D3CC67FC11E570DC6EF8C7C718EB546EC59BF1388E384C85C350EA5D4",
+    "engine_sources": [
+      "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\rawrxd\\src\\deep2\\vulkan_compute.cpp",
+      "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\rawrxd\\src\\deep2\\Deep2Engine.cpp",
+      "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\rawrxd\\src\\deep2\\Deep2Engine_GpuForward.cpp",
+      "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_tps_candidate_43a1b6ea3d524fe4b79a9cde69614be3\\rawrxd\\src\\deep2\\deep2_end_to_end_bench.cpp"
+    ],
+    "benchmark_launched": false
+  },
+  "guard_tests": {
+    "schema": "RAWRXD_CANDIDATE_BUILD_GUARDS_001",
+    "passed": true,
+    "test_count": 5,
+    "benchmarks_launched": 0,
+    "results": [
+      {
+        "name": "outside_build_rejected",
+        "pass": true,
+        "process_exit": 1
+      },
+      {
+        "name": "in_source_build_rejected",
+        "pass": true,
+        "process_exit": 1
+      },
+      {
+        "name": "foreign_cache_rejected",
+        "pass": true,
+        "process_exit": 1
+      },
+      {
+        "name": "invalid_cache_rejected",
+        "pass": true,
+        "process_exit": 1
+      },
+      {
+        "name": "manifest_without_built_executable",
+        "pass": true,
+        "process_exit": 0
+      }
+    ]
+  },
+  "gate": {
+    "verdict": "DRY_RUN_ONLY",
+    "compiler_exit": 0,
+    "spirv_validator_exit": 0,
+    "benchmark_status": "PAUSED",
+    "baseline_preserved": true,
+    "candidate_removed": true,
+    "report": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_isolated_build_gate_d26543df61f34ffba9b345483d8348fb\\gate_report.json"
+  },
+  "ledger_verification": "LEDGER_VALID=True RECORDS=3 HEAD=5D0E4BC5D11EAE58969087974A6F6076E62222D397D7F619FA5214700F5A231C",
+  "accepted_build_files": [
+    {
+      "path": "_s12_parity_build/CMakeCache.txt",
+      "before_sha256": "965CE6E07A3436F82EACC41AB54DBE93704C77657DA35E1663C959E8DCEAC893",
+      "after_sha256": "965CE6E07A3436F82EACC41AB54DBE93704C77657DA35E1663C959E8DCEAC893",
+      "unchanged": true
+    },
+    {
+      "path": "_s12_parity_build/bin/deep2_end_to_end_bench.exe",
+      "before_sha256": "A32F17107AA57D5C4AC19D4FC35C0DFAE4EF34A510AB6537EBAD72A1BBD5BDE7",
+      "after_sha256": "A32F17107AA57D5C4AC19D4FC35C0DFAE4EF34A510AB6537EBAD72A1BBD5BDE7",
+      "unchanged": true
+    }
+  ]
+}
