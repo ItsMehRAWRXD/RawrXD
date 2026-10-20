@@ -13,6 +13,7 @@ param(
     [string]$DenseExec = 'LAYER_SPLIT',
     [ValidateSet('auto', '4', '8')]
     [string]$Q4Tile = 'auto',
+    [switch]$PrimaryOnly,
     [switch]$ResidentFirst,
     [switch]$NoTrace,
     [string]$Gpu0Weight = '100',
@@ -47,6 +48,7 @@ $trackedEnv = @(
     'DEEP2_RESIDENT_FIRST',
     'DEEP2_GPU0_THROUGHPUT_WEIGHT',
     'DEEP2_GPU1_THROUGHPUT_WEIGHT',
+    'DEEP2_DENSE_PRIMARY_ONLY',
     'DEEP2_Q4K_HOT_BATCH_ROWS',
     'DEEP2_Q4K_SINGLE_BATCH_ROWS',
     'DEEP2_Q4K_FORCE_TILE',
@@ -97,6 +99,7 @@ try {
     $env:DEEP2_RESIDENT_FIRST = if ($ResidentFirst) { '1' } else { '0' }
     $env:DEEP2_GPU0_THROUGHPUT_WEIGHT = $Gpu0Weight
     $env:DEEP2_GPU1_THROUGHPUT_WEIGHT = $Gpu1Weight
+    $env:DEEP2_DENSE_PRIMARY_ONLY = if ($PrimaryOnly) { '1' } else { $null }
     $env:DEEP2_Q4K_HOT_BATCH_ROWS = if ($Q4Hot) { '1' } else { '0' }
     $env:DEEP2_Q4K_SINGLE_BATCH_ROWS = if ($Q4Hot) { '1' } else { '0' }
     if ($Q4Tile -eq 'auto') {
@@ -226,6 +229,7 @@ try {
         q6_hot = [bool]$Q6Hot
         q4_tile = $Q4Tile
         dense_exec = $DenseExec
+        primary_only = [bool]$PrimaryOnly
         resident_first = [bool]$ResidentFirst
         trace_enabled = -not [bool]$NoTrace
         gpu0_weight = $Gpu0Weight
