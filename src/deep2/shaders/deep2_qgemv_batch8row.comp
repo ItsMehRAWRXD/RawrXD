@@ -13,11 +13,15 @@ layout(push_constant) uniform Push {
     uint batch;
 } pc;
 
-shared float xs[4][256];
+shared float xs[8][256];
 shared float red0[256];
 shared float red1[256];
 shared float red2[256];
 shared float red3[256];
+shared float red4[256];
+shared float red5[256];
+shared float red6[256];
+shared float red7[256];
 
 uint getb(uint byteIndex) {
     uint word=w[byteIndex>>2u];
@@ -55,56 +59,187 @@ float q4kWeight(uint rowBase,uint col) {
     return d*float(sc)*float(q)-dm*float(mn);
 }
 
+void q4kDot4(uint rowBase,uint globalCol,uint localCol,
+             inout float a0,inout float a1,inout float a2,inout float a3,
+             inout float a4,inout float a5,inout float a6,inout float a7) {
+    uint block=globalCol>>8u;
+    uint idx=globalCol&255u;
+    uint b=rowBase+block*144u;
+    float d=geth(b);
+    float dm=geth(b+2u);
+    uint sb=idx>>5u;
+    uint l=idx&31u;
+    uint sc,mn;
+    q4kScaleMin(b,sb,sc,mn);
+    uint pair=sb>>1u;
+    uint packed4=w[(b+16u+pair*32u+l)>>2u];
+    float ds=d*float(sc);
+    float ms=dm*float(mn);
+    for(uint k=0u;k<4u;++k) {
+        uint col=globalCol+k;
+        if(col>=pc.cols) break;
+        uint packed=(packed4>>(k*8u))&255u;
+        uint q=(sb&1u)==0u?(packed&15u):(packed>>4u);
+        float ww=ds*float(q)-ms;
+        uint local=localCol+k;
+        a0+=ww*xs[0][local];
+        if(pc.batch>1u) a1+=ww*xs[1][local];
+        if(pc.batch>2u) a2+=ww*xs[2][local];
+        if(pc.batch>3u) a3+=ww*xs[3][local];
+        if(pc.batch>4u) a4+=ww*xs[4][local];
+        if(pc.batch>5u) a5+=ww*xs[5][local];
+        if(pc.batch>6u) a6+=ww*xs[6][local];
+        if(pc.batch>7u) a7+=ww*xs[7][local];
+    }
+}
+
+int gets8(uint byteIndex) {
+    int v=int(getb(byteIndex));
+    return v>=128 ? v-256 : v;
+}
+float q6kWeight(uint rowBase,uint col) {
+    uint block=col>>8u;
+    uint idx=col&255u;
+    uint b=rowBase+block*210u;
+    float d=geth(b+208u);
+    uint hi128=idx>>7u;
+    uint within=idx&127u;
+    uint cat=within>>5u;
+    uint l=within&31u;
+    uint is=l>>4u;
+    uint qlBase=b+hi128*64u;
+    uint qhBase=b+128u+hi128*32u;
+    uint scBase=b+192u+hi128*8u;
+    uint q=0u;
+    uint scIndex=0u;
+    if(cat==0u) {
+        q=(getb(qlBase+l)&15u)|(((getb(qhBase+l)>>0u)&3u)<<4u);
+        scIndex=is;
+    } else if(cat==1u) {
+        q=(getb(qlBase+l+32u)&15u)|(((getb(qhBase+l)>>2u)&3u)<<4u);
+        scIndex=is+2u;
+    } else if(cat==2u) {
+        q=(getb(qlBase+l)>>4u)|(((getb(qhBase+l)>>4u)&3u)<<4u);
+        scIndex=is+4u;
+    } else {
+        q=(getb(qlBase+l+32u)>>4u)|(((getb(qhBase+l)>>6u)&3u)<<4u);
+        scIndex=is+6u;
+    }
+    return d*float(gets8(scBase+scIndex))*float(int(q)-32);
+}
+
+uint load4Bytes(uint byteIndex) {
+    uint wordIndex=byteIndex>>2u;
+    uint shift=(byteIndex&3u)*8u;
+    uint lo=w[wordIndex];
+    if(shift==0u) return lo;
+    uint hi=w[wordIndex+1u];
+    return (lo>>shift)|(hi<<(32u-shift));
+}
+
+void q6kDot4(uint rowBase,uint globalCol,uint localCol,
+             inout float a0,inout float a1,inout float a2,inout float a3,
+             inout float a4,inout float a5,inout float a6,inout float a7) {
+    uint block=globalCol>>8u;
+    uint element=globalCol&255u;
+    uint elementHalf=element>>7u;
+    uint elementWithin=element&127u;
+    uint elementCat=elementWithin>>5u;
+    uint elementL=elementWithin&31u;
+    uint b=rowBase+block*210u;
+    uint qlBase=b+elementHalf*64u+(elementCat&1u)*32u+elementL;
+    uint qhBase=b+128u+elementHalf*32u+elementL;
+    uint ql=load4Bytes(qlBase);
+    uint qh=load4Bytes(qhBase);
+    uint scaleIndex=elementHalf*8u+(elementCat<<1u)+(elementL>>4u);
+    float d=geth(b+208u);
+    float scale=float(gets8(b+192u+scaleIndex));
+    for(uint k=0u;k<4u;++k) {
+        uint col=globalCol+k;
+        if(col>=pc.cols) break;
+        uint qByte=(ql>>(k*8u))&255u;
+        uint q=(elementCat&1u)==0u?(qByte&15u):(qByte>>4u);
+        uint highByte=(qh>>(k*8u))&255u;
+        uint high=(highByte>>((elementCat&3u)*2u))&3u;
+        float ww=d*scale*float(int(q|(high<<4u))-32);
+        uint local=localCol+k;
+        a0+=ww*xs[0][local];
+        if(pc.batch>1u) a1+=ww*xs[1][local];
+        if(pc.batch>2u) a2+=ww*xs[2][local];
+        if(pc.batch>3u) a3+=ww*xs[3][local];
+        if(pc.batch>4u) a4+=ww*xs[4][local];
+        if(pc.batch>5u) a5+=ww*xs[5][local];
+        if(pc.batch>6u) a6+=ww*xs[6][local];
+        if(pc.batch>7u) a7+=ww*xs[7][local];
+    }
+}
+
 void main() {
-    if(pc.type!=12u||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
+    if((pc.type!=12u&&pc.type!=14u)||pc.batch==0u||pc.batch>8u||pc.cols==0u) return;
 
     uint lid=gl_LocalInvocationID.x;
-    uint cohort=lid>>5u; // /32 => 0..7
+    uint cohort=lid>>5u;
     uint lane=lid&31u;
     uint row=gl_WorkGroupID.x*8u+cohort;
     uint blocks=(pc.cols+255u)>>8u;
-    uint rowBytes=blocks*144u;
+    uint rowBytes=blocks*(pc.type==14u?210u:144u);
 
     float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
+    float a4=0.0,a5=0.0,a6=0.0,a7=0.0;
     for(uint blk=0u;blk<blocks;++blk) {
         uint colBase=blk*256u;
         uint c=colBase+lid;
         if(c<pc.cols) {
-            xs[0][lid]=x[c];
-            xs[1][lid]=pc.batch>1u?x[pc.cols+c]:0.0;
-            xs[2][lid]=pc.batch>2u?x[2u*pc.cols+c]:0.0;
-            xs[3][lid]=pc.batch>3u?x[3u*pc.cols+c]:0.0;
+            for(uint bi=0u; bi<8u; ++bi)
+                xs[bi][lid]=pc.batch>bi ? x[bi*pc.cols+c] : 0.0;
         } else {
-            xs[0][lid]=xs[1][lid]=xs[2][lid]=xs[3][lid]=0.0;
+            for(uint bi=0u; bi<8u; ++bi) xs[bi][lid]=0.0;
         }
         barrier();
 
         if(row<pc.rows) {
             uint rb=row*rowBytes;
-            // 32 lanes x 8 elements = one complete 256-column Q4_K tile.
-            for(uint k=0u;k<8u;++k) {
-                uint lc=lane+k*32u;
-                uint gc=colBase+lc;
-                if(gc>=pc.cols) continue;
-                float ww=q4kWeight(rb,gc);
-                a0+=ww*xs[0][lc];
-                if(pc.batch>1u) a1+=ww*xs[1][lc];
-                if(pc.batch>2u) a2+=ww*xs[2][lc];
-                if(pc.batch>3u) a3+=ww*xs[3][lc];
+            if(pc.type==14u) {
+                // Keep the Q6_K witness scalar until the layout is proven
+                // against the executor's integer-MAC reference. This is less
+                // aggressive than q6kDot4 but cannot cross a scale group or
+                // rely on an alignment assumption hidden in a vector load.
+                for(uint k=0u;k<8u;++k) {
+                    uint lc=lane*8u+k;
+                    uint gc=colBase+lc;
+                    if(gc>=pc.cols) continue;
+                    float ww=q6kWeight(rb,gc);
+                    a0+=ww*xs[0][lc];
+                    if(pc.batch>1u) a1+=ww*xs[1][lc];
+                    if(pc.batch>2u) a2+=ww*xs[2][lc];
+                    if(pc.batch>3u) a3+=ww*xs[3][lc];
+                    if(pc.batch>4u) a4+=ww*xs[4][lc];
+                    if(pc.batch>5u) a5+=ww*xs[5][lc];
+                    if(pc.batch>6u) a6+=ww*xs[6][lc];
+                    if(pc.batch>7u) a7+=ww*xs[7][lc];
+                }
+            } else {
+                for(uint k=0u;k<2u;++k) {
+                    uint lc=lane*8u+k*4u;
+                    uint gc=colBase+lc;
+                    if(gc<pc.cols)
+                        q4kDot4(rb,gc,lc,a0,a1,a2,a3,a4,a5,a6,a7);
+                }
             }
         }
         barrier();
     }
 
-    red0[lid]=a0;red1[lid]=a1;red2[lid]=a2;red3[lid]=a3;
+    red0[lid]=a0; red1[lid]=a1; red2[lid]=a2; red3[lid]=a3;
+    red4[lid]=a4; red5[lid]=a5; red6[lid]=a6; red7[lid]=a7;
     barrier();
-    for(uint stride=16u;stride>0u;stride>>=1u) {
+    for(uint stride=16u; stride>0u; stride>>=1u) {
         if(lane<stride) {
             uint j=lid+stride;
-            red0[lid]+=red0[j];
-            red1[lid]+=red1[j];
-            red2[lid]+=red2[j];
-            red3[lid]+=red3[j];
+            red0[lid]+=red0[j]; red1[lid]+=red1[j];
+            red2[lid]+=red2[j]; red3[lid]+=red3[j];
+            red4[lid]+=red4[j]; red5[lid]+=red5[j];
+            red6[lid]+=red6[j]; red7[lid]+=red7[j];
         }
         barrier();
     }
@@ -113,5 +248,9 @@ void main() {
         if(pc.batch>1u)y[pc.rows+row]=red1[lid];
         if(pc.batch>2u)y[2u*pc.rows+row]=red2[lid];
         if(pc.batch>3u)y[3u*pc.rows+row]=red3[lid];
+        if(pc.batch>4u)y[4u*pc.rows+row]=red4[lid];
+        if(pc.batch>5u)y[5u*pc.rows+row]=red5[lid];
+        if(pc.batch>6u)y[6u*pc.rows+row]=red6[lid];
+        if(pc.batch>7u)y[7u*pc.rows+row]=red7[lid];
     }
 }

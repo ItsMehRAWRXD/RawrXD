@@ -3219,20 +3219,38 @@ case OpKind::LmHead: {
                 // EXL3/RDNA4 reference relies on (8 draft tokens ~1.16x cost).
                 if (perPosLogits) {
                     const TensorRec& lmh = tensors_[(size_t)in.b];
-                    const bool is_q4k = (lmh.ggml_type == 12); // GGML_TYPE_Q4_K
-                    if (is_q4k && lmh.data && lmh.bytes > 0) {
+                    const bool is_qk = (lmh.ggml_type == 12 || lmh.ggml_type == 14);
+                    if (is_qk && lmh.data && lmh.bytes > 0) {
                         // Fused batch path: upload all P hidden vectors, one
                         // kernel launch, download all P logits.
                         const size_t hidden_dim = ts[0].hidden.size();
-                        const size_t vocab = lmh.dims[0] ? (size_t)lmh.dims[0] : spec_.vocab;
+                        // GGUF matrix order is [input, output]. The LM head
+                        // therefore uses dims[1] for its vocabulary rows;
+                        // dims[0] is the hidden input width.
+                        const size_t vocab = lmh.dims.size() > 1 && lmh.dims[1]
+                            ? (size_t)lmh.dims[1] : spec_.vocab;
                         if (hidden_dim > 0 && vocab > 0) {
                             // Prepare concatenated input batch
                             std::vector<float> flat_in;
                             flat_in.reserve(P * hidden_dim);
-                            for (size_t t = 0; t < P; ++t)
-                                flat_in.insert(flat_in.end(),
-                                               ts[t].hidden.begin(),
-                                               ts[t].hidden.end());
+                            for (size_t t = 0; t < P; ++t) {
+                                // The ordinary quant-dot path first converts
+                                // activations to interleaved Q8_K. Feed the
+                                // fused shader the same reconstructed values;
+                                // sending raw hidden floats would produce a
+                                // numerically different (though plausible)
+                                // Q6 projection and break greedy parity.
+                                std::vector<float> q8;
+                                BuildInterleavedQ8(ts[t].hidden.data(), hidden_dim, q8);
+                                const size_t n_sb = (hidden_dim + 255u) / 256u;
+                                for (size_t sb = 0; sb < n_sb; ++sb) {
+                                    const float d = q8[sb * kQ8Stride];
+                                    const size_t base = sb * kQ8Stride + 1u;
+                                    const size_t count = std::min<size_t>(256u, hidden_dim - sb * 256u);
+                                    for (size_t j = 0; j < count; ++j)
+                                        flat_in.push_back(d * q8[base + j]);
+                                }
+                            }
                             // Output buffer for concatenated logits
                             std::vector<float> flat_out(P * vocab);
                             // Real Q4_K CPU dot callback: dequantize packed Q4_K row
@@ -3259,7 +3277,40 @@ case OpKind::LmHead: {
                                     flat_in.data(), flat_in.size(),
                                     flat_out.data(), flat_out.size(),
                                     vocab, hidden_dim, P,
-                                    force_cpu_)) {
+                                    force_cpu_, static_cast<int>(lmh.ggml_type))) {
+                                // Optional differential witness for the fused
+                                // path. It compares each fused row against the
+                                // exact interleaved-Q8 reference used by the
+                                // ordinary quant-dot route, without changing
+                                // the production fast path.
+                                if (std::getenv("RR_QK_FUSED_VALIDATE")) {
+                                    const int qkind = QuantKindOf(lmh.ggml_type);
+                                    double worst = 0.0;
+                                    size_t worst_t = 0, worst_r = 0;
+                                    float fused_worst = 0.0f, ref_worst = 0.0f;
+                                    for (size_t vt = 0; vt < P; ++vt) {
+                                        std::vector<float> q8_ref;
+                                        BuildInterleavedQ8(ts[vt].hidden.data(), hidden_dim, q8_ref);
+                                        const uint8_t* base = static_cast<const uint8_t*>(lmh.data);
+                                        const size_t row_bytes = QuantRowBytes(qkind, hidden_dim);
+                                        for (size_t vr = 0; vr < vocab; ++vr) {
+                                            const float ref = RowDotInterleavedQ8(
+                                                qkind, base + vr * row_bytes,
+                                                q8_ref.data(), hidden_dim);
+                                            const float got = flat_out[vt * vocab + vr];
+                                            const double d = std::fabs(double(got) - double(ref));
+                                            if (d > worst) {
+                                                worst = d; worst_t = vt; worst_r = vr;
+                                                fused_worst = got; ref_worst = ref;
+                                            }
+                                        }
+                                    }
+                                    std::fprintf(stderr,
+                                        "[qk-fused-validate] type=%d rows=%zu cols=%zu batch=%zu "
+                                        "max_abs=%.9g token=%zu row=%zu fused=%.9g ref=%.9g\n",
+                                        static_cast<int>(lmh.ggml_type), vocab, hidden_dim, P,
+                                        worst, worst_t, worst_r, fused_worst, ref_worst);
+                                }
                                 perPosLogits->assign(P, {});
                                 for (size_t t = 0; t < P; ++t) {
                                     (*perPosLogits)[t].assign(

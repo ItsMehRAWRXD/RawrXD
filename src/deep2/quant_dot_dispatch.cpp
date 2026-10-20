@@ -717,7 +717,8 @@ bool DispatchLmHeadBatchQ4K(
     size_t rows,     // vocab size
     size_t cols,     // hidden dimension
     size_t batch,    // number of token positions (P)
-    bool force_cpu)
+    bool force_cpu,
+    int quant_type)
 {
     g_receipt = Receipt{};
     if (!wBytes || wBytesCount == 0 || !inputBatch || inputBatchCount == 0 ||
@@ -744,7 +745,14 @@ bool DispatchLmHeadBatchQ4K(
         return false;
     }
 
-    // Use the canonical VulkanCompute's fused Q4_K batch GEMV via its scratch system.
+    if (quant_type != 12 && quant_type != 14) {
+        g_receipt.fallback_reason = "lmhead-batch: unsupported quant type";
+        return false;
+    }
+
+    // Use the canonical VulkanCompute's fused Q4_K/Q6_K batch GEMV via its
+    // scratch system. The caller supplies the real GGUF type so a Q6_K output
+    // head is not silently routed through a Q4-only kernel.
     auto& gpu = Gpu();
     const size_t in_bytes = batch * cols * sizeof(float);
     const size_t out_bytes = batch * rows * sizeof(float);
@@ -776,7 +784,8 @@ bool DispatchLmHeadBatchQ4K(
             inScratch->buffer, outScratch->buffer,
             static_cast<uint32_t>(rows),
             static_cast<uint32_t>(cols),
-            static_cast<uint32_t>(batch))) {
+            static_cast<uint32_t>(batch),
+            static_cast<uint32_t>(quant_type))) {
         gpu.ReleaseQuantScratch(outScratch);
         gpu.ReleaseQuantScratch(inScratch);
         g_receipt.fallback_reason = "lmhead-batch: fused dispatch failed";

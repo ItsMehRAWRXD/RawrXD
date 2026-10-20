@@ -246,7 +246,7 @@ size_t BatchCapacity();
 
 // ---------------------------------------------------------------------------
 // RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: fused multi-token LM-head projection.
-// Runs a batched Q4_K GEMV over P token-position hidden vectors, loading the
+// Runs a batched Q4_K/Q6_K GEMV over P token-position hidden vectors, loading the
 // output-weight matrix once and producing P logits vectors in one kernel
 // launch. This is the "batched GPU verification" primitive required by
 // speculative decoding (8 draft tokens ~1.16x cost per the EXL3/RDNA4 reference).
@@ -258,6 +258,7 @@ bool DispatchLmHeadBatchQ4K(
     size_t rows,     // vocab size
     size_t cols,     // hidden dimension
     size_t batch,    // number of token positions (P)
-    bool force_cpu = false);
+    bool force_cpu = false,
+    int quant_type = 12); // GGML_TYPE_Q4_K=12 or GGML_TYPE_Q6_K=14
 
 } } }

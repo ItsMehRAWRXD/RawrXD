@@ -1,0 +1,28 @@
+{
+  "tool": "deep2_spec_bench",
+  "tag": "RAWRXD_DEEP2_SPEC_VERIFY_001",
+  "model": "F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "gamma": 4,
+  "ngram": 3,
+  "draft_policy": "repeat",
+  "tokens": 4,
+  "force_cpu": false,
+  "lines": [
+    "      model=F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "== [P] REAL MODEL (universal GGUF ingest)",
+    "      arch=llama name=tinyllama_tinyllama-1.1b-chat-v1.0 sha256=9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+    "      layers=22 embd=2048 heads=32 vocab=32000 ctx=2048",
+    "== [code] workload",
+    "      prompt: 103 tokens, generate=4, gamma=4, ngram=3, draft=repeat",
+    "      serial: prefill=18687.5 ms decode=661.9 ms gpu_calls=16878 cpu_calls=0",
+    "      spec: prefill=17312.2 ms decode=1141.8 ms gpu_calls=17426 cpu_calls=0",
+    "      serial TPS=6.04  spec TPS=3.50  speedup=0.58x",
+    "      acceptance[code]: rounds=1 proposed=4 accepted=3 rate=75.0% tokens/round=4.00 bonus=0 replacements=1 zero_accept=0 serial_steps=1 verify_batches=1 verify_positions=5 repairs=1 serial_fallbacks=0 adaptive_disabled=0",
+    "PASS  spec stream identical to serial greedy stream (greedy equivalence)",
+    "PASS  no non-finite logits on the spec arm",
+    "PASS  no non-finite logits on the serial arm",
+    "== VERDICT",
+    "      pass=3 fail=0 na=0 spec_ran=1"
+  ]
+}

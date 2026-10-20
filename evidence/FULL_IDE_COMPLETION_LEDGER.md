@@ -231,3 +231,12 @@ Receipt: `evidence/S07_SPEC_MEASUREMENT_RECEIPT_20261020.md`; raw run: `evidence
 The verifier now records sequence-level batches, evaluated positions, serial KV repairs, and adaptive fallbacks. The default fail-safe disables speculation after two consecutive zero-accept rounds. On the same 128-token TinyLlama/R9700 workload, the repeat drafter measured code 0.95x and prose 1.04x serial speed; prompt lookup raised acceptance to 45.7%/70.0% but measured 0.78x/0.94x. All streams remained 128/128 identical with zero nonfinite logits and zero CPU calls.
 
 This is an optimization and diagnostic improvement, not an S07 pass. The verifier still runs attention/norm/KV stages token-minor inside each PrefillBatch and performs serial KV repair after partial rejection. Receipt: evidence/S07_ADAPTIVE_POLICY_RECEIPT_20261020.md.
+
+
+## S07 Q4_K/Q6_K fused LM-head integration — 2026-10-20
+
+The real TinyLlama output head is Q6_K (`output.weight dims=[2048,32000]`). The fused verifier now passes the GGUF type, uses the correct vocabulary dimension, discovers the shader from packaged or source-tree paths, and reconstructs the serial path's interleaved Q8_K activations. A fresh four-token differential witness measured max_abs `4.76837158e-06`, exact greedy stream agreement, finite logits, and zero CPU calls.
+
+The rebuilt 128-token R9700 run stayed exact and GPU-only: code 4.54 -> 4.33 TPS (0.95x), prose 4.50 -> 4.27 TPS (0.95x), with 3/12 and 0/8 drafts accepted; GPU calls increased from 36,098 to 37,742 (code) and 47,208 to 48,614 (prose). S07 acceleration remains OPEN.
+
+The per-op trace shows approximately 195 ms/token in `FlushDotBatch` versus approximately 14.4 ms in the LM head, so the next performance work targets submission/fence amortization rather than draft policy alone. Receipts: `evidence/S07_Q6_FUSED_RECEIPT_20261020.md`, `evidence/S07_Q6_FUSED_VALIDATE_4_RUN6_20261020/`, `evidence/S07_Q6_FUSED_128_BOTH_RUN2_20261020/`, and `evidence/S07_Q6_TIMING_4_20261020/`.

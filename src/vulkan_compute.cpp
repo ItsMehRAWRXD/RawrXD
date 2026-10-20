@@ -1984,12 +1984,36 @@ bool VulkanCompute::EnsureQ4KBatchGemvPipeline() {
         shaders_["q4k_batch_gemv"].layout) {
         return true;
     }
-    const char* kQ4KBatchGemvShaderPath = "tools/shaders/deep2_qgemv_batch8row.spv";
     std::vector<uint32_t> code;
-    if (!LoadSPIRVCode(kQ4KBatchGemvShaderPath, code) || code.empty()) {
-        std::cerr << "Failed to load Q4K-batch-GEMV SPIR-V: " << kQ4KBatchGemvShaderPath << std::endl;
+    std::string selected_path;
+    std::vector<std::string> shader_candidates;
+    if (const char* override_path = std::getenv("RAWRXD_Q4K_BATCH_SHADER");
+        override_path && *override_path) {
+        shader_candidates.emplace_back(override_path);
+    }
+#ifdef DEEP2_SHADER_DIR
+    shader_candidates.emplace_back(std::string(DEEP2_SHADER_DIR) +
+                                    "\\deep2_qgemv_batch8row.spv");
+#endif
+    // Prefer the packaged path, then the source-tree artifact. The absolute
+    // fallback keeps build/bin launches tied to the same checked-out shader.
+    shader_candidates.emplace_back("tools/shaders/deep2_qgemv_batch8row.spv");
+    shader_candidates.emplace_back("src/deep2/shaders/deep2_qgemv_batch8row.spv");
+    shader_candidates.emplace_back("F:\\rawrxd\\src\\deep2\\shaders\\deep2_qgemv_batch8row.spv");
+    for (const std::string& candidate : shader_candidates) {
+        std::ifstream probe(candidate, std::ios::binary);
+        if (!probe.good()) continue;
+        if (LoadSPIRVCode(candidate, code) && !code.empty()) {
+            selected_path = candidate;
+            break;
+        }
+    }
+    if (selected_path.empty()) {
+        std::cerr << "Failed to load Q4K/Q6K-batch-GEMV SPIR-V from the packaged or source-tree paths"
+                  << std::endl;
         return false;
     }
+    std::cerr << "[qk-batch] shader=" << selected_path << std::endl;
     VkShaderModuleCreateInfo sm{};
     sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     sm.codeSize = code.size() * sizeof(uint32_t);
@@ -2004,7 +2028,7 @@ bool VulkanCompute::EnsureQ4KBatchGemvPipeline() {
     }
     // Reuses the quant-dot descriptor set layout: three storage buffers
     // (input batch, weight, output batch). The push constant matches the
-    // shader's QBatchPush: {type=12, rows=vocab, cols=hidden, weightBytes, batch}.
+    // shader's QBatchPush: {type, rows=vocab, cols=hidden, weightBytes, batch}.
     if (!quant_descriptor_set_layout_) {
         std::cerr << "Q4K-batch-GEMV needs the quant-dot descriptor layout" << std::endl;
         return false;
@@ -2319,14 +2343,15 @@ bool VulkanCompute::DownloadBuffer(VkBuffer src, void* dst, size_t bytes) {
 bool VulkanCompute::DispatchGemvQ4KBatch(
     const void* weights, size_t weightBytes,
     VkBuffer inputBatch, VkBuffer outputBatch,
-    uint32_t rows, uint32_t cols, uint32_t batch) {
+    uint32_t rows, uint32_t cols, uint32_t batch, uint32_t kind) {
     const bool trace = (std::getenv("RR_Q4K_BATCH_TRACE") != nullptr);
     // RAWRXD_G04: same atomic-residency contract as ExecuteQuantDot.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     #define Q4K_BATCH_FAIL(msg) do { if (trace) { std::cerr << "[q4k-batch-trace] " << msg << std::endl; } return false; } while (0)
     if (!weights || weightBytes == 0 || !inputBatch || !outputBatch)
         Q4K_BATCH_FAIL("null argument");
-    if (rows == 0 || cols == 0 || batch == 0 || batch > 8)
+    if (rows == 0 || cols == 0 || batch == 0 || batch > 8 ||
+        (kind != 12 && kind != 14))
         Q4K_BATCH_FAIL("invalid rows/cols/batch (batch max 8)");
     // Callers pass device-side scratch buffers; the expected byte counts are
     // derived from the geometry and documented on the declaration.
@@ -2336,9 +2361,9 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     if (!EnsureQ4KBatchGemvPipeline()) Q4K_BATCH_FAIL("q4k-batch-gemv pipeline");
     if (!EnsureQuantFastPath()) Q4K_BATCH_FAIL("fast path");
 
-    // Weight bytes are uploaded once and cached (kind=12 marks the Q4_K batch
+    // Weight bytes are uploaded once and cached (kind marks the Q4_K/Q6_K batch
     // cache entry; the fingerprint still guards the pointer/bytes/size identity).
-    QuantWeight* w = EnsureQuantWeight(weights, weightBytes, /*kind=*/12);
+    QuantWeight* w = EnsureQuantWeight(weights, weightBytes, static_cast<int>(kind));
     if (!w) Q4K_BATCH_FAIL("weight cache miss");
     // RAWRXD_G04 in-flight pin: hold the entry until this call's fence wait.
     struct WeightPin {
@@ -2346,7 +2371,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
         const void* key;
         ~WeightPin() { v.UnpinQuantWeight(key); }
     } weight_pin{*this, weights};
-    PinQuantWeight(weights, weightBytes, 12);
+    PinQuantWeight(weights, weightBytes, static_cast<int>(kind));
 
     // Descriptor set from the recycled ring: three storage buffers
     // (weight, input batch, output batch). The caller has already uploaded
@@ -2394,7 +2419,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     auto it = shaders_.find("q4k_batch_gemv");
     if (it == shaders_.end() || !it->second.pipeline)
         Q4K_BATCH_FAIL("q4k_batch_gemv pipeline missing");
-    // Push constants: {type=12, rows=vocab, cols=hidden, weightBytes, batch}
+    // Push constants: {type, rows=vocab, cols=hidden, weightBytes, batch}
     struct QBatchPush {
         uint32_t type = 12;
         uint32_t rows = 0;
@@ -2403,7 +2428,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
         uint32_t batch = 0;
     };
     QBatchPush pc{};
-    pc.type = 12;
+    pc.type = kind;
     pc.rows = rows;
     pc.cols = cols;
     pc.weightBytes = static_cast<uint32_t>(weightBytes);
