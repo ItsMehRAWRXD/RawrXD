@@ -253,3 +253,6 @@ A guarded `DEEP2_QUANT_ROW_TILE=8` Q6 shared-tile route was added alongside row-
 ## Native Nemotron 30B smoke — 2026-10-20
 
 The native row-8/Q6/reuse route loaded `nemotron-3.5-lightning-30b-Q4_K_M.gguf` (Nemotron-H MoE, 53 layers, hidden 2688, context 1048576) and completed an 8-token GPU serial run with finite logits and zero CPU calls. Decode was 275.7 ms for 8 tokens (~29.02 TPS); the recurrent SSM graph correctly disables speculative rollback. This is a loadability/correctness smoke, not sustained 30B performance certification. Receipt: `evidence/NEMOTRON30B_ROW8_8TOK_20261020/SPEC_BENCH_RECEIPT.txt`.
+## Native DeepSeek R1 32B smoke — 2026-10-20
+
+The universal loader identified `deepseek-r1_32b.gguf` as Qwen2 (64 layers, hidden 5120, 40 heads, vocab 152064, context 131072) and Vulkan initialized on the R9700. The process terminated after pipeline initialization before a forward receipt, finite-logit result, or clean exit was recorded on repeated 8-token and 1-token attempts. This model is NOT CERTIFIED for native forward execution; preserved logs and the blocker analysis are in `evidence/DEEPSEEK32B_NATIVE_BLOCKER_20261020.md`.

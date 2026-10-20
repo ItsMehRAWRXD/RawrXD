@@ -1,0 +1,2 @@
+[quant-row8] shader=F:\rawrxd\tools\shaders\quant_dot_row8_q6tile.spv q6_shared=1
+[qk-batch] shader=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv
