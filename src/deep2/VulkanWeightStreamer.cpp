@@ -17,6 +17,7 @@ bool VulkanWeightStreamer::initialize(const WeightStreamConfig& config) {
                    (!config.strictGpuExecution || backend_ != nullptr);
     nextTicket_ = 0;
     nextSignal_ = 0;
+    nextAllocationEpoch_ = std::max<uint64_t>(1, nextAllocationEpoch_ + 1);
     resident_.clear();
     metrics_ = {};
     for (auto& slot : slots_) slot = {};
@@ -31,6 +32,7 @@ void VulkanWeightStreamer::reset() noexcept {
     metrics_ = {};
     nextTicket_ = 0;
     nextSignal_ = 0;
+    nextAllocationEpoch_ = std::max<uint64_t>(1, nextAllocationEpoch_ + 1);
 }
 
 bool VulkanWeightStreamer::initialized() const noexcept {
@@ -43,6 +45,7 @@ VulkanWeightStreamer::Slot* VulkanWeightStreamer::lookupLocked(
     if (!ticket.valid() || ticket.slot >= config_.slotCount) return nullptr;
     Slot& slot = slots_[ticket.slot];
     if (slot.ticketId != ticket.id || slot.generation != ticket.generation ||
+        slot.allocationEpoch != ticket.allocationEpoch ||
         slot.signalValue != ticket.signalValue)
         return nullptr;
     return &slot;
@@ -53,6 +56,7 @@ const VulkanWeightStreamer::Slot* VulkanWeightStreamer::lookupLocked(
     if (!ticket.valid() || ticket.slot >= config_.slotCount) return nullptr;
     const Slot& slot = slots_[ticket.slot];
     if (slot.ticketId != ticket.id || slot.generation != ticket.generation ||
+        slot.allocationEpoch != ticket.allocationEpoch ||
         slot.signalValue != ticket.signalValue)
         return nullptr;
     return &slot;
@@ -81,7 +85,8 @@ TransferTicket VulkanWeightStreamer::prefetch(WeightTensorId tensor,
             if (config_.enableExpertCache &&
                 (slot.state == SlotState::Pending || slot.state == SlotState::Ready)) {
                 ++metrics_.cacheHits;
-                return {slot.ticketId, slot.generation, slot.signalValue, hit->second};
+                return {slot.ticketId, slot.generation, slot.allocationEpoch,
+                        slot.signalValue, hit->second};
             }
             resident_.erase(hit);
         }
@@ -108,11 +113,15 @@ TransferTicket VulkanWeightStreamer::prefetch(WeightTensorId tensor,
         slot.state = SlotState::Pending;
         slot.tensor = tensor;
         slot.generation = std::max<uint64_t>(1, slot.generation + 1);
+        slot.allocationEpoch = std::max<uint64_t>(1, ++nextAllocationEpoch_);
         slot.signalValue = ++nextSignal_;
         slot.ticketId = ++nextTicket_;
+        slot.nextDispatchLease = 0;
+        slot.dispatchLeases = 0;
         slot.bytes = bytes;
         resident_[tensor] = slotIndex;
-        ticket = {slot.ticketId, slot.generation, slot.signalValue, slotIndex};
+        ticket = {slot.ticketId, slot.generation, slot.allocationEpoch,
+                  slot.signalValue, slotIndex};
         ++metrics_.submitted;
         metrics_.bytesSubmitted += bytes;
         ++metrics_.inFlight;
@@ -129,6 +138,12 @@ TransferTicket VulkanWeightStreamer::prefetch(WeightTensorId tensor,
         return {};
     }
     return ticket;
+}
+
+bool VulkanWeightStreamer::ready(TransferTicket ticket) const {
+    std::lock_guard<std::mutex> lock(mu_);
+    const Slot* slot = lookupLocked(ticket);
+    return slot && slot->state == SlotState::Ready;
 }
 
 bool VulkanWeightStreamer::waitReady(TransferTicket ticket) {
@@ -170,7 +185,48 @@ bool VulkanWeightStreamer::bindResident(WeightTensorId tensor,
     if (it == resident_.end() || it->second >= config_.slotCount) return false;
     const Slot& slot = slots_[it->second];
     if (slot.state != SlotState::Ready) return false;
-    out = {tensor, it->second, slot.generation, slot.bytes};
+    out = {tensor, it->second, slot.generation, slot.allocationEpoch, 0,
+           slot.bytes};
+    return true;
+}
+
+bool VulkanWeightStreamer::acquireForDispatch(TransferTicket ticket,
+                                              ResidentBinding& out) {
+    std::lock_guard<std::mutex> lock(mu_);
+    out = {};
+    Slot* slot = lookupLocked(ticket);
+    if (!slot || slot->state != SlotState::Ready) {
+        if (!slot) noteStaleLocked();
+        return false;
+    }
+    if (slot->dispatchLeases == std::numeric_limits<uint32_t>::max()) {
+        ++metrics_.failures;
+        return false;
+    }
+    ++slot->dispatchLeases;
+    slot->nextDispatchLease = std::max<uint64_t>(1, slot->nextDispatchLease + 1);
+    slot->activeDispatchLeases.insert(slot->nextDispatchLease);
+    out = {slot->tensor, ticket.slot, slot->generation,
+           slot->allocationEpoch, slot->nextDispatchLease, slot->bytes};
+    return true;
+}
+
+bool VulkanWeightStreamer::releaseAfterGpuCompletion(ResidentBinding binding) {
+    std::lock_guard<std::mutex> lock(mu_);
+    if (!binding.valid() || binding.slot >= config_.slotCount ||
+        binding.dispatchLease == 0) return false;
+    Slot& slot = slots_[binding.slot];
+    if (slot.state != SlotState::Ready || slot.tensor != binding.tensor ||
+        slot.generation != binding.generation ||
+        slot.allocationEpoch != binding.allocationEpoch ||
+        slot.dispatchLeases == 0 ||
+        slot.activeDispatchLeases.find(binding.dispatchLease) ==
+            slot.activeDispatchLeases.end()) {
+        noteStaleLocked();
+        return false;
+    }
+    slot.activeDispatchLeases.erase(binding.dispatchLease);
+    --slot.dispatchLeases;
     return true;
 }
 
@@ -179,7 +235,9 @@ bool VulkanWeightStreamer::release(ResidentBinding binding) {
     if (!binding.valid() || binding.slot >= config_.slotCount) return false;
     Slot& slot = slots_[binding.slot];
     if (slot.state != SlotState::Ready || slot.tensor != binding.tensor ||
-        slot.generation != binding.generation) {
+        slot.generation != binding.generation ||
+        slot.allocationEpoch != binding.allocationEpoch ||
+        slot.dispatchLeases != 0) {
         noteStaleLocked();
         return false;
     }

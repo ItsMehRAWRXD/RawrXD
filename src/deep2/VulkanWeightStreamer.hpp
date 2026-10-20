@@ -14,6 +14,7 @@
 #include <limits>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace Deep2 {
 
@@ -32,11 +33,15 @@ struct WeightStreamConfig {
 struct TransferTicket {
     uint64_t id = 0;
     uint64_t generation = 0;
+    // Allocation epochs prevent an old ticket from becoming valid again after
+    // a slot is recycled for a different model allocation.
+    uint64_t allocationEpoch = 0;
     uint64_t signalValue = 0;
     uint32_t slot = std::numeric_limits<uint32_t>::max();
 
     bool valid() const noexcept {
-        return id != 0 && generation != 0 && signalValue != 0 &&
+        return id != 0 && generation != 0 && allocationEpoch != 0 &&
+               signalValue != 0 &&
                slot != std::numeric_limits<uint32_t>::max();
     }
 };
@@ -45,6 +50,8 @@ struct ResidentBinding {
     WeightTensorId tensor = 0;
     uint32_t slot = std::numeric_limits<uint32_t>::max();
     uint64_t generation = 0;
+    uint64_t allocationEpoch = 0;
+    uint64_t dispatchLease = 0;
     uint64_t bytes = 0;
 
     bool valid() const noexcept {
@@ -88,8 +95,16 @@ public:
 
     TransferTicket prefetch(WeightTensorId tensor, const void* packed,
                             size_t bytes);
+    // Non-blocking readiness query for a dependency-aware compute scheduler.
+    // A false result means the caller must defer dispatch; it never performs a
+    // hidden wait on the CPU.
+    bool ready(TransferTicket ticket) const;
     bool waitReady(TransferTicket ticket);
     bool bindResident(WeightTensorId tensor, ResidentBinding& out) const;
+    // Acquire a dispatch lease.  The lease pins the allocation against
+    // eviction until releaseAfterGpuCompletion is called.
+    bool acquireForDispatch(TransferTicket ticket, ResidentBinding& out);
+    bool releaseAfterGpuCompletion(ResidentBinding binding);
     bool release(ResidentBinding binding);
 
     // Polling completion is non-blocking.  It promotes all pending tickets up
@@ -105,8 +120,12 @@ private:
         SlotState state = SlotState::Empty;
         WeightTensorId tensor = 0;
         uint64_t generation = 0;
+        uint64_t allocationEpoch = 0;
         uint64_t signalValue = 0;
         uint64_t ticketId = 0;
+        uint64_t nextDispatchLease = 0;
+        uint32_t dispatchLeases = 0;
+        std::unordered_set<uint64_t> activeDispatchLeases;
         uint64_t bytes = 0;
     };
 
@@ -119,6 +138,7 @@ private:
     bool initialized_ = false;
     uint64_t nextTicket_ = 0;
     uint64_t nextSignal_ = 0;
+    uint64_t nextAllocationEpoch_ = 0;
     std::array<Slot, 16> slots_{};
     std::unordered_map<WeightTensorId, uint32_t> resident_;
     mutable std::mutex mu_;

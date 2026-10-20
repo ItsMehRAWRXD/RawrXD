@@ -1,4 +1,5 @@
 #include "deep2/VulkanWeightStreamer.hpp"
+#include "deep2/ResidencyReplay.hpp"
 #include "deep2/StreamLinkBudget.hpp"
 
 #include <cassert>
@@ -55,14 +56,25 @@ int main() {
     assert(stream.initialize(cfg));
     const auto a = stream.prefetch(11, payload.data(), payload.size());
     assert(a.valid() && backend.submits == 1);
+    assert(!stream.ready(a));
     // A second request for the same tensor is a cache hit, not a duplicate copy.
     const auto aHit = stream.prefetch(11, payload.data(), payload.size());
     assert(aHit.valid() && aHit.id == a.id && stream.snapshot().cacheHits == 1);
     ResidentBinding binding{};
     assert(!stream.bindResident(11, binding));
     assert(stream.waitReady(a));
+    assert(stream.ready(a));
     assert(stream.bindResident(11, binding));
     assert(binding.valid());
+
+    // A dispatch lease pins the allocation. Eviction/release is denied until
+    // the compute dependency is explicitly retired.
+    ResidentBinding dispatchBinding{};
+    assert(stream.acquireForDispatch(a, dispatchBinding));
+    assert(dispatchBinding.dispatchLease != 0);
+    assert(!stream.release(binding));
+    assert(stream.releaseAfterGpuCompletion(dispatchBinding));
+    assert(!stream.releaseAfterGpuCompletion(dispatchBinding));
 
     // A second slot can be submitted while the first binding is live. A third
     // request is rejected instead of evicting a live GPU buffer.
@@ -77,8 +89,30 @@ int main() {
     assert(!stream.release(binding));
     const auto c = stream.prefetch(13, payload.data(), payload.size());
     assert(c.valid());
+    assert(c.allocationEpoch != a.allocationEpoch);
     assert(!stream.waitReady(a));
     assert(stream.waitReady(c));
+
+    // Predictive planning and deterministic replay are source-only evidence;
+    // they must never be confused with a live Vulkan transfer receipt.
+    ExpertResidencyPlanner planner(2048, 4);
+    const auto plan = planner.plan({
+        {101, 1024, 0.9, 8.0, 2.0, 2, 1},
+        {102, 1024, 0.2, 2.0, 1.0, 2, 0},
+        {103, 2048, 1.0, 9.0, 1.0, 2, 2}}, 0);
+    assert(plan.size() == 3 && plan[0].candidate.tensor == 101);
+    assert(plan[0].admitted && !plan[1].admitted);
+
+    ResidencyTraceRecorder trace;
+    ResidencyReplaySimulator replay(2048);
+    const auto replayResult = replay.run({{101, 1024}, {102, 1024},
+                                         {101, 1024}, {103, 2048}}, &trace);
+    assert(replayResult.requests == 4);
+    assert(replayResult.transfers == 3);
+    assert(replayResult.cacheHits == 1);
+    assert(replayResult.evictions == 2);
+    assert(replayResult.status == "PASS");
+    assert(!trace.events().empty());
 
     const auto m = stream.snapshot();
     assert(m.submitted == 3);
