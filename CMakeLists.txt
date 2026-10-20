@@ -2509,6 +2509,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/PlasmaGovernor.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2GlobalTensorIndex.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2GpuStreamCopy.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/VulkanWeightStreamerVulkanBackend.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2MLA_GpuGemv.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2ShardIo.cpp
             # Certification probes (deep2/AttnCertProbe.cpp etc.)
@@ -4764,6 +4765,33 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/test_deep2_inference.cpp" AND TARGET deep2_engine
     message(STATUS "test_deep2_inference enabled (headless Deep2 inference harness)")
 else()
     message(STATUS "test_deep2_inference EXCLUDED: source or deep2_engine_lib unavailable")
+endif()
+
+# ============================================================
+# DEEP2 ASYNC WEIGHT STREAMER CONTRACT TEST
+# ============================================================
+# This target exercises the scheduler and its fail-closed ticket/lifetime
+# contract without requiring a Vulkan device.  The production adapter still
+# has to provide the real queue submission and timeline wait callbacks.
+option(DEEP2_BUILD_STREAMER_TEST
+       "Build the fail-closed asynchronous weight streamer contract test" OFF)
+if(DEEP2_BUILD_STREAMER_TEST)
+    enable_testing()
+    add_executable(deep2_weight_streamer_test
+        tests/deep2_weight_streamer_test.cpp
+        tests/stream_transfer_emit_compile.cpp
+        src/deep2/VulkanWeightStreamer.cpp)
+    target_include_directories(deep2_weight_streamer_test PRIVATE
+        "${CMAKE_SOURCE_DIR}/src")
+    set_target_properties(deep2_weight_streamer_test PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    add_test(NAME deep2_weight_streamer_contract
+             COMMAND deep2_weight_streamer_test)
+    set_tests_properties(deep2_weight_streamer_contract PROPERTIES
+        LABELS "deep2;streaming;contract"
+        TIMEOUT 60)
 endif()
 
 # ============================================================

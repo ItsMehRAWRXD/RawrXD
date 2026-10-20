@@ -12,6 +12,11 @@ test. It is not a GPU performance certification.
   release. A stale ticket cannot bind a reused slot.
 - Strict mode refuses initialization without a real transfer backend. The
   scheduler therefore cannot report GPU residency from a CPU-only placeholder.
+- `VulkanWeightStreamerVulkanBackend` is wired into the Deep2 engine library.
+  It submits through the existing `SubmitWeightPrimeAsync` material lane,
+  waits on its real Vulkan fence, and calls `CommitWeightPrime` to adopt the
+  completed device buffer. The adapter is compiled into `deep2_engine_lib`, but
+  no live model run was claimed in this receipt.
 - `src/deep2/StreamLinkBudget.hpp` computes the link budget from configurable
   bandwidth and target TPS. Defaults are 54 GB/s and 150 TPS, yielding:
 
