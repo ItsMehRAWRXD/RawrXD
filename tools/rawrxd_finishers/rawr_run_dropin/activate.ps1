@@ -15,7 +15,7 @@ if (-not (Test-Path $global:RawrAgentExecutable)) {
 # Ensure every GPU/display adapter is active before `rawr run <model> '<task>'`
 # launches rawr_run.exe. A secondary card that Windows disabled (Device Manager
 # Code 31 "the drivers required for this device cannot be loaded", Code 22
-# "this device is disabled", or Code 10 "STATUS_DEVICE_POWER_FAILURE") breaks
+# "this device is disabled", or Code 43 "Windows stopped this device") breaks
 # dual-card inference, so reset/re-enable it here instead of requiring manual
 # Device Manager intervention.
 #
@@ -57,7 +57,7 @@ function global:Reset-RawrGpuDevices {
 
     # --- Resolve paths ---
     $dropRoot = Split-Path -Parent $PSCommandPath
-    $repoRoot = Join-Path $dropRoot '..\..\..\..\..'
+    $repoRoot = (Resolve-Path (Join-Path $dropRoot '..\..\..')).Path
     $telemetryDir = Join-Path $repoRoot 'evidence'
     $telemetryPath = Join-Path $telemetryDir 'gpu_recovery_telemetry.json'
 
@@ -68,7 +68,16 @@ function global:Reset-RawrGpuDevices {
     }
 
     # --- 0. Require explicit primary GPU ID before any recovery ---
+    # gpu_config.json is an explicit hardware binding, not autodetection.
+    $configPath = Join-Path $repoRoot 'gpu_config.json'
+    $cfg = $null
+    if (Test-Path $configPath) {
+        try { $cfg = Get-Content $configPath -Raw | ConvertFrom-Json } catch { $cfg = $null }
+    }
     $primaryId = $env:RAWR_PRIMARY_GPU_ID
+    if (-not $primaryId -and $cfg -and $cfg.PSObject.Properties.Name -contains 'primaryGpuInstanceId') {
+        $primaryId = [string]$cfg.primaryGpuInstanceId
+    }
     if (-not $primaryId) {
         if (-not $Quiet) { Write-Host "[rawr] GPU reset skipped: RAWR_PRIMARY_GPU_ID not set - refusing to guess primary GPU" -ForegroundColor Yellow }
         $result.admission_result = "skipped_no_primary_configured"
@@ -90,23 +99,25 @@ function global:Reset-RawrGpuDevices {
     if ($rawIds) {
         $configuredIds += $rawIds.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }
     }
-    $configPath = Join-Path $repoRoot 'gpu_config.json'
-    if (Test-Path $configPath) {
-        try {
-            $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-            if ($cfg.PSObject.Properties.Name -contains 'secondaryGpuInstanceIds') {
-                $configuredIds += @($cfg.secondaryGpuInstanceIds)
-            }
-        } catch {}
+    if ($cfg -and $cfg.PSObject.Properties.Name -contains 'secondaryGpuInstanceIds') {
+        $configuredIds += @($cfg.secondaryGpuInstanceIds)
     }
     $configuredIds = $configuredIds | Select-Object -Unique
+
+    # --- 2b. Vulkan inventory (detects a present-but-not-visible GPU) ---
+    $vkOut = @()
+    $vulkanAvailable = $false
+    try {
+        $vkOut = @(vulkaninfo --summary 2>$null)
+        $vulkanAvailable = ($LASTEXITCODE -eq 0 -and $vkOut.Count -gt 0)
+    } catch {}
 
     # --- 3. Active inference detection (Deep2 + rawr runners + CLI workloads) ---
     $inferenceRunning = $false
     try {
         $inferenceNames = @('deep2_strata_bench', 'deep2_bench_tps', 'deep2_parity_trace',
                             'deep2_spec_bench', 'deep2_runtime_dispatch', 'deep2_engine',
-                            'deep2_cert', 'deep2_smoke', 'rawr_run', 'rawr', 'python')
+                            'deep2_cert', 'deep2_smoke', 'rawr_run', 'rawr', 'python', 'ollama', 'ollama app')
         foreach ($name in $inferenceNames) {
             $procs = Get-CimInstance Win32_Process -Filter "Name = '$name.exe'" -ErrorAction SilentlyContinue
             if ($procs) { $inferenceRunning = $true; break }
@@ -132,9 +143,17 @@ function global:Reset-RawrGpuDevices {
             continue
         }
 
-        # Skip healthy secondary GPUs - no recovery needed
-        if ($origCode -eq 0 -and $origStatus -eq 'OK') {
+        # Skip healthy secondary GPUs only when Vulkan also exposes them.
+        $vulkanVisible = $true
+        if ($vulkanAvailable) {
+            $vulkanVisible = [bool]($vkOut | Where-Object { $_ -match [regex]::Escape($name) })
+        }
+        if ($origCode -eq 0 -and $origStatus -eq 'OK' -and $vulkanVisible) {
             continue
+        }
+
+        if ($origCode -eq 0 -and $origStatus -eq 'OK' -and -not $vulkanVisible -and -not $Quiet) {
+            Write-Host "[rawr] GPU $name ($id) is absent from Vulkan; attempting controlled recovery" -ForegroundColor Yellow
         }
 
         # --- 5. Code 10 is explicitly unsupported ---
@@ -147,16 +166,18 @@ function global:Reset-RawrGpuDevices {
             continue
         }
 
-        # Only recover explicit fault/disabled codes (31 = driver load failure,
-        # 22 = device disabled). All other codes are NOT recovery targets.
-        if ($origCode -ne 31 -and $origCode -ne 22) {
-            if (-not $Quiet) { Write-Host "[rawr] skipping $name ($id) - Code $origCode is not a recoverable target (31/22 only)" -ForegroundColor Cyan }
+        # Recover explicit fault/disabled codes (31, 22, and 43). A healthy
+        # WMI device missing from Vulkan is also a recovery target.
+        if ($origCode -ne 31 -and $origCode -ne 22 -and $origCode -ne 43 -and $vulkanVisible) {
+            if (-not $Quiet) { Write-Host "[rawr] skipping $name ($id) - Code $origCode is not a recoverable target (22/31/43 only)" -ForegroundColor Cyan }
             continue
         }
 
         # --- 6. Active inference guard ---
         if ($inferenceRunning) {
             if (-not $Quiet) { Write-Host "[rawr] skipping $name ($id) - active inference detected, refusing disruptive reset" -ForegroundColor Yellow }
+            $result.attempted = $true
+            $result.recovery_result = "blocked_active_inference"
             $result.devices += @{
                 id=$id; name=$name; originalCode=$origCode; action="skipped";
                 reason="active_inference"; finalCode=$origCode
@@ -224,23 +245,36 @@ function global:Reset-RawrGpuDevices {
         }
     }
 
-    # --- 9. Vulkan identity validation (match recovered GPU by name) ---
-    $vulkanOk = $false
-    try {
-        $vkOut = & vulkaninfo --summary 2>$null
-        if ($LASTEXITCODE -eq 0 -and $vkOut) {
-            # Check each recovered/restarted device by its display name appears in vulkaninfo
-            foreach ($dev in $result.devices) {
-                if ($dev.action -eq 'restarted' -and $dev.recoveredName) {
-                    if ($vkOut | Where-Object { $_ -match [regex]::Escape($dev.recoveredName) }) {
-                        $vulkanOk = $true
-                        break
-                    }
+    # A configured secondary that disappeared from WMI cannot be reset by
+    # instance ID until Windows rescans the PCIe bus. Request one rescan and
+    # record the missing identity without guessing at another device.
+    if ($configuredIds.Count) {
+        $seenIds = @($devices | ForEach-Object { $_.DeviceID })
+        foreach ($missingId in ($configuredIds | Where-Object { $seenIds -notcontains $_ })) {
+            $result.attempted = $true
+            if (-not $Quiet) { Write-Host "[rawr] configured GPU is not enumerated: $missingId; requesting PCIe rescan" -ForegroundColor Yellow }
+            pnputil /scan-devices 2>&1 | Out-Null
+            $result.devices += @{ id=$missingId; name=''; originalCode=$null; action='missing'; finalCode=$null }
+        }
+    }
+
+    # --- 9. Vulkan identity validation (match every configured secondary) ---
+    $vulkanOk = $true
+    if ($configuredIds.Count -and $vulkanAvailable) {
+        foreach ($dev in $devices) {
+            if ($configuredIds -contains $dev.DeviceID -and $dev.Name) {
+                if (-not ($vkOut | Where-Object { $_ -match [regex]::Escape($dev.Name) })) {
+                    $vulkanOk = $false
                 }
             }
         }
-    } catch {
-        # vulkaninfo not available or failed - Vulkan validation cannot be performed
+        if ($result.devices | Where-Object { $_.action -eq 'missing' }) { $vulkanOk = $false }
+    } elseif ($configuredIds.Count -and -not $vulkanAvailable) {
+        $vulkanOk = $false
+        if (-not $result.attempted) {
+            $result.attempted = $true
+            $result.recovery_result = "vulkan_validation_unavailable"
+        }
     }
 
     # --- 10. Admission decision ---
@@ -264,7 +298,7 @@ function global:Reset-RawrGpuDevices {
             gpu_recovery_result    = $result.recovery_result
             gpu_admission_result   = $result.admission_result
             devices                = $result.devices
-            vulkan_available       = $vulkanOk
+            vulkan_available       = $vulkanAvailable
             primary_gpu_id         = $primaryId
         }
         $telemetry | ConvertTo-Json -Depth 3 | Out-File $telemetryPath -Encoding UTF8
@@ -289,7 +323,19 @@ function global:rawr {
         if ($gpuResult.attempted -and $gpuResult.admission_result -in @('denied_recovery_failed', 'denied_no_vulkan')) {
             throw "GPU admission failed: $($gpuResult.admission_result). Aborting rawr run."
         }
-        & $global:RawrAgentExecutable @args
+        $runExit = 0
+        try {
+            & $global:RawrAgentExecutable @args
+            if ($null -ne $LASTEXITCODE) { $runExit = $LASTEXITCODE }
+        } finally {
+            # Re-check after the task exits, when no runner process is holding
+            # a Vulkan context, and record any recovery attempt.
+            $postGpuResult = Reset-RawrGpuDevices
+            if ($postGpuResult.attempted -and $postGpuResult.admission_result -in @('denied_recovery_failed', 'denied_no_vulkan')) {
+                Write-Warning "GPU post-run admission failed: $($postGpuResult.admission_result)"
+            }
+        }
+        $global:LASTEXITCODE = $runExit
         return
     }
     if ($global:RawrOriginalExecutable) {

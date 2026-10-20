@@ -1,0 +1,22 @@
+START 2026-10-20T16:45:18.0792458-04:00
+DISABLE PASS 2026-10-20T16:45:18.6314292-04:00
+ENABLE PASS 2026-10-20T16:45:29.4129122-04:00
+
+Name                   : AMD Radeon RX 7800 XT
+Status                 : Error
+ConfigManagerErrorCode : 43
+DriverVersion          : 32.0.31041.1004
+PNPDeviceID            : PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+
+Microsoft PnP Utility
+
+Instance ID:                PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+Device Description:         AMD Radeon RX 7800 XT
+Class Name:                 Display
+Class GUID:                 {4d36e968-e325-11ce-bfc1-08002be10318}
+Manufacturer Name:          Advanced Micro Devices, Inc.
+Status:                     Problem
+Problem Code:               43 (0x2B) [CM_PROB_FAILED_POST_START]
+Driver Name:                oem40.inf
+
+END 2026-10-20T16:45:39.5322605-04:00
