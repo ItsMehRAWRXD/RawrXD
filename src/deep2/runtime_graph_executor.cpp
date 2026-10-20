@@ -761,6 +761,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     kvat_.assign(B, {});
     kv_width_k_.assign(B, 0);
     kv_width_v_.assign(B, 0);
+    // Model rebinding invalidates all cached SSM parameters.
+    ssm_weights_.assign(B, {});
 
     // RAWRXD_DEEP2_SPEC_VERIFY_001: detect recurrent blocks. A rejected
     // speculative draft cannot be rolled back out of an SSM state, so the
