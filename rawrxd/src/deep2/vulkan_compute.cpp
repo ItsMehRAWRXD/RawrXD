@@ -781,6 +781,10 @@ VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
     const char* at=std::getenv("DEEP2_Q4K_AUTOTUNE");
     if(at&&at[0]=='0') return Q4KBatchTile::Four;
 
+    const char* hot=std::getenv("DEEP2_Q4K_SINGLE_BATCH_ROWS");
+    if(fused_&&hot&&hot[0]=='1'&&rows>=8&&qBatch8RowPipeline_)
+        return Q4KBatchTile::Eight;
+
     Q4KTileKey key{rows,cols,batch};
     auto it=q4kTileChoices_.find(key);
     if(it!=q4kTileChoices_.end()) return it->second.tile;
