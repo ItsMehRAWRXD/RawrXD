@@ -117,6 +117,33 @@ float q6kWeight(uint rowBase,uint col) {
     return d*float(gets8(scBase+scIndex))*float(int(q)-32);
 }
 
+void q6kDot4(uint rowBase,uint globalCol,uint localCol,
+             inout float a0,inout float a1,inout float a2,inout float a3) {
+    uint block=globalCol>>8u;
+    uint b=rowBase+block*210u;
+    for(uint k=0u;k<4u;++k) {
+        uint col=globalCol+k;
+        if(col>=pc.cols) break;
+        uint element=col&255u;
+        uint elementHalf=element>>7u;
+        uint elementWithin=element&127u;
+        uint elementCat=elementWithin>>5u;
+        uint elementL=elementWithin&31u;
+        uint elementQ=(getb(b+elementHalf*64u+(elementCat&1u)*32u+elementL)
+                      >>((elementCat>>1u)*4u))&15u;
+        uint elementHigh=(getb(b+128u+elementHalf*32u+elementL)
+                         >>((elementCat&3u)*2u))&3u;
+        uint elementScale=elementHalf*8u+(elementCat<<1u)+(elementL>>4u);
+        float ww=geth(b+208u)*float(gets8(b+192u+elementScale))
+                 *float(int(elementQ|(elementHigh<<4u))-32);
+        uint local=localCol+k;
+        a0+=ww*xs[0][local];
+        if(pc.batch>1u) a1+=ww*xs[1][local];
+        if(pc.batch>2u) a2+=ww*xs[2][local];
+        if(pc.batch>3u) a3+=ww*xs[3][local];
+    }
+}
+
 void main() {
     if((pc.type!=12u&&pc.type!=14u)||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
 
@@ -146,15 +173,11 @@ void main() {
             uint rb=row*rowBytes;
             uint valuesPerLane=256u/subgroupSize;
             if(pc.type==14u) {
-                for(uint k=0u;k<valuesPerLane;++k) {
+                for(uint k=0u;k<valuesPerLane;k+=4u) {
                     uint lc=lane*valuesPerLane+k;
                     uint gc=colBase+lc;
                     if(gc>=pc.cols) continue;
-                    float ww=q6kWeight(rb,gc);
-                    a0+=ww*xs[0][lc];
-                    if(pc.batch>1u) a1+=ww*xs[1][lc];
-                    if(pc.batch>2u) a2+=ww*xs[2][lc];
-                    if(pc.batch>3u) a3+=ww*xs[3][lc];
+                    q6kDot4(rb,gc,lc,a0,a1,a2,a3);
                 }
             } else {
                 for(uint k=0u;k<valuesPerLane;k+=4u) {
