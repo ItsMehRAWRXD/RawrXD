@@ -64,6 +64,9 @@ Relevant GitHub references:
 - RawrXD two-device row-split source: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
 - Row-split receipt: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/~dev/evidence/RAWRXD_PERFORMANCE_001/DEEP2_DUAL_PHYSICAL_GPU_FORWARD_001/RECEIPT.txt
 - ROM source: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/TensorROM.hpp
+- ROM emulator descriptor: https://github.com/ItsMehRAWRXD/RawrXD/blob/033a8acb55d46d2fc22a84428e81f3167a0c3897/src/Win32RomEmulator.hpp
+- GGUF-to-ROM manifest writer: https://github.com/ItsMehRAWRXD/RawrXD/blob/033a8acb55d46d2fc22a84428e81f3167a0c3897/src/gguf2rom_ms.cpp
+- Lease-aware page cache: https://github.com/ItsMehRAWRXD/RawrXD/blob/033a8acb55d46d2fc22a84428e81f3167a0c3897/src/ShardPager.hpp
 - Default-branch MASM codec path check (404): https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/asm/RawrXD_Compression.asm
 - W0 prototype on non-default branch: https://github.com/ItsMehRAWRXD/RawrXD/blob/feat/hexmag-polymorphic-repeat-tuner-masm/src/deep2w0/W0Engine.cpp
 - W0 certificate contract: https://github.com/ItsMehRAWRXD/RawrXD/blob/feat/hexmag-polymorphic-repeat-tuner-masm/tests/w0_001_cert.cpp
