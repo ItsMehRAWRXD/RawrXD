@@ -16,6 +16,9 @@ uses the canonical `QuantTypeTable` for every dtype and byte-geometry check.
 | Ollama `deepseek-r1:32b` blob | `qwen2` | 771 | 771 | 0 / 0 | `BOUND_ALL` |
 | Ollama `gpt-oss:120b` blob | `gptoss` | 687 | 687 | 0 / 0 | `BOUND_ALL` |
 | `nemotron-bolt.gguf` | `nemotron_h_moe` | 843 | 843 | 0 / 0 | `BOUND_ALL` |
+| Ollama `qwen3-next:80b` blob | `qwen3next` | 807 | 807 | 0 / 0 | `BOUND_ALL` |
+| Ollama `bluehawana/deepseek-v4-flash:iq2_m` blob | `deepseek4` | 1,328 | 1,328 | 0 / 0 | `BOUND_ALL` |
+| Ollama `laguna-s-2.1:Q4_K_M` blob | `laguna` | 814 | 814 | 0 / 0 | `BOUND_ALL` |
 
 The GPT-OSS run scanned and bound the complete 65,369,799,840-byte file without
 materialising its weights. This establishes ROM-level availability and exact
@@ -29,3 +32,6 @@ Per-model logs and exit codes are retained in the sibling directories:
 - `rom_manifest_deepseek_r1_32b_20261020T1440/`
 - `rom_manifest_gpt_oss_120b_20261020T1440/`
 - `rom_manifest_nemotron_bolt_nvfp4_20261020T1450/`
+- `rom_manifest_qwen3_next_80b_20261020T1500/`
+- `rom_manifest_deepseek_v4_flash_iq2m_20261020T1500/`
+- `rom_manifest_laguna_s_2_1_20261020T1500/`

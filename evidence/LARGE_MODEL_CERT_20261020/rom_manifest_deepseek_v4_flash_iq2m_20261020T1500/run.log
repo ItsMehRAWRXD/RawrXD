@@ -1,0 +1,9 @@
+FILE    F:\OllamaModels\blobs\sha256-764636b03a41d573e71eea419a8992a8960778355b2d832117cf014a5d231f21
+ARCH    deepseek4
+GGUF    version 3, 1328 tensors, data start 5334272, 103999401280 bytes
+
+MANIFEST  entries=1328 bound=1328 unbound=0
+DTYPE_CROSSCHECK inconsistent=0 unknown=0
+DTYPES BF16=43 F32=662 I32=3 IQ2_XS=50 IQ3_XXS=77 MXFP4=2 Q6_K=174 Q8_0=317
+
+VERDICT=BOUND_ALL
