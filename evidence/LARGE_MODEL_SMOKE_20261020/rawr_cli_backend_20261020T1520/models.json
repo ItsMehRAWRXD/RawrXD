@@ -1,0 +1,23 @@
+{
+  "count": 16,
+  "inference_reachable": false,
+  "models": [
+    "70b_simulation.gguf (1 MB)",
+    "bench_frag.gguf (258 MB)",
+    "bench_min.gguf (2 MB)",
+    "DeepSeek-V2-Lite-Chat.Q4_K_M.gguf (9884 MB)",
+    "dummy.gguf (0 MB)",
+    "dummy_200b.gguf (409600 MB)",
+    "gemma3-1b-Q2_K.gguf (666 MB)",
+    "llama3.2-3b-Q2_K.gguf (1300 MB)",
+    "llama3.2-3b-Q3_K_S.gguf (1471 MB)",
+    "model.gguf (0 MB)",
+    "nemotron-bolt.gguf (20998 MB)",
+    "phi3-mini-Q2_K.gguf (1440 MB)",
+    "synthetic_moe.gguf (0 MB)",
+    "test_min2.gguf (0 MB)",
+    "test_min_model.gguf (0 MB)",
+    "test_mock.gguf (0 MB)"
+  ],
+  "port": 8080
+}

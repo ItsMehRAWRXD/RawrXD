@@ -1,0 +1,7 @@
+{
+  "active": "local-gguf-llama-server",
+  "backup": "ollama",
+  "endpoint": "http://127.0.0.1:8080/v1/chat/completions",
+  "primary": "deep2",
+  "reachable": false
+}

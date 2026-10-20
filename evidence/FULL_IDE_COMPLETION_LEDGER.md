@@ -82,6 +82,13 @@ to the ROM layer even though the current host-materializing forward executable
 cannot safely launch it. Suite receipt:
 `F:/rawrxd/evidence/LARGE_MODEL_CERT_20261020/rom_manifest_suite_20261020T1440/receipt.md`.
 
+The native `rawr` CLI remains an integration blocker: its model registry sees
+only 16 workspace fixtures, the configured localhost:8080 inference endpoint
+is not listening, and `rawr doctor` fails only on that reachability check. The
+Ollama inventory and native large-model receipts therefore cannot yet be
+selected through the shipped CLI. Receipt:
+`F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/rawr_cli_backend_20261020T1520/receipt.md`.
+
 ## Performance (Gate 12 / S10) — measured receipt
 
 Model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (SHA-256 `9fecc3b3…d76a0`, 668,788,096 B),
