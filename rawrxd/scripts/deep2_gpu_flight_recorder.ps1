@@ -4,6 +4,7 @@ param(
     [string]$Prompt = 'The capital of France is',
     [int]$Tokens = 32,
     [int]$Runs = 3,
+    [int]$WarmupRuns = 0,
     [int]$TimeoutSec = 180,
     [string]$OutputDir = '',
     [switch]$Q6Hot,
@@ -23,6 +24,7 @@ $ErrorActionPreference = 'Stop'
 
 if ($Tokens -lt 1) { throw 'Tokens must be positive.' }
 if ($Runs -lt 1) { throw 'Runs must be positive.' }
+if ($WarmupRuns -lt 0) { throw 'WarmupRuns cannot be negative.' }
 if ($TimeoutSec -lt 1) { throw 'TimeoutSec must be positive.' }
 
 $exePath = [System.IO.Path]::GetFullPath($Exe)
@@ -106,10 +108,13 @@ try {
     $env:DEEP2_GPU_TRACE = if ($NoTrace) { '0' } else { '1' }
 
     $results = [System.Collections.Generic.List[object]]::new()
-    for ($run = 1; $run -le $Runs; $run++) {
-        $stdoutPath = Join-Path $OutputDir ("run_{0:D2}.stdout.txt" -f $run)
-        $stderrPath = Join-Path $OutputDir ("run_{0:D2}.stderr.txt" -f $run)
-        $combinedPath = Join-Path $OutputDir ("run_{0:D2}.flight.txt" -f $run)
+    for ($run = 1; $run -le ($WarmupRuns + $Runs); $run++) {
+        $isWarmup = $run -le $WarmupRuns
+        $sampleRun = $run - $WarmupRuns
+        $runLabel = if ($isWarmup) { "warmup_{0:D2}" -f $run } else { "run_{0:D2}" -f $sampleRun }
+        $stdoutPath = Join-Path $OutputDir ("{0}.stdout.txt" -f $runLabel)
+        $stderrPath = Join-Path $OutputDir ("{0}.stderr.txt" -f $runLabel)
+        $combinedPath = Join-Path $OutputDir ("{0}.flight.txt" -f $runLabel)
         Remove-Item -LiteralPath $stdoutPath,$stderrPath,$combinedPath -Force -ErrorAction SilentlyContinue
 
         $arguments = @(
@@ -172,32 +177,38 @@ try {
             $failureCount -eq 0
         )
 
-        $results.Add([pscustomobject]@{
-            run = $run
-            pass = [bool]$gatePass
-            process_exit = $processExit
-            timeout = [bool]$timedOut
-            duration_sec = [math]::Round(($finished - $started).TotalSeconds, 3)
-            requested_tokens = $Tokens
-            generated_tokens = $generated
-            last_receipt_gen = $receiptGen
-            last_receipt_tokens = $receiptTokens
-            expected_layers = $expectedLayers
-            host_forward_layers = $lastHostFallback
-            nan = $nan
-            inf = $inf
-            q_dispatches = $dispatchCount
-            q4_dispatches = $q4DispatchCount
-            q6_dispatches = $q6DispatchCount
-            fence_failures = $failureCount
-            decode_tps = $lastDecodeTps
-            stdout = $stdoutPath
-            stderr = $stderrPath
-            flight_log = $combinedPath
-        })
+        if (-not $isWarmup) {
+            $results.Add([pscustomobject]@{
+                run = $sampleRun
+                pass = [bool]$gatePass
+                process_exit = $processExit
+                timeout = [bool]$timedOut
+                duration_sec = [math]::Round(($finished - $started).TotalSeconds, 3)
+                requested_tokens = $Tokens
+                generated_tokens = $generated
+                last_receipt_gen = $receiptGen
+                last_receipt_tokens = $receiptTokens
+                expected_layers = $expectedLayers
+                host_forward_layers = $lastHostFallback
+                nan = $nan
+                inf = $inf
+                q_dispatches = $dispatchCount
+                q4_dispatches = $q4DispatchCount
+                q6_dispatches = $q6DispatchCount
+                fence_failures = $failureCount
+                decode_tps = $lastDecodeTps
+                stdout = $stdoutPath
+                stderr = $stderrPath
+                flight_log = $combinedPath
+            })
+        }
 
         $state = if ($gatePass) { 'PASS' } else { 'FAIL' }
-        Write-Output ("RUN={0} STATE={1} EXIT={2} GENERATED={3}/{4} RECEIPT_GEN={5} HOST_FWD={6} NAN={7} INF={8} FENCE_FAIL={9} DECODE_TPS={10}" -f $run, $state, $processExit, $generated, $Tokens, $receiptGen, $lastHostFallback, $nan, $inf, $failureCount, $lastDecodeTps)
+        if ($isWarmup) {
+            Write-Output ("WARMUP={0} STATE={1} EXIT={2} GENERATED={3}/{4} RECEIPT_GEN={5} HOST_FWD={6} NAN={7} INF={8} FENCE_FAIL={9}" -f $run, $state, $processExit, $generated, $Tokens, $receiptGen, $lastHostFallback, $nan, $inf, $failureCount)
+        } else {
+            Write-Output ("RUN={0} STATE={1} EXIT={2} GENERATED={3}/{4} RECEIPT_GEN={5} HOST_FWD={6} NAN={7} INF={8} FENCE_FAIL={9} DECODE_TPS={10}" -f $sampleRun, $state, $processExit, $generated, $Tokens, $receiptGen, $lastHostFallback, $nan, $inf, $failureCount, $lastDecodeTps)
+        }
     }
 
     $failedResults = @($results | Where-Object { -not $_.pass })
@@ -209,6 +220,7 @@ try {
         model = $modelPath
         tokens = $Tokens
         runs = $Runs
+        warmup_runs = $WarmupRuns
         timeout_sec = $TimeoutSec
         q4_hot = [bool]$Q4Hot
         q6_hot = [bool]$Q6Hot

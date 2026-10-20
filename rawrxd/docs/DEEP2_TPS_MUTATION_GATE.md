@@ -24,7 +24,7 @@ Example:
   -ValidationCommand C:\VulkanSDK\1.4.357.0\Bin\spirv-val.exe `
   -ValidationArguments @('--target-env','vulkan1.2','rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv') `
   -BenchmarkScript rawrxd/scripts/deep2_gpu_flight_recorder.ps1 `
-  -BenchmarkArguments @('-Exe','_s12_parity_build/bin/deep2_end_to_end_bench.exe','-Model','F:\~dev\qwen2.5-coder-1.5b-base.gguf','-Tokens','32','-Runs','3','-Q4Hot','-Q6Hot','-NoTrace') `
+  -BenchmarkArguments @('-Exe','_s12_parity_build/bin/deep2_end_to_end_bench.exe','-Model','F:\~dev\qwen2.5-coder-1.5b-base.gguf','-Tokens','32','-WarmupRuns','1','-Runs','3','-Q4Hot','-Q6Hot','-NoTrace') `
   -BaselineMedianTps 33.832 `
   -MinRelativeGain 0.01 `
   -ReportPath .rawrxd/tps_mutation_report.json
