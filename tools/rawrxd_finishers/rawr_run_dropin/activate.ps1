@@ -320,7 +320,7 @@ function global:rawr {
         # GPU admission control: reset/re-enable faulted secondary GPUs before
         # the model run starts. Fail closed if admission cannot be granted.
         $gpuResult = Reset-RawrGpuDevices
-        if ($gpuResult.attempted -and $gpuResult.admission_result -in @('denied_recovery_failed', 'denied_no_vulkan')) {
+        if ($gpuResult.admission_result -notin @('admitted', 'no_recovery_needed')) {
             throw "GPU admission failed: $($gpuResult.admission_result). Aborting rawr run."
         }
         $runExit = 0

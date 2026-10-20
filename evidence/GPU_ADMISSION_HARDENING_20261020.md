@@ -26,3 +26,7 @@ An elevated targeted disable/enable was executed for the RX 7800 XT at 2026-10-2
 
 Raw elevated log: `evidence/RX7800XT_RESET_20261020.log`.
 - Runtime admission smoke with the configured IDs detected the live RX 7800 XT Code 43 and returned `recovery_result=blocked_active_inference`, `admission_result=denied_recovery_failed` while Ollama was active; no disruptive reset was attempted.
+
+## Fail-closed admission correction
+
+The preflight gate now allows launch only for `admitted` or verified `no_recovery_needed`. `skipped_no_primary_configured`, `not_evaluated`, `blocked_active_inference`, missing-device, unavailable-Vulkan, and recovery-failed states all abort `rawr run` before model execution. This closes the attempted-flag bypass identified during audit.
