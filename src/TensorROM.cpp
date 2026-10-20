@@ -13,14 +13,31 @@ namespace deep2 {
 // whole-model GGUFLoader, so the two can evolve independently).
 // ---------------------------------------------------------------------------
 
-static std::string readGGUFStr(std::ifstream& f) {
-    uint64_t len = 0;
-    f.read(reinterpret_cast<char*>(&len), sizeof(len));
-    if (!f || len > 4096) return "";
-    std::vector<char> buf(len);
-    f.read(buf.data(), len);
-    return std::string(buf.data(), len);
-}
+  static std::string readGGUFStr(std::ifstream& f) {
+      uint64_t len = 0;
+      f.read(reinterpret_cast<char*>(&len), sizeof(len));
+      if (!f) return "";
+      // A string this long is not one the engine uses, but its bytes still
+      // have to be consumed. Returning without them leaves the stream
+      // misaligned by len bytes, and every read after this lands in the
+      // wrong place, which is what makes a model with a long chat template
+      // look truncated.
+      if (len > 4096) {
+          std::vector<char> discard(65536);
+          uint64_t left = len;
+          while (left > 0) {
+              const size_t chunk = static_cast<size_t>(left < discard.size() ? left : discard.size());
+              f.read(discard.data(), chunk);
+              if (!f) return "";
+              left -= chunk;
+          }
+          return "";
+      }
+      std::vector<char> buf(len);
+      f.read(buf.data(), len);
+      return std::string(buf.data(), len);
+  }
+
 
 static void skipArray(std::ifstream& f) {
     uint32_t arrayType = 0;
