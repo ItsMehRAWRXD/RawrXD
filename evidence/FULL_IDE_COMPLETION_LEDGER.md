@@ -55,6 +55,19 @@ are claimed. The active universal graph does not yet emit the gated
 `attn_qkv`/`attn_gate` hybrid mixer. Receipt:
 `F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/qwen38_27b_probe_20261020T1418/receipt.md`.
 
+As a bounded substitute, the local `deepseek-r1:32b` blob (DeepSeek R1
+Distill Qwen 32B, GGUF `qwen2`) completed a two-token native R9700 smoke with
+finite logits, zero CPU calls, zero fallback, and a real stream (`7596 287`).
+Decode measured 0.175 TPS after a 78.9 s bind; this is a correctness/smoke
+PASS only. Receipt:
+`F:/rawrxd/evidence/LARGE_MODEL_CERT_20261020/deepseek_r1_32b_qwen2_current_20261020T1430/receipt.md`.
+
+GPT-OSS 120B is present locally as a 65.37 GB GGUF, but the host has 64 GiB
+RAM and the current runtime materializes weights in host memory. Its preflight
+is therefore blocked before launch; the 120B receipt records the measured
+budget and the required ROM/streaming prerequisite:
+`F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/gpt_oss_120b_preflight_20261020T1430/receipt.md`.
+
 ## Performance (Gate 12 / S10) — measured receipt
 
 Model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (SHA-256 `9fecc3b3…d76a0`, 668,788,096 B),
