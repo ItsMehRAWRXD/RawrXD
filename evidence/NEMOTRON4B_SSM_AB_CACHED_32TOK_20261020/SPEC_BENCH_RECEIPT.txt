@@ -1,0 +1,15 @@
+      model=F:\rawrxd\models\nemotron-3-nano_4b.gguf
+== [P] REAL MODEL (universal GGUF ingest)
+      arch=nemotron_h name= sha256=527db2cf6c705d8fabb95693d038d9c06b4a2b0b8b0a4bbdbd01212d37242970
+      layers=42 embd=3136 heads=40 vocab=131072 ctx=262144
+== [code] workload
+      prompt: 64 tokens, generate=32, gamma=4, ngram=3, draft=repeat
+      graph contains recurrent (SSM) blocks: serial arm unaffected
+      serial: prefill=5549.9 ms decode=2255.0 ms gpu_calls=8914 cpu_calls=0
+N/A   spec arm (recurrent graph) -- SSM state cannot be rolled back after a rejected draft
+N/A   spec stream == serial stream -- recurrent (SSM) graph
+N/A   no non-finite logits on the spec arm -- recurrent (SSM) graph
+PASS  no non-finite logits on the serial arm
+== VERDICT
+      pass=1 fail=0 na=3 spec_ran=0
+VERDICT=PASS

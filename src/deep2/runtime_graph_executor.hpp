@@ -423,6 +423,13 @@ private:
       // ((kernel-1) samples per channel) across tokens.
       std::vector<std::vector<float> > ssm_state_;
       std::vector<std::vector<float> > ssm_conv_;
+      // SSM parameters are immutable after Bind. Decode them once per block
+      // instead of re-running DequantPrefix for every generated token.
+      struct SsmWeightCache {
+          bool ready = false;
+          std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
+      };
+      std::vector<SsmWeightCache> ssm_weights_;
       bool first_bind_ = true;   // trace only the primary executor
       std::vector<uint32_t> ssm_state_slots_;
     std::vector<float> logits_;

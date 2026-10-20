@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <utility>
 #include <mutex>
 
 #include "ggml.h"
@@ -4238,25 +4239,70 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     if (convBSlot < 0) { err = "ssm: model has no ssm_conv1d.bias"; return false; }
     if (normSlot < 0) { err = "ssm: model has no ssm_norm.weight"; return false; }
 
-    std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
-    if (DequantPrefix(tensors_[(size_t)aSlot], A, 1u << 16) == 0) {
-        err = "ssm: ssm_a dequantized to nothing"; return false;
+    if (in.block < 0) { err = "ssm: block index is negative"; return false; }
+    if (ssm_weights_.size() <= (size_t)in.block)
+        ssm_weights_.resize((size_t)in.block + 1);
+    SsmWeightCache& cache = ssm_weights_[(size_t)in.block];
+    // Keep an explicit A/B switch so cache performance can be measured against
+    // the exact uncached route without rebuilding the executor. The established
+    // production route stays unchanged by default. Set DEEP2_SSM_WEIGHT_CACHE=1
+    // to opt into the cache for controlled trials.
+    const char* cache_env = std::getenv("DEEP2_SSM_WEIGHT_CACHE");
+    const bool cache_enabled = cache_env && std::strcmp(cache_env, "1") == 0;
+    if (cache_enabled && !cache.ready) {
+        std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
+        if (DequantPrefix(tensors_[(size_t)aSlot], A, 1u << 16) == 0) {
+            err = "ssm: ssm_a dequantized to nothing"; return false;
+        }
+        if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, 1u << 16) == 0) {
+            err = "ssm: ssm_dt.bias dequantized to nothing"; return false;
+        }
+        if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], Dv, 1u << 16);
+        if (Dv.empty()) Dv.assign(A.size(), 0.0f);
+        if (DequantPrefix(tensors_[(size_t)convBSlot], ConvB, 1u << 20) == 0) {
+            err = "ssm: ssm_conv1d.bias dequantized to nothing"; return false;
+        }
+        if (DequantPrefix(tensors_[(size_t)normSlot], NormW, 1u << 20) == 0) {
+            err = "ssm: ssm_norm dequantized to nothing"; return false;
+        }
+        if (DequantPrefix(tensors_[(size_t)in.c], ConvW, 1u << 24) == 0) {
+            err = "ssm: ssm_conv1d.weight dequantized to nothing"; return false;
+        }
+        cache.A = std::move(A);
+        cache.DtB = std::move(DtB);
+        cache.Dv = std::move(Dv);
+        cache.ConvB = std::move(ConvB);
+        cache.NormW = std::move(NormW);
+        cache.ConvW = std::move(ConvW);
+        cache.ready = true;
     }
-    if (DequantPrefix(tensors_[(size_t)dtSlot], DtB, 1u << 16) == 0) {
-        err = "ssm: ssm_dt.bias dequantized to nothing"; return false;
+    std::vector<float> uncachedA, uncachedDtB, uncachedDv, uncachedConvB,
+        uncachedNormW, uncachedConvW;
+    if (!cache_enabled) {
+        if (DequantPrefix(tensors_[(size_t)aSlot], uncachedA, 1u << 16) == 0) {
+            err = "ssm: ssm_a dequantized to nothing"; return false;
+        }
+        if (DequantPrefix(tensors_[(size_t)dtSlot], uncachedDtB, 1u << 16) == 0) {
+            err = "ssm: ssm_dt.bias dequantized to nothing"; return false;
+        }
+        if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], uncachedDv, 1u << 16);
+        if (uncachedDv.empty()) uncachedDv.assign(uncachedA.size(), 0.0f);
+        if (DequantPrefix(tensors_[(size_t)convBSlot], uncachedConvB, 1u << 20) == 0) {
+            err = "ssm: ssm_conv1d.bias dequantized to nothing"; return false;
+        }
+        if (DequantPrefix(tensors_[(size_t)normSlot], uncachedNormW, 1u << 20) == 0) {
+            err = "ssm: ssm_norm dequantized to nothing"; return false;
+        }
+        if (DequantPrefix(tensors_[(size_t)in.c], uncachedConvW, 1u << 24) == 0) {
+            err = "ssm: ssm_conv1d.weight dequantized to nothing"; return false;
+        }
     }
-    if (dSlot >= 0) DequantPrefix(tensors_[(size_t)dSlot], Dv, 1u << 16);
-    if (Dv.empty()) Dv.assign(A.size(), 0.0f);
-    if (DequantPrefix(tensors_[(size_t)convBSlot], ConvB, 1u << 20) == 0) {
-        err = "ssm: ssm_conv1d.bias dequantized to nothing"; return false;
-    }
-    if (DequantPrefix(tensors_[(size_t)normSlot], NormW, 1u << 20) == 0) {
-        err = "ssm: ssm_norm dequantized to nothing"; return false;
-    }
-    if (DequantPrefix(tensors_[(size_t)in.c], ConvW, 1u << 24) == 0) {
-        err = "ssm: ssm_conv1d.weight dequantized to nothing"; return false;
-    }
-
+    const std::vector<float>& A = cache_enabled ? cache.A : uncachedA;
+    const std::vector<float>& DtB = cache_enabled ? cache.DtB : uncachedDtB;
+    const std::vector<float>& Dv = cache_enabled ? cache.Dv : uncachedDv;
+    const std::vector<float>& ConvB = cache_enabled ? cache.ConvB : uncachedConvB;
+    const std::vector<float>& NormW = cache_enabled ? cache.NormW : uncachedNormW;
+    const std::vector<float>& ConvW = cache_enabled ? cache.ConvW : uncachedConvW;
     // ---- 1. in_proj: the FULL zxbcdt projection ----------------------------
     std::vector<float> zxbcdt;
     if (!OpLinear(in.b, x, zxbcdt, err)) return false;
