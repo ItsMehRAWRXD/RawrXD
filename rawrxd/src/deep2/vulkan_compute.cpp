@@ -5674,20 +5674,38 @@ bool VulkanCompute::RunWeightResidentHotDirect(
             lane.query, 1);
     if (vkEndCommandBuffer(lane.cmd) != VK_SUCCESS)
         return false;
-    if (vkResetFences(device_, 1, &lane.fence) != VK_SUCCESS)
+    const VkResult resetFence = vkResetFences(device_, 1, &lane.fence);
+    if (resetFence != VK_SUCCESS) {
+        DEEP2_VK_TRACE(
+            "[HOT_LANE_RESET_FAIL] gpu=%u result=%d type=%d rows=%u cols=%u\n",
+            lane.gpuOrdinal, static_cast<int>(resetFence), meta.type,
+            meta.rows, meta.cols);
         return false;
+    }
 
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
     const uint64_t submitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
+    const VkResult submit = vkQueueSubmit(queue_, 1, &si, lane.fence);
+    if (submit != VK_SUCCESS) {
+        DEEP2_VK_TRACE(
+            "[HOT_LANE_SUBMIT_FAIL] gpu=%u result=%d type=%d rows=%u cols=%u\n",
+            lane.gpuOrdinal, static_cast<int>(submit), meta.type,
+            meta.rows, meta.cols);
         return false;
+    }
     ++lane.submits;
-    if (vkWaitForFences(
-            device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+    const VkResult wait = vkWaitForFences(
+        device_, 1, &lane.fence, VK_TRUE, UINT64_MAX);
+    if (wait != VK_SUCCESS) {
+        DEEP2_VK_TRACE(
+            "[HOT_LANE_WAIT_FAIL] gpu=%u result=%d type=%d rows=%u cols=%u\n",
+            lane.gpuOrdinal, static_cast<int>(wait), meta.type,
+            meta.rows, meta.cols);
         return false;
+    }
     const uint64_t completeNs = nowNs();
 
     // Endurance fix: the fence is signaled — the GPU is done with every
@@ -5774,6 +5792,12 @@ bool VulkanCompute::DispatchWeightResidentLane(
 
     const size_t rowBytes = QuantPackedRowBytes(meta.type, meta.cols);
     if (!rowBytes) return false;
+    if (meta.rows > std::numeric_limits<size_t>::max() / rowBytes)
+        return false;
+    const size_t requiredWeightBytes =
+        static_cast<size_t>(meta.rows) * rowBytes;
+    if (meta.bytes < requiredWeightBytes)
+        return false;
 
     const VkDescriptorSet set = getQuantDescriptorRange(
         residentWeight, 0,
@@ -5782,6 +5806,11 @@ bool VulkanCompute::DispatchWeightResidentLane(
     if (set == VK_NULL_HANDLE) return false;
     if (lane.pendingSetCount >= 4) return false; // single submit capacity
     lane.pendingSets[lane.pendingSetCount++] = set;
+    DEEP2_VK_TRACE(
+        "[HOT_QUANT_DISPATCH] gpu=%u type=%d rows=%u cols=%u bytes=%zu "
+        "row_bytes=%zu\n",
+        lane.gpuOrdinal, meta.type, meta.rows, meta.cols, meta.bytes,
+        rowBytes);
     const char* hotBatchRows = std::getenv("DEEP2_Q4K_HOT_BATCH_ROWS");
     if (meta.type == 12 && hotBatchRows && hotBatchRows[0] == '1' &&
         meta.rows >= 8 && qBatch8RowPipeline_) {
@@ -5884,6 +5913,8 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
         if (totalOutBytes > SIZE_MAX - b) return false;
         totalOutBytes += b;
     }
+    if (totalOutBytes > lane.downCapacity)
+        return false;
 
     lane.epoch = epoch;
     lane.q4kLaneTag = kQ4kLaneDual;
@@ -5938,20 +5969,35 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
             lane.query, 1);
     if (vkEndCommandBuffer(lane.cmd) != VK_SUCCESS)
         return false;
-    if (vkResetFences(device_, 1, &lane.fence) != VK_SUCCESS)
+    const VkResult resetFence = vkResetFences(device_, 1, &lane.fence);
+    if (resetFence != VK_SUCCESS) {
+        DEEP2_VK_TRACE(
+            "[HOT_GROUP_RESET_FAIL] gpu=%u result=%d count=%zu\n",
+            lane.gpuOrdinal, static_cast<int>(resetFence), count);
         return false;
+    }
 
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
     const uint64_t groupSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
+    const VkResult submit = vkQueueSubmit(queue_, 1, &si, lane.fence);
+    if (submit != VK_SUCCESS) {
+        DEEP2_VK_TRACE(
+            "[HOT_GROUP_SUBMIT_FAIL] gpu=%u result=%d count=%zu\n",
+            lane.gpuOrdinal, static_cast<int>(submit), count);
         return false;
+    }
     ++lane.submits;
-    if (vkWaitForFences(
-            device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+    const VkResult wait = vkWaitForFences(
+        device_, 1, &lane.fence, VK_TRUE, UINT64_MAX);
+    if (wait != VK_SUCCESS) {
+        DEEP2_VK_TRACE(
+            "[HOT_GROUP_WAIT_FAIL] gpu=%u result=%d count=%zu\n",
+            lane.gpuOrdinal, static_cast<int>(wait), count);
         return false;
+    }
     const uint64_t groupCompleteNs = nowNs();
 
     // Free every ranged set this submit bound.
