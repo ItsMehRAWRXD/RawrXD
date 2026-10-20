@@ -1,0 +1,264 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Packed { uint packed_u32[]; };
+layout(std430, binding = 1) readonly buffer Q8 { float q8_data[]; };
+layout(std430, binding = 2) writeonly buffer Out { float out_rows[]; };
+
+layout(push_constant) uniform PushConstants {
+    uint n_out;
+    uint n_in;
+    uint n_blocks;
+    uint kind;
+} pc;
+
+const uint Q8_STRIDE = 273u;
+const uint Q4K_BYTES = 144u;
+const uint Q6K_BYTES = 210u;
+const uint Q2K_BYTES = 84u;
+const uint Q3K_BYTES = 110u;
+const uint Q50_BYTES = 22u;
+const uint Q80_BYTES = 34u;
+const uint Q40_BYTES = 18u;
+
+shared float activation_tile[256];
+shared float partials[256];
+#ifdef DEEP2_Q6_SHARED_TILE
+// Q6_K blocks are 210 bytes.  A 4-byte aligned load for a block whose base is
+// 1..3 bytes past a word boundary needs bytes through offset 212, i.e. word
+// 53.  Keep 54 words so the last byte is in-bounds for every row/block.
+shared uint q6_words[8][54];
+#endif
+
+uint pack_byte(uint idx) {
+    uint word = packed_u32[idx >> 2u];
+    return (word >> ((idx & 3u) * 8u)) & 0xFFu;
+}
+
+uint pack_u16(uint idx) {
+    return pack_byte(idx) | (pack_byte(idx + 1u) << 8u);
+}
+
+int pack_i8(uint idx) {
+    uint value = pack_byte(idx);
+    return value < 128u ? int(value) : int(value) - 256;
+}
+
+float half_to_float(uint h) {
+    uint sign = (h & 0x8000u) << 16u;
+    uint exponent = (h >> 10u) & 31u;
+    uint fraction = h & 1023u;
+    if (exponent == 0u) {
+        if (fraction == 0u) return uintBitsToFloat(sign);
+        uint mantissa = fraction;
+        int exponent_value = -14;
+        while ((mantissa & 1024u) == 0u) {
+            mantissa <<= 1u;
+            --exponent_value;
+        }
+        mantissa &= 1023u;
+        return uintBitsToFloat(sign | (uint(exponent_value + 127) << 23u) | (mantissa << 13u));
+    }
+    if (exponent == 31u) return uintBitsToFloat(sign | 0x7f800000u | (fraction << 13u));
+    return uintBitsToFloat(sign | ((exponent + 112u) << 23u) | (fraction << 13u));
+}
+
+void q4_scale_min(uint base, uint group, out int scale, out int minv) {
+    uint low = pack_byte(base + group);
+    uint high = pack_byte(base + group + 4u);
+    if (group < 4u) {
+        scale = int(low & 63u);
+        minv = int(high & 63u);
+    } else {
+        uint previous = pack_byte(base + group - 4u);
+        scale = int((high & 15u) | ((previous >> 6u) << 4u));
+        minv = int((high >> 4u) | ((low >> 6u) << 4u));
+    }
+}
+
+float q4k_weight(uint row, uint col) {
+    uint block = col >> 8u;
+    uint index = col & 255u;
+    uint base = row * pc.n_blocks * Q4K_BYTES + block * Q4K_BYTES;
+    uint group = index >> 5u;
+    uint lane = index & 31u;
+    int scale;
+    int minv;
+    q4_scale_min(base + 4u, group, scale, minv);
+    uint packed = pack_byte(base + 16u + (group >> 1u) * 32u + lane);
+    int quant = (group & 1u) == 0u ? int(packed & 15u) : int(packed >> 4u);
+    float d = half_to_float(pack_u16(base));
+    float dmin = half_to_float(pack_u16(base + 2u));
+    return d * float(scale * quant) - dmin * float(minv);
+}
+
+#ifdef DEEP2_Q6_SHARED_TILE
+uint q6_tile_byte(uint cohort, uint base_mod, uint byte_index) {
+    uint word = q6_words[cohort][(byte_index + base_mod) >> 2u];
+    return (word >> (((byte_index + base_mod) & 3u) * 8u)) & 0xFFu;
+}
+#endif
+
+uint q6_block_byte(uint base, uint byte_index, uint cohort, uint base_mod) {
+#ifdef DEEP2_Q6_SHARED_TILE
+    return q6_tile_byte(cohort, base_mod, byte_index);
+#else
+    return pack_byte(base + byte_index);
+#endif
+}
+
+float q6k_weight(uint row, uint col, uint cohort, uint base_mod) {
+    uint block = col >> 8u;
+    uint index = col & 255u;
+    uint base = row * pc.n_blocks * Q6K_BYTES + block * Q6K_BYTES;
+    uint group = index >> 5u;
+    uint lane = index & 31u;
+    uint half_group = group >> 2u;
+    uint part = group & 3u;
+    uint low_offset = half_group * 64u + (part & 1u) * 32u;
+    uint high_offset = half_group * 32u;
+    uint low_shift = part >= 2u ? 4u : 0u;
+    uint high_shift = 2u * part;
+    int low = int((q6_block_byte(base, low_offset + lane, cohort, base_mod) >> low_shift) & 15u);
+    int high = int((q6_block_byte(base, 128u + high_offset + lane, cohort, base_mod) >> high_shift) & 3u);
+    int scale = int(q6_block_byte(base, 192u + group * 2u + (lane >> 4u), cohort, base_mod));
+    if (scale >= 128) scale -= 256;
+    float d = half_to_float(q6_block_byte(base, 208u, cohort, base_mod) |
+                            (q6_block_byte(base, 209u, cohort, base_mod) << 8u));
+    return d * float(scale * ((low | (high << 4)) - 32));
+}
+
+float q2k_weight(uint row, uint col) {
+    uint block = col >> 8u;
+    uint index = col & 255u;
+    uint base = row * pc.n_blocks * Q2K_BYTES + block * Q2K_BYTES;
+    uint half_block = index >> 7u;
+    uint local = index & 127u;
+    uint group = index >> 4u;
+    uint group_local = local & 31u;
+    uint half_lane = group_local >> 4u;
+    uint lane = group_local & 15u;
+    uint sub_group = (local >> 5u) & 3u;
+    uint qbyte = base + 16u + half_block * 32u + half_lane * 16u + lane;
+    uint q = (pack_byte(qbyte) >> (sub_group * 2u)) & 3u;
+    uint scale_min = pack_byte(base + group);
+    float d = half_to_float(pack_u16(base + 80u));
+    float dmin = half_to_float(pack_u16(base + 82u));
+    return d * float(scale_min & 15u) * float(q) - dmin * float(scale_min >> 4u);
+}
+
+int q3_scale(uint base, uint group) {
+    uint s0 = pack_byte(base + 96u) | (pack_byte(base + 97u) << 8u) |
+              (pack_byte(base + 98u) << 16u) | (pack_byte(base + 99u) << 24u);
+    uint s1 = pack_byte(base + 100u) | (pack_byte(base + 101u) << 8u) |
+              (pack_byte(base + 102u) << 16u) | (pack_byte(base + 103u) << 24u);
+    uint s2 = pack_byte(base + 104u) | (pack_byte(base + 105u) << 8u) |
+              (pack_byte(base + 106u) << 16u) | (pack_byte(base + 107u) << 24u);
+    uint mask1 = 0x03030303u;
+    uint mask2 = 0x0f0f0f0fu;
+    uint n0 = (s0 & mask2) | (((s2 >> 0u) & mask1) << 4u);
+    uint n1 = (s1 & mask2) | (((s2 >> 2u) & mask1) << 4u);
+    uint n2 = ((s0 >> 4u) & mask2) | (((s2 >> 4u) & mask1) << 4u);
+    uint n3 = ((s1 >> 4u) & mask2) | (((s2 >> 6u) & mask1) << 4u);
+    uint packed = group < 4u ? n0 : group < 8u ? n1 : group < 12u ? n2 : n3;
+    int value = int((packed >> ((group & 3u) * 8u)) & 0xFFu);
+    return value >= 128 ? value - 256 : value;
+}
+
+float q3k_weight(uint row, uint col) {
+    uint block = col >> 8u;
+    uint index = col & 255u;
+    uint base = row * pc.n_blocks * Q3K_BYTES + block * Q3K_BYTES;
+    uint half_block = index >> 7u;
+    uint local = index & 127u;
+    uint subgroup = local >> 5u;
+    uint group_local = local & 31u;
+    uint half_lane = group_local >> 4u;
+    uint lane = group_local & 15u;
+    uint qbyte = base + 32u + half_block * 32u + half_lane * 16u + lane;
+    uint q = (pack_byte(qbyte) >> (subgroup * 2u)) & 3u;
+    uint mask_bit = 1u << subgroup;
+    uint mask_byte = pack_byte(base + half_lane * 16u + lane);
+    int high = (mask_byte & mask_bit) == 0u ? 4 : 0;
+    float d = half_to_float(pack_u16(base + 108u));
+    return d * float(q3_scale(base, index >> 4u) - 32) * float(int(q) - high);
+}
+
+float legacy_weight(uint row, uint col) {
+    uint block_bytes = pc.kind == 2u ? Q50_BYTES : pc.kind == 3u ? Q80_BYTES : Q40_BYTES;
+    uint row_bytes = ((pc.n_in + 31u) >> 5u) * block_bytes;
+    uint block = col >> 5u;
+    uint index = col & 31u;
+    uint base = row * row_bytes + block * block_bytes;
+    if (pc.kind == 3u) return half_to_float(pack_u16(base)) * float(pack_i8(base + 2u + index));
+    uint lane = index & 15u;
+    uint packed = pack_byte(base + (pc.kind == 2u ? 6u : 2u) + lane);
+    int quant;
+    if (pc.kind == 2u) {
+        uint qh = pack_byte(base + 2u) | (pack_byte(base + 3u) << 8u) |
+                  (pack_byte(base + 4u) << 16u) | (pack_byte(base + 5u) << 24u);
+        int high_bit = int((qh >> index) & 1u);
+        quant = (int(index < 16u ? packed & 15u : packed >> 4u) | (high_bit << 4)) - 16;
+    } else {
+        quant = int(index < 16u ? packed & 15u : packed >> 4u) - 8;
+    }
+    return half_to_float(pack_u16(base)) * float(quant);
+}
+
+float quant_weight(uint row, uint col, uint cohort, uint base_mod) {
+    if (pc.kind == 0u) return q4k_weight(row, col);
+    if (pc.kind == 1u) return q6k_weight(row, col, cohort, base_mod);
+    if (pc.kind == 5u) return q2k_weight(row, col);
+    if (pc.kind == 6u) return q3k_weight(row, col);
+    return legacy_weight(row, col);
+}
+
+void main() {
+    uint lane = gl_LocalInvocationID.x & 31u;
+    uint cohort = gl_LocalInvocationID.x >> 5u;
+    uint row = gl_WorkGroupID.x * 8u + cohort;
+    float acc = 0.0;
+    uint super_blocks = (pc.n_in + 255u) >> 8u;
+
+    for (uint block = 0u; block < super_blocks; ++block) {
+        uint col = block * 256u + gl_LocalInvocationID.x;
+        activation_tile[gl_LocalInvocationID.x] = col < pc.n_in
+            ? q8_data[block * Q8_STRIDE + 1u + gl_LocalInvocationID.x]
+            : 0.0;
+#ifdef DEEP2_Q6_SHARED_TILE
+        if (pc.kind == 1u && row < pc.n_out) {
+            uint absolute_base = row * pc.n_blocks * Q6K_BYTES + block * Q6K_BYTES;
+            uint aligned_base = absolute_base & ~3u;
+            // A row cohort has 32 lanes but the aligned Q6 block spans
+            // 54 words. Cooperatively load the complete tile in two rounds;
+            // leaving words 32..53 undefined causes workload-dependent NaNs.
+            for (uint wi = lane; wi < 54u; wi += 32u)
+                q6_words[cohort][wi] = packed_u32[(aligned_base >> 2u) + wi];
+        }
+#endif
+        barrier();
+        if (row < pc.n_out) {
+            float q8_scale = q8_data[block * Q8_STRIDE];
+            for (uint offset = 0u; offset < 256u; offset += 32u) {
+                uint local_col = lane + offset;
+                uint global_col = block * 256u + local_col;
+                if (global_col < pc.n_in)
+                    acc += quant_weight(row, global_col, cohort,
+                                       (row * pc.n_blocks * Q6K_BYTES + block * Q6K_BYTES) & 3u) *
+                           q8_scale * activation_tile[local_col];
+            }
+        }
+        barrier();
+    }
+
+    uint base = cohort * 32u;
+    partials[gl_LocalInvocationID.x] = acc;
+    barrier();
+    for (uint stride = 16u; stride > 0u; stride >>= 1u) {
+        if (lane < stride)
+            partials[base + lane] += partials[base + lane + stride];
+        barrier();
+    }
+    if (row < pc.n_out && lane == 0u) out_rows[row] = partials[base];
+}

@@ -1023,6 +1023,10 @@ const char* kQuantDotRow4ShaderPath =
     "F:\\rawrxd\\tools\\shaders\\quant_dot_row4.spv";
 const char* kQuantDotRow4Q6TileShaderPath =
     "F:\\rawrxd\\tools\\shaders\\quant_dot_row4_q6tile.spv";
+const char* kQuantDotRow8ShaderPath =
+    "F:\\rawrxd\\tools\\shaders\\quant_dot_row8.spv";
+const char* kQuantDotRow8Q6TileShaderPath =
+    "F:\\rawrxd\\tools\\shaders\\quant_dot_row8_q6tile.spv";
 
 struct QuantCommandPlan {
     VkCommandBuffer command = nullptr;
@@ -1055,6 +1059,16 @@ bool QuantDotRow4Enabled() {
         return value && std::strcmp(value, "4") == 0;
     }();
     return enabled;
+}
+bool QuantDotRow8Enabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_QUANT_ROW_TILE");
+        return value && std::strcmp(value, "8") == 0;
+    }();
+    return enabled;
+}
+uint32_t QuantDotRowsPerWorkgroup() {
+    return QuantDotRow8Enabled() ? 8u : (QuantDotRow4Enabled() ? 4u : 1u);
 }
 
 bool QuantDotQ6SharedTileEnabled() {
@@ -1109,37 +1123,35 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
     }
 
     std::string selected_path = spirv_path;
-    if (QuantDotRow4Enabled()) {
+    if (QuantDotRow4Enabled() || QuantDotRow8Enabled()) {
+        const bool row8 = QuantDotRow8Enabled();
         const bool q6_tile = QuantDotQ6SharedTileEnabled();
-        const char* override_path = std::getenv(q6_tile
-            ? "RAWRXD_QUANT_ROW4_Q6_SHADER"
-            : "RAWRXD_QUANT_ROW4_SHADER");
+        const char* override_path = std::getenv(
+            row8 ? "RAWRXD_QUANT_ROW8_Q6_SHADER" :
+            (q6_tile ? "RAWRXD_QUANT_ROW4_Q6_SHADER" : "RAWRXD_QUANT_ROW4_SHADER"));
         std::vector<std::string> candidates;
         if (override_path && *override_path) candidates.emplace_back(override_path);
-        candidates.emplace_back(q6_tile ? kQuantDotRow4Q6TileShaderPath
-                                        : kQuantDotRow4ShaderPath);
-        candidates.emplace_back(q6_tile
-            ? "tools/shaders/quant_dot_row4_q6tile.spv"
-            : "tools/shaders/quant_dot_row4.spv");
-        candidates.emplace_back(q6_tile
-            ? "src/deep2/shaders/quant_dot_row4_q6tile.spv"
-            : "src/deep2/shaders/quant_dot_row4.spv");
+        if (row8) {
+            candidates.emplace_back(q6_tile ? kQuantDotRow8Q6TileShaderPath : kQuantDotRow8ShaderPath);
+            candidates.emplace_back(q6_tile ? "tools/shaders/quant_dot_row8_q6tile.spv" : "tools/shaders/quant_dot_row8.spv");
+        } else {
+            candidates.emplace_back(q6_tile ? kQuantDotRow4Q6TileShaderPath : kQuantDotRow4ShaderPath);
+            candidates.emplace_back(q6_tile ? "tools/shaders/quant_dot_row4_q6tile.spv" : "tools/shaders/quant_dot_row4.spv");
+        }
         selected_path.clear();
         for (const std::string& candidate : candidates) {
             std::ifstream probe(candidate, std::ios::binary);
             if (probe.good()) { selected_path = candidate; break; }
         }
-        if (selected_path.empty()) {
-            selected_path = candidates.front();
-        }
+        if (selected_path.empty()) selected_path = candidates.front();
     }
     std::vector<uint32_t> code;
     if (!LoadSPIRVCode(selected_path, code) || code.empty()) {
         std::cerr << "Failed to load quant-dot SPIR-V: " << selected_path << std::endl;
         return false;
     }
-    if (QuantDotRow4Enabled())
-        std::cerr << "[quant-row4] shader=" << selected_path
+    if (QuantDotRow4Enabled() || QuantDotRow8Enabled())
+        std::cerr << "[quant-row" << QuantDotRowsPerWorkgroup() << "] shader=" << selected_path
                   << " q6_shared=" << (QuantDotQ6SharedTileEnabled() ? 1 : 0) << std::endl;
 
     VkShaderModuleCreateInfo sm{};
@@ -1490,8 +1502,13 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
             vkCmdBindDescriptorSets(plan->command, VK_PIPELINE_BIND_POINT_COMPUTE,
                                     it->second.layout, 0, 1, &plan->descriptor,
                                     0, nullptr);
-            const uint32_t groups = QuantDotRow4Enabled()
-                ? (uint32_t)((n_out + 3u) / 4u)
+            // Keep command-replay dispatch geometry in lockstep with the
+            // selected shader.  Row-4 and row-8 kernels each produce several
+            // output rows per workgroup; dispatching n_out groups here would
+            // launch redundant empty groups and erase the tiling benefit.
+            const uint32_t tile_rows = QuantDotRowsPerWorkgroup();
+            const uint32_t groups = tile_rows > 1u
+                ? (uint32_t)((n_out + tile_rows - 1u) / tile_rows)
                 : (uint32_t)n_out;
             vkCmdDispatch(plan->command, groups ? groups : 1u, 1, 1);
 
@@ -1686,9 +1703,10 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
                             it->second.layout, 0, 1, &ds, 0, nullptr);
     // One invocation per output row.
-    uint32_t groups = QuantDotRow4Enabled()
-        ? (uint32_t)((n_out + 3u) / 4u)
-        : (uint32_t)(n_out / 1u);
+    const uint32_t tile_rows = QuantDotRowsPerWorkgroup();
+    uint32_t groups = tile_rows > 1u
+        ? (uint32_t)((n_out + tile_rows - 1u) / tile_rows)
+        : (uint32_t)n_out;
     if (groups == 0u) groups = 1u;
     vkCmdDispatch(quant_cmd_, groups, 1, 1);
 
@@ -2133,8 +2151,9 @@ bool VulkanCompute::EndQuantDotBatch() {
                            0, sizeof(uint32_t) * 4, &e.n_out);
         vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
                                 sh->second.layout, 0, 1, &e.ds, 0, nullptr);
-        uint32_t groups = QuantDotRow4Enabled()
-            ? (e.n_out + 3u) / 4u
+        const uint32_t tile_rows = QuantDotRowsPerWorkgroup();
+        uint32_t groups = tile_rows > 1u
+            ? (e.n_out + tile_rows - 1u) / tile_rows
             : e.n_out;
         if (groups == 0u) groups = 1u;
         vkCmdDispatch(quant_cmd_, groups, 1, 1);

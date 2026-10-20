@@ -1,0 +1,544 @@
+=================================================================
+ Deep2 SPECULATIVE VERIFICATION BENCH  (RAWRXD_DEEP2_SPEC_VERIFY_001)
+ serial greedy vs batched verify, code/prose acceptance split
+=================================================================
+      model=F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+--- [P] REAL MODEL (universal GGUF ingest) ---
+      arch=llama name=tinyllama_tinyllama-1.1b-chat-v1.0 sha256=9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+      layers=22 embd=2048 heads=32 vocab=32000 ctx=2048
+
+--- [code] workload ---
+      prompt: 103 tokens, generate=32, gamma=4, ngram=3, draft=repeat
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[quant-row8] shader=F:\rawrxd\tools\shaders\quant_dot_row8_q6tile.spv q6_shared=1
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[OPTIMING] position=103 batch_flush_ms=24.075
+[OPTIMING] op=3 count=22 total_ms=5.206 avg_ms=0.2367
+[OPTIMING] op=2 count=154 total_ms=2.957 avg_ms=0.0192
+[OPTIMING] op=9 count=1 total_ms=1.329 avg_ms=1.3294
+[OPTIMING] op=12 count=22 total_ms=0.378 avg_ms=0.0172
+[OPTIMING] op=8 count=44 total_ms=0.270 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.131 avg_ms=0.0029
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.007 avg_ms=0.0073
+[OPTIMING] position=104 batch_flush_ms=22.110
+[OPTIMING] op=3 count=22 total_ms=4.824 avg_ms=0.2193
+[OPTIMING] op=2 count=154 total_ms=2.956 avg_ms=0.0192
+[OPTIMING] op=9 count=1 total_ms=0.974 avg_ms=0.9740
+[OPTIMING] op=12 count=22 total_ms=0.365 avg_ms=0.0166
+[OPTIMING] op=8 count=44 total_ms=0.258 avg_ms=0.0059
+[OPTIMING] op=1 count=45 total_ms=0.125 avg_ms=0.0028
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.007 avg_ms=0.0070
+[OPTIMING] position=105 batch_flush_ms=19.958
+[OPTIMING] op=3 count=22 total_ms=4.597 avg_ms=0.2090
+[OPTIMING] op=2 count=154 total_ms=2.855 avg_ms=0.0185
+[OPTIMING] op=9 count=1 total_ms=1.375 avg_ms=1.3746
+[OPTIMING] op=12 count=22 total_ms=0.371 avg_ms=0.0168
+[OPTIMING] op=8 count=44 total_ms=0.244 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.112 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.047 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0061
+[OPTIMING] position=106 batch_flush_ms=21.791
+[OPTIMING] op=3 count=22 total_ms=4.674 avg_ms=0.2125
+[OPTIMING] op=2 count=154 total_ms=2.866 avg_ms=0.0186
+[OPTIMING] op=9 count=1 total_ms=1.592 avg_ms=1.5919
+[OPTIMING] op=12 count=22 total_ms=0.359 avg_ms=0.0163
+[OPTIMING] op=8 count=44 total_ms=0.246 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.114 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.047 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0056
+[OPTIMING] position=107 batch_flush_ms=23.743
+[OPTIMING] op=3 count=22 total_ms=5.485 avg_ms=0.2493
+[OPTIMING] op=2 count=154 total_ms=3.357 avg_ms=0.0218
+[OPTIMING] op=9 count=1 total_ms=1.169 avg_ms=1.1685
+[OPTIMING] op=12 count=22 total_ms=0.418 avg_ms=0.0190
+[OPTIMING] op=8 count=44 total_ms=0.304 avg_ms=0.0069
+[OPTIMING] op=1 count=45 total_ms=0.133 avg_ms=0.0029
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0053
+[OPTIMING] position=108 batch_flush_ms=23.600
+[OPTIMING] op=3 count=22 total_ms=5.193 avg_ms=0.2360
+[OPTIMING] op=2 count=154 total_ms=3.203 avg_ms=0.0208
+[OPTIMING] op=9 count=1 total_ms=1.040 avg_ms=1.0402
+[OPTIMING] op=12 count=22 total_ms=0.391 avg_ms=0.0178
+[OPTIMING] op=8 count=44 total_ms=0.285 avg_ms=0.0065
+[OPTIMING] op=1 count=45 total_ms=0.133 avg_ms=0.0029
+[OPTIMING] op=11 count=22 total_ms=0.055 avg_ms=0.0025
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0058
+[OPTIMING] position=109 batch_flush_ms=23.991
+[OPTIMING] op=3 count=22 total_ms=4.935 avg_ms=0.2243
+[OPTIMING] op=2 count=154 total_ms=3.071 avg_ms=0.0199
+[OPTIMING] op=9 count=1 total_ms=1.103 avg_ms=1.1034
+[OPTIMING] op=12 count=22 total_ms=0.411 avg_ms=0.0187
+[OPTIMING] op=8 count=44 total_ms=0.269 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.121 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.053 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0058
+[OPTIMING] position=110 batch_flush_ms=23.491
+[OPTIMING] op=3 count=22 total_ms=4.941 avg_ms=0.2246
+[OPTIMING] op=2 count=154 total_ms=2.786 avg_ms=0.0181
+[OPTIMING] op=9 count=1 total_ms=0.978 avg_ms=0.9775
+[OPTIMING] op=12 count=22 total_ms=0.362 avg_ms=0.0165
+[OPTIMING] op=8 count=44 total_ms=0.246 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.118 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.045 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0048
+[OPTIMING] position=111 batch_flush_ms=23.732
+[OPTIMING] op=3 count=22 total_ms=5.056 avg_ms=0.2298
+[OPTIMING] op=2 count=154 total_ms=2.949 avg_ms=0.0191
+[OPTIMING] op=9 count=1 total_ms=0.960 avg_ms=0.9601
+[OPTIMING] op=12 count=22 total_ms=0.389 avg_ms=0.0177
+[OPTIMING] op=8 count=44 total_ms=0.264 avg_ms=0.0060
+[OPTIMING] op=1 count=45 total_ms=0.117 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.009 avg_ms=0.0088
+[OPTIMING] position=112 batch_flush_ms=22.443
+[OPTIMING] op=3 count=22 total_ms=5.102 avg_ms=0.2319
+[OPTIMING] op=2 count=154 total_ms=2.955 avg_ms=0.0192
+[OPTIMING] op=9 count=1 total_ms=0.933 avg_ms=0.9326
+[OPTIMING] op=12 count=22 total_ms=0.357 avg_ms=0.0162
+[OPTIMING] op=8 count=44 total_ms=0.254 avg_ms=0.0058
+[OPTIMING] op=1 count=45 total_ms=0.119 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0046
+[OPTIMING] position=113 batch_flush_ms=23.285
+[OPTIMING] op=3 count=22 total_ms=5.262 avg_ms=0.2392
+[OPTIMING] op=2 count=154 total_ms=3.255 avg_ms=0.0211
+[OPTIMING] op=9 count=1 total_ms=1.029 avg_ms=1.0288
+[OPTIMING] op=12 count=22 total_ms=0.450 avg_ms=0.0205
+[OPTIMING] op=8 count=44 total_ms=0.297 avg_ms=0.0068
+[OPTIMING] op=1 count=45 total_ms=0.121 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.054 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0043
+[OPTIMING] position=114 batch_flush_ms=23.676
+[OPTIMING] op=3 count=22 total_ms=5.317 avg_ms=0.2417
+[OPTIMING] op=2 count=154 total_ms=3.058 avg_ms=0.0199
+[OPTIMING] op=9 count=1 total_ms=0.978 avg_ms=0.9781
+[OPTIMING] op=12 count=22 total_ms=0.361 avg_ms=0.0164
+[OPTIMING] op=8 count=44 total_ms=0.262 avg_ms=0.0059
+[OPTIMING] op=1 count=45 total_ms=0.121 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0052
+[OPTIMING] position=115 batch_flush_ms=23.442
+[OPTIMING] op=3 count=22 total_ms=5.591 avg_ms=0.2541
+[OPTIMING] op=2 count=154 total_ms=3.269 avg_ms=0.0212
+[OPTIMING] op=9 count=1 total_ms=1.596 avg_ms=1.5959
+[OPTIMING] op=12 count=22 total_ms=0.425 avg_ms=0.0193
+[OPTIMING] op=8 count=44 total_ms=0.290 avg_ms=0.0066
+[OPTIMING] op=1 count=45 total_ms=0.131 avg_ms=0.0029
+[OPTIMING] op=11 count=22 total_ms=0.055 avg_ms=0.0025
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0046
+[OPTIMING] position=116 batch_flush_ms=20.232
+[OPTIMING] op=3 count=22 total_ms=4.893 avg_ms=0.2224
+[OPTIMING] op=2 count=154 total_ms=2.712 avg_ms=0.0176
+[OPTIMING] op=9 count=1 total_ms=0.945 avg_ms=0.9450
+[OPTIMING] op=12 count=22 total_ms=0.326 avg_ms=0.0148
+[OPTIMING] op=8 count=44 total_ms=0.223 avg_ms=0.0051
+[OPTIMING] op=1 count=45 total_ms=0.112 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.046 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0050
+[OPTIMING] position=117 batch_flush_ms=22.861
+[OPTIMING] op=3 count=22 total_ms=5.940 avg_ms=0.2700
+[OPTIMING] op=2 count=154 total_ms=3.316 avg_ms=0.0215
+[OPTIMING] op=9 count=1 total_ms=1.384 avg_ms=1.3842
+[OPTIMING] op=12 count=22 total_ms=0.379 avg_ms=0.0172
+[OPTIMING] op=8 count=44 total_ms=0.278 avg_ms=0.0063
+[OPTIMING] op=1 count=45 total_ms=0.129 avg_ms=0.0029
+[OPTIMING] op=11 count=22 total_ms=0.054 avg_ms=0.0025
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0045
+[OPTIMING] position=118 batch_flush_ms=21.115
+[OPTIMING] op=3 count=22 total_ms=4.955 avg_ms=0.2252
+[OPTIMING] op=2 count=154 total_ms=2.766 avg_ms=0.0180
+[OPTIMING] op=9 count=1 total_ms=0.948 avg_ms=0.9482
+[OPTIMING] op=12 count=22 total_ms=0.330 avg_ms=0.0150
+[OPTIMING] op=8 count=44 total_ms=0.237 avg_ms=0.0054
+[OPTIMING] op=1 count=45 total_ms=0.115 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.017 avg_ms=0.0167
+[OPTIMING] position=119 batch_flush_ms=22.426
+[OPTIMING] op=3 count=22 total_ms=5.635 avg_ms=0.2561
+[OPTIMING] op=2 count=154 total_ms=3.102 avg_ms=0.0201
+[OPTIMING] op=9 count=1 total_ms=1.120 avg_ms=1.1196
+[OPTIMING] op=12 count=22 total_ms=0.361 avg_ms=0.0164
+[OPTIMING] op=8 count=44 total_ms=0.264 avg_ms=0.0060
+[OPTIMING] op=1 count=45 total_ms=0.119 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.053 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0046
+[OPTIMING] position=120 batch_flush_ms=21.715
+[OPTIMING] op=3 count=22 total_ms=5.056 avg_ms=0.2298
+[OPTIMING] op=2 count=154 total_ms=2.755 avg_ms=0.0179
+[OPTIMING] op=9 count=1 total_ms=0.952 avg_ms=0.9523
+[OPTIMING] op=12 count=22 total_ms=0.330 avg_ms=0.0150
+[OPTIMING] op=8 count=44 total_ms=0.231 avg_ms=0.0053
+[OPTIMING] op=1 count=45 total_ms=0.110 avg_ms=0.0024
+[OPTIMING] op=11 count=22 total_ms=0.047 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0060
+[OPTIMING] position=121 batch_flush_ms=23.082
+[OPTIMING] op=3 count=22 total_ms=5.804 avg_ms=0.2638
+[OPTIMING] op=2 count=154 total_ms=3.309 avg_ms=0.0215
+[OPTIMING] op=9 count=1 total_ms=0.979 avg_ms=0.9789
+[OPTIMING] op=12 count=22 total_ms=0.379 avg_ms=0.0172
+[OPTIMING] op=8 count=44 total_ms=0.273 avg_ms=0.0062
+[OPTIMING] op=1 count=45 total_ms=0.123 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.053 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0045
+[OPTIMING] position=122 batch_flush_ms=22.868
+[OPTIMING] op=3 count=22 total_ms=5.222 avg_ms=0.2374
+[OPTIMING] op=2 count=154 total_ms=2.939 avg_ms=0.0191
+[OPTIMING] op=9 count=1 total_ms=1.011 avg_ms=1.0112
+[OPTIMING] op=12 count=22 total_ms=0.357 avg_ms=0.0162
+[OPTIMING] op=8 count=44 total_ms=0.251 avg_ms=0.0057
+[OPTIMING] op=1 count=45 total_ms=0.114 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.049 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0046
+[OPTIMING] position=123 batch_flush_ms=22.648
+[OPTIMING] op=3 count=22 total_ms=5.514 avg_ms=0.2506
+[OPTIMING] op=2 count=154 total_ms=3.038 avg_ms=0.0197
+[OPTIMING] op=9 count=1 total_ms=0.944 avg_ms=0.9441
+[OPTIMING] op=12 count=22 total_ms=0.378 avg_ms=0.0172
+[OPTIMING] op=8 count=44 total_ms=0.257 avg_ms=0.0058
+[OPTIMING] op=1 count=45 total_ms=0.117 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0054
+[OPTIMING] position=124 batch_flush_ms=22.400
+[OPTIMING] op=3 count=22 total_ms=5.349 avg_ms=0.2431
+[OPTIMING] op=2 count=154 total_ms=2.971 avg_ms=0.0193
+[OPTIMING] op=9 count=1 total_ms=1.058 avg_ms=1.0575
+[OPTIMING] op=12 count=22 total_ms=0.352 avg_ms=0.0160
+[OPTIMING] op=8 count=44 total_ms=0.272 avg_ms=0.0062
+[OPTIMING] op=1 count=45 total_ms=0.121 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0051
+[OPTIMING] position=125 batch_flush_ms=22.967
+[OPTIMING] op=3 count=22 total_ms=5.646 avg_ms=0.2566
+[OPTIMING] op=2 count=154 total_ms=3.020 avg_ms=0.0196
+[OPTIMING] op=9 count=1 total_ms=0.973 avg_ms=0.9727
+[OPTIMING] op=12 count=22 total_ms=0.352 avg_ms=0.0160
+[OPTIMING] op=8 count=44 total_ms=0.265 avg_ms=0.0060
+[OPTIMING] op=1 count=45 total_ms=0.118 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.049 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0062
+[OPTIMING] position=126 batch_flush_ms=22.825
+[OPTIMING] op=3 count=22 total_ms=5.349 avg_ms=0.2431
+[OPTIMING] op=2 count=154 total_ms=2.948 avg_ms=0.0191
+[OPTIMING] op=9 count=1 total_ms=1.044 avg_ms=1.0439
+[OPTIMING] op=12 count=22 total_ms=0.359 avg_ms=0.0163
+[OPTIMING] op=8 count=44 total_ms=0.259 avg_ms=0.0059
+[OPTIMING] op=1 count=45 total_ms=0.114 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0046
+[OPTIMING] position=127 batch_flush_ms=22.498
+[OPTIMING] op=3 count=22 total_ms=5.399 avg_ms=0.2454
+[OPTIMING] op=2 count=154 total_ms=2.920 avg_ms=0.0190
+[OPTIMING] op=9 count=1 total_ms=0.949 avg_ms=0.9487
+[OPTIMING] op=12 count=22 total_ms=0.333 avg_ms=0.0152
+[OPTIMING] op=8 count=44 total_ms=0.251 avg_ms=0.0057
+[OPTIMING] op=1 count=45 total_ms=0.116 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.008 avg_ms=0.0077
+[OPTIMING] position=128 batch_flush_ms=22.632
+[OPTIMING] op=3 count=22 total_ms=5.391 avg_ms=0.2450
+[OPTIMING] op=2 count=154 total_ms=2.946 avg_ms=0.0191
+[OPTIMING] op=9 count=1 total_ms=0.973 avg_ms=0.9733
+[OPTIMING] op=12 count=22 total_ms=0.364 avg_ms=0.0165
+[OPTIMING] op=8 count=44 total_ms=0.255 avg_ms=0.0058
+[OPTIMING] op=1 count=45 total_ms=0.115 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0045
+[OPTIMING] position=129 batch_flush_ms=21.967
+[OPTIMING] op=3 count=22 total_ms=5.363 avg_ms=0.2438
+[OPTIMING] op=2 count=154 total_ms=2.780 avg_ms=0.0181
+[OPTIMING] op=9 count=1 total_ms=0.926 avg_ms=0.9256
+[OPTIMING] op=12 count=22 total_ms=0.327 avg_ms=0.0149
+[OPTIMING] op=8 count=44 total_ms=0.237 avg_ms=0.0054
+[OPTIMING] op=1 count=45 total_ms=0.112 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0045
+[OPTIMING] position=130 batch_flush_ms=21.942
+[OPTIMING] op=3 count=22 total_ms=5.692 avg_ms=0.2587
+[OPTIMING] op=2 count=154 total_ms=3.002 avg_ms=0.0195
+[OPTIMING] op=9 count=1 total_ms=0.997 avg_ms=0.9972
+[OPTIMING] op=12 count=22 total_ms=0.362 avg_ms=0.0165
+[OPTIMING] op=8 count=44 total_ms=0.264 avg_ms=0.0060
+[OPTIMING] op=1 count=45 total_ms=0.128 avg_ms=0.0028
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0047
+[OPTIMING] position=131 batch_flush_ms=22.587
+[OPTIMING] op=3 count=22 total_ms=5.934 avg_ms=0.2697
+[OPTIMING] op=2 count=154 total_ms=3.141 avg_ms=0.0204
+[OPTIMING] op=9 count=1 total_ms=0.948 avg_ms=0.9481
+[OPTIMING] op=12 count=22 total_ms=0.362 avg_ms=0.0164
+[OPTIMING] op=8 count=44 total_ms=0.267 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.124 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0055
+[OPTIMING] position=132 batch_flush_ms=22.853
+[OPTIMING] op=3 count=22 total_ms=5.681 avg_ms=0.2582
+[OPTIMING] op=2 count=154 total_ms=3.012 avg_ms=0.0196
+[OPTIMING] op=9 count=1 total_ms=1.165 avg_ms=1.1645
+[OPTIMING] op=12 count=22 total_ms=0.378 avg_ms=0.0172
+[OPTIMING] op=8 count=44 total_ms=0.270 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.118 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0048
+[OPTIMING] position=133 batch_flush_ms=22.426
+[OPTIMING] op=3 count=22 total_ms=5.872 avg_ms=0.2669
+[OPTIMING] op=2 count=154 total_ms=2.967 avg_ms=0.0193
+[OPTIMING] op=9 count=1 total_ms=0.951 avg_ms=0.9510
+[OPTIMING] op=12 count=22 total_ms=0.367 avg_ms=0.0167
+[OPTIMING] op=8 count=44 total_ms=0.247 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.116 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.007 avg_ms=0.0066
+      serial: prefill=2970.1 ms decode=1060.7 ms gpu_calls=21218 cpu_calls=0
+[qk-batch] shader=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv
+[OPTIMING] position=107 batch_flush_ms=27.043
+[OPTIMING] op=9 count=1 total_ms=13.808 avg_ms=13.8077
+[OPTIMING] op=2 count=154 total_ms=7.058 avg_ms=0.0458
+[OPTIMING] op=3 count=22 total_ms=7.029 avg_ms=0.3195
+[OPTIMING] op=12 count=22 total_ms=0.852 avg_ms=0.0387
+[OPTIMING] op=8 count=44 total_ms=0.413 avg_ms=0.0094
+[OPTIMING] op=1 count=45 total_ms=0.155 avg_ms=0.0034
+[OPTIMING] op=11 count=22 total_ms=0.075 avg_ms=0.0034
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0063
+[OPTIMING] position=109 batch_flush_ms=21.472
+[OPTIMING] op=9 count=1 total_ms=12.050 avg_ms=12.0504
+[OPTIMING] op=3 count=22 total_ms=5.010 avg_ms=0.2277
+[OPTIMING] op=2 count=154 total_ms=3.000 avg_ms=0.0195
+[OPTIMING] op=12 count=22 total_ms=0.338 avg_ms=0.0154
+[OPTIMING] op=8 count=44 total_ms=0.260 avg_ms=0.0059
+[OPTIMING] op=1 count=45 total_ms=0.119 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0051
+[OPTIMING] position=111 batch_flush_ms=22.958
+[OPTIMING] op=9 count=1 total_ms=11.402 avg_ms=11.4021
+[OPTIMING] op=3 count=22 total_ms=5.897 avg_ms=0.2680
+[OPTIMING] op=2 count=154 total_ms=3.510 avg_ms=0.0228
+[OPTIMING] op=12 count=22 total_ms=0.394 avg_ms=0.0179
+[OPTIMING] op=8 count=44 total_ms=0.305 avg_ms=0.0069
+[OPTIMING] op=1 count=45 total_ms=0.138 avg_ms=0.0031
+[OPTIMING] op=11 count=22 total_ms=0.061 avg_ms=0.0028
+[OPTIMING] op=0 count=1 total_ms=0.007 avg_ms=0.0073
+[OPTIMING] position=112 batch_flush_ms=22.829
+[OPTIMING] op=3 count=22 total_ms=5.451 avg_ms=0.2478
+[OPTIMING] op=2 count=154 total_ms=3.107 avg_ms=0.0202
+[OPTIMING] op=9 count=1 total_ms=0.980 avg_ms=0.9804
+[OPTIMING] op=12 count=22 total_ms=0.368 avg_ms=0.0167
+[OPTIMING] op=8 count=44 total_ms=0.271 avg_ms=0.0062
+[OPTIMING] op=1 count=45 total_ms=0.122 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0048
+[OPTIMING] position=113 batch_flush_ms=22.082
+[OPTIMING] op=3 count=22 total_ms=5.090 avg_ms=0.2313
+[OPTIMING] op=2 count=154 total_ms=2.877 avg_ms=0.0187
+[OPTIMING] op=9 count=1 total_ms=0.951 avg_ms=0.9510
+[OPTIMING] op=12 count=22 total_ms=0.334 avg_ms=0.0152
+[OPTIMING] op=8 count=44 total_ms=0.243 avg_ms=0.0055
+[OPTIMING] op=1 count=45 total_ms=0.116 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0051
+[OPTIMING] position=114 batch_flush_ms=22.045
+[OPTIMING] op=3 count=22 total_ms=5.297 avg_ms=0.2408
+[OPTIMING] op=2 count=154 total_ms=3.047 avg_ms=0.0198
+[OPTIMING] op=9 count=1 total_ms=0.946 avg_ms=0.9459
+[OPTIMING] op=12 count=22 total_ms=0.353 avg_ms=0.0161
+[OPTIMING] op=8 count=44 total_ms=0.268 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.121 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.054 avg_ms=0.0025
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0058
+[OPTIMING] position=115 batch_flush_ms=21.512
+[OPTIMING] op=3 count=22 total_ms=5.199 avg_ms=0.2363
+[OPTIMING] op=2 count=154 total_ms=2.721 avg_ms=0.0177
+[OPTIMING] op=9 count=1 total_ms=0.929 avg_ms=0.9294
+[OPTIMING] op=12 count=22 total_ms=0.335 avg_ms=0.0152
+[OPTIMING] op=8 count=44 total_ms=0.230 avg_ms=0.0052
+[OPTIMING] op=1 count=45 total_ms=0.110 avg_ms=0.0024
+[OPTIMING] op=11 count=22 total_ms=0.044 avg_ms=0.0020
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0051
+[OPTIMING] position=116 batch_flush_ms=23.028
+[OPTIMING] op=3 count=22 total_ms=5.713 avg_ms=0.2597
+[OPTIMING] op=2 count=154 total_ms=3.263 avg_ms=0.0212
+[OPTIMING] op=9 count=1 total_ms=1.014 avg_ms=1.0145
+[OPTIMING] op=12 count=22 total_ms=0.399 avg_ms=0.0181
+[OPTIMING] op=8 count=44 total_ms=0.285 avg_ms=0.0065
+[OPTIMING] op=1 count=45 total_ms=0.123 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0045
+[OPTIMING] position=117 batch_flush_ms=21.677
+[OPTIMING] op=3 count=22 total_ms=5.057 avg_ms=0.2299
+[OPTIMING] op=2 count=154 total_ms=2.812 avg_ms=0.0183
+[OPTIMING] op=9 count=1 total_ms=0.944 avg_ms=0.9443
+[OPTIMING] op=12 count=22 total_ms=0.325 avg_ms=0.0148
+[OPTIMING] op=8 count=44 total_ms=0.247 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.113 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.046 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0048
+[OPTIMING] position=118 batch_flush_ms=23.481
+[OPTIMING] op=3 count=22 total_ms=5.805 avg_ms=0.2639
+[OPTIMING] op=2 count=154 total_ms=3.325 avg_ms=0.0216
+[OPTIMING] op=9 count=1 total_ms=1.484 avg_ms=1.4843
+[OPTIMING] op=12 count=22 total_ms=0.443 avg_ms=0.0201
+[OPTIMING] op=8 count=44 total_ms=0.280 avg_ms=0.0064
+[OPTIMING] op=1 count=45 total_ms=0.126 avg_ms=0.0028
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0044
+[OPTIMING] position=119 batch_flush_ms=20.462
+[OPTIMING] op=3 count=22 total_ms=4.919 avg_ms=0.2236
+[OPTIMING] op=2 count=154 total_ms=2.688 avg_ms=0.0175
+[OPTIMING] op=9 count=1 total_ms=0.960 avg_ms=0.9602
+[OPTIMING] op=12 count=22 total_ms=0.318 avg_ms=0.0144
+[OPTIMING] op=8 count=44 total_ms=0.225 avg_ms=0.0051
+[OPTIMING] op=1 count=45 total_ms=0.108 avg_ms=0.0024
+[OPTIMING] op=11 count=22 total_ms=0.044 avg_ms=0.0020
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0048
+[OPTIMING] position=120 batch_flush_ms=21.991
+[OPTIMING] op=3 count=22 total_ms=5.672 avg_ms=0.2578
+[OPTIMING] op=2 count=154 total_ms=3.160 avg_ms=0.0205
+[OPTIMING] op=9 count=1 total_ms=1.022 avg_ms=1.0216
+[OPTIMING] op=12 count=22 total_ms=0.375 avg_ms=0.0171
+[OPTIMING] op=8 count=44 total_ms=0.272 avg_ms=0.0062
+[OPTIMING] op=1 count=45 total_ms=0.122 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0042
+[OPTIMING] position=121 batch_flush_ms=21.167
+[OPTIMING] op=3 count=22 total_ms=5.550 avg_ms=0.2523
+[OPTIMING] op=2 count=154 total_ms=2.975 avg_ms=0.0193
+[OPTIMING] op=9 count=1 total_ms=0.983 avg_ms=0.9830
+[OPTIMING] op=12 count=22 total_ms=0.349 avg_ms=0.0159
+[OPTIMING] op=8 count=44 total_ms=0.246 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.115 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.049 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.007 avg_ms=0.0067
+[OPTIMING] position=122 batch_flush_ms=21.172
+[OPTIMING] op=3 count=22 total_ms=5.548 avg_ms=0.2522
+[OPTIMING] op=2 count=154 total_ms=2.989 avg_ms=0.0194
+[OPTIMING] op=9 count=1 total_ms=0.970 avg_ms=0.9699
+[OPTIMING] op=12 count=22 total_ms=0.370 avg_ms=0.0168
+[OPTIMING] op=8 count=44 total_ms=0.250 avg_ms=0.0057
+[OPTIMING] op=1 count=45 total_ms=0.111 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.049 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0047
+[OPTIMING] position=123 batch_flush_ms=22.605
+[OPTIMING] op=3 count=22 total_ms=5.530 avg_ms=0.2514
+[OPTIMING] op=2 count=154 total_ms=2.960 avg_ms=0.0192
+[OPTIMING] op=9 count=1 total_ms=0.947 avg_ms=0.9465
+[OPTIMING] op=12 count=22 total_ms=0.346 avg_ms=0.0157
+[OPTIMING] op=8 count=44 total_ms=0.252 avg_ms=0.0057
+[OPTIMING] op=1 count=45 total_ms=0.117 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0051
+[OPTIMING] position=124 batch_flush_ms=22.317
+[OPTIMING] op=3 count=22 total_ms=5.571 avg_ms=0.2532
+[OPTIMING] op=2 count=154 total_ms=3.150 avg_ms=0.0205
+[OPTIMING] op=9 count=1 total_ms=0.947 avg_ms=0.9470
+[OPTIMING] op=12 count=22 total_ms=0.407 avg_ms=0.0185
+[OPTIMING] op=8 count=44 total_ms=0.268 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.123 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0043
+[OPTIMING] position=125 batch_flush_ms=21.737
+[OPTIMING] op=3 count=22 total_ms=5.213 avg_ms=0.2369
+[OPTIMING] op=2 count=154 total_ms=2.753 avg_ms=0.0179
+[OPTIMING] op=9 count=1 total_ms=0.948 avg_ms=0.9480
+[OPTIMING] op=12 count=22 total_ms=0.324 avg_ms=0.0147
+[OPTIMING] op=8 count=44 total_ms=0.235 avg_ms=0.0053
+[OPTIMING] op=1 count=45 total_ms=0.109 avg_ms=0.0024
+[OPTIMING] op=11 count=22 total_ms=0.046 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0043
+[OPTIMING] position=126 batch_flush_ms=22.438
+[OPTIMING] op=3 count=22 total_ms=5.743 avg_ms=0.2610
+[OPTIMING] op=2 count=154 total_ms=3.100 avg_ms=0.0201
+[OPTIMING] op=9 count=1 total_ms=1.054 avg_ms=1.0542
+[OPTIMING] op=12 count=22 total_ms=0.364 avg_ms=0.0165
+[OPTIMING] op=8 count=44 total_ms=0.270 avg_ms=0.0061
+[OPTIMING] op=1 count=45 total_ms=0.117 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.051 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0046
+[OPTIMING] position=127 batch_flush_ms=21.048
+[OPTIMING] op=3 count=22 total_ms=5.307 avg_ms=0.2412
+[OPTIMING] op=2 count=154 total_ms=2.808 avg_ms=0.0182
+[OPTIMING] op=9 count=1 total_ms=0.939 avg_ms=0.9385
+[OPTIMING] op=12 count=22 total_ms=0.326 avg_ms=0.0148
+[OPTIMING] op=8 count=44 total_ms=0.237 avg_ms=0.0054
+[OPTIMING] op=1 count=45 total_ms=0.112 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.047 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0056
+[OPTIMING] position=128 batch_flush_ms=22.086
+[OPTIMING] op=3 count=22 total_ms=5.906 avg_ms=0.2685
+[OPTIMING] op=2 count=154 total_ms=3.037 avg_ms=0.0197
+[OPTIMING] op=9 count=1 total_ms=0.942 avg_ms=0.9424
+[OPTIMING] op=12 count=22 total_ms=0.385 avg_ms=0.0175
+[OPTIMING] op=8 count=44 total_ms=0.256 avg_ms=0.0058
+[OPTIMING] op=1 count=45 total_ms=0.116 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0041
+[OPTIMING] position=129 batch_flush_ms=20.475
+[OPTIMING] op=3 count=22 total_ms=5.477 avg_ms=0.2489
+[OPTIMING] op=2 count=154 total_ms=2.747 avg_ms=0.0178
+[OPTIMING] op=9 count=1 total_ms=0.957 avg_ms=0.9573
+[OPTIMING] op=12 count=22 total_ms=0.321 avg_ms=0.0146
+[OPTIMING] op=8 count=44 total_ms=0.228 avg_ms=0.0052
+[OPTIMING] op=1 count=45 total_ms=0.108 avg_ms=0.0024
+[OPTIMING] op=11 count=22 total_ms=0.045 avg_ms=0.0021
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0042
+[OPTIMING] position=130 batch_flush_ms=22.131
+[OPTIMING] op=3 count=22 total_ms=5.824 avg_ms=0.2647
+[OPTIMING] op=2 count=154 total_ms=3.117 avg_ms=0.0202
+[OPTIMING] op=9 count=1 total_ms=1.028 avg_ms=1.0280
+[OPTIMING] op=12 count=22 total_ms=0.371 avg_ms=0.0169
+[OPTIMING] op=8 count=44 total_ms=0.265 avg_ms=0.0060
+[OPTIMING] op=1 count=45 total_ms=0.120 avg_ms=0.0027
+[OPTIMING] op=11 count=22 total_ms=0.052 avg_ms=0.0024
+[OPTIMING] op=0 count=1 total_ms=0.004 avg_ms=0.0045
+[OPTIMING] position=131 batch_flush_ms=21.068
+[OPTIMING] op=3 count=22 total_ms=5.743 avg_ms=0.2611
+[OPTIMING] op=2 count=154 total_ms=2.883 avg_ms=0.0187
+[OPTIMING] op=9 count=1 total_ms=0.954 avg_ms=0.9543
+[OPTIMING] op=12 count=22 total_ms=0.338 avg_ms=0.0154
+[OPTIMING] op=8 count=44 total_ms=0.248 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.113 avg_ms=0.0025
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.006 avg_ms=0.0056
+[OPTIMING] position=132 batch_flush_ms=21.765
+[OPTIMING] op=3 count=22 total_ms=5.895 avg_ms=0.2680
+[OPTIMING] op=2 count=154 total_ms=3.001 avg_ms=0.0195
+[OPTIMING] op=9 count=1 total_ms=0.944 avg_ms=0.9439
+[OPTIMING] op=12 count=22 total_ms=0.352 avg_ms=0.0160
+[OPTIMING] op=8 count=44 total_ms=0.254 avg_ms=0.0058
+[OPTIMING] op=1 count=45 total_ms=0.115 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.050 avg_ms=0.0023
+[OPTIMING] op=0 count=1 total_ms=0.005 avg_ms=0.0048
+[OPTIMING] position=133 batch_flush_ms=22.136
+[OPTIMING] op=3 count=22 total_ms=5.730 avg_ms=0.2605
+[OPTIMING] op=2 count=154 total_ms=2.929 avg_ms=0.0190
+[OPTIMING] op=9 count=1 total_ms=0.963 avg_ms=0.9632
+[OPTIMING] op=12 count=22 total_ms=0.347 avg_ms=0.0158
+[OPTIMING] op=8 count=44 total_ms=0.246 avg_ms=0.0056
+[OPTIMING] op=1 count=45 total_ms=0.115 avg_ms=0.0026
+[OPTIMING] op=11 count=22 total_ms=0.048 avg_ms=0.0022
+[OPTIMING] op=0 count=1 total_ms=0.007 avg_ms=0.0075
+      spec: prefill=1698.1 ms decode=1270.8 ms gpu_calls=22862 cpu_calls=0
+      serial TPS=30.17  spec TPS=25.18  speedup=0.83x
+      acceptance[code]: rounds=3 proposed=12 accepted=3 rate=25.0% tokens/round=2.00 bonus=0 replacements=3 zero_accept=2 serial_steps=26 verify_batches=3 verify_positions=15 repairs=3 serial_fallbacks=22 adaptive_disabled=1
+  [PASS] spec stream identical to serial greedy stream (greedy equivalence)
+  [PASS] no non-finite logits on the spec arm
+  [PASS] no non-finite logits on the serial arm
+
+--- VERDICT ---
+      pass=3 fail=0 na=0 spec_ran=1
+
+VERDICT=PASS
+receipt: evidence/S07_Q6_ROW8_TIMING_R1_20261020/SPEC_BENCH_RECEIPT.txt
+Released all tensors
+Vulkan resources cleaned up successfully

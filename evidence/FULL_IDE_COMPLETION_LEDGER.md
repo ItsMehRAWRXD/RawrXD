@@ -245,3 +245,11 @@ The per-op trace shows approximately 195 ms/token in `FlushDotBatch` versus appr
 ## Q6 row-4 shared-tile and command-reuse route — 2026-10-20
 
 The guarded `DEEP2_QUANT_ROW_TILE=4` + `DEEP2_QUANT_Q6_SHARED_TILE=1` + `DEEP2_QUANT_REUSE_COMMANDS=1` route reached 31.02 TPS code / 29.07 TPS prose over a controlled 128-token TinyLlama run, with exact streams, finite logits, and zero CPU calls. After rebuilding both SPIR-V artifacts with `scripts/compile_quant_row4_shaders.ps1` and rebuilding Release, the route revalidated at 31.15 TPS serial / 29.89 TPS speculative for 128 code tokens, again exact, finite, and CPU-call free. The four-token 44.41 TPS probe is exploratory and not a sustained claim. The subgroup-vector Q6 candidate failed differential validation (max_abs 20.4811039) and remains rejected. S12 remains FAIL at 150 TPS; S07 remains OPEN. Receipt: `evidence/S12_Q6_HOT_ROUTE_RECEIPT_20261020.md`.
+
+## Q6 row-8 dispatch-correctness candidate — 2026-10-20
+
+A guarded `DEEP2_QUANT_ROW_TILE=8` Q6 shared-tile route was added alongside row-4. The shader uses eight 32-lane cohorts and loads all 54 aligned Q6 words per cohort; command-replay dispatch now uses `QuantDotRowsPerWorkgroup()` so the row-8 path does not launch redundant empty groups. Release build and all four SPIR-V variants compile with exit code 0. The corrected 128-token TinyLlama code/prose run is finite, exact, and GPU-only (`evidence/S07_Q6_ROW8_128_BOTH_R4_20261020/`), but measures 31.55/30.36 TPS code and 29.47/27.83 TPS prose (serial/speculative), so no 40 TPS claim is made. S07 remains OPEN and S12 remains FAIL at 150 TPS. Receipt: `evidence/S07_Q6_ROW8_NEMOTRON_RECEIPT_20261020.md`.
+
+## Native Nemotron 30B smoke — 2026-10-20
+
+The native row-8/Q6/reuse route loaded `nemotron-3.5-lightning-30b-Q4_K_M.gguf` (Nemotron-H MoE, 53 layers, hidden 2688, context 1048576) and completed an 8-token GPU serial run with finite logits and zero CPU calls. Decode was 275.7 ms for 8 tokens (~29.02 TPS); the recurrent SSM graph correctly disables speculative rollback. This is a loadability/correctness smoke, not sustained 30B performance certification. Receipt: `evidence/NEMOTRON30B_ROW8_8TOK_20261020/SPEC_BENCH_RECEIPT.txt`.
