@@ -363,21 +363,19 @@ set(DEEP2_ORACLE_PROMPT "capital" CACHE STRING
     "The prompt the oracle parity gate checks with")
 
 add_test(NAME OracleParity_Cpu
-    COMMAND ${CMAKE_COMMAND}
-        -DORACLE=$<TARGET_FILE:rom_audit>
-        -DMODEL=${DEEP2_ORACLE_MODEL}
-        -DPROMPT=${DEEP2_ORACLE_PROMPT}
-        -DMODE=cpu
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_oracle_parity.cmake
+    COMMAND rom_audit kv-incremental ${DEEP2_ORACLE_MODEL} ${DEEP2_ORACLE_PROMPT} cpu
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
 add_test(NAME OracleParity_Gpu
-    COMMAND ${CMAKE_COMMAND}
-        -DORACLE=$<TARGET_FILE:rom_audit>
-        -DMODEL=${DEEP2_ORACLE_MODEL}
-        -DPROMPT=${DEEP2_ORACLE_PROMPT}
-        -DMODE=gpu
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/run_oracle_parity.cmake
+    COMMAND rom_audit kv-incremental ${DEEP2_ORACLE_MODEL} ${DEEP2_ORACLE_PROMPT} gpu
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# A runner without the model cannot run the gate. CTest has to say so, and
+# "Skipped" is the only answer that tells a reader the gate did not run.
+# Without this the two gates report Passed on a machine where they checked
+# nothing, which is the failure mode this gate exists to prevent.
+set_tests_properties(OracleParity_Cpu OracleParity_Gpu
+    PROPERTIES SKIP_RETURN_CODE 77
 )

@@ -127,6 +127,105 @@ jobs:
           include_passed: true
 
   # ============================================================
+  # Oracle parity gate.
+  #
+  # Every other check in this repository compares the engine against a path
+  # derived from the engine. That is a consistency check, not a correctness
+  # check, and three real defects passed all of them: the attention output
+  # projection was never applied, the final norm was not the model's, and
+  # most of the vocabulary was replaced by the embedding of token zero. The
+  # engine agreed with itself on every one of them, because the defect was in
+  # the code both paths shared.
+  #
+  # This job runs the oracle, which is the only reference that is not
+  # derived from the engine, and compares it against the engine's
+  # full-prefix pass and its incremental pass.
+  #
+  # The gate needs a model. A runner without one reports the gate as
+  # Skipped, and this job says so in its output rather than letting the
+  # check pass quietly. The step fails the job if the gate is skipped, so a
+  # pull request cannot be merged on the strength of a gate that did not
+  # run; the model is fetched below when the runner can reach it.
+  # ============================================================
+  oracle-parity:
+    runs-on: windows-latest
+    env:
+      PYTHONIOENCODING: utf-8
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Vulkan SDK
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install vulkan-sdk -y --version 1.3.268.0
+          echo "VULKAN_SDK=$env:VULKAN_SDK" >> $env:GITHUB_ENV
+          echo "$env:VULKAN_SDK\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          cmake -S . -B build_oracle -DCMAKE_BUILD_TYPE=Release -A x64
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Build the oracle
+        shell: pwsh
+        run: |
+          cmake --build build_oracle --config Release --target rom_audit
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Locate a model
+        id: model
+        shell: pwsh
+        run: |
+          # The model the gate checks against. A runner that has one uses it;
+          # a runner that does not is told plainly that the gate did not run.
+          $candidates = @(
+            "$env:RUNNER_TEMP\phi3-mini-Q2_K.gguf",
+            "G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf"
+          )
+          $found = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if ($found) {
+            "path=$found" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            Write-Host "model: $found"
+          } else {
+            "path=" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            Write-Warning "no model found: the oracle parity gate will report as Skipped"
+          }
+
+      - name: Run the oracle parity gate
+        shell: pwsh
+        run: |
+          $model = "${{ steps.model.outputs.path }}"
+          cmake -S . -B build_oracle -DDEEP2_ORACLE_MODEL="$model"
+          cd build_oracle
+          ctest -C Release -R OracleParity --output-on-failure
+          $code = $LASTEXITCODE
+          if ($code -ne 0) { exit $code }
+          # CTest reports a skipped test as a success, so the skip has to be
+          # read out of the test list rather than out of the exit code.
+          $skipped = ctest -C Release -R OracleParity -N 2>&1 | Out-String
+          Write-Host $skipped
+          if ($skipped -match "Skipped") {
+            Write-Error "the oracle parity gate was SKIPPED: no model on this runner"
+            Write-Error "the engine is not checked against an independent reference on this runner"
+            exit 1
+          }
+
+      - name: Upload the gate output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-parity-output
+          path: build_oracle/Testing/
+          retention-days: 30
+
+  # ============================================================
   # Component tests: FAIL EXPLICITLY by design (not silent skips)
   # These components (voice_processor, ai_merge_resolver, semantic_diff,
   # sandboxed_terminal, model_registry, zero_retention_manager) live in
@@ -327,6 +426,7 @@ jobs:
     runs-on: windows-latest
     needs: [
       test-suite,
+      oracle-parity,
       test-voice-processor,
       test-ai-merge-resolver,
       test-semantic-diff,
@@ -344,6 +444,9 @@ jobs:
           
           if ("${{ needs.test-suite.result }}" -ne "success") {
             $failed += "Test Suite"
+          }
+          if ("${{ needs.oracle-parity.result }}" -ne "success") {
+            $failed += "Oracle Parity Gate"
           }
           if ("${{ needs.test-voice-processor.result }}" -ne "success") {
             $failed += "VoiceProcessor Tests"

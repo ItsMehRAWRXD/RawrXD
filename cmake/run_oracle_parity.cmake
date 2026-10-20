@@ -30,6 +30,10 @@ if (NOT EXISTS "${ORACLE}")
 endif()
 
 if (NOT EXISTS "${MODEL}")
+    # The test that uses this driver declares SKIP_RETURN_CODE 77, and the
+    # driver is invoked through the oracle itself, so the skip is reported
+    # by CTest as Skipped rather than as Passed. A gate that cannot run must
+    # be visible in the test report, not green because it did nothing.
     message(STATUS "model not present, skipping: ${MODEL}")
     return()
 endif()

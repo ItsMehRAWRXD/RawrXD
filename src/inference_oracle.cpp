@@ -1273,11 +1273,23 @@ static int argmaxOf(const std::vector<float>& v) {
 // ---------------------------------------------------------------------------
 int cmdKvIncremental(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "usage: rom_audit kv-incremental <model.gguf> \"<prompt>\"\n";
+        std::cerr << "usage: rom_audit kv-incremental <model.gguf> \"<prompt>\" [cpu|gpu]\n";
         return 1;
     }
     const std::string modelPath = argv[2];
     const std::string prompt = (argc > 3) ? argv[3] : "The capital of France is";
+
+    // 77 is the automake convention for "skipped". The test that runs this
+    // declares SKIP_RETURN_CODE 77, so CTest reports the gate as Skipped
+    // rather than as Passed. A gate that cannot run must be visible in the
+    // test report, not green because it did nothing.
+    {
+        std::ifstream probe(modelPath, std::ios::binary);
+        if (!probe) {
+            std::cout << "[KVPARITY] SKIPPED: no model at " << modelPath << "\n" << std::flush;
+            return 77;
+        }
+    }
 
     TensorROM rom;
     if (!rom.addShard(modelPath) || !rom.finalizeIndex()) return 1;
