@@ -100,11 +100,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // A readiness gate failure is normally fatal: an operator must be able
         // to see why. RAWRXD_FAIL_FAST_GATES=false opts into degraded startup.
         LOG_ERROR("Readiness gates blocked startup; see the structured log");
-        MessageBoxA(nullptr,
-                    "RawrXD refused to start: a readiness gate failed.\n"
-                    "Details were written to the log directory.\n"
-                    "Set RAWRXD_FAIL_FAST_GATES=false to start degraded.",
-                    "RawrXD startup blocked", MB_OK | MB_ICONERROR);
+        const std::string readiness_report =
+            Sovereign::Production::ProductionRuntime::last_readiness_report();
+        const std::string startup_error =
+            "RawrXD refused to start because a readiness gate failed.\n\n" +
+            readiness_report + "\n\nSee the structured log for details.";
+        MessageBoxA(nullptr, startup_error.c_str(), "RawrXD startup blocked",
+                    MB_OK | MB_ICONERROR);
         Sovereign::Production::ProductionRuntime::shutdown();
         return 3;
     }

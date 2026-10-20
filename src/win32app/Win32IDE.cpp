@@ -8,6 +8,9 @@
 #include "Win32IDE.h"
 #include "Win32IDE_CommandIDs.h"
 #include "Win32IDE_Deep2Bridge.h"
+#include "GeneratedChatRouteMenu.h"
+#include "../cloud_api_client.h"
+#include "../universal_model_router.h"
 #include <regex>
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -21,10 +24,17 @@
 #include <shellapi.h>
 #include <iostream>
 #include <fstream>
+#include <cstdint>
+#include <cstring>
 #include <chrono>
 #include <algorithm>
 #include <sstream>
 #include <ctime>
+#include <cstdlib>
+#include <iterator>
+#include <deque>
+#include <unordered_set>
+#include <cctype>
 #include <winhttp.h>
 
 #pragma comment(lib, "winhttp.lib")
@@ -112,13 +122,264 @@ std::string CaptureProcessOutput(const std::string& commandLine)
     return result;
 }
 
+std::string toLowerAscii(std::string value)
+{
+    std::transform(value.begin(), value.end(), value.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return value;
+}
+
+std::string modelRouteBreadcrumb(RawrXD::ChatRouteMenu::RouteKind kind,
+                                 const std::string& leaf)
+{
+    const auto* route = RawrXD::ChatRouteMenu::find(kind);
+    if (!route) return leaf;
+    return std::string(route->breadcrumb) + " / " + leaf;
+}
+
+bool isSelectableGguf(const char* filename)
+{
+    const std::string name = toLowerAscii(filename ? filename : "");
+    if (name.size() < 5 || name.compare(name.size() - 5, 5, ".gguf") != 0 ||
+        name.find("mmproj") != std::string::npos) {
+        return false;
+    }
+
+    // A split GGUF is loaded from its first shard; listing every continuation
+    // shard would make the picker look like it contains duplicate models.
+    const size_t shard = name.find("-000");
+    if (shard != std::string::npos && shard + 13 <= name.size() &&
+        name.compare(shard + 6, 4, "-of-") == 0 &&
+        name.compare(shard + 1, 5, "00001") != 0) {
+        return false;
+    }
+    return true;
+}
+
+// Some GGUF files contain tokenizer metadata only (for example
+// ggml-vocab-aquila.gguf). They are valid GGUF containers but cannot be
+// loaded as inference models. Read only the fixed header so recursive model
+// discovery can reject those files without mapping or parsing their contents.
+bool hasGgufModelTensors(const std::string& path)
+{
+    std::ifstream input(path, std::ios::binary);
+    unsigned char header[16]{};
+    if (!input.read(reinterpret_cast<char*>(header), sizeof(header)) ||
+        std::memcmp(header, "GGUF", 4) != 0) {
+        return false;
+    }
+
+    const uint32_t version =
+        static_cast<uint32_t>(header[4]) |
+        (static_cast<uint32_t>(header[5]) << 8) |
+        (static_cast<uint32_t>(header[6]) << 16) |
+        (static_cast<uint32_t>(header[7]) << 24);
+    uint64_t tensorCount = 0;
+    for (unsigned int i = 0; i < 8; ++i) {
+        tensorCount |= static_cast<uint64_t>(header[8 + i]) << (i * 8);
+    }
+    return version >= 2 && version <= 3 && tensorCount > 0;
+}
+
+bool skipModelScanDirectory(const std::string& name)
+{
+    const std::string lower = toLowerAscii(name);
+    static const std::unordered_set<std::string> skipped = {
+        "$recycle.bin", "system volume information", "windows", "winsxs",
+        "program files", "program files (x86)", "node_modules", ".git",
+        ".svn", ".hg", ".vs", "__pycache__", "$windows.~bt"
+    };
+    return skipped.find(lower) != skipped.end();
+}
+
+void scanModelTree(const std::string& root,
+                   std::vector<ChatModelEntry>& models,
+                   std::unordered_set<std::string>& seen,
+                   const std::shared_ptr<std::atomic_bool>& cancel,
+                   size_t& visitedDirectories)
+{
+    std::deque<std::pair<std::string, unsigned>> pending;
+    pending.emplace_back(root, 0);
+    while (!pending.empty() && !cancel->load() && visitedDirectories < 300000) {
+        auto current = std::move(pending.front());
+        pending.pop_front();
+        ++visitedDirectories;
+
+        WIN32_FIND_DATAA data{};
+        std::string pattern = current.first;
+        if (pattern.empty() || pattern.back() != '\\') pattern.push_back('\\');
+        pattern.push_back('*');
+        HANDLE find = FindFirstFileA(pattern.c_str(), &data);
+        if (find == INVALID_HANDLE_VALUE) continue;
+        do {
+            if (cancel->load()) break;
+            if (std::strcmp(data.cFileName, ".") == 0 ||
+                std::strcmp(data.cFileName, "..") == 0) continue;
+
+            std::string fullPath = current.first;
+            if (fullPath.empty() || fullPath.back() != '\\') fullPath.push_back('\\');
+            fullPath += data.cFileName;
+            if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (!(data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) &&
+                    current.second < 48 && !skipModelScanDirectory(data.cFileName)) {
+                    pending.emplace_back(fullPath, current.second + 1);
+                }
+            } else if (isSelectableGguf(data.cFileName) &&
+                       hasGgufModelTensors(fullPath)) {
+                const std::string key = toLowerAscii(fullPath);
+                if (seen.insert(key).second) {
+                    models.push_back({ChatModelEntry::Source::LocalFile,
+                        modelRouteBreadcrumb(RawrXD::ChatRouteMenu::RouteKind::LocalFile,
+                            fullPath), fullPath});
+                }
+            }
+        } while (FindNextFileA(find, &data));
+        FindClose(find);
+    }
+}
+
+std::vector<ChatModelEntry> discoverLocalModels(
+    const std::shared_ptr<std::atomic_bool>& cancel)
+{
+    std::vector<ChatModelEntry> models;
+    std::unordered_set<std::string> seen;
+    size_t visitedDirectories = 0;
+    char driveStrings[MAX_PATH + 1] = {};
+    const DWORD driveStringLength = GetLogicalDriveStringsA(MAX_PATH, driveStrings);
+    if (driveStringLength && driveStringLength < MAX_PATH) {
+        for (const char* drive = driveStrings; *drive && !cancel->load();
+             drive += std::strlen(drive) + 1) {
+            const UINT driveType = GetDriveTypeA(drive);
+            if (driveType == DRIVE_FIXED || driveType == DRIVE_REMOVABLE) {
+                scanModelTree(drive, models, seen, cancel, visitedDirectories);
+            }
+        }
+    }
+
+    // Ollama stores weights as content-addressed blobs without model-file
+    // extensions. Its local tags endpoint is the authoritative local catalog.
+    if (!cancel->load()) {
+        HINTERNET session = WinHttpOpen(L"RawrXD Model Discovery/1.0",
+            WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME,
+            WINHTTP_NO_PROXY_BYPASS, 0);
+        if (session) {
+            WinHttpSetTimeouts(session, 300, 500, 750, 750);
+            HINTERNET connect = WinHttpConnect(session, L"127.0.0.1", 11434, 0);
+            if (connect) {
+                HINTERNET request = WinHttpOpenRequest(connect, L"GET", L"/api/tags",
+                    nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+                if (request) {
+                    std::string raw;
+                    if (WinHttpSendRequest(request, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                            WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
+                        WinHttpReceiveResponse(request, nullptr)) {
+                        DWORD available = 0;
+                        while (!cancel->load() &&
+                               WinHttpQueryDataAvailable(request, &available) && available) {
+                            std::string chunk(available, '\0');
+                            DWORD read = 0;
+                            if (!WinHttpReadData(request, chunk.data(), available, &read) || !read) break;
+                            raw.append(chunk.data(), read);
+                        }
+                    }
+                    WinHttpCloseHandle(request);
+                    try {
+                        const auto document = nlohmann::json::parse(raw);
+                        if (document.contains("models") && document["models"].is_array()) {
+                            for (const auto& model : document["models"]) {
+                                if (!model.contains("name") || !model["name"].is_string()) continue;
+                                const std::string name = model["name"].get<std::string>();
+                                models.push_back({ChatModelEntry::Source::Ollama,
+                                    modelRouteBreadcrumb(
+                                        RawrXD::ChatRouteMenu::RouteKind::Ollama, name), name});
+                            }
+                        }
+                    } catch (...) {
+                        // Ollama may be absent or may return a non-catalog response.
+                    }
+                }
+                WinHttpCloseHandle(connect);
+            }
+            WinHttpCloseHandle(session);
+        }
+    }
+
+    std::sort(models.begin(), models.end(), [](const auto& a, const auto& b) {
+        return toLowerAscii(a.breadcrumb) < toLowerAscii(b.breadcrumb);
+    });
+    return models;
+}
+
+std::string generateOllamaModel(const std::string& baseUrl,
+                                const std::string& model,
+                                const std::string& prompt,
+                                int maxTokens)
+{
+    std::string url = baseUrl.empty() ? "http://127.0.0.1:11434" : baseUrl;
+    const size_t scheme = url.find("://");
+    if (scheme == std::string::npos) return {};
+    const bool https = url.compare(0, scheme, "https") == 0;
+    const size_t authorityStart = scheme + 3;
+    const size_t pathStart = url.find('/', authorityStart);
+    const std::string authority = url.substr(authorityStart,
+        pathStart == std::string::npos ? std::string::npos : pathStart - authorityStart);
+    const size_t colon = authority.rfind(':');
+    const std::string host = colon == std::string::npos ? authority : authority.substr(0, colon);
+    const INTERNET_PORT port = colon == std::string::npos
+        ? (https ? INTERNET_DEFAULT_HTTPS_PORT : static_cast<INTERNET_PORT>(11434))
+        : static_cast<INTERNET_PORT>(std::atoi(authority.c_str() + colon + 1));
+    if (host.empty() || port == 0) return {};
+
+    const auto bodyJson = nlohmann::json{
+        {"model", model}, {"prompt", prompt}, {"stream", false},
+        {"options", {{"num_predict", maxTokens}}}
+    };
+    const std::string body = bodyJson.dump();
+    const std::wstring wideHost(host.begin(), host.end());
+    HINTERNET session = WinHttpOpen(L"RawrXD Chat/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY,
+        WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!session) return {};
+    WinHttpSetTimeouts(session, 1500, 1500, 30000, 30000);
+    HINTERNET connect = WinHttpConnect(session, wideHost.c_str(), port, 0);
+    if (!connect) { WinHttpCloseHandle(session); return {}; }
+    const DWORD flags = https ? WINHTTP_FLAG_SECURE : 0;
+    HINTERNET request = WinHttpOpenRequest(connect, L"POST", L"/api/generate", nullptr,
+        WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+    if (!request) { WinHttpCloseHandle(connect); WinHttpCloseHandle(session); return {}; }
+
+    std::string raw;
+    const wchar_t headers[] = L"Content-Type: application/json\r\n";
+    if (WinHttpSendRequest(request, headers, static_cast<DWORD>(-1L),
+            const_cast<char*>(body.data()), static_cast<DWORD>(body.size()),
+            static_cast<DWORD>(body.size()), 0) && WinHttpReceiveResponse(request, nullptr)) {
+        DWORD available = 0;
+        while (WinHttpQueryDataAvailable(request, &available) && available) {
+            std::string chunk(available, '\0');
+            DWORD read = 0;
+            if (!WinHttpReadData(request, chunk.data(), available, &read) || !read) break;
+            raw.append(chunk.data(), read);
+        }
+    }
+    WinHttpCloseHandle(request);
+    WinHttpCloseHandle(connect);
+    WinHttpCloseHandle(session);
+
+    try {
+        const auto response = nlohmann::json::parse(raw);
+        if (response.contains("response") && response["response"].is_string()) {
+            return response["response"].get<std::string>();
+        }
+    } catch (...) {
+    }
+    return {};
+}
+
 } // namespace
 
 
 #define IDC_TERMINAL 1002
 #define IDC_COMMAND_INPUT 1003
 #define IDC_STATUS_BAR 1004
-#define IDC_OUTPUT_TABS 1005
 #define IDC_MINIMAP 1006
 #define IDC_MODULE_BROWSER 1007
 #define IDC_HELP_PANEL 1008
@@ -132,7 +393,6 @@ std::string CaptureProcessOutput(const std::string& commandLine)
 #define IDC_SPLITTER 1016
 #define IDC_SEVERITY_FILTER 1017
 #define IDC_TITLE_TEXT 1018
-#define IDC_FILE_EXPLORER 1025
 #define IDC_FILE_TREE 1026
 
 // Activity Bar (Far Left) - VS Code style icon bar
@@ -152,6 +412,8 @@ std::string CaptureProcessOutput(const std::string& commandLine)
 #define IDC_COPILOT_CHAT_OUTPUT 1203
 #define IDC_COPILOT_SEND_BTN 1204
 #define IDC_COPILOT_CLEAR_BTN 1205
+#define IDC_COPILOT_MODEL_SELECTOR 1206
+#define IDC_COPILOT_TOKEN_SLIDER 1207
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
 #define IDC_PANEL_CONTAINER 1300
@@ -1869,22 +2131,19 @@ void Win32IDE::createMenuBar(HWND hwnd)
 
 void Win32IDE::createToolbar(HWND hwnd)
 {
-
+    RECT client{};
+    GetClientRect(hwnd, &client);
     m_hwndToolbar = CreateWindowExA(0, TOOLBARCLASSNAMEA, nullptr,
-                                   WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT,
-                                   0, 0, 0, 0, hwnd, nullptr, m_hInstance, nullptr);
+                                   WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT |
+                                       CCS_NODIVIDER | CCS_NOPARENTALIGN,
+                                   0, 0, client.right, 40, hwnd, nullptr,
+                                   m_hInstance, nullptr);
+    if (!m_hwndToolbar) return;
 
-    if (m_hwndToolbar) {
-
-        SendMessage(m_hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-        SendMessage(m_hwndToolbar, TB_AUTOSIZE, 0, 0);
-
-        createTitleBarControls();
-        updateTitleBarText();
-
-    } else {
-
-    }
+    SendMessageA(m_hwndToolbar, TB_BUTTONSTRUCTSIZE,
+                 static_cast<WPARAM>(sizeof(TBBUTTON)), 0);
+    createTitleBarControls();
+    updateTitleBarText();
 }
 
 void Win32IDE::createTitleBarControls()
@@ -1899,12 +2158,7 @@ void Win32IDE::createTitleBarControls()
                                  0, 0, 32, 24, m_hwndToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(controlId)), m_hInstance, nullptr);
     };
 
-    createButton(m_hwndBtnGitHub, IDC_BTN_GITHUB, "GH");
-    createButton(m_hwndBtnMicrosoft, IDC_BTN_MICROSOFT, "MS");
     createButton(m_hwndBtnSettings, IDC_BTN_SETTINGS, "Gear");
-    createButton(m_hwndBtnMinimize, IDC_BTN_MINIMIZE, "-");
-    createButton(m_hwndBtnMaximize, IDC_BTN_MAXIMIZE, "[]");
-    createButton(m_hwndBtnClose, IDC_BTN_CLOSE, "X");
 
     RECT client{};
     GetClientRect(m_hwndMain, &client);
@@ -1931,12 +2185,7 @@ void Win32IDE::layoutTitleBar(int width)
         x -= padding;
     };
 
-    placeButton(m_hwndBtnClose, 32);
-    placeButton(m_hwndBtnMaximize, 32);
-    placeButton(m_hwndBtnMinimize, 32);
     placeButton(m_hwndBtnSettings, 48);
-    placeButton(m_hwndBtnMicrosoft, 40);
-    placeButton(m_hwndBtnGitHub, 40);
 
     if (m_hwndTitleLabel) {
         int availableRight = x;
@@ -1975,7 +2224,7 @@ void Win32IDE::setCurrentDirectoryFromFile(const std::string& filePath)
 
 void Win32IDE::updateTitleBarText()
 {
-    if (!m_hwndTitleLabel) return;
+    if (!m_hwndMain) return;
 
     std::string fileName = m_currentFile.empty() ? "Untitled" : extractLeafName(m_currentFile);
     std::string projectFolder;
@@ -1991,10 +2240,6 @@ void Win32IDE::updateTitleBarText()
         }
     }
 
-    if (projectFolder.empty() && !m_gitRepoPath.empty()) {
-        projectFolder = extractLeafName(m_gitRepoPath);
-    }
-
     if (projectFolder.empty()) {
         projectFolder = "Workspace";
     }
@@ -2003,9 +2248,19 @@ void Win32IDE::updateTitleBarText()
     // a UTF-8 bullet (U+2022) renders as mojibake here.
     std::string composed = fileName + "  -  " + projectFolder;
     if (composed != m_lastTitleBarText) {
-        SetWindowTextA(m_hwndTitleLabel, composed.c_str());
+        if (m_hwndTitleLabel) SetWindowTextA(m_hwndTitleLabel, composed.c_str());
+        SetWindowTextA(m_hwndMain, ("RawrXD IDE  -  " + composed).c_str());
         m_lastTitleBarText = composed;
     }
+}
+
+void Win32IDE::setEditorText(const std::string& text)
+{
+    if (!m_hwndEditor) return;
+    const bool wasSuppressed = m_suppressEditorDirty;
+    m_suppressEditorDirty = true;
+    SetWindowTextA(m_hwndEditor, text.c_str());
+    m_suppressEditorDirty = wasSuppressed;
 }
 
 void Win32IDE::createEditor(HWND hwnd)
@@ -2281,7 +2536,7 @@ void Win32IDE::newFile()
         }
     }
 
-    SetWindowTextA(m_hwndEditor, "");
+    setEditorText("");
     m_currentFile.clear();
     m_fileModified = false;
     updateTitleBarText();
@@ -2304,7 +2559,7 @@ bool Win32IDE::loadFileIntoEditor(const std::string& path)
 
         std::string content((std::istreambuf_iterator<char>(file)),
                              std::istreambuf_iterator<char>());
-        SetWindowTextA(m_hwndEditor, content.c_str());
+        setEditorText(content);
         m_currentFile = path;
         m_fileModified = false;
         setCurrentDirectoryFromFile(m_currentFile);
@@ -2357,7 +2612,7 @@ void Win32IDE::openFile()
             std::ifstream file(szFile);
             if (file) {
                 std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                SetWindowTextA(m_hwndEditor, content.c_str());
+                setEditorText(content);
                 m_currentFile = szFile;
                 m_fileModified = false;
                 setCurrentDirectoryFromFile(m_currentFile);
@@ -4454,16 +4709,53 @@ void Win32IDE::populateFileTree()
     // Clear existing items
     TreeView_DeleteAllItems(m_hwndFileExplorer);
 
-    // Add root directories for model browsing
-    std::vector<std::string> modelPaths = {
-        "D:\\OllamaModels",
-        "C:\\OllamaModels",
-        "C:\\Users\\" + std::string(getenv("USERNAME")) + "\\OllamaModels"
+    // Put the active workspace first so Explorer opens on the project rather
+    // than showing an empty model-only tree on machines without OllamaModels.
+    std::vector<std::string> modelPaths;
+    auto addRootIfPresent = [&modelPaths](const std::string& path) {
+        if (path.empty() || GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+        for (const auto& existing : modelPaths) {
+            if (_stricmp(existing.c_str(), path.c_str()) == 0) return;
+        }
+        modelPaths.push_back(path);
     };
+
+    char currentDirectory[MAX_PATH] = {};
+    if (GetCurrentDirectoryA(MAX_PATH, currentDirectory) > 0) {
+        addRootIfPresent(currentDirectory);
+    }
+
+    // The IDE is commonly launched from build_cmake/bin/Release. Walk upward
+    // from the executable to locate its checkout even when the process CWD is
+    // unrelated to the project.
+    char executablePath[MAX_PATH] = {};
+    const DWORD executableLength = GetModuleFileNameA(nullptr, executablePath, MAX_PATH);
+    if (executableLength > 0 && executableLength < MAX_PATH) {
+        std::string candidate(executablePath, executableLength);
+        size_t slash = candidate.find_last_of("\\/");
+        if (slash != std::string::npos) candidate.resize(slash);
+        for (int depth = 0; depth < 8 && !candidate.empty(); ++depth) {
+            const std::string gitMarker = candidate + "\\.git";
+            if (GetFileAttributesA(gitMarker.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                addRootIfPresent(candidate);
+                break;
+            }
+            const size_t parentSlash = candidate.find_last_of("\\/");
+            if (parentSlash == std::string::npos || parentSlash == 2) break;
+            candidate.resize(parentSlash);
+        }
+    }
+
+    const char* username = std::getenv("USERNAME");
+    if (username && *username) {
+        addRootIfPresent(std::string("C:\\Users\\") + username + "\\OllamaModels");
+    }
+    addRootIfPresent("D:\\OllamaModels");
+    addRootIfPresent("C:\\OllamaModels");
 
     for (const auto& path : modelPaths) {
         if (GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES) {
-            std::string displayName = path;
+        std::string displayName = path;
             size_t lastSlash = path.find_last_of("\\/");
             if (lastSlash != std::string::npos) {
                 displayName = path.substr(lastSlash + 1) + " (" + path + ")";
@@ -4531,16 +4823,24 @@ void Win32IDE::scanDirectory(const std::string& dirPath, HTREEITEM hParent)
             continue;
         }
         
-        // For files, only show model files and some common extensions
+        // Show source, project, documentation, and model files in the workspace.
         if (!isDirectory) {
             std::string fileName = findData.cFileName;
             std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-            
-            if (!isModelFile(fullPath) && 
-                fileName.find(".txt") == std::string::npos &&
-                fileName.find(".json") == std::string::npos &&
-                fileName.find(".md") == std::string::npos &&
-                fileName.find(".log") == std::string::npos) {
+
+            const size_t extensionStart = fileName.find_last_of('.');
+            const std::string extension = extensionStart == std::string::npos
+                ? std::string() : fileName.substr(extensionStart);
+            static const char* visibleExtensions[] = {
+                ".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx",
+                ".inl", ".ixx", ".cs", ".py", ".pyi", ".js", ".jsx", ".ts",
+                ".tsx", ".html", ".css", ".scss", ".json", ".md", ".txt",
+                ".log", ".cmake", ".toml", ".yaml", ".yml", ".xml", ".ini",
+                ".bat", ".cmd", ".ps1", ".sh", ".sln", ".vcxproj"
+            };
+            const bool sourceOrProjectFile = std::find(std::begin(visibleExtensions),
+                std::end(visibleExtensions), extension) != std::end(visibleExtensions);
+            if (!isModelFile(fullPath) && !sourceOrProjectFile) {
                 continue;
             }
         }
@@ -4658,8 +4958,9 @@ void Win32IDE::onFileExplorerDoubleClick()
                     }
                     
                     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                    SetWindowTextA(m_hwndEditor, content.c_str());
+                    setEditorText(content);
                     m_currentFile = filePath;
+                    m_fileModified = false;
                     updateTitleBarText();
                     file.close();
                 }
@@ -4760,8 +5061,9 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
                 std::ifstream file(filePath);
                 if (file.is_open()) {
                     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                    SetWindowTextA(m_hwndEditor, content.c_str());
+                    setEditorText(content);
                     m_currentFile = filePath;
+                    m_fileModified = false;
                     updateTitleBarText();
                 }
             }
@@ -5394,37 +5696,113 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
         if (callback) callback("Inference already in progress.", true);
         return;
     }
+    if (m_inferenceThread.joinable()) {
+        m_inferenceThread.join();
+    }
+    const ChatModelEntry selectedModel = m_selectedChatModel;
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;
     m_currentInferencePrompt = prompt;
     m_inferenceCallback = callback;
     
-    // Launch dedicated inference thread using Native Agentic Bridge
-    m_inferenceThread = std::thread([this, prompt]() {
-        if (!m_agenticBridge) {
-             if (m_inferenceCallback) m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
-             m_inferenceRunning = false;
-             return;
-        }
+    // Route from the selected model entry. Local GGUF uses the native agent,
+    // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
+    m_inferenceThread = std::thread([this, prompt, callback, selectedModel]() {
+        auto finish = [this, &callback](const std::string& result) {
+            if (callback) callback(result, true);
+            m_inferenceRunning = false;
+        };
 
-        // Set callback to route NativeAgent stream to the UI
-        m_agenticBridge->SetOutputCallback([this](const std::string& type, const std::string& msg) {
-             if (m_inferenceStopRequested) return;
-             // "stream" type is what we send to chat UI
-             if (m_inferenceCallback) m_inferenceCallback(msg, false);
-        });
+        try {
+            if (selectedModel.identifier.empty()) {
+                finish("Select a model route first.");
+                return;
+            }
 
-        // Execute via parity bridge (supports /edit, /think, etc.)
-        m_agenticBridge->ExecuteAgentCommand(prompt);
-
-        m_inferenceRunning = false;
-        if (m_inferenceCallback) {
-            m_inferenceCallback("", true); // Finalize
+            switch (selectedModel.source) {
+            case ChatModelEntry::Source::KiloFree: {
+                const auto* route = RawrXD::ChatRouteMenu::find(
+                    RawrXD::ChatRouteMenu::RouteKind::KiloFree);
+                const char* apiKey = route && route->authEnv[0]
+                    ? std::getenv(route->authEnv) : nullptr;
+                if (!apiKey || !*apiKey) {
+                    finish("Kilo free cloud route is selected, but RawrXD cannot find its Kilo credential. Set KILO_API_KEY and restart RawrXD.");
+                    return;
+                }
+                if (!route || std::strcmp(route->runtime, "cloud-api") != 0) {
+                    finish("The generated Kilo route is missing its cloud-api runtime mapping.");
+                    return;
+                }
+                ModelConfig config{};
+                config.backend = ModelBackend::KILO_GATEWAY;
+                config.model_id = selectedModel.identifier;
+                config.api_key = apiKey;
+                config.parameters["max_tokens"] = std::to_string(m_currentMaxTokens);
+                CloudApiClient client;
+                const std::string response = client.generate(prompt, config);
+                finish(response.empty()
+                    ? "Kilo did not return a response. Check the Kilo credential and network connection."
+                    : response);
+                return;
+            }
+            case ChatModelEntry::Source::Ollama: {
+                const auto* route = RawrXD::ChatRouteMenu::find(
+                    RawrXD::ChatRouteMenu::RouteKind::Ollama);
+                if (!route || std::strcmp(route->runtime, "ollama-http") != 0) {
+                    finish("The generated Ollama route is missing its local HTTP runtime mapping.");
+                    return;
+                }
+                const std::string response = generateOllamaModel(
+                    m_ollamaBaseUrl, selectedModel.identifier, prompt, m_currentMaxTokens);
+                finish(response.empty()
+                    ? "The selected Ollama model did not respond. Check that Ollama is running locally."
+                    : response);
+                return;
+            }
+            case ChatModelEntry::Source::LocalFile: {
+                const auto* route = RawrXD::ChatRouteMenu::find(
+                    RawrXD::ChatRouteMenu::RouteKind::LocalFile);
+                if (!route || std::strcmp(route->runtime, "native-agent") != 0) {
+                    finish("The generated local model route is missing its native-agent runtime mapping.");
+                    return;
+                }
+                if (!m_agenticBridge || !m_agenticBridge->IsInitialized()) {
+                    finish("The native agent bridge is not initialized.");
+                    return;
+                }
+                if (!hasGgufModelTensors(selectedModel.identifier)) {
+                    finish("The selected GGUF is not an inference model (it may contain vocabulary metadata only): " +
+                        selectedModel.identifier);
+                    return;
+                }
+                if (m_agenticChatLoadedModelPath != selectedModel.identifier) {
+                    const AgentResponse load = m_agenticBridge->ExecuteAgentCommand(
+                        "/load " + selectedModel.identifier);
+                    if (load.type == AgentResponseType::AGENT_ERROR) {
+                        finish(load.content.empty()
+                            ? "The selected local model could not be loaded."
+                            : load.content);
+                        return;
+                    }
+                    m_agenticChatLoadedModelPath = selectedModel.identifier;
+                }
+                m_agenticBridge->SetOutputCallback(
+                    [this, &callback](const std::string&, const std::string& chunk) {
+                        if (!m_inferenceStopRequested && callback) callback(chunk, false);
+                    });
+                m_agenticBridge->ExecuteAgentCommand(prompt);
+                finish("");
+                return;
+            }
+            }
+            finish("The selected chat route is unsupported.");
+        } catch (const std::exception& error) {
+            finish(std::string("Chat route failed: ") + error.what());
+        } catch (...) {
+            finish("Chat route failed with an unknown error.");
         }
     });
-    
-    m_inferenceThread.detach();
 }
 
 void Win32IDE::stopInference()
@@ -5667,7 +6045,7 @@ void Win32IDE::createChatPanel() {
         0, "COMBOBOX", "",
         WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL,
         60, 35, 235, 200,
-        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_MODEL_SELECTOR, m_hInstance, nullptr);
     
     if (m_hwndModelSelector) {
         SendMessage(m_hwndModelSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -5691,7 +6069,7 @@ void Win32IDE::createChatPanel() {
         0, "TRACKBAR_CLASS", "",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
         5, 80, 290, 25,
-        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_TOKEN_SLIDER, m_hInstance, nullptr);
     
     if (m_hwndMaxTokensSlider) {
         SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGE, TRUE, MAKELPARAM(32, 2048));
@@ -5709,6 +6087,8 @@ void Win32IDE::createChatPanel() {
     
     if (m_hwndCopilotChatOutput) {
         SendMessage(m_hwndCopilotChatOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SetWindowTextA(m_hwndCopilotChatOutput,
+            "Welcome to RawrXD AI Chat!\r\n\r\nSelect a model and type a message to begin.");
     }
     
     // Chat Input Textbox
@@ -5751,44 +6131,133 @@ void Win32IDE::createChatPanel() {
 
 void Win32IDE::populateModelSelector() {
     if (!m_hwndModelSelector) return;
-
-    // Clear existing items
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
-    
-    // Try to scan OllamaModels directory for available models
-    std::string ollamaPath = "D:\\OllamaModels";
     m_availableModels.clear();
-    
-    // Add default models
-    m_availableModels.push_back("llama2");
-    m_availableModels.push_back("mistral");
-    m_availableModels.push_back("neural-chat");
-    m_availableModels.push_back("dolphin-mixtral");
-    
-    // Try to scan directory
-    WIN32_FIND_DATAA findData;
-    HANDLE findHandle = FindFirstFileA((ollamaPath + "\\*").c_str(), &findData);
-    
-    if (findHandle != INVALID_HANDLE_VALUE) {
-        do {
-            if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && 
-                strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
-                m_availableModels.push_back(findData.cFileName);
-            }
-        } while (FindNextFileA(findHandle, &findData));
-        FindClose(findHandle);
-    }
-    
-    // Populate combobox
-    for (const auto& model : m_availableModels) {
-        SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)model.c_str());
-    }
-    
-    // Set first item as selected
-    if (!m_availableModels.empty()) {
-        SendMessage(m_hwndModelSelector, CB_SETCURSEL, 0, 0);
+
+    const auto* kiloRoute = RawrXD::ChatRouteMenu::find(
+        RawrXD::ChatRouteMenu::RouteKind::KiloFree);
+    if (kiloRoute) {
+        std::string display = kiloRoute->breadcrumb;
+        display += " / ";
+        display += kiloRoute->displayName;
+        m_availableModels.push_back({ChatModelEntry::Source::KiloFree,
+            std::move(display), kiloRoute->modelId});
     }
 
+    // A sentinel row keeps the user informed while accessible local drives and
+    // the local Ollama catalog are scanned on a worker thread.
+    const LRESULT scanningRow = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
+        reinterpret_cast<LPARAM>("Local models / scanning accessible drives..."));
+    if (scanningRow != CB_ERR && scanningRow != CB_ERRSPACE) {
+        SendMessage(m_hwndModelSelector, CB_SETITEMDATA,
+            static_cast<WPARAM>(scanningRow), static_cast<LPARAM>(-1));
+    }
+    int defaultRouteRow = -1;
+    for (size_t i = 0; i < m_availableModels.size(); ++i) {
+        const LRESULT item = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>(m_availableModels[i].breadcrumb.c_str()));
+        if (item != CB_ERR && item != CB_ERRSPACE) {
+            SendMessage(m_hwndModelSelector, CB_SETITEMDATA,
+                static_cast<WPARAM>(item), static_cast<LPARAM>(i));
+            if (m_availableModels[i].source == ChatModelEntry::Source::KiloFree) {
+                defaultRouteRow = static_cast<int>(item);
+            }
+        }
+    }
+    SendMessage(m_hwndModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
+    if (defaultRouteRow >= 0) {
+        SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+            static_cast<WPARAM>(defaultRouteRow), 0);
+        onModelSelectionChanged();
+    } else {
+        SendMessage(m_hwndModelSelector, CB_SETCURSEL, static_cast<WPARAM>(-1), 0);
+        m_selectedChatModel = {};
+    }
+
+    if (m_modelDiscoveryThread.joinable()) {
+        m_modelDiscoveryCancel->store(true);
+        m_modelDiscoveryThread.join();
+    }
+    m_modelDiscoveryCancel->store(false);
+    m_modelDiscoveryRunning.store(true);
+    const HWND mainWindow = m_hwndMain;
+    const auto cancel = m_modelDiscoveryCancel;
+    m_modelDiscoveryThread = std::thread([this, mainWindow, cancel]() {
+        auto* discovered = new std::vector<ChatModelEntry>(discoverLocalModels(cancel));
+        m_modelDiscoveryRunning.store(false);
+        if (!cancel->load() && mainWindow &&
+            PostMessageA(mainWindow, WM_APP + 106, 0,
+                reinterpret_cast<LPARAM>(discovered))) {
+            return;
+        }
+        delete discovered;
+    });
+
+}
+
+void Win32IDE::onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered) {
+    std::unique_ptr<std::vector<ChatModelEntry>> owned(discovered);
+    if (!owned || !m_hwndModelSelector) return;
+
+    ChatModelEntry previous = m_selectedChatModel;
+    m_availableModels.erase(std::remove_if(m_availableModels.begin(), m_availableModels.end(),
+        [](const ChatModelEntry& entry) {
+            return entry.source != ChatModelEntry::Source::KiloFree;
+        }), m_availableModels.end());
+    for (auto& entry : *owned) {
+        const bool duplicate = std::any_of(m_availableModels.begin(), m_availableModels.end(),
+            [&entry](const ChatModelEntry& current) {
+                return current.source == entry.source && current.identifier == entry.identifier;
+            });
+        if (!duplicate) m_availableModels.push_back(std::move(entry));
+    }
+
+    SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
+    if (m_availableModels.size() == 1) {
+        const LRESULT row = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("Local models / no GGUF models found"));
+        if (row != CB_ERR && row != CB_ERRSPACE) {
+            SendMessage(m_hwndModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(row),
+                static_cast<LPARAM>(-1));
+        }
+    }
+
+    int selectedRow = -1;
+    int preferredRow = -1;
+    int kiloRow = -1;
+    for (size_t i = 0; i < m_availableModels.size(); ++i) {
+        const auto& entry = m_availableModels[i];
+        const LRESULT row = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>(entry.breadcrumb.c_str()));
+        if (row == CB_ERR || row == CB_ERRSPACE) continue;
+        SendMessage(m_hwndModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(row),
+            static_cast<LPARAM>(i));
+        if (entry.source == previous.source && entry.identifier == previous.identifier) {
+            preferredRow = static_cast<int>(row);
+        }
+        if (entry.source == ChatModelEntry::Source::KiloFree) {
+            kiloRow = static_cast<int>(row);
+        }
+    }
+    selectedRow = preferredRow >= 0 ? preferredRow
+        : kiloRow;
+    if (selectedRow >= 0) {
+        SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+            static_cast<WPARAM>(selectedRow), 0);
+        onModelSelectionChanged();
+    }
+    const size_t localModelCount = static_cast<size_t>(std::count_if(
+        m_availableModels.begin(), m_availableModels.end(),
+        [](const ChatModelEntry& entry) {
+            return entry.source != ChatModelEntry::Source::KiloFree;
+        }));
+    if (m_hwndStatusBar) {
+        const std::string status = "Model routes ready: " +
+            std::to_string(localModelCount) +
+            " local model(s), Kilo free cloud route available";
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+            reinterpret_cast<LPARAM>(status.c_str()));
+    }
 }
 
 void Win32IDE::HandleCopilotSend() {
@@ -5805,10 +6274,13 @@ void Win32IDE::HandleCopilotSend() {
     }
     
     // Get selected model
-    int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    std::string selectedModel = (modelIdx >= 0 && modelIdx < (int)m_availableModels.size()) 
-        ? m_availableModels[modelIdx] 
-        : "llama2";
+    onModelSelectionChanged();
+    if (m_selectedChatModel.identifier.empty()) {
+        const std::string message = "Select a model route after local discovery finishes.";
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+            reinterpret_cast<LPARAM>(message.c_str()));
+        return;
+    }
 
     // Display user message
     std::string displayText = "\n> User: " + userMessage + "\n";
@@ -5834,9 +6306,6 @@ void Win32IDE::HandleCopilotSend() {
         }
         SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayResp.c_str());
     };
-    
-    // Set model override temporarily
-    m_ollamaModelOverride = selectedModel;
     
     // Generate response
     generateResponseAsync(userMessage, onResponse);
@@ -5872,9 +6341,19 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length) {
 
 void Win32IDE::onModelSelectionChanged() {
     int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    if (idx >= 0 && idx < (int)m_availableModels.size()) {
-        m_ollamaModelOverride = m_availableModels[idx];
-
+    if (idx < 0) {
+        m_selectedChatModel = {};
+        return;
+    }
+    const LRESULT itemData = SendMessage(m_hwndModelSelector, CB_GETITEMDATA,
+        static_cast<WPARAM>(idx), 0);
+    if (itemData < 0 || static_cast<size_t>(itemData) >= m_availableModels.size()) {
+        m_selectedChatModel = {};
+        return;
+    }
+    m_selectedChatModel = m_availableModels[static_cast<size_t>(itemData)];
+    if (m_selectedChatModel.source == ChatModelEntry::Source::Ollama) {
+        m_ollamaModelOverride = m_selectedChatModel.identifier;
     }
 }
 
@@ -5890,6 +6369,11 @@ void Win32IDE::onMaxTokensChanged(int newValue) {
 }
 
 Win32IDE::~Win32IDE() {
+    if (m_modelDiscoveryCancel) m_modelDiscoveryCancel->store(true);
+    if (m_modelDiscoveryThread.joinable()) m_modelDiscoveryThread.join();
+    m_inferenceStopRequested = true;
+    if (m_inferenceThread.joinable()) m_inferenceThread.join();
+
     if (m_nativeEngine) {
         delete static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
         m_nativeEngine = nullptr;

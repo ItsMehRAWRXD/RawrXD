@@ -12,6 +12,7 @@
 
 #include <windows.h>
 #include <richedit.h>
+#include <algorithm>
 #include <string>
 
 namespace {
@@ -81,11 +82,30 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return 0;
         case WM_NOTIFY: {
-            // Document tabs report selection changes here.
             auto* nmhdr = reinterpret_cast<NMHDR*>(lParam);
-            if (nmhdr && ide && nmhdr->idFrom == IDC_DOC_TABS &&
-                nmhdr->code == TCN_SELCHANGE) {
+            if (!nmhdr || !ide) return 0;
+            if (nmhdr->idFrom == IDC_DOC_TABS && nmhdr->code == TCN_SELCHANGE) {
                 ide->switchDocumentTab(TabCtrl_GetCurSel(nmhdr->hwndFrom));
+            } else if (nmhdr->idFrom == IDC_OUTPUT_TABS && nmhdr->code == TCN_SELCHANGE) {
+                static const char* outputKeys[] = {"Output", "Errors", "Debug", "Find Results"};
+                const int selected = TabCtrl_GetCurSel(nmhdr->hwndFrom);
+                if (selected >= 0 && selected < 4) {
+                    ide->m_selectedOutputTab = selected;
+                    ide->m_activeOutputTab = outputKeys[selected];
+                    for (const auto& output : ide->m_outputWindows) {
+                        ShowWindow(output.second,
+                            ide->m_outputPanelVisible && output.first == ide->m_activeOutputTab
+                                ? SW_SHOW : SW_HIDE);
+                    }
+                }
+            } else if (nmhdr->idFrom == IDC_FILE_EXPLORER &&
+                       nmhdr->code == TVN_ITEMEXPANDINGA) {
+                auto* treeChange = reinterpret_cast<NMTREEVIEWA*>(lParam);
+                if (treeChange->action & TVE_EXPAND) {
+                    ide->expandTreeNode(treeChange->itemNew.hItem);
+                }
+            } else if (nmhdr->idFrom == IDC_FILE_EXPLORER && nmhdr->code == NM_DBLCLK) {
+                ide->onFileExplorerDoubleClick();
             }
             return 0;
         }
@@ -135,6 +155,15 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return 0;
         }
+        case WM_APP + 106: {
+            if (ide) {
+                ide->onModelDiscoveryComplete(
+                    reinterpret_cast<std::vector<ChatModelEntry>*>(lParam));
+            } else {
+                delete reinterpret_cast<std::vector<ChatModelEntry>*>(lParam);
+            }
+            return 0;
+        }
         default:
             return DefWindowProcA(hwnd, uMsg, wParam, lParam);
     }
@@ -163,24 +192,58 @@ void Win32IDE::onCreate(HWND hwnd)
                 return DefSubclassProc(control, message, wp, lp);
             }, 1, 0);
     }
+    const SUBCLASSPROC forwardPaneNotifications =
+        [](HWND pane, UINT message, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) -> LRESULT {
+            if (message == WM_COMMAND || message == WM_NOTIFY) {
+                return SendMessageA(GetParent(pane), message, wp, lp);
+            }
+            return DefSubclassProc(pane, message, wp, lp);
+        };
     createDocumentTabs();
     createSidebar(hwnd);
+    if (m_hwndSidebar) SetWindowSubclass(m_hwndSidebar, forwardPaneNotifications, 2, 0);
+    createFileExplorer();
     createStatusBar(hwnd);
+    createOutputTabs();
+    createChatPanel();
+    if (m_hwndSecondarySidebar) {
+        SetWindowSubclass(m_hwndSecondarySidebar, forwardPaneNotifications, 3, 0);
+    }
     initializeEditorSurface();
+
+    RECT client{};
+    if (GetClientRect(hwnd, &client)) {
+        onSize(client.right, client.bottom);
+    }
 }
 
 void Win32IDE::onDestroy()
 {
+    if (m_modelDiscoveryCancel) m_modelDiscoveryCancel->store(true);
     m_hwndMain = nullptr;
 }
 
 void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
+    if (hwndCtl == m_hwndCopilotSendBtn && codeNotify == BN_CLICKED) {
+        HandleCopilotSend();
+        return;
+    }
+    if (hwndCtl == m_hwndCopilotClearBtn && codeNotify == BN_CLICKED) {
+        HandleCopilotClear();
+        return;
+    }
+    if (hwndCtl == m_hwndModelSelector && codeNotify == CBN_SELCHANGE) {
+        onModelSelectionChanged();
+        return;
+    }
     if (hwndCtl) {
         if (hwndCtl == m_hwndEditor) {
             if (codeNotify == EN_CHANGE) {
-                m_fileModified = true;
-                updateTitleBarText();
+                if (!m_suppressEditorDirty) {
+                    m_fileModified = true;
+                    updateTitleBarText();
+                }
             }
             return;
         }
@@ -284,19 +347,97 @@ void Win32IDE::onSize(int width, int height)
     if (width <= 0 || height <= 0) {
         return;
     }
+    int statusHeight = 0;
     if (m_hwndStatusBar) {
         SendMessageA(m_hwndStatusBar, WM_SIZE, 0, 0);
+        RECT statusRect{};
+        if (GetClientRect(m_hwndStatusBar, &statusRect)) {
+            statusHeight = statusRect.bottom - statusRect.top;
+        }
     }
-    if (m_hwndDocTabs) {
-        // Tab strip sits directly under the toolbar and spans the client width.
-        const int tabTop = m_hwndToolbar ? 40 : 0;
-        MoveWindow(m_hwndDocTabs, 0, tabTop, width, DOC_TAB_HEIGHT, TRUE);
+    if (m_hwndToolbar) {
+        MoveWindow(m_hwndToolbar, 0, 0, width, 40, TRUE);
+        layoutTitleBar(width);
     }
-    if (m_hwndEditor) {
-        const int editorTop = (m_hwndToolbar ? 40 : 0) + DOC_TAB_HEIGHT;
-        const int editorHeight = height - editorTop - m_terminalHeight;
-        MoveWindow(m_hwndEditor, 0, editorTop, width, editorHeight > 0 ? editorHeight : 0, TRUE);
+    const int toolbarHeight = m_hwndToolbar ? 40 : 0;
+    const int contentTop = toolbarHeight + DOC_TAB_HEIGHT;
+    if (m_hwndDocTabs) MoveWindow(m_hwndDocTabs, 0, toolbarHeight, width, DOC_TAB_HEIGHT, TRUE);
+
+    const int activityWidth = (m_sidebarVisible && m_hwndActivityBar) ? 48 : 0;
+    const int desiredLeft = m_sidebarVisible && m_hwndSidebar ? activityWidth + m_sidebarWidth : 0;
+    const int leftWidth = std::min(desiredLeft, std::max(0, (width - 200) / 2));
+    const int sidebarWidth = std::max(0, leftWidth - activityWidth);
+    const int desiredRight = (m_secondarySidebarVisible && m_hwndSecondarySidebar)
+        ? m_secondarySidebarWidth : 0;
+    const int rightWidth = std::min(desiredRight, std::max(0, width - leftWidth - 200));
+
+    const int availableHeight = std::max(0, height - contentTop - statusHeight);
+    const bool terminalVisible = m_outputPanelVisible && !m_terminalPanes.empty();
+    const int desiredBottom = m_outputPanelVisible
+        ? (terminalVisible ? m_terminalHeight : m_outputTabHeight) : 0;
+    const int bottomHeight = std::min(desiredBottom, std::max(0, availableHeight - 100));
+    const int workHeight = std::max(0, availableHeight - bottomHeight);
+    const int bottomTop = contentTop + workHeight;
+
+    if (m_hwndActivityBar) {
+        MoveWindow(m_hwndActivityBar, 0, contentTop, activityWidth, workHeight, TRUE);
+        ShowWindow(m_hwndActivityBar, activityWidth ? SW_SHOW : SW_HIDE);
     }
+    if (m_hwndSidebar) {
+        MoveWindow(m_hwndSidebar, activityWidth, contentTop, sidebarWidth, workHeight, TRUE);
+        ShowWindow(m_hwndSidebar, sidebarWidth > 0 ? SW_SHOW : SW_HIDE);
+    }
+    if (m_hwndFileExplorer) {
+        MoveWindow(m_hwndFileExplorer, 5, 30, std::max(0, sidebarWidth - 10),
+                   std::max(0, workHeight - 35), TRUE);
+        ShowWindow(m_hwndFileExplorer, sidebarWidth > 0 ? SW_SHOW : SW_HIDE);
+    }
+
+    const int editorWidth = std::max(0, width - leftWidth - rightWidth);
+    if (m_hwndEditor) MoveWindow(m_hwndEditor, leftWidth, contentTop, editorWidth, workHeight, TRUE);
+
+    if (m_hwndSecondarySidebar) {
+        MoveWindow(m_hwndSecondarySidebar, width - rightWidth, contentTop, rightWidth, workHeight, TRUE);
+        ShowWindow(m_hwndSecondarySidebar, rightWidth > 0 ? SW_SHOW : SW_HIDE);
+        const int buttonY = std::max(110, workHeight - 35);
+        const int inputHeight = std::min(80, std::max(45, buttonY - 115));
+        const int inputY = std::max(110, buttonY - inputHeight - 5);
+        const int outputHeight = std::max(0, inputY - 115);
+        if (m_hwndSecondarySidebarHeader) MoveWindow(m_hwndSecondarySidebarHeader, 5, 5, std::max(0, rightWidth - 10), 25, TRUE);
+        if (m_hwndModelSelector) MoveWindow(m_hwndModelSelector, 60, 35, std::max(0, rightWidth - 65), 24, TRUE);
+        if (m_hwndMaxTokensSlider) MoveWindow(m_hwndMaxTokensSlider, 5, 80, std::max(0, rightWidth - 10), 25, TRUE);
+        if (m_hwndMaxTokensLabel) MoveWindow(m_hwndMaxTokensLabel, std::max(5, rightWidth - 55), 60, 50, 18, TRUE);
+        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, 110, std::max(0, rightWidth - 10), outputHeight, TRUE);
+        if (m_hwndCopilotChatInput) MoveWindow(m_hwndCopilotChatInput, 5, inputY, std::max(0, rightWidth - 10), inputHeight, TRUE);
+        const int buttonWidth = std::max(0, (rightWidth - 15) / 2);
+        if (m_hwndCopilotSendBtn) MoveWindow(m_hwndCopilotSendBtn, 5, buttonY, buttonWidth, 30, TRUE);
+        if (m_hwndCopilotClearBtn) MoveWindow(m_hwndCopilotClearBtn, 10 + buttonWidth, buttonY, buttonWidth, 30, TRUE);
+    }
+
+    const bool showOutput = m_outputPanelVisible && !terminalVisible && bottomHeight > 0;
+    if (m_hwndOutputTabs) {
+        MoveWindow(m_hwndOutputTabs, 0, bottomTop, std::max(0, width - 150), 24, TRUE);
+        ShowWindow(m_hwndOutputTabs, showOutput ? SW_SHOW : SW_HIDE);
+    }
+    if (m_hwndSeverityFilter) {
+        MoveWindow(m_hwndSeverityFilter, std::max(0, width - 145), bottomTop + 2, 140, 100, TRUE);
+        ShowWindow(m_hwndSeverityFilter, showOutput ? SW_SHOW : SW_HIDE);
+    }
+    for (const auto& output : m_outputWindows) {
+        MoveWindow(output.second, 0, bottomTop + 24, width, std::max(0, bottomHeight - 24), TRUE);
+        ShowWindow(output.second,
+            showOutput && output.first == m_activeOutputTab ? SW_SHOW : SW_HIDE);
+    }
+    for (auto& pane : m_terminalPanes) {
+        if (!pane.hwnd) continue;
+        if (terminalVisible) {
+            MoveWindow(pane.hwnd, 0, bottomTop, width, bottomHeight, TRUE);
+            ShowWindow(pane.hwnd, SW_SHOW);
+        } else {
+            ShowWindow(pane.hwnd, SW_HIDE);
+        }
+    }
+    m_editorHeight = workHeight;
 }
 
 void Win32IDE::initializeEditorSurface()
@@ -304,6 +445,7 @@ void Win32IDE::initializeEditorSurface()
     if (!m_hwndMain) {
         return;
     }
+    m_suppressEditorDirty = true;
     m_hwndEditor = CreateWindowExA(
         WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
@@ -314,6 +456,9 @@ void Win32IDE::initializeEditorSurface()
         SendMessageA(m_hwndEditor, EM_SETEVENTMASK, 0, ENM_CHANGE);
         applyTheme();
     }
+    // Initial control creation and theme application are not user edits.
+    m_fileModified = false;
+    m_suppressEditorDirty = false;
 }
 
 void Win32IDE::syncEditorToGpuSurface()

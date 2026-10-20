@@ -87,7 +87,7 @@ void Win32IDE::openFileDialog() {
                 
                 std::string content((std::istreambuf_iterator<char>(file)), 
                                   std::istreambuf_iterator<char>());
-                SetWindowTextA(m_hwndEditor, content.c_str());
+                setEditorText(content);
                 
                 m_currentFile = szFile;
                 m_fileModified = false;
@@ -130,7 +130,7 @@ void Win32IDE::openRecentFile(int index) {
         if (file) {
             std::string content((std::istreambuf_iterator<char>(file)), 
                               std::istreambuf_iterator<char>());
-            SetWindowTextA(m_hwndEditor, content.c_str());
+            setEditorText(content);
             
             m_currentFile = filePath;
             m_fileModified = false;
@@ -208,7 +208,7 @@ void Win32IDE::closeFile() {
     }
     
     // Clear editor
-    SetWindowTextA(m_hwndEditor, "");
+    setEditorText("");
     
     // Reset state
     m_currentFile.clear();

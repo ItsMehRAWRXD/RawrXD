@@ -45,6 +45,18 @@
 // Forward declaration for Deep2Bridge
 class Deep2Bridge;
 
+struct ChatModelEntry {
+    enum class Source {
+        LocalFile,
+        Ollama,
+        KiloFree
+    };
+
+    Source source = Source::LocalFile;
+    std::string breadcrumb;
+    std::string identifier;
+};
+
 // Define LOG_FUNCTION macro if not already defined
 #ifndef LOG_FUNCTION
 #define LOG_FUNCTION() LOG_DEBUG(std::string("ENTER ") + __FUNCTION__)
@@ -258,6 +270,7 @@ private:
     // document. Used by the document tabs (which must switch buffers without
     // showing the open dialog). Returns false if the file cannot be read.
     bool loadFileIntoEditor(const std::string& path);
+    void setEditorText(const std::string& text);
     void openRecentFile(int index);
     bool saveFile();
     bool saveFileAs();
@@ -830,6 +843,7 @@ private:
     // Per-pane terminal managers replace the previous single manager
     std::string m_currentFile;
     bool m_fileModified;
+    bool m_suppressEditorDirty = false;
     
     // Multi-terminal support
     std::vector<TerminalPane> m_terminalPanes;
@@ -1040,7 +1054,13 @@ private:
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
     int m_currentMaxTokens;
-    std::vector<std::string> m_availableModels;
+    std::vector<ChatModelEntry> m_availableModels;
+    ChatModelEntry m_selectedChatModel;
+    std::string m_agenticChatLoadedModelPath;
+    std::thread m_modelDiscoveryThread;
+    std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
+        std::make_shared<std::atomic_bool>(false);
+    std::atomic_bool m_modelDiscoveryRunning{false};
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
@@ -1272,6 +1292,7 @@ private:
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
     void populateModelSelector();
     void onModelSelectionChanged();
+    void onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered);
     void onMaxTokensChanged(int newValue);
     
     // Debugger Execution Control

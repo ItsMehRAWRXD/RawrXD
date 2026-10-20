@@ -650,7 +650,7 @@ void Win32IDE::goToProblem(int index)
         std::ifstream file(problem.file);
         if (file) {
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-            SetWindowTextA(m_hwndEditor, content.c_str());
+            setEditorText(content);
             m_currentFile = problem.file;
             m_fileModified = false;
         }

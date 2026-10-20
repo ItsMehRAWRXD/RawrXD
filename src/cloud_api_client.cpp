@@ -9,6 +9,7 @@
 #include <ctime>
 #include <algorithm>
 #include <codecvt>
+#include <nlohmann/json.hpp>
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -238,16 +239,27 @@ std::vector<std::string> CloudApiClient::listModels(const ModelConfig& config) {
 }
 
 std::string CloudApiClient::buildOpenAICompatibleRequest(const std::string& prompt, const ModelConfig& config) {
-    std::ostringstream oss;
-    oss << "{";
-    oss << "\"model\":\"" << config.model_id << "\",";
-    oss << "\"max_tokens\":" << (config.parameters.count("max_tokens") ? config.parameters.at("max_tokens") : "4096") << ",";
-    if (config.parameters.count("temperature")) {
-        oss << "\"temperature\":" << config.parameters.at("temperature") << ",";
+    nlohmann::json request = {
+        {"model", config.model_id},
+        {"max_tokens", 4096},
+        {"messages", nlohmann::json::array({
+            {{"role", "user"}, {"content", prompt}}
+        })}
+    };
+    if (const auto it = config.parameters.find("max_tokens"); it != config.parameters.end()) {
+        try {
+            request["max_tokens"] = std::max(1, std::stoi(it->second));
+        } catch (...) {
+            request["max_tokens"] = 4096;
+        }
     }
-    oss << "\"messages\":[{\"role\":\"user\",\"content\":\"" << prompt << "\"}";
-    oss << "]}";
-    return oss.str();
+    if (const auto it = config.parameters.find("temperature"); it != config.parameters.end()) {
+        try {
+            request["temperature"] = std::stod(it->second);
+        } catch (...) {
+        }
+    }
+    return request.dump();
 }
 
 std::string CloudApiClient::buildOpenRouterRequest(const std::string& prompt, const ModelConfig& config) {
@@ -257,23 +269,32 @@ std::string CloudApiClient::buildOpenRouterRequest(const std::string& prompt, co
 }
 
 std::string CloudApiClient::parseOpenAIResponse(const std::string& raw_body) {
-    // Simple extraction of choices[0].message.content
-    size_t choices_pos = raw_body.find("\"choices\"");
-    if (choices_pos == std::string::npos) return "";
-
-    size_t content_pos = raw_body.find("\"content\"", choices_pos);
-    if (content_pos == std::string::npos) return "";
-
-    size_t colon = raw_body.find(':', content_pos);
-    if (colon == std::string::npos) return "";
-
-    size_t quote = raw_body.find('"', colon + 1);
-    if (quote == std::string::npos) return "";
-
-    size_t end_quote = raw_body.find('"', quote + 1);
-    if (end_quote == std::string::npos) return "";
-
-    return raw_body.substr(quote + 1, end_quote - quote - 1);
+    try {
+        const auto response = nlohmann::json::parse(raw_body);
+        if (!response.contains("choices") || !response["choices"].is_array() ||
+            response["choices"].empty()) {
+            return "";
+        }
+        const auto& first = response["choices"][0];
+        if (first.contains("message") && first["message"].is_object()) {
+            const auto& content = first["message"]["content"];
+            if (content.is_string()) return content.get<std::string>();
+            if (content.is_array()) {
+                std::string text;
+                for (const auto& part : content) {
+                    if (part.is_object() && part.contains("text") && part["text"].is_string()) {
+                        text += part["text"].get<std::string>();
+                    }
+                }
+                return text;
+            }
+        }
+        if (first.contains("text") && first["text"].is_string()) {
+            return first["text"].get<std::string>();
+        }
+    } catch (...) {
+    }
+    return "";
 }
 
 ApiResponse CloudApiClient::executeRequest(const std::string& endpoint,

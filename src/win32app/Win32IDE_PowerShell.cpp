@@ -873,10 +873,14 @@ void Win32IDE::initializePowerShellState() {
     m_nextPSJobId = 1;
     m_rawrXDModuleLoaded = false;
     
-    // Get initial state
-    getPowerShellVersion();
-    getPowerShellEdition();
-    getPowerShellExecutionPolicy();
+    // Do not launch synchronous PowerShell subprocesses from the constructor.
+    // These probes read a pipe before waiting for process exit, so a stalled
+    // child can otherwise prevent the entire IDE window from being created.
+    // Version, edition, and policy remain lazy and are queried by the PowerShell
+    // panel only when the user opens it.
+    m_psState.version.clear();
+    m_psState.edition.clear();
+    m_psState.currentExecutionPolicy.clear();
     
     m_psState.initialized = true;
 }

@@ -2826,6 +2826,23 @@ endif()
 # the dependency-free build. Enabled with -DRAWRXD_BUILD_WIN32IDE=ON.
 # ============================================================================
 if(MSVC AND RAWRXD_BUILD_WIN32IDE)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    set(_chat_route_generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    set(_chat_route_generated_header "${_chat_route_generated_dir}/GeneratedChatRouteMenu.h")
+    add_custom_command(
+        OUTPUT "${_chat_route_generated_header}"
+        COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_SOURCE_DIR}/scripts/generate_chat_route_menu.py"
+                --manifest "${CMAKE_SOURCE_DIR}/config/chat_model_routes.json"
+                --output "${_chat_route_generated_header}"
+        DEPENDS
+            "${CMAKE_SOURCE_DIR}/scripts/generate_chat_route_menu.py"
+            "${CMAKE_SOURCE_DIR}/config/chat_model_routes.json"
+        COMMENT "Generating local/cloud chat route menu from manifest"
+        VERBATIM
+    )
+    add_custom_target(rawrxd_chat_route_menu DEPENDS "${_chat_route_generated_header}")
+
     set(RAWRXD_NATIVE_IDE_SOURCES
         src/win32app/main_win32.cpp
         src/win32app/Win32IDE.cpp
@@ -2843,6 +2860,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Autonomy.cpp
         src/win32app/Win32IDE_Deep2Bridge.cpp
         src/win32app/Win32IDE_AgenticLoopBridge.cpp
+        src/cloud_api_client.cpp
         # Lifecycle methods declared in Win32IDE.h but defined in their own
         # translation unit (createWindow/showWindow/runMessageLoop/onSize/
         # editor surface/Ollama bridge + the WindowProc dispatch chain).
@@ -2869,9 +2887,11 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
 
     if(RAWRXD_NATIVE_IDE_COMPLETE)
         add_executable(RawrXD-Win32IDE-Native ${RAWRXD_NATIVE_IDE_SOURCES}
+            "${_chat_route_generated_header}"
             $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         )
         target_include_directories(RawrXD-Win32IDE-Native PRIVATE
+            "${_chat_route_generated_dir}"
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/win32app
             ${CMAKE_SOURCE_DIR}/src/utils
@@ -2922,7 +2942,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             message(STATUS "RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK")
         endif()
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
-            comctl32 comdlg32
+            comctl32 comdlg32 winhttp
             ${RAWRXD_RICHEDIT_LIBS}
             shell32 user32 gdi32
             ole32 oleaut32 uuid advapi32 d3d11 dxgi d3dcompiler
@@ -2936,6 +2956,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             # PSAPI for process enumeration in SNAP detectors
             psapi
         )
+        add_dependencies(RawrXD-Win32IDE-Native rawrxd_chat_route_menu)
         # Production-hardening runtime: configuration, structured logging,
         # metrics, security (AES-GCM + hash-chained audit) and readiness gates.
         # main_win32.cpp calls ProductionRuntime::init()/shutdown() and
