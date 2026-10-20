@@ -66,6 +66,15 @@ struct block_q8_0 {
     int8_t   qs[32];      // int8 quantized values
 };
 
+// Q8_1: 32 int8 weights, fp16 scale and fp16 block sum.
+// The sum is metadata for vec-dot kernels; GEMV uses the same d*qs values.
+struct block_q8_1 {
+    uint16_t d;
+    uint16_t s;
+    int8_t   qs[32];
+};
+static_assert(sizeof(block_q8_1) == 36, "GGUF block_q8_1 must be 36 bytes");
+
 // Q2_K: 256 weights, 16 scales — 84 bytes
 struct block_q2_K {
     uint8_t  scales[16];  // 4-bit scale/min pairs
@@ -121,6 +130,70 @@ struct block_q8_K {
     int8_t  qs[256];      // int8 quantized values
     int16_t bsums[16];    // block sums for vec_dot correction
 };
+
+struct block_iq2_xxs {
+    uint16_t d;
+    uint16_t qs[32];
+};
+static_assert(sizeof(block_iq2_xxs) == 66, "GGUF block_iq2_xxs must be 66 bytes");
+
+struct block_iq2_xs {
+    uint16_t d;
+    uint16_t qs[32];
+    uint8_t scales[8];
+};
+static_assert(sizeof(block_iq2_xs) == 74, "GGUF block_iq2_xs must be 74 bytes");
+
+struct block_iq3_xxs {
+    uint16_t d;
+    uint8_t qs[96];
+};
+static_assert(sizeof(block_iq3_xxs) == 98, "GGUF block_iq3_xxs must be 98 bytes");
+
+struct block_iq1_s {
+    uint16_t d;
+    uint8_t qs[32];
+    uint16_t qh[8];
+};
+static_assert(sizeof(block_iq1_s) == 50, "GGUF block_iq1_s must be 50 bytes");
+
+struct block_iq4_nl {
+    uint16_t d;
+    uint8_t qs[16];
+};
+static_assert(sizeof(block_iq4_nl) == 18, "GGUF block_iq4_nl must be 18 bytes");
+
+struct block_iq3_s {
+    uint16_t d;
+    uint8_t qs[64];
+    uint8_t qh[8];
+    uint8_t signs[32];
+    uint8_t scales[4];
+};
+static_assert(sizeof(block_iq3_s) == 110, "GGUF block_iq3_s must be 110 bytes");
+
+struct block_iq2_s {
+    uint16_t d;
+    uint8_t qs[64];
+    uint8_t qh[8];
+    uint8_t scales[8];
+};
+static_assert(sizeof(block_iq2_s) == 82, "GGUF block_iq2_s must be 82 bytes");
+
+struct block_iq4_xs {
+    uint16_t d;
+    uint16_t scales_h;
+    uint8_t scales_l[4];
+    uint8_t qs[128];
+};
+static_assert(sizeof(block_iq4_xs) == 136, "GGUF block_iq4_xs must be 136 bytes");
+
+struct block_iq1_m {
+    uint8_t qs[32];
+    uint8_t qh[16];
+    uint8_t scales[8];
+};
+static_assert(sizeof(block_iq1_m) == 56, "GGUF block_iq1_m must be 56 bytes");
 
 // ---------------------------------------------------------------------------
 // Quant type descriptor (lookup table used by geometry / name queries)

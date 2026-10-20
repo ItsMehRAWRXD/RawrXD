@@ -853,10 +853,8 @@ std::size_t ModelRegistry::countMissingRequiredTensors(const ModelMetadata& md,
 // Quantization execution capability
 //
 // Measured, never assumed. The kernel registry is asked whether it actually
-// holds a GEMV and a dequant pointer for this type id. A format present in the
-// GGML type enum but with no linked kernel — every IQ type, for example, whose
-// RegisterIQKernels() is an empty stub — reports false here even though it
-// parses perfectly well.
+// holds a GEMV and a dequant pointer for this type id. Parseability alone is
+// never treated as execution capability.
 // -----------------------------------------------------------------------------
 bool ModelRegistry::quantExecutable(uint32_t ggmlTypeId, ExecDevice device) noexcept {
     // QuantKernelRegistry::Instance() does NOT register its builtins; that is a

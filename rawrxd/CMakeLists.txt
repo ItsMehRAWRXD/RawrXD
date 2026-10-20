@@ -3341,6 +3341,7 @@ set(SOURCES
     src/deep2/Deep2ModelRuntime.cpp
     # AUTO-REMOVED: stub file
      src/deep2/Deep2Engine.cpp
+    src/deep2/InferenceWire.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/Sampler.cpp
     src/deep2/Tokenizer.cpp
@@ -4903,6 +4904,7 @@ set(INFERENCE_ENGINE_SOURCES
     # AUTO-REMOVED: stub file
     # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
      src/deep2/Deep2Engine.cpp
+    src/deep2/InferenceWire.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/strict_gpu_violations.cpp
     src/deep2/VramStreamingController.cpp
@@ -5323,9 +5325,6 @@ list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 rawrxd_filter_missing_sources(INFERENCE_ENGINE_LIBRARY_SOURCES)
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
-# Link precompiled MASM objects (tracer + quantKB)
-target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.obj")
-target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -5578,8 +5577,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/quantum_dynamic_time_manager.cpp
         src/agent/quantum_missing_impl.cpp
         src/agent/quantum_production_orchestrator.cpp
-        src/agent/autonomous_orchestrator.cpp
-        src/agent/orchestrator_cli_handler.cpp
         src/ui/RawrXD_MainLoop.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -5645,7 +5642,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CommandSurface.cpp
         src/command/CommandBroker.cpp
         src/command/CommandEventJournal.cpp
-        src/command/SessionBinder.cpp
         src/command/CapabilityProfile.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
@@ -5706,13 +5702,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         src/inference/NegativeSpaceProfiler.cpp
         src/core/unlinked_symbols_batch_022.cpp
-        Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
         # Deep2 completion provider and bridge +�-�+�-�+�-� real local inference for ghost text
-        src/ai_completion_real.cpp
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/Deep2Bridge.cpp
         # AUTO-REMOVED: stub file
            # AUTO-REMOVED: stub file  RAWRXD_STUB_RECONCILIATION_001: E_SHIPPING_STUB, 0 callers, 0 declared API, link-neutral. was: src/ide/ANSIColorParser.cpp
@@ -5726,7 +5720,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Breadcrumbs.cpp
         src/win32app/Win32IDE_PlanExecutor.cpp
         # AUTO-REMOVED: stub file
-        src/agentic/failure_intelligence_orchestrator.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -5772,20 +5765,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-        src/auth/QuantumAuthUI.cpp
         
         # Core engine files needed by IDE
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
 
         # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
-        src/backend/vulkan_compute.cpp
         src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
 
         # Bounded Agent Loop + FIM Provider (Agent+�-�+�-�+�-�IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
-        src/agentic/OllamaProvider.cpp
         # AUTO-REMOVED: stub file
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
@@ -5847,8 +5837,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
         # src/core/spengine_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp (asm_spengine_cpu_optimize)
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
-        src/collab/cursor_widget.cpp
-        src/collab/crdt_buffer.cpp
         # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
         # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
@@ -5872,7 +5860,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/agent_memory_indexer.cpp
 
         # T5: Agentic Transaction Layer (multi-step command execute/rollback)
-        src/agentic/agentic_transaction.cpp
 
         # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
         src/agentic/agent_workflow_orchestrator.cpp
@@ -5890,7 +5877,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Disk Recovery Agent (C++ implementation) + Tool handler + ASM wrapper
         src/agent/DiskRecoveryAgent.cpp
         src/agentic/DiskRecoveryAgent.cpp
-        src/agentic/DiskRecoveryToolHandler.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -5994,7 +5980,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/llm_http_client.cpp
         src/agent/model_invoker.cpp
         src/agent/planner.cpp
-        src/agent/meta_planner.cpp
         src/agent/eval_framework.cpp
         src/agent/autonomous_subagent.cpp
         src/agent/agentic_failure_detector.cpp
@@ -6010,7 +5995,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         
     # src/core/ai_agent_masm_core_impl.cpp
         src/agent/agentic_puppeteer.cpp
-        src/cloud_api_client.cpp
 
         # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
@@ -6201,7 +6185,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/core/input_guard_slicer.cpp
-        src/agentic_agent_coordinator.cpp
         src/production_config_manager.cpp
 
         # Singleton subsystems referenced by UnifiedHotpatchManager
@@ -6295,7 +6278,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 51: mIRC Control Bridge +�-�+�-�+�-� IRC bot for remote IDE control
         src/win32app/Win32IDE_IRCBridge.cpp
         src/win32app/Win32IDE_IRCBridgeCommands.cpp
-        src/collab/websocket_hub.cpp
         src/win32app/Win32IDE_TestExplorerTree.cpp
         src/win32app/Win32IDE_NetworkPanel.cpp
         # NOTE: Experimental features removed from production build
@@ -6438,19 +6420,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/real_time_completion_engine.cpp
         src/LanguageServerIntegration.cpp
         src/interpretability_panel_enhanced.cpp
-        src/feature_registry_panel.cpp
-        src/autonomous_feature_engine.cpp
-        src/autonomous_intelligence_orchestrator.cpp
         # Advanced feature module deps
         src/plan_orchestrator.cpp
         src/tool_registry_advanced.cpp
         src/lsp_client.cpp
         src/intelligent_codebase_engine.cpp
-        src/ai_model_caller.cpp
-        src/hybrid_cloud_manager.cpp
-        # Benchmarks (real implementation; replaces earlier IDE stubs)
-        src/benchmark_menu_widget.cpp
-        src/benchmark_runner.cpp
+        # Benchmarks are not part of the production IDE target.
         src/win32app/feature_registry_panel.cpp
         src/ui/monaco_settings_dialog.cpp
         src/thermal/RAWRXD_ThermalDashboard.cpp
@@ -6776,7 +6751,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # src/core/hexmag_control_plane.cpp
     # src/core/hexmag_oracle_binder.cpp
     # src/core/hexmag_runtime_controller.cpp
-        src/agent/hexmag_client.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")
@@ -13885,9 +13859,8 @@ if(WIN32)
         src/deep2/sovereign_q8_0_gemv.asm
         src/deep2/sovereign_fp16_gemv.asm
         src/deep2/sovereign_fp8_gemv.asm
-        src/deep2/sovereign_iq2_xxs_gemv.asm
-        src/deep2/sovereign_iq3_xxs_gemv.asm
-        src/deep2/sovereign_iq4_nl_gemv.asm
+        # IQ formats use the verified scalar registry kernels in
+        # QuantKernelRegistry.cpp; no zero-return MASM placeholders are linked.
         # sovereign_q2_k_gemv.asm banned: 72-byte stride vs 84-byte GGUF block_q2_K.
         # RAWRXD_B69_DEAD_Q3K_MASM_REMOVED_001
         # sovereign_q3_k_gemv.asm is EXCLUDED from the build. It was an
@@ -14749,7 +14722,6 @@ add_executable(rawrxd
         src/core/link_stubs.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/logging/Logger.cpp
-        B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -16015,6 +15987,7 @@ endif()
 # ============================================================================
 # B012: Amortization Crossover Experiment
 # ============================================================================
+if(RAWRXD_BUILD_LEGACY_CERTS)
 set(B012_AMORTIZATION_SOURCES
     B012/build/amortization_test.cpp
     src/cpu_inference_engine.cpp
@@ -17310,6 +17283,7 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 # ============================================================================
 # Certification Harness +�-�+�-�+�-� Adversarial Evidence-Producing Benchmark Suite
 # ============================================================================
+endif()
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
@@ -17433,7 +17407,7 @@ if(DEFINED _MSVC_ROOT)
 endif()
 message(STATUS "native_toolchain_cert: Native toolchain certification target configured")
 
-if(BUILD_TESTING)
+if(BUILD_TESTING AND TARGET b009_batched_prefill_certification)
     add_test(NAME b009_batched_prefill_certification
              COMMAND b009_batched_prefill_certification)
 endif()
@@ -17866,9 +17840,10 @@ endif()
 #     quantization executable on the requested device.
 #   - quantExecutable() is measured from QuantKernelRegistry's actually
 #     registered GEMV/dequant pointers. A format that parses but has no linked
-#     kernel (every IQ type, since RegisterIQKernels() is an empty stub) reports
-#     false. BF16 reports true because dequant_bf16 + gemv_bf16_scalar really
-#     are registered — measured, not assumed from parseability.
+#     kernel. IQ formats are registered by the scalar GGML-layout-compatible
+#     implementations in QuantKernelRegistry.cpp. BF16 reports true because
+#     dequant_bf16 + gemv_bf16_scalar really are registered — measured, not
+#     assumed from parseability.
 #   - Unknown architecture, no registered implementation, structurally
 #     incomplete tensors, and SpecialGraph architectures all FAIL CLOSED.
 #
@@ -18247,6 +18222,48 @@ if(BUILD_TESTING)
     add_test(NAME kquant_parity COMMAND kquant_parity)
 endif()
 message(STATUS "kquant_parity: CONFIGURED (AVX-512 Q4_K GEMV parity oracle)")
+
+add_executable(deep2_kquant_oracle EXCLUDE_FROM_ALL
+    tests/deep2_kquant_oracle_gate.cpp
+    src/gguf_loader.cpp
+)
+set_target_properties(deep2_kquant_oracle PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+)
+target_include_directories(deep2_kquant_oracle PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+)
+target_compile_features(deep2_kquant_oracle PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(deep2_kquant_oracle PRIVATE /arch:AVX512 /EHsc)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME deep2_kquant_oracle COMMAND deep2_kquant_oracle)
+endif()
+message(STATUS "deep2_kquant_oracle: CONFIGURED (Q2_K/Q4_K/Q6_K independent oracle)")
+
+add_executable(deep2_quant_registry_all_types EXCLUDE_FROM_ALL
+    tests/deep2_quant_registry_all_types.cpp
+    src/gguf_loader.cpp
+)
+set_target_properties(deep2_quant_registry_all_types PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+)
+target_include_directories(deep2_quant_registry_all_types PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+)
+target_compile_features(deep2_quant_registry_all_types PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(deep2_quant_registry_all_types PRIVATE /arch:AVX512 /EHsc)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME deep2_quant_registry_all_types COMMAND deep2_quant_registry_all_types)
+endif()
+message(STATUS "deep2_quant_registry_all_types: CONFIGURED (all local Deep2 formats)")
 
 # ============================================================================
 # RAWRXD_CPU_FULL_MODEL_INFERENCE_001

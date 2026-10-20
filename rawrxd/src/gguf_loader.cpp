@@ -1,5 +1,7 @@
 #include "gguf_loader.hpp"
 #include "gguf_q6k_trace.hpp"
+#include "deep2/QuantKernelRegistry.hpp"
+#include "deep2/IQQuantTables.hpp"
 #include <fstream>
 #include <string>
 #include <algorithm>
@@ -121,8 +123,14 @@ size_t GGMLBlockSize(GGMLType type) {
         case GGMLType::Q2_K: case GGMLType::Q3_K: case GGMLType::Q4_K:
         case GGMLType::Q5_K: case GGMLType::Q6_K: case GGMLType::Q8_K:
             return 256;
+        case GGMLType::IQ2_XXS: case GGMLType::IQ2_XS: case GGMLType::IQ3_XXS:
+        case GGMLType::IQ1_S: case GGMLType::IQ3_S: case GGMLType::IQ2_S:
+        case GGMLType::IQ4_XS: case GGMLType::IQ1_M:
+            return 256;
+        case GGMLType::IQ4_NL:
+            return 32;
         default:
-            return 0;   // IQ types are not decoded here
+            return 0;
     }
 }
 
@@ -153,6 +161,15 @@ size_t GGMLTypeSize(GGMLType type) {
         case GGMLType::Q5_K: return 176;   // 2 + 2 + 12 + 32 + 128
         case GGMLType::Q6_K: return 210;   // 2 + 1 + 128 + 64 + 16 (padded to 210)
         case GGMLType::Q8_K: return 292;   // 4 + 2*1 + 256
+        case GGMLType::IQ2_XXS: return 66;
+        case GGMLType::IQ2_XS: return 74;
+        case GGMLType::IQ3_XXS: return 98;
+        case GGMLType::IQ1_S: return 50;
+        case GGMLType::IQ4_NL: return 18;
+        case GGMLType::IQ3_S: return 110;
+        case GGMLType::IQ2_S: return 82;
+        case GGMLType::IQ4_XS: return 136;
+        case GGMLType::IQ1_M: return 56;
         default:
             return 0;
     }
@@ -175,11 +192,243 @@ const char* GGMLTypeName(GGMLType type) {
         case GGMLType::Q5_K: return "Q5_K";
         case GGMLType::Q6_K: return "Q6_K";
         case GGMLType::Q8_K: return "Q8_K";
+        case GGMLType::IQ2_XXS: return "IQ2_XXS";
+        case GGMLType::IQ2_XS: return "IQ2_XS";
+        case GGMLType::IQ3_XXS: return "IQ3_XXS";
+        case GGMLType::IQ1_S: return "IQ1_S";
+        case GGMLType::IQ4_NL: return "IQ4_NL";
+        case GGMLType::IQ3_S: return "IQ3_S";
+        case GGMLType::IQ2_S: return "IQ2_S";
+        case GGMLType::IQ4_XS: return "IQ4_XS";
+        case GGMLType::IQ1_M: return "IQ1_M";
         default: return "UNKNOWN";
     }
 }
 
 namespace {
+
+    void DequantIQ2XXS(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq2_xxs*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            uint32_t packed[2]{};
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                std::memcpy(packed, block.qs + groupIndex * 4, sizeof(packed));
+                const float groupScale = scale * (0.5f + static_cast<float>(packed[1] >> 28)) * 0.25f;
+                const auto* packedBytes = reinterpret_cast<const uint8_t*>(packed);
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const auto* grid = reinterpret_cast<const uint8_t*>(
+                        &Deep2::IQTables::iq2xxs_grid[packedBytes[laneGroup]]);
+                    const uint8_t signs = Deep2::IQTables::ksigns_iq2xs[(packed[1] >> (7 * laneGroup)) & 127u];
+                    for (size_t lane = 0; lane < 8; ++lane) {
+                        dst[lane] = groupScale * static_cast<float>(grid[lane]) *
+                            ((signs & Deep2::IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                    }
+                    dst += 8;
+                }
+            }
+        }
+    }
+
+    void DequantIQ2XS(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq2_xs*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                const float groupScales[2] = {
+                    scale * (0.5f + static_cast<float>(block.scales[groupIndex] & 0xfu)) * 0.25f,
+                    scale * (0.5f + static_cast<float>(block.scales[groupIndex] >> 4)) * 0.25f
+                };
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const uint16_t packed = block.qs[groupIndex * 4 + laneGroup];
+                    const auto* grid = reinterpret_cast<const uint8_t*>(
+                        &Deep2::IQTables::iq2xs_grid[packed & 511u]);
+                    const uint8_t signs = Deep2::IQTables::ksigns_iq2xs[packed >> 9];
+                    for (size_t lane = 0; lane < 8; ++lane) {
+                        dst[lane] = groupScales[laneGroup / 2] * static_cast<float>(grid[lane]) *
+                            ((signs & Deep2::IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                    }
+                    dst += 8;
+                }
+            }
+        }
+    }
+
+    void DequantIQ2S(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq2_s*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                const float groupScales[2] = {
+                    scale * (0.5f + static_cast<float>(block.scales[groupIndex] & 0xfu)) * 0.25f,
+                    scale * (0.5f + static_cast<float>(block.scales[groupIndex] >> 4)) * 0.25f
+                };
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const uint16_t gridIndex = static_cast<uint16_t>(
+                        block.qs[groupIndex * 4 + laneGroup] |
+                        ((block.qh[groupIndex] << (8 - 2 * laneGroup)) & 0x300));
+                    const uint8_t signs = block.qs[32 + groupIndex * 4 + laneGroup];
+                    const auto* grid = reinterpret_cast<const uint8_t*>(
+                        &Deep2::IQTables::iq2s_grid[gridIndex]);
+                    for (size_t lane = 0; lane < 8; ++lane) {
+                        dst[lane] = groupScales[laneGroup / 2] * static_cast<float>(grid[lane]) *
+                            ((signs & Deep2::IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                    }
+                    dst += 8;
+                }
+            }
+        }
+    }
+
+    void DequantIQ3XXS(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq3_xxs*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                uint32_t packed = 0;
+                std::memcpy(&packed, block.qs + 64 + groupIndex * 4, sizeof(packed));
+                const float groupScale = scale * (0.5f + static_cast<float>(packed >> 28)) * 0.5f;
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const uint8_t signs = Deep2::IQTables::ksigns_iq2xs[(packed >> (7 * laneGroup)) & 127u];
+                    const auto* gridFirst = reinterpret_cast<const uint8_t*>(
+                        &Deep2::IQTables::iq3xxs_grid[block.qs[groupIndex * 8 + 2 * laneGroup]]);
+                    const auto* gridSecond = reinterpret_cast<const uint8_t*>(
+                        &Deep2::IQTables::iq3xxs_grid[block.qs[groupIndex * 8 + 2 * laneGroup + 1]]);
+                    for (size_t lane = 0; lane < 4; ++lane) {
+                        dst[lane] = groupScale * static_cast<float>(gridFirst[lane]) *
+                            ((signs & Deep2::IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                        dst[lane + 4] = groupScale * static_cast<float>(gridSecond[lane]) *
+                            ((signs & Deep2::IQTables::kmask_iq2xs[lane + 4]) ? -1.0f : 1.0f);
+                    }
+                    dst += 8;
+                }
+            }
+        }
+    }
+
+    void DequantIQ3S(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq3_s*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; groupIndex += 2) {
+                const float groupScaleFirst = scale * (1.0f + 2.0f * (block.scales[groupIndex / 2] & 0xfu));
+                const float groupScaleSecond = scale * (1.0f + 2.0f * (block.scales[groupIndex / 2] >> 4));
+                for (size_t half = 0; half < 2; ++half) {
+                    const size_t currentGroup = groupIndex + half;
+                    const uint8_t highBits = block.qh[currentGroup];
+                    const float groupScale = half == 0 ? groupScaleFirst : groupScaleSecond;
+                    for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                        const auto* gridFirst = reinterpret_cast<const uint8_t*>(&Deep2::IQTables::iq3s_grid[
+                            block.qs[currentGroup * 8 + 2 * laneGroup] |
+                            ((highBits << (8 - 2 * laneGroup)) & 256)]);
+                        const auto* gridSecond = reinterpret_cast<const uint8_t*>(&Deep2::IQTables::iq3s_grid[
+                            block.qs[currentGroup * 8 + 2 * laneGroup + 1] |
+                            ((highBits << (7 - 2 * laneGroup)) & 256)]);
+                        const uint8_t signs = block.signs[currentGroup * 4 + laneGroup];
+                        for (size_t lane = 0; lane < 4; ++lane) {
+                            dst[lane] = groupScale * static_cast<float>(gridFirst[lane]) *
+                                ((signs & Deep2::IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                            dst[lane + 4] = groupScale * static_cast<float>(gridSecond[lane]) *
+                                ((signs & Deep2::IQTables::kmask_iq2xs[lane + 4]) ? -1.0f : 1.0f);
+                        }
+                        dst += 8;
+                    }
+                }
+            }
+        }
+    }
+
+    void DequantIQ1S(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq1_s*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                const uint16_t highBits = block.qh[groupIndex];
+                const float groupScale = scale * (2.0f * ((highBits >> 12) & 7u) + 1.0f);
+                const float delta = (highBits & 0x8000u) ? -0.125f : 0.125f;
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const uint16_t gridIndex = static_cast<uint16_t>(
+                        block.qs[groupIndex * 4 + laneGroup] |
+                        (((highBits >> (3 * laneGroup)) & 7u) << 8));
+                    const auto* grid = reinterpret_cast<const int8_t*>(&Deep2::IQTables::iq1s_grid[gridIndex]);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                        dst[lane] = groupScale * (static_cast<float>(grid[lane]) + delta);
+                    dst += 8;
+                }
+            }
+        }
+    }
+
+    void DequantIQ1M(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq1_m*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            uint16_t scales[4]{};
+            std::memcpy(scales, block.scales, sizeof(scales));
+            const uint16_t scaleBits = static_cast<uint16_t>((scales[0] >> 12) |
+                ((scales[1] >> 8) & 0x00f0u) | ((scales[2] >> 4) & 0x0f00u) | (scales[3] & 0xf000u));
+            const float scale = FP16ToFP32(scaleBits);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                const size_t scaleIndex = groupIndex / 2;
+                const size_t scaleShift = 6 * (groupIndex % 2);
+                const float lowScale = scale * (2.0f * ((scales[scaleIndex] >> scaleShift) & 7u) + 1.0f);
+                const float highScale = scale * (2.0f * ((scales[scaleIndex] >> (scaleShift + 3)) & 7u) + 1.0f);
+                const uint8_t* groupHighBits = block.qh + groupIndex * 2;
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const size_t index = groupIndex * 4 + laneGroup;
+                    const uint16_t gridIndex = static_cast<uint16_t>(block.qs[index] |
+                        ((groupHighBits[laneGroup / 2] << (laneGroup % 2 == 0 ? 8 : 4)) & 0x700u));
+                    const float delta = (groupHighBits[laneGroup / 2] & (laneGroup % 2 == 0 ? 0x08u : 0x80u))
+                        ? -0.125f : 0.125f;
+                    const float groupScale = laneGroup < 2 ? lowScale : highScale;
+                    const auto* grid = reinterpret_cast<const int8_t*>(&Deep2::IQTables::iq1s_grid[gridIndex]);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                        dst[lane] = groupScale * (static_cast<float>(grid[lane]) + delta);
+                    dst += 8;
+                }
+            }
+        }
+    }
+
+    void DequantIQ4NL(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq4_nl*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 32; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t lane = 0; lane < 16; ++lane) {
+                dst[lane] = scale * Deep2::IQTables::kvalues_iq4nl[block.qs[lane] & 0xfu];
+                dst[lane + 16] = scale * Deep2::IQTables::kvalues_iq4nl[block.qs[lane] >> 4];
+            }
+            dst += 32;
+        }
+    }
+
+    void DequantIQ4XS(const uint8_t* src, size_t n, float* dst) {
+        const auto* blocks = reinterpret_cast<const Deep2::block_iq4_xs*>(src);
+        for (size_t blockIndex = 0; blockIndex < n / 256; ++blockIndex) {
+            const auto& block = blocks[blockIndex];
+            const float scale = FP16ToFP32(block.d);
+            for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+                const uint16_t lowScale = static_cast<uint16_t>(
+                    (block.scales_l[groupIndex / 2] >> (4 * (groupIndex % 2))) & 0xfu);
+                const uint16_t highScale = static_cast<uint16_t>(
+                    (block.scales_h >> (2 * groupIndex)) & 3u);
+                const float groupScale = scale * static_cast<float>((highScale << 4) | lowScale) - scale * 32.0f;
+                for (size_t lane = 0; lane < 16; ++lane) {
+                    const uint8_t packed = block.qs[groupIndex * 16 + lane];
+                    dst[lane] = groupScale * Deep2::IQTables::kvalues_iq4nl[packed & 0xfu];
+                    dst[lane + 16] = groupScale * Deep2::IQTables::kvalues_iq4nl[packed >> 4];
+                }
+                dst += 32;
+            }
+        }
+    }
 
     // ---- K-quant scale/min unpacking (mirrors ggml get_scale_min_k4) ----
     void GetScaleMinK4(int j, const uint8_t* q, uint8_t& d, uint8_t& m) {
@@ -483,6 +732,15 @@ namespace {
             case GGMLType::Q5_K: DequantQ5_K(src, blk, out); return true;
             case GGMLType::Q6_K: DequantQ6_K(src, blk, out); return true;
             case GGMLType::Q8_K: DequantQ8_K(src, blk, out); return true;
+            case GGMLType::IQ2_XXS: DequantIQ2XXS(src, blk, out); return true;
+            case GGMLType::IQ2_XS: DequantIQ2XS(src, blk, out); return true;
+            case GGMLType::IQ3_XXS: DequantIQ3XXS(src, blk, out); return true;
+            case GGMLType::IQ1_S: DequantIQ1S(src, blk, out); return true;
+            case GGMLType::IQ4_NL: DequantIQ4NL(src, blk, out); return true;
+            case GGMLType::IQ3_S: DequantIQ3S(src, blk, out); return true;
+            case GGMLType::IQ2_S: DequantIQ2S(src, blk, out); return true;
+            case GGMLType::IQ4_XS: DequantIQ4XS(src, blk, out); return true;
+            case GGMLType::IQ1_M: DequantIQ1M(src, blk, out); return true;
             default: return false;
         }
     }

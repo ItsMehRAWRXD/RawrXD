@@ -41,7 +41,13 @@ $ErrorActionPreference = 'Stop'
 
 function Get-Sha256([string] $Path) {
     if (-not (Test-Path -LiteralPath $Path)) { return "ABSENT" }
-    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $Path).Path)
+        return ([System.BitConverter]::ToString($algorithm.ComputeHash($bytes))).Replace('-', '')
+    } finally {
+        $algorithm.Dispose()
+    }
 }
 
 $binFull = (Resolve-Path -LiteralPath $BinaryPath).Path

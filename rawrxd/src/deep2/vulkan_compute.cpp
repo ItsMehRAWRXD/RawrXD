@@ -59,6 +59,21 @@ bool finiteVector(const std::vector<float>& v) {
     return true;
 }
 
+bool VulkanTraceEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_GPU_TRACE");
+        return value && value[0] && value[0] != '0';
+    }();
+    return enabled;
+}
+
+#define DEEP2_VK_TRACE(...) do { \
+    if (VulkanTraceEnabled()) { \
+        std::fprintf(stderr, __VA_ARGS__); \
+        std::fflush(stderr); \
+    } \
+} while (0)
+
 uint64_t hostDomainToNs(VkTimeDomainEXT domain, uint64_t raw) {
 #ifdef _WIN32
     if (domain == VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_EXT) {
@@ -927,15 +942,15 @@ bool VulkanCompute::RunSpecSwiGLUHostBatch(
     SetWorkEpoch(epoch);
     const size_t n=(size_t)width*batch;
     const size_t nbytes=n*sizeof(float);
-    std::fprintf(stderr,"[SwiGLU] width=%u batch=%u n=%zu nbytes=%zu\n",width,batch,n,nbytes); std::fflush(stderr);
+    DEEP2_VK_TRACE("[SwiGLU] width=%u batch=%u n=%zu nbytes=%zu\n",width,batch,n,nbytes);
 
     if(!EnsureScratch(94,n)||!EnsureScratch(95,n)||
        !EnsureScratch(96,n)||!EnsureScratch(97,1))
         return false;
     auto& g=Scratch(94);auto& u=Scratch(95);
     auto& o=Scratch(96);auto& d=Scratch(97);
-    std::fprintf(stderr,"[SwiGLU] buf g(id=%llu size=%zu) u(id=%llu size=%zu) o(id=%llu size=%zu) d(id=%llu size=%zu)\n",
-        (unsigned long long)g.id,(size_t)g.size,(unsigned long long)u.id,(size_t)u.size,(unsigned long long)o.id,(size_t)o.size,(unsigned long long)d.id,(size_t)d.size); std::fflush(stderr);
+    DEEP2_VK_TRACE("[SwiGLU] buf g(id=%llu size=%zu) u(id=%llu size=%zu) o(id=%llu size=%zu) d(id=%llu size=%zu)\n",
+        (unsigned long long)g.id,(size_t)g.size,(unsigned long long)u.id,(size_t)u.size,(unsigned long long)o.id,(size_t)o.size,(unsigned long long)d.id,(size_t)d.size);
     if(g.size<nbytes||u.size<nbytes||o.size<nbytes||d.size<sizeof(float)){
         std::fprintf(stderr,"[SwiGLU] FATAL: scratch undersized\n"); std::fflush(stderr);
         return false;
@@ -943,9 +958,9 @@ bool VulkanCompute::RunSpecSwiGLUHostBatch(
 
     if(!UploadVector(g,gate,n)||!UploadVector(u,up,n)) return false;
     SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
-    std::fprintf(stderr,"[SwiGLU] dispatch op=%u width=%u batch=%u\n",p.op,p.width,p.batch); std::fflush(stderr);
+    DEEP2_VK_TRACE("[SwiGLU] dispatch op=%u width=%u batch=%u\n",p.op,p.width,p.batch);
     if(!dispatchSpecOps(g,u,o,d,p)) return false;
-    std::fprintf(stderr,"[SwiGLU] download n=%zu\n",n); std::fflush(stderr);
+    DEEP2_VK_TRACE("[SwiGLU] download n=%zu\n",n);
     return DownloadVector(o,output,n);
 }
 
@@ -1259,7 +1274,7 @@ bool VulkanCompute::beginCommand(
 {
     cmd = VK_NULL_HANDLE;
     query = VK_NULL_HANDLE;
-    std::fprintf(stderr, "BEGIN_CMD_ALLOC\n");
+    DEEP2_VK_TRACE("BEGIN_CMD_ALLOC\n");
     VkCommandBufferAllocateInfo ai{};
     ai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     ai.commandPool = commandPool_;
@@ -1269,7 +1284,7 @@ bool VulkanCompute::beginCommand(
         std::fprintf(stderr, "BEGIN_CMD_ALLOC_FAIL\n");
         return false;
     }
-    std::fprintf(stderr, "BEGIN_CMD_ALLOC_OK cmd=%p\n", (void*)cmd);
+    DEEP2_VK_TRACE("BEGIN_CMD_ALLOC_OK cmd=%p\n", (void*)cmd);
 
     if (timestamped && timestampValidBits_) {
         VkQueryPoolCreateInfo qi{};
@@ -1553,7 +1568,7 @@ VkDescriptorSet VulkanCompute::getQuantDescriptorRange(
 }
 
 bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes) {
-    std::fprintf(stderr, "UPLOAD_ENTER dstBuf=%p src=%p bytes=%zu dstSize=%zu\n",
+    DEEP2_VK_TRACE("UPLOAD_ENTER dstBuf=%p src=%p bytes=%zu dstSize=%zu\n",
         (void*)dst.buffer, src, bytes, dst.size);
     if (!dst || !src || !bytes || bytes > dst.size) {
         std::fprintf(stderr, "UPLOAD_EARLY_FAIL dstBuf=%p src=%p bytes=%zu dstSize=%zu\n",
@@ -1563,32 +1578,32 @@ bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes
 
     DeviceBuf* staging = nullptr;
     void* mapped = nullptr;
-    std::fprintf(stderr, "UPLOAD_STAGING bytes=%zu\n", bytes);
+    DEEP2_VK_TRACE("UPLOAD_STAGING bytes=%zu\n", bytes);
     if (!ensureMappedStaging(true, bytes, staging, mapped)) {
         std::fprintf(stderr, "UPLOAD_STAGING_FAIL bytes=%zu\n", bytes);
         return false;
     }
-    std::fprintf(stderr, "UPLOAD_MEMCPY bytes=%zu\n", bytes);
+    DEEP2_VK_TRACE("UPLOAD_MEMCPY bytes=%zu\n", bytes);
     std::memcpy(mapped, src, bytes);
 
     VkCommandBuffer cmd{};
     VkQueryPool query{};
-    std::fprintf(stderr, "UPLOAD_BEGIN bytes=%zu\n", bytes);
+    DEEP2_VK_TRACE("UPLOAD_BEGIN bytes=%zu\n", bytes);
     if (!beginCommand(cmd, query, true)) {
         std::fprintf(stderr, "UPLOAD_BEGIN_FAIL bytes=%zu\n", bytes);
         return false;
     }
-    std::fprintf(stderr, "UPLOAD_COPY bytes=%zu\n", bytes);
+    DEEP2_VK_TRACE("UPLOAD_COPY bytes=%zu\n", bytes);
     if (!recordCopy(cmd, *staging, dst, bytes)) {
         std::fprintf(stderr, "UPLOAD_COPY_FAIL bytes=%zu\n", bytes);
         return false;
     }
-    std::fprintf(stderr, "UPLOAD_ENDSUBMIT bytes=%zu\n", bytes);
+    DEEP2_VK_TRACE("UPLOAD_ENDSUBMIT bytes=%zu\n", bytes);
     if (!endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer, bytes, workEpoch_, nullptr)) {
         std::fprintf(stderr, "UPLOAD_ENDSUBMIT_FAIL bytes=%zu\n", bytes);
         return false;
     }
-    std::fprintf(stderr, "UPLOAD_OK bytes=%zu\n", bytes);
+    DEEP2_VK_TRACE("UPLOAD_OK bytes=%zu\n", bytes);
     return true;
 }
 
@@ -1754,8 +1769,10 @@ bool VulkanCompute::dispatchOps(
     DeviceBuf& aa, DeviceBuf& bb, DeviceBuf& cc, DeviceBuf& dd,
     const OpsPush& push, uint32_t groupsX, GpuWorkKind kind)
 {
-    std::fprintf(stderr, "DISPATCH_OPS_ENTER op=%u n=%u p0=%u groupsX=%u\n",
-        push.op, push.n, push.p0, groupsX);
+    if (VulkanTraceEnabled()) {
+        std::fprintf(stderr, "DISPATCH_OPS_ENTER op=%u n=%u p0=%u groupsX=%u\n",
+            push.op, push.n, push.p0, groupsX);
+    }
     if (!opsPipeline_ || !aa || !bb || !cc || !dd || groupsX == 0) {
         std::fprintf(stderr, "DISPATCH_OPS_EARLY_FAIL op=%u pipeline=%p aa=%p bb=%p cc=%p dd=%p\n",
             push.op, (void*)opsPipeline_, (void*)aa.buffer, (void*)bb.buffer, (void*)cc.buffer, (void*)dd.buffer);
@@ -1766,7 +1783,7 @@ bool VulkanCompute::dispatchOps(
     VkQueryPool query = fusedQuery_;
     const bool own = !fused_;
     if (own) {
-        std::fprintf(stderr, "DISPATCH_OPS_BEGIN op=%u\n", push.op);
+        if (VulkanTraceEnabled()) std::fprintf(stderr, "DISPATCH_OPS_BEGIN op=%u\n", push.op);
         if (!beginCommand(cmd, query, true)) {
             std::fprintf(stderr, "DISPATCH_OPS_BEGIN_FAIL op=%u\n", push.op);
             return false;
@@ -3197,21 +3214,21 @@ bool VulkanCompute::ensureWeightF32(
     const float* weights, uint64_t key, size_t bytes, DeviceBuf*& out)
 {
     out = nullptr;
-    std::fprintf(stderr, "ENSUREWF32_ENTER key=%llu bytes=%zu weights=%p\n",
+    DEEP2_VK_TRACE("ENSUREWF32_ENTER key=%llu bytes=%zu weights=%p\n",
         static_cast<unsigned long long>(key), bytes, (const void*)weights);
     if (residentDispatchDepth_) {
         ++residentLookupViolations_;
     }
-    std::fprintf(stderr, "ENSUREWF32_FIND key=%llu\n", static_cast<unsigned long long>(key));
+    DEEP2_VK_TRACE("ENSUREWF32_FIND key=%llu\n", static_cast<unsigned long long>(key));
     auto it = weightCache_.find(key);
     if (it != weightCache_.end()) {
         ++weightHits_;
         it->second.lastUse = weightUseClock_++;
         out = &it->second.buffer;
-        std::fprintf(stderr, "ENSUREWF32_HIT key=%llu\n", static_cast<unsigned long long>(key));
+        DEEP2_VK_TRACE("ENSUREWF32_HIT key=%llu\n", static_cast<unsigned long long>(key));
         return true;
     }
-    std::fprintf(stderr, "ENSUREWF32_MISS key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
+    DEEP2_VK_TRACE("ENSUREWF32_MISS key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
     if (!weights || !bytes) return false;
     if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
         fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
@@ -3219,15 +3236,15 @@ bool VulkanCompute::ensureWeightF32(
         return false;
     }
     if (weightBudgetBytes_ && bytes > weightBudgetBytes_) return false;
-    std::fprintf(stderr, "ENSUREWF32_EVICT key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
+    DEEP2_VK_TRACE("ENSUREWF32_EVICT key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
     if (!evictWeightCacheUntil(bytes)) return false;
-    std::fprintf(stderr, "ENSUREWF32_LIVEHEAP key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
+    DEEP2_VK_TRACE("ENSUREWF32_LIVEHEAP key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
     if (!checkLiveHeapAdmission(bytes)) {
         fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu live_headroom_insufficient need=%zu\n",
                 static_cast<unsigned long long>(key), bytes);
         return false;
     }
-    std::fprintf(stderr, "ENSUREWF32_CREATEBUF key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
+    DEEP2_VK_TRACE("ENSUREWF32_CREATEBUF key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
     WeightCacheEntry e{};
     size_t padded = (bytes+3u)&~size_t(3u);
     if (!createBuffer(padded,
@@ -3238,19 +3255,19 @@ bool VulkanCompute::ensureWeightF32(
         std::fprintf(stderr, "ENSUREWF32_CREATEBUF_FAIL key=%llu\n", static_cast<unsigned long long>(key));
         return false;
     }
-    std::fprintf(stderr, "ENSUREWF32_UPLOAD key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
+    DEEP2_VK_TRACE("ENSUREWF32_UPLOAD key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
     if (!uploadToBuffer(e.buffer,weights,bytes)) {
         destroyBuffer(e.buffer);
         std::fprintf(stderr, "ENSUREWF32_UPLOAD_FAIL key=%llu\n", static_cast<unsigned long long>(key));
         return false;
     }
-    std::fprintf(stderr, "ENSUREWF32_EMPLACE key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
+    DEEP2_VK_TRACE("ENSUREWF32_EMPLACE key=%llu bytes=%zu\n", static_cast<unsigned long long>(key), bytes);
     e.bytes=bytes; e.type=0; e.lastUse=weightUseClock_++;
     auto ins = weightCache_.emplace(key,std::move(e)).first;
     weightCacheBytes_ += bytes;
     ++weightUploads_;
     out=&ins->second.buffer;
-    std::fprintf(stderr, "ENSUREWF32_OK key=%llu\n", static_cast<unsigned long long>(key));
+    DEEP2_VK_TRACE("ENSUREWF32_OK key=%llu\n", static_cast<unsigned long long>(key));
     return true;
 }
 
@@ -3357,7 +3374,7 @@ bool VulkanCompute::DispatchGemvDevice(
     DeviceBuf& input, DeviceBuf& output,
     uint32_t rows, uint32_t cols)
 {
-    std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_ENTER rows=%u cols=%u outSize=%zu inSize=%zu weights=%p\n",
+    DEEP2_VK_TRACE("DISPATCH_GEMV_DEVICE_ENTER rows=%u cols=%u outSize=%zu inSize=%zu weights=%p\n",
         rows, cols, output.size, input.size, (const void*)weights);
     if(!weights||!rows||!cols||rows*sizeof(float)>output.size ||
        cols*sizeof(float)>input.size) {
@@ -3370,15 +3387,15 @@ bool VulkanCompute::DispatchGemvDevice(
        count>std::numeric_limits<size_t>::max()/sizeof(float)) return false;
 
     DeviceBuf* w=nullptr;
-    std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_ENSURE rows=%u cols=%u count=%zu\n", rows, cols, count);
+    DEEP2_VK_TRACE("DISPATCH_GEMV_DEVICE_ENSURE rows=%u cols=%u count=%zu\n", rows, cols, count);
     if(!ensureWeightF32(weights,key,count*sizeof(float),w)) {
         std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_ENSURE_FAIL rows=%u cols=%u\n", rows, cols);
         return false;
     }
-    std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_DISPATCH rows=%u cols=%u\n", rows, cols);
+    DEEP2_VK_TRACE("DISPATCH_GEMV_DEVICE_DISPATCH rows=%u cols=%u\n", rows, cols);
     OpsPush p{}; p.op=OP_GEMV_F32; p.n=rows; p.p0=cols;
     bool ok=dispatchOps(*w,input,output,output,p,(rows+63u)/64u);
-    std::fprintf(stderr, "DISPATCH_GEMV_DEVICE_DISPATCH_DONE rows=%u cols=%u ok=%d\n", rows, cols, (int)ok);
+    DEEP2_VK_TRACE("DISPATCH_GEMV_DEVICE_DISPATCH_DONE rows=%u cols=%u ok=%d\n", rows, cols, (int)ok);
     if(ok) ++gemvSuccess_;
     return ok;
 }
@@ -3403,6 +3420,15 @@ bool VulkanCompute::DispatchGemvQuant(
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;
+
+    const char* batchRows = std::getenv("DEEP2_Q4K_SINGLE_BATCH_ROWS");
+    if (type == 12 && batchRows && batchRows[0] == '1' &&
+        rows >= 4 && qBatch4RowPipeline_) {
+        const bool ok = DispatchGemvQ4KBatch(
+            weights, weightBytes, input, output, rows, cols, 1);
+        if (ok) ++gemvSuccess_;
+        return ok;
+    }
 
     DeviceBuf* w=nullptr;
     if(!ensureWeightQuant(type,weights,weightBytes,w)) return false;
@@ -5729,6 +5755,7 @@ bool VulkanCompute::DispatchWeightResidentLane(
 
     if (meta.bytes > std::numeric_limits<uint32_t>::max())
         return false;
+
     const size_t rowBytes = QuantPackedRowBytes(meta.type, meta.cols);
     if (!rowBytes) return false;
 
@@ -5739,6 +5766,29 @@ bool VulkanCompute::DispatchWeightResidentLane(
     if (set == VK_NULL_HANDLE) return false;
     if (lane.pendingSetCount >= 4) return false; // single submit capacity
     lane.pendingSets[lane.pendingSetCount++] = set;
+    const char* hotBatchRows = std::getenv("DEEP2_Q4K_HOT_BATCH_ROWS");
+    if (meta.type == 12 && hotBatchRows && hotBatchRows[0] == '1' &&
+        meta.rows >= 8 && qBatch8RowPipeline_) {
+        vkCmdBindPipeline(
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qBatch8RowPipeline_);
+        vkCmdBindDescriptorSets(
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+            qBatch8RowPipelineLayout_, 0, 1, &set, 0, nullptr);
+        QBatchPush push{};
+        push.type = 12;
+        push.rows = meta.rows;
+        push.cols = meta.cols;
+        push.weightBytes = static_cast<uint32_t>(meta.bytes);
+        push.batch = 1;
+        vkCmdPushConstants(
+            lane.cmd, qBatch8RowPipelineLayout_,
+            VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
+        vkCmdDispatch(lane.cmd, (meta.rows + 7u) / 8u, 1, 1);
+        recordComputeBarrier(lane.cmd);
+        ++residentDirectDispatches_;
+        ++lane.residentDispatches;
+        return true;
+    }
     vkCmdBindPipeline(
         lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
     vkCmdBindDescriptorSets(

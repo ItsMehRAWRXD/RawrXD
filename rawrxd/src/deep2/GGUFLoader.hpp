@@ -45,17 +45,27 @@ enum class GGMLType : uint32_t {
     GGML_TYPE_Q5_0    = 6,
     GGML_TYPE_Q5_1    = 7,
     GGML_TYPE_Q8_0    = 8,
+    GGML_TYPE_Q8_1    = 9,
     GGML_TYPE_Q2_K    = 10,
     GGML_TYPE_Q3_K    = 11,
     GGML_TYPE_Q4_K    = 12,
     GGML_TYPE_Q5_K    = 13,
     GGML_TYPE_Q6_K    = 14,
     GGML_TYPE_Q8_K    = 15,
+    GGML_TYPE_IQ2_XXS = 16,
+    GGML_TYPE_IQ2_XS  = 17,
+    GGML_TYPE_IQ3_XXS = 18,
+    GGML_TYPE_IQ1_S   = 19,
+    GGML_TYPE_IQ4_NL  = 20,
+    GGML_TYPE_IQ3_S   = 21,
+    GGML_TYPE_IQ2_S   = 22,
+    GGML_TYPE_IQ4_XS  = 23,
     GGML_TYPE_I8      = 24,
     GGML_TYPE_I16     = 25,
     GGML_TYPE_I32     = 26,
     GGML_TYPE_I64     = 27,
     GGML_TYPE_F64     = 28,
+    GGML_TYPE_IQ1_M   = 29,
     GGML_TYPE_BF16    = 30,
 };
 
@@ -537,17 +547,27 @@ private:
             case 6:  blockElems = 32;  blockBytes = 22;  return true; // Q5_0
             case 7:  blockElems = 32;  blockBytes = 24;  return true; // Q5_1
             case 8:  blockElems = 32;  blockBytes = 34;  return true; // Q8_0
+            case 9:  blockElems = 32;  blockBytes = 36;  return true; // Q8_1
             case 10: blockElems = 256; blockBytes = 84;  return true; // Q2_K
             case 11: blockElems = 256; blockBytes = 110; return true; // Q3_K
             case 12: blockElems = 256; blockBytes = 144; return true; // Q4_K
             case 13: blockElems = 256; blockBytes = 176; return true; // Q5_K
             case 14: blockElems = 256; blockBytes = 210; return true; // Q6_K
             case 15: blockElems = 256; blockBytes = 292; return true; // Q8_K
+            case 16: blockElems = 256; blockBytes = 66;  return true; // IQ2_XXS
+            case 17: blockElems = 256; blockBytes = 74;  return true; // IQ2_XS
+            case 18: blockElems = 256; blockBytes = 98;  return true; // IQ3_XXS
+            case 19: blockElems = 256; blockBytes = 50;  return true; // IQ1_S
+            case 20: blockElems = 32;  blockBytes = 18;  return true; // IQ4_NL
+            case 21: blockElems = 256; blockBytes = 110; return true; // IQ3_S
+            case 22: blockElems = 256; blockBytes = 82;  return true; // IQ2_S
+            case 23: blockElems = 256; blockBytes = 136; return true; // IQ4_XS
             case 24: blockElems = 1;   blockBytes = 1;   return true; // I8
             case 25: blockElems = 1;   blockBytes = 2;   return true; // I16
             case 26: blockElems = 1;   blockBytes = 4;   return true; // I32
             case 27: blockElems = 1;   blockBytes = 8;   return true; // I64
             case 28: blockElems = 1;   blockBytes = 8;   return true; // F64
+            case 29: blockElems = 256; blockBytes = 56;  return true; // IQ1_M
             case 30: blockElems = 1;   blockBytes = 2;   return true; // BF16
             default: blockElems = blockBytes = 0; return false;
         }

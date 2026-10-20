@@ -1173,6 +1173,8 @@ public:
                         std::vector<ChainStage>* out);
 
 private:
+    void refreshVulkanModelPlan();
+
     PreparedSpecWindow preparedSpec_[2]{};
     uint64_t specGeneration_=0;
     bool prepareSpecWindow(
@@ -1452,6 +1454,10 @@ private:
 
     // B5_SLOT1_RANGE_RESIDENCY_001: per-slot layer-range pin state.
     bool layerRangePinned_[2] = {false, false};
+    // Forward-arena geometry and weight-window admission are stable for a
+    // loaded model/placement plan. Keep the per-layer forward path from
+    // repeating that setup on every transformer layer.
+    bool gpuForwardArenaReady_[2] = {false, false};
 
     // B4_LMHEAD_PERMANENT_RESIDENCY_001: lmHead slices pinned on both
     // devices at the frozen dual-row split geometry. Pinning happens once

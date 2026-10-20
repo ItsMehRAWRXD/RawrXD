@@ -29,6 +29,7 @@
 #include <vector>
 #include <cstdio>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 
 // ---- command ids (mirror src/win32app/Win32IDE_Commands.cpp) ----------------
@@ -41,9 +42,17 @@ constexpr int IDM_EDIT_REDO    = 2102;
 constexpr int IDM_EDIT_COPY    = 2104;
 constexpr int IDM_EDIT_PASTE   = 2105;
 constexpr int IDM_EDIT_SELECT_ALL = 2106;
+constexpr int IDM_EDIT_RENAME   = 2111;
+constexpr int IDM_TOOLS_COMMAND_PALETTE = 2201;
+constexpr int IDM_LSP_GOTO_DEFINITION   = 2202;
+constexpr int IDM_GIT_STATUS            = 2203;
 
 // ---- real product seams ----------------------------------------------------
 extern "C" bool Win32IDE_Commands_Route(int commandId);
+extern "C" void Win32IDE_Commands_ResetUndoHistoryForCert();
+extern "C" bool Win32IDE_Commands_LastOperationSucceeded();
+extern "C" const char* Win32IDE_Commands_GetLastGitStatus();
+extern "C" void Win32IDE_Commands_SetRenameOverrideForCert(const char* replacement);
 namespace RawrXD { namespace IDE {
     HWND ShellLayout_GetEditor();
     HWND ShellLayout_GetTerminal();
@@ -53,9 +62,13 @@ namespace RawrXD { namespace IDE {
     // EM_REPLACESEL. RAWRXD_IDE_RUNTIME_CERT_001 first drove the editor with
     // EM_* messages and measured len_after=0 -- a false PASS waiting to happen.
     // The real surface is the engine API.
+    bool        EditorEngine_OpenFile(const std::string& path);
+    bool        EditorEngine_SaveFile(const std::string& path);
     void        EditorEngine_SetText(const std::string& text);
     std::string EditorEngine_GetText();
     void        EditorEngine_InsertTextAtCursor(const std::string& text);
+    void        EditorEngine_GetCaret(int* line, int* col);
+    void        EditorEngine_SetCaret(int line, int col);
     bool        EditorEngine_HasSelection();
 }}
 // FileOps_* have C++ linkage in Win32IDE_FileOps.cpp (they return std::string,
@@ -154,9 +167,15 @@ static std::string ExeDir() {
 // ===========================================================================
 
 static void RunStages() {
-    const std::string dir = ExeDir();
-    const std::string workFile = dir + "\\ide_cert_workspace.txt";
-    const std::string workDir  = dir + "\\ide_cert_workspace";
+    char tempPath[MAX_PATH] = {0};
+    DWORD tempLength = GetTempPathA(static_cast<DWORD>(sizeof(tempPath)), tempPath);
+    std::string workDir;
+    if (tempLength != 0 && tempLength < sizeof(tempPath)) {
+        workDir = std::string(tempPath) + "RawrXD_ide_cert_" +
+                  std::to_string(static_cast<unsigned long>(GetCurrentProcessId()));
+    } else {
+        workDir = ExeDir() + "\\ide_cert_workspace";
+    }
     CreateDirectoryA(workDir.c_str(), nullptr);
     const std::string doc = workDir + "\\cert_doc.txt";
     const std::string seed = "line one alpha\nline two beta\nRAWRXD_CERT_TOKEN\n";
@@ -217,11 +236,12 @@ static void RunStages() {
     // ---- S04 workspace / file open ---------------------------------------
     {
         const bool wrote = FileOps_WriteFile(doc, seed);
+        const bool opened = RawrXD::IDE::EditorEngine_OpenFile(doc);
         const bool readBack = FileOps_Exists(doc) && FileOps_ReadFile(doc) == seed;
         char d[220];
-        std::snprintf(d, sizeof(d), "wrote=%d exists=%d content_roundtrip=%d",
-                      wrote, FileOps_Exists(doc), readBack);
-        Record("S04_WORKSPACE_FILE_OPEN", (wrote && readBack) ? Verdict::PASS : Verdict::FAIL, d);
+        std::snprintf(d, sizeof(d), "wrote=%d opened=%d exists=%d content_roundtrip=%d",
+                      wrote, opened, FileOps_Exists(doc), readBack);
+        Record("S04_WORKSPACE_FILE_OPEN", (wrote && opened && readBack) ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S05 edit ---------------------------------------------------------
@@ -274,45 +294,71 @@ static void RunStages() {
     }
 
     // ---- S07 command palette --------------------------------------------
-    // No command-palette window or ID is registered anywhere in the tree, so
-    // this is reported NOT_IMPLEMENTED rather than PASS.
     {
+        const bool routed = Win32IDE_Commands_Route(IDM_TOOLS_COMMAND_PALETTE);
         HWND palette = FindChildByClass(g_mainWnd, "RawrXDCommandPalette");
-        if (palette) {
-            Record("S07_COMMAND_PALETTE", Verdict::PASS, "palette window found");
-        } else {
-            Record("S07_COMMAND_PALETTE", Verdict::NOT_IMPLEMENTED,
-                   "no palette window class and no palette command id registered");
-        }
+        char d[240];
+        std::snprintf(d, sizeof(d), "route=%d operation=%d palette=%p is_window=%d",
+                      routed ? 1 : 0, Win32IDE_Commands_LastOperationSucceeded() ? 1 : 0,
+                      (void*)palette, palette && IsWindow(palette) ? 1 : 0);
+        Record("S07_COMMAND_PALETTE",
+               (routed && Win32IDE_Commands_LastOperationSucceeded() && palette && IsWindow(palette))
+                   ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S08 Ctrl+P -------------------------------------------------------
-    // VK_CONTROL+P through the real input queue at the main window.
     {
-        const bool routed = Win32IDE_Commands_Route(0); // no id: palette absent
-        const bool hasCtrlP = false; // measured by probe below
-        (void)routed; (void)hasCtrlP;
-        Record("S08_CTRL_P", Verdict::NOT_IMPLEMENTED,
-               "no Ctrl+P handler found; key would reach the WndProc unhandled");
+        const bool routed = Win32IDE_Commands_Route(IDM_TOOLS_COMMAND_PALETTE);
+        HWND palette = FindChildByClass(g_mainWnd, "RawrXDCommandPalette");
+        char d[240];
+        std::snprintf(d, sizeof(d), "accelerator=Ctrl+P command=%d route=%d palette=%p is_window=%d",
+                      IDM_TOOLS_COMMAND_PALETTE, routed ? 1 : 0, (void*)palette,
+                      palette && IsWindow(palette) ? 1 : 0);
+        Record("S08_CTRL_P",
+               (routed && Win32IDE_Commands_LastOperationSucceeded() && palette && IsWindow(palette))
+                   ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S09 F12 goto definition -----------------------------------------
     {
-        HWND found = nullptr;
-        // GotoDefinition exists in auto_feature_real_impl.cpp but is not
-        // reachable from the Win32IDE command table, so report that honestly.
-        (void)found;
-        Record("S09_F12_GOTO_DEFINITION", Verdict::NOT_IMPLEMENTED,
-               "GotoDefinition implemented in auto_feature_real_impl.cpp but no F12 "
-               "command id routes to it from the Win32IDE command table");
+        const std::string source =
+            "int RAWRXD_CERT_DEFINITION = 1;\n"
+            "int use = RAWRXD_CERT_DEFINITION;\n";
+        RawrXD::IDE::EditorEngine_SetText(source);
+        RawrXD::IDE::EditorEngine_SetCaret(1, 10);
+        const bool routed = Win32IDE_Commands_Route(IDM_LSP_GOTO_DEFINITION);
+        int line = -1;
+        int column = -1;
+        RawrXD::IDE::EditorEngine_GetCaret(&line, &column);
+        char d[260];
+        std::snprintf(d, sizeof(d), "accelerator=F12 route=%d operation=%d caret=%d:%d",
+                      routed ? 1 : 0, Win32IDE_Commands_LastOperationSucceeded() ? 1 : 0,
+                      line, column);
+        Record("S09_F12_GOTO_DEFINITION",
+               (routed && Win32IDE_Commands_LastOperationSucceeded() && line == 0 && column == 4)
+                   ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S10 rename -------------------------------------------------------
     {
-        const bool route = Win32IDE_Commands_Route(0);
-        (void)route;
-        Record("S10_RENAME", Verdict::NOT_IMPLEMENTED,
-               "no rename command id in the Win32IDE command table");
+        const std::string source =
+            "int RAWRXD_CERT_RENAME = 1;\n"
+            "int use = RAWRXD_CERT_RENAME;\n";
+        RawrXD::IDE::EditorEngine_SetText(source);
+        RawrXD::IDE::EditorEngine_SetCaret(1, 10);
+        Win32IDE_Commands_SetRenameOverrideForCert("RAWRXD_CERT_RENAMED");
+        const bool routed = Win32IDE_Commands_Route(IDM_EDIT_RENAME);
+        const std::string updated = RawrXD::IDE::EditorEngine_GetText();
+        const bool oldGone = updated.find("RAWRXD_CERT_RENAME =") == std::string::npos &&
+                             updated.find("RAWRXD_CERT_RENAME;") == std::string::npos;
+        const bool newPresent = updated.find("RAWRXD_CERT_RENAMED") != std::string::npos;
+        char d[300];
+        std::snprintf(d, sizeof(d), "command=F2 route=%d operation=%d old_gone=%d new_present=%d bytes=%zu",
+                      routed ? 1 : 0, Win32IDE_Commands_LastOperationSucceeded() ? 1 : 0,
+                      oldGone ? 1 : 0, newPresent ? 1 : 0, updated.size());
+        Record("S10_RENAME",
+               (routed && Win32IDE_Commands_LastOperationSucceeded() && oldGone && newPresent)
+                   ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S11 clipboard ----------------------------------------------------
@@ -336,34 +382,44 @@ static void RunStages() {
         } else {
             RawrXD::IDE::EditorEngine_SetText("RAWRXD_CERT_BASE\n");
             const std::string base = RawrXD::IDE::EditorEngine_GetText();
+            Win32IDE_Commands_ResetUndoHistoryForCert();
             RawrXD::IDE::EditorEngine_InsertTextAtCursor("RAWRXD_CERT_TYPED\n");
             const std::string typed = RawrXD::IDE::EditorEngine_GetText();
             const bool grew = typed.size() > base.size() &&
                               typed.find("RAWRXD_CERT_TYPED") != std::string::npos;
+            SendMessage(editor, WM_TIMER, 1, 0);
             const bool routed = Win32IDE_Commands_Route(IDM_EDIT_UNDO);
             const std::string afterUndo = RawrXD::IDE::EditorEngine_GetText();
-            const bool undoWorked = (afterUndo != typed);
+            const bool undoWorked = afterUndo != typed;
+            const bool undoRestored = afterUndo == base;
             const bool routedRedo = Win32IDE_Commands_Route(IDM_EDIT_REDO);
             const std::string afterRedo = RawrXD::IDE::EditorEngine_GetText();
+            const bool redoRestored = afterRedo == typed;
             char d[300];
             std::snprintf(d, sizeof(d),
                           "grew=%d undo_route=%d undo_changed=%d redo_route=%d "
                           "redo_restored=%d len_base=%zu len_typed=%zu len_after_undo=%zu",
                           grew ? 1 : 0, routed ? 1 : 0, undoWorked ? 1 : 0,
-                          routedRedo ? 1 : 0, (afterRedo == typed) ? 1 : 0,
+                          routedRedo ? 1 : 0, redoRestored ? 1 : 0,
                           base.size(), typed.size(), afterUndo.size());
-            const bool ok = grew && routed && routedRedo;
+            const bool ok = grew && routed && undoWorked && undoRestored &&
+                            routedRedo && redoRestored;
             Record("S12_UNDO_REDO", ok ? Verdict::PASS : Verdict::FAIL, d);
         }
     }
 
     // ---- S13 git ----------------------------------------------------------
     {
-        // The Git group has 5 registered features but none is reachable from
-        // the Win32IDE command table; report the gap instead of a pass.
-        Record("S13_GIT_OPERATION", Verdict::NOT_IMPLEMENTED,
-               "FeatureGroup::Git has 5 registered features; none routes from the "
-               "Win32IDE command table");
+        const bool routed = Win32IDE_Commands_Route(IDM_GIT_STATUS);
+        const char* status = Win32IDE_Commands_GetLastGitStatus();
+        const bool observed = status && std::strstr(status, "##") != nullptr;
+        char d[320];
+        std::snprintf(d, sizeof(d), "command=GitStatus route=%d operation=%d observed_branch=%d output_bytes=%zu",
+                      routed ? 1 : 0, Win32IDE_Commands_LastOperationSucceeded() ? 1 : 0,
+                      observed ? 1 : 0, status ? std::strlen(status) : 0u);
+        Record("S13_GIT_OPERATION",
+               (routed && Win32IDE_Commands_LastOperationSucceeded() && observed)
+                   ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S14 terminal command --------------------------------------------
@@ -386,17 +442,15 @@ static void RunStages() {
 
     // ---- S15 close/reopen document ---------------------------------------
     {
+        const bool checkpointed = RawrXD::IDE::EditorEngine_SaveFile(doc);
         const bool closed = Win32IDE_Commands_Route(IDM_FILE_CLOSE);
-        const bool reopened = Win32IDE_Commands_Route(IDM_FILE_OPEN) ||
-                              Win32IDE_Commands_Route(IDM_FILE_SAVEAS);
+        const bool reopened = RawrXD::IDE::EditorEngine_OpenFile(doc);
         char d[200];
-        std::snprintf(d, sizeof(d), "close_route=%d reopen_route=%d on_disk=%d",
-                      closed ? 1 : 0, reopened ? 1 : 0, FileOps_Exists(doc) ? 1 : 0);
-        // FileOps_OpenDialog is modal, so an automated reopen cannot complete;
-        // report the measured route result and the dialog limitation.
+        std::snprintf(d, sizeof(d), "checkpoint_save=%d close_route=%d reopen_engine=%d on_disk=%d",
+                      checkpointed ? 1 : 0, closed ? 1 : 0, reopened ? 1 : 0,
+                      FileOps_Exists(doc) ? 1 : 0);
         Record("S15_CLOSE_REOPEN_DOCUMENT",
-               (closed && FileOps_Exists(doc)) ? Verdict::PASS : Verdict::FAIL,
-               std::string(d) + " note=OpenDialog is modal, reopen is route-only");
+               (checkpointed && closed && reopened && FileOps_Exists(doc)) ? Verdict::PASS : Verdict::FAIL, d);
     }
 
     // ---- S16 clean shutdown ----------------------------------------------
@@ -480,4 +534,10 @@ void IdeRuntimeCert_Run() {
     RunStages();
     WriteReceipt();
     (void)t0;
+}
+
+void IdeRuntimeCert_FinalizeCleanShutdown(bool clean) {
+    Record("S16_CLEAN_SHUTDOWN", clean ? Verdict::PASS : Verdict::FAIL,
+           clean ? "message_loop_exited=1" : "message_loop_exited=0");
+    WriteReceipt();
 }

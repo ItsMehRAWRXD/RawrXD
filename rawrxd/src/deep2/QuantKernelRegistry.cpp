@@ -14,6 +14,7 @@
 #include "QuantKernelRegistry_K.h"  // K-quant dequant/GEMV kernels
 #include "Deep2Q40Reference.hpp"    // Reference Q4_0 GEMV (VAL-051.7)
 #include "k_quant_gemv_avx512.h"    // RAWRXD_Q4K_AVX512_GEMV_001 fused Q4_K GEMV
+#include "IQQuantTables.hpp"
 
 #include <immintrin.h>
 #include <cstring>
@@ -24,9 +25,6 @@
 #include <vector>
 
 namespace Deep2 {
-
-// Forward declaration from IQQuantKernels.cpp
-void RegisterIQKernels();
 
 // ---------------------------------------------------------------------------
 // Static quant-type descriptor table
@@ -39,12 +37,22 @@ static const QuantTypeDesc kQuantTypeTable[] = {
     { 6,  "Q5_0",  sizeof(block_q5_0),    32, true,  false, true  },
     { 7,  "Q5_1",  sizeof(block_q5_1),    32, true,  true,  true  },
     { 8,  "Q8_0",  sizeof(block_q8_0),    32, true,  false, true  },
+    { 9,  "Q8_1",  sizeof(block_q8_1),    32, true,  true,  true  },
     { 10, "Q2_K",  sizeof(block_q2_K),   256, true,  true,  true  },
     { 11, "Q3_K",  sizeof(block_q3_K),   256, true,  true,  true  },
     { 12, "Q4_K",  sizeof(block_q4_K),   256, true,  true,  true  },
     { 13, "Q5_K",  sizeof(block_q5_K),   256, true,  true,  true  },
     { 14, "Q6_K",  sizeof(block_q6_K),   256, true,  false, true  },
     { 15, "Q8_K",  sizeof(block_q8_K),   256, true,  false, true  },
+    { 16, "IQ2_XXS", sizeof(block_iq2_xxs), 256, true, false, true },
+    { 17, "IQ2_XS",  sizeof(block_iq2_xs),  256, true, false, true },
+    { 18, "IQ3_XXS", sizeof(block_iq3_xxs), 256, true, false, true },
+    { 19, "IQ1_S",   sizeof(block_iq1_s),   256, true, false, true },
+    { 20, "IQ4_NL",  sizeof(block_iq4_nl),   32, true, false, true },
+    { 21, "IQ3_S",   sizeof(block_iq3_s),   256, true, false, true },
+    { 22, "IQ2_S",   sizeof(block_iq2_s),   256, true, false, true },
+    { 23, "IQ4_XS",  sizeof(block_iq4_xs),  256, true, false, true },
+    { 29, "IQ1_M",   sizeof(block_iq1_m),   256, true, false, true },
     { 30, "BF16",  sizeof(uint16_t),       1, false, false, false },
 };
 
@@ -65,15 +73,320 @@ bool QuantTypeIsQuantized(uint32_t type) {
     return d ? d->isQuantized : false;
 }
 
-// Empty stub for IQ kernels (no IQ types linked yet)
-void RegisterIQKernels() {}
+static inline float f16_to_f32(uint16_t h);
 
-// Stub for FP16 MASM GEMV (no MASM object linked yet)
+static void dequant_iq2_xxs(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq2_xxs*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        uint32_t packed[2]{};
+        const uint8_t* packedBytes = reinterpret_cast<const uint8_t*>(packed);
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            std::memcpy(packed, blocks[blockIndex].qs + groupIndex * 4, sizeof(packed));
+            const float groupScale = scale * (0.5f + static_cast<float>(packed[1] >> 28)) * 0.25f;
+            for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                const uint8_t* grid = reinterpret_cast<const uint8_t*>(
+                    &IQTables::iq2xxs_grid[packedBytes[laneGroup]]);
+                const uint8_t signs = IQTables::ksigns_iq2xs[(packed[1] >> (7 * laneGroup)) & 127u];
+                for (size_t lane = 0; lane < 8; ++lane) {
+                    dst[lane] = groupScale * static_cast<float>(grid[lane]) *
+                        ((signs & IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                }
+                dst += 8;
+            }
+        }
+    }
+}
+
+static void dequant_iq2_xs(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq2_xs*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            const float groupScales[2] = {
+                scale * (0.5f + static_cast<float>(blocks[blockIndex].scales[groupIndex] & 0xfu)) * 0.25f,
+                scale * (0.5f + static_cast<float>(blocks[blockIndex].scales[groupIndex] >> 4)) * 0.25f
+            };
+            for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                const uint16_t packed = blocks[blockIndex].qs[groupIndex * 4 + laneGroup];
+                const uint8_t* grid = reinterpret_cast<const uint8_t*>(
+                    &IQTables::iq2xs_grid[packed & 511u]);
+                const uint8_t signs = IQTables::ksigns_iq2xs[packed >> 9];
+                for (size_t lane = 0; lane < 8; ++lane) {
+                    dst[lane] = groupScales[laneGroup / 2] * static_cast<float>(grid[lane]) *
+                        ((signs & IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                }
+                dst += 8;
+            }
+        }
+    }
+}
+
+static void dequant_iq2_s(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq2_s*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            const float groupScales[2] = {
+                scale * (0.5f + static_cast<float>(blocks[blockIndex].scales[groupIndex] & 0xfu)) * 0.25f,
+                scale * (0.5f + static_cast<float>(blocks[blockIndex].scales[groupIndex] >> 4)) * 0.25f
+            };
+            for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                const uint16_t gridIndex = static_cast<uint16_t>(
+                    blocks[blockIndex].qs[groupIndex * 4 + laneGroup] |
+                    ((blocks[blockIndex].qh[groupIndex] << (8 - 2 * laneGroup)) & 0x300));
+                const uint8_t signs = blocks[blockIndex].qs[32 + groupIndex * 4 + laneGroup];
+                const uint8_t* grid = reinterpret_cast<const uint8_t*>(
+                    &IQTables::iq2s_grid[gridIndex]);
+                for (size_t lane = 0; lane < 8; ++lane) {
+                    dst[lane] = groupScales[laneGroup / 2] * static_cast<float>(grid[lane]) *
+                        ((signs & IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                }
+                dst += 8;
+            }
+        }
+    }
+}
+
+static void dequant_iq3_xxs(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq3_xxs*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            uint32_t packed = 0;
+            std::memcpy(&packed, blocks[blockIndex].qs + 64 + groupIndex * 4, sizeof(packed));
+            const float groupScale = scale * (0.5f + static_cast<float>(packed >> 28)) * 0.5f;
+            for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                const uint8_t signs = IQTables::ksigns_iq2xs[(packed >> (7 * laneGroup)) & 127u];
+                const uint8_t* gridFirst = reinterpret_cast<const uint8_t*>(
+                    &IQTables::iq3xxs_grid[blocks[blockIndex].qs[groupIndex * 8 + 2 * laneGroup]]);
+                const uint8_t* gridSecond = reinterpret_cast<const uint8_t*>(
+                    &IQTables::iq3xxs_grid[blocks[blockIndex].qs[groupIndex * 8 + 2 * laneGroup + 1]]);
+                for (size_t lane = 0; lane < 4; ++lane) {
+                    dst[lane] = groupScale * static_cast<float>(gridFirst[lane]) *
+                        ((signs & IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                    dst[lane + 4] = groupScale * static_cast<float>(gridSecond[lane]) *
+                        ((signs & IQTables::kmask_iq2xs[lane + 4]) ? -1.0f : 1.0f);
+                }
+                dst += 8;
+            }
+        }
+    }
+}
+
+static void dequant_iq3_s(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq3_s*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; groupIndex += 2) {
+            const float groupScaleFirst = scale * (1.0f + 2.0f * (blocks[blockIndex].scales[groupIndex / 2] & 0xfu));
+            const float groupScaleSecond = scale * (1.0f + 2.0f * (blocks[blockIndex].scales[groupIndex / 2] >> 4));
+            for (size_t half = 0; half < 2; ++half) {
+                const size_t currentGroup = groupIndex + half;
+                const uint8_t highBits = blocks[blockIndex].qh[currentGroup];
+                const float groupScale = half == 0 ? groupScaleFirst : groupScaleSecond;
+                for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                    const uint8_t* gridFirst = reinterpret_cast<const uint8_t*>(&IQTables::iq3s_grid[
+                        blocks[blockIndex].qs[currentGroup * 8 + 2 * laneGroup] |
+                        ((highBits << (8 - 2 * laneGroup)) & 256)]);
+                    const uint8_t* gridSecond = reinterpret_cast<const uint8_t*>(&IQTables::iq3s_grid[
+                        blocks[blockIndex].qs[currentGroup * 8 + 2 * laneGroup + 1] |
+                        ((highBits << (7 - 2 * laneGroup)) & 256)]);
+                    const uint8_t signs = blocks[blockIndex].signs[currentGroup * 4 + laneGroup];
+                    for (size_t lane = 0; lane < 4; ++lane) {
+                        dst[lane] = groupScale * static_cast<float>(gridFirst[lane]) *
+                            ((signs & IQTables::kmask_iq2xs[lane]) ? -1.0f : 1.0f);
+                        dst[lane + 4] = groupScale * static_cast<float>(gridSecond[lane]) *
+                            ((signs & IQTables::kmask_iq2xs[lane + 4]) ? -1.0f : 1.0f);
+                    }
+                    dst += 8;
+                }
+            }
+        }
+    }
+}
+
+static void dequant_iq1_s(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq1_s*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            const uint16_t highBits = blocks[blockIndex].qh[groupIndex];
+            const float groupScale = scale * (2.0f * ((highBits >> 12) & 7u) + 1.0f);
+            const float delta = (highBits & 0x8000u) ? -0.125f : 0.125f;
+            for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                const uint16_t gridIndex = static_cast<uint16_t>(
+                    blocks[blockIndex].qs[groupIndex * 4 + laneGroup] |
+                    (((highBits >> (3 * laneGroup)) & 7u) << 8));
+                const int8_t* grid = reinterpret_cast<const int8_t*>(&IQTables::iq1s_grid[gridIndex]);
+                for (size_t lane = 0; lane < 8; ++lane)
+                    dst[lane] = groupScale * (static_cast<float>(grid[lane]) + delta);
+                dst += 8;
+            }
+        }
+    }
+}
+
+static void dequant_iq1_m(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq1_m*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        uint16_t scales[4]{};
+        std::memcpy(scales, blocks[blockIndex].scales, sizeof(scales));
+        const uint16_t scaleBits = static_cast<uint16_t>((scales[0] >> 12) |
+            ((scales[1] >> 8) & 0x00f0u) | ((scales[2] >> 4) & 0x0f00u) | (scales[3] & 0xf000u));
+        const float scale = f16_to_f32(scaleBits);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            const size_t scaleIndex = groupIndex / 2;
+            const size_t scaleShift = 6 * (groupIndex % 2);
+            const float lowScale = scale * (2.0f * ((scales[scaleIndex] >> scaleShift) & 7u) + 1.0f);
+            const float highScale = scale * (2.0f * ((scales[scaleIndex] >> (scaleShift + 3)) & 7u) + 1.0f);
+            const uint8_t* groupHighBits = blocks[blockIndex].qh + groupIndex * 2;
+            for (size_t laneGroup = 0; laneGroup < 4; ++laneGroup) {
+                const size_t index = groupIndex * 4 + laneGroup;
+                const uint16_t gridIndex = static_cast<uint16_t>(blocks[blockIndex].qs[index] |
+                    ((groupHighBits[laneGroup / 2] << (laneGroup % 2 == 0 ? 8 : 4)) & 0x700u));
+                const float delta = (groupHighBits[laneGroup / 2] & (laneGroup % 2 == 0 ? 0x08u : 0x80u))
+                    ? -0.125f : 0.125f;
+                const float groupScale = laneGroup < 2 ? lowScale : highScale;
+                const int8_t* grid = reinterpret_cast<const int8_t*>(&IQTables::iq1s_grid[gridIndex]);
+                for (size_t lane = 0; lane < 8; ++lane)
+                    dst[lane] = groupScale * (static_cast<float>(grid[lane]) + delta);
+                dst += 8;
+            }
+        }
+    }
+}
+
+static void dequant_iq4_nl(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 32;
+    const auto* blocks = reinterpret_cast<const block_iq4_nl*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t lane = 0; lane < 16; ++lane) {
+            dst[lane] = scale * IQTables::kvalues_iq4nl[blocks[blockIndex].qs[lane] & 0xfu];
+            dst[lane + 16] = scale * IQTables::kvalues_iq4nl[blocks[blockIndex].qs[lane] >> 4];
+        }
+        dst += 32;
+    }
+}
+
+static void dequant_iq4_xs(const uint8_t* src, float* dst, size_t n) {
+    const size_t blockCount = n / 256;
+    const auto* blocks = reinterpret_cast<const block_iq4_xs*>(src);
+    for (size_t blockIndex = 0; blockIndex < blockCount; ++blockIndex) {
+        const float scale = f16_to_f32(blocks[blockIndex].d);
+        for (size_t groupIndex = 0; groupIndex < 8; ++groupIndex) {
+            const uint16_t lowScale = static_cast<uint16_t>(
+                (blocks[blockIndex].scales_l[groupIndex / 2] >> (4 * (groupIndex % 2))) & 0xfu);
+            const uint16_t highScale = static_cast<uint16_t>(
+                (blocks[blockIndex].scales_h >> (2 * groupIndex)) & 3u);
+            const float groupScale = scale * static_cast<float>((highScale << 4) | lowScale) - scale * 32.0f;
+            for (size_t lane = 0; lane < 16; ++lane) {
+                const uint8_t packed = blocks[blockIndex].qs[groupIndex * 16 + lane];
+                dst[lane] = groupScale * IQTables::kvalues_iq4nl[packed & 0xfu];
+                dst[lane + 16] = groupScale * IQTables::kvalues_iq4nl[packed >> 4];
+            }
+            dst += 32;
+        }
+    }
+}
+
+template <size_t BlockBytes, size_t BlockElements, DequantKernelFn Dequant>
+static void gemv_iq(const uint8_t* weights, const float* input, float* output,
+                    size_t rows, size_t cols) {
+    if (!weights || !input || !output || cols == 0) return;
+    const size_t blocksPerRow = (cols + BlockElements - 1) / BlockElements;
+    const size_t expandedCols = blocksPerRow * BlockElements;
+    const size_t rowBytes = blocksPerRow * BlockBytes;
+    std::vector<float> dequantized(expandedCols);
+    for (size_t row = 0; row < rows; ++row) {
+        Dequant(weights + row * rowBytes, dequantized.data(), expandedCols);
+        float sum = 0.0f;
+        for (size_t col = 0; col < cols; ++col)
+            sum += dequantized[col] * input[col];
+        output[row] += sum;
+    }
+}
+
+static void gemv_iq2_xxs(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<66, 256, dequant_iq2_xxs>(weights, input, output, rows, cols);
+}
+static void gemv_iq2_xs(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<74, 256, dequant_iq2_xs>(weights, input, output, rows, cols);
+}
+static void gemv_iq3_xxs(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<98, 256, dequant_iq3_xxs>(weights, input, output, rows, cols);
+}
+static void gemv_iq1_s(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<50, 256, dequant_iq1_s>(weights, input, output, rows, cols);
+}
+static void gemv_iq4_nl(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<18, 32, dequant_iq4_nl>(weights, input, output, rows, cols);
+}
+static void gemv_iq3_s(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<110, 256, dequant_iq3_s>(weights, input, output, rows, cols);
+}
+static void gemv_iq2_s(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<82, 256, dequant_iq2_s>(weights, input, output, rows, cols);
+}
+static void gemv_iq4_xs(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<136, 256, dequant_iq4_xs>(weights, input, output, rows, cols);
+}
+static void gemv_iq1_m(const uint8_t* weights, const float* input, float* output, size_t rows, size_t cols) {
+    gemv_iq<56, 256, dequant_iq1_m>(weights, input, output, rows, cols);
+}
+
+void RegisterIQKernels() {
+    auto& registry = QuantKernelRegistry::Instance();
+    registry.RegisterGeometry(16, {66, 256, true, false});
+    registry.RegisterDequant(16, dequant_iq2_xxs);
+    registry.RegisterGEMV(16, gemv_iq2_xxs);
+    registry.RegisterGeometry(17, {74, 256, true, false});
+    registry.RegisterDequant(17, dequant_iq2_xs);
+    registry.RegisterGEMV(17, gemv_iq2_xs);
+    registry.RegisterGeometry(18, {98, 256, true, false});
+    registry.RegisterDequant(18, dequant_iq3_xxs);
+    registry.RegisterGEMV(18, gemv_iq3_xxs);
+    registry.RegisterGeometry(19, {50, 256, true, false});
+    registry.RegisterDequant(19, dequant_iq1_s);
+    registry.RegisterGEMV(19, gemv_iq1_s);
+    registry.RegisterGeometry(20, {18, 32, true, false});
+    registry.RegisterDequant(20, dequant_iq4_nl);
+    registry.RegisterGEMV(20, gemv_iq4_nl);
+    registry.RegisterGeometry(21, {110, 256, true, false});
+    registry.RegisterDequant(21, dequant_iq3_s);
+    registry.RegisterGEMV(21, gemv_iq3_s);
+    registry.RegisterGeometry(22, {82, 256, true, false});
+    registry.RegisterDequant(22, dequant_iq2_s);
+    registry.RegisterGEMV(22, gemv_iq2_s);
+    registry.RegisterGeometry(23, {136, 256, true, false});
+    registry.RegisterDequant(23, dequant_iq4_xs);
+    registry.RegisterGEMV(23, gemv_iq4_xs);
+    registry.RegisterGeometry(29, {56, 256, true, false});
+    registry.RegisterDequant(29, dequant_iq1_m);
+    registry.RegisterGEMV(29, gemv_iq1_m);
+}
+
+// Portable FP16 GEMV fallback used when the optional MASM object is absent.
+// Keeping this symbol functional prevents an unlinked accelerator from
+// silently converting an otherwise valid FP16 tensor into an all-zero result.
 extern "C" void Deep2_FP16_GEMV(const void* weights, const float* input, float* output,
                                 unsigned int rows, unsigned int cols) {
-    (void)weights; (void)input; (void)output; (void)rows; (void)cols;
-    std::memset(output, 0, rows * sizeof(float));
-    std::fprintf(stderr, "[WARN] Deep2_FP16_GEMV: MASM stub — zeroing output\n");
+    if (!weights || !input || !output) return;
+    const uint16_t* values = reinterpret_cast<const uint16_t*>(weights);
+    for (unsigned int row = 0; row < rows; ++row) {
+        float sum = 0.0f;
+        for (unsigned int col = 0; col < cols; ++col)
+            sum += f16_to_f32(values[static_cast<size_t>(row) * cols + col]) * input[col];
+        output[row] += sum;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -419,6 +732,31 @@ static void gemv_q8_0_scalar(
             for (size_t i = 0; i < n; ++i)
                 blockAcc += (float)blk->qs[i] * x[base + i];
             acc += d * blockAcc;
+        }
+        y[r] += acc;
+    }
+}
+
+// --- Q8_1 GEMV (scalar) ---
+static void gemv_q8_1_scalar(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const size_t blocksPerRow = (cols + 31) / 32;
+    const size_t rowBytes = blocksPerRow * sizeof(block_q8_1);
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const uint8_t* row = w + r * rowBytes;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const auto* block = reinterpret_cast<const block_q8_1*>(
+                row + b * sizeof(block_q8_1));
+            const size_t base = b * 32;
+            const size_t count = (base + 32 <= cols) ? 32u : (cols - base);
+            const float d = f16_to_f32(block->d);
+            for (size_t i = 0; i < count; ++i)
+                acc += d * static_cast<float>(block->qs[i]) * x[base + i];
         }
         y[r] += acc;
     }
@@ -917,8 +1255,6 @@ static float vec_dot_q6_K_q8_K(const block_q6_K* x, const block_q8_K* y, size_t 
 }
 
 // BATCH2_V_PROJ_001: TinyLlama attn_v is Q6_K (type 14), not Q4_K.
-// FP32 dequant·x matched dequantize_row_q6_K but diverged from llama mul_mat
-// (Q6_K×Q8_K) — same class of bug as Q4K-GEMV-001. Production must use Q8_K path.
 static void gemv_q6_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -932,13 +1268,7 @@ static void gemv_q6_k_scalar(
         }
         return;
     }
-    const size_t blocksPerRow = cols / 256;
-    std::vector<block_q8_K> xQ8(blocksPerRow);
-    quantize_row_q8_K(x, xQ8.data(), cols);
-    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(w);
-    for (size_t r = 0; r < rows; ++r) {
-        y[r] += vec_dot_q6_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
-    }
+    rawrxd::kquant::GemvQ6K(w, x, y, rows, cols);
 }
 
 // --- Q4_0 GEMV (reference) ---
@@ -966,10 +1296,17 @@ static void gemv_q4_0_scalar(
             size_t base = b * 32;
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
             if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                acc += (d * q) * x[base + i];
+            for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+                const uint8_t packed = blk.qs[pairIndex];
+                if (pairIndex < elemsInBlock) {
+                    acc += d * (static_cast<float>(packed & 0x0F) - 8.0f) *
+                           x[base + pairIndex];
+                }
+                const size_t highIndex = pairIndex + 16;
+                if (highIndex < elemsInBlock) {
+                    acc += d * (static_cast<float>(packed >> 4) - 8.0f) *
+                           x[base + highIndex];
+                }
             }
         }
         y[r] += acc;
@@ -995,10 +1332,17 @@ static void gemv_q4_1_scalar(
             size_t base = b * 32;
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
             if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                acc += (d * q - m) * x[base + i];
+            for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+                const uint8_t packed = blk.qs[pairIndex];
+                if (pairIndex < elemsInBlock) {
+                    acc += (d * static_cast<float>(packed & 0x0F) + m) *
+                           x[base + pairIndex];
+                }
+                const size_t highIndex = pairIndex + 16;
+                if (highIndex < elemsInBlock) {
+                    acc += (d * static_cast<float>(packed >> 4) + m) *
+                           x[base + highIndex];
+                }
             }
         }
         y[r] += acc;
@@ -1020,17 +1364,28 @@ static void gemv_q5_0_scalar(
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q5_0& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
+            uint32_t highBitsPacked = 0;
+            std::memcpy(&highBitsPacked, blk.qh, sizeof(highBitsPacked));
             size_t base = b * 32;
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
             if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t low4 = blk.qs[i / 2];
-                float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
-                int qhIdx = (int)(i / 8);
-                int qhShift = (int)(i % 8);
-                uint8_t high1 = (blk.qh[qhIdx] >> qhShift) & 0x01;
-                float q = q_low + (float)(high1 << 4);
-                acc += d * q * x[base + i];
+            for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+                const uint8_t packed = blk.qs[pairIndex];
+                const uint8_t highLow = static_cast<uint8_t>(
+                    (highBitsPacked >> pairIndex) & 0x01u);
+                const uint8_t highHigh = static_cast<uint8_t>(
+                    (highBitsPacked >> (pairIndex + 16)) & 0x01u);
+                if (pairIndex < elemsInBlock) {
+                    const float quantized = static_cast<float>((packed & 0x0F) |
+                                                               (highLow << 4));
+                    acc += d * (quantized - 16.0f) * x[base + pairIndex];
+                }
+                const size_t highIndex = pairIndex + 16;
+                if (highIndex < elemsInBlock) {
+                    const float quantized = static_cast<float>((packed >> 4) |
+                                                               (highHigh << 4));
+                    acc += d * (quantized - 16.0f) * x[base + highIndex];
+                }
             }
         }
         y[r] += acc;
@@ -1053,17 +1408,28 @@ static void gemv_q5_1_scalar(
             const block_q5_1& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
             float m = f16_to_f32(blk.m);
+            uint32_t highBitsPacked = 0;
+            std::memcpy(&highBitsPacked, blk.qh, sizeof(highBitsPacked));
             size_t base = b * 32;
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
             if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t low4 = blk.qs[i / 2];
-                float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
-                int qhIdx = (int)(i / 8);
-                int qhShift = (int)(i % 8);
-                uint8_t high1 = (blk.qh[qhIdx] >> qhShift) & 0x01;
-                float q = q_low + (float)(high1 << 4);
-                acc += (d * q - m) * x[base + i];
+            for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+                const uint8_t packed = blk.qs[pairIndex];
+                const uint8_t highLow = static_cast<uint8_t>(
+                    (highBitsPacked >> pairIndex) & 0x01u);
+                const uint8_t highHigh = static_cast<uint8_t>(
+                    (highBitsPacked >> (pairIndex + 16)) & 0x01u);
+                if (pairIndex < elemsInBlock) {
+                    const float quantized = static_cast<float>((packed & 0x0F) |
+                                                               (highLow << 4));
+                    acc += (d * quantized + m) * x[base + pairIndex];
+                }
+                const size_t highIndex = pairIndex + 16;
+                if (highIndex < elemsInBlock) {
+                    const float quantized = static_cast<float>((packed >> 4) |
+                                                               (highHigh << 4));
+                    acc += (d * quantized + m) * x[base + highIndex];
+                }
             }
         }
         y[r] += acc;
@@ -1447,6 +1813,19 @@ static void dequant_q8_0(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
+static void dequant_q8_1(const uint8_t* src, float* dst, size_t n) {
+    const block_q8_1* blocks = reinterpret_cast<const block_q8_1*>(src);
+    const size_t numBlocks = (n + 31) / 32;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        const float d = f16_to_f32(blocks[b].d);
+        for (size_t i = 0; i < 32; ++i) {
+            const size_t idx = b * 32 + i;
+            if (idx >= n) return;
+            dst[idx] = d * static_cast<float>(blocks[b].qs[i]);
+        }
+    }
+}
+
 static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
     // Exact layout match for ggml dequantize_row_q4_K
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(src);
@@ -1608,12 +1987,14 @@ static void dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
-        for (int i = 0; i < 32; ++i) {
-            size_t idx = b * 32 + i;
-            if (idx >= n) return;
-            uint8_t byte = blocks[b].qs[i / 2];
-            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-            dst[idx] = d * q;
+        for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+            const uint8_t packed = blocks[b].qs[pairIndex];
+            const size_t lowIndex = b * 32 + pairIndex;
+            const size_t highIndex = lowIndex + 16;
+            if (lowIndex < n)
+                dst[lowIndex] = d * (static_cast<float>(packed & 0x0F) - 8.0f);
+            if (highIndex < n)
+                dst[highIndex] = d * (static_cast<float>(packed >> 4) - 8.0f);
         }
     }
 }
@@ -1624,12 +2005,14 @@ static void dequant_q4_1(const uint8_t* src, float* dst, size_t n) {
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
         float m = f16_to_f32(blocks[b].m);
-        for (int i = 0; i < 32; ++i) {
-            size_t idx = b * 32 + i;
-            if (idx >= n) return;
-            uint8_t byte = blocks[b].qs[i / 2];
-            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-            dst[idx] = d * q - m;
+        for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+            const uint8_t packed = blocks[b].qs[pairIndex];
+            const size_t lowIndex = b * 32 + pairIndex;
+            const size_t highIndex = lowIndex + 16;
+            if (lowIndex < n)
+                dst[lowIndex] = d * static_cast<float>(packed & 0x0F) + m;
+            if (highIndex < n)
+                dst[highIndex] = d * static_cast<float>(packed >> 4) + m;
         }
     }
 }
@@ -1639,16 +2022,26 @@ static void dequant_q5_0(const uint8_t* src, float* dst, size_t n) {
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
-        for (int i = 0; i < 32; ++i) {
-            size_t idx = b * 32 + i;
-            if (idx >= n) return;
-            uint8_t low4 = blocks[b].qs[i / 2];
-            float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
-            int qhIdx = i / 8;
-            int qhShift = i % 8;
-            uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
-            float q = q_low + (float)(high1 << 4);
-            dst[idx] = d * q;
+        uint32_t highBitsPacked = 0;
+        std::memcpy(&highBitsPacked, blocks[b].qh, sizeof(highBitsPacked));
+        for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+            const uint8_t packed = blocks[b].qs[pairIndex];
+            const uint8_t highLow = static_cast<uint8_t>(
+                (highBitsPacked >> pairIndex) & 0x01u);
+            const uint8_t highHigh = static_cast<uint8_t>(
+                (highBitsPacked >> (pairIndex + 16)) & 0x01u);
+            const size_t lowIndex = b * 32 + pairIndex;
+            const size_t highIndex = lowIndex + 16;
+            if (lowIndex < n) {
+                const float quantized = static_cast<float>((packed & 0x0F) |
+                                                           (highLow << 4));
+                dst[lowIndex] = d * (quantized - 16.0f);
+            }
+            if (highIndex < n) {
+                const float quantized = static_cast<float>((packed >> 4) |
+                                                           (highHigh << 4));
+                dst[highIndex] = d * (quantized - 16.0f);
+            }
         }
     }
 }
@@ -1659,16 +2052,26 @@ static void dequant_q5_1(const uint8_t* src, float* dst, size_t n) {
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
         float m = f16_to_f32(blocks[b].m);
-        for (int i = 0; i < 32; ++i) {
-            size_t idx = b * 32 + i;
-            if (idx >= n) return;
-            uint8_t low4 = blocks[b].qs[i / 2];
-            float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
-            int qhIdx = i / 8;
-            int qhShift = i % 8;
-            uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
-            float q = q_low + (float)(high1 << 4);
-            dst[idx] = d * q - m;
+        uint32_t highBitsPacked = 0;
+        std::memcpy(&highBitsPacked, blocks[b].qh, sizeof(highBitsPacked));
+        for (size_t pairIndex = 0; pairIndex < 16; ++pairIndex) {
+            const uint8_t packed = blocks[b].qs[pairIndex];
+            const uint8_t highLow = static_cast<uint8_t>(
+                (highBitsPacked >> pairIndex) & 0x01u);
+            const uint8_t highHigh = static_cast<uint8_t>(
+                (highBitsPacked >> (pairIndex + 16)) & 0x01u);
+            const size_t lowIndex = b * 32 + pairIndex;
+            const size_t highIndex = lowIndex + 16;
+            if (lowIndex < n) {
+                const float quantized = static_cast<float>((packed & 0x0F) |
+                                                           (highLow << 4));
+                dst[lowIndex] = d * quantized + m;
+            }
+            if (highIndex < n) {
+                const float quantized = static_cast<float>((packed >> 4) |
+                                                           (highHigh << 4));
+                dst[highIndex] = d * quantized + m;
+            }
         }
     }
 }
@@ -1976,6 +2379,11 @@ void QuantKernelRegistry::RegisterBuiltins() {
     if (hasAVX2) RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx2);
     else         RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
 
+    // --- Q8_1 ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_1));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q8_1, dequant_q8_1);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_1, gemv_q8_1_scalar);
+
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
@@ -2002,14 +2410,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q6_K, dequant_q6_k);
-    // RAWRXD_Q6K_AVX512_GEMV_001: Q6_K is the second most common weight type
-    // in Q4_K_M models (29 of 337 tensors in qwen2.5-coder-1.5b-base) and was
-    // scalar-only. The fused kernel is admitted by real_q6k_gemv_parity:
-    // 29/29 tensors, worst rel 1.74e-05, cosine 0.999999999998, negative control
-    // still firing. Capability-gated exactly like Q4_K so non-AVX-512 builds
-    // keep the scalar reference.
-    if (hasAVX512) RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx512_kernel);
-    else          RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
     // --- Q2_K ---
     // LAW: block_q2_K = 84 bytes. There is no Q2_K MASM kernel in the build.
@@ -2052,7 +2453,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_avx512);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_scalar);
 
-    // --- IQ types (registered via IQQuantKernels.cpp) ---
+    // --- IQ types ---
     RegisterIQKernels();
 }
 
@@ -2144,6 +2545,9 @@ static const char* KernelImplName(int type, GEMVKernelFn fn) {
         if (fn == gemv_q8_0_avx2)   return "avx2";
         if (fn == gemv_q8_0_scalar) return "scalar";
         break;
+    case GGMLType::GGML_TYPE_Q8_1:
+        if (fn == gemv_q8_1_scalar) return "scalar";
+        break;
     case GGMLType::GGML_TYPE_Q4_K:
         // RAWRXD_Q4K_AVX512_GEMV_001: gemv_q4_k_avx512 is a REAL fused
         // AVX-512 dequant+GEMV kernel, admitted by kquant_parity_check
@@ -2182,6 +2586,33 @@ static const char* KernelImplName(int type, GEMVKernelFn fn) {
     case GGMLType::GGML_TYPE_Q8_K:
         if (fn == gemv_q8_k_avx512) return "avx512";
         if (fn == gemv_q8_k_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ2_XXS:
+        if (fn == gemv_iq2_xxs) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ2_XS:
+        if (fn == gemv_iq2_xs) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ3_XXS:
+        if (fn == gemv_iq3_xxs) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ1_S:
+        if (fn == gemv_iq1_s) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ4_NL:
+        if (fn == gemv_iq4_nl) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ3_S:
+        if (fn == gemv_iq3_s) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ2_S:
+        if (fn == gemv_iq2_s) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ4_XS:
+        if (fn == gemv_iq4_xs) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_IQ1_M:
+        if (fn == gemv_iq1_m) return "scalar";
         break;
     default:
         break;

@@ -1,4 +1,6 @@
 #version 450
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
 layout(local_size_x=256) in;
 
 layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
@@ -14,10 +16,6 @@ layout(push_constant) uniform Push {
 } pc;
 
 shared float xs[4][256];
-shared float red0[256];
-shared float red1[256];
-shared float red2[256];
-shared float red3[256];
 
 uint getb(uint byteIndex) {
     uint word=w[byteIndex>>2u];
@@ -59,9 +57,9 @@ void main() {
     if(pc.type!=12u||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
 
     uint lid=gl_LocalInvocationID.x;
-    uint cohort=lid>>5u; // /32 => 0..7
-    uint lane=lid&31u;
-    uint row=gl_WorkGroupID.x*8u+cohort;
+    uint subgroupSize=gl_SubgroupSize;
+    uint lane=gl_SubgroupInvocationID;
+    uint row=gl_WorkGroupID.x*gl_NumSubgroups+gl_SubgroupID;
     uint blocks=(pc.cols+255u)>>8u;
     uint rowBytes=blocks*144u;
 
@@ -79,11 +77,14 @@ void main() {
         }
         barrier();
 
-        if(row<pc.rows) {
+        if(row<pc.rows && subgroupSize <= 256u &&
+           (256u % subgroupSize) == 0u) {
             uint rb=row*rowBytes;
-            // 32 lanes x 8 elements = one complete 256-column Q4_K tile.
-            for(uint k=0u;k<8u;++k) {
-                uint lc=lane+k*32u;
+            // Each subgroup owns one output row. The subgroup width is
+            // device-dependent (wave32 or wave64), so cover one 256-column
+            // tile with the corresponding number of values per lane.
+            for(uint k=0u;k<256u/subgroupSize;++k) {
+                uint lc=lane+k*subgroupSize;
                 uint gc=colBase+lc;
                 if(gc>=pc.cols) continue;
                 float ww=q4kWeight(rb,gc);
@@ -96,22 +97,16 @@ void main() {
         barrier();
     }
 
-    red0[lid]=a0;red1[lid]=a1;red2[lid]=a2;red3[lid]=a3;
-    barrier();
-    for(uint stride=16u;stride>0u;stride>>=1u) {
-        if(lane<stride) {
-            uint j=lid+stride;
-            red0[lid]+=red0[j];
-            red1[lid]+=red1[j];
-            red2[lid]+=red2[j];
-            red3[lid]+=red3[j];
-        }
-        barrier();
-    }
-    if(lane==0u&&row<pc.rows) {
-        y[row]=red0[lid];
-        if(pc.batch>1u)y[pc.rows+row]=red1[lid];
-        if(pc.batch>2u)y[2u*pc.rows+row]=red2[lid];
-        if(pc.batch>3u)y[3u*pc.rows+row]=red3[lid];
+    // One reduction per output row; unlike the old shared tree this does not
+    // serialize all eight row cohorts through five workgroup barriers.
+    float t0=subgroupAdd(a0);
+    float t1=subgroupAdd(a1);
+    float t2=subgroupAdd(a2);
+    float t3=subgroupAdd(a3);
+    if(subgroupElect()&&row<pc.rows) {
+        y[row]=t0;
+        if(pc.batch>1u)y[pc.rows+row]=t1;
+        if(pc.batch>2u)y[2u*pc.rows+row]=t2;
+        if(pc.batch>3u)y[3u*pc.rows+row]=t3;
     }
 }

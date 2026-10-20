@@ -35,6 +35,14 @@ bool isDeep2RequiredNativeGpu(const VulkanPhysicalInfo& d) {
     return d.deviceId == 0x7551 || d.deviceId == 0x747E;
 }
 
+bool GpuRuntimeTraceEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_GPU_TRACE");
+        return value && value[0] && value[0] != '0';
+    }();
+    return enabled;
+}
+
 uint64_t tensorResidentBytes(const WeightTensor& w) {
     if (!w.data) return 0;
     if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
@@ -66,11 +74,69 @@ double envPositiveDouble(const char* name, double fallback) {
 
 } // namespace
 
+void Deep2Engine::refreshVulkanModelPlan() {
+    multiGpuLayerPlan_.clear();
+    layerRangePinned_[0] = false;
+    layerRangePinned_[1] = false;
+    gpuForwardArenaReady_[0] = false;
+    gpuForwardArenaReady_[1] = false;
+    if (!vulkanInitialized_ || vulkanDevices_.empty() ||
+        !modelWeights.loaded || modelWeights.layers.empty()) {
+        return;
+    }
+
+    std::vector<uint64_t> caps;
+    caps.reserve(vulkanDevices_.size());
+    for (const auto& device : vulkanDevices_) {
+        caps.push_back(device ? device->deviceLocalBytes() : 0);
+    }
+
+    std::vector<uint64_t> layerBytes;
+    layerBytes.reserve(modelWeights.layers.size());
+    for (const auto& layer : modelWeights.layers) {
+        layerBytes.push_back(denseLayerResidentBytes(layer));
+    }
+
+    const char* primaryOnlyEnv = std::getenv("DEEP2_DENSE_PRIMARY_ONLY");
+    const bool primaryOnly = primaryOnlyEnv && primaryOnlyEnv[0] == '1';
+    if (primaryOnly && caps.size() > 1)
+        caps.resize(1);
+
+    std::vector<double> speed(caps.size(), 1.0);
+    if (!speed.empty())
+        speed[0] = envPositiveDouble("DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.32);
+    if (speed.size() > 1)
+        speed[1] = envPositiveDouble("DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0);
+
+    if (!multiGpuLayerPlan_.configureThroughputBalanced(layerBytes, caps, speed)) {
+        std::fprintf(stderr,
+            "BATCH9_MULTIGPU_PLAN=HOLD reason=model_plan_refresh_failed layers=%zu devices=%zu\n",
+            layerBytes.size(), caps.size());
+        return;
+    }
+
+    std::fprintf(stderr,
+        "BATCH9_MULTIGPU_PLAN=READY layers=%zu devices=%u\n",
+        layerBytes.size(), multiGpuLayerPlan_.gpuSlotCount);
+    for (unsigned slot = 0; slot < multiGpuLayerPlan_.gpuSlotCount; ++slot) {
+        std::fprintf(stderr,
+            "DEEP2_DENSE_SLOT slot=%u lo=%u hi=%u speed_weight=%.3f\n",
+            slot,
+            multiGpuLayerPlan_.rangeLo[slot],
+            multiGpuLayerPlan_.rangeHi[slot],
+            speed[slot]);
+    }
+}
+
 void Deep2Engine::enableVulkan(bool enable) {
     if (!enable) {
         vulkanDevices_.clear();
         vulkanCompute_.reset();
         multiGpuLayerPlan_.clear();
+        layerRangePinned_[0] = false;
+        layerRangePinned_[1] = false;
+        gpuForwardArenaReady_[0] = false;
+        gpuForwardArenaReady_[1] = false;
         vulkanEnabled_ = false;
         vulkanInitialized_ = false;
         gpuFwdCommitted_ = false;
@@ -83,6 +149,10 @@ void Deep2Engine::enableVulkan(bool enable) {
     vulkanDevices_.clear();
     vulkanCompute_.reset();
     multiGpuLayerPlan_.clear();
+    layerRangePinned_[0] = false;
+    layerRangePinned_[1] = false;
+    gpuForwardArenaReady_[0] = false;
+    gpuForwardArenaReady_[1] = false;
 
     auto devs = VulkanCompute::EnumeratePhysicalDevices();
     devs.erase(
@@ -507,13 +577,15 @@ uint64_t Deep2Engine::vulkanSlotQueueSubmits(unsigned slot) const {
 
 bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     gpuFwdStateMutated_ = false;
-    std::fprintf(stderr, "GPU_FORWARD_ENTER hidden=%p loaded=%u vulkanEnabled=%u init=%u devices=%u layers=%u\n",
-        (void*)hidden,
-        modelWeights.loaded?1u:0u,
-        vulkanEnabled_?1u:0u,
-        vulkanInitialized_?1u:0u,
-        (unsigned)vulkanDevices_.size(),
-        (unsigned)modelWeights.numLayers);
+    if (GpuRuntimeTraceEnabled()) {
+        std::fprintf(stderr, "GPU_FORWARD_ENTER hidden=%p loaded=%u vulkanEnabled=%u init=%u devices=%u layers=%u\n",
+            (void*)hidden,
+            modelWeights.loaded?1u:0u,
+            vulkanEnabled_?1u:0u,
+            vulkanInitialized_?1u:0u,
+            (unsigned)vulkanDevices_.size(),
+            (unsigned)modelWeights.numLayers);
+    }
     if (!hidden || !modelWeights.loaded || !vulkanEnabled_ ||
         !vulkanInitialized_ || vulkanDevices_.empty() ||
         modelWeights.numLayers==0) {
@@ -536,10 +608,10 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
 
     gpuFwdStateMutated_ = true;
     if (vulkanDevices_.size()>1 && multiGpuLayerPlan_.active) {
-        std::fprintf(stderr, "GPU_FORWARD_STAGE=MULTIMAP\n");
+        if (GpuRuntimeTraceEnabled()) std::fprintf(stderr, "GPU_FORWARD_STAGE=MULTIMAP\n");
         ok=forwardGpuMultiMap(hidden,out.data());
     } else {
-        std::fprintf(stderr, "GPU_FORWARD_STAGE=CONTIGUOUS_RANGE\n");
+        if (GpuRuntimeTraceEnabled()) std::fprintf(stderr, "GPU_FORWARD_STAGE=CONTIGUOUS_RANGE\n");
         ok=forwardGpuContiguousRange(
             0,0,static_cast<uint32_t>(modelWeights.numLayers-1),
             hidden,out.data());
@@ -566,10 +638,12 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             else if (std::isinf(v)) ++hiddenInf;
             else { ++hiddenFinite; hiddenMin = std::min(hiddenMin, v); hiddenMax = std::max(hiddenMax, v); }
         }
-        std::fprintf(stderr,
-            "GPU_FORWARD_FINITE_CHECK finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
-            hiddenFinite, hiddenNan, hiddenInf, hiddenMin, hiddenMax);
-        std::fflush(stderr);
+        if (GpuRuntimeTraceEnabled()) {
+            std::fprintf(stderr,
+                "GPU_FORWARD_FINITE_CHECK finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                hiddenFinite, hiddenNan, hiddenInf, hiddenMin, hiddenMax);
+            std::fflush(stderr);
+        }
         if (hiddenNan > 0 || hiddenInf > 0) {
             std::fprintf(stderr,
                 "GPU_FORWARD_FAIL_STAGE=HIDDEN_NONFINITE nan=%zu inf=%zu\n",
@@ -585,7 +659,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     // calls reset() in its tail, so this is the last point at which the
     // evidence for this generation exists.
     captureGpuForwardReceipt(hiddenNan, hiddenInf);
-    std::fprintf(stderr, "GPU_FORWARD_OK\n");
+    if (GpuRuntimeTraceEnabled()) std::fprintf(stderr, "GPU_FORWARD_OK\n");
     return true;
 }
 

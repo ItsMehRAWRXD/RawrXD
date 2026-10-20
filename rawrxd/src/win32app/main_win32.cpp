@@ -11,6 +11,9 @@
 #include <fstream>
 #include <sstream>
 #include <thread>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
 #include <io.h>
 #include <fcntl.h>
 #include "ide_inference_gate.hpp"
@@ -50,6 +53,7 @@ extern "C" void Win32IDE_Sidebar_SetVisibility(bool visible);
 extern "C" bool Win32IDE_Sidebar_IsVisible();
 extern "C" void Win32IDE_Commands_SetMainWindow(HWND hwnd);
 extern "C" void Win32IDE_Commands_SetEditorWindow(HWND hwnd);
+extern "C" void Win32IDE_Commands_AttachUndo();
 extern "C" bool Win32IDE_Commands_Route(int commandId);
 extern "C" void Win32IDE_Commands_Register(int id, void (*fn)());
 
@@ -122,6 +126,12 @@ struct StartupOptions {
 static StartupOptions g_startupOptions;
 static FILE* g_headlessLog = nullptr;  // File log for GUI-subsystem headless runs
 static bool g_certTimerExpired = false;  // W8: set when cert timer fires
+static constexpr UINT kCertTimerMessage = WM_APP + 0xB008;
+static std::atomic<bool> g_certTimerStop{false};
+static std::condition_variable g_certTimerCv;
+static std::mutex g_certTimerMutex;
+static std::thread g_certTimerThread;
+static DWORD g_mainThreadId = 0;
 
 // W8: Shutdown origin tracing â€” records the FIRST reason the process exits
 enum class ShutdownReason {
@@ -1485,6 +1495,10 @@ static HWND g_hOutput  = NULL;
 #define IDM_EDIT_REPLACE    2108
 #define IDM_EDIT_FINDNEXT   2109
 #define IDM_EDIT_REPLACEALL 2110
+#define IDM_EDIT_RENAME     2111
+#define IDM_TOOLS_COMMAND_PALETTE 2201
+#define IDM_LSP_GOTO_DEFINITION   2202
+#define IDM_GIT_STATUS            2203
 #define IDM_MODEL_LOCAL     3001
 #define IDM_MODEL_DIAG      3002
 #define IDM_MODEL_OPEN      3003
@@ -2136,6 +2150,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HWND hEditor = RawrXD::IDE::ShellLayout_GetEditor();
         Win32IDE_Commands_SetMainWindow(hWnd);
         Win32IDE_Commands_SetEditorWindow(hEditor);
+        Win32IDE_Commands_AttachUndo();
 
         // Wire ChatPanel â†’ Deep2Engine streaming
         // Try --model path, then RAWRXD_AGENT_MODEL env, then default
@@ -2182,6 +2197,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RawrXD::IDE::ShellLayout_Resize(W, H);
         break;
     }
+    case WM_TIMER:
+        if (wParam == 0xB008 && g_startupOptions.certStayAlive) {
+            KillTimer(hWnd, 0xB008);
+            g_certTimerExpired = true;
+            recordShutdownReason(ShutdownReason::CertTimerExpired);
+            PostMessageA(hWnd, WM_CLOSE, 0, 0);
+            return 0;
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -2805,7 +2829,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 // automation flag that silently ignores its own argument is the
                 // same defect class as a gate that silently ignores a failure.
                 char buf[1024] = {0};
-                WideCharToMultiByte(CP_UTF8, 0, arg.c_str() + 18, -1,
+                WideCharToMultiByte(CP_UTF8, 0, arg.c_str() + 19, -1,
                                     buf, sizeof(buf) - 1, nullptr, nullptr);
                 g_startupOptions.ideCertReceiptPath = buf;
             }
@@ -2942,7 +2966,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AppendMenuA(hEdit, MF_STRING, IDM_EDIT_FINDNEXT,   "Find &Next\tF3");
     AppendMenuA(hEdit, MF_STRING, IDM_EDIT_REPLACE,    "&Replace...\tCtrl+H");
     AppendMenuA(hEdit, MF_STRING, IDM_EDIT_REPLACEALL, "Replace &All\tCtrl+Alt+H");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_RENAME,     "Rena&me Symbol\tF2");
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hEdit, "&Edit");
+
+    HMENU hTools = CreatePopupMenu();
+    AppendMenuA(hTools, MF_STRING, IDM_TOOLS_COMMAND_PALETTE, "Command &Palette\tCtrl+P");
+    AppendMenuA(hTools, MF_STRING, IDM_LSP_GOTO_DEFINITION, "Go to &Definition\tF12");
+    AppendMenuA(hTools, MF_STRING, IDM_GIT_STATUS, "Git &Status");
+    AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hTools, "&Tools");
 
     HMENU hBuild = CreatePopupMenu();
     AppendMenuA(hBuild, MF_STRING, IDM_BUILD_NATIVE, "&Native Compile Test\tF5");
@@ -2987,7 +3018,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         { FCONTROL|FVIRTKEY, 'F', IDM_EDIT_FIND },
         { FCONTROL|FVIRTKEY, 'H', IDM_EDIT_REPLACE },
         { FCONTROL|FALT|FVIRTKEY, 'H', IDM_EDIT_REPLACEALL },
+        { FCONTROL|FVIRTKEY, 'P', IDM_TOOLS_COMMAND_PALETTE },
         { FVIRTKEY, VK_F3,    IDM_EDIT_FINDNEXT },
+        { FVIRTKEY, VK_F2,    IDM_EDIT_RENAME },
+        { FVIRTKEY, VK_F12,   IDM_LSP_GOTO_DEFINITION },
         { FVIRTKEY, VK_F5,    IDM_BUILD_NATIVE },
         { FVIRTKEY, VK_F6,    IDM_MODEL_LOCAL },
         { FVIRTKEY, VK_F7,    IDM_MODEL_DIAG },
@@ -3014,12 +3048,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // W8_HEADLESS_LIFECYCLE_CERT_001: --cert-stay-alive keeps the message
     // loop alive for --cert-duration-sec seconds, then exits cleanly.
     // No model, no Deep2, no Ollama, no user interaction required.
-    UINT_PTR g_stayAliveTimer = 0;
-    if (g_startupOptions.certStayAlive && g_startupOptions.certDurationSec > 0 && g_hMainWnd) {
-        g_stayAliveTimer = SetTimer(g_hMainWnd, 0xB008,
-            g_startupOptions.certDurationSec * 1000, nullptr);
-    }
-
     // RAWRXD_IDE_RUNTIME_CERT_001
     // Automated smoke path over the real runtime surface, run once the window
     // and its children exist and immediately before the message loop. Linking
@@ -3036,14 +3064,32 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         }
     }
 
+    g_mainThreadId = GetCurrentThreadId();
+    if (g_startupOptions.certStayAlive && g_startupOptions.certDurationSec > 0 && g_hMainWnd) {
+        MSG queueProbe{};
+        PeekMessageA(&queueProbe, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
+        g_certTimerStop.store(false, std::memory_order_release);
+        g_certTimerThread = std::thread([] {
+            std::unique_lock<std::mutex> lock(g_certTimerMutex);
+            const bool stopped = g_certTimerCv.wait_for(
+                lock, std::chrono::seconds(g_startupOptions.certDurationSec),
+                [] { return g_certTimerStop.load(std::memory_order_acquire); });
+            if (stopped) return;
+            PostThreadMessageA(g_mainThreadId, kCertTimerMessage, 0, 0);
+            if (g_hMainWnd) PostMessageA(g_hMainWnd, kCertTimerMessage, 0, 0);
+        });
+    }
+
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        // W8 stay-alive timer fired: post WM_CLOSE to end cleanly
-        if (msg.message == WM_TIMER && msg.wParam == 0xB008) {
-            KillTimer(g_hMainWnd, g_stayAliveTimer);
-            g_certTimerExpired = true;  // allow WM_CLOSE through cert suppression
-            recordShutdownReason(ShutdownReason::CertTimerExpired);
-            PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
+        if (msg.message == kCertTimerMessage ||
+            (msg.message == WM_TIMER && msg.wParam == 0xB008)) {
+            if (!g_certTimerExpired) {
+                g_certTimerExpired = true;
+                recordShutdownReason(ShutdownReason::CertTimerExpired);
+            }
+            if (g_hMainWnd && IsWindow(g_hMainWnd)) DestroyWindow(g_hMainWnd);
+            else PostQuitMessage(0);
             continue;
         }
         if (msg.message == WM_AUTORUN) {
@@ -3067,6 +3113,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+    }
+
+    g_certTimerStop.store(true, std::memory_order_release);
+    g_certTimerCv.notify_all();
+    if (g_certTimerThread.joinable()) g_certTimerThread.join();
+
+    if (g_startupOptions.ideRuntimeCert) {
+        extern void IdeRuntimeCert_FinalizeCleanShutdown(bool);
+        const bool clean = !g_startupOptions.certStayAlive ||
+            (g_certTimerExpired && !IsWindow(g_hMainWnd));
+        IdeRuntimeCert_FinalizeCleanShutdown(clean);
     }
 
     if (hAccel) DestroyAcceleratorTable(hAccel);

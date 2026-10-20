@@ -42,6 +42,21 @@ static bool GpuFiniteTraceEnabled() {
     return s && *s && std::strcmp(s, "0") != 0;
 }
 
+static bool GpuForwardTraceEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_GPU_TRACE");
+        return value && value[0] && value[0] != '0';
+    }();
+    return enabled;
+}
+
+#define DEEP2_GPU_TRACE(...) do { \
+    if (GpuForwardTraceEnabled()) { \
+        std::fprintf(stderr, __VA_ARGS__); \
+        std::fflush(stderr); \
+    } \
+} while (0)
+
 static long GpuTracePrefixHi() {
     const char* s = std::getenv("DEEP2_GPU_TRACE_PREFIX_HI");
     if (!s || !*s) return -1;
@@ -286,6 +301,7 @@ void Deep2Engine::ReleasePreparedWeights() {
 }
 
 bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
+    if (slot >= 2 || gpuForwardArenaReady_[slot]) return true;
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
@@ -366,7 +382,7 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
             // Non-fatal: decode falls back to the locked compatibility
             // API until the next successful prepare.
         } else {
-            std::fprintf(stderr,
+            DEEP2_GPU_TRACE(
                 "[HOT_LANE_PREP_OK] slot=%u maxIn=%u maxRows=%u\n",
                 slot, maxIn, maxRows);
         }
@@ -410,7 +426,9 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
         (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22),
         kvLayers);
-    return vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena);
+    const bool ready = vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena);
+    if (ready) gpuForwardArenaReady_[slot] = true;
+    return ready;
 }
 
 // RAWRXD_VULKAN_BODY_PARITY_GRID_001
@@ -1330,7 +1348,7 @@ bool Deep2Engine::ropeBisectRun(unsigned layer, const std::string& dumpDir,
 bool Deep2Engine::forwardLayerGpuResident(
     uint32_t layer, unsigned slot, bool uploadEntry, bool downloadExit)
 {
-    std::fprintf(stderr, "GPU_LAYER_ENTER layer=%u slot=%u\n", layer, slot);
+    DEEP2_GPU_TRACE("GPU_LAYER_ENTER layer=%u slot=%u\n", layer, slot);
     if (!vulkanInitialized_ || vulkanDevices_.empty()) {
         std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=VULKAN_INIT layer=%u reason=vulkan_uninitialized_or_no_devices\n", layer);
         return false;
@@ -1348,15 +1366,15 @@ bool Deep2Engine::forwardLayerGpuResident(
         std::fprintf(stderr, "GPU_FORWARD_STAGE=GET_SLOT layer=%u slot=%u vc=null\n", layer, slot);
         return false;
     }
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=ENSURE_ARENA layer=%u slot=%u\n", layer, slot);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=ENSURE_ARENA layer=%u slot=%u\n", layer, slot);
     if (!ensureGpuForwardArena(slot)) {
         std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=ARENA layer=%u slot=%u\n", layer, slot);
         return false;
     }
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=SET_EPOCH layer=%u slot=%u\n", layer, slot);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=SET_EPOCH layer=%u slot=%u\n", layer, slot);
     vc->SetWorkEpoch(kvCache ? kvCache->currentLength() : 0);
 
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=GET_LAYER_WEIGHTS layer=%u slot=%u\n", layer, slot);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=GET_LAYER_WEIGHTS layer=%u slot=%u\n", layer, slot);
     const auto& lw = modelWeights.layers[layer];
     const uint32_t H = (uint32_t)config.hiddenDim;
     const uint32_t nHeads = (uint32_t)modelWeights.numHeads;
@@ -1383,7 +1401,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     const bool doSSM  = lw.hasSSM;
     const bool doFFN  = lw.hasFFN;
 
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=CHECK_WEIGHT_DATA layer=%u slot=%u doAttn=%d doSSM=%d doFFN=%d\n",
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=CHECK_WEIGHT_DATA layer=%u slot=%u doAttn=%d doSSM=%d doFFN=%d\n",
         layer, slot, (int)doAttn, (int)doSSM, (int)doFFN);
 
     if (doAttn) {
@@ -1413,10 +1431,10 @@ bool Deep2Engine::forwardLayerGpuResident(
             return false;
         }
     }
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=WEIGHT_DATA_OK layer=%u slot=%u\n", layer, slot);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=WEIGHT_DATA_OK layer=%u slot=%u\n", layer, slot);
 
     auto& c = gpuFwd_;
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=GPU_FWD_REF_OK layer=%u slot=%u\n", layer, slot);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=GPU_FWD_REF_OK layer=%u slot=%u\n", layer, slot);
     if (uploadEntry) {
         // caller must have placed host hidden into a staging path via UploadHidden
         ++c.hostSyncBoundaries; // entry boundary only — not a mid-layer materialization
@@ -1424,9 +1442,9 @@ bool Deep2Engine::forwardLayerGpuResident(
 
     const uint64_t liveSeq =
         kvCache ? static_cast<uint64_t>(kvCache->currentLength()) : 0ull;
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=KV_SEQ_OK layer=%u seq=%llu\n", layer, (unsigned long long)liveSeq);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=KV_SEQ_OK layer=%u seq=%llu\n", layer, (unsigned long long)liveSeq);
     CycloneScheduler* liveCyc = LivePath_ActiveCyclone();
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=CYC_OK layer=%u cyc=%p\n", layer, (void*)liveCyc);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=CYC_OK layer=%u cyc=%p\n", layer, (void*)liveCyc);
     if (!liveCyc && cycloneEnabled_) liveCyc = cyclone_.get();
     const uint64_t layerStartNs =
         (liveCyc && LivePath_Active())
@@ -1437,7 +1455,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (LivePath_Active())
         LivePath_OnLayerStart(liveCyc, layer, liveSeq);
 
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=PREFETCH_CHECK layer=%u\n", layer);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=PREFETCH_CHECK layer=%u\n", layer);
     const bool prefetch = vc->WeightPrefetchActive() ||
         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
@@ -1460,15 +1478,15 @@ bool Deep2Engine::forwardLayerGpuResident(
         return false;
     };
     if (ownFusion) {
-        std::fprintf(stderr, "GPU_FORWARD_STAGE=FUSE_BEGIN layer=%u\n", layer);
+        DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=FUSE_BEGIN layer=%u\n", layer);
         if (!vc->BeginFusedLayer()) {
             std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=FUSE layer=%u op=BeginFusedLayer\n", layer);
             return fail("FUSE", "BeginFusedLayer");
         }
-        std::fprintf(stderr, "GPU_FORWARD_STAGE=FUSE_BEGIN_OK layer=%u\n", layer);
+        DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=FUSE_BEGIN_OK layer=%u\n", layer);
     }
-    std::fprintf(stderr, "GPU_LAYER_BEGIN layer=%u\n", layer);
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=ENSURE_F32_ATTN layer=%u\n", layer);
+    DEEP2_GPU_TRACE("GPU_LAYER_BEGIN layer=%u\n", layer);
+    DEEP2_GPU_TRACE("GPU_FORWARD_STAGE=ENSURE_F32_ATTN layer=%u\n", layer);
     const float* attnW = EnsureF32(*this, lw.attnNorm, vulkanWeightF32_);
     /* DualStick owns work: real weight bytes → FreeToken Overwrite (not null Resolve). */
     if (attnW)
@@ -1490,7 +1508,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
                     CPUInference::VulkanCompute::DeviceBuf& out,
                     uint32_t rows, uint32_t cols) -> bool {
-        std::fprintf(stderr, "GEMV_ENTER name=%s type=%d rows=%u cols=%u packed=%d\n",
+        DEEP2_GPU_TRACE("GEMV_ENTER name=%s type=%d rows=%u cols=%u packed=%d\n",
             wt.name.c_str(), wt.type, rows, cols, (int)PackedQuant(wt));
         if (!wt.data) {
             std::fprintf(stderr,
@@ -1525,10 +1543,10 @@ bool Deep2Engine::forwardLayerGpuResident(
                 return vc->SubmitGemvPrefetch(sl, in, out, rows, cols, wt.sizeBytes, wt.type);
             }
             /* DualStick armed: prefer in-process 84-byte packed Q2_K (never 72-byte MASM). */
-            std::fprintf(stderr, "GEMV_DISPATCH_GEMVQUANT name=%s type=%d rows=%u cols=%u\n",
+            DEEP2_GPU_TRACE("GEMV_DISPATCH_GEMVQUANT name=%s type=%d rows=%u cols=%u\n",
                 wt.name.c_str(), wt.type, rows, cols);
             bool r = vc->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
-            std::fprintf(stderr, "GEMV_DISPATCH_GEMVQUANT_DONE name=%s result=%d\n", wt.name.c_str(), (int)r);
+            DEEP2_GPU_TRACE("GEMV_DISPATCH_GEMVQUANT_DONE name=%s result=%d\n", wt.name.c_str(), (int)r);
             return r;
         }
         /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
@@ -1551,9 +1569,9 @@ bool Deep2Engine::forwardLayerGpuResident(
             if (!vc->PrefetchWeight(w, weightBytes, sl)) return false;
             return vc->SubmitGemvPrefetch(sl, in, out, rows, cols);
         }
-        std::fprintf(stderr, "GEMV_DISPATCH_DEVICE name=%s rows=%u cols=%u bytes=%zu\n", wt.name.c_str(), rows, cols, weightBytes);
+        DEEP2_GPU_TRACE("GEMV_DISPATCH_DEVICE name=%s rows=%u cols=%u bytes=%zu\n", wt.name.c_str(), rows, cols, weightBytes);
         bool r = vc->DispatchGemvDevice(w, WeightKey(wt), in, out, rows, cols);
-        std::fprintf(stderr, "GEMV_DISPATCH_DEVICE_DONE name=%s result=%d\n", wt.name.c_str(), (int)r);
+        DEEP2_GPU_TRACE("GEMV_DISPATCH_DEVICE_DONE name=%s result=%d\n", wt.name.c_str(), (int)r);
         return r;
     };
     // Overlapped QKV: upload next while prior GEMV runs
@@ -2395,7 +2413,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             std::fflush(stderr);
         }
     }
-    std::fprintf(stderr, "GPU_LAYER_END layer=%u\n", layer);
+    DEEP2_GPU_TRACE("GPU_LAYER_END layer=%u\n", layer);
     return true;
 }
 
@@ -2866,6 +2884,32 @@ void Deep2Engine::captureGpuForwardReceipt(uint64_t nanCount, uint64_t infCount)
         (unsigned long long)gpuFwdReceipt_.nanCount,
         (unsigned long long)gpuFwdReceipt_.infCount,
         (unsigned)gpuFwdReceipt_.expectedLayersPerToken);
+    const char* timingEnv = std::getenv("DEEP2_GPU_TIMING");
+    if (timingEnv && timingEnv[0] == '1') {
+        std::fprintf(stderr,
+            "GPUFWD_TIMING upload_ns=%llu upload_count=%llu "
+            "prime_ns=%llu prime_count=%llu "
+            "range0_ns=%llu range0_gpu_ns=%llu range0_count=%llu "
+            "range1_ns=%llu range1_gpu_ns=%llu range1_count=%llu "
+            "handoff_ns=%llu handoff_count=%llu "
+            "final_ns=%llu final_count=%llu submits=%llu waits=%llu\n",
+            (unsigned long long)gpuFwd_.residentUploadHiddenNs,
+            (unsigned long long)gpuFwd_.residentUploadHiddenCount,
+            (unsigned long long)gpuFwd_.residentPrimeCommitNs,
+            (unsigned long long)gpuFwd_.residentPrimeCommitCount,
+            (unsigned long long)gpuFwd_.residentRangeNs[0],
+            (unsigned long long)gpuFwd_.residentRangeGpuNs[0],
+            (unsigned long long)gpuFwd_.residentRangeCount[0],
+            (unsigned long long)gpuFwd_.residentRangeNs[1],
+            (unsigned long long)gpuFwd_.residentRangeGpuNs[1],
+            (unsigned long long)gpuFwd_.residentRangeCount[1],
+            (unsigned long long)gpuFwd_.residentHandoffNs,
+            (unsigned long long)gpuFwd_.residentHandoffCount,
+            (unsigned long long)gpuFwd_.residentFinalDownloadNs,
+            (unsigned long long)gpuFwd_.residentFinalDownloadCount,
+            (unsigned long long)gpuFwd_.residentQueueSubmits,
+            (unsigned long long)gpuFwd_.residentFenceWaits);
+    }
     std::fflush(stderr);
 }
 

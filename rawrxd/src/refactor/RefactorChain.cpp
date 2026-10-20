@@ -1329,6 +1329,14 @@ void RefactorChain::computeDiagnostics(FileState& fs) {
         return false;
     };
 
+    auto isPrototypeLine = [&](uint32_t ln) -> bool {
+        if (ln == 0 || ln > fs.lines.size()) return false;
+        const std::string trimmed = trimBothStr(fs.lines[ln - 1]);
+        return !trimmed.empty() && trimmed.back() == ';' &&
+               trimmed.find(");") != std::string::npos &&
+               trimmed.find('{') == std::string::npos;
+    };
+
     std::map<uint32_t, std::vector<size_t>> byLine;
     for (size_t i = 0; i < n; ++i) byLine[T[i].line].push_back(i);
     std::vector<uint32_t> codeLines;
@@ -1407,6 +1415,7 @@ void RefactorChain::computeDiagnostics(FileState& fs) {
         if (scopeOpBefore(T, i)) continue;
         if (scopeOpAfter(T, i)) continue;
         if (declNameSites.count(std::make_pair(t.line, t.col))) continue;
+        if (isPrototypeLine(t.line)) continue;
 
         if (isDeclaredAnywhere(t.text)) continue;
         if (boundInFile.count(t.text)) continue;
@@ -1945,11 +1954,17 @@ ExtractResult RefactorChain::extractFunction(const std::string& relFile,
         for (const auto& v : freeVars) if (v == t.text) { already = true; break; }
         if (!already) freeVars.push_back(t.text);
 
-        const bool assignment =
+        bool assignment =
             (i + 1 < f->tokens.size() && f->tokens[i + 1].type == TokType::Punct &&
-             (f->tokens[i + 1].text == "=" || f->tokens[i + 1].text == "+=" ||
-              f->tokens[i + 1].text == "-=" || f->tokens[i + 1].text == "*=" ||
-              f->tokens[i + 1].text == "/="));
+             f->tokens[i + 1].text == "=");
+        if (!assignment && i + 2 < f->tokens.size() &&
+            f->tokens[i + 1].type == TokType::Punct &&
+            f->tokens[i + 2].type == TokType::Punct &&
+            f->tokens[i + 2].text == "=") {
+            const std::string& op = f->tokens[i + 1].text;
+            assignment = op == "+" || op == "-" || op == "*" || op == "/" ||
+                         op == "%" || op == "&" || op == "|" || op == "^";
+        }
         if (assignment) {
             bool seenAssign = false;
             for (const auto& v : assignedFreeVars) if (v == t.text) { seenAssign = true; break; }
@@ -2043,7 +2058,9 @@ ExtractResult RefactorChain::extractFunction(const std::string& relFile,
     std::vector<std::string> lines = f->lines;
     // Replace the selected block with exactly one call first, so the enclosing
     // function's own first line is unchanged.
-    const std::string call = indent + newName + "(" + argText + ");";
+    const std::string call = indent +
+        (retVar.empty() ? std::string() : retVar + " = ") +
+        newName + "(" + argText + ");";
     lines.erase(lines.begin() + (firstLine - 1), lines.begin() + lastLine);
     lines.insert(lines.begin() + (firstLine - 1), call);
 

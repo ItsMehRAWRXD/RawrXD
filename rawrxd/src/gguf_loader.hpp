@@ -113,8 +113,8 @@ public:
     const std::vector<uint64_t>& shape() const;
     std::string name() const;
 
-    // Dequantize the whole tensor into `out` as float32. Handles F32, F16,
-    // BF16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0 and the K-quants Q2_K..Q6_K.
+    // Dequantize the whole tensor into `out` as float32. Handles all local
+    // scalar, K-quant, and IQ quantization encodings in the GGML type table.
     // Returns false if the encoding is unsupported or the buffer is short;
     // `out` is left untouched in that case.
     bool ToFloat32(std::vector<float>& out) const;

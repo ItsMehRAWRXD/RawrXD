@@ -395,10 +395,10 @@ int main() {
     // ---------------- negative: UNSUPPORTED QUANT ----------------
     {
         ModelMetadata md = denseMeta("llama");
-        // An IQ type: present in the GGML type enum and therefore parseable, but
-        // RegisterIQKernels() is an empty stub so no kernel is registered.
-        md.quantTypeId = 20;   // GGML_TYPE_IQ2_M neighbourhood, no linked kernel
-        md.quantization = "IQ2_M";
+        // An unknown type remains rejected even though all supported local
+        // quantization formats have real CPU registry entries.
+        md.quantTypeId = 31;
+        md.quantization = "UNKNOWN_31";
         if (!ModelRegistry::admit(md, ExecDevice::Cpu, rep) &&
             rep.reject == AdmissionReject::UnsupportedQuant) {
             ++g.unsupported_quant_rejected;

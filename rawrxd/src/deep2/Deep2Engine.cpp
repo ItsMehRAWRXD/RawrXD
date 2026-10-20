@@ -3008,6 +3008,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                   ggufPath.c_str());
 
     modelWeights.loaded = true;
+    // Vulkan may be enabled before model load. At that point the physical
+    // devices are ready but layer geometry is not available yet, so refresh
+    // the placement plan once the authoritative weights are bound.
+    refreshVulkanModelPlan();
     if (cycloneEnabled_ && cyclone_) {
         cyclone_->onModelSwitch(static_cast<uint32_t>(modelWeights.numLayers), 0);
         Deep2::LivePath_BindCyclone(cyclone_.get());
@@ -3159,6 +3163,10 @@ void Deep2Engine::unloadModel() {
     // RAWRXD_REAL_GPU_FORWARD_002: model-unload reset, witnessed.
     resetGpuForwardCounters();
     gpuFwdCommitted_ = false;
+    layerRangePinned_[0] = false;
+    layerRangePinned_[1] = false;
+    gpuForwardArenaReady_[0] = false;
+    gpuForwardArenaReady_[1] = false;
     lmHeadPinned_[0] = false;
     lmHeadPinned_[1] = false;
     lmHeadPinRow0Count_ = 0;
@@ -5312,10 +5320,13 @@ Deep2Engine::ForwardResult Deep2Engine::forwardTokenAllLayers(float* hidden, siz
             modelWeights.layers.size(), (size_t)modelWeights.numLayers); std::fflush(stderr);
         return ForwardResult{false, ExecutionRoute::Unset, false, "layer_count_mismatch"};
     }
-    std::fprintf(stderr, "[FWD_ALL] seqLen=%zu numLayers=%zu isMoE=%d useMLA=%d vulkan=%d/%d\n",
-        seqLen, (size_t)modelWeights.numLayers,
-        modelWeights.isMoE ? 1 : 0, modelWeights.useMLA ? 1 : 0,
-        vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr, "[FWD_ALL] seqLen=%zu numLayers=%zu isMoE=%d useMLA=%d vulkan=%d/%d\n",
+            seqLen, (size_t)modelWeights.numLayers,
+            modelWeights.isMoE ? 1 : 0, modelWeights.useMLA ? 1 : 0,
+            vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0);
+        std::fflush(stderr);
+    }
 
     // Once any lane has mutated per-token state (device KV/residency, or
     // hidden rewritten layer-by-layer), no other lane may retry the token,
@@ -5602,14 +5613,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             return 0;
         }
         auto tEmbed1 = std::chrono::steady_clock::now();
-        {
-            float emMin = std::numeric_limits<float>::infinity();
-            float emMax = -std::numeric_limits<float>::infinity();
-            for (size_t i = 0; i < config.hiddenDim; ++i) {
-                if (hidden[i] < emMin) emMin = hidden[i];
-                if (hidden[i] > emMax) emMax = hidden[i];
-            }
-        }
         if (profiler_) profiler_->recordCpuOverhead(
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmbed1 - tEmbed0).count()));
         auto tFwd0 = std::chrono::steady_clock::now();
@@ -5711,14 +5714,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 break;
             }
             auto tEmb1 = std::chrono::steady_clock::now();
-            {
-                float emMin = std::numeric_limits<float>::infinity();
-                float emMax = -std::numeric_limits<float>::infinity();
-                for (size_t i = 0; i < config.hiddenDim; ++i) {
-                    if (hidden[i] < emMin) emMin = hidden[i];
-                    if (hidden[i] > emMax) emMax = hidden[i];
-                }
-            }
             if (profiler_) profiler_->recordCpuOverhead(
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmb1 - tEmb0).count()));
             const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;

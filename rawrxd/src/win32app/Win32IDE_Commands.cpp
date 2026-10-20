@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <functional>
 #include <algorithm>
+#include <cctype>
+#include <cwctype>
 #include <cstdio>
 #include <sstream>
 
@@ -59,6 +61,8 @@ namespace RawrXD::IDE {
     void        SettingsGUI_Show(HWND parent);
 }
 
+extern "C" bool Win32IDE_Commands_Route(int commandId);
+
 namespace {
 
 static HWND g_hwndMain = nullptr;
@@ -97,6 +101,17 @@ constexpr int IDM_EDIT_FIND        = 2107;
 constexpr int IDM_EDIT_FINDNEXT    = 2109;
 constexpr int IDM_EDIT_REPLACE     = 2108;
 constexpr int IDM_EDIT_REPLACEALL  = 2110;
+constexpr int IDM_EDIT_RENAME      = 2111;
+constexpr int IDM_TOOLS_COMMAND_PALETTE = 2201;
+constexpr int IDM_LSP_GOTO_DEFINITION   = 2202;
+constexpr int IDM_GIT_STATUS             = 2203;
+
+static HWND g_paletteWindow = nullptr;
+static HWND g_paletteSearch = nullptr;
+static HWND g_paletteList = nullptr;
+static bool g_lastOperationSucceeded = false;
+static std::string g_lastGitStatus;
+static std::string g_renameOverride;
 
 static void SnapshotForUndo() {
     using namespace RawrXD::IDE;
@@ -174,7 +189,7 @@ static bool DoFileNew() {
                 p = FileOps_SaveDialog(g_hwndMain, "", "All Files\0*.*\0C/C++ Files\0*.c;*.cpp;*.h;*.hpp\0");
                 if (p.empty()) return false;
             }
-            EditorEngine_SaveFile(p);
+            if (!EditorEngine_SaveFile(p)) return false;
             TabManager_SetModified(p, false);
         }
     }
@@ -576,6 +591,318 @@ static bool PromptFindReplace(bool withReplace, FindPromptResult* out)
     return r != 0 && out->accepted;
 }
 
+static bool IsIdentifierByte(char value) {
+    const unsigned char byte = static_cast<unsigned char>(value);
+    return std::isalnum(byte) != 0 || value == '_' || byte >= 0x80;
+}
+
+static size_t CaretOffset(const std::string& text, int line, int column) {
+    size_t offset = 0;
+    int currentLine = 0;
+    while (currentLine < line && offset < text.size()) {
+        const size_t newline = text.find('\n', offset);
+        if (newline == std::string::npos) return text.size();
+        offset = newline + 1;
+        ++currentLine;
+    }
+    const size_t lineEnd = text.find('\n', offset);
+    const size_t boundedEnd = lineEnd == std::string::npos ? text.size() : lineEnd;
+    const size_t requested = offset + static_cast<size_t>(std::max(column, 0));
+    return std::min(requested, boundedEnd);
+}
+
+static bool CurrentSymbol(std::string* symbol, size_t* startOffset = nullptr) {
+    if (!symbol) return false;
+    symbol->clear();
+    const std::string text = RawrXD::IDE::EditorEngine_GetText();
+    int line = 0;
+    int column = 0;
+    RawrXD::IDE::EditorEngine_GetCaret(&line, &column);
+    size_t offset = CaretOffset(text, line, column);
+    if (offset > 0 && (offset == text.size() || !IsIdentifierByte(text[offset]))) {
+        if (IsIdentifierByte(text[offset - 1])) --offset;
+    }
+    if (offset >= text.size() || !IsIdentifierByte(text[offset])) return false;
+    size_t begin = offset;
+    size_t end = offset + 1;
+    while (begin > 0 && IsIdentifierByte(text[begin - 1])) --begin;
+    while (end < text.size() && IsIdentifierByte(text[end])) ++end;
+    *symbol = text.substr(begin, end - begin);
+    if (startOffset) *startOffset = begin;
+    return !symbol->empty();
+}
+
+static bool IsWholeSymbolAt(const std::string& text, size_t offset,
+                            const std::string& symbol) {
+    if (offset > text.size() || text.compare(offset, symbol.size(), symbol) != 0) return false;
+    const bool left = offset == 0 || !IsIdentifierByte(text[offset - 1]);
+    const size_t end = offset + symbol.size();
+    const bool right = end >= text.size() || !IsIdentifierByte(text[end]);
+    return left && right;
+}
+
+static bool GotoDefinition() {
+    std::string symbol;
+    if (!CurrentSymbol(&symbol)) return false;
+    const std::string text = RawrXD::IDE::EditorEngine_GetText();
+    const size_t definition = text.find(symbol);
+    if (definition == std::string::npos || !IsWholeSymbolAt(text, definition, symbol)) return false;
+
+    int line = 0;
+    int column = 0;
+    for (size_t i = 0; i < definition; ++i) {
+        if (text[i] == '\n') {
+            ++line;
+            column = 0;
+        } else {
+            ++column;
+        }
+    }
+    RawrXD::IDE::EditorEngine_SetCaret(line, column);
+    return true;
+}
+
+static bool RenameCurrentSymbol(const std::string& replacement) {
+    if (replacement.empty()) return false;
+    for (char value : replacement) {
+        if (!IsIdentifierByte(value)) return false;
+    }
+
+    std::string symbol;
+    if (!CurrentSymbol(&symbol) || symbol == replacement) return false;
+    const std::string original = RawrXD::IDE::EditorEngine_GetText();
+    std::string updated;
+    updated.reserve(original.size());
+    size_t cursor = 0;
+    size_t edits = 0;
+    while (cursor < original.size()) {
+        const size_t match = original.find(symbol, cursor);
+        if (match == std::string::npos) {
+            updated.append(original, cursor, std::string::npos);
+            break;
+        }
+        if (!IsWholeSymbolAt(original, match, symbol)) {
+            updated.append(original, cursor, match + symbol.size() - cursor);
+            cursor = match + symbol.size();
+            continue;
+        }
+        updated.append(original, cursor, match - cursor);
+        updated += replacement;
+        cursor = match + symbol.size();
+        ++edits;
+    }
+    if (edits == 0) return false;
+    RawrXD::IDE::EditorEngine_SetText(updated);
+    return true;
+}
+
+static std::string ParentPath(const std::string& path) {
+    const size_t slash = path.find_last_of("\\/");
+    if (slash == std::string::npos) return {};
+    if (slash == 2 && path.size() >= 3 && path[1] == ':') return path.substr(0, 3);
+    return path.substr(0, slash);
+}
+
+static std::string FindGitRoot() {
+    char buffer[MAX_PATH] = {};
+    const DWORD length = GetCurrentDirectoryA(static_cast<DWORD>(sizeof(buffer)), buffer);
+    if (length == 0 || length >= sizeof(buffer)) return {};
+    std::string candidate(buffer, length);
+    for (;;) {
+        const std::string marker = candidate + "\\.git";
+        if (GetFileAttributesA(marker.c_str()) != INVALID_FILE_ATTRIBUTES) return candidate;
+        const std::string parent = ParentPath(candidate);
+        if (parent.empty() || parent == candidate) return {};
+        candidate = parent;
+    }
+}
+
+static bool RunGitStatus() {
+    const std::string root = FindGitRoot();
+    if (root.empty()) {
+        g_lastGitStatus = "git root not found";
+        return false;
+    }
+
+    SECURITY_ATTRIBUTES security{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
+    HANDLE readPipe = nullptr;
+    HANDLE writePipe = nullptr;
+    if (!CreatePipe(&readPipe, &writePipe, &security, 0)) {
+        g_lastGitStatus = "CreatePipe failed";
+        return false;
+    }
+    SetHandleInformation(readPipe, HANDLE_FLAG_INHERIT, 0);
+
+    std::string command = "git.exe -C \"" + root + "\" status --short --branch";
+    STARTUPINFOA startup{};
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+    startup.wShowWindow = SW_HIDE;
+    startup.hStdOutput = writePipe;
+    startup.hStdError = writePipe;
+    PROCESS_INFORMATION process{};
+    const BOOL launched = CreateProcessA(nullptr, command.data(), nullptr, nullptr, TRUE,
+                                         CREATE_NO_WINDOW, nullptr, nullptr, &startup, &process);
+    CloseHandle(writePipe);
+    if (!launched) {
+        CloseHandle(readPipe);
+        g_lastGitStatus = "CreateProcess(git) failed";
+        return false;
+    }
+
+    g_lastGitStatus.clear();
+    char buffer[512];
+    DWORD bytesRead = 0;
+    while (ReadFile(readPipe, buffer, sizeof(buffer), &bytesRead, nullptr) && bytesRead != 0) {
+        g_lastGitStatus.append(buffer, bytesRead);
+    }
+    CloseHandle(readPipe);
+    WaitForSingleObject(process.hProcess, INFINITE);
+    DWORD exitCode = 1;
+    GetExitCodeProcess(process.hProcess, &exitCode);
+    CloseHandle(process.hThread);
+    CloseHandle(process.hProcess);
+    return exitCode == 0;
+}
+
+struct PaletteEntry {
+    const char* label;
+    int commandId;
+};
+
+static constexpr PaletteEntry kPaletteEntries[] = {
+    {"File: Save", IDM_FILE_SAVE},
+    {"Edit: Undo", IDM_EDIT_UNDO},
+    {"Edit: Redo", IDM_EDIT_REDO},
+    {"Edit: Rename Symbol", IDM_EDIT_RENAME},
+    {"LSP: Go to Definition", IDM_LSP_GOTO_DEFINITION},
+    {"Git: Status", IDM_GIT_STATUS},
+    {"Tools: Command Palette", IDM_TOOLS_COMMAND_PALETTE},
+};
+
+static void RefreshCommandPalette() {
+    if (!g_paletteList) return;
+    std::wstring query;
+    if (g_paletteSearch) {
+        const int length = GetWindowTextLengthW(g_paletteSearch);
+        query.resize(static_cast<size_t>(length) + 1);
+        if (length > 0) GetWindowTextW(g_paletteSearch, query.data(), length + 1);
+        query.resize(static_cast<size_t>(length));
+    }
+    std::transform(query.begin(), query.end(), query.begin(), [](wchar_t value) {
+        return static_cast<wchar_t>(std::towlower(value));
+    });
+    SendMessage(g_paletteList, LB_RESETCONTENT, 0, 0);
+    int first = -1;
+    for (const PaletteEntry& entry : kPaletteEntries) {
+        std::wstring label = WidenUtf8(entry.label);
+        std::wstring lowered = label;
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](wchar_t value) {
+            return static_cast<wchar_t>(std::towlower(value));
+        });
+        if (!query.empty() && lowered.find(query) == std::wstring::npos) continue;
+        const int index = static_cast<int>(SendMessageW(
+            g_paletteList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str())));
+        SendMessage(g_paletteList, LB_SETITEMDATA, index, entry.commandId);
+        if (first < 0) first = index;
+    }
+    if (first >= 0) SendMessage(g_paletteList, LB_SETCURSEL, first, 0);
+}
+
+static LRESULT CALLBACK CommandPaletteWndProc(HWND hwnd, UINT message,
+                                               WPARAM wParam, LPARAM lParam) {
+    switch (message) {
+    case WM_CREATE:
+        g_paletteWindow = hwnd;
+        g_paletteSearch = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
+            WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 8, 8, 484, 24, hwnd,
+            reinterpret_cast<HMENU>(1), GetModuleHandleW(nullptr), nullptr);
+        g_paletteList = CreateWindowExW(WS_EX_CLIENTEDGE, L"LISTBOX", L"",
+            WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL, 8, 40, 484, 212, hwnd,
+            reinterpret_cast<HMENU>(2), GetModuleHandleW(nullptr), nullptr);
+        RefreshCommandPalette();
+        return 0;
+    case WM_SIZE:
+        if (g_paletteSearch) MoveWindow(g_paletteSearch, 8, 8, LOWORD(lParam) - 16, 24, TRUE);
+        if (g_paletteList) MoveWindow(g_paletteList, 8, 40, LOWORD(lParam) - 16,
+                                      HIWORD(lParam) - 48, TRUE);
+        return 0;
+    case WM_COMMAND: {
+        const int controlId = LOWORD(wParam);
+        const int notifyCode = HIWORD(wParam);
+        if (controlId == 1 && notifyCode == EN_CHANGE) {
+            RefreshCommandPalette();
+            return 0;
+        }
+        if (controlId == 2 && notifyCode == LBN_DBLCLK && g_paletteList) {
+            const LRESULT index = SendMessage(g_paletteList, LB_GETCURSEL, 0, 0);
+            if (index >= 0) {
+                const int commandId = static_cast<int>(SendMessage(
+                    g_paletteList, LB_GETITEMDATA, static_cast<WPARAM>(index), 0));
+                Win32IDE_Commands_Route(commandId);
+            }
+            return 0;
+        }
+        break;
+    }
+    case WM_CLOSE:
+        DestroyWindow(hwnd);
+        return 0;
+    case WM_DESTROY:
+        if (hwnd == g_paletteWindow) {
+            g_paletteWindow = nullptr;
+            g_paletteSearch = nullptr;
+            g_paletteList = nullptr;
+        }
+        return 0;
+    }
+    return DefWindowProcW(hwnd, message, wParam, lParam);
+}
+
+static bool ShowCommandPalette() {
+    if (!g_hwndMain || !IsWindow(g_hwndMain)) return false;
+    if (!g_paletteWindow) {
+        WNDCLASSEXW klass{sizeof(WNDCLASSEXW)};
+        klass.lpfnWndProc = CommandPaletteWndProc;
+        klass.hInstance = GetModuleHandleW(nullptr);
+        klass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        klass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+        klass.lpszClassName = L"RawrXDCommandPalette";
+        RegisterClassExW(&klass);
+        g_paletteWindow = CreateWindowExW(0, klass.lpszClassName, L"Command Palette",
+            WS_CHILD | WS_VISIBLE | WS_BORDER | WS_CLIPCHILDREN,
+            20, 20, 500, 260, g_hwndMain, nullptr, klass.hInstance, nullptr);
+    } else {
+        ShowWindow(g_paletteWindow, SW_SHOW);
+    }
+    if (!g_paletteWindow) return false;
+    RefreshCommandPalette();
+    SetFocus(g_paletteSearch ? g_paletteSearch : g_paletteWindow);
+    return true;
+}
+
+static void DoGotoDefinition() {
+    g_lastOperationSucceeded = GotoDefinition();
+}
+
+static void DoRenameSymbol() {
+    std::string replacement = g_renameOverride;
+    g_renameOverride.clear();
+    if (replacement.empty()) {
+        FindPromptResult prompt;
+        if (!PromptFindReplace(true, &prompt)) {
+            g_lastOperationSucceeded = false;
+            return;
+        }
+        replacement = prompt.replace;
+    }
+    g_lastOperationSucceeded = RenameCurrentSymbol(replacement);
+}
+
+static void DoGitStatus() {
+    g_lastOperationSucceeded = RunGitStatus();
+}
+
 static void ReportFindResult(bool found) {
     using namespace RawrXD::IDE;
     if (!g_hwndMain) return;
@@ -674,6 +1001,7 @@ void handleEditCommand(int cmd) {
     case IDM_EDIT_FINDNEXT:   DoEditFindNext();   break;
     case IDM_EDIT_REPLACE:    DoEditReplace();    break;
     case IDM_EDIT_REPLACEALL: DoEditReplaceAll(); break;
+    case IDM_EDIT_RENAME:     DoRenameSymbol();    break;
     }
 }
 
@@ -686,12 +1014,28 @@ extern "C" void Win32IDE_Commands_SetEditorWindow(HWND hwnd) { (void)hwnd; }
 extern "C" bool Win32IDE_Commands_Route(int commandId) {
     auto it = g_commandHandlers.find(commandId);
     if (it != g_commandHandlers.end()) { it->second(); return true; }
+    switch (commandId) {
+    case IDM_TOOLS_COMMAND_PALETTE:
+        g_lastOperationSucceeded = ShowCommandPalette();
+        return true;
+    case IDM_LSP_GOTO_DEFINITION:
+        DoGotoDefinition();
+        return true;
+    case IDM_GIT_STATUS:
+        DoGitStatus();
+        return true;
+    }
     if (commandId >= 1000 && commandId < 2000) { handleFileCommand(commandId); return true; }
     if (commandId >= 2100 && commandId < 2200) { handleEditCommand(commandId); return true; }
     return false;
 }
 extern "C" void Win32IDE_Commands_Register(int id, void (*fn)()) { g_commandHandlers[id] = [fn]() { fn(); }; }
 extern "C" void Win32IDE_Commands_SetDirty(bool dirty) { g_dirty = dirty; UpdateTitle(); }
+extern "C" bool Win32IDE_Commands_LastOperationSucceeded() { return g_lastOperationSucceeded; }
+extern "C" const char* Win32IDE_Commands_GetLastGitStatus() { return g_lastGitStatus.c_str(); }
+extern "C" void Win32IDE_Commands_SetRenameOverrideForCert(const char* replacement) {
+    g_renameOverride = replacement ? replacement : "";
+}
 
 // RAWRXD_IDE_UNDO_COVERAGE_001
 // The router owns the undo stack, so it is the natural place to subscribe to
@@ -699,6 +1043,9 @@ extern "C" void Win32IDE_Commands_SetDirty(bool dirty) { g_dirty = dirty; Update
 extern "C" void Win32IDE_Commands_AttachUndo() {
     RawrXD::IDE::EditorEngine_RegisterMutationHook(&OnEditorMutation);
     PushInitialSnapshot();
+}
+extern "C" void Win32IDE_Commands_ResetUndoHistoryForCert() {
+    ResetUndoHistory();
 }
 extern "C" const wchar_t* Win32IDE_Commands_GetCurrentFile() {
     using namespace RawrXD::IDE;

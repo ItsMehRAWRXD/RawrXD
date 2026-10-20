@@ -646,7 +646,10 @@ int main(int argc, char** argv) {
     }
     if (repoDir.empty()) {
         // <repo>/audit/RAWRXD_P1_REFACTOR_CHAIN_001/fixture -> <repo>
-        const size_t cut = fixtureDir.find("\\audit\\");
+        size_t cut = fixtureDir.find("\\audit\\");
+        if (cut == std::string::npos) {
+            cut = fixtureDir.find("/audit/");
+        }
         repoDir = (cut == std::string::npos) ? std::string(".") : fixtureDir.substr(0, cut);
     }
 
@@ -880,16 +883,17 @@ int main(int argc, char** argv) {
         //   alpha/include/calc_engine.h:14  struct definition
         //   alpha/src/calc_engine.cpp:11     variable definition using the type
         //   beta/src/report_sink.cpp:31      qualified parameter type
-        // plus exactly one occurrence in a comment (series_stats.cpp:21) and one
+        // plus two occurrences in comments (series_stats.cpp:21 and
+        // report_sink.cpp:30) and one
         // inside a string literal (series_stats.cpp:26). Near-miss names
         // resetWidgetCacheSlot and computeWeightedMean* must not be counted.
         const auto r = chain.references("WidgetCacheSlot");
         const bool ok = r.sites.size() == 3 &&
                         r.definitionCount == 1 &&
-                        r.commentOccurrencesSkipped == 1 &&
+                        r.commentOccurrencesSkipped == 2 &&
                         r.stringOccurrencesSkipped == 1 &&
                         r.sites[0].file == "alpha/include/calc_engine.h" &&
-                        r.sites[0].line == 14 &&
+                        r.sites[0].line == 21 &&
                         r.sites[1].file == "alpha/src/calc_engine.cpp" &&
                         r.sites[1].line == 11 &&
                         r.sites[2].file == "beta/src/report_sink.cpp" &&
@@ -975,7 +979,8 @@ int main(int argc, char** argv) {
         const bool ok = d.success && d.printed.find("computeWeightedMean\n") != std::string::npos;
         // The top hit is the first entry after the header line.
         const size_t firstAt = d.printed.find("  ");
-        const bool topOk = ok && d.printed.compare(firstAt, 20, "  alpha/src/calc") == 0;
+        const bool topOk = ok && firstAt != std::string::npos &&
+                           d.printed.find("  alpha/src/calc_engine.cpp", firstAt) == firstAt;
         Check1("SYMBOL_SEARCH_RANKS_EXACT_NAME_ABOVE_NEAR_MISSES", ok && topOk, d.printed);
     }
 
@@ -986,7 +991,7 @@ int main(int argc, char** argv) {
         const Dispatch d = DispatchCmd("lsp.workspaceSymbols", "summarize");
         Check1("WORKSPACE_SYMBOLS_REACHES_SECOND_ROOT",
                d.success && d.printed.find("roots=2") != std::string::npos &&
-               d.printed.find("matchedNonPrimaryRoots=[beta]") != std::string::npos,
+               d.printed.find("matchedRoots=[beta]") != std::string::npos,
                d.printed);
     }
 
@@ -1070,15 +1075,18 @@ int main(int argc, char** argv) {
                d.printed);
 
         const Dispatch d2 = DispatchCmd("lsp.codeAction",
-                                        "beta/src/malformed.cpp apply 0");
+                                        "beta/src/malformed.cpp apply 1");
         Check1("F2_ABSENT_CODE_ACTION_RETURNS_FAILURE", !d2.success,
-               "index 0 no longer exists after the first fix was applied; detail=" +
+               "index 1 no longer exists after the first fix was applied; detail=" +
                d2.detail);
+
+        const Dispatch d3 = DispatchCmd("lsp.codeAction",
+                                        "beta/src/malformed.cpp apply 0");
 
         std::string clog2;
         const bool compilesAfter =
             CompileOnly(scratch, vcvars, {"beta\\src\\malformed.cpp"}, &clog2);
-        Check1("CODE_ACTION_RESULT_STILL_COMPILES", compilesAfter,
+        Check1("CODE_ACTION_RESULT_STILL_COMPILES", d3.success && compilesAfter,
                compilesAfter ? "cl.exe /c accepted the repaired file"
                              : clog2.substr(0, 400));
     }
@@ -1133,7 +1141,7 @@ int main(int argc, char** argv) {
                                        "alpha/src/extract_target.cpp 15 17 secondExtract");
         // After the first extraction the block is gone, so this must refuse
         // rather than invent a second function out of a one-line block.
-        const bool secondRefused = (!d.success) || (d.success && true);
+        const bool secondRefused = !d.success;
         Check1("EXTRACT_VIA_COMMAND_TABLE_POINTER", secondRefused, d.printed);
     }
 

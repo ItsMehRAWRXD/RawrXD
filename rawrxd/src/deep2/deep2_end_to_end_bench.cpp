@@ -217,6 +217,11 @@ int main(int argc, char** argv) {
             diag.stageName.c_str(), diag.message.c_str());
         return 1;
     }
+    const char* speculativeEnv = std::getenv("DEEP2_ENABLE_VERIFIED_SPEC");
+    if (speculativeEnv && speculativeEnv[0] == '1') {
+        engine.enableVerifiedSpeculation(true, 4);
+        std::fprintf(stderr, "VERIFIED_SPECULATION=1 window=4\n");
+    }
     const double loadMs = std::chrono::duration<double, std::milli>(
         std::chrono::steady_clock::now() - tLoad0).count();
     std::fprintf(stderr, "MODEL_LOAD=PASS %.0f ms\n", loadMs);
