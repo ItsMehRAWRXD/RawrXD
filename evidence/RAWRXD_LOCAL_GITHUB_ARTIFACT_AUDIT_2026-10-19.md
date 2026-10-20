@@ -92,3 +92,11 @@ This is a broad source, evidence, worktree, branch, and GitHub-artifact audit. I
 ## Post-audit execution update — D1 replay
 
 After the audit snapshot, commit `74fafe258498749cbd22d443752f8cc792ac31f9` on branch `codex/d1-replay-1977e041` replayed D1 from the exact audited primary HEAD `1977e04140a199f23b0cbae9ac26bd2a819eed82`. The TinyLlama/R9700 matrix passed lengths 1, 2, 8, 32, and 128 with bit-exact full logits, committed K/V payloads across all blocks, executor state, and one-token continuation; all CPU fallback counters were zero. The receipt and build/matrix logs are under `evidence/D1_REPLAY_1977E_20261019/` on that branch. This is a verified D1 PASS for the tested TinyLlama path; other model families and the Q4_K fused LM-head path remain unverified. The D1 commit is isolated from the dirty primary checkout pending integration review.
+
+## Post-audit discovery — Q6 packed-byte shader optimization
+
+While the D2 revalidation was being isolated from competing GPU benchmarks, a separate checkout at `F:/wt_ide1` completed and pushed commit `46dcdb171532ef995996d7084d94beee0bbbe7b3` on `rawrxd/s15-tps-panel`. It changes the Q6_K batch shader to decode four-column lanes with two packed-byte loads and includes a mutation script and a dedicated optimization receipt.
+
+The receipt reports a fresh 28.444 TPS control and candidate runs of 17.705, 30.101, and 35.269 TPS (median 30.101 TPS, 1.0583x control), SPIR-V validation PASS, and 24/24 ctest PASS. The first run is explicitly cold and the spread is wide. This is a measured candidate improvement on the stated Qwen route, not a 150 TPS acceptance, cross-model certification, or Gate 10 multi-GPU full-model proof. The source worktree is clean for the shader files; generated benchmark directories and two unrelated modified audit receipts remain modified/untracked there.
+
+The optimization is isolated from the audited `local-30b-backend` and D1/D2 replay worktrees. Do not treat it as integrated until a reviewed port is built and tested on the target branch.
