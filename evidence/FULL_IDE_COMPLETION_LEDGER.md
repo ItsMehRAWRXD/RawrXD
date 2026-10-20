@@ -89,6 +89,12 @@ Ollama inventory and native large-model receipts therefore cannot yet be
 selected through the shipped CLI. Receipt:
 `F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/rawr_cli_backend_20261020T1520/receipt.md`.
 
+The CMake route-menu target itself is now reproducibly green: Python generated
+the Local GGUF, Local Ollama, and Cloud Kilo descriptors with exit code 0.
+This is generation evidence only; Gate 17 remains PARTIAL until the linked IDE
+binary and live discovery are verified. Receipt:
+`F:/rawrxd/evidence/IDE_ROUTE_MENU_GENERATION_20261020.md`.
+
 ## Performance (Gate 12 / S10) — measured receipt
 
 Model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (SHA-256 `9fecc3b3…d76a0`, 668,788,096 B),
