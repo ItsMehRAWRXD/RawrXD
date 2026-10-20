@@ -542,14 +542,20 @@ int main(int argc, char** argv) {
             Info("serial TPS=%.2f  spec TPS=%.2f  speedup=%.2fx",
                  serial_tps, spec_tps, serial_tps > 0 ? spec_tps / serial_tps : 0.0);
             Info("acceptance[%s]: rounds=%llu proposed=%llu accepted=%llu rate=%.1f%% "
-                 "tokens/round=%.2f bonus=%llu replacements=%llu zero_accept=%llu serial_steps=%llu",
+                 "tokens/round=%.2f bonus=%llu replacements=%llu zero_accept=%llu serial_steps=%llu "
+                 "verify_batches=%llu verify_positions=%llu repairs=%llu serial_fallbacks=%llu adaptive_disabled=%d",
                  wl_name,
                  (unsigned long long)ws.rounds, (unsigned long long)ws.proposed,
                  (unsigned long long)ws.accepted, 100.0 * ws.acceptance_rate(),
                  ws.tokens_per_round(), (unsigned long long)ws.bonus,
                  (unsigned long long)ws.replacements,
                  (unsigned long long)ws.zero_accept_rounds,
-                 (unsigned long long)ws.serial_steps);
+                 (unsigned long long)ws.serial_steps,
+                 (unsigned long long)ws.verify_batches,
+                 (unsigned long long)ws.verify_positions,
+                 (unsigned long long)ws.repair_steps,
+                 (unsigned long long)ws.serial_fallbacks,
+                 ws.adaptive_disabled ? 1 : 0);
 
             // G1: token-for-token equivalence.
             bool parity = serial.stream.size() == spec.stream.size();

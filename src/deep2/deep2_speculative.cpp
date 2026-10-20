@@ -159,6 +159,7 @@ bool SpeculativeVerifier::Step(const std::vector<uint32_t>& context,
     // argmax for the next position as the new head. Exactly one forward pass
     // per emitted token - identical to the serial arm.
     if (draft.empty()) {
+        ++ws.serial_fallbacks;
         if (!exe_.ExecuteToken(pending_tok_, consumed_)) {
             err = "spec-verify: serial fallback ExecuteToken failed: " + exe_.LastError();
             return false;
@@ -177,6 +178,13 @@ bool SpeculativeVerifier::Step(const std::vector<uint32_t>& context,
     batch.reserve(draft.size() + 1);
     batch.push_back(pending_tok_);
     batch.insert(batch.end(), draft.begin(), draft.end());
+
+    // Keep verifier work separate from aggregate GPU-call accounting.  The
+    // executor's PrefillBatch is one sequence-level call here, even though
+    // its implementation may still execute attention/norm/KV stages per
+    // token.  These counters make that distinction visible in receipts.
+    ++ws.verify_batches;
+    ws.verify_positions += batch.size();
 
     std::vector<std::vector<float>> perPos;
     if (!exe_.PrefillBatch(batch, consumed_, &perPos)) {
@@ -225,6 +233,7 @@ bool SpeculativeVerifier::Step(const std::vector<uint32_t>& context,
             err = "spec-verify: KV repair pass failed: " + exe_.LastError();
             return false;
         }
+        ++ws.repair_steps;
         consumed_ += accepted + 2;       // pending + accepted drafts + replacement
         has_pending_ = false;            // replacement was consumed by the repair
         ws.replacements++;
@@ -235,8 +244,10 @@ bool SpeculativeVerifier::Step(const std::vector<uint32_t>& context,
     if (accepted == 0) {
         ++consecutive_zero_;
         ++ws.zero_accept_rounds;
-        if (cfg_.adaptive_disable && consecutive_zero_ >= cfg_.max_consecutive_zero)
+        if (cfg_.adaptive_disable && consecutive_zero_ >= cfg_.max_consecutive_zero) {
             auto_disabled_ = true;
+            ws.adaptive_disabled = true;
+        }
     } else {
         consecutive_zero_ = 0;
     }

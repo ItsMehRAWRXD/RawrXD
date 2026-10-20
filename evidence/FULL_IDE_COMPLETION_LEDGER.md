@@ -225,3 +225,9 @@ The isolated R9700/TinyLlama `deep2_spec_bench` run completed with exit code 0. 
 - No Vulkan validation-layer, alignment, or runtime error/warning messages appeared in the captured log.
 
 Receipt: `evidence/S07_SPEC_MEASUREMENT_RECEIPT_20261020.md`; raw run: `evidence/S07_SPEC_RUN_20261020/`.
+
+## S07 adaptive verifier and draft-policy measurement — 2026-10-20
+
+The verifier now records sequence-level batches, evaluated positions, serial KV repairs, and adaptive fallbacks. The default fail-safe disables speculation after two consecutive zero-accept rounds. On the same 128-token TinyLlama/R9700 workload, the repeat drafter measured code 0.95x and prose 1.04x serial speed; prompt lookup raised acceptance to 45.7%/70.0% but measured 0.78x/0.94x. All streams remained 128/128 identical with zero nonfinite logits and zero CPU calls.
+
+This is an optimization and diagnostic improvement, not an S07 pass. The verifier still runs attention/norm/KV stages token-minor inside each PrefillBatch and performs serial KV repair after partial rejection. Receipt: evidence/S07_ADAPTIVE_POLICY_RECEIPT_20261020.md.

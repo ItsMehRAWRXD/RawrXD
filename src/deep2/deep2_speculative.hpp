@@ -73,7 +73,11 @@ struct SpeculativeConfig {
     DraftPolicy policy = DraftPolicy::PromptLookup;
     size_t ngram = 3;                 // prompt-lookup match length
     bool adaptive_disable = true;     // stop speculating on persistent rejection
-    size_t max_consecutive_zero = 8;  // rounds with zero accepted drafts
+    // Two consecutive zero-accept rounds are already more expensive than
+    // serial decoding for the current verifier. Disable speculation early and
+    // continue with the exact serial path until a future draft policy earns a
+    // new controlled measurement.
+    size_t max_consecutive_zero = 2;  // rounds with zero accepted drafts
 };
 
 // Per-workload counters. Every field is a real observation from the loop;
@@ -86,6 +90,11 @@ struct WorkloadStats {
     uint64_t bonus = 0;            // free tokens after a fully accepted round
     uint64_t zero_accept_rounds = 0;
     uint64_t serial_steps = 0;     // serial fallback steps (disabled or no draft)
+    uint64_t verify_batches = 0;   // PrefillBatch calls used for draft verification
+    uint64_t verify_positions = 0; // token positions evaluated across those calls
+    uint64_t repair_steps = 0;     // serial KV repairs after first rejection
+    uint64_t serial_fallbacks = 0; // rounds that had no draft/after adaptive disable
+    bool adaptive_disabled = false; // fail-safe engaged for this workload
     double   spec_wall_ms = 0.0;   // wall time inside speculative Steps
     double   serial_wall_ms = 0.0; // wall time inside serial Steps
     uint64_t tokens_emitted = 0;   // total tokens emitted by this verifier
