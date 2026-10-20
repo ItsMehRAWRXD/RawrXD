@@ -47,6 +47,14 @@ The controlled D2 135-token capture was verified before resuming GPU work. The f
 
 The separate `nemotron-bolt.gguf` NVFP4 probe produced finite logits but 400 CPU calls because the active top-level `QuantDot` wrapper has no integrated type-40 dispatch. Its evidence is retained under `F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/nemotron30b_probe_20261020T1351/`; this remains an open implementation blocker before certifying NVFP4 models.
 
+The first available Qwen-sized candidate was also probed before moving to a
+larger model. The local `qwen3.8:27b` Ollama blob is a Qwen3.5 hybrid export,
+not a 32B/40B dense model. It ingested and bound 673 operations, then failed
+at position 0 with `residualadd: addend 'attn_proj' missing`; no logits or TPS
+are claimed. The active universal graph does not yet emit the gated
+`attn_qkv`/`attn_gate` hybrid mixer. Receipt:
+`F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/qwen38_27b_probe_20261020T1418/receipt.md`.
+
 ## Performance (Gate 12 / S10) — measured receipt
 
 Model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (SHA-256 `9fecc3b3…d76a0`, 668,788,096 B),
