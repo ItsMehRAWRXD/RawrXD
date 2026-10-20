@@ -39,7 +39,7 @@ count). Historical reports are treated as claims until reproduced against curren
 | Item | Scope | Status | Evidence |
 | --- | --- | --- | --- |
 | **D2** | Dependency-correct GPU submission batching | **PASS** | `GATE7_TPS_RUN2.md`; q/k/v and gate/up grouped per token; this run records submissions 21,080→12,170 (−42.3%), waits −42.3%; batched vs serial GPU logits **bit-identical 135/135** (`gate7_d2_batched_vs_serial_logits.txt`); same-binary `--no-batch` control also 135/135 bit-identical; zero CPU fallback. The Session-3 addendum records a separate run at 8,835→5,139 (−41.8%); retain both receipts as distinct workloads until provenance is normalized. |
-| **D1** | Multi-token batched prefill | **PARTIAL** | `Executor::PrefillBatch` and `Deep2Engine::prefillBatched` are present, and the Session-3 addendum records historical bit-exact full-logit checks. The required 1/2/8/32/128 sequence-length, causal-KV, and continuation matrix has not been replayed on current HEAD; keep partial until that receipt is produced. See `evidence/RAWRXD_LOCAL_GITHUB_ARTIFACT_AUDIT_2026-10-19.md`. |
+| **D1** | Multi-token batched prefill | **PASS (TinyLlama matrix)** | Replayed on base HEAD `1977e04140a199f23b0cbae9ac26bd2a819eed82` on AMD Radeon AI PRO R9700. Lengths 1/2/8/32/128: all per-position 32,000-wide logits and committed K/V rows across all blocks matched serial bit-for-bit; continuation logits/KV/state matched after each length; 1,034 GPU batch submissions for 26,334 dots; zero CPU fallback. Receipt and full log: `evidence/D1_REPLAY_1977E_20261019/receipt.md` and `evidence/D1_REPLAY_1977E_20261019/tinyllama_matrix.log`. This run covers only the specified TinyLlama model; other model families and the Q4_K fused LM-head branch remain unverified (the tested output tensor was Q6_K). |
 
 ## Performance (Gate 12 / S10) — measured receipt
 
@@ -78,7 +78,7 @@ device: AMD Radeon AI PRO R9700 (Vulkan), 8 prompt tokens, 128 generated tokens.
 ## Known defects / unfinished (do not clear by gate passage)
 
 - `kernel_ms` aliasing host wait (now documented; `gpu_ms` added as the device metric).
-- Prefill is one forward per token (D1 open).
+- D1's required prefill parity/KV/continuation matrix passes for TinyLlama only; other model-family coverage and the Q4_K fused LM-head branch remain unverified.
 - Per-row kernel dispatch geometry caps throughput at ~4.4 TPS (Gate 12 blocker).
 - Speculative verification is serial (S07 speedup unrealized).
 - Multi-GPU concurrent execution and tensor parallelism uncertified (Gate 10); DeepSeek 671B untested (Gate 11).
@@ -89,7 +89,7 @@ device: AMD Radeon AI PRO R9700 (Vulkan), 8 prompt tokens, 128 generated tokens.
 ## Next dependencies (in order)
 
 1. Commit + push the D2 work and this ledger.
-2. D1 batched prefill (inference-owned) — parity + causal KV evidence required.
+2. Extend D1 runtime coverage to other supported model families and exercise the Q4_K fused LM-head branch; the TinyLlama matrix receipt is complete.
 3. Batched speculative verification (unlocks S07 speedup measurement).
 4. Kernel dispatch geometry (tiled matmul) — the Gate 12 blocker.
 5. Gates 16–18 audit results → IDE feature completion → 19/20.

@@ -1739,12 +1739,11 @@ endif()
 
 # Gate 7 D1 — batched multi-token prefill full-logit parity.
 # RAWRXD_DEEP2_D1_PREFILL_PARITY verifies Executor::PrefillBatch against the
-# serial ExecuteToken path: full-logit BIT_EXACT over a prefix sweep + causal
-# KV via continued decode. Same source set as deep2_parity_trace so the
-# batched path is exercised against the identical kernels the cert path uses.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+# serial ExecuteToken path: full per-position vocabulary logits, committed K/V
+# payload, executor state, and continuation for the required length matrix.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_matrix.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_d1_prefill_parity
-        tools/deep2_d1_prefill_parity.cpp
+        tools/deep2_d1_prefill_matrix.cpp
         src/deep2/runtime_graph_executor.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
@@ -1753,6 +1752,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOU
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_d1_prefill_parity PRIVATE
@@ -1782,7 +1782,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOU
     set_target_properties(deep2_d1_prefill_parity PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
-    message(STATUS "deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)")
+    message(STATUS "deep2_d1_prefill_parity enabled (D1 full-logit/KV/continuation matrix; ggml + Vulkan SDK)")
 else()
     message(STATUS "deep2_d1_prefill_parity EXCLUDED: tool source or Vulkan SDK unavailable")
 endif()
