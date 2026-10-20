@@ -7,6 +7,7 @@ Variants:
 - `hoist_scale`: computes `d * scale` once per four-value decode group;
 - `half_load`: reads the Q6 block half through the existing packed four-byte loader;
 - `hoist_scale_half_load`: combines both changes.
+- `skip_unused_batch_rows`: avoids writing inactive shared activation planes when the push-constant batch is one.
 
 Each variant requires the shader and generated SPIR-V to be declared in the gate's `-Files` list. The gate must compile, validate with `spirv-val`, run all correctness checks, and collect multiple valid TPS samples before accepting a candidate. A rejected candidate is restored by the gate and its restoration build remains enabled by default.
 
