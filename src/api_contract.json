@@ -77,7 +77,7 @@
       "tool": {
         "path": "/api/tool",
         "method": "POST",
-        "description": "Execute specific tool"
+        "description": "Reserved but disabled: runtime rejects requests; no tool dispatch is implemented"
       },
       "subagent": {
         "path": "/api/subagent",

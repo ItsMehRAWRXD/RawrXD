@@ -77,6 +77,15 @@ CycleOutcome SelfRepairLoop::RunCycle(
     std::string task_id = m_backlog.AddTask(task);
     m_currentTask = *m_backlog.GetTask(task_id);
 
+    // A task is one user-originated turn. The shared tool bridge resets its
+    // authorization here; the model must call read_motd before any other tool.
+    if (!m_toolBridge->BeginUserTurn(task_id, 1)) {
+        m_currentTask.failure_reason = "MOTD authorization could not begin";
+        m_backlog.MarkTaskFailed(task_id, m_currentTask.failure_reason);
+        return CycleOutcome::Blocked;
+    }
+    [[maybe_unused]] auto motdTurnGuard = m_toolBridge->GuardUserTurn();
+
     if (on_progress) on_progress("plan", "Analyzing task: " + task_description);
 
     // Stage 1: Generate implementation via LLM
@@ -804,6 +813,7 @@ json SelfRepairLoop::BuildSystemPrompt() const {
             "7. Commit successful improvements with reproducible evidence. "
             ""
             "Available tools: "
+            "- read_motd: required first tool call for this user turn; read the workspace policy before using other tools. "
             "- readFile: Read a file at a specific path "
             "- listDirectory: List directory contents "
             "- fileSearch: Find files by pattern "

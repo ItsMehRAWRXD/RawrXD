@@ -20,9 +20,11 @@
 
 #include "InferenceBackend.h"
 #include "tool_core.hpp"
+#include "MotdAuthorization.h"
 #include <string>
 #include <vector>
 #include <functional>
+#include <mutex>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -90,8 +92,39 @@ public:
     void SetRegistry(rawrxd::tools::Registry* registry) { m_registry = registry; }
     rawrxd::tools::Registry* GetRegistry() const { return m_registry; }
 
-    void SetWorkspaceRoot(const std::filesystem::path& root) { m_workspaceRoot = root; }
+    void SetWorkspaceRoot(const std::filesystem::path& root) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        m_workspaceRoot = root;
+        m_motdAuthorization.SetWorkspaceRoot(root);
+        m_turnOpen = false;
+    }
     std::filesystem::path GetWorkspaceRoot() const { return m_workspaceRoot; }
+
+    // Must be called for each new user-originated turn. Reusing an earlier turn
+    // leaves the dispatcher fail-closed until the policy is read again.
+    bool BeginUserTurn(const std::string& sessionId, uint64_t turnId) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        if (m_turnOpen) return false; // overlapping sessions fail closed
+        if (!m_motdAuthorization.BeginTurn(sessionId, turnId)) return false;
+        m_authorizationSession = sessionId;
+        m_authorizationTurn = turnId;
+        m_turnOpen = true;
+        return true;
+    }
+
+    void EndUserTurn() {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        if (!m_turnOpen) return;
+        m_motdAuthorization.EndTurn(m_authorizationSession, m_authorizationTurn);
+        m_authorizationSession.clear();
+        m_authorizationTurn = 0;
+        m_turnOpen = false;
+    }
+
+    rawrxd::agentic::MotdAuthorization::TurnGuard GuardUserTurn() {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        return m_motdAuthorization.GuardTurn(m_authorizationSession, m_authorizationTurn);
+    }
 
     void SetApprovalCallback(ApprovalCallback cb) { m_approval = cb; }
 
@@ -114,6 +147,11 @@ private:
     rawrxd::tools::Registry* m_registry = nullptr;
     std::filesystem::path m_workspaceRoot;
     ApprovalCallback m_approval;
+    rawrxd::agentic::MotdAuthorization m_motdAuthorization;
+    std::string m_authorizationSession;
+    uint64_t m_authorizationTurn = 0;
+    bool m_turnOpen = false;
+    std::mutex m_turnMutex;
 
     // Convert LLM tool arguments (json) to rawrxd::tools::Request args (string map)
     rawrxd::tools::Request ConvertArgs(const ToolCall& call) const;
@@ -165,6 +203,21 @@ inline json ToolCallBridge::GetToolSchemasForLLM() const {
         schemas.push_back(schema);
     }
 
+    // Reserved host tool. It reads only the workspace's PassiveRoleNotRoleplay
+    // policy file and records the ACK bound to the active session and turn.
+    schemas.push_back(json{
+        {"type", "function"},
+        {"function", json{
+            {"name", "read_motd"},
+            {"description", "Required first tool action each user turn: read the workspace execution policy."},
+            {"parameters", json{
+                {"type", "object"},
+                {"properties", json::object()},
+                {"additionalProperties", false}
+            }}
+        }}
+    });
+
     return schemas;
 }
 
@@ -191,10 +244,39 @@ inline void ToolCallBridge::RegisterTool(const rawrxd::tools::Tool& tool) {
 }
 
 inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
+    std::lock_guard<std::mutex> lock(m_turnMutex);
     ToolResultMessage result_msg;
     result_msg.tool_call_id = call.id;
     result_msg.tool_name = call.name;
     result_msg.success = false;
+
+    if (!m_turnOpen) {
+        result_msg.content = "MOTD_REQUIRED: no active user turn";
+        return result_msg;
+    }
+
+    if (call.name == "read_motd") {
+        if (!call.arguments.is_object() || !call.arguments.empty()) {
+            result_msg.content = "MOTD_READ_FAILED: read_motd accepts no arguments";
+            return result_msg;
+        }
+        std::string contents, digest, error;
+        if (!m_motdAuthorization.ReadMotd(m_authorizationSession, m_authorizationTurn,
+                                          contents, digest, error)) {
+            result_msg.content = error;
+            return result_msg;
+        }
+        result_msg.content = "MOTD_ACK=1\nMOTD_SHA256=" + digest + "\n" + contents;
+        result_msg.success = true;
+        return result_msg;
+    }
+
+    std::string authorizationError;
+    if (!m_motdAuthorization.AuthorizeTool(call.name, m_authorizationSession,
+                                           m_authorizationTurn, authorizationError)) {
+        result_msg.content = authorizationError;
+        return result_msg;
+    }
 
     if (!m_registry) {
         result_msg.content = "Error: tool registry not initialized";
@@ -212,6 +294,7 @@ inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
     }
 
     rawrxd::tools::Result tool_result = m_registry->call(req, approve);
+    m_motdAuthorization.NoteExecution(m_authorizationSession, m_authorizationTurn);
     result_msg.content = tool_result.ok ? tool_result.output : tool_result.error;
     result_msg.success = tool_result.ok;
 

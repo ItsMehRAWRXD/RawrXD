@@ -1,0 +1,91 @@
+{
+  "schema_version": "rawrxd.motd-authorization-verification.v1",
+  "captured_utc": "2026-10-20 04:24:10 UTC",
+  "repository": {
+    "root": "F:/rawrxd",
+    "branch": "local-30b-backend",
+    "base_commit": "d053716b120b17c9a177549f87c14a3d2f070bf7",
+    "working_tree_was_dirty_before_this_change": true
+  },
+  "policy": {
+    "path": ".cursor/rules/PassiveRoleNotRoleplay.md",
+    "sha256": "3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de",
+    "maximum_bytes": 1048576,
+    "path_containment": "canonical policy path must remain inside canonical workspace root"
+  },
+  "worktree_checkouts": [
+    {"path": "F:/rawrxd", "head": "d053716b120b17c9a177549f87c14a3d2f070bf7", "branch": "local-30b-backend"},
+    {"path": "C:/Users/Garrett/AppData/Local/Temp/kilo/ide-recovery", "head": "80dcfd1b0824a334438adfc97dcc39683b4c1164", "branch": "detached"},
+    {"path": "C:/Users/Garrett/AppData/Local/Temp/kilo/ide-repro", "head": "80dcfd1b0824a334438adfc97dcc39683b4c1164", "branch": "detached"},
+    {"path": "F:/rawrxd/.kilo/worktrees/ide-closure", "head": "8dfeeaf0b729e2d76e0f23437bb52df3c256f0ad", "branch": "detached"},
+    {"path": "F:/rawrxd/.kilo/worktrees/piranha1-gate2-provenance", "head": "a551012de37a9e6cb48b26cfd73f8d9b8f97c82a", "branch": "piranha1-gate2-provenance"},
+    {"path": "F:/rawrxd/.kilo/worktrees/piranha2-gate4-dispatch", "head": "a551012de37a9e6cb48b26cfd73f8d9b8f97c82a", "branch": "piranha2-gate4-dispatch"},
+    {"path": "F:/rawrxd/.kilo/worktrees/thorn-measure", "head": "d9c664b95be5cf0f65f6c8873ff0ce13d3076e20", "branch": "thorn-measure"},
+    {"path": "F:/rawrxd/.worktrees/codex-d1-batched-prefill", "head": "1d756c1cc8a92d429bcc872241283a5aa85d9b40", "branch": "codex/d1-batched-prefill"},
+    {"path": "F:/rawrxd/.worktrees/codex-d1-opmajor", "head": "c3a850c53894ca61a31c52f3c819171051689682", "branch": "codex/d1-opmajor"},
+    {"path": "F:/rawrxd/.worktrees/codex-d1-replay-338c7d", "head": "74fafe258498749cbd22d443752f8cc792ac31f9", "branch": "codex/d1-replay-1977e041"},
+    {"path": "F:/rawrxd/.worktrees/codex-d2-gpu-batching", "head": "bbb6712307c5bccb92c1cd928387f71a8df90961", "branch": "codex/d2-gpu-batching"},
+    {"path": "F:/rawrxd/.worktrees/codex-d2-revalidate-74fafe", "head": "4deb5816ce32ed6d7779c8aa42fe9e5199574e38", "branch": "codex/d2-revalidate-74fafe"},
+    {"path": "F:/rawrxd/.worktrees/codex-gate16-18-audit", "head": "93fe08748cdd6c517fe10f809047dee0344cb3f3", "branch": "codex/gate16-18-audit"},
+    {"path": "F:/rawrxd-genb", "head": "8ad11f817edb0d95006f798c59cc2de3160d837d", "branch": "detached"},
+    {"path": "F:/rawrxd-main-audit", "head": "a0c98e7fb1b938046f7db7b20c2d2c4c178939bf", "branch": "audit/ide-authority-closure-001"},
+    {"path": "F:/rawrxd-pr18-audit", "head": "f68bebfa24ae9f727675ee13605320a168e48bf0", "branch": "detached"},
+    {"path": "F:/rawrxd_cert", "head": "9d91af0237b38e2ab4b5533b6e61503b5d4b0501", "branch": "feat/hexmag-polymorphic-repeat-tuner-masm"},
+    {"path": "F:/rawrxd_stagea", "head": "3148121201fdeb8fcc6eb7b276bc2441a024f4f5", "branch": "detached", "state": "locked initializing"},
+    {"path": "G:/rawrxd-push-tmp", "head": "72e1f725bbdbb2956b236fc32793314cb62d7606", "branch": "detached", "state": "locked initializing"}
+  ],
+  "builds_and_checks": [
+    {
+      "name": "targeted CMake build",
+      "command": "cmake --build F:/rawrxd/build_msvc --target deep2_agentic_loop RawrXD-CLI-V2 --config Release --parallel 4 (VS2022 vcvars64 environment)",
+      "exit_code": 0,
+      "result": "PASS; loop and CLI linked"
+    },
+    {
+      "name": "standalone authorization and ToolCallBridge test",
+      "command": "cl.exe /nologo /EHsc /std:c++20 /W4 /Iinclude /Isrc /Isrc\\agentic /Isrc\\deep2 tests\\motd_authorization_test.cpp /link bcrypt.lib /OUT:build_msvc\\motd_authorization_test.exe && build_msvc\\motd_authorization_test.exe",
+      "exit_code": 0,
+      "result": "MOTD_AUTHORIZATION_TEST PASS"
+    },
+    {
+      "name": "Deep2 agent-loop offline self-test",
+      "command": "build_msvc\\bin\\deep2_agentic_loop.exe --motd-selftest --workdir F:\\rawrxd",
+      "exit_code": 0,
+      "result": "MOTD_LOOP_SELFTEST PASS; policy digest matched"
+    },
+    {
+      "name": "active API translation-unit compile",
+      "command": "cl.exe /nologo /EHsc /std:c++20 /Iinclude /Isrc /Isrc\\deep2 /I\"C:\\VulkanSDK\\1.4.357.0\\Include\" /c src\\api_server.cpp",
+      "exit_code": 0,
+      "result": "PASS; compile-only, no linked API runtime exists in this configured target"
+    }
+  ],
+  "runtime_checks": [
+    {"command": "build_msvc\\bin-msvc\\rawr.exe tools run read_motd (workspace F:/rawrxd)", "exit_code": 0, "result": "MOTD_ACK=1 and expected SHA-256 returned with policy bytes"},
+    {"command": "same command from a temporary workspace without .cursor/rules policy", "exit_code": 3, "result": "DENIED: MOTD_NOT_FOUND"}
+  ],
+  "coverage": {
+    "guarded_paths": [
+      "tools/deep2_agentic_loop.cpp direct tool dispatcher",
+      "src/agentic/ToolCallBridge.h and SelfRepairLoop task lifecycle",
+      "rawr tools run manual tool entry",
+      "rawr run one-shot/interactive generation receives the current policy as system context",
+      "RawrXD Project Wizard tool callbacks"
+    ],
+    "explicitly_disabled": ["POST /api/tool in src/api_server.cpp; route is inert and returns an error"],
+    "open_or_unverified": [
+      "rawr run has no model-generated tool dispatch loop",
+      "HexMag/SubAgent dispatch paths are not all routed through the shared authorization boundary",
+      "API server has no active listener in this checkout; /api/tool rejection has compile evidence only",
+      "no signed receipts or external key-backed non-repudiation",
+      "full IDE E2E and model token-survival not run"
+    ]
+  },
+  "certification": {
+    "gate9": "PARTIAL",
+    "gate18": "OPEN",
+    "s07": "OPEN",
+    "s12": "OPEN",
+    "gpu_benchmark_pause": "PRESERVED"
+  }
+}

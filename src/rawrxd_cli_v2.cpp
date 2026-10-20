@@ -49,6 +49,7 @@
 #include <map>
 #include <filesystem>
 #include <csignal>
+#include <chrono>
 #include <cstdlib>
 #include <algorithm>
 #include <cctype>
@@ -361,6 +362,43 @@ static int RunToolCli(const std::vector<std::string>& rest) {
         req.args[kv.substr(0, eq)] = kv.substr(eq + 1);
     }
 
+    // A direct CLI tool invocation is its own user turn. Read the active
+    // workspace MOTD before allowing this command to reach the registry.
+    const fs::path workspaceRoot = g_workspace.empty() ? fs::current_path() : fs::path(g_workspace);
+    rawrxd::agentic::MotdAuthorization motdAuthorization(workspaceRoot);
+    const std::string motdSession = "rawr-tools-" +
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    constexpr uint64_t motdTurn = 1;
+    if (!motdAuthorization.BeginTurn(motdSession, motdTurn)) {
+        std::cerr << "DENIED: MOTD_TURN_START_FAILED\n";
+        return 3;
+    }
+    [[maybe_unused]] auto motdTurnGuard = motdAuthorization.GuardTurn(motdSession, motdTurn);
+
+    if (req.name == "read_motd") {
+        std::string contents, digest, error;
+        if (!motdAuthorization.ReadMotd(motdSession, motdTurn, contents, digest, error)) {
+            std::cerr << "DENIED: " << error << "\n";
+            return 3;
+        }
+        std::cout << "MOTD_ACK=1\nMOTD_SHA256=" << digest << "\n" << contents << "\n";
+        return 0;
+    }
+
+    std::string motdContents, motdDigest, motdError;
+    if (!motdAuthorization.ReadMotd(motdSession, motdTurn,
+                                    motdContents, motdDigest, motdError)) {
+        std::cerr << "DENIED: " << motdError << "\n";
+        return 3;
+    }
+    std::string authorizationError;
+    if (!motdAuthorization.AuthorizeTool(req.name, motdSession, motdTurn,
+                                          authorizationError)) {
+        std::cerr << "DENIED: " << authorizationError << "\n";
+        return 3;
+    }
+    std::cout << "MOTD_ACK=1 MOTD_SHA256=" << motdDigest << "\n";
+
     if (!g_tools || !g_gate) {
         std::cerr << "Tool executor not initialized.\n";
         return 1;
@@ -421,7 +459,9 @@ static void CheckpointLedger(const std::string& label) {
 namespace {
 int CmdProjectWizard(const std::string& model, const std::string& goal,
                      const std::map<std::string, std::string>& flags,
-                     const std::string& workspace_root);
+                     const std::string& workspace_root,
+                     rawrxd::agentic::MotdAuthorization* authorization,
+                     const std::string& session, uint64_t turn);
 }
 
 static int CmdRun(const std::vector<std::string>& args) {
@@ -472,6 +512,27 @@ static int CmdRun(const std::vector<std::string>& args) {
         opt.flags = flags;
         g_workspace = DiscoverWorkspace(opt);
     }
+
+    rawrxd::agentic::MotdAuthorization runAuthorization(g_workspace);
+    const std::string runSession = "rawr-run-" +
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    uint64_t runTurn = 0;
+    auto readPolicyForTurn = [&](std::string& contents, std::string& digest, std::string& error) {
+        ++runTurn;
+        if (!runAuthorization.BeginTurn(runSession, runTurn)) {
+            error = "MOTD_TURN_START_FAILED";
+            return false;
+        }
+        if (!runAuthorization.AuthorizeTool("read_motd", runSession, runTurn, error)) {
+            runAuthorization.EndTurn(runSession, runTurn);
+            return false;
+        }
+        if (!runAuthorization.ReadMotd(runSession, runTurn, contents, digest, error)) {
+            runAuthorization.EndTurn(runSession, runTurn);
+            return false;
+        }
+        return true;
+    };
 
     // ---- Project Wizard workflow detection --------------------------------
     // `rawr run <model> "new project"` starts the interactive project builder.
@@ -569,7 +630,14 @@ static int CmdRun(const std::vector<std::string>& args) {
 
     // ---- Project Wizard: intercept before the normal agent session ------
     if (is_wizard_goal) {
-        return CmdProjectWizard(model, workflow_goal, flags, g_workspace);
+        std::string policy, digest, error;
+        if (!readPolicyForTurn(policy, digest, error)) {
+            std::cerr << "DENIED: " << error << "\n";
+            return 3;
+        }
+        [[maybe_unused]] auto motdTurnGuard = runAuthorization.GuardTurn(runSession, runTurn);
+        return CmdProjectWizard(model, workflow_goal, flags, g_workspace,
+                                &runAuthorization, runSession, runTurn);
     }
 
     // Driver-owned ledger, initialized before anything executes.
@@ -585,6 +653,15 @@ static int CmdRun(const std::vector<std::string>& args) {
 
     // One-shot mode: `rawr run <model> --task "..."` executes and exits.
     if (flags.count("prompt") || flags.count("task")) {
+        std::string policy, digest, error;
+        if (!readPolicyForTurn(policy, digest, error)) {
+            std::cerr << "DENIED: " << error << "\n";
+            g_ledger->RecordFailure("MOTD authorization failed: " + error);
+            g_ledger->Flush();
+            return 3;
+        }
+        [[maybe_unused]] auto motdTurnGuard = runAuthorization.GuardTurn(runSession, runTurn);
+        std::cerr << "MOTD_ACK=1 MOTD_SHA256=" << digest << "\n";
         std::string prompt = flags.count("prompt") ? flags["prompt"] : flags["task"];
         g_ledger->AppendUserMessage(prompt);
         g_ledger->RecordAgentTurn();
@@ -596,6 +673,9 @@ static int CmdRun(const std::vector<std::string>& args) {
             cm.content = m.value("content", std::string());
             messages.push_back(cm);
         }
+        messages.insert(messages.begin(), ChatMessage{
+            "system", "Workspace execution policy read for this user turn. SHA-256=" + digest +
+                      "\n" + policy, ""});
 
         InferenceResult result;
         try {
@@ -720,6 +800,14 @@ static int CmdRun(const std::vector<std::string>& args) {
         }
 
         // ---- Agent turn ----
+        std::string policy, digest, error;
+        if (!readPolicyForTurn(policy, digest, error)) {
+            std::cerr << "DENIED: " << error << "\n";
+            g_ledger->RecordFailure("MOTD authorization failed: " + error);
+            continue;
+        }
+        [[maybe_unused]] auto motdTurnGuard = runAuthorization.GuardTurn(runSession, runTurn);
+        std::cerr << "MOTD_ACK=1 MOTD_SHA256=" << digest << "\n";
         g_ledger->AppendUserMessage(line);
         g_ledger->RecordAgentTurn();
 
@@ -730,6 +818,9 @@ static int CmdRun(const std::vector<std::string>& args) {
             cm.content = m.value("content", std::string());
             messages.push_back(cm);
         }
+        messages.insert(messages.begin(), ChatMessage{
+            "system", "Workspace execution policy read for this user turn. SHA-256=" + digest +
+                      "\n" + policy, ""});
 
         InferenceResult result;
         try {
@@ -804,7 +895,23 @@ rawrxd::project::InferenceResult MakeInferenceAdapter(
 // explicit env opt-in, generate-and-verify and autonomous allow them.
 rawrxd::project::ToolResult MakeToolAdapter(
     const rawrxd::project::ProjectSpec& spec,
+    rawrxd::agentic::MotdAuthorization* authorization,
+    const std::string& session, uint64_t turn,
     const std::string& name, const std::string& args_json) {
+    if (!authorization) {
+        return rawrxd::project::ToolResult{false, "", "MOTD authorization unavailable"};
+    }
+    std::string authorizationError;
+    if (!authorization->AuthorizeTool(name, session, turn, authorizationError)) {
+        return rawrxd::project::ToolResult{false, "", authorizationError};
+    }
+    if (name == "read_motd") {
+        std::string contents, digest, error;
+        if (!authorization->ReadMotd(session, turn, contents, digest, error))
+            return rawrxd::project::ToolResult{false, "", error};
+        return rawrxd::project::ToolResult{true,
+            "MOTD_ACK=1\nMOTD_SHA256=" + digest + "\n" + contents, ""};
+    }
     rawrxd::tools::Tool tool;
     if (!g_tools || !g_tools->find(name, tool))
         return rawrxd::project::ToolResult{false, "", "unknown tool: " + name};
@@ -827,13 +934,24 @@ rawrxd::project::ToolResult MakeToolAdapter(
     if (tool.risk != rawrxd::tools::Risk::ReadOnly && !approve(tool, req))
         return rawrxd::project::ToolResult{false, "", "mutation denied by autonomy policy"};
     auto res = g_tools->call(req, approve);
+    authorization->NoteExecution(session, turn);
     return rawrxd::project::ToolResult{res.ok, res.output, res.error};
 }
 
 static int CmdProjectWizard(const std::string& model, const std::string& goal,
                             const std::map<std::string, std::string>& flags,
-                            const std::string& workspace_root) {
+                            const std::string& workspace_root,
+                            rawrxd::agentic::MotdAuthorization* authorization,
+                            const std::string& session, uint64_t turn) {
     using namespace rawrxd::project;
+
+    std::string policy, digest, error;
+    if (!authorization ||
+        !authorization->AuthorizeTool("project_wizard", session, turn, error) ||
+        !authorization->ReadMotd(session, turn, policy, digest, error)) {
+        std::cerr << "DENIED: " << (error.empty() ? "MOTD authorization unavailable" : error) << "\n";
+        return 3;
+    }
 
     ProjectStateManager store(workspace_root);
     std::cout << "\n";
@@ -938,8 +1056,18 @@ static int CmdProjectWizard(const std::string& model, const std::string& goal,
     Wizard::PrintPreview(spec);
 
     // Run the Plan -> Scaffold -> Implement -> Build -> Verify loop.
-    ProjectWorkflow workflow(store, project_id, MakeInferenceAdapter,
-                             std::bind(MakeToolAdapter, std::cref(spec),
+    // The policy was read before project state mutation. Make its exact bytes
+    // part of every generation context and gate each tool callback below.
+    std::function<rawrxd::project::InferenceResult(const std::vector<json>&, int)> authorizedInference =
+      [policy, digest](const std::vector<json>& messages, int max_tokens) {
+        std::vector<json> withPolicy = messages;
+        withPolicy.insert(withPolicy.begin(), json{{"role", "system"},
+            {"content", "Workspace execution policy read for this user turn. SHA-256=" + digest + "\n" + policy}});
+        return MakeInferenceAdapter(withPolicy, max_tokens);
+      };
+    ProjectWorkflow workflow(store, project_id, authorizedInference,
+                             std::bind(MakeToolAdapter, std::cref(spec), authorization,
+                                       std::cref(session), turn,
                                        std::placeholders::_1, std::placeholders::_2),
                              1);
     WorkflowResult res = workflow.Run();

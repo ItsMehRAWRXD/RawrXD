@@ -64,6 +64,7 @@
 #include "esp_runtime.hpp"
 #include "esp_metrics.hpp"
 #include "esp_cli.hpp"
+#include "../src/agentic/MotdAuthorization.h"
 
 #include "../cloud_api_client.h"
 
@@ -103,6 +104,7 @@ struct Args
     bool single_turn_repair = false; // Test B: one tool command, execute, verify, exit
     bool full_prefill = false;  // baseline: re-feed the whole render each turn
     bool quiet = false;
+    bool motd_selftest = false;       // Gate test; does not load a model or initialize GPU inference
     bool batched_prefill = true;  // PrefillBatch: P dots per op, one submission
     // FIRST-TOKEN PARITY: render a plain prompt (no tool protocol), prefill it,
     // and report the first generated token's full ranking with the EOS rank
@@ -189,6 +191,8 @@ Args Parse(int argc, char* argv[])
             a.full_prefill = true;
         else if (s == "--quiet")
             a.quiet = true;
+        else if (s == "--motd-selftest")
+            a.motd_selftest = true;
         else if (s == "--batched-prefill" && i + 1 < argc)
             a.batched_prefill = std::atoi(argv[++i]) != 0;
         else if (s == "--temperature" && i + 1 < argc)
@@ -1347,6 +1351,13 @@ Action ParseAction(const std::string& text)
         a.valid = true;
         a.finish = true;
         a.tool = "finish";
+        a.raw = t;
+        return a;
+    }
+    if (t == "TOOL read_motd")
+    {
+        a.valid = true;
+        a.tool = "read_motd";
         a.raw = t;
         return a;
     }
@@ -2659,11 +2670,33 @@ int main(int argc, char* argv[])
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     const Args args = Parse(argc, argv);
-    if (args.model.empty())
+    if (args.model.empty() && !args.motd_selftest)
     {
         std::printf("usage: deep2_agentic_loop.exe --model <gguf> [--task f] [--workdir D] "
                     "[--max-steps N] [--max-new N] [--cpu] [--toktest]\n");
         return 1;
+    }
+    if (args.motd_selftest)
+    {
+        const Action motdAction = ParseAction("TOOL read_motd\n");
+        const Action writeAction = ParseAction("TOOL write target.cpp @@content@@\n");
+        bool ok = motdAction.valid && motdAction.tool == "read_motd" &&
+                  writeAction.valid && writeAction.tool == "write";
+        rawrxd::agentic::MotdAuthorization auth(args.workdir);
+        const std::string session = "deep2-motd-selftest";
+        std::string reason, contents, digest, error;
+        ok = ok && auth.BeginTurn(session, 1);
+        if (ok && auth.AuthorizeTool(writeAction.tool, session, 1, reason)) ok = false;
+        ok = ok && auth.AuthorizeTool(motdAction.tool, session, 1, reason);
+        ok = ok && auth.ReadMotd(session, 1, contents, digest, error);
+        ok = ok && !digest.empty() && contents.find("PassiveRoleNotRoleplay") != std::string::npos;
+        ok = ok && auth.AuthorizeTool(writeAction.tool, session, 1, reason);
+        ok = ok && auth.BeginTurn(session, 2);
+        ok = ok && !auth.AuthorizeTool(writeAction.tool, session, 2, reason);
+        Logf_("MOTD_LOOP_SELFTEST %s\n", ok ? "PASS" : "FAIL");
+        Logf_("POLICY_SHA256 %s\n", digest.c_str());
+        if (!error.empty()) Logf_("MOTD_ERROR %s\n", error.c_str());
+        return ok ? 0 : 1;
     }
     if (args.toktest)
         return TokTest(args);
@@ -2730,6 +2763,25 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    // Each invocation handles one user-originated task. Continuation model
+    // turns share this authorization, while the next process/task starts fresh.
+    rawrxd::agentic::MotdAuthorization motdAuthorization(args.workdir);
+    const auto motdNonce = std::chrono::steady_clock::now().time_since_epoch().count();
+#ifdef _WIN32
+    const std::string motdSession = "deep2-agent-" + std::to_string(GetCurrentProcessId()) + "-" +
+                                    std::to_string(motdNonce);
+#else
+    const std::string motdSession = "deep2-agent-" + std::to_string(motdNonce);
+#endif
+    constexpr uint64_t motdTurn = 1;
+    if (!motdAuthorization.BeginTurn(motdSession, motdTurn))
+    {
+        Logf_("MOTD_STATUS BLOCKED: could not initialize turn authorization\n");
+        return 3;
+    }
+    Logf_("MOTD_STATUS TURN_START session=%s turn=%llu\n", motdSession.c_str(),
+          static_cast<unsigned long long>(motdTurn));
+
     Logf_("[stage] loading model %s\n", args.model.c_str());
     const auto t_load0 = std::chrono::steady_clock::now();
     const IngestReport& rep = Ingest(args.model, false);
@@ -2756,11 +2808,12 @@ int main(int argc, char* argv[])
     bool rt_ok = false;
     {
         std::vector<int32_t> rt;
-        enc.Encode("TOOL read calc.cpp\nint add(int a, int b) { return a + b; }", rt);
+        enc.Encode("TOOL read_motd\nTOOL read calc.cpp\nint add(int a, int b) { return a + b; }", rt);
         std::string back;
         for (int32_t id : rt)
             back += enc.Piece((uint32_t)id);
-        rt_ok = back.find("TOOL read calc.cpp") != std::string::npos;
+        rt_ok = back.find("TOOL read_motd") != std::string::npos &&
+                back.find("TOOL read calc.cpp") != std::string::npos;
         Logf_("[stage] tokenizer round-trip: %s (%zu ids -> %zu chars)\n", rt_ok ? "PASS" : "FAIL", rt.size(),
               back.size());
         if (!rt_ok)
@@ -2981,15 +3034,20 @@ const std::string task = args.task.empty()
         "You are a file-repair agent operating a tool protocol.\n"
         "Reply with EXACTLY ONE command per turn. Never add explanations,\n"
         "apologies, quotes, or code fences.\n"
+        "Before any other tool, read the workspace policy exactly once with:\n"
+        "  TOOL read_motd\n"
+        "Then continue with the requested task. The host blocks all other tools\n"
+        "until read_motd succeeds.\n"
         "Commands:\n"
+        "  TOOL read_motd\n"
         "  TOOL read <filename>\n"
         "  TOOL write <filename> @@<complete file content>@@\n"
         "  TOOL bash <command>\n"
         "  TOOL finish\n"});
     msgs.push_back({"user",
-        "A C++ file has an off-by-one bug. Read it first, then fix it.\n"
+        "Read the workspace policy first. Then read the C++ file, fix its off-by-one bug, build it, and run it.\n"
         "File: " + args.target_file + "\n"
-        "Reply with: TOOL read " + args.target_file});
+        "Reply with: TOOL read_motd"});
 
     bool finished = false, built = false, ran_pass = false;
     bool source_patched = false;
@@ -3133,11 +3191,28 @@ const std::string task = args.task.empty()
               stop.generated > 0 && gen_ms > 0 ? stop.generated / (gen_ms / 1000.0) : 0.0);
         const Action act = ParseAction(gen);
         Logf_("VALID_TOOL_CALL  %s\n", act.valid ? "yes" : "no");
+        bool authorizationPassed = false;
         if (act.valid)
         {
             Logf_("TOOL             %s\n", act.tool.c_str());
             Logf_("TARGET           %s\n", act.arg1.c_str());
-            if (act.tool == "read")
+            std::string authorizationError;
+            const bool authorized = motdAuthorization.AuthorizeTool(
+                act.tool, motdSession, motdTurn, authorizationError);
+            if (!authorized)
+            {
+                Logf_("MOTD_TOOL_VERDICT DENIED (%s)\n", authorizationError.c_str());
+            }
+            else if (act.tool == "read_motd")
+            {
+                std::string policy, hash, readError;
+                const bool readOk = motdAuthorization.ReadMotd(
+                    motdSession, motdTurn, policy, hash, readError);
+                Logf_("MOTD_TOOL_VERDICT %s\n", readOk ? "ACKNOWLEDGED" : readError.c_str());
+                if (readOk) Logf_("MOTD_SHA256 %s\n", hash.c_str());
+                authorizationPassed = readOk;
+            }
+            else if (act.tool == "read")
             {
                 const auto t_gen_b = std::chrono::steady_clock::now();
                 const auto t_dispatch = std::chrono::steady_clock::now();
@@ -3146,14 +3221,16 @@ const std::string task = args.task.empty()
                       std::chrono::duration<double, std::milli>(t_dispatch - t_gen_b).count());
                 Logf_("READ_BYTES       %zu\n", content.size());
                 Logf_("READ_PREVIEW     %s\n", content.substr(0, 200).c_str());
+                authorizationPassed = true;
             }
         }
         Logf_("RAW_OUTPUT       >>>%s<<<\n", Trim(gen).c_str());
-        Logf_("TEST_A_VERDICT   %s\n", act.valid ? "PASS" : "FAIL");
-        ledger.log_verification(act.valid, "single-turn static prompt diagnostic");
-        esp_rt.finish(act.valid);
+        const bool testPass = act.valid && authorizationPassed;
+        Logf_("TEST_A_VERDICT   %s\n", testPass ? "PASS" : "FAIL");
+        ledger.log_verification(testPass, "single-turn static prompt + MOTD authorization diagnostic");
+        esp_rt.finish(testPass);
         esp_log.stop();
-        return act.valid ? 0 : 1;
+        return testPass ? 0 : 1;
     }
 
     // ============================================================================
@@ -3176,7 +3253,24 @@ const std::string task = args.task.empty()
         Logf_("TARGET           %s\n", act.arg1.c_str());
 
         bool step_ok = false;
-        if (act.tool == "read")
+        std::string authorizationError;
+        const bool authorized = motdAuthorization.AuthorizeTool(
+            act.tool, motdSession, motdTurn, authorizationError);
+        if (!authorized)
+        {
+            Logf_("MOTD_TOOL_VERDICT DENIED (%s)\n", authorizationError.c_str());
+        }
+        else if (act.tool == "read_motd")
+        {
+            std::string policy, hash, readError;
+            step_ok = motdAuthorization.ReadMotd(motdSession, motdTurn, policy, hash, readError);
+            Logf_("MOTD_TOOL_VERDICT %s\n", step_ok ? "ACKNOWLEDGED" : readError.c_str());
+            if (step_ok) Logf_("MOTD_SHA256 %s\n", hash.c_str());
+            // This diagnostic mode certifies only one call, so the read proves
+            // the gate itself but never claims a complete repair.
+            step_ok = false;
+        }
+        else if (act.tool == "read")
         {
             const auto t_dispatch = std::chrono::steady_clock::now();
             const std::string content = ReadFile(args.workdir + "/" + act.arg1);
@@ -3570,15 +3664,46 @@ const std::string task = args.task.empty()
             break;
         }
 
-        if (act.tool == "write" && !patch_mgr.snapshot(act.arg1))
-            Logf_("[step %d] ERROR: Failed to snapshot %s before write\n", step, act.arg1.c_str());
-
         // ---- dispatch -----------------------------------------------------------
         std::string result;
         int bash_exit_code = 0;
         bool tool_rejected = false;
-
-        if (act.tool == "read")
+        std::string authorizationError;
+        const bool toolAuthorized = motdAuthorization.AuthorizeTool(
+            act.tool, motdSession, motdTurn, authorizationError);
+        const bool writeSnapshotReady = !toolAuthorized || act.tool != "write" ||
+                                        patch_mgr.snapshot(act.arg1);
+        if (!toolAuthorized)
+        {
+            tool_rejected = true;
+            bash_exit_code = -1;
+            result = "MOTD_REQUIRED: " + authorizationError;
+            Logf_("[step %d] MOTD_TOOL_VERDICT DENIED (%s)\n", step, authorizationError.c_str());
+        }
+        else if (!writeSnapshotReady)
+        {
+            tool_rejected = true;
+            bash_exit_code = -1;
+            result = "[exit -1]\nERROR: failed to snapshot target before write\n";
+            Logf_("[step %d] ERROR: Failed to snapshot %s before write\n", step, act.arg1.c_str());
+        }
+        else if (act.tool == "read_motd")
+        {
+            std::string policy, hash, readError;
+            if (motdAuthorization.ReadMotd(motdSession, motdTurn, policy, hash, readError))
+            {
+                result = "MOTD_ACK=1\nMOTD_SHA256=" + hash + "\n" + policy;
+                Logf_("[step %d] MOTD_STATUS ACKNOWLEDGED sha256=%s\n", step, hash.c_str());
+            }
+            else
+            {
+                tool_rejected = true;
+                bash_exit_code = -1;
+                result = "MOTD_READ_FAILED: " + readError;
+                Logf_("[step %d] MOTD_STATUS BLOCKED (%s)\n", step, readError.c_str());
+            }
+        }
+        else if (act.tool == "read")
         {
             result = ReadFile(args.workdir + "/" + act.arg1);
             if (result.empty()) result = "(file not found)";
@@ -3646,7 +3771,10 @@ const std::string task = args.task.empty()
             tool_rejected = true;
         }
 
-        if (result.size() > 2500)
+        if (toolAuthorized && act.tool != "read_motd")
+            motdAuthorization.NoteExecution(motdSession, motdTurn);
+
+        if (result.size() > 2500 && act.tool != "read_motd")
             result = result.substr(0, 1200) + "\n...[truncated]...\n" + result.substr(result.size() - 800);
 
         // ESP: Tool events

@@ -1,5 +1,6 @@
 #include "api_server.h"
 #include "Deep2Engine.h"
+#include "Deep2InferenceService.hpp"
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -477,6 +478,13 @@ void APIServer::ProcessPendingRequests() {
                     HandleTagsRequest(response_body);
                 } else if (request.path == "/api/pull") {
                     HandlePullRequest(request.body, response_body);
+                } else if (request.path == "/api/tool") {
+                    // The contract reserves this path, but this server has no
+                    // authenticated tool dispatcher. Keep it explicitly inert.
+                    response_body = CreateErrorResponse(
+                        "Tool execution is disabled on this API server");
+                    LogApiOperation("WARN", "TOOL_REQUEST_DENIED",
+                                    "POST /api/tool has no authorization dispatcher");
                 } else {
                     response_body = CreateErrorResponse("Unknown endpoint: " + request.path);
                 }
