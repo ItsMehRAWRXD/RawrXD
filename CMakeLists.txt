@@ -4795,33 +4795,6 @@ if(DEEP2_BUILD_STREAMER_TEST)
 endif()
 
 # ============================================================
-# DEEP2 ASYNC WEIGHT STREAMER CONTRACT TEST
-# ============================================================
-# This target exercises the scheduler and its fail-closed ticket/lifetime
-# contract without requiring a Vulkan device.  The production adapter still
-# has to provide the real queue submission and timeline wait callbacks.
-option(DEEP2_BUILD_STREAMER_TEST
-       "Build the fail-closed asynchronous weight streamer contract test" OFF)
-if(DEEP2_BUILD_STREAMER_TEST)
-    enable_testing()
-    add_executable(deep2_weight_streamer_test
-        tests/deep2_weight_streamer_test.cpp
-        tests/stream_transfer_emit_compile.cpp
-        src/deep2/VulkanWeightStreamer.cpp)
-    target_include_directories(deep2_weight_streamer_test PRIVATE
-        "${CMAKE_SOURCE_DIR}/src")
-    set_target_properties(deep2_weight_streamer_test PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-    add_test(NAME deep2_weight_streamer_contract
-             COMMAND deep2_weight_streamer_test)
-    set_tests_properties(deep2_weight_streamer_contract PROPERTIES
-        LABELS "deep2;streaming;contract"
-        TIMEOUT 60)
-endif()
-
-# ============================================================
 # CPACK - PACKAGE GENERATION
 # ============================================================
 option(RAWRXD_ENABLE_PACKAGING "Enable CPack packaging (ZIP, NSIS, etc.)" OFF)
