@@ -670,25 +670,27 @@ bool VulkanCompute::createPipelines() {
     const std::string qb = shaderPath("deep2_qgemv_batch.spv");
     const std::string q4r = shaderPath("deep2_qgemv_batch4row.spv");
     const std::string q8r = shaderPath("deep2_qgemv_batch8row.spv");
+    const std::string q6r = shaderPath("deep2_qgemv_q6row.spv");
     const std::string am = shaderPath("deep2_argmax.spv");
     const std::string so = shaderPath("deep2_spec_ops.spv");
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
 
     std::fprintf(stderr,
-        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s am=%s so=%s sa=%s ac=%s\n",
+        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s q6r=%s am=%s so=%s sa=%s ac=%s\n",
         ops.empty()?"NOTFOUND":ops.c_str(),
         q.empty()?"NOTFOUND":q.c_str(),
         qb.empty()?"NOTFOUND":qb.c_str(),
         q4r.empty()?"NOTFOUND":q4r.c_str(),
         q8r.empty()?"NOTFOUND":q8r.c_str(),
+        q6r.empty()?"NOTFOUND":q6r.c_str(),
         am.empty()?"NOTFOUND":am.c_str(),
         so.empty()?"NOTFOUND":so.c_str(),
         sa.empty()?"NOTFOUND":sa.c_str(),
         ac.empty()?"NOTFOUND":ac.c_str());
     std::fflush(stderr);
 
-    bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false;
+    bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false, okQ6r=false;
     if (!ops.empty())
         okOps=createPipelineFromFile(
             ops, opsSetLayout_, sizeof(OpsPush), opsPipelineLayout_, opsPipeline_);
@@ -707,6 +709,10 @@ bool VulkanCompute::createPipelines() {
         okQ8r=createPipelineFromFile(
             q8r,qSetLayout_,sizeof(QBatchPush),
             qBatch8RowPipelineLayout_,qBatch8RowPipeline_);
+    if(!q6r.empty())
+        okQ6r=createPipelineFromFile(
+            q6r,qSetLayout_,sizeof(QBatchPush),
+            q6RowPipelineLayout_,q6RowPipeline_);
     if(!am.empty())
         (void)createPipelineFromFile(
             am,qSetLayout_,sizeof(ArgmaxPush),
@@ -721,8 +727,9 @@ bool VulkanCompute::createPipelines() {
             specAttnPipelineLayout_,specAttnPipeline_);
 
     std::fprintf(stderr,
-        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u\n",
-        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u);
+        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u q6r=%u\n",
+        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u,
+        okQ8r?1u:0u, okQ6r?1u:0u);
     std::fflush(stderr);
 
     return opsPipeline_ != VK_NULL_HANDLE;
@@ -768,6 +775,47 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
         weightBytes,workEpoch_,&wi);
     if(ok) q4kBatchGpuNs_+=wi.calibratedDurationNs();
     return ok;
+}
+
+bool VulkanCompute::DispatchGemvQ6SingleRow(
+    const void* weights,size_t weightBytes,
+    DeviceBuf& input,DeviceBuf& output,
+    uint32_t rows,uint32_t cols)
+{
+    if(!q6RowPipeline_||!weights||!weightBytes||!rows||!cols)
+        return false;
+    if(input.size < static_cast<size_t>(cols)*sizeof(float) ||
+       output.size < static_cast<size_t>(rows)*sizeof(float))
+        return false;
+    DeviceBuf* wb=nullptr;
+    if(!ensureWeightQuant(14,weights,weightBytes,wb)) return false;
+    if(weightBytes>std::numeric_limits<uint32_t>::max()) return false;
+    VkCommandBuffer cmd=fusedCmd_;
+    VkQueryPool query=fusedQuery_;
+    const bool own=!fused_;
+    if(own&&!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getQuantDescriptor(*wb,input,output);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,q6RowPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,q6RowPipelineLayout_,
+        0,1,&set,0,nullptr);
+    QBatchPush p{};
+    p.type=14;p.rows=rows;p.cols=cols;
+    p.weightBytes=static_cast<uint32_t>(weightBytes);p.batch=1;
+    vkCmdPushConstants(
+        cmd,q6RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    const uint32_t rowsPerWorkgroup=batchRowsPerWorkgroup();
+    vkCmdDispatch(
+        cmd,(rows+rowsPerWorkgroup-1u)/rowsPerWorkgroup,1,1);
+    recordComputeBarrier(cmd);
+    if(!own) return true;
+    GpuWorkInterval wi{};
+    return endSubmitWait(
+        cmd,query,GpuWorkKind::ModelCompute,
+        weightBytes,workEpoch_,&wi);
 }
 
 VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
@@ -3454,9 +3502,15 @@ bool VulkanCompute::DispatchGemvQuant(
 
     const char* q6BatchRows = std::getenv("DEEP2_Q6K_HOT_BATCH_ROWS");
     if (type == 14 && q6BatchRows && q6BatchRows[0] == '1' &&
-        rows >= 8 && qBatch8RowPipeline_) {
-        const bool ok = DispatchGemvQ4KBatch8Row(
-            weights, weightBytes, input, output, rows, cols, 1, 14);
+        rows >= 8 && (qBatch8RowPipeline_ || q6RowPipeline_)) {
+        const char* q6Single = std::getenv("DEEP2_Q6K_SINGLE_ROW");
+        const bool useSingle = q6Single && q6Single[0] == '1' &&
+            q6RowPipeline_;
+        const bool ok = useSingle
+            ? DispatchGemvQ6SingleRow(
+                weights, weightBytes, input, output, rows, cols)
+            : DispatchGemvQ4KBatch8Row(
+                weights, weightBytes, input, output, rows, cols, 1, 14);
         if (ok) ++gemvSuccess_;
         return ok;
     }
@@ -5854,12 +5908,19 @@ bool VulkanCompute::DispatchWeightResidentLane(
     }
     const char* q6HotBatchRows = std::getenv("DEEP2_Q6K_HOT_BATCH_ROWS");
     if (meta.type == 14 && q6HotBatchRows && q6HotBatchRows[0] == '1' &&
-        meta.rows >= 8 && qBatch8RowPipeline_) {
+        meta.rows >= 8 && (qBatch8RowPipeline_ || q6RowPipeline_)) {
+        const char* q6Single = std::getenv("DEEP2_Q6K_SINGLE_ROW");
+        const bool useSingle = q6Single && q6Single[0] == '1' &&
+            q6RowPipeline_;
+        const VkPipeline pipeline = useSingle
+            ? q6RowPipeline_ : qBatch8RowPipeline_;
+        const VkPipelineLayout layout = useSingle
+            ? q6RowPipelineLayout_ : qBatch8RowPipelineLayout_;
         vkCmdBindPipeline(
-            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qBatch8RowPipeline_);
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
         vkCmdBindDescriptorSets(
             lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
-            qBatch8RowPipelineLayout_, 0, 1, &set, 0, nullptr);
+            layout, 0, 1, &set, 0, nullptr);
         QBatchPush push{};
         push.type = 14;
         push.rows = meta.rows;
@@ -5867,7 +5928,7 @@ bool VulkanCompute::DispatchWeightResidentLane(
         push.weightBytes = static_cast<uint32_t>(meta.bytes);
         push.batch = 1;
         vkCmdPushConstants(
-            lane.cmd, qBatch8RowPipelineLayout_,
+            lane.cmd, layout,
             VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
         const uint32_t rowsPerWorkgroup = batchRowsPerWorkgroup();
         vkCmdDispatch(
@@ -6562,6 +6623,8 @@ void VulkanCompute::cleanup() {
         vkDestroyPipeline(device_,qBatch4RowPipeline_,nullptr);
     if(device_ && qBatch8RowPipeline_)
         vkDestroyPipeline(device_,qBatch8RowPipeline_,nullptr);
+    if(device_ && q6RowPipeline_)
+        vkDestroyPipeline(device_,q6RowPipeline_,nullptr);
     if(device_ && argmaxPipeline_)
         vkDestroyPipeline(device_,argmaxPipeline_,nullptr);
     if(device_ && specOpsPipeline_)
@@ -6580,6 +6643,9 @@ void VulkanCompute::cleanup() {
     if(device_ && qBatch8RowPipelineLayout_)
         vkDestroyPipelineLayout(
             device_,qBatch8RowPipelineLayout_,nullptr);
+    if(device_ && q6RowPipelineLayout_)
+        vkDestroyPipelineLayout(
+            device_,q6RowPipelineLayout_,nullptr);
 
     if(device_ && argmaxPipelineLayout_)
         vkDestroyPipelineLayout(device_,argmaxPipelineLayout_,nullptr);

@@ -41,6 +41,8 @@ Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch4row.comp") `
             (Join-Path $ShaderDir "deep2_qgemv_batch4row.spv")
 Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch8row.comp") `
             (Join-Path $ShaderDir "deep2_qgemv_batch8row.spv")
+Compile-One (Join-Path $ShaderDir "deep2_qgemv_q6row.comp") `
+            (Join-Path $ShaderDir "deep2_qgemv_q6row.spv")
 
 Compile-One (Join-Path $ShaderDir "deep2_argmax.comp") `
             (Join-Path $ShaderDir "deep2_argmax.spv")

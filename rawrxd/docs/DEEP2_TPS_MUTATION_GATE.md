@@ -2,16 +2,41 @@
 
 `scripts/deep2_tps_mutation_gate.ps1` runs one optimization candidate through a fail-closed loop:
 
-1. Snapshot only the declared candidate files by SHA-256.
+1. Enroll an immutable Gate 21 baseline with canonical paths, byte lengths, content hashes, and an isolated snapshot.
 2. Run a mutation script with `RAWRXD_MUTATION_ROOT` and `RAWRXD_MUTATION_ALLOWED_FILES` set.
 3. Reject undeclared source changes.
 4. Build the candidate and run optional validation.
-5. Run the flight-recorder benchmark and require every run to pass.
+5. Run the flight-recorder benchmark only after the separate resume authorization is present,
+   and require every run to pass.
 6. Require the candidate median TPS to exceed the baseline by `MinRelativeGain`.
-7. Restore the exact snapshot on every rejection and verify its hashes.
-8. Rebuild the baseline after rejection so a stale candidate executable cannot be measured later.
+7. Restore the exact snapshot on every rejection and every non-promoted success through the crash-recoverable Gate 21 keeper.
+8. Verify the restored inventory and optionally rebuild the baseline so a stale candidate executable cannot be measured later.
+9. Append state transitions to the hash-linked `MutationLedger`.
 
-The controller never stages, commits, resets, or stashes the repository. Existing unrelated worktree changes are recorded and left alone. Use `-SkipRebuildAfterReject` only when the build output is external and independently controlled.
+The controller never stages, commits, resets, or stashes the repository. Existing unrelated worktree changes are fingerprinted and left alone; mutation of a pre-existing dirty file is rejected. Candidate source is restored by default even after an accepted measurement. Use `-Promote` only for an explicit promotion transaction. Use `-SkipRebuildAfterReject` only when the build output is external and independently controlled.
+
+## Benchmark pause
+
+The gate is source-only by default. It runs mutation, build, and validation, then records
+`DRY_RUN_ONLY` and restores without starting a model. Supplying `-ResumeBenchmarks` is still
+not sufficient: the process must also contain
+`RAWRXD_D2_BENCHMARK_AUTHORIZATION=EXPLICIT_USER_RESUME`. This separate authorization is the
+active D2/R9700 pause boundary.
+
+## Gate 21/22 and MutationLedger
+
+`scripts/deep2_gatekeeper.ps1` implements the source-only Gate 21/22 boundary:
+
+- `-Action CaptureBaseline` creates a create-once baseline and verifies its complete snapshot.
+- `-Action VerifyBaseline` rejects missing, changed, or invalidly enrolled files.
+- `-Action Restore` stages and verifies the snapshot, writes a durable recovery record, restores, and verifies again.
+- `-Action Recover` completes an orphaned `APPLYING` transaction.
+- `-Action FaultTest` runs nine disposable-fixture failure tests and must report `test_count=9` and `passed=true`.
+
+`scripts/deep2_mutation_ledger.ps1` stores canonical UTF-8 records in append-only JSONL. Each
+entry binds the previous hash, an explicit byte length, and the exact canonical record bytes.
+The separate `.head` file is checked on every append and verification. A tampered line, missing
+head, sequence gap, length mismatch, or canonicalization change fails closed.
 
 Example:
 
@@ -31,7 +56,10 @@ Example:
   -ReportPath .rawrxd/tps_mutation_report.json
 ```
 
-The mutation script is responsible for applying one candidate. A rejected candidate exits `2` and prints `RESTORE_VERIFIED=True`; an accepted candidate remains in the worktree for human review and exits `0`.
+The mutation script is responsible for applying one candidate. A rejected candidate exits `2` and
+prints `RESTORE_VERIFIED=True`. An accepted candidate is restored unless `-Promote` is explicitly
+provided; promoted candidates remain live only after the promotion transaction verifies every
+declared file and exits `0`.
 
 ## Bounded variant sweep
 

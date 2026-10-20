@@ -633,6 +633,12 @@ public:
         uint32_t rows, uint32_t cols, uint32_t batch);
     VkPipeline qBatch8RowPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout qBatch8RowPipelineLayout_ = VK_NULL_HANDLE;
+    bool DispatchGemvQ6SingleRow(
+        const void* weights, size_t weightBytes,
+        DeviceBuf& input, DeviceBuf& output,
+        uint32_t rows, uint32_t cols);
+    VkPipeline q6RowPipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout q6RowPipelineLayout_ = VK_NULL_HANDLE;
     std::unordered_map<Q4KTileKey, Q4KTileChoice, Q4KTileKeyHash>
         q4kTileChoices_;
     uint64_t Q4KBatch8RowOps() const noexcept { return q4kBatch8RowOps_; }

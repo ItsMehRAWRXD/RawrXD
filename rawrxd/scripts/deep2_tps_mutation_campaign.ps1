@@ -42,15 +42,20 @@ New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
 $files = @(
     'rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp',
-    'rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv'
+    'rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv',
+    'rawrxd/src/deep2/shaders/deep2_qgemv_q6row.comp',
+    'rawrxd/src/deep2/shaders/deep2_qgemv_q6row.spv',
+    'rawrxd/src/deep2/vulkan_compute.cpp',
+    'rawrxd/src/deep2/vulkan_compute.h'
 )
 $candidates = @(
-    [pscustomobject]@{ name = 'primary-hoist-scale'; variant = 'hoist_scale'; primaryOnly = $true; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
-    [pscustomobject]@{ name = 'primary-half-load'; variant = 'half_load'; primaryOnly = $true; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
-    [pscustomobject]@{ name = 'primary-combined'; variant = 'hoist_scale_half_load'; primaryOnly = $true; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
-    [pscustomobject]@{ name = 'primary-batch1-loads'; variant = 'skip_unused_batch_rows'; primaryOnly = $true; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
-    [pscustomobject]@{ name = 'primary-combined-auto-tile'; variant = 'hoist_scale_half_load'; primaryOnly = $true; tile = 'auto'; gpu0 = '100'; gpu1 = '0.01' },
-    [pscustomobject]@{ name = 'split-combined'; variant = 'hoist_scale_half_load'; primaryOnly = $false; tile = '8'; gpu0 = '100'; gpu1 = '0.01' }
+    [pscustomobject]@{ name = 'primary-hoist-scale'; variant = 'hoist_scale'; primaryOnly = $true; q6SingleRow = $false; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
+    [pscustomobject]@{ name = 'primary-half-load'; variant = 'half_load'; primaryOnly = $true; q6SingleRow = $false; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
+    [pscustomobject]@{ name = 'primary-combined'; variant = 'hoist_scale_half_load'; primaryOnly = $true; q6SingleRow = $false; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
+    [pscustomobject]@{ name = 'primary-batch1-loads'; variant = 'skip_unused_batch_rows'; primaryOnly = $true; q6SingleRow = $false; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
+    [pscustomobject]@{ name = 'primary-combined-auto-tile'; variant = 'hoist_scale_half_load'; primaryOnly = $true; q6SingleRow = $false; tile = 'auto'; gpu0 = '100'; gpu1 = '0.01' },
+    [pscustomobject]@{ name = 'primary-single-row'; variant = 'skip_unused_batch_rows'; primaryOnly = $true; q6SingleRow = $true; tile = '8'; gpu0 = '100'; gpu1 = '0.01' },
+    [pscustomobject]@{ name = 'split-combined'; variant = 'hoist_scale_half_load'; primaryOnly = $false; q6SingleRow = $false; tile = '8'; gpu0 = '100'; gpu1 = '0.01' }
 )
 
 $manifest = [ordered]@{
@@ -99,22 +104,25 @@ try {
             '-OutputDir', (Join-Path $candidateDir 'benchmark')
         )
         if ($candidate.primaryOnly) { $benchmarkArguments += '-PrimaryOnly' }
+        if ($candidate.q6SingleRow) { $benchmarkArguments += '-Q6SingleRow' }
         $gateArguments = @(
             '-NoProfile', '-File', $resolvedGate,
             '-MutationScript', $resolvedMutation,
-            '-Files', $files,
+            '-FilesJson', ($files | ConvertTo-Json -Compress),
             '-BuildCommand', $BuildCommand,
-            '-BuildArguments', $BuildArguments,
+            '-BuildArgumentsJson', ($BuildArguments | ConvertTo-Json -Compress),
             '-ValidationCommand', $ValidationCommand,
-            '-ValidationArguments', $ValidationArguments,
+            '-ValidationArgumentsJson', ($ValidationArguments | ConvertTo-Json -Compress),
             '-BenchmarkScript', $resolvedBenchmark,
-            '-BenchmarkArguments', $benchmarkArguments,
+            '-BenchmarkArgumentsJson', ($benchmarkArguments | ConvertTo-Json -Compress),
             '-BaselineMedianTps', $BaselineMedianTps,
             '-MinRelativeGain', $MinRelativeGain,
             '-RepoRoot', $repoRoot,
             '-ReportPath', (Join-Path $candidateDir 'gate_report.json'),
+            '-LedgerPath', (Join-Path $OutputDir 'mutation_ledger.jsonl'),
             '-KeepRejectedSnapshot'
         )
+        if ($ResumeBenchmarks) { $gateArguments += '-ResumeBenchmarks' }
         $consolePath = Join-Path $candidateDir 'gate_console.txt'
         Write-Output ("CANDIDATE={0} VARIANT={1} PRIMARY_ONLY={2}" -f $candidate.name, $candidate.variant, $candidate.primaryOnly)
         $output = @(& pwsh @gateArguments 2>&1 | Tee-Object -FilePath $consolePath)
@@ -124,6 +132,7 @@ try {
             name = $candidate.name
             variant = $candidate.variant
             primary_only = [bool]$candidate.primaryOnly
+            q6_single_row = [bool]$candidate.q6SingleRow
             exit_code = $exitCode
             accepted = $acceptedCandidate
             report = (Join-Path $candidateDir 'gate_report.json')

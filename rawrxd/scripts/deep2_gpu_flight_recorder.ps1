@@ -13,6 +13,7 @@ param(
     [string]$DenseExec = 'LAYER_SPLIT',
     [ValidateSet('auto', '4', '8')]
     [string]$Q4Tile = 'auto',
+    [switch]$Q6SingleRow,
     [switch]$PrimaryOnly,
     [switch]$ResidentFirst,
     [switch]$NoTrace,
@@ -53,6 +54,7 @@ $trackedEnv = @(
     'DEEP2_Q4K_SINGLE_BATCH_ROWS',
     'DEEP2_Q4K_FORCE_TILE',
     'DEEP2_Q6K_HOT_BATCH_ROWS',
+    'DEEP2_Q6K_SINGLE_ROW',
     'DEEP2_GPU_TRACE'
 )
 $savedEnv = @{}
@@ -108,6 +110,7 @@ try {
         $env:DEEP2_Q4K_FORCE_TILE = $Q4Tile
     }
     $env:DEEP2_Q6K_HOT_BATCH_ROWS = if ($Q6Hot) { '1' } else { '0' }
+    $env:DEEP2_Q6K_SINGLE_ROW = if ($Q6SingleRow) { '1' } else { $null }
     $env:DEEP2_GPU_TRACE = if ($NoTrace) { '0' } else { '1' }
 
     $results = [System.Collections.Generic.List[object]]::new()
@@ -227,6 +230,7 @@ try {
         timeout_sec = $TimeoutSec
         q4_hot = [bool]$Q4Hot
         q6_hot = [bool]$Q6Hot
+        q6_single_row = [bool]$Q6SingleRow
         q4_tile = $Q4Tile
         dense_exec = $DenseExec
         primary_only = [bool]$PrimaryOnly
