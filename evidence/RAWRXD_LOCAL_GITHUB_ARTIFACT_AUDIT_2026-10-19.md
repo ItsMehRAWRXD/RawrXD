@@ -88,3 +88,7 @@ Relevant GitHub references:
 ## Audit limits
 
 This is a broad source, evidence, worktree, branch, and GitHub-artifact audit. It did not open each of the 181,988 binary .bin files or every generated executable, and some auxiliary GitHub tree listings were unavailable from the connector. Those files were counted and their relevant names indexed, but binary contents and every historical Git object were not certified.
+
+## Post-audit execution update — D1 replay
+
+After the audit snapshot, commit `74fafe258498749cbd22d443752f8cc792ac31f9` on branch `codex/d1-replay-1977e041` replayed D1 from the exact audited primary HEAD `1977e04140a199f23b0cbae9ac26bd2a819eed82`. The TinyLlama/R9700 matrix passed lengths 1, 2, 8, 32, and 128 with bit-exact full logits, committed K/V payloads across all blocks, executor state, and one-token continuation; all CPU fallback counters were zero. The receipt and build/matrix logs are under `evidence/D1_REPLAY_1977E_20261019/` on that branch. This is a verified D1 PASS for the tested TinyLlama path; other model families and the Q4_K fused LM-head path remain unverified. The D1 commit is isolated from the dirty primary checkout pending integration review.
