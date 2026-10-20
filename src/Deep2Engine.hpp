@@ -405,6 +405,15 @@ struct Deep2Engine {
         uint64_t downRows = 0, downCols = 0;
         bool ready = false;
     };
+    // The resident weights of a Llama layer.
+    //
+    // Llama has seven matrices per layer where Phi-3 has four: separate
+    // query, key and value projections, the attention output projection, and
+    // the gate, up and down projections of a gated feed-forward.
+    struct ResidentLlamaLayer {
+        ResidentProjection q, k, v, o, gate, up, down;
+        bool ready = false;
+    };
     std::vector<ResidentLayer> m_residentLayers;
     ResidentProjection m_residentOutput;
     uint64_t m_residentOutputRows = 0, m_residentOutputCols = 0;
@@ -530,6 +539,16 @@ struct Deep2Engine {
     // them from where they already are instead of dequantizing and
     // re-uploading them for every token. Set forceCpuPath to run the
     // original CPU path, which is the reference for the parity check.
+    // Run the Llama forward pass over the resident device path, or the CPU
+    // path when it is forced or the devices are not available.
+    // Run the forward pass for whichever architecture the model has.
+    bool executeROMForwardPass(const std::vector<uint32_t>& inputTokens,
+                               std::vector<float>& outputLogits,
+                               std::vector<float>& baselineLogits,
+                               bool forceCpuPath = false);    bool executeLlamaROMForwardPass(const std::vector<uint32_t>& inputTokens,
+                                    std::vector<float>& outputLogits,
+                                    std::vector<float>& baselineLogits,
+                                    bool forceCpuPath = false);
     bool executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
                                    std::vector<float>& outputLogits,
                                    std::vector<float>& baselineLogits,
@@ -558,6 +577,20 @@ struct Deep2Engine {
     // A null ring means the pass uses the engine's scratch ring, which is
     // cleared and holds only the positions this pass produces. A ring
     // supplied by the caller is used as it stands.
+    // The Llama forward path.
+    //
+    // Llama has separate query, key and value projections instead of one
+    // fused matrix, its key and value matrices are narrower than its query
+    // matrix when the model uses grouped-query attention, and its rotary
+    // embedding pairs the two halves of a head instead of adjacent
+    // elements.
+    bool executeLlamaROMForwardImpl(const std::vector<uint32_t>& inputTokens,
+                                   std::vector<float>& outputLogits,
+                                   std::vector<float>& baselineLogits,
+                                   bool forceCpuPath);
+    // Place one tensor of a Llama layer on the devices, split by output rows.
+    bool placeLlamaResident(const std::string& name, ResidentProjection& slot,
+                            double& uploadMs, uint32_t& tensorCount);
     bool executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTokens,
                                    std::vector<float>& outputLogits,
                                    std::vector<float>& baselineLogits,

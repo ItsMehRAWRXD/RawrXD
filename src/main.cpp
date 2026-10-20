@@ -174,7 +174,7 @@ void runThroughputBenchmark(Deep2Engine& engine, int steps) {
     // unexplained crash is a failed run, not a missing metric.
     auto forward = [&](std::vector<float>& out) -> bool {
         try {
-            return engine.executePhi3ROMForwardPass(inputTokens, out, baseline);
+            return engine.executeROMForwardPass(inputTokens, out, baseline);
         } catch (const std::exception& e) {
             fprintf(stderr, "[BENCH] forward pass threw: %s\n", e.what());
             return false;
@@ -411,14 +411,14 @@ static void runLayer0CheckpointDiff(Deep2Engine& engine) {
 
     std::cout << "\n=== LAYER 0 CHECKPOINT DIFF: RESIDENT vs CPU ===\n" << std::flush;
     engine.m_layer0Checkpoints.clear();
-    if (!engine.executePhi3ROMForwardPass(inputTokens, residentLogits, residentBaseline, false)) {
+    if (!engine.executeROMForwardPass(inputTokens, residentLogits, residentBaseline, false)) {
         std::cerr << "[L0DIFF] the resident pass failed\n";
         return;
     }
     const auto resident = engine.m_layer0Checkpoints;
     engine.m_layer0Checkpoints.clear();
 
-    if (!engine.executePhi3ROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true)) {
+    if (!engine.executeROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true)) {
         std::cerr << "[L0DIFF] the CPU pass failed\n";
         return;
     }
@@ -492,7 +492,7 @@ void runMove10Validation(Deep2Engine& engine) {
     std::cout << "\n=== MOVE 10 VALIDATION WITH ORACLE-TRACE PROBES ===\n";
     // Run only first 5 layers to hit the boundary probes quickly
     // Temporarily modify the engine to limit layers
-    bool success = engine.executePhi3ROMForwardPass(inputTokens, outputLogits, baselineLogits);
+    bool success = engine.executeROMForwardPass(inputTokens, outputLogits, baselineLogits);
     
     if (success) {
         std::cout << "\n[Move 10] Forward pass completed successfully!\n";
@@ -1043,7 +1043,7 @@ static void runForwardParity(Deep2Engine& engine) {
     {
         residentTrace.passthrough = std::cout.rdbuf();
         std::streambuf* saved = std::cout.rdbuf(&residentTrace);
-        const bool ok = engine.executePhi3ROMForwardPass(inputTokens, residentLogits, residentBaseline, false);
+        const bool ok = engine.executeROMForwardPass(inputTokens, residentLogits, residentBaseline, false);
         std::cout.rdbuf(saved);
         std::cout << "\n[PARITY] resident path: " << (ok ? "OK" : "FAILED") << "\n" << std::flush;
     }
@@ -1058,7 +1058,7 @@ static void runForwardParity(Deep2Engine& engine) {
     {
         cpuTrace.passthrough = std::cout.rdbuf();
         std::streambuf* saved = std::cout.rdbuf(&cpuTrace);
-        const bool ok = engine.executePhi3ROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true);
+        const bool ok = engine.executeROMForwardPass(inputTokens, cpuLogits, cpuBaseline, true);
         std::cout.rdbuf(saved);
         std::cout << "\n[PARITY] cpu path: " << (ok ? "OK" : "FAILED") << "\n" << std::flush;
     }

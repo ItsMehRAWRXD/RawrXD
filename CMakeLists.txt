@@ -21,6 +21,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(DEEP2_ENGINE_CORE_SOURCES
     src/Deep2Engine.cpp
     src/Deep2Engine_MultiGPU.cpp
+    src/Deep2Engine_Llama.cpp
     src/GGUFLoader.cpp
     src/TensorROM.cpp
     src/ShardPager.cpp

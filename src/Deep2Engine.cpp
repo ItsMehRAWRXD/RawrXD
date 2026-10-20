@@ -597,17 +597,23 @@ void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
               << " heads=" << engine.ctx.cfg.numHeads
               << " vocab=" << engine.ctx.cfg.vocabSize << "\n";
 
-    const deep2::TensorEntry* qkv = engine.rom.findTensor("blk.0.attn_qkv.weight");
+    // The smoke check needs one weight matrix to verify the GEMV against,
+    // and the two architectures name it differently: Phi-3 fuses the query,
+    // key and value projections into one matrix, Llama has a separate query
+    // projection.
+    const bool llamaArch = engine.rom.geometry().arch == deep2::ModelArch::Llama;
+    const char* smokeTensor = llamaArch ? "blk.0.attn_q.weight" : "blk.0.attn_qkv.weight";
+    const deep2::TensorEntry* qkv = engine.rom.findTensor(smokeTensor);
     if (!qkv) {
-        std::cout << "[VERIFY] blk.0.attn_qkv.weight not present in ROM\n";
+        std::cout << "[VERIFY] " << smokeTensor << " not present in ROM\n";
         return;
     }
     deep2::DequantizedTensor dq;
     if (!engine.dequantTensor(*qkv, dq)) {
-        std::cout << "[VERIFY] dequant of blk.0.attn_qkv.weight failed\n";
+        std::cout << "[VERIFY] dequant of " << smokeTensor << " failed\n";
         return;
     }
-    std::cout << "[VERIFY] dequantized blk.0.attn_qkv.weight -> " << dq.rows << "x" << dq.cols << " f32\n";
+    std::cout << "[VERIFY] dequantized " << smokeTensor << " -> " << dq.rows << "x" << dq.cols << " f32\n";
 
     uint64_t testRows = std::min<uint64_t>(16, dq.rows);
     std::vector<float> x(dq.cols, 1.0f), y(testRows, 0.0f);
