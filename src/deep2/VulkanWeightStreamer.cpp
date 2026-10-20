@@ -21,6 +21,7 @@ bool VulkanWeightStreamer::initialize(const WeightStreamConfig& config) {
     resident_.clear();
     metrics_ = {};
     for (auto& slot : slots_) slot = {};
+    cv_.notify_all();
     return initialized_;
 }
 
@@ -33,6 +34,7 @@ void VulkanWeightStreamer::reset() noexcept {
     nextTicket_ = 0;
     nextSignal_ = 0;
     nextAllocationEpoch_ = std::max<uint64_t>(1, nextAllocationEpoch_ + 1);
+    cv_.notify_all();
 }
 
 bool VulkanWeightStreamer::initialized() const noexcept {
@@ -149,11 +151,22 @@ bool VulkanWeightStreamer::ready(TransferTicket ticket) const {
 bool VulkanWeightStreamer::waitReady(TransferTicket ticket) {
     uint64_t signal = 0;
     {
-        std::lock_guard<std::mutex> lock(mu_);
+        std::unique_lock<std::mutex> lock(mu_);
         Slot* slot = lookupLocked(ticket);
         if (!slot) { noteStaleLocked(); return false; }
         if (slot->state == SlotState::Ready) return true;
         if (slot->state != SlotState::Pending) return false;
+        if (slot->waitInProgress) {
+            cv_.wait(lock, [&] {
+                Slot* current = lookupLocked(ticket);
+                return !current || current->state != SlotState::Pending ||
+                       !current->waitInProgress;
+            });
+            slot = lookupLocked(ticket);
+            if (!slot) { noteStaleLocked(); return false; }
+            return slot->state == SlotState::Ready;
+        }
+        slot->waitInProgress = true;
         signal = slot->signalValue;
         ++metrics_.waits;
     }
@@ -162,11 +175,13 @@ bool VulkanWeightStreamer::waitReady(TransferTicket ticket) {
     std::lock_guard<std::mutex> lock(mu_);
     Slot* slot = lookupLocked(ticket);
     if (!slot) { noteStaleLocked(); return false; }
+    slot->waitInProgress = false;
     if (!ok) {
         slot->state = SlotState::Failed;
         resident_.erase(slot->tensor);
         if (metrics_.inFlight) --metrics_.inFlight;
         ++metrics_.failures;
+        cv_.notify_all();
         return false;
     }
     if (slot->state == SlotState::Pending) {
@@ -174,6 +189,7 @@ bool VulkanWeightStreamer::waitReady(TransferTicket ticket) {
         if (metrics_.inFlight) --metrics_.inFlight;
         ++metrics_.completed;
     }
+    cv_.notify_all();
     return true;
 }
 
@@ -264,6 +280,7 @@ uint32_t VulkanWeightStreamer::retireCompleted(uint64_t completedTimeline) {
             ++promoted;
         }
     }
+    if (promoted) cv_.notify_all();
     return promoted;
 }
 

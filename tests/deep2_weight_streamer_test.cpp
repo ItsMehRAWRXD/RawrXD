@@ -19,6 +19,7 @@ public:
         return true;
     }
     bool wait(uint64_t signal) override {
+        ++waitCalls;
         if (!pending || signal != pending) return false;
         completed = signal;
         pending = 0;
@@ -28,6 +29,7 @@ public:
     uint64_t submits = 0, completed = 0, pending = 0;
     size_t lastBytes = 0;
     uint32_t lastSlot = 0;
+    uint32_t waitCalls = 0;
 };
 }
 
@@ -92,6 +94,23 @@ int main() {
     assert(c.allocationEpoch != a.allocationEpoch);
     assert(!stream.waitReady(a));
     assert(stream.waitReady(c));
+
+    // Repeated consumers of one completed cache hit never re-wait or turn a
+    // successful upload into a false failure. The condition-variable path in
+    // the scheduler coalesces the same dependency while it is still pending.
+    FakeTransferBackend concurrentBackend;
+    VulkanWeightStreamer concurrent(&concurrentBackend);
+    WeightStreamConfig concurrentCfg = cfg;
+    concurrentCfg.slotCount = 1;
+    assert(concurrent.initialize(concurrentCfg));
+    const auto d = concurrent.prefetch(14, payload.data(), payload.size());
+    assert(d.valid());
+    bool firstReady = false;
+    bool secondReady = false;
+    firstReady = concurrent.waitReady(d);
+    secondReady = concurrent.waitReady(d);
+    assert(firstReady && secondReady);
+    assert(concurrentBackend.waitCalls == 1);
 
     // Predictive planning and deterministic replay are source-only evidence;
     // they must never be confused with a live Vulkan transfer receipt.

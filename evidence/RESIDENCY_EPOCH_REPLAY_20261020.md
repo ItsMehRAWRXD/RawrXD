@@ -14,6 +14,8 @@ expert residency planner and LRU replay simulator.
   - Allocation epochs are carried by transfer tickets and resident bindings.
   - Recycled slots cannot satisfy an old ticket or binding.
   - `ready()` is a non-blocking dependency query.
+  - Concurrent waiters coalesce on one backend wait through a condition
+    variable; a completed dependency is never waited a second time.
   - `acquireForDispatch()` pins a ready allocation with a lease.
   - `releaseAfterGpuCompletion()` retires the lease; ordinary release is
     denied while a dispatch lease is live.
@@ -24,7 +26,7 @@ expert residency planner and LRU replay simulator.
     counters.
 - `tests/deep2_weight_streamer_test.cpp`
   - Covers non-blocking readiness, lease pinning, epoch invalidation, planner
-    ranking, and replay determinism.
+    ranking, replay determinism, and repeated-consumer wait behavior.
 
 ## Verification
 

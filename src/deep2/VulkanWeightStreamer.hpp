@@ -8,6 +8,7 @@
 #pragma once
 
 #include <array>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -123,6 +124,7 @@ private:
         uint64_t allocationEpoch = 0;
         uint64_t signalValue = 0;
         uint64_t ticketId = 0;
+        bool waitInProgress = false;
         uint64_t nextDispatchLease = 0;
         uint32_t dispatchLeases = 0;
         std::unordered_set<uint64_t> activeDispatchLeases;
@@ -142,6 +144,7 @@ private:
     std::array<Slot, 16> slots_{};
     std::unordered_map<WeightTensorId, uint32_t> resident_;
     mutable std::mutex mu_;
+    mutable std::condition_variable cv_;
     WeightStreamMetrics metrics_{};
 };
 
