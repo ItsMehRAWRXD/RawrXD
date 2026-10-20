@@ -416,6 +416,19 @@ bool TensorROM::finalizeIndex() {
         parseU64(lookup(p + ".attention.head_count"), m_geom.numHeads);
         parseU64(lookup(p + ".attention.head_count_kv"), m_geom.numKVHeads);
         parseU64(lookup(p + ".feed_forward_length"), m_geom.intermediateDim);
+        // The rotary frequency base and the context length are per model, and
+        // neither is the default. A llama-family model keeps them under its
+        // own prefix and not under "general", so reading only the general
+        // spelling leaves a Llama-3.2 model with a frequency base of 10000
+        // when it declares 500000, and a context length of 4096 when it
+        // declares 131072.
+        parseF64(lookup(p + ".rope.freq_base"), m_geom.ropeTheta);
+        parseU64(lookup(p + ".context_length"), m_geom.maxSeqLen);
+        uint64_t ropeDim = 0;
+        if (parseU64(lookup(p + ".rope.dimension_count"), ropeDim)) {
+            m_geom.ropeDimCount = static_cast<uint32_t>(ropeDim);
+        }
+        parseF64(lookup(p + ".attention.layer_norm_rms_epsilon"), m_geom.rmsEps);
     }
 
     // Architecture identity. The engine has specialised forward passes for a
@@ -541,6 +554,12 @@ const TensorEntry* TensorROM::findTensor(const std::string& name) const {
 
 bool TensorROM::hasTensor(const std::string& name) const {
     return findTensor(name) != nullptr;
+}
+
+const std::string* TensorROM::findKv(const std::string& key) const {
+    auto it = m_kvStrings.find(key);
+    if (it == m_kvStrings.end()) return nullptr;
+    return &it->second;
 }
 
 uint64_t TensorROM::tensorNumValues(const TensorEntry& e) {

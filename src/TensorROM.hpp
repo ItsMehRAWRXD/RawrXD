@@ -69,6 +69,13 @@ struct ModelGeometry {
     uint64_t maxSeqLen = 4096;
     double ropeTheta = 10000.0;
 
+    // The rotary touches the first ropeDimCount elements of a head, and that
+    // is not always the whole head.
+    uint32_t ropeDimCount = 0;
+
+    // The norm epsilon the model declares.
+    double rmsEps = 1e-5;
+
     // DeepSeek2 / MoE extensions (populated in Move 7).
     uint32_t qLoraRank = 0;
     uint32_t kvLoraRank = 0;
@@ -106,6 +113,15 @@ public:
 
     const TensorEntry* findTensor(const std::string& name) const;
     bool hasTensor(const std::string& name) const;
+
+    // A metadata value from the first shard, or null when the key is absent.
+    //
+    // The geometry carries the handful of keys the engine needs, and a
+    // reference implementation needs the rest: the rotary dimension count,
+    // the norm epsilon, the per-layer feed-forward widths. Reading them
+    // from the file rather than assuming them is what keeps a reference
+    // independent of the code it is checking.
+    const std::string* findKv(const std::string& key) const;
 
     // Number of logical values and storage bytes for a tensor.
     static uint64_t tensorNumValues(const TensorEntry& e);

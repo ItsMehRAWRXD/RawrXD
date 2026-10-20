@@ -243,6 +243,14 @@ void Deep2Engine::SynchronizeRoPEScaling(double modelThetaConfig) {
         ctx.cfg.maxSeqLen = static_cast<size_t>(rom.geometry().maxSeqLen);
         ctx.cfg.ropeThetaGlobal = rom.geometry().ropeTheta;
         ctx.cfg.ropeScaleFactor = 1.0;
+
+        // The rotary frequency base is the model's own value and the
+        // positions are not compressed. A model that wants a different
+        // treatment of its positions says so in its metadata, and the
+        // long-context adjustment that the whole-loader path applies is a
+        // Phi-3 thing that a llama-family model does not use: Llama-3.2
+        // declares a base of 500000 and a context of 131072, and dividing
+        // every position by 32 is not what it was trained with.
     } else {
         ctx.cfg.ropeThetaGlobal = (modelThetaConfig > 0.0) ? modelThetaConfig : 10000.0;
         ctx.cfg.ropeScaleFactor = 1.0;

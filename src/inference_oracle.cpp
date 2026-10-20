@@ -349,6 +349,368 @@ struct Phi3Model {
 };
 
 // ---------------------------------------------------------------------------
+// Llama family reference.
+//
+// This is the independent reference for the Llama executor. It is written
+// from the model's own layout rather than from the executor, so the two can
+// be compared and a mistake in either one shows up.
+//
+// The differences from the Phi-3 path are the ones that matter:
+//
+//   - the query, the key and the value are three separate matrices, not one
+//     fused matrix
+//   - the key and the value are narrower than the hidden size when the model
+//     groups query heads, and the key head a query head reads is its own
+//     divided by the group size
+//   - the feed-forward is gated with a separate gate projection
+//   - the rotary pairs the elements half a head apart rather than the ones
+//     next to each other
+//   - the rotary frequency base is a model value and is not always 10000
+//
+// The key and the value are held in the same half precision the engine's
+// ring holds them in. A reference that kept them in f32 would differ from
+// the engine for a reason that has nothing to do with whether the engine is
+// right.
+// ---------------------------------------------------------------------------
+struct LlamaModel {
+    struct LayerW {
+        std::vector<float> attnNormW, ffnNormW;
+        std::vector<float> qW, kW, vW, attnOutW;
+        std::vector<float> gateW, upW, downW;
+    };
+
+    const TensorROM* rom = nullptr;
+    uint32_t hidden = 0, layers = 0, heads = 0, kvHeads = 0, headDim = 0;
+    uint32_t intermediate = 0, vocab = 0, kvWidth = 0;
+    uint32_t ropeDim = 0;
+    double theta = 10000.0;
+    float eps = 1e-5f;
+    bool outputTied = false;
+    std::vector<float> tokenEmbdW, outputNormW, outputW;
+
+    // Read one tensor and expand it to f32.
+    bool readF32(const std::string& name, std::vector<float>& out) const {
+        const TensorEntry* e = rom->findTensor(name);
+        if (!e) {
+            std::cerr << "[LLAMA-ORACLE] missing tensor: " << name << "\n";
+            return false;
+        }
+        const uint64_t size = e->byteSize();
+        std::vector<uint8_t> raw(size);
+        if (!rom->readTensor(*e, raw.data())) {
+            std::cerr << "[LLAMA-ORACLE] readTensor failed: " << name << "\n";
+            return false;
+        }
+        TensorView view{ e->type, raw.data(), size, e->dims, true };
+        DequantizedTensor dq;
+        if (!dequantizeTensor(view, dq)) {
+            std::cerr << "[LLAMA-ORACLE] dequant failed: " << name << "\n";
+            return false;
+        }
+        out = std::move(dq.data);
+        return true;
+    }
+
+    bool loadRom(const TensorROM& r) {
+        rom = &r;
+        const auto& g = rom->geometry();
+        if (g.arch != ModelArch::Llama) {
+            std::cerr << "[LLAMA-ORACLE] the model is not a llama-family model\n";
+            return false;
+        }
+        hidden = static_cast<uint32_t>(g.hiddenDim);
+        layers = static_cast<uint32_t>(g.numLayers);
+        heads = static_cast<uint32_t>(g.numHeads);
+        kvHeads = static_cast<uint32_t>(g.numKVHeads ? g.numKVHeads : g.numHeads);
+        intermediate = static_cast<uint32_t>(g.intermediateDim);
+        vocab = static_cast<uint32_t>(g.vocabSize);
+        theta = g.ropeTheta;
+
+        if (hidden == 0 || layers == 0 || heads == 0 || kvHeads == 0 || heads % kvHeads != 0) {
+            std::cerr << "[LLAMA-ORACLE] the head geometry is not usable: " << heads << " heads, "
+                      << kvHeads << " kv heads\n";
+            return false;
+        }
+        headDim = hidden / heads;
+        kvWidth = kvHeads * headDim;
+        ropeDim = headDim;
+
+        // The rotary dimension count and the norm epsilon are model values.
+        // The rotary dimension is the number of elements of a head the rotary
+        // touches, and it is less than the head for some models.
+        if (const std::string* s = rom->findKv("llama.rope.dimension_count")) {
+            const long v = std::strtol(s->c_str(), nullptr, 10);
+            if (v > 0 && (v % 2) == 0 && v <= static_cast<long>(headDim)) {
+                ropeDim = static_cast<uint32_t>(v);
+            }
+        }
+        if (const std::string* s = rom->findKv("llama.attention.layer_norm_rms_epsilon")) {
+            eps = static_cast<float>(std::strtod(s->c_str(), nullptr));
+        }
+        if (!readF32("token_embd.weight", tokenEmbdW)) return false;
+        if (!readF32("output_norm.weight", outputNormW)) return false;
+
+        // The output projection is sometimes tied to the token embedding.
+        // A model that has no output.weight computes its logits from the
+        // embedding matrix, and reading the projection that is not there is
+        // the difference between a model that runs and one that does not.
+        if (rom->hasTensor("output.weight")) {
+            if (!readF32("output.weight", outputW)) return false;
+            outputTied = false;
+        } else {
+            outputW = tokenEmbdW;
+            outputTied = true;
+        }
+
+        std::cerr << "[LLAMA-ORACLE] hidden=" << hidden << " layers=" << layers
+                  << " heads=" << heads << " kvHeads=" << kvHeads << " headDim=" << headDim
+                  << " kvWidth=" << kvWidth << " ropeDim=" << ropeDim
+                  << " theta=" << theta << " eps=" << eps
+                  << " intermediate=" << intermediate << " vocab=" << vocab
+                  << (outputTied ? " output=tied-to-embedding" : "") << "\n";
+        return true;
+    }
+
+    // The rotary, with the elements of a pair half a head apart.
+    //
+    // This is the pairing the llama family uses. The Phi-3 path pairs the
+    // elements next to each other, and using the wrong pairing produces a
+    // model that generates fluent nonsense.
+    void rope(float* v, size_t headDim_, uint32_t position) const {
+        const size_t nRot = ropeDim;
+        if (nRot < 2) return;
+        const size_t half = nRot / 2;
+        for (size_t i = 0; i < half; ++i) {
+            const double frequency = 1.0 / std::pow(theta, (2.0 * i) / static_cast<double>(nRot));
+            const double angle = static_cast<double>(position) * frequency;
+            const float s = static_cast<float>(std::sin(angle));
+            const float c = static_cast<float>(std::cos(angle));
+            const float v0 = v[i];
+            const float v1 = v[i + half];
+            v[i] = v0 * c - v1 * s;
+            v[i + half] = v0 * s + v1 * c;
+        }
+    }
+
+    // The attention over the cache, with the query heads grouped onto the
+    // key and value heads.
+    void groupedAttention(float* out, const float* q, const deep2::HostKvRing& ring,
+                          uint32_t layer, uint32_t startLogical, uint32_t count) const {
+        std::memset(out, 0, static_cast<size_t>(heads) * headDim * sizeof(float));
+        if (count == 0) return;
+
+        const uint32_t groupSize = heads / kvHeads;
+        const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+        std::vector<float> scores(count);
+
+        for (uint32_t h = 0; h < heads; ++h) {
+            // The key head this query head reads.
+            const uint32_t kvHead = h / groupSize;
+            const float* qh = q + static_cast<size_t>(h) * headDim;
+
+            float maxScore = -std::numeric_limits<float>::infinity();
+            for (uint32_t t = 0; t < count; ++t) {
+                const uint16_t* kh = ring.keyRow(layer, startLogical + t);
+                if (!kh) return;
+                kh += static_cast<size_t>(kvHead) * headDim;
+                float dot = 0.0f;
+                for (uint32_t d = 0; d < headDim; ++d) {
+                    dot += qh[d] * deep2::KvHalfToFloat(kh[d]);
+                }
+                scores[t] = dot * scale;
+                maxScore = (std::max)(maxScore, scores[t]);
+            }
+
+            float expSum = 0.0f;
+            for (uint32_t t = 0; t < count; ++t) {
+                scores[t] = std::exp(scores[t] - maxScore);
+                expSum += scores[t];
+            }
+            if (expSum <= 0.0f) continue;
+            const float invExpSum = 1.0f / expSum;
+
+            float* headOut = out + static_cast<size_t>(h) * headDim;
+            for (uint32_t t = 0; t < count; ++t) {
+                const uint16_t* vh = ring.valueRow(layer, startLogical + t);
+                if (!vh) return;
+                vh += static_cast<size_t>(kvHead) * headDim;
+                const float weight = scores[t] * invExpSum;
+                for (uint32_t d = 0; d < headDim; ++d) {
+                    headOut[d] += weight * deep2::KvHalfToFloat(vh[d]);
+                }
+            }
+        }
+    }
+
+    // The logits for the last token of `tokens`.
+    //
+    // The layer weights are read from the ROM one layer at a time and
+    // released before the next one is read, so the peak memory is one layer
+    // rather than the whole model.
+    std::vector<float> forward(const std::vector<uint32_t>& tokens) {
+        const uint32_t seq = static_cast<uint32_t>(tokens.size());
+        if (seq == 0) return {};
+
+        deep2::HostKvRing ring;
+        // The ring's width is the key and value width, which is narrower
+        // than the hidden size when the model groups query heads.
+        ring.reset(layers, seq, kvWidth);
+
+        std::vector<float> h(seq * hidden, 0.0f);
+        for (uint32_t t = 0; t < seq; ++t) {
+            std::memcpy(&h[t * hidden], &tokenEmbdW[tokens[t] * hidden], hidden * sizeof(float));
+        }
+
+        std::vector<float> normIn(hidden), q(heads * headDim), k(kvHeads * headDim),
+            v(kvHeads * headDim), attnOut(hidden), proj(hidden), gate(intermediate),
+            up(intermediate), down(hidden);
+
+        for (uint32_t l = 0; l < layers; ++l) {
+            LayerW lw;
+            {
+                std::ostringstream os;
+                os << "blk." << l << ".";
+                const std::string p = os.str();
+                if (!readF32(p + "attn_norm.weight", lw.attnNormW)) return {};
+                if (!readF32(p + "attn_q.weight", lw.qW)) return {};
+                if (!readF32(p + "attn_k.weight", lw.kW)) return {};
+                if (!readF32(p + "attn_v.weight", lw.vW)) return {};
+                if (!readF32(p + "attn_output.weight", lw.attnOutW)) return {};
+                if (!readF32(p + "ffn_norm.weight", lw.ffnNormW)) return {};
+                if (!readF32(p + "ffn_gate.weight", lw.gateW)) return {};
+                if (!readF32(p + "ffn_up.weight", lw.upW)) return {};
+                if (!readF32(p + "ffn_down.weight", lw.downW)) return {};
+            }
+
+            for (uint32_t t = 0; t < seq; ++t) {
+                float* ht = &h[t * hidden];
+
+                // Attention branch.
+                std::memcpy(normIn.data(), ht, hidden * sizeof(float));
+                rmsNorm(normIn.data(), lw.attnNormW.data(), hidden, eps);
+
+                gemvFloat(lw.qW.data(), normIn.data(), q.data(), heads * headDim, hidden);
+                gemvFloat(lw.kW.data(), normIn.data(), k.data(), kvHeads * headDim, hidden);
+                gemvFloat(lw.vW.data(), normIn.data(), v.data(), kvHeads * headDim, hidden);
+
+                for (uint32_t hIdx = 0; hIdx < heads; ++hIdx) {
+                    rope(q.data() + hIdx * headDim, headDim, t);
+                }
+                for (uint32_t hIdx = 0; hIdx < kvHeads; ++hIdx) {
+                    rope(k.data() + hIdx * headDim, headDim, t);
+                }
+
+                // The cache holds the key and the value for this position, in
+                // the key and value width.
+                ring.append(l, t, k.data(), v.data());
+
+                const uint32_t count = t + 1;
+                groupedAttention(attnOut.data(), q.data(), ring, l, 0, count);
+
+                gemvFloat(lw.attnOutW.data(), attnOut.data(), proj.data(), hidden, hidden);
+                for (uint32_t i = 0; i < hidden; ++i) ht[i] += proj[i];
+
+                // Feed-forward branch: the gate and the up projection are
+                // separate, and the activation is silu(gate) * up.
+                std::memcpy(normIn.data(), ht, hidden * sizeof(float));
+                rmsNorm(normIn.data(), lw.ffnNormW.data(), hidden, eps);
+
+                gemvFloat(lw.gateW.data(), normIn.data(), gate.data(), intermediate, hidden);
+                gemvFloat(lw.upW.data(), normIn.data(), up.data(), intermediate, hidden);
+                for (uint32_t i = 0; i < intermediate; ++i) {
+                    const float g = gate[i];
+                    up[i] = (g / (1.0f + std::expf(-g))) * up[i];
+                }
+                gemvFloat(lw.downW.data(), up.data(), down.data(), hidden, intermediate);
+                for (uint32_t i = 0; i < hidden; ++i) ht[i] += down[i];
+            }
+        }
+
+        // Final norm and the output projection on the last position.
+        float* last = &h[(seq - 1) * hidden];
+        rmsNorm(last, outputNormW.data(), hidden, eps);
+        std::vector<float> logits(vocab);
+        gemvFloat(outputW.data(), last, logits.data(), vocab, hidden);
+        return logits;
+    }
+};
+
+// ---------------------------------------------------------------------------
+// The Llama family reference, run on its own.
+//
+// This is the independent answer for a llama-family model. The executor is
+// checked against it, and the executor and the reference are written
+// separately, so a mistake in the shared understanding of the layout shows
+// up as a difference rather than as agreement.
+//
+//   rom_audit llama-oracle <model.gguf> "<prompt>" [tokens]
+//
+// The prompt is tokenized with the model's own tokenizer, the beginning of
+// sequence token is prepended, and the reference runs the whole sequence.
+// The logits for the last position are printed, together with the tokens
+// the highest few logits name.
+// ---------------------------------------------------------------------------
+int cmdLlamaOracle(int argc, char** argv) {
+    if (argc < 3) {
+        std::cerr << "usage: rom_audit llama-oracle <model.gguf> \"<prompt>\" [tokens]\n";
+        return 1;
+    }
+    const std::string modelPath = argv[2];
+    const std::string prompt = (argc > 3) ? argv[3] : "The capital of France is";
+    const int topN = (argc > 4) ? std::atoi(argv[4]) : 5;
+
+    TensorROM rom;
+    if (!rom.addShard(modelPath) || !rom.finalizeIndex()) {
+        std::cerr << "[LLAMA-ORACLE] the model could not be indexed\n";
+        return 1;
+    }
+
+    GgufTokenizer tok;
+    if (!tok.loadFromGGUF(modelPath)) {
+        std::cerr << "[LLAMA-ORACLE] the tokenizer could not be loaded\n";
+        return 1;
+    }
+
+    std::vector<uint32_t> tokens = tok.encode(prompt);
+    if (tokens.empty()) {
+        std::cerr << "[LLAMA-ORACLE] the prompt produced no tokens\n";
+        return 1;
+    }
+    if (tok.bosTokenId() != 0xFFFFFFFFu) {
+        tokens.insert(tokens.begin(), tok.bosTokenId());
+    }
+    std::cerr << "[LLAMA-ORACLE] " << tokens.size() << " prompt token(s)\n";
+
+    LlamaModel model;
+    if (!model.loadRom(rom)) return 1;
+
+    const std::vector<float> logits = model.forward(tokens);
+    if (logits.empty()) {
+        std::cerr << "[LLAMA-ORACLE] the reference produced no logits\n";
+        return 1;
+    }
+
+    std::vector<std::pair<float, uint32_t>> ranked;
+    ranked.reserve(logits.size());
+    for (size_t i = 0; i < logits.size(); ++i) ranked.emplace_back(logits[i], (uint32_t)i);
+    std::partial_sort(ranked.begin(),
+                      ranked.begin() + (std::min)((size_t)topN, ranked.size()),
+                      ranked.end(),
+                      [](const auto& a, const auto& b) { return a.first > b.first; });
+
+    std::cout << "[LLAMA-ORACLE] logits=" << logits.size() << " top:";
+    for (size_t i = 0; i < ranked.size() && i < (size_t)topN; ++i) {
+        std::cout << " [" << tok.piece(ranked[i].second) << ":" << ranked[i].second
+                  << "=" << ranked[i].first << "]";
+    }
+    std::cout << "\n";
+    std::cout << "[LLAMA-ORACLE] argmax=" << ranked[0].second
+              << " piece=" << tok.piece(ranked[0].second) << "\n";
+    std::cout.flush();
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
 // DeepSeek-V2-Lite forward pass (Move 8: MLA + dense FFN, layer 0 diagnostic).
 // Layer 0 is the single dense layer (leading_dense_block_count=1); layers 1-26
 // are MoE and handled in Move 9.
@@ -2164,6 +2526,7 @@ int main(int argc, char** argv) {
     if (cmd == "gemv-resident") return cmdGemvResident(argc, argv);
     if (cmd == "resident-parity") return cmdResidentParity(argc, argv);
     if (cmd == "q2k-parity")    return cmdQ2KParity(argc, argv);
+    if (cmd == "llama-oracle")  return cmdLlamaOracle(argc, argv);
     if (cmd == "kv-incremental") return cmdKvIncremental(argc, argv);
 
     std::cerr << "unknown command: " << cmd << "\n";
