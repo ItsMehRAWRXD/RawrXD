@@ -1,0 +1,85 @@
+#version 450
+
+// FP16 weight x FP32 activation GEMV, four output rows per workgroup.
+//
+// Each row owns one 64-lane cohort.  The workgroup cooperatively stages the
+// activation tile once, while every cohort consumes that tile for its row.
+// This keeps the descriptor contract identical to fp16_gemv.comp and changes
+// only the dispatch geometry.  The host enables this shader with
+// DEEP2_F16_ROW_TILE=4.
+
+layout (local_size_x = 256) in;
+
+layout(set = 0, binding = 0, std430) readonly  buffer InF { float in_f[]; };
+layout(set = 0, binding = 1, std430) readonly  buffer W16 { uint w16[]; };
+layout(set = 0, binding = 2, std430) writeonly buffer Out { float out_f[]; };
+
+layout(push_constant) uniform PushConstants {
+    uint n_out;
+    uint n_in;
+};
+
+shared float activation_tile[256];
+shared float partials[256];
+
+float half_to_float(uint u) {
+    uint sign = (u >> 15) & 1u;
+    int exp = int((u >> 10) & 0x1Fu);
+    uint frac = u & 0x3FFu;
+    float f;
+    if (exp == 0) {
+        f = frac == 0u ? 0.0 : float(frac) * (1.0f / 16777216.0f);
+    } else if (exp == 31) {
+        f = frac == 0u ? uintBitsToFloat(0x7F800000u)
+                       : uintBitsToFloat(0x7FC00000u);
+    } else {
+        uint e = uint(exp - 15 + 127);
+        f = uintBitsToFloat((e << 23) | (frac << 13));
+    }
+    return sign == 1u ? -f : f;
+}
+
+float load_weight(uint row, uint col) {
+    uint byte_offset = row * n_in * 2u + col * 2u;
+    uint word = w16[byte_offset >> 2];
+    uint bits = (byte_offset & 2u) == 0u ? (word & 0xFFFFu) : (word >> 16);
+    return half_to_float(bits);
+}
+
+void main() {
+    uint local_id = gl_LocalInvocationID.x;
+    uint lane = local_id & 63u;
+    uint row_in_group = local_id >> 6;
+    uint row = gl_WorkGroupID.x * 4u + row_in_group;
+    float sumf = 0.0;
+
+    uint tile_count = (n_in + 255u) / 256u;
+    for (uint tile = 0u; tile < tile_count; ++tile) {
+        uint col = tile * 256u + local_id;
+        activation_tile[local_id] = col < n_in ? in_f[col] : 0.0;
+        barrier();
+
+        if (row < n_out) {
+            for (uint offset = 0u; offset < 256u; offset += 64u) {
+                uint tile_col = tile * 256u + lane + offset;
+                if (tile_col < n_in) {
+                    sumf += load_weight(row, tile_col) *
+                            activation_tile[lane + offset];
+                }
+            }
+        }
+        barrier();
+    }
+
+    partials[local_id] = sumf;
+    barrier();
+    for (uint width = 32u; width > 0u; width >>= 1u) {
+        if (lane < width) {
+            partials[local_id] += partials[local_id + width];
+        }
+        barrier();
+    }
+    if (lane == 0u && row < n_out) {
+        out_f[row] = partials[local_id];
+    }
+}

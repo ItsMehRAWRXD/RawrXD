@@ -14,6 +14,9 @@
 #include <sstream>
 #include <cmath>
 #include <cstring>
+#if defined(_MSC_VER) || defined(__x86_64__)
+#include <immintrin.h>
+#endif
 
 VulkanCompute::VulkanCompute()
     : instance_(nullptr), physical_device_(nullptr), device_(nullptr),
@@ -1015,6 +1018,88 @@ bool VulkanCompute::EnsureRoPEPipeline(const std::string& spirv_path) {
     return true;
 }
 
+namespace {
+const char* kQuantDotRow4ShaderPath =
+    "F:\\rawrxd\\tools\\shaders\\quant_dot_row4.spv";
+const char* kQuantDotRow4Q6TileShaderPath =
+    "F:\\rawrxd\\tools\\shaders\\quant_dot_row4_q6tile.spv";
+
+struct QuantCommandPlan {
+    VkCommandBuffer command = nullptr;
+    VkDescriptorSet descriptor = nullptr;
+    VkBuffer q8 = nullptr;
+    VkDeviceMemory q8_memory = nullptr;
+    VkBuffer out = nullptr;
+    VkDeviceMemory out_memory = nullptr;
+    size_t q8_bytes = 0;
+    size_t out_bytes = 0;
+    uint32_t n_out = 0;
+    uint32_t n_in = 0;
+    uint32_t n_blocks = 0;
+    uint32_t kind = 0;
+    bool recorded = false;
+};
+
+std::unordered_map<VulkanCompute*, std::vector<QuantCommandPlan>> g_quant_command_plans;
+
+bool QuantCommandReuseEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_QUANT_REUSE_COMMANDS");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    return enabled;
+}
+bool QuantDotRow4Enabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_QUANT_ROW_TILE");
+        return value && std::strcmp(value, "4") == 0;
+    }();
+    return enabled;
+}
+
+bool QuantDotQ6SharedTileEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_QUANT_Q6_SHARED_TILE");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    return enabled;
+}
+
+bool QuantDotSpinWaitEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_QUANT_SPIN_WAIT");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    return enabled;
+}
+
+bool QuantDotDirectIoEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_QUANT_DIRECT_IO");
+        return value && std::strcmp(value, "1") == 0;
+    }();
+    return enabled;
+}
+
+VkResult WaitQuantFence(VkDevice device, VkFence fence) {
+    if (!QuantDotSpinWaitEnabled())
+        return vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX);
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    for (;;) {
+        const VkResult status = vkGetFenceStatus(device, fence);
+        if (status == VK_SUCCESS) return VK_SUCCESS;
+        if (status != VK_NOT_READY) return status;
+        if (std::chrono::steady_clock::now() >= deadline) return VK_TIMEOUT;
+#if defined(_MSC_VER) || defined(__x86_64__)
+        _mm_pause();
+#else
+        std::this_thread::yield();
+#endif
+    }
+}
+}  // namespace
+
 bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
     if (shaders_.count("quantdot") &&
         shaders_["quantdot"].pipeline &&
@@ -1023,11 +1108,39 @@ bool VulkanCompute::EnsureQuantDotPipeline(const std::string& spirv_path) {
         return true;
     }
 
+    std::string selected_path = spirv_path;
+    if (QuantDotRow4Enabled()) {
+        const bool q6_tile = QuantDotQ6SharedTileEnabled();
+        const char* override_path = std::getenv(q6_tile
+            ? "RAWRXD_QUANT_ROW4_Q6_SHADER"
+            : "RAWRXD_QUANT_ROW4_SHADER");
+        std::vector<std::string> candidates;
+        if (override_path && *override_path) candidates.emplace_back(override_path);
+        candidates.emplace_back(q6_tile ? kQuantDotRow4Q6TileShaderPath
+                                        : kQuantDotRow4ShaderPath);
+        candidates.emplace_back(q6_tile
+            ? "tools/shaders/quant_dot_row4_q6tile.spv"
+            : "tools/shaders/quant_dot_row4.spv");
+        candidates.emplace_back(q6_tile
+            ? "src/deep2/shaders/quant_dot_row4_q6tile.spv"
+            : "src/deep2/shaders/quant_dot_row4.spv");
+        selected_path.clear();
+        for (const std::string& candidate : candidates) {
+            std::ifstream probe(candidate, std::ios::binary);
+            if (probe.good()) { selected_path = candidate; break; }
+        }
+        if (selected_path.empty()) {
+            selected_path = candidates.front();
+        }
+    }
     std::vector<uint32_t> code;
-    if (!LoadSPIRVCode(spirv_path, code) || code.empty()) {
-        std::cerr << "Failed to load quant-dot SPIR-V: " << spirv_path << std::endl;
+    if (!LoadSPIRVCode(selected_path, code) || code.empty()) {
+        std::cerr << "Failed to load quant-dot SPIR-V: " << selected_path << std::endl;
         return false;
     }
+    if (QuantDotRow4Enabled())
+        std::cerr << "[quant-row4] shader=" << selected_path
+                  << " q6_shared=" << (QuantDotQ6SharedTileEnabled() ? 1 : 0) << std::endl;
 
     VkShaderModuleCreateInfo sm{};
     sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -1245,17 +1358,212 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     } weight_pin{*this, packed};
     PinQuantWeight(packed, packed_bytes, kind);
 
-    // ---- 2. pooled device buffers for the activation and the output --------
-    QuantScratch* q8buf = AcquireQuantScratch(q8_bytes);
-    if (!q8buf) {
-        std::cerr << "Quant-dot activation buffer acquire failed" << std::endl;
-        return false;
+    const bool direct_io = QuantDotDirectIoEnabled();
+
+    if (QuantCommandReuseEnabled() && !direct_io) {
+        if (!EnsureHostVisible(q8_bytes, upload_staging_, upload_staging_mem_,
+                               upload_staging_size_, upload_staging_mapped_) ||
+            !EnsureHostVisible(out_bytes, readback_buffer_, readback_memory_,
+                               readback_size_, readback_mapped_)) {
+            return false;
+        }
+
+        auto& plans = g_quant_command_plans[this];
+        QuantCommandPlan* plan = nullptr;
+        for (auto& candidate : plans) {
+            if (candidate.n_out == n_out && candidate.n_in == n_in &&
+                candidate.n_blocks == n_blocks && candidate.kind == (uint32_t)kind &&
+                candidate.q8_bytes == q8_bytes && candidate.out_bytes == out_bytes) {
+                plan = &candidate;
+                break;
+            }
+        }
+        if (!plan) {
+            QuantCommandPlan candidate;
+            candidate.q8_bytes = q8_bytes;
+            candidate.out_bytes = out_bytes;
+            candidate.n_out = (uint32_t)n_out;
+            candidate.n_in = (uint32_t)n_in;
+            candidate.n_blocks = (uint32_t)n_blocks;
+            candidate.kind = (uint32_t)kind;
+            if (!AllocateBuffer(q8_bytes, candidate.q8, candidate.q8_memory) ||
+                !AllocateBuffer(out_bytes, candidate.out, candidate.out_memory)) {
+                if (candidate.q8) vkDestroyBuffer(device_, candidate.q8, nullptr);
+                if (candidate.q8_memory) vkFreeMemory(device_, candidate.q8_memory, nullptr);
+                if (candidate.out) vkDestroyBuffer(device_, candidate.out, nullptr);
+                if (candidate.out_memory) vkFreeMemory(device_, candidate.out_memory, nullptr);
+                return false;
+            }
+            ++gpu_counters_.buffer_allocations;
+            gpu_counters_.device_bytes_live += q8_bytes + out_bytes;
+            if (gpu_counters_.device_bytes_live > gpu_counters_.device_bytes_peak)
+                gpu_counters_.device_bytes_peak = gpu_counters_.device_bytes_live;
+
+            VkDescriptorSetAllocateInfo alloc{};
+            alloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            alloc.descriptorPool = quant_descriptor_pool_;
+            alloc.descriptorSetCount = 1;
+            alloc.pSetLayouts = &quant_descriptor_set_layout_;
+            if (vkAllocateDescriptorSets(device_, &alloc, &candidate.descriptor) != VK_SUCCESS) {
+                vkDestroyBuffer(device_, candidate.q8, nullptr);
+                vkFreeMemory(device_, candidate.q8_memory, nullptr);
+                vkDestroyBuffer(device_, candidate.out, nullptr);
+                vkFreeMemory(device_, candidate.out_memory, nullptr);
+                gpu_counters_.device_bytes_live -= q8_bytes + out_bytes;
+                ++gpu_counters_.descriptor_alloc_failures;
+                return false;
+            }
+            ++gpu_counters_.descriptor_allocations;
+
+            VkCommandBufferAllocateInfo command_alloc{};
+            command_alloc.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            command_alloc.commandPool = command_pool_;
+            command_alloc.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            command_alloc.commandBufferCount = 1;
+            if (vkAllocateCommandBuffers(device_, &command_alloc, &candidate.command) != VK_SUCCESS) {
+                vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &candidate.descriptor);
+                vkDestroyBuffer(device_, candidate.q8, nullptr);
+                vkFreeMemory(device_, candidate.q8_memory, nullptr);
+                vkDestroyBuffer(device_, candidate.out, nullptr);
+                vkFreeMemory(device_, candidate.out_memory, nullptr);
+                gpu_counters_.device_bytes_live -= q8_bytes + out_bytes;
+                return false;
+            }
+            plans.push_back(std::move(candidate));
+            plan = &plans.back();
+        }
+
+        VkDescriptorBufferInfo infos[3] = {};
+        VkWriteDescriptorSet writes[3] = {};
+        const VkBuffer buffers[3] = { w->buffer, plan->q8, plan->out };
+        const size_t ranges[3] = { packed_bytes, q8_bytes, out_bytes };
+        for (int i = 0; i < 3; ++i) {
+            infos[i].buffer = buffers[i];
+            infos[i].range = ranges[i];
+            writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[i].dstSet = plan->descriptor;
+            writes[i].dstBinding = (uint32_t)i;
+            writes[i].descriptorCount = 1;
+            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            writes[i].pBufferInfo = &infos[i];
+        }
+        vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
+        ++gpu_counters_.descriptor_reuses;
+        std::memcpy(upload_staging_mapped_, q8_interleaved, q8_bytes);
+        gpu_counters_.upload_bytes += q8_bytes;
+        gpu_counters_.download_bytes += out_bytes;
+
+        if (!plan->recorded) {
+            if (vkResetCommandBuffer(plan->command, 0) != VK_SUCCESS) return false;
+            VkCommandBufferBeginInfo begin{};
+            begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+            if (vkBeginCommandBuffer(plan->command, &begin) != VK_SUCCESS) return false;
+
+            const bool ts = EnsureQuantTimestampPool();
+            if (ts) {
+                vkCmdResetQueryPool(plan->command, quant_ts_pool_, 0, 2);
+                vkCmdWriteTimestamp(plan->command, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                    quant_ts_pool_, 0);
+            }
+            VkBufferCopy upload{};
+            upload.size = q8_bytes;
+            vkCmdCopyBuffer(plan->command, upload_staging_, plan->q8, 1, &upload);
+            VkBufferMemoryBarrier upload_barrier{};
+            upload_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            upload_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            upload_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            upload_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            upload_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            upload_barrier.buffer = plan->q8;
+            upload_barrier.size = q8_bytes;
+            vkCmdPipelineBarrier(plan->command, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+                                 0, nullptr, 1, &upload_barrier, 0, nullptr);
+
+            uint32_t pc[4] = { (uint32_t)n_out, (uint32_t)n_in,
+                               (uint32_t)n_blocks, (uint32_t)kind };
+            vkCmdPushConstants(plan->command, it->second.layout,
+                               VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), pc);
+            vkCmdBindPipeline(plan->command, VK_PIPELINE_BIND_POINT_COMPUTE,
+                              it->second.pipeline);
+            vkCmdBindDescriptorSets(plan->command, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                    it->second.layout, 0, 1, &plan->descriptor,
+                                    0, nullptr);
+            const uint32_t groups = QuantDotRow4Enabled()
+                ? (uint32_t)((n_out + 3u) / 4u)
+                : (uint32_t)n_out;
+            vkCmdDispatch(plan->command, groups ? groups : 1u, 1, 1);
+
+            VkBufferMemoryBarrier output_barrier{};
+            output_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            output_barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+            output_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            output_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            output_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            output_barrier.buffer = plan->out;
+            output_barrier.size = out_bytes;
+            vkCmdPipelineBarrier(plan->command, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                                 0, nullptr, 1, &output_barrier, 0, nullptr);
+            VkBufferCopy download{};
+            download.size = out_bytes;
+            vkCmdCopyBuffer(plan->command, plan->out, readback_buffer_, 1, &download);
+            if (ts)
+                vkCmdWriteTimestamp(plan->command, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                    quant_ts_pool_, 1);
+            if (vkEndCommandBuffer(plan->command) != VK_SUCCESS) return false;
+            plan->recorded = true;
+        }
+
+        if (vkResetFences(device_, 1, &quant_fence_) != VK_SUCCESS) return false;
+        const auto submit_begin = std::chrono::steady_clock::now();
+        VkSubmitInfo submit{};
+        submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit.commandBufferCount = 1;
+        submit.pCommandBuffers = &plan->command;
+        if (vkQueueSubmit(compute_queue_, 1, &submit, quant_fence_) != VK_SUCCESS) return false;
+        ++quant_epoch_;
+        ++gpu_counters_.submits;
+        const auto submit_end = std::chrono::steady_clock::now();
+        gpu_counters_.submit_ms += std::chrono::duration<double, std::milli>(
+            submit_end - submit_begin).count();
+        if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) return false;
+        NoteSubmissionComplete();
+        const auto wait_end = std::chrono::steady_clock::now();
+        ++gpu_counters_.waits;
+        const double waited_ms = std::chrono::duration<double, std::milli>(
+            wait_end - submit_end).count();
+        gpu_counters_.wait_ms += waited_ms;
+        gpu_counters_.kernel_ms += waited_ms;
+        const bool ts = ts_supported_;
+        if (ts) {
+            uint64_t stamps[2] = {0, 0};
+            const VkResult qr = vkGetQueryPoolResults(
+                device_, quant_ts_pool_, 0, 2, sizeof(stamps), stamps,
+                sizeof(uint64_t), VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+            if (qr == VK_SUCCESS && stamps[1] >= stamps[0] && ts_period_ns_ > 0.0)
+                gpu_counters_.gpu_ms += double(stamps[1] - stamps[0]) * ts_period_ns_ / 1e6;
+        }
+        std::memcpy(out, readback_mapped_, out_bytes);
+        return true;
     }
-    QuantScratch* obuf = AcquireQuantScratch(out_bytes);
+
+    // ---- 2. pooled device buffers for the activation and the output --------
+    QuantScratch* q8buf = direct_io ? nullptr : AcquireQuantScratch(q8_bytes);
+    if (!q8buf) {
+        if (!direct_io) {
+            std::cerr << "Quant-dot activation buffer acquire failed" << std::endl;
+            return false;
+        }
+    }
+    QuantScratch* obuf = direct_io ? nullptr : AcquireQuantScratch(out_bytes);
     if (!obuf) {
-        std::cerr << "Quant-dot output buffer acquire failed" << std::endl;
-        ReleaseQuantScratch(q8buf);
-        return false;
+        if (!direct_io) {
+            std::cerr << "Quant-dot output buffer acquire failed" << std::endl;
+            ReleaseQuantScratch(q8buf);
+            return false;
+        }
     }
 
     // ---- 3. persistent host-visible staging for the activation upload ------
@@ -1296,7 +1604,11 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
 
     VkDescriptorBufferInfo infos[3];
     VkWriteDescriptorSet writes[3];
-    const VkBuffer bufs[3] = { w->buffer, q8buf->buffer, obuf->buffer };
+    const VkBuffer bufs[3] = {
+        w->buffer,
+        direct_io ? upload_staging_ : q8buf->buffer,
+        direct_io ? readback_buffer_ : obuf->buffer
+    };
     const size_t sizes[3] = { packed_bytes, q8_bytes, out_bytes };
     for (int i = 0; i < 3; ++i) {
         infos[i] = {};
@@ -1347,24 +1659,24 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         vkCmdWriteTimestamp(quant_cmd_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, quant_ts_pool_, 0);
     }
 
-    // Activation upload (staging -> device).
-    VkBufferCopy up_region{};
-    up_region.size = q8_bytes;
-    vkCmdCopyBuffer(quant_cmd_, upload_staging_, q8buf->buffer, 1, &up_region);
+    if (!direct_io) {
+        VkBufferCopy up_region{};
+        up_region.size = q8_bytes;
+        vkCmdCopyBuffer(quant_cmd_, upload_staging_, q8buf->buffer, 1, &up_region);
 
-    // transfer write -> shader read for the activation.
-    VkBufferMemoryBarrier up_barrier{};
-    up_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-    up_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    up_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    up_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    up_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    up_barrier.buffer = q8buf->buffer;
-    up_barrier.offset = 0;
-    up_barrier.size = q8_bytes;
-    vkCmdPipelineBarrier(quant_cmd_, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
-                         0, nullptr, 1, &up_barrier, 0, nullptr);
+        VkBufferMemoryBarrier up_barrier{};
+        up_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        up_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        up_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        up_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        up_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        up_barrier.buffer = q8buf->buffer;
+        up_barrier.offset = 0;
+        up_barrier.size = q8_bytes;
+        vkCmdPipelineBarrier(quant_cmd_, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+                             0, nullptr, 1, &up_barrier, 0, nullptr);
+    }
 
     uint32_t pc[4] = { (uint32_t)n_out, (uint32_t)n_in,
                        (uint32_t)n_blocks, (uint32_t)kind };
@@ -1374,27 +1686,33 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
                             it->second.layout, 0, 1, &ds, 0, nullptr);
     // One invocation per output row.
-    uint32_t groups = (uint32_t)(n_out / 1u);
+    uint32_t groups = QuantDotRow4Enabled()
+        ? (uint32_t)((n_out + 3u) / 4u)
+        : (uint32_t)(n_out / 1u);
     if (groups == 0u) groups = 1u;
     vkCmdDispatch(quant_cmd_, groups, 1, 1);
 
-    // shader write -> transfer read for the output.
     VkBufferMemoryBarrier down_barrier{};
     down_barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
     down_barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-    down_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    down_barrier.dstAccessMask = direct_io ? VK_ACCESS_HOST_READ_BIT
+                                           : VK_ACCESS_TRANSFER_READ_BIT;
     down_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     down_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    down_barrier.buffer = obuf->buffer;
+    down_barrier.buffer = direct_io ? readback_buffer_ : obuf->buffer;
     down_barrier.offset = 0;
     down_barrier.size = out_bytes;
     vkCmdPipelineBarrier(quant_cmd_, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-                         VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                         direct_io ? VK_PIPELINE_STAGE_HOST_BIT
+                                   : VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         0,
                          0, nullptr, 1, &down_barrier, 0, nullptr);
 
-    VkBufferCopy down_region{};
-    down_region.size = out_bytes;
-    vkCmdCopyBuffer(quant_cmd_, obuf->buffer, readback_buffer_, 1, &down_region);
+    if (!direct_io) {
+        VkBufferCopy down_region{};
+        down_region.size = out_bytes;
+        vkCmdCopyBuffer(quant_cmd_, obuf->buffer, readback_buffer_, 1, &down_region);
+    }
 
     // Second timestamp: after the readback copy so the measured span covers
     // every GPU-side stage of this submission.
@@ -1429,7 +1747,7 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
                                << " kind=" << kind << " q8_bytes=" << q8_bytes
                                << " packed_bytes=" << packed_bytes << " out_bytes=" << out_bytes);
 
-    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
         QDTRACE("fence wait returned error");
         std::cerr << "Quant-dot fence wait failed" << std::endl;
         ReleaseQuantScratch(obuf);
@@ -1815,7 +2133,9 @@ bool VulkanCompute::EndQuantDotBatch() {
                            0, sizeof(uint32_t) * 4, &e.n_out);
         vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
                                 sh->second.layout, 0, 1, &e.ds, 0, nullptr);
-        uint32_t groups = e.n_out;
+        uint32_t groups = QuantDotRow4Enabled()
+            ? (e.n_out + 3u) / 4u
+            : e.n_out;
         if (groups == 0u) groups = 1u;
         vkCmdDispatch(quant_cmd_, groups, 1, 1);
         out_cursor += e.out_bytes;
@@ -1870,7 +2190,7 @@ bool VulkanCompute::EndQuantDotBatch() {
     const auto submit_end = std::chrono::steady_clock::now();
     gpu_counters_.submit_ms +=
         std::chrono::duration<double, std::milli>(submit_end - submit_begin).count();
-    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
         std::cerr << "[QUANT_DOT] batch fence wait failed" << std::endl;
         QDTRACE("end-batch fence ERROR");
         return false;
@@ -1910,6 +2230,16 @@ bool VulkanCompute::EndQuantDotBatch() {
 
 namespace {
 const char* kF16DotShaderPath = "tools/shaders/fp16_gemv.spv";
+const char* kF16DotRow4ShaderPath =
+    "F:\\rawrxd\\tools\\shaders\\fp16_gemv_row4.spv";
+
+bool F16Row4Enabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("DEEP2_F16_ROW_TILE");
+        return value && std::strcmp(value, "4") == 0;
+    }();
+    return enabled;
+}
 }  // namespace
 
 bool VulkanCompute::EnsureF16DotPipeline() {
@@ -1917,9 +2247,12 @@ bool VulkanCompute::EnsureF16DotPipeline() {
         shaders_["fp16gemv"].layout) {
         return true;
     }
+    const char* selected_path = F16Row4Enabled()
+        ? kF16DotRow4ShaderPath
+        : kF16DotShaderPath;
     std::vector<uint32_t> code;
-    if (!LoadSPIRVCode(kF16DotShaderPath, code) || code.empty()) {
-        std::cerr << "Failed to load fp16-gemv SPIR-V: " << kF16DotShaderPath << std::endl;
+    if (!LoadSPIRVCode(selected_path, code) || code.empty()) {
+        std::cerr << "Failed to load fp16-gemv SPIR-V: " << selected_path << std::endl;
         return false;
     }
     VkShaderModuleCreateInfo sm{};
@@ -2195,7 +2528,9 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     vkCmdBindPipeline(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
     vkCmdBindDescriptorSets(quant_cmd_, VK_PIPELINE_BIND_POINT_COMPUTE,
                             it->second.layout, 0, 1, &ds, 0, nullptr);
-    uint32_t groups = (uint32_t)n_out;
+    uint32_t groups = F16Row4Enabled()
+        ? (static_cast<uint32_t>(n_out) + 3u) / 4u
+        : static_cast<uint32_t>(n_out);
     if (groups == 0u) groups = 1u;
     vkCmdDispatch(quant_cmd_, groups, 1, 1);
 
@@ -2232,7 +2567,7 @@ bool VulkanCompute::ExecuteF16Dot(const void* packed, size_t packed_bytes,
     }
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
-    if (vkWaitForFences(device_, 1, &quant_fence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (WaitQuantFence(device_, quant_fence_) != VK_SUCCESS) {
         std::cerr << "fp16 dot fence wait failed" << std::endl;
         ReleaseQuantScratch(obuf);
         ReleaseQuantScratch(xbuf);
@@ -2474,6 +2809,22 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
 bool VulkanCompute::EnsureHostVisible(size_t bytes, VkBuffer& buf,
                                       VkDeviceMemory& mem, size_t& size,
                                       void*& mapped) {
+    if (buf && size < bytes && (&buf == &upload_staging_ || &buf == &readback_buffer_)) {
+        auto plans = g_quant_command_plans.find(this);
+        if (plans != g_quant_command_plans.end()) {
+            for (auto& plan : plans->second) {
+                if (plan.command)
+                    vkFreeCommandBuffers(device_, command_pool_, 1, &plan.command);
+                if (plan.descriptor && quant_descriptor_pool_)
+                    vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &plan.descriptor);
+                if (plan.q8) vkDestroyBuffer(device_, plan.q8, nullptr);
+                if (plan.q8_memory) vkFreeMemory(device_, plan.q8_memory, nullptr);
+                if (plan.out) vkDestroyBuffer(device_, plan.out, nullptr);
+                if (plan.out_memory) vkFreeMemory(device_, plan.out_memory, nullptr);
+            }
+            g_quant_command_plans.erase(plans);
+        }
+    }
     if (buf && mapped && size >= bytes) return true;
     if (buf) {
         if (mapped) { vkUnmapMemory(device_, mem); mapped = nullptr; }
@@ -2484,7 +2835,8 @@ bool VulkanCompute::EnsureHostVisible(size_t bytes, VkBuffer& buf,
     VkBufferCreateInfo bi{};
     bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bi.size = bytes;
-    bi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+               VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     if (vkCreateBuffer(device_, &bi, nullptr, &buf) != VK_SUCCESS) return false;
 
@@ -2946,6 +3298,20 @@ bool VulkanCompute::EnsureQuantFastPath() {
 
 void VulkanCompute::ReleaseQuantFastPath() {
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    auto plans = g_quant_command_plans.find(this);
+    if (plans != g_quant_command_plans.end()) {
+        for (auto& plan : plans->second) {
+            if (plan.command)
+                vkFreeCommandBuffers(device_, command_pool_, 1, &plan.command);
+            if (plan.descriptor && quant_descriptor_pool_)
+                vkFreeDescriptorSets(device_, quant_descriptor_pool_, 1, &plan.descriptor);
+            if (plan.q8) vkDestroyBuffer(device_, plan.q8, nullptr);
+            if (plan.q8_memory) vkFreeMemory(device_, plan.q8_memory, nullptr);
+            if (plan.out) vkDestroyBuffer(device_, plan.out, nullptr);
+            if (plan.out_memory) vkFreeMemory(device_, plan.out_memory, nullptr);
+        }
+        g_quant_command_plans.erase(plans);
+    }
     for (auto& kv : quant_weight_cache_) {
         if (kv.second.buffer) vkDestroyBuffer(device_, kv.second.buffer, nullptr);
         if (kv.second.memory) vkFreeMemory(device_, kv.second.memory, nullptr);

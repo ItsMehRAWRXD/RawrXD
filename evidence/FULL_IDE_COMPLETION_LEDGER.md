@@ -240,3 +240,8 @@ The real TinyLlama output head is Q6_K (`output.weight dims=[2048,32000]`). The 
 The rebuilt 128-token R9700 run stayed exact and GPU-only: code 4.54 -> 4.33 TPS (0.95x), prose 4.50 -> 4.27 TPS (0.95x), with 3/12 and 0/8 drafts accepted; GPU calls increased from 36,098 to 37,742 (code) and 47,208 to 48,614 (prose). S07 acceleration remains OPEN.
 
 The per-op trace shows approximately 195 ms/token in `FlushDotBatch` versus approximately 14.4 ms in the LM head, so the next performance work targets submission/fence amortization rather than draft policy alone. Receipts: `evidence/S07_Q6_FUSED_RECEIPT_20261020.md`, `evidence/S07_Q6_FUSED_VALIDATE_4_RUN6_20261020/`, `evidence/S07_Q6_FUSED_128_BOTH_RUN2_20261020/`, and `evidence/S07_Q6_TIMING_4_20261020/`.
+
+
+## Q6 row-4 shared-tile and command-reuse route — 2026-10-20
+
+The guarded `DEEP2_QUANT_ROW_TILE=4` + `DEEP2_QUANT_Q6_SHARED_TILE=1` + `DEEP2_QUANT_REUSE_COMMANDS=1` route reached 31.02 TPS code / 29.07 TPS prose over a controlled 128-token TinyLlama run, with exact streams, finite logits, and zero CPU calls. After rebuilding both SPIR-V artifacts with `scripts/compile_quant_row4_shaders.ps1` and rebuilding Release, the route revalidated at 31.15 TPS serial / 29.89 TPS speculative for 128 code tokens, again exact, finite, and CPU-call free. The four-token 44.41 TPS probe is exploratory and not a sustained claim. The subgroup-vector Q6 candidate failed differential validation (max_abs 20.4811039) and remains rejected. S12 remains FAIL at 150 TPS; S07 remains OPEN. Receipt: `evidence/S12_Q6_HOT_ROUTE_RECEIPT_20261020.md`.
