@@ -191,3 +191,5 @@ floor remains OPEN and unattained on this hardware/loop.
   standard; S07 and S12 stay OPEN until measured acceptance and 150 TPS pass.
 
 Native IDE route integration was rebuilt from the current working tree with exit code 0; the generated route header and linked executable hashes are recorded in vidence/IDE_NATIVE_ROUTE_BUILD_20261020.md. This is a build receipt only; live UI smoke, Ollama discovery, and source-delta publication remain open.
+
+The native IDE route source is now published in commit cf32e9554d63021bcf8d613e6b832c98da0512ec. A post-commit route-generator build and native IDE link both exited 0; hashes and scope are recorded in vidence/IDE_NATIVE_ROUTE_SOURCE_CERT_20261020.md. Gate 17 remains PARTIAL pending live UI and end-to-end model-response smoke.
