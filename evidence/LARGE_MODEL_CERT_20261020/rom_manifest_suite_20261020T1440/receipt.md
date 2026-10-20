@@ -15,6 +15,7 @@ uses the canonical `QuantTypeTable` for every dtype and byte-geometry check.
 | `models/nemotron-3.5-lightning-30b-Q4_K_M.gguf` | `nemotron_h_moe` | 417 | 417 | 0 / 0 | `BOUND_ALL` |
 | Ollama `deepseek-r1:32b` blob | `qwen2` | 771 | 771 | 0 / 0 | `BOUND_ALL` |
 | Ollama `gpt-oss:120b` blob | `gptoss` | 687 | 687 | 0 / 0 | `BOUND_ALL` |
+| `nemotron-bolt.gguf` | `nemotron_h_moe` | 843 | 843 | 0 / 0 | `BOUND_ALL` |
 
 The GPT-OSS run scanned and bound the complete 65,369,799,840-byte file without
 materialising its weights. This establishes ROM-level availability and exact
@@ -27,3 +28,4 @@ Per-model logs and exit codes are retained in the sibling directories:
 - `rom_manifest_nemotron30b_q4_20261020T1440/`
 - `rom_manifest_deepseek_r1_32b_20261020T1440/`
 - `rom_manifest_gpt_oss_120b_20261020T1440/`
+- `rom_manifest_nemotron_bolt_nvfp4_20261020T1450/`

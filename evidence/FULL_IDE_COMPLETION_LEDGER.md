@@ -68,9 +68,10 @@ is therefore blocked before launch; the 120B receipt records the measured
 budget and the required ROM/streaming prerequisite:
 `F:/rawrxd/evidence/LARGE_MODEL_SMOKE_20261020/gpt_oss_120b_preflight_20261020T1430/receipt.md`.
 
-The independent ROM manifest path is healthy for all three blobs: 417/417
-Nemotron tensors, 771/771 DeepSeek 32B tensors, and 687/687 GPT-OSS 120B
-tensors bound with zero dtype or range errors. GPT-OSS is therefore available
+The independent ROM manifest path is healthy for all four blobs: 417/417
+Nemotron Q4 tensors, 771/771 DeepSeek 32B tensors, 687/687 GPT-OSS 120B
+tensors, and 843/843 NVFP4 Nemotron-Bolt tensors bound with zero dtype or
+range errors. GPT-OSS is therefore available
 to the ROM layer even though the current host-materializing forward executable
 cannot safely launch it. Suite receipt:
 `F:/rawrxd/evidence/LARGE_MODEL_CERT_20261020/rom_manifest_suite_20261020T1440/receipt.md`.
