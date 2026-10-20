@@ -11,6 +11,8 @@
 
 #include <windows.h>
 #include <functional>
+#include <atomic>
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -48,13 +50,14 @@ public:
     // Stops the worker thread and closes the directory handle. Idempotent.
     void stop();
 
-    bool isWatching() const { return m_running; }
+    bool isWatching() const { return m_running.load(std::memory_order_acquire); }
 
 private:
     HANDLE        m_hDir = INVALID_HANDLE_VALUE;
     std::thread   m_worker;
     FileChangeCallback m_callback;
-    bool          m_running = false;
+    std::atomic<bool> m_running{false};
+    mutable std::mutex m_ioMutex;
 };
 
 } // namespace RawrXD::Core

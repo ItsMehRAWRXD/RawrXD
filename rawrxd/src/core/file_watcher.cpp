@@ -15,18 +15,23 @@ namespace RawrXD::Core {
         if (m_hDir == INVALID_HANDLE_VALUE) return false;
 
         m_callback = cb;
-        m_running = true;
+        m_running.store(true, std::memory_order_release);
         m_worker = std::thread([this, path]() {
             char buffer[4096];
             OVERLAPPED ol{};
             ol.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
             DWORD bytesReturned;
 
-            while (m_running) {
+            while (m_running.load(std::memory_order_acquire)) {
                 ResetEvent(ol.hEvent);
-                BOOL ok = ReadDirectoryChangesW(m_hDir, buffer, sizeof(buffer), TRUE,
-                    FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
-                    &bytesReturned, &ol, nullptr);
+                BOOL ok = FALSE;
+                {
+                    std::lock_guard<std::mutex> lock(m_ioMutex);
+                    if (!m_running.load(std::memory_order_acquire)) break;
+                    ok = ReadDirectoryChangesW(m_hDir, buffer, sizeof(buffer), TRUE,
+                        FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION,
+                        &bytesReturned, &ol, nullptr);
+                }
                 if (!ok) break;
 
                 DWORD wait = WaitForSingleObject(ol.hEvent, 100);
@@ -65,12 +70,15 @@ namespace RawrXD::Core {
     }
 
     void FileWatcher::stop() {
-        m_running = false;
+        m_running.store(false, std::memory_order_release);
         if (m_hDir != INVALID_HANDLE_VALUE) {
-            CancelIo(m_hDir);
+            std::lock_guard<std::mutex> lock(m_ioMutex);
+            CancelIoEx(m_hDir, nullptr);
+        }
+        if (m_worker.joinable()) m_worker.join();
+        if (m_hDir != INVALID_HANDLE_VALUE) {
             CloseHandle(m_hDir);
             m_hDir = INVALID_HANDLE_VALUE;
         }
-        if (m_worker.joinable()) m_worker.join();
     }
 }
