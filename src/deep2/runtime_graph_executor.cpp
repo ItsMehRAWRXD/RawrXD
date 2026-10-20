@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <mutex>
 
 #include "ggml.h"
@@ -2729,9 +2730,18 @@ bool Executor::OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
 bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos,
                             std::vector<std::vector<float>>* perPosLogits)
 {
+    if (!bound_) {
+        last_error_ = "prefill-batch: executor is not bound";
+        return false;
+    }
+    last_error_.clear();
     const size_t P = tokens.size();
     if (P == 0) {
         last_error_ = "prefill-batch: empty token list";
+        return false;
+    }
+    if (P - 1 > std::numeric_limits<size_t>::max() - startPos) {
+        last_error_ = "prefill-batch: position range overflow";
         return false;
     }
     if (force_cpu_) {
@@ -2740,6 +2750,7 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
         last_error_ = "prefill-batch: force_cpu pinned; use ExecuteToken";
         return false;
     }
+    const uint64_t cpu_calls_before = cpu_calls_;
 
     // Execution trace: begin prefill trace
     if (trace_active_) {
@@ -2823,9 +2834,9 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
         const size_t dots = batch_dots;
         batch_dots = 0;
         const bool ok = QuantDot::EndBatch();
-        // EndBatch already performed CPU replay internally if the GPU
-        // submission failed. Continue with the replayed results instead of
-        // aborting the entire prefill - the output buffers hold real numbers.
+        // EndBatch performs CPU replay when the GPU submission fails. D1's
+        // prefill contract requires GPU-only dispatch, so a replay is a hard
+        // failure even though the backend filled the output buffers.
         if (!ok) {
             gpu_calls_ = (gpu_calls_ >= dots) ? gpu_calls_ - dots : 0;
             cpu_calls_ += dots;
@@ -2834,6 +2845,10 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                     std::to_string(dots) + ")";
             }
             stats_.gpu_calls = gpu_calls_;
+            stats_.cpu_calls = cpu_calls_;
+            stats_.fallback_reason = cpu_fallback_reason_;
+            last_error_ = "prefill-batch: GPU batch failed; CPU replay is forbidden";
+            return false;
         } else {
             // RAWRXD_DEEP2_BATCH_ACCOUNTING_001: a batched submission IS a GPU
             // dispatch, and it carried `dots` kernel invocations.
@@ -3224,8 +3239,12 @@ case OpKind::LmHead: {
                         // Fused batch path: upload all P hidden vectors, one
                         // kernel launch, download all P logits.
                         const size_t hidden_dim = ts[0].hidden.size();
-                        const size_t vocab = lmh.dims[0] ? (size_t)lmh.dims[0] : spec_.vocab;
-                        if (hidden_dim > 0 && vocab > 0) {
+                        const size_t vocab = lmh.dims.size() > 1
+                            ? (size_t)lmh.dims[1] : (size_t)spec_.vocab;
+                        const size_t input_dim = lmh.dims.empty()
+                            ? 0 : (size_t)lmh.dims[0];
+                        if (hidden_dim > 0 && vocab > 0 && input_dim == hidden_dim &&
+                            P <= 8) {
                             // Prepare concatenated input batch
                             std::vector<float> flat_in;
                             flat_in.reserve(P * hidden_dim);
@@ -3260,6 +3279,9 @@ case OpKind::LmHead: {
                                     flat_out.data(), flat_out.size(),
                                     vocab, hidden_dim, P,
                                     force_cpu_)) {
+                                ++gpu_calls_;
+                                ++gpu_lmhead_batches_;
+                                gpu_lmhead_batch_positions_ += P;
                                 perPosLogits->assign(P, {});
                                 for (size_t t = 0; t < P; ++t) {
                                     (*perPosLogits)[t].assign(
@@ -3321,6 +3343,18 @@ case OpKind::LmHead: {
     if (batch_open && !flushGroup()) return false;
     if (logits_.empty()) {
         last_error_ = "prefill-batch: no LmHead produced logits";
+        return false;
+    }
+    // Mirror counters for the complete call (including scalar GPU LmHead
+    // verification) and reject any CPU fallback before the caller can treat
+    // the logits or KV state as a D1 result.
+    stats_.gpu_calls = gpu_calls_;
+    stats_.cpu_calls = cpu_calls_;
+    if (!cpu_fallback_reason_.empty() && stats_.fallback_reason.empty())
+        stats_.fallback_reason = cpu_fallback_reason_;
+    if (cpu_calls_ != cpu_calls_before) {
+        last_error_ = "prefill-batch: GPU-only dispatch violated by CPU fallback: " +
+                      cpu_fallback_reason_;
         return false;
     }
     for (float v : logits_)

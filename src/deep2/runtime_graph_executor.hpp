@@ -139,6 +139,14 @@ public:
     bool PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos,
                       std::vector<std::vector<float>>* perPosLogits = nullptr);
 
+    // D1 receipt counters for work actually submitted through the row batch
+    // path. These are cumulative and separate from gpu_calls (which also
+    // counts individual dot rows for legacy receipts).
+    uint64_t GpuBatchSubmissions() const { return gpu_batch_submissions_; }
+    uint64_t GpuBatchDots() const { return gpu_batch_dots_; }
+    uint64_t GpuLmHeadBatchSubmissions() const { return gpu_lmhead_batches_; }
+    uint64_t GpuLmHeadBatchPositions() const { return gpu_lmhead_batch_positions_; }
+
     // Deep2 flight recorder: opt-in per-token / per-layer progress reporting so
     // the watchdog can distinguish "long-running kernel" from "stalled".
     // The path must already exist as a directory.
@@ -436,6 +444,7 @@ private:
     // submission can carry many kernel invocations; both are recorded so a
     // receipt cannot claim "0 dispatches" for a pass that submitted work.
     uint64_t gpu_batch_submissions_ = 0, gpu_batch_dots_ = 0;
+    uint64_t gpu_lmhead_batches_ = 0, gpu_lmhead_batch_positions_ = 0;
     // Per-executor CPU pin. It MUST stay per-executor: the parity harness binds a
     // second "reference" executor with this set, and the earlier implementation
     // forwarded it to the PROCESS-WIDE QuantDot switch, which the harness then
