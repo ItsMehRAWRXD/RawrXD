@@ -8,6 +8,12 @@ param(
     [string]$OutputDir = '',
     [switch]$Q6Hot,
     [switch]$Q4Hot,
+    [ValidateSet('LAYER_SPLIT', 'DEFAULT')]
+    [string]$DenseExec = 'LAYER_SPLIT',
+    [ValidateSet('auto', '4', '8')]
+    [string]$Q4Tile = 'auto',
+    [switch]$ResidentFirst,
+    [switch]$NoTrace,
     [string]$Gpu0Weight = '100',
     [string]$Gpu1Weight = '0.01'
 )
@@ -36,9 +42,12 @@ New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
 $trackedEnv = @(
     'DEEP2_DENSE_EXEC',
+    'DEEP2_RESIDENT_FIRST',
     'DEEP2_GPU0_THROUGHPUT_WEIGHT',
     'DEEP2_GPU1_THROUGHPUT_WEIGHT',
     'DEEP2_Q4K_HOT_BATCH_ROWS',
+    'DEEP2_Q4K_SINGLE_BATCH_ROWS',
+    'DEEP2_Q4K_FORCE_TILE',
     'DEEP2_Q6K_HOT_BATCH_ROWS',
     'DEEP2_GPU_TRACE'
 )
@@ -78,12 +87,23 @@ function Get-LastDouble {
 }
 
 try {
-    $env:DEEP2_DENSE_EXEC = 'LAYER_SPLIT'
+    if ($DenseExec -eq 'LAYER_SPLIT') {
+        $env:DEEP2_DENSE_EXEC = 'LAYER_SPLIT'
+    } else {
+        $env:DEEP2_DENSE_EXEC = $null
+    }
+    $env:DEEP2_RESIDENT_FIRST = if ($ResidentFirst) { '1' } else { '0' }
     $env:DEEP2_GPU0_THROUGHPUT_WEIGHT = $Gpu0Weight
     $env:DEEP2_GPU1_THROUGHPUT_WEIGHT = $Gpu1Weight
     $env:DEEP2_Q4K_HOT_BATCH_ROWS = if ($Q4Hot) { '1' } else { '0' }
+    $env:DEEP2_Q4K_SINGLE_BATCH_ROWS = if ($Q4Hot) { '1' } else { '0' }
+    if ($Q4Tile -eq 'auto') {
+        $env:DEEP2_Q4K_FORCE_TILE = $null
+    } else {
+        $env:DEEP2_Q4K_FORCE_TILE = $Q4Tile
+    }
     $env:DEEP2_Q6K_HOT_BATCH_ROWS = if ($Q6Hot) { '1' } else { '0' }
-    $env:DEEP2_GPU_TRACE = '1'
+    $env:DEEP2_GPU_TRACE = if ($NoTrace) { '0' } else { '1' }
 
     $results = [System.Collections.Generic.List[object]]::new()
     for ($run = 1; $run -le $Runs; $run++) {
@@ -132,6 +152,8 @@ try {
         $completedFlag = if ($null -eq $lastResult) { $null } else { [int]$lastResult.Groups[3].Value }
         $status = if ($null -eq $lastResult) { $null } else { [int]$lastResult.Groups[4].Value }
         $dispatchCount = ([regex]::Matches($combined, '\[HOT_QUANT_DISPATCH\]')).Count
+        $q4DispatchCount = ([regex]::Matches($combined, '\[HOT_QUANT_DISPATCH\].*type=12')).Count
+        $q6DispatchCount = ([regex]::Matches($combined, '\[HOT_QUANT_DISPATCH\].*type=14')).Count
         $failureCount = ([regex]::Matches($combined, '\[HOT_(?:LANE|GROUP)_(?:RESET|SUBMIT|WAIT)_FAIL\]')).Count
         $processExit = if ($timedOut) { $null } else { $process.ExitCode }
         $gatePass = (
@@ -165,6 +187,8 @@ try {
             nan = $nan
             inf = $inf
             q_dispatches = $dispatchCount
+            q4_dispatches = $q4DispatchCount
+            q6_dispatches = $q6DispatchCount
             fence_failures = $failureCount
             decode_tps = $lastDecodeTps
             stdout = $stdoutPath
@@ -188,7 +212,10 @@ try {
         timeout_sec = $TimeoutSec
         q4_hot = [bool]$Q4Hot
         q6_hot = [bool]$Q6Hot
-        dense_exec = $env:DEEP2_DENSE_EXEC
+        q4_tile = $Q4Tile
+        dense_exec = $DenseExec
+        resident_first = [bool]$ResidentFirst
+        trace_enabled = -not [bool]$NoTrace
         gpu0_weight = $Gpu0Weight
         gpu1_weight = $Gpu1Weight
         results = @($results)
