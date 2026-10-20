@@ -1,0 +1,144 @@
+{
+  "schema": "RAWRXD_Q6_MUTATION_REPAIR_EVIDENCE_001",
+  "base_commit": "a209f5222465abe8f27fbd50afc795ec9fa86dae",
+  "scope": "Source generation, compilation, packed half-word addressing, and source isolation; inference performance is unmeasured.",
+  "before": {
+    "schema": "RAWRXD_Q6_MUTATION_SOURCE_CERT_001",
+    "passed": false,
+    "benchmarks_launched": 0,
+    "source_workspace_preserved": true,
+    "test_count": 7,
+    "results": [
+      {
+        "name": "hoist_scale",
+        "pass": false,
+        "mutation_exit": 0,
+        "failure": "Variant emitted the original shader without changes."
+      },
+      {
+        "name": "half_load",
+        "pass": false,
+        "mutation_exit": 0,
+        "failure": "Variant emitted the original shader without changes."
+      },
+      {
+        "name": "hoist_scale_half_load",
+        "pass": false,
+        "mutation_exit": 0,
+        "failure": "Variant emitted the original shader without changes."
+      },
+      {
+        "name": "skip_unused_batch_rows",
+        "pass": true,
+        "mutation_exit": 0,
+        "source_sha256": "125DBCDCE59D0710D905D36F5C5F8AC451235292A2233E6F3CDD775A2C419A04",
+        "spirv_sha256": "C2752E693AAF2381E4F9B1F3161F94FB5D8F215F429D5E164DE58F52103DB898",
+        "spirv_changed": true
+      },
+      {
+        "name": "unknown_variant",
+        "pass": true,
+        "mutation_exit": 1
+      },
+      {
+        "name": "missing_q6_function",
+        "pass": true,
+        "mutation_exit": 1
+      },
+      {
+        "name": "compiler_failure",
+        "pass": true,
+        "mutation_exit": 1
+      }
+    ]
+  },
+  "after": {
+    "schema": "RAWRXD_Q6_MUTATION_SOURCE_CERT_001",
+    "generated_utc": "2026-10-20T04:13:31.9295745Z",
+    "passed": true,
+    "benchmarks_launched": 0,
+    "mutation_script_sha256": "6422F82E32FAE8A5DCB8DA5A37577BFEDC81F16BE888DC6570DCE0CE72135E10",
+    "accepted_source_sha256": "039A69322ED920C8F982376142A6771676C6D2D289906FE90CBE7DDA3C69473E",
+    "accepted_spirv_sha256": "72B16D1FFDA01A1DECEED6CC1C84E228E6673034E958C9FC7AB9FC33CFCA3E0B",
+    "compiled_baseline_spirv_sha256": "72B16D1FFDA01A1DECEED6CC1C84E228E6673034E958C9FC7AB9FC33CFCA3E0B",
+    "source_workspace_preserved": true,
+    "test_count": 9,
+    "results": [
+      {
+        "name": "hoist_scale",
+        "pass": true,
+        "mutation_exit": 0,
+        "source_sha256": "EC3D7E0C122E2DAF67F9D6295A0F58E280E815A717C4542C0A0ECD20B7F9D209",
+        "spirv_sha256": "842EA77E77760120F1305431DD11973446DDA97D3D67DC570D322765579BEBC6",
+        "spirv_changed": true,
+        "replay_rejected": true
+      },
+      {
+        "name": "half_load",
+        "pass": true,
+        "mutation_exit": 0,
+        "source_sha256": "5FA8165ED087938686E6B6ED3A2033808720F988994BDEAEEF528F4F4BC8038D",
+        "spirv_sha256": "656A522C5ABDAE41B4ED9AEDA9EC2F1537AFE57E059617F9FDF2A3D33ED59C2A",
+        "spirv_changed": true,
+        "replay_rejected": true
+      },
+      {
+        "name": "hoist_scale_half_load",
+        "pass": true,
+        "mutation_exit": 0,
+        "source_sha256": "D8F7D116AED63E196911134685DA7B5C992C8DF44B57F5B8CB1D914DF7653711",
+        "spirv_sha256": "A2B3F860782593079812076B0D1D752AC2BD54657ECA6AE14C1CDD1ADC5AC912",
+        "spirv_changed": true,
+        "replay_rejected": true
+      },
+      {
+        "name": "skip_unused_batch_rows",
+        "pass": true,
+        "mutation_exit": 0,
+        "source_sha256": "125DBCDCE59D0710D905D36F5C5F8AC451235292A2233E6F3CDD775A2C419A04",
+        "spirv_sha256": "C2752E693AAF2381E4F9B1F3161F94FB5D8F215F429D5E164DE58F52103DB898",
+        "spirv_changed": true,
+        "replay_rejected": true
+      },
+      {
+        "name": "unknown_variant",
+        "pass": true,
+        "mutation_exit": 1
+      },
+      {
+        "name": "missing_q6_function",
+        "pass": true,
+        "mutation_exit": 1
+      },
+      {
+        "name": "compiler_failure",
+        "pass": true,
+        "mutation_exit": 1
+      },
+      {
+        "name": "undeclared_spirv",
+        "pass": true,
+        "mutation_exit": 1
+      },
+      {
+        "name": "half_word_boundaries",
+        "pass": true,
+        "patterns_checked": 131072,
+        "block_counts_checked": 128
+      }
+    ]
+  },
+  "outer_gate": {
+    "verdict": "DRY_RUN_ONLY",
+    "benchmark_status": "PAUSED",
+    "compiler": "C:\\VulkanSDK\\1.4.357.0\\Bin\\glslc.exe",
+    "compiler_exit": 0,
+    "validator": "C:\\VulkanSDK\\1.4.357.0\\Bin\\spirv-val.exe",
+    "validator_exit": 0,
+    "restoration_verified": true,
+    "candidate_worktree_removed": true,
+    "ledger_records": 3,
+    "ledger_head": "9C8C4837884C2E293F20CCBF4A1495664A216A0CC84F00F2C0933716CA735DE6",
+    "report": "C:\\Users\\Garrett\\AppData\\Local\\Temp\\rawrxd_q6_fixed_gate_dd651864a093475f91f1a77c1aa3cb26\\gate_report.json"
+  }
+}

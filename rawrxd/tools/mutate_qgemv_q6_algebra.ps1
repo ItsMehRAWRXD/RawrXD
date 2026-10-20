@@ -18,16 +18,16 @@ $shaderPath = Join-Path $root $shaderRelative
 $spvPath = Join-Path $root $spvRelative
 $shader = [System.IO.File]::ReadAllText($shaderPath)
 $start = $shader.IndexOf('void q6kDot4(')
+if ($start -lt 0) { throw 'Q6 dot function was not found.' }
 $end = $shader.IndexOf("`nvoid main()", $start)
-if ($start -lt 0 -or $end -lt 0) { throw 'Q6 dot function was not found.' }
+if ($end -lt 0) { throw 'Q6 dot function boundary was not found.' }
 $prefix = $shader.Substring(0, $start)
 $body = $shader.Substring($start, $end - $start)
 $suffix = $shader.Substring($end)
-$fullShader = $prefix + $body + $suffix
 
 if ($variant -in @('half_load', 'hoist_scale_half_load')) {
     $old = '    float d=geth(b+208u);'
-    $new = '    float d=unpackHalf2x16(load4Bytes(b+208u)).x;'
+    $new = '    float d=unpackHalf2x16(w[(b+208u)>>2u])[((b+208u)&2u)>>1u];'
     if ($body.IndexOf($old, [System.StringComparison]::Ordinal) -lt 0) { throw 'Q6 scale load was not found.' }
     $body = $body.Replace($old, $new)
 }
@@ -43,6 +43,7 @@ if ($variant -in @('hoist_scale', 'hoist_scale_half_load')) {
     $body = $body.Replace($oldWeight, $newWeight)
 }
 
+$fullShader = $prefix + $body + $suffix
 if ($variant -eq 'skip_unused_batch_rows') {
     $newLoads = @'
         if(c<pc.cols) {
@@ -62,12 +63,13 @@ if ($variant -eq 'skip_unused_batch_rows') {
     $fullShader = [regex]::Replace($fullShader, $loadPattern, $newLoads.Trim(), 1)
 }
 
+if ($fullShader -ceq $shader) { throw 'Mutation produced no shader change.' }
+$glslc = Join-Path ($env:VULKAN_SDK ? $env:VULKAN_SDK : 'C:\VulkanSDK\1.4.357.0') 'Bin\glslc.exe'
+if (-not (Test-Path -LiteralPath $glslc -PathType Leaf)) { throw "glslc not found: $glslc" }
 [System.IO.File]::WriteAllText(
     $shaderPath,
     $fullShader,
     [System.Text.UTF8Encoding]::new($false))
 
-$glslc = Join-Path ($env:VULKAN_SDK ? $env:VULKAN_SDK : 'C:\VulkanSDK\1.4.357.0') 'Bin\glslc.exe'
-if (-not (Test-Path -LiteralPath $glslc -PathType Leaf)) { throw "glslc not found: $glslc" }
 & $glslc -O --target-env=vulkan1.2 -fshader-stage=compute $shaderPath -o $spvPath 2>&1
 if ($LASTEXITCODE -ne 0) { throw "glslc failed with exit $LASTEXITCODE." }
