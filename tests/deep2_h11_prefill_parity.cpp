@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <string>
 #include <vector>
 
@@ -80,6 +81,13 @@ int main(int argc, char** argv) {
         return 2;
     }
 
+    // H11 compares the serial and batched implementations, so both legs must
+    // use the same KV representation.  The normal enhancement stack enables
+    // the compressed Q8 KV sidecar for generation; that sidecar is not exposed
+    // through the parity snapshot API.  Disable it for this controlled gate so
+    // both legs write/read the authoritative FP32 KVCache.
+    engine.enableCompressedKV(false);
+
     // ---- identical token sequence for every gate ----
     std::vector<int> tokens = engine.tokenize(promptText);
     if (tokens.empty()) {
@@ -96,8 +104,21 @@ int main(int argc, char** argv) {
                 tokens.size());
 
     const ModelMetadata meta = engine.getModelMetadata();
+    const EngineConfig &loaded = engine.getConfig();
     std::printf("[H11] layers=%zu hidden=%zu heads=%zu kv_heads=%zu head_dim=%zu vocab=%zu\n",
-                (size_t)0, (size_t)0, (size_t)0, (size_t)0, (size_t)0, (size_t)0);
+                loaded.numLayers, loaded.hiddenDim, loaded.numHeads,
+                loaded.numKVHeads, loaded.headDim, loaded.vocabSize);
+    if (meta.hiddenSize != loaded.hiddenDim || meta.numLayers != loaded.numLayers ||
+        meta.numHeads != loaded.numHeads || meta.numKeyValueHeads != loaded.numKVHeads) {
+        std::fprintf(stderr,
+                     "[H11] FATAL: metadata/config geometry mismatch "
+                     "meta=(hidden=%u layers=%u heads=%u kv=%u) "
+                     "config=(hidden=%zu layers=%zu heads=%zu kv=%zu)\n",
+                     meta.hiddenSize, meta.numLayers, meta.numHeads,
+                     meta.numKeyValueHeads, loaded.hiddenDim, loaded.numLayers,
+                     loaded.numHeads, loaded.numKVHeads);
+        return 2;
+    }
     (void)meta;
 
     // ---- run P1..P4 ----
@@ -108,8 +129,34 @@ int main(int argc, char** argv) {
     for (int g = 0; g < 4; ++g) {
         const int chunk = chunks[g];
         std::printf("\n--- H11-P%d chunk=%d ---\n", g + 1, chunk);
-        const double r = engine.prefillParityReport(
-            tokens.data(), tokens.size(), (size_t)chunk, stdout);
+        std::fflush(stdout);
+        // The engine throws when it finds something it cannot proceed with,
+        // and a throw that leaves the driver is a process that dies with no
+        // verdict and no explanation: the run reports a fast fail and
+        // nothing else. The gate is supposed to say which gate failed and
+        // why, so the throw is caught here and turned into a failed gate
+        // with the engine's own message in it.
+        double r = -1.0;
+        try {
+            r = engine.prefillParityReport(
+                tokens.data(), tokens.size(), (size_t)chunk, stdout);
+        }
+        catch (const std::exception& e) {
+            std::fflush(stdout);
+            std::fprintf(stderr,
+                         "[H11_PARITY] H11-P%d chunk=%d THREW: %s\n",
+                         g + 1, chunk, e.what());
+            std::fflush(stderr);
+            r = -1.0;
+        }
+        catch (...) {
+            std::fflush(stdout);
+            std::fprintf(stderr,
+                         "[H11_PARITY] H11-P%d chunk=%d THREW a non-standard exception\n",
+                         g + 1, chunk);
+            std::fflush(stderr);
+            r = -1.0;
+        }
         results[g].chunk = chunk;
         results[g].maxAbs = r;
         results[g].ran = (r >= 0.0);

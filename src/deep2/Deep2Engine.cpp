@@ -1680,12 +1680,16 @@ bool Deep2Engine::initialize(const EngineConfig& cfg)
     kvCache.reset();
     threadPool.reset();
 
-    // Initialize thread pool with auto-detected physical cores
+    // Initialize the requested worker count, or auto-detect when zero.
     if (config.useThreadPool)
     {
-        threadPool = std::make_unique<ThreadPool>();
-        threadPool->init(0);  // 0 = auto-detect physical cores
-        printf("  ThreadPool: %zu threads (auto-detected)\n", threadPool->size());
+        threadPool = std::make_unique<ThreadPool>(config.numThreads);
+        // A requested positive count is part of the execution contract (the
+        // H11 parity gate uses one worker for deterministic accumulation).
+        // Preserve the historical auto-detect path only when the caller did
+        // not specify a count.
+        printf("  ThreadPool: %zu threads%s\n", threadPool->size(),
+               config.numThreads ? " (requested)" : " (auto-detected)");
     }
 
     // Initialize KV cache with correct GQA dimensions
@@ -3266,8 +3270,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     // ensure thread pool, KV cache, and quant dispatch are ready here.
     if (config.useThreadPool && !threadPool)
     {
-        threadPool = std::make_unique<ThreadPool>();
-        threadPool->init(config.numThreads);
+        threadPool = std::make_unique<ThreadPool>(config.numThreads);
         printf("[Deep2Engine] ThreadPool (loadModel): %zu threads\n", threadPool->size());
     }
     Deep2::QuantKernelRegistry::Instance().Initialize();
@@ -5917,27 +5920,66 @@ static void B3_TraceLogits(const char* phase, size_t pos, const float* logits, s
 // ============================================================================
 // Generate - Real implementation with weight projections
 // ============================================================================
+// ----------------------------------------------------------------------------
+// GenerationStopReasonName — the receipt's vocabulary.
+//
+// The names are the receipt's words. They are stable strings because a
+// certification gate reads them, so they are not shortened or reformatted
+// to suit a log.
+// ----------------------------------------------------------------------------
+const char* Deep2Engine::GenerationStopReasonName(GenerationStopReason r)
+{
+    switch (r)
+    {
+        case GenerationStopReason::NONE:                   return "NONE";
+        case GenerationStopReason::NOT_INITIALIZED:       return "NOT_INITIALIZED";
+        case GenerationStopReason::NO_MODEL:              return "NO_MODEL";
+        case GenerationStopReason::BAD_ARGUMENTS:         return "BAD_ARGUMENTS";
+        case GenerationStopReason::EMPTY_PROMPT:          return "EMPTY_PROMPT";
+        case GenerationStopReason::NO_CONTEXT_LEFT:       return "NO_CONTEXT_LEFT";
+        case GenerationStopReason::INVALID_CONFIG:        return "INVALID_CONFIG";
+        case GenerationStopReason::CONFIG_MISMATCH:       return "CONFIG_MISMATCH";
+        case GenerationStopReason::KV_INIT_FAILED:        return "KV_INIT_FAILED";
+        case GenerationStopReason::COMPLETION_PLAN_BLOCKED: return "COMPLETION_PLAN_BLOCKED";
+        case GenerationStopReason::EMBED_FAILED:          return "EMBED_FAILED";
+        case GenerationStopReason::FORWARD_FAULT:         return "FORWARD_FAULT";
+        case GenerationStopReason::EXCEPTION:             return "EXCEPTION";
+        case GenerationStopReason::CANCELLED:             return "CANCELLED";
+        case GenerationStopReason::EOS:                   return "EOS";
+        case GenerationStopReason::BUDGET_EXHAUSTED:      return "BUDGET_EXHAUSTED";
+        case GenerationStopReason::COMPLETED:             return "COMPLETED";
+    }
+    return "UNKNOWN";
+}
+
 size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* outputTokens, size_t maxOutputLen,
                              InferenceStats* stats, std::function<bool(int)> onToken)
 {
+    // The reason is decided by this run, not inherited from the last one.
+    m_generationStop = GenerationStopReason::NONE;
+
     if (!initialized)
     {
         printf("[Deep2Engine] ERROR: Engine not initialized\n");
+        m_generationStop = GenerationStopReason::NOT_INITIALIZED;
         return 0;
     }
 
     if (!modelWeights.loaded)
     {
         printf("[Deep2Engine] ERROR: No model loaded - call loadModel() first\n");
+        m_generationStop = GenerationStopReason::NO_MODEL;
         return 0;
     }
 
     if (!promptTokens || !outputTokens || maxOutputLen == 0)
     {
+        m_generationStop = GenerationStopReason::BAD_ARGUMENTS;
         return 0;
     }
     if (promptLen == 0)
     {
+        m_generationStop = GenerationStopReason::EMPTY_PROMPT;
         return 0;
     }
 
@@ -5955,6 +5997,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
     if (remainingContext == 0)
     {
+        m_generationStop = GenerationStopReason::NO_CONTEXT_LEFT;
         return 0;
     }
     maxOutputLen = std::min(maxOutputLen, remainingContext);
@@ -5972,6 +6015,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     {
         printf("[Deep2Engine] ERROR: Invalid config (hiddenDim=%zu vocabSize=%zu)\n", config.hiddenDim,
                config.vocabSize);
+        m_generationStop = GenerationStopReason::INVALID_CONFIG;
         return 0;
     }
     if (config.hiddenDim != modelWeights.hiddenDim || config.vocabSize != modelWeights.vocabSize)
@@ -5979,6 +6023,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         printf("[Deep2Engine] ERROR: Config mismatch (config hidden=%zu vocab=%zu) "
                "vs (model hidden=%zu vocab=%zu)\n",
                config.hiddenDim, config.vocabSize, modelWeights.hiddenDim, modelWeights.vocabSize);
+        m_generationStop = GenerationStopReason::CONFIG_MISMATCH;
         return 0;
     }
 
@@ -6001,6 +6046,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         {
             fprintf(stderr,
                     "[Deep2Engine] ERROR: KV cache init failed before generate\n");
+            m_generationStop = GenerationStopReason::KV_INIT_FAILED;
             return 0;
         }
     }
@@ -6030,6 +6076,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                     plan.blockedOwner ? plan.blockedOwner : "?",
                     plan.nextAction ? plan.nextAction : "?");
             fflush(stderr);
+            m_generationStop = GenerationStopReason::COMPLETION_PLAN_BLOCKED;
             return 0;
         }
         printf("[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM\n");
@@ -6171,6 +6218,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         {
             fprintf(stderr, "[B3_ABORT] prefill embed FATAL_EMBED token=%d pos=%zu\n", promptTokens[t], t);
             fflush(stderr);
+            m_generationStop = GenerationStopReason::EMBED_FAILED;
             return 0;
         }
         ResidencyCounters::EndEmbed();
@@ -6185,6 +6233,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 if (!forwardTokenAllLayers(h, t + 1))
                 {
                     fprintf(stderr, "[B3_ABORT] prefill gpu/cpu forward fail pos=%zu\n", t);
+                    // The reason is set by the layer itself when it faults;
+                    // this is the fallback for a forward that failed without
+                    // naming a cause.
+                    if (m_generationStop == GenerationStopReason::NONE)
+                        m_generationStop = GenerationStopReason::FORWARD_FAULT;
                     return 0;
                 }
             }
@@ -6193,6 +6246,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 fprintf(stderr,
                         "[B3_ABORT] prefill: ex.what()", t);
                 fflush(stderr);
+                m_generationStop = GenerationStopReason::EXCEPTION;
                 return 0;
             }
         }
@@ -7004,6 +7058,33 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
     result.generatedTokens = generated;
     result.cancelled = wasCancelled || isCancelRequested();
     result.completed = generated > 0 && !result.cancelled;
+
+    // The receipt.
+    //
+    // One line, machine-readable, naming the stage that decided the run.
+    // Without it a generation that produced nothing is indistinguishable
+    // from a generation that was never started, and the difference between
+    // the two has to be found by reading the log.
+    {
+        // The reason is set where the decision is made. If the run produced
+        // tokens the reason is whatever ended it; if it produced none, it is
+        // whatever stopped it.
+        GenerationStopReason reason = m_generationStop;
+        if (reason == GenerationStopReason::NONE)
+        {
+            if (result.cancelled) reason = GenerationStopReason::CANCELLED;
+            else if (generated > 0) reason = GenerationStopReason::COMPLETED;
+            else reason = GenerationStopReason::NONE;
+        }
+        std::fprintf(stderr,
+                     "[AGENT] GENERATION_RECEIPT prompt=%zu generated=%zu "
+                     "completed=%d cancelled=%d stop_reason=%d stop=%s\n",
+                     result.promptTokens, result.generatedTokens,
+                     result.completed ? 1 : 0, result.cancelled ? 1 : 0,
+                     static_cast<int>(reason),
+                     GenerationStopReasonName(reason));
+        std::fflush(stderr);
+    }
     clearCancel();
 
     if (agentFirstToken)

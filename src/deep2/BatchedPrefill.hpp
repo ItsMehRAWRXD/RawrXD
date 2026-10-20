@@ -95,8 +95,13 @@ inline void batchedAttentionScores(
         const size_t limit = j + 1;   // causal within chunk
 
         for (size_t h = 0; h < g.numHeads; ++h) {
+            // GQA maps each group of query heads onto one KV head.  The old
+            // guard compared the group size to the KV-head count, which is
+            // false for the normal TinyLlama geometry (32 Q heads, 4 KV heads,
+            // group size 8) and sent heads 4..31 past the KV view.
+            const size_t groupedHead = g.groupSize ? h / g.groupSize : h;
             const size_t kvHead =
-                (g.groupSize && g.groupSize <= g.numKVHeads) ? h / g.groupSize : h;
+                (g.groupSize && groupedHead < g.numKVHeads) ? groupedHead : h;
             const float* qh = q + h * g.headDim;
             float* oh = out + h * g.headDim;
             const size_t visible = committedLen + limit;
@@ -115,7 +120,11 @@ inline void batchedAttentionScores(
                 for (size_t d = 0; d < g.headDim; ++d)
                     dot = std::fma(qh[d], k[d], dot);
                 scoresScratch[t] = dot * g.scale;
-                if (dot > maxv || scoresScratch[t] > maxv) maxv = scoresScratch[t];
+                // Compare scores in the same scaled domain used by the
+                // softmax.  Comparing the raw dot product against maxv (which
+                // already contains scaled scores) selects the wrong pivot for
+                // some two-or-more-token queries and causes O(1) divergence.
+                if (scoresScratch[t] > maxv) maxv = scoresScratch[t];
             }
 
             // Softmax over the visible prefix.

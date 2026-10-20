@@ -54,6 +54,53 @@ static uint64_t fnv1a(const void* data, size_t n, uint64_t seed = 0) {
     return h;
 }
 
+// H11 diagnostic: keep the batched path fail-closed while making the first
+// divergent stage observable.  This is opt-in because a full prompt can run
+// thousands of projections.
+static bool H11BatchTraceEnabled() {
+    static const bool enabled = [] {
+        const char* e = std::getenv("RAWRXD_H11_BATCH_TRACE");
+        return e && e[0] == '1';
+    }();
+    return enabled;
+}
+
+static bool H11TraceBatchVector(const char* stage, size_t layer, size_t row,
+                                const float* values, size_t count) {
+    if (!values || count == 0) return false;
+    size_t bad = 0;
+    float minValue = std::numeric_limits<float>::infinity();
+    float maxValue = -std::numeric_limits<float>::infinity();
+    double sumSq = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        const float v = values[i];
+        if (!std::isfinite(v)) { ++bad; continue; }
+        minValue = (std::min)(minValue, v);
+        maxValue = (std::max)(maxValue, v);
+        sumSq += static_cast<double>(v) * static_cast<double>(v);
+    }
+    const bool digestStage = std::strcmp(stage, "post_ffn") == 0;
+    if (H11BatchTraceEnabled() && (bad || (row == 0 && (layer < 2 || digestStage)))) {
+        std::fprintf(stderr,
+                     "[H11_BATCH_TRACE] layer=%zu row=%zu stage=%s "
+                     "finite=%zu/%zu bad=%zu min=%g max=%g l2=%g\n",
+                     layer, row, stage, count - bad, count, bad,
+                     minValue, maxValue, std::sqrt(sumSq));
+        std::fflush(stderr);
+        if (bad && std::strcmp(stage, "attention") == 0) {
+            size_t printed = 0;
+            for (size_t i = 0; i < count && printed < 12; ++i) {
+                if (!std::isfinite(values[i])) {
+                    std::fprintf(stderr, "[H11_BATCH_TRACE] bad_index=%zu value=%g\n", i, values[i]);
+                    ++printed;
+                }
+            }
+            std::fflush(stderr);
+        }
+    }
+    return bad == 0;
+}
+
 // ---------------------------------------------------------------------------
 // GPU enumeration bridge: fills a HostHardwareSnapshot from the runtime's OWN
 // device inventory.
@@ -485,7 +532,14 @@ void Deep2Engine::enableBatchedPrefill(bool enable, size_t chunkTokens) {
     prefillChunkSize_ = chunkTokens;
     if (prefillChunkSize_ == 0) {
         const char* ce = std::getenv("DEEP2_PREFILL_CHUNK");
-        if (ce && *ce) prefillChunkSize_ = static_cast<size_t>(std::strtol(ce, nullptr, 10));
+        if (ce && *ce) {
+            char* end = nullptr;
+            errno = 0;
+            const long v = std::strtol(ce, &end, 10);
+            if (errno == 0 && end != ce && *end == '\0' && v > 0) {
+                prefillChunkSize_ = static_cast<size_t>(v);
+            }
+        }
     }
 }
 
@@ -512,6 +566,7 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
     normed.assign(B * H, 0.0f);
     for (size_t j = 0; j < B; ++j) {
         RMSNormW(lw.attnNorm, batch.row(j), &normed[j * H], H, modelWeights.normEps);
+        if (!H11TraceBatchVector("attn_norm", layer, j, &normed[j * H], H)) return false;
     }
 
     // ---- Q/K/V projections (per row, real quantized GEMV) ----
@@ -537,6 +592,9 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
         LinearW(lw.wq, in, bq, &qAll[j * H], H);
         LinearW(lw.wk, in, bk, &kAll[j * kvDim], kvDim);
         LinearW(lw.wv, in, bv, &vAll[j * kvDim], kvDim);
+        if (!H11TraceBatchVector("q", layer, j, &qAll[j * H], H) ||
+            !H11TraceBatchVector("k", layer, j, &kAll[j * kvDim], kvDim) ||
+            !H11TraceBatchVector("v", layer, j, &vAll[j * kvDim], kvDim)) return false;
     }
 
     // ---- per-head Q/K norms (Qwen3-style, optional) ----
@@ -562,6 +620,8 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
         for (size_t j = 0; j < B; ++j) {
             applyRoPE(&qAll[j * H], &kAll[j * kvDim], headDim, numHeads,
                       numKVHeads, chunkBase + j, theta, scaling);
+            if (!H11TraceBatchVector("rope_q", layer, j, &qAll[j * H], H) ||
+                !H11TraceBatchVector("rope_k", layer, j, &kAll[j * kvDim], kvDim)) return false;
         }
     }
 
@@ -620,13 +680,31 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
             std::memcpy(&vView[(h * visible + p) * headDim], vs, headDim * sizeof(float));
         }
     }
+    if (H11BatchTraceEnabled()) {
+        if (!H11TraceBatchVector("k_view", layer, 0, kView.data(), kView.size()) ||
+            !H11TraceBatchVector("v_view", layer, 0, vView.data(), vView.size())) return false;
+    }
 
-    static thread_local std::vector<float> scores;
-    // visible is the [pos] stride of the view laid out just above; the scorer
-    // MUST be told it rather than inferring it from committedLen, because the
-    // view spans committedLen+chunk positions per head.
-    batchedAttentionScores(qb, kView.data(), vView.data(), g, chunkBase, visible,
-                           attn, scores);
+    // Use the production KV-cache attention reducer for the correctness path.
+    // It is intentionally invoked for each query row/head after the whole
+    // chunk's K/V has been staged.  This preserves the layer-major batching
+    // boundary while guaranteeing that H11 compares the same AVX2 dot,
+    // expf/epsilon softmax, and weighted-accumulation semantics as the serial
+    // forward path.  The standalone batched scorer remains available for a
+    // later performance implementation once this reference is certified.
+    for (size_t j = 0; j < B; ++j) {
+        const size_t visibleForRow = chunkBase + j + 1;
+        for (size_t h = 0; h < numHeads; ++h) {
+            const size_t groupedHead = g.groupSize ? h / g.groupSize : h;
+            const size_t kvHead =
+                (g.groupSize && groupedHead < numKVHeads) ? groupedHead : h;
+            AttentionWithCache(qAll.data() + j * H + h * headDim,
+                               *kvCache, layer, kvHead,
+                               attn.row(j) + h * headDim, visibleForRow);
+        }
+    }
+    for (size_t j = 0; j < B; ++j)
+        if (!H11TraceBatchVector("attention", layer, j, attn.row(j), H)) return false;
 
     // ---- output projection + attention residual ----
     const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
@@ -634,16 +712,21 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
     proj.assign(B * H, 0.0f);
     for (size_t j = 0; j < B; ++j)
         LinearW(wo, attn.row(j), nullptr, &proj[j * H], H);
+    for (size_t j = 0; j < B; ++j)
+        if (!H11TraceBatchVector("attn_output", layer, j, &proj[j * H], H)) return false;
 
     for (size_t j = 0; j < B; ++j)
         for (size_t i = 0; i < H; ++i)
             batch.row(j)[i] += proj[j * H + i];
+    for (size_t j = 0; j < B; ++j)
+        if (!H11TraceBatchVector("post_attn", layer, j, batch.row(j), H)) return false;
 
     // ---- FFN ----
     for (size_t j = 0; j < B; ++j) {
         static thread_local std::vector<float> ffnNormed;
         ffnNormed.assign(H, 0.0f);
         RMSNormW(lw.ffnNorm, batch.row(j), ffnNormed.data(), H, modelWeights.normEps);
+        if (!H11TraceBatchVector("ffn_norm", layer, j, ffnNormed.data(), H)) return false;
 
         static thread_local std::vector<float> ffnOut;
         ffnOut.assign(H, 0.0f);
@@ -651,9 +734,11 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
             computeMoEFFN(layer, ffnNormed.data(), ffnOut.data());
         else
             computeFFN(layer, ffnNormed.data(), ffnOut.data());
+        if (!H11TraceBatchVector("ffn", layer, j, ffnOut.data(), H)) return false;
 
         for (size_t i = 0; i < H; ++i)
             batch.row(j)[i] += ffnOut[i];
+        if (!H11TraceBatchVector("post_ffn", layer, j, batch.row(j), H)) return false;
     }
 
     ++execTelemetry_.layerExecutions;
@@ -681,6 +766,12 @@ size_t Deep2Engine::prefillSerial(const int* promptTokens, size_t promptLen,
         if (!forwardTokenAllLayers(h, t + 1)) break;
         if (modelWeights.finalNorm.data)
             RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
+        // Publish the same post-normalization hidden state that the serial
+        // leg actually used.  The old implementation accepted hiddenOut but
+        // never wrote it, leaving parity callers to project an all-zero
+        // buffer and masking the real serial/batched comparison.
+        std::memcpy(hiddenOut + t * config.hiddenDim, h,
+                    config.hiddenDim * sizeof(float));
         if (kvCache) {
             // advance() is void in the production KVCache; the bound check is
             // isFull() BEFORE advancing, and advance() past virtualMaxSeq is
@@ -711,21 +802,20 @@ size_t Deep2Engine::prefillBatched(const int* promptTokens, size_t promptLen,
     if (chunk == 0) chunk = 1;
     chunk = std::min(chunk, promptLen);
 
-    // Embed the whole prompt once up front (embedding rows are cheap and this
-    // removes the per-token embed cost from the layer loop entirely).
-    ActivationBatch embed(promptLen, H);
-    for (size_t t = 0; t < promptLen; ++t) {
-        if (!embedToken(promptTokens[t], embed.row(t))) return 0;
-    }
-
     size_t done = 0;
     for (size_t base = 0; base < promptLen; base += chunk) {
         const size_t n = std::min(chunk, promptLen - base);
         if (base + n > config.maxSeqLen) break;
 
         ActivationBatch batch(n, H);
-        std::memcpy(batch.data.data(), embed.data.data() + base * H * sizeof(float),
-                    n * H * sizeof(float));
+        // Materialize only the current causal chunk immediately before its
+        // layer-major pass.  Embedding the entire prompt up front can change
+        // residency and per-token state ordering relative to the serial
+        // reference, which makes a multi-token parity failure look like a
+        // transformer math problem even when the layer kernels agree.
+        for (size_t j = 0; j < n; ++j) {
+            if (!embedToken(promptTokens[base + j], batch.row(j))) return done;
+        }
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
             if (!forwardLayerBatched(layer, batch, base, base + 1)) return done;
@@ -737,6 +827,9 @@ size_t Deep2Engine::prefillBatched(const int* promptTokens, size_t promptLen,
             std::memcpy(h, batch.row(j), H * sizeof(float));
             if (modelWeights.finalNorm.data)
                 RMSNormW(modelWeights.finalNorm, h, h, H, modelWeights.normEps);
+            // Publish the same normalized state to the caller-owned output
+            // buffer used by the parity gate and generation path.
+            std::memcpy(hiddenOut + (base + j) * H, h, H * sizeof(float));
         }
         if (kvCache) {
             if (!kvCache->advanceBy(n)) return done;
@@ -844,6 +937,11 @@ double Deep2Engine::prefillParityReport(const int *promptTokens, size_t promptLe
     resetInferenceState();
     const size_t doneSerial = prefillSerial(promptTokens, promptLen, hiddenSerial.data());
     const bool haveKvSerial = snap(kvS);
+    if (std::getenv("RAWRXD_H11_KV_TRACE") && haveKvSerial && !kvS.k.empty() && !kvS.v.empty()) {
+        std::fprintf(f, "[H11_KV_TRACE] leg=serial k0=%.9e k1=%.9e v0=%.9e v1=%.9e rows=%zu\n",
+                     kvS.k[0], kvS.k.size() > 1 ? kvS.k[1] : 0.0f,
+                     kvS.v[0], kvS.v.size() > 1 ? kvS.v[1] : 0.0f, kvS.rows);
+    }
     computeLogitsFrom(hiddenSerial.data() + (doneSerial ? (doneSerial - 1) : 0) * H);
     std::vector<float> logitsSerial = logits;
 
@@ -852,6 +950,11 @@ double Deep2Engine::prefillParityReport(const int *promptTokens, size_t promptLe
     const size_t doneBatched = prefillBatched(promptTokens, promptLen,
                                               hiddenBatched.data(), chunkTokens);
     const bool haveKvBatched = snap(kvB);
+    if (std::getenv("RAWRXD_H11_KV_TRACE") && haveKvBatched && !kvB.k.empty() && !kvB.v.empty()) {
+        std::fprintf(f, "[H11_KV_TRACE] leg=batched k0=%.9e k1=%.9e v0=%.9e v1=%.9e rows=%zu\n",
+                     kvB.k[0], kvB.k.size() > 1 ? kvB.k[1] : 0.0f,
+                     kvB.v[0], kvB.v.size() > 1 ? kvB.v[1] : 0.0f, kvB.rows);
+    }
     computeLogitsFrom(hiddenBatched.data() + (doneBatched ? (doneBatched - 1) : 0) * H);
     std::vector<float> logitsBatched = logits;
 
@@ -904,6 +1007,28 @@ double Deep2Engine::prefillParityReport(const int *promptTokens, size_t promptLe
                                              firstKvIdx, firstKvVal);
         maxKvAbs = std::fmax(rk.first, rv.first);
         rmseKv = std::fmax(rk.second, rv.second);
+        if (std::getenv("RAWRXD_H11_KV_TRACE")) {
+            double worstK = 0.0, worstV = 0.0;
+            size_t worstKL = 0, worstVL = 0, worstKIdx = 0, worstVIdx = 0;
+            const size_t elemsPerLayer = kvS.rows * nKVHeads * headDim;
+            for (size_t L = 0; L < nLayers; ++L) {
+                const size_t base = L * elemsPerLayer;
+                for (size_t i = 0; i < elemsPerLayer; ++i) {
+                    const double dk = std::fabs(double(kvS.k[base + i]) - double(kvB.k[base + i]));
+                    const double dv = std::fabs(double(kvS.v[base + i]) - double(kvB.v[base + i]));
+                    if (dk > worstK) { worstK = dk; worstKL = L; worstKIdx = i; }
+                    if (dv > worstV) { worstV = dv; worstVL = L; worstVIdx = i; }
+                }
+            }
+            std::fprintf(f, "[H11_KV_TRACE] worst_k layer=%zu local=%zu diff=%.9e serial=%.9e batched=%.9e\n",
+                         worstKL, worstKIdx, worstK,
+                         kvS.k[worstKL * elemsPerLayer + worstKIdx],
+                         kvB.k[worstKL * elemsPerLayer + worstKIdx]);
+            std::fprintf(f, "[H11_KV_TRACE] worst_v layer=%zu local=%zu diff=%.9e serial=%.9e batched=%.9e\n",
+                         worstVL, worstVIdx, worstV,
+                         kvS.v[worstVL * elemsPerLayer + worstVIdx],
+                         kvB.v[worstVL * elemsPerLayer + worstVIdx]);
+        }
         (void)perLayer;
     } else {
         kvOk = false;

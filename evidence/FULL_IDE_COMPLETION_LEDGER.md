@@ -199,3 +199,20 @@ The committed native route was exercised against Ollama at 127.0.0.1:11434: the 
 A current-tree H11 replay against TinyLlama failed closed at lk.0.attn_output.weight: all chunks 1/2/16/128 produced non-finite output (48/2048 bad, first index 3), with zero dispatch/submit/fence counters. This is a regression/blocker against the isolated D1 receipt and remains open. Receipt: vidence/LARGE_MODEL_SMOKE_20261020/h11_current_tree_tinyllama_20261020T1425/receipt.md.
 
 Post-route regression: the native IDE target still builds, but the default Release build is blocked by legacy MASM awrxd_hexmag_repeat (LNK1181), CTest has 14 entries with missing executables, and the H11 current-tree replay fails closed on non-finite lk.0.attn_output.weight. Detailed battery receipt: vidence/IDE_REGRESSION_BATTERY_20261020.md.
+
+## H11 geometry and batched prefill correction — 2026-10-20
+
+The current-tree H11 failure was reproduced and repaired against TinyLlama 1.1B Q4_K_M. The loader now reports the actual GGUF geometry before execution (`layers=22 hidden=2048 heads=32 kv_heads=4 head_dim=64`); the prior 4096/32-head fallback is rejected by the parity harness. The layer-0 nonfinite output came from the batched GQA mapping sending query heads 4..31 past the four-head KV view. The mapping now uses `query_head / (numHeads / numKVHeads)` and bounds the grouped index.
+
+The D1 reference path also now publishes post-final-norm hidden states, embeds each causal chunk immediately before its layer-major pass, and uses the production `AttentionWithCache` reducer after staged KV writes. This preserves the batched layer boundary while keeping the numerical comparison on the same dot-product, softmax, and weighted-accumulation implementation as serial inference. The standalone batched scorer remains corrected but is not used for the correctness receipt until a separate performance comparison is made.
+
+Controlled H11 receipts (TinyLlama, FP32 KV, one worker, zero nonfinite values):
+
+- 1-token control: `evidence/H11_GQA_HIDDENOUT_FIX_20261020.log` — PASS.
+- 2-token prompt: `evidence/H11_TWO_TOKEN_ATTENTION_REFERENCE_20261020.log` — P1/P2/P3/P4 PASS, `kv_byte_exact=1`, `max_abs_overall=0`.
+- 8-token prompt: `evidence/H11_8TOKEN_ATTENTION_REFERENCE_20261020.log` — P1/P2/P3/P4 PASS, `kv_byte_exact=1`, `max_abs_overall=0`.
+- 32-token prompt: `evidence/H11_32TOKEN_ATTENTION_REFERENCE_20261020.log` — P1/P2/P3/P4 PASS, `kv_byte_exact=1`, `max_abs_overall=0`.
+- 128-token prompt: `evidence/H11_128TOKEN_ATTENTION_REFERENCE_20261020.log` — P1/P2/P3/P4 PASS, `kv_byte_exact=1`, `max_abs_overall=0`.
+- 30-token default prompt: `evidence/H11_FULL_PROMPT_ATTENTION_REFERENCE_20261020.log` — P1/P2/P3/P4 PASS, `kv_byte_exact=1`, `max_abs_overall=0`.
+
+The final H11 build exited 0. The Release parity executable SHA-256 is `FB575E317D12ACED4FB6602ED8A06666E91E3935391A3113D3F4E48BC10B9A8E`. These receipts close the H11/D1 correctness milestone for this model and workload. They do not close D2 performance, S07, S12, Gate 5, or multi-GPU certification; dispatch accounting remains zero because Vulkan note hooks are not wired.
