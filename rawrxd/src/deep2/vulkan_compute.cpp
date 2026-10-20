@@ -731,12 +731,12 @@ bool VulkanCompute::createPipelines() {
 bool VulkanCompute::DispatchGemvQ4KBatch8Row(
     const void* weights,size_t weightBytes,
     DeviceBuf& inputBatch,DeviceBuf& outputBatch,
-    uint32_t rows,uint32_t cols,uint32_t batch)
+    uint32_t rows,uint32_t cols,uint32_t batch,int type)
 {
     if(!qBatch8RowPipeline_||!weights||!weightBytes||
-       !rows||!cols||!batch||batch>4) return false;
+       !rows||!cols||!batch||batch>4||(type!=12&&type!=14)) return false;
     DeviceBuf* wb=nullptr;
-    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
+    if(!ensureWeightQuant(type,weights,weightBytes,wb)) return false;
     VkCommandBuffer cmd=fusedCmd_;
     VkQueryPool query=fusedQuery_;
     const bool own=!fused_;
@@ -748,7 +748,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
         cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch8RowPipelineLayout_,
         0,1,&set,0,nullptr);
     QBatchPush p{};
-    p.type=12;p.rows=rows;p.cols=cols;
+    p.type=static_cast<uint32_t>(type);p.rows=rows;p.cols=cols;
     p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
     vkCmdPushConstants(
         cmd,qBatch8RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
@@ -757,8 +757,10 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
     vkCmdDispatch(
         cmd,(rows+rowsPerWorkgroup-1u)/rowsPerWorkgroup,1,1);
     recordComputeBarrier(cmd);
-    ++q4kBatch8RowOps_;
-    q4kBatchWeightBytes_+=weightBytes;
+    if (type == 12) {
+        ++q4kBatch8RowOps_;
+        q4kBatchWeightBytes_ += weightBytes;
+    }
     if(!own) return true;
     GpuWorkInterval wi{};
     const bool ok=endSubmitWait(
@@ -3442,6 +3444,15 @@ bool VulkanCompute::DispatchGemvQuant(
         rows >= 4 && qBatch4RowPipeline_) {
         const bool ok = DispatchGemvQ4KBatch(
             weights, weightBytes, input, output, rows, cols, 1);
+        if (ok) ++gemvSuccess_;
+        return ok;
+    }
+
+    const char* q6BatchRows = std::getenv("DEEP2_Q6K_HOT_BATCH_ROWS");
+    if (type == 14 && q6BatchRows && q6BatchRows[0] == '1' &&
+        rows >= 8 && qBatch8RowPipeline_) {
+        const bool ok = DispatchGemvQ4KBatch8Row(
+            weights, weightBytes, input, output, rows, cols, 1, 14);
         if (ok) ++gemvSuccess_;
         return ok;
     }

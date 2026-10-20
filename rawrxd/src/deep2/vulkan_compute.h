@@ -625,7 +625,8 @@ public:
     bool DispatchGemvQ4KBatch8Row(
         const void* weights, size_t weightBytes,
         DeviceBuf& inputBatch, DeviceBuf& outputBatch,
-        uint32_t rows, uint32_t cols, uint32_t batch);
+        uint32_t rows, uint32_t cols, uint32_t batch,
+        int type = 12);
     Q4KBatchTile SelectQ4KBatchTile(
         const void* weights, size_t weightBytes,
         DeviceBuf& inputBatch, DeviceBuf& scratchOutput,
