@@ -257,3 +257,8 @@ The native row-8/Q6/reuse route loaded `nemotron-3.5-lightning-30b-Q4_K_M.gguf` 
 ## Native DeepSeek R1 32B smoke — 2026-10-20
 
 The universal loader identified `deepseek-r1_32b.gguf` as Qwen2 (64 layers, hidden 5120, 40 heads, vocab 152064, context 131072) and Vulkan initialized on the R9700. A redirected retry completed with exit code 0: native GPU serial decode took 2509.1 ms for 8 tokens (3.19 TPS), gpu_calls=32712, cpu_calls=0, with finite logits. The speculative arm also matched the serial stream and remained finite, but ran at 1.41 TPS with 0/8 drafts accepted. This is a loadability and forward-correctness smoke PASS; sustained performance and S07 acceleration remain OPEN. Receipt: `evidence/DEEPSEEK32B_ROW8_8TOK_R2_20261020/SPEC_BENCH_RECEIPT.txt`.
+
+
+## Nemotron 30B sustained row-8 baseline — 2026-10-20
+
+Two independent 128-token native GPU runs completed with finite serial logits and zero CPU calls under the row-8/Q6/replay route. Decode was 5077.8 ms (25.21 TPS) and 5024.4 ms (25.48 TPS), mean 25.34 TPS. Nemotron-H recurrent SSM blocks correctly disable speculative rollback, so speculative parity is N/A. This establishes a sustained 30B baseline but does not close 40 TPS or S12/150 TPS. Receipt: `evidence/NEMOTRON30B_ROW8_SUSTAINED_RECEIPT_20261020.md`.
