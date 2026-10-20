@@ -27,7 +27,9 @@ param(
     [Parameter(Mandatory = $false)]
     [string[]]$GeneratedPaths = @(),
     [Parameter(Mandatory = $false)]
-    [switch]$KeepRejectedSnapshot
+    [switch]$KeepRejectedSnapshot,
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipRebuildAfterReject
 )
 
 Set-StrictMode -Version Latest
@@ -113,6 +115,7 @@ $report = [ordered]@{
     candidate = [ordered]@{}
     restoration = [ordered]@{ attempted = $false; verified = $false }
     snapshot = [ordered]@{}
+    rebuildAfterReject = -not $SkipRebuildAfterReject
 }
 $snapshotIdentities = [ordered]@{}
 
@@ -211,6 +214,15 @@ finally {
             if ($before.exists -ne $after.exists -or $before.sha256 -ne $after.sha256) { $restored = $false }
         }
         $report.restoration.verified = $restored
+        if ($restored -and -not $SkipRebuildAfterReject) {
+            $restoreBuild = Invoke-CheckedCommand -Command $BuildCommand -Arguments $BuildArguments -LogPath (Join-Path $trialRoot 'restore_build.log')
+            $report.commands.restoreBuild = $restoreBuild
+            if ($restoreBuild.exitCode -ne 0) {
+                $restored = $false
+                $report.restoration.restoreBuildFailure = $restoreBuild.output
+            }
+            $report.restoration.verified = $restored
+        }
     }
     if ($ReportPath) {
         $destination = Resolve-RepoPath $ReportPath

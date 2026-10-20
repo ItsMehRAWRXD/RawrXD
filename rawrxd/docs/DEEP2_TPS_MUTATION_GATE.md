@@ -9,8 +9,9 @@
 5. Run the flight-recorder benchmark and require every run to pass.
 6. Require the candidate median TPS to exceed the baseline by `MinRelativeGain`.
 7. Restore the exact snapshot on every rejection and verify its hashes.
+8. Rebuild the baseline after rejection so a stale candidate executable cannot be measured later.
 
-The controller never stages, commits, resets, or stashes the repository. Existing unrelated worktree changes are recorded and left alone.
+The controller never stages, commits, resets, or stashes the repository. Existing unrelated worktree changes are recorded and left alone. Use `-SkipRebuildAfterReject` only when the build output is external and independently controlled.
 
 Example:
 
