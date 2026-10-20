@@ -25,7 +25,8 @@ RawrXD already contains a large body of implementation and prototype work. The a
 | Local multi-GPU attempt | F:/rawrxd/evidence/TP_UNEVEN_MULTI_GPU_LAYER_SMOKE_2026-10-19.receipt.txt | Two-device run dispatched GPU GEMVs without CPU fallback but diverged from the single-R9700 stream after token 1 (1/4 token agreement); layer completion counters were zero. Gate 10 remains open.
 | ROM and virtual tensor work | TensorROM, Win32RomEmulator, gguf2rom/gguf2rom_ms, ShardPager, ModelGenie TensorROM manifests, VWA VirtualTensor/VwaIrScheduler | Paging, manifests, virtual address space, and packed quantized paths exist in source. The current ledger has no executed precision/reconstruction receipt for Gate 14, so presence of these components is not a ROM-integrity PASS.
 | Weightless coding prototype | src/deep2w0/W0Engine.cpp, W0Types.hpp, W0HexMagBridge.hpp, and tests/w0_001_cert.cpp on F:/rawrxd_cert, F:/rawrxd-p1-promote, and GitHub branch feat/hexmag-polymorphic-repeat-tuner-masm | W0 is a deterministic no-tensor-weight coding agent. Its inspected transform is a narrow CHANGE_LITERAL rule with structural checks. Its own certificate says the 50+ fixture W0-AGENT-E2E-001 remains future work. This is not compression or reconstruction of neural model weights. The two local copies of W0Engine.cpp, W0Engine.hpp, W0Types.hpp, and w0_001_cert.cpp have identical SHA-256 values; no W0 PASS transcript was found.
-| Brutal compression | BRUTAL-GZIP.md, BRUTAL-NEON.md and deflate_brutal sources in RawrXD and recovery-docs | These are general GZip/DEFLATE and ARM/ASM compression paths. They do not implement neural-weight reconstruction or NuWeightless.
+| Brutal GZip/DEFLATE | `src/codec/brutal_gzip.cpp`, `brutal_gzip_impl.cpp`, `gzip_brutal_inflate.cpp`, and matching recovery-docs copies | This is general gzip/DEFLATE storage compression, not neural-weight reconstruction. The fallback encoder uses zlib when available and a raw-copy path otherwise; the custom inflater accepts stored DEFLATE blocks only (`BTYPE=0`). Treat codec variants as distinct until roundtrip fixtures prove their compatibility.
+| Custom checkpoint MASM codec | `src/asm/RawrXD_Compression.asm` exists in `F:\rawrxd_cert` and `F:\rawrxd-p1-promote`; the active `F:\rawrxd` source path and GitHub main path are absent | The source describes a custom LZ4-like format, not gzip. In the certification snapshot, CMake builds a MASM object as a dependency but does not add it to the `RawrXD_Compression` library sources. Static inspection found a 4096-qword clear against a 4096-DWORD hash table, a hash write indexed by input offset, a match-offset calculation that resolves to zero, and decoder copies that check for one remaining output byte rather than the full copy length. Do not wire this prototype into ROM paging before these issues are repaired and bounded roundtrip tests pass.
 | NuWeightless | No matching code or test receipt found | The pasted architecture remains a proposal. Reuse ROM paging, quantized GEMV, and W0 only where their contracts fit; keep them as distinct components. A lossless weightless path needs a precise representation/decoder contract and evidence that the information is preserved.
 
 ## Certification status recovered from the authoritative ledger and receipts
@@ -55,7 +56,7 @@ The proposed release scope is documented separately in evidence/RELEASE_ROADMAP_
 - The GitHub comparison reports local-30b-backend and main as diverged: 11 commits exist on main after their merge base and 217 commits exist on the target branch that are absent from main. The local checkout is another 3 commits ahead of the GitHub local-30b branch. This is not a fast-forward situation.
 - The HexMag/W0 feature and promotion branches have no common ancestor with main; GitHub compare also reports no common ancestor between the two branches. Treat them as separate source histories and port selected files only after provenance and integration review.
 - The main commit’s combined-status endpoint returned an empty status list at audit time, while branch protection lists required checks. The empty response is not CI PASS evidence.
-- RawrXD-Artifacts contains old audit tombstones and executables, not a NuWeightless implementation.
+- RawrXD-Artifacts contains old audit tombstones and executables, not a NuWeightless implementation. The exact default-branch URL for `src/asm/RawrXD_Compression.asm` returned 404; its local copies are in separate certification/promotion snapshots.
 
 Relevant GitHub references:
 
@@ -63,6 +64,7 @@ Relevant GitHub references:
 - RawrXD two-device row-split source: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
 - Row-split receipt: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/~dev/evidence/RAWRXD_PERFORMANCE_001/DEEP2_DUAL_PHYSICAL_GPU_FORWARD_001/RECEIPT.txt
 - ROM source: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/TensorROM.hpp
+- Default-branch MASM codec path check (404): https://github.com/ItsMehRAWRXD/RawrXD/blob/main/src/asm/RawrXD_Compression.asm
 - W0 prototype on non-default branch: https://github.com/ItsMehRAWRXD/RawrXD/blob/feat/hexmag-polymorphic-repeat-tuner-masm/src/deep2w0/W0Engine.cpp
 - W0 certificate contract: https://github.com/ItsMehRAWRXD/RawrXD/blob/feat/hexmag-polymorphic-repeat-tuner-masm/tests/w0_001_cert.cpp
 
