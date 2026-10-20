@@ -3061,6 +3061,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         IdeRuntimeCert_Run();
         if (!g_startupOptions.certStayAlive) {
             recordShutdownReason(ShutdownReason::ApplicationQuit);
+            // The runtime certificate is synchronous and has already written
+            // its provisional receipt. Without an explicit close request the
+            // GUI message loop remains alive forever in headless automation,
+            // leaving S16 unverifiable and allowing a hidden modal to look
+            // like a save prompt.
+            PostMessageA(g_hMainWnd, WM_CLOSE, 0, 0);
         }
     }
 

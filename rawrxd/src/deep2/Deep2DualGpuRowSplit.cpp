@@ -24,14 +24,23 @@ long double envThroughput(const char* name) noexcept {
     return end!=s && v>0.0L ? v : 1.0L;
 }
 
-long double envRowThroughput(const char* rowName, const char* fallbackName) noexcept {
+long double envRowThroughput(
+    const char* rowName, const char* fallbackName, long double defaultValue) noexcept {
     const char* s = std::getenv(rowName);
     if (s && *s) {
         char* end = nullptr;
         const long double v = std::strtold(s, &end);
         if (end != s && v > 0.0L) return v;
     }
-    return envThroughput(fallbackName);
+    // Layer placement and tensor-row partitioning measure different work:
+    // the former schedules whole transformer layers, while the latter splits
+    // every output row of a GEMV. Reusing the layer weights here can assign
+    // nearly the entire vocabulary projection to one device when a layer plan
+    // is intentionally skewed. Keep the old coupling available only as an
+    // explicit compatibility mode.
+    const char* legacy = std::getenv("DEEP2_ROW_WEIGHTS_FALLBACK_TO_LAYER");
+    if (legacy && legacy[0] == '1') return envThroughput(fallbackName);
+    return defaultValue;
 }
 
 // Overlap-probe sampling period. The pairwise witness scan costs ~50us and
@@ -138,8 +147,10 @@ struct DualPlanHash {
 const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
     const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1)
 {
-    const long double s0=envRowThroughput("DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT","DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    const long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    const long double s0=envRowThroughput(
+        "DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT", "DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.32L);
+    const long double s1=envRowThroughput(
+        "DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT", "DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0L);
     const uint16_t pm=(uint16_t)std::max<long double>(
         1,std::min<long double>(999,s0/(s0+s1)*1000.0L+0.5L));
     const DualPlanKey key{
@@ -589,8 +600,10 @@ RowSplitPlan cachedThroughputSplit(
     // buckets: ~1.6% ratio granularity) means a converged controller
     // re-derives each tensor's plan once per bucket transition, and
     // steady state is a pure cache hit.
-    const long double s0=envRowThroughput("DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT","DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    const long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    const long double s0=envRowThroughput(
+        "DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT", "DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.32L);
+    const long double s1=envRowThroughput(
+        "DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT", "DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0L);
     const uint32_t m0=(uint32_t)(s0*1000.0L+0.5L);
     const uint32_t m1=(uint32_t)(s1*1000.0L+0.5L);
     double r=0.50;
@@ -702,8 +715,10 @@ RowSplitPlan chooseThroughputSplit(
         return p;
     }
     if(!g0.deviceLocalBytes()||!g1.deviceLocalBytes()) return {};
-    long double s0=envRowThroughput("DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT","DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    long double s0=envRowThroughput(
+        "DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT", "DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.32L);
+    long double s1=envRowThroughput(
+        "DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT", "DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0L);
     if(autoSplitEnabled()){
         const double a0=gAutoSpeed0.load(std::memory_order_relaxed);
         const double a1=gAutoSpeed1.load(std::memory_order_relaxed);

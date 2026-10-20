@@ -3321,8 +3321,10 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
             "computeLogits: final norm / LM head not bound");
     }
 
+    const auto logitsStart = std::chrono::steady_clock::now();
     RMSNormW(modelWeights.finalNorm, hiddenState, layerTemp,
              H, modelWeights.normEps);
+    const auto normEnd = std::chrono::steady_clock::now();
     {
         // RAWRXD_DEEP2_LOG_FLOOD_001: unconditional, once per token, and it
         // computes a full H-element min/max reduction on every token purely to
@@ -3346,6 +3348,18 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
     }
     parityEmit(ParityCheckpoint::FinalNorm, layerTemp, H);
     LinearW(modelWeights.lmHead, layerTemp, nullptr, logitsOut, V);
+    const auto lmHeadEnd = std::chrono::steady_clock::now();
+    const char* logitsTiming = std::getenv("DEEP2_LOGITS_TIMING");
+    if (logitsTiming && logitsTiming[0] == '1') {
+        const auto normNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            normEnd - logitsStart).count();
+        const auto lmHeadNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            lmHeadEnd - normEnd).count();
+        std::fprintf(stderr,
+            "LOGITS_TIMING norm_ns=%lld lmhead_ns=%lld vocab=%zu hidden=%zu type=%d\n",
+            static_cast<long long>(normNs), static_cast<long long>(lmHeadNs),
+            V, H, modelWeights.lmHead.type);
+    }
     // RAWRXD_DEBUG_EXPOSE_LOGITS_001
     // Capture the logits for the divergence harness, gated so it can never
     // become a silent product API.
