@@ -1,0 +1,42 @@
+{
+  "positions": 135,
+  "vocab": 32000,
+  "logit_floats_compared": 4320000,
+  "bit_identical_rows": 135,
+  "finite_rows": 135,
+  "mismatches": [],
+  "batched": {
+    "gpu_calls": 20925,
+    "cpu_calls": 0,
+    "fallback": "<none>",
+    "submits": 12170,
+    "waits": 12170,
+    "wall_ms": 29746.5,
+    "gpu_ms": 25649.9,
+    "fence_wait_wall_ms": 26710.6,
+    "host_submit_call_ms": 190.0,
+    "device": "AMD Radeon AI PRO R9700",
+    "genstream": "20606",
+    "verdict_pass": true
+  },
+  "serial": {
+    "gpu_calls": 20925,
+    "cpu_calls": 0,
+    "fallback": "<none>",
+    "submits": 21080,
+    "waits": 21080,
+    "wall_ms": 31142.0,
+    "gpu_ms": 26422.0,
+    "fence_wait_wall_ms": 27988.0,
+    "host_submit_call_ms": 309.1,
+    "device": "AMD Radeon AI PRO R9700",
+    "genstream": "20606",
+    "verdict_pass": true
+  },
+  "submit_reduction_count": 8910,
+  "submit_reduction_percent": 42.267552182163186,
+  "wait_reduction_count": 8910,
+  "wait_reduction_percent": 42.267552182163186,
+  "timing_note": "Host submit API duration, device timestamp duration, and fence-wait wall duration are separate reported measurements. Fence-wait wall overlaps GPU execution; do not sum these durations.",
+  "verdict": "PASS"
+}

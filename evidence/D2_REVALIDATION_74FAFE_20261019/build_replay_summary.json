@@ -1,0 +1,16 @@
+{
+  "batchedExit": 0,
+  "serialExit": 0,
+  "hashManifestExit": 0,
+  "ggmlBuildCommand": "cmake --build F:\\rawrxd\\.build_d2_revalidate_74fafe\\ggml --config Release --target ggml",
+  "deep2BuildExit": 0,
+  "comparatorExit": 0,
+  "configureExit": 0,
+  "note": "Post-run re-link output was not used in measured pair; linked PE hash differed.",
+  "benchmarkBinaryHashAfterPostRunRebuild": "C93F6C6B2747D3ECA103085A5896CAA55DD36DD08036B07015ACB4F93DB653B5",
+  "configureCommand": "cmake -S \"F:\\rawrxd\\.worktrees\\codex-d2-revalidate-74fafe\\3rdparty\\ggml\" -B \"F:\\rawrxd\\.build_d2_revalidate_74fafe\\ggml\" -A x64 -DGGML_BUILD_TESTS=OFF -DGGML_VULKAN=OFF -DGGML_NATIVE=ON\r\n",
+  "sourceBase": "74fafe258498749cbd22d443752f8cc792ac31f9",
+  "deep2BuildInvocation": "cmd.exe /c \"F:\\rawrxd\\.build_d2_revalidate_74fafe\\build_deep2_d2.cmd\"",
+  "benchmarkBinaryHashUsed": "C3DCFEABD86BA874E369A80334A356D5D01610113B60B905E08AF91CEFCB9CEA",
+  "ggmlBuildExit": 0
+}
