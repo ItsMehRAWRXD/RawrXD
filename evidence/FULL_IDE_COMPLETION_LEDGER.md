@@ -22,7 +22,7 @@ count). Historical reports are treated as claims until reproduced against curren
 | 7 | Architecture execution | **PASS (dense)** | llama/tinyllama family executes native; MLA/MoE/SSM/hybrid partial (see S-items). |
 | 8 | Native GPU, quantization, ROM streaming | **PARTIAL** | Native Vulkan dispatch PASS (Gate 4); ROM streamer + expert caching not certified end-to-end. |
 | 9 | Agentic IDE end-to-end tool execution | **PARTIAL** | Agentic loop harness exists (`tools/deep2_agentic_loop.cpp`, `deep2_plan.cpp`); full IDE tool-execution chain not certified. |
-| 10 | Concurrent multi-GPU orchestration | **NOT STARTED** | Only enumeration evidence: R9700 + RX 7800 XT both visible; no concurrent multi-device run certified. |
+| 10 | Concurrent multi-GPU orchestration and tensor parallelism | **NOT STARTED** | Only enumeration evidence: R9700 + RX 7800 XT both visible; no concurrent multi-device run certified. Acceptance must include real tensor-parallel weight/matrix sharding across both GPUs, even and ragged shard widths with explicit offsets, synchronized cross-device activation/reduction transfers, no CPU fallback, and full-logit parity against a single-GPU baseline. Record per-device Vulkan GPU time, host submit time, fence wait, transfer bytes/path, and allocation high-water marks. See `evidence/TP_UNEVEN_SHARD_BACKEND_AUDIT_2026-10-19.md`. |
 | 11 | DeepSeek 671B native execution | **NOT STARTED** | Blocked on model availability (no 671B GGUF on disk) + memory budget. |
 | 12 | Performance certification (150 TPS) | **OPEN** | See below — measured, not met. |
 | 13 | Million-token context | **NOT STARTED** | Blocked on KV budget/streaming design. |
@@ -81,7 +81,7 @@ device: AMD Radeon AI PRO R9700 (Vulkan), 8 prompt tokens, 128 generated tokens.
 - Prefill is one forward per token (D1 open).
 - Per-row kernel dispatch geometry caps throughput at ~4.4 TPS (Gate 12 blocker).
 - Speculative verification is serial (S07 speedup unrealized).
-- Multi-GPU concurrent execution uncertified (Gate 10); DeepSeek 671B untested (Gate 11).
+- Multi-GPU concurrent execution and tensor parallelism uncertified (Gate 10); DeepSeek 671B untested (Gate 11).
 - Concurrency hazard observed: another agent editing this checkout mid-session produced
   interleaved saves in `runtime_graph_executor.cpp`; the merged state was verified by
   rebuild + re-run, but the workstreams should use separate worktrees.
