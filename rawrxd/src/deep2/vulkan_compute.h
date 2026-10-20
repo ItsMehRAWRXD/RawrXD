@@ -1464,6 +1464,12 @@ private:
     bool createTransferCommandPool();
     uint32_t timestampValidBits_ = 0;
     float timestampPeriodNs_ = 0.0f;
+    uint32_t subgroupSize_ = 0;
+
+    uint32_t batchRowsPerWorkgroup() const noexcept {
+        return subgroupSize_ && (256u % subgroupSize_) == 0u
+            ? 256u / subgroupSize_ : 1u;
+    }
 
     VkCommandPool commandPool_ = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;

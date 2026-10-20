@@ -53,15 +53,79 @@ float q4kWeight(uint rowBase,uint col) {
     return d*float(sc)*float(q)-dm*float(mn);
 }
 
+void q4kDot4(uint rowBase,uint globalCol,uint localCol,
+             inout float a0,inout float a1,inout float a2,inout float a3) {
+    uint block=globalCol>>8u;
+    uint idx=globalCol&255u;
+    uint b=rowBase+block*144u;
+    float d=geth(b);
+    float dm=geth(b+2u);
+    uint sb=idx>>5u;
+    uint l=idx&31u;
+    uint sc,mn;
+    q4kScaleMin(b,sb,sc,mn);
+    uint pair=sb>>1u;
+    uint packed4=w[(b+16u+pair*32u+l)>>2u];
+    float ds=d*float(sc);
+    float ms=dm*float(mn);
+    for(uint k=0u;k<4u;++k) {
+        uint col=globalCol+k;
+        if(col>=pc.cols) break;
+        uint packed=(packed4>>(k*8u))&255u;
+        uint q=(sb&1u)==0u?(packed&15u):(packed>>4u);
+        float ww=ds*float(q)-ms;
+        uint local=localCol+k;
+        a0+=ww*xs[0][local];
+        if(pc.batch>1u) a1+=ww*xs[1][local];
+        if(pc.batch>2u) a2+=ww*xs[2][local];
+        if(pc.batch>3u) a3+=ww*xs[3][local];
+    }
+}
+
+int gets8(uint byteIndex) {
+    int v=int(getb(byteIndex));
+    return v>=128 ? v-256 : v;
+}
+float q6kWeight(uint rowBase,uint col) {
+    uint block=col>>8u;
+    uint idx=col&255u;
+    uint b=rowBase+block*210u;
+    float d=geth(b+208u);
+    uint hi128=idx>>7u;
+    uint within=idx&127u;
+    uint cat=within>>5u;
+    uint l=within&31u;
+    uint is=l>>4u;
+    uint qlBase=b+hi128*64u;
+    uint qhBase=b+128u+hi128*32u;
+    uint scBase=b+192u+hi128*8u;
+    uint q=0u;
+    uint scIndex=0u;
+    if(cat==0u) {
+        q=(getb(qlBase+l)&15u)|(((getb(qhBase+l)>>0u)&3u)<<4u);
+        scIndex=is;
+    } else if(cat==1u) {
+        q=(getb(qlBase+l+32u)&15u)|(((getb(qhBase+l)>>2u)&3u)<<4u);
+        scIndex=is+2u;
+    } else if(cat==2u) {
+        q=(getb(qlBase+l)>>4u)|(((getb(qhBase+l)>>4u)&3u)<<4u);
+        scIndex=is+4u;
+    } else {
+        q=(getb(qlBase+l+32u)>>4u)|(((getb(qhBase+l)>>6u)&3u)<<4u);
+        scIndex=is+6u;
+    }
+    return d*float(gets8(scBase+scIndex))*float(int(q)-32);
+}
+
 void main() {
-    if(pc.type!=12u||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
+    if((pc.type!=12u&&pc.type!=14u)||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
 
     uint lid=gl_LocalInvocationID.x;
     uint subgroupSize=gl_SubgroupSize;
     uint lane=gl_SubgroupInvocationID;
     uint row=gl_WorkGroupID.x*gl_NumSubgroups+gl_SubgroupID;
     uint blocks=(pc.cols+255u)>>8u;
-    uint rowBytes=blocks*144u;
+    uint rowBytes=blocks*(pc.type==14u?210u:144u);
 
     float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
     for(uint blk=0u;blk<blocks;++blk) {
@@ -80,18 +144,25 @@ void main() {
         if(row<pc.rows && subgroupSize <= 256u &&
            (256u % subgroupSize) == 0u) {
             uint rb=row*rowBytes;
-            // Each subgroup owns one output row. The subgroup width is
-            // device-dependent (wave32 or wave64), so cover one 256-column
-            // tile with the corresponding number of values per lane.
-            for(uint k=0u;k<256u/subgroupSize;++k) {
-                uint lc=lane+k*subgroupSize;
-                uint gc=colBase+lc;
-                if(gc>=pc.cols) continue;
-                float ww=q4kWeight(rb,gc);
-                a0+=ww*xs[0][lc];
-                if(pc.batch>1u) a1+=ww*xs[1][lc];
-                if(pc.batch>2u) a2+=ww*xs[2][lc];
-                if(pc.batch>3u) a3+=ww*xs[3][lc];
+            uint valuesPerLane=256u/subgroupSize;
+            if(pc.type==14u) {
+                for(uint k=0u;k<valuesPerLane;++k) {
+                    uint lc=lane*valuesPerLane+k;
+                    uint gc=colBase+lc;
+                    if(gc>=pc.cols) continue;
+                    float ww=q6kWeight(rb,gc);
+                    a0+=ww*xs[0][lc];
+                    if(pc.batch>1u) a1+=ww*xs[1][lc];
+                    if(pc.batch>2u) a2+=ww*xs[2][lc];
+                    if(pc.batch>3u) a3+=ww*xs[3][lc];
+                }
+            } else {
+                for(uint k=0u;k<valuesPerLane;k+=4u) {
+                    uint lc=lane*valuesPerLane+k;
+                    uint gc=colBase+lc;
+                    if(gc<pc.cols)
+                        q4kDot4(rb,gc,lc,a0,a1,a2,a3);
+                }
             }
         }
         barrier();

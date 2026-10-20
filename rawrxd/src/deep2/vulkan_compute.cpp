@@ -308,6 +308,14 @@ bool VulkanCompute::selectPhysical() {
     VkPhysicalDeviceMemoryProperties mp{};
     vkGetPhysicalDeviceProperties(physical_, &p);
     vkGetPhysicalDeviceMemoryProperties(physical_, &mp);
+    VkPhysicalDeviceSubgroupProperties subgroup{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES};
+    VkPhysicalDeviceProperties2 properties2{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    properties2.pNext = &subgroup;
+    vkGetPhysicalDeviceProperties2(physical_, &properties2);
+    if (subgroup.subgroupSize)
+        subgroupSize_ = subgroup.subgroupSize;
 
     info_.ordinal = requestedOrdinal_;
     info_.vendorId = p.vendorID;
@@ -745,7 +753,9 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
     vkCmdPushConstants(
         cmd,qBatch8RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
-    vkCmdDispatch(cmd,(rows+7u)/8u,1,1);
+    const uint32_t rowsPerWorkgroup = batchRowsPerWorkgroup();
+    vkCmdDispatch(
+        cmd,(rows+rowsPerWorkgroup-1u)/rowsPerWorkgroup,1,1);
     recordComputeBarrier(cmd);
     ++q4kBatch8RowOps_;
     q4kBatchWeightBytes_+=weightBytes;
@@ -1057,6 +1067,9 @@ bool VulkanCompute::initialize() {
         opsPipeline_ ? 1u : 0u, qPipeline_ ? 1u : 0u,
         qBatch4RowPipeline_ ? 1u : 0u, qBatch8RowPipeline_ ? 1u : 0u,
         calibratedAvailable_ ? 1u : 0u);
+    std::fprintf(stderr,
+        "BATCH9_SUBGROUP_SIZE=%u ROWS_PER_BATCH_WORKGROUP=%u\n",
+        subgroupSize_, batchRowsPerWorkgroup());
     return true;
 }
 
@@ -2810,9 +2823,11 @@ bool VulkanCompute::SubmitRecordedResidentQ4K(
         vkCmdPushConstants(
             r.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
             0,sizeof(p),&p);
+        const uint32_t dispatchRows = tile == Q4KBatchTile::Eight
+            ? batchRowsPerWorkgroup() : 4u;
         vkCmdDispatch(
             r.cmd,
-            (weight.rows+(tileN-1u))/tileN,1,1);
+            (weight.rows+(dispatchRows-1u))/dispatchRows,1,1);
         recordComputeBarrier(r.cmd);
         if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
         VkFenceCreateInfo fi{};
@@ -2916,7 +2931,8 @@ bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
             vkCmdPushConstants(
                 r.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
                 0,sizeof(p),&p);
-            const uint32_t tileN=(uint32_t)tile;
+            const uint32_t tileN=tile==Q4KBatchTile::Eight
+                ? batchRowsPerWorkgroup() : 4u;
             vkCmdDispatch(
                 r.cmd,(weights[i].rows+tileN-1u)/tileN,1,1);
             recordComputeBarrier(r.cmd);
@@ -5783,7 +5799,36 @@ bool VulkanCompute::DispatchWeightResidentLane(
         vkCmdPushConstants(
             lane.cmd, qBatch8RowPipelineLayout_,
             VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
-        vkCmdDispatch(lane.cmd, (meta.rows + 7u) / 8u, 1, 1);
+        const uint32_t rowsPerWorkgroup = batchRowsPerWorkgroup();
+        vkCmdDispatch(
+            lane.cmd, (meta.rows + rowsPerWorkgroup - 1u) / rowsPerWorkgroup,
+            1, 1);
+        recordComputeBarrier(lane.cmd);
+        ++residentDirectDispatches_;
+        ++lane.residentDispatches;
+        return true;
+    }
+    const char* q6HotBatchRows = std::getenv("DEEP2_Q6K_HOT_BATCH_ROWS");
+    if (meta.type == 14 && q6HotBatchRows && q6HotBatchRows[0] == '1' &&
+        meta.rows >= 8 && qBatch8RowPipeline_) {
+        vkCmdBindPipeline(
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qBatch8RowPipeline_);
+        vkCmdBindDescriptorSets(
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+            qBatch8RowPipelineLayout_, 0, 1, &set, 0, nullptr);
+        QBatchPush push{};
+        push.type = 14;
+        push.rows = meta.rows;
+        push.cols = meta.cols;
+        push.weightBytes = static_cast<uint32_t>(meta.bytes);
+        push.batch = 1;
+        vkCmdPushConstants(
+            lane.cmd, qBatch8RowPipelineLayout_,
+            VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push), &push);
+        const uint32_t rowsPerWorkgroup = batchRowsPerWorkgroup();
+        vkCmdDispatch(
+            lane.cmd, (meta.rows + rowsPerWorkgroup - 1u) / rowsPerWorkgroup,
+            1, 1);
         recordComputeBarrier(lane.cmd);
         ++residentDirectDispatches_;
         ++lane.residentDispatches;
@@ -6908,8 +6953,10 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     vkCmdPushConstants(
         t.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
-    const uint32_t tileN=(uint32_t)tile;
-    vkCmdDispatch(t.cmd,(weight.rows+tileN-1u)/tileN,1,1);
+    const uint32_t dispatchRows = tile == Q4KBatchTile::Eight
+        ? batchRowsPerWorkgroup() : 4u;
+    vkCmdDispatch(
+        t.cmd,(weight.rows+dispatchRows-1u)/dispatchRows,1,1);
     recordComputeBarrier(t.cmd);
     if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
         CancelQ4KAsync(t); return false;
@@ -7004,8 +7051,10 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
     vkCmdPushConstants(
         ccmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(p),&p);
-    const uint32_t tileN=(uint32_t)tile;
-    vkCmdDispatch(ccmd,(weight.rows+tileN-1u)/tileN,1,1);
+    const uint32_t dispatchRows = tile == Q4KBatchTile::Eight
+        ? batchRowsPerWorkgroup() : 4u;
+    vkCmdDispatch(
+        ccmd,(weight.rows+dispatchRows-1u)/dispatchRows,1,1);
     recordComputeBarrier(ccmd);
     if(vkEndCommandBuffer(ccmd)!=VK_SUCCESS) return false;
 
