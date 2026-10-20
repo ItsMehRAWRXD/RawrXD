@@ -1805,6 +1805,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND Vulkan_FOUND AND 
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_spec_bench PRIVATE

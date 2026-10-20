@@ -113,10 +113,7 @@ device: AMD Radeon AI PRO R9700 (Vulkan), 8 prompt tokens, 128 generated tokens.
 - **150 TPS floor: NOT met.** Measured limit = 4.405 decode TPS (2.9% of floor).
   Blocker: kernel dispatch geometry (one invocation per output row) — 85% of the
   decode window is real device time; submission overhead is only ~15%.
-- S07 speculative decode: acceptance measured at **0.9333** on a copy workload
-  (56/60 accepted) and **0.0000** on a ramp prompt; **zero speedup** because the
-  target model still runs one forward per position → S07 stays OPEN pending batched
-  verification (the D1 follow-on).
+- S07 controlled native measurement (2026-10-20): code accepted 15/164 proposed (9.1%) and prose accepted 0/32; both emitted 128 tokens with exact greedy stream agreement and zero nonfinite logits. Speculative decode was slower (code 55,418.4 ms vs 28,105.5 ms serial; prose 34,434.6 ms vs 28,938.8 ms), and GPU-call counts increased. S07 remains OPEN. Receipt: `evidence/S07_SPEC_MEASUREMENT_RECEIPT_20261020.md`.
 
 ## Verified checks performed this session
 
@@ -217,3 +214,14 @@ Controlled H11 receipts (TinyLlama, FP32 KV, one worker, zero nonfinite values):
 
 The final H11 build exited 0. The Release parity executable SHA-256 is `FB575E317D12ACED4FB6602ED8A06666E91E3935391A3113D3F4E48BC10B9A8E`. These receipts close the H11/D1 correctness milestone for this model and workload. They do not close D2 performance, S07, S12, Gate 5, or multi-GPU certification; dispatch accounting remains zero because Vulkan note hooks are not wired.
 
+
+## S07 controlled native measurement — 2026-10-20
+
+The isolated R9700/TinyLlama `deep2_spec_bench` run completed with exit code 0. The benchmark’s correctness verdict was `PASS` for both code and prose streams, but S07 certification remains **OPEN** because speculative execution did not reduce target work or wall time.
+
+- Code: 128 emitted, 164 proposed, 15 accepted (9.1%); decode 28,105.5 ms serial vs 55,418.4 ms speculative; 36,098 vs 62,801 GPU calls.
+- Prose: 128 emitted, 32 proposed, 0 accepted (0.0%); decode 28,938.8 ms serial vs 34,434.6 ms speculative; 47,208 vs 52,872 GPU calls.
+- Combined: 15 accepted of 256 emitted and 196 proposed; both streams were 128/128 identical and all logits were finite.
+- No Vulkan validation-layer, alignment, or runtime error/warning messages appeared in the captured log.
+
+Receipt: `evidence/S07_SPEC_MEASUREMENT_RECEIPT_20261020.md`; raw run: `evidence/S07_SPEC_RUN_20261020/`.
