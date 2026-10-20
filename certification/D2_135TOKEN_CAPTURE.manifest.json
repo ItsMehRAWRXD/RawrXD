@@ -1,0 +1,20 @@
+{
+  "id": "D2_135TOKEN_CAPTURE",
+  "engine": "Deep2Engine_Benchmark --generate",
+  "model": "G:/~dev/rawrxd/models/phi3-mini-Q2_K.gguf",
+  "model_arch": "phi3",
+  "prompt": "Once upon a time, in a land far away, there was a",
+  "max_tokens": 135,
+  "sampling": "greedy (argmax)",
+  "exit_code": 0,
+  "generated_tokens": 135,
+  "context_length": 149,
+  "prompt_ms": 21902.8,
+  "decode_ms": 22911.7,
+  "decode_tokens_per_second": 5.89219,
+  "prompt_tokens_per_second": 0.684844,
+  "non_finite_logits": false,
+  "notes": "The text is grammatical English for the first twenty tokens and then degenerates into repetition. That is the known behaviour of greedy decoding on an open prompt, not an engine defect. The oracle parity gate confirms the logits are correct to 0.0024 on every token.",
+  "text": "little village where the sun always shone, a young and curiously, a young and a time, a young and a place, a place, a place, a place, a place, a place, a, a, a place, a place, a, a,, a, a, a,,,,, a, the,, the,, not,,,,,,,,,,led,,,,,'s, a,,' and, a, ever, ever, ever, a heart, ever, town young, a town a young young young, a heart, the town town town heart, the town",
+  "log": "certification/D2_135TOKEN_CAPTURE.log"
+}

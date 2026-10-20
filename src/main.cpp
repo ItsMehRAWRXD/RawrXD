@@ -121,6 +121,15 @@ static int runGeneration(Deep2Engine& engine, const std::string& modelPath,
               << (result.stopReason == deep2::DecodeSession::kStoppedAtEndOfText
                       ? "end of sequence" : "token limit") << "\n";
     std::cout.flush();
+
+    // A run that produced nothing is a failed run, and it has to say so
+    // through the exit code. A model whose architecture the engine does not
+    // read fails at the first tensor it looks for, and returning success
+    // from that is the same silent failure the oracle gate exists to catch.
+    if (result.generatedTokens.empty()) {
+        std::cerr << "[GEN] no tokens were generated: the engine could not run this model\n";
+        return 1;
+    }
     return 0;
 }
 
