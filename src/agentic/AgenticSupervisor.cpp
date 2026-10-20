@@ -410,6 +410,17 @@ void AgenticSupervisor::Shutdown() {
         return;
     }
     
+    // Wake the loops that are waiting for their interval.
+    //
+    // The flag is already false, so a loop that is between its check and
+    // its wait sees the predicate and does not wait at all, and one that is
+    // already waiting is woken here. Taking the lock makes the wake
+    // impossible to lose.
+    {
+        std::lock_guard<std::mutex> lock(stopMutex_);
+        stopCv_.notify_all();
+    }
+    
     // Wake all waiting threads
     taskCv_.notify_all();
     
@@ -613,7 +624,12 @@ void AgenticSupervisor::FailTask(const std::string& taskId, const std::string& e
 
 void AgenticSupervisor::MetricsLoop() {
     while (running_.load()) {
-        std::this_thread::sleep_for(config_.metricsInterval);
+        // Wait for the interval, or until a shutdown cuts it short.
+        {
+            std::unique_lock<std::mutex> lock(stopMutex_);
+            stopCv_.wait_for(lock, config_.metricsInterval,
+                             [this] { return !running_.load(); });
+        }
         
         if (!running_.load()) break;
         
@@ -661,7 +677,12 @@ void AgenticSupervisor::MetricsLoop() {
 
 void AgenticSupervisor::HealingLoop() {
     while (running_.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // Wait for the interval, or until a shutdown cuts it short.
+        {
+            std::unique_lock<std::mutex> lock(stopMutex_);
+            stopCv_.wait_for(lock, std::chrono::milliseconds(500),
+                             [this] { return !running_.load(); });
+        }
         
         if (!running_.load()) break;
         

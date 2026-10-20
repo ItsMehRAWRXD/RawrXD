@@ -325,6 +325,19 @@ public:
     std::thread metricsThread_;
     std::thread healingThread_;
     std::condition_variable taskCv_;
+
+    // The wait that a shutdown can cut short.
+    //
+    // The metrics loop and the healing loop each slept for their interval
+    // and checked the running flag afterwards, so a shutdown waited the
+    // sleep out. The metrics interval is a second by default and the
+    // healing loop's is half of one, and every test that created a
+    // supervisor and shut it down paid it.
+    //
+    // The two loops now wait on this instead, with the running flag as the
+    // predicate, and the shutdown notifies it.
+    std::condition_variable stopCv_;
+    std::mutex stopMutex_;
     
     PerformanceMetrics metrics_;
     std::vector<double> latencyHistory_;

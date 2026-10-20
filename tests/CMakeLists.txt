@@ -673,6 +673,34 @@ if(NOT TARGET test_agentic_supervisor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/te
     message(STATUS "  ✓ Added test_agentic_supervisor (Agentic Supervisor)")
 endif()
 
+# The cost of a supervisor's shutdown.
+#
+# The metrics loop and the healing loop each wait for their interval, and
+# the defaults are a second and half a second with both loops on. A
+# supervisor that is created and shut down without overriding the
+# configuration pays for the waits. This measures the shutdown on its own,
+# so the cost is a number and not an inference.
+if(NOT TARGET supervisor_teardown_cost AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/supervisor_teardown_cost.cpp")
+    add_executable(supervisor_teardown_cost
+        supervisor_teardown_cost.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic/AgenticSupervisor.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/IDE_Lifecycle_Hook.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignVCS.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignCheckpoint.cpp
+    )
+    target_include_directories(supervisor_teardown_cost PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/sovereign
+    )
+    set_target_properties(supervisor_teardown_cost PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    target_link_libraries(supervisor_teardown_cost PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
+    message(STATUS "  ✓ Added supervisor_teardown_cost (Supervisor Shutdown Cost)")
+endif()
+
 # ============================================================================
 # End of test registration
 # ============================================================================
