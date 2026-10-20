@@ -189,3 +189,5 @@ floor remains OPEN and unattained on this hardware/loop.
 - Qt ABI blocker (above).
 - Gate 5 stays PARTIAL (bounded-error certification, not exact parity) per the program
   standard; S07 and S12 stay OPEN until measured acceptance and 150 TPS pass.
+
+Native IDE route integration was rebuilt from the current working tree with exit code 0; the generated route header and linked executable hashes are recorded in vidence/IDE_NATIVE_ROUTE_BUILD_20261020.md. This is a build receipt only; live UI smoke, Ollama discovery, and source-delta publication remain open.
