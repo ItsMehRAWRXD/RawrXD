@@ -294,17 +294,28 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         std::string key = readGGUFStr(f);
         uint32_t type = 0;
         f.read(reinterpret_cast<char*>(&type), sizeof(type));
+        const std::streampos beforeValue = f.tellg();
         if (isMaster) {
             m_kvStrings.emplace(key, readValueAsString(type, f));
         } else {
             skipValue(type, f);
         }
+        if (getenv("DEEP2_GGUF_TRACE")) {
+            fprintf(stderr, "[GGUF] kv[%llu] %-46s type=%u at=%lld body=%lld\n",
+                    (unsigned long long)i, key.c_str(), type,
+                    (long long)beforeValue,
+                    (long long)(f.tellg() - beforeValue));
+        }
+    }
+    if (getenv("DEEP2_GGUF_TRACE")) {
+        fprintf(stderr, "[GGUF] kv section ends at %lld\n", (long long)f.tellg());
     }
 
     // Tensor directory.
     manifest.tensors.reserve(manifest.tensorCount);
     for (uint64_t i = 0; i < manifest.tensorCount; ++i) {
         TensorEntry e;
+        const std::streampos beforeTensor = f.tellg();
         e.name = readGGUFStr(f);
         uint32_t nDims = 0;
         f.read(reinterpret_cast<char*>(&nDims), 4);
@@ -316,6 +327,14 @@ bool TensorROM::parseShard(std::ifstream& f, ShardManifest& manifest) {
         f.read(reinterpret_cast<char*>(&e.offset), 8);
         e.shardIndex = static_cast<size_t>(m_shards.size());
         manifest.tensors.push_back(std::move(e));
+        if (getenv("DEEP2_GGUF_TRACE")) {
+            fprintf(stderr, "[GGUF] tensor[%llu] at=%lld nDims=%u type=%u\n",
+                    (unsigned long long)i, (long long)beforeTensor, nDims, type);
+        }
+        if (!f) {
+            fprintf(stderr, "[GGUF] stream failed inside tensor %llu\n", (unsigned long long)i);
+            break;
+        }
     }
 
     if (!f) {

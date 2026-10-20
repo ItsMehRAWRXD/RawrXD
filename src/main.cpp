@@ -64,13 +64,25 @@ static int runGeneration(Deep2Engine& engine, const std::string& modelPath,
     const uint32_t layers = static_cast<uint32_t>(geometry.numLayers);
     const uint32_t hiddenDim = static_cast<uint32_t>(geometry.hiddenDim);
 
+    // The head count comes from the model's metadata and is zero for an
+    // architecture the engine does not read. Dividing by it is a crash, and
+    // a crash in a mode that is meant to be driven by a script is the worst
+    // way to learn that the model is out of reach.
+    if (geometry.numHeads == 0 || geometry.hiddenDim == 0 || geometry.numLayers == 0) {
+        std::cerr << "[GEN] the model geometry could not be read: hidden=" << geometry.hiddenDim
+                  << " layers=" << geometry.numLayers << " heads=" << geometry.numHeads << "\n";
+        std::cerr << "[GEN] this engine reads the phi3 layout; the model's architecture is not one it can run\n";
+        return 1;
+    }
+    const uint32_t headDim = static_cast<uint32_t>(geometry.hiddenDim) / static_cast<uint32_t>(geometry.numHeads);
+
     // The context window the cache holds. It is bounded by what the host
     // can hold, because the cache lives on the host for now.
     const uint64_t hostBudget = 4ull * 1024ull * 1024ull * 1024ull;
     uint32_t window = deep2::DetermineSafeContextWindow(
         static_cast<uint32_t>(geometry.maxSeqLen), layers,
         static_cast<uint32_t>(geometry.numKVHeads),
-        static_cast<uint32_t>(geometry.hiddenDim / geometry.numHeads),
+        headDim,
         deep2::kKvBytesFp16, hostBudget);
     if (window == 0) window = 1024;
     // The window has to be at least as long as the prompt.

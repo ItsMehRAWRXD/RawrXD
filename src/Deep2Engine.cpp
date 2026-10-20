@@ -261,6 +261,7 @@ void Deep2Engine::SynchronizeRoPEScaling(double modelThetaConfig) {
     void Deep2Engine::ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position) {
         const size_t hiddenDim = ctx.cfg.hiddenDim;
         const size_t heads = ctx.cfg.numHeads;
+        if (heads == 0 || hiddenDim == 0) return;
         const size_t dim = hiddenDim / heads;
         (void)headIndex;
         // RoPE rotates the pairs inside a head, and the frequency of a pair
@@ -852,6 +853,19 @@ bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTo
     const size_t hiddenDim = geometry.hiddenDim;
     const size_t numLayers = geometry.numLayers;
     const size_t numHeads = geometry.numHeads;
+
+    // A model whose geometry the engine cannot read is refused here, before
+    // anything is divided by it. The head count comes from the metadata and
+    // is zero for an architecture the engine does not know, and a division
+    // by it is a crash rather than an error message.
+    if (hiddenDim == 0 || numLayers == 0 || numHeads == 0 || numHeads > hiddenDim) {
+        fprintf(stderr,
+                "[Move 10] the model geometry could not be read: hidden=%zu layers=%zu heads=%zu\n",
+                hiddenDim, numLayers, numHeads);
+        fprintf(stderr,
+                "[Move 10] this engine reads the phi3 layout; the model's architecture is not one it can run\n");
+        return false;
+    }
     const size_t headDim = hiddenDim / numHeads;
     size_t vocabSize = geometry.vocabSize;
     const size_t intermediateDim = geometry.intermediateDim;
