@@ -34,6 +34,10 @@
 // ----------------------------------------------------------------------------
 namespace Deep2 {
 
+const GpuForwardCounters& Deep2Engine::gpuForwardCounters() const {
+    return gpuFwd_;
+}
+
 // ----------------------------------------------------------------------------
 // resetGpuForwardCounters — clear the real forward-path counters.
 // Mirrors what Deep2Engine::reset() does for gpuFwd_ and additionally clears

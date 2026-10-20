@@ -1359,14 +1359,18 @@ bool VulkanCompute::endSubmitWait(
         vkDestroyFence(device_, fence, nullptr);
         return false;
     }
+    const uint64_t submitReturnedNs = nowNs();
     ++queueSubmitCount_;
 
+    const uint64_t waitStartedNs = nowNs();
     VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, UINT64_MAX);
     const uint64_t completeNs = nowNs();
 
     GpuWorkInterval wi{};
     if (wait == VK_SUCCESS) {
         finalizeInterval(query, submitNs, completeNs, epoch, bytes, kind, wi);
+        wi.queueSubmitCallNs = submitReturnedNs - submitNs;
+        wi.fenceWaitWallNs = completeNs - waitStartedNs;
         recordInterval(wi);
         if (interval) *interval = wi;
     }

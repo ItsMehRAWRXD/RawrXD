@@ -2791,6 +2791,31 @@ else()
     message(STATUS "deep2_gpu_decode_roofline EXCLUDED: deep2_engine_lib not available or test source/Vulkan SDK unavailable")
 endif()
 
+# Gate 10 diagnostic — uneven tensor-parallel GEMV microbenchmark. This proves
+# only shard math and Vulkan timing on the local AMD devices; it is not a real
+# Deep2 tensor-parallel inference certification.
+if(TARGET rawrxd_gpu_compute AND TARGET deep2_engine_lib AND Vulkan_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/tools/gpu_profiler/deep2_uneven_tp_gemv.cpp")
+    add_executable(deep2_uneven_tp_gemv
+        tools/gpu_profiler/deep2_uneven_tp_gemv.cpp
+    )
+    target_link_libraries(deep2_uneven_tp_gemv PRIVATE
+        rawrxd_gpu_compute
+        deep2_engine_lib
+        Vulkan::Vulkan
+    )
+    target_compile_features(deep2_uneven_tp_gemv PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_uneven_tp_gemv PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_uneven_tp_gemv PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_uneven_tp_gemv PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(deep2_uneven_tp_gemv PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics")
+endif()
+
 # ============================================================================
 # Native (dependency-free, Qt-free) Win32 IDE
 # ============================================================================

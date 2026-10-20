@@ -44,6 +44,11 @@ struct GpuWorkInterval {
     uint64_t epoch = 0;
     uint64_t hostSubmitNs = 0;
     uint64_t hostCompleteNs = 0;
+    // The queue-submit API duration and subsequent fence wait are recorded
+    // separately. Fence wait overlaps GPU execution; consumers must not sum
+    // these fields with calibratedDurationNs() as disjoint wall time.
+    uint64_t queueSubmitCallNs = 0;
+    uint64_t fenceWaitWallNs = 0;
     uint64_t gpuStartNs = 0;
     uint64_t gpuEndNs = 0;
     uint64_t bytes = 0;
