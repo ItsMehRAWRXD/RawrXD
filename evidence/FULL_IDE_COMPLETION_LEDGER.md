@@ -22,15 +22,15 @@ count). Historical reports are treated as claims until reproduced against curren
 | 7 | Architecture execution | **PASS (dense)** | llama/tinyllama family executes native; MLA/MoE/SSM/hybrid partial (see S-items). |
 | 8 | Native GPU, quantization, ROM streaming | **PARTIAL** | Native Vulkan dispatch PASS (Gate 4); ROM streamer + expert caching not certified end-to-end. |
 | 9 | Agentic IDE end-to-end tool execution | **PARTIAL** | Agentic loop harness exists (`tools/deep2_agentic_loop.cpp`, `deep2_plan.cpp`); full IDE tool-execution chain not certified. |
-| 10 | Concurrent multi-GPU orchestration and tensor parallelism | **NOT STARTED** | Diagnostic Vulkan F32 GEMV microbenchmark passed exact CPU and single-GPU output checks for even/ragged widths on both cards; its reduction is host-staged, so it does not certify multi-GPU inference. Acceptance still requires real tensor-parallel weight/matrix sharding, explicit offsets, synchronized cross-device activation/reduction transfers, no CPU fallback, full-logit parity, and allocation high-water evidence. See `evidence/TP_UNEVEN_SHARD_BACKEND_AUDIT_2026-10-19.md` and its receipts. |
+| 10 | Concurrent multi-GPU orchestration and tensor parallelism | **NOT STARTED** | Diagnostic Vulkan F32 GEMV and explicit padded-view path pass 98-shape CPU/single-GPU parity with zero tails. Across pad multiples 1/4/8/16, 16-F32 stride is fastest in the tested sweep; at local width 2049 it is 2.86× faster on R9700 and 3.29× on RX 7800 XT versus contiguous rows. A strict single-R9700 TinyLlama smoke preserves the four-token stream with zero CPU GEMVs. These are kernel-layout/runtime compatibility results, not model-level tensor parallelism. A real two-device layer-parallel smoke dispatched 4,302 GPU GEMVs with no CPU fallback but disagreed with the R9700-only greedy stream after token 1 (1/4 agreement), and layer-completion counters were zero. Gate acceptance still requires matrix sharding, explicit offsets, synchronized cross-device transfers, full-logit parity, no CPU fallback, and allocation high-water. See `evidence/TP_UNEVEN_STRIDE_LAYOUT_CERT_2026-10-19.md`, `evidence/TP_UNEVEN_SHARD_BACKEND_AUDIT_2026-10-19.md`, and `evidence/TP_UNEVEN_MULTI_GPU_LAYER_SMOKE_2026-10-19.receipt.txt`. |
 | 11 | DeepSeek 671B native execution | **NOT STARTED** | Blocked on model availability (no 671B GGUF on disk) + memory budget. |
 | 12 | Performance certification (150 TPS) | **OPEN** | See below — measured, not met. |
 | 13 | Million-token context | **NOT STARTED** | Blocked on KV budget/streaming design. |
 | 14 | ROM reconstruction integrity | **NOT STARTED** | No reproduction harness executed yet. |
 | 15 | Piranha/HexMag multi-agent scalability | **NOT STARTED** | Coordination layer unreviewed this session. |
-| 16 | Native compiler/linker/builder/debugger/test execution | **AUDIT ASSIGNED** | Independent worker (this session), inference files untouched. |
-| 17 | Complete IDE feature integration | **OPEN** | Menu/command surface audit pending (with 16–18). |
-| 18 | Security, tool authorization, receipts | **AUDIT ASSIGNED** | Independent worker. |
+| 16 | Native compiler/linker/builder/debugger/test execution | **PARTIAL** | Independent audit found IDE sources compile, but the final link is blocked by the installed Qt VS2019 library / VS2022 compiler ABI mismatch; no fresh linked runtime proof. See `evidence/RAWRXD_LOCAL_GITHUB_ARTIFACT_AUDIT_2026-10-19.md`. |
+| 17 | Complete IDE feature integration | **PARTIAL** | Independent audit found partial UI/tool integration evidence; the final File New assertion and fresh-binary end-to-end workflow remain unverified. See `evidence/RAWRXD_LOCAL_GITHUB_ARTIFACT_AUDIT_2026-10-19.md`. |
+| 18 | Security, tool authorization, receipts | **OPEN** | Independent audit did not establish authenticated tool execution with end-to-end permission and receipt-integrity proof. See `evidence/RAWRXD_LOCAL_GITHUB_ARTIFACT_AUDIT_2026-10-19.md`. |
 | 19 | Endurance, cancellation, crash/device-loss recovery | **NOT STARTED** | — |
 | 20 | Clean-checkout production release certification | **NOT STARTED** | Depends on all above. |
 
@@ -38,8 +38,8 @@ count). Historical reports are treated as claims until reproduced against curren
 
 | Item | Scope | Status | Evidence |
 | --- | --- | --- | --- |
-| **D2** | Dependency-correct GPU submission batching | **PASS** | `GATE7_TPS_RUN2.md`; q/k/v and gate/up grouped per token; submissions 21,080→12,170 (−42.3%), waits −42.3%; batched vs serial GPU logits **bit-identical 135/135** (`gate7_d2_batched_vs_serial_logits.txt`); same-binary `--no-batch` control also 135/135 bit-identical; zero CPU fallback. |
-| **D1** | Multi-token batched prefill | **NOT STARTED** | Prefill still executes one `ExecuteToken` per position (8-token prefill ≈ 2.3 s cold). Requires: batched submission of per-position q/k/v/ffn dots, then per-position causal attention over the filled KV; must show batched-vs-serial full-logit parity + correct causal KV before PASS. |
+| **D2** | Dependency-correct GPU submission batching | **PASS** | `GATE7_TPS_RUN2.md`; q/k/v and gate/up grouped per token; this run records submissions 21,080→12,170 (−42.3%), waits −42.3%; batched vs serial GPU logits **bit-identical 135/135** (`gate7_d2_batched_vs_serial_logits.txt`); same-binary `--no-batch` control also 135/135 bit-identical; zero CPU fallback. The Session-3 addendum records a separate run at 8,835→5,139 (−41.8%); retain both receipts as distinct workloads until provenance is normalized. |
+| **D1** | Multi-token batched prefill | **PARTIAL** | `Executor::PrefillBatch` and `Deep2Engine::prefillBatched` are present, and the Session-3 addendum records historical bit-exact full-logit checks. The required 1/2/8/32/128 sequence-length, causal-KV, and continuation matrix has not been replayed on current HEAD; keep partial until that receipt is produced. See `evidence/RAWRXD_LOCAL_GITHUB_ARTIFACT_AUDIT_2026-10-19.md`. |
 
 ## Performance (Gate 12 / S10) — measured receipt
 
