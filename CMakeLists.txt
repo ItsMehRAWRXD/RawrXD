@@ -1947,6 +1947,35 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_ple_test.cpp" AND Vulkan_FOU
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# The Qwen4Exp grouped RMSNorm lowering, executed on the device.
+#
+# The hyperconnection mix needs a per-stream RMSNorm, and the generic ops
+# shader's OP_RMSNORM normalises over the whole row rather than over a
+# stream of it. This is the primitive the mix path needs, proven against a
+# host reference computed in double precision.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_grouped_rmsnorm_test.cpp" AND Vulkan_FOUND)
+    add_executable(deep2_qwen4exp_grouped_rmsnorm_test
+        tools/deep2_qwen4exp_grouped_rmsnorm_test.cpp)
+    target_compile_features(deep2_qwen4exp_grouped_rmsnorm_test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_grouped_rmsnorm_test PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_grouped_rmsnorm_test PRIVATE
+            -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_qwen4exp_grouped_rmsnorm_test PRIVATE Vulkan::Vulkan)
+    endif()
+    set_target_properties(deep2_qwen4exp_grouped_rmsnorm_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_qwen4exp_grouped_rmsnorm_test enabled (Qwen4Exp grouped RMSNorm proof)")
+    add_test(NAME Qwen4Exp_GroupedRmsNorm_Device
+        COMMAND deep2_qwen4exp_grouped_rmsnorm_test
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_grouped_rmsnorm.spv"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
 
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims

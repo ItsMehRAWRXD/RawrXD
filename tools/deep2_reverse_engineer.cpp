@@ -138,9 +138,8 @@ const Operator kOperators[] = {
       "projection and a sigmoid-gated mean; and a combine of the residual "
       "with the block output, grouped RMS normalised",
       "OP_GEMV_F32 (the down and up projections), OP_RESIDUAL (the combine "
-      "addition)",
-      "the per-stream silu mean, the sigmoid-gated mean, and the grouped "
-      "RMSNorm",
+      "addition), and the grouped RMSNorm (which is lowered and executed)",
+      "the per-stream silu mean and the sigmoid-gated mean",
       "hc_combine",
       "the mix path: the down projection, the per-stream silu, the up "
       "projection and the gated mean" },
@@ -155,6 +154,30 @@ const Operator kOperators[] = {
       "",
       "the router top-k, which is the first part of the operator and is "
       "independent of the expert formats" },
+};
+
+// The lowered primitives.
+//
+// An operator is made of primitives. A primitive that has been lowered and
+// executed is a fact about the device path; an operator that has been
+// lowered and executed is a fact about the model. Both are recorded, and
+// they are separate claims.
+struct Primitive {
+    const char* name;
+    const char* artifact;
+    const char* purpose;
+};
+
+const Primitive kPrimitives[] = {
+    { "grouped RMSNorm", "grouped_rmsnorm",
+      "the per-stream normalisation the hyperconnection mix needs, and the "
+      "normalisation the combine path performs" },
+    { "hyperconnection combine", "hc_combine",
+      "the residual combine of the block output with the injection, and the "
+      "grouped normalisation that follows it" },
+    { "PLE depthwise short convolution", "ple",
+      "the causal depthwise convolution, with the window carried between "
+      "dispatches" },
 };
 
 // A device execution receipt, if the operator has one.
@@ -301,6 +324,28 @@ int main(int argc, char** argv) {
         report << "Ledger: " << (ledgerOk ? "PASS" : "FAIL") << "\n";
         report << "Certification: NOT_CERTIFIED (no operator is bound into the runtime graph, "
                   "and the model is still fail-closed)\n";
+
+        // ---- the lowered primitives ----
+        //
+        // The primitives the operators are made of. These are separate
+        // claims: a primitive that has been executed is a fact about the
+        // device path, not about the model.
+        report << "\n## The lowered primitives\n\n";
+        report << "| Primitive | Purpose | Artifact | Device execution |\n|---|---|---|---|\n";
+        int primitiveCount = 0;
+        int primitiveExecuted = 0;
+        for (const auto& p : kPrimitives) {
+            const Evidence e = GatherEvidence(shadersDir, evidenceDir, p.artifact);
+            ++primitiveCount;
+            const std::string artifact =
+                e.artifactExists ? (std::string("`") + p.artifact + ".comp`") : std::string("none");
+            const std::string executed =
+                e.executed ? "PASS" : (e.artifactExists ? "NOT RUN" : "n/a");
+            if (e.executed) ++primitiveExecuted;
+            report << "| " << p.name << " | " << p.purpose << " | " << artifact
+                   << " | " << executed << " |\n";
+        }
+        report << "\nExecuted primitives: " << primitiveExecuted << " of " << primitiveCount << "\n";
 
         std::cout << "QWEN4EXP_REVERSE_ENGINEERED=1\nTENSORS=" << tensors.size()
                   << " GEOMETRY=" << (geometry_ok ? "PASS" : "FAIL")
