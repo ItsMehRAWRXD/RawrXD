@@ -25,20 +25,24 @@ MOE_BLOCKS: router=24 topk=24 expert_execute=24
 EXPERT/ROUTER TENSORS (first 16):
   blk.1.exp_probs_b.bias                           dims=[128] bytes=512
   blk.1.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=678494208
+  blk.1.ffn_gate_inp.weight                        dims=[2688,128] bytes=1376256
   blk.1.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
   blk.3.exp_probs_b.bias                           dims=[128] bytes=512
   blk.3.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=678494208
+  blk.3.ffn_gate_inp.weight                        dims=[2688,128] bytes=1376256
   blk.3.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
   blk.6.exp_probs_b.bias                           dims=[128] bytes=512
   blk.6.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=439025664
+  blk.6.ffn_gate_inp.weight                        dims=[2688,128] bytes=1376256
   blk.6.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
   blk.8.exp_probs_b.bias                           dims=[128] bytes=512
   blk.8.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=678494208
+  blk.8.ffn_gate_inp.weight                        dims=[2688,128] bytes=1376256
   blk.8.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
-  blk.10.exp_probs_b.bias                          dims=[128] bytes=512
-  blk.10.ffn_down_exps.weight                      dims=[1856,2688,128] bytes=439025664
-  blk.10.ffn_up_exps.weight                        dims=[2688,1856,128] bytes=439025664
-  blk.13.exp_probs_b.bias                          dims=[128] bytes=512
+
+  router matrices (ffn_gate_inp.weight) : 24
+  router biases   (exp_probs_b.bias)     : 24
+  example: blk.1.ffn_gate_inp.weight
 
   router tensor example : blk.1.exp_probs_b.bias
   expert tensor example : blk.1.ffn_down_exps.weight
@@ -69,5 +73,8 @@ EXPERT_GATE_PRESENT    0
 [PASS] no expert binding is a zero-sized tensor             0 zero-sized expert tensors
 [PASS] the expert tensors have the declared shape           24 of 24 match [hidden,ffn,experts] and [ffn,hidden,experts] with experts=128
 [PASS] the absent gate is explicitly supported for gateless experts 0 of 24 blocks have a gate tensor; the binding accepts a gateless expert
+  router bound to a matrix : 24 of 24
+  router bound to a bias   : 0 of 24
+[PASS] the router is bound to the [hidden, experts] matrix  blk.1.ffn_gate_inp.weight (24 of 24 bound to a matrix)
 
 === DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS ===

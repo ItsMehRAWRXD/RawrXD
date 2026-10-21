@@ -527,8 +527,15 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     // ffn_norm.weight - so the graph emitted an SsmScan detail whose ";norm="
     // resolved empty and the real Mamba2 gate could never load its weight.
     // It must classify as SsmNorm below, and it is excluded here.
-    if (n.find(".ffn_gate_inp.weight") != std::string::npos ||
-        n.find(".exp_probs_b.bias") != std::string::npos) return Role::RouterGate;
+    // RAWRXD_GATE7_NEMOTRON_MOE_001: the router's MATRIX and the router's
+    // BIAS were both classified as RouterGate, so the per-block role map
+    // kept whichever came first and the Router operator ended up bound to
+    // the [experts] bias. The router operator needs the [hidden, experts]
+    // matrix: with the bias it failed its own shape check with "router: bad
+    // shape", and even had it not, the routing would not have depended on
+    // the token at all. The bias is a separate role.
+    if (n.find(".ffn_gate_inp.weight") != std::string::npos) return Role::RouterGate;
+    if (n.find(".exp_probs_b.bias") != std::string::npos) return Role::RouterBias;
     if (n.find(".ffn_gate_exps.weight") != std::string::npos) return Role::ExpFfnGate;
     if (n.find(".ffn_up_exps.weight") != std::string::npos) return Role::ExpFfnUp;
     if (n.find(".ffn_down_exps.weight") != std::string::npos) return Role::ExpFfnDown;
@@ -1225,6 +1232,12 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             GraphOp o;
             o.op = Op::Router; o.block = (int32_t)b;
             o.a = "ffn_norm"; o.b = name(Role::RouterGate); o.out = "router_logits";
+            // The router's bias is carried alongside the matrix. Whether the
+            // reference adds it is a question for the numerical parity
+            // certificate, not something to guess at here.
+            if (!name(Role::RouterBias).empty()) {
+                o.detail = "bias=" + name(Role::RouterBias);
+            }
             g.ops.push_back(o);
             o = GraphOp{};
             o.op = Op::TopK; o.block = (int32_t)b;

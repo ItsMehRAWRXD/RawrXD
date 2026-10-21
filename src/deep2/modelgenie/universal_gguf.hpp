@@ -76,7 +76,8 @@ enum class Role : uint8_t {
     FfnNorm,
     FfnGate, FfnUp, FfnDown,
     ExpFfnGate, ExpFfnUp, ExpFfnDown,   // MoE experts (3-D: [ffn, experts, blocks])
-    RouterGate,                          // MoE router
+    RouterGate,                          // MoE router: the [hidden, experts] MATRIX
+    RouterBias,                          // MoE router: the [experts] bias offset
     SharedFfnGate, SharedFfnUp, SharedFfnDown, // deepseek2 shared experts (*_shexp)
     SsmA, SsmAlpha, SsmBeta, SsmConv1dW, SsmConv1dB, SsmD, SsmDtB, SsmIn, SsmOut, SsmNorm,
     HyperAttnDown, HyperAttnInject, HyperAttnNorm, HyperAttnUp,

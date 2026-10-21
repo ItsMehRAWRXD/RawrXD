@@ -204,7 +204,9 @@ int main(int argc, char** argv) {
     size_t printed = 0;
     for (const Universal::TensorRec& tensor : report.tensors) {
         if (tensor.name.find("exp_probs") == std::string::npos &&
-            tensor.name.find("_exps") == std::string::npos) {
+            tensor.name.find("_exps") == std::string::npos &&
+            tensor.name.find("gate_inp") == std::string::npos &&
+            tensor.name.find("router") == std::string::npos) {
             continue;
         }
         if (printed++ >= 16) break;
@@ -214,6 +216,25 @@ int main(int argc, char** argv) {
         }
         printf("] bytes=%llu\n", (unsigned long long)tensor.bytes);
     }
+
+    // The router's PROJECTION needs a matrix. A 128-element bias is only the
+    // offset. If the block carries no router matrix, every token would be
+    // routed identically, and the certificate has to say so rather than
+    // pass a router that cannot depend on the token.
+    size_t routerMatrixCount = 0;
+    std::string routerMatrixExample;
+    for (const Universal::TensorRec& tensor : report.tensors) {
+        if (tensor.name.find(".ffn_gate_inp.weight") == std::string::npos) continue;
+        ++routerMatrixCount;
+        if (routerMatrixExample.empty()) routerMatrixExample = tensor.name;
+    }
+    size_t routerBiasCount = 0;
+    for (const Universal::TensorRec& tensor : report.tensors) {
+        if (tensor.name.find(".exp_probs_b.bias") != std::string::npos) ++routerBiasCount;
+    }
+    printf("\n  router matrices (ffn_gate_inp.weight) : %zu\n", routerMatrixCount);
+    printf("  router biases   (exp_probs_b.bias)     : %zu\n", routerBiasCount);
+    if (!routerMatrixExample.empty()) printf("  example: %s\n", routerMatrixExample.c_str());
     // Does the router tensor name actually contain the substring the role
     // classifier looks for? This is the difference between "the MoE path was
     // not taken" and "the MoE path was taken and produced nothing".
@@ -426,6 +447,31 @@ int main(int argc, char** argv) {
            gatePresent == 0 && gateRequired == 0 && moeBlockCount > 0,
            "0 of " + std::to_string(moeBlockCount) +
                " blocks have a gate tensor; the binding accepts a gateless expert");
+
+    // The router must be bound to the [hidden, experts] MATRIX. A [experts]
+    // bias cannot be a router projection: the router operator's own shape
+    // check rejects it, and the routing would not depend on the token.
+    size_t routerMatrixBound = 0;
+    size_t routerBiasBound = 0;
+    std::string routerBoundExample;
+    for (const auto& entry : routerWeight) {
+        const Universal::TensorRec* tensor = findTensor(entry.second);
+        if (tensor == nullptr) continue;
+        if (tensor->dims.size() >= 2) {
+            ++routerMatrixBound;
+            if (routerBoundExample.empty()) routerBoundExample = entry.second;
+        } else {
+            ++routerBiasBound;
+        }
+    }
+    printf("  router bound to a matrix : %zu of %zu\n", routerMatrixBound, routerBlocks.size());
+    printf("  router bound to a bias   : %zu of %zu\n", routerBiasBound, routerBlocks.size());
+    Report("the router is bound to the [hidden, experts] matrix",
+           routerMatrixBound == routerBlocks.size() && routerBlocks.size() > 0,
+           routerBoundExample.empty()
+               ? "no router tensor resolved"
+               : routerBoundExample + " (" + std::to_string(routerMatrixBound) + " of " +
+                     std::to_string(routerBlocks.size()) + " bound to a matrix)");
 
     printf("\n=== %s ===\n", g_failures == 0 ? "DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS"
                                             : "DEEP2_NEMOTRON_MOE_EXECUTION_001 = FAIL");
