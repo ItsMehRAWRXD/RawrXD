@@ -1832,6 +1832,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_reverse_engineer.cpp")
     message(STATUS "deep2_reverse_engineer enabled (native Qwen4Exp contract audit)")
 endif()
 
+# Physical Vulkan topology telemetry. This target reports real device heaps and
+# queues only; it is deliberately separate from the certifier and never claims
+# an operator allocation or execution.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dynamic_interceptor.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_dynamic_interceptor tools/deep2_dynamic_interceptor.cpp)
+    target_include_directories(deep2_dynamic_interceptor PRIVATE ${_rawrxd_vk_sdk_inc})
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_dynamic_interceptor PRIVATE Vulkan::Vulkan)
+    endif()
+    target_compile_features(deep2_dynamic_interceptor PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_dynamic_interceptor PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_dynamic_interceptor PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_dynamic_interceptor PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)")
+endif()
+
 # Gate 7 D1 — batched multi-token prefill full-logit parity.
 # RAWRXD_DEEP2_D1_PREFILL_PARITY verifies Executor::PrefillBatch against the
 # serial ExecuteToken path: full-logit BIT_EXACT over a prefix sweep + causal
