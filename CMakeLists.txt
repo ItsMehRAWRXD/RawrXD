@@ -1870,6 +1870,53 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GL
         DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.spv")
 endif()
 
+if(GLSLC_EXECUTABLE)
+    set(_rawrxd_qwen4exp_operator_shader_sources
+        deep2_qwen4exp_ple
+        deep2_qwen4exp_hc_combine
+        deep2_qwen4exp_qsa_score
+        deep2_qwen4exp_moe_router)
+    set(_rawrxd_qwen4exp_operator_shader_outputs)
+    foreach(_shader ${_rawrxd_qwen4exp_operator_shader_sources})
+        add_custom_command(
+            OUTPUT "${CMAKE_SOURCE_DIR}/src/deep2/shaders/${_shader}.spv"
+            COMMAND ${GLSLC_EXECUTABLE}
+                "${CMAKE_SOURCE_DIR}/src/deep2/shaders/${_shader}.comp"
+                -o "${CMAKE_SOURCE_DIR}/src/deep2/shaders/${_shader}.spv"
+            DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/${_shader}.comp"
+            COMMENT "Compiling Qwen4Exp ${_shader} shader")
+        list(APPEND _rawrxd_qwen4exp_operator_shader_outputs
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/${_shader}.spv")
+    endforeach()
+    add_custom_target(deep2_qwen4exp_operator_shaders ALL
+        DEPENDS ${_rawrxd_qwen4exp_operator_shader_outputs})
+endif()
+
+# CPU operator contract harness. It exercises the exact Qwen4Exp geometry for
+# PLE, hyperconnections, QSA scoring/selection, and sparse-MoE routing. Expert
+# execution remains fail-closed until IQ2_S/MXFP4 dequantization is certified.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_operator_harness.cpp")
+    add_executable(deep2_qwen4exp_operator_harness
+        tools/deep2_qwen4exp_operator_harness.cpp
+        src/deep2/op_ple.cpp
+        src/deep2/op_hyperconnection.cpp
+        src/deep2/op_qsa.cpp
+        src/deep2/op_sparse_moe.cpp)
+    target_include_directories(deep2_qwen4exp_operator_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR})
+    target_compile_features(deep2_qwen4exp_operator_harness PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_operator_harness PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_operator_harness PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_qwen4exp_operator_harness PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    add_test(NAME deep2_qwen4exp_operator_contract
+        COMMAND deep2_qwen4exp_operator_harness)
+    message(STATUS "deep2_qwen4exp_operator_harness enabled (PLE/HC/QSA/MoE contracts)")
+endif()
+
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims
 # an operator allocation or execution.
@@ -1907,6 +1954,69 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_pipeline_probe.cpp" AND Vulk
     set_target_properties(deep2_qwen4exp_pipeline_probe PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     message(STATUS "deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)" )
+endif()
+
+# Real isolated GDN execution probe. This allocates synthetic Qwen4Exp-shaped
+# buffers, submits one Vulkan dispatch, and compares output plus recurrent state
+# against the independent CPU reference. It is an operator certificate only;
+# it never advances the Qwen4Exp full-model gate.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_gdn_probe.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/op_gdn.cpp" AND
+   Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_qwen4exp_gdn_probe
+        tools/deep2_qwen4exp_gdn_probe.cpp
+        src/deep2/op_gdn.cpp)
+    target_include_directories(deep2_qwen4exp_gdn_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR} ${_rawrxd_vk_sdk_inc})
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_qwen4exp_gdn_probe PRIVATE Vulkan::Vulkan)
+    endif()
+    target_compile_features(deep2_qwen4exp_gdn_probe PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_gdn_probe PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_gdn_probe PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET deep2_qwen4exp_gdn_shader)
+        add_dependencies(deep2_qwen4exp_gdn_probe deep2_qwen4exp_gdn_shader)
+    endif()
+    set_target_properties(deep2_qwen4exp_gdn_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_qwen4exp_gdn_probe enabled (real isolated GDN dispatch)")
+endif()
+
+# Real isolated GPU probes for the remaining Qwen4Exp scalar operators. These
+# use bounded synthetic buffers and independent CPU contracts; they do not
+# admit the full model or alter the production executor's fail-closed boundary.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_operator_probe.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/op_ple.cpp" AND
+   Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_qwen4exp_operator_probe
+        tools/deep2_qwen4exp_operator_probe.cpp
+        src/deep2/op_ple.cpp
+        src/deep2/op_hyperconnection.cpp
+        src/deep2/op_qsa.cpp
+        src/deep2/op_sparse_moe.cpp)
+    target_include_directories(deep2_qwen4exp_operator_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR} ${_rawrxd_vk_sdk_inc})
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_qwen4exp_operator_probe PRIVATE Vulkan::Vulkan)
+    endif()
+    target_compile_features(deep2_qwen4exp_operator_probe PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_operator_probe PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_operator_probe PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET deep2_qwen4exp_operator_shaders)
+        add_dependencies(deep2_qwen4exp_operator_probe deep2_qwen4exp_operator_shaders)
+    endif()
+    set_target_properties(deep2_qwen4exp_operator_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    add_test(NAME deep2_qwen4exp_operator_gpu_probe
+        COMMAND deep2_qwen4exp_operator_probe
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/")
+    message(STATUS "deep2_qwen4exp_operator_probe enabled (PLE/HC/QSA/router GPU dispatch)")
 endif()
 
 # Enterprise source-to-parity closure manifest.  This read-only target hashes

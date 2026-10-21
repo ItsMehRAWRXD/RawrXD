@@ -1,5 +1,8 @@
-QWEN4EXP_SHARD_MANIFEST_JSON_VALIDATION=FAIL
-COMMAND=PowerShell ConvertFrom-Json on evidence/qwen4exp_manifest_shard1.json and evidence/qwen4exp_manifest_shard2.json
-SHARD1=FAIL Bad JSON escape sequence: \O at file path F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\...
-SHARD2=FAIL Bad JSON escape sequence: \O at file path F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\...
-REQUIRED_FIX=escape Windows backslashes or emit JSON forward-slash paths, then rerun independent parser and ownership reconciliation
+QWEN4EXP_SHARD_MANIFEST_JSON_VALIDATION=PASS
+RAW_RECEIPTS=HISTORICAL_INVALID
+RAW_SHARD1=FAIL Bad JSON escape sequence: \O at file path F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\...
+RAW_SHARD2=FAIL Bad JSON escape sequence: \O at file path F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\...
+NORMALIZED_SHARD1=PASS PowerShell ConvertFrom-Json tensors=121
+NORMALIZED_SHARD2=PASS PowerShell ConvertFrom-Json tensors=1103
+EXECUTABLE_INPUTS=qwen4exp_manifest_shard1_normalized.json,qwen4exp_manifest_shard2_normalized.json
+REQUIRED_POLICY=Reject historical malformed receipts; use only independently parser-validated normalized manifests for ownership and executor admission.

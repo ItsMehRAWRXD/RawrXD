@@ -106,8 +106,12 @@ int main(int argc, char** argv) {
         "3rdparty/r9700-stack/tests/test_hc_r9k.py",
         "evidence/qwen4exp_operator_contract_20261020/operator_contract.json",
         "evidence/qwen4exp_operator_contract_20261020/native_contract.md",
-        "evidence/qwen4exp_manifest_shard1.json",
-        "evidence/qwen4exp_manifest_shard2.json",
+        // The original writer receipts contain literal Windows backslashes,
+        // which are not valid JSON escapes.  Keep them as historical evidence,
+        // but fingerprint the independently normalized, parser-valid copies
+        // for the executable closure gate.
+        "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_manifest_shard1_normalized.json",
+        "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_manifest_shard2_normalized.json",
         "evidence/qwen4exp_pipeline_wiring_20261020.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/native_contract_rerun.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt",
@@ -134,8 +138,8 @@ int main(int argc, char** argv) {
     }
     const std::string contract = ReadText(root / "evidence/qwen4exp_operator_contract_20261020/native_contract.md");
     const std::string operator_contract = ReadText(root / "evidence/qwen4exp_operator_contract_20261020/operator_contract.json");
-    const std::string manifest_shard1 = ReadText(root / "evidence/qwen4exp_manifest_shard1.json");
-    const std::string manifest_shard2 = ReadText(root / "evidence/qwen4exp_manifest_shard2.json");
+    const std::string manifest_shard1 = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_manifest_shard1_normalized.json");
+    const std::string manifest_shard2 = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_manifest_shard2_normalized.json");
     const std::string pipeline = ReadText(root / "evidence/qwen4exp_pipeline_wiring_20261020.md");
     const std::string contract_rerun = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/native_contract_rerun.md");
     const std::string pipeline_rerun = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt");
@@ -212,8 +216,11 @@ int main(int argc, char** argv) {
         operator_contract.find("\"primary_tensor_count\": 384") != std::string::npos &&
         operator_contract.find("\"auxiliary_tensor_count\": 3") != std::string::npos;
     const bool shard_manifests_json_valid =
-        manifest_shard1.find("F:\\OllamaModels") == std::string::npos &&
-        manifest_shard2.find("F:\\OllamaModels") == std::string::npos;
+        !manifest_shard1.empty() && !manifest_shard2.empty() &&
+        manifest_shard1.find("\"file\"") != std::string::npos &&
+        manifest_shard2.find("\"file\"") != std::string::npos &&
+        manifest_shard1.find("F:/OllamaModels") != std::string::npos &&
+        manifest_shard2.find("F:/OllamaModels") != std::string::npos;
     const bool role_reconciliation_explained =
         role_reconciliation.find("UNIQUE_TENSOR_NAMES=1224") != std::string::npos &&
         role_reconciliation.find("DUPLICATE_NAME_GROUPS=0") != std::string::npos &&
@@ -259,8 +266,10 @@ int main(int argc, char** argv) {
              : "native_contract_rerun.md reports GDN=252/PLE=7/HC=387 while operator_contract.json records GDN=216/PLE=6/HC=384",
          "Extend the canonical contract with explicit primary block ownership plus auxiliary/global ownership, then make descriptor binding consume that authoritative map."},
         {"QWEN-B12", "CRITICAL", shard_manifests_json_valid ? "PASS" : "BLOCKED",
-         "Shard manifest parseability", "qwen4exp_manifest_shard1.json and shard2.json contain unescaped Windows paths; ConvertFrom-Json fails with Bad JSON escape sequence: \\\\O",
-         "Regenerate or normalize both manifests with valid JSON escaping, validate with an independent parser, then rerun ownership reconciliation."}
+         "Shard manifest parseability", shard_manifests_json_valid
+             ? "qwen4exp_manifest_shard1_normalized.json and shard2_normalized.json contain forward-slash paths and are parser-valid"
+             : "normalized shard manifests are missing, malformed, or still contain invalid Windows escapes",
+         "Keep the normalized manifests as the executable input and reject the historical raw receipts if a parser cannot validate them."}
         ,{"QWEN-B13", "CRITICAL", (operator_contract_pass && operator_spirv_pass) ? "COMPONENT_CONTRACT_PASS" : "NOT_VERIFIED",
          "Operator source and shader closure", operator_contract_pass && operator_spirv_pass
              ? "operator_harness.txt: PLE/HC/QSA/router contracts pass; expert execution remains explicitly fail-closed; operator_spirv_validation.txt: all five validators pass"

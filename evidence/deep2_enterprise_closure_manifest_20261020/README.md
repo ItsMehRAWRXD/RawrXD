@@ -83,9 +83,10 @@ with 1,224 unique names and zero duplicates. The native report and canonical
 schema now represent those auxiliary tensors explicitly; B11 is PASS, while
 executor binding remains separately blocked by B01/B02.
 
-The audit also records QWEN-B12: both shard manifest JSON files contain
-unescaped Windows path separators and fail independent JSON parsing before
-tensor ownership can be recomputed.
+The audit records the historical raw shard receipts as malformed, but the
+normalized executable copies now pass independent JSON parsing (121 and 1,103
+tensors). B12 is therefore PASS under the explicit policy that malformed raw
+receipts are rejected and never admitted to ownership or execution.
 
 The often-mentioned asymmetric queue-family mismatch is not present in the
 current Qwen4Exp receipts or probe output. It remains an unverified hypothesis,
