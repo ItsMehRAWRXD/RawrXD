@@ -2081,7 +2081,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dispatch_contract_test.cpp" AND Vulka
     add_executable(deep2_dispatch_contract_test
         tools/deep2_dispatch_contract_test.cpp
         src/deep2/modelgenie/universal_gguf.cpp
-        src/deep2/GGUFLoader.cpp)
+        src/GGUFLoader.cpp)
     target_include_directories(deep2_dispatch_contract_test PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -2108,6 +2108,59 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dispatch_contract_test.cpp" AND Vulka
     set_target_properties(deep2_dispatch_contract_test PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     message(STATUS "deep2_dispatch_contract_test enabled (per-layer dispatch contract)")
+endif()
+
+# The Q5_K branch of the packed GEMV, executed on the device.
+#
+# Q5_K was the one format with no GPU kernel in either tree, and in a
+# Qwen3.5 hybrid block four of the five projections are Q5_K, so the
+# persistent-residency path was unreachable for that family and every one of
+# those projections fell back to the host.
+#
+# The reference is ggml's OWN dequantiser, reached through the type traits,
+# so the kernel is checked against the upstream decoder rather than against
+# another transcription of it. A matching mistake cannot hide.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/test_q5k_device.cpp" AND Vulkan_FOUND)
+    add_executable(test_q5k_device
+        tools/test_q5k_device.cpp)
+    target_include_directories(test_q5k_device PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    target_compile_features(test_q5k_device PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(test_q5k_device PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(test_q5k_device PRIVATE
+            -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET ggml)
+        target_link_libraries(test_q5k_device PRIVATE ggml)
+    endif()
+    if(TARGET ggml-base)
+        target_link_libraries(test_q5k_device PRIVATE ggml-base)
+    endif()
+    if(TARGET ggml-cpu)
+        target_link_libraries(test_q5k_device PRIVATE ggml-cpu)
+    endif()
+    # The Vulkan loader: the test creates its own device.
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(test_q5k_device PRIVATE Vulkan::Vulkan)
+    else()
+        find_library(DEEP2_VULKAN_LOADER NAMES vulkan-1
+                     HINTS "${VULKAN_SDK}/lib" "${VULKAN_SDK}/bin")
+        if(DEEP2_VULKAN_LOADER)
+            target_link_libraries(test_q5k_device PRIVATE ${DEEP2_VULKAN_LOADER})
+        endif()
+    endif()
+    set_target_properties(test_q5k_device PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "test_q5k_device enabled (Q5_K packed GEMV device proof)")
+    add_test(NAME Quant_Q5K_Device
+        COMMAND test_q5k_device
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.spv"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
 

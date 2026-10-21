@@ -2,7 +2,7 @@
 #extension GL_KHR_shader_subgroup_basic : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 // Batch 9 packed GGUF GEMV.
-// Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+// Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q5_K(13), Q6_K(14).
 //
 // 40TPS_BATCH2:
 //   one workgroup = one output row
@@ -21,6 +21,50 @@ layout(push_constant) uniform Push {
     uint weightBytes;
 } pc;
 
+// The byte offsets of each field inside a quant block.
+//
+// These are the single source of truth for the shader's view of a block. They
+// are checked against the C struct layout by tests/quant_layout_offsets_test.cpp,
+// which reads the C definitions out of ggml-common.h. A drift between the two
+// reads every weight at the wrong place and produces plausible-looking
+// garbage, so the offsets are named, declared once, and verified.
+//
+// The Q2_K layout is the older one: scales first, then the quants, then the
+// two super-block scales at the end. It is not the same as the Q4_K/Q5_K
+// layout, where the super-block scales come first.
+
+const uint Q8_0_BYTES      = 34u;
+const uint Q8_0_OFF_D      = 0u;
+const uint Q8_0_OFF_QS     = 2u;
+
+const uint Q2K_BYTES       = 84u;
+const uint Q2K_OFF_SCALES  = 0u;
+const uint Q2K_OFF_QS      = 16u;
+const uint Q2K_OFF_D       = 80u;
+const uint Q2K_OFF_DMIN    = 82u;
+
+const uint Q4K_BYTES       = 144u;
+const uint Q4K_OFF_D       = 0u;
+const uint Q4K_OFF_DMIN    = 2u;
+const uint Q4K_OFF_SCALES  = 4u;
+const uint Q4K_OFF_QS      = 16u;
+
+const uint Q6K_BYTES       = 210u;
+const uint Q6K_OFF_QL      = 0u;
+const uint Q6K_OFF_QH      = 128u;
+const uint Q6K_OFF_SCALES  = 192u;
+const uint Q6K_OFF_D       = 208u;
+
+// Q5_K shares the Q4_K scales layout and offset: the six-bit scales and
+// mins sit at offset 4 in both. Only the quants differ, and the block is
+// bigger because Q5_K carries a high bit per value.
+const uint Q5K_BYTES       = 176u;
+const uint Q5K_OFF_D       = 0u;
+const uint Q5K_OFF_DMIN    = 2u;
+const uint Q5K_OFF_SCALES  = 4u;
+const uint Q5K_OFF_QH      = 16u;
+const uint Q5K_OFF_QS      = 48u;
+
 // AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
 shared float subgroupSums[8];
 
@@ -37,56 +81,116 @@ float geth(uint byteIndex) {
     return unpackHalf2x16(h).x;
 }
 
-void q4kScaleMin(uint base, uint sb, out uint sc, out uint mn) {
+// The six-bit scale and min of one sub-block, from the twelve packed bytes.
+//
+// Q4_K and Q5_K share this layout and this offset, so the offset is a
+// parameter. The sub-block index is the sixteen-way one; the first four
+// sub-blocks keep their scale and min in separate bytes and the rest are
+// packed six bits each.
+void kScaleMin(uint base, uint scalesOff, uint sb, out uint sc, out uint mn) {
     if (sb < 4u) {
-        sc = getb(base + 4u + sb) & 63u;
-        mn = getb(base + 8u + sb) & 63u;
+        sc = getb(base + scalesOff + sb) & 63u;
+        mn = getb(base + scalesOff + 4u + sb) & 63u;
     } else {
         uint j = sb - 4u;
-        sc = (getb(base + 12u + j) & 15u) |
-             ((getb(base + 4u + j) >> 6u) << 4u);
-        mn = (getb(base + 12u + j) >> 4u) |
-             ((getb(base + 8u + j) >> 6u) << 4u);
+        sc = (getb(base + scalesOff + 8u + j) & 15u) |
+             ((getb(base + scalesOff + j) >> 6u) << 4u);
+        mn = (getb(base + scalesOff + 8u + j) >> 4u) |
+             ((getb(base + scalesOff + 4u + j) >> 6u) << 4u);
     }
+}
+
+void q4kScaleMin(uint base, uint sb, out uint sc, out uint mn) {
+    kScaleMin(base, Q4K_OFF_SCALES, sb, sc, mn);
 }
 
 float q8_0_weight(uint rowBase, uint col) {
     uint block = col / 32u;
     uint i = col % 32u;
-    uint b = rowBase + block * 34u;
-    return geth(b) * float(gets8(b + 2u + i));
+    uint b = rowBase + block * Q8_0_BYTES;
+    return geth(b + Q8_0_OFF_D) * float(gets8(b + Q8_0_OFF_QS + i));
 }
 
+// Q2_K: 16 sub-blocks of 16 values, two scale bytes per sub-block pair.
+//
+// The block is laid out as scales[16], qs[64], d, dmin. The quants are two
+// bits, packed four to a byte, and the scale byte of a group holds a 4-bit
+// scale in the low nibble and a 4-bit min in the high nibble.
 float q2k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
-    uint b = rowBase + block * 84u;
-    float ds = geth(b + 0u);
-    float dm = geth(b + 2u);
+    uint b = rowBase + block * Q2K_BYTES;
 
-    uint chunk = idx / 128u;
-    uint rem = idx % 128u;
-    uint subBlock = rem / 32u;
-    uint group = (rem % 32u) / 16u;
-    uint pos = rem % 16u;
+    float ds = geth(b + Q2K_OFF_D);
+    float dm = geth(b + Q2K_OFF_DMIN);
 
-    uint scaleIdx = chunk * 8u + subBlock * 2u + group;
-    uint packedScale = getb(b + 4u + scaleIdx);
+    uint half128 = idx / 128u;      // which 128-value half
+    uint within  = idx % 128u;
+    uint group   = within / 32u;    // which 32-value group inside the half
+    uint l16     = within % 32u;
+    uint halfGrp = l16 / 16u;       // which 16-value half of the group
+    uint l       = l16 % 16u;
+
+    // The scale bytes are consumed in the order: half, group, half.
+    uint scaleIndex = (half128 * 4u + group) * 2u + halfGrp;
+    uint packedScale = getb(b + Q2K_OFF_SCALES + scaleIndex);
     float dl = ds * float(packedScale & 15u);
     float ml = dm * float(packedScale >> 4u);
 
-    uint qsIdx = chunk * 32u + group * 16u + pos;
-    uint shift = subBlock * 2u;
-    uint q = (getb(b + 20u + qsIdx) >> shift) & 3u;
+    uint qsIndex = half128 * 32u + halfGrp * 16u + l;
+    uint shift = group * 2u;
+    uint q = (getb(b + Q2K_OFF_QS + qsIndex) >> shift) & 3u;
     return dl * float(q) - ml;
 }
 
-float q4k_weight(uint rowBase, uint col) {
+// Q5_K: sixteen sub-blocks of sixteen values, six-bit scales and mins.
+//
+// The block is d, dmin, scales[12], qh[32], qs[128]. The low four bits of
+// each value are in qs and the high bit is in qh, and the sub-block's scale
+// and min are the six-bit pair the shared layout carries.
+//
+// The four groups of sixty-four values each use two sub-blocks, the low
+// nibble for the first thirty-two and the high nibble for the second
+// thirty-two, and the high bit of a value is selected by a mask that walks
+// through the qh bytes one bit at a time.
+float q5k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
-    uint b = rowBase + block * 144u;
-    float ds = geth(b + 0u);
-    float dm = geth(b + 2u);
+    uint b = rowBase + block * Q5K_BYTES;
+    float ds = geth(b + Q5K_OFF_D);
+    float dm = geth(b + Q5K_OFF_DMIN);
+
+    uint grp = idx / 64u;          // which group of sixty-four
+    uint l = idx % 64u;            // which value inside it
+    uint l32 = l % 32u;            // which byte of qs and of qh
+
+    // The first thirty-two values of a group take the low nibble and the
+    // first sub-block's scale; the second thirty-two take the high nibble and
+    // the second sub-block's scale.
+    bool lowHalf = (l < 32u);
+    uint subBlock = grp * 2u + (lowHalf ? 0u : 1u);
+
+    uint sc, mn;
+    kScaleMin(b, Q5K_OFF_SCALES, subBlock, sc, mn);
+
+    uint qsByte = getb(b + Q5K_OFF_QS + grp * 32u + l32);
+    uint q = lowHalf ? (qsByte & 15u) : (qsByte >> 4u);
+
+    // The high bit mask walks one bit at a time through the qh bytes: the
+    // first group uses bit 0, the second bit 1, the third bit 2 and the
+    // fourth bit 3, and the two halves of a group use consecutive bits.
+    uint hiMask = lowHalf ? (1u << (2u * grp)) : (1u << (2u * grp + 1u));
+    uint qhByte = getb(b + Q5K_OFF_QH + l32);
+    uint q5 = q + (((qhByte & hiMask) != 0u) ? 16u : 0u);
+
+    return ds * float(sc) * float(q5) - dm * float(mn);
+}
+
+float q4k_weight(uint rowBase, uint col) {    uint block = col / 256u;
+    uint idx = col % 256u;
+    uint b = rowBase + block * Q4K_BYTES;
+    float ds = geth(b + Q4K_OFF_D);
+    float dm = geth(b + Q4K_OFF_DMIN);
 
     uint sb = idx / 32u;
     uint l = idx % 32u;
@@ -94,7 +198,7 @@ float q4k_weight(uint rowBase, uint col) {
     q4kScaleMin(b, sb, sc, mn);
 
     uint pair = sb / 2u;
-    uint packed = getb(b + 16u + pair * 32u + l);
+    uint packed = getb(b + Q4K_OFF_QS + pair * 32u + l);
     uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
     return ds * float(sc) * float(q) - dm * float(mn);
 }
@@ -105,10 +209,10 @@ float q4k_weight(uint rowBase, uint col) {
 float q4k_dot4(uint rowBase, uint colBase) {
     uint block = colBase / 256u;
     uint idx = colBase % 256u;
-    uint b = rowBase + block * 144u;
+    uint b = rowBase + block * Q4K_BYTES;
 
-    float ds = geth(b + 0u);
-    float dm = geth(b + 2u);
+    float ds = geth(b + Q4K_OFF_D);
+    float dm = geth(b + Q4K_OFF_DMIN);
 
     uint sb = idx / 32u;
     uint l = idx % 32u;
@@ -116,7 +220,7 @@ float q4k_dot4(uint rowBase, uint colBase) {
     q4kScaleMin(b, sb, sc, mn);
 
     uint pair = sb / 2u;
-    uint qsByte = b + 16u + pair * 32u + l;
+    uint qsByte = b + Q4K_OFF_QS + pair * 32u + l;
     // qsByte is 4-byte aligned for colBase=(lane*4 + k*1024).
     uint packed4 = w[qsByte >> 2u];
 
@@ -137,8 +241,8 @@ float q4k_dot4(uint rowBase, uint colBase) {
 float q6k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
-    uint b = rowBase + block * 210u;
-    float ds = geth(b + 208u);
+    uint b = rowBase + block * Q6K_BYTES;
+    float ds = geth(b + Q6K_OFF_D);
 
     uint hi128 = idx / 128u;
     uint within = idx % 128u;
@@ -146,9 +250,9 @@ float q6k_weight(uint rowBase, uint col) {
     uint l = within % 32u;
     uint is = l / 16u;
 
-    uint qlBase = b + hi128 * 64u;
-    uint qhBase = b + 128u + hi128 * 32u;
-    uint scBase = b + 192u + hi128 * 8u;
+    uint qlBase = b + Q6K_OFF_QL + hi128 * 64u;
+    uint qhBase = b + Q6K_OFF_QH + hi128 * 32u;
+    uint scBase = b + Q6K_OFF_SCALES + hi128 * 8u;
 
     uint q = 0u;
     uint scIndex = 0u;
@@ -183,16 +287,19 @@ void main() {
     uint rowBytes = 0u;
     if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
-        rowBytes = blocksPerRow * 34u;
+        rowBytes = blocksPerRow * Q8_0_BYTES;
     } else if (pc.type == 10u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
-        rowBytes = blocksPerRow * 84u;
+        rowBytes = blocksPerRow * Q2K_BYTES;
     } else if (pc.type == 12u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
-        rowBytes = blocksPerRow * 144u;
+        rowBytes = blocksPerRow * Q4K_BYTES;
+    } else if (pc.type == 13u) {
+        blocksPerRow = (pc.cols + 255u) / 256u;
+        rowBytes = blocksPerRow * Q5K_BYTES;
     } else if (pc.type == 14u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
-        rowBytes = blocksPerRow * 210u;
+        rowBytes = blocksPerRow * Q6K_BYTES;
     } else {
         y[row] = uintBitsToFloat(0x7fc00000u);
         return;
@@ -214,6 +321,7 @@ void main() {
             float ww = 0.0;
             if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
+            else if (pc.type == 13u) ww = q5k_weight(rb, j);
             else if (pc.type == 14u) ww = q6k_weight(rb, j);
             acc += ww * x[j];
         }
