@@ -256,6 +256,23 @@ float legacy_weight(uint row, uint col) {
     return half_to_float(pack_u16(base)) * float(quant);
 }
 
+#ifdef DEEP2_SPECIALIZED_KIND
+float quant_weight(uint row, uint col, uint cohort, uint base_mod) {
+#if DEEP2_SPECIALIZED_KIND == 0
+    return q4k_weight(row, col);
+#elif DEEP2_SPECIALIZED_KIND == 1
+    return q6k_weight(row, col, cohort, base_mod);
+#elif DEEP2_SPECIALIZED_KIND == 5
+    return q2k_weight(row, col);
+#elif DEEP2_SPECIALIZED_KIND == 6
+    return q3k_weight(row, col);
+#elif DEEP2_SPECIALIZED_KIND == 8
+    return q5k_weight(row, col);
+#else
+    return legacy_weight(row, col);
+#endif
+}
+#else
 float quant_weight(uint row, uint col, uint cohort, uint base_mod) {
     if (pc.kind == 0u) return q4k_weight(row, col);
     if (pc.kind == 1u) return q6k_weight(row, col, cohort, base_mod);
@@ -264,6 +281,7 @@ float quant_weight(uint row, uint col, uint cohort, uint base_mod) {
     if (pc.kind == 8u) return q5k_weight(row, col);
     return legacy_weight(row, col);
 }
+#endif
 
 void main() {
     uint lane = gl_LocalInvocationID.x & 31u;
