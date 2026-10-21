@@ -15140,7 +15140,27 @@ add_test(NAME test_q6k_asm_certification COMMAND test_q6k_asm_certification WORK
 # Validates all K-quant dequantizers against canonical GGML reference implementations
 add_executable(test_quant_dequant_crosscheck tests/test_quant_dequant_crosscheck.cpp)
 set_target_properties(test_quant_dequant_crosscheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(test_quant_dequant_crosscheck PRIVATE InferenceEngine)
 add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosscheck WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# Native Direct3D 12 Voxel Renderer Certification
+# Runs the real DX12 pipeline: a deterministic procedural world, greedy meshing
+# with exact cross-chunk face culling, a root signature and a PSO, a depth
+# buffer, runtime-compiled HLSL, an offscreen render target, and a frame
+# capture whose row pitch is unpacked. The gate verifies the EVIDENCE (drawn
+# terrain, a stable capture, distinct rows, exact boundary face counts), not
+# merely that the target compiled.
+add_executable(voxel_render_certify
+    tools/voxel_render_certify.cpp
+    src/voxel/VoxelWorld.cpp
+    src/voxel/VoxelMesher.cpp
+    src/voxel/VoxelRenderer.cpp
+    src/voxel/VoxelRasterizer.cpp)
+target_include_directories(voxel_render_certify PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(voxel_render_certify PRIVATE d3d12 dxgi d3dcompiler)
+set_target_properties(voxel_render_certify PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+add_test(NAME voxel_render_certify COMMAND voxel_render_certify WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency

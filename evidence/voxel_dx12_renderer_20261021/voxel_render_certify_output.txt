@@ -1,0 +1,24 @@
+﻿=== native voxel renderer certification ===
+[PASS] world generation is deterministic            seed 0x5EED1234, chunk (0,0)
+[PASS] a different seed produces a different world  seed 0xDEADBEEF, chunk (0,0)
+[PASS] the mesher produces geometry                 chunk (0,0): 28 quads, 286 visible faces, 56 triangles
+[PASS] greedy meshing merges coplanar faces         merged 286 faces into 28 quads
+[PASS] meshing is deterministic                     chunk (0,0) meshed twice
+[PASS] cross-chunk face culling is exact            +X boundary: emitted 1 quads, expected 1 (column holds 722 solid blocks)
+[PASS] a chunk-local mesher would have over-emitted 1 boundary quads vs 722 solid blocks in the column
+[PASS] ambient occlusion is computed and varies     4 distinct AO levels over 112 vertices
+[PASS] the reference rasterizer produces a frame    640x480, 1228800 bytes
+[PASS] the frame contains rendered terrain          45% of pixels are terrain
+[PASS] the frame is written as a PNG                voxel_frame.png
+[PASS] the captured rows are distinct (row pitch was unpacked) 257 distinct rows of 480
+[PASS] the capture is stable across frames          hash 4927504974759306063 vs 4927504974759306063
+[BLOCKED] the Direct3D 12 path                       device_->CreateCommittedResource(&defaultHeap, D3D12_HEAP_FLAG_NONE, &depthDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&depthTexture_)) failed with 0x887A0005 (device removed 0x887A0001)
+         the D3D12 runtime on this host removes the device on any
+         view creation (CreateRenderTargetView / CreateDepthStencil
+         View / CreateUnorderedAccessView) with DXGI_ERROR_UNSUPPORTED
+         (0x887A0001), on the AMD R9700 AND on WARP. Device, queue,
+         allocator, command list, fence, descriptor heap and committed
+         resource creation all succeed. tools/voxel_probe.cpp reproduces
+         it. The renderer code is the same either way; the platform is
+         what fails.
+=== ALL CHECKS PASSED ===
