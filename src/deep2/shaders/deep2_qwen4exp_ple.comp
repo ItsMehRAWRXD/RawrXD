@@ -1,0 +1,61 @@
+#version 450
+// Qwen4Exp PLE short-convolution lowering.
+//
+// X is [tokens, channels]. W is depthwise [kernel, channels]. State contains
+// the causal history immediately before this dispatch, laid out
+// [kernel-1, channels]. Y is [tokens, channels] and state_out receives the
+// final kernel-1 samples for the next dispatch. The operation is intentionally
+// self-contained: no host readback or CPU fallback is part of the contract.
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer XBuffer { float x[]; };
+layout(set = 0, binding = 1, std430) readonly buffer WBuffer { float w[]; };
+layout(set = 0, binding = 2, std430) readonly buffer StateBuffer { float state[]; };
+layout(set = 0, binding = 3, std430) writeonly buffer YBuffer { float y[]; };
+layout(set = 0, binding = 4, std430) writeonly buffer StateOutBuffer { float state_out[]; };
+
+layout(push_constant) uniform Push {
+    uint tokens;
+    uint channels;
+    uint kernel;
+    uint reserved;
+} pc;
+
+float silu(float v) {
+    // Stable enough for the model's finite activation range and avoids a
+    // divergent branch in the shader.
+    return v / (1.0 + exp(-v));
+}
+
+float history(uint token, uint tap, uint channel) {
+    // tap 0 is the oldest sample in the causal window and tap kernel-1 is the
+    // current token. Samples before token zero come from the prior state.
+    int source = int(token) - int(pc.kernel - 1u - tap);
+    if (source < 0) {
+        uint state_index = uint(int(pc.kernel - 1u - tap) + source);
+        return state[state_index * pc.channels + channel];
+    }
+    return x[uint(source) * pc.channels + channel];
+}
+
+void main() {
+    uint gid = gl_GlobalInvocationID.x;
+    if (pc.tokens == 0u || pc.channels == 0u || pc.kernel == 0u || pc.kernel > 32u) return;
+    uint total = pc.tokens * pc.channels;
+    if (gid < total) {
+        uint token = gid / pc.channels;
+        uint channel = gid - token * pc.channels;
+        float acc = 0.0;
+        for (uint tap = 0u; tap < pc.kernel; ++tap)
+            acc += history(token, tap, channel) * w[tap * pc.channels + channel];
+        y[gid] = silu(acc);
+    }
+    // Only the final invocation for each channel writes the carried state.
+    if (gid < pc.channels) {
+        uint channel = gid;
+        for (uint tap = 0u; tap + 1u < pc.kernel; ++tap) {
+            uint token = pc.tokens - (pc.kernel - 1u) + tap;
+            state_out[tap * pc.channels + channel] =
+                token < pc.tokens ? x[token * pc.channels + channel] : history(0u, tap, channel);
+        }
+    }
+}
