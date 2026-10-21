@@ -352,6 +352,16 @@ public:
         int expert = -1;            // the MoE expert, -1 for shared ops
         uint64_t submit_id = 0;     // the command list submission it rode
         uint64_t fence_value = 0;   // the fence it waited on
+        // The op KIND, so a trace can be grouped by what the operation IS
+        // rather than only by the name of the tensor it wrote. Grouping by
+        // tensor name alone makes every expert and every projection of the
+        // same role look like one operation.
+        std::string op_kind;
+        // The weight's shape, so the bytes an op had to read can be checked
+        // against the arithmetic the op represents.
+        uint64_t weight_rows = 0;
+        uint64_t weight_cols = 0;
+        int weight_type = 0;        // the ggml type of the weight
     };
     // enable: checksum per op. capture_values: also copies each op's full
     // output so a divergence can be diffed element-by-element. Both default
@@ -517,6 +527,34 @@ private:
     // trace record can pick them up.
     uint64_t trace_last_weight_bytes_ = 0;
     int trace_last_expert_ = -1;
+    uint64_t trace_last_weight_rows_ = 0;
+    uint64_t trace_last_weight_cols_ = 0;
+    int trace_last_weight_type_ = 0;
+
+    // RAWRXD_GATE7_TPS_001: the per-op-kind execution census. A cache hit
+    // rate only means something if the counters cover the path that the
+    // cache serves: these say how many router, top-k, expert, projection
+    // and LM-head operations actually executed, so the MoE accounting can be
+    // reconciled against the model's own parsed topology.
+    uint64_t census_router_ = 0;
+    uint64_t census_topk_ = 0;
+    uint64_t census_moe_ = 0;
+    uint64_t census_linear_ = 0;
+    uint64_t census_lmhead_ = 0;
+    uint64_t census_ssm_ = 0;
+    uint64_t census_attention_ = 0;
+    uint64_t census_rmsnorm_ = 0;
+    uint64_t census_other_ = 0;
+    // The same census as a histogram over the kind NAME, so every kind the
+    // executor can run is visible by name.
+    std::map<std::string, uint64_t> census_by_kind_;
+
+public:
+    // The census of executed operations, by kind. A histogram rather than a
+    // fixed struct, because a fixed struct hides the kinds it does not name:
+    // a "other" bucket is how a whole execution path disappears from a
+    // diagnosis.
+    const std::map<std::string, uint64_t>& CensusByKind() const { return census_by_kind_; }
 
     // RAWRXD_DEEP2_STRATA_S01..S08: expert residency ledger + policy switches.
     Strata::ExpertResidencyLedger strata_ledger_;

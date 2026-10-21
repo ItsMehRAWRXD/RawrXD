@@ -643,6 +643,11 @@ const char* OpKindName(OpKind k) {
         case OpKind::MlaDecompress: return "MlaDecompress";
         case OpKind::Router: return "Router";
         case OpKind::TopK: return "TopK";
+        // RAWRXD_GATE7_TPS_001: SsmScan was missing here, so every SSM
+        // operation reported itself as "Unsupported" in the trace and the
+        // largest single cost in a decode could not be attributed to its
+        // kind. The name table must cover every kind the executor runs.
+        case OpKind::SsmScan: return "SsmScan";
         case OpKind::MoEExecute: return "MoEExecute";
         case OpKind::Qsa: return "QSA";
         case OpKind::Gdn: return "GDN";
@@ -1217,6 +1222,18 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     const size_t n_in = (size_t)w.dims[0];
     const size_t n_out = (size_t)w.dims[1];
     if (x.size() != n_in) { char b2[192]; std::snprintf(b2, sizeof(b2), "linear: x=%zu n_in=%zu weight=%s dims=[%zu,%zu]", x.size(), n_in, w.name.c_str(), (size_t)w.dims[0], w.dims.size()>1?(size_t)w.dims[1]:0); err = b2; return false; }
+
+    // RAWRXD_GATE7_TPS_001: the weight this op reads on the device, and its
+    // shape, attributed BEFORE any dispatch path is chosen. The batched path
+    // returns early, so attributing at the dispatch site would leave the
+    // queued ops - which includes the LM head projection, the single most
+    // expensive op in a decode - reporting nothing at all. With the bytes
+    // known here, the trace can say how much a kernel has to read, and the
+    // effective rate can be computed from the duration.
+    trace_last_weight_bytes_ = (uint64_t)w.bytes;
+    trace_last_weight_rows_ = (uint64_t)n_out;
+    trace_last_weight_cols_ = (uint64_t)n_in;
+    trace_last_weight_type_ = (int)w.ggml_type;
 
     const bool quant = (w.ggml_type == GGML_TYPE_Q4_K || w.ggml_type == GGML_TYPE_Q6_K ||
                         w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q3_K ||
@@ -4250,6 +4267,27 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         // rather than the PREVIOUS op's size.
         trace_last_weight_bytes_ = 0;
         trace_last_expert_ = -1;
+        trace_last_weight_rows_ = 0;
+        trace_last_weight_cols_ = 0;
+        trace_last_weight_type_ = 0;
+        // The per-op-kind census: how many of each kind of operation actually
+        // executed. This is what reconciles the MoE accounting against the
+        // model's parsed topology, and what shows whether the router and the
+        // experts run as their own operations or are fused into another one.
+        switch (in.op) {
+        case OpKind::Router: ++census_router_; break;
+        case OpKind::TopK: ++census_topk_; break;
+        case OpKind::MoEExecute: ++census_moe_; break;
+        case OpKind::Linear: ++census_linear_; break;
+        case OpKind::LmHead: ++census_lmhead_; break;
+        case OpKind::SsmScan: ++census_ssm_; break;
+        case OpKind::Attention: ++census_attention_; break;
+        case OpKind::RmsNorm: ++census_rmsnorm_; break;
+        default: ++census_other_; break;
+        }
+        // The same census by kind NAME, so a kind the fixed counters do not
+        // name is still visible.
+        ++census_by_kind_[OpKindName(in.op)];
     switch (in.op) {
             if (std::getenv("RR_OP_TRACE")) {
                 std::fprintf(stderr, "  [op] %-16s blk=%3d a='%s' b='%s' out='%s' bSlot=%d\n",
@@ -4867,6 +4905,10 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 tr.exec_ms = op_exec_ms;
                 tr.weight_bytes = trace_last_weight_bytes_;
                 tr.expert = trace_last_expert_;
+                tr.op_kind = OpKindName(in.op);
+                tr.weight_rows = trace_last_weight_rows_;
+                tr.weight_cols = trace_last_weight_cols_;
+                tr.weight_type = trace_last_weight_type_;
                 for (size_t vi = 0; vi < 8 && vi < out->size(); ++vi)
                     tr.first_vals[vi] = (*out)[vi];
                 if (trace_capture_values_) tr.values = *out;

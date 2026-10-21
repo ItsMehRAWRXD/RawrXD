@@ -142,9 +142,9 @@ static void DumpDecodeFlameGraph(const RuntimeGraph::Executor& ex,
         size_t gpu_calls = 0;
         size_t cpu_calls = 0;
     };
-    std::map<std::string, Aggregate> byOp;
+    std::map<std::string, Aggregate> byOp;   // keyed by op kind + tensor name
     for (const auto& trace : traces) {
-        Aggregate& aggregate = byOp[trace.name];
+        Aggregate& aggregate = byOp[trace.op_kind + "/" + trace.name];
         ++aggregate.calls;
         aggregate.total_ms += trace.exec_ms;
         aggregate.weight_bytes += trace.weight_bytes;
@@ -162,6 +162,18 @@ static void DumpDecodeFlameGraph(const RuntimeGraph::Executor& ex,
                     static_cast<double>(aggregate.weight_bytes) / (1024.0 * 1024.0),
                     aggregate.gpu_calls, aggregate.cpu_calls);
     }
+
+    // The per-op-kind census: what actually executed, so the MoE accounting
+    // can be reconciled against the model's parsed topology.
+    const std::map<std::string, uint64_t>& census = ex.CensusByKind();
+    std::printf("\nOP_CENSUS (operations actually executed, by kind)\n");
+    uint64_t censusTotal = 0;
+    for (const auto& entry : census) {
+        std::printf("  %-22s %10llu\n", entry.first.c_str(),
+                    (unsigned long long)entry.second);
+        censusTotal += entry.second;
+    }
+    std::printf("  %-22s %10llu\n", "TOTAL", (unsigned long long)censusTotal);
 
     std::printf("\n%-26s %10llu\n", "SUBMITS",
                 static_cast<unsigned long long>(stats.submits));
