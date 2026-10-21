@@ -1,0 +1,108 @@
+{
+  "schema": "rawrxd.deep2.reverse_engineering_manifest.v1",
+  "generated_utc": "2026-10-21T02:30:40.0055622Z",
+  "repository": "F:\\rawrxd",
+  "policy": "full-model certification only; component evidence never certifies the model",
+  "open_findings": 4,
+  "certification": "NOT_CERTIFIED",
+  "findings": [
+    {
+      "id": "RE-GRAPH-01",
+      "boundary": "Qwen hybrid block classification",
+      "status": "PASS",
+      "evidence": [
+        "src\\deep2\\modelgenie\\universal_gguf.cpp",
+        "qwen35Gdn predicate, exclusive SsmScan and attention lowering"
+      ],
+      "next_action": "Keep GDN lowering exclusive and add per-model graph receipt."
+    },
+    {
+      "id": "RE-GEOM-02",
+      "boundary": "SsmAlpha/SsmBeta role coverage",
+      "status": "PASS",
+      "evidence": [
+        "src\\deep2\\modelgenie\\universal_gguf.hpp",
+        "SsmAlpha, SsmBeta role declarations"
+      ],
+      "next_action": "Reject models whose recurrent coefficient roles are absent or ambiguous."
+    },
+    {
+      "id": "RE-SHADER-03",
+      "boundary": "GDN shader artifact",
+      "status": "COMPONENT_PASS",
+      "evidence": [
+        "src\\deep2\\shaders\\deep2_qwen4exp_gdn.comp",
+        "src/deep2/shaders/deep2_qwen4exp_gdn.spv"
+      ],
+      "next_action": "Bind descriptors and submit this shader from ExecuteToken."
+    },
+    {
+      "id": "RE-EXEC-04",
+      "boundary": "GDN production ExecuteToken dispatch",
+      "status": "BLOCKED",
+      "evidence": [
+        "src\\deep2\\runtime_graph_executor.cpp",
+        "OpKind::Gdn exists but no executable switch arm"
+      ],
+      "next_action": "Implement descriptor allocation, queue submission, state publication, and GPU parity."
+    },
+    {
+      "id": "RE-EXEC-05",
+      "boundary": "QSA/PLE/Hyperconnection/SparseMoE production dispatch",
+      "status": "BLOCKED",
+      "evidence": [
+        "src\\deep2\\runtime_graph_executor.cpp",
+        "Bind fail-closed operator boundary"
+      ],
+      "next_action": "Close each operator through ExecuteToken independently before aggregate admission."
+    },
+    {
+      "id": "RE-AGENT-06",
+      "boundary": "Native agent loop source",
+      "status": "SOURCE_READY",
+      "evidence": [
+        "tools\\deep2_agentic_loop.cpp",
+        "read/write/bash/finish action grammar"
+      ],
+      "next_action": "Build the binary and run a read-only audit against a real local model."
+    },
+    {
+      "id": "RE-AGENT-07",
+      "boundary": "Native agent loop executable",
+      "status": "BUILT",
+      "evidence": [
+        "F:\\rawrxd\\build\\bin\\Release\\deep2_agentic_loop.exe",
+        "F:\\rawrxd\\build\\Release\\deep2_agentic_loop.exe"
+      ],
+      "next_action": "Build deep2_agentic_loop before advertising rawr run model audits."
+    },
+    {
+      "id": "RE-AUTH-08",
+      "boundary": "MOTD authorization boundary",
+      "status": "SOURCE_PRESENT",
+      "evidence": [
+        "src\\agentic\\MotdAuthorization.h",
+        "session/turn authorization source"
+      ],
+      "next_action": "Require a fresh MOTD acknowledgement before executable tool dispatch."
+    },
+    {
+      "id": "RE-FULL-09",
+      "boundary": "Qwen full-model independent parity",
+      "status": "NOT_RUN",
+      "evidence": [
+        "No complete two-shard execution receipt supplied by this scan"
+      ],
+      "next_action": "Run every layer and expert path with an independent oracle."
+    },
+    {
+      "id": "RE-FULL-10",
+      "boundary": "Qwen autoregressive certification",
+      "status": "BLOCKED",
+      "evidence": [
+        "Depends on RE-EXEC-04, RE-EXEC-05, and RE-FULL-09"
+      ],
+      "next_action": "Require deterministic multi-token generation, cache continuity, and repeated output."
+    }
+  ]
+}
