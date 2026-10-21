@@ -23,6 +23,44 @@ using Universal::TensorRec;
 
 namespace {
 
+std::string JsonEscape(const std::string& value) {
+    std::string out;
+    out.reserve(value.size() + 8);
+    for (const unsigned char c : value) {
+        switch (c) {
+            case '\\': out += "\\\\"; break;
+            case '"': out += "\\\""; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (c < 0x20) {
+                    char buf[7];
+                    std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+                    out += buf;
+                } else {
+                    out.push_back(static_cast<char>(c));
+                }
+        }
+    }
+    return out;
+}
+
+void SetBindFailureReceipt(BindStats& stats, const std::string& model,
+                           const char* stage, const char* op,
+                           const std::string& reason) {
+    stats.failure_stage = stage ? stage : "UNKNOWN";
+    stats.first_blocking_operator = op ? op : "UNKNOWN";
+    stats.failure_receipt_json =
+        std::string("{\"model\":\"") + JsonEscape(model) +
+        "\",\"certification\":\"BLOCKED\",\"stage\":\"" +
+        JsonEscape(stats.failure_stage) +
+        "\",\"first_blocking_operator\":\"" +
+        JsonEscape(stats.first_blocking_operator) +
+        "\",\"gpu_dispatches\":0,\"generated_tokens\":0,\"tps\":null,\"reason\":\"" +
+        JsonEscape(reason) + "\"}";
+}
+
 // ---------------------------------------------------------------------------
 // RAWRXD_RESOURCE_GOVERNOR_001 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â admitted, bounded KV residency.
 //
@@ -518,7 +556,11 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     bound_ = false;
     last_error_.clear();
 
-    if (!report.ok) { stats_.error = "ingest report invalid"; return false; }
+    if (!report.ok) {
+        stats_.error = "ingest report invalid";
+        SetBindFailureReceipt(stats_, "unknown", "DISCOVERY", "INGEST", stats_.error);
+        return false;
+    }
     spec_ = report.spec;
     tensors_ = report.tensors;
     program_.clear();
@@ -535,11 +577,18 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         auto it = slot_by_name_.find(n);
         return it == slot_by_name_.end() ? -1 : it->second;
     };
-    if (findSlot("token_embd.weight") < 0) { stats_.error = "missing token_embd.weight"; return false; }
+    if (findSlot("token_embd.weight") < 0) {
+        stats_.error = "missing token_embd.weight";
+        SetBindFailureReceipt(stats_, spec_.architecture, "TENSOR_BINDING",
+                              "token_embd.weight", stats_.error);
+        return false;
+    }
     const bool hasOutputNorm = findSlot("output_norm.weight") >= 0 ||
                                findSlot("output_hc_norm.weight") >= 0;
     if (!hasOutputNorm) {
         stats_.error = "missing output_norm.weight (or architecture-specific final norm)";
+        SetBindFailureReceipt(stats_, spec_.architecture, "TENSOR_BINDING",
+                              "output_norm.weight", stats_.error);
         return false;
     }
 
@@ -570,6 +619,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         if (!canTie) {
             stats_.error = "missing output.weight and token_embd.weight cannot "
                            "serve as a tied LM head";
+            SetBindFailureReceipt(stats_, spec_.architecture, "TENSOR_BINDING",
+                                  "output.weight", stats_.error);
             return false;
         }
         // Tied embeddings: the head op resolves through token_embd.weight.
@@ -708,6 +759,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             stats_.error = "attention geometry metadata inconsistent: head_count=" +
                            std::to_string(H) + " key_length=" + std::to_string(qW) +
                            " value_length=" + std::to_string(vW);
+            SetBindFailureReceipt(stats_, spec_.architecture, "GRAPH_LOWERING",
+                                  "Attention", stats_.error);
             return false;
         }
     }
@@ -775,6 +828,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
                           qwen4exp_unbound ? OpKindName(in.op) : "Unsupported",
                           in.detail.c_str());
             stats_.unbound_ops.emplace_back(buf);
+            if (stats_.first_blocking_operator.empty())
+                stats_.first_blocking_operator = OpKindName(in.op);
             ++stats_.ops_unbound;
             continue;
         }
@@ -789,9 +844,16 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         for (size_t i = 0; i < stats_.unbound_ops.size() && i < 4; ++i)
             e += stats_.unbound_ops[i] + "; ";
         stats_.error = e;
+        SetBindFailureReceipt(stats_, spec_.architecture, "GRAPH_LOWERING",
+                              stats_.first_blocking_operator.c_str(), stats_.error);
         return false;
     }
-    if (stats_.ops_bound == 0) { stats_.error = "no executable ops"; return false; }
+    if (stats_.ops_bound == 0) {
+        stats_.error = "no executable ops";
+        SetBindFailureReceipt(stats_, spec_.architecture, "GRAPH_LOWERING",
+                              "NONE", stats_.error);
+        return false;
+    }
 
     // ---- 4. allocate per-layer KV cache ----
     const size_t B = (size_t)std::max<uint64_t>(spec_.block_count, 1);
