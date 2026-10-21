@@ -1043,8 +1043,22 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         const bool isMoEExecute = (in.op == OpKind::MoEExecute);
         std::string unboundReason;
         if (isRouter) {
-            if (findSlot(in.bName.c_str()) < 0) {
+            const int32_t slot = findSlot(in.bName.c_str());
+            if (slot < 0) {
                 unboundReason = "router weight '" + in.bName + "' does not resolve";
+            } else {
+                // The router is a [hidden, experts] MATRIX. A one-dimensional
+                // tensor is the router's bias, and a matrix with the wrong
+                // extent would route against the wrong hidden size.
+                const TensorRec& routerTensor = tensors_[(size_t)slot];
+                if (routerTensor.dims.size() < 2) {
+                    unboundReason = "the router weight '" + in.bName +
+                                    "' is not a [hidden, experts] matrix";
+                } else if (routerTensor.dims[0] != spec_.embd ||
+                           routerTensor.dims[1] != spec_.expert_count) {
+                    unboundReason = "the router weight '" + in.bName +
+                                    "' has the wrong shape for the topology";
+                }
             }
         } else if (isMoEExecute) {
             // The detail carries "experts: <up>,<down>". The names are
@@ -1075,6 +1089,26 @@ bool Executor::Bind(const Universal::IngestReport& report) {
                 unboundReason = "expert up projection '" + up + "' does not resolve";
             } else if (findSlot(down.c_str()) < 0) {
                 unboundReason = "expert down projection '" + down + "' does not resolve";
+            } else {
+                // The expert projections are 3-D: [ffn, experts, hidden] for the
+                // up projection and [hidden, ffn, experts] for the down one.
+                // A projection with the wrong extent would silently compute
+                // the wrong thing, so the shape is checked, not just the name.
+                const TensorRec& upTensor = tensors_[(size_t)findSlot(up.c_str())];
+                const TensorRec& downTensor = tensors_[(size_t)findSlot(down.c_str())];
+                if (upTensor.dims.size() != 3 || downTensor.dims.size() != 3) {
+                    unboundReason = "the expert projections are not 3-D [ffn, experts, hidden]";
+                } else if (upTensor.dims[0] != spec_.embd ||
+                           upTensor.dims[1] != spec_.expert_ffn ||
+                           upTensor.dims[2] != spec_.expert_count) {
+                    unboundReason = "the expert up projection '" + up +
+                                    "' has the wrong shape for the topology";
+                } else if (downTensor.dims[0] != spec_.expert_ffn ||
+                           downTensor.dims[1] != spec_.embd ||
+                           downTensor.dims[2] != spec_.expert_count) {
+                    unboundReason = "the expert down projection '" + down +
+                                    "' has the wrong shape for the topology";
+                }
             }
         }
 
@@ -2461,18 +2495,74 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
         std::fprintf(stderr, "\n");
         std::fflush(stderr);
     }
+    // RAWRXD_GATE7_NEMOTRON_MOE_001: the routing semantics, taken from the
+    // reference implementation of this architecture
+    // (llama.cpp, src/models/nemotron-h-moe.cpp and src/llama-graph.cpp,
+    // build_moe_ffn):
+    //
+    //   logits          = hidden @ ffn_gate_inp          (the MATRIX)
+    //   probs           = sigmoid(logits)                (SIGMOID, not softmax)
+    //   selection_probs = probs + exp_probs_b            (the bias is on the
+    //                                                     PROBABILITIES)
+    //   selected        = argsort_top_k(selection_probs)  (the SELECTION sees
+    //                                                     the biased probs)
+    //   weights         = probs[selected]                (the WEIGHTS are the
+    //                                                     UNBIASED probs)
+    //   weights        /= sum(weights)   if expert_weights_norm
+    //
+    // Two things this corrects. The gating function for nemotron_h_moe is
+    // SIGMOID, not the deepseek2 default of softmax: over 128 experts a
+    // softmax spreads the mass so widely that the top-6 selection ORDER can
+    // differ from the reference's. And the router's bias is added to the
+    // probabilities AFTER the sigmoid, not to the logits: adding it to the
+    // logits would change the gating function's output, and the reference
+    // deliberately keeps the probabilities unbiased because they are what
+    // become the expert weights.
+    //
+    // The bias steers WHICH experts are selected without changing HOW MUCH
+    // each selected expert contributes.
     const bool sigmoid_routing = (spec_.architecture == "deepseek3" ||
-                                  spec_.architecture == "deepseek4");
+                                  spec_.architecture == "deepseek4" ||
+                                  spec_.architecture == "nemotron_h" ||
+                                  spec_.architecture == "nemotron_h_moe");
     if (sigmoid_routing) {
         for (size_t e = 0; e < n_exp; ++e)
             logits[e] = 1.0f / (1.0f + std::exp(-logits[e]));
     } else {
         SoftmaxVec(logits);
     }
+    // The probabilities after the gating function. These are the expert
+    // weights; the reference keeps them unbiased.
+    const std::vector<float> probs = logits;
+
+    // The expert-selection bias, if the model declares one.
+    std::vector<float> selection = probs;
+    if (!router.detail.empty()) {
+        const size_t biasAt = router.detail.find("bias=");
+        if (biasAt != std::string::npos) {
+            std::string biasName = router.detail.substr(biasAt + 5);
+            const size_t cut = biasName.find_first_of(" ;");
+            if (cut != std::string::npos) biasName = biasName.substr(0, cut);
+            const auto biasIt = slot_by_name_.find(biasName);
+            if (biasIt != slot_by_name_.end()) {
+                const int32_t biasSlot = biasIt->second;
+                const TensorRec& biasTensor = tensors_[(size_t)biasSlot];
+                if (biasTensor.data != nullptr &&
+                    biasTensor.bytes >= n_exp * sizeof(float)) {
+                    const float* bias = reinterpret_cast<const float*>(biasTensor.data);
+                    for (size_t e = 0; e < n_exp; ++e) selection[e] += bias[e];
+                } else {
+                    last_error_ = "router: the selection bias is missing or short";
+                    return false;
+                }
+            }
+        }
+    }
+
     std::vector<uint32_t> idx(n_exp);
     for (uint32_t i = 0; i < n_exp; ++i) idx[i] = i;
     std::stable_sort(idx.begin(), idx.end(),
-                     [&](uint32_t a, uint32_t b) { return logits[a] > logits[b]; });
+                     [&](uint32_t a, uint32_t b) { return selection[a] > selection[b]; });
     ids.assign(kused, 0);
     w.assign(kused, 0.0f);
     // 3. weight transformation.
@@ -2493,7 +2583,9 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     }
     for (size_t i = 0; i < kused; ++i) {
         ids[i] = idx[i];
-        w[i] = (float)(logits[idx[i]] / renorm);
+        // The weight is the UNBIASED probability: the bias steered the
+        // selection, it does not change the contribution.
+        w[i] = (float)(probs[idx[i]] / renorm);
     }
     // expert_weights_scale: applied only when the model sets it to something
     // other than 0 (absent) or 1 (identity), exactly like the reference.

@@ -77,4 +77,9 @@ EXPERT_GATE_PRESENT    0
   router bound to a bias   : 0 of 24
 [PASS] the router is bound to the [hidden, experts] matrix  blk.1.ffn_gate_inp.weight (24 of 24 bound to a matrix)
 
+NEGATIVE TESTS (each must be refused before execution)
+[PASS] a corrupted expert binding is refused before execution graph contains unimplemented operators: MoEExecute node: expert up projection 'blk.999.cor
+[PASS] a missing router matrix is refused before execution  graph contains unimplemented operators: Router node: router weight 'blk.999.missing_router
+[PASS] an incompatible tensor shape is refused before execution graph contains unimplemented operators: Router node: the router weight 'blk.1.ffn_up_exps.
+
 === DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS ===

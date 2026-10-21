@@ -473,6 +473,84 @@ int main(int argc, char** argv) {
                : routerBoundExample + " (" + std::to_string(routerMatrixBound) + " of " +
                      std::to_string(routerBlocks.size()) + " bound to a matrix)");
 
+    // ---- 8. the negative tests: a wrong binding must be REFUSED ------------
+    // The engine has to refuse an invalid computation rather than silently
+    // produce plausible but incorrect tokens. Three corruptions are applied
+    // to a COPY of the bound graph, and each must make the bind fail closed
+    // BEFORE any execution happens.
+    printf("\nNEGATIVE TESTS (each must be refused before execution)\n");
+
+    // 8a. A corrupted expert binding: the expert's up projection is
+    // redirected to a tensor that does not exist.
+    {
+        Universal::IngestReport corrupted = report;
+        corrupted.graph = report.graph;
+        bool patched = false;
+        for (Universal::GraphOp& op : corrupted.graph.ops) {
+            if (op.op != Universal::Op::MoEExecute) continue;
+            const size_t marker = op.detail.find("experts:");
+            if (marker == std::string::npos) continue;
+            const size_t comma = op.detail.find(',', marker);
+            if (comma == std::string::npos) continue;
+            op.detail = op.detail.substr(0, marker + 8) + "blk.999.corrupt_expert_up.weight" +
+                        op.detail.substr(comma);
+            patched = true;
+            break;
+        }
+        RuntimeGraph::Executor executor2;
+        executor2.SetForceCpu(true);
+        const bool bound2 = executor2.Bind(corrupted);
+        Report("a corrupted expert binding is refused before execution",
+               patched && !bound2,
+               patched ? (bound2 ? "the corrupted graph BOUND - it must refuse"
+                                 : executor2.Stats().error.substr(0, 90))
+                       : "no MoEExecute operation was found to corrupt");
+    }
+
+    // 8b. A missing router matrix: the router's weight is redirected to a
+    // tensor that does not exist.
+    {
+        Universal::IngestReport corrupted = report;
+        corrupted.graph = report.graph;
+        bool patched = false;
+        for (Universal::GraphOp& op : corrupted.graph.ops) {
+            if (op.op != Universal::Op::Router) continue;
+            op.b = "blk.999.missing_router.weight";
+            patched = true;
+            break;
+        }
+        RuntimeGraph::Executor executor3;
+        executor3.SetForceCpu(true);
+        const bool bound3 = executor3.Bind(corrupted);
+        Report("a missing router matrix is refused before execution",
+               patched && !bound3,
+               patched ? (bound3 ? "the corrupted graph BOUND - it must refuse"
+                                 : executor3.Stats().error.substr(0, 90))
+                       : "no Router operation was found to corrupt");
+    }
+
+    // 8c. An incompatible tensor shape: the router is pointed at the
+    // EXPERT tensor, which resolves but is not a [hidden, experts] matrix.
+    {
+        Universal::IngestReport corrupted = report;
+        corrupted.graph = report.graph;
+        bool patched = false;
+        for (Universal::GraphOp& op : corrupted.graph.ops) {
+            if (op.op != Universal::Op::Router) continue;
+            op.b = "blk.1.ffn_up_exps.weight";  // resolves, but is 3-D
+            patched = true;
+            break;
+        }
+        RuntimeGraph::Executor executor4;
+        executor4.SetForceCpu(true);
+        const bool bound4 = executor4.Bind(corrupted);
+        Report("an incompatible tensor shape is refused before execution",
+               patched && !bound4,
+               patched ? (bound4 ? "the corrupted graph BOUND - it must refuse"
+                                 : executor4.Stats().error.substr(0, 90))
+                       : "no Router operation was found to corrupt");
+    }
+
     printf("\n=== %s ===\n", g_failures == 0 ? "DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS"
                                             : "DEEP2_NEMOTRON_MOE_EXECUTION_001 = FAIL");
     if (g_failures != 0) {
