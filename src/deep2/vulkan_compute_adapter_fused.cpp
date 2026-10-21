@@ -246,25 +246,27 @@ bool VulkanCompute::GemvHostReadOut(float* dst, size_t bytes) {
 // Q4_K fused GEMV. The implementation owns a real Q4_K kernel
 // (DispatchGemvQ4KBatch, batch=1 for a single token), so this dispatches on the
 // device after staging the host activation.
+// Keep the Q4_K batch shader and host-pointer API unchanged, but record
+// upload + Q4_K GEMV + download as one fused backend submission. Previously
+// the three standalone calls serialized the queue three times per projection.
 bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
                                           const float* input, float* output,
                                           uint32_t rows, uint32_t cols,
                                           uint64_t cacheKey) {
-    if (backend_ == nullptr) return false;
-    if (packed == nullptr || input == nullptr || output == nullptr) return false;
-    if (rows == 0 || cols == 0 || bytes == 0) return false;
-
-    Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
-    Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
-    if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
-        out.size < static_cast<size_t>(rows) * sizeof(float)) {
-        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1)) return false;
-    }
-    if (!backend_->UploadVector(in, input, cols)) return false;
-    if (!backend_->DispatchGemvQ4KBatch(packed, bytes, in, out, rows, cols, 1)) {
+    if (!backend_ || !packed || !input || !output ||
+        !rows || !cols || !bytes)
         return false;
-    }
-    if (!backend_->DownloadVector(out, output, rows)) return false;
+
+    Deep2::GpuWeightView view{};
+    view.data = packed;
+    view.bytes = bytes;
+    view.type = GGML_TYPE_Q4_K;
+    view.rows = rows;
+    view.cols = cols;
+    view.key = cacheKey;
+    if (!backend_->RunWeightHostBatchQ4K(
+            view, input, output, 1, backend_->WorkEpoch()))
+        return false;
 
     gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
     gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());
@@ -272,34 +274,24 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
     return true;
 }
 
-// Q6_K logits path: dedicated buffer, never truncated by the weight window.
-// The generic quant dispatch implements this kernel, so the host activation is
-// staged into the arena and the caller's output buffer is written by the
-// device.
+// Q6_K logits path: the regular Q6_K quant shader now shares one fused
+// upload/dispatch/download fence instead of waiting at each boundary.
 bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
                                           const float* input, float* output,
                                           uint32_t rows, uint32_t cols) {
-    if (backend_ == nullptr) return false;
-    if (packed == nullptr || input == nullptr || output == nullptr) return false;
-    if (rows == 0 || cols == 0 || bytes == 0) return false;
-
-    Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
-    if (in.size < static_cast<size_t>(cols) * sizeof(float)) {
-        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1)) return false;
-    }
-    if (!backend_->UploadVector(in, input, cols)) return false;
-
-    // The contract's signature is host-pointer based; stage the result back out
-    // through the arena, which is what keeps the output off the host while the
-    // kernel runs.
-    Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
-    if (out.size < static_cast<size_t>(rows) * sizeof(float)) {
-        if (!backend_->EnsureForwardArena(rows, rows, 1, 1, 1, 1, 1)) return false;
-    }
-    if (!backend_->DispatchGemvQuant(GGML_TYPE_Q6_K, packed, bytes, in, out, rows, cols)) {
+    if (!backend_ || !packed || !input || !output ||
+        !rows || !cols || !bytes)
         return false;
-    }
-    if (!backend_->DownloadVector(out, output, rows)) return false;
+
+    Deep2::GpuWeightView view{};
+    view.data = packed;
+    view.bytes = bytes;
+    view.type = GGML_TYPE_Q6_K;
+    view.rows = rows;
+    view.cols = cols;
+    if (!backend_->RunWeightHostRoundTrip(
+            view, input, output, backend_->WorkEpoch()))
+        return false;
 
     gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
     gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());
