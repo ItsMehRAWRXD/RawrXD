@@ -187,10 +187,16 @@ function global:Reset-RawrGpuDevices {
     try {
         $inferenceNames = @('deep2_strata_bench', 'deep2_bench_tps', 'deep2_parity_trace',
                             'deep2_spec_bench', 'deep2_runtime_dispatch', 'deep2_engine',
-                            'deep2_cert', 'deep2_smoke', 'rawr_run', 'rawr', 'python', 'ollama', 'ollama app')
+                            'deep2_cert', 'deep2_smoke', 'rawr_run', 'rawr', 'python')
         foreach ($name in $inferenceNames) {
             $procs = Get-CimInstance Win32_Process -Filter "Name = '$name.exe'" -ErrorAction SilentlyContinue
             if ($procs) { $inferenceRunning = $true; break }
+        }
+        # Ollama keeps a resident daemon even while no model is loaded.  Only
+        # block disruptive GPU recovery when `ollama ps` shows a live model.
+        if (-not $inferenceRunning -and (Get-Command ollama.exe -ErrorAction SilentlyContinue)) {
+            $ollamaRows = @(ollama ps 2>$null | Select-Object -Skip 1 | Where-Object { $_ -match '\S' })
+            if ($ollamaRows.Count -gt 0) { $inferenceRunning = $true }
         }
     } catch {}
 
