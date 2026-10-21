@@ -592,6 +592,39 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         return false;
     }
 
+    // Admission-time geometry fence.  A malformed architecture record can
+    // otherwise survive Bind and fail much later in OpRmsNorm with the vague
+    // "weight too small" diagnostic after the wrong block/offset has already
+    // been selected.  Norm vectors are block-local and must match the model's
+    // declared embedding width; their block id must also be inside the
+    // declared topology.  This is validation only: no dimensions are guessed
+    // or repaired, and a mismatch remains fail-closed.
+    if (spec_.embd != 0 && spec_.block_count != 0) {
+        for (const auto& t : tensors_) {
+            if (t.block >= 0 && static_cast<uint64_t>(t.block) >= spec_.block_count) {
+                stats_.error = "tensor block outside model topology: " + t.name +
+                               " block=" + std::to_string(t.block) +
+                               " block_count=" + std::to_string(spec_.block_count);
+                SetBindFailureReceipt(stats_, spec_.architecture, "MODEL_GEOMETRY",
+                                      t.name.c_str(), stats_.error);
+                return false;
+            }
+            const bool norm = t.role == Universal::Role::AttnNorm ||
+                              t.role == Universal::Role::FfnNorm;
+            if (!norm || t.block < 0 || t.name.find(".weight") == std::string::npos)
+                continue;
+            if (t.dims.size() != 1 || t.dims[0] != spec_.embd) {
+                stats_.error = "norm geometry mismatch: " + t.name +
+                               " dims=" + (t.dims.empty() ? std::string("[]") :
+                                   "[" + std::to_string(t.dims[0]) + "]") +
+                               " expected=[" + std::to_string(spec_.embd) + "]";
+                SetBindFailureReceipt(stats_, spec_.architecture, "MODEL_GEOMETRY",
+                                      t.name.c_str(), stats_.error);
+                return false;
+            }
+        }
+    }
+
     // The LM head. Models that tie their embeddings (Qwen2.5-Coder-1.5B and
     // most base checkpoints) ship no output.weight at all and share
     // token_embd.weight as the head. Accepting the embedding there is correct
