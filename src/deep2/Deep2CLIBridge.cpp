@@ -27,6 +27,28 @@ extern "C" bool deep2_generate(Deep2EngineHandle* engine,
     return !outText.empty();
 }
 
+extern "C" bool deep2_generate_stream(Deep2EngineHandle* engine,
+                                       const char* prompt,
+                                       size_t maxTokens,
+                                       Deep2TokenCallback callback,
+                                       void* user,
+                                       std::string& outText) {
+    if (!engine || !prompt || !callback) return false;
+    Deep2::GenerationOptions options{};
+    options.maxTokens = maxTokens;
+    options.temperature = 0.0f;
+    options.topK = 1;
+    options.topP = 1.0f;
+    options.seed = 42;
+    const auto result = engine->engine.generateStream(
+        prompt, options,
+        [&](int32_t tokenId, const std::string& text) -> bool {
+            outText += text;
+            return callback(tokenId, text.data(), text.size(), user);
+        });
+    return result.completed && !outText.empty();
+}
+
 extern "C" void deep2_free(Deep2EngineHandle* engine) {
     delete engine;
 }

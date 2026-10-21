@@ -2963,8 +2963,13 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/ExecutionPolicyApply.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/ExecutionPolicyStore.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/execution_policy/PlacementPlan.cpp
-            # Ollama blob ingestion (declared in src/deep2/ollama_blob_parser.h)
-            ${CMAKE_SOURCE_DIR}/src/deep2/ollama_blob_parser.cpp
+            # Ollama blob ingestion and native blob detector implementation
+            # used by RawrModelAlias and `rawr run`.  The implementation unit
+            # also owns OllamaBlobParser; do not compile the legacy duplicate
+            # parser unit alongside it.
+            # the `rawr run <ollama-name>` front door.  Keep this in the shared
+            # engine library so CLI consumers do not get unresolved symbols.
+            ${CMAKE_SOURCE_DIR}/src/deep2/ollama_blob_parser_impl.cpp
             # Deep2Engine's own out-of-class members
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_missing_members.cpp
             # Sampling helpers used by the engine

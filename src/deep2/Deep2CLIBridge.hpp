@@ -5,6 +5,7 @@
 // as part of deep2_engine_lib (where all includes resolve).
 
 #include <string>
+#include <cstdint>
 
 struct Deep2EngineHandle;  // opaque
 
@@ -17,6 +18,17 @@ extern "C" bool deep2_generate(Deep2EngineHandle* engine,
                                const char* prompt,
                                size_t maxTokens,
                                std::string& outText);
+
+// Token streaming bridge used by the native CLI.  The callback returns false
+// to cancel generation.  The bridge keeps the engine opaque to CLI callers.
+using Deep2TokenCallback = bool (*)(int32_t tokenId, const char* text,
+                                    size_t textBytes, void* user);
+extern "C" bool deep2_generate_stream(Deep2EngineHandle* engine,
+                                       const char* prompt,
+                                       size_t maxTokens,
+                                       Deep2TokenCallback callback,
+                                       void* user,
+                                       std::string& outText);
 
 // Free a Deep2Engine instance.
 extern "C" void deep2_free(Deep2EngineHandle* engine);

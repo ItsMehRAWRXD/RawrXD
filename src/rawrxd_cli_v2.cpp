@@ -36,6 +36,7 @@
 #endif
 
 #include "deep2/Deep2CLIBridge.hpp"
+#include "deep2/RawrModelAlias.hpp"
 #include "project_wizard/project_spec.hpp"
 #include "project_wizard/project_state_manager.hpp"
 #include "project_wizard/project_wizard.hpp"
@@ -73,6 +74,7 @@ static std::atomic<bool>                   g_running{true};
 static std::string                         g_workspace;
 static std::string                         g_model;
 static std::string                         g_backend_name = "auto";
+static std::atomic<bool>                   g_streamed_response{false};
 
 // ---------------------------------------------------------------------------
 // Signal handling
@@ -173,7 +175,13 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
             localEngine = nullptr;
         }
         std::string modelPath = g_workspace + "/" + model;
-        if (!std::filesystem::exists(modelPath)) {
+        Deep2::rawr_run::AliasResolve resolved{};
+        if (Deep2::rawr_run::ResolveModelAlias(model.c_str(), resolved)) {
+            modelPath = resolved.path;
+            std::fprintf(stderr, "[Deep2Backend] Resolved alias '%s' -> %s (%u shard%s)\n",
+                         model.c_str(), modelPath.c_str(), resolved.shards,
+                         resolved.shards == 1 ? "" : "s");
+        } else if (!std::filesystem::exists(modelPath)) {
             modelPath = model;
         }
         std::fprintf(stderr, "[Deep2Backend] Loading model: %s\n", modelPath.c_str());
@@ -211,7 +219,18 @@ static bool InitBackend(BackendMode mode, const std::string& model) {
                 }
             }
             std::string text;
-            if (!deep2_generate(localEngine, prompt.c_str(), static_cast<size_t>(maxTokens), text)) {
+            auto emit = [](int32_t, const char* bytes, size_t count, void*) -> bool {
+                if (bytes && count) {
+                    std::cout.write(bytes, static_cast<std::streamsize>(count));
+                    std::cout.flush();
+                    g_streamed_response = true;
+                }
+                return g_running.load();
+            };
+            g_streamed_response = false;
+            if (!deep2_generate_stream(localEngine, prompt.c_str(),
+                                        static_cast<size_t>(maxTokens), emit,
+                                        nullptr, text)) {
                 return InferenceResult::Error("Deep2Engine generated empty response");
             }
             InferenceResult r = InferenceResult::Ok(text);
@@ -554,6 +573,19 @@ static int CmdRun(const std::vector<std::string>& args) {
                          (fu.kind != rawrxd::project::FollowUpKind::kNone);
     }
 
+    // `rawr run <model> "<prompt>"` is the primary one-shot form.  A bare
+    // second positional is an agent mode only when it names a registered
+    // mode; otherwise preserve the exact prompt and avoid interpreting it as
+    // an invalid mode (the old behavior rejected normal English prompts).
+    if (!is_wizard_goal && !mode_str.empty() && !flags.count("prompt") &&
+        !flags.count("task")) {
+        AgentMode requestedMode{};
+        if (!AgentModeParse(mode_str, requestedMode)) {
+            flags["prompt"] = mode_str;
+            mode_str.clear();
+        }
+    }
+
     // Resolve mode: --mode wins, then a bare positional, else Code.
     // Skipped entirely for wizard goals (they are not agent modes).
     AgentMode mode = AgentMode::Code;
@@ -703,7 +735,8 @@ static int CmdRun(const std::vector<std::string>& args) {
         }
 
         g_ledger->AppendAssistantMessage(result.response);
-        std::cout << result.response << "\n";
+        if (g_streamed_response) std::cout << "\n" << std::flush;
+        else std::cout << result.response << "\n";
 
         g_ledger->SetTermination(TerminationReason::ModelCompleted, 0);
         g_ledger->SetVerdict("one-shot task completed");
@@ -848,7 +881,8 @@ static int CmdRun(const std::vector<std::string>& args) {
         }
 
         g_ledger->AppendAssistantMessage(result.response);
-        std::cout << result.response << "\n";
+        if (g_streamed_response) std::cout << "\n" << std::flush;
+        else std::cout << result.response << "\n";
     }
 
     // ---- Finalize the ledger regardless of how the session ended ----
