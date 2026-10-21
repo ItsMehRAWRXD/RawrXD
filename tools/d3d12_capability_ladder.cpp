@@ -57,6 +57,7 @@
 
 #include <windows.h>
 #include <d3d12.h>
+#include <d3d12sdklayers.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 
@@ -112,6 +113,16 @@ struct Receipt {
     uint32_t dred_breadcrumb_count = 0;
     uint64_t dred_page_fault_va = 0;
     std::vector<std::string> debug_messages;
+    // The debug layer's own verdict on the failure: how many messages it
+    // produced, and how many of them were errors. Without the debug layer
+    // these are zero, and that is exactly the condition that makes the
+    // conclusion PLATFORM_DIAGNOSTICS_INCOMPLETE rather than
+    // PLATFORM_BLOCKED: an invalid application argument and a damaged
+    // installation look identical until the layer is there to tell them
+    // apart.
+    uint32_t debug_layer_message_count = 0;
+    uint32_t debug_layer_error_count = 0;
+    bool debug_layer_reported_application_error = false;
 
     // Conclusion.
     bool sunshine_code_reached = false;
@@ -252,7 +263,23 @@ private:
             SIZE_T length = sizeof(message);
             if (FAILED(infoQueue->GetMessage(i, &message, &length))) break;
             if (message.pDescription == nullptr) break;
-            receipt_.debug_messages.push_back(message.pDescription);
+            ++receipt_.debug_layer_message_count;
+
+            const char* severity = "MESSAGE";
+            switch (message.Severity) {
+            case D3D12_MESSAGE_SEVERITY_CORRUPTION: severity = "CORRUPTION"; break;
+            case D3D12_MESSAGE_SEVERITY_ERROR: severity = "ERROR"; break;
+            case D3D12_MESSAGE_SEVERITY_WARNING: severity = "WARNING"; break;
+            case D3D12_MESSAGE_SEVERITY_INFO: severity = "INFO"; break;
+            default: break;
+            }
+            if (message.Severity == D3D12_MESSAGE_SEVERITY_ERROR ||
+                message.Severity == D3D12_MESSAGE_SEVERITY_CORRUPTION) {
+                ++receipt_.debug_layer_error_count;
+                receipt_.debug_layer_reported_application_error = true;
+            }
+            receipt_.debug_messages.push_back(std::string("[") + severity + "] " +
+                                             message.pDescription);
         }
     }
 
@@ -443,10 +470,20 @@ private:
 
     bool TryRtv(Rung& rung) {
         const D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+        const D3D12_RESOURCE_DESC desc = colorTexture_->GetDesc();
+        char call[512];
+        sprintf_s(call,
+                  "CreateRenderTargetView(res dimension=%u format=%d flags=0x%X "
+                  "mip_levels=%u sample_count=%u; desc format=%d view_dimension=TEXTURE2D)",
+                  static_cast<unsigned>(desc.Dimension), static_cast<int>(desc.Format),
+                  static_cast<unsigned>(desc.Flags), static_cast<unsigned>(desc.MipLevels),
+                  static_cast<unsigned>(desc.SampleDesc.Count),
+                  static_cast<int>(DXGI_FORMAT_R8G8B8A8_UNORM));
+
         device_->CreateRenderTargetView(colorTexture_.Get(), nullptr, handle);
         if (device_->GetDeviceRemovedReason() != S_OK) {
             return Fail(rung, device_->GetDeviceRemovedReason(),
-                        "CreateRenderTargetView removed the device");
+                        std::string(call) + " -> the device was removed");
         }
         colorRtv_ = handle;
         return true;
@@ -619,6 +656,9 @@ void WriteReceipt(const Receipt& receipt, const std::string& path) {
     out << "  \"debug_layer_available\": " << (receipt.debug_layer_available ? "true" : "false") << ",\n";
     out << "  \"debug_layer_enabled\": " << (receipt.debug_layer_enabled ? "true" : "false") << ",\n";
     out << "  \"dred_available\": " << (receipt.dred_available ? "true" : "false") << ",\n";
+    out << "  \"debug_layer_message_count\": " << receipt.debug_layer_message_count << ",\n";
+    out << "  \"debug_layer_error_count\": " << receipt.debug_layer_error_count << ",\n";
+    out << "  \"diagnosis_complete\": " << (receipt.debug_layer_enabled ? "true" : "false") << ",\n";
     out << "  \"rungs\": {\n";
     for (size_t i = 0; i < receipt.rungs.size(); ++i) {
         out << "    \"rung_" << (i + 1) << "_" << receipt.rungs[i].name << "\": {\"status\": \""
@@ -670,6 +710,7 @@ void PrintReceipt(const Receipt& receipt) {
            receipt.debug_layer_available ? "yes" : "no",
            receipt.debug_layer_enabled ? "yes" : "no");
     printf("dred_available      %s\n", receipt.dred_available ? "yes" : "no");
+    printf("debug_layer_msgs    %u (errors %u)\n", receipt.debug_layer_message_count, receipt.debug_layer_error_count);
     printf("\n");
     for (size_t i = 0; i < receipt.rungs.size(); ++i) {
         const Rung& rung = receipt.rungs[i];
@@ -725,11 +766,34 @@ int main(int argc, char** argv) {
     // The conclusion. A rung failure means the fault is in the platform and
     // the application was never reached, which is exactly the distinction
     // that stops a renderer defect being hidden behind a platform excuse.
+    //
+    // The classification is EVIDENCE based, and the evidence is the debug
+    // layer:
+    //
+    //   the debug layer is unavailable      -> PLATFORM_DIAGNOSTICS_INCOMPLETE
+    //   a valid call is rejected, no error   -> PLATFORM_BLOCKED
+    //   the debug layer names an invalid
+    //   application argument                 -> APPLICATION_BLOCKED
+    //   the rung now succeeds                -> the ladder continues
+    //
+    // Without the debug layer the first and the second cases are
+    // indistinguishable, and reporting PLATFORM_BLOCKED there would be a
+    // guess dressed as a certificate.
     if (!passed) {
-        receipt.platform_blocked = true;
         receipt.sunshine_code_reached = false;
-        receipt.application_blocked = false;
-        receipt.conclusion = "PLATFORM_BLOCKED";
+        if (!receipt.debug_layer_enabled) {
+            receipt.platform_blocked = false;
+            receipt.application_blocked = false;
+            receipt.conclusion = "PLATFORM_DIAGNOSTICS_INCOMPLETE";
+        } else if (receipt.debug_layer_reported_application_error) {
+            receipt.platform_blocked = false;
+            receipt.application_blocked = true;
+            receipt.conclusion = "APPLICATION_BLOCKED";
+        } else {
+            receipt.platform_blocked = true;
+            receipt.application_blocked = false;
+            receipt.conclusion = "PLATFORM_BLOCKED";
+        }
     } else {
         // The ladder passed. The Sunshine path is a separate question, and it
         // is answered by running the renderer, not by this probe.

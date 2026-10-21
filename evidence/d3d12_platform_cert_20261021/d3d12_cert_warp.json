@@ -10,6 +10,9 @@
   "debug_layer_available": false,
   "debug_layer_enabled": false,
   "dred_available": true,
+  "debug_layer_message_count": 0,
+  "debug_layer_error_count": 0,
+  "diagnosis_complete": false,
   "rungs": {
     "rung_1_DEVICE": {"status": "PASS", "hresult": "S_OK", "detail": ""},
     "rung_2_QUEUE": {"status": "PASS", "hresult": "S_OK", "detail": ""},
@@ -17,7 +20,7 @@
     "rung_4_COMMAND_LIST": {"status": "PASS", "hresult": "S_OK", "detail": ""},
     "rung_5_DESCRIPTOR_HEAP": {"status": "PASS", "hresult": "S_OK", "detail": ""},
     "rung_6_RESOURCE": {"status": "PASS", "hresult": "S_OK", "detail": ""},
-    "rung_7_RTV": {"status": "FAIL", "hresult": "DXGI_ERROR_INVALID_CALL", "detail": "CreateRenderTargetView removed the device"}
+    "rung_7_RTV": {"status": "FAIL", "hresult": "DXGI_ERROR_INVALID_CALL", "detail": "CreateRenderTargetView(res dimension=3 format=28 flags=0x0 mip_levels=1 sample_count=1; desc format=28 view_dimension=TEXTURE2D) -> the device was removed"}
   },
   "first_failed_rung": "RTV",
   "first_failed_hresult": "DXGI_ERROR_INVALID_CALL",
@@ -26,8 +29,8 @@
   "dred_breadcrumb_count": 0,
   "dred_page_fault_va": 0,
   "sunshine_code_reached": false,
-  "platform_blocked": true,
+  "platform_blocked": false,
   "application_blocked": false,
-  "conclusion": "PLATFORM_BLOCKED",
+  "conclusion": "PLATFORM_DIAGNOSTICS_INCOMPLETE",
   "debug_messages": []
 }
