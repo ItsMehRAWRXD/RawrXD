@@ -137,6 +137,12 @@ std::vector<QueuedDot> g_queued;
 // executing.
 bool BeginBatchImpl()
 {
+    // Differential execution consumes every result immediately.  Keep the
+    // executor's logical batch bookkeeping alive, but do not open the device
+    // batch: DotBlocked must execute synchronously so the checker sees the
+    // freshly written output rather than a queued zero.  EndBatchImpl treats
+    // the matching logical close as a no-op below.
+    if (std::getenv("RR_GPU_CHECK")) return true;
     if (g_batch_active) return false;
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     const bool gpu_ok = Gpu().BeginQuantDotBatch();
@@ -172,6 +178,7 @@ void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
 // command buffer behind one fence and copies the results to the caller buffers.
 bool EndBatchImpl()
 {
+    if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
     if (!g_batch_active) return false;
     g_batch_active = false;
     std::vector<QueuedDot> qs;
@@ -499,7 +506,15 @@ bool DotBlocked(int kind,
     // a caller-pinned CPU call never queues. The receipt reports the GPU path
     // as committed; the batch's own success/failure is reported by EndBatch and
     // accounted by the caller.
-    if (g_batch_active && g_active_device < 0 && !force_cpu && !g_force_cpu) {
+    // The per-op differential checker consumes `y` immediately after this
+    // call.  It deliberately disables executor-side batch joining, so a dot
+    // must execute synchronously even if a surrounding graph opened a batch
+    // for other operations.  Queueing here would return true with an
+    // untouched zero-filled output and report a false GPU divergence before
+    // EndBatch has a chance to submit the work.
+    const bool differential_check = std::getenv("RR_GPU_CHECK") != nullptr;
+    if (g_batch_active && !differential_check && g_active_device < 0 &&
+        !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
             return false;
