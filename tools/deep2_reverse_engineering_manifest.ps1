@@ -52,14 +52,20 @@ $findings += Finding 'RE-SHADER-03' 'GDN shader artifact' `
     ($(if ($gdnShader.present -and (Test-Path -LiteralPath $gdnSpvPath)) {'COMPONENT_PASS'} else {'BLOCKED'})) `
     @($gdnShader.path, 'src/deep2/shaders/deep2_qwen4exp_gdn.spv') `
     'Bind descriptors and submit this shader from ExecuteToken.'
+$gdnCpuReference = (Has $executor 'bool Executor::OpGdn') -and (Has $executor 'GDN reference recurrence')
 $findings += Finding 'RE-EXEC-04' 'GDN production ExecuteToken dispatch' `
-    ($(if (Has $executor 'case OpKind::Gdn') {'BLOCKED'} else {'NOT_FOUND'})) `
-    @($executor.path, 'OpKind::Gdn exists but no executable switch arm') `
-    'Implement descriptor allocation, queue submission, state publication, and GPU parity.'
-$findings += Finding 'RE-EXEC-05' 'QSA/PLE/Hyperconnection/SparseMoE production dispatch' `
-    ($(if (Has $executor 'qwen4exp_unbound') {'BLOCKED'} else {'NOT_FOUND'})) `
-    @($executor.path, 'Bind fail-closed operator boundary') `
-    'Close each operator through ExecuteToken independently before aggregate admission.'
+    ($(if ($gdnCpuReference) {'REFERENCE_ONLY'} elseif (Has $executor 'case OpKind::Gdn') {'COMPONENT_WIRED'} else {'BLOCKED'})) `
+    @($executor.path, 'OpKind::Gdn ExecuteToken arm', 'OpGdn uses reference recurrence and increments cpu_calls') `
+    'Replace the reference recurrence with descriptor-backed Vulkan submission and prove state parity.'
+$operatorFiles = @('op_ple.cpp','op_qsa.cpp','op_hyperconnection.cpp','op_sparse_moe.cpp')
+$unconnectedOperators = @($operatorFiles | Where-Object {
+    $p = Join-Path $RepoRoot "src\deep2\$_"
+    (Test-Path -LiteralPath $p) -and -not (Has $executor ("Op" + [IO.Path]::GetFileNameWithoutExtension($_).Substring(3)))
+})
+$findings += Finding 'RE-EXEC-05' 'PLE/QSA/Hyperconnection/SparseMoE executor reachability' `
+    ($(if ($unconnectedOperators.Count -eq 0) {'COMPONENT_WIRED'} else {'UNCONNECTED'})) `
+    @($executor.path) + $unconnectedOperators `
+    'Add explicit executor methods, tensor-role binding, and production dispatch for each operator.'
 $findings += Finding 'RE-AGENT-06' 'Native agent loop source' `
     ($(if ((Has $agentLoop 'TOOL read') -and (Has $agentLoop 'TOOL bash') -and (Has $agentLoop 'TOOL finish')) {'SOURCE_READY'} else {'BLOCKED'})) `
     @($agentLoop.path, 'read/write/bash/finish action grammar') `

@@ -1,6 +1,6 @@
 {
   "schema": "rawrxd.deep2.reverse_engineering_manifest.v1",
-  "generated_utc": "2026-10-21T02:30:40.0055622Z",
+  "generated_utc": "2026-10-21T02:32:49.1148390Z",
   "repository": "F:\\rawrxd",
   "policy": "full-model certification only; component evidence never certifies the model",
   "open_findings": 4,
@@ -39,22 +39,22 @@
     {
       "id": "RE-EXEC-04",
       "boundary": "GDN production ExecuteToken dispatch",
-      "status": "BLOCKED",
+      "status": "REFERENCE_ONLY",
       "evidence": [
         "src\\deep2\\runtime_graph_executor.cpp",
-        "OpKind::Gdn exists but no executable switch arm"
+        "OpKind::Gdn ExecuteToken arm",
+        "OpGdn uses reference recurrence and increments cpu_calls"
       ],
-      "next_action": "Implement descriptor allocation, queue submission, state publication, and GPU parity."
+      "next_action": "Replace the reference recurrence with descriptor-backed Vulkan submission and prove state parity."
     },
     {
       "id": "RE-EXEC-05",
-      "boundary": "QSA/PLE/Hyperconnection/SparseMoE production dispatch",
-      "status": "BLOCKED",
+      "boundary": "PLE/QSA/Hyperconnection/SparseMoE executor reachability",
+      "status": "UNCONNECTED",
       "evidence": [
-        "src\\deep2\\runtime_graph_executor.cpp",
-        "Bind fail-closed operator boundary"
+        "src\\deep2\\runtime_graph_executor.cpp"
       ],
-      "next_action": "Close each operator through ExecuteToken independently before aggregate admission."
+      "next_action": "+"
     },
     {
       "id": "RE-AGENT-06",
