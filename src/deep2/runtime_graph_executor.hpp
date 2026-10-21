@@ -144,8 +144,7 @@ public:
     // same-input projection group), while attention, MoE, SSM and norms run
     // per token in causal order so the KV cache and recurrent state are
     // byte-identical to the serial ExecuteToken path. After the call,
-    // Logits() holds the LAST token's logits exactly as ExecuteToken would
-    // have produced them, and hidden_ is that token's final hidden state, so
+    // Logits() holds the LAST token's logits exactly as ExecuteToken would    // have produced them, and hidden_ is that token's final hidden state, so
     // generation continues with plain ExecuteToken. Opt-in; the serial path
     // is untouched. Returns false with LastError() set on any failure.
     //
@@ -173,6 +172,48 @@ public:
     bool Ok() const { return bound_ && !last_error_.empty() == false; }
     const std::string& LastError() const { return last_error_; }
     uint32_t LastToken() const { return last_token_; }
+
+    // ---- Intermediate tensors ----------------------------------------------
+    //
+    // RAWRXD_GATE7_NEMOTRON_MOE_001: a read-only view of an intermediate
+    // tensor by its arena name, so a certification can compare the
+    // execution's own buffers against an independent reference WITHOUT
+    // recomputing anything. The view exposes the execution's actual buffer:
+    // it is the same storage the operator wrote, not a copy.
+    //
+    // LIFETIME: the returned pointer is valid until the next ExecuteToken
+    // replaces the arena's contents. CopyArenaValue is the lifetime-safe
+    // form for a caller that needs to keep the data.
+    const std::vector<float>* ArenaValue(const std::string& name) const {
+        if (act_map_ == nullptr) return nullptr;
+        const auto it = act_map_->find(name);
+        return it == act_map_->end() ? nullptr : &it->second;
+    }
+    bool CopyArenaValue(const std::string& name, std::vector<float>& out) const {
+        const std::vector<float>* value = ArenaValue(name);
+        if (value == nullptr) return false;
+        out = *value;
+        return true;
+    }
+
+    // RAWRXD_GATE7_NEMOTRON_MOE_001: the routing's intermediate values, for
+    // the numerical parity certificate. They are optional out-parameters so
+    // the routing's behaviour is unchanged when they are not requested.
+    struct RouterTrace {
+        std::vector<float> logits;     // the raw router logits
+        std::vector<float> probs;      // after the gating function
+        std::vector<float> selection;  // probs + the selection bias
+        double seventhScore = 0.0;     // the highest UNSELECTED selection score
+    };
+    // Run ONE MoE block's routing over a given hidden state. It uses the
+    // execution's own routing arithmetic, so an independent reference is
+    // compared against the real thing rather than against a reimplementation
+    // of it in the test. The routing is a pure function of the hidden state
+    // and the router's weights, which is what lets the certificate exercise
+    // it without a forward pass.
+    bool RunMoeRouting(int32_t block, const std::vector<float>& x,
+                       std::vector<uint32_t>& ids, std::vector<float>& weights,
+                       RouterTrace& trace, std::string& err);
 
     // ---- Context admission guard --------------------------------------------
     //
@@ -405,7 +446,8 @@ private:
     double AttentionScoreScale(size_t headDim, bool yarn) const;
     bool OpRouterTopK(const Instr& router, const Instr& topk,
                       const std::vector<float>& x,
-                      std::vector<uint32_t>& ids, std::vector<float>& w);
+                      std::vector<uint32_t>& ids, std::vector<float>& w,
+                      RouterTrace* trace = nullptr);
     bool OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                       const std::vector<uint32_t>& ids, const std::vector<float>& w,
                       std::vector<float>& y, std::string& err);

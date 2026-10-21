@@ -2417,8 +2417,9 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
 }
 
 bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
-                            const std::vector<float>& x,
-                            std::vector<uint32_t>& ids, std::vector<float>& w) {
+                             const std::vector<float>& x,
+                             std::vector<uint32_t>& ids, std::vector<float>& w,
+                             RouterTrace* trace) {
     (void)topk;
     if (router.b < 0) { last_error_ = "router: no weight"; return false; }
     const TensorRec& rt = tensors_[(size_t)router.b];
@@ -2476,6 +2477,8 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
             logits[e] = (float)acc;
         }
     }
+    // The raw router logits, for the numerical parity certificate.
+    if (trace != nullptr) trace->logits = logits;
     if (spec_.expert_used == 0) { last_error_ = "router: expert_used 0"; return false; }
     const size_t kused = (size_t)spec_.expert_used;
     // The routing formula is architecture-specific and is the difference between
@@ -2559,12 +2562,23 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
         }
     }
 
+    // The probabilities after the gating function, and the selection scores
+    // the bias was added to, for the numerical parity certificate.
+    if (trace != nullptr) { trace->probs = probs; trace->selection = selection; }
+
     std::vector<uint32_t> idx(n_exp);
     for (uint32_t i = 0; i < n_exp; ++i) idx[i] = i;
     std::stable_sort(idx.begin(), idx.end(),
                      [&](uint32_t a, uint32_t b) { return selection[a] > selection[b]; });
     ids.assign(kused, 0);
     w.assign(kused, 0.0f);
+    // The highest UNSELECTED selection score. It is the margin at the top-k
+    // boundary: when it is close to the sixth score, the selected set is
+    // sensitive to floating-point rounding, and a routing difference between
+    // two implementations is expected rather than a defect.
+    if (trace != nullptr && kused < n_exp) {
+        trace->seventhScore = (double)selection[idx[kused]];
+    }
     // 3. weight transformation.
     //
     // The reference renormalises the selected top-k scores to sum to 1 ONLY
@@ -2578,7 +2592,14 @@ bool Executor::OpRouterTopK(const Instr& router, const Instr& topk,
     double renorm = 1.0;
     if (spec_.expert_weights_norm) {
         renorm = 0.0;
-        for (size_t i = 0; i < kused; ++i) renorm += logits[idx[i]];
+        // The sum is over the PROBABILITIES, because the weights are the
+        // probabilities. Summing the raw logits here divided every expert's
+        // contribution by the wrong constant: the direction was right and
+        // the magnitude was off by the ratio of the logits to the
+        // probabilities, which is exactly the "same direction, wrong
+        // magnitude" signature the numerical parity certificate reported on
+        // its first run.
+        for (size_t i = 0; i < kused; ++i) renorm += probs[idx[i]];
         if (!(renorm > 0.0)) { last_error_ = "router: zero weight"; return false; }
     }
     for (size_t i = 0; i < kused; ++i) {
@@ -2687,6 +2708,29 @@ static bool DequantRange(const TensorRec& t, size_t base, size_t count, std::vec
 void Executor::SetStrataCachePolicy(int policy)
 {
     QuantDot::SetCachePolicy(policy);
+}
+
+bool Executor::RunMoeRouting(int32_t block, const std::vector<float>& x,
+                              std::vector<uint32_t>& ids, std::vector<float>& weights,
+                              RouterTrace& trace, std::string& err) {
+    // Find the Router operation for the block. The Router and the TopK are
+    // the same instruction: the routing and the selection are one operation.
+    const Instr* router = nullptr;
+    for (const auto& in : program_) {
+        if (in.op != OpKind::Router) continue;
+        if (in.block != block) continue;
+        router = &in;
+        break;
+    }
+    if (router == nullptr) {
+        err = "no Router operation for block " + std::to_string(block);
+        return false;
+    }
+    if (!OpRouterTopK(*router, *router, x, ids, weights, &trace)) {
+        err = last_error_;
+        return false;
+    }
+    return true;
 }
 
 bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
