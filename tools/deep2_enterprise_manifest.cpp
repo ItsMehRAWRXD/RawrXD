@@ -93,14 +93,20 @@ int main(int argc, char** argv) {
     }
     const std::string contract = ReadText(root / "evidence/qwen4exp_operator_contract_20261020/native_contract.md");
     const std::string pipeline = ReadText(root / "evidence/qwen4exp_pipeline_wiring_20261020.md");
+    const std::string contract_rerun = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/native_contract_rerun.md");
+    const std::string pipeline_rerun = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt");
     const std::string executor = ReadText(root / "src/deep2/runtime_graph_executor.cpp");
     const std::string gr_inventory = ReadText(root / "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md");
     const bool contract_geometry = contract.find("Tensors: 1224") != std::string::npos &&
-                                   contract.find("Geometry checks: PASS") != std::string::npos;
+                                   contract.find("Geometry checks: PASS") != std::string::npos &&
+                                   contract_rerun.find("Tensors: 1224") != std::string::npos &&
+                                   contract_rerun.find("Geometry checks: PASS") != std::string::npos;
     const bool pipeline_wiring = pipeline.find("PLE_PIPELINE=PASS") != std::string::npos &&
                                  pipeline.find("HC_PIPELINE=PASS") != std::string::npos &&
-                                 pipeline.find("DISPATCHES=0") != std::string::npos &&
-                                 pipeline.find("EXECUTION=NOT_RUN") != std::string::npos;
+                                 pipeline_rerun.find("PLE_PIPELINE=PASS") != std::string::npos &&
+                                 pipeline_rerun.find("HC_PIPELINE=PASS") != std::string::npos &&
+                                 pipeline_rerun.find("DISPATCHES=0") != std::string::npos &&
+                                 pipeline_rerun.find("EXECUTION=NOT_RUN") != std::string::npos;
     const bool executor_fail_closed = executor.find("qwen4exp_unbound") != std::string::npos &&
                                       executor.find("OpKind::Qsa") != std::string::npos &&
                                       executor.find("OpKind::SparseMoE") != std::string::npos;

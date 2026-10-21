@@ -17,7 +17,7 @@
   "required_closure":"Wire Qwen4Exp tensor handles to descriptor updates and command submission in ExecuteToken, then run independent full-logit and autoregressive parity.",
   "artifacts":[
     {"path":"CMakeLists.txt","present":true,"bytes":235111,"sha256":"5ad846df025b66171821aaffa657c5d2e903650c28deffc4ee8fd04a24002032"},
-    {"path":"tools/deep2_enterprise_manifest.cpp","present":true,"bytes":8552,"sha256":"5d6b0effa2c395f7e0b576bf30eeb467ac1940e0f5827bc77a7b83256f846ccc"},
+    {"path":"tools/deep2_enterprise_manifest.cpp","present":true,"bytes":9231,"sha256":"f34a5febf502b6ed615795d014bbc317f13cdbd0eaeaa6889432a3605c9910b3"},
     {"path":"tools/deep2_reverse_engineer.cpp","present":true,"bytes":6177,"sha256":"407b2fb4a0abca92b660b39816d8bebf0e14563f8a13f5a8472e49fdcc7f0d22"},
     {"path":"tools/reverse_engineer_qwen4exp.py","present":true,"bytes":5178,"sha256":"17ff2eefb41d0a48a30a5383bc0be3d4471db611f5357aa5c42cab62571d97bd"},
     {"path":"tools/deep2_qwen4exp_pipeline_probe.cpp","present":true,"bytes":5995,"sha256":"b78a8273ac4f69c2fd725489f3ad06bd2954d4e3ca90fe8c28f9554ee5a2353c"},
