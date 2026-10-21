@@ -1773,6 +1773,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_gpu_certify
         tools/deep2_gpu_certify.cpp
+        src/deep2/op_gdn.cpp
         src/deep2/runtime_graph_executor.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
@@ -1830,6 +1831,43 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_reverse_engineer.cpp")
     set_target_properties(deep2_reverse_engineer PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     message(STATUS "deep2_reverse_engineer enabled (native Qwen4Exp contract audit)")
+endif()
+
+# GDN lowering contract and independent state-continuity harness.  This target
+# intentionally stops at reference arithmetic; it must not be treated as GPU
+# execution or Qwen4Exp certification until a production descriptor path owns
+# the shader dispatch and an independent model trace passes.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gdn_parity_harness.cpp")
+    add_executable(deep2_gdn_parity_harness
+        tools/deep2_gdn_parity_harness.cpp
+        src/deep2/op_gdn.cpp)
+    target_include_directories(deep2_gdn_parity_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR})
+    target_compile_features(deep2_gdn_parity_harness PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_gdn_parity_harness PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_gdn_parity_harness PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_gdn_parity_harness PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    add_test(NAME deep2_gdn_reference_contract
+        COMMAND deep2_gdn_parity_harness)
+    message(STATUS "deep2_gdn_parity_harness enabled (reference-only GDN contract)")
+endif()
+
+find_program(GLSLC_EXECUTABLE NAMES glslc
+    HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin")
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GLSLC_EXECUTABLE)
+    add_custom_command(
+        OUTPUT "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.spv"
+        COMMAND ${GLSLC_EXECUTABLE}
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp"
+            -o "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.spv"
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp"
+        COMMENT "Compiling Qwen4Exp GDN shader")
+    add_custom_target(deep2_qwen4exp_gdn_shader ALL
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.spv")
 endif()
 
 # Physical Vulkan topology telemetry. This target reports real device heaps and

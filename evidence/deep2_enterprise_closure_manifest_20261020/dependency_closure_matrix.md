@@ -7,7 +7,7 @@ that called the PLE or Hyperconnection shaders missing.
 | Boundary | Source / artifact state | Executor state | Production evidence still required |
 |---|---|---|---|
 | QSA | No native shader, descriptor contract, or cache executor | **BLOCKED** in `Executor::Bind` | indexer projection, compressed-key cache, top-K causal selection, GPU parity |
-| GDN | No native recurrent-state executor | **BLOCKED** in `Executor::Bind` | state allocation, gated update, convolution/cache continuity, GPU parity |
+| GDN | Contract C++ reference, validated GLSL/SPIR-V, and state-continuity harness present | **BLOCKED** in `Executor::Bind` and no `ExecuteToken` case | production state allocation, tensor binding, GPU dispatch, independent model parity |
 | PLE | GLSL and validated SPIR-V present; real pipeline object creates | **BLOCKED** in `Executor::Bind` and no `ExecuteToken` case | five descriptor bindings, state lifecycle, short-sequence handling, dispatch and parity |
 | Hyperconnection | GLSL and validated SPIR-V present; real pipeline object creates | **BLOCKED** in `Executor::Bind` and no `ExecuteToken` case | four-stream tensor descriptors, fused synchronization, dispatch and parity |
 | SparseMoE | No native top-K/grouped-GEMM executor | **BLOCKED** in `Executor::Bind` | routing, expert residency, MXFP4/IQ2 grouped GEMM, GPU parity |

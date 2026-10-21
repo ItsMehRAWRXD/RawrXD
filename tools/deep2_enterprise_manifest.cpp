@@ -74,6 +74,11 @@ int main(int argc, char** argv) {
         "src/deep2/shaders/deep2_qwen4exp_ple.spv",
         "src/deep2/shaders/deep2_qwen4exp_hc_combine.comp",
         "src/deep2/shaders/deep2_qwen4exp_hc_combine.spv",
+        "src/deep2/op_gdn.hpp",
+        "src/deep2/op_gdn.cpp",
+        "tools/deep2_gdn_parity_harness.cpp",
+        "src/deep2/shaders/deep2_qwen4exp_gdn.comp",
+        "src/deep2/shaders/deep2_qwen4exp_gdn.spv",
         "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py",
         "3rdparty/r9700-stack/r9700_vllm/hc.py",
         "3rdparty/r9700-stack/tests/test_hc_r9k.py",
@@ -84,6 +89,8 @@ int main(int argc, char** argv) {
         "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/dependency_closure_matrix.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_full_model_blocked_receipt.json",
+        "evidence/deep2_enterprise_closure_manifest_20261020/gdn_reference_harness.txt",
+        "evidence/deep2_enterprise_closure_manifest_20261020/gdn_spirv_validation.txt",
         "evidence/qwen4exp_gr_source_drop_20261020/Qwen4ExpGatedResidual.hpp",
         "evidence/qwen4exp_gr_source_drop_20261020/test_gr.cpp",
         "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md",
@@ -100,6 +107,8 @@ int main(int argc, char** argv) {
     const std::string executor = ReadText(root / "src/deep2/runtime_graph_executor.cpp");
     const std::string gr_inventory = ReadText(root / "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md");
     const std::string full_model_receipt = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_full_model_blocked_receipt.json");
+    const std::string gdn_harness = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/gdn_reference_harness.txt");
+    const std::string gdn_spirv = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/gdn_spirv_validation.txt");
     const bool contract_geometry = contract.find("Tensors: 1224") != std::string::npos &&
                                    contract.find("Geometry checks: PASS") != std::string::npos &&
                                    contract_rerun.find("Tensors: 1224") != std::string::npos &&
@@ -119,7 +128,12 @@ int main(int argc, char** argv) {
                                     full_model_receipt.find("\"execution_status\":\"NOT_RUN\"") != std::string::npos &&
                                     full_model_receipt.find("\"unsupported_ops\":5") != std::string::npos &&
                                     full_model_receipt.find("\"tensor_count\":1224") != std::string::npos;
-    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked;
+    const bool gdn_reference = gdn_harness.find("GDN_GEOMETRY=PASS") != std::string::npos &&
+                               gdn_harness.find("GDN_REFERENCE_FINITE=PASS") != std::string::npos &&
+                               gdn_harness.find("GDN_STATE_CONTINUITY=PASS") != std::string::npos &&
+                               gdn_harness.find("GDN_GPU_DISPATCHES=0") != std::string::npos &&
+                               gdn_spirv.find("SPIRV_VAL=PASS") != std::string::npos;
+    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked && gdn_reference;
     std::filesystem::create_directories(out_path.parent_path());
     std::ofstream out(out_path); if (!out) return 3;
     out << "{\n  \"schema\":\"rawrxd.deep2.enterprise_closure_manifest.v1\",\n";
@@ -134,6 +148,9 @@ int main(int argc, char** argv) {
     out << "  \"GR_INDEPENDENT_PARITY\":\"NOT_RUN\",\n";
     out << "  \"QWEN4EXP_FULL_MODEL\":\"BLOCKED\",\n";
     out << "  \"full_model_attempt\":\"" << (full_model_blocked ? "BLOCKED_NATIVE_GRAPH" : "NOT_VERIFIED") << "\",\n";
+    out << "  \"GDN_REFERENCE_ARITHMETIC\":\"" << (gdn_reference ? "PASS" : "NOT_VERIFIED") << "\",\n";
+    out << "  \"GDN_SHADER_VALIDATION\":\"" << (gdn_reference ? "PASS" : "NOT_VERIFIED") << "\",\n";
+    out << "  \"GDN_PRODUCTION_DISPATCH\":\"NOT_RUN\",\n";
     out << "  \"command_submission\":\"NOT_RUN\",\n  \"full_model_execution\":\"NOT_RUN\",\n  \"certification\":\"NOT_CERTIFIED\",\n";
     out << "  \"executor_blocking_boundary\":\"Executor::Bind still rejects QSA, GDN, PLE, Hyperconnection, and SparseMoE; ExecuteToken has no descriptor allocation, tensor upload, command recording, or dispatch cases for these OpKinds.\",\n";
     out << "  \"required_closure\":\"Wire Qwen4Exp tensor handles to descriptor updates and command submission in ExecuteToken, then run independent full-logit and autoregressive parity.\",\n";

@@ -26,6 +26,11 @@ QWEN4EXP_FULL_MODEL     = BLOCKED
 contains CPU arithmetic tests, while no GPU dispatch or full-graph execution
 has been run from it.
 
+The GDN slice is one step further along: its geometry, finite reference output,
+state continuity, and SPIR-V validation pass. The harness still reports
+`GDN_GPU_DISPATCHES=0`, so GDN production dispatch and Qwen4Exp certification
+remain open.
+
 The receipt hashes the reverse-engineering source, executor source and header,
 PLE and Hyperconnection GLSL/SPIR-V, the physical Vulkan pipeline probe, the
 independent short-convolution and hyperconnection references, and the native

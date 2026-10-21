@@ -1,0 +1,33 @@
+#version 450
+
+// Contract-level GDN lowering. Production model binding must provide the
+// model's exact projection and state layout before this shader is dispatched.
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer InputBuffer { float input_values[]; };
+layout(set = 0, binding = 1, std430) readonly buffer DecayBuffer { float decay[]; };
+layout(set = 0, binding = 2, std430) readonly buffer BetaBuffer { float beta[]; };
+layout(set = 0, binding = 3, std430) readonly buffer KeyBuffer { float key[]; };
+layout(set = 0, binding = 4, std430) readonly buffer ValueBuffer { float value[]; };
+layout(set = 0, binding = 5, std430) buffer StateBuffer { float state[]; };
+layout(set = 0, binding = 6, std430) writeonly buffer OutputBuffer { float output_values[]; };
+
+layout(push_constant) uniform Push {
+    uint channels;
+    uint state_size;
+    uint groups;
+    uint reserved;
+} pc;
+
+void main() {
+    uint channel = gl_GlobalInvocationID.x;
+    if (pc.channels == 0u || pc.state_size == 0u || pc.groups == 0u ||
+        pc.channels % pc.groups != 0u || channel >= pc.channels) return;
+
+    uint channels_per_group = pc.channels / pc.groups;
+    uint group = channel / channels_per_group;
+    uint state_index = (group * pc.state_size * pc.channels) + channel;
+    float next = decay[channel] * state[state_index] +
+                 beta[channel] * key[channel] * value[channel];
+    state[state_index] = next;
+    output_values[channel] = next * input_values[channel];
+}
