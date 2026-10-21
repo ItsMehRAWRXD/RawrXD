@@ -943,7 +943,9 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         // (blkN.ssm_in.weight and friends), the rest are attention. Emitting an
         // SSM scan for a block with no SSM tensors produced an op with an empty
         // weight name, which then failed at runtime as "linear: no weight".
-        if (const std::string ssmIn = name(Role::SsmIn); !ssmIn.empty()) {
+        if (!qwen35Gdn) {
+            const std::string ssmIn = name(Role::SsmIn);
+            if (!ssmIn.empty()) {
             GraphOp o;
             o.op = Op::SsmScan;
             o.block = (int32_t)b;
@@ -971,6 +973,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             // never existed.
             p.out = "attn_proj";
             g.ops.push_back(p);
+            }
         }
 
         if (s.kind == ArchKind::DeepSeekMLA) {
@@ -1039,7 +1042,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o2.a = "attn_out"; o2.b = name(Role::AttnOutput); o2.out = "attn_proj";
                 g.ops.push_back(o2);
             }
-        } else if (!name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
+        } else if (!qwen35Gdn && !name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
                    !name(Role::AttnV).empty()) {
             // Standard (dense) attention. This branch requires all three
             // projections: an architecture that omits them is an SSM/hybrid
