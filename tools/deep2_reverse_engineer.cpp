@@ -149,11 +149,11 @@ const Operator kOperators[] = {
       "projection with the results accumulated back into the hidden state",
       "OP_SWIGLU (the expert activation), and the packed GEMV for one "
       "expert's projection",
-      "the router and its top-k, the grouped expert dispatch, and the "
-      "MXFP4 and IQ2 formats the experts are stored in",
-      "",
-      "the router top-k, which is the first part of the operator and is "
-      "independent of the expert formats" },
+      "the top-k over the router logits, the grouped expert dispatch, and "
+      "the MXFP4 and IQ2 formats the experts are stored in",
+      "moe_router",
+      "the top-k over the router logits, which the router itself does not "
+      "do, and then the grouped expert dispatch" },
 };
 
 // The lowered primitives.
@@ -178,6 +178,10 @@ const Primitive kPrimitives[] = {
     { "PLE depthwise short convolution", "ple",
       "the causal depthwise convolution, with the window carried between "
       "dispatches" },
+    { "MoE router", "moe_router",
+      "the hidden state turned into one logit per expert, which is the "
+      "first part of the sparse MoE operator and does not depend on the "
+      "format the experts are stored in" },
 };
 
 // A device execution receipt, if the operator has one.

@@ -2008,6 +2008,34 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_hc_combine_test.cpp" AND Vul
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# The Qwen4Exp MoE router lowering, executed on the device.
+#
+# The router is the first part of the sparse MoE operator and it does not
+# depend on the format the experts are stored in, so it is the part that can
+# be proven first. It turns a hidden state into one logit per expert.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_moe_router_test.cpp" AND Vulkan_FOUND)
+    add_executable(deep2_qwen4exp_moe_router_test
+        tools/deep2_qwen4exp_moe_router_test.cpp)
+    target_compile_features(deep2_qwen4exp_moe_router_test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_moe_router_test PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_moe_router_test PRIVATE
+            -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_qwen4exp_moe_router_test PRIVATE Vulkan::Vulkan)
+    endif()
+    set_target_properties(deep2_qwen4exp_moe_router_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_qwen4exp_moe_router_test enabled (Qwen4Exp MoE router proof)")
+    add_test(NAME Qwen4Exp_MoeRouter_Device
+        COMMAND deep2_qwen4exp_moe_router_test
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_moe_router.spv"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
 
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims
