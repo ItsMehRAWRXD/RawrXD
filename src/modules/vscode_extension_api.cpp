@@ -1711,6 +1711,22 @@ VSCodeAPIResult VSCodeExtensionAPI::registerCommand(const char* commandId,
     return VSCodeAPIResult::ok("Command registered");
 }
 
+VSCodeAPIResult VSCodeExtensionAPI::removeCommand(const char* commandId) {
+    incrementAPICalls();
+    if (!commandId) {
+        incrementErrors();
+        return VSCodeAPIResult::error("removeCommand: null commandId");
+    }
+    std::lock_guard<std::mutex> lock(m_commandsMutex);
+    auto it = m_commands.find(commandId);
+    if (it == m_commands.end()) {
+        return VSCodeAPIResult::error("removeCommand: command not found");
+    }
+    m_commands.erase(it);
+    logDebug("[VSCodeExtensionAPI] Removed command: %s", commandId);
+    return VSCodeAPIResult::ok("Command removed");
+}
+
 VSCodeAPIResult VSCodeExtensionAPI::executeCommand(const char* commandId) {
     incrementAPICalls();
     if (!commandId) {

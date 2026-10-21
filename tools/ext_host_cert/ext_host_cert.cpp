@@ -1,9 +1,9 @@
-// RAWRXD_EXTENSION_HOST_001 — certification for the VS Code extension runtime.
+﻿// RAWRXD_EXTENSION_HOST_001 â€” certification for the VS Code extension runtime.
 //
 // This certifies the REAL runtime, built from TRACKED source:
 //
 //   1. the shared VSCodeExtensionAPI runtime initializes against the
-//      ExtensionHostBridge — the one narrow interface the IDE and the CLI
+//      ExtensionHostBridge â€” the one narrow interface the IDE and the CLI
 //      both implement,
 //   2. a native command registers and executes,
 //   3. a JavaScript extension registers a command through
@@ -103,31 +103,53 @@ static void nativeHandler(void* ctx) {
 
 static bool g_jsHandlerRan = false;
 
+// Find the id of a loaded extension by name.
+//
+// The host keys extensions by id, and more than one extension can be loaded
+// at a time, so the id has to be selected by name rather than by position.
+static std::string findExtensionId(JSExtensionHost& host, const std::string& name) {
+    JSExtensionState states[64] = {};
+    size_t count = 0;
+    host.getLoadedExtensions(states, 64, &count);
+    for (size_t i = 0; i < count; ++i) {
+        if (states[i].extensionId[0] != '\0' && name == states[i].extensionId) {
+            return states[i].extensionId;
+        }
+    }
+    return {};
+}
+
 // ---------------------------------------------------------------------------
 // A JavaScript extension that registers a command through the VS Code API.
 // ---------------------------------------------------------------------------
-static bool writeJsExtension(const fs::path& dir) {
+static bool writeJsExtension(const fs::path& dir, const char* commandId,
+                             bool throws = false, const char* extensionName = "cert-extension") {
     std::error_code ec;
     fs::create_directories(dir, ec);
     {
         std::ofstream pkg(dir / "package.json");
+        // The entry file is named after the extension. QuickJS caches modules
+        // by name in the runtime, so two extensions whose main file share a
+        // name would share the first one's evaluation and the second would
+        // never register its command.
         pkg << "{\n"
-            << "  \"name\": \"cert-extension\",\n"
+            << "  \"name\": \"" << extensionName << "\",\n"
             << "  \"version\": \"1.0.0\",\n"
-            << "  \"main\": \"./extension.js\",\n"
+            << "  \"main\": \"./" << extensionName << ".js\",\n"
             << "  \"engines\": { \"vscode\": \"^1.0.0\" }\n"
             << "}\n";
     }
     {
-        std::ofstream js(dir / "extension.js");
+        std::ofstream js(dir / (std::string(extensionName) + ".js"));
         // The host binds the API as a GLOBAL (`vscode`), not as a module that
         // require() can resolve, so the extension uses the global directly and
         // only falls back to require() if that is ever not the case.
         js << "var api = (typeof vscode !== 'undefined') ? vscode : null;\n"
             << "if (!api) { try { api = require('vscode'); } catch (e) { api = null; } }\n"
             << "if (api && api.commands) {\n"
-            << "  api.commands.registerCommand('cert.js.command', function () {\n"
-            << "    return 'js-handler-ran';\n"
+            << "  api.commands.registerCommand('" << commandId << "', function () {\n"
+            << (throws ? "    throw new Error('cert command failed on purpose');\n"
+                       : "    return 'js-handler-ran';\n")
             << "  });\n"
             << "}\n";
     }
@@ -155,6 +177,8 @@ static std::string readAll(const fs::path& p) {
 }
 
 int main(int argc, char** argv) {
+    // Unbuffered, so a crash still shows how far the run got.
+    setvbuf(stdout, nullptr, _IONBF, 0);
     const fs::path repo = (argc > 1) ? fs::path(argv[1]) : fs::current_path();
     const fs::path work = fs::temp_directory_path() / "rawrxd_ext_host_cert";
 
@@ -198,7 +222,7 @@ int main(int argc, char** argv) {
     std::error_code ec;
     fs::remove_all(work, ec);
     const fs::path extDir = work / "cert-extension";
-    writeJsExtension(extDir);
+    writeJsExtension(extDir, "cert.js.command", false, "cert-extension");
 
     JSExtensionHost& host = JSExtensionHost::instance();
     const PatchResult hostInit = host.initialize();
@@ -290,6 +314,112 @@ int main(int argc, char** argv) {
                   " api_definitions=" + std::to_string(definitions));
     }
 
+    // ---- 9. repeated load / execute / unload lifecycle --------------------
+    // The runtime has to survive being driven repeatedly: a command that is
+    // registered, called and unloaded leaves JS values behind unless every
+    // reference is released, and a leak here shows up as a crash at teardown.
+    {
+        const size_t baseline = api.getCommandCount();
+        bool ok = true;
+        std::string detail;
+        for (int i = 0; i < 5; ++i) {
+            // The extension id comes from the directory, so each cycle needs
+            // its own directory as well as its own package name.
+            const std::string cycleName = "cert-cycle-" + std::to_string(i);
+            const fs::path dir = work / ("cycle" + std::to_string(i)) / cycleName;
+            writeJsExtension(dir, "cert.cycle.command", false, cycleName.c_str());
+            const size_t before = api.getCommandCount();
+            const PatchResult loaded = host.loadExtensionFromDir(dir.string().c_str());
+            if (!loaded.success) { ok = false; detail += "load failed: " + loaded.detail + "; "; break; }
+
+            std::string id = findExtensionId(host, "cert-extension");
+            if (id.empty()) { ok = false; detail += "no extension id; "; break; }
+            const PatchResult activated = host.activateExtension(id.c_str());
+            if (!activated.success) { ok = false; detail += "activate failed: " + activated.detail + "; "; break; }
+
+            const size_t afterActivate = api.getCommandCount();
+            // Probe the second extension's own context: is the namespace
+            // there, and is the call reaching the registry?
+            std::string cycleProbe;
+            {
+                char buf[128] = {0};
+                const PatchResult pr = host.executeScript(id.c_str(),
+                    "typeof vscode.commands.registerCommand", buf, sizeof(buf));
+                cycleProbe = (pr.success && buf[0]) ? buf : "(probe failed)";
+            }
+            const VSCodeAPIResult exec = api.executeCommand("cert.cycle.command");
+            if (!exec.success) {
+                ok = false;
+                detail += "cycle " + std::to_string(i) + ": execute failed; command_count " +
+                          std::to_string(before) + " -> " + std::to_string(afterActivate) +
+                          "; registerCommand is " + cycleProbe + "; ";
+                break;
+            }
+
+            const PatchResult unloaded = host.unloadExtension(id.c_str());
+            if (!unloaded.success) { ok = false; detail += "unload failed: " + unloaded.detail + "; "; break; }
+            if (api.getCommandCount() != baseline) {
+                ok = false;
+                detail += "command count " + std::to_string(baseline) + " -> " +
+                          std::to_string(api.getCommandCount()) +
+                          " after unloading '" + id + "'; ";
+                break;
+            }
+        }
+        check("five load / activate / execute / unload cycles leave no residue",
+              ok && api.getCommandCount() == baseline,
+              detail.empty()
+                  ? ("command_count returned to " + std::to_string(baseline) + " after every cycle")
+                  : detail);
+    }
+
+    // ---- 10. a command that fails does not take the runtime down ---------
+    {
+        const fs::path dir = work / "throwing" / "cert-extension";
+        writeJsExtension(dir, "cert.throws.command", /*throws*/ true, "cert-throws");
+        const PatchResult loaded = host.loadExtensionFromDir(dir.string().c_str());
+        std::string id = findExtensionId(host, "cert-extension");
+        if (!id.empty()) host.activateExtension(id.c_str());
+
+        const VSCodeAPIResult exec = api.executeCommand("cert.throws.command");
+        // The command throws in JavaScript. The runtime has to survive it and
+        // stay usable.
+        const VSCodeAPIResult after = api.executeCommand("cert.native.command");
+        check("a command that throws is contained and the runtime survives",
+              loaded.success && after.success && g_nativeHandlerRan,
+              std::string("throwing command -> ") +
+                  (exec.success ? "ok" : "reported a failure") +
+                  "; the runtime still answers a later command");
+        if (!id.empty()) host.unloadExtension(id.c_str());
+    }
+
+    // ---- 11. an extension can be reloaded --------------------------------
+    {
+        const fs::path dir = work / "reload" / "cert-extension";
+        writeJsExtension(dir, "cert.reload.command", false, "cert-reload");
+        const PatchResult first = host.loadExtensionFromDir(dir.string().c_str());
+        std::string id = findExtensionId(host, "cert-extension");
+        if (!id.empty()) {
+            host.activateExtension(id.c_str());
+            host.unloadExtension(id.c_str());
+        }
+        const PatchResult second = host.loadExtensionFromDir(dir.string().c_str());
+        JSExtensionState states2[16] = {};
+        size_t count2 = 0;
+        host.getLoadedExtensions(states2, 16, &count2);
+        std::string id2;
+        for (size_t s = 0; s < count2; ++s) {
+            if (states2[s].extensionId[0] != '\0') { id2 = states2[s].extensionId; break; }
+        }
+        if (!id2.empty()) host.activateExtension(id2.c_str());
+        const VSCodeAPIResult exec = api.executeCommand("cert.reload.command");
+        check("an extension can be unloaded and reloaded, and its command works again",
+              first.success && second.success && exec.success,
+              std::string("first load -> ") + first.detail + "; second load -> " +
+                  second.detail + "; command -> " + (exec.success ? "ok" : "failed"));
+        if (!id2.empty()) host.unloadExtension(id2.c_str());
+    }
+
     // ---- summary ----------------------------------------------------------
     int passed = 0, failed = 0;
     for (const Result& r : g_results) {
@@ -302,3 +432,8 @@ int main(int argc, char** argv) {
     fs::remove_all(work, ec);
     return failed == 0 ? 0 : 1;
 }
+
+
+
+
+

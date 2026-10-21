@@ -1692,6 +1692,13 @@ namespace vscode {
         // ---- Command Registry (routed to vscode::commands) ----
         VSCodeAPIResult registerCommand(const char* commandId,
                                          void (*handler)(void* ctx), void* ctx);
+        /// @brief Remove a registered command.
+        ///
+        /// Registering a command returns a Disposable that unregisters it
+        /// when disposed, and an extension that is unloaded must not leave a
+        /// command behind that dispatches into a context that no longer
+        /// exists. Returns an error if the command was not registered.
+        VSCodeAPIResult removeCommand(const char* commandId);
         VSCodeAPIResult executeCommand(const char* commandId);
         size_t getCommandCount() const;
 

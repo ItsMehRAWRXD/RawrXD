@@ -1,8 +1,8 @@
-// ============================================================================
-// js_extension_host.cpp — QuickJS-Based VSIX Extension Host Implementation
+﻿// ============================================================================
+// js_extension_host.cpp â€” QuickJS-Based VSIX Extension Host Implementation
 // ============================================================================
 //
-// Phase 37: JavaScript Extension Runtime — Full Implementation
+// Phase 37: JavaScript Extension Runtime â€” Full Implementation
 //
 // Implements:
 //   - QuickJS runtime initialization and lifecycle
@@ -17,7 +17,7 @@
 //   - js_extension_host.hpp (the header)
 //   - vscode_extension_api.h (existing C++ API layer)
 //   - unified_hotpatch_manager.hpp (hotpatch coordination)
-//   - quickjs.h (QuickJS engine — embedded or linked)
+//   - quickjs.h (QuickJS engine â€” embedded or linked)
 //
 // Build Note:
 //   QuickJS is compiled as a static library (.lib) and linked.
@@ -28,6 +28,7 @@
 // ============================================================================
 
 #include "js_extension_host.hpp"
+#include "../marketplace/vsix_installer.h"
 #include "../modules/vscode_extension_api.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -94,7 +95,7 @@
     #define JS_FALSE            ((JSValue)((0ULL << 32) | 1))
     #define JS_EXCEPTION        ((JSValue)6)
 
-    // Function declarations — implemented below as no-ops or minimal simulation
+    // Function declarations â€” implemented below as no-ops or minimal simulation
     static JSRuntime* JS_NewRuntime(void) { return nullptr; }
     static void JS_FreeRuntime(JSRuntime* rt) {}
     static void JS_SetMemoryLimit(JSRuntime* rt, size_t limit) {}
@@ -148,13 +149,13 @@
 // PatchResult provided by model_memory_hotpatch.hpp (included transitively)
 
 // ============================================================================
-// VSCodeExtensionManifest — provided by vscode_extension_api.h (std::string version)
+// VSCodeExtensionManifest â€” provided by vscode_extension_api.h (std::string version)
 // ============================================================================
 // Note: The header's VSCodeExtensionManifest uses std::string members.
 // All code in this file must use .c_str() when passing to C APIs.
 
 // ============================================================================
-// JS→C++ Command Callback Storage (Phase 37 — bridged to VSCodeExtensionAPI)
+// JSâ†’C++ Command Callback Storage (Phase 37 â€” bridged to VSCodeExtensionAPI)
 // ============================================================================
 // Stores JS function references (DUP'd) so that when the C++ command
 // registry fires a command, we can call back into JS.
@@ -166,15 +167,66 @@ struct JSCommandBinding {
     JSValue      callback;     // The JS function (DUP'd to prevent GC)
     std::string  extensionId;  // Owning extension
     std::string  commandId;    // Command identifier
+    // Set once the DUP'd callback has been released. The binding is kept so
+    // that the pointer the command registry holds stays valid, but a
+    // released binding must never be called again.
+    bool         released = false;
 };
 
 static std::mutex              s_jsCommandMutex;
-static std::vector<JSCommandBinding> s_jsCommands;
+/* A deque keeps the element addresses stable. The command registry stores a
+ * pointer to the binding, so a vector would leave that pointer dangling
+ * whenever a second command was registered. */
+static std::deque<JSCommandBinding> s_jsCommands;
+
+// Release the JS command bindings.
+//
+// Each binding holds a DUP'd reference to a JS callback that belongs to an
+// extension's context. The reference has to be released while that context
+// is still alive: releasing it afterwards would touch a freed context, and
+// leaving it alive leaves the runtime's GC list non-empty, which
+// JS_FreeRuntime refuses.
+//
+// The bindings are marked rather than erased, so the pointers the command
+// registry holds stay valid and the trampoline can refuse to call a
+// released binding.
+//
+// An empty extensionId releases every binding.
+static void ReleaseJSCommandBindings(const std::string& extensionId = std::string()) {
+    std::lock_guard<std::mutex> lock(s_jsCommandMutex);
+    for (auto& binding : s_jsCommands) {
+        if (!extensionId.empty() && binding.extensionId != extensionId) continue;
+        if (binding.released || !binding.ctx) continue;
+        JS_FreeValue(binding.ctx, binding.callback);
+        binding.callback = JS_UNDEFINED;
+        binding.released = true;
+    }
+}
+
+// Remove an extension's commands from the shared registry.
+//
+// A command left behind by an unloaded extension dispatches into a context
+// that no longer exists, so the registration has to go with the extension.
+static void RemoveExtensionCommands(const std::string& extensionId) {
+    std::vector<std::string> ids;
+    {
+        std::lock_guard<std::mutex> lock(s_jsCommandMutex);
+        for (const auto& binding : s_jsCommands) {
+            if (binding.extensionId == extensionId) ids.push_back(binding.commandId);
+        }
+    }
+    for (const std::string& id : ids) {
+        vscode::VSCodeExtensionAPI::instance().removeCommand(id.c_str());
+    }
+}
 
 // C++ trampoline: called by VSCodeExtensionAPI when command fires
 static void jsCommandTrampoline(void* ctx) {
     auto* binding = static_cast<JSCommandBinding*>(ctx);
     if (!binding || !binding->ctx) return;
+    // A released binding has no callback left to call. The registry may still
+    // hold this pointer, so it has to be safe to reach here.
+    if (binding->released) return;
 
     // Call the JS function from the extension's context
     JSValue ret = JS_Call(binding->ctx, binding->callback,
@@ -219,7 +271,7 @@ static int32_t getJsArrayLength(JSContext* ctx, JSValue obj) {
 // ============================================================================
 namespace {
 
-// Minimal JSON value extractor — finds "key": "value" in JSON text
+// Minimal JSON value extractor â€” finds "key": "value" in JSON text
 // This is used for package.json parsing without pulling in a full JSON lib.
 // Handles: strings, numbers, booleans, arrays of strings.
 
@@ -339,7 +391,7 @@ bool writeStringToFile(const char* path, const std::string& content) {
 } // anonymous namespace
 
 // ============================================================================
-// JSExtensionHost — Singleton
+// JSExtensionHost â€” Singleton
 // ============================================================================
 
 JSExtensionHost& JSExtensionHost::instance() {
@@ -594,7 +646,7 @@ PatchResult JSExtensionHost::shutdown() {
 
         // CRITICAL ORDER: detach module loader WHILE runtime is still alive and
         // BEFORE joining the host thread / FreeRuntime. Otherwise a host-thread
-        // require() past the m_initialized guard races FreeRuntime → 0xC0000005
+        // require() past the m_initialized guard races FreeRuntime â†’ 0xC0000005
         // in moduleLoader (WM_DESTROY / observed 0xC000041D).
         if (rt)
             JS_SetModuleLoaderFunc(rt, nullptr, nullptr, nullptr);
@@ -633,9 +685,17 @@ PatchResult JSExtensionHost::shutdown() {
         m_queueEvent = nullptr;
     }
 
-    // Drop extensions without JS deactivate (eval re-entered moduleLoader → AV).
+    // Release the JS command bindings FIRST.
+    //
+    // They hold DUP'd callbacks that belong to the extension contexts, so
+    // they have to be released while those contexts are still alive. Leaving
+    // them alive also leaves the runtime's GC list non-empty, which
+    // JS_FreeRuntime refuses.
+    ReleaseJSCommandBindings();
+
+    // Drop extensions without JS deactivate (eval re-entered moduleLoader â†’ AV).
     {
-        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
         for (auto& [id, state] : m_extensions) {
             (void)id;
             if (!state)
@@ -689,6 +749,12 @@ void JSExtensionHost::bindVSCodeAPI(void* ctx) {
     JSValue global = JS_GetGlobalObject(cx);
     JSValue vscode = JS_NewObject(cx);
 
+    // The namespace has to be published before the binders run. Each
+    // binder looks up globalThis.vscode and adds its namespace to it, so
+    // publishing afterwards would replace the object the namespaces were
+    // added to and leave globalThis.vscode.commands undefined.
+    JS_SetPropertyStr(cx, global, "vscode", vscode);
+
     // Bind each namespace
     bindVSCodeCommands(ctx);
     bindVSCodeWindow(ctx);
@@ -699,7 +765,6 @@ void JSExtensionHost::bindVSCodeAPI(void* ctx) {
     bindVSCodeEnv(ctx);
     bindVSCodeExtensions(ctx);
 
-    JS_SetPropertyStr(cx, global, "vscode", vscode);
     JS_FreeValue(cx, global);
 
     OutputDebugStringA("[JSExtensionHost] vscode.* API bound to QuickJS context\n");
@@ -737,7 +802,7 @@ void JSExtensionHost::bindVSCodeCommands(void* ctx) {
             auto* host = static_cast<JSExtensionHost*>(JS_GetContextOpaque(c));
             if (host) {
                 // Find which extension owns this context
-                std::lock_guard<std::mutex> extLock(host->m_extensionsMutex);
+                std::lock_guard<std::recursive_mutex> extLock(host->m_extensionsMutex);
                 for (const auto& [id, state] : host->m_extensions) {
                     if (state->jsContext == c) {
                         binding.extensionId = id;
@@ -767,6 +832,15 @@ void JSExtensionHost::bindVSCodeCommands(void* ctx) {
             JSValue disposable = JS_NewObject(c);
             JS_SetPropertyStr(c, disposable, "dispose",
                 JS_NewCFunction(c, [](JSContext* ctx2, JSValue this2, int ac, JSValue* av) -> JSValue {
+                    // The registry promised that disposing the result of
+                    // registerCommand unregisters the command. Honour it.
+                    if (ac >= 1) {
+                        const char* id = JS_ToCString(ctx2, av[0]);
+                        if (id) {
+                            vscode::VSCodeExtensionAPI::instance().removeCommand(id);
+                            JS_FreeCString(ctx2, id);
+                        }
+                    }
                     return JS_UNDEFINED;
                 }, "dispose", 0));
             return disposable;
@@ -787,7 +861,7 @@ void JSExtensionHost::bindVSCodeCommands(void* ctx) {
             // Dispatch to VSCodeExtensionAPI command registry
             auto result = vsapi().executeCommand(cmdId);
             if (!result.success) {
-                // Command not found in singleton — try local JS command bindings
+                // Command not found in singleton â€” try local JS command bindings
                 std::lock_guard<std::mutex> lock(s_jsCommandMutex);
                 for (auto& binding : s_jsCommands) {
                     if (binding.commandId == cmdId) {
@@ -1502,7 +1576,7 @@ void JSExtensionHost::bindVSCodeLanguages(void* ctx) {
             vsapi().registerProvider(
                 ProviderType::CompletionItem,
                 langId ? langId : "*",
-                nullptr); // JS provider — bridged at invocation time
+                nullptr); // JS provider â€” bridged at invocation time
 
             if (langId) JS_FreeCString(c, langId);
 
@@ -1829,7 +1903,7 @@ void JSExtensionHost::bindVSCodeExtensions(void* ctx) {
             auto* host = static_cast<JSExtensionHost*>(JS_GetContextOpaque(c));
             if (!host) { JS_FreeCString(c, extId); return JS_UNDEFINED; }
 
-            std::lock_guard<std::mutex> lock(host->m_extensionsMutex);
+            std::lock_guard<std::recursive_mutex> lock(host->m_extensionsMutex);
             auto it = host->m_extensions.find(extId);
 
             JSValue ext = JS_NewObject(c);
@@ -1866,17 +1940,17 @@ void JSExtensionHost::bindVSCodeExtensions(void* ctx) {
 }
 
 // ============================================================================
-// Module Loader — require() Interceptor Chain
+// Module Loader â€” require() Interceptor Chain
 // ============================================================================
 //
 // Resolution order:
-//   1. Check if module is 'vscode' → return the global vscode object
+//   1. Check if module is 'vscode' â†’ return the global vscode object
 //   2. Check polyfill registry (fs, path, os, events, etc.)
 //   3. Check extension's node_modules directory
 //   4. Auto-generate polyfill via PolyfillEngine
 //   5. Return error with migration guide
 
-// Static wrapper for C function pointer compatibility — SEH containment so an
+// Static wrapper for C function pointer compatibility â€” SEH containment so an
 // AV inside require resolution cannot escape as 0xC000041D from a callback.
 JSModuleDef* JSExtensionHost::moduleLoaderWrapper(JSContext* ctx, const char* moduleName, void* opaque) {
 #if defined(_MSC_VER)
@@ -1894,7 +1968,7 @@ JSModuleDef* JSExtensionHost::moduleLoaderWrapper(JSContext* ctx, const char* mo
 }
 
 JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName, void* hostPtr) {
-    // Fail closed on any teardown / null opaque — this is the frozen fault owner
+    // Fail closed on any teardown / null opaque â€” this is the frozen fault owner
     // for WM_DESTROY ACCESS_VIOLATION (observed exit 0xC000041D).
     if (!moduleName || !cx || !hostPtr)
         return nullptr;
@@ -1914,9 +1988,9 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
 
     host->m_stats.requireCalls++;
 
-    // ---- Step 1: 'vscode' module → return global vscode object ----
+    // ---- Step 1: 'vscode' module â†’ return global vscode object ----
     if (std::strcmp(moduleName, "vscode") == 0) {
-        // The vscode object is already on global — no module compilation needed.
+        // The vscode object is already on global â€” no module compilation needed.
         // In real QuickJS, we'd compile a module that re-exports globalThis.vscode.
         return nullptr; // Handled by eval wrapper
     }
@@ -1925,7 +1999,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
     const PolyfillDescriptor* polyfill = PolyfillEngine::instance().getPolyfill(moduleName);
     if (polyfill && polyfill->jsSource && polyfill->jsSourceLen > 0) {
         std::snprintf(info, sizeof(info),
-                      "[JSExtensionHost] require('%s') → polyfill (score=%u, strategy=%u)\n",
+                      "[JSExtensionHost] require('%s') â†’ polyfill (score=%u, strategy=%u)\n",
                       moduleName, polyfill->compatibilityScore,
                       static_cast<unsigned>(polyfill->strategy));
         OutputDebugStringA(info);
@@ -1958,10 +2032,10 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
     // Search the calling extension's node_modules directory for the module.
     // Resolution: extensionPath/node_modules/<moduleName>/index.js or package.json "main"
     if (host) {
-        std::lock_guard<std::mutex> lock(host->m_extensionsMutex);
+        std::lock_guard<std::recursive_mutex> lock(host->m_extensionsMutex);
         for (const auto& [id, state] : host->m_extensions) {
             if (state->jsContext == cx) {
-                // Found the owning extension — search its node_modules
+                // Found the owning extension â€” search its node_modules
                 std::string nmBase = state->extensionPath + "\\node_modules\\" + moduleName;
 
                 // Try <moduleName>.js
@@ -1970,7 +2044,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
                     std::string src = readFileToString(directJs.c_str());
                     if (!src.empty()) {
                         std::snprintf(info, sizeof(info),
-                                      "[JSExtensionHost] require('%s') → node_modules/%s.js\n",
+                                      "[JSExtensionHost] require('%s') â†’ node_modules/%s.js\n",
                                       moduleName, moduleName);
                         OutputDebugStringA(info);
 #if RAWRXD_HAS_QUICKJS
@@ -1991,7 +2065,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
                     std::string src = readFileToString(indexJs.c_str());
                     if (!src.empty()) {
                         std::snprintf(info, sizeof(info),
-                                      "[JSExtensionHost] require('%s') → node_modules/%s/index.js\n",
+                                      "[JSExtensionHost] require('%s') â†’ node_modules/%s/index.js\n",
                                       moduleName, moduleName);
                         OutputDebugStringA(info);
 #if RAWRXD_HAS_QUICKJS
@@ -2005,7 +2079,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
                     }
                 }
 
-                // Try <moduleName>/package.json → "main" field
+                // Try <moduleName>/package.json â†’ "main" field
                 std::string pkgJson = nmBase + "\\package.json";
                 if (std::filesystem::exists(pkgJson)) {
                     std::string pkgContent = readFileToString(pkgJson.c_str());
@@ -2022,7 +2096,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
                                 std::string src = readFileToString(mainPath.c_str());
                                 if (!src.empty()) {
                                     std::snprintf(info, sizeof(info),
-                                                  "[JSExtensionHost] require('%s') → node_modules/%s/%s\n",
+                                                  "[JSExtensionHost] require('%s') â†’ node_modules/%s/%s\n",
                                                   moduleName, moduleName, mainField.c_str());
                                     OutputDebugStringA(info);
 #if RAWRXD_HAS_QUICKJS
@@ -2047,7 +2121,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
     // ---- Step 4: Auto-Generate Polyfill ----
     if (PolyfillEngine::instance().autoGeneratePolyfill(moduleName, "unknown")) {
         std::snprintf(info, sizeof(info),
-                      "[JSExtensionHost] require('%s') → auto-generated polyfill\n",
+                      "[JSExtensionHost] require('%s') â†’ auto-generated polyfill\n",
                       moduleName);
         OutputDebugStringA(info);
 
@@ -2065,7 +2139,7 @@ JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName
 
     // ---- Step 5: Error ----
     std::snprintf(info, sizeof(info),
-                  "[JSExtensionHost] require('%s') → MODULE NOT FOUND\n", moduleName);
+                  "[JSExtensionHost] require('%s') â†’ MODULE NOT FOUND\n", moduleName);
     OutputDebugStringA(info);
 
     return nullptr;
@@ -2195,7 +2269,7 @@ PatchResult JSExtensionHost::loadExtensionFromDir(const char* extensionDir) {
 
     // ---- Register extension ----
     {
-        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
         m_extensions[extensionId] = std::move(state);
     }
 
@@ -2218,7 +2292,7 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
     if (!extensionId) return PatchResult::error("Null extensionId");
     if (!m_initialized) return PatchResult::error("Host not initialized");
 
-    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
     if (it == m_extensions.end()) {
         return PatchResult::error("Extension not found");
@@ -2341,7 +2415,7 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
     wrapper << "  const __dirname = '" << state->extensionPath << "';\n";
     wrapper << "  const vscode = globalThis.vscode;\n";
     wrapper << "\n";
-    wrapper << "  // require() function — bridged to native module loader\n";
+    wrapper << "  // require() function â€” bridged to native module loader\n";
     wrapper << "  const __moduleCache = {};\n";
     wrapper << "  function require(name) {\n";
     wrapper << "    if (name === 'vscode') return globalThis.vscode;\n";
@@ -2375,8 +2449,14 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
     wrapper << "  }\n";
     wrapper << "\n";
     wrapper << "  // Extension source\n";
+    // The extension source is placed in its own scope. Almost every VS Code
+    // extension declares "const vscode = require('vscode')" at the top
+    // level, and the wrapper already binds a name of its own, so evaluating
+    // the source in the same scope is a redeclaration error.
+    wrapper << "  (function() {\n";
     wrapper << source;
-    wrapper << "\n\n";
+    wrapper << "\n  })();\n";
+    wrapper << "\n";
     wrapper << "  // Call activate\n";
     wrapper << "  if (typeof module.exports.activate === 'function') {\n";
     wrapper << "    module.exports.activate(globalThis.__extensionContext);\n";
@@ -2456,7 +2536,7 @@ PatchResult JSExtensionHost::activateExtension(const char* extensionId) {
 PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
     if (!extensionId) return PatchResult::error("Null extensionId");
 
-    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
     if (it == m_extensions.end()) return PatchResult::error("Extension not found");
 
@@ -2485,10 +2565,17 @@ PatchResult JSExtensionHost::deactivateExtension(const char* extensionId) {
 PatchResult JSExtensionHost::unloadExtension(const char* extensionId) {
     if (!extensionId) return PatchResult::error("Null extensionId");
 
+    // Release this extension's command bindings while its context is still
+    // alive, for the same reason the shutdown path does, and take its
+    // commands out of the shared registry so that none of them survives the
+    // extension.
+    ReleaseJSCommandBindings(extensionId);
+    RemoveExtensionCommands(extensionId);
+
     // Deactivate first
     deactivateExtension(extensionId);
 
-    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
     if (it == m_extensions.end()) return PatchResult::error("Extension not found");
 
@@ -2579,7 +2666,7 @@ PatchResult JSExtensionHost::executeScript(const char* extensionId,
     if (!extensionId || !script) return PatchResult::error("Null parameters");
     if (!m_initialized) return PatchResult::error("Not initialized");
 
-    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
     auto it = m_extensions.find(extensionId);
     if (it == m_extensions.end()) return PatchResult::error("Extension not found");
 
@@ -2673,7 +2760,7 @@ void JSExtensionHost::getLoadedExtensions(JSExtensionState* outStates, size_t ma
                                             size_t* outCount) const {
     if (!outStates || !outCount) return;
 
-    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
 
     size_t count = 0;
     for (const auto& [id, state] : m_extensions) {
@@ -2831,53 +2918,16 @@ PatchResult JSExtensionHost::extractZip(const char* zipPath, const char* destDir
     // Create destination directory
     std::filesystem::create_directories(destDir);
 
-    // ---- Shell-based extraction using PowerShell ----
-    // This is a robust fallback that handles all ZIP variants.
-    // In production builds, replace with minizip or direct DEFLATE.
-    char cmd[2048];
-    std::snprintf(cmd, sizeof(cmd),
-                  "powershell -NoProfile -Command "
-                  "\"Expand-Archive -Path '%s' -DestinationPath '%s' -Force\"",
-                  zipPath, destDir);
-
-    OutputDebugStringA("[JSExtensionHost] Extracting VSIX: ");
-    OutputDebugStringA(cmd);
-    OutputDebugStringA("\n");
-
-    STARTUPINFOA si = {};
-    si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
-
-    PROCESS_INFORMATION pi = {};
-
-    BOOL created = CreateProcessA(
-        nullptr, cmd, nullptr, nullptr, FALSE,
-        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
-
-    if (!created) {
-        return PatchResult::error("Failed to start extraction process");
-    }
-
-    // Wait up to 60 seconds for extraction
-    DWORD waitResult = WaitForSingleObject(pi.hProcess, 60000);
-    if (waitResult == WAIT_TIMEOUT) {
-        TerminateProcess(pi.hProcess, 1);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-        return PatchResult::error("VSIX extraction timed out (60s)");
-    }
-
-    DWORD exitCode = 0;
-    GetExitCodeProcess(pi.hProcess, &exitCode);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-
-    if (exitCode != 0) {
-        char err[256];
-        std::snprintf(err, sizeof(err),
-                      "VSIX extraction failed (exit code %lu)", exitCode);
-        return PatchResult::error(err);
+    // ---- Extract with the shared first-party ZIP reader ----
+    //
+    // The extension host used to shell out to PowerShell here, which made
+    // the host depend on an external tool that is not present on every
+    // machine and that fails on a package it considers malformed. The
+    // runtime already carries a ZIP reader for the installer, so the same
+    // implementation is used here.
+    VsixInstaller installer;
+    if (!installer.extractVsixPackage(zipPath, destDir)) {
+        return PatchResult::error("VSIX extraction failed");
     }
 
     // Verify extraction produced files
@@ -2907,7 +2957,7 @@ PatchResult JSExtensionHost::parseManifest(const char* extensionDir,
     std::string json = readFileToString(pkgPath.c_str());
     if (json.empty()) return PatchResult::error("Failed to read package.json");
 
-    // Extract fields — VSCodeExtensionManifest uses std::string members
+    // Extract fields â€” VSCodeExtensionManifest uses std::string members
     auto assignField = [](const std::string& src, std::string& dest) {
         if (!src.empty()) {
             dest = src;
@@ -2997,7 +3047,7 @@ DWORD WINAPI JSExtensionHost::extensionHostThread(LPVOID param) {
                 }
 
                 if (now >= it->fireTime) {
-                    // Fire timer — invoke the JS callback function
+                    // Fire timer â€” invoke the JS callback function
                     if (it->jsCallback) {
                         // The callback is stored as an opaque pointer to a JSValue payload.
                         JSValue callbackVal = *reinterpret_cast<JSValue*>(it->jsCallback);
@@ -3104,7 +3154,7 @@ void JSExtensionHost::processMessageQueue() {
                     std::string eventName = msg.data.substr(0, newline);
                     std::string eventData = msg.data.substr(newline + 1);
 
-                    std::lock_guard<std::mutex> lock(m_extensionsMutex);
+                    std::lock_guard<std::recursive_mutex> lock(m_extensionsMutex);
                     for (auto& [id, state] : m_extensions) {
                         if (!state->activated || !state->jsContext) continue;
 
@@ -3139,3 +3189,4 @@ void JSExtensionHost::processMessageQueue() {
         messages.pop();
     }
 }
+
