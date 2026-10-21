@@ -1205,6 +1205,13 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     }
     const TensorRec& w = tensors_[(size_t)wslot];
     if (!w.data || w.dims.size() < 2) { err = "linear: bad weight"; return false; }
+    const bool linear_boundary_trace = std::getenv("DEEP2_LINEAR_BOUNDARY_TRACE") != nullptr;
+    if (linear_boundary_trace) {
+        std::fprintf(stderr, "[LINEAR_BEGIN] name=%s type=%d dims=[%zu,%zu] bytes=%zu x=%zu\n",
+                     w.name.c_str(), (int)w.ggml_type, (size_t)w.dims[0],
+                     (size_t)w.dims[1], w.bytes, x.size());
+        std::fflush(stderr);
+    }
     // Route this linear op's quant dots to the device that owns its block.
     const DevScope dev_scope(BlockVkFor(w.name));
     const size_t n_in = (size_t)w.dims[0];
@@ -1356,6 +1363,10 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         trace_dispatch_backend_ = gpu ? "vulkan" : "cpu";
         trace_dispatch_forced_ = force_cpu_;
         trace_dispatch_fallback_.clear();
+        // The weight this op needs on the device, for the flame graph. It is
+        // stashed rather than passed down because the trace record is built
+        // in the op loop, which does not hold the weight.
+        trace_last_weight_bytes_ = (uint64_t)w.bytes;
         if (!gpu && !force_cpu_) {
             const QuantDot::Receipt& rcpt = QuantDot::LastReceipt();
             trace_dispatch_fallback_ =
@@ -1447,6 +1458,12 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                         cpu_fallback_reason_ = std::string("legacy quant dot: ") + rcpt.fallback_reason +
                             " (weight=" + w.name + ")";
                     }
+                }
+                if (linear_boundary_trace) {
+                    std::fprintf(stderr, "[LINEAR_END] name=%s kind=%d backend=%s y=%zu first=%g\n",
+                                 w.name.c_str(), kind, ok ? "vulkan" : "cpu",
+                                 y.size(), y.empty() ? 0.0 : (double)y[0]);
+                    std::fflush(stderr);
                 }
                 return true;
             }
@@ -4228,6 +4245,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         }
         const std::vector<float>& xi = resolveIn(in);
         const auto op_started = std::chrono::steady_clock::now();
+        // The per-op weight size is stashed by the op that loads a weight.
+        // It is cleared here so an op that loads no weight reports zero
+        // rather than the PREVIOUS op's size.
+        trace_last_weight_bytes_ = 0;
+        trace_last_expert_ = -1;
     switch (in.op) {
             if (std::getenv("RR_OP_TRACE")) {
                 std::fprintf(stderr, "  [op] %-16s blk=%3d a='%s' b='%s' out='%s' bSlot=%d\n",
@@ -4765,9 +4787,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 return false;
         }   // switch over program_ ops
 
+        // ---- the op's own duration -----------------------------------------
+        // Measured unconditionally when the op trace is on, because the
+        // flame graph is a TIMING measurement: an op that is only timed when
+        // a separate flag is set would describe a different execution than
+        // the one being measured.
+        const double op_exec_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - op_started).count();
+
         if (op_timing) {
-            op_timing_ms[(int)in.op] += std::chrono::duration<double, std::milli>(
-                std::chrono::steady_clock::now() - op_started).count();
+            op_timing_ms[(int)in.op] += op_exec_ms;
             ++op_timing_count[(int)in.op];
         }
 
@@ -4809,12 +4838,15 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             if (!out && !hidden_.empty()) out = &hidden_;
             if (!out && !logits_.empty()) out = &logits_;
             if (out) {
-                uint64_t h = 1469598103934665603ull;
-                for (float v : *out) {
-                    uint32_t u = 0;
-                    std::memcpy(&u, &v, sizeof(u));
-                    h ^= u;
-                    h *= 1099511628211ull;
+                uint64_t h = 0;
+                if (trace_checksum_) {
+                    h = 1469598103934665603ull;
+                    for (float v : *out) {
+                        uint32_t u = 0;
+                        std::memcpy(&u, &v, sizeof(u));
+                        h ^= u;
+                        h *= 1099511628211ull;
+                    }
                 }
                 OpTrace tr;
                 tr.block = in.block;
@@ -4828,6 +4860,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 tr.dispatch_backend = trace_dispatch_backend_;
                 tr.dispatch_fallback = trace_dispatch_fallback_;
                 tr.dispatch_forced = trace_dispatch_forced_;
+                // The measurement fields: which token and layer this op
+                // belonged to, how long it took, and how much weight it
+                // needed on the device.
+                tr.token = last_token_;
+                tr.exec_ms = op_exec_ms;
+                tr.weight_bytes = trace_last_weight_bytes_;
+                tr.expert = trace_last_expert_;
                 for (size_t vi = 0; vi < 8 && vi < out->size(); ++vi)
                     tr.first_vals[vi] = (*out)[vi];
                 if (trace_capture_values_) tr.values = *out;

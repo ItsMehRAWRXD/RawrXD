@@ -87,6 +87,8 @@ struct Instr {
     // projection's declared input width. `k`/`v` are unused by the current
     // graph shapes (the arena carries the q/k/v activations by name).
     int32_t q = -1;
+    int32_t q_norm = -1;
+    int32_t k_norm = -1;
     std::string detail;
 };
 
@@ -130,6 +132,11 @@ public:
 
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);
+
+    // Start a new independent session without rebinding model weights.
+    // Recurrent state, KV state, logits, and admission counters are cleared;
+    // immutable tensor bindings and compiled graph instructions are retained.
+    void ResetState();
 
     // RAWRXD_DEEP2_D1_BATCHED_PREFILL: multi-token prefill. Ops run
     // op-major / token-minor: every Linear op queues one dot PER TOKEN into a
@@ -332,14 +339,27 @@ public:
         float first_vals[8] = {0, 0, 0, 0, 0, 0, 0, 0};
         // Full output copy when value capture is on (single-token forensics).
         std::vector<float> values;
+        // ---- RAWRXD_GATE7_TPS_001: the per-op execution measurement ----
+        // The decode flame graph needs to know, for every operation, which
+        // token and which layer it belonged to, how long it took on its own,
+        // and how much weight it needed on the device. These are filled only
+        // when the op trace is enabled, and they do not change execution
+        // semantics.
+        uint32_t token = 0;
+        double exec_ms = 0.0;      // the op's own duration
+        uint64_t weight_bytes = 0;  // the weight's size
+        uint64_t upload_bytes = 0;  // bytes uploaded for this op
+        int expert = -1;            // the MoE expert, -1 for shared ops
+        uint64_t submit_id = 0;     // the command list submission it rode
+        uint64_t fence_value = 0;   // the fence it waited on
     };
     // enable: checksum per op. capture_values: also copies each op's full
     // output so a divergence can be diffed element-by-element. Both default
     // off; neither changes execution semantics.
-    void SetOpTrace(bool enable, bool capture_values = false) {
+    void SetOpTrace(bool enable, bool capture_values = false, bool checksum = true) {
         trace_ops_ = enable;
         trace_capture_values_ = capture_values;
-        op_traces_.clear();
+        trace_checksum_ = checksum;
     }
     const std::vector<OpTrace>& OpTraces() const { return op_traces_; }
 
@@ -381,6 +401,8 @@ private:
                       std::vector<float>& y, std::string& err);
       bool OpSsmScan(const Instr& in, const std::vector<float>& x,
                      std::vector<float>& y, std::string& err);
+    bool OpGdn(const Instr& in, const std::vector<float>& x,
+               std::vector<float>& y, std::string& err);
       bool OpMlaDecompress(const Instr& mla, const std::vector<float>& x,
                            std::vector<float>& k_out, std::vector<float>& v_out,
                            size_t position, std::string& err);
@@ -446,6 +468,11 @@ private:
           std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
       };
       std::vector<SsmWeightCache> ssm_weights_;
+      // A GPU GDN state is owned by VulkanCompute and keyed by this executor
+      // plus block. This mirror records whether that block has crossed from
+      // the reference path to the device-authoritative path; a later device
+      // failure must not silently resume with an unsynchronised host state.
+      std::vector<uint8_t> gdn_gpu_active_;
       // Optional SSM profiling counters. They remain dormant unless
       // DEEP2_SSM_PROFILE=1 is set, so production execution has no logging
       // cost while controlled runs can separate cache and recurrent work.
@@ -480,6 +507,16 @@ private:
     std::vector<OpTrace> op_traces_;
     bool trace_ops_ = false;
     bool trace_capture_values_ = false;
+    // The per-op checksum walks the whole output buffer of every op, which
+    // is exactly what first-divergence forensics needs and exactly what a
+    // TIMING measurement must not pay for. The flame graph therefore runs
+    // with the checksum off.
+    bool trace_checksum_ = true;
+    // The weight size and the MoE expert for the op currently being
+    // dispatched, stashed the way the dispatch backend already is, so the
+    // trace record can pick them up.
+    uint64_t trace_last_weight_bytes_ = 0;
+    int trace_last_expert_ = -1;
 
     // RAWRXD_DEEP2_STRATA_S01..S08: expert residency ledger + policy switches.
     Strata::ExpertResidencyLedger strata_ledger_;

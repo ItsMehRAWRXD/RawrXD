@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -82,6 +83,97 @@ void DumpLogits(const std::string& dir, size_t pos, const std::vector<float>& lg
 
 }  // namespace
 
+// ============================================================================
+// The decode flame graph.
+//
+// This is a MEASUREMENT, not an optimisation: it shows, per operation, how
+// long the op took and how much weight it needed on the device, so that the
+// next change is aimed at the bar that is actually tallest rather than at the
+// one that looks most likely.
+//
+// It is printed with the op trace's checksum OFF. The checksum walks the
+// whole output buffer of every op, which first-divergence forensics needs and
+// a timing measurement must not pay for.
+// ============================================================================
+static void DumpDecodeFlameGraph(const RuntimeGraph::Executor& ex,
+                                  const QuantDot::BackendStats& stats) {
+    const std::vector<RuntimeGraph::Executor::OpTrace>& traces = ex.OpTraces();
+    if (traces.empty()) {
+        std::printf("\nDECODE_FLAME_GRAPH: no operation trace was recorded\n");
+        return;
+    }
+
+    std::printf("\nDECODE_FLAME_GRAPH\n");
+    std::printf("=================\n");
+
+    // ---- per token -------------------------------------------------------
+    // The trace is emitted in execution order, so a token's ops are
+    // contiguous. Walk it once and print each token's block.
+    size_t index = 0;
+    while (index < traces.size()) {
+        const int token = static_cast<int>(traces[index].token);
+        const size_t opStart = index;
+        double token_ms = 0.0;
+        while (index < traces.size() && static_cast<int>(traces[index].token) == token) {
+            token_ms += traces[index].exec_ms;
+            ++index;
+        }
+        const size_t tokenOps = index - opStart;
+
+        std::printf("\nTOKEN %d   (%zu ops, %.3f ms)\n", token, tokenOps, token_ms);
+        std::printf("  %-4s %-26s %9s %9s %10s  %s\n", "LAYER", "OP", "ms", "cumul", "WEIGHT",
+                    "BACKEND");
+        double cumulative = 0.0;
+        for (size_t i = opStart; i < opStart + tokenOps; ++i) {
+            const auto& trace = traces[i];
+            cumulative += trace.exec_ms;
+            std::printf("  L%-3d %-26s %9.4f %9.4f %8.1fMB  %s\n", trace.block,
+                        trace.name.c_str(), trace.exec_ms, cumulative,
+                        static_cast<double>(trace.weight_bytes) / (1024.0 * 1024.0),
+                        trace.dispatch_backend.c_str());
+        }
+    }
+
+    // ---- aggregate by operation ------------------------------------------
+    struct Aggregate {
+        size_t calls = 0;
+        double total_ms = 0.0;
+        uint64_t weight_bytes = 0;
+        size_t gpu_calls = 0;
+        size_t cpu_calls = 0;
+    };
+    std::map<std::string, Aggregate> byOp;
+    for (const auto& trace : traces) {
+        Aggregate& aggregate = byOp[trace.name];
+        ++aggregate.calls;
+        aggregate.total_ms += trace.exec_ms;
+        aggregate.weight_bytes += trace.weight_bytes;
+        if (trace.dispatch_backend == "vulkan") ++aggregate.gpu_calls;
+        else if (trace.dispatch_backend == "cpu") ++aggregate.cpu_calls;
+    }
+
+    std::printf("\n%-26s %8s %10s %10s %11s %9s\n", "OP", "CALLS", "TOTAL ms", "MEAN ms",
+                "WEIGHT MB", "GPU/CPU");
+    for (const auto& entry : byOp) {
+        const Aggregate& aggregate = entry.second;
+        std::printf("%-26s %8zu %10.3f %10.4f %11.1f %5zu/%zu\n", entry.first.c_str(),
+                    aggregate.calls, aggregate.total_ms,
+                    aggregate.calls ? aggregate.total_ms / aggregate.calls : 0.0,
+                    static_cast<double>(aggregate.weight_bytes) / (1024.0 * 1024.0),
+                    aggregate.gpu_calls, aggregate.cpu_calls);
+    }
+
+    std::printf("\n%-26s %10llu\n", "SUBMITS",
+                static_cast<unsigned long long>(stats.submits));
+    std::printf("%-26s %10llu\n", "WAIT EVENTS",
+                static_cast<unsigned long long>(stats.waits));
+    std::printf("%-26s %10.1f\n", "UPLOAD MB",
+                static_cast<double>(stats.upload_bytes) / (1024.0 * 1024.0));
+    std::printf("%-26s %10llu\n", "WEIGHT CACHE HITS",
+                static_cast<unsigned long long>(stats.weight_cache_hits));
+    std::printf("%-26s %10.3f\n", "KERNEL ms", stats.kernel_ms);
+    std::printf("%-26s %10.3f\n", "WAIT ms", stats.wait_ms);
+}
 int main(int argc, char* argv[]) {
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
@@ -157,6 +249,12 @@ int main(int argc, char* argv[]) {
                     (unsigned long long)rep.spec.expert_count,
                     (unsigned long long)rep.spec.expert_used);
         RuntimeGraph::Executor ex;
+        // The per-op trace is enabled for the FIRST run only, and with the
+        // checksum OFF. The checksum walks the whole output buffer of every
+        // op: first-divergence forensics needs that, a timing measurement must
+        // not pay for. The trace records which token and layer each op
+        // belonged to, how long it took, and how much weight it needed.
+        if (run == 1) ex.SetOpTrace(true, false, false);
         ex.SetForceCpu(!gpu);
         if (!ex.Bind(rep)) {
             std::printf("BIND_FAIL: %s\n", ex.Stats().error.c_str());
@@ -205,6 +303,10 @@ int main(int argc, char* argv[]) {
             DumpLogits(dumpLogitsDir, tokens.size() + i - 1, ex.Logits());
         }
         const double decode_ms = MsSince(t_dc0);
+        // The flame graph for the first run, printed from the per-op trace.
+        if (run == 1) {
+            DumpDecodeFlameGraph(ex, QuantDot::BackendCounters());
+        }
         const double first_decode_ms = gen_ms.empty() ? 0.0 : gen_ms.front();
         const double steady_ms =
             gen_ms.empty() ? 0.0 : decode_ms - first_decode_ms;
