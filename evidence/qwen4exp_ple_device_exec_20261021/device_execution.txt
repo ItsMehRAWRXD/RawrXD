@@ -1,0 +1,13 @@
+=== Qwen4Exp PLE short convolution: device execution ===
+artifact: src\deep2\shaders\deep2_qwen4exp_ple.spv
+artifact: 1037 words of SPIR-V
+validation: VK_LAYER_KHRONOS_validation is on
+device : AMD Radeon AI PRO R9700
+pipeline: created
+
+kernel=4 channels=8
+dispatch 1: tokens=6  y max_abs_diff = 5.672672e-08   carry max_abs_diff = 0.000000e+00
+dispatch 2: tokens=3  y max_abs_diff = 2.020435e-08   carry max_abs_diff = 0.000000e+00
+tolerance                       = 2.000000e-05
+
+RESULT: PASS (the device reproduced the reference)

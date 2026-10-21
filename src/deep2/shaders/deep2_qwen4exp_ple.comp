@@ -29,10 +29,17 @@ float silu(float v) {
 float history(uint token, uint tap, uint channel) {
     // tap 0 is the oldest sample in the causal window and tap kernel-1 is the
     // current token. Samples before token zero come from the prior state.
+    //
+    // The carried state holds the kernel-1 samples immediately before the
+    // dispatch, oldest first: state[tap] is the sample at offset
+    // tap-(kernel-1) relative to the start of the dispatch. The sample this
+    // tap wants at token zero is at exactly that offset, so the slot is the
+    // tap. It used to be computed from the token, which made every tap of
+    // the first token read the same slot and gave the window the wrong
+    // history.
     int source = int(token) - int(pc.kernel - 1u - tap);
     if (source < 0) {
-        uint state_index = uint(int(pc.kernel - 1u - tap) + source);
-        return state[state_index * pc.channels + channel];
+        return state[tap * pc.channels + channel];
     }
     return x[uint(source) * pc.channels + channel];
 }
