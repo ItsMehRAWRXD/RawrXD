@@ -1,0 +1,51 @@
+#version 450
+// Qwen4Exp Hyperconnection combine_norm reference lowering.
+//
+// This is the exact scalar contract recovered from r9700_vllm/hc.py:
+// injection = 2*sigmoid(injection_logits / hc_count),
+// out = residual + block_output * injection, followed by grouped RMSNorm.
+// It is a correctness kernel over F32 staging buffers. Quantized weight GEMMs
+// remain separate until their Q8 layout and bf16 rounding are certified.
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer Residual { float residual[]; };
+layout(set = 0, binding = 1, std430) readonly buffer Block { float block_output[]; };
+layout(set = 0, binding = 2, std430) readonly buffer Injection { float injection[]; };
+layout(set = 0, binding = 3, std430) readonly buffer Norm { float norm_weight[]; };
+layout(set = 0, binding = 4, std430) writeonly buffer Combined { float combined[]; };
+layout(set = 0, binding = 5, std430) writeonly buffer Normalized { float normalized[]; };
+
+layout(push_constant) uniform Push {
+    uint tokens;
+    uint head_dim;
+    uint hc_count;
+    uint reserved;
+    float epsilon;
+} pc;
+
+float sigmoid(float x) { return 1.0 / (1.0 + exp(-x)); }
+
+void main() {
+    if (pc.tokens == 0u || pc.head_dim == 0u || pc.hc_count == 0u) return;
+    uint width = pc.head_dim * pc.hc_count;
+    uint gid = gl_GlobalInvocationID.x;
+    if (gid >= pc.tokens * width) return;
+    uint token = gid / width;
+    uint element = gid - token * width;
+    uint stream = element / pc.head_dim;
+    uint col = element - stream * pc.head_dim;
+    float factor = 2.0 * sigmoid(injection[token * pc.hc_count + stream] / float(pc.hc_count));
+    float v = residual[token * width + element] + block_output[token * pc.head_dim + col] * factor;
+    combined[token * width + element] = v;
+
+    float ss = 0.0;
+    for (uint j = 0u; j < pc.head_dim; ++j) {
+        uint e = stream * pc.head_dim + j;
+        float q = residual[token * width + e] +
+                  block_output[token * pc.head_dim + j] * factor;
+        ss += q * q;
+    }
+    float inv = inversesqrt(ss / float(pc.head_dim) + pc.epsilon);
+    float nw = norm_weight[pc.head_dim == 0u ? col : (norm_weight.length() == pc.head_dim ? col : element)];
+    float y = v * inv;
+    normalized[token * width + element] = y + y * nw;
+}
