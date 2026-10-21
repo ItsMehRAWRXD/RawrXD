@@ -878,6 +878,29 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             return std::string();
         };
 
+        // Topology-only receipt: expose alternating hybrid block signatures
+        // without allocating or executing the full model.
+        if (std::getenv("DEEP2_DUMP_QWEN_BLOCK_SIGNATURES") &&
+            (s.kind == ArchKind::SsmHybrid || s.kind == ArchKind::Qwen3Next ||
+             s.kind == ArchKind::Qwen4Exp)) {
+            const bool gdn = !name(Role::AttnQKV).empty() && !name(Role::AttnGate).empty() &&
+                             !name(Role::SsmA).empty() && !name(Role::SsmAlpha).empty() &&
+                             !name(Role::SsmBeta).empty() && !name(Role::SsmOut).empty();
+            const bool attention = !name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
+                                   !name(Role::AttnV).empty();
+            const bool ssm = !name(Role::SsmIn).empty() && !name(Role::SsmOut).empty();
+            std::fprintf(stderr, "[qwen-block] block=%llu kind=%s qkv=%s gate=%s q=%s k=%s v=%s ssm_in=%s ssm_out=%s\n",
+                         static_cast<unsigned long long>(b),
+                         gdn ? "GDN" : (attention ? "ATTENTION" : (ssm ? "SSM" : "OTHER")),
+                         name(Role::AttnQKV).empty() ? "-" : "yes",
+                         name(Role::AttnGate).empty() ? "-" : "yes",
+                         name(Role::AttnQ).empty() ? "-" : "yes",
+                         name(Role::AttnK).empty() ? "-" : "yes",
+                         name(Role::AttnV).empty() ? "-" : "yes",
+                         name(Role::SsmIn).empty() ? "-" : "yes",
+                         name(Role::SsmOut).empty() ? "-" : "yes");
+        }
+
         // Snapshot the BLOCK INPUT as resid_in BEFORE the first norm runs.
         // Publish copies the CURRENT hidden vector, and RmsNorm overwrites
         // hidden_ with the normed value. Emitting Publish after the norm (the
@@ -918,6 +941,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                                !name(Role::SsmA).empty() &&
                                !name(Role::SsmAlpha).empty() &&
                                !name(Role::SsmBeta).empty() &&
+                               !name(Role::SsmConv1dW).empty() &&
                                !name(Role::SsmDtB).empty() &&
                                !name(Role::SsmNorm).empty() &&
                                !name(Role::SsmOut).empty();
@@ -932,6 +956,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.detail = "qwen35_gdn;A=" + name(Role::SsmA) +
                        ";alpha=" + name(Role::SsmAlpha) +
                        ";beta=" + name(Role::SsmBeta) +
+                       ";conv=" + name(Role::SsmConv1dW) +
                        ";dt=" + name(Role::SsmDtB) +
                        ";norm=" + name(Role::SsmNorm) +
                        ";out=" + name(Role::SsmOut);
