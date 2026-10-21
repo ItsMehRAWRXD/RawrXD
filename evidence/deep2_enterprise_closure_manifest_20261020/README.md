@@ -65,7 +65,7 @@ present and hashable. It never reports execution or certification as PASS.
 
 ## Concrete blocker register
 
-The machine-readable manifest includes eleven identified blockers, each with an
+The machine-readable manifest includes twelve identified blockers, each with an
 evidence location and a closure test. The human-readable register is
 qwen4exp_blocker_audit.md. The immediate execution boundary is:
 
@@ -77,3 +77,11 @@ The audit also records QWEN-B11: the native role report says
 GDN/PLE/Hyperconnection are 252/7/387 tensors while the canonical contract
 records 216/6/384. This must be reconciled before descriptor ownership can be
 treated as authoritative.
+
+The audit also records QWEN-B12: both shard manifest JSON files contain
+unescaped Windows path separators and fail independent JSON parsing before
+tensor ownership can be recomputed.
+
+An isolated GDN Vulkan probe now records one real dispatch and independent
+output/state parity. This advances GDN to COMPONENT_DISPATCH_PASS only; the
+production Executor graph still rejects it and Qwen4Exp remains blocked.
