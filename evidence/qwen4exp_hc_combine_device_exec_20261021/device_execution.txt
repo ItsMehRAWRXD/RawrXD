@@ -1,0 +1,28 @@
+=== Qwen4Exp hyperconnection combine: device execution ===
+artifact: src\deep2\shaders\deep2_qwen4exp_hc_combine.spv
+artifact: 1635 words of SPIR-V
+validation: VK_LAYER_KHRONOS_validation is on
+device : AMD Radeon AI PRO R9700
+pipeline: created
+memory  : type 2 (host visible, host coherent)
+
+--- the first values of token 0 ---
+ index     residual        block       device    reference
+     0     -0.47800      0.84402      0.68979      0.68979
+       (stream 0 col 0, factor 1.383606, predicted 0.689790)
+     1      0.82147     -0.92079     -0.45254     -0.45254
+     2     -0.50314     -0.34077     -0.97464     -0.97464
+     3     -0.24474     -0.10461     -0.38949     -0.38949
+     4      0.66874      0.06721      0.76174      0.76174
+     5     -0.82796     -0.61083     -1.67311     -1.67311
+     6      0.17347     -0.51464     -0.53860     -0.53860
+     7     -0.44528     -0.92895     -1.73058     -1.73058
+
+tokens=5 head_dim=16 hc_count=4 width=64
+combined   max_abs_diff = 1.043e-07
+normalized max_abs_diff = 4.041e-07
+tolerance                = 2.000e-05
+all values finite        = yes
+
+RESULT: PASS (the device reproduced the reference)
+EXIT=0 
