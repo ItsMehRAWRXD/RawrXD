@@ -62,3 +62,18 @@ cmake --build F:\rawrxd\build --config Release --target deep2_enterprise_manifes
 
 The generator returns exit code `0` only when every tracked artifact is
 present and hashable. It never reports execution or certification as PASS.
+
+## Concrete blocker register
+
+The machine-readable manifest includes eleven identified blockers, each with an
+evidence location and a closure test. The human-readable register is
+qwen4exp_blocker_audit.md. The immediate execution boundary is:
+
+- QWEN-B01: Executor::Bind rejects all five Qwen4Exp operator kinds.
+- QWEN-B02: ExecuteToken has no lowering cases for those kinds.
+- QWEN-B03: the physical probe creates pipelines but submits zero commands.
+
+The audit also records QWEN-B11: the native role report says
+GDN/PLE/Hyperconnection are 252/7/387 tensors while the canonical contract
+records 216/6/384. This must be reconciled before descriptor ownership can be
+treated as authoritative.
