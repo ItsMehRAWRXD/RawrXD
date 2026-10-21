@@ -1,0 +1,33 @@
+{
+  "adapter": "AMD Radeon AI PRO R9700",
+  "adapter_luid": "0x00000000:0x00015B22",
+  "vendor_id": 4098,
+  "device_id": 30033,
+  "driver_version": "32.0.31041.1004",
+  "is_software_adapter": false,
+  "runtime_version": "6.0.6.2",
+  "feature_level": "12_0",
+  "debug_layer_available": false,
+  "debug_layer_enabled": false,
+  "dred_available": true,
+  "rungs": {
+    "rung_1_DEVICE": {"status": "PASS", "hresult": "S_OK", "detail": ""},
+    "rung_2_QUEUE": {"status": "PASS", "hresult": "S_OK", "detail": ""},
+    "rung_3_ALLOCATOR": {"status": "PASS", "hresult": "S_OK", "detail": ""},
+    "rung_4_COMMAND_LIST": {"status": "PASS", "hresult": "S_OK", "detail": ""},
+    "rung_5_DESCRIPTOR_HEAP": {"status": "PASS", "hresult": "S_OK", "detail": ""},
+    "rung_6_RESOURCE": {"status": "PASS", "hresult": "S_OK", "detail": ""},
+    "rung_7_RTV": {"status": "FAIL", "hresult": "DXGI_ERROR_INVALID_CALL", "detail": "CreateRenderTargetView removed the device"}
+  },
+  "first_failed_rung": "RTV",
+  "first_failed_hresult": "DXGI_ERROR_INVALID_CALL",
+  "first_failed_hresult_name": "DXGI_ERROR_INVALID_CALL",
+  "device_removed_reason": "DXGI_ERROR_INVALID_CALL",
+  "dred_breadcrumb_count": 0,
+  "dred_page_fault_va": 0,
+  "sunshine_code_reached": false,
+  "platform_blocked": true,
+  "application_blocked": false,
+  "conclusion": "PLATFORM_BLOCKED",
+  "debug_messages": []
+}

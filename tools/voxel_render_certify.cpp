@@ -245,7 +245,7 @@ int main() {
                renderer.LastError().c_str());
         printf("         the D3D12 runtime on this host removes the device on any\n"
                "         view creation (CreateRenderTargetView / CreateDepthStencil\n"
-               "         View / CreateUnorderedAccessView) with DXGI_ERROR_UNSUPPORTED\n"
+               "         View / CreateUnorderedAccessView) with DXGI_ERROR_INVALID_CALL\n"
                "         (0x887A0001), on the AMD R9700 AND on WARP. Device, queue,\n"
                "         allocator, command list, fence, descriptor heap and committed\n"
                "         resource creation all succeed. tools/voxel_probe.cpp reproduces\n"

@@ -6,7 +6,7 @@
 // The DX12 path in VoxelRenderer is the production renderer. It cannot be
 // executed on the current build host: every ID3D12Device view creation
 // (CreateRenderTargetView, CreateDepthStencilView, CreateUnorderedAccessView)
-// removes the device with DXGI_ERROR_UNSUPPORTED (0x887A0001) on BOTH the
+// removes the device with DXGI_ERROR_INVALID_CALL (0x887A0001) on BOTH the
 // AMD Radeon AI PRO R9700 and the WARP software adapter, while device,
 // queue, allocator, command list, fence, descriptor heap and committed
 // resource creation all succeed. That is a host D3D12 runtime fault, and

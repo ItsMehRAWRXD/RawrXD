@@ -53,14 +53,20 @@ evidence.
 Stated plainly, because the certification standard here is that a claim
 without a gate is not a claim:
 
-- **The Direct3D 12 path cannot execute on the current host.** Every
-  `ID3D12Device` view creation removes the device with
-  `DXGI_ERROR_UNSUPPORTED` (0x887A0001) on both the AMD Radeon AI PRO R9700
-  and the WARP software adapter, while device, queue, allocator, command
-  list, fence, descriptor heap and committed resource creation all succeed.
-  `tools/voxel_probe.cpp` reproduces it. The renderer is the renderer of
-  record; a software reference rasterizer sharing the same matrices,
-  vertex layout and shading model is what executes today.
+- **The Direct3D 12 path cannot execute on the current host.** The platform
+  certificate (`tools/d3d12_capability_ladder.cpp`) climbs twelve rungs
+  monotonically and fail-closed. On this machine the **AMD Radeon AI PRO
+  R9700 and the Microsoft Basic Render Driver fail at exactly the same
+  rung — 07 RTV — with `DXGI_ERROR_INVALID_CALL` (0x887A0001)** — after
+  passing device, queue, allocator, command list, descriptor heap and
+  resource creation. The D3D12 **debug layer is not installed** on this
+  host (`D3D12GetDebugInterface` fails), and DRED is present but has no
+  breadcrumbs, which is consistent with the failure being in an API call
+  rather than in GPU execution. The conclusion is `PLATFORM_BLOCKED` with
+  `sunshine_code_reached = NO` and `application_blocked = NO`. The
+  renderer is the renderer of record; a software reference rasterizer
+  sharing the same matrices, vertex layout and shading model is what
+  executes today.
 - **Nemotron runs at 3.06 decode TPS, not 40.** The gap is orchestration,
   not arithmetic: 63 command-list submits per token and about 1 GB of
   weights resident against a 23.7 GB model.
