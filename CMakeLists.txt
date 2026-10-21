@@ -2065,6 +2065,51 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_qsa_score_test.cpp" AND Vulk
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# The per-layer dispatch contract.
+#
+# It runs the engine's own graph builder over a model and compares, for
+# every layer, what the graph bound against what the layer's own tensors
+# say the layer is. The two are independent witnesses: the graph says what
+# the engine decided to do, the shapes say what the file is.
+#
+# A layer that is bound to two mixers, or to the wrong one, will execute as
+# something it is not, and the failure will surface several operations later
+# as a width mismatch at a norm. This is a static check: it reads the
+# header, the key-value directory and the tensor directory, and it runs no
+# inference and touches no device.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dispatch_contract_test.cpp" AND Vulkan_FOUND)
+    add_executable(deep2_dispatch_contract_test
+        tools/deep2_dispatch_contract_test.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/GGUFLoader.cpp)
+    target_include_directories(deep2_dispatch_contract_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    target_compile_features(deep2_dispatch_contract_test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_dispatch_contract_test PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_dispatch_contract_test PRIVATE
+            -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET ggml)
+        target_link_libraries(deep2_dispatch_contract_test PRIVATE ggml)
+    endif()
+    if(TARGET ggml-base)
+        target_link_libraries(deep2_dispatch_contract_test PRIVATE ggml-base)
+    endif()
+    if(TARGET ggml-cpu)
+        target_link_libraries(deep2_dispatch_contract_test PRIVATE ggml-cpu)
+    endif()
+    set_target_properties(deep2_dispatch_contract_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_dispatch_contract_test enabled (per-layer dispatch contract)")
+endif()
+
 
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims
