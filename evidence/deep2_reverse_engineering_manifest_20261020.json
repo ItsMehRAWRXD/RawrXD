@@ -1,9 +1,16 @@
 {
   "schema": "rawrxd.deep2.reverse_engineering_manifest.v1",
-  "generated_utc": "2026-10-21T02:32:49.1148390Z",
+  "generated_utc": "2026-10-21T02:33:30.0485661Z",
   "repository": "F:\\rawrxd",
   "policy": "full-model certification only; component evidence never certifies the model",
-  "open_findings": 4,
+  "reverse_engineered_pattern": {
+    "family": "qwen35_hybrid",
+    "type_a": "attn_qkv[5120,10240] + attn_gate[5120,6144] + recurrent sidecars -> GDN -> ssm_out[6144,5120]",
+    "type_b": "attn_q[5120,12288] + attn_k[5120,1024] + attn_v[5120,1024] -> attn_output[6144,5120]",
+    "invariant": "both block families return a 5120-wide residual stream; never lower Type-A fused GDN as conventional attention",
+    "confidence": "manifest-and-source-backed; not a certification result"
+  },
+  "open_findings": 6,
   "certification": "NOT_CERTIFIED",
   "findings": [
     {
@@ -42,10 +49,21 @@
       "status": "REFERENCE_ONLY",
       "evidence": [
         "src\\deep2\\runtime_graph_executor.cpp",
-        "OpKind::Gdn ExecuteToken arm",
-        "OpGdn uses reference recurrence and increments cpu_calls"
+        "case OpKind::Gdn in ExecuteToken/PrefillBatch",
+        "OpGdn uses causal state and reference recurrence; increments cpu_calls"
       ],
       "next_action": "Replace the reference recurrence with descriptor-backed Vulkan submission and prove state parity."
+    },
+    {
+      "id": "RE-WIRE-11",
+      "boundary": "Production target operator linkage",
+      "status": "GDN_LINKED_COMPONENT_ONLY",
+      "evidence": [
+        "CMakeLists.txt",
+        "deep2_agentic_loop includes op_gdn.cpp",
+        "QSA/PLE/Hyperconnection/SparseMoE sources remain probe-only"
+      ],
+      "next_action": "Keep unsupported operators out of production admission until each has a real Executor method and GPU receipt."
     },
     {
       "id": "RE-EXEC-05",
@@ -103,6 +121,258 @@
         "Depends on RE-EXEC-04, RE-EXEC-05, and RE-FULL-09"
       ],
       "next_action": "Require deterministic multi-token generation, cache continuity, and repeated output."
+    },
+    {
+      "id": "RE-CONNECT-11",
+      "boundary": "Deep2 operator and shader connectivity sweep",
+      "status": "DISCONNECTED_PIECES",
+      "evidence": [
+        "operator:src\\deep2\\op_hyperconnection.cpp",
+        "operator:src\\deep2\\op_ple.cpp",
+        "operator:src\\deep2\\op_qsa.cpp",
+        "operator:src\\deep2\\op_sparse_moe.cpp",
+        "shader:src\\deep2\\shaders\\deep2_b21_q4_swizzled_gemv.comp",
+        "shader:src\\deep2\\shaders\\deep2_b22_lds_reuse_gemv.comp",
+        "shader:src\\deep2\\shaders\\deep2_b23_persistent_queue.comp",
+        "shader:src\\deep2\\shaders\\deep2_b24_verify_logits.comp",
+        "shader:src\\deep2\\shaders\\deep2_b26_rms_qkv_rope_superkernel.comp",
+        "shader:src\\deep2\\shaders\\deep2_b27_moe_expert_superkernel.comp",
+        "shader:src\\deep2\\shaders\\deep2_b28_finalnorm_lmhead_argmax.comp",
+        "shader:src\\deep2\\shaders\\deep2_b29_activation_chain.comp",
+        "shader:src\\deep2\\shaders\\deep2_b31_q4k_superkernel.comp",
+        "shader:src\\deep2\\shaders\\deep2_b32_flash_mla.comp",
+        "shader:src\\deep2\\shaders\\deep2_b34_kvwrite_attention.comp",
+        "shader:src\\deep2\\shaders\\deep2_b35_device_token_ring.comp",
+        "shader:src\\deep2\\shaders\\deep2_b41_packed_dot.comp",
+        "shader:src\\deep2\\shaders\\deep2_b42_multistage_lds.comp",
+        "shader:src\\deep2\\shaders\\deep2_b43_moe_wave.comp",
+        "shader:src\\deep2\\shaders\\deep2_b46_q4k_native.comp",
+        "shader:src\\deep2\\shaders\\deep2_b47_register_expert.comp",
+        "shader:src\\deep2\\shaders\\deep2_b52_coalesced_q4.comp",
+        "shader:src\\deep2\\shaders\\deep2_b53_compute_unroll.comp",
+        "shader:src\\deep2\\shaders\\deep2_b54_device_epoch.comp",
+        "shader:src\\deep2\\shaders\\deep2_b57_context_stream.comp",
+        "shader:src\\deep2\\shaders\\deep2_b58_route_hotset.comp",
+        "shader:src\\deep2\\shaders\\deep2_mla_fused_gather_dot.comp",
+        "shader:src\\deep2\\shaders\\deep2_moe_gate_up_fused.comp",
+        "shader:src\\deep2\\shaders\\deep2_q4_gemv_roofline.comp",
+        "shader:src\\deep2\\shaders\\deep2_qwen4exp_gdn.comp",
+        "shader:src\\deep2\\shaders\\deep2_qwen4exp_hc_combine.comp",
+        "shader:src\\deep2\\shaders\\deep2_qwen4exp_moe_router.comp",
+        "shader:src\\deep2\\shaders\\deep2_qwen4exp_ple.comp",
+        "shader:src\\deep2\\shaders\\deep2_qwen4exp_qsa_score.comp"
+      ],
+      "next_action": "Connect every reported operator/shader to a runtime dispatch method or document it as diagnostic-only."
+    }
+  ],
+  "disconnected_pieces": [
+    {
+      "kind": "operator",
+      "file": "src\\deep2\\op_hyperconnection.cpp",
+      "symbol": "OpHyperconnection",
+      "build_included": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "operator",
+      "file": "src\\deep2\\op_ple.cpp",
+      "symbol": "OpPle",
+      "build_included": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "operator",
+      "file": "src\\deep2\\op_qsa.cpp",
+      "symbol": "OpQsa",
+      "build_included": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "operator",
+      "file": "src\\deep2\\op_sparse_moe.cpp",
+      "symbol": "OpSparseMoe",
+      "build_included": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b21_q4_swizzled_gemv.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b22_lds_reuse_gemv.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b23_persistent_queue.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b24_verify_logits.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b26_rms_qkv_rope_superkernel.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b27_moe_expert_superkernel.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b28_finalnorm_lmhead_argmax.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b29_activation_chain.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b31_q4k_superkernel.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b32_flash_mla.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b34_kvwrite_attention.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b35_device_token_ring.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b41_packed_dot.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b42_multistage_lds.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b43_moe_wave.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b46_q4k_native.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b47_register_expert.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b52_coalesced_q4.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b53_compute_unroll.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b54_device_epoch.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b57_context_stream.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_b58_route_hotset.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_mla_fused_gather_dot.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_moe_gate_up_fused.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_q4_gemv_roofline.comp",
+      "spirv_present": false,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_qwen4exp_gdn.comp",
+      "spirv_present": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_qwen4exp_hc_combine.comp",
+      "spirv_present": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_qwen4exp_moe_router.comp",
+      "spirv_present": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_qwen4exp_ple.comp",
+      "spirv_present": true,
+      "runtime_reference": false
+    },
+    {
+      "kind": "shader",
+      "file": "src\\deep2\\shaders\\deep2_qwen4exp_qsa_score.comp",
+      "spirv_present": true,
+      "runtime_reference": false
     }
   ]
 }
