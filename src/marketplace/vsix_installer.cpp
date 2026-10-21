@@ -1,4 +1,5 @@
 #include "marketplace/vsix_installer.h"
+#include "core/zip_reader.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -163,26 +164,34 @@ void VsixInstaller::installFromFile(const std::string& filePath, const std::stri
 }
 
 bool VsixInstaller::extractVsixPackage(const std::string& vsixPath, const std::string& destination) {
-    // REAL IMPLEMENTATION: Use PowerShell Expand-Archive (built-in on Win10+)
-    // VSIX is just a ZIP.
-    
-    // Construct command: powershell -Command "Expand-Archive -Path 'src' -DestinationPath 'dest' -Force"
-    std::string cmd = "powershell -NoProfile -Command \"Expand-Archive -Path '" + vsixPath + "' -DestinationPath '" + destination + "' -Force\"";
-    
-    int result = std::system(cmd.c_str());
-    if (result == 0) {
-        // Validate extraction
-        if (fs::exists(destination + "/extension.vsixmanifest") || fs::exists(destination + "/package.json")) {
-            return true;
-        }
+    // A VSIX is a ZIP, and the runtime carries its own reader for that
+    // format. Shelling out to PowerShell or tar made the extension runtime
+    // depend on external tools that are not present on every machine and
+    // that cannot be relied on in a headless context.
+    std::error_code ec;
+    if (!fs::exists(vsixPath, ec)) return false;
+
+    std::ifstream in(vsixPath, std::ios::binary);
+    if (!in) return false;
+    std::string archive((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    if (archive.empty()) return false;
+
+    RawrXD::ZipReader reader;
+    if (!reader.open(reinterpret_cast<const uint8_t*>(archive.data()), archive.size())) {
+        return false;
     }
-    
-    // Fallback: Try 'tar' (Windows 10 newer builds, and safer if PWSH restricted)
-    // -xf to extract
-    std::string tarCmd = "tar -xf \"" + vsixPath + "\" -C \"" + destination + "\"";
-    result = std::system(tarCmd.c_str());
-    
-    return (result == 0);
+
+    int written = reader.extractAll(destination);
+    if (written <= 0) return false;
+
+    // A VSIX holds its manifest under extension/, but a bare package may
+    // put package.json at the root, so both layouts are accepted.
+    if (fs::exists(destination + "/extension.vsixmanifest") ||
+        fs::exists(destination + "/package.json") ||
+        fs::exists(destination + "/extension/package.json")) {
+        return true;
+    }
+    return written > 0;
 }
 
 bool VsixInstaller::activateExtension(const std::string& extensionPath) {

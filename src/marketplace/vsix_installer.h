@@ -21,6 +21,13 @@ public:
     void installFromFile(const std::string& filePath, const std::string& extensionId);
     bool uninstallExtension(const std::string& extensionId);
     bool isExtensionInstalled(const std::string& extensionId);
+
+    // Extracts a VSIX package into a destination directory.
+    //
+    // This is the runtime's own ZIP reader. It is public because the
+    // JavaScript extension host extracts through it rather than through
+    // an external tool.
+    bool extractVsixPackage(const std::string& vsixPath, const std::string& destination);
     
     // Callbacks
     std::function<void(const std::string&)> installationStarted;
@@ -32,7 +39,6 @@ public:
 private:
     std::string getExtensionsDirectory();
     std::string getExtensionInstallPath(const std::string& extensionId);
-    bool extractVsixPackage(const std::string& vsixPath, const std::string& destination);
     bool activateExtension(const std::string& extensionPath);
     bool deactivateExtension(const std::string& extensionId);
     void cleanupTempFiles();
