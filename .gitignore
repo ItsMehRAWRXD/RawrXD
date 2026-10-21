@@ -282,3 +282,22 @@ act_*.f32
 *.bak_*
 models/*.gguf_flight.jsonl
 .scratch/
+
+# The B0xx certification work streams keep their SOURCES in a directory named
+# "build", which the blanket build-output rules above would swallow. Those
+# sources are declared by the CMake targets, so a fresh checkout without them
+# cannot even configure: CMake reports "Cannot find source file" for a path
+# that plainly exists in the maintainer's tree. The sources are tracked here;
+# the build outputs that share the directory are not.
+!B0*/build/
+B0*/build/*
+!B0*/build/*.cpp
+!B0*/build/*.c
+!B0*/build/*.cc
+!B0*/build/*.h
+!B0*/build/*.hpp
+!B0*/build/*.inc
+!B0*/build/*.asm
+!B0*/build/*.py
+!B0*/build/*.ps1
+!B0*/build/*.bat
