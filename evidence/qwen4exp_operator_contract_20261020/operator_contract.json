@@ -1,0 +1,107 @@
+{
+  "schema": "rawrxd.deep2.qwen4exp.operator_contract.v1",
+  "architecture": "qwen4exp",
+  "tensor_count": 1224,
+  "block_count": 48,
+  "operators": {
+    "PLE": {
+      "state": "REVERSE_ENGINEERED",
+      "tensor_count": 6,
+      "conv_kernel": 4,
+      "channels": 10240,
+      "reference": "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py"
+    },
+    "Hyperconnection": {
+      "state": "REVERSE_ENGINEERED",
+      "tensor_count": 384,
+      "stream_count": 4,
+      "low_rank": 320,
+      "hidden": 10240,
+      "reference": "3rdparty/r9700-stack/r9700_vllm/hc.py"
+    },
+    "QSA": {
+      "state": "REVERSE_ENGINEERED",
+      "tensor_count": 48,
+      "indexer_top_k": 2048,
+      "reference": "3rdparty/r9700-stack/r9700_vllm/attn/qsa.py"
+    },
+    "GDN": {
+      "state": "REVERSE_ENGINEERED",
+      "tensor_count": 216,
+      "inner_size": 6144,
+      "state_size": 128,
+      "groups": 16,
+      "reference": "3rdparty/r9700-stack/r9700_vllm/models/gdn.py"
+    },
+    "SparseMoE": {
+      "state": "REVERSE_ENGINEERED",
+      "tensor_count": 144,
+      "experts": 512,
+      "top_k": 10,
+      "expert_width": 640,
+      "reference": "3rdparty/r9700-stack/r9700_vllm/moe/route.py"
+    }
+  },
+  "checks": [
+    {
+      "ok": true,
+      "detail": "block_count=48 (expected 48 from canonical Qwen4Exp manifest)"
+    },
+    {
+      "ok": true,
+      "detail": "hyperconnection tensors=384 (expected 384)"
+    },
+    {
+      "ok": true,
+      "detail": "expert projection tensors=144 (expected 144)"
+    },
+    {
+      "ok": true,
+      "detail": "QSA indexer tensors=48"
+    },
+    {
+      "ok": true,
+      "detail": "PLE tensors=6"
+    },
+    {
+      "ok": true,
+      "detail": "GDN tensors=216"
+    },
+    {
+      "ok": true,
+      "detail": "HC inject shape=[10240, 4]"
+    },
+    {
+      "ok": true,
+      "detail": "HC down shape=[10240, 320]"
+    },
+    {
+      "ok": true,
+      "detail": "HC up shape=[320, 10240]"
+    },
+    {
+      "ok": true,
+      "detail": "GDN A shape=[48]"
+    },
+    {
+      "ok": true,
+      "detail": "PLE conv shape=[4, 10240]"
+    },
+    {
+      "ok": true,
+      "detail": "MoE gate shape=[2560, 640, 512]"
+    },
+    {
+      "ok": true,
+      "detail": "MoE down shape=[640, 2560, 512]"
+    }
+  ],
+  "native_execution": {
+    "PLE": false,
+    "Hyperconnection": false,
+    "QSA": false,
+    "GDN": false,
+    "SparseMoE": false
+  },
+  "certification": "NOT_CERTIFIED"
+}
