@@ -1,3 +1,14 @@
 [submodule "remove-refusals-with-transformers"]
     path = remove-refusals-with-transformers
     url = https://github.com/ItsMehRAWRXD/remove-refusals-with-transformers.git
+
+# The QuickJS runtimes are vendored as submodules. Without these entries a
+# fresh clone has the gitlinks but no way to fetch them, so the targets that
+# use them cannot be configured or built anywhere but on a machine that
+# happened to have them checked out already.
+[submodule "3rdparty/quickjs"]
+	path = 3rdparty/quickjs
+	url = https://github.com/bellard/quickjs.git
+[submodule "3rdparty/quickjs_ng"]
+	path = 3rdparty/quickjs_ng
+	url = https://github.com/quickjs-ng/quickjs.git
