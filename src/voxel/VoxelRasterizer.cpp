@@ -28,8 +28,10 @@ struct Shading {
     Vec3 lightDir{0.45f, 0.82f, 0.35f};
     float sunIntensity = 0.95f;
     float ambientScale = 1.0f;
-    float fogStart = 60.0f;
-    float fogRange = 140.0f;
+    // The fog band scales with the world height, so it stays in proportion
+    // when the column height changes.
+    float fogStart = static_cast<float>(kChunkHeight) * 1.0f;
+    float fogRange = static_cast<float>(kChunkHeight) * 3.0f;
     float fogStrength = 0.85f;
 };
 

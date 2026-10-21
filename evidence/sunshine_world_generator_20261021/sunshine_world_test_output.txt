@@ -1,0 +1,19 @@
+﻿=== configurable world generator certification ===
+[PASS] the designer's JSON parses                       
+[PASS] the parsed values are the designer's             seed=1337 sea=64 caves=40
+[PASS] the JSON round trips byte for byte               {"seed":1337,"world":"islands","scale":1,"sea":64,"mountains":35,"erosion":55,"caves":40,"trees":85,"temperature":85,"humidity":80,"rivers":40,"structures":35}
+[PASS] the configuration maps onto the generator        generator sea=82 (a block level)
+[PASS] the sea level is resolved as a percentage of the world height 64% of 128 blocks = 82
+[PASS] the requested world mode is supported by the generator mode='islands'
+[PASS] the generated world is deterministic             an 80x80x128 volume compared block for block
+[PASS] a different seed produces a different world      seed 1338
+[PASS] the world is chunk order independent             the chunk cache and a direct query agree on the boundary column
+[PASS] the mesher produces geometry from the generated world chunk (0,0): 661 quads, 1082 visible faces, 1322 triangles
+[PASS] greedy meshing merges the generated terrain      merged 1082 faces into 661 quads
+[PASS] cross-chunk face culling is exact against the generated world +X boundary: emitted 3 quads, expected 3
+[PASS] the binary configuration serialization round trips 60 bytes, version 1, CRC32 protected
+[PASS] the generated world renders                      640x480 frame
+[PASS] the frame contains water, land and sky           sky=78% green=6% dark/bright=12%
+[INFO] the island frame was written to sunshine_island.png
+[PASS] the rendered frame is stable                     1228800 bytes compared
+=== ALL CHECKS PASSED ===

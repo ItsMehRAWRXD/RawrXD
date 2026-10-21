@@ -17,8 +17,21 @@
 #include <unordered_map>
 #include <vector>
 
+#include "SunshineWorldConfig.hpp"
+
 namespace RawrXD {
 namespace Voxel {
+
+// The configurable world generator. It is forward declared here because it
+// is defined in terms of BlockType, which lives in this header. The world
+// holds it through a shared pointer, so the two headers do not have to
+// include each other.
+class SunshineWorld;
+
+// The vendored, fully configurable generator.
+namespace sunshine {
+class Generator;
+}
 
 // Block palette. The values are indices into the colour table used by the
 // pixel shader; 0 is air and is never emitted as geometry.
@@ -33,10 +46,15 @@ enum class BlockType : uint8_t {
     Bedrock = 7,
     Wood = 8,
     Leaves = 9,
+    Brick = 10,
 };
 
 inline constexpr int32_t kChunkWidth = 16;
-inline constexpr int32_t kChunkHeight = 64;
+// The world is 128 blocks tall. The configurable generator's terrain range
+// (a sea level near the middle of the column, mountains above it) needs the
+// headroom, and a taller column is also what lets a river cut down through
+// the rock without reaching the sea floor.
+inline constexpr int32_t kChunkHeight = 128;
 inline constexpr int32_t kChunkDepth = 16;
 inline constexpr int32_t kChunkVolume = kChunkWidth * kChunkHeight * kChunkDepth;
 
@@ -75,7 +93,21 @@ struct Chunk {
 
 class VoxelWorld {
 public:
+    // The built-in generator: a hash driven terrain with biomes and caves.
     explicit VoxelWorld(uint32_t seed = 0x5EED1234u) : seed_(seed) {}
+
+    // The configurable Sunshine generator. The world then answers every
+    // block query from the generator, and the mesher, the renderer and the
+    // chunk cache are unchanged: the generator is just another pure
+    // function of world coordinates.
+    explicit VoxelWorld(const SunshineWorldConfig& config);
+
+    // Declared here and defined in the translation unit that knows the
+    // generator, so the shared pointer to an incomplete type is destroyed
+    // where the type is complete.
+    ~VoxelWorld();
+    VoxelWorld(const VoxelWorld&) = delete;
+    VoxelWorld& operator=(const VoxelWorld&) = delete;
 
     uint32_t seed() const { return seed_; }
 
@@ -117,6 +149,11 @@ private:
     void PlaceTrees(Chunk& chunk, int32_t cx, int32_t cz) const;
 
     uint32_t seed_;
+    // Null when the built-in generator is used. When it is set, every block
+    // query is answered by the configurable generator, and the mesher, the
+    // renderer and the chunk cache are unchanged: the generator is just
+    // another pure function of world coordinates.
+    std::shared_ptr<sunshine::Generator> sunshine_;
     mutable std::unordered_map<ChunkCoord, Chunk, ChunkCoordHash> chunks_;
 };
 

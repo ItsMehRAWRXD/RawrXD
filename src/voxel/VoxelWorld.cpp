@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "sunshine/WorldGen.hpp"
+
 namespace RawrXD {
 namespace Voxel {
 namespace {
@@ -106,6 +108,38 @@ constexpr int32_t kMaxTerrainHeight = kChunkHeight - 12;
 
 } // namespace
 
+namespace {
+
+// Maps the generator's material onto the engine's block palette.
+inline BlockType FromGenerator(sunshine::Block block) {
+    switch (block) {
+    case sunshine::Block::Stone: return BlockType::Stone;
+    case sunshine::Block::Dirt: return BlockType::Dirt;
+    case sunshine::Block::Grass: return BlockType::Grass;
+    case sunshine::Block::Sand: return BlockType::Sand;
+    case sunshine::Block::Water: return BlockType::Water;
+    case sunshine::Block::Wood: return BlockType::Wood;
+    case sunshine::Block::Leaves: return BlockType::Leaves;
+    case sunshine::Block::Brick: return BlockType::Brick;
+    case sunshine::Block::Snow: return BlockType::Snow;
+    case sunshine::Block::Air:
+    default: return BlockType::Air;
+    }
+}
+
+} // namespace
+
+VoxelWorld::VoxelWorld(const SunshineWorldConfig& config)
+    : seed_(static_cast<uint32_t>(config.seed)) {
+    sunshine::Config generatorConfig;
+    bool supported = true;
+    if (config.ToGeneratorConfig(kChunkHeight, generatorConfig, &supported) && generatorConfig.valid()) {
+        sunshine_ = std::make_shared<sunshine::Generator>(generatorConfig);
+    }
+}
+
+VoxelWorld::~VoxelWorld() = default;
+
 float VoxelWorld::Fractal2D(float x, float z, uint32_t salt, int octaves) const {
     float sum = 0.0f;
     float amplitude = 1.0f;
@@ -141,6 +175,12 @@ float VoxelWorld::Fractal3D(float x, float y, float z, uint32_t salt, int octave
 }
 
 int32_t VoxelWorld::SurfaceHeight(int32_t wx, int32_t wz) const {
+    if (sunshine_) {
+        const int32_t height = sunshine_->height(wx, wz);
+        if (height < 0) return 0;
+        if (height > kChunkHeight - 1) return kChunkHeight - 1;
+        return height;
+    }
     // Continent shape decides where the land is; hills break up the surface.
     const float continent = Fractal2D(static_cast<float>(wx) * 0.0035f,
                                       static_cast<float>(wz) * 0.0035f, 0x1111u, 4);
@@ -160,6 +200,13 @@ int32_t VoxelWorld::SurfaceHeight(int32_t wx, int32_t wz) const {
 }
 
 BlockType VoxelWorld::GetBlock(int32_t wx, int32_t wy, int32_t wz) const {
+    // The configurable generator answers every query when it is installed.
+    // It is a pure function of world coordinates, so the mesher's cross-chunk
+    // culling stays exact: a block at a chunk boundary is produced
+    // identically whoever asks for it.
+    if (sunshine_) {
+        return FromGenerator(sunshine_->sample(wx, wy, wz));
+    }
     if (wy < 0) return BlockType::Bedrock;
     if (wy >= kChunkHeight) return BlockType::Air;
 
@@ -271,6 +318,32 @@ Chunk VoxelWorld::GenerateChunk(int32_t cx, int32_t cz) const {
     chunk.coord = ChunkCoord{cx, cz};
     const int32_t baseX = cx * kChunkWidth;
     const int32_t baseZ = cz * kChunkDepth;
+
+    if (sunshine_) {
+        // The configurable generator fills the whole column, including the
+        // water and the carved caves, so the whole volume is filled rather
+        // than only the part below the surface.
+        //
+        // A note on the ocean model: the generator fills water only in the
+        // columns whose terrain is below the sea level, so the ocean is a
+        // SHEET rather than a filled volume. A landmass is a solid column
+        // from the bedrock up, and the water sheet meets it at the shore.
+        // The consequence is visible in a frame: the submerged flank of an
+        // island is not covered by water, because the water's face against
+        // solid rock is culled, so an island reads as a landmass rising out
+        // of a blue plane. Filling the ocean as a volume is the fix, and it
+        // belongs in the generator's water model, not in the mesher.
+        for (int32_t lz = 0; lz < kChunkDepth; ++lz) {
+            for (int32_t lx = 0; lx < kChunkWidth; ++lx) {
+                for (int32_t ly = 0; ly < kChunkHeight; ++ly) {
+                    const BlockType t = FromGenerator(
+                        sunshine_->sample(baseX + lx, ly, baseZ + lz));
+                    chunk.Set(lx, ly, lz, static_cast<uint8_t>(t));
+                }
+            }
+        }
+        return chunk;
+    }
 
     for (int32_t lz = 0; lz < kChunkDepth; ++lz) {
         for (int32_t lx = 0; lx < kChunkWidth; ++lx) {

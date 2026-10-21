@@ -680,8 +680,10 @@ bool VoxelRenderer::RenderFrame(const VoxelCamera& camera) {
     constants.light[3] = 0.95f;  // sun intensity
 
     constants.params[0] = 1.0f;  // ambient scale
-    constants.params[1] = 60.0f; // fog start
-    constants.params[2] = 140.0f;// fog range
+    // The fog band scales with the world height, matching the reference
+    // rasterizer exactly.
+    constants.params[1] = static_cast<float>(kChunkHeight) * 1.0f;  // fog start
+    constants.params[2] = static_cast<float>(kChunkHeight) * 3.0f;  // fog range
     constants.params[3] = 0.85f; // fog strength
 
     if (constantCpu_) {

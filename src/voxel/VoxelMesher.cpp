@@ -61,6 +61,7 @@ uint32_t BlockColor(BlockType type) {
     case BlockType::Bedrock: return 0xFF3A3A3Fu;
     case BlockType::Wood:    return 0xFF6B4A2Bu;
     case BlockType::Leaves:  return 0xFF2F7A32u;
+    case BlockType::Brick:   return 0xFF9C5A3Cu;
     case BlockType::Air:
     default:                 return 0x00000000u;
     }

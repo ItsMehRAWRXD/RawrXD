@@ -15161,6 +15161,27 @@ target_link_libraries(voxel_render_certify PRIVATE d3d12 dxgi d3dcompiler)
 set_target_properties(voxel_render_certify PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 add_test(NAME voxel_render_certify COMMAND voxel_render_certify WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# ============================================================================
+# Configurable Sunshine World Generator Certification
+#
+# The generator is verified THROUGH the real engine classes: VoxelWorld
+# answers the queries, VoxelMesher builds the geometry, and the reference
+# rasterizer produces the frame. What is checked is the designer's exact
+# configuration, determinism, chunk order independence, exact cross-chunk
+# face culling against the generated world, the binary serialization, and
+# that the world renders.
+# ============================================================================
+add_executable(sunshine_world_test
+    tools/sunshine_world_test.cpp
+    src/voxel/VoxelWorld.cpp
+    src/voxel/VoxelMesher.cpp
+    src/voxel/VoxelRasterizer.cpp
+    src/voxel/sunshine/WorldGen.cpp)
+target_include_directories(sunshine_world_test PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(sunshine_world_test PRIVATE d3d12 dxgi d3dcompiler)
+set_target_properties(sunshine_world_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+add_test(NAME sunshine_world_test COMMAND sunshine_world_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
