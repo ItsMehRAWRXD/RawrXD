@@ -411,7 +411,10 @@ private:
 
     // ---- Extension Registry ----
     std::unordered_map<std::string, std::unique_ptr<JSExtensionState>>  m_extensions;
-    mutable std::mutex                                                    m_extensionsMutex;
+    // Recursive: an extension's activation code runs while the host holds this
+    // lock, and a command registered from that code looks the extension
+    // up again under the same lock.
+    mutable std::recursive_mutex                                            m_extensionsMutex;
 
     // ---- Timer Registry ----
     struct TimerEntry {
