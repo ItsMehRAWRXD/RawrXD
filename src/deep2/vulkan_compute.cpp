@@ -3741,11 +3741,12 @@ bool VulkanCompute::RunWeightHostRoundTrip(
         return false;
 
     // PARITY: dual-row lane tag (dispatches inside this round-trip).
+    const uint32_t previousLaneTag = q4kLane_;
     SetQ4kLaneTag(kQ4kLaneDual);
     struct LaneTagRestore {
         VulkanCompute* self; uint32_t prev;
         ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
-    } laneRestore{this, q4kLane_};
+    } laneRestore{this, previousLaneTag};
 
     SetWorkEpoch(epoch);
     if(!EnsureScratch(60,weight.cols)||
@@ -3823,11 +3824,12 @@ bool VulkanCompute::RunWeightGroupHostRoundTrip(
         return false;
 
     // PARITY: dual-row lane tag (dispatches inside this group round-trip).
+    const uint32_t previousLaneTag = q4kLane_;
     SetQ4kLaneTag(kQ4kLaneDual);
     struct LaneTagRestore {
         VulkanCompute* self; uint32_t prev;
         ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
-    } laneRestore{this, q4kLane_};
+    } laneRestore{this, previousLaneTag};
 
     SetWorkEpoch(epoch);
     if(!EnsureScratch(62,inputCount)) return false;
@@ -4188,11 +4190,12 @@ bool VulkanCompute::RunWeightResidentHot(
     if(!weight.valid()||!residentWeight||!input||!output||!initialized_)
         return false;
 
+    const uint32_t previousLaneTag = q4kLane_;
     SetQ4kLaneTag(kQ4kLaneDual);
     struct LaneTagRestore {
         VulkanCompute* self; uint32_t prev;
         ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
-    } laneRestore{this, q4kLane_};
+    } laneRestore{this, previousLaneTag};
 
     SetWorkEpoch(epoch);
     if(!EnsureScratch(60,weight.cols)||
@@ -4249,11 +4252,12 @@ bool VulkanCompute::RunWeightGroupResidentHot(
     if(!weights||!residentWeights||!outputs||!input||count<2||count>3||!inputCount)
         return false;
 
+    const uint32_t previousLaneTag = q4kLane_;
     SetQ4kLaneTag(kQ4kLaneDual);
     struct LaneTagRestore {
         VulkanCompute* self; uint32_t prev;
         ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
-    } laneRestore{this, q4kLane_};
+    } laneRestore{this, previousLaneTag};
 
     SetWorkEpoch(epoch);
     if(!EnsureScratch(62,inputCount)) return false;
