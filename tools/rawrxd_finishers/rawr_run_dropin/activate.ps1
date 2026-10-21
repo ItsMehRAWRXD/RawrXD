@@ -53,6 +53,38 @@ function global:Reset-RawrGpuDevices {
         recovery_result     = "none"
         admission_result    = "not_evaluated"
         devices             = @()
+        reboot_required     = $false
+        reboot_prompted     = $false
+        reboot_requested    = $false
+        reboot_result       = "not_required"
+    }
+
+    function Test-RawrRebootRequired {
+        try {
+            if (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') { return $true }
+            if (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') { return $true }
+            $sm = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' -Name PendingFileRenameOperations -ErrorAction SilentlyContinue
+            if ($sm -and $sm.PendingFileRenameOperations) { return $true }
+        } catch {}
+        return $false
+    }
+
+    function Invoke-RawrRebootPrompt {
+        param([hashtable]$State, [string]$Reason)
+        $State.reboot_required = $true
+        if ($env:RAWR_GPU_REBOOT_PROMPT -eq '0') {
+            $State.reboot_result = 'suppressed_by_environment'
+            return $false
+        }
+        $State.reboot_prompted = $true
+        $answer = Read-Host "[rawr] Windows reports a reboot is required ($Reason). Reboot now? [Y/N]"
+        if ($answer -notmatch '^(?i:y|yes)$') {
+            $State.reboot_result = 'declined'
+            return $false
+        }
+        $State.reboot_requested = $true
+        $State.reboot_result = 'requested'
+        return $true
     }
 
     # --- Resolve paths ---
@@ -190,11 +222,12 @@ function global:Reset-RawrGpuDevices {
         if (-not $Quiet) { Write-Host "[rawr] GPU faulted: $name ($id) Code=$origCode - controlled restart (attempt 1/1)" -ForegroundColor Yellow }
 
         $restarted = $false
-        pnputil /restart-device $id 2>&1 | Out-Null
+        $restartOutput = @(pnputil /restart-device $id 2>&1)
+        $restartText = ($restartOutput -join "`n")
         if ($LASTEXITCODE -eq 0) { $restarted = $true }
         else {
             if (-not $Quiet) { Write-Host "[rawr] restart-device failed for $id; trying enable-device" -ForegroundColor Yellow }
-            pnputil /enable-device $id 2>&1 | Out-Null
+            $restartOutput += @(pnputil /enable-device $id 2>&1)
             if ($LASTEXITCODE -eq 0) { $restarted = $true }
         }
 
@@ -204,6 +237,23 @@ function global:Reset-RawrGpuDevices {
                 id=$id; name=$name; originalCode=$origCode; action="restart_failed";
                 finalCode=$origCode
             }
+            continue
+        }
+
+        $restartSignalsReboot = $restartText -match '(?i)(reboot|restart).*(required|the computer|the system)|required.*(reboot|restart)'
+        if ((Test-RawrRebootRequired) -or $restartSignalsReboot) {
+            if (Invoke-RawrRebootPrompt -State $result -Reason 'device recovery cannot complete until restart') {
+                $result.recovery_result = 'reboot_requested'
+                $result.devices += @{ id=$id; name=$name; originalCode=$origCode; action='reboot_requested'; finalCode=$origCode }
+                try {
+                    if (-not (Test-Path $telemetryDir)) { New-Item -ItemType Directory -Path $telemetryDir -Force | Out-Null }
+                    $result | ConvertTo-Json -Depth 8 | Set-Content -Path $telemetryPath -Encoding UTF8
+                } catch {}
+                Restart-Computer -Force
+                return $result
+            }
+            $result.recovery_result = 'reboot_required_user_declined'
+            $result.devices += @{ id=$id; name=$name; originalCode=$origCode; action='reboot_required'; finalCode=$origCode }
             continue
         }
 
