@@ -115,8 +115,10 @@ int main(int argc, char** argv) {
                                    contract_rerun.find("Geometry checks: PASS") != std::string::npos;
     const bool pipeline_wiring = pipeline.find("PLE_PIPELINE=PASS") != std::string::npos &&
                                  pipeline.find("HC_PIPELINE=PASS") != std::string::npos &&
+                                 pipeline.find("GDN_PIPELINE=PASS") != std::string::npos &&
                                  pipeline_rerun.find("PLE_PIPELINE=PASS") != std::string::npos &&
                                  pipeline_rerun.find("HC_PIPELINE=PASS") != std::string::npos &&
+                                 pipeline_rerun.find("GDN_PIPELINE=PASS") != std::string::npos &&
                                  pipeline_rerun.find("DISPATCHES=0") != std::string::npos &&
                                  pipeline_rerun.find("EXECUTION=NOT_RUN") != std::string::npos;
     const bool executor_fail_closed = executor.find("qwen4exp_unbound") != std::string::npos &&

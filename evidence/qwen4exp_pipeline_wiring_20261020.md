@@ -5,6 +5,7 @@ The pipeline probe created real Vulkan objects on the AMD Radeon AI PRO R9700:
 ```text
 PLE_PIPELINE=PASS
 HC_PIPELINE=PASS
+GDN_PIPELINE=PASS
 QUEUE_FAMILY=0
 DISPATCHES=0
 EXECUTION=NOT_RUN
@@ -19,5 +20,9 @@ Verified wiring:
 - Hyperconnection descriptor layout created with 6 storage-buffer bindings.
 - Hyperconnection push-constant range created at 20 bytes.
 - Both compute pipelines were created successfully on the selected AMD device.
+- GDN SPIR-V loaded into a real `VkShaderModule`.
+- GDN descriptor layout created with 7 storage-buffer bindings.
+- GDN push-constant range created at 16 bytes.
+- The GDN compute pipeline was created successfully on the selected AMD device.
 
 This proves source -> SPIR-V -> descriptor layout -> pipeline layout -> compute pipeline wiring. It does not prove command submission, tensor residency, numerical parity, or full-model execution. The executor therefore remains fail-closed and Qwen4Exp remains `NOT_CERTIFIED`.

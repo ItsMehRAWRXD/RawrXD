@@ -49,8 +49,9 @@ static bool MakePipeline(VkDevice dev, const std::vector<uint32_t>& code, uint32
 int main(int argc, char** argv) {
     const std::string ple = argc > 1 ? argv[1] : "src/deep2/shaders/deep2_qwen4exp_ple.spv";
     const std::string hc = argc > 2 ? argv[2] : "src/deep2/shaders/deep2_qwen4exp_hc_combine.spv";
-    const auto ple_code = ReadSpv(ple), hc_code = ReadSpv(hc);
-    if (ple_code.empty() || hc_code.empty()) { std::cerr << "SPIRV_READ_FAIL\n"; return 2; }
+    const std::string gdn = argc > 3 ? argv[3] : "src/deep2/shaders/deep2_qwen4exp_gdn.spv";
+    const auto ple_code = ReadSpv(ple), hc_code = ReadSpv(hc), gdn_code = ReadSpv(gdn);
+    if (ple_code.empty() || hc_code.empty() || gdn_code.empty()) { std::cerr << "SPIRV_READ_FAIL\n"; return 2; }
     VkApplicationInfo app{VK_STRUCTURE_TYPE_APPLICATION_INFO}; app.pApplicationName = "RawrXD Qwen4Exp Pipeline Probe"; app.apiVersion = VK_API_VERSION_1_1;
     VkInstanceCreateInfo ic{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO}; ic.pApplicationInfo = &app;
     VkInstance instance = VK_NULL_HANDLE;
@@ -69,16 +70,23 @@ int main(int argc, char** argv) {
     float priority = 1.0f; VkDeviceQueueCreateInfo q{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO}; q.queueFamilyIndex = qfamily; q.queueCount = 1; q.pQueuePriorities = &priority;
     VkDeviceCreateInfo dc{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO}; dc.queueCreateInfoCount = 1; dc.pQueueCreateInfos = &q;
     VkDevice dev = VK_NULL_HANDLE; if (vkCreateDevice(physical, &dc, nullptr, &dev) != VK_SUCCESS) { vkDestroyInstance(instance, nullptr); return 5; }
-    VkPipeline ple_pipe = VK_NULL_HANDLE, hc_pipe = VK_NULL_HANDLE; VkPipelineLayout ple_layout = VK_NULL_HANDLE, hc_layout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout ple_desc = VK_NULL_HANDLE, hc_desc = VK_NULL_HANDLE;
+    VkPipeline ple_pipe = VK_NULL_HANDLE, hc_pipe = VK_NULL_HANDLE, gdn_pipe = VK_NULL_HANDLE;
+    VkPipelineLayout ple_layout = VK_NULL_HANDLE, hc_layout = VK_NULL_HANDLE, gdn_layout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout ple_desc = VK_NULL_HANDLE, hc_desc = VK_NULL_HANDLE, gdn_desc = VK_NULL_HANDLE;
     const bool ple_ok = MakePipeline(dev, ple_code, 5, 16, ple_pipe, ple_layout, ple_desc);
     const bool hc_ok = MakePipeline(dev, hc_code, 6, 20, hc_pipe, hc_layout, hc_desc);
+    const bool gdn_ok = MakePipeline(dev, gdn_code, 7, 16, gdn_pipe, gdn_layout, gdn_desc);
     std::cout << "DEVICE=" << props.deviceName << " QUEUE_FAMILY=" << qfamily << "\n"
-              << "PLE_PIPELINE=" << (ple_ok ? "PASS" : "FAIL") << " HC_PIPELINE=" << (hc_ok ? "PASS" : "FAIL") << "\n"
+              << "PLE_PIPELINE=" << (ple_ok ? "PASS" : "FAIL")
+              << " HC_PIPELINE=" << (hc_ok ? "PASS" : "FAIL")
+              << " GDN_PIPELINE=" << (gdn_ok ? "PASS" : "FAIL") << "\n"
               << "DISPATCHES=0 EXECUTION=NOT_RUN\n";
     if (ple_pipe) vkDestroyPipeline(dev, ple_pipe, nullptr); if (hc_pipe) vkDestroyPipeline(dev, hc_pipe, nullptr);
+    if (gdn_pipe) vkDestroyPipeline(dev, gdn_pipe, nullptr);
     if (ple_layout) vkDestroyPipelineLayout(dev, ple_layout, nullptr); if (hc_layout) vkDestroyPipelineLayout(dev, hc_layout, nullptr);
+    if (gdn_layout) vkDestroyPipelineLayout(dev, gdn_layout, nullptr);
     if (ple_desc) vkDestroyDescriptorSetLayout(dev, ple_desc, nullptr); if (hc_desc) vkDestroyDescriptorSetLayout(dev, hc_desc, nullptr);
+    if (gdn_desc) vkDestroyDescriptorSetLayout(dev, gdn_desc, nullptr);
     vkDestroyDevice(dev, nullptr); vkDestroyInstance(instance, nullptr);
-    return ple_ok && hc_ok ? 0 : 6;
+    return ple_ok && hc_ok && gdn_ok ? 0 : 6;
 }
