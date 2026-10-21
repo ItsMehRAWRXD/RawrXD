@@ -27,9 +27,11 @@ contains CPU arithmetic tests, while no GPU dispatch or full-graph execution
 has been run from it.
 
 The GDN slice is one step further along: its geometry, finite reference output,
-state continuity, and SPIR-V validation pass. The harness still reports
-`GDN_GPU_DISPATCHES=0`, so GDN production dispatch and Qwen4Exp certification
-remain open.
+state continuity, SPIR-V validation, and isolated component probe pass. The
+component probe records one real dispatch and independent output/state parity.
+The separate reference harness still reports `GDN_GPU_DISPATCHES=0`, and the
+production Executor graph still rejects GDN, so Qwen4Exp certification remains
+open.
 
 The receipt hashes the reverse-engineering source, executor source and header,
 PLE and Hyperconnection GLSL/SPIR-V, the physical Vulkan pipeline probe, the
@@ -75,12 +77,21 @@ qwen4exp_blocker_audit.md. The immediate execution boundary is:
 
 The audit also records QWEN-B11: the native role report says
 GDN/PLE/Hyperconnection are 252/7/387 tensors while the canonical contract
-records 216/6/384. This must be reconciled before descriptor ownership can be
-treated as authoritative.
+records 216/6/384. A follow-up receipt proves this is 36 per-block ssm_dt.bias
+tensors plus one global PLE tensor and three global Hyperconnection tensors,
+with 1,224 unique names and zero duplicates. The native report and canonical
+schema now represent those auxiliary tensors explicitly; B11 is PASS, while
+executor binding remains separately blocked by B01/B02.
 
 The audit also records QWEN-B12: both shard manifest JSON files contain
 unescaped Windows path separators and fail independent JSON parsing before
 tensor ownership can be recomputed.
+
+The often-mentioned asymmetric queue-family mismatch is not present in the
+current Qwen4Exp receipts or probe output. It remains an unverified hypothesis,
+not a substitute for B12. A separate queue-topology blocker should be opened
+only after a device-by-device Vulkan probe records the physical queue-family
+properties and the failing allocation call.
 
 An isolated GDN Vulkan probe now records one real dispatch and independent
 output/state parity. This advances GDN to COMPONENT_DISPATCH_PASS only; the

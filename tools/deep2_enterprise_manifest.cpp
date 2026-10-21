@@ -84,10 +84,23 @@ int main(int argc, char** argv) {
         "src/deep2/shaders/deep2_qwen4exp_hc_combine.spv",
         "src/deep2/op_gdn.hpp",
         "src/deep2/op_gdn.cpp",
+        "src/deep2/op_ple.hpp",
+        "src/deep2/op_ple.cpp",
+        "src/deep2/op_qsa.hpp",
+        "src/deep2/op_qsa.cpp",
+        "src/deep2/op_hyperconnection.hpp",
+        "src/deep2/op_hyperconnection.cpp",
+        "src/deep2/op_sparse_moe.hpp",
+        "src/deep2/op_sparse_moe.cpp",
         "tools/deep2_gdn_parity_harness.cpp",
+        "tools/deep2_qwen4exp_operator_harness.cpp",
         "tools/deep2_qwen4exp_gdn_probe.cpp",
         "src/deep2/shaders/deep2_qwen4exp_gdn.comp",
         "src/deep2/shaders/deep2_qwen4exp_gdn.spv",
+        "src/deep2/shaders/deep2_qwen4exp_qsa_score.comp",
+        "src/deep2/shaders/deep2_qwen4exp_qsa_score.spv",
+        "src/deep2/shaders/deep2_qwen4exp_moe_router.comp",
+        "src/deep2/shaders/deep2_qwen4exp_moe_router.spv",
         "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py",
         "3rdparty/r9700-stack/r9700_vllm/hc.py",
         "3rdparty/r9700-stack/tests/test_hc_r9k.py",
@@ -102,10 +115,14 @@ int main(int argc, char** argv) {
         "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_blocker_audit.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/README.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/shard_manifest_json_validation.txt",
+        "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_role_reconciliation.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_full_model_blocked_receipt.json",
         "evidence/deep2_enterprise_closure_manifest_20261020/gdn_reference_harness.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/gdn_spirv_validation.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/gdn_component_probe.txt",
+        "evidence/deep2_enterprise_closure_manifest_20261020/operator_harness.txt",
+        "evidence/deep2_enterprise_closure_manifest_20261020/operator_spirv_validation.txt",
+        "evidence/QWEN4EXP_OPERATOR_IMPLEMENTATION_20261020.md",
         "evidence/qwen4exp_gr_source_drop_20261020/Qwen4ExpGatedResidual.hpp",
         "evidence/qwen4exp_gr_source_drop_20261020/test_gr.cpp",
         "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md",
@@ -116,6 +133,7 @@ int main(int argc, char** argv) {
         Artifact a; a.path = rel; a.present = HashFile(root / rel, a.sha256, a.bytes); all_present &= a.present; artifacts.push_back(std::move(a));
     }
     const std::string contract = ReadText(root / "evidence/qwen4exp_operator_contract_20261020/native_contract.md");
+    const std::string operator_contract = ReadText(root / "evidence/qwen4exp_operator_contract_20261020/operator_contract.json");
     const std::string manifest_shard1 = ReadText(root / "evidence/qwen4exp_manifest_shard1.json");
     const std::string manifest_shard2 = ReadText(root / "evidence/qwen4exp_manifest_shard2.json");
     const std::string pipeline = ReadText(root / "evidence/qwen4exp_pipeline_wiring_20261020.md");
@@ -127,6 +145,9 @@ int main(int argc, char** argv) {
     const std::string gdn_harness = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/gdn_reference_harness.txt");
     const std::string gdn_spirv = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/gdn_spirv_validation.txt");
     const std::string gdn_component_probe = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/gdn_component_probe.txt");
+    const std::string operator_harness = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/operator_harness.txt");
+    const std::string operator_spirv = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/operator_spirv_validation.txt");
+    const std::string role_reconciliation = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_role_reconciliation.txt");
     const bool execute_token_has_qwen_cases = [&]() {
         const auto start = executor.find("bool Executor::ExecuteToken");
         if (start == std::string::npos) return false;
@@ -165,14 +186,40 @@ int main(int argc, char** argv) {
                                gdn_spirv.find("SPIRV_VAL=PASS") != std::string::npos;
     const bool gdn_component_dispatch = gdn_component_probe.find("GDN_DISPATCHES=1 GDN_EXECUTION=PASS") != std::string::npos &&
                                          gdn_component_probe.find("GDN_INDEPENDENT_PARITY=PASS") != std::string::npos;
-    const bool contract_report_reconciled = contract_rerun.find("QSA | 48") != std::string::npos &&
-                                             contract_rerun.find("GDN | 216") != std::string::npos &&
-                                             contract_rerun.find("PLE | 6") != std::string::npos &&
-                                             contract_rerun.find("HYPERCONNECTION | 384") != std::string::npos &&
-                                             contract_rerun.find("SPARSE_MOE | 144") != std::string::npos;
+    const bool operator_contract_pass =
+        operator_harness.find("PLE_GEOMETRY=PASS") != std::string::npos &&
+        operator_harness.find("HC_GEOMETRY=PASS") != std::string::npos &&
+        operator_harness.find("QSA_GEOMETRY=PASS") != std::string::npos &&
+        operator_harness.find("SPARSE_MOE_ROUTE=PASS") != std::string::npos &&
+        operator_harness.find("SPARSE_MOE_EXPERT_EXECUTION=FAIL_CLOSED_UNDEQUANTIZED") != std::string::npos &&
+        operator_harness.find("QWEN4EXP_OPERATOR_HARNESS=PASS") != std::string::npos;
+    const bool operator_spirv_pass =
+        operator_spirv.find("PLE_SPIRV_VAL=PASS") != std::string::npos &&
+        operator_spirv.find("HC_SPIRV_VAL=PASS") != std::string::npos &&
+        operator_spirv.find("QSA_SCORE_SPIRV_VAL=PASS") != std::string::npos &&
+        operator_spirv.find("MOE_ROUTER_SPIRV_VAL=PASS") != std::string::npos &&
+        operator_spirv.find("GDN_SPIRV_VAL=PASS") != std::string::npos;
+    const bool contract_report_reconciled =
+        contract_rerun.find("Ownership reconciliation: GDN 216+36, PLE 6+1, HYPERCONNECTION 384+3") != std::string::npos &&
+        contract_rerun.find("| GDN | 252 | 216 | 36 |") != std::string::npos &&
+        contract_rerun.find("| PLE | 7 | 6 | 1 |") != std::string::npos &&
+        contract_rerun.find("| HYPERCONNECTION | 387 | 384 | 3 |") != std::string::npos;
+    const bool canonical_role_schema =
+        operator_contract.find("\"primary_tensor_count\": 216") != std::string::npos &&
+        operator_contract.find("\"auxiliary_tensor_count\": 36") != std::string::npos &&
+        operator_contract.find("\"primary_tensor_count\": 6") != std::string::npos &&
+        operator_contract.find("\"auxiliary_tensor_count\": 1") != std::string::npos &&
+        operator_contract.find("\"primary_tensor_count\": 384") != std::string::npos &&
+        operator_contract.find("\"auxiliary_tensor_count\": 3") != std::string::npos;
     const bool shard_manifests_json_valid =
         manifest_shard1.find("F:\\OllamaModels") == std::string::npos &&
         manifest_shard2.find("F:\\OllamaModels") == std::string::npos;
+    const bool role_reconciliation_explained =
+        role_reconciliation.find("UNIQUE_TENSOR_NAMES=1224") != std::string::npos &&
+        role_reconciliation.find("DUPLICATE_NAME_GROUPS=0") != std::string::npos &&
+        role_reconciliation.find("GDN_AUXILIARY=36") != std::string::npos &&
+        role_reconciliation.find("PLE_AUXILIARY=1") != std::string::npos &&
+        role_reconciliation.find("HYPERCONNECTION_AUXILIARY=3") != std::string::npos;
     std::vector<Blocker> blockers = {
         {"QWEN-B01", "CRITICAL", executor_fail_closed ? "BLOCKED" : "NOT_VERIFIED",
          "Executor::Bind admission", "runtime_graph_executor.cpp:768-772; qwen4exp_full_model_blocked_receipt.json:unsupported_ops=5",
@@ -206,14 +253,21 @@ int main(int argc, char** argv) {
         {"QWEN-B10", "CRITICAL", full_model_blocked ? "BLOCKED" : "NOT_VERIFIED",
          "Autoregressive generation and certification", "qwen4exp_full_model_blocked_receipt.json:status=BLOCKED_NATIVE_GRAPH/certification_status=NOT_CERTIFIED",
          "Only after all operators execute, run deterministic multi-token decode, cache continuity, repeated output, and issue a full-model certificate."},
-        {"QWEN-B11", "HIGH", contract_report_reconciled ? "PASS" : "RECONCILIATION_REQUIRED",
-         "Source-to-contract tensor-role ownership", "native_contract_rerun.md reports GDN=252/PLE=7/HC=387 while operator_contract.json records GDN=216/PLE=6/HC=384",
-         "Reconcile the role classifier against the canonical 1,224-descriptor manifest and make one authoritative ownership map drive graph binding."},
+        {"QWEN-B11", "HIGH", (role_reconciliation_explained && contract_report_reconciled && canonical_role_schema) ? "PASS" : (role_reconciliation_explained ? "EXPLAINED_RECONCILIATION_REQUIRED" : "RECONCILIATION_REQUIRED"),
+         "Source-to-contract tensor-role ownership", role_reconciliation_explained
+             ? "qwen4exp_role_reconciliation.txt:1224 unique names, zero duplicates; native excess is 36 ssm_dt.bias + 1 global per_layer_token_embd + 3 global output_hc tensors"
+             : "native_contract_rerun.md reports GDN=252/PLE=7/HC=387 while operator_contract.json records GDN=216/PLE=6/HC=384",
+         "Extend the canonical contract with explicit primary block ownership plus auxiliary/global ownership, then make descriptor binding consume that authoritative map."},
         {"QWEN-B12", "CRITICAL", shard_manifests_json_valid ? "PASS" : "BLOCKED",
          "Shard manifest parseability", "qwen4exp_manifest_shard1.json and shard2.json contain unescaped Windows paths; ConvertFrom-Json fails with Bad JSON escape sequence: \\\\O",
          "Regenerate or normalize both manifests with valid JSON escaping, validate with an independent parser, then rerun ownership reconciliation."}
+        ,{"QWEN-B13", "CRITICAL", (operator_contract_pass && operator_spirv_pass) ? "COMPONENT_CONTRACT_PASS" : "NOT_VERIFIED",
+         "Operator source and shader closure", operator_contract_pass && operator_spirv_pass
+             ? "operator_harness.txt: PLE/HC/QSA/router contracts pass; expert execution remains explicitly fail-closed; operator_spirv_validation.txt: all five validators pass"
+             : "operator_harness.txt or operator_spirv_validation.txt is missing a required receipt",
+         "Connect every validated operator to production graph execution, add real GPU probes for PLE/HC/QSA/router, and certify IQ2_S/MXFP4 expert GEMM before full-model admission."}
     };
-    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked && gdn_reference;
+    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked && gdn_reference && operator_contract_pass && operator_spirv_pass;
     std::filesystem::create_directories(out_path.parent_path());
     std::ofstream out(out_path); if (!out) return 3;
     out << "{\n  \"schema\":\"rawrxd.deep2.enterprise_closure_manifest.v1\",\n";
@@ -232,8 +286,11 @@ int main(int argc, char** argv) {
     out << "  \"GDN_SHADER_VALIDATION\":\"" << (gdn_reference ? "PASS" : "NOT_VERIFIED") << "\",\n";
     out << "  \"GDN_COMPONENT_DISPATCH\":\"" << (gdn_component_dispatch ? "PASS" : "NOT_RUN") << "\",\n";
     out << "  \"GDN_PRODUCTION_DISPATCH\":\"NOT_RUN\",\n";
+    out << "  \"QWEN4EXP_OPERATOR_CONTRACT\":\"" << (operator_contract_pass ? "PASS" : "NOT_VERIFIED") << "\",\n";
+    out << "  \"QWEN4EXP_OPERATOR_SPIRV\":\"" << (operator_spirv_pass ? "PASS" : "NOT_VERIFIED") << "\",\n";
     out << "  \"command_submission\":\"NOT_RUN\",\n  \"full_model_execution\":\"NOT_RUN\",\n  \"certification\":\"NOT_CERTIFIED\",\n";
-    out << "  \"contract_reconciliation\":\"" << (contract_report_reconciled ? "PASS" : "RECONCILIATION_REQUIRED") << "\",\n";
+    out << "  \"contract_reconciliation\":\"" << (contract_report_reconciled && canonical_role_schema ? "PASS" : "RECONCILIATION_REQUIRED") << "\",\n";
+    out << "  \"role_reconciliation\":\"" << ((role_reconciliation_explained && contract_report_reconciled && canonical_role_schema) ? "PASS" : (role_reconciliation_explained ? "EXPLAINED_RECONCILIATION_REQUIRED" : "RECONCILIATION_REQUIRED")) << "\",\n";
     out << "  \"shard_manifest_json\":\"" << (shard_manifests_json_valid ? "PASS" : "FAIL") << "\",\n";
     out << "  \"executor_blocking_boundary\":\"Executor::Bind still rejects QSA, GDN, PLE, Hyperconnection, and SparseMoE; ExecuteToken has no descriptor allocation, tensor upload, command recording, or dispatch cases for these OpKinds.\",\n";
     out << "  \"required_closure\":\"Wire Qwen4Exp tensor handles to descriptor updates and command submission in ExecuteToken, then run independent full-logit and autoregressive parity.\",\n";

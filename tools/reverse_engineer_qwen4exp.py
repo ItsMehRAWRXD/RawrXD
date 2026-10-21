@@ -42,6 +42,12 @@ def contract(ts):
     qsa = by_name(ts, r"\.indexer\.(q_proj|k_proj|q_norm|k_norm)\.weight$")
     ple = by_name(ts, r"\.ple_(conv1d|key|norm_conv|norm_key|norm_query|value)\.weight$")
     gdn = by_name(ts, r"\.ssm_(a|alpha|beta|conv1d|dt|norm|out)(\.weight)?$")
+    # These are real tensors, but they are auxiliary/global ownership rather
+    # than block-local operator parameters. Keep them explicit instead of
+    # silently dropping them or inflating the block-local count.
+    gdn_aux = by_name(ts, r"\.ssm_dt\.bias$")
+    ple_aux = by_name(ts, r"^per_layer_token_embd\.weight$")
+    hc_aux = by_name(ts, r"^output_hc_(down|norm|up)\.weight$")
     checks = []
     def check(ok, msg): checks.append({"ok": bool(ok), "detail": msg})
     check(len(blocks) == 48, f"block_count={len(blocks)} (expected 48 from canonical Qwen4Exp manifest)")
@@ -50,6 +56,9 @@ def contract(ts):
     check(bool(qsa), f"QSA indexer tensors={len(qsa)}")
     check(bool(ple), f"PLE tensors={len(ple)}")
     check(bool(gdn), f"GDN tensors={len(gdn)}")
+    check(len(gdn_aux) == 36, f"GDN auxiliary dt.bias tensors={len(gdn_aux)} (expected 36)")
+    check(len(ple_aux) == 1, f"PLE auxiliary global embedding tensors={len(ple_aux)} (expected 1)")
+    check(len(hc_aux) == 3, f"HC auxiliary global tensors={len(hc_aux)} (expected 3)")
     check(dims("blk.0.hc_attn_inject.weight") == [10240, 4], f"HC inject shape={dims('blk.0.hc_attn_inject.weight')}")
     check(dims("blk.0.hc_attn_down.weight") == [10240, 320], f"HC down shape={dims('blk.0.hc_attn_down.weight')}")
     check(dims("blk.0.hc_attn_up.weight") == [320, 10240], f"HC up shape={dims('blk.0.hc_attn_up.weight')}")
@@ -62,10 +71,10 @@ def contract(ts):
         "architecture": "qwen4exp",
         "tensor_count": len(ts), "block_count": len(blocks),
         "operators": {
-            "PLE": {"state": "REVERSE_ENGINEERED", "tensor_count": len(ple), "conv_kernel": 4, "channels": 10240, "reference": "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py"},
-            "Hyperconnection": {"state": "REVERSE_ENGINEERED", "tensor_count": len(hc), "stream_count": 4, "low_rank": 320, "hidden": 10240, "reference": "3rdparty/r9700-stack/r9700_vllm/hc.py"},
+            "PLE": {"state": "REVERSE_ENGINEERED", "tensor_count": len(ple), "primary_tensor_count": len(ple), "auxiliary_tensor_count": len(ple_aux), "conv_kernel": 4, "channels": 10240, "reference": "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py"},
+            "Hyperconnection": {"state": "REVERSE_ENGINEERED", "tensor_count": len(hc), "primary_tensor_count": len(hc), "auxiliary_tensor_count": len(hc_aux), "stream_count": 4, "low_rank": 320, "hidden": 10240, "reference": "3rdparty/r9700-stack/r9700_vllm/hc.py"},
             "QSA": {"state": "REVERSE_ENGINEERED", "tensor_count": len(qsa), "indexer_top_k": 2048, "reference": "3rdparty/r9700-stack/r9700_vllm/attn/qsa.py"},
-            "GDN": {"state": "REVERSE_ENGINEERED", "tensor_count": len(gdn), "inner_size": 6144, "state_size": 128, "groups": 16, "reference": "3rdparty/r9700-stack/r9700_vllm/models/gdn.py"},
+            "GDN": {"state": "REVERSE_ENGINEERED", "tensor_count": len(gdn), "primary_tensor_count": len(gdn), "auxiliary_tensor_count": len(gdn_aux), "inner_size": 6144, "state_size": 128, "groups": 16, "reference": "3rdparty/r9700-stack/r9700_vllm/models/gdn.py"},
             "SparseMoE": {"state": "REVERSE_ENGINEERED", "tensor_count": len(experts), "experts": 512, "top_k": 10, "expert_width": 640, "reference": "3rdparty/r9700-stack/r9700_vllm/moe/route.py"},
         },
         "checks": checks,

@@ -9,7 +9,12 @@
       "tensor_count": 6,
       "conv_kernel": 4,
       "channels": 10240,
-      "reference": "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py"
+      "reference": "3rdparty/r9700-stack/r9700_vllm/ple/short_conv.py",
+      "primary_tensor_count": 6,
+      "auxiliary_tensor_count": 1,
+      "auxiliary_roles": [
+        "per_layer_token_embd.weight"
+      ]
     },
     "Hyperconnection": {
       "state": "REVERSE_ENGINEERED",
@@ -17,7 +22,14 @@
       "stream_count": 4,
       "low_rank": 320,
       "hidden": 10240,
-      "reference": "3rdparty/r9700-stack/r9700_vllm/hc.py"
+      "reference": "3rdparty/r9700-stack/r9700_vllm/hc.py",
+      "primary_tensor_count": 384,
+      "auxiliary_tensor_count": 3,
+      "auxiliary_roles": [
+        "output_hc_down.weight",
+        "output_hc_norm.weight",
+        "output_hc_up.weight"
+      ]
     },
     "QSA": {
       "state": "REVERSE_ENGINEERED",
@@ -31,7 +43,12 @@
       "inner_size": 6144,
       "state_size": 128,
       "groups": 16,
-      "reference": "3rdparty/r9700-stack/r9700_vllm/models/gdn.py"
+      "reference": "3rdparty/r9700-stack/r9700_vllm/models/gdn.py",
+      "primary_tensor_count": 216,
+      "auxiliary_tensor_count": 36,
+      "auxiliary_roles": [
+        "blk.*.ssm_dt.bias"
+      ]
     },
     "SparseMoE": {
       "state": "REVERSE_ENGINEERED",

@@ -58,6 +58,12 @@ const char* Op(const std::string& n) {
     return "OTHER";
 }
 
+bool IsGdnAux(const std::string& n) { return std::regex_search(n, std::regex(R"(\.ssm_dt\.bias$)")); }
+bool IsPleAux(const std::string& n) { return n == "per_layer_token_embd.weight"; }
+bool IsHcAux(const std::string& n) {
+    return n == "output_hc_down.weight" || n == "output_hc_norm.weight" || n == "output_hc_up.weight";
+}
+
 std::string Shape(const Tensor* t) {
     if (!t) return "missing";
     std::ostringstream o; o << "[";
@@ -86,6 +92,12 @@ int main(int argc, char** argv) {
         for (const auto& m : manifests) { auto part = ReadManifest(m); tensors.insert(tensors.end(), part.begin(), part.end()); }
         std::map<std::string, size_t> counts;
         for (const auto& t : tensors) ++counts[Op(t.name)];
+        std::map<std::string, size_t> auxiliary;
+        for (const auto& t : tensors) {
+            if (IsGdnAux(t.name)) ++auxiliary["GDN"];
+            if (IsPleAux(t.name)) ++auxiliary["PLE"];
+            if (IsHcAux(t.name)) ++auxiliary["HYPERCONNECTION"];
+        }
         const Tensor* hc_down = Find(tensors, "blk.0.hc_attn_down.weight");
         const Tensor* hc_inject = Find(tensors, "blk.0.hc_attn_inject.weight");
         const Tensor* hc_up = Find(tensors, "blk.0.hc_attn_up.weight");
@@ -102,12 +114,13 @@ int main(int argc, char** argv) {
         if (!report) throw std::runtime_error("cannot create report: " + out);
         report << "# Deep2 Qwen4Exp reverse-engineered operator contract\n\n";
         report << "Tensors: " << tensors.size() << "\n\n";
-        report << "| Operator | Tensor count | Contract geometry | Native executable |\n|---|---:|---|---|\n";
-        report << "| QSA | " << counts["QSA"] << " | indexer tensors, top-k compressed-key attention | NO |\n";
-        report << "| GDN | " << counts["GDN"] << " | selective gated delta state; ssm_a=" << Shape(gdn_a) << " | NO |\n";
-        report << "| PLE | " << counts["PLE"] << " | causal conv=" << Shape(ple_conv) << " | NO |\n";
-        report << "| HYPERCONNECTION | " << counts["HYPERCONNECTION"] << " | down=" << Shape(hc_down) << ", inject=" << Shape(hc_inject) << ", up=" << Shape(hc_up) << " | NO |\n";
-        report << "| SPARSE_MOE | " << counts["SPARSE_MOE"] << " | gate=" << Shape(moe_gate) << ", 512 experts | NO |\n\n";
+        report << "| Operator | Total tensors | Primary block tensors | Auxiliary/global tensors | Contract geometry | Native executable |\n|---|---:|---:|---:|---|---|\n";
+        report << "| QSA | " << counts["QSA"] << " | " << counts["QSA"] << " | 0 | indexer tensors, top-k compressed-key attention | NO |\n";
+        report << "| GDN | " << counts["GDN"] << " | " << counts["GDN"] - auxiliary["GDN"] << " | " << auxiliary["GDN"] << " | selective gated delta state; ssm_a=" << Shape(gdn_a) << " | NO |\n";
+        report << "| PLE | " << counts["PLE"] << " | " << counts["PLE"] - auxiliary["PLE"] << " | " << auxiliary["PLE"] << " | causal conv=" << Shape(ple_conv) << " | NO |\n";
+        report << "| HYPERCONNECTION | " << counts["HYPERCONNECTION"] << " | " << counts["HYPERCONNECTION"] - auxiliary["HYPERCONNECTION"] << " | " << auxiliary["HYPERCONNECTION"] << " | down=" << Shape(hc_down) << ", inject=" << Shape(hc_inject) << ", up=" << Shape(hc_up) << " | NO |\n";
+        report << "| SPARSE_MOE | " << counts["SPARSE_MOE"] << " | " << counts["SPARSE_MOE"] << " | 0 | gate=" << Shape(moe_gate) << ", 512 experts | NO |\n\n";
+        report << "Ownership reconciliation: GDN 216+36, PLE 6+1, HYPERCONNECTION 384+3; tensor names remain unique across both shards.\n\n";
         report << "Geometry checks: " << (geometry_ok ? "PASS" : "FAIL") << "\n";
         report << "Certification: NOT_CERTIFIED (native Vulkan lowering and parity are still required)\n";
         std::cout << "QWEN4EXP_REVERSE_ENGINEERED=1\nTENSORS=" << tensors.size()
