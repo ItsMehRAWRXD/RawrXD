@@ -98,11 +98,14 @@ void BackendRouter::SetMode(BackendMode mode) {
         std::lock_guard<std::mutex> lock(m_active_mtx);
         if (mode == BackendMode::Ollama) {
             m_active_kind = BackendKind::Ollama;
-            m_active_model = m_config.fallback_model;
+            // The backend's own config is authoritative for the model name.
+            m_active_model = m_ollama ? m_ollama->GetConfig().model
+                                      : m_config.fallback_model;
             m_active_endpoint = m_config.fallback_endpoint;
         } else {
             m_active_kind = BackendKind::Deep2;
-            m_active_model = m_config.primary_model;
+            m_active_model = m_deep2 ? m_deep2->GetConfig().model
+                                     : m_config.primary_model;
             m_active_endpoint = m_config.primary_endpoint;
         }
     }
@@ -181,6 +184,15 @@ std::vector<std::string> BackendRouter::ListModels(BackendKind preferred) {
     return {};
 }
 
+bool BackendRouter::IsCloudModel(const std::string& model_name) {
+    if (!m_ollama) return false;
+    return m_ollama->IsCloudModel(model_name);
+}
+
+void BackendRouter::SetThinkingSink(const std::function<void(const std::string&)>& sink) {
+    if (m_ollama) m_ollama->SetThinkingSink(sink);
+}
+
 BackendKind BackendRouter::SelectBackendForRequest(FailoverInfo* failover_info) {
     BackendMode mode = m_mode.load();
 
@@ -212,14 +224,24 @@ BackendKind BackendRouter::SelectBackendForRequest(FailoverInfo* failover_info) 
     return BackendKind::Ollama;
 }
 
-void BackendRouter::RouteToBackend(BackendKind kind, const std::string& /*model*/) {
+void BackendRouter::RouteToBackend(BackendKind kind, const std::string& model) {
     std::lock_guard<std::mutex> lock(m_active_mtx);
     m_active_kind = kind;
-    if (kind == BackendKind::Deep2) {
+    // The caller's model is the backend's CURRENT model, which is authoritative.
+    // Copying m_config here instead would report a stale name whenever the
+    // model was set directly on the backend.
+    if (!model.empty()) {
+        m_active_model = model;
+    } else if (kind == BackendKind::Deep2) {
         m_active_model = m_config.primary_model;
         m_active_endpoint = m_config.primary_endpoint;
     } else {
         m_active_model = m_config.fallback_model;
+        m_active_endpoint = m_config.fallback_endpoint;
+    }
+    if (kind == BackendKind::Deep2) {
+        m_active_endpoint = m_config.primary_endpoint;
+    } else {
         m_active_endpoint = m_config.fallback_endpoint;
     }
 }

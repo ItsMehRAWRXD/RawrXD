@@ -1571,6 +1571,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE_QT AND Qt6_FOUND)
         ${CMAKE_SOURCE_DIR}/src/utils
         ${CMAKE_SOURCE_DIR}/src/model_loader
         ${CMAKE_SOURCE_DIR}/src/qtapp
+        ${CMAKE_SOURCE_DIR}/src/deep2/watchdog
+        ${CMAKE_SOURCE_DIR}/src/snap
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
     )
@@ -4851,6 +4853,7 @@ endif()
 # No Qt dependency. Uses WinHTTP on Windows for HTTP transport.
 #
 add_library(rawrxd_agentic_backend STATIC
+    src/agent/delegated_agents.cpp
     src/agentic/OllamaBackend.cpp
     src/agentic/Deep2Backend.cpp
     src/agentic/BackendRouter.cpp
@@ -4863,6 +4866,7 @@ add_library(rawrxd_agentic_backend STATIC
     src/agentic/RawrSwarmEvents.cpp
     src/agentic/RawrLiveTools.cpp
     src/backend/ollama_client.cpp
+    src/backend/kilo_gateway_client.cpp
 )
 target_include_directories(rawrxd_agentic_backend PUBLIC
     ${CMAKE_SOURCE_DIR}/src

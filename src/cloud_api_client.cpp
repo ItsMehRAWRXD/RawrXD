@@ -56,11 +56,15 @@ CloudApiClient::CloudApiClient() {
 CloudApiClient::~CloudApiClient() = default;
 
 void CloudApiClient::initializeApiEndpoints() {
-    // KILO GATEWAY API - OpenAI-compatible, free model catalog
+    // KILO GATEWAY API - OpenAI-compatible, free model catalog.
+    // Base URL and paths follow the current Kilo documentation:
+    //   https://ai-gateway.kilo.ai/api/v1
+    // The personal gateway key is copied from the profile page at app.kilo.ai
+    // and supplied as a bearer token.
     api_endpoints[static_cast<int>(ModelBackend::KILO_GATEWAY)] = {
-        "https://api.kilo.ai",
-        "/api/gateway/chat/completions",
-        "/api/gateway/models"
+        "https://ai-gateway.kilo.ai/api/v1",
+        "/chat/completions",
+        "/models"
     };
 
     // OPENROUTER API - OpenAI-compatible, free models

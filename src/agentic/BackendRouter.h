@@ -41,6 +41,7 @@ enum class BackendMode : uint8_t {
     Auto,     // Deep2 first; Ollama fallback if Deep2 unavailable
     Deep2,    // Deep2 only; explicit failure
     Ollama,   // Ollama only
+    Kilo,     // Kilo Gateway only (OpenAI-compatible, cloud, needs a key)
     Manual,   // User picks backend per-call
 };
 
@@ -49,6 +50,7 @@ inline const char* BackendModeName(BackendMode mode) {
         case BackendMode::Auto:    return "auto";
         case BackendMode::Deep2:   return "deep2";
         case BackendMode::Ollama:  return "ollama";
+        case BackendMode::Kilo:    return "kilo";
         case BackendMode::Manual:  return "manual";
         default:                   return "unknown";
     }
@@ -98,6 +100,13 @@ public:
 
     // ---- Model discovery (delegates to active backend) ----
     std::vector<std::string> ListModels(BackendKind preferred = BackendKind::Deep2);
+
+    /// @brief Is this Ollama model served by ollama.com rather than locally?
+    bool IsCloudModel(const std::string& model_name);
+
+    /// @brief Route a reasoning model's thinking text to a sink, separately
+    /// from the answer.
+    void SetThinkingSink(const std::function<void(const std::string&)>& sink);
 
     // ---- Inference entry points ----
     // These route to the selected backend, with failover per operating mode.

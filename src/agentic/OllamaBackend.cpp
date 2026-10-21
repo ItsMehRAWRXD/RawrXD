@@ -73,6 +73,8 @@ BackendConfig OllamaBackend::GetConfig() const {
 
 void OllamaBackend::SetConfig(const BackendConfig& config) {
     m_config = config;
+    // A different model may well support native tool calling.
+    m_nativeToolsUnsupported.store(false);
     if (m_client) {
         m_client->setBaseUrl(m_config.endpoint);
         m_client->setTimeoutSeconds(m_config.timeout_ms / 1000);
@@ -141,6 +143,36 @@ std::vector<std::string> OllamaBackend::ListModels() {
     return names;
 }
 
+std::vector<Backend::OllamaModel> OllamaBackend::ListModelsDetailed() {
+    if (!m_client) return {};
+    return m_client->listModels();
+}
+
+bool OllamaBackend::ShowModel(const std::string& model_name,
+                              Backend::OllamaShowResult& out) {
+    if (!m_client) {
+        out.ok = false;
+        out.error = "Ollama backend not initialized";
+        return false;
+    }
+    return m_client->showModel(model_name, out);
+}
+
+std::vector<Backend::OllamaRunningModel> OllamaBackend::ListRunning() {
+    if (!m_client) return {};
+    return m_client->listRunning();
+}
+
+bool OllamaBackend::IsCloudModel(const std::string& model_name) {
+    if (!m_client) return false;
+    for (const auto& m : m_client->listModels()) {
+        if (m.name == model_name) return m.IsCloud();
+    }
+    // An exact match is the only reliable signal; a prefix match could be a
+    // local model that merely starts with the same characters.
+    return false;
+}
+
 bool OllamaBackend::LoadModel(const std::string& model_name) {
     if (!m_client) return false;
     // Ollama auto-loads models on first request; just verify it exists
@@ -165,6 +197,12 @@ void OllamaBackend::ConvertMessages(
         Backend::OllamaChatMessage omsg;
         omsg.role    = msg.role;
         omsg.content = msg.content;
+        omsg.tool_call_id = msg.tool_call_id;
+        // Only forward tool calls the provider can represent; an empty
+        // array would make Ollama reject the request.
+        if (msg.tool_calls.is_array() && !msg.tool_calls.empty()) {
+            omsg.tool_calls = msg.tool_calls;
+        }
         out.push_back(omsg);
     }
 }
@@ -203,6 +241,7 @@ InferenceResult OllamaBackend::ChatSync(
     }
 
     m_cancelRequested.store(false);
+    if (m_client) m_client->clearCancel();
 
     Backend::OllamaChatRequest req;
     req.model  = m_config.model;
@@ -210,11 +249,11 @@ InferenceResult OllamaBackend::ChatSync(
     ConvertMessages(messages, req.messages);
 
     // Build options
-    req.options["temperature"] = std::to_string(m_config.temperature);
-    req.options["top_p"] = std::to_string(m_config.top_p);
-    req.options["num_ctx"] = std::to_string(m_config.num_ctx);
+    req.options["temperature"] = m_config.temperature;
+    req.options["top_p"] = m_config.top_p;
+    req.options["num_ctx"] = m_config.num_ctx;
     if (m_config.max_tokens > 0) {
-        req.options["num_predict"] = std::to_string(m_config.max_tokens);
+        req.options["num_predict"] = m_config.max_tokens;
     }
     if (!tools.is_null()) {
         req.tools = tools;
@@ -225,6 +264,16 @@ InferenceResult OllamaBackend::ChatSync(
 
     try {
         resp = m_client->chatSync(req);
+        // Not every served model implements native tool calling, and Ollama
+        // answers such a request with HTTP 400 ("does not support tools").
+        // The agent contract in the prompt is the fallback: retry once with
+        // the tool schemas removed and remember the limitation, so the agent
+        // engine keeps working with models that only speak the JSON contract.
+        if (resp.error.find("does not support tools") != std::string::npos) {
+            m_nativeToolsUnsupported.store(true);
+            req.tools = json();
+            resp = m_client->chatSync(req);
+        }
     } catch (const std::exception& e) {
         RecordFailure("Ollama chatSync exception: " + std::string(e.what()));
         return InferenceResult::Error(e.what());
@@ -235,20 +284,31 @@ InferenceResult OllamaBackend::ChatSync(
 
     m_totalRequests.fetch_add(1);
 
-    if (!resp.done || resp.response.empty()) {
-        std::string err = resp.done_reason == "error" ? resp.response : "Unknown error";
+    // Chat replies carry the text in `message.content`; `response` is only
+    // populated by /api/generate. Checking `response` alone would reject
+    // every successful chat completion.
+    std::string text = !resp.message.empty() ? resp.message : resp.response;
+    if (!resp.error.empty()) {
+        RecordFailure("Ollama chatSync failed: " + resp.error);
+        return InferenceResult::Error(resp.error);
+    }
+    // A tool call is a complete reply even when the content is empty: a
+    // model asked to call a function answers with tool_calls and no text.
+    const bool hasToolCalls = resp.tool_calls.is_array() && !resp.tool_calls.empty();
+    if (!resp.done || (text.empty() && !hasToolCalls)) {
+        const std::string err = resp.done_reason == "error"
+            ? (resp.error.empty() ? "Ollama reported an error" : resp.error)
+            : "Ollama returned an empty completion";
         RecordFailure("Ollama chatSync failed: " + err);
         return InferenceResult::Error(err);
     }
 
-    // Extract response text (chat mode uses .message, generate mode uses .response)
-    std::string text = !resp.message.empty() ? resp.message : resp.response;
-
     InferenceResult result = InferenceResult::Ok(text);
     result.tool_calls.clear();
 
-    // Parse tool calls if present
-    if (!resp.tool_calls.is_null()) {
+    // Parse tool calls if present. Ollama returns them in OpenAI shape:
+    // {"id": "...", "function": {"name": "...", "arguments": {...}}}
+    if (resp.tool_calls.is_array() && !resp.tool_calls.empty()) {
         result.has_tool_calls = true;
         for (const auto& tc : resp.tool_calls) {
             std::string name = tc.value("name", tc.value("function", json::object()).value("name", ""));
@@ -259,6 +319,7 @@ InferenceResult OllamaBackend::ChatSync(
                     args = json::parse(args.get<std::string>());
                 } catch (...) {}
             }
+            if (!args.is_object()) args = json::object();
             result.tool_calls.emplace_back(name, args);
         }
     }
@@ -291,6 +352,7 @@ bool OllamaBackend::ChatStream(
     }
 
     m_cancelRequested.store(false);
+    if (m_client) m_client->clearCancel();
     m_streaming.store(true);
 
     Backend::OllamaChatRequest req;
@@ -298,13 +360,13 @@ bool OllamaBackend::ChatStream(
     req.stream = true;
     ConvertMessages(messages, req.messages);
 
-    req.options["temperature"] = std::to_string(m_config.temperature);
-    req.options["top_p"] = std::to_string(m_config.top_p);
-    req.options["num_ctx"] = std::to_string(m_config.num_ctx);
+    req.options["temperature"] = m_config.temperature;
+    req.options["top_p"] = m_config.top_p;
+    req.options["num_ctx"] = m_config.num_ctx;
     if (m_config.max_tokens > 0) {
-        req.options["num_predict"] = std::to_string(m_config.max_tokens);
+        req.options["num_predict"] = m_config.max_tokens;
     }
-    if (!tools.is_null()) {
+    if (!tools.is_null() && !m_nativeToolsUnsupported.load()) {
         req.tools = tools;
     }
 
@@ -320,9 +382,12 @@ bool OllamaBackend::ChatStream(
         }
 
         // Streamed chat responses come as SSE-like JSON lines
+        // Reasoning is a separate channel from the answer.
+        if (!chunk.thinking.empty() && m_thinking_sink) {
+            m_thinking_sink(chunk.thinking);
+        }
         if (!chunk.message.empty()) {
             full_response += chunk.message;
-            if (on_token) on_token(chunk.message);
         }
         if (!chunk.response.empty()) {
             full_response += chunk.response;
@@ -354,9 +419,11 @@ bool OllamaBackend::ChatStream(
 
             m_totalRequests.fetch_add(1);
 
-            if (chunk.done_reason == "error" || chunk.response.empty()) {
+            if (!chunk.error.empty() || chunk.done_reason == "error") {
                 stream_failed = true;
-                fail_reason = !chunk.response.empty() ? chunk.response : "Streaming failed";
+                fail_reason = chunk.error.empty()
+                    ? (chunk.response.empty() ? "Ollama streaming failed" : chunk.response)
+                    : chunk.error;
                 RecordFailure("Ollama ChatStream failed: " + fail_reason);
                 if (on_error) on_error(fail_reason);
             } else {
@@ -392,6 +459,7 @@ InferenceResult OllamaBackend::FIMSync(
     }
 
     m_cancelRequested.store(false);
+    if (m_client) m_client->clearCancel();
 
     // Build FIM prompt: <|fim_prefix|>{prefix}<|fim_suffix|>{suffix}<|fim_middle|>
     std::string fim_prompt = "<|fim_prefix|>" + prefix + "<|fim_suffix|>" + suffix + "<|fim_middle|>";
@@ -400,9 +468,9 @@ InferenceResult OllamaBackend::FIMSync(
     req.model  = m_config.model;
     req.prompt = fim_prompt;
     req.stream = false;
-    req.options["temperature"] = std::to_string(m_config.temperature);
-    req.options["num_ctx"] = std::to_string(m_config.num_ctx);
-    req.options["num_predict"] = std::to_string(m_config.fim_max_tokens > 0 ? m_config.fim_max_tokens : 256);
+    req.options["temperature"] = m_config.temperature;
+    req.options["num_ctx"] = m_config.num_ctx;
+    req.options["num_predict"] = (m_config.fim_max_tokens > 0 ? m_config.fim_max_tokens : 256);
 
     auto t0 = std::chrono::steady_clock::now();
     Backend::OllamaResponse resp;
@@ -460,6 +528,7 @@ bool OllamaBackend::FIMStream(
     }
 
     m_cancelRequested.store(false);
+    if (m_client) m_client->clearCancel();
     m_streaming.store(true);
 
     std::string fim_prompt = "<|fim_prefix|>" + prefix + "<|fim_suffix|>" + suffix + "<|fim_middle|>";
@@ -468,9 +537,9 @@ bool OllamaBackend::FIMStream(
     req.model  = m_config.model;
     req.prompt = fim_prompt;
     req.stream = true;
-    req.options["temperature"] = std::to_string(m_config.temperature);
-    req.options["num_ctx"] = std::to_string(m_config.num_ctx);
-    req.options["num_predict"] = std::to_string(m_config.fim_max_tokens > 0 ? m_config.fim_max_tokens : 256);
+    req.options["temperature"] = m_config.temperature;
+    req.options["num_ctx"] = m_config.num_ctx;
+    req.options["num_predict"] = (m_config.fim_max_tokens > 0 ? m_config.fim_max_tokens : 256);
 
     auto t0 = std::chrono::steady_clock::now();
     std::string full_response;
@@ -497,9 +566,9 @@ bool OllamaBackend::FIMStream(
 
             m_totalRequests.fetch_add(1);
 
-            if (chunk.done_reason == "error" || full_response.empty()) {
+            if (!chunk.error.empty() || chunk.done_reason == "error" || full_response.empty()) {
                 stream_failed = true;
-                fail_reason = "FIM streaming failed";
+                fail_reason = chunk.error.empty() ? "FIM streaming failed" : chunk.error;
                 RecordFailure("Ollama FIMStream failed");
                 if (on_error) on_error(fail_reason);
             } else {
@@ -537,8 +606,9 @@ bool OllamaBackend::FIMStream(
 
 void OllamaBackend::Cancel() {
     m_cancelRequested.store(true);
-    // Note: Ollama HTTP doesn't support per-request cancellation.
-    // The cancel flag prevents new tokens from being delivered to callbacks.
+    // Abort the in-flight HTTP read so the streaming loop stops consuming the
+    // socket instead of running to completion in the background.
+    if (m_client) m_client->cancel();
     m_streaming.store(false);
 }
 

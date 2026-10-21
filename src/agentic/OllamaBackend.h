@@ -38,6 +38,23 @@ public:
     bool Supports(BackendCapability cap) const override;
 
     std::vector<std::string> ListModels() override;
+
+    /// @brief Full model records (digest, size, family, quantization) from
+    /// GET /api/tags. ListModels() drops this detail; the discovery commands
+    /// need it.
+    std::vector<Backend::OllamaModel> ListModelsDetailed();
+
+    /// @brief Model metadata from POST /api/show.
+    bool ShowModel(const std::string& model_name, Backend::OllamaShowResult& out);
+
+    /// @brief Models currently resident in memory, from GET /api/ps.
+    std::vector<Backend::OllamaRunningModel> ListRunning();
+
+    /// @brief Is this model served by ollama.com rather than locally?
+    /// Cloud models need a signed-in account and internet, and are never
+    /// local inference.
+    bool IsCloudModel(const std::string& model_name);
+
     bool LoadModel(const std::string& model_name) override;
 
     InferenceResult ChatSync(const std::vector<ChatMessage>& messages,
@@ -49,6 +66,12 @@ public:
                     ToolCallCallback  on_tool_call,
                     DoneCallback      on_done,
                     ErrorCallback     on_error) override;
+
+    /// @brief Thinking text from a reasoning model, delivered separately from
+    /// the answer so the answer channel stays clean.
+    void SetThinkingSink(const std::function<void(const std::string&)>& sink) {
+        m_thinking_sink = sink;
+    }
 
     InferenceResult FIMSync(const std::string& prefix,
                             const std::string& suffix,
@@ -76,6 +99,11 @@ private:
     std::atomic<bool> m_initialized{false};
     std::atomic<bool> m_streaming{false};
     std::atomic<bool> m_cancelRequested{false};
+    /// @brief Set when the served model rejects native tool schemas. The
+    /// agent then relies on the JSON tool contract in its prompt instead.
+    std::atomic<bool> m_nativeToolsUnsupported{false};
+    /// @brief Sink for a reasoning model's thinking text.
+    std::function<void(const std::string&)> m_thinking_sink;
 
     // ---- Stats ----
     mutable std::mutex m_stats_mtx;
