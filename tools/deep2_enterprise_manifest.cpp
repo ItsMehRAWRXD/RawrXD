@@ -82,6 +82,7 @@ int main(int argc, char** argv) {
         "evidence/qwen4exp_pipeline_wiring_20261020.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/native_contract_rerun.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt",
+        "evidence/deep2_enterprise_closure_manifest_20261020/dependency_closure_matrix.md",
         "evidence/qwen4exp_gr_source_drop_20261020/Qwen4ExpGatedResidual.hpp",
         "evidence/qwen4exp_gr_source_drop_20261020/test_gr.cpp",
         "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md",
