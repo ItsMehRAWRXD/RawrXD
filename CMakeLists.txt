@@ -2163,6 +2163,47 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/test_q5k_device.cpp" AND Vulkan_FOUND)
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# What the resident path actually achieves.
+#
+# The roofline argument says the decode rate is set by how many weight
+# bytes have to be read per token and by how fast the card reads them. The
+# number that matters is the rate the engine REACHES, because the
+# speculation depth has to be computed from it. This measures it directly,
+# with the weights in DEVICE_LOCAL memory, which is the only arrangement that
+# reads them from the card's own bus.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_residency_bench.cpp" AND Vulkan_FOUND)
+    add_executable(deep2_residency_bench
+        tools/deep2_residency_bench.cpp)
+    target_include_directories(deep2_residency_bench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    )
+    target_compile_features(deep2_residency_bench PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_residency_bench PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_residency_bench PRIVATE
+            -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_residency_bench PRIVATE Vulkan::Vulkan)
+    else()
+        find_library(DEEP2_VULKAN_LOADER_BENCH NAMES vulkan-1
+                     HINTS "${VULKAN_SDK}/lib" "${VULKAN_SDK}/bin")
+        if(DEEP2_VULKAN_LOADER_BENCH)
+            target_link_libraries(deep2_residency_bench PRIVATE ${DEEP2_VULKAN_LOADER_BENCH})
+        endif()
+    endif()
+    set_target_properties(deep2_residency_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_residency_bench enabled (achieved resident bandwidth)")
+    add_test(NAME Quant_Residency_Bandwidth
+        COMMAND deep2_residency_bench
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.spv"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
 
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims
