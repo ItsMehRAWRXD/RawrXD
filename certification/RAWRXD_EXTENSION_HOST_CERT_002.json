@@ -1,0 +1,150 @@
+﻿{
+    "schema":  "rawr.extension.cert/2",
+    "ladder":  "RAWRXD_EXTENSION_HOST_001",
+    "document":  "RAWRXD_EXTENSION_HOST_CERT_002",
+    "generated_utc":  "2026-10-21T22:45:47Z",
+    "source_revision":  {
+                            "branch":  "preservation/source-baseline-20261021",
+                            "commit":  "207d526d24ecd6a925ebd51d7299555712c421f4"
+                        },
+    "clean_export_validation":  {
+                                    "method":  "git archive HEAD src include tools/ext_host_cert 3rdparty/quickjs_ng, extracted to a directory outside the repository, then built and run there",
+                                    "contaminated_by_working_tree":  false,
+                                    "build":  "tools/ext_host_cert/build_ext_host_cert.bat (MSVC 19.44, /std:c++20 for the C++ units and /std:c11 for quickjs-ng, which needs C11 atomics)",
+                                    "result":  "BUILD OK; the certification ran from the exported tree"
+                                },
+    "ownership_contract":  {
+                               "established_by":  "tools/ext_host_cert/quickjs_ownership_probe.c against the vendored quickjs-ng",
+                               "JS_SetPropertyStr":  "CONSUMES the value it is given; the caller must not free it afterwards",
+                               "JS_GetPropertyStr":  "RETURNS an owned reference; the caller must free it",
+                               "JS_NewObject":  "returns an owned reference",
+                               "probe_result":  "5/5 probes pass, including the host\u0027s exact bind pattern 5000 times"
+                           },
+    "defects_closed":  [
+                           {
+                               "id":  "EXT-001",
+                               "title":  "the vscode namespace was overwritten, and the command bindings were never released",
+                               "file":  "src/core/js_extension_host.cpp",
+                               "functions":  [
+                                                 "JSExtensionHost::bindVSCodeAPI",
+                                                 "JSExtensionHost::unloadExtension",
+                                                 "JSExtensionHost::shutdown",
+                                                 "jsCommandTrampoline"
+                                             ],
+                               "cause":  "bindVSCodeAPI created its own vscode object, ran the binders, and then wrote that empty object back over the global, discarding the object the binders had populated. Separately, each command binding holds a DUP\u0027d callback that was never freed, so the runtime\u0027s GC list was not empty at JS_FreeRuntime.",
+                               "symptom_before":  "typeof vscode.commands was undefined, so no extension could register a command; the runtime also aborted at teardown with \u0027list_empty(\u0026rt-\u003egc_obj_list)\u0027",
+                               "fix":  "publish the shared object before the binders run and never write it back; release the bindings while their context is still alive, at unload and at shutdown; make the trampoline refuse a released binding",
+                               "verification":  "typeof vscode.commands.registerCommand is now \u0027function\u0027; the command registers and executes; the process exits cleanly"
+                           },
+                           {
+                               "id":  "EXT-003",
+                               "title":  "registerCommand promised a Disposable that unregisters the command, and did not",
+                               "file":  "src/modules/vscode_extension_api.cpp",
+                               "functions":  [
+                                                 "VSCodeExtensionAPI::removeCommand",
+                                                 "JSExtensionHost::unloadExtension"
+                                             ],
+                               "cause":  "the registry had no removal path, so an unloaded extension left a command behind that dispatched into a context that no longer existed",
+                               "fix":  "added VSCodeExtensionAPI::removeCommand, called it from the JS disposable and from unloadExtension",
+                               "verification":  "the command count returns to its baseline when an extension is unloaded"
+                           }
+                       ],
+    "defects_open":  [
+                         {
+                             "id":  "EXT-002",
+                             "title":  "only the first extension loaded in a process registers a command",
+                             "scope":  "the lifecycle gates 9 and 11",
+                             "symptom":  "loading and activating a second extension leaves the shared command count unchanged, and the second extension\u0027s command is not found by executeCommand",
+                             "evidence":  "the binding IS present in the second extension\u0027s own context (a probe in that context reports typeof vscode.commands.registerCommand = function), and the command count is 19 -\u003e 19 across the load, so the call never reaches the registry",
+                             "what_is_not_the_cause":  [
+                                                           "the namespace binding: the probe shows registerCommand is a function in the second extension\u0027s context",
+                                                           "the ownership contract: the probe proves the host\u0027s bind pattern is sound over 5000 cycles",
+                                                           "a test artifact: the extension name, the entry file name and the extension id are all distinct for each test extension, and the id is now selected by name rather than by position"
+                                                       ],
+                             "likely_area":  "the extension\u0027s entry module is not evaluated for the second extension, or its evaluation is swallowed before the registerCommand call; the module identity the host uses for the cached module is the thing to compare next",
+                             "status":  "OPEN - reported, not claimed as fixed"
+                         }
+                     ],
+    "result":  {
+                   "gates":  11,
+                   "passed":  9,
+                   "failed":  2
+               },
+    "original_eight_gates":  "8/8 PASS",
+    "lifecycle_gates":  "2/4 PASS; the two failures are EXT-002 and are reported above",
+    "shutdown":  "clean: the process exits without the QuickJS teardown assertion",
+    "gates":  [
+                  {
+                      "status":  "PASS",
+                      "name":  "the shared runtime initializes against the ExtensionHostBridge",
+                      "detail":  "initialize -\u003e VSCodeExtensionAPI initialized"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "registerCommand accepts a native command",
+                      "detail":  "command_count 17 -\u003e 18"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "executeCommand runs the native handler",
+                      "detail":  "handler_ran=yes"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "an unknown command fails cleanly",
+                      "detail":  "errorCode=-1"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "a JavaScript extension loads and registers a command",
+                      "detail":  "load -\u003e Extension loaded; activate -\u003e Extension activated; extension_id=cert-extension; command_count 18 -\u003e 19"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "the JS-registered command is executable through the same API",
+                      "detail":  "executeCommand(cert.js.command) -\u003e ok | probe: typeof vscode=object; typeof vscode.commands=object; typeof vscode.commands.registerCommand=function;"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "all seven native commands are registered in the tracked source",
+                      "detail":  "7/7 found"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "there is one extension runtime, reached through the bridge",
+                      "detail":  "bridge_included=yes api_definitions=1"
+                  },
+                  {
+                      "status":  "FAIL",
+                      "name":  "five load / activate / execute / unload cycles leave no residue",
+                      "detail":  "cycle 0: execute failed; command_count 19 -\u003e 19; registerCommand is function;"
+                  },
+                  {
+                      "status":  "PASS",
+                      "name":  "a command that throws is contained and the runtime survives",
+                      "detail":  "throwing command -\u003e reported a failure; the runtime still answers a later command"
+                  },
+                  {
+                      "status":  "FAIL",
+                      "name":  "an extension can be unloaded and reloaded, and its command works again",
+                      "detail":  "first load -\u003e Extension loaded; second load -\u003e Extension loaded; command -\u003e failed"
+                  }
+              ],
+    "source_sha256":  {
+                          "src/core/js_extension_host.cpp":  "E9EBFD1DA3C81694426F46EF53DAC5687184D35771FE6111641183A2DEE97156",
+                          "src/core/js_extension_host.hpp":  "6E2CD8F8B66304A754F267BBBFEC6787990E1F436E225AD667009650AF363937",
+                          "src/modules/vscode_extension_api.cpp":  "9A044E0A1C464DB3FC99DE2EC9433F397858FF73169B1CB7F79E00456883F6EB",
+                          "src/modules/vscode_extension_api.h":  "BACF47E946AA7C99DE1FB7A817079076743AD07C62C42B063E05FA21E8BE555D",
+                          "src/core/extension_polyfill_engine.cpp":  "7F51706AB0F723A55A40DFAA699326480F9638F2658DF5A636026D6CCB088543",
+                          "src/marketplace/vsix_installer.cpp":  "50D7B7F6E332C861777E0917AA9EAECBDC17902D4EBB35A3A78B5B583460F870",
+                          "src/marketplace/vsix_installer.h":  "84D43964840C405CEA68FB4A83FB6E0FBCD324E1A456CA361B6C6253F5AA0F77",
+                          "src/core/zip_reader.cpp":  "A2D0228D308E1555F0AA4A6A20945FC87EB645CA490DFF87078B79A827395C41",
+                          "src/core/zip_reader.h":  "54E3B90EC6459703B049A921BC12C02A9A3E2503CA712F22B15466A12619121F",
+                          "3rdparty/quickjs_ng/quickjs.c":  "3AB6151B8E37727350EC3C2B88192F1D0E5A15470F197AC71F165DE559752A55",
+                          "3rdparty/quickjs_ng/quickjs.h":  "0FFA0E8840EF755BEA58FCB28C1EE0B072F24FE5E07CBBF8D6D6E29CB0C18878",
+                          "tools/ext_host_cert/ext_host_cert.cpp":  "2A691EA2B8A9B32C530F80B1C8C6987CE8BFE38E89B772EDC5E76B05AE8D86BE",
+                          "tools/ext_host_cert/build_ext_host_cert.bat":  "E03411C13D4BFD902AC4702B9CA5D5AA6CD888F3223C27D4ED41EAACD78CAAB7",
+                          "tools/ext_host_cert/quickjs_ownership_probe.c":  "C3613A7586C8F878F9CDA5D9D200331DCB1C30103E9B1FE2AF76662A308DD89A"
+                      },
+    "remaining_failures":  "EXT-002 only: a second extension in the same process does not register its command"
+}

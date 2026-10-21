@@ -1,0 +1,18 @@
+﻿==========================================================
+ RAWRXD_EXTENSION_HOST_001
+==========================================================
+  [PASS] the shared runtime initializes against the ExtensionHostBridge - initialize -> VSCodeExtensionAPI initialized
+  [PASS] registerCommand accepts a native command - command_count 17 -> 18
+  [PASS] executeCommand runs the native handler - handler_ran=yes
+  [PASS] an unknown command fails cleanly - errorCode=-1
+  [PASS] a JavaScript extension loads and registers a command - load -> Extension loaded; activate -> Extension activated; extension_id=cert-extension; command_count 18 -> 19
+  [PASS] the JS-registered command is executable through the same API - executeCommand(cert.js.command) -> ok | probe: typeof vscode=object; typeof vscode.commands=object; typeof vscode.commands.registerCommand=function; 
+  [PASS] all seven native commands are registered in the tracked source - 7/7 found
+  [PASS] there is one extension runtime, reached through the bridge - bridge_included=yes api_definitions=1
+  [FAIL] five load / activate / execute / unload cycles leave no residue - cycle 0: execute failed; command_count 19 -> 19; registerCommand is function; 
+  [PASS] a command that throws is contained and the runtime survives - throwing command -> reported a failure; the runtime still answers a later command
+  [FAIL] an extension can be unloaded and reloaded, and its command works again - first load -> Extension loaded; second load -> Extension loaded; command -> failed
+
+--------------------------------------------------------
+RAWRXD_EXTENSION_HOST_001: 9 passed, 2 failed
+--------------------------------------------------------
