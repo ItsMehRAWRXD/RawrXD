@@ -18,6 +18,7 @@ const uint Q4K_BYTES = 144u;
 const uint Q6K_BYTES = 210u;
 const uint Q2K_BYTES = 84u;
 const uint Q3K_BYTES = 110u;
+const uint Q5K_BYTES = 176u;
 const uint Q50_BYTES = 22u;
 const uint Q80_BYTES = 34u;
 const uint Q40_BYTES = 18u;
@@ -185,6 +186,54 @@ float q3k_weight(uint row, uint col) {
     return d * float(q3_scale(base, index >> 4u) - 32) * float(int(q) - high);
 }
 
+// GGML q5_K: d/dmin, 12 packed scale/min bytes, qh[32], qs[128].
+// Keep this decoding identical to the row-8 kernel; row width changes only
+// workgroup geometry, never the quantized block contract.
+void q5_scale_min(uint base, uint group, out uint scale, out uint minv) {
+    uint u0 = pack_byte(base + 0u) | (pack_byte(base + 1u) << 8u) |
+              (pack_byte(base + 2u) << 16u) | (pack_byte(base + 3u) << 24u);
+    uint u1 = pack_byte(base + 4u) | (pack_byte(base + 5u) << 8u) |
+              (pack_byte(base + 6u) << 16u) | (pack_byte(base + 7u) << 24u);
+    uint u2 = pack_byte(base + 8u) | (pack_byte(base + 9u) << 8u) |
+              (pack_byte(base + 10u) << 16u) | (pack_byte(base + 11u) << 24u);
+    const uint kmask1 = 0x3f3f3f3fu;
+    const uint kmask2 = 0x0f0f0f0fu;
+    const uint kmask3 = 0x03030303u;
+    uint u3 = ((u2 >> 4u) & kmask2) | (((u1 >> 6u) & kmask3) << 4u);
+    uint aux = u1 & kmask1;
+    u1 = (u2 & kmask2) | (((u0 >> 6u) & kmask3) << 4u);
+    u2 = aux;
+    u0 &= kmask1;
+    uint scaleWord = group < 4u ? u0 : u1;
+    // q5_K has eight minima, one per 32-value group.  The packed minima are
+    // split across u2/u3; unlike the q4_K helper they are not repeated in
+    // pairs at this stage.
+    uint minWord = group < 4u ? u2 : u3;
+    uint scaleByte = group & 3u;
+    uint minByte = group & 3u;
+    scale = (scaleWord >> (scaleByte * 8u)) & 0xFFu;
+    minv = (minWord >> (minByte * 8u)) & 0xFFu;
+}
+
+float q5k_weight(uint row, uint col) {
+    uint block = col >> 8u;
+    uint index = col & 255u;
+    uint base = row * pc.n_blocks * Q5K_BYTES + block * Q5K_BYTES;
+    uint group = index >> 5u;
+    uint pair = index >> 6u;
+    uint half_group = (index >> 5u) & 1u;
+    uint lane = index & 31u;
+    uint q = pack_byte(base + 48u + pair * 32u + lane);
+    uint high = pack_byte(base + 16u + lane);
+    int quant = int((q >> (half_group * 4u)) & 0xFu);
+    quant += (high & (1u << (2u * pair + half_group))) != 0u ? 16 : 0;
+    uint scale, minv;
+    q5_scale_min(base + 4u, group, scale, minv);
+    float d = half_to_float(pack_u16(base));
+    float dmin = half_to_float(pack_u16(base + 2u));
+    return d * float(scale * uint(quant)) - dmin * float(minv);
+}
+
 float legacy_weight(uint row, uint col) {
     uint block_bytes = pc.kind == 2u ? Q50_BYTES : pc.kind == 3u ? Q80_BYTES : Q40_BYTES;
     uint row_bytes = ((pc.n_in + 31u) >> 5u) * block_bytes;
@@ -206,13 +255,32 @@ float legacy_weight(uint row, uint col) {
     return half_to_float(pack_u16(base)) * float(quant);
 }
 
+#ifdef DEEP2_SPECIALIZED_KIND
+float quant_weight(uint row, uint col, uint cohort, uint base_mod) {
+#if DEEP2_SPECIALIZED_KIND == 0
+    return q4k_weight(row, col);
+#elif DEEP2_SPECIALIZED_KIND == 1
+    return q6k_weight(row, col, cohort, base_mod);
+#elif DEEP2_SPECIALIZED_KIND == 5
+    return q2k_weight(row, col);
+#elif DEEP2_SPECIALIZED_KIND == 6
+    return q3k_weight(row, col);
+#elif DEEP2_SPECIALIZED_KIND == 8
+    return q5k_weight(row, col);
+#else
+    return legacy_weight(row, col);
+#endif
+}
+#else
 float quant_weight(uint row, uint col, uint cohort, uint base_mod) {
     if (pc.kind == 0u) return q4k_weight(row, col);
     if (pc.kind == 1u) return q6k_weight(row, col, cohort, base_mod);
     if (pc.kind == 5u) return q2k_weight(row, col);
     if (pc.kind == 6u) return q3k_weight(row, col);
+    if (pc.kind == 8u) return q5k_weight(row, col);
     return legacy_weight(row, col);
 }
+#endif
 
 void main() {
     uint lane = gl_LocalInvocationID.x & 63u;
@@ -257,3 +325,4 @@ void main() {
     }
     if (row < pc.n_out && lane == 0u) out_rows[row] = partials[gl_LocalInvocationID.x];
 }
+

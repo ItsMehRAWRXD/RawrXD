@@ -89,11 +89,13 @@ VulkanCompute& GpuFor(int32_t device_index)
 
 // Packed row stride per kind (same geometry the shader and ExecuteQuantDot
 // use). Legacy kinds quantise 32 values per block; the k-quants 256.
-// 0=Q4_K(144) 1=Q6_K(210) 5=Q2_K(84) 6=Q3_K(110); 2..4 = legacy 32-value.
+// 0=Q4_K(144) 1=Q6_K(210) 5=Q2_K(84) 6=Q3_K(110) 8=Q5_K(176);
+// 2..4 = legacy 32-value.
 size_t RowBytesForKind(int kind, size_t n_in)
 {
     if (kind == 5) return ((n_in + 255u) / 256u) * 84u;    // Q2_K
     if (kind == 6) return ((n_in + 255u) / 256u) * 110u;   // Q3_K
+    if (kind == 8) return ((n_in + 255u) / 256u) * 176u;   // Q5_K
     if (kind == 7) return ((n_in + 63u) / 64u) * 36u;      // NVFP4: 64 elems per 36-byte block
     switch (kind) {
     case 0: return ((n_in + 255u) / 256u) * 144u;               // Q4_K
@@ -135,6 +137,12 @@ std::vector<QueuedDot> g_queued;
 // executing.
 bool BeginBatchImpl()
 {
+    // Differential execution consumes every result immediately.  Keep the
+    // executor's logical batch bookkeeping alive, but do not open the device
+    // batch: DotBlocked must execute synchronously so the checker sees the
+    // freshly written output rather than a queued zero.  EndBatchImpl treats
+    // the matching logical close as a no-op below.
+    if (std::getenv("RR_GPU_CHECK")) return true;
     if (g_batch_active) return false;
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     const bool gpu_ok = Gpu().BeginQuantDotBatch();
@@ -170,6 +178,7 @@ void ReplayQueuedOnCpu(std::vector<QueuedDot>& qs)
 // command buffer behind one fence and copies the results to the caller buffers.
 bool EndBatchImpl()
 {
+    if (std::getenv("RR_GPU_CHECK") && !g_batch_active) return true;
     if (!g_batch_active) return false;
     g_batch_active = false;
     std::vector<QueuedDot> qs;
@@ -455,8 +464,12 @@ bool DotBlocked(int kind,
                 size_t q8_bytes,
                 bool force_cpu)
 {
-    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K, 7 = NVFP4
-    if (kind < 0 || kind > 7) {
+    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0,
+    //       5 = Q2_K, 6 = Q3_K, 7 = NVFP4, 8 = Q5_K.
+    // Q5_K is deliberately a separate capability id: GGML type ids and
+    // dispatch capability ids are different domains, and kind 8 must not be
+    // confused with the GGML Q8_0 type id.
+    if (kind < 0 || kind > 8) {
         g_receipt.fallback_reason = "unsupported kind";
         return false;
     }
@@ -493,7 +506,15 @@ bool DotBlocked(int kind,
     // a caller-pinned CPU call never queues. The receipt reports the GPU path
     // as committed; the batch's own success/failure is reported by EndBatch and
     // accounted by the caller.
-    if (g_batch_active && g_active_device < 0 && !force_cpu && !g_force_cpu) {
+    // The per-op differential checker consumes `y` immediately after this
+    // call.  It deliberately disables executor-side batch joining, so a dot
+    // must execute synchronously even if a surrounding graph opened a batch
+    // for other operations.  Queueing here would return true with an
+    // untouched zero-filled output and report a false GPU divergence before
+    // EndBatch has a chance to submit the work.
+    const bool differential_check = std::getenv("RR_GPU_CHECK") != nullptr;
+    if (g_batch_active && !differential_check && g_active_device < 0 &&
+        !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
             return false;
@@ -631,7 +652,7 @@ bool DotBlockedOn(int32_t device, int kind,
                   bool force_cpu)
 {
     g_receipt = Receipt{};
-    if (kind < 0 || kind > 7) { g_receipt.fallback_reason = "unsupported kind"; return false; }
+    if (kind < 0 || kind > 8) { g_receipt.fallback_reason = "unsupported kind"; return false; }
     if (!wBytes || !x || !y || n_in == 0 || n_out == 0) { g_receipt.fallback_reason = "bad arguments"; return false; }
     if (cpu == nullptr) { g_receipt.fallback_reason = "no CPU fallback supplied"; return false; }
     const bool legacy = (kind >= 2);

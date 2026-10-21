@@ -543,6 +543,8 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ffn_gate.weight") != std::string::npos) return Role::FfnGate;
     if (n.find(".ffn_up.weight") != std::string::npos) return Role::FfnUp;
     if (n.find(".ffn_down.weight") != std::string::npos) return Role::FfnDown;
+    if (n.find(".ssm_alpha.weight") != std::string::npos) return Role::SsmAlpha;
+    if (n.find(".ssm_beta.weight") != std::string::npos) return Role::SsmBeta;
     if (n.find(".ssm_a") != std::string::npos) return Role::SsmA;
     if (n.find(".ssm_conv1d.weight") != std::string::npos) return Role::SsmConv1dW;
     if (n.find(".ssm_conv1d.bias") != std::string::npos) return Role::SsmConv1dB;
@@ -876,6 +878,29 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             return std::string();
         };
 
+        // Topology-only receipt: expose alternating hybrid block signatures
+        // without allocating or executing the full model.
+        if (std::getenv("DEEP2_DUMP_QWEN_BLOCK_SIGNATURES") &&
+            (s.kind == ArchKind::SsmHybrid || s.kind == ArchKind::Qwen3Next ||
+             s.kind == ArchKind::Qwen4Exp)) {
+            const bool gdn = !name(Role::AttnQKV).empty() && !name(Role::AttnGate).empty() &&
+                             !name(Role::SsmA).empty() && !name(Role::SsmAlpha).empty() &&
+                             !name(Role::SsmBeta).empty() && !name(Role::SsmOut).empty();
+            const bool attention = !name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
+                                   !name(Role::AttnV).empty();
+            const bool ssm = !name(Role::SsmIn).empty() && !name(Role::SsmOut).empty();
+            std::fprintf(stderr, "[qwen-block] block=%llu kind=%s qkv=%s gate=%s q=%s k=%s v=%s ssm_in=%s ssm_out=%s\n",
+                         static_cast<unsigned long long>(b),
+                         gdn ? "GDN" : (attention ? "ATTENTION" : (ssm ? "SSM" : "OTHER")),
+                         name(Role::AttnQKV).empty() ? "-" : "yes",
+                         name(Role::AttnGate).empty() ? "-" : "yes",
+                         name(Role::AttnQ).empty() ? "-" : "yes",
+                         name(Role::AttnK).empty() ? "-" : "yes",
+                         name(Role::AttnV).empty() ? "-" : "yes",
+                         name(Role::SsmIn).empty() ? "-" : "yes",
+                         name(Role::SsmOut).empty() ? "-" : "yes");
+        }
+
         // Snapshot the BLOCK INPUT as resid_in BEFORE the first norm runs.
         // Publish copies the CURRENT hidden vector, and RmsNorm overwrites
         // hidden_ with the normed value. Emitting Publish after the norm (the
@@ -903,12 +928,49 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             g.ops.push_back(o);
         }
 
+        // Qwen3.5 hybrid blocks use the GDN projection naming convention:
+        // attn_qkv is the mixed q/k/v projection, attn_gate is z, and the
+        // ssm_* tensors carry the recurrent coefficients and output projection.
+        // They are not a conventional gated attention output projection. The
+        // shape contract is decisive: attn_gate is 6144 wide while the
+        // residual stream is 5120 wide. Never lower this family as Attention;
+        // doing so fabricates a 6144-dimensional residual and hides the real
+        // GDN executor boundary behind an RMSNorm failure.
+        const bool qwen35Gdn = !name(Role::AttnQKV).empty() &&
+                               !name(Role::AttnGate).empty() &&
+                               !name(Role::SsmA).empty() &&
+                               !name(Role::SsmAlpha).empty() &&
+                               !name(Role::SsmBeta).empty() &&
+                               !name(Role::SsmConv1dW).empty() &&
+                               !name(Role::SsmDtB).empty() &&
+                               !name(Role::SsmNorm).empty() &&
+                               !name(Role::SsmOut).empty();
+        if (qwen35Gdn) {
+            GraphOp o;
+            o.op = Op::Gdn;
+            o.block = static_cast<int32_t>(b);
+            o.a = "attn_norm";
+            o.b = name(Role::AttnQKV);
+            o.c = name(Role::AttnGate);
+            o.out = "attn_proj";
+            o.detail = "qwen35_gdn;A=" + name(Role::SsmA) +
+                       ";alpha=" + name(Role::SsmAlpha) +
+                       ";beta=" + name(Role::SsmBeta) +
+                       ";conv=" + name(Role::SsmConv1dW) +
+                       ";dt=" + name(Role::SsmDtB) +
+                       ";norm=" + name(Role::SsmNorm) +
+                       ";out=" + name(Role::SsmOut);
+            g.ops.push_back(o);
+        }
+
         // ---- Mamba2 selective scan (nemotron_h, qwen3-next) ----
         // Iterate over decoder blocks: some blocks carry the Mamba2 mixer
         // (blkN.ssm_in.weight and friends), the rest are attention. Emitting an
         // SSM scan for a block with no SSM tensors produced an op with an empty
         // weight name, which then failed at runtime as "linear: no weight".
-        if (const std::string ssmIn = name(Role::SsmIn); !ssmIn.empty()) {
+        if (!qwen35Gdn) {
+            const std::string ssmIn = name(Role::SsmIn);
+            if (!ssmIn.empty()) {
             GraphOp o;
             o.op = Op::SsmScan;
             o.block = (int32_t)b;
@@ -936,6 +998,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             // never existed.
             p.out = "attn_proj";
             g.ops.push_back(p);
+            }
         }
 
         if (s.kind == ArchKind::DeepSeekMLA) {
@@ -1004,7 +1067,7 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 o2.a = "attn_out"; o2.b = name(Role::AttnOutput); o2.out = "attn_proj";
                 g.ops.push_back(o2);
             }
-        } else if (!name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
+        } else if (!qwen35Gdn && !name(Role::AttnQ).empty() && !name(Role::AttnK).empty() &&
                    !name(Role::AttnV).empty()) {
             // Standard (dense) attention. This branch requires all three
             // projections: an architecture that omits them is an SSM/hybrid

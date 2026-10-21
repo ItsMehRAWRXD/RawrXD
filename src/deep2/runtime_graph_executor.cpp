@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // runtime_graph_executor.cpp  --  RAWRXD_DEEP2_RUNTIME_DISPATCH
 // ============================================================================
 #include "runtime_graph_executor.hpp"
@@ -14,7 +14,10 @@
 
 #include "ggml.h"
 #include "quant_dot_dispatch.hpp"
+#include "generic_vulkan_matmul.hpp"
+#include "vulkan_compute.h"
 #include "Q8KQuant.h"   // single ggml-exact Q8_K activation quantiser
+#include "op_gdn.hpp"
 #include "../../tools/deep2_debugger/deep2_flight_recorder.hpp"
 
 namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
@@ -22,6 +25,44 @@ namespace RawrXD { namespace Deep2 { namespace RuntimeGraph {
 using Universal::TensorRec;
 
 namespace {
+
+std::string JsonEscape(const std::string& value) {
+    std::string out;
+    out.reserve(value.size() + 8);
+    for (const unsigned char c : value) {
+        switch (c) {
+            case '\\': out += "\\\\"; break;
+            case '"': out += "\\\""; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (c < 0x20) {
+                    char buf[7];
+                    std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+                    out += buf;
+                } else {
+                    out.push_back(static_cast<char>(c));
+                }
+        }
+    }
+    return out;
+}
+
+void SetBindFailureReceipt(BindStats& stats, const std::string& model,
+                           const char* stage, const char* op,
+                           const std::string& reason) {
+    stats.failure_stage = stage ? stage : "UNKNOWN";
+    stats.first_blocking_operator = op ? op : "UNKNOWN";
+    stats.failure_receipt_json =
+        std::string("{\"model\":\"") + JsonEscape(model) +
+        "\",\"certification\":\"BLOCKED\",\"stage\":\"" +
+        JsonEscape(stats.failure_stage) +
+        "\",\"first_blocking_operator\":\"" +
+        JsonEscape(stats.first_blocking_operator) +
+        "\",\"gpu_dispatches\":0,\"generated_tokens\":0,\"tps\":null,\"reason\":\"" +
+        JsonEscape(reason) + "\"}";
+}
 
 // ---------------------------------------------------------------------------
 // RAWRXD_RESOURCE_GOVERNOR_001 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â admitted, bounded KV residency.
@@ -150,6 +191,7 @@ inline size_t QuantRowBytes(int kind, size_t n_in) {
     case 1: return (n_in / 256u) * 210u;               // Q6_K
     case 2: return ((n_in + 31u) / 32u) * 22u;         // Q5_0
     case 3: return ((n_in + 31u) / 32u) * 34u;         // Q8_0
+    case 8: return (n_in / 256u) * 176u;               // Q5_K
     default: return ((n_in + 31u) / 32u) * 18u;        // Q4_0
     }
 }
@@ -165,6 +207,7 @@ inline int QuantKindOf(ggml_type t) {
     case GGML_TYPE_Q4_0: return 4;
     case GGML_TYPE_Q2_K: return 5;   // G05: native Q2_K GPU kernel (validated vs llama.cpp)
     case GGML_TYPE_Q3_K: return 6;   // G05: native Q3_K GPU kernel (validated vs llama.cpp)
+    case GGML_TYPE_Q5_K: return 8;   // Qwen hybrid projections: native Q5_K GPU kernel
     case static_cast<ggml_type>(40): return 7;  // NVFP4: 36 bytes per 64 elements
     default: return -1;
     }
@@ -188,7 +231,61 @@ inline int QuantKindOf(ggml_type t) {
 inline float KQuantRowDotQ8(int kind, const uint8_t* row, const float* q8,
                             size_t n_in) {
     const size_t nblk = n_in / 256u;
-    const size_t blk_bytes = (kind == 0) ? 144u : 210u;
+    const size_t blk_bytes = (kind == 0) ? 144u : (kind == 8) ? 176u : 210u;
+    // Q5_K: 12 packed scale/min bytes, 32 high-bit bytes and 128 low-nibble
+    // bytes. This is the GGML q5_K_q8_K layout, including the lockstep ql/qh
+    // mapping and the per-16-value minimum correction.
+    if (kind == 8) {
+        float result = 0.0f;
+        for (size_t b = 0; b < nblk; ++b) {
+            const uint8_t* blk = row + b * 176u;
+            const float* q8b = q8 + b * kQ8Stride;
+            uint32_t u[4] = {};
+            std::memcpy(u, blk + 4, 12);
+            constexpr uint32_t kmask1 = 0x3f3f3f3fu;
+            constexpr uint32_t kmask2 = 0x0f0f0f0fu;
+            constexpr uint32_t kmask3 = 0x03030303u;
+            u[3] = ((u[2] >> 4) & kmask2) | (((u[1] >> 6) & kmask3) << 4);
+            const uint32_t aux = u[1] & kmask1;
+            u[1] = (u[2] & kmask2) | (((u[0] >> 6) & kmask3) << 4);
+            u[2] = aux;
+            u[0] &= kmask1;
+            uint8_t scales[8], mins[8];
+            std::memcpy(scales + 0, &u[0], 4);
+            std::memcpy(scales + 4, &u[1], 4);
+            std::memcpy(mins + 0, &u[2], 4);
+            std::memcpy(mins + 4, &u[3], 4);
+            uint16_t hd = 0, hdm = 0;
+            std::memcpy(&hd, blk + 0, 2);
+            std::memcpy(&hdm, blk + 2, 2);
+            const float d = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hd)) * q8b[0];
+            const float dmin = ggml_fp16_to_fp32(static_cast<ggml_fp16_t>(hdm)) * q8b[0];
+            int32_t sums[8] = {};
+            for (int group = 0; group < 8; ++group) {
+                const int scale = scales[group];
+                const uint8_t* ql = blk + 48u + (group / 2) * 32u;
+                // qh is one shared 32-byte high-bit plane in block_q5_K;
+                // only ql advances for each pair of 32-value groups.
+                const uint8_t* qh = blk + 16u;
+                const int half = group & 1;
+                const uint8_t mask = static_cast<uint8_t>(1u << (2u * (group / 2) + half));
+                for (int lane = 0; lane < 32; ++lane) {
+                    const uint8_t packed = ql[lane];
+                    const int low = half ? (packed >> 4) : (packed & 0x0f);
+                    const int quant = low + ((qh[lane] & mask) ? 16 : 0);
+                    sums[lane & 7] += scale * quant *
+                        static_cast<int32_t>(q8b[1 + group * 32 + lane]);
+                }
+            }
+            int32_t min_sum = 0;
+            for (int j = 0; j < 16; ++j)
+                min_sum += static_cast<int32_t>(q8b[257 + j]) * mins[j / 2];
+            int32_t mac = 0;
+            for (int lane = 0; lane < 8; ++lane) mac += sums[lane];
+            result += d * static_cast<float>(mac) - dmin * static_cast<float>(min_sum);
+        }
+        return result;
+    }
     // G05: Q2_K (kind 5) / Q3_K (kind 6) dequant-dot (ggml-exact geometry). Float
     // reconstruction x q8, bounded-correct like the legacy path, so the CPU path /
     // fallback for these lowbit kinds stays correct and fail-closed. Returns here
@@ -326,7 +423,7 @@ inline float KQuantRowDotQ8(int kind, const uint8_t* row, const float* q8,
 // activation, exactly as the shader does: ggml block decoders, fp16 scales,
 // integer MACs, super-block activation scale applied once per super-block.
 inline float RowDotInterleavedQ8(int kind, const uint8_t* row, const float* q8v, size_t n_in) {
-    if (kind <= 1) {
+    if (kind <= 1 || kind == 8) {
         // ---- k-quants Q4_K / Q6_K: shared ggml-accurate integer-MAC path ----
         // (the linear path in the executor routes through the same function, so
         // a dense projection and an MoE expert slice cannot diverge)
@@ -481,6 +578,60 @@ size_t DequantPrefix(const TensorRec& t, std::vector<float>& out, size_t want) {
     return n;
 }
 
+static bool QuantizedRowsDot(const TensorRec& tensor,
+                             size_t base,
+                             size_t input_width,
+                             size_t output_rows,
+                             const std::vector<float>& input,
+                             std::vector<float>& output,
+                             std::string& failure) {
+    if (!tensor.data) {
+        failure = "quantized row dot tensor data is unavailable";
+        return false;
+    }
+    const ggml_type_traits* traits = ggml_get_type_traits(tensor.ggml_type);
+    if (!traits || !traits->to_float || traits->blck_size <= 0 || traits->type_size <= 0) {
+        failure = "quantized row dot has no GGML dequantizer";
+        return false;
+    }
+    if (input.size() < input_width || input_width == 0 || output_rows == 0) {
+        failure = "quantized row dot input geometry is invalid";
+        return false;
+    }
+
+    const size_t block_width = static_cast<size_t>(traits->blck_size);
+    const size_t block_bytes = static_cast<size_t>(traits->type_size);
+    if ((input_width % block_width) != 0 || (base % block_width) != 0) {
+        failure = "quantized row dot is not block aligned";
+        return false;
+    }
+    const size_t row_bytes = (input_width / block_width) * block_bytes;
+    if (row_bytes == 0 || output_rows > std::numeric_limits<size_t>::max() / row_bytes) {
+        failure = "quantized row dot byte geometry overflow";
+        return false;
+    }
+    const size_t base_bytes = (base / block_width) * block_bytes;
+    const size_t payload_bytes = output_rows * row_bytes;
+    if (base_bytes > tensor.bytes || payload_bytes > tensor.bytes - base_bytes) {
+        failure = "quantized row dot exceeds tensor payload";
+        return false;
+    }
+
+    std::vector<float> decoded(input_width, 0.0f);
+    output.assign(output_rows, 0.0f);
+    for (size_t row_index = 0; row_index < output_rows; ++row_index) {
+        const uint8_t* row = tensor.data + base_bytes + row_index * row_bytes;
+        traits->to_float(row, decoded.data(), static_cast<int64_t>(input_width));
+        double accumulator = 0.0;
+        for (size_t input_index = 0; input_index < input_width; ++input_index) {
+            accumulator += static_cast<double>(decoded[input_index]) *
+                           static_cast<double>(input[input_index]);
+        }
+        output[row_index] = static_cast<float>(accumulator);
+    }
+    return true;
+}
+
 }  // namespace
 
 const char* OpKindName(OpKind k) {
@@ -508,17 +659,59 @@ const char* OpKindName(OpKind k) {
     }
 }
 
-Executor::~Executor() = default;
+Executor::~Executor() {
+    ResetState();
+}
+
+namespace {
+
+uint64_t GdnStateKey(const Executor* owner, int32_t block) noexcept {
+    const uint64_t identity = static_cast<uint64_t>(
+        reinterpret_cast<uintptr_t>(owner));
+    const uint64_t lane = static_cast<uint64_t>(block >= 0 ? block : 0) + 1ull;
+    return (identity ^ (lane * 0x9E3779B97F4A7C15ull)) | 1ull;
+}
+
+}
+
+void Executor::ResetState() {
+    for (size_t block = 0; block < gdn_gpu_active_.size(); ++block) {
+        if (!gdn_gpu_active_[block]) continue;
+        ::GetDeep2VulkanCompute().ResetGdnState(
+            GdnStateKey(this, static_cast<int32_t>(block)));
+    }
+    for (auto& state : ssm_state_) state.clear();
+    for (auto& conv : ssm_conv_) conv.clear();
+    for (auto& cache : kv_k_) cache.clear();
+    for (auto& cache : kv_v_) cache.clear();
+    for (auto& cache : kvat_) cache.clear();
+    kv_committed_ = 0;
+    position_ = 0;
+    last_token_ = 0;
+    hidden_.clear();
+    logits_.clear();
+    last_error_.clear();
+    nonfinite_logits_ = 0;
+    std::fill(gdn_gpu_active_.begin(), gdn_gpu_active_.end(), uint8_t{0});
+}
 
 // ---------------------------------------------------------------------------
 // Bind
 // ---------------------------------------------------------------------------
 bool Executor::Bind(const Universal::IngestReport& report) {
+    // Rebinding this executor is a new model/session boundary. Tear down any
+    // keyed device GDN states before replacing tensor ownership, otherwise a
+    // block number reused by the next model could inherit stale recurrent data.
+    ResetState();
     stats_ = BindStats{};
     bound_ = false;
     last_error_.clear();
 
-    if (!report.ok) { stats_.error = "ingest report invalid"; return false; }
+    if (!report.ok) {
+        stats_.error = "ingest report invalid";
+        SetBindFailureReceipt(stats_, "unknown", "DISCOVERY", "INGEST", stats_.error);
+        return false;
+    }
     spec_ = report.spec;
     tensors_ = report.tensors;
     program_.clear();
@@ -535,12 +728,52 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         auto it = slot_by_name_.find(n);
         return it == slot_by_name_.end() ? -1 : it->second;
     };
-    if (findSlot("token_embd.weight") < 0) { stats_.error = "missing token_embd.weight"; return false; }
+    if (findSlot("token_embd.weight") < 0) {
+        stats_.error = "missing token_embd.weight";
+        SetBindFailureReceipt(stats_, spec_.architecture, "TENSOR_BINDING",
+                              "token_embd.weight", stats_.error);
+        return false;
+    }
     const bool hasOutputNorm = findSlot("output_norm.weight") >= 0 ||
                                findSlot("output_hc_norm.weight") >= 0;
     if (!hasOutputNorm) {
         stats_.error = "missing output_norm.weight (or architecture-specific final norm)";
+        SetBindFailureReceipt(stats_, spec_.architecture, "TENSOR_BINDING",
+                              "output_norm.weight", stats_.error);
         return false;
+    }
+
+    // Admission-time geometry fence.  A malformed architecture record can
+    // otherwise survive Bind and fail much later in OpRmsNorm with the vague
+    // "weight too small" diagnostic after the wrong block/offset has already
+    // been selected.  Norm vectors are block-local and must match the model's
+    // declared embedding width; their block id must also be inside the
+    // declared topology.  This is validation only: no dimensions are guessed
+    // or repaired, and a mismatch remains fail-closed.
+    if (spec_.embd != 0 && spec_.block_count != 0) {
+        for (const auto& t : tensors_) {
+            if (t.block >= 0 && static_cast<uint64_t>(t.block) >= spec_.block_count) {
+                stats_.error = "tensor block outside model topology: " + t.name +
+                               " block=" + std::to_string(t.block) +
+                               " block_count=" + std::to_string(spec_.block_count);
+                SetBindFailureReceipt(stats_, spec_.architecture, "MODEL_GEOMETRY",
+                                      t.name.c_str(), stats_.error);
+                return false;
+            }
+            const bool norm = t.role == Universal::Role::AttnNorm ||
+                              t.role == Universal::Role::FfnNorm;
+            if (!norm || t.block < 0 || t.name.find(".weight") == std::string::npos)
+                continue;
+            if (t.dims.size() != 1 || t.dims[0] != spec_.embd) {
+                stats_.error = "norm geometry mismatch: " + t.name +
+                               " dims=" + (t.dims.empty() ? std::string("[]") :
+                                   "[" + std::to_string(t.dims[0]) + "]") +
+                               " expected=[" + std::to_string(spec_.embd) + "]";
+                SetBindFailureReceipt(stats_, spec_.architecture, "MODEL_GEOMETRY",
+                                      t.name.c_str(), stats_.error);
+                return false;
+            }
+        }
     }
 
     // The LM head. Models that tie their embeddings (Qwen2.5-Coder-1.5B and
@@ -570,6 +803,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         if (!canTie) {
             stats_.error = "missing output.weight and token_embd.weight cannot "
                            "serve as a tied LM head";
+            SetBindFailureReceipt(stats_, spec_.architecture, "TENSOR_BINDING",
+                                  "output.weight", stats_.error);
             return false;
         }
         // Tied embeddings: the head op resolves through token_embd.weight.
@@ -643,6 +878,21 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         in.c = nameSlot(g.c);
         in.out = nameSlot(g.out);
         in.detail = g.detail;
+        if (in.detail.rfind("qwen35_gated_attention", 0) == 0) {
+            auto detailSlot = [&](const char* key) -> int32_t {
+                const std::string needle = std::string(key) + "=";
+                const size_t begin = in.detail.find(needle);
+                if (begin == std::string::npos) return -1;
+                const size_t valueBegin = begin + needle.size();
+                const size_t valueEnd = in.detail.find(';', valueBegin);
+                const std::string name = valueEnd == std::string::npos
+                    ? in.detail.substr(valueBegin)
+                    : in.detail.substr(valueBegin, valueEnd - valueBegin);
+                return nameSlot(name);
+            };
+            in.q_norm = detailSlot("qnorm");
+            in.k_norm = detailSlot("knorm");
+        }
         program_.push_back(in);
     }
 
@@ -708,6 +958,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             stats_.error = "attention geometry metadata inconsistent: head_count=" +
                            std::to_string(H) + " key_length=" + std::to_string(qW) +
                            " value_length=" + std::to_string(vW);
+            SetBindFailureReceipt(stats_, spec_.architecture, "GRAPH_LOWERING",
+                                  "Attention", stats_.error);
             return false;
         }
     }
@@ -766,7 +1018,7 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     stats_.ops_total = program_.size();
     for (const auto& in : program_) {
         const bool qwen4exp_unbound =
-            in.op == OpKind::Qsa || in.op == OpKind::Gdn ||
+            in.op == OpKind::Qsa ||
             in.op == OpKind::Ple || in.op == OpKind::Hyperconnection ||
             in.op == OpKind::SparseMoE;
         if (in.op == OpKind::Unsupported || qwen4exp_unbound) {
@@ -775,6 +1027,8 @@ bool Executor::Bind(const Universal::IngestReport& report) {
                           qwen4exp_unbound ? OpKindName(in.op) : "Unsupported",
                           in.detail.c_str());
             stats_.unbound_ops.emplace_back(buf);
+            if (stats_.first_blocking_operator.empty())
+                stats_.first_blocking_operator = OpKindName(in.op);
             ++stats_.ops_unbound;
             continue;
         }
@@ -789,9 +1043,16 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         for (size_t i = 0; i < stats_.unbound_ops.size() && i < 4; ++i)
             e += stats_.unbound_ops[i] + "; ";
         stats_.error = e;
+        SetBindFailureReceipt(stats_, spec_.architecture, "GRAPH_LOWERING",
+                              stats_.first_blocking_operator.c_str(), stats_.error);
         return false;
     }
-    if (stats_.ops_bound == 0) { stats_.error = "no executable ops"; return false; }
+    if (stats_.ops_bound == 0) {
+        stats_.error = "no executable ops";
+        SetBindFailureReceipt(stats_, spec_.architecture, "GRAPH_LOWERING",
+                              "NONE", stats_.error);
+        return false;
+    }
 
     // ---- 4. allocate per-layer KV cache ----
     const size_t B = (size_t)std::max<uint64_t>(spec_.block_count, 1);
@@ -803,6 +1064,7 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     ssm_state_.assign(B, {});
     ssm_conv_.assign(B, {});
     ssm_weights_.assign(B, {});
+    gdn_gpu_active_.assign(B, 0);
     ssm_profile_calls_ = 0;
     ssm_profile_cache_hits_ = 0;
     ssm_profile_cache_misses_ = 0;
@@ -841,7 +1103,10 @@ bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
     const TensorRec& w = tensors_[(size_t)in.b];
     std::vector<float> wf;
     if (!DequantPrefix(w, wf, x.size()) || wf.size() < x.size()) {
-        last_error_ = "rmsnorm: weight too small";
+        last_error_ = "rmsnorm: weight too small block=" + std::to_string(in.block) +
+                      " tensor=" + w.name +
+                      " decoded=" + std::to_string(wf.size()) +
+                      " activation=" + std::to_string(x.size());
         return false;
     }
     wf.resize(x.size());
@@ -948,11 +1213,13 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
 
     const bool quant = (w.ggml_type == GGML_TYPE_Q4_K || w.ggml_type == GGML_TYPE_Q6_K ||
                         w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q3_K ||
+                        w.ggml_type == GGML_TYPE_Q5_K ||
                         w.ggml_type == static_cast<ggml_type>(40));  // NVFP4
     if (quant && (n_in % 256) == 0) {
         const int kind = QuantKindOf(w.ggml_type);
         const size_t rb = (kind == 0) ? (n_in / 256) * 144u : (kind == 1) ? (n_in / 256) * 210u
                         : (kind == 5) ? (n_in / 256) * 84u  : (kind == 6) ? (n_in / 256) * 110u
+                        : (kind == 8) ? (n_in / 256) * 176u
                         : (kind == 7) ? (n_in / 64) * 36u   : (n_in / 256) * 110u;
         if (w.bytes < rb * n_out) {
             if (std::getenv("LINEAR_TRACE")) {
@@ -1240,6 +1507,35 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         return true;
     }
 
+    const bool generic_quant_type =
+        w.ggml_type == GGML_TYPE_IQ2_S || w.ggml_type == GGML_TYPE_MXFP4;
+    if (generic_quant_type && n_in > 0 && n_out > 0) {
+        // The canonical GGML Vulkan backend is the first production GPU path
+        // for the expert formats that Deep2's hand-written GEMV does not yet
+        // decode.  Keep it opt-in until the full-model receipt proves its
+        // numerical and residency contract; a failed dispatch is explicitly
+        // reported and then uses the bounded row decoder below.
+        if (!force_cpu_ && std::getenv("DEEP2_GENERIC_VULKAN") != nullptr &&
+            GenericVulkan::MatVec(BlockVkFor(w.name), w.ggml_type, w.data,
+                                  w.bytes, n_out, n_in, x.data(), y.data())) {
+            ++gpu_calls_;
+            trace_dispatch_backend_ = "vulkan-generic-ggml";
+            trace_dispatch_forced_ = false;
+            trace_dispatch_fallback_.clear();
+            return true;
+        }
+        std::string row_failure;
+        if (!QuantizedRowsDot(w, 0, n_in, n_out, x, y, row_failure)) {
+            err = "linear: generic quant row decode failed: " + row_failure;
+            return false;
+        }
+        ++cpu_calls_;
+        if (cpu_fallback_reason_.empty()) {
+            cpu_fallback_reason_ = "generic quant type has no Deep2 GPU GEMV: " + w.name;
+        }
+        return true;
+    }
+
     // Legacy quantized types (Q8_0, Q5_0, Q4_0, Q4_1, Q5_1, Q3_K, Q2_K,
     // Q5_K, Q8_K): dot ONE ROW AT A TIME. Materialising a dequantised
     // [n_out, n_in] matrix would need 1.4 GB of F32 for the language-model
@@ -1248,11 +1544,15 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
     //
     // GGML ne order: dims[0] is the contiguous (input) dimension and
     // dims[1] the row count, so row j starts at j * blocks_per_row * ts.
+    const int legacyGpuKind = QuantKindOf(w.ggml_type);
+    const bool legacyGpuGeometry = legacyGpuKind >= 0 &&
+        (legacyGpuKind >= 2 ? (n_in % 32u) == 0u : (n_in % 256u) == 0u);
     if ((w.ggml_type == GGML_TYPE_Q8_0 || w.ggml_type == GGML_TYPE_Q5_0 ||
          w.ggml_type == GGML_TYPE_Q4_0 || w.ggml_type == GGML_TYPE_Q4_1 ||
          w.ggml_type == GGML_TYPE_Q5_1 || w.ggml_type == GGML_TYPE_Q3_K ||
          w.ggml_type == GGML_TYPE_Q2_K || w.ggml_type == GGML_TYPE_Q5_K ||
-         w.ggml_type == GGML_TYPE_Q8_K) && n_in > 0 && n_out > 0) {
+         w.ggml_type == GGML_TYPE_Q8_K) && n_in > 0 && n_out > 0 &&
+        !legacyGpuGeometry) {
         const ggml_type_traits* tr = ggml_get_type_traits(w.ggml_type);
         if (!tr || !tr->to_float || tr->blck_size == 0 || tr->type_size == 0) {
             err = "linear: no dequantizer for this type";
@@ -1453,7 +1753,32 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     //
     // qHeadDim comes from the query width over H, then k/v head counts follow.
     // This is GQA: k/v are narrower than q because heads are grouped.
-    const size_t qWidth = q.size();
+    const bool qwen35Gated = in.detail.rfind("qwen35_gated_attention", 0) == 0;
+    std::vector<float> qInput = q;
+    std::vector<float> gate;
+    if (qwen35Gated) {
+        if (in.q_norm < 0 || in.k_norm < 0) {
+            err = "attention: qwen35 gated attention requires q_norm and k_norm weights";
+            return false;
+        }
+        const size_t headDim = (size_t)spec_.key_length;
+        const size_t queryWidth = H * headDim;
+        if (headDim == 0 || q.size() != queryWidth * 2) {
+            err = "attention: qwen35 gated query geometry mismatch (raw=" +
+                  std::to_string(q.size()) + " expected=" +
+                  std::to_string(queryWidth * 2) + ")";
+            return false;
+        }
+        qInput.assign(queryWidth, 0.0f);
+        gate.assign(queryWidth, 0.0f);
+        for (size_t h = 0; h < H; ++h) {
+            const size_t rawBase = h * headDim * 2;
+            const size_t headBase = h * headDim;
+            std::copy_n(q.data() + rawBase, headDim, qInput.data() + headBase);
+            std::copy_n(q.data() + rawBase + headDim, headDim, gate.data() + headBase);
+        }
+    }
+    const size_t qWidth = qInput.size();
     const size_t kWidth = k.size();
     const size_t vWidth = v.size();
     const size_t qPerHead = qWidth / H;
@@ -1488,7 +1813,7 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
 
     const size_t kl = (size_t)spec_.key_length;
     const size_t vl = (size_t)spec_.value_length;
-    const bool isMla = (kPerHead == kl && vPerHead == vl && kl > vl);
+    const bool isMla = !qwen35Gated && (kPerHead == kl && vPerHead == vl && kl > vl);
     const size_t D = isMla ? qPerHead : qPerHead;
     if (D == 0) { err = "attention: head dim 0"; return false; }
     const size_t qD = isMla ? qPerHead : qPerHead;
@@ -1521,7 +1846,10 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     const size_t qk_nope = isMla ? (kl - ropeDim) : 0;
     const size_t q_rope_dim = isMla ? (qD - qk_nope) : D;
     const size_t k_rope_dim = isMla ? (kPerHead - qk_nope) : D;
-    const size_t ropeLen = isMla ? ropeDim : std::min(q_rope_dim, k_rope_dim);
+    const size_t ropeLen = qwen35Gated
+        ? std::min<size_t>(spec_.rope_dim == 0 ? qPerHead : (size_t)spec_.rope_dim,
+                           std::min(qPerHead, kPerHead))
+        : (isMla ? ropeDim : std::min(q_rope_dim, k_rope_dim));
     const size_t qRopeOff = isMla ? qk_nope : 0;
     const size_t kRopeOff = isMla ? qk_nope : 0;
 
@@ -1634,7 +1962,34 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                      (int)in.block, H, hk, H / hk, qPerHead, kPerHead, vPerHead);
     }
 
-    std::vector<float> qr = q, kr = k;
+    std::vector<float> qr = qInput, kr = k;
+    if (qwen35Gated) {
+        auto applyHeadNorm = [&](std::vector<float>& values, size_t heads, size_t width,
+                                 int32_t slot, const char* label) -> bool {
+            if (slot < 0 || slot >= (int32_t)tensors_.size()) {
+                err = std::string("attention: missing ") + label + " weight";
+                return false;
+            }
+            std::vector<float> weights;
+            if (DequantPrefix(tensors_[(size_t)slot], weights, width) < width) {
+                err = std::string("attention: ") + label + " weight is shorter than head width";
+                return false;
+            }
+            for (size_t h = 0; h < heads; ++h) {
+                float* head = values.data() + h * width;
+                double sum = 0.0;
+                for (size_t i = 0; i < width; ++i) sum += double(head[i]) * double(head[i]);
+                const float scale = 1.0f / std::sqrt(float(sum / double(width)) +
+                                                      float(spec_.rms_eps));
+                for (size_t i = 0; i < width; ++i)
+                    head[i] = head[i] * scale * (1.0f + weights[i]);
+            }
+            return true;
+        };
+        if (!applyHeadNorm(qr, H, qPerHead, in.q_norm, "q_norm") ||
+            !applyHeadNorm(kr, hk, kPerHead, in.k_norm, "k_norm"))
+            return false;
+    }
     // RoPE is applied to the QUERY heads and to the KV heads. The KV call must
     // iterate hk, not H: with H=32 and a 256-element K buffer, looping 32 heads
     // at stride kPerHead reads 31*128 bytes past the end.
@@ -1788,6 +2143,15 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float s = scores[t];
             for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
         }
+    }
+
+    if (qwen35Gated) {
+        if (gate.size() != y.size()) {
+            err = "attention: qwen35 gate width does not match attention output";
+            return false;
+        }
+        for (size_t i = 0; i < y.size(); ++i)
+            y[i] *= 1.0f / (1.0f + std::exp(-gate[i]));
     }
 
     // Env-gated dump of the GQA-expanded attention buffer (the pre-O_proj
@@ -2323,6 +2687,63 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const size_t olen = std::min(embd, dOut);
     const int uKind = QuantKindOf(upT->ggml_type);
     const int dKind = QuantKindOf(downT->ggml_type);
+    const bool genericVulkanEnabled = !force_cpu_ &&
+                                      std::getenv("DEEP2_GENERIC_VULKAN") != nullptr;
+    const auto isGenericVulkanType = [](ggml_type type) {
+        return type == GGML_TYPE_IQ2_S || type == GGML_TYPE_MXFP4;
+    };
+    const bool genericUpType = genericVulkanEnabled &&
+                               isGenericVulkanType(upT->ggml_type);
+    const bool genericGateType = genericVulkanEnabled && have_gate &&
+                                 isGenericVulkanType(gateT->ggml_type);
+    const bool genericDownType = genericVulkanEnabled &&
+                                 isGenericVulkanType(downT->ggml_type);
+    auto genericExpertSlice = [&](const TensorRec& tensor,
+                                  size_t expert_index,
+                                  size_t tensor_rows,
+                                  size_t expert_rows,
+                                  size_t input_width,
+                                  GenericVulkan::MatVecSlice& slice) -> bool {
+        if (!genericVulkanEnabled || !isGenericVulkanType(tensor.ggml_type) ||
+            tensor_rows == 0 || expert_rows == 0 || input_width == 0 || !tensor.data) {
+            return false;
+        }
+        const size_t row_bytes = ggml_row_size(tensor.ggml_type, input_width);
+        if (row_bytes == 0 || tensor_rows > std::numeric_limits<size_t>::max() / row_bytes) {
+            return false;
+        }
+        if (expert_rows > std::numeric_limits<size_t>::max() / row_bytes) {
+            return false;
+        }
+        const size_t expert_bytes = expert_rows * row_bytes;
+        if (expert_index > std::numeric_limits<size_t>::max() / expert_bytes) {
+            return false;
+        }
+        const size_t base_bytes = expert_index * expert_bytes;
+        if (base_bytes > tensor.bytes || expert_bytes > tensor.bytes - base_bytes) {
+            return false;
+        }
+        slice.weights = static_cast<const uint8_t*>(tensor.data) + base_bytes;
+        slice.weight_bytes = tensor.bytes - base_bytes;
+        return true;
+    };
+    auto genericExpertMatVec = [&](const TensorRec& tensor,
+                                   size_t expert_index,
+                                   size_t tensor_rows,
+                                   size_t expert_rows,
+                                   size_t input_width,
+                                   const std::vector<float>& input,
+                                   std::vector<float>& output) -> bool {
+        if (input.size() < input_width) return false;
+        GenericVulkan::MatVecSlice slice;
+        if (!genericExpertSlice(tensor, expert_index, tensor_rows, expert_rows,
+                                input_width, slice)) return false;
+        output.assign(tensor_rows, 0.0f);
+        return GenericVulkan::MatVec(BlockVkFor(tensor.name), tensor.ggml_type,
+                                     slice.weights, slice.weight_bytes,
+                                     tensor_rows, input_width, input.data(),
+                                     output.data());
+    };
     // The up-projection activation is the SAME token hidden state for every
     // selected expert, so its interleaved Q8 is built once per block.
     const bool upGpuShape = (uKind >= 0) && (uIn % (uKind >= 2 ? 32u : 256u)) == 0 &&
@@ -2403,14 +2824,53 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     // before batching) so a parity difference can be A/B-attributed to the
     // batching itself rather than to the MoE math.
     static const bool noMoeBatch = std::getenv("RR_NO_MOE_BATCH") != nullptr;
-    const bool batchUp = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+    const bool batchUp = !genericUpType && !force_cpu_ && !noMoeBatch &&
+                         nSel >= 2 && QuantDot::BeginBatch();
     size_t queuedUp = 0;
+    if (genericUpType && nSel > 0) {
+        std::vector<GenericVulkan::MatVecSlice> slices;
+        slices.reserve(nSel);
+        bool geometry_ok = true;
+        for (size_t e = 0; e < nSel; ++e) {
+            GenericVulkan::MatVecSlice slice;
+            if (!genericExpertSlice(*upT, static_cast<size_t>(ids[e]), ulen,
+                                    uOut, uIn, slice)) {
+                geometry_ok = false;
+                break;
+            }
+            slices.push_back(slice);
+        }
+        if (geometry_ok) {
+            std::vector<float> batch_output(nSel * ulen, 0.0f);
+            if (GenericVulkan::MatVecBatch(BlockVkFor(upT->name), upT->ggml_type,
+                                           slices.data(), slices.size(), ulen, uIn,
+                                           x.data(), 0, batch_output.data(), ulen)) {
+                for (size_t e = 0; e < nSel; ++e) {
+                    std::copy_n(batch_output.data() + e * ulen, ulen,
+                                uAll.data() + e * ffn);
+                    upDone[e] = 1;
+                }
+                ++gpu_calls_;
+            }
+        }
+    }
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
         if (ex >= usableE) continue;
-        if (!upGpuShape) continue;
+        if (upDone[e]) continue;
+        if (!upGpuShape && !genericUpType) continue;
         float* out = &uAll[e * ffn];
+        if (genericUpType) {
+            std::vector<float> expert_output;
+            if (genericExpertMatVec(*upT, ex, ulen, uOut, uIn, x, expert_output)) {
+                std::copy(expert_output.begin(), expert_output.end(), out);
+                upDone[e] = 1;
+                ++gpu_calls_;
+                continue;
+            }
+            if (!upGpuShape) continue;
+        }
           if (batchUp) {
               // Queued: DotBlocked defers to the batch's single submission.
               // Capture by VALUE: the batch may invoke this closure after this
@@ -2468,11 +2928,53 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         const bool gGpuShape = (gKind >= 0) && (gIn % (gKind >= 2 ? 32u : 256u)) == 0 &&
                                (gIn <= x.size());
         const size_t gRowBytes = gGpuShape ? QuantRowBytes(gKind, gIn) : 0u;
-        const bool batchGate = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+        const bool batchGate = !genericGateType && !force_cpu_ && !noMoeBatch &&
+                               nSel >= 2 && QuantDot::BeginBatch();
         size_t queuedGate = 0;
+        if (genericGateType && nSel > 0) {
+            std::vector<GenericVulkan::MatVecSlice> slices;
+            slices.reserve(nSel);
+            bool geometry_ok = true;
+            for (size_t e = 0; e < nSel; ++e) {
+                GenericVulkan::MatVecSlice slice;
+                if (!genericExpertSlice(*gateT, static_cast<size_t>(ids[e]), glen,
+                                        gOut, gIn, slice)) {
+                    geometry_ok = false;
+                    break;
+                }
+                slices.push_back(slice);
+            }
+            if (geometry_ok) {
+                std::vector<float> batch_output(nSel * glen, 0.0f);
+                if (GenericVulkan::MatVecBatch(BlockVkFor(gateT->name),
+                                               gateT->ggml_type, slices.data(),
+                                               slices.size(), glen, gIn,
+                                               x.data(), 0, batch_output.data(), glen)) {
+                    for (size_t e = 0; e < nSel; ++e) {
+                        std::copy_n(batch_output.data() + e * glen, glen,
+                                    gAll.data() + e * ffn);
+                        gateDone[e] = 1;
+                    }
+                    ++gpu_calls_;
+                }
+            }
+        }
         for (size_t e = 0; e < nSel; ++e) {
             const size_t ex = (size_t)ids[e];
-            if (ex >= usableE || !gGpuShape) continue;
+            if (ex >= usableE) continue;
+            if (gateDone[e]) continue;
+            if (genericGateType) {
+                std::vector<float> expert_output;
+                if (genericExpertMatVec(*gateT, ex, glen, gOut, gIn, x, expert_output)) {
+                    std::copy(expert_output.begin(), expert_output.end(),
+                              &gAll[e * ffn]);
+                    gateDone[e] = 1;
+                    ++gpu_calls_;
+                    continue;
+                }
+                if (!gGpuShape) continue;
+            }
+            if (!gGpuShape) continue;
             float* out = &gAll[e * ffn];
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(gateT->data) +
                                     ex * glen * gRowBytes;
@@ -2535,40 +3037,22 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
         else
         {
-            // CPU path: dequantise only this expert's slice, dot in double.
-            std::vector<float> uSlice;
-            if (!DequantRange(*upT, ex * elemStrideU, elemStrideU, uSlice))
-            {
+            std::string row_failure;
+            if (!QuantizedRowsDot(*upT, ex * elemStrideU, uIn, ulen, x, u, row_failure)) {
                 err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
-                      " expert=" + std::to_string(ex) + ")";
+                      " expert=" + std::to_string(ex) + "): " + row_failure;
                 return false;
-            }
-            const size_t lim = std::min(uIn, x.size());
-            for (size_t j = 0; j < ulen; ++j)
-            {
-                double acc = 0.0;
-                for (size_t i = 0; i < lim; ++i) acc += double(uSlice[j * uIn + i]) * double(x[i]);
-                u[j] = (float)acc;
             }
             if (!have_gate) {
                 std::copy(u.begin(), u.begin() + (std::ptrdiff_t)glen, g.begin());
             }
         }
         if (have_gate && !gateDone[e]) {
-            // CPU path for the gate bank: same per-expert dequant + double dot.
-            std::vector<float> gSlice;
-            if (!DequantRange(*gateT, ex * elemStrideG, elemStrideG, gSlice))
-            {
+            std::string row_failure;
+            if (!QuantizedRowsDot(*gateT, ex * elemStrideG, gIn, glen, x, g, row_failure)) {
                 err = "moe: gate expert slice dequant failed (block=" + std::to_string(moe.block) +
-                      " expert=" + std::to_string(ex) + ")";
+                      " expert=" + std::to_string(ex) + "): " + row_failure;
                 return false;
-            }
-            const size_t lim = std::min(gIn, x.size());
-            for (size_t j = 0; j < glen; ++j)
-            {
-                double acc = 0.0;
-                for (size_t i = 0; i < lim; ++i) acc += double(gSlice[j * gIn + i]) * double(x[i]);
-                g[j] = (float)acc;
             }
         }
 
@@ -2584,12 +3068,59 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const bool dShapeAll = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) &&
                            (dIn <= ffn);
     const size_t downRowBytes = dShapeAll ? QuantRowBytes(dKind, dIn) : 0u;
-    const bool batchDown = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+    const bool batchDown = !genericDownType && !force_cpu_ && !noMoeBatch &&
+                           nSel >= 2 && QuantDot::BeginBatch();
     size_t queuedDown = 0;
+    bool genericDownBatchDone = false;
+    if (genericDownType && dIn <= ffn && nSel > 0) {
+        std::vector<GenericVulkan::MatVecSlice> slices;
+        slices.reserve(nSel);
+        bool geometry_ok = true;
+        for (size_t e = 0; e < nSel; ++e) {
+            GenericVulkan::MatVecSlice slice;
+            if (!genericExpertSlice(*downT, static_cast<size_t>(ids[e]), olen,
+                                    dOut, dIn, slice)) {
+                geometry_ok = false;
+                break;
+            }
+            slices.push_back(slice);
+        }
+        if (geometry_ok) {
+            std::vector<float> batch_output(nSel * embd, 0.0f);
+            if (GenericVulkan::MatVecBatch(BlockVkFor(downT->name),
+                                           downT->ggml_type, slices.data(),
+                                           slices.size(), olen, dIn,
+                                           hAll.data(), ffn,
+                                           batch_output.data(), embd)) {
+                for (size_t e = 0; e < nSel; ++e) {
+                    std::copy_n(batch_output.data() + e * embd, olen,
+                                dyAll.data() + e * embd);
+                }
+                gpu_calls_++;
+                expertsProcessed += nSel;
+                genericDownBatchDone = true;
+            }
+        }
+    }
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
         if (ex >= usableE) continue;
+        if (genericDownBatchDone) continue;
+        if (genericDownType && dIn <= ffn) {
+            const std::vector<float> expert_hidden(
+                hAll.begin() + static_cast<std::ptrdiff_t>(e * ffn),
+                hAll.begin() + static_cast<std::ptrdiff_t>(e * ffn + dIn));
+            std::vector<float> expert_output;
+            if (genericExpertMatVec(*downT, ex, olen, dOut, dIn,
+                                    expert_hidden, expert_output)) {
+                std::copy(expert_output.begin(), expert_output.end(),
+                          dyAll.begin() + static_cast<std::ptrdiff_t>(e * embd));
+                ++gpu_calls_;
+                ++expertsProcessed;
+                continue;
+            }
+        }
         if (dShapeAll)
         {
             std::vector<float> q8h;
@@ -2617,19 +3148,22 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
         else
         {
-            std::vector<float> dSlice;
-            if (!DequantRange(*downT, ex * elemStrideD, elemStrideD, dSlice))
-            {
-                err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
-                      " expert=" + std::to_string(ex) + ")";
+            if (dIn > ffn) {
+                err = "moe: down input width exceeds expert activation width";
                 return false;
             }
-            for (size_t i = 0; i < olen; ++i)
-            {
-                double acc = 0.0;
-                for (size_t j = 0; j < dIn; ++j) acc += double(dSlice[i * dIn + j]) * double(hAll[e * ffn + j]);
-                dyAll[e * embd + i] = (float)acc;
+            std::vector<float> expert_hidden(dIn, 0.0f);
+            std::copy_n(hAll.data() + e * ffn, dIn, expert_hidden.data());
+            std::vector<float> expert_output;
+            std::string row_failure;
+            if (!QuantizedRowsDot(*downT, ex * elemStrideD, dIn, olen,
+                                  expert_hidden, expert_output, row_failure)) {
+                err = "moe: expert down slice dequant failed (block=" + std::to_string(moe.block) +
+                      " expert=" + std::to_string(ex) + "): " + row_failure;
+                return false;
             }
+            std::copy(expert_output.begin(), expert_output.end(),
+                      dyAll.begin() + static_cast<std::ptrdiff_t>(e * embd));
         }
         ++expertsProcessed;
     }
@@ -3070,6 +3604,32 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                 for (size_t t = 0; t < P; ++t) {
                     std::vector<float> y;
                     std::string e;
+                    if (in.detail == "gated_qkv") {
+                        if (in.b < 0 || in.c < 0) {
+                            last_error_ = "prefill-batch: gated mixer weights are not bound";
+                            return false;
+                        }
+                        bool token_ok = true;
+                        const std::vector<float>& x = resolveIn(t, in, token_ok);
+                        if (!token_ok) return false;
+                        std::vector<float> qkv;
+                        if (!OpLinear(in.b, x, qkv, e)) { last_error_ = e; return false; }
+                        if (qkv.empty() || (qkv.size() & 1u) != 0) {
+                            last_error_ = "prefill-batch: gated mixer projection is not an even [value|gate] tensor";
+                            return false;
+                        }
+                        const size_t half = qkv.size() / 2;
+                        std::vector<float> gated(half);
+                        for (size_t i = 0; i < half; ++i) {
+                            const float gate = qkv[half + i];
+                            gated[i] = qkv[i] * (gate / (1.0f + std::exp(-gate)));
+                        }
+                        if (!OpLinear(in.c, gated, y, e)) { last_error_ = e; return false; }
+                        ts[t].act["attn"] = y;
+                        ts[t].act[in.outName.empty() ? std::string("attn_proj") : in.outName] = y;
+                        ts[t].hidden = y;
+                        continue;
+                    }
                     std::vector<float> qv, kv, vv;
                     const std::vector<float>* q = findAct(t, "q");
                     const std::vector<float>* k = findAct(t, "k");
@@ -3244,6 +3804,23 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                     ts[t].act["moe"] = y;
                     if (!in.outName.empty()) ts[t].act[in.outName] = y;
                     ts[t].hidden = y;
+                }
+                break;
+            }
+            case OpKind::Gdn: {
+                for (size_t t = 0; t < P; ++t) {
+                    const std::vector<float>* gdnIn = findAct(t, in.aName);
+                    if (!gdnIn || gdnIn->empty()) {
+                        last_error_ = "prefill-batch: GDN input missing";
+                        return false;
+                    }
+                    std::vector<float> y;
+                    std::string e;
+                    if (!OpGdn(in, *gdnIn, y, e)) {
+                        last_error_ = e;
+                        return false;
+                    }
+                    ts[t].act[in.outName] = y;
                 }
                 break;
             }
@@ -3892,6 +4469,29 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::Attention: {
                 std::vector<float> y;
                 std::string e;
+                if (in.detail == "gated_qkv") {
+                    if (in.b < 0 || in.c < 0) {
+                        last_error_ = "attention: gated mixer weights are not bound";
+                        return false;
+                    }
+                    std::vector<float> qkv;
+                    if (!OpLinear(in.b, xi, qkv, e)) { last_error_ = e; return false; }
+                    if (qkv.empty() || (qkv.size() & 1u) != 0) {
+                        last_error_ = "attention: gated mixer projection is not an even [value|gate] tensor";
+                        return false;
+                    }
+                    const size_t half = qkv.size() / 2;
+                    std::vector<float> gated(half);
+                    for (size_t i = 0; i < half; ++i) {
+                        const float gate = qkv[half + i];
+                        gated[i] = qkv[i] * (gate / (1.0f + std::exp(-gate)));
+                    }
+                    if (!OpLinear(in.c, gated, y, e)) { last_error_ = e; return false; }
+                    arena("attn") = y;
+                    arena(in.outName.empty() ? std::string("attn_proj") : in.outName) = y;
+                    hidden_ = y;
+                    break;
+                }
                 if (std::getenv("ATTN_TRACE")) {
                     std::fprintf(stderr, "[attn-enter] block=%d pos=%zu aName='%s' hidden_=%zu\n",
                                  (int)in.block, position, in.aName.c_str(), hidden_.size());
@@ -4145,6 +4745,16 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 arena(in.outName) = y;
                 break;
             }
+            case OpKind::Gdn: {
+                std::vector<float> y;
+                std::string e;
+                const std::vector<float>& gdnIn = arena(in.aName);
+                if (gdnIn.empty()) { last_error_ = "GDN: empty input arena"; return false; }
+                if (!OpGdn(in, gdnIn, y, e)) { last_error_ = e; return false; }
+                arena(in.outName) = y;
+                hidden_ = y;
+                break;
+            }
             default:
                 if (std::getenv("SSM_TRACE")) {
                     std::fprintf(stderr, "[exec] unhandled op=%d bName=%s bSlot=%d aName=%s outName=%s\n",
@@ -4287,6 +4897,183 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     return true;
 }
 
+
+// ---------------------------------------------------------------------------
+// OpGdn - Qwen3.5/Qwen4Exp gated delta-net reference lowering. This is the
+// correctness path: it deliberately uses the independent reference recurrence
+// and reports CPU execution until a matching Vulkan stateful kernel is wired.
+bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
+                     std::vector<float>& y, std::string& err) {
+    auto slotOf = [&](const char* tag) -> int32_t {
+        const std::string needle = std::string(tag) + "=";
+        const size_t at = in.detail.find(needle);
+        if (at == std::string::npos) return -1;
+        size_t start = at + needle.size();
+        size_t end = in.detail.find(';', start);
+        std::string name = end == std::string::npos ? in.detail.substr(start) : in.detail.substr(start, end - start);
+        auto it = slot_by_name_.find(name);
+        return name.empty() || it == slot_by_name_.end() ? -1 : it->second;
+    };
+    if (in.b < 0 || in.c < 0) { err = "GDN: missing qkv or gate projection"; return false; }
+    const int32_t aSlot = slotOf("A");
+    const int32_t alphaSlot = slotOf("alpha");
+    const int32_t betaSlot = slotOf("beta");
+    const int32_t convSlot = slotOf("conv");
+    const int32_t dtSlot = slotOf("dt");
+    const int32_t normSlot = slotOf("norm");
+    const int32_t outSlot = slotOf("out");
+    if (aSlot < 0 || alphaSlot < 0 || betaSlot < 0 || convSlot < 0 ||
+        dtSlot < 0 || normSlot < 0 || outSlot < 0) {
+        err = "GDN: incomplete recurrent tensor binding";
+        return false;
+    }
+
+    std::vector<float> qkv, z, alpha, beta;
+    if (!OpLinear(in.b, x, qkv, err) || !OpLinear(in.c, x, z, err) ||
+        !OpLinear(alphaSlot, x, alpha, err) || !OpLinear(betaSlot, x, beta, err)) return false;
+    size_t qkvWidth = qkv.size();
+    constexpr uint32_t headDim = 128;
+    if (qkvWidth % headDim != 0 || z.size() % headDim != 0) {
+        err = "GDN: projection widths are not multiples of head_dim=128";
+        return false;
+    }
+
+    constexpr size_t convKernel = 4;
+    std::vector<float> convWeights;
+    if (DequantPrefix(tensors_[(size_t)convSlot], convWeights,
+                      convKernel * qkvWidth) < convKernel * qkvWidth) {
+        err = "GDN: causal convolution weights are incomplete";
+        return false;
+    }
+    if (ssm_conv_.size() <= static_cast<size_t>(in.block))
+        ssm_conv_.resize(static_cast<size_t>(in.block) + 1);
+    auto& convState = ssm_conv_[static_cast<size_t>(in.block)];
+    const size_t historyWidth = (convKernel - 1) * qkvWidth;
+    if (convState.size() != historyWidth) convState.assign(historyWidth, 0.0f);
+    std::vector<float> mixed(qkvWidth, 0.0f);
+    for (size_t channel = 0; channel < qkvWidth; ++channel) {
+        float value = 0.0f;
+        for (size_t tap = 0; tap < convKernel; ++tap) {
+            const float sample = tap + 1 == convKernel
+                ? qkv[channel]
+                : convState[channel * (convKernel - 1) + tap];
+            value += convWeights[channel * convKernel + tap] * sample;
+        }
+        mixed[channel] = value / (1.0f + std::exp(-value));
+    }
+    for (size_t channel = 0; channel < qkvWidth; ++channel) {
+        for (size_t tap = 0; tap + 1 < convKernel - 1; ++tap)
+            convState[channel * (convKernel - 1) + tap] =
+                convState[channel * (convKernel - 1) + tap + 1];
+        convState[channel * (convKernel - 1) + (convKernel - 2)] = qkv[channel];
+    }
+    const uint32_t valueHeads = static_cast<uint32_t>(z.size() / headDim);
+    const uint32_t keyHeads = static_cast<uint32_t>((qkvWidth / headDim - valueHeads) / 2);
+    if (keyHeads == 0 || 2u * keyHeads + valueHeads != qkvWidth / headDim) {
+        err = "GDN: qkv/gate head geometry is inconsistent";
+        return false;
+    }
+    ::Deep2::Qwen4Exp::GDNDescriptor descriptor;
+    descriptor.key_heads = keyHeads;
+    descriptor.value_heads = valueHeads;
+    descriptor.head_dim = headDim;
+    descriptor.tokens = 1;
+    descriptor.qkv_stride = static_cast<uint32_t>(qkv.size());
+    descriptor.gate_stride = static_cast<uint32_t>(z.size());
+    std::string failure;
+    if (!::Deep2::Qwen4Exp::ValidateGDNDescriptor(descriptor, failure)) { err = "GDN: " + failure; return false; }
+
+    std::vector<float> aLog, dtBias, norm;
+    if (!DequantPrefix(tensors_[(size_t)aSlot], aLog, valueHeads) ||
+        !DequantPrefix(tensors_[(size_t)dtSlot], dtBias, valueHeads) ||
+        !DequantPrefix(tensors_[(size_t)normSlot], norm, headDim)) {
+        err = "GDN: recurrent parameter dequantization failed";
+        return false;
+    }
+    if (ssm_state_.size() <= static_cast<size_t>(in.block)) ssm_state_.resize(static_cast<size_t>(in.block) + 1);
+    auto& state = ssm_state_[static_cast<size_t>(in.block)];
+    if (state.empty()) state.assign(static_cast<size_t>(::Deep2::Qwen4Exp::GDNStateElements(descriptor)), 0.0f);
+    bool gpuExecuted = false;
+    if (!force_cpu_) {
+        const uint64_t stateKey = GdnStateKey(this, in.block);
+        std::vector<float> gpuOutput;
+        auto& gpu = ::GetDeep2VulkanCompute();
+        if (gpu.DispatchGdn(
+                mixed.data(), mixed.size(),
+                beta.data(), beta.size(),
+                alpha.data(), alpha.size(),
+                aLog.data(), aLog.size(),
+                dtBias.data(), dtBias.size(),
+                norm.data(), norm.size(),
+                z.data(), z.size(),
+                keyHeads, valueHeads, headDim,
+                descriptor.epsilon, descriptor.scale,
+                descriptor.gate_sigmoid != 0, stateKey, gpuOutput)) {
+            if (gdn_gpu_active_.size() <= static_cast<size_t>(in.block))
+                gdn_gpu_active_.resize(static_cast<size_t>(in.block) + 1, 0);
+            gdn_gpu_active_[static_cast<size_t>(in.block)] = 1;
+            y.swap(gpuOutput);
+            gpuExecuted = true;
+
+            // Optional differential witness. The device state remains the
+            // authority; the host copy is only advanced for comparison and
+            // for a diagnostic receipt. This is never counted as a fallback.
+            if (std::getenv("DEEP2_GDN_GPU_CHECK")) {
+                std::vector<float> referenceState = state;
+                std::vector<float> referenceOutput;
+                if (!::Deep2::Qwen4Exp::GDNReferenceStep(
+                        descriptor, mixed, beta, alpha, z, aLog, dtBias,
+                        norm, referenceState, referenceOutput, failure)) {
+                    err = "GDN: GPU differential reference failed: " + failure;
+                    return false;
+                }
+                if (y.size() != referenceOutput.size() || referenceOutput.empty()) {
+                    err = "GDN: Vulkan/reference output shape mismatch";
+                    return false;
+                }
+                double worst = 0.0;
+                size_t worstIndex = 0;
+                for (size_t i = 0; i < y.size(); ++i) {
+                    const double delta = std::fabs(
+                        static_cast<double>(y[i]) - referenceOutput[i]);
+                    if (delta > worst) {
+                        worst = delta;
+                        worstIndex = i;
+                    }
+                }
+                const double bound = 5.0e-3 * std::max(
+                    1.0, std::fabs(static_cast<double>(referenceOutput[worstIndex])));
+                if (worst > bound) {
+                    err = "GDN: Vulkan/reference parity failed at index " +
+                          std::to_string(worstIndex) + " max_abs=" +
+                          std::to_string(worst) + " bound=" + std::to_string(bound);
+                    return false;
+                }
+                state.swap(referenceState);
+            }
+            ++gpu_calls_;
+        } else if (in.block >= 0 &&
+                   static_cast<size_t>(in.block) < gdn_gpu_active_.size() &&
+                   gdn_gpu_active_[static_cast<size_t>(in.block)]) {
+            err = "GDN: Vulkan stateful dispatch failed after GPU state became authoritative";
+            return false;
+        }
+    }
+    if (!gpuExecuted) {
+        if (!::Deep2::Qwen4Exp::GDNReferenceStep(
+                descriptor, mixed, beta, alpha, z, aLog, dtBias, norm,
+                state, y, failure)) {
+            err = "GDN: " + failure;
+            return false;
+        }
+        ++cpu_calls_;
+        stats_.fallback_reason = "GDN reference recurrence; Vulkan stateful dispatch unavailable";
+    }
+    std::vector<float> projected;
+    if (!OpLinear(outSlot, y, projected, err)) return false;
+    y.swap(projected);
+    return true;
+}
 
 // ---------------------------------------------------------------------------
 // OpSsmScan - Mamba2 selective scan (RAWRXD_GATE7_MAMBA2_001).

@@ -540,7 +540,7 @@ add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
     # with CTest so the guarded-edit/JSON/frame/path-guard contracts are
     # enforced on every build, not just on manual invocation.
     if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawrxd_parity_final/CMakeLists.txt")
-        add_subdirectory(tools/rawrxd_parity_final EXCLUDE_FROM_ALL)
+        add_subdirectory(tools/rawrxd_parity_final)
     else()
         message(STATUS "rawrxd_parity_final EXCLUDED: tools/rawrxd_parity_final/CMakeLists.txt not present")
     endif()
@@ -1670,6 +1670,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_token_profiler.cpp" AND Vulkan_FOUND 
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
     )
     target_include_directories(deep2_token_profiler PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -1713,7 +1714,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AN
     add_executable(deep2_parity_trace
         tools/deep2_parity_trace.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
         src/deep2/op_linear.cpp
+        src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         # RAWRXD_GATE4_LINK_001: the QuantDot implementation layer and the
         # Vulkan engine it drives. The dispatch layer's five entry points
@@ -1732,6 +1738,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AN
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
     )
     target_include_directories(deep2_parity_trace PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -1750,6 +1757,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AN
     # reach a real device rather than a CPU substitute.
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_parity_trace PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_parity_trace PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_parity_trace PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -1775,9 +1785,18 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND Vulkan_FOUND AND
         tools/deep2_gpu_certify.cpp
         src/deep2/op_gdn.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        # The executor's stateful GDN path uses the Deep2 VulkanCompute
+        # implementation (separate from the legacy quant-dot wrapper below).
+        # Keep both translation units: quant_dot_dispatch.cpp intentionally
+        # binds the canonical root VulkanCompute, while GDN state ownership
+        # and ResetGdnState live in src/deep2/vulkan_compute.cpp.
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
@@ -1799,6 +1818,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND Vulkan_FOUND AND
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_gpu_certify PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_gpu_certify PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_gpu_certify PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -1871,6 +1893,33 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GL
 endif()
 
 if(GLSLC_EXECUTABLE)
+    # Quant GEMV is intentionally specialized by format.  Keeping one
+    # runtime type-switch shader forces the register allocator and control
+    # flow to pay for the worst Q6 path on every invocation.  This target
+    # compiles every supported packed format and fails the build immediately
+    # if glslc cannot produce an artifact (never mask stderr/exit status).
+    set(_rawrxd_quant_specialized_outputs)
+    foreach(_tile row4 row8)
+        foreach(_quant_kind q4k=0 q6k=1 q2k=5 q3k=6 q5k=8)
+            string(REPLACE "=" ";" _kind_pair "${_quant_kind}")
+            list(GET _kind_pair 0 _kind_name)
+            list(GET _kind_pair 1 _kind_id)
+            set(_quant_src "${CMAKE_SOURCE_DIR}/tools/shaders/quant_dot_${_tile}.comp")
+            set(_quant_out "${CMAKE_SOURCE_DIR}/tools/shaders/quant_dot_${_tile}_${_kind_name}_specialized.spv")
+            add_custom_command(
+                OUTPUT "${_quant_out}"
+                COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.2
+                    "-DDEEP2_SPECIALIZED_KIND=${_kind_id}"
+                    "${_quant_src}" -o "${_quant_out}"
+                DEPENDS "${_quant_src}"
+                VERBATIM
+                COMMENT "Compiling specialized ${_tile} ${_kind_name} quant GEMV")
+            list(APPEND _rawrxd_quant_specialized_outputs "${_quant_out}")
+        endforeach()
+    endforeach()
+    add_custom_target(deep2_quant_specialized_shaders ALL
+        DEPENDS ${_rawrxd_quant_specialized_outputs})
+
     set(_rawrxd_qwen4exp_operator_shader_sources
         deep2_qwen4exp_ple
         deep2_qwen4exp_hc_combine
@@ -2307,6 +2356,39 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_operator_probe.cpp" AND
     message(STATUS "deep2_qwen4exp_operator_probe enabled (PLE/HC/QSA/router GPU dispatch)")
 endif()
 
+# Canonical GGML Vulkan quantization probe.  Deep2's hand-written quant-dot
+# shader intentionally remains limited to its certified Q2/Q4/Q6 layouts;
+# this target proves that the bundled GGML Vulkan backend can execute the
+# Qwen4Exp expert formats (IQ2_S and MXFP4) without a CPU expansion.  It is a
+# prerequisite for production MoE lowering, not a full-model certificate.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_generic_vulkan_quant_probe.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND
+   Vulkan_FOUND AND _rawrxd_vk_sdk_inc AND TARGET ggml-vulkan)
+    add_executable(deep2_generic_vulkan_quant_probe
+        tools/deep2_generic_vulkan_quant_probe.cpp
+        src/deep2/generic_vulkan_matmul.cpp)
+    target_include_directories(deep2_generic_vulkan_quant_probe PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${_rawrxd_vk_sdk_inc})
+    target_link_libraries(deep2_generic_vulkan_quant_probe PRIVATE
+        ggml-vulkan ggml)
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_generic_vulkan_quant_probe PRIVATE Vulkan::Vulkan)
+    endif()
+    target_compile_features(deep2_generic_vulkan_quant_probe PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_generic_vulkan_quant_probe PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_generic_vulkan_quant_probe PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_generic_vulkan_quant_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    add_test(NAME deep2_generic_vulkan_quant_probe
+        COMMAND deep2_generic_vulkan_quant_probe)
+    message(STATUS "deep2_generic_vulkan_quant_probe enabled (canonical IQ2_S/MXFP4 GPU path)")
+endif()
+
 # Enterprise source-to-parity closure manifest.  This read-only target hashes
 # the reverse-engineered contract, executor boundary, shader source/SPIR-V,
 # pipeline probe, and independent parity references.  It deliberately records
@@ -2335,6 +2417,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOU
     add_executable(deep2_d1_prefill_parity
         tools/deep2_d1_prefill_parity.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2358,6 +2441,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOU
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_d1_prefill_parity PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_d1_prefill_parity PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_d1_prefill_parity PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -2386,6 +2472,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND Vulkan_FOUND AND 
     add_executable(deep2_spec_bench
         tools/deep2_spec_bench.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2411,6 +2498,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND Vulkan_FOUND AND 
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_spec_bench PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_spec_bench PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_spec_bench PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -2543,6 +2633,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND Vulkan_FOUND
     add_executable(deep2_context_scaling
         tools/deep2_context_scaling.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2566,6 +2657,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND Vulkan_FOUND
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_context_scaling PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_context_scaling PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_context_scaling PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -2592,6 +2686,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND Vulkan_FOUND 
     add_executable(deep2_gguf_lifecycle
         tools/deep2_gguf_lifecycle.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2615,6 +2710,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND Vulkan_FOUND 
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_gguf_lifecycle PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_gguf_lifecycle PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_gguf_lifecycle PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -2792,7 +2890,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp")
         # Logf_() is defined exactly once, in Deep2Log.cpp, for this target too.
         src/deep2/Deep2Log.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
+        src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
         src/vulkan_compute.cpp
@@ -2836,6 +2936,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp")
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_agentic_loop PRIVATE Vulkan::Vulkan)
     endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_agentic_loop PRIVATE ggml-vulkan)
+    endif()
     # Link the real Deep2Engine so the agent uses batched prefill and GPU kernels
     if(TARGET deep2_engine_lib)
         target_link_libraries(deep2_agentic_loop PRIVATE deep2_engine_lib)
@@ -2865,6 +2968,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND Vulkan_FOUND 
     add_executable(deep2_agentic_repair
         tools/deep2_agentic_repair.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2890,6 +2994,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND Vulkan_FOUND 
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_agentic_repair PRIVATE Vulkan::Vulkan)
     endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_agentic_repair PRIVATE ggml-vulkan)
+    endif()
     if(MSVC)
         target_compile_options(deep2_agentic_repair PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
     else()
@@ -2914,6 +3021,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND Vulkan_FOUND AND 
     add_executable(deep2_exec_trace
         tools/deep2_exec_trace.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2922,6 +3034,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND Vulkan_FOUND AND 
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
     )
     target_include_directories(deep2_exec_trace PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -2938,6 +3051,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND Vulkan_FOUND AND 
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_exec_trace PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_exec_trace PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_exec_trace PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
@@ -2962,6 +3078,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND Vulkan_FOUND 
     add_executable(deep2_prefill_parity
         tools/deep2_prefill_parity.cpp
         src/deep2/runtime_graph_executor.cpp
+        src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
@@ -2986,6 +3103,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND Vulkan_FOUND 
     endif()
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(deep2_prefill_parity PRIVATE Vulkan::Vulkan)
+    endif()
+    if(TARGET ggml-vulkan)
+        target_link_libraries(deep2_prefill_parity PRIVATE ggml-vulkan)
     endif()
     if(MSVC)
         target_compile_options(deep2_prefill_parity PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)

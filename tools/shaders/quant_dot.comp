@@ -1,6 +1,6 @@
 #version 450
 
-// Native quantised dot product: Q4_K x Q8_K and Q6_K x Q8_K.
+// Native quantised dot product: K-quants and legacy quants x Q8_K.
 //
 // Decodes the GGML block layout inside the shader, applies the fp16 block
 // scales, accumulates the integer products in the same eight-lane grouping the
@@ -8,6 +8,7 @@
 //
 // Block layouts (ggml):
 //   Q4_K (144 bytes) : uint16 d, uint16 dmin, uint8 scales[12], uint8 qs[128]
+//   Q5_K (176 bytes) : uint16 d, uint16 dmin, uint8 scales[12], uint8 qh[32], uint8 qs[128]
 //   Q6_K (210 bytes) : uint8 ql[128], uint8 qh[64], int8 scales[16], uint16 d
 //   Q5_0 (22 bytes)  : uint16 d, uint8 qh[4], uint8 qs[16]   (32 values)
 //   Q8_0 (34 bytes)  : uint16 d, int8 qs[32]                 (32 values)
@@ -51,11 +52,12 @@ layout(push_constant) uniform PushConstants {
     uint n_out;      // rows
     uint n_in;       // input dimension
     uint n_blocks;   // n_in / 256 (k-quants: the 256-value super-block count)
-    uint kind;       // 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K
+    uint kind;       // 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K, 8 = Q5_K
 };
 
 // Q4_K / Q6_K block sizes in bytes.
 const uint Q4K_BYTES = 144u;
+const uint Q5K_BYTES = 176u;
 const uint Q6K_BYTES = 210u;
 const uint Q2K_BYTES = 84u;   // G05: scales[16]|qs[64]|d(f16)|dmin(f16)
 const uint Q3K_BYTES = 110u;  // G05: hmask[32]|qs[64]|scales[12]|d(f16)
@@ -117,6 +119,29 @@ void q4_scale_min(uint base, uint group, out int scale, out int minv) {
         scale = int((s_group_p4 & 15u) | ((s_group_m4 >> 6u) << 4u));
         minv  = int((s_group_p4 >> 4u) | ((s_group >> 6u) << 4u));
     }
+}
+
+// GGML q5_K scale/min unpack.  There are eight 6-bit scales and eight
+// 6-bit minima, each covering one 32-value group.
+void q5_scale_min(uint base, uint group, out uint scale, out uint minv) {
+    uint u0 = pack_byte(base + 0u) | (pack_byte(base + 1u) << 8u) |
+              (pack_byte(base + 2u) << 16u) | (pack_byte(base + 3u) << 24u);
+    uint u1 = pack_byte(base + 4u) | (pack_byte(base + 5u) << 8u) |
+              (pack_byte(base + 6u) << 16u) | (pack_byte(base + 7u) << 24u);
+    uint u2 = pack_byte(base + 8u) | (pack_byte(base + 9u) << 8u) |
+              (pack_byte(base + 10u) << 16u) | (pack_byte(base + 11u) << 24u);
+    const uint kmask1 = 0x3f3f3f3fu;
+    const uint kmask2 = 0x0f0f0f0fu;
+    const uint kmask3 = 0x03030303u;
+    uint u3 = ((u2 >> 4u) & kmask2) | (((u1 >> 6u) & kmask3) << 4u);
+    uint aux = u1 & kmask1;
+    u1 = (u2 & kmask2) | (((u0 >> 6u) & kmask3) << 4u);
+    u2 = aux;
+    u0 &= kmask1;
+    const uint scaleWord = group < 4u ? u0 : u1;
+    const uint minWord = group < 4u ? u2 : u3;
+    scale = (scaleWord >> ((group & 3u) * 8u)) & 0xFFu;
+    minv = (minWord >> ((group & 3u) * 8u)) & 0xFFu;
 }
 
 void main() {
@@ -196,6 +221,56 @@ void main() {
         out_rows[row] = sumf;
         return;
     }
+
+    if (kind == 8u) {
+        // ---- Q5_K ---------------------------------------------------------
+        // block_q5_K is eight 32-value groups. Each group uses a low nibble
+        // from qs, one high bit from qh, and one packed scale/min pair.
+        // Keep integer products separate from the fp16 scales to mirror the
+        // GGML q5_K x q8_K reference arithmetic.
+        const uint row_bytes = ((n_in + 255u) / 256u) * Q5K_BYTES;
+        const uint n_sb = (n_in + 255u) / 256u;
+        for (uint b = 0u; b < n_sb; ++b) {
+            const uint sb_off = b * 256u;
+            const uint sb_elems = min(256u, n_in - sb_off);
+            const uint base = row * row_bytes + b * Q5K_BYTES;
+            const uint q8_base = b * Q8_STRIDE;
+            const float q8_scale = q8_data[q8_base + Q8_OFF_D];
+            float block_sum = 0.0;
+            for (uint group = 0u; group < 8u; ++group) {
+                const uint group_start = group * 32u;
+                if (group_start >= sb_elems) break;
+                const uint group_count = min(32u, sb_elems - group_start);
+                int qsum = 0;
+                int asum = 0;
+                for (uint lane = 0u; lane < group_count; ++lane) {
+                    const uint qsb = pack_byte(base + 48u + (group / 2u) * 32u + lane);
+                    const uint low = (group & 1u) == 0u ? (qsb & 15u) : (qsb >> 4u);
+                    // qh advances with qs for each pair of 32-value
+                    // half-groups. Using base+16+lane for every group makes
+                    // groups 2..7 reuse the first 32 high-bit bytes and is a
+                    // silent, large numerical corruption for Q5_K.
+                    const uint pair = group / 2u;
+                    const uint half_group = group & 1u;
+                    const uint high =
+                        (pack_byte(base + 16u + lane) &
+                         (1u << (2u * pair + half_group))) != 0u ? 16u : 0u;
+                    const int q = int(low + high);
+                    const int a = int(q8_data[q8_base + Q8_OFF_QS + group_start + lane]);
+                    qsum += q * a;
+                    asum += a;
+                }
+                uint scale, minv;
+                q5_scale_min(base + 4u, group, scale, minv);
+                block_sum += half_to_float(pack_u16(base + 0u)) * float(scale * qsum);
+                block_sum -= half_to_float(pack_u16(base + 2u)) * float(minv * asum);
+            }
+            sumf += q8_scale * block_sum;
+        }
+        out_rows[row] = sumf;
+        return;
+    }
+
     uint block_bytes = (kind == 0u) ? Q4K_BYTES : (kind == 1u) ? Q6K_BYTES
                      : (kind == 5u) ? Q2K_BYTES : (kind == 6u) ? Q3K_BYTES : Q4K_BYTES;
     uint row_base = row * block_bytes * n_blocks;
@@ -341,3 +416,4 @@ void main() {
     for (int i = 0; i < 8; ++i) sumf += sums[i];
     out_rows[row] = sumf;
 }
+

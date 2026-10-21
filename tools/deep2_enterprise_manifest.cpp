@@ -126,6 +126,7 @@ int main(int argc, char** argv) {
         "evidence/deep2_enterprise_closure_manifest_20261020/gdn_component_probe.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/operator_harness.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/operator_spirv_validation.txt",
+        "evidence/deep2_enterprise_closure_manifest_20261020/operator_gpu_probe.txt",
         "evidence/QWEN4EXP_OPERATOR_IMPLEMENTATION_20261020.md",
         "evidence/qwen4exp_gr_source_drop_20261020/Qwen4ExpGatedResidual.hpp",
         "evidence/qwen4exp_gr_source_drop_20261020/test_gr.cpp",
@@ -151,6 +152,7 @@ int main(int argc, char** argv) {
     const std::string gdn_component_probe = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/gdn_component_probe.txt");
     const std::string operator_harness = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/operator_harness.txt");
     const std::string operator_spirv = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/operator_spirv_validation.txt");
+    const std::string operator_gpu = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/operator_gpu_probe.txt");
     const std::string role_reconciliation = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_role_reconciliation.txt");
     const bool execute_token_has_qwen_cases = [&]() {
         const auto start = executor.find("bool Executor::ExecuteToken");
@@ -203,6 +205,13 @@ int main(int argc, char** argv) {
         operator_spirv.find("QSA_SCORE_SPIRV_VAL=PASS") != std::string::npos &&
         operator_spirv.find("MOE_ROUTER_SPIRV_VAL=PASS") != std::string::npos &&
         operator_spirv.find("GDN_SPIRV_VAL=PASS") != std::string::npos;
+    const bool operator_gpu_pass =
+        operator_gpu.find("PLE_GPU_DISPATCH=PASS") != std::string::npos &&
+        operator_gpu.find("HC_GPU_DISPATCH=PASS") != std::string::npos &&
+        operator_gpu.find("QSA_GPU_DISPATCH=PASS") != std::string::npos &&
+        operator_gpu.find("MOE_ROUTER_GPU_DISPATCH=PASS") != std::string::npos &&
+        operator_gpu.find("QWEN4EXP_OPERATOR_GPU=PASS") != std::string::npos &&
+        operator_gpu.find("QWEN4EXP_EXPERT_GEMM=FAIL_CLOSED_UNDEQUANTIZED") != std::string::npos;
     const bool contract_report_reconciled =
         contract_rerun.find("Ownership reconciliation: GDN 216+36, PLE 6+1, HYPERCONNECTION 384+3") != std::string::npos &&
         contract_rerun.find("| GDN | 252 | 216 | 36 |") != std::string::npos &&
@@ -248,9 +257,11 @@ int main(int argc, char** argv) {
              ? "gdn_component_probe.txt:GDN_DISPATCHES=1/GDN_EXECUTION=PASS/GDN_INDEPENDENT_PARITY=PASS; this is isolated, not ExecuteToken"
              : "gdn_reference_harness.txt:GDN_REFERENCE_FINITE=PASS/GDN_STATE_CONTINUITY=PASS/GDN_GPU_DISPATCHES=0",
          "Bind the verified GDN descriptors and state lifecycle into the Qwen4Exp Executor graph, then repeat parity through ExecuteToken."},
-        {"QWEN-B07", "HIGH", "NOT_RUN",
-         "PLE and Hyperconnection production dispatch", "pipeline_probe_rerun.txt:PLE_PIPELINE=PASS HC_PIPELINE=PASS but DISPATCHES=0",
-         "Allocate real tensor/state buffers, dispatch both pipelines, compare outputs against independent references, and wire them into ExecuteToken."},
+        {"QWEN-B07", "HIGH", operator_gpu_pass ? "COMPONENT_DISPATCH_PASS" : "NOT_RUN",
+         "PLE, Hyperconnection, QSA score, and router dispatch", operator_gpu_pass
+             ? "operator_gpu_probe.txt: all four bounded GPU dispatches PASS with independent CPU comparison"
+             : "operator_gpu_probe.txt is missing a required component result",
+         "Connect the component dispatches to ExecuteToken with model tensor bindings and state publication."},
         {"QWEN-B08", "HIGH", gr_reference_cpu_only ? "REFERENCE_ONLY" : "NOT_VERIFIED",
          "Gated Residual production path", "QWEN4EXP_FAIL_CLOSED_INVENTORY.md: isolated CPU arithmetic-contract tested only",
          "Implement GPU GR read/write/combine in the production graph and prove finite independent parity with zero CPU fallback."},
@@ -276,7 +287,18 @@ int main(int argc, char** argv) {
              : "operator_harness.txt or operator_spirv_validation.txt is missing a required receipt",
          "Connect every validated operator to production graph execution, add real GPU probes for PLE/HC/QSA/router, and certify IQ2_S/MXFP4 expert GEMM before full-model admission."}
     };
-    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked && gdn_reference && operator_contract_pass && operator_spirv_pass;
+    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked && gdn_reference && operator_contract_pass && operator_spirv_pass && operator_gpu_pass;
+    // Artifact integrity and certification closure are separate gates.  A
+    // complete source/evidence inventory must not return success while any
+    // blocker is still BLOCKED, NOT_RUN, REFERENCE_ONLY, or only a component
+    // pass.  This keeps the manifest fail-closed for CI and release tooling.
+    const auto blocker_closed = [](const Blocker& blocker) {
+        return blocker.status == "PASS";
+    };
+    size_t open_blockers = 0;
+    for (const auto& blocker : blockers)
+        if (!blocker_closed(blocker)) ++open_blockers;
+    const bool certification_ready = all_present && open_blockers == 0;
     std::filesystem::create_directories(out_path.parent_path());
     std::ofstream out(out_path); if (!out) return 3;
     out << "{\n  \"schema\":\"rawrxd.deep2.enterprise_closure_manifest.v1\",\n";
@@ -297,10 +319,14 @@ int main(int argc, char** argv) {
     out << "  \"GDN_PRODUCTION_DISPATCH\":\"NOT_RUN\",\n";
     out << "  \"QWEN4EXP_OPERATOR_CONTRACT\":\"" << (operator_contract_pass ? "PASS" : "NOT_VERIFIED") << "\",\n";
     out << "  \"QWEN4EXP_OPERATOR_SPIRV\":\"" << (operator_spirv_pass ? "PASS" : "NOT_VERIFIED") << "\",\n";
+    out << "  \"QWEN4EXP_OPERATOR_GPU\":\"" << (operator_gpu_pass ? "PASS" : "NOT_VERIFIED") << "\",\n";
     out << "  \"command_submission\":\"NOT_RUN\",\n  \"full_model_execution\":\"NOT_RUN\",\n  \"certification\":\"NOT_CERTIFIED\",\n";
     out << "  \"contract_reconciliation\":\"" << (contract_report_reconciled && canonical_role_schema ? "PASS" : "RECONCILIATION_REQUIRED") << "\",\n";
     out << "  \"role_reconciliation\":\"" << ((role_reconciliation_explained && contract_report_reconciled && canonical_role_schema) ? "PASS" : (role_reconciliation_explained ? "EXPLAINED_RECONCILIATION_REQUIRED" : "RECONCILIATION_REQUIRED")) << "\",\n";
     out << "  \"shard_manifest_json\":\"" << (shard_manifests_json_valid ? "PASS" : "FAIL") << "\",\n";
+    out << "  \"blocker_count\":" << blockers.size() << ",\n";
+    out << "  \"open_blockers\":" << open_blockers << ",\n";
+    out << "  \"certification_ready\":" << (certification_ready ? "true" : "false") << ",\n";
     out << "  \"executor_blocking_boundary\":\"Executor::Bind still rejects QSA, GDN, PLE, Hyperconnection, and SparseMoE; ExecuteToken has no descriptor allocation, tensor upload, command recording, or dispatch cases for these OpKinds.\",\n";
     out << "  \"required_closure\":\"Wire Qwen4Exp tensor handles to descriptor updates and command submission in ExecuteToken, then run independent full-logit and autoregressive parity.\",\n";
     out << "  \"blockers\":[\n";
@@ -323,6 +349,8 @@ int main(int argc, char** argv) {
               << "\nCONTRACT_GEOMETRY=" << (contract_geometry ? "PASS" : "FAIL")
               << "\nPIPELINE_WIRING=" << (pipeline_wiring ? "PASS" : "FAIL")
               << "\nEXECUTOR_BOUNDARY=" << (executor_fail_closed ? "Bind-rejects-unimplemented-Qwen4Exp-OpKinds" : "NOT_VERIFIED")
+              << "\nOPEN_BLOCKERS=" << open_blockers
+              << "\nCERTIFICATION_READY=" << (certification_ready ? "1" : "0")
               << "\nCERTIFICATION=NOT_CERTIFIED\n";
-    return all_present ? 0 : 4;
+    return certification_ready ? 0 : 4;
 }

@@ -99,6 +99,11 @@ struct BindStats {
     size_t weights_resolved = 0;
     size_t weights_missing = 0;
     std::vector<std::string> unbound_ops;   // op kind + reason
+    // Machine-readable fail-closed attribution. These fields describe the
+    // first boundary that prevented binding; they never imply execution.
+    std::string failure_stage;
+    std::string first_blocking_operator;
+    std::string failure_receipt_json;
     // Kernel receipts
     uint64_t gpu_calls = 0, cpu_calls = 0, gpu_rows = 0, cpu_rows = 0;
     std::string fallback_reason;
@@ -116,6 +121,12 @@ public:
     bool Bind(const Universal::IngestReport& report);
 
     const BindStats& Stats() const { return stats_; }
+
+    // Stable JSON receipt for callers and certification tooling. An empty
+    // string means Bind has not failed in this executor instance.
+    const std::string& FailureReceiptJson() const {
+        return stats_.failure_receipt_json;
+    }
 
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);

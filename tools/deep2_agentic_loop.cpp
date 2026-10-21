@@ -37,6 +37,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <set>
@@ -84,6 +85,44 @@ using ConsoleView = rawrxd::esp::ConsoleView;
 
 namespace
 {
+
+// Resolve the policy root independently from the task scratch directory.  A
+// default task workspace such as "agentic_ws" does not contain the repository
+// MOTD, so binding authorization to it makes `rawr run` fail before loading a
+// model when launched from the repo root.  Tool reads/writes still use the
+// caller's requested workdir; this helper only selects the policy root.
+std::string ResolveMotdWorkspace(const std::string& requested)
+{
+    std::vector<std::filesystem::path> candidates;
+    if (!requested.empty()) candidates.emplace_back(requested);
+    std::error_code ec;
+    auto current = std::filesystem::current_path(ec);
+    if (!ec) candidates.push_back(current);
+
+#ifdef _WIN32
+    char modulePath[MAX_PATH] = {};
+    const DWORD length = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
+    if (length > 0 && length < MAX_PATH)
+        candidates.emplace_back(std::filesystem::path(modulePath).parent_path());
+#endif
+
+    for (const auto& initial : candidates) {
+        auto root = std::filesystem::weakly_canonical(initial, ec);
+        if (ec) { ec.clear(); continue; }
+        for (int depth = 0; depth < 8 && !root.empty(); ++depth) {
+            const auto md = root / ".cursor" / "rules" / "PassiveRoleNotRoleplay.md";
+            const auto mc = root / ".cursor" / "rules" / "PassiveRoleNotRoleplay.mdc";
+            if (std::filesystem::is_regular_file(md, ec) ||
+                std::filesystem::is_regular_file(mc, ec))
+                return root.string();
+            ec.clear();
+            const auto parent = root.parent_path();
+            if (parent == root) break;
+            root = parent;
+        }
+    }
+    return requested;
+}
 
 struct Args
 {
@@ -2358,6 +2397,8 @@ struct PatchTransaction
     std::string file_path, before_content, after_content, last_error;
     bool committed = false;
     bool rolled_back = false;
+    bool structural_valid = false;
+    size_t changed_lines = 0;
 };
 
 struct RetryState
@@ -2446,6 +2487,70 @@ static std::string SHA256_Hash(const std::string& data)
 #endif
 }
 
+// Dependency-free structural mutation gate.  It is intentionally lexical
+// rather than a permissive text diff: edits with unbalanced delimiters,
+// unterminated strings/comments, or binary bytes are rejected before a build
+// can bless a phantom mutation.  The full AST remains compiler-owned, while
+// this gate protects the host/model boundary without shipping a parser DLL.
+struct StructuralAudit
+{
+    bool valid = false;
+    size_t changed_lines = 0;
+    std::string error;
+};
+
+static StructuralAudit AuditMutation(const std::string& before, const std::string& after)
+{
+    StructuralAudit result;
+    if (after.empty()) { result.error = "empty patched file"; return result; }
+    if (after.find('\0') != std::string::npos) { result.error = "binary byte in source patch"; return result; }
+
+    size_t a = 0, b = 0;
+    while (a < before.size() || b < after.size())
+    {
+        const size_t ae = before.find('\n', a);
+        const size_t be = after.find('\n', b);
+        const std::string al = before.substr(a, ae == std::string::npos ? std::string::npos : ae - a);
+        const std::string bl = after.substr(b, be == std::string::npos ? std::string::npos : be - b);
+        if (al != bl) ++result.changed_lines;
+        if (ae == std::string::npos) a = before.size(); else a = ae + 1;
+        if (be == std::string::npos) b = after.size(); else b = be + 1;
+    }
+
+    char quote = 0;
+    bool lineComment = false, blockComment = false, escaped = false;
+    int braces = 0, parens = 0, brackets = 0;
+    for (size_t i = 0; i < after.size(); ++i)
+    {
+        const char c = after[i];
+        const char n = i + 1 < after.size() ? after[i + 1] : '\0';
+        if (lineComment) { if (c == '\n') lineComment = false; continue; }
+        if (blockComment) { if (c == '*' && n == '/') { blockComment = false; ++i; } continue; }
+        if (quote)
+        {
+            if (escaped) { escaped = false; continue; }
+            if (c == '\\') { escaped = true; continue; }
+            if (c == quote) quote = 0;
+            continue;
+        }
+        if ((c == '/' && n == '/') || (c == '/' && n == '*'))
+        {
+            if (n == '/') lineComment = true; else blockComment = true;
+            ++i; continue;
+        }
+        if (c == '"' || c == '\'') { quote = c; continue; }
+        if (c == '{') ++braces; else if (c == '}' && --braces < 0) { result.error = "closing brace underflow"; return result; }
+        if (c == '(') ++parens; else if (c == ')' && --parens < 0) { result.error = "closing parenthesis underflow"; return result; }
+        if (c == '[') ++brackets; else if (c == ']' && --brackets < 0) { result.error = "closing bracket underflow"; return result; }
+    }
+    if (quote || blockComment || braces || parens || brackets)
+    {
+        result.error = "unterminated string/comment or unbalanced delimiters"; return result;
+    }
+    result.valid = true;
+    return result;
+}
+
 // Snapshot/apply/verify/commit-or-rollback for source patches.
 class PatchManager
 {
@@ -2481,6 +2586,14 @@ public:
     {
         if (transactions_.empty()) return false;
         auto& tx = transactions_.back();
+        const StructuralAudit audit = AuditMutation(tx.before_content, tx.after_content);
+        tx.structural_valid = audit.valid;
+        tx.changed_lines = audit.changed_lines;
+        if (!audit.valid)
+        {
+            tx.last_error = "structural audit failed: " + audit.error;
+            return false;
+        }
         int code = 0;
         std::string out = RunCmd("cd /d \"" + workdir + "\" && " + build_cmd + " 2>&1", &code);
         if (code != 0)
@@ -2682,7 +2795,7 @@ int main(int argc, char* argv[])
         const Action writeAction = ParseAction("TOOL write target.cpp @@content@@\n");
         bool ok = motdAction.valid && motdAction.tool == "read_motd" &&
                   writeAction.valid && writeAction.tool == "write";
-        rawrxd::agentic::MotdAuthorization auth(args.workdir);
+        rawrxd::agentic::MotdAuthorization auth(ResolveMotdWorkspace(args.workdir));
         const std::string session = "deep2-motd-selftest";
         std::string reason, contents, digest, error;
         ok = ok && auth.BeginTurn(session, 1);
@@ -2765,7 +2878,9 @@ int main(int argc, char* argv[])
 
     // Each invocation handles one user-originated task. Continuation model
     // turns share this authorization, while the next process/task starts fresh.
-    rawrxd::agentic::MotdAuthorization motdAuthorization(args.workdir);
+    const std::string motdWorkspace = ResolveMotdWorkspace(args.workdir);
+    rawrxd::agentic::MotdAuthorization motdAuthorization(motdWorkspace);
+    Logf_("MOTD_WORKSPACE %s\n", motdWorkspace.c_str());
     const auto motdNonce = std::chrono::steady_clock::now().time_since_epoch().count();
 #ifdef _WIN32
     const std::string motdSession = "deep2-agent-" + std::to_string(GetCurrentProcessId()) + "-" +

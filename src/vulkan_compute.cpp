@@ -1327,7 +1327,7 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     // contract; what is new is that residency steering can no longer race it.
     std::lock_guard<std::recursive_mutex> lk(quant_mu_);
     if (!packed || !q8_interleaved || !out) return false;
-    if (kind < 0 || kind > 6) return false;   // G05: +Q2_K(5)/Q3_K(6)
+    if (kind < 0 || (kind > 6 && kind != 8)) return false;
     if (n_out == 0 || n_in == 0 || n_blocks == 0) return false;
 
     // Kinds 0/1/5/6 are the k-quants (one 256-value super-block per block); kinds
@@ -1347,7 +1347,8 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
     } else {
         if ((n_in % 256u) != 0) return false;
         if (n_blocks != n_in / 256u) return false;
-        block_bytes = (kind == 0) ? 144u : (kind == 1) ? 210u : (kind == 5) ? 84u : 110u;  // Q4_K/Q6_K/Q2_K/Q3_K
+        block_bytes = (kind == 0) ? 144u : (kind == 1) ? 210u :
+                      (kind == 5) ? 84u : (kind == 6) ? 110u : 176u;  // Q4_K/Q6_K/Q2_K/Q3_K/Q5_K
         need_packed = n_out * n_blocks * block_bytes;
         need_q8 = n_blocks * 273u * sizeof(float);
     }
@@ -1873,7 +1874,7 @@ namespace {
 bool QuantDotGeometry(int kind, size_t n_in, size_t n_out, size_t n_blocks,
                       size_t& block_bytes, size_t& need_packed, size_t& need_q8,
                       size_t& n_sb) {
-    if (kind < 0 || kind > 6) return false;   // G05: +Q2_K(5)/Q3_K(6)
+    if (kind < 0 || (kind > 6 && kind != 8)) return false;
     if (n_out == 0 || n_in == 0) return false;
     if (kind >= 2 && kind <= 4) {   // legacy 32-value kinds only (Q5_0/Q8_0/Q4_0)
         if ((n_in % 32u) != 0) return false;
@@ -1883,7 +1884,8 @@ bool QuantDotGeometry(int kind, size_t n_in, size_t n_out, size_t n_blocks,
         need_q8 = n_sb * 273u * sizeof(float);
     } else {   // k-quants, 256-value super-blocks: Q4_K/Q6_K/Q2_K/Q3_K
         if (n_blocks == 0 || (n_in % 256u) != 0 || n_blocks != n_in / 256u) return false;
-        block_bytes = (kind == 0) ? 144u : (kind == 1) ? 210u : (kind == 5) ? 84u : 110u;  // Q4_K/Q6_K/Q2_K/Q3_K
+        block_bytes = (kind == 0) ? 144u : (kind == 1) ? 210u :
+                      (kind == 5) ? 84u : (kind == 6) ? 110u : 176u;  // Q4_K/Q6_K/Q2_K/Q3_K/Q5_K
         n_sb = n_blocks;
         need_packed = n_out * n_blocks * block_bytes;
         need_q8 = n_blocks * 273u * sizeof(float);

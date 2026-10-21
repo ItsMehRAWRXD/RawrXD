@@ -1,33 +1,111 @@
 #version 450
 
-// Contract-level GDN lowering. Production model binding must provide the
-// model's exact projection and state layout before this shader is dispatched.
-layout(local_size_x = 64) in;
-layout(set = 0, binding = 0, std430) readonly buffer InputBuffer { float input_values[]; };
-layout(set = 0, binding = 1, std430) readonly buffer DecayBuffer { float decay[]; };
-layout(set = 0, binding = 2, std430) readonly buffer BetaBuffer { float beta[]; };
-layout(set = 0, binding = 3, std430) readonly buffer KeyBuffer { float key[]; };
-layout(set = 0, binding = 4, std430) readonly buffer ValueBuffer { float value[]; };
-layout(set = 0, binding = 5, std430) buffer StateBuffer { float state[]; };
-layout(set = 0, binding = 6, std430) writeonly buffer OutputBuffer { float output_values[]; };
+// Qwen4Exp Flash-Next GDN core after the causal convolution/projections.
+// The model layout is [q(key_heads*D), k(key_heads*D), v(value_heads*D)].
+// One invocation owns one value head and processes tokens in order so the
+// recurrent state is never observed halfway through a token update.
+layout(local_size_x = 1) in;
+
+layout(set = 0, binding = 0, std430) readonly buffer QkvBuffer { float qkv[]; };
+layout(set = 0, binding = 1, std430) readonly buffer BetaBuffer { float beta[]; };
+layout(set = 0, binding = 2, std430) readonly buffer AlphaBuffer { float alpha[]; };
+layout(set = 0, binding = 3, std430) readonly buffer ALogBuffer { float a_log[]; };
+layout(set = 0, binding = 4, std430) readonly buffer DtBiasBuffer { float dt_bias[]; };
+layout(set = 0, binding = 5, std430) readonly buffer NormBuffer { float norm[]; };
+layout(set = 0, binding = 6, std430) readonly buffer GateBuffer { float gate_input[]; };
+layout(set = 0, binding = 7, std430) buffer StateBuffer { float state[]; };
+layout(set = 0, binding = 8, std430) writeonly buffer OutputBuffer { float output_values[]; };
 
 layout(push_constant) uniform Push {
-    uint channels;
-    uint state_size;
-    uint groups;
+    uint tokens;
+    uint key_heads;
+    uint value_heads;
+    uint head_dim;
+    float epsilon;
+    float scale;
+    uint gate_sigmoid;
     uint reserved;
 } pc;
 
-void main() {
-    uint channel = gl_GlobalInvocationID.x;
-    if (pc.channels == 0u || pc.state_size == 0u || pc.groups == 0u ||
-        pc.channels % pc.groups != 0u || channel >= pc.channels) return;
+float sigmoid(float x) {
+    if (x >= 0.0) return 1.0 / (1.0 + exp(-x));
+    float e = exp(x);
+    return e / (1.0 + e);
+}
 
-    uint channels_per_group = pc.channels / pc.groups;
-    uint group = channel / channels_per_group;
-    uint state_index = (group * pc.state_size * pc.channels) + channel;
-    float next = decay[channel] * state[state_index] +
-                 beta[channel] * key[channel] * value[channel];
-    state[state_index] = next;
-    output_values[channel] = next * input_values[channel];
+float softplus(float x) {
+    return x > 20.0 ? x : log(1.0 + exp(x));
+}
+
+void main() {
+    const uint hv = gl_GlobalInvocationID.x;
+    if (pc.tokens == 0u || pc.key_heads == 0u || pc.value_heads == 0u ||
+        pc.head_dim == 0u || pc.head_dim > 256u || hv >= pc.value_heads ||
+        pc.value_heads % pc.key_heads != 0u || pc.epsilon <= 0.0 ||
+        pc.scale <= 0.0) return;
+
+    const uint d = pc.head_dim;
+    const uint q_width = pc.key_heads * d;
+    const uint qkv_width = (2u * pc.key_heads + pc.value_heads) * d;
+    const uint output_width = pc.value_heads * d;
+    const uint heads_per_key = pc.value_heads / pc.key_heads;
+    const uint hk = hv / heads_per_key;
+    const uint state_head = hv * d * d;
+
+    float q[256];
+    float k[256];
+    float o[256];
+
+    for (uint token = 0u; token < pc.tokens; ++token) {
+        const uint qkv_base = token * qkv_width;
+        float q_norm = 0.0;
+        float k_norm = 0.0;
+        for (uint i = 0u; i < d; ++i) {
+            q[i] = qkv[qkv_base + hk * d + i];
+            k[i] = qkv[qkv_base + q_width + hk * d + i];
+            q_norm += q[i] * q[i];
+            k_norm += k[i] * k[i];
+        }
+        const float q_scale = pc.scale * inversesqrt(q_norm + pc.epsilon);
+        const float k_scale = inversesqrt(k_norm + pc.epsilon);
+        for (uint i = 0u; i < d; ++i) {
+            q[i] *= q_scale;
+            k[i] *= k_scale;
+        }
+
+        const float decay = exp(-exp(a_log[hv]) *
+                                softplus(alpha[token * pc.value_heads + hv] + dt_bias[hv]));
+        const float beta_value = sigmoid(beta[token * pc.value_heads + hv]);
+        const uint value_base = qkv_base + 2u * q_width + hv * d;
+
+        float sum_squares = 0.0;
+        for (uint row = 0u; row < d; ++row) {
+            float dot = 0.0;
+            const uint state_row = state_head + row * d;
+            for (uint col = 0u; col < d; ++col) {
+                const uint state_index = state_row + col;
+                state[state_index] *= decay;
+                dot += state[state_index] * k[col];
+            }
+            const float value = (qkv[value_base + row] - dot) * beta_value;
+            float projected = 0.0;
+            for (uint col = 0u; col < d; ++col) {
+                const uint state_index = state_row + col;
+                state[state_index] += value * k[col];
+                projected += state[state_index] * q[col];
+            }
+            o[row] = projected;
+            sum_squares += projected * projected;
+        }
+
+        const float inv_rms = inversesqrt(sum_squares / float(d) + pc.epsilon);
+        const uint output_base = token * output_width + hv * d;
+        const uint gate_base = token * output_width + hv * d;
+        for (uint row = 0u; row < d; ++row) {
+            const float gate = pc.gate_sigmoid != 0u
+                ? sigmoid(gate_input[gate_base + row])
+                : gate_input[gate_base + row] * sigmoid(gate_input[gate_base + row]);
+            output_values[output_base + row] = o[row] * inv_rms * norm[row] * gate;
+        }
+    }
 }
