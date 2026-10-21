@@ -39,7 +39,13 @@ static const char* RoleName(Role r) {
         case Role::AttnV: return "v";
         case Role::AttnOutput: return "attn_out";
         case Role::AttnQKV: return "qkv(fused)";
+        case Role::AttnGate: return "attn_gate";
+        case Role::AttnQNorm: return "q_norm";
         case Role::AttnKNorm: return "k_norm";
+        case Role::IndexerKProj: return "indexer_k_proj";
+        case Role::IndexerKNorm: return "indexer_k_norm";
+        case Role::IndexerQProj: return "indexer_q_proj";
+        case Role::IndexerQNorm: return "indexer_q_norm";
         case Role::AttnKvAMqa: return "kv_a_mqa";
         case Role::AttnKvB: return "kv_b";
         case Role::FfnNorm: return "ffn_norm";
@@ -56,6 +62,18 @@ static const char* RoleName(Role r) {
         case Role::SsmIn: return "ssm_in";
         case Role::SsmOut: return "ssm_out";
         case Role::SsmNorm: return "ssm_norm";
+        case Role::HyperAttnDown: return "hc_attn_down";
+        case Role::HyperAttnInject: return "hc_attn_inject";
+        case Role::HyperAttnNorm: return "hc_attn_norm";
+        case Role::HyperAttnUp: return "hc_attn_up";
+        case Role::HyperFfnDown: return "hc_ffn_down";
+        case Role::HyperFfnInject: return "hc_ffn_inject";
+        case Role::HyperFfnNorm: return "hc_ffn_norm";
+        case Role::HyperFfnUp: return "hc_ffn_up";
+        case Role::PleTokenEmbedding: return "ple_token_embd";
+        case Role::PleConv: return "ple_conv";
+        case Role::PleNorm: return "ple_norm";
+        case Role::PleOutput: return "ple_output";
         case Role::RopeFreqs: return "rope";
         case Role::RopeFactors: return "rope_fac";
         default: return "other";
@@ -151,16 +169,31 @@ int main(int argc, char** argv) {
             std::printf("     MLA kv_lora=%llu key_len=%llu value_len=%llu leading_dense=%llu\n",
                         (unsigned long long)s.kv_lora_rank, (unsigned long long)s.key_length,
                         (unsigned long long)s.value_length, (unsigned long long)s.leading_dense);
+        if (s.kind == ArchKind::Qwen4Exp) {
+            std::printf("     Qwen4Exp qsa=%s gdn=%s ple=%s hc=%s sparse_moe=%s "
+                        "indexer_heads=%llu indexer_key=%llu top_k=%llu hc_count=%llu hc_rank=%llu\n",
+                        s.qwen4exp_has_qsa ? "yes" : "no",
+                        s.qwen4exp_has_gdn ? "yes" : "no",
+                        s.qwen4exp_has_ple ? "yes" : "no",
+                        s.qwen4exp_has_hyperconnection ? "yes" : "no",
+                        s.qwen4exp_has_sparse_moe ? "yes" : "no",
+                        (unsigned long long)s.indexer_heads,
+                        (unsigned long long)s.indexer_key_length,
+                        (unsigned long long)s.indexer_top_k,
+                        (unsigned long long)s.hyperconnection_count,
+                        (unsigned long long)s.hyperconnection_low_rank);
+        }
 
         // Op counts by primitive.
         std::map<Op, size_t> cnt;
         for (const auto& o : r.graph.ops) cnt[o.op]++;
         auto total_ops = r.graph.ops.size();
         bool executable = total_ops > 3 && r.graph.unsupported == 0;
-        std::printf("     graph: %zu ops  [embd=1 rms=%zu linear=%zu attn=%zu mla=%zu router=%zu topk=%zu moe=%zu resid=%zu lmhead=1] unsupported=%zu -> %s\n",
+        std::printf("     graph: %zu ops  [embd=1 rms=%zu linear=%zu attn=%zu mla=%zu router=%zu topk=%zu moe=%zu qsa=%zu gdn=%zu ple=%zu hc=%zu sparse_moe=%zu resid=%zu lmhead=1] unsupported=%zu -> %s\n",
                     total_ops, cnt[Op::RmsNorm], cnt[Op::Linear], cnt[Op::Attention],
                     cnt[Op::MlaDecompress], cnt[Op::Router], cnt[Op::TopK], cnt[Op::MoEExecute],
-                    cnt[Op::ResidualAdd], r.graph.unsupported,
+                    cnt[Op::Qsa], cnt[Op::Gdn], cnt[Op::Ple], cnt[Op::Hyperconnection],
+                    cnt[Op::SparseMoE], cnt[Op::ResidualAdd], r.graph.unsupported,
                     executable ? "DECODE-GRAPH-EMITTED" : "NO-DECODE-GRAPH");
         if (r.graph.unsupported) graph_no++; else graph_ok++;
 

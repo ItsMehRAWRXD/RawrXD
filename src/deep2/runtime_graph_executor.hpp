@@ -50,6 +50,11 @@ enum class OpKind : uint8_t {
     EmbeddingLookup = 0, RmsNorm, Linear, Attention, MlaDecompress,
     Router, TopK, MoEExecute, ResidualAdd, LmHead,
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
+    Qsa,          // Qwen4Exp indexer + compressed-key sparse attention
+    Gdn,          // Qwen4Exp gated delta-net recurrent state update
+    Ple,          // Qwen4Exp per-layer n-gram embedding + short convolution
+    Hyperconnection, // Qwen4Exp four-stream residual mix/down/up
+    SparseMoE,    // Qwen4Exp top-k sparse expert grouped GEMM
     Publish,      // copy an arena value to a named one (residual bookkeeping)
     SwiGLU,       // out = silu(gate) * up, the dense-FFN activation
     SquaredReLU,  // out = relu(x)^2, Nemotron's gateless MLP activation
@@ -430,6 +435,16 @@ private:
           std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
       };
       std::vector<SsmWeightCache> ssm_weights_;
+      // Optional SSM profiling counters. They remain dormant unless
+      // DEEP2_SSM_PROFILE=1 is set, so production execution has no logging
+      // cost while controlled runs can separate cache and recurrent work.
+      uint64_t ssm_profile_calls_ = 0;
+      uint64_t ssm_profile_cache_hits_ = 0;
+      uint64_t ssm_profile_cache_misses_ = 0;
+      double ssm_profile_cache_ms_ = 0.0;
+      double ssm_profile_total_ms_ = 0.0;
+      double ssm_profile_linear_ms_ = 0.0;
+      double ssm_profile_post_ms_ = 0.0;
       bool first_bind_ = true;   // trace only the primary executor
       std::vector<uint32_t> ssm_state_slots_;
     std::vector<float> logits_;

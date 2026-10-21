@@ -5,6 +5,7 @@
 // ============================================================================
 #include "universal_gguf.hpp"
 #include "../QuantTypeTable.hpp"
+#include "../GGUFLoader.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -95,23 +96,22 @@ std::string Sha256FileImpl(const std::string& path) {
     HANDLE h = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (h == INVALID_HANDLE_VALUE) return {};
-    LARGE_INTEGER sz{};
-    GetFileSizeEx(h, &sz);
-    HANDLE m = CreateFileMappingA(h, nullptr, PAGE_READONLY, 0, 0, nullptr);
-    if (!m) { CloseHandle(h); return {}; }
-    const uint8_t* base = (const uint8_t*)MapViewOfFile(m, FILE_MAP_READ, 0, 0, 0);
     Sha256 s;
-    if (base) {
-        const uint8_t* p = base;
-        size_t left = (size_t)sz.QuadPart;
-        while (left) {
-            const size_t k = std::min<size_t>(left, 8u << 20);
-            s.update(p, k);
-            p += k; left -= k;
+    // Hash through a bounded buffer.  Mapping an 85-GB sharded model and
+    // walking it here made provenance collection fault tens of gigabytes into
+    // the working set before execution had even started.  Streaming the bytes
+    // preserves the digest while keeping admission memory bounded.
+    std::vector<uint8_t> buf(1u << 20);
+    DWORD got = 0;
+    for (;;) {
+        if (!ReadFile(h, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr)) {
+            CloseHandle(h);
+            return {};
         }
-        UnmapViewOfFile(base);
+        if (got == 0) break;
+        s.update(buf.data(), got);
+        if (got < buf.size()) break;
     }
-    CloseHandle(m);
     CloseHandle(h);
     return s.hex();
 #else
@@ -124,6 +124,80 @@ std::string Sha256FileImpl(const std::string& path) {
     ::close(fd);
     return s.hex();
 #endif
+}
+
+// Canonical GGUF split names are deliberately recognized without opening the
+// first file.  This lets the shard-aware loader become the sole owner of the
+// mappings, avoiding a duplicate legacy mapping of shard 1.
+bool ParseCanonicalShardPath(const std::string& path, std::string& prefix,
+                             uint32_t& index, uint32_t& count) {
+    prefix.clear(); index = count = 0;
+    if (path.size() < 20 || path.compare(path.size() - 5, 5, ".gguf") != 0)
+        return false;
+    const size_t start = path.size() - 20;
+    if (path[start] != '-' || path.compare(start + 6, 4, "-of-") != 0)
+        return false;
+    auto digits = [&path](size_t off) {
+        for (size_t i = 0; i < 5; ++i)
+            if (path[off + i] < '0' || path[off + i] > '9') return false;
+        return true;
+    };
+    if (!digits(start + 1) || !digits(start + 10)) return false;
+    for (size_t i = 0; i < 5; ++i) {
+        index = index * 10u + static_cast<uint32_t>(path[start + 1 + i] - '0');
+        count = count * 10u + static_cast<uint32_t>(path[start + 10 + i] - '0');
+    }
+    if (index == 0 || count < 2 || index > count) return false;
+    prefix = path.substr(0, start + 1);
+    return true;
+}
+
+std::vector<std::string> CanonicalShardPaths(const std::string& path,
+                                             const std::string& prefix,
+                                             uint32_t count) {
+    std::vector<std::string> paths;
+    paths.reserve(count);
+    for (uint32_t i = 1; i <= count; ++i) {
+        char name[32]{};
+        std::snprintf(name, sizeof(name), "%05u-of-%05u.gguf", i, count);
+        paths.push_back(prefix + name);
+    }
+    (void)path;
+    return paths;
+}
+
+std::string Sha256FilesImpl(const std::vector<std::string>& paths) {
+    Sha256 s;
+    for (const auto& path : paths) {
+#ifdef _WIN32
+        HANDLE h = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (h == INVALID_HANDLE_VALUE) return {};
+        std::vector<uint8_t> buf(1u << 20);
+        DWORD got = 0;
+        for (;;) {
+            if (!ReadFile(h, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr)) {
+                CloseHandle(h);
+                return {};
+            }
+            if (got == 0) break;
+            s.update(buf.data(), got);
+            if (got < buf.size()) break;
+        }
+        CloseHandle(h);
+#else
+        FILE* f = std::fopen(path.c_str(), "rb");
+        if (!f) return {};
+        std::vector<uint8_t> buf(1u << 20);
+        size_t got = 0;
+        while ((got = std::fread(buf.data(), 1, buf.size(), f)) != 0)
+            s.update(buf.data(), got);
+        const bool ok = std::feof(f) != 0;
+        std::fclose(f);
+        if (!ok) return {};
+#endif
+    }
+    return s.hex();
 }
 
 Tokenizer g_tokenizer;
@@ -420,15 +494,21 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
         }
     }
     if (n == "token_embd.weight") return Role::TokenEmbedding;
+    if (n == "per_layer_token_embd.weight") return Role::PleTokenEmbedding;
     if (n == "output.weight") return Role::OutputWeight;
-    if (n == "output_norm.weight") return Role::OutputNorm;
+    if (n == "output_norm.weight" || n == "output_hc_norm.weight") return Role::OutputNorm;
 
     if (n.find(".attn_qkv.weight") != std::string::npos) return Role::AttnQKV;
+    if (n.find(".attn_gate.weight") != std::string::npos) return Role::AttnGate;
+    if (n.find(".indexer.k_proj.weight") != std::string::npos) return Role::IndexerKProj;
+    if (n.find(".indexer.k_norm.weight") != std::string::npos) return Role::IndexerKNorm;
+    if (n.find(".indexer.q_proj.weight") != std::string::npos) return Role::IndexerQProj;
+    if (n.find(".indexer.q_norm.weight") != std::string::npos) return Role::IndexerQNorm;
     if (n.find(".attn_kv_a_norm.weight") != std::string::npos) return Role::AttnKNorm;
     if (n.find(".attn_kv_a_mqa.weight") != std::string::npos) return Role::AttnKvAMqa;
     if (n.find(".attn_kv_b.weight") != std::string::npos) return Role::AttnKvB;
     if (n.find(".attn_k_norm.weight") != std::string::npos) return Role::AttnKNorm;
-    if (n.find(".attn_q_norm.weight") != std::string::npos) return Role::AttnKNorm;
+    if (n.find(".attn_q_norm.weight") != std::string::npos) return Role::AttnQNorm;
     if (n.find(".attn_norm.weight") != std::string::npos ||
         n.find(".attn_norm.bias") != std::string::npos) return Role::AttnNorm;
     if (n.find(".attn_q.bias") != std::string::npos) return Role::AttnQ;
@@ -471,6 +551,20 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ssm_in.weight") != std::string::npos) return Role::SsmIn;
     if (n.find(".ssm_out.weight") != std::string::npos) return Role::SsmOut;
     if (n.find(".ssm_norm.weight") != std::string::npos) return Role::SsmNorm;
+    if (n.find(".hc_attn_down.weight") != std::string::npos) return Role::HyperAttnDown;
+    if (n.find(".hc_attn_inject.weight") != std::string::npos) return Role::HyperAttnInject;
+    if (n.find(".hc_attn_norm.weight") != std::string::npos) return Role::HyperAttnNorm;
+    if (n.find(".hc_attn_up.weight") != std::string::npos) return Role::HyperAttnUp;
+    if (n.find(".hc_ffn_down.weight") != std::string::npos) return Role::HyperFfnDown;
+    if (n.find(".hc_ffn_inject.weight") != std::string::npos) return Role::HyperFfnInject;
+    if (n.find(".hc_ffn_norm.weight") != std::string::npos) return Role::HyperFfnNorm;
+    if (n.find(".hc_ffn_up.weight") != std::string::npos) return Role::HyperFfnUp;
+    if (n.find(".ple_conv1d.weight") != std::string::npos) return Role::PleConv;
+    if (n.find(".ple_norm_conv.weight") != std::string::npos ||
+        n.find(".ple_norm_key.weight") != std::string::npos ||
+        n.find(".ple_norm_query.weight") != std::string::npos) return Role::PleNorm;
+    if (n.find(".ple_key.weight") != std::string::npos ||
+        n.find(".ple_value.weight") != std::string::npos) return Role::PleOutput;
     if (n.find("rope_freqs.weight") != std::string::npos) return Role::RopeFreqs;
     if (n.find("rope_factors") != std::string::npos) return Role::RopeFactors;
     return Role::Other;
@@ -572,6 +666,22 @@ void DetectArch(ModelSpec& s, const std::vector<TensorRec>& tensors) {
     if (a == "phi3") { s.kind = ArchKind::Phi3Fused; return; }
     if (a == "nemotron_h" || a == "nemotron_h_moe") { s.kind = ArchKind::SsmHybrid; return; }
     if (a == "qwen3next") { s.kind = ArchKind::Qwen3Next; return; }
+    if (a == "qwen4exp") {
+        s.kind = ArchKind::Qwen4Exp;
+        // FillSpec runs before architecture detection, so derive the
+        // capability contract here once the family is known. The booleans are
+        // descriptive admission facts; they never enable an unimplemented
+        // operator by themselves.
+        s.qwen4exp_has_qsa = s.indexer_heads != 0 && s.indexer_key_length != 0;
+        s.qwen4exp_has_gdn = s.gdn_inner_size != 0 && s.gdn_state_size != 0 &&
+                             s.gdn_group_count != 0;
+        s.qwen4exp_has_ple = s.ple_conv_kernel != 0 || s.ple_ngram_size != 0;
+        s.qwen4exp_has_hyperconnection = s.hyperconnection_count != 0 &&
+                                         s.hyperconnection_low_rank != 0;
+        s.qwen4exp_has_sparse_moe = s.expert_count != 0 && s.expert_used != 0 &&
+                                    s.expert_ffn != 0;
+        return;
+    }
 
     // SSM-driven hybrids also expose the standard decoder tensors (attention on
     // some blocks, MoE elsewhere) alongside the ssm_* set, so this only records
@@ -634,6 +744,21 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
     pick("attention.key_length", s.key_length);
     pick("attention.value_length", s.value_length);
     pick("leading_dense_block_count", s.leading_dense);
+    pick("attention.indexer.head_count", s.indexer_heads);
+    pick("attention.indexer.key_length", s.indexer_key_length);
+    pick("attention.indexer.top_k", s.indexer_top_k);
+    pick("full_attention_interval", s.full_attention_interval);
+    pick("hyper_connection.count", s.hyperconnection_count);
+    pick("hyper_connection.low_rank", s.hyperconnection_low_rank);
+    pick("ple.conv_kernel", s.ple_conv_kernel);
+    pick("ple.ngram_size", s.ple_ngram_size);
+    pick("ple.heads_per_ngram", s.ple_heads_per_ngram);
+    // Qwen4Exp names these under qwen4exp.ssm.* rather than the generic
+    // Mamba keys. Preserve both spellings so the contract is metadata-driven.
+    s.gdn_inner_size = GetU(m, p + "ssm.inner_size", 0);
+    s.gdn_state_size = GetU(m, p + "ssm.state_size", 0);
+    s.gdn_group_count = GetU(m, p + "ssm.group_count", 0);
+    s.gdn_time_step_rank = GetU(m, p + "ssm.time_step_rank", 0);
     // Mamba2 SSM geometry. Read from the model's own metadata and never
     // defaulted: a wrong state size silently corrupts every scan step.
     pick("ssm.state_size", s.ssm_state_size);
@@ -648,6 +773,16 @@ void FillSpec(ModelSpec& s, const std::map<std::string, std::string>& m) {
     }
     s.rms_eps = GetD(m, p + "attention.layer_norm_rms_epsilon", 1e-5);
     if (s.heads_kv == 0) s.heads_kv = s.heads;   // MHA default
+    if (s.kind == ArchKind::Qwen4Exp) {
+        s.qwen4exp_has_qsa = s.indexer_heads != 0 && s.indexer_key_length != 0;
+        s.qwen4exp_has_gdn = s.gdn_inner_size != 0 && s.gdn_state_size != 0 &&
+                             s.gdn_group_count != 0;
+        s.qwen4exp_has_ple = s.ple_conv_kernel != 0 || s.ple_ngram_size != 0;
+        s.qwen4exp_has_hyperconnection = s.hyperconnection_count != 0 &&
+                                         s.hyperconnection_low_rank != 0;
+        s.qwen4exp_has_sparse_moe = s.expert_count != 0 && s.expert_used != 0 &&
+                                    s.expert_ffn != 0;
+    }
 }
 
 // Build the runtime op graph for the families Deep2 can execute.
@@ -659,6 +794,44 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         u.detail = "no decoder graph for this architecture";
         g.ops.push_back(u);
         g.unsupported = 1;
+        return g;
+    }
+    if (s.kind == ArchKind::Qwen4Exp) {
+        // Keep the model fail-closed, but expose one blocker per architectural
+        // primitive. This is an executable contract inventory, not a generic
+        // transformer approximation: the certifier can report exactly what
+        // still prevents full-model execution without claiming a false graph.
+        const auto blocker = [&](Op op, const char* name, const char* detail) {
+            GraphOp u;
+            // Preserve the architectural identity in the graph while the
+            // native executor is unavailable. The runtime bind step maps
+            // these kinds to explicit fail-closed backend errors; they must
+            // never be mistaken for generic attention, SSM, or MoE nodes.
+            u.op = op;
+            u.detail = std::string(name) + ": " + detail;
+            g.ops.push_back(std::move(u));
+            ++g.unsupported;
+        };
+        if (s.qwen4exp_has_qsa)
+            blocker(Op::Qsa, "QSA", "indexer sparse attention and compressed-key cache executor is not bound");
+        else
+            blocker(Op::Qsa, "QSA", "metadata missing indexer geometry");
+        if (s.qwen4exp_has_gdn)
+            blocker(Op::Gdn, "GDN", "gated delta-net recurrent state executor is not bound");
+        else
+            blocker(Op::Gdn, "GDN", "metadata missing recurrent geometry");
+        if (s.qwen4exp_has_ple)
+            blocker(Op::Ple, "PLE", "per-layer n-gram embedding and short-convolution executor is not bound");
+        else
+            blocker(Op::Ple, "PLE", "metadata missing PLE geometry");
+        if (s.qwen4exp_has_hyperconnection)
+            blocker(Op::Hyperconnection, "HYPERCONNECTION", "four-stream mix/down/up residual executor is not bound");
+        else
+            blocker(Op::Hyperconnection, "HYPERCONNECTION", "metadata missing hyperconnection geometry");
+        if (s.qwen4exp_has_sparse_moe)
+            blocker(Op::SparseMoE, "SPARSE_MOE", "top-10-of-512 MXFP4/IQ2 expert grouped GEMM executor is not bound");
+        else
+            blocker(Op::SparseMoE, "SPARSE_MOE", "metadata missing expert geometry");
         return g;
     }
 
@@ -1157,6 +1330,7 @@ const char* ArchKindName(ArchKind k) {
         case ArchKind::DeepSeekMLA: return "deepseek-MLA-MoE";
         case ArchKind::SsmHybrid: return "ssm-hybrid";
         case ArchKind::Qwen3Next: return "qwen3next-hybrid";
+        case ArchKind::Qwen4Exp: return "qwen4exp";
         case ArchKind::MoeOnly: return "moe-dense-attn";
         case ArchKind::Encoder: return "encoder";
         default: return "unknown";
@@ -1166,6 +1340,14 @@ const char* ArchKindName(ArchKind k) {
 const IngestReport& Ingest(const std::string& path, bool want_weights) {
     std::lock_guard<std::mutex> lock(g_mu);
     g_last = IngestReport{};
+    const bool ingest_trace = std::getenv("DEEP2_INGEST_TRACE") != nullptr;
+    auto trace = [ingest_trace](const char* phase) {
+        if (ingest_trace) {
+            std::fprintf(stderr, "[INGEST_TRACE] %s\n", phase);
+            std::fflush(stderr);
+        }
+    };
+    trace("begin");
 
     // The returned report holds raw pointers INTO the memory mapping, so the
     // mapping must outlive the report. Keep the reader in a retained holder and
@@ -1173,35 +1355,121 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
     // an earlier version did) left every TensorRec::data pointing at unmapped
     // memory, which crashes the first kernel that tries to read a weight.
     static Reader* g_reader = nullptr;
+    static std::shared_ptr<::Deep2::GGUFLoader> g_sharded_loader;
     if (g_reader) { g_reader->Close(); delete g_reader; g_reader = nullptr; }
-    g_reader = new Reader();
-    Reader& r = *g_reader;
-    if (!r.Open(path)) { delete g_reader; g_reader = nullptr; g_last.error = "cannot open"; return g_last; }
-
+    g_sharded_loader.reset();
     std::map<std::string, std::string> meta;
     uint64_t tensor_count = 0, kv_count = 0;
-    if (!r.ParseHeader(meta, tensor_count, kv_count)) {
-        g_last.error = "GGUF header/metadata parse failed";
+    uint64_t source_bytes = 0;
+    std::string shard_prefix;
+    uint32_t shard_index = 0, shard_count = 0;
+    const bool canonical_shards =
+        ParseCanonicalShardPath(path, shard_prefix, shard_index, shard_count);
+    const bool isSharded = canonical_shards;
+    if (isSharded) {
+        // The legacy Reader maps one GGUF only.  A canonical split model must
+        // be loaded through the shared no-copy loader so every descriptor and
+        // payload pointer comes from its owning shard.  Keeping the loader in
+        // a static holder makes TensorRec::data valid for the lifetime of the
+        // returned report, just like g_reader does for single-file models.
+        ::GGUFLoadOptions options;
+        options.loadTensors = true;
+        options.verbose = false;
+        options.mmap = true;
+        const ::Deep2::GGUFLoadResult loaded =
+            ::Deep2::GGUFLoader::Load(path.c_str(), options);
+        if (!loaded.success || !loaded.loader) {
+            g_last.error = "multi-shard GGUF load failed: " + loaded.error;
+            return g_last;
+        }
+        g_sharded_loader = loaded.loader;
+        meta = g_sharded_loader->getMetaAllStrings();
+        source_bytes = g_sharded_loader->mappedBytes();
+        trace("shard-loader-ready");
+        g_last.shard_count = g_sharded_loader->shardCount();
+        g_last.mapped_bytes = source_bytes;
+
+        const std::vector<std::string> names = g_sharded_loader->listTensors();
+        g_last.tensors.reserve(names.size());
+        for (const std::string& name : names) {
+            const ::Deep2::GGUFTensor* source = g_sharded_loader->getTensor(name);
+            if (!source || !source->data || source->sizeBytes == 0 || source->shape.empty()) {
+                g_last.error = "multi-shard tensor is not fully mapped: " + name;
+                g_last.tensors.clear();
                 return g_last;
-    }
-    if (!r.ParseTensors(static_cast<size_t>(tensor_count), g_last.tensors, g_last.error)) {
-        return g_last;
+            }
+            TensorRec t;
+            t.name = source->name;
+            t.dims.reserve(source->shape.size());
+            for (const int64_t dim : source->shape) {
+                if (dim <= 0) {
+                    g_last.error = "multi-shard tensor has invalid dimension: " + name;
+                    g_last.tensors.clear();
+                    return g_last;
+                }
+                t.dims.push_back(static_cast<uint64_t>(dim));
+            }
+            t.gguf_type = static_cast<uint32_t>(source->type);
+            t.ggml_type = static_cast<ggml_type>(t.gguf_type);
+            t.rel_offset = source->tensorOffset;
+            t.data = source->data;
+            t.bytes = source->sizeBytes;
+            // GGML_TYPE_COUNT in this tree predates any future GGUF type.  A
+            // native type must never be handed to ggml's trait table.
+            t.deep2_native = t.gguf_type >= static_cast<uint32_t>(GGML_TYPE_COUNT);
+            g_last.tensors.push_back(std::move(t));
+        }
+        tensor_count = g_last.tensors.size();
+        trace("shard-tensors-ready");
+    } else {
+        g_reader = new Reader();
+        Reader& r = *g_reader;
+        if (!r.Open(path)) {
+            delete g_reader; g_reader = nullptr;
+            g_last.error = "cannot open";
+            return g_last;
+        }
+        if (!r.ParseHeader(meta, tensor_count, kv_count)) {
+            g_last.error = "GGUF header/metadata parse failed";
+            return g_last;
+        }
+        if (GetU(meta, "split.count", 1) > 1) {
+            g_last.error = "GGUF declares split.count > 1 but filename is not canonical -00001-of-000NN.gguf";
+            return g_last;
+        }
+        if (!r.ParseTensors(static_cast<size_t>(tensor_count), g_last.tensors, g_last.error))
+            return g_last;
+        source_bytes = static_cast<uint64_t>(r.size);
+        g_last.shard_count = 1;
+        g_last.mapped_bytes = source_bytes;
     }
 
+    trace("tensors-parsed");
     FillSpec(g_last.spec, meta);
+    trace("spec-filled");
 
     // Provenance: the file's SHA-256, size, tensor count and type histogram.
     g_prov = Provenance{};
     g_prov.path = path;
-    g_prov.sha256 = Sha256FileImpl(path);
-    g_prov.file_bytes = static_cast<uint64_t>(r.size);
+    if (std::getenv("DEEP2_INGEST_SKIP_DIGEST")) {
+        g_prov.sha256 = "<deferred>";
+    } else if (canonical_shards) {
+        const auto shard_paths = CanonicalShardPaths(path, shard_prefix, shard_count);
+        g_prov.sha256 = Sha256FilesImpl(shard_paths);
+    } else {
+        g_prov.sha256 = Sha256FileImpl(path);
+    }
+    g_prov.file_bytes = source_bytes;
     g_prov.tensor_count = g_last.tensors.size();
+    g_prov.shard_count = g_last.shard_count;
     g_prov.architecture = g_last.spec.architecture;
     g_prov.model_name = g_last.spec.model_name;
     for (const auto& t : g_last.tensors) g_prov.type_histogram[t.gguf_type]++;
+    trace("provenance-ready");
 
     // Tokenizer + the model's own identity, read from metadata.
     ReadTokenizerAndIdentity(path, g_last.spec);
+    trace("tokenizer-ready");
 
     // Some models (phi3, gemma3, ...) do not declare <arch>.vocab_size. The
     // authoritative value is the embedding table's second dimension, so derive
@@ -1227,6 +1495,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
     }
 
     DetectArch(g_last.spec, g_last.tensors);
+    trace("arch-detected");
 
     for (auto& t : g_last.tensors) {
         t.role = ClassifyRole(t.name, t.block);
@@ -1259,6 +1528,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
     g_last.total = g_last.tensors.size();
     g_last.resolved = g_last.total;   // every tensor is resolved by name+data
     g_last.graph = BuildGraph(g_last.spec, g_last.tensors);
+    trace("graph-built");
     g_last.ok = true;
 
     if (want_weights) {
@@ -1315,6 +1585,7 @@ const IngestReport& Ingest(const std::string& path, bool want_weights) {
             g_last.weights[t.name] = std::move(v);
         }
     }
+    trace("complete");
         return g_last;
 }
 

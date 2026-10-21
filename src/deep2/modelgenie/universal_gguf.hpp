@@ -48,6 +48,7 @@ enum class ArchKind : uint8_t {
     DeepSeekMLA,    // MLA (kv_a/kv_b) + MoE experts
     SsmHybrid,      // SSM blocks (+ attention on some blocks); nemotron_h
     Qwen3Next,      // SSM + linear attention hybrid + MoE
+    Qwen4Exp,       // Qwen3.8 Flash-Next: PLE/QSA/hyperconnection/MoE
     MoeOnly,        // MoE with standard attention; gptoss, laguna, qwen35moe
     Encoder         // not a decoder (clip); ingest only, no decode graph
 };
@@ -64,7 +65,13 @@ enum class Role : uint8_t {
     AttnNorm,
     AttnQ, AttnK, AttnV, AttnOutput,
     AttnQKV,           // phi3 fused
-    AttnKNorm,         // q/k norm (gemma3)
+    AttnGate,          // Qwen4Exp gated attention output
+    AttnQNorm,         // QSA query norm
+    AttnKNorm,         // q/k norm (gemma3/QSA)
+    IndexerKProj,      // QSA compressed-key projection
+    IndexerKNorm,      // QSA compressed-key norm
+    IndexerQProj,      // QSA query projection
+    IndexerQNorm,      // QSA query norm
     AttnKvANorm, AttnKvAMqa, AttnKvB, AttnO,   // deepseek MLA
     FfnNorm,
     FfnGate, FfnUp, FfnDown,
@@ -72,6 +79,9 @@ enum class Role : uint8_t {
     RouterGate,                          // MoE router
     SharedFfnGate, SharedFfnUp, SharedFfnDown, // deepseek2 shared experts (*_shexp)
     SsmA, SsmConv1dW, SsmConv1dB, SsmD, SsmDtB, SsmIn, SsmOut, SsmNorm,
+    HyperAttnDown, HyperAttnInject, HyperAttnNorm, HyperAttnUp,
+    HyperFfnDown, HyperFfnInject, HyperFfnNorm, HyperFfnUp,
+    PleTokenEmbedding, PleConv, PleNorm, PleOutput,
     RopeFreqs, RopeFactors
 };
 
@@ -137,6 +147,26 @@ struct ModelSpec {
     uint64_t key_length = 0;
     uint64_t value_length = 0;
     uint64_t leading_dense = 0;
+    // Qwen4Exp / Flash-Next geometry. These are read from the model's own
+    // metadata and are never inferred from a generic Llama layout.
+    uint64_t indexer_heads = 0;
+    uint64_t indexer_key_length = 0;
+    uint64_t indexer_top_k = 0;
+    uint64_t full_attention_interval = 0;
+    uint64_t hyperconnection_count = 0;
+    uint64_t hyperconnection_low_rank = 0;
+    uint64_t ple_conv_kernel = 0;
+    uint64_t ple_ngram_size = 0;
+    uint64_t ple_heads_per_ngram = 0;
+    uint64_t gdn_inner_size = 0;
+    uint64_t gdn_state_size = 0;
+    uint64_t gdn_group_count = 0;
+    uint64_t gdn_time_step_rank = 0;
+    bool qwen4exp_has_qsa = false;
+    bool qwen4exp_has_gdn = false;
+    bool qwen4exp_has_ple = false;
+    bool qwen4exp_has_hyperconnection = false;
+    bool qwen4exp_has_sparse_moe = false;
     bool has_bias = false;        // qwen2-style attn_q/k/v .bias present
     // Mamba2 SSM (nemotron_h, qwen3-next). Read from the model's own metadata;
     // never defaulted, because a wrong state size silently corrupts the scan.
@@ -146,15 +176,28 @@ struct ModelSpec {
     uint64_t ssm_group_count = 0;  // n_groups
     uint64_t ssm_conv_kernel = 0;  // conv dim
     std::vector<std::string> notes;
+
+    // Derived GQA ratio. Zero means metadata is incomplete or inconsistent.
+    uint64_t GqaRatio() const {
+        return heads_kv != 0 && heads >= heads_kv && heads % heads_kv == 0
+            ? heads / heads_kv : 0;
+    }
 };
 
 // ---------------------------------------------------------------------------
-// Op graph: same primitive vocabulary Deep2 already implements.
+// Op graph: shared primitive vocabulary plus explicit architecture-specific
+// kinds. Architecture-specific kinds remain fail-closed until a native GPU
+// executor is linked and independently certified.
 // ---------------------------------------------------------------------------
 enum class Op : uint8_t {
     EmbeddingLookup, RmsNorm, Linear, Attention, MatMul,
     MlaDecompress, Router, TopK, MoEExecute, ResidualAdd, LmHead,
     SsmScan,      // Mamba2 selective scan (nemotron_h, qwen3-next)
+    Qsa,          // Qwen4Exp indexer + compressed-key sparse attention
+    Gdn,          // Qwen4Exp gated delta-net recurrent state update
+    Ple,          // Qwen4Exp per-layer n-gram embedding + short convolution
+    Hyperconnection, // Qwen4Exp four-stream residual mix/down/up
+    SparseMoE,    // Qwen4Exp top-k sparse expert grouped GEMM
     SwiGLU,       // out = silu(gate) * up, the dense-FFN activation
     Publish,      // copy an arena value to a named one (residual bookkeeping)
     SquaredReLU,  // out = relu(x)^2, Nemotron's gateless MLP activation
@@ -189,6 +232,8 @@ struct IngestReport {
     size_t no_dequant = 0;        // types ggml cannot dequantise
     std::map<uint32_t, size_t> type_histogram;
     std::vector<std::string> unsupported_types;
+    uint32_t shard_count = 1;
+    uint64_t mapped_bytes = 0;
     // Resolution: name -> dequantised row for role-tested tensors.
     std::unordered_map<std::string, std::vector<float>> weights;
 };
@@ -205,10 +250,12 @@ struct Tokenizer {
 };
 
 // Provenance: what was actually loaded, so a run can be audited.
-struct Provenance {    std::string path;
+struct Provenance {
+    std::string path;
     std::string sha256;
     uint64_t file_bytes = 0;
     size_t tensor_count = 0;
+    uint32_t shard_count = 1;
     std::map<uint32_t, size_t> type_histogram;
     std::string architecture;
     std::string model_name;

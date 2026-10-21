@@ -7,8 +7,10 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <utility>
+#include <cerrno>
 #include <mutex>
+#include <unordered_set>
+#include <utility>
 
 #include "ggml.h"
 #include "quant_dot_dispatch.hpp"
@@ -34,10 +36,21 @@ rawrxd::deep2::Governor& ProcessGovernor() {
     static rawrxd::deep2::Governor governor = [] {
         std::uint64_t mb = 8192;   // 8 GiB default host admission budget
         if (const char* e = std::getenv("DEEP2_KV_BUDGET_MB")) {
-            const unsigned long long v = std::strtoull(e, nullptr, 10);
-            if (v > 0) mb = v;
+            // Reject leading minus (strtoull accepts it and wraps)
+            if (*e == '-') return rawrxd::deep2::Governor({8192ull * 1024ull * 1024ull, 0, 0});
+            char* end = nullptr;
+            errno = 0;
+            const unsigned long long v = std::strtoull(e, &end, 10);
+            if (errno == 0 && end != e && *end == '\0' && v > 0) mb = v;
         }
-        return rawrxd::deep2::Governor({mb * 1024ull * 1024ull, 0, 0});
+        // Overflow-safe MiB to bytes conversion: cap at UINT64_MAX
+        std::uint64_t bytes = 0;
+        if (mb != 0 && mb > std::numeric_limits<std::uint64_t>::max() / 1024ull / 1024ull) {
+            bytes = std::numeric_limits<std::uint64_t>::max();
+        } else {
+            bytes = mb * 1024ull * 1024ull;
+        }
+        return rawrxd::deep2::Governor({bytes, 0, 0});
     }();
     return governor;
 }
@@ -387,6 +400,11 @@ const char* opName(Universal::Op o) {
         case Universal::Op::Router: return "Router";
         case Universal::Op::TopK: return "TopK";
         case Universal::Op::MoEExecute: return "MoEExecute";
+        case Universal::Op::Qsa: return "QSA";
+        case Universal::Op::Gdn: return "GDN";
+        case Universal::Op::Ple: return "PLE";
+        case Universal::Op::Hyperconnection: return "Hyperconnection";
+        case Universal::Op::SparseMoE: return "SparseMoE";
         case Universal::Op::ResidualAdd: return "ResidualAdd";
         case Universal::Op::LmHead: return "LmHead";
         default: return "Unsupported";
@@ -475,6 +493,11 @@ const char* OpKindName(OpKind k) {
         case OpKind::Router: return "Router";
         case OpKind::TopK: return "TopK";
         case OpKind::MoEExecute: return "MoEExecute";
+        case OpKind::Qsa: return "QSA";
+        case OpKind::Gdn: return "GDN";
+        case OpKind::Ple: return "PLE";
+        case OpKind::Hyperconnection: return "Hyperconnection";
+        case OpKind::SparseMoE: return "SparseMoE";
         case OpKind::ResidualAdd: return "ResidualAdd";
         case OpKind::Publish: return "Publish";
         case OpKind::SwiGLU: return "SwiGLU";
@@ -513,7 +536,12 @@ bool Executor::Bind(const Universal::IngestReport& report) {
         return it == slot_by_name_.end() ? -1 : it->second;
     };
     if (findSlot("token_embd.weight") < 0) { stats_.error = "missing token_embd.weight"; return false; }
-    if (findSlot("output_norm.weight") < 0) { stats_.error = "missing output_norm.weight"; return false; }
+    const bool hasOutputNorm = findSlot("output_norm.weight") >= 0 ||
+                               findSlot("output_hc_norm.weight") >= 0;
+    if (!hasOutputNorm) {
+        stats_.error = "missing output_norm.weight (or architecture-specific final norm)";
+        return false;
+    }
 
     // The LM head. Models that tie their embeddings (Qwen2.5-Coder-1.5B and
     // most base checkpoints) ship no output.weight at all and share
@@ -587,6 +615,11 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             case Universal::Op::Router: in.op = OpKind::Router; break;
             case Universal::Op::TopK: in.op = OpKind::TopK; break;
             case Universal::Op::MoEExecute: in.op = OpKind::MoEExecute; break;
+            case Universal::Op::Qsa: in.op = OpKind::Qsa; break;
+            case Universal::Op::Gdn: in.op = OpKind::Gdn; break;
+            case Universal::Op::Ple: in.op = OpKind::Ple; break;
+            case Universal::Op::Hyperconnection: in.op = OpKind::Hyperconnection; break;
+            case Universal::Op::SparseMoE: in.op = OpKind::SparseMoE; break;
             case Universal::Op::ResidualAdd: in.op = OpKind::ResidualAdd; break;
             case Universal::Op::Publish: in.op = OpKind::Publish; break;
             case Universal::Op::SwiGLU: in.op = OpKind::SwiGLU; break;
@@ -732,9 +765,15 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     // ---- 3. bind kernels, fail-closed ----
     stats_.ops_total = program_.size();
     for (const auto& in : program_) {
-        if (in.op == OpKind::Unsupported) {
+        const bool qwen4exp_unbound =
+            in.op == OpKind::Qsa || in.op == OpKind::Gdn ||
+            in.op == OpKind::Ple || in.op == OpKind::Hyperconnection ||
+            in.op == OpKind::SparseMoE;
+        if (in.op == OpKind::Unsupported || qwen4exp_unbound) {
             char buf[256];
-            std::snprintf(buf, sizeof(buf), "Unsupported node: %s", in.detail.c_str());
+            std::snprintf(buf, sizeof(buf), "%s node: %s",
+                          qwen4exp_unbound ? OpKindName(in.op) : "Unsupported",
+                          in.detail.c_str());
             stats_.unbound_ops.emplace_back(buf);
             ++stats_.ops_unbound;
             continue;
@@ -761,8 +800,16 @@ bool Executor::Bind(const Universal::IngestReport& report) {
     kvat_.assign(B, {});
     kv_width_k_.assign(B, 0);
     kv_width_v_.assign(B, 0);
-    // Model rebinding invalidates all cached SSM parameters.
+    ssm_state_.assign(B, {});
+    ssm_conv_.assign(B, {});
     ssm_weights_.assign(B, {});
+    ssm_profile_calls_ = 0;
+    ssm_profile_cache_hits_ = 0;
+    ssm_profile_cache_misses_ = 0;
+    ssm_profile_cache_ms_ = 0.0;
+    ssm_profile_total_ms_ = 0.0;
+    ssm_profile_linear_ms_ = 0.0;
+    ssm_profile_post_ms_ = 0.0;
 
     // RAWRXD_DEEP2_SPEC_VERIFY_001: detect recurrent blocks. A rejected
     // speculative draft cannot be rolled back out of an SSM state, so the
@@ -983,8 +1030,9 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         // (iscale = -127.f/max, d = 1/iscale), round-half-to-even, and a clamp.
         // src/deep2/Q8KParity.cpp measures the difference byte-for-byte.
         const size_t n_blk = n_in / 256;
-        std::vector<float> q8(n_blk * 273, 0.0f);
-        BuildInterleavedQ8K(x.data(), n_in, q8.data());
+        thread_local std::vector<float> q8_scratch;
+        q8_scratch.resize(n_blk * 273);
+        BuildInterleavedQ8K(x.data(), n_in, q8_scratch.data());
         y.assign(n_out, 0.0f);
         if (std::getenv("QUANT_TRACE")) {
             std::fprintf(stderr, "[quant] w=%s kind=%d n_in=%zu n_out=%zu n_blk=%zu rb=%zu wbytes=%zu need=%zu\n",
@@ -1002,7 +1050,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         if (join_batch && dot_batch_open_ && !std::getenv("RR_GPU_CHECK")) {
             const bool qok = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                                   x.data(), n_in, y.data(), n_out, cpu,
-                                                  q8.data(), q8.size() * sizeof(float),
+                                                  q8_scratch.data(), q8_scratch.size() * sizeof(float),
                                                   force_cpu_);
             const QuantDot::Receipt& qr = QuantDot::LastReceipt();
             if (qok && qr.queued) {
@@ -1022,7 +1070,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
         }
         const bool gpu = QuantDot::DotBlocked(kind, w.data, w.bytes,
                                               x.data(), n_in, y.data(), n_out, cpu,
-                                              q8.data(), q8.size() * sizeof(float),
+                                              q8_scratch.data(), q8_scratch.size() * sizeof(float),
                                               force_cpu_);
         if (gpu) {
             ++gpu_calls_;
@@ -1054,7 +1102,7 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
             std::vector<float> ref(n_out, 0.0f);
             for (size_t j = 0; j < n_out; ++j) {
                 const uint8_t* row = reinterpret_cast<const uint8_t*>(w.data) + j * rb;
-                ref[j] = cpu(row, q8.data(), j);
+                ref[j] = cpu(row, q8_scratch.data(), j);
             }
             size_t badnan = 0, worstj = 0;
             double worstd = 0.0;
@@ -2038,7 +2086,16 @@ static bool DequantRange(const TensorRec& t, size_t base, size_t count, std::vec
     // Number of complete blocks available in the encoded data.
     const size_t totalBlocks = t.bytes / ts;
     const size_t firstBlock  = base / static_cast<size_t>(blk);
-    const size_t lastBlock   = (base + count + blk - 1) / static_cast<size_t>(blk);
+
+    // Overflow-safe base + count calculation
+    size_t basePlusCount;
+    if (base > std::numeric_limits<size_t>::max() - count) {
+        basePlusCount = std::numeric_limits<size_t>::max();
+    } else {
+        basePlusCount = base + count;
+    }
+
+    const size_t lastBlock   = (basePlusCount + static_cast<size_t>(blk) - 1) / static_cast<size_t>(blk);
     if (firstBlock >= totalBlocks) return false;
     const size_t upto = std::min(lastBlock, totalBlocks);
     if (upto <= firstBlock) return false;
@@ -2053,7 +2110,7 @@ static bool DequantRange(const TensorRec& t, size_t base, size_t count, std::vec
         const size_t elemStart = (firstBlock + b) * static_cast<size_t>(blk);
         const size_t elemEnd   = elemStart + static_cast<size_t>(blk);
         const size_t clipFrom  = std::max(elemStart, base);
-        const size_t clipTo    = std::min(elemEnd, base + count);
+        const size_t clipTo    = std::min(elemEnd, basePlusCount);
         if (clipTo <= clipFrom) continue;
 
         // Decode this block into a scratch buffer (never in place; that aliases
@@ -3483,6 +3540,23 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         !std::getenv("DEEP2_NO_DOT_BATCH") && !std::getenv("RR_GPU_CHECK") &&
         !std::getenv("DEEP2_DUMP_FFN") && !std::getenv("ATTN_DUMP") &&
         !std::getenv("ATTN_TRACE");
+    const bool wide_batch_ = can_batch_ && std::getenv("DEEP2_WIDE_DOT_BATCH") != nullptr;
+    std::unordered_set<std::string> dot_batch_pending_outputs;
+    auto queueable_linear = [&](const Instr& candidate) {
+        if (candidate.op != OpKind::Linear || candidate.b < 0 ||
+            candidate.b >= static_cast<int32_t>(tensors_.size())) return false;
+        const TensorRec& weight = tensors_[static_cast<size_t>(candidate.b)];
+        const int kind = QuantKindOf(weight.ggml_type);
+        if (kind < 0 || weight.dims.empty()) return false;
+        const size_t n_in = static_cast<size_t>(weight.dims[0]);
+        if (kind < 2) return (n_in % 256u) == 0;
+        if (kind == 7) return (n_in % 64u) == 0;
+        return (n_in % 32u) == 0;
+    };
+    auto pending_name = [&](const std::string& name) {
+        return !name.empty() && name[0] != '<' &&
+               dot_batch_pending_outputs.find(name) != dot_batch_pending_outputs.end();
+    };
     auto resolveIn = [&](const Instr& i) -> const std::vector<float>& {
         if (!i.aName.empty() && i.aName[0] != '<' && i.op != OpKind::MlaDecompress) {
             auto it = act.find(i.aName);
@@ -3510,12 +3584,22 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 
     const int32_t embSlot = slot_by_name_["token_embd.weight"];
     std::string dot_batch_last_out_slot_;
+    const bool op_timing = std::getenv("DEEP2_OP_TIMING") != nullptr;
+    std::unordered_map<int, double> op_timing_ms;
+    std::unordered_map<int, size_t> op_timing_count;
+    double dot_batch_flush_ms = 0.0;
     auto flush_group = [&]() {
+        const auto flush_started = std::chrono::steady_clock::now();
         const bool ok = FlushDotBatch();
+        if (op_timing) {
+            dot_batch_flush_ms += std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - flush_started).count();
+        }
         if (!dot_batch_last_out_slot_.empty()) {
             hidden_ = arena(dot_batch_last_out_slot_);
             dot_batch_last_out_slot_.clear();
         }
+        dot_batch_pending_outputs.clear();
         // FlushDotBatch already performed CPU replay internally if EndBatch
         // failed. Output buffers hold real numbers; GPU counters already
         // adjusted. Return true so the prefill continues with valid results.
@@ -3543,11 +3627,13 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         }
         // Only named, independent linear operands may share a submission.
         // Flush before resolving an operand that could consume queued output.
-        const bool join_batch_ = can_batch_ && in.op == OpKind::Linear &&
+        const bool join_batch_ = can_batch_ && queueable_linear(in) &&
             !in.aName.empty() && in.aName[0] != '<' &&
             in.outName != in.aName;
         if (dot_batch_open_ &&
-            (!join_batch_ || in.aName != dot_batch_input_)) {
+            (!join_batch_ ||
+             (wide_batch_ && (pending_name(in.aName) || pending_name(in.bName))) ||
+             (!wide_batch_ && in.aName != dot_batch_input_))) {
             if (!flush_group()) {
                 last_error_ = "quant-dot batch submission failed";
                 return false;
@@ -3564,6 +3650,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             std::fflush(stderr);
         }
         const std::vector<float>& xi = resolveIn(in);
+        const auto op_started = std::chrono::steady_clock::now();
     switch (in.op) {
             if (std::getenv("RR_OP_TRACE")) {
                 std::fprintf(stderr, "  [op] %-16s blk=%3d a='%s' b='%s' out='%s' bSlot=%d\n",
@@ -3774,8 +3861,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 }
                 // y already IS the arena slot; the queued dot's EndBatch
                 // fills it at the group flush.
-                if (dot_batch_open_) {
+                if (dot_batch_open_ && QuantDot::LastReceipt().queued) {
                     dot_batch_last_out_slot_ = linSlot;
+                    dot_batch_pending_outputs.insert(linSlot);
                 } else {
                     hidden_ = y;
                 }
@@ -4067,6 +4155,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 return false;
         }   // switch over program_ ops
 
+        if (op_timing) {
+            op_timing_ms[(int)in.op] += std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - op_started).count();
+            ++op_timing_count[(int)in.op];
+        }
+
         // ---- env-gated first-non-finite tracer (no semantics change) ----
         // RR_CHECK_FINITE=1 aborts at the FIRST op whose FP32 output is NaN/Inf,
         // reporting block/pc/op/name/index/value so the real numerical defect is
@@ -4135,6 +4229,21 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (dot_batch_open_ && !flush_group()) {
         last_error_ = "quant-dot batch submission failed";
         return false;
+    }
+    if (op_timing) {
+        std::vector<std::pair<double, int>> ranked;
+        ranked.reserve(op_timing_ms.size());
+        for (const auto& item : op_timing_ms)
+            ranked.emplace_back(item.second, item.first);
+        std::sort(ranked.rbegin(), ranked.rend());
+        std::fprintf(stderr, "[OPTIMING] position=%zu batch_flush_ms=%.3f\n",
+                     position, dot_batch_flush_ms);
+        for (const auto& item : ranked) {
+            std::fprintf(stderr, "[OPTIMING] op=%d count=%zu total_ms=%.3f avg_ms=%.4f\n",
+                         item.second, op_timing_count[item.second], item.first,
+                         item.first / std::max<size_t>(1, op_timing_count[item.second]));
+        }
+        std::fflush(stderr);
     }
     if (logits_.empty()) { last_error_ = "no logits produced"; return false; }
     for (float v : logits_) if (!std::isfinite(v)) ++nonfinite_logits_;
@@ -4209,6 +4318,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
 // ---------------------------------------------------------------------------
 bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
                          std::vector<float>& y, std::string& err) {
+    const bool profile_ssm = std::getenv("DEEP2_SSM_PROFILE") != nullptr;
+    const auto ssm_started = std::chrono::steady_clock::now();
+    if (profile_ssm) ++ssm_profile_calls_;
     const size_t D = (size_t)spec_.ssm_inner_size;      // d_inner (x and z width)
     const size_t N = (size_t)spec_.ssm_state_size;      // d_state
     const size_t G = (size_t)spec_.ssm_group_count;     // n_groups
@@ -4247,10 +4359,17 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     SsmWeightCache& cache = ssm_weights_[(size_t)in.block];
     // Keep an explicit A/B switch so cache performance can be measured against
     // the exact uncached route without rebuilding the executor. The established
-    // production route stays unchanged by default. Set DEEP2_SSM_WEIGHT_CACHE=1
-    // to opt into the cache for controlled trials.
+    // production route stays unchanged by default. Set
+    // DEEP2_SSM_WEIGHT_CACHE=1 to opt into the cache for controlled trials;
+    // setting it to 0 (or leaving it unset) uses reference dequantization.
     const char* cache_env = std::getenv("DEEP2_SSM_WEIGHT_CACHE");
     const bool cache_enabled = cache_env && std::strcmp(cache_env, "1") == 0;
+    const bool cache_hit = cache_enabled && cache.ready;
+    if (profile_ssm) {
+        if (cache_hit) ++ssm_profile_cache_hits_;
+        else ++ssm_profile_cache_misses_;
+    }
+    const auto cache_started = std::chrono::steady_clock::now();
     if (cache_enabled && !cache.ready) {
         std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
         if (DequantPrefix(tensors_[(size_t)aSlot], A, 1u << 16) == 0) {
@@ -4305,9 +4424,20 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
     const std::vector<float>& ConvB = cache_enabled ? cache.ConvB : uncachedConvB;
     const std::vector<float>& NormW = cache_enabled ? cache.NormW : uncachedNormW;
     const std::vector<float>& ConvW = cache_enabled ? cache.ConvW : uncachedConvW;
+    if (profile_ssm) {
+        ssm_profile_cache_ms_ += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - cache_started).count();
+    }
+
     // ---- 1. in_proj: the FULL zxbcdt projection ----------------------------
     std::vector<float> zxbcdt;
+    const auto linear_started = std::chrono::steady_clock::now();
     if (!OpLinear(in.b, x, zxbcdt, err)) return false;
+    if (profile_ssm) {
+        ssm_profile_linear_ms_ += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - linear_started).count();
+    }
+    const auto post_started = std::chrono::steady_clock::now();
 
     const size_t nHeads = A.size();               // 96
     const size_t headDim = D / nHeads;            // 80
@@ -4431,6 +4561,22 @@ bool Executor::OpSsmScan(const Instr& in, const std::vector<float>& x,
                              "in=%zu convCh=%zu A0=%.6f dt0=%.6f y0=%.6f\n",
                      (int)in.block, D, N, G, K, nHeads, headDim, zxbcdt.size(), convCh,
                      A[0], dt[0], y[0]);
+    }
+    if (profile_ssm) {
+        ssm_profile_post_ms_ += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - post_started).count();
+        ssm_profile_total_ms_ += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - ssm_started).count();
+        if ((ssm_profile_calls_ % 100u) == 0u) {
+            std::fprintf(stderr,
+                "[SSM_PROFILE] calls=%llu hits=%llu misses=%llu cache_ms=%.3f linear_ms=%.3f post_ms=%.3f total_ms=%.3f\n",
+                (unsigned long long)ssm_profile_calls_,
+                (unsigned long long)ssm_profile_cache_hits_,
+                (unsigned long long)ssm_profile_cache_misses_,
+                ssm_profile_cache_ms_, ssm_profile_linear_ms_,
+                ssm_profile_post_ms_, ssm_profile_total_ms_);
+            std::fflush(stderr);
+        }
     }
     return true;
 }
