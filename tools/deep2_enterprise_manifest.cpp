@@ -83,6 +83,7 @@ int main(int argc, char** argv) {
         "evidence/deep2_enterprise_closure_manifest_20261020/native_contract_rerun.md",
         "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt",
         "evidence/deep2_enterprise_closure_manifest_20261020/dependency_closure_matrix.md",
+        "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_full_model_blocked_receipt.json",
         "evidence/qwen4exp_gr_source_drop_20261020/Qwen4ExpGatedResidual.hpp",
         "evidence/qwen4exp_gr_source_drop_20261020/test_gr.cpp",
         "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md",
@@ -98,6 +99,7 @@ int main(int argc, char** argv) {
     const std::string pipeline_rerun = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/pipeline_probe_rerun.txt");
     const std::string executor = ReadText(root / "src/deep2/runtime_graph_executor.cpp");
     const std::string gr_inventory = ReadText(root / "evidence/qwen4exp_gr_source_drop_20261020/QWEN4EXP_FAIL_CLOSED_INVENTORY.md");
+    const std::string full_model_receipt = ReadText(root / "evidence/deep2_enterprise_closure_manifest_20261020/qwen4exp_full_model_blocked_receipt.json");
     const bool contract_geometry = contract.find("Tensors: 1224") != std::string::npos &&
                                    contract.find("Geometry checks: PASS") != std::string::npos &&
                                    contract_rerun.find("Tensors: 1224") != std::string::npos &&
@@ -113,7 +115,11 @@ int main(int argc, char** argv) {
                                       executor.find("OpKind::SparseMoE") != std::string::npos;
     const bool gr_reference_cpu_only = gr_inventory.find("isolated CPU arithmetic-contract tested only") != std::string::npos &&
                                        gr_inventory.find("full-model certificate") != std::string::npos;
-    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only;
+    const bool full_model_blocked = full_model_receipt.find("\"status\":\"BLOCKED_NATIVE_GRAPH\"") != std::string::npos &&
+                                    full_model_receipt.find("\"execution_status\":\"NOT_RUN\"") != std::string::npos &&
+                                    full_model_receipt.find("\"unsupported_ops\":5") != std::string::npos &&
+                                    full_model_receipt.find("\"tensor_count\":1224") != std::string::npos;
+    all_present = all_present && contract_geometry && pipeline_wiring && executor_fail_closed && gr_reference_cpu_only && full_model_blocked;
     std::filesystem::create_directories(out_path.parent_path());
     std::ofstream out(out_path); if (!out) return 3;
     out << "{\n  \"schema\":\"rawrxd.deep2.enterprise_closure_manifest.v1\",\n";
@@ -127,6 +133,7 @@ int main(int argc, char** argv) {
     out << "  \"GR_PIPELINE_INTEGRATION\":\"NOT_RUN\",\n";
     out << "  \"GR_INDEPENDENT_PARITY\":\"NOT_RUN\",\n";
     out << "  \"QWEN4EXP_FULL_MODEL\":\"BLOCKED\",\n";
+    out << "  \"full_model_attempt\":\"" << (full_model_blocked ? "BLOCKED_NATIVE_GRAPH" : "NOT_VERIFIED") << "\",\n";
     out << "  \"command_submission\":\"NOT_RUN\",\n  \"full_model_execution\":\"NOT_RUN\",\n  \"certification\":\"NOT_CERTIFIED\",\n";
     out << "  \"executor_blocking_boundary\":\"Executor::Bind still rejects QSA, GDN, PLE, Hyperconnection, and SparseMoE; ExecuteToken has no descriptor allocation, tensor upload, command recording, or dispatch cases for these OpKinds.\",\n";
     out << "  \"required_closure\":\"Wire Qwen4Exp tensor handles to descriptor updates and command submission in ExecuteToken, then run independent full-logit and autoregressive parity.\",\n";
