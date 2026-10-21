@@ -1,0 +1,22 @@
+{
+  "schema": "rawrxd.gate9.initialization_attestation.v1",
+  "generated_utc": "2026-10-21T02:38:07.3365702Z",
+  "commit": "53aced28b5959eb3d99d27d854d3ff42b16404e8",
+  "workspace_resolution": [
+    "requested_workspace",
+    "current_directory",
+    "executable_ancestry"
+  ],
+  "test": {
+    "command": "deep2_agentic_loop.exe --motd-selftest --workdir agentic_ws",
+    "exit_code": 0,
+    "policy_sha256": "3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de",
+    "result": "PASS"
+  },
+  "artifact": {
+    "path": "build/bin/Release/deep2_agentic_loop.exe",
+    "sha256": "a23414daba0ea349e8dc822b5b3d52d28f543a0f3b94a74086843df0d567273f"
+  },
+  "scope": "authorization bootstrap only",
+  "full_model_execution": "NOT_CERTIFIED"
+}
