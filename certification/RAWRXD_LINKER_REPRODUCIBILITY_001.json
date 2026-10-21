@@ -1,0 +1,51 @@
+﻿{
+    "schema":  "rawr.linker.reproducibility/1",
+    "generated_utc":  "2026-10-21T20:25:22Z",
+    "ladder":  "RAWR_NATIVE_LINKER_CERT_001",
+    "source_revision":  {
+                            "branch":  "preservation/source-baseline-20261021",
+                            "commit":  "7b80896908cbcedf57da4482e63fb2ab18a74eef",
+                            "tree_exported_with":  "git archive HEAD toolchain/from_scratch/phase2_linker",
+                            "provenance":  "recovered from _pre_merge_backup/toolchain/from_scratch/phase2_linker"
+                        },
+    "build":  {
+                  "generator":  "Ninja",
+                  "configuration":  "Release",
+                  "compiler":  "MSVC 19.44.35207",
+                  "command":  "cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \u0026\u0026 cmake --build build",
+                  "build_dir":  "a clean directory outside the repository, from the exported commit",
+                  "units":  "16/16, no warnings",
+                  "rawrxd_link_sha256":  "4998BD54BBF8F1935C2EE1AEFE08AA1F18E9EE108A0A2D899D9EA51063BE6614",
+                  "rawrxd_link_bytes":  69120
+              },
+    "harness_fix":  {
+                        "file":  "toolchain/from_scratch/phase2_linker/tests/run_linker_cert.ps1",
+                        "change":  "$ErrorActionPreference \u0027Stop\u0027 -\u003e \u0027Continue\u0027",
+                        "cause":  "The linker writes progress to stderr. Under \u0027Stop\u0027 a native command\u0027s stderr becomes a terminating error, so the suite aborted at its first linker invocation and could never certify anything.",
+                        "acceptance":  "the gates assert on the linker\u0027s exit code and its output, not on the absence of stderr"
+                    },
+    "result":  {
+                   "passed":  32,
+                   "failed":  0,
+                   "gates":  [
+                                 "L1 undefined symbol rejection",
+                                 "L2/L3 import table and Windows execution",
+                                 "L4 multiple import DLLs",
+                                 "L5 deterministic output",
+                                 "L6 global data layout"
+                             ]
+               },
+    "windows_execution_evidence":  {
+                                       "note":  "each executable below was produced by the linker from the tracked source and was loaded and executed by Windows",
+                                       "executables":  [
+                                                           "addr64.exe (2048 bytes)",
+                                                           "call.exe (2048 bytes)",
+                                                           "det_a.exe (2048 bytes)",
+                                                           "det_b.exe (2048 bytes)",
+                                                           "exit42.exe (2048 bytes)",
+                                                           "multi.exe (2048 bytes)",
+                                                           "tail.exe (2048 bytes)"
+                                                       ],
+                                       "independent_run":  "exit42.exe was run again after the suite and returned exit code 42"
+                                   }
+}

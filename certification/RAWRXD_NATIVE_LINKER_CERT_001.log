@@ -1,0 +1,51 @@
+﻿==========================================================
+ RAWR_NATIVE_LINKER_CERT_001
+==========================================================
+
+--- generating COFF fixtures ---
+  [PASS] fixture generated: fixture_exit42.obj
+  [PASS] fixture generated: fixture_multi.obj
+  [PASS] fixture generated: fixture_undef.obj
+  [PASS] fixture generated: fixture_addr64.obj
+
+--- L1: unresolved symbol rejection ---
+  [PASS] linker refused to emit an image with an unresolved symbol
+  [PASS] linker reported the unresolved symbol
+
+--- L2/L3: import table and Windows execution ---
+  [PASS] linker produced exit42.exe
+  [PASS] entry point is set
+  [PASS] image base is 0x140000000
+  [PASS] section alignment is 0x1000
+  [PASS] file alignment is 0x200
+  [PASS] SizeOfHeaders is file aligned
+  [PASS] SizeOfImage is section aligned
+  [PASS] all section raw data is within the file
+  [PASS] section RVAs ascend
+  [PASS] import directory parsed
+  [PASS] kernel32.dll is imported
+  [PASS] ExitProcess is imported
+  [PASS] all import RVAs are image-relative (not section offsets)
+  [PASS] the IAT lives in a writable section
+  [PASS] Windows loaded the image and ExitProcess(42) ran
+  [PASS] tail-jump import form runs
+  [PASS] call import form runs
+
+--- L4: multiple import DLLs ---
+  [PASS] linker produced multi.exe
+  [PASS] multi import descriptors present
+  [PASS] ExitProcess imported from the multi-DLL fixture
+  [PASS] GetStdHandle imported from the multi-DLL fixture
+  [PASS] GetTickCount imported from the multi-DLL fixture
+  [PASS] multi-DLL image runs
+
+--- L5: deterministic output ---
+  [PASS] two links of the same input produce identical bytes
+
+--- L6: global data layout ---
+  [PASS] linker produced addr64.exe
+  [PASS] .data section is present
+
+----------------------------------------------------------
+RAWR_NATIVE_LINKER_CERT_001: 32 passed, 0 failed
+----------------------------------------------------------
