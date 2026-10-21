@@ -1,0 +1,2 @@
+ROM_READ_PASS tensors=1224 alignment=65536
+EXIT_CODE=0
