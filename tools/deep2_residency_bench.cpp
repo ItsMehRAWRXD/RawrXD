@@ -36,8 +36,15 @@ constexpr uint32_t kBlockBytes = 176;
 // cache. A matrix that fits in the cache measures the cache, and a model
 // that is resident in VRAM is read from the card's memory, not from its
 // cache.
-constexpr uint32_t kRows = 458752;   // 1.50 GiB of Q5_K at 5120 columns
-constexpr uint32_t kCols = 5120;     // the Qwen3.5 hidden width
+//
+// The column count is a parameter, because the SHAPE decides the balance
+// between the two kinds of traffic. Every output row re-reads the whole
+// activation vector, so a matrix with many rows and few columns reads the
+// activation far more often than it reads its own weights. The total weight
+// bytes are held constant across the sweep, so the only thing that changes
+// is how often the activation is broadcast.
+constexpr uint64_t kTotalWeightBytes = 1610612736ull;  // 1.50 GiB
+constexpr uint32_t kDefaultCols = 5120;    // the Qwen3.5 hidden width
 constexpr int kWarmups = 1;
 constexpr int kIterations = 3;
 
@@ -69,10 +76,25 @@ bool ReadSpirv(const std::string& path, std::vector<uint32_t>& out) {
 int main(int argc, char** argv) {
     std::string spirvPath = "src/deep2/shaders/deep2_qgemv.spv";
     if (argc >= 2) spirvPath = argv[1];
+    const uint32_t kCols = (argc >= 3) ? static_cast<uint32_t>(std::strtoul(argv[2], nullptr, 10))
+                                       : kDefaultCols;
+    const uint32_t kType = (argc >= 4) ? static_cast<uint32_t>(std::strtoul(argv[3], nullptr, 10))
+                                       : 13u;
 
     std::printf("=== what the resident path achieves ===\n");
     std::printf("artifact : %s\n", spirvPath.c_str());
+
+    const size_t blocksPerRow = (kCols + kBlockElements - 1) / kBlockElements;
+    const size_t rowBytes = blocksPerRow * kBlockBytes;
+    const uint32_t kRows = static_cast<uint32_t>(kTotalWeightBytes / rowBytes);
+    const size_t weightBytes = static_cast<size_t>(kRows) * rowBytes;
     std::printf("shape    : %u rows x %u cols, Q5_K\n", kRows, kCols);
+    std::printf("weights  : %.2f MiB of Q5_K, %zu bytes per row\n",
+                static_cast<double>(weightBytes) / (1024.0 * 1024.0), rowBytes);
+    // How often the activation is re-read: once per output row.
+    const double activationReads = static_cast<double>(kRows) * kCols * 4.0;
+    std::printf("activation broadcast: %.2f MiB per projection, %u rows\n",
+                activationReads / (1024.0 * 1024.0), kRows);
 
     std::vector<uint32_t> spirv;
     if (!ReadSpirv(spirvPath, spirv)) {
@@ -213,11 +235,6 @@ int main(int argc, char** argv) {
     const bool separateDeviceMemory = deviceIndex != UINT32_MAX && deviceIndex != hostIndex;
     if (!separateDeviceMemory) deviceIndex = hostIndex;
 
-    const size_t blocksPerRow = (kCols + kBlockElements - 1) / kBlockElements;
-    const size_t weightBytes = static_cast<size_t>(kRows) * blocksPerRow * kBlockBytes;
-    std::printf("weights  : %.2f MiB of Q5_K, %zu bytes per row\n",
-                static_cast<double>(weightBytes) / (1024.0 * 1024.0), blocksPerRow * kBlockBytes);
-
     auto makeBuffer = [&](size_t bytes, uint32_t memType, bool map, Buffer& out) -> bool {
         VkBufferCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -357,7 +374,7 @@ int main(int argc, char** argv) {
     vkAllocateCommandBuffers(device, &cmdAlloc, &cmd);
 
     Push push{};
-    push.type = 13;
+    push.type = kType;
     push.rows = kRows;
     push.cols = kCols;
     push.weightBytes = static_cast<uint32_t>(weightBytes);

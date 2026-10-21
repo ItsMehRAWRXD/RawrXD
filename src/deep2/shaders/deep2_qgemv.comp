@@ -238,6 +238,66 @@ float q4k_dot4(uint rowBase, uint colBase) {
     return sum;
 }
 
+// Four-column Q5_K dot fragment.
+//
+// colBase is always a multiple of four. A Q5_K sub-block is thirty-two
+// columns wide, so the four columns are in one sub-block and its scale and
+// min are loaded once instead of once per element. The quant bytes and the
+// high-bit bytes are read as words.
+//
+// The four columns take the low nibbles of four consecutive bytes when they
+// are the first thirty-two of a group of sixty-four, and the high nibbles
+// of the same four bytes when they are the second thirty-two, so the byte
+// indices are the same either way and only the nibble changes.
+float q5k_dot4(uint rowBase, uint colBase) {
+    uint block = colBase / 256u;
+    uint idx = colBase % 256u;
+    uint b = rowBase + block * Q5K_BYTES;
+
+    float ds = geth(b + Q5K_OFF_D);
+    float dm = geth(b + Q5K_OFF_DMIN);
+
+    uint grp = idx / 64u;          // which group of sixty-four
+    uint l = idx % 64u;            // where in the group
+    uint l32 = l % 32u;            // which byte of qs and of qh
+    bool lowHalf = (l < 32u);     // the low nibbles serve the first thirty-two
+    uint subBlock = grp * 2u + (lowHalf ? 0u : 1u);
+
+    uint sc, mn;
+    kScaleMin(b, Q5K_OFF_SCALES, subBlock, sc, mn);
+
+    // The quant bytes. The four columns are four consecutive bytes, so one
+    // word carries all four. qsByte is four-byte aligned because l32 is a
+    // multiple of four.
+    uint qsByte = b + Q5K_OFF_QS + grp * 32u + l32;
+    uint qsWord = w[qsByte >> 2u];
+
+    // The high bits. The four columns have four consecutive high-bit bytes,
+    // so one word carries all four.
+    uint qhByte = b + Q5K_OFF_QH + l32;
+    uint qhWord = w[qhByte >> 2u];
+
+    // The high-bit mask walks one bit at a time through the qh bytes: the
+    // first group uses bit 0, the second bit 1, and the two halves of a group
+    // use consecutive bits.
+    uint hiMask = lowHalf ? (1u << (2u * grp)) : (1u << (2u * grp + 1u));
+
+    float d = ds * float(sc);
+    float m = dm * float(mn);
+    float sum = 0.0;
+
+    for (uint k = 0u; k < 4u; ++k) {
+        uint col = colBase + k;
+        if (col >= pc.cols) break;
+        uint packed = (qsWord >> (k * 8u)) & 255u;
+        uint q = lowHalf ? (packed & 15u) : (packed >> 4u);
+        uint qh = (qhWord >> (k * 8u)) & 255u;
+        uint q5 = q + (((qh & hiMask) != 0u) ? 16u : 0u);
+        sum += (d * float(q5) - m) * x[col];
+    }
+    return sum;
+}
+
 float q6k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
@@ -312,10 +372,12 @@ void main() {
     }
 
     float acc = 0.0;
-    if (pc.type == 12u) {
+    if (pc.type == 12u || pc.type == 13u) {
         // 256 lanes * 4 contiguous values = 1024 columns per sweep.
-        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
-            acc += q4k_dot4(rb, j);
+        for (uint j = lane * 4u; j < pc.cols; j += 1024u) {
+            if (pc.type == 12u) acc += q4k_dot4(rb, j);
+            else acc += q5k_dot4(rb, j);
+        }
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
