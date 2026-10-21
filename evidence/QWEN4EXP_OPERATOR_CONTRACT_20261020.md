@@ -71,6 +71,25 @@ SPARSE_MOE: top-10-of-512 MXFP4/IQ2 expert grouped GEMM executor is not bound
 
 Receipt: `evidence/qwen4exp_contract_qsa_gdn_ple_hc_moe_20261020/full_model_receipt.json`.
 
+## Uninterrupted digest rerun
+
+The same full-model command was rerun without `DEEP2_INGEST_SKIP_DIGEST` and
+was allowed to finish. It spent 281,276 ms in the bounded two-shard read and
+then reached the same fail-closed graph boundary:
+
+```text
+provenance_sha256=1946835defb1e481be2df526533280621f83a89022b79ae9200c3e4385a15212
+mapped_bytes=84930920928
+shard_count=2
+tensor_count=1224
+resolved_tensors=1224
+unmapped_tensors=0
+execution_status=NOT_RUN
+certification_status=NOT_CERTIFIED
+```
+
+Receipt: `evidence/qwen4exp_full_digest_contract_20261020/full_model_receipt.json`.
+
 ## Certification disposition
 
 `NOT_RUN != PASS`. Qwen4Exp remains `NOT_CERTIFIED`. The graph now carries
