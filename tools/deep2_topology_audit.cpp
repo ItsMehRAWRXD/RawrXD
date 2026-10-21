@@ -276,6 +276,7 @@ int main(int argc, char** argv) {
     const std::string archPrefix = g.kvString("general.architecture");
     // The geometry, gathered from the layers for the residency calculation.
     uint64_t groups = 0, stateWidth = 0, valueHeadWidth = 0, hiddenWidth = 0;
+    uint64_t valueHeads = 0, keyGroups = 0;
     for (auto& [index, L] : layers) {
         auto get = [&](const std::string& part) -> const Tensor* {
             auto it = byName.find(L.prefix + part);
@@ -291,47 +292,43 @@ int main(int argc, char** argv) {
         if (!outProj) outProj = get("ssm_out.weight");
         if (outProj) L.valueWidth = outProj->in();
 
-        // The head count, the key head width and the value head width come
-        // from the file's own metadata, not from a heuristic over the
-        // tensor shapes.
+        // The head count, the head width and the state come from the file.
         //
-        // A heuristic over the shapes gets this wrong: the decay bias is
-        // wide in the time-step rank, not in the head count, so reading the
-        // head count from it gives the wrong state by a factor of three.
-        // The file states the geometry, so the file is asked.
+        //   value_heads  the number of value heads, which is how wide the
+        //                decay bias is
+        //   head_dim     the width of a head, which the file states as
+        //                ssm.state_size, and which is also the inner size
+        //                over the value heads
+        //   state        [value_heads, head_dim, head_dim]
         //
-        //   group_count    the number of value heads
-        //   state_size     the key head width, the dimension of the state
-        //   inner_size     the value width, the number of value heads
-        //                   times the value head width
-        //   time_step_rank the rank of the decay matrices
+        // The two ways of getting the head width have to agree, and when
+        // they do not, the file is describing something this audit does not
+        // understand, and it says so rather than picking one.
+        //
+        // The key heads are the group count, which is fewer than the value
+        // heads: the key is shared across a group of value heads.
         const uint64_t groups = g.kvNumber(archPrefix + ".ssm.group_count", 0);
         const uint64_t stateSize = g.kvNumber(archPrefix + ".ssm.state_size", 0);
         const uint64_t innerSize = g.kvNumber(archPrefix + ".ssm.inner_size", 0);
         const uint64_t timeStepRank = g.kvNumber(archPrefix + ".ssm.time_step_rank", 0);
-        if (groups && stateSize && innerSize) {
-            L.numHeads = groups;
-            L.headKDim = stateSize;
-            L.headVDim = innerSize / groups;
-            L.stateElements = groups * stateSize * L.headVDim;
-            L.timeStepRank = timeStepRank;
-            L.groupCount = groups;
-        } else {
-            // Fall back to the shapes when the file does not state the
-            // geometry. The shapes are a weaker witness and the report says
-            // so.
-            const Tensor* dtBias = get("ssm_dt.bias");
-            if (dtBias && !dtBias->dims.empty()) L.numHeads = dtBias->dims[0];
-            const Tensor* ssmA = get("ssm_a");
-            if (ssmA && !ssmA->dims.empty()) {
-                L.headKDim = (ssmA->dims.size() >= 2) ? ssmA->dims[ssmA->dims.size() - 1]
-                                                      : ssmA->dims[0];
-            }
-            if (L.numHeads && L.valueWidth) L.headVDim = L.valueWidth / L.numHeads;
-            if (L.numHeads && L.headKDim && L.headVDim) {
-                L.stateElements = L.numHeads * L.headKDim * L.headVDim;
-                L.stateFromShapes = true;
-            }
+        const Tensor* dtBias = get("ssm_dt.bias");
+        if (dtBias && !dtBias->dims.empty()) L.numHeads = dtBias->dims[0];
+        L.groupCount = groups;
+        L.timeStepRank = timeStepRank;
+        if (stateSize) L.headKDim = stateSize;
+        if (L.numHeads && innerSize) L.headVDim = innerSize / L.numHeads;
+        if (L.numHeads && L.headKDim && L.headVDim) {
+            L.stateElements = L.numHeads * L.headKDim * L.headVDim;
+        }
+        if (L.headKDim && L.headVDim && L.headKDim != L.headVDim) {
+            L.problems.push_back("the state width " + std::to_string(L.headKDim) +
+                                 " and the value head width " + std::to_string(L.headVDim) +
+                                 " disagree");
+        }
+        if (L.numHeads && groups && L.numHeads < groups) {
+            L.problems.push_back("there are fewer value heads " +
+                                 std::to_string(L.numHeads) + " than key groups " +
+                                 std::to_string(groups));
         }
 
         // The checks that the shapes make possible.
@@ -367,10 +364,15 @@ int main(int argc, char** argv) {
     // The report.
     const std::string arch = archPrefix;
     for (const auto& [i, L] : layers) {
-        if (L.groupCount) {
-            groups = L.groupCount;
+        // The geometry is taken from a layer that actually has a recurrent
+        // state. Taking it from any layer would take it from the last one,
+        // and the last layer of a hybrid model is often an attention layer
+        // that carries no recurrent tensors at all.
+        if (L.stateElements) {
+            keyGroups = L.groupCount;
             stateWidth = L.headKDim;
             valueHeadWidth = L.headVDim;
+            valueHeads = L.numHeads;
         }
         if (L.hidden) hiddenWidth = L.hidden;
     }
@@ -420,12 +422,17 @@ int main(int argc, char** argv) {
             L.mixer == Mixer::LatentAttention) ++attentionLayers;
     }
     if (statePerLayer) {
-        std::printf("\n  recurrent state: %llu groups x %llu state width x %llu value head width"
+        std::printf("\n  recurrent state: %llu value heads x %llu head width x %llu head width"
                     " = %llu elements per sequence per layer\n",
-                    static_cast<unsigned long long>(groups),
+                    static_cast<unsigned long long>(valueHeads),
                     static_cast<unsigned long long>(stateWidth),
                     static_cast<unsigned long long>(valueHeadWidth),
                     static_cast<unsigned long long>(statePerLayer));
+        if (keyGroups) {
+            std::printf("  the key is shared across a group of value heads: %llu key groups, %llu value heads\n",
+                        static_cast<unsigned long long>(keyGroups),
+                        static_cast<unsigned long long>(valueHeads));
+        }
     }
 
     // The residency of the two kinds of state, which is what decides
