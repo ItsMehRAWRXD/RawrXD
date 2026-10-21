@@ -172,6 +172,9 @@ struct Layer {
     uint64_t headVDim = 0;
     uint64_t headKDim = 0;
     uint64_t stateElements = 0;
+    uint64_t timeStepRank = 0;
+    uint64_t groupCount = 0;
+    bool stateFromShapes = false;
     std::vector<std::pair<std::string, std::string>> norms;
     std::vector<std::pair<std::string, std::string>> projections;
     std::vector<std::string> problems;
@@ -269,6 +272,10 @@ int main(int argc, char** argv) {
     // The widths, from the tensors themselves.
     std::map<std::string, const Tensor*> byName;
     for (const auto& t : g.tensors()) byName[t.name] = &t;
+    // The architecture prefix, which the metadata keys are written under.
+    const std::string archPrefix = g.kvString("general.architecture");
+    // The geometry, gathered from the layers for the residency calculation.
+    uint64_t groups = 0, stateWidth = 0, valueHeadWidth = 0, hiddenWidth = 0;
     for (auto& [index, L] : layers) {
         auto get = [&](const std::string& part) -> const Tensor* {
             auto it = byName.find(L.prefix + part);
@@ -284,31 +291,47 @@ int main(int argc, char** argv) {
         if (!outProj) outProj = get("ssm_out.weight");
         if (outProj) L.valueWidth = outProj->in();
 
-        // The head count: the decay bias is one entry per head.
-        const Tensor* dtBias = get("ssm_dt.bias");
-        if (dtBias && !dtBias->dims.empty()) L.numHeads = dtBias->dims[0];
-        if (L.numHeads == 0) {
+        // The head count, the key head width and the value head width come
+        // from the file's own metadata, not from a heuristic over the
+        // tensor shapes.
+        //
+        // A heuristic over the shapes gets this wrong: the decay bias is
+        // wide in the time-step rank, not in the head count, so reading the
+        // head count from it gives the wrong state by a factor of three.
+        // The file states the geometry, so the file is asked.
+        //
+        //   group_count    the number of value heads
+        //   state_size     the key head width, the dimension of the state
+        //   inner_size     the value width, the number of value heads
+        //                   times the value head width
+        //   time_step_rank the rank of the decay matrices
+        const uint64_t groups = g.kvNumber(archPrefix + ".ssm.group_count", 0);
+        const uint64_t stateSize = g.kvNumber(archPrefix + ".ssm.state_size", 0);
+        const uint64_t innerSize = g.kvNumber(archPrefix + ".ssm.inner_size", 0);
+        const uint64_t timeStepRank = g.kvNumber(archPrefix + ".ssm.time_step_rank", 0);
+        if (groups && stateSize && innerSize) {
+            L.numHeads = groups;
+            L.headKDim = stateSize;
+            L.headVDim = innerSize / groups;
+            L.stateElements = groups * stateSize * L.headVDim;
+            L.timeStepRank = timeStepRank;
+            L.groupCount = groups;
+        } else {
+            // Fall back to the shapes when the file does not state the
+            // geometry. The shapes are a weaker witness and the report says
+            // so.
+            const Tensor* dtBias = get("ssm_dt.bias");
+            if (dtBias && !dtBias->dims.empty()) L.numHeads = dtBias->dims[0];
             const Tensor* ssmA = get("ssm_a");
-            if (ssmA && ssmA->dims.size() >= 2) L.numHeads = ssmA->dims[1];
-        }
-        if (L.numHeads && L.valueWidth) L.headVDim = L.valueWidth / L.numHeads;
-
-        // The key head width: the A and D matrices are square in it. They
-        // are written as a one element vector or as a one by N row
-        // depending on the converter, so both spellings are read.
-        const Tensor* ssmA = get("ssm_a");
-        if (ssmA && !ssmA->dims.empty()) {
-            L.headKDim = (ssmA->dims.size() >= 2) ? ssmA->dims[ssmA->dims.size() - 1]
-                                                  : ssmA->dims[0];
-        }
-        const Tensor* ssmD = get("ssm_d");
-        if (ssmD && !ssmD->dims.empty()) {
-            L.headKDim = (ssmD->dims.size() >= 2) ? ssmD->dims[ssmD->dims.size() - 1]
-                                                  : ssmD->dims[0];
-        }
-
-        if (L.numHeads && L.headKDim && L.headVDim) {
-            L.stateElements = L.numHeads * L.headKDim * L.headVDim;
+            if (ssmA && !ssmA->dims.empty()) {
+                L.headKDim = (ssmA->dims.size() >= 2) ? ssmA->dims[ssmA->dims.size() - 1]
+                                                      : ssmA->dims[0];
+            }
+            if (L.numHeads && L.valueWidth) L.headVDim = L.valueWidth / L.numHeads;
+            if (L.numHeads && L.headKDim && L.headVDim) {
+                L.stateElements = L.numHeads * L.headKDim * L.headVDim;
+                L.stateFromShapes = true;
+            }
         }
 
         // The checks that the shapes make possible.
@@ -342,7 +365,15 @@ int main(int argc, char** argv) {
     }
 
     // The report.
-    const std::string arch = g.kvString("general.architecture");
+    const std::string arch = archPrefix;
+    for (const auto& [i, L] : layers) {
+        if (L.groupCount) {
+            groups = L.groupCount;
+            stateWidth = L.headKDim;
+            valueHeadWidth = L.headVDim;
+        }
+        if (L.hidden) hiddenWidth = L.hidden;
+    }
     std::printf("=== %s ===\n", path.c_str());
     std::printf("  architecture : %s\n", arch.empty() ? "(none)" : arch.c_str());
     std::printf("  layers       : %zu\n", layers.size());
@@ -377,16 +408,61 @@ int main(int argc, char** argv) {
 
     // The recurrent state, once, because every gated layer of the same
     // shape needs the same one.
+    uint64_t statePerLayer = 0;
+    uint64_t gatedLayers = 0;
+    uint64_t attentionLayers = 0;
     for (const auto& [i, L] : layers) {
-        if (L.stateElements) {
-            std::printf("\n  recurrent state: %llu heads x %llu key head width x %llu value head width"
-                        " = %llu elements per sequence\n",
-                        static_cast<unsigned long long>(L.numHeads),
-                        static_cast<unsigned long long>(L.headKDim),
-                        static_cast<unsigned long long>(L.headVDim),
-                        static_cast<unsigned long long>(L.stateElements));
-            break;
-        }
+        if (L.stateElements) { statePerLayer = L.stateElements; }
+    }
+    for (const auto& [i, L] : layers) {
+        if (L.mixer == Mixer::GatedDelta || L.mixer == Mixer::GatedDeltaFused) ++gatedLayers;
+        if (L.mixer == Mixer::FullAttention || L.mixer == Mixer::FusedAttention ||
+            L.mixer == Mixer::LatentAttention) ++attentionLayers;
+    }
+    if (statePerLayer) {
+        std::printf("\n  recurrent state: %llu groups x %llu state width x %llu value head width"
+                    " = %llu elements per sequence per layer\n",
+                    static_cast<unsigned long long>(groups),
+                    static_cast<unsigned long long>(stateWidth),
+                    static_cast<unsigned long long>(valueHeadWidth),
+                    static_cast<unsigned long long>(statePerLayer));
+    }
+
+    // The residency of the two kinds of state, which is what decides
+    // whether a context fits.
+    //
+    // The recurrent state is fixed: it is the same however long the
+    // sequence is. The key and value cache grows with the context, and for
+    // a hybrid model it is the one that decides.
+    {
+        const uint64_t hidden = hiddenWidth;
+        const uint64_t kvHeads = g.kvNumber(archPrefix + ".attention.head_count_kv", 0);
+        const uint64_t valueLength = g.kvNumber(archPrefix + ".attention.value_length", 0);
+        const uint64_t context = g.kvNumber(archPrefix + ".context_length",
+                                            g.kvNumber("general.context_length", 0));
+        // Two bytes per element: the cache is held in half precision.
+        const uint64_t gdnBytes = gatedLayers * statePerLayer * 2ull;
+        const uint64_t kvBytesPerToken = attentionLayers * 2ull * kvHeads * valueLength * 2ull;
+        const uint64_t kvBytes = kvBytesPerToken * context;
+        std::printf("\n  residency at the declared context of %llu tokens:\n",
+                    static_cast<unsigned long long>(context));
+        std::printf("    recurrent state   : %llu layers x %llu elements x 2 bytes = %llu bytes (%.2f MiB)\n",
+                    static_cast<unsigned long long>(gatedLayers),
+                    static_cast<unsigned long long>(statePerLayer),
+                    static_cast<unsigned long long>(gdnBytes),
+                    static_cast<double>(gdnBytes) / (1024.0 * 1024.0));
+        std::printf("    key and value cache: %llu layers x %llu bytes per token x %llu tokens = %llu bytes (%.2f GiB)\n",
+                    static_cast<unsigned long long>(attentionLayers),
+                    static_cast<unsigned long long>(kvBytesPerToken),
+                    static_cast<unsigned long long>(context),
+                    static_cast<unsigned long long>(kvBytes),
+                    static_cast<double>(kvBytes) / (1024.0 * 1024.0 * 1024.0));
+        std::printf("    together          : %.2f GiB per sequence\n",
+                    static_cast<double>(gdnBytes + kvBytes) / (1024.0 * 1024.0 * 1024.0));
+        std::printf("    the recurrent state is %.2f%% of it: the cache decides, not the state\n",
+                    gdnBytes + kvBytes
+                        ? 100.0 * static_cast<double>(gdnBytes) / static_cast<double>(gdnBytes + kvBytes)
+                        : 0.0);
     }
 
     // The per-layer detail.
