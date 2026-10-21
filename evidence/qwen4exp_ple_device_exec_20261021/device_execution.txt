@@ -11,3 +11,4 @@ dispatch 2: tokens=3  y max_abs_diff = 2.020435e-08   carry max_abs_diff = 0.000
 tolerance                       = 2.000000e-05
 
 RESULT: PASS (the device reproduced the reference)
+EXIT=0 
