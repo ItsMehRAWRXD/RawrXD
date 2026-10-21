@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // runtime_graph_executor.cpp  --  RAWRXD_DEEP2_RUNTIME_DISPATCH
 // ============================================================================
 #include "runtime_graph_executor.hpp"
@@ -1026,11 +1026,68 @@ bool Executor::Bind(const Universal::IngestReport& report) {
             in.op == OpKind::Qsa ||
             in.op == OpKind::Ple || in.op == OpKind::Hyperconnection ||
             in.op == OpKind::SparseMoE;
-        if (in.op == OpKind::Unsupported || qwen4exp_unbound) {
+
+        // RAWRXD_GATE7_NEMOTRON_MOE_001: a MoE operator is bound only when
+        // the tensors it names actually RESOLVE. Counting an operator as
+        // bound because its descriptor exists is how a graph passes its bind
+        // and then fails, or silently skips, at execution.
+        //
+        //   Router      names the router weight; it must resolve.
+        //   MoEExecute  names the expert's projections in its detail. The
+        //               GATE projection is OPTIONAL: a gateless expert
+        //               (nemotron_h_moe's ffn_up_exps + ffn_down_exps with
+        //               no ffn_gate_exps) is a valid shape, and requiring a
+        //               gate would refuse a model that is correctly routed.
+        //               The up and down projections are not optional.
+        const bool isRouter = (in.op == OpKind::Router);
+        const bool isMoEExecute = (in.op == OpKind::MoEExecute);
+        std::string unboundReason;
+        if (isRouter) {
+            if (findSlot(in.bName.c_str()) < 0) {
+                unboundReason = "router weight '" + in.bName + "' does not resolve";
+            }
+        } else if (isMoEExecute) {
+            // The detail carries "experts: <up>,<down>". The names are
+            // separated by ", " and the whole list may be followed by
+            // more detail, so both ends of each name are trimmed.
+            std::string up;
+            std::string down;
+            const size_t marker = in.detail.find("experts:");
+            if (marker != std::string::npos) {
+                std::string list = in.detail.substr(marker + 8);
+                const size_t comma = list.find(',');
+                if (comma != std::string::npos) {
+                    up = list.substr(0, comma);
+                    down = list.substr(comma + 1);
+                }
+            }
+            auto trim = [](std::string s) {
+                const size_t first = s.find_first_not_of(" \t;");
+                if (first == std::string::npos) return std::string();
+                const size_t last = s.find_last_not_of(" \t;");
+                return s.substr(first, last - first + 1);
+            };
+            up = trim(up);
+            down = trim(down);
+            if (up.empty() || down.empty()) {
+                unboundReason = "the expert projections are not named: " + in.detail;
+            } else if (findSlot(up.c_str()) < 0) {
+                unboundReason = "expert up projection '" + up + "' does not resolve";
+            } else if (findSlot(down.c_str()) < 0) {
+                unboundReason = "expert down projection '" + down + "' does not resolve";
+            }
+        }
+
+        if (in.op == OpKind::Unsupported || qwen4exp_unbound || !unboundReason.empty()) {
             char buf[256];
-            std::snprintf(buf, sizeof(buf), "%s node: %s",
-                          qwen4exp_unbound ? OpKindName(in.op) : "Unsupported",
-                          in.detail.c_str());
+            if (!unboundReason.empty()) {
+                std::snprintf(buf, sizeof(buf), "%s node: %s", OpKindName(in.op),
+                              unboundReason.c_str());
+            } else {
+                std::snprintf(buf, sizeof(buf), "%s node: %s",
+                              qwen4exp_unbound ? OpKindName(in.op) : "Unsupported",
+                              in.detail.c_str());
+            }
             stats_.unbound_ops.emplace_back(buf);
             if (stats_.first_blocking_operator.empty())
                 stats_.first_blocking_operator = OpKindName(in.op);

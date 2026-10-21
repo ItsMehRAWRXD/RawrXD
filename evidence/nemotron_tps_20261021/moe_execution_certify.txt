@@ -50,4 +50,24 @@ EXPERT/ROUTER TENSORS (first 16):
 [PASS] every MoE block has a router, a top-k and an expert execution 24 MoE blocks lowered
 [PASS] every MoE block has a router weight                  24 of 24 MoE blocks have a router weight
 
+BINDING PHASE (CPU pinned, no GPU device, no dispatch)
+GRAPH_MOE_BLOCKS       24
+OPS_BOUND              386
+OPS_UNBOUND            0
+FIRST_BLOCKING_OPERATOR (none)
+FIRST_BLOCKING_TENSOR  (none)
+WEIGHTS_RESOLVED       417
+WEIGHTS_MISSING        0
+[PASS] the executor binds the graph                         bound
+[PASS] every Router, TopK and MoEExecute operator binds     0 MoE operators unbound, 0 operators unbound in total
+EXPERT_UP_BOUND        24 of 24
+EXPERT_DOWN_BOUND      24 of 24
+EXPERT_GATE_REQUIRED   0
+EXPERT_GATE_PRESENT    0
+[PASS] every expert up projection resolves to real metadata 24 of 24
+[PASS] every expert down projection resolves to real metadata 24 of 24
+[PASS] no expert binding is a zero-sized tensor             0 zero-sized expert tensors
+[PASS] the expert tensors have the declared shape           24 of 24 match [hidden,ffn,experts] and [ffn,hidden,experts] with experts=128
+[PASS] the absent gate is explicitly supported for gateless experts 0 of 24 blocks have a gate tensor; the binding accepts a gateless expert
+
 === DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS ===

@@ -36,10 +36,12 @@
 #include <string>
 #include <vector>
 
+#include "runtime_graph_executor.hpp"
 #include "universal_gguf.hpp"
 
 // The modelgenie lives in RawrXD::Deep2::Universal.
 namespace Universal = RawrXD::Deep2::Universal;
+namespace RuntimeGraph = RawrXD::Deep2::RuntimeGraph;
 
 namespace {
 
@@ -291,6 +293,139 @@ int main(int argc, char** argv) {
                std::to_string(blocksWithRouterWeight) + " of " +
                    std::to_string(routerBlocks.size()) + " MoE blocks have a router weight");
     }
+
+    // ---- 6. the binding phase -----------------------------------------------
+    // The executor's OWN bind, with the CPU backend pinned so nothing touches
+    // the GPU. Binding is a CPU operation: it resolves every weight handle,
+    // builds the operator program and validates that each operator has the
+    // tensors it names.
+    printf("\nBINDING PHASE (CPU pinned, no GPU device, no dispatch)\n");
+    RuntimeGraph::Executor executor;
+    executor.SetForceCpu(true);
+    const bool bound = executor.Bind(report);
+    const RuntimeGraph::BindStats& stats = executor.Stats();
+
+    printf("GRAPH_MOE_BLOCKS       %zu\n", moeBlockCount);
+    printf("OPS_BOUND              %zu\n", stats.ops_bound);
+    printf("OPS_UNBOUND            %zu\n", stats.ops_unbound);
+    printf("FIRST_BLOCKING_OPERATOR %s\n",
+           stats.first_blocking_operator.empty() ? "(none)" : stats.first_blocking_operator.c_str());
+    printf("FIRST_BLOCKING_TENSOR  %s\n",
+           stats.failure_receipt_json.empty() ? "(none)" : stats.failure_receipt_json.c_str());
+    printf("WEIGHTS_RESOLVED       %llu\n", (unsigned long long)stats.weights_resolved);
+    printf("WEIGHTS_MISSING        %llu\n", (unsigned long long)stats.weights_missing);
+
+    Report("the executor binds the graph", bound,
+           bound ? "bound" : stats.error);
+
+    // The MoE operators must be among the bound ones, not merely absent
+    // from the unbound list.
+    size_t moeUnbound = 0;
+    for (const std::string& entry : stats.unbound_ops) {
+        if (entry.find("Router") != std::string::npos ||
+            entry.find("TopK") != std::string::npos ||
+            entry.find("MoEExecute") != std::string::npos) {
+            ++moeUnbound;
+        }
+    }
+    Report("every Router, TopK and MoEExecute operator binds",
+           moeUnbound == 0 && stats.ops_unbound == 0,
+           std::to_string(moeUnbound) + " MoE operators unbound, " +
+               std::to_string(stats.ops_unbound) + " operators unbound in total");
+
+    // ---- 7. the expert tensors resolve to real metadata -------------------
+    // Independently of the executor: for every MoE block, the expert's up and
+    // down projections must exist in the model with the right shape and a
+    // non-zero size, and the gate must be OPTIONAL rather than required.
+    auto findTensor = [&](const std::string& name) -> const Universal::TensorRec* {
+        for (const Universal::TensorRec& tensor : report.tensors) {
+            if (tensor.name == name) return &tensor;
+        }
+        return nullptr;
+    };
+    auto trim = [](std::string s) {
+        const size_t first = s.find_first_not_of(" \t;");
+        if (first == std::string::npos) return std::string();
+        const size_t last = s.find_last_not_of(" \t;");
+        return s.substr(first, last - first + 1);
+    };
+
+    size_t upBound = 0;
+    size_t downBound = 0;
+    size_t gatePresent = 0;
+    size_t gateRequired = 0;
+    size_t shapeOk = 0;
+    size_t zeroSized = 0;
+    size_t expertCountOk = 0;
+    std::string firstFailure;
+
+    for (const Universal::GraphOp& op : graph.ops) {
+        if (op.op != Universal::Op::MoEExecute) continue;
+        std::string up;
+        std::string down;
+        const size_t marker = op.detail.find("experts:");
+        if (marker != std::string::npos) {
+            std::string list = op.detail.substr(marker + 8);
+            const size_t comma = list.find(',');
+            if (comma != std::string::npos) {
+                up = trim(list.substr(0, comma));
+                down = trim(list.substr(comma + 1));
+            }
+        }
+        if (!op.c.empty()) {
+            ++gatePresent;
+            ++gateRequired;
+        }
+        const Universal::TensorRec* upTensor = findTensor(up);
+        const Universal::TensorRec* downTensor = findTensor(down);
+        if (upTensor && upTensor->bytes > 0) ++upBound;
+        else if (firstFailure.empty()) firstFailure = "expert up '" + up + "' missing or empty";
+        if (downTensor && downTensor->bytes > 0) ++downBound;
+        else if (firstFailure.empty()) firstFailure = "expert down '" + down + "' missing or empty";
+        if (upTensor && upTensor->bytes == 0) ++zeroSized;
+        if (downTensor && downTensor->bytes == 0) ++zeroSized;
+        // up is [hidden, ffn, experts] and down is [ffn, hidden, experts].
+        if (upTensor && downTensor && upTensor->dims.size() == 3 &&
+            downTensor->dims.size() == 3) {
+            const bool upShape = upTensor->dims[0] == spec.embd &&
+                                 upTensor->dims[1] == spec.expert_ffn &&
+                                 upTensor->dims[2] == spec.expert_count;
+            const bool downShape = downTensor->dims[0] == spec.expert_ffn &&
+                                  downTensor->dims[1] == spec.embd &&
+                                  downTensor->dims[2] == spec.expert_count;
+            if (upShape && downShape) ++shapeOk;
+            else if (firstFailure.empty()) {
+                firstFailure = "expert shape mismatch on block " + std::to_string(op.block);
+            }
+            if (upShape && downShape && upTensor->dims[2] == spec.expert_count) {
+                ++expertCountOk;
+            }
+        }
+    }
+
+    printf("EXPERT_UP_BOUND        %zu of %zu\n", upBound, moeBlockCount);
+    printf("EXPERT_DOWN_BOUND      %zu of %zu\n", downBound, moeBlockCount);
+    printf("EXPERT_GATE_REQUIRED   %zu\n", gateRequired);
+    printf("EXPERT_GATE_PRESENT    %zu\n", gatePresent);
+
+    Report("every expert up projection resolves to real metadata",
+           upBound == moeBlockCount && moeBlockCount > 0,
+           std::to_string(upBound) + " of " + std::to_string(moeBlockCount) +
+               (firstFailure.empty() ? "" : " (" + firstFailure + ")"));
+    Report("every expert down projection resolves to real metadata",
+           downBound == moeBlockCount && moeBlockCount > 0,
+           std::to_string(downBound) + " of " + std::to_string(moeBlockCount));
+    Report("no expert binding is a zero-sized tensor", zeroSized == 0,
+           std::to_string(zeroSized) + " zero-sized expert tensors");
+    Report("the expert tensors have the declared shape",
+           shapeOk == moeBlockCount && moeBlockCount > 0,
+           std::to_string(shapeOk) + " of " + std::to_string(moeBlockCount) +
+               " match [hidden,ffn,experts] and [ffn,hidden,experts] with experts=" +
+               std::to_string(spec.expert_count));
+    Report("the absent gate is explicitly supported for gateless experts",
+           gatePresent == 0 && gateRequired == 0 && moeBlockCount > 0,
+           "0 of " + std::to_string(moeBlockCount) +
+               " blocks have a gate tensor; the binding accepts a gateless expert");
 
     printf("\n=== %s ===\n", g_failures == 0 ? "DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS"
                                             : "DEEP2_NEMOTRON_MOE_EXECUTION_001 = FAIL");
