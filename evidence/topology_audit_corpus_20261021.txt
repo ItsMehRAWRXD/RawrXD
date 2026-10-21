@@ -1,0 +1,600 @@
+Deep2 per-layer topology audit
+generated 2026-10-21
+models audited: 30
+
+==== F:\OllamaModels\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ====
+=== F:\OllamaModels\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ===
+  architecture : nemotron_h
+  layers       : 42
+  tensors      : 263
+  mixers       :  4 x full attention  21 x gated delta, own input projection  17 x no mixer of its own
+
+  the layer sequence and its transitions:
+    transition at layer 1: gated delta, own input projection -> no mixer of its own
+    transition at layer 2: no mixer of its own -> gated delta, own input projection
+    transition at layer 3: gated delta, own input projection -> no mixer of its own
+    transition at layer 4: no mixer of its own -> gated delta, own input projection
+    transition at layer 5: gated delta, own input projection -> no mixer of its own
+    transition at layer 6: no mixer of its own -> gated delta, own input projection
+    transition at layer 8: gated delta, own input projection -> no mixer of its own
+    transition at layer 9: no mixer of its own -> gated delta, own input projection
+    transition at layer 10: gated delta, own input projection -> no mixer of its own
+    transition at layer 11: no mixer of its own -> gated delta, own input projection
+    transition at layer 12: gated delta, own input projection -> full attention
+    transition at layer 13: full attention -> no mixer of its own
+    transition at layer 14: no mixer of its own -> gated delta, own input projection
+    transition at layer 15: gated delta, own input projection -> no mixer of its own
+    transition at layer 16: no mixer of its own -> gated delta, own input projection
+    transition at layer 17: gated delta, own input projection -> full attention
+    transition at layer 18: full attention -> no mixer of its own
+    transition at layer 19: no mixer of its own -> gated delta, own input projection
+    transition at layer 20: gated delta, own input projection -> no mixer of its own
+    transition at layer 21: no mixer of its own -> gated delta, own input projection
+    transition at layer 22: gated delta, own input projection -> no mixer of its own
+    transition at layer 23: no mixer of its own -> gated delta, own input projection
+    transition at layer 24: gated delta, own input projection -> full attention
+    transition at layer 25: full attention -> no mixer of its own
+    transition at layer 26: no mixer of its own -> gated delta, own input projection
+    transition at layer 27: gated delta, own input projection -> no mixer of its own
+    transition at layer 28: no mixer of its own -> gated delta, own input projection
+    transition at layer 29: gated delta, own input projection -> no mixer of its own
+    transition at layer 30: no mixer of its own -> gated delta, own input projection
+    transition at layer 32: gated delta, own input projection -> full attention
+    transition at layer 33: full attention -> no mixer of its own
+    transition at layer 34: no mixer of its own -> gated delta, own input projection
+    transition at layer 37: gated delta, own input projection -> no mixer of its own
+    transition at layer 38: no mixer of its own -> gated delta, own input projection
+    transition at layer 39: gated delta, own input projection -> no mixer of its own
+    transition at layer 40: no mixer of its own -> gated delta, own input projection
+    transition at layer 41: gated delta, own input projection -> no mixer of its own
+    last layer 41 is no mixer of its own
+
+  recurrent state: 96 heads x 96 key head width x 80 value head width = 737280 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf ====
+=== F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf ===
+  architecture : deepseek2
+  layers       : 6
+  tensors      : 98
+  mixers       :  6 x latent attention
+
+  the layer sequence and its transitions:
+    last layer 5 is latent attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf ===
+  architecture : phi3
+  layers       : 40
+  tensors      : 245
+  mixers       :  40 x fused qkv attention
+
+  the layer sequence and its transitions:
+    last layer 39 is fused qkv attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf ====
+=== F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf ===
+  architecture : minimax-m2
+  layers       : 22
+  tensors      : 288
+  mixers       :  22 x full attention
+
+  the layer sequence and its transitions:
+    last layer 21 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf ====
+=== F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf ===
+  architecture : qwen35
+  layers       : 65
+  tensors      : 866
+  mixers       :  17 x full attention  48 x gated delta, fused input projection
+
+  the layer sequence and its transitions:
+    transition at layer 3: gated delta, fused input projection -> full attention
+    transition at layer 4: full attention -> gated delta, fused input projection
+    transition at layer 7: gated delta, fused input projection -> full attention
+    transition at layer 8: full attention -> gated delta, fused input projection
+    transition at layer 11: gated delta, fused input projection -> full attention
+    transition at layer 12: full attention -> gated delta, fused input projection
+    transition at layer 15: gated delta, fused input projection -> full attention
+    transition at layer 16: full attention -> gated delta, fused input projection
+    transition at layer 19: gated delta, fused input projection -> full attention
+    transition at layer 20: full attention -> gated delta, fused input projection
+    transition at layer 23: gated delta, fused input projection -> full attention
+    transition at layer 24: full attention -> gated delta, fused input projection
+    transition at layer 27: gated delta, fused input projection -> full attention
+    transition at layer 28: full attention -> gated delta, fused input projection
+    transition at layer 31: gated delta, fused input projection -> full attention
+    transition at layer 32: full attention -> gated delta, fused input projection
+    transition at layer 35: gated delta, fused input projection -> full attention
+    transition at layer 36: full attention -> gated delta, fused input projection
+    transition at layer 39: gated delta, fused input projection -> full attention
+    transition at layer 40: full attention -> gated delta, fused input projection
+    transition at layer 43: gated delta, fused input projection -> full attention
+    transition at layer 44: full attention -> gated delta, fused input projection
+    transition at layer 47: gated delta, fused input projection -> full attention
+    transition at layer 48: full attention -> gated delta, fused input projection
+    transition at layer 51: gated delta, fused input projection -> full attention
+    transition at layer 52: full attention -> gated delta, fused input projection
+    transition at layer 55: gated delta, fused input projection -> full attention
+    transition at layer 56: full attention -> gated delta, fused input projection
+    transition at layer 59: gated delta, fused input projection -> full attention
+    transition at layer 60: full attention -> gated delta, fused input projection
+    transition at layer 63: gated delta, fused input projection -> full attention
+    last layer 64 is full attention
+
+  recurrent state: 48 heads x 48 key head width x 128 value head width = 294912 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Qwen2.5-Coder-14B-Instruct-Q8_0\qwen2.5-coder-14b-instruct-q8_0.gguf ====
+=== F:\OllamaModels\Qwen2.5-Coder-14B-Instruct-Q8_0\qwen2.5-coder-14b-instruct-q8_0.gguf ===
+  architecture : qwen2
+  layers       : 48
+  tensors      : 579
+  mixers       :  48 x full attention
+
+  the layer sequence and its transitions:
+    last layer 47 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00002-of-00011.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00002-of-00011.gguf ===
+  architecture : (none)
+  layers       : 6
+  tensors      : 91
+  mixers       :  5 x latent attention  1 x no mixer of its own
+
+  the layer sequence and its transitions:
+    transition at layer 9: no mixer of its own -> latent attention
+    last layer 13 is latent attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf ====
+=== F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf ===
+  architecture : gemma4
+  layers       : 42
+  tensors      : 720
+  mixers       :  42 x full attention
+
+  the layer sequence and its transitions:
+    last layer 41 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\DeepSeek-R1-Recovery\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-Recovery\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ===
+  architecture : deepseek2
+  layers       : 9
+  tensors      : 133
+  mixers       :  9 x latent attention
+
+  the layer sequence and its transitions:
+    last layer 8 is latent attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf ====
+=== F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf ===
+  architecture : llama
+  layers       : 28
+  tensors      : 255
+  mixers       :  28 x full attention
+
+  the layer sequence and its transitions:
+    last layer 27 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ===
+  architecture : qwen3
+  layers       : 36
+  tensors      : 399
+  mixers       :  36 x full attention
+
+  the layer sequence and its transitions:
+    last layer 35 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Qwen3.6-27B-Fable-Fusion-711-Heretic-MAX-Q4_K_M\Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q4_K_M.gguf ====
+=== F:\OllamaModels\Qwen3.6-27B-Fable-Fusion-711-Heretic-MAX-Q4_K_M\Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q4_K_M.gguf ===
+  architecture : qwen35
+  layers       : 65
+  tensors      : 866
+  mixers       :  17 x full attention  48 x gated delta, fused input projection
+
+  the layer sequence and its transitions:
+    transition at layer 3: gated delta, fused input projection -> full attention
+    transition at layer 4: full attention -> gated delta, fused input projection
+    transition at layer 7: gated delta, fused input projection -> full attention
+    transition at layer 8: full attention -> gated delta, fused input projection
+    transition at layer 11: gated delta, fused input projection -> full attention
+    transition at layer 12: full attention -> gated delta, fused input projection
+    transition at layer 15: gated delta, fused input projection -> full attention
+    transition at layer 16: full attention -> gated delta, fused input projection
+    transition at layer 19: gated delta, fused input projection -> full attention
+    transition at layer 20: full attention -> gated delta, fused input projection
+    transition at layer 23: gated delta, fused input projection -> full attention
+    transition at layer 24: full attention -> gated delta, fused input projection
+    transition at layer 27: gated delta, fused input projection -> full attention
+    transition at layer 28: full attention -> gated delta, fused input projection
+    transition at layer 31: gated delta, fused input projection -> full attention
+    transition at layer 32: full attention -> gated delta, fused input projection
+    transition at layer 35: gated delta, fused input projection -> full attention
+    transition at layer 36: full attention -> gated delta, fused input projection
+    transition at layer 39: gated delta, fused input projection -> full attention
+    transition at layer 40: full attention -> gated delta, fused input projection
+    transition at layer 43: gated delta, fused input projection -> full attention
+    transition at layer 44: full attention -> gated delta, fused input projection
+    transition at layer 47: gated delta, fused input projection -> full attention
+    transition at layer 48: full attention -> gated delta, fused input projection
+    transition at layer 51: gated delta, fused input projection -> full attention
+    transition at layer 52: full attention -> gated delta, fused input projection
+    transition at layer 55: gated delta, fused input projection -> full attention
+    transition at layer 56: full attention -> gated delta, fused input projection
+    transition at layer 59: gated delta, fused input projection -> full attention
+    transition at layer 60: full attention -> gated delta, fused input projection
+    transition at layer 63: gated delta, fused input projection -> full attention
+    last layer 64 is full attention
+
+  recurrent state: 48 heads x 48 key head width x 128 value head width = 294912 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\05_gemma4_e4b\gemma-4-E4B-it-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\05_gemma4_e4b\gemma-4-E4B-it-Q4_K_M.gguf ===
+  architecture : gemma4
+  layers       : 42
+  tensors      : 720
+  mixers       :  42 x full attention
+
+  the layer sequence and its transitions:
+    last layer 41 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\GLM-4.7-Flash-GGUF\GLM-4.7-Flash-Q4_K_M.gguf ====
+=== F:\OllamaModels\GLM-4.7-Flash-GGUF\GLM-4.7-Flash-Q4_K_M.gguf ===
+  architecture : deepseek2
+  layers       : 47
+  tensors      : 844
+  mixers       :  47 x latent attention
+
+  the layer sequence and its transitions:
+    last layer 46 is latent attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf ====
+=== F:\OllamaModels\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf ===
+  architecture : phi3
+  layers       : 32
+  tensors      : 197
+  mixers       :  32 x fused qkv attention
+
+  the layer sequence and its transitions:
+    last layer 31 is fused qkv attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\BigDaddyG-F32-FROM-Q4.gguf ====
+=== F:\OllamaModels\BigDaddyG-F32-FROM-Q4.gguf ===
+  architecture : llama
+  layers       : 80
+  tensors      : 723
+  mixers       :  80 x full attention
+
+  the layer sequence and its transitions:
+    last layer 79 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf ====
+=== F:\OllamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf ===
+  architecture : gemma4
+  layers       : 60
+  tensors      : 833
+  mixers       :  60 x full attention
+
+  the layer sequence and its transitions:
+    last layer 59 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\10_glm47\GLM-4.7-Flash-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\10_glm47\GLM-4.7-Flash-Q4_K_M.gguf ===
+  architecture : deepseek2
+  layers       : 47
+  tensors      : 844
+  mixers       :  47 x latent attention
+
+  the layer sequence and its transitions:
+    last layer 46 is latent attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf ====
+=== F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf ===
+  architecture : qwen4exp
+  layers       : 5
+  tensors      : 121
+  mixers       :  1 x full attention  1 x fused qkv attention  3 x gated delta, fused input projection
+
+  the layer sequence and its transitions:
+    transition at layer 3: gated delta, fused input projection -> full attention
+    transition at layer 4: full attention -> fused qkv attention
+    last layer 4 is fused qkv attention
+
+  recurrent state: 48 heads x 48 key head width x 128 value head width = 294912 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\gguf\nemotron-3.5-lightning-30b-Q4_K_M.gguf ====
+=== F:\OllamaModels\gguf\nemotron-3.5-lightning-30b-Q4_K_M.gguf ===
+  architecture : nemotron_h_moe
+  layers       : 53
+  tensors      : 417
+  mixers       :  7 x full attention  23 x gated delta, own input projection  23 x no mixer of its own
+
+  the layer sequence and its transitions:
+    transition at layer 1: gated delta, own input projection -> no mixer of its own
+    transition at layer 2: no mixer of its own -> gated delta, own input projection
+    transition at layer 3: gated delta, own input projection -> no mixer of its own
+    transition at layer 4: no mixer of its own -> gated delta, own input projection
+    transition at layer 5: gated delta, own input projection -> full attention
+    transition at layer 6: full attention -> no mixer of its own
+    transition at layer 7: no mixer of its own -> gated delta, own input projection
+    transition at layer 8: gated delta, own input projection -> no mixer of its own
+    transition at layer 9: no mixer of its own -> gated delta, own input projection
+    transition at layer 10: gated delta, own input projection -> no mixer of its own
+    transition at layer 11: no mixer of its own -> gated delta, own input projection
+    transition at layer 12: gated delta, own input projection -> full attention
+    transition at layer 13: full attention -> no mixer of its own
+    transition at layer 14: no mixer of its own -> gated delta, own input projection
+    transition at layer 15: gated delta, own input projection -> no mixer of its own
+    transition at layer 16: no mixer of its own -> gated delta, own input projection
+    transition at layer 17: gated delta, own input projection -> no mixer of its own
+    transition at layer 18: no mixer of its own -> gated delta, own input projection
+    transition at layer 19: gated delta, own input projection -> full attention
+    transition at layer 20: full attention -> no mixer of its own
+    transition at layer 21: no mixer of its own -> gated delta, own input projection
+    transition at layer 22: gated delta, own input projection -> no mixer of its own
+    transition at layer 23: no mixer of its own -> gated delta, own input projection
+    transition at layer 24: gated delta, own input projection -> no mixer of its own
+    transition at layer 25: no mixer of its own -> gated delta, own input projection
+    transition at layer 26: gated delta, own input projection -> full attention
+    transition at layer 27: full attention -> no mixer of its own
+    transition at layer 28: no mixer of its own -> gated delta, own input projection
+    transition at layer 29: gated delta, own input projection -> no mixer of its own
+    transition at layer 30: no mixer of its own -> gated delta, own input projection
+    transition at layer 31: gated delta, own input projection -> no mixer of its own
+    transition at layer 32: no mixer of its own -> gated delta, own input projection
+    transition at layer 33: gated delta, own input projection -> full attention
+    transition at layer 34: full attention -> no mixer of its own
+    transition at layer 35: no mixer of its own -> gated delta, own input projection
+    transition at layer 36: gated delta, own input projection -> no mixer of its own
+    transition at layer 37: no mixer of its own -> gated delta, own input projection
+    transition at layer 38: gated delta, own input projection -> no mixer of its own
+    transition at layer 39: no mixer of its own -> gated delta, own input projection
+    transition at layer 40: gated delta, own input projection -> no mixer of its own
+    transition at layer 41: no mixer of its own -> gated delta, own input projection
+    transition at layer 42: gated delta, own input projection -> full attention
+    transition at layer 43: full attention -> no mixer of its own
+    transition at layer 44: no mixer of its own -> gated delta, own input projection
+    transition at layer 45: gated delta, own input projection -> no mixer of its own
+    transition at layer 46: no mixer of its own -> gated delta, own input projection
+    transition at layer 47: gated delta, own input projection -> no mixer of its own
+    transition at layer 48: no mixer of its own -> gated delta, own input projection
+    transition at layer 49: gated delta, own input projection -> no mixer of its own
+    transition at layer 50: no mixer of its own -> gated delta, own input projection
+    transition at layer 51: gated delta, own input projection -> no mixer of its own
+    transition at layer 52: no mixer of its own -> full attention
+    last layer 52 is full attention
+
+  recurrent state: 64 heads x 64 key head width x 64 value head width = 262144 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ====
+=== F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ===
+  architecture : nemotron_h
+  layers       : 42
+  tensors      : 263
+  mixers       :  4 x full attention  21 x gated delta, own input projection  17 x no mixer of its own
+
+  the layer sequence and its transitions:
+    transition at layer 1: gated delta, own input projection -> no mixer of its own
+    transition at layer 2: no mixer of its own -> gated delta, own input projection
+    transition at layer 3: gated delta, own input projection -> no mixer of its own
+    transition at layer 4: no mixer of its own -> gated delta, own input projection
+    transition at layer 5: gated delta, own input projection -> no mixer of its own
+    transition at layer 6: no mixer of its own -> gated delta, own input projection
+    transition at layer 8: gated delta, own input projection -> no mixer of its own
+    transition at layer 9: no mixer of its own -> gated delta, own input projection
+    transition at layer 10: gated delta, own input projection -> no mixer of its own
+    transition at layer 11: no mixer of its own -> gated delta, own input projection
+    transition at layer 12: gated delta, own input projection -> full attention
+    transition at layer 13: full attention -> no mixer of its own
+    transition at layer 14: no mixer of its own -> gated delta, own input projection
+    transition at layer 15: gated delta, own input projection -> no mixer of its own
+    transition at layer 16: no mixer of its own -> gated delta, own input projection
+    transition at layer 17: gated delta, own input projection -> full attention
+    transition at layer 18: full attention -> no mixer of its own
+    transition at layer 19: no mixer of its own -> gated delta, own input projection
+    transition at layer 20: gated delta, own input projection -> no mixer of its own
+    transition at layer 21: no mixer of its own -> gated delta, own input projection
+    transition at layer 22: gated delta, own input projection -> no mixer of its own
+    transition at layer 23: no mixer of its own -> gated delta, own input projection
+    transition at layer 24: gated delta, own input projection -> full attention
+    transition at layer 25: full attention -> no mixer of its own
+    transition at layer 26: no mixer of its own -> gated delta, own input projection
+    transition at layer 27: gated delta, own input projection -> no mixer of its own
+    transition at layer 28: no mixer of its own -> gated delta, own input projection
+    transition at layer 29: gated delta, own input projection -> no mixer of its own
+    transition at layer 30: no mixer of its own -> gated delta, own input projection
+    transition at layer 32: gated delta, own input projection -> full attention
+    transition at layer 33: full attention -> no mixer of its own
+    transition at layer 34: no mixer of its own -> gated delta, own input projection
+    transition at layer 37: gated delta, own input projection -> no mixer of its own
+    transition at layer 38: no mixer of its own -> gated delta, own input projection
+    transition at layer 39: gated delta, own input projection -> no mixer of its own
+    transition at layer 40: no mixer of its own -> gated delta, own input projection
+    transition at layer 41: gated delta, own input projection -> no mixer of its own
+    last layer 41 is no mixer of its own
+
+  recurrent state: 96 heads x 96 key head width x 80 value head width = 737280 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf ===
+  architecture : qwen35
+  layers       : 65
+  tensors      : 866
+  mixers       :  17 x full attention  48 x gated delta, fused input projection
+
+  the layer sequence and its transitions:
+    transition at layer 3: gated delta, fused input projection -> full attention
+    transition at layer 4: full attention -> gated delta, fused input projection
+    transition at layer 7: gated delta, fused input projection -> full attention
+    transition at layer 8: full attention -> gated delta, fused input projection
+    transition at layer 11: gated delta, fused input projection -> full attention
+    transition at layer 12: full attention -> gated delta, fused input projection
+    transition at layer 15: gated delta, fused input projection -> full attention
+    transition at layer 16: full attention -> gated delta, fused input projection
+    transition at layer 19: gated delta, fused input projection -> full attention
+    transition at layer 20: full attention -> gated delta, fused input projection
+    transition at layer 23: gated delta, fused input projection -> full attention
+    transition at layer 24: full attention -> gated delta, fused input projection
+    transition at layer 27: gated delta, fused input projection -> full attention
+    transition at layer 28: full attention -> gated delta, fused input projection
+    transition at layer 31: gated delta, fused input projection -> full attention
+    transition at layer 32: full attention -> gated delta, fused input projection
+    transition at layer 35: gated delta, fused input projection -> full attention
+    transition at layer 36: full attention -> gated delta, fused input projection
+    transition at layer 39: gated delta, fused input projection -> full attention
+    transition at layer 40: full attention -> gated delta, fused input projection
+    transition at layer 43: gated delta, fused input projection -> full attention
+    transition at layer 44: full attention -> gated delta, fused input projection
+    transition at layer 47: gated delta, fused input projection -> full attention
+    transition at layer 48: full attention -> gated delta, fused input projection
+    transition at layer 51: gated delta, fused input projection -> full attention
+    transition at layer 52: full attention -> gated delta, fused input projection
+    transition at layer 55: gated delta, fused input projection -> full attention
+    transition at layer 56: full attention -> gated delta, fused input projection
+    transition at layer 59: gated delta, fused input projection -> full attention
+    transition at layer 60: full attention -> gated delta, fused input projection
+    transition at layer 63: gated delta, fused input projection -> full attention
+    last layer 64 is full attention
+
+  recurrent state: 48 heads x 48 key head width x 128 value head width = 294912 elements per sequence
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ===
+  architecture : deepseek2
+  layers       : 9
+  tensors      : 133
+  mixers       :  9 x latent attention
+
+  the layer sequence and its transitions:
+    last layer 8 is latent attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\07_codestral\Codestral-22B-v0.1-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\07_codestral\Codestral-22B-v0.1-Q4_K_M.gguf ===
+  architecture : llama
+  layers       : 56
+  tensors      : 507
+  mixers       :  56 x full attention
+
+  the layer sequence and its transitions:
+    last layer 55 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ===
+  architecture : qwen3
+  layers       : 36
+  tensors      : 399
+  mixers       :  36 x full attention
+
+  the layer sequence and its transitions:
+    last layer 35 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\mmproj-Qwen3.6-35B-A3B-BF16.gguf ====
+=== F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\mmproj-Qwen3.6-35B-A3B-BF16.gguf ===
+  architecture : clip
+  layers       : 0
+  tensors      : 334
+  mixers       :
+
+  the layer sequence and its transitions:
+    last layer 0 is none
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf ====
+=== F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf ===
+  architecture : llama
+  layers       : 56
+  tensors      : 507
+  mixers       :  56 x full attention
+
+  the layer sequence and its transitions:
+    last layer 55 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf ====
+=== F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf ===
+  architecture : phi3
+  layers       : 40
+  tensors      : 245
+  mixers       :  40 x fused qkv attention
+
+  the layer sequence and its transitions:
+    last layer 39 is fused qkv attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\09_bigdaddy_ultra\BigDaddyG-Q2_K-ULTRA.gguf ====
+=== F:\OllamaModels\_r1_iso\09_bigdaddy_ultra\BigDaddyG-Q2_K-ULTRA.gguf ===
+  architecture : llama
+  layers       : 80
+  tensors      : 723
+  mixers       :  80 x full attention
+
+  the layer sequence and its transitions:
+    last layer 79 is full attention
+
+  0 layer(s) with a shape problem
+
+==== F:\OllamaModels\_r1_iso\08_qwen_coder\qwen2.5-coder-14b-instruct-q8_0.gguf ====
+=== F:\OllamaModels\_r1_iso\08_qwen_coder\qwen2.5-coder-14b-instruct-q8_0.gguf ===
+  architecture : qwen2
+  layers       : 48
+  tensors      : 579
+  mixers       :  48 x full attention
+
+  the layer sequence and its transitions:
+    last layer 47 is full attention
+
+  0 layer(s) with a shape problem
+

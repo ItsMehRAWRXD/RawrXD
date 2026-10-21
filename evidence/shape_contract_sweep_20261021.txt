@@ -1,0 +1,692 @@
+Deep2 shape contract sweep
+generated 2026-10-21
+models audited: 30
+
+==== F:\OllamaModels\Qwen2.5-Coder-14B-Instruct-Q8_0\qwen2.5-coder-14b-instruct-q8_0.gguf ====
+=== F:\OllamaModels\Qwen2.5-Coder-14B-Instruct-Q8_0\qwen2.5-coder-14b-instruct-q8_0.gguf ===
+  architecture      : qwen2
+  block_count       : 48
+  tensors           : 579
+  block families    :  48 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf ====
+=== F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf ===
+  architecture      : llama
+  block_count       : 28
+  tensors           : 255
+  block families    :  28 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\06_phi3_med\Phi-3-medium-128k-instruct-Q4_K_M.gguf ===
+  architecture      : phi3
+  block_count       : 40
+  tensors           : 245
+  block families    :  40 x fused qkv, no gate and no recurrent state
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\Qwen3.6-27B-Fable-Fusion-711-Heretic-MAX-Q4_K_M\Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q4_K_M.gguf ====
+=== F:\OllamaModels\Qwen3.6-27B-Fable-Fusion-711-Heretic-MAX-Q4_K_M\Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q4_K_M.gguf ===
+  architecture      : qwen35
+  block_count       : 65
+  tensors           : 866
+  block families    :  17 x full attention  48 x fused qkv, no gate and no recurrent state
+  [NOTE] blk.0: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.1: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.10: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.12: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.13: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.14: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.16: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.17: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.18: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.2: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.20: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.21: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.22: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.24: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.25: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.26: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.28: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.29: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.30: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.32: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.33: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.34: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.36: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.37: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.38: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.4: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.40: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.41: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.42: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.44: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.45: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.46: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.48: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.49: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.5: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.50: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.52: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.53: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.54: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.56: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.57: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.58: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.6: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.60: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.61: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.62: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.8: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.9: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf ====
+=== F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf ===
+  architecture      : qwen35
+  block_count       : 65
+  tensors           : 866
+  block families    :  17 x full attention  48 x fused qkv, no gate and no recurrent state
+  [NOTE] blk.0: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.1: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.10: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.12: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.13: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.14: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.16: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.17: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.18: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.2: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.20: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.21: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.22: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.24: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.25: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.26: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.28: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.29: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.30: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.32: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.33: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.34: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.36: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.37: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.38: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.4: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.40: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.41: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.42: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.44: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.45: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.46: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.48: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.49: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.5: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.50: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.52: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.53: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.54: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.56: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.57: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.58: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.6: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.60: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.61: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.62: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.8: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.9: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf ====
+=== F:\OllamaModels\gemma-4-31B-it-GGUF\gemma-4-31B-it-Q4_K_M.gguf ===
+  architecture      : gemma4
+  block_count       : 60
+  tensors           : 833
+  block families    :  60 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ====
+=== F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ===
+  architecture      : nemotron_h
+  block_count       : 42
+  tensors           : 263
+  block families    :  4 x full attention  21 x gated hybrid, recurrent with its own input projection  17 x no mixer of its own (shared expert)
+  [NOTE] blk.0: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.11: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.14: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.16: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.19: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.2: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.21: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.23: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.26: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.28: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.30: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.31: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.34: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.35: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.36: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.38: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.4: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.40: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.6: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.7: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.9: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf ====
+=== F:\OllamaModels\_r1_iso\02_phi3_mini\Phi-3-mini-4k-instruct-q8_0.gguf ===
+  architecture      : phi3
+  block_count       : 32
+  tensors           : 197
+  block families    :  32 x fused qkv, no gate and no recurrent state
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\07_codestral\Codestral-22B-v0.1-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\07_codestral\Codestral-22B-v0.1-Q4_K_M.gguf ===
+  architecture      : llama
+  block_count       : 56
+  tensors           : 507
+  block families    :  56 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf ====
+=== F:\OllamaModels\rawrxd_test_models\Codestral-22B-v0.1-Q4_K_M.gguf ===
+  architecture      : llama
+  block_count       : 56
+  tensors           : 507
+  block families    :  56 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\09_bigdaddy_ultra\BigDaddyG-Q2_K-ULTRA.gguf ====
+=== F:\OllamaModels\_r1_iso\09_bigdaddy_ultra\BigDaddyG-Q2_K-ULTRA.gguf ===
+  architecture      : llama
+  block_count       : 80
+  tensors           : 723
+  block families    :  80 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\08_qwen_coder\qwen2.5-coder-14b-instruct-q8_0.gguf ====
+=== F:\OllamaModels\_r1_iso\08_qwen_coder\qwen2.5-coder-14b-instruct-q8_0.gguf ===
+  architecture      : qwen2
+  block_count       : 48
+  tensors           : 579
+  block families    :  48 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00002-of-00011.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00002-of-00011.gguf ===
+  architecture      : (none)
+  block_count       : 6
+  tensors           : 91
+  block families    :  5 x latent attention (compressed q and kv)  1 x no mixer of its own (shared expert)
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\DeepSeek-R1-Recovery\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-Recovery\DeepSeek-R1-Q4_K_M\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ===
+  architecture      : deepseek2
+  block_count       : 9
+  tensors           : 133
+  block families    :  9 x latent attention (compressed q and kv)
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\BigDaddyG-F32-FROM-Q4.gguf ====
+=== F:\OllamaModels\BigDaddyG-F32-FROM-Q4.gguf ===
+  architecture      : llama
+  block_count       : 80
+  tensors           : 723
+  block families    :  80 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ====
+=== F:\OllamaModels\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ===
+  architecture      : nemotron_h
+  block_count       : 42
+  tensors           : 263
+  block families    :  4 x full attention  21 x gated hybrid, recurrent with its own input projection  17 x no mixer of its own (shared expert)
+  [NOTE] blk.0: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.11: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.14: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.16: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.19: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.2: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.21: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.23: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.26: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.28: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.30: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.31: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.34: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.35: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.36: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.38: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.4: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.40: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.6: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.7: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  [NOTE] blk.9: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 9728 channels, ssm_out takes 7680
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ===
+  architecture      : deepseek2
+  block_count       : 9
+  tensors           : 133
+  block families    :  9 x latent attention (compressed q and kv)
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ====
+=== F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ===
+  architecture      : qwen3
+  block_count       : 36
+  tensors           : 399
+  block families    :  36 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\gguf\nemotron-3.5-lightning-30b-Q4_K_M.gguf ====
+=== F:\OllamaModels\gguf\nemotron-3.5-lightning-30b-Q4_K_M.gguf ===
+  architecture      : nemotron_h_moe
+  block_count       : 53
+  tensors           : 417
+  block families    :  7 x full attention  23 x gated hybrid, recurrent with its own input projection  23 x no mixer of its own (shared expert)
+  [NOTE] blk.0: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.11: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.14: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.16: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.18: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.2: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.21: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.23: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.25: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.28: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.30: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.32: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.35: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.37: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.39: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.4: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.41: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.44: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.46: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.48: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.50: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.7: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  [NOTE] blk.9: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 6144 channels, ssm_out takes 4096
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf ====
+=== F:\OllamaModels\Phi-3-medium-128k-instruct-14B-Q4_K_M\Phi-3-medium-128k-instruct-Q4_K_M.gguf ===
+  architecture      : phi3
+  block_count       : 40
+  tensors           : 245
+  block families    :  40 x fused qkv, no gate and no recurrent state
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf ====
+=== F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf ===
+  architecture      : minimax-m2
+  block_count       : 22
+  tensors           : 288
+  block families    :  22 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf ===
+  architecture      : qwen35
+  block_count       : 65
+  tensors           : 866
+  block families    :  17 x full attention  48 x fused qkv, no gate and no recurrent state
+  [NOTE] blk.0: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.1: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.10: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.12: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.13: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.14: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.16: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.17: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.18: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.2: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.20: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.21: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.22: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.24: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.25: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.26: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.28: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.29: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.30: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.32: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.33: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.34: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.36: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.37: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.38: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.4: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.40: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.41: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.42: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.44: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.45: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.46: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.48: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.49: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.5: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.50: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.52: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.53: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.54: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.56: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.57: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.58: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.6: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.60: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.61: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.62: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.8: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  [NOTE] blk.9: the recurrent convolution and the output projection are on different widths
+         ssm_conv1d is over 10240 channels, ssm_out takes 6144
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf ====
+=== F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf ===
+  architecture      : qwen4exp
+  block_count       : 5
+  tensors           : 121
+  block families    :  1 x full attention  4 x fused qkv, no gate and no recurrent state
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\04_ds_r1_qwen3\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf ===
+  architecture      : qwen3
+  block_count       : 36
+  tensors           : 399
+  block families    :  36 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\GLM-4.7-Flash-GGUF\GLM-4.7-Flash-Q4_K_M.gguf ====
+=== F:\OllamaModels\GLM-4.7-Flash-GGUF\GLM-4.7-Flash-Q4_K_M.gguf ===
+  architecture      : deepseek2
+  block_count       : 47
+  tensors           : 844
+  block families    :  47 x latent attention (compressed q and kv)
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf ====
+=== F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf ===
+  architecture      : gemma4
+  block_count       : 42
+  tensors           : 720
+  block families    :  42 x full attention
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\10_glm47\GLM-4.7-Flash-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\10_glm47\GLM-4.7-Flash-Q4_K_M.gguf ===
+  architecture      : deepseek2
+  block_count       : 47
+  tensors           : 844
+  block families    :  47 x latent attention (compressed q and kv)
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\mmproj-Qwen3.6-35B-A3B-BF16.gguf ====
+=== F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\mmproj-Qwen3.6-35B-A3B-BF16.gguf ===
+  architecture      : clip
+  block_count       : 0
+  tensors           : 334
+  block families    :
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf ====
+=== F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf ===
+  architecture      : deepseek2
+  block_count       : 6
+  tensors           : 98
+  block families    :  6 x latent attention (compressed q and kv)
+  the width chain closes on every block
+
+
+==== F:\OllamaModels\_r1_iso\05_gemma4_e4b\gemma-4-E4B-it-Q4_K_M.gguf ====
+=== F:\OllamaModels\_r1_iso\05_gemma4_e4b\gemma-4-E4B-it-Q4_K_M.gguf ===
+  architecture      : gemma4
+  block_count       : 42
+  tensors           : 720
+  block families    :  42 x full attention
+  the width chain closes on every block
+
+
