@@ -1,0 +1,15 @@
+=== Qwen4Exp QSA indexer scoring: device execution ===
+artifact: src\deep2\shaders\deep2_qwen4exp_qsa_score.spv
+artifact: 2019 words of SPIR-V
+validation: VK_LAYER_KHRONOS_validation is on
+device : AMD Radeon AI PRO R9700
+pipeline: created
+memory  : type 2
+
+rows=5 index_heads=4 key_dim=8 page_size=4 compress_ratio=2 max_pages=3
+max_abs_diff (finite) = 2.823601e-08
+mask mismatches        = 0
+visible-count mismatch  = 0
+
+RESULT: PASS (the device reproduced the reference)
+EXIT=0 

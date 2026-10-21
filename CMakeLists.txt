@@ -2036,6 +2036,35 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_moe_router_test.cpp" AND Vul
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# The Qwen4Exp QSA indexer scoring, executed on the device.
+#
+# The scoring goes through a page table and only the visible compressed keys
+# of a sequence take part. The page arithmetic is what a static check cannot
+# speak to, so it is run against a host reference computed in double
+# precision, with the invalid-request and invalid-page paths exercised.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_qsa_score_test.cpp" AND Vulkan_FOUND)
+    add_executable(deep2_qwen4exp_qsa_score_test
+        tools/deep2_qwen4exp_qsa_score_test.cpp)
+    target_compile_features(deep2_qwen4exp_qsa_score_test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_qsa_score_test PRIVATE
+            /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_qsa_score_test PRIVATE
+            -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_qwen4exp_qsa_score_test PRIVATE Vulkan::Vulkan)
+    endif()
+    set_target_properties(deep2_qwen4exp_qsa_score_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_qwen4exp_qsa_score_test enabled (Qwen4Exp QSA scoring proof)")
+    add_test(NAME Qwen4Exp_QsaScore_Device
+        COMMAND deep2_qwen4exp_qsa_score_test
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_qsa_score.spv"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+endif()
+
 
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims

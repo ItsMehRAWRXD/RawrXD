@@ -114,15 +114,15 @@ const Operator kOperators[] = {
       "OP_GEMV_F32 (the indexer projections), OP_RMSNORM (the indexer norms)",
       "the indexer scoring and its top-k selection, and the compressed-key "
       "attention itself",
-      "",
-      "the indexer scoring kernel, with the top-k selection over the key cache" },
+      "qsa_score",
+      "the compressed-key attention itself, which the scoring does not cover" },
 
     { "GDN",
       "a gated delta-net recurrent state: a state matrix, a gated decay, and "
       "a per-step state update",
       "OP_GEMV_F32 (the projections around the state)",
       "the recurrent state update and the gated normalisation",
-      "",
+      "gdn",
       "the selective state update, which is a scan and not a projection" },
 
     { "PLE",
@@ -182,6 +182,9 @@ const Primitive kPrimitives[] = {
       "the hidden state turned into one logit per expert, which is the "
       "first part of the sparse MoE operator and does not depend on the "
       "format the experts are stored in" },
+    { "QSA indexer scoring", "qsa_score",
+      "the indexer scoring against the compressed-key cache, through a page "
+      "table and over the visible compressed keys only" },
 };
 
 // A device execution receipt, if the operator has one.
