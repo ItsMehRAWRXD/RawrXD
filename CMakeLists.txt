@@ -1852,6 +1852,25 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dynamic_interceptor.cpp" AND Vulkan_F
     message(STATUS "deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)")
 endif()
 
+# Qwen4Exp shader-to-Vulkan wiring probe. It creates real PLE and
+# Hyperconnection pipeline objects but submits no inference work.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_pipeline_probe.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_qwen4exp_pipeline_probe tools/deep2_qwen4exp_pipeline_probe.cpp)
+    target_include_directories(deep2_qwen4exp_pipeline_probe PRIVATE ${_rawrxd_vk_sdk_inc})
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_qwen4exp_pipeline_probe PRIVATE Vulkan::Vulkan)
+    endif()
+    target_compile_features(deep2_qwen4exp_pipeline_probe PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_qwen4exp_pipeline_probe PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_qwen4exp_pipeline_probe PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_qwen4exp_pipeline_probe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)" )
+endif()
+
 # Gate 7 D1 — batched multi-token prefill full-logit parity.
 # RAWRXD_DEEP2_D1_PREFILL_PARITY verifies Executor::PrefillBatch against the
 # serial ExecuteToken path: full-logit BIT_EXACT over a prefix sweep + causal
