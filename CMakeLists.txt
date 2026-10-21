@@ -1,5 +1,33 @@
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_rom_roundtrip.cpp")
+    add_executable(deep2_rom_roundtrip tools/deep2_rom_roundtrip.cpp)
+    target_include_directories(deep2_rom_roundtrip PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")
+    target_compile_features(deep2_rom_roundtrip PRIVATE cxx_std_20)
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_rom_pack.cpp")
+    add_executable(deep2_rom_pack
+        tools/deep2_rom_pack.cpp)
+    target_include_directories(deep2_rom_pack PRIVATE
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/src"
+        "${CMAKE_SOURCE_DIR}/src/deep2")
+    target_compile_features(deep2_rom_pack PRIVATE cxx_std_20)
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_shard_probe.cpp")
+    add_executable(deep2_shard_probe tools/deep2_shard_probe.cpp)
+    target_include_directories(deep2_shard_probe PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")
+    target_compile_features(deep2_shard_probe PRIVATE cxx_std_20)
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawrxd_msvc_runner.cpp")
+    add_executable(rawrxd_msvc_runner tools/rawrxd_msvc_runner.cpp)
+    target_compile_features(rawrxd_msvc_runner PRIVATE cxx_std_20)
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/rawrxd_astro_index.cpp")
+    add_executable(rawrxd_astro_index tools/rawrxd_astro_index.cpp)
+    target_compile_features(rawrxd_astro_index PRIVATE cxx_std_20)
+endif()
 add_definitions(-DNOMINMAX -D_WIN32_WINNT=0x0A00)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -1735,6 +1763,73 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AN
 else()
     message(STATUS "deep2_parity_trace EXCLUDED: auditor source or Vulkan SDK unavailable - "
                    "Gate 4 GPU audit will be SKIPPED_UNSUPPORTED, never PASS")
+endif()
+
+# Full-model certification runner.  This is intentionally a separate target
+# from the metadata probes: it binds the complete runtime graph, executes the
+# supplied token sequence, and compares the full vocabulary logits on the GPU
+# and CPU-pinned paths.  A build or metadata pass must never be reported as a
+# full-model certification result.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+    add_executable(deep2_gpu_certify
+        tools/deep2_gpu_certify.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
+    )
+    target_include_directories(deep2_gpu_certify PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${_rawrxd_vk_sdk_inc}
+    )
+    if(TARGET ggml_interface)
+        target_link_libraries(deep2_gpu_certify PRIVATE ggml_interface)
+    endif()
+    if(TARGET Vulkan::Vulkan)
+        target_link_libraries(deep2_gpu_certify PRIVATE Vulkan::Vulkan)
+    endif()
+    if(MSVC)
+        target_compile_options(deep2_gpu_certify PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_gpu_certify PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    target_compile_definitions(deep2_gpu_certify PRIVATE
+        NOMINMAX _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
+    )
+    set_target_properties(deep2_gpu_certify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "deep2_gpu_certify enabled (full-model GPU/CPU logits certification)")
+else()
+    message(STATUS "deep2_gpu_certify EXCLUDED: source or Vulkan SDK unavailable")
+endif()
+
+# Native Qwen4Exp reverse-engineering contract extractor.  This target is
+# intentionally dependency-free and read-only: it audits real shard manifests
+# before any operator is lowered into the executable Vulkan graph.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_reverse_engineer.cpp")
+    add_executable(deep2_reverse_engineer tools/deep2_reverse_engineer.cpp)
+    target_compile_features(deep2_reverse_engineer PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_reverse_engineer PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(deep2_reverse_engineer PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_reverse_engineer PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_reverse_engineer enabled (native Qwen4Exp contract audit)")
 endif()
 
 # Gate 7 D1 — batched multi-token prefill full-logit parity.
