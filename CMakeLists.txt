@@ -1871,6 +1871,25 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_pipeline_probe.cpp" AND Vulk
     message(STATUS "deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)" )
 endif()
 
+# Enterprise source-to-parity closure manifest.  This read-only target hashes
+# the reverse-engineered contract, executor boundary, shader source/SPIR-V,
+# pipeline probe, and independent parity references.  It deliberately records
+# command submission and full-model execution as NOT_RUN until ExecuteToken
+# owns descriptor updates and real dispatches for every Qwen4Exp operator.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_enterprise_manifest.cpp")
+    add_executable(deep2_enterprise_manifest tools/deep2_enterprise_manifest.cpp)
+    target_compile_features(deep2_enterprise_manifest PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_enterprise_manifest PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+        target_link_libraries(deep2_enterprise_manifest PRIVATE Bcrypt)
+    else()
+        target_compile_options(deep2_enterprise_manifest PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(deep2_enterprise_manifest PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    message(STATUS "deep2_enterprise_manifest enabled (source-to-parity closure receipt)")
+endif()
+
 # Gate 7 D1 — batched multi-token prefill full-logit parity.
 # RAWRXD_DEEP2_D1_PREFILL_PARITY verifies Executor::PrefillBatch against the
 # serial ExecuteToken path: full-logit BIT_EXACT over a prefix sweep + causal
