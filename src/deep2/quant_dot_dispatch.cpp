@@ -89,11 +89,13 @@ VulkanCompute& GpuFor(int32_t device_index)
 
 // Packed row stride per kind (same geometry the shader and ExecuteQuantDot
 // use). Legacy kinds quantise 32 values per block; the k-quants 256.
-// 0=Q4_K(144) 1=Q6_K(210) 5=Q2_K(84) 6=Q3_K(110); 2..4 = legacy 32-value.
+// 0=Q4_K(144) 1=Q6_K(210) 5=Q2_K(84) 6=Q3_K(110) 8=Q5_K(176);
+// 2..4 = legacy 32-value.
 size_t RowBytesForKind(int kind, size_t n_in)
 {
     if (kind == 5) return ((n_in + 255u) / 256u) * 84u;    // Q2_K
     if (kind == 6) return ((n_in + 255u) / 256u) * 110u;   // Q3_K
+    if (kind == 8) return ((n_in + 255u) / 256u) * 176u;   // Q5_K
     if (kind == 7) return ((n_in + 63u) / 64u) * 36u;      // NVFP4: 64 elems per 36-byte block
     switch (kind) {
     case 0: return ((n_in + 255u) / 256u) * 144u;               // Q4_K
@@ -455,8 +457,12 @@ bool DotBlocked(int kind,
                 size_t q8_bytes,
                 bool force_cpu)
 {
-    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0, 5 = Q2_K, 6 = Q3_K, 7 = NVFP4
-    if (kind < 0 || kind > 7) {
+    // kind: 0 = Q4_K, 1 = Q6_K, 2 = Q5_0, 3 = Q8_0, 4 = Q4_0,
+    //       5 = Q2_K, 6 = Q3_K, 7 = NVFP4, 8 = Q5_K.
+    // Q5_K is deliberately a separate capability id: GGML type ids and
+    // dispatch capability ids are different domains, and kind 8 must not be
+    // confused with the GGML Q8_0 type id.
+    if (kind < 0 || kind > 8) {
         g_receipt.fallback_reason = "unsupported kind";
         return false;
     }
@@ -631,7 +637,7 @@ bool DotBlockedOn(int32_t device, int kind,
                   bool force_cpu)
 {
     g_receipt = Receipt{};
-    if (kind < 0 || kind > 7) { g_receipt.fallback_reason = "unsupported kind"; return false; }
+    if (kind < 0 || kind > 8) { g_receipt.fallback_reason = "unsupported kind"; return false; }
     if (!wBytes || !x || !y || n_in == 0 || n_out == 0) { g_receipt.fallback_reason = "bad arguments"; return false; }
     if (cpu == nullptr) { g_receipt.fallback_reason = "no CPU fallback supplied"; return false; }
     const bool legacy = (kind >= 2);

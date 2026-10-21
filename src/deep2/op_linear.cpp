@@ -52,6 +52,7 @@ bool OpLinear(int gguf_type,
         case GGML_TYPE_Q4_0: kind = 4; break;
         case GGML_TYPE_Q2_K: kind = 5; break;
         case GGML_TYPE_Q3_K: kind = 6; break;
+        case GGML_TYPE_Q5_K: kind = 8; break;
         case GGML_TYPE_F16:
             break;  // handled below via DotF16
         default:
