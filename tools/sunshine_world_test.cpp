@@ -217,8 +217,8 @@ int main() {
     }
 
     VoxelCamera camera;
-    camera.position = Vec3{4.0f, 150.0f, 120.0f};
-    camera.target = Vec3{4.0f, 95.0f, 0.0f};
+    camera.position = Vec3{90.0f, 175.0f, 165.0f};
+    camera.target = Vec3{0.0f, 88.0f, 0.0f};
     camera.fovYDegrees = 68.0f;
     camera.zFar = 1200.0f;
 
@@ -269,6 +269,154 @@ int main() {
     RasterizeFrame(pointers, camera, kWidth, kHeight, pixels2, nullptr);
     Report("the rendered frame is stable", pixels == pixels2,
            std::to_string(pixels.size()) + " bytes compared");
+
+    // ---- 9. A top-down map of the generated world --------------------------
+    // The frame above only covers the chunks that were meshed, which is a
+    // tiny part of an island that is hundreds of blocks across. A top-down
+    // map samples the world directly, so it shows the whole landmass, the
+    // shoreline and the sea, and it is cheap enough to always produce.
+    {
+        constexpr uint32_t kMapSize = 512;
+        constexpr int32_t kMapSpan = 1024;  // world blocks covered by the map
+        const int32_t originX = -kMapSpan / 2;
+        const int32_t originZ = -kMapSpan / 2;
+        const int32_t step = kMapSpan / static_cast<int32_t>(kMapSize);
+
+        std::vector<uint8_t> map(static_cast<size_t>(kMapSize) * kMapSize * 4u, 0);
+        for (uint32_t my = 0; my < kMapSize; ++my) {
+            for (uint32_t mx = 0; mx < kMapSize; ++mx) {
+                const int32_t wx = originX + static_cast<int32_t>(mx) * step;
+                const int32_t wz = originZ + static_cast<int32_t>(my) * step;
+
+                const int32_t height = worldA.SurfaceHeight(wx, wz);
+                const int32_t sea = static_cast<int32_t>((64.0 / 100.0) * kChunkHeight + 0.5);
+
+                uint8_t r = 0;
+                uint8_t g = 0;
+                uint8_t b = 0;
+                if (height < sea) {
+                    // Water: the deeper, the darker.
+                    const int32_t depth = sea - height;
+                    const float t = std::min(1.0f, static_cast<float>(depth) / 20.0f);
+                    r = static_cast<uint8_t>((0.10f + 0.20f * t) * 255.0f);
+                    g = static_cast<uint8_t>((0.55f - 0.35f * t) * 255.0f);
+                    b = static_cast<uint8_t>((0.80f - 0.15f * t) * 255.0f);
+                } else {
+                    // Land: shaded by height and by the relief, so the
+                    // landmass reads as terrain rather than as a flat blob.
+                    const float t = std::min(1.0f, static_cast<float>(height - sea) / 40.0f);
+                    r = static_cast<uint8_t>((0.20f + 0.45f * t) * 255.0f);
+                    g = static_cast<uint8_t>((0.55f + 0.30f * t) * 255.0f);
+                    b = static_cast<uint8_t>((0.25f + 0.25f * t) * 255.0f);
+                    const int32_t neighbour = worldA.SurfaceHeight(wx + step, wz);
+                    if (neighbour < height) {
+                        const int32_t drop = height - neighbour;
+                        const float shade = std::min(0.45f, static_cast<float>(drop) / 40.0f);
+                        r = static_cast<uint8_t>(r * (1.0f - shade));
+                        g = static_cast<uint8_t>(g * (1.0f - shade));
+                        b = static_cast<uint8_t>(b * (1.0f - shade));
+                    }
+                }
+                const size_t p = (static_cast<size_t>(my) * kMapSize + mx) * 4u;
+                map[p + 0] = r;
+                map[p + 1] = g;
+                map[p + 2] = b;
+                map[p + 3] = 255u;
+            }
+        }
+        if (WritePng("sunshine_worldmap.png", map, kMapSize, kMapSize)) {
+            printf("[INFO] the world map was written to sunshine_worldmap.png (%d blocks across)\n",
+                   kMapSpan);
+        }
+    }
+
+    // ---- 10. A hero frame with real coverage --------------------------------
+    // The frame above meshes a small block of chunks, which on a world this
+    // size is a corner of one island and a lot of empty space. The hero
+    // frame meshes a wide region around a coastline, so the frame shows an
+    // island meeting the sea, which is what the world actually looks like.
+    {
+        const int32_t sea = static_cast<int32_t>((64.0 / 100.0) * kChunkHeight + 0.5);
+        // Find a coastline: a point that is water, with land a short way off.
+        int32_t coastX = 0;
+        int32_t coastZ = 0;
+        bool found = false;
+        for (int32_t radius = 40; radius <= 420 && !found; radius += 20) {
+            for (int32_t angle = 0; angle < 32 && !found; ++angle) {
+                const float radians = static_cast<float>(angle) * 3.14159265f / 16.0f;
+                const int32_t x = static_cast<int32_t>(static_cast<float>(radius) * std::cos(radians));
+                const int32_t z = static_cast<int32_t>(static_cast<float>(radius) * std::sin(radians));
+                if (worldA.SurfaceHeight(x, z) >= sea) continue;
+                // Is there land nearby?
+                for (int32_t d = 24; d <= 96; d += 24) {
+                    if (worldA.SurfaceHeight(x + d, z) >= sea ||
+                        worldA.SurfaceHeight(x - d, z) >= sea ||
+                        worldA.SurfaceHeight(x, z + d) >= sea ||
+                        worldA.SurfaceHeight(x, z - d) >= sea) {
+                        coastX = x;
+                        coastZ = z;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (found) {
+            constexpr int32_t kRadiusChunks = 12;  // 25 x 25 chunks = 400 blocks
+            std::vector<ChunkMesh> heroChunks;
+            std::vector<const ChunkMesh*> heroPointers;
+            heroChunks.reserve(static_cast<size_t>(kRadiusChunks * 2 + 1) * (kRadiusChunks * 2 + 1));
+            heroPointers.reserve(heroChunks.capacity());
+            const int32_t centreChunkX = coastX / kChunkWidth;
+            const int32_t centreChunkZ = coastZ / kChunkDepth;
+            for (int32_t cz = centreChunkZ - kRadiusChunks; cz <= centreChunkZ + kRadiusChunks; ++cz) {
+                for (int32_t cx = centreChunkX - kRadiusChunks; cx <= centreChunkX + kRadiusChunks; ++cx) {
+                    heroChunks.push_back(MeshChunk(worldA, cx, cz));
+                    heroPointers.push_back(&heroChunks.back());
+                }
+            }
+
+            VoxelCamera heroCamera;
+            heroCamera.position = Vec3{static_cast<float>(coastX) + 95.0f, 150.0f,
+                                       static_cast<float>(coastZ) + 95.0f};
+            heroCamera.target = Vec3{static_cast<float>(coastX), sea + 6.0f,
+                                     static_cast<float>(coastZ)};
+            heroCamera.fovYDegrees = 62.0f;
+            heroCamera.zFar = 2000.0f;
+
+            std::vector<uint8_t> heroPixels;
+            std::string heroError;
+            const bool heroOk = RasterizeFrame(heroPointers, heroCamera, 960, 540, heroPixels,
+                                                &heroError);
+            Report("the hero frame renders with a wide field of view", heroOk,
+                   heroOk ? (std::to_string(heroPointers.size()) + " chunks, 960x540")
+                          : heroError);
+            if (heroOk) {
+                if (WritePng("sunshine_hero.png", heroPixels, 960, 540)) {
+                    printf("[INFO] the hero frame was written to sunshine_hero.png\n");
+                }
+                // The hero frame must show sea AND land: that is the whole
+                // point of framing a coastline.
+                size_t heroWater = 0;
+                size_t heroLand = 0;
+                for (size_t i = 0; i < heroPixels.size(); i += 4) {
+                    const int r = heroPixels[i];
+                    const int g = heroPixels[i + 1];
+                    const int b = heroPixels[i + 2];
+                    if (b > r + 25 && b > 70) ++heroWater;
+                    else if (g > r + 10) ++heroLand;
+                }
+                const size_t heroTotal = 960u * 540u;
+                Report("the hero frame shows land meeting the sea",
+                       heroWater > heroTotal / 20 && heroLand > heroTotal / 20,
+                       "water=" + std::to_string(heroWater * 100 / heroTotal) + "% land=" +
+                           std::to_string(heroLand * 100 / heroTotal) + "%");
+            }
+        } else {
+            Report("a coastline was found", false, "no coastline within 420 blocks");
+        }
+    }
 
     printf("=== %s ===\n", g_failures == 0 ? "ALL CHECKS PASSED" : "CHECKS FAILED");
     if (g_failures != 0) {

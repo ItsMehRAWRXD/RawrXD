@@ -682,9 +682,11 @@ bool VoxelRenderer::RenderFrame(const VoxelCamera& camera) {
     constants.params[0] = 1.0f;  // ambient scale
     // The fog band scales with the world height, matching the reference
     // rasterizer exactly.
-    constants.params[1] = static_cast<float>(kChunkHeight) * 1.0f;  // fog start
-    constants.params[2] = static_cast<float>(kChunkHeight) * 3.0f;  // fog range
-    constants.params[3] = 0.85f; // fog strength
+    // The fog band scales with the world height, and it is deliberately
+    // wide: a tight band turns the sea into sky.
+    constants.params[1] = static_cast<float>(kChunkHeight) * 2.0f;   // fog start
+    constants.params[2] = static_cast<float>(kChunkHeight) * 14.0f;  // fog range
+    constants.params[3] = 0.9f;  // fog strength
 
     if (constantCpu_) {
         memcpy(constantCpu_, &constants, sizeof(constants));

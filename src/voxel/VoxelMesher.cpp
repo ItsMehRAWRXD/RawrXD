@@ -48,6 +48,20 @@ inline bool Opaque(uint8_t t) {
     return t != static_cast<uint8_t>(BlockType::Air) && t != static_cast<uint8_t>(BlockType::Water);
 }
 
+// The colour of water at a given depth: pale turquoise in the shallows,
+// deep blue offshore. The depth is sampled at the vertex, so the sea shades
+// as a gradient across the surface.
+inline uint32_t WaterColor(uint8_t depth) {
+    if (depth == 0) return 0xFF3A6FD8u;
+    const float t = std::min(1.0f, static_cast<float>(depth) / 14.0f);
+    const float r = 0.36f + (0.04f - 0.36f) * t;
+    const float g = 0.80f + (0.24f - 0.80f) * t;
+    const float b = 0.82f + (0.52f - 0.82f) * t;
+    return (static_cast<uint32_t>(r * 255.0f) << 16) |
+           (static_cast<uint32_t>(g * 255.0f) << 8) |
+           static_cast<uint32_t>(b * 255.0f);
+}
+
 } // namespace
 
 uint32_t BlockColor(BlockType type) {
@@ -106,6 +120,9 @@ ChunkMesh MeshChunk(const VoxelWorld& world, int32_t chunkX, int32_t chunkZ) {
         std::vector<uint8_t> maskBlock(static_cast<size_t>(uCells) * vCells, 0);
         std::vector<int8_t> maskSign(static_cast<size_t>(uCells) * vCells, 0);
         std::vector<uint8_t> maskAo(static_cast<size_t>(uCells) * vCells * 4, 0);
+        // The water depth under each cell, carried through the merge to the
+        // quad so the ocean can be shaded by depth.
+        std::vector<uint8_t> maskWater(static_cast<size_t>(uCells) * vCells, 0);
 
         // The block at (padded index along d, cell uu, cell vv).
         auto blockAt = [&](int32_t pd, int32_t uu, int32_t vv) -> uint8_t {
@@ -123,6 +140,7 @@ ChunkMesh MeshChunk(const VoxelWorld& world, int32_t chunkX, int32_t chunkZ) {
             std::fill(maskBlock.begin(), maskBlock.end(), 0);
             std::fill(maskSign.begin(), maskSign.end(), 0);
             std::fill(maskAo.begin(), maskAo.end(), 0);
+            std::fill(maskWater.begin(), maskWater.end(), 0);
 
             for (int32_t vv = 0; vv < vCells; ++vv) {
                 for (int32_t uu = 0; uu < uCells; ++uu) {
@@ -144,6 +162,25 @@ ChunkMesh MeshChunk(const VoxelWorld& world, int32_t chunkX, int32_t chunkZ) {
                     maskBlock[mi] = solid;
                     maskSign[mi] = sign;
                     ++mesh.faceCount;
+
+                    // The depth of the water below a top face, so the ocean
+                    // can be shaded from pale turquoise in the shallows to
+                    // deep blue offshore. Without this the ocean is one flat
+                    // blue field and the island reads as a landmass floating
+                    // in a void rather than as an island in a sea.
+                    uint8_t waterDepth = 0;
+                    if (d == 1 && solid == static_cast<uint8_t>(BlockType::Water) && sign > 0) {
+                        const int32_t cellY = pd - 1 - kOffset[1];
+                        for (int32_t depth = 0; depth < 32; ++depth) {
+                            const int32_t py = cellY - depth;
+                            if (py < 0) break;
+                            const uint8_t below = pad[static_cast<size_t>(Index(
+                                uu + kOffset[u], py, vv + kOffset[v]))];
+                            if (below != static_cast<uint8_t>(BlockType::Water)) break;
+                            waterDepth = static_cast<uint8_t>(depth + 1);
+                        }
+                    }
+                    maskWater[mi] = waterDepth;
 
                     // ---- Ambient occlusion ------------------------------------
                     // For each of the four corners of the face, sample the three
@@ -211,8 +248,20 @@ ChunkMesh MeshChunk(const VoxelWorld& world, int32_t chunkX, int32_t chunkZ) {
                     const uint8_t ao2 = maskAo[(static_cast<size_t>(vv + h - 1) * uCells + (uu + w - 1)) * 4 + 2];
                     const uint8_t ao3 = maskAo[(static_cast<size_t>(vv + h - 1) * uCells + uu) * 4 + 3];
 
-                    const uint32_t rgb = BlockColor(static_cast<BlockType>(block));
-
+                    uint32_t rgb = BlockColor(static_cast<BlockType>(block));
+                    // The water depth at each of the quad's four corners, so
+                    // the ocean shades as a smooth gradient rather than as a
+                    // flat tile per chunk. Greedy meshing merges a whole
+                    // water surface into one quad, and a single depth for
+                    // that quad makes the sea a patchwork of flat blues.
+                    const int32_t u0 = uu;
+                    const int32_t v0 = vv;
+                    const uint8_t waterDepth[4] = {
+                        maskWater[static_cast<size_t>(v0) * uCells + u0],
+                        maskWater[static_cast<size_t>(v0) * uCells + (u0 + w - 1)],
+                        maskWater[static_cast<size_t>(v0 + h - 1) * uCells + (u0 + w - 1)],
+                        maskWater[static_cast<size_t>(v0 + h - 1) * uCells + u0]};
+                    const bool isWater = (block == static_cast<uint8_t>(BlockType::Water));
                     // The four corners of the merged rectangle, in padded index
                     // space: the plane along d, and the cell extents along u/v.
                     int32_t cornerPos[4][3];
@@ -236,7 +285,7 @@ ChunkMesh MeshChunk(const VoxelWorld& world, int32_t chunkX, int32_t chunkZ) {
                         vert.nx = n[0];
                         vert.ny = n[1];
                         vert.nz = n[2];
-                        vert.color = rgb;
+                        vert.color = isWater ? WaterColor(waterDepth[c]) : rgb;
                         // Each vertex carries the AO of ITS OWN corner. For a
                         // merged quad the corner AO is taken from the cell that
                         // owns that corner of the rectangle.
@@ -270,6 +319,7 @@ ChunkMesh MeshChunk(const VoxelWorld& world, int32_t chunkX, int32_t chunkZ) {
                             const size_t mj = static_cast<size_t>(vv + j) * uCells + (uu + i);
                             maskBlock[mj] = 0;
                             maskSign[mj] = 0;
+                            maskWater[mj] = 0;
                         }
                     }
 

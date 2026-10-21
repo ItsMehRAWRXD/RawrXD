@@ -30,15 +30,21 @@ struct Shading {
     float ambientScale = 1.0f;
     // The fog band scales with the world height, so it stays in proportion
     // when the column height changes.
-    float fogStart = static_cast<float>(kChunkHeight) * 1.0f;
-    float fogRange = static_cast<float>(kChunkHeight) * 3.0f;
-    float fogStrength = 0.85f;
+    // The fog has to be weak enough that the ocean stays blue out to the
+    // horizon. A tight band turns the sea into sky, which is what makes a
+    // landmass read as floating in a void.
+    float fogStart = static_cast<float>(kChunkHeight) * 2.0f;
+    float fogRange = static_cast<float>(kChunkHeight) * 14.0f;
+    float fogStrength = 0.9f;
 };
 
 // The same constants as the HLSL, so the two paths agree.
 const Vec3 kSkyColor{0.36f, 0.55f, 0.82f};
 const Vec3 kHorizonColor{0.70f, 0.79f, 0.90f};
 const Vec3 kSunColor{1.00f, 0.95f, 0.84f};
+// The zenith of the sky gradient, and the haze below the horizon.
+const Vec3 kZenithColor{0.20f, 0.38f, 0.70f};
+const Vec3 kGroundHaze{0.52f, 0.58f, 0.66f};
 
 // The clear colour the DX12 path uses.
 const Vec3 kClearColor{0.44f, 0.55f, 0.72f};
@@ -122,6 +128,45 @@ bool RasterizeFrame(const std::vector<const ChunkMesh*>& meshes,
         rgba[i * 4 + 3] = 255u;
     }
     std::vector<float> depth(static_cast<size_t>(width) * height, 1.0f);
+
+    // The sky is a gradient with a horizon, not a flat fill. A flat clear
+    // colour is what makes a frame read as "an object in a void" rather
+    // than as a place; the horizon line is what tells the eye where the
+    // ground ends and the sky begins.
+    {
+        const Vec3 forward = Normalize(camera.target - camera.position);
+        const Vec3 right = Normalize(Cross(forward, camera.up));
+        const Vec3 trueUp = Cross(right, forward);
+        const float tanHalf = std::tan(fov * 0.5f);
+        const float aspect = static_cast<float>(width) / static_cast<float>(height);
+
+        for (uint32_t py = 0; py < height; ++py) {
+            const float ndcY = 1.0f - (static_cast<float>(py) + 0.5f) / static_cast<float>(height) * 2.0f;
+            for (uint32_t px = 0; px < width; ++px) {
+                const float ndcX = (static_cast<float>(px) + 0.5f) / static_cast<float>(width) * 2.0f - 1.0f;
+                const Vec3 dir = Normalize(Vec3{
+                    forward.x + right.x * (ndcX * aspect * tanHalf) + trueUp.x * (ndcY * tanHalf),
+                    forward.y + right.y * (ndcX * aspect * tanHalf) + trueUp.y * (ndcY * tanHalf),
+                    forward.z + right.z * (ndcX * aspect * tanHalf) + trueUp.z * (ndcY * tanHalf)});
+
+                Vec3 sky;
+                if (dir.y >= 0.0f) {
+                    // Above the horizon: zenith to horizon.
+                    const float t = std::sqrt(Saturate(dir.y));
+                    sky = Mix(kZenithColor, kHorizonColor, t);
+                } else {
+                    // Below the horizon: the haze that the distance fog
+                    // fades into, so the two meet without a seam.
+                    sky = Mix(kHorizonColor, kGroundHaze, Saturate(-dir.y * 3.0f));
+                }
+                const size_t pixel = static_cast<size_t>(py) * width + px;
+                rgba[pixel * 4 + 0] = static_cast<uint8_t>(Saturate(sky.x) * 255.0f);
+                rgba[pixel * 4 + 1] = static_cast<uint8_t>(Saturate(sky.y) * 255.0f);
+                rgba[pixel * 4 + 2] = static_cast<uint8_t>(Saturate(sky.z) * 255.0f);
+                rgba[pixel * 4 + 3] = 255u;
+            }
+        }
+    }
 
     std::vector<ScreenVertex> screen;
     std::vector<bool> valid;

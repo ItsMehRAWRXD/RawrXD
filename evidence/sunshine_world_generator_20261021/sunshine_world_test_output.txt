@@ -13,7 +13,11 @@
 [PASS] cross-chunk face culling is exact against the generated world +X boundary: emitted 3 quads, expected 3
 [PASS] the binary configuration serialization round trips 60 bytes, version 1, CRC32 protected
 [PASS] the generated world renders                      640x480 frame
-[PASS] the frame contains water, land and sky           sky=78% green=6% dark/bright=12%
+[PASS] the frame contains water, land and sky           sky=91% green=2% dark/bright=5%
 [INFO] the island frame was written to sunshine_island.png
 [PASS] the rendered frame is stable                     1228800 bytes compared
+[INFO] the world map was written to sunshine_worldmap.png (1024 blocks across)
+[PASS] the hero frame renders with a wide field of view 625 chunks, 960x540
+[INFO] the hero frame was written to sunshine_hero.png
+[PASS] the hero frame shows land meeting the sea        water=56% land=35%
 === ALL CHECKS PASSED ===
