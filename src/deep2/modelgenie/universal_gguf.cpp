@@ -1085,6 +1085,11 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
                 GraphOp o;
                 o.op = Op::Attention; o.block = (int32_t)b;
                 o.a = "q"; o.b = "k,v"; o.out = "attn_out";
+                if (s.architecture == "qwen35" &&
+                    !name(Role::AttnQNorm).empty() && !name(Role::AttnKNorm).empty()) {
+                    o.detail = "qwen35_gated_attention;qnorm=" + name(Role::AttnQNorm) +
+                               ";knorm=" + name(Role::AttnKNorm);
+                }
                 g.ops.push_back(o);
             }
 // Output projection: only for non-MLA models (MLA handles its own output projection)
@@ -1164,6 +1169,23 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
         // output, which hidden_ carries to the next block.
         const bool hasFfn = !name(Role::FfnGate).empty() ||
                             !name(Role::ExpFfnGate).empty() ||
+                            // RAWRXD_GATE7_NEMOTRON_MOE_001: a GATELESS MoE
+                            // expert. nemotron_h_moe's routed experts ship
+                            // ffn_up_exps and ffn_down_exps and NO
+                            // ffn_gate_exps, so the gate test alone said
+                            // "this block has no FFN" and the block was
+                            // skipped with `continue` BEFORE the router,
+                            // top-k and expert-execution lowering was
+                            // reached. The result was that the 128 experts
+                            // and the top-6 routing were never executed at
+                            // all: the graph carried 266 operations and none
+                            // of them touched an expert tensor, and the
+                            // block's only contribution was a pass-through of
+                            // its norm into the residual stream.
+                            //
+                            // An expert that has an up and a down
+                            // projection IS an FFN, gated or not.
+                            !name(Role::ExpFfnUp).empty() ||
                             !name(Role::SharedFfnGate).empty();
         if (!hasFfn) continue;
         // ffn norm. SSM blocks carry ssm_norm.weight; attention blocks carry

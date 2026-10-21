@@ -3322,6 +3322,10 @@ endforeach()
         # same implementation instead of re-listing sources and risking ODR violations.
         add_library(deep2_engine_lib STATIC
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
+            # GgufPath::IsLoadableModelFile asks the blob detector whether a
+            # file is a GGUF inside an ollama blob, so the detector's
+            # implementation has to be in this library or the link fails.
+            ${CMAKE_SOURCE_DIR}/src/deep2/ollama_blob_parser_impl.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
             ${CMAKE_SOURCE_DIR}/src/agentic/AgentOrchestrator.cpp
             ${CMAKE_SOURCE_DIR}/src/agentic/tool_call_parser.cpp
@@ -5158,7 +5162,10 @@ target_link_libraries(rawrxd_agentic_backend PUBLIC
 if(MSVC)
     target_compile_options(rawrxd_agentic_backend PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     target_compile_definitions(rawrxd_agentic_backend PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
-    target_link_libraries(rawrxd_agentic_backend PUBLIC winhttp)
+    # windowscodecs is the Windows Imaging Component: the platform decoder the
+    # readImage tool uses to turn PNG/BMP/JPEG/TIFF into pixels the model can
+    # be shown. ole32 is COM, which WIC needs.
+    target_link_libraries(rawrxd_agentic_backend PUBLIC winhttp windowscodecs ole32)
 else()
     target_compile_options(rawrxd_agentic_backend PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
     find_package(Threads REQUIRED)
@@ -5254,6 +5261,37 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
         src/project_wizard/project_state_manager.cpp
         src/project_wizard/project_wizard.cpp
         src/project_wizard/project_workflow.cpp
+        # The inference path drives the same runtime graph executor that the
+        # certification receipts were produced on, so the CLI needs it and
+        # the modelgenie ingest and the tokenizer it reads.
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_loader.cpp
+        # The loader layer reports through the shared diagnostics sink and
+        # validates model paths through the hardening library, so the CLI
+        # needs both. Without them the loader's error path cannot link.
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp
+    )
+    target_include_directories(RawrXD-CLI-V2 PRIVATE
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        # Some of the engine sources include "include/vulkan_compute.h", so
+        # the source root has to be on the path as well.
+        ${CMAKE_SOURCE_DIR}
     )
     target_link_libraries(RawrXD-CLI-V2 PRIVATE
         rawrxd_agentic_backend
@@ -5289,6 +5327,97 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
 else()
     list(APPEND RAWRXD_QT_TARGETS RawrXD-CLI-V2)
     message(STATUS "RawrXD-CLI-V2 EXCLUDED: src/rawrxd_cli_v2.cpp not present in this tree")
+endif()
+
+# ============================================================================
+# Deep2 Wall-Clock TPS Benchmark  (RAWRXD_GATE7_TPS_001)
+#
+# The trace-free production benchmark: a persistent KV cache, greedy decode,
+# and wall-clock tokens per second measured over the real prefill and the
+# real decode. It compiles the SAME runtime graph executor the CLI drives, so
+# a TPS number from this target is a number for the shipped inference path
+# rather than for a parallel implementation.
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp")
+    add_executable(deep2_bench_tps
+        tools/deep2_bench_tps.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/gguf_loader.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp)
+    target_include_directories(deep2_bench_tps PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include)
+    target_link_libraries(deep2_bench_tps PRIVATE
+        deep2_engine_lib
+        ggml_interface
+        Vulkan::Vulkan
+        psapi)
+    target_compile_options(deep2_bench_tps PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(deep2_bench_tps PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS
+        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders")
+    set_target_properties(deep2_bench_tps PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+
+# ============================================================================
+# DEEP2_NEMOTRON_MOE_EXECUTION_001
+#
+# Certifies that the model executes its intended MoE architecture rather than
+# merely producing finite logits. It ingests on the CPU, which builds the op
+# graph, and inspects the graph: no weight is uploaded, nothing is dispatched
+# and no GPU timing is taken, so it runs under the benchmark pause.
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_moe_execution_certify.cpp")
+    add_executable(deep2_moe_execution_certify
+        tools/deep2_moe_execution_certify.cpp
+        src/deep2/modelgenie/universal_gguf.cpp)
+    target_include_directories(deep2_moe_execution_certify PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include)
+    target_link_libraries(deep2_moe_execution_certify PRIVATE ggml ggml-base ggml-cpu)
+    target_compile_options(deep2_moe_execution_certify PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(deep2_moe_execution_certify PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(deep2_moe_execution_certify PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    add_test(NAME deep2_moe_execution_certify COMMAND deep2_moe_execution_certify
+             --model "${CMAKE_SOURCE_DIR}/../models/nemotron-3.5-lightning-30b.gguf")
+endif()
+
+# ============================================================================
+# Agent Image Viewing Certification
+#
+# Proves the agent can actually SEE: it decodes a real image through the
+# platform decoder, runs the registered readImage tool through the real
+# registry, and verifies the model-visible rendering against the real pixels.
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/image_tool_certify.cpp")
+    add_executable(image_tool_certify tools/image_tool_certify.cpp)
+    target_include_directories(image_tool_certify PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/agentic/tools
+        ${CMAKE_SOURCE_DIR}/include)
+    target_link_libraries(image_tool_certify PRIVATE windowscodecs ole32)
+    target_compile_options(image_tool_certify PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(image_tool_certify PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(image_tool_certify PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    add_test(NAME image_tool_certify COMMAND image_tool_certify
+             "${CMAKE_SOURCE_DIR}/evidence/voxel_dx12_renderer_20261021/voxel_frame.png")
 endif()
 
 # ============================================================================

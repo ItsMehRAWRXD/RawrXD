@@ -1,0 +1,53 @@
+﻿=== DEEP2_NEMOTRON_MOE_EXECUTION_001 ===
+model: F:\models\nemotron-3.5-lightning-30b.gguf
+
+ingesting (CPU only, no GPU upload, no dispatch) ...
+
+topology: arch=nemotron_h_moe blocks=53 embd=2688 experts=128 used=6 expert_ffn=1856
+[PASS] the model declares an MoE topology                   experts=128 used=6 ffn=1856
+
+GRAPH_CENSUS (386 ops, 0 unsupported)
+  Attention                     7
+  EmbeddingLookup               1
+  Linear                       51
+  LmHead                        1
+  MoEExecute                   24
+  Publish                      76
+  ResidualAdd                  77
+  RmsNorm                      78
+  Router                       24
+  SsmScan                      23
+  TopK                         24
+
+MOE_BLOCKS: router=24 topk=24 expert_execute=24
+[PASS] the expert weight is bound to an expert-execution operation block 1 gate=<gateless> experts=experts: blk.1.ffn_up_exps.weight,blk.1.ffn_down_exps.weight
+
+EXPERT/ROUTER TENSORS (first 16):
+  blk.1.exp_probs_b.bias                           dims=[128] bytes=512
+  blk.1.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=678494208
+  blk.1.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
+  blk.3.exp_probs_b.bias                           dims=[128] bytes=512
+  blk.3.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=678494208
+  blk.3.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
+  blk.6.exp_probs_b.bias                           dims=[128] bytes=512
+  blk.6.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=439025664
+  blk.6.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
+  blk.8.exp_probs_b.bias                           dims=[128] bytes=512
+  blk.8.ffn_down_exps.weight                       dims=[1856,2688,128] bytes=678494208
+  blk.8.ffn_up_exps.weight                         dims=[2688,1856,128] bytes=439025664
+  blk.10.exp_probs_b.bias                          dims=[128] bytes=512
+  blk.10.ffn_down_exps.weight                      dims=[1856,2688,128] bytes=439025664
+  blk.10.ffn_up_exps.weight                        dims=[2688,1856,128] bytes=439025664
+  blk.13.exp_probs_b.bias                          dims=[128] bytes=512
+
+  router tensor example : blk.1.exp_probs_b.bias
+  expert tensor example : blk.1.ffn_down_exps.weight
+[PASS] the router tensor name matches the role classifier's pattern blk.1.exp_probs_b.bias (matches)
+[PASS] the expert tensor name matches the role classifier's pattern blk.1.ffn_down_exps.weight (GATELESS expert: .ffn_up_exps/.ffn_down_exps match, no gate tensor)
+[PASS] the graph contains Router operations                 24 Router ops across 24 blocks
+[PASS] the graph contains TopK operations                   24 TopK ops across 24 blocks
+[PASS] the graph contains expert-execution operations       24 MoEExecute + 0 SparseMoE ops across 24 blocks
+[PASS] every MoE block has a router, a top-k and an expert execution 24 MoE blocks lowered
+[PASS] every MoE block has a router weight                  24 of 24 MoE blocks have a router weight
+
+=== DEEP2_NEMOTRON_MOE_EXECUTION_001 = PASS ===
