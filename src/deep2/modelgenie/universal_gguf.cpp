@@ -543,6 +543,8 @@ Role ClassifyRole(const std::string& n, int32_t& block) {
     if (n.find(".ffn_gate.weight") != std::string::npos) return Role::FfnGate;
     if (n.find(".ffn_up.weight") != std::string::npos) return Role::FfnUp;
     if (n.find(".ffn_down.weight") != std::string::npos) return Role::FfnDown;
+    if (n.find(".ssm_alpha.weight") != std::string::npos) return Role::SsmAlpha;
+    if (n.find(".ssm_beta.weight") != std::string::npos) return Role::SsmBeta;
     if (n.find(".ssm_a") != std::string::npos) return Role::SsmA;
     if (n.find(".ssm_conv1d.weight") != std::string::npos) return Role::SsmConv1dW;
     if (n.find(".ssm_conv1d.bias") != std::string::npos) return Role::SsmConv1dB;
@@ -900,6 +902,39 @@ OpGraph BuildGraph(const ModelSpec& s, const std::vector<TensorRec>& tensors) {
             o.a = "<hidden>";
             o.b = name(Role::AttnNorm);
             o.out = "attn_norm";
+            g.ops.push_back(o);
+        }
+
+        // Qwen3.5 hybrid blocks use the GDN projection naming convention:
+        // attn_qkv is the mixed q/k/v projection, attn_gate is z, and the
+        // ssm_* tensors carry the recurrent coefficients and output projection.
+        // They are not a conventional gated attention output projection. The
+        // shape contract is decisive: attn_gate is 6144 wide while the
+        // residual stream is 5120 wide. Never lower this family as Attention;
+        // doing so fabricates a 6144-dimensional residual and hides the real
+        // GDN executor boundary behind an RMSNorm failure.
+        const bool qwen35Gdn = !name(Role::AttnQKV).empty() &&
+                               !name(Role::AttnGate).empty() &&
+                               !name(Role::SsmA).empty() &&
+                               !name(Role::SsmAlpha).empty() &&
+                               !name(Role::SsmBeta).empty() &&
+                               !name(Role::SsmDtB).empty() &&
+                               !name(Role::SsmNorm).empty() &&
+                               !name(Role::SsmOut).empty();
+        if (qwen35Gdn) {
+            GraphOp o;
+            o.op = Op::Gdn;
+            o.block = static_cast<int32_t>(b);
+            o.a = "attn_norm";
+            o.b = name(Role::AttnQKV);
+            o.c = name(Role::AttnGate);
+            o.out = "attn_proj";
+            o.detail = "qwen35_gdn;A=" + name(Role::SsmA) +
+                       ";alpha=" + name(Role::SsmAlpha) +
+                       ";beta=" + name(Role::SsmBeta) +
+                       ";dt=" + name(Role::SsmDtB) +
+                       ";norm=" + name(Role::SsmNorm) +
+                       ";out=" + name(Role::SsmOut);
             g.ops.push_back(o);
         }
 

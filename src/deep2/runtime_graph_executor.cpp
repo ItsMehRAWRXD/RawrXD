@@ -14,6 +14,7 @@
 
 #include "ggml.h"
 #include "quant_dot_dispatch.hpp"
+#include "generic_vulkan_matmul.hpp"
 #include "Q8KQuant.h"   // single ggml-exact Q8_K activation quantiser
 #include "../../tools/deep2_debugger/deep2_flight_recorder.hpp"
 
@@ -519,6 +520,60 @@ size_t DequantPrefix(const TensorRec& t, std::vector<float>& out, size_t want) {
     return n;
 }
 
+static bool QuantizedRowsDot(const TensorRec& tensor,
+                             size_t base,
+                             size_t input_width,
+                             size_t output_rows,
+                             const std::vector<float>& input,
+                             std::vector<float>& output,
+                             std::string& failure) {
+    if (!tensor.data) {
+        failure = "quantized row dot tensor data is unavailable";
+        return false;
+    }
+    const ggml_type_traits* traits = ggml_get_type_traits(tensor.ggml_type);
+    if (!traits || !traits->to_float || traits->blck_size <= 0 || traits->type_size <= 0) {
+        failure = "quantized row dot has no GGML dequantizer";
+        return false;
+    }
+    if (input.size() < input_width || input_width == 0 || output_rows == 0) {
+        failure = "quantized row dot input geometry is invalid";
+        return false;
+    }
+
+    const size_t block_width = static_cast<size_t>(traits->blck_size);
+    const size_t block_bytes = static_cast<size_t>(traits->type_size);
+    if ((input_width % block_width) != 0 || (base % block_width) != 0) {
+        failure = "quantized row dot is not block aligned";
+        return false;
+    }
+    const size_t row_bytes = (input_width / block_width) * block_bytes;
+    if (row_bytes == 0 || output_rows > std::numeric_limits<size_t>::max() / row_bytes) {
+        failure = "quantized row dot byte geometry overflow";
+        return false;
+    }
+    const size_t base_bytes = (base / block_width) * block_bytes;
+    const size_t payload_bytes = output_rows * row_bytes;
+    if (base_bytes > tensor.bytes || payload_bytes > tensor.bytes - base_bytes) {
+        failure = "quantized row dot exceeds tensor payload";
+        return false;
+    }
+
+    std::vector<float> decoded(input_width, 0.0f);
+    output.assign(output_rows, 0.0f);
+    for (size_t row_index = 0; row_index < output_rows; ++row_index) {
+        const uint8_t* row = tensor.data + base_bytes + row_index * row_bytes;
+        traits->to_float(row, decoded.data(), static_cast<int64_t>(input_width));
+        double accumulator = 0.0;
+        for (size_t input_index = 0; input_index < input_width; ++input_index) {
+            accumulator += static_cast<double>(decoded[input_index]) *
+                           static_cast<double>(input[input_index]);
+        }
+        output[row_index] = static_cast<float>(accumulator);
+    }
+    return true;
+}
+
 }  // namespace
 
 const char* OpKindName(OpKind k) {
@@ -936,7 +991,10 @@ bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
     const TensorRec& w = tensors_[(size_t)in.b];
     std::vector<float> wf;
     if (!DequantPrefix(w, wf, x.size()) || wf.size() < x.size()) {
-        last_error_ = "rmsnorm: weight too small";
+        last_error_ = "rmsnorm: weight too small block=" + std::to_string(in.block) +
+                      " tensor=" + w.name +
+                      " decoded=" + std::to_string(wf.size()) +
+                      " activation=" + std::to_string(x.size());
         return false;
     }
     wf.resize(x.size());
@@ -1331,6 +1389,35 @@ bool Executor::OpLinear(int32_t wslot, const std::vector<float>& x,
                 cpu_fallback_reason_ = std::string(rcpt.fallback_reason) +
                     " (weight=" + w.name + ")";
             }
+        }
+        return true;
+    }
+
+    const bool generic_quant_type =
+        w.ggml_type == GGML_TYPE_IQ2_S || w.ggml_type == GGML_TYPE_MXFP4;
+    if (generic_quant_type && n_in > 0 && n_out > 0) {
+        // The canonical GGML Vulkan backend is the first production GPU path
+        // for the expert formats that Deep2's hand-written GEMV does not yet
+        // decode.  Keep it opt-in until the full-model receipt proves its
+        // numerical and residency contract; a failed dispatch is explicitly
+        // reported and then uses the bounded row decoder below.
+        if (!force_cpu_ && std::getenv("DEEP2_GENERIC_VULKAN") != nullptr &&
+            GenericVulkan::MatVec(BlockVkFor(w.name), w.ggml_type, w.data,
+                                  w.bytes, n_out, n_in, x.data(), y.data())) {
+            ++gpu_calls_;
+            trace_dispatch_backend_ = "vulkan-generic-ggml";
+            trace_dispatch_forced_ = false;
+            trace_dispatch_fallback_.clear();
+            return true;
+        }
+        std::string row_failure;
+        if (!QuantizedRowsDot(w, 0, n_in, n_out, x, y, row_failure)) {
+            err = "linear: generic quant row decode failed: " + row_failure;
+            return false;
+        }
+        ++cpu_calls_;
+        if (cpu_fallback_reason_.empty()) {
+            cpu_fallback_reason_ = "generic quant type has no Deep2 GPU GEMV: " + w.name;
         }
         return true;
     }
@@ -2418,6 +2505,63 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const size_t olen = std::min(embd, dOut);
     const int uKind = QuantKindOf(upT->ggml_type);
     const int dKind = QuantKindOf(downT->ggml_type);
+    const bool genericVulkanEnabled = !force_cpu_ &&
+                                      std::getenv("DEEP2_GENERIC_VULKAN") != nullptr;
+    const auto isGenericVulkanType = [](ggml_type type) {
+        return type == GGML_TYPE_IQ2_S || type == GGML_TYPE_MXFP4;
+    };
+    const bool genericUpType = genericVulkanEnabled &&
+                               isGenericVulkanType(upT->ggml_type);
+    const bool genericGateType = genericVulkanEnabled && have_gate &&
+                                 isGenericVulkanType(gateT->ggml_type);
+    const bool genericDownType = genericVulkanEnabled &&
+                                 isGenericVulkanType(downT->ggml_type);
+    auto genericExpertSlice = [&](const TensorRec& tensor,
+                                  size_t expert_index,
+                                  size_t tensor_rows,
+                                  size_t expert_rows,
+                                  size_t input_width,
+                                  GenericVulkan::MatVecSlice& slice) -> bool {
+        if (!genericVulkanEnabled || !isGenericVulkanType(tensor.ggml_type) ||
+            tensor_rows == 0 || expert_rows == 0 || input_width == 0 || !tensor.data) {
+            return false;
+        }
+        const size_t row_bytes = ggml_row_size(tensor.ggml_type, input_width);
+        if (row_bytes == 0 || tensor_rows > std::numeric_limits<size_t>::max() / row_bytes) {
+            return false;
+        }
+        if (expert_rows > std::numeric_limits<size_t>::max() / row_bytes) {
+            return false;
+        }
+        const size_t expert_bytes = expert_rows * row_bytes;
+        if (expert_index > std::numeric_limits<size_t>::max() / expert_bytes) {
+            return false;
+        }
+        const size_t base_bytes = expert_index * expert_bytes;
+        if (base_bytes > tensor.bytes || expert_bytes > tensor.bytes - base_bytes) {
+            return false;
+        }
+        slice.weights = static_cast<const uint8_t*>(tensor.data) + base_bytes;
+        slice.weight_bytes = tensor.bytes - base_bytes;
+        return true;
+    };
+    auto genericExpertMatVec = [&](const TensorRec& tensor,
+                                   size_t expert_index,
+                                   size_t tensor_rows,
+                                   size_t expert_rows,
+                                   size_t input_width,
+                                   const std::vector<float>& input,
+                                   std::vector<float>& output) -> bool {
+        if (input.size() < input_width) return false;
+        GenericVulkan::MatVecSlice slice;
+        if (!genericExpertSlice(tensor, expert_index, tensor_rows, expert_rows,
+                                input_width, slice)) return false;
+        output.assign(tensor_rows, 0.0f);
+        return GenericVulkan::MatVec(BlockVkFor(tensor.name), tensor.ggml_type,
+                                     slice.weights, slice.weight_bytes,
+                                     tensor_rows, input_width, input.data(),
+                                     output.data());
+    };
     // The up-projection activation is the SAME token hidden state for every
     // selected expert, so its interleaved Q8 is built once per block.
     const bool upGpuShape = (uKind >= 0) && (uIn % (uKind >= 2 ? 32u : 256u)) == 0 &&
@@ -2498,14 +2642,53 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     // before batching) so a parity difference can be A/B-attributed to the
     // batching itself rather than to the MoE math.
     static const bool noMoeBatch = std::getenv("RR_NO_MOE_BATCH") != nullptr;
-    const bool batchUp = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+    const bool batchUp = !genericUpType && !force_cpu_ && !noMoeBatch &&
+                         nSel >= 2 && QuantDot::BeginBatch();
     size_t queuedUp = 0;
+    if (genericUpType && nSel > 0) {
+        std::vector<GenericVulkan::MatVecSlice> slices;
+        slices.reserve(nSel);
+        bool geometry_ok = true;
+        for (size_t e = 0; e < nSel; ++e) {
+            GenericVulkan::MatVecSlice slice;
+            if (!genericExpertSlice(*upT, static_cast<size_t>(ids[e]), ulen,
+                                    uOut, uIn, slice)) {
+                geometry_ok = false;
+                break;
+            }
+            slices.push_back(slice);
+        }
+        if (geometry_ok) {
+            std::vector<float> batch_output(nSel * ulen, 0.0f);
+            if (GenericVulkan::MatVecBatch(BlockVkFor(upT->name), upT->ggml_type,
+                                           slices.data(), slices.size(), ulen, uIn,
+                                           x.data(), 0, batch_output.data(), ulen)) {
+                for (size_t e = 0; e < nSel; ++e) {
+                    std::copy_n(batch_output.data() + e * ulen, ulen,
+                                uAll.data() + e * ffn);
+                    upDone[e] = 1;
+                }
+                ++gpu_calls_;
+            }
+        }
+    }
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
         if (ex >= usableE) continue;
-        if (!upGpuShape) continue;
+        if (upDone[e]) continue;
+        if (!upGpuShape && !genericUpType) continue;
         float* out = &uAll[e * ffn];
+        if (genericUpType) {
+            std::vector<float> expert_output;
+            if (genericExpertMatVec(*upT, ex, ulen, uOut, uIn, x, expert_output)) {
+                std::copy(expert_output.begin(), expert_output.end(), out);
+                upDone[e] = 1;
+                ++gpu_calls_;
+                continue;
+            }
+            if (!upGpuShape) continue;
+        }
           if (batchUp) {
               // Queued: DotBlocked defers to the batch's single submission.
               // Capture by VALUE: the batch may invoke this closure after this
@@ -2563,11 +2746,53 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         const bool gGpuShape = (gKind >= 0) && (gIn % (gKind >= 2 ? 32u : 256u)) == 0 &&
                                (gIn <= x.size());
         const size_t gRowBytes = gGpuShape ? QuantRowBytes(gKind, gIn) : 0u;
-        const bool batchGate = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+        const bool batchGate = !genericGateType && !force_cpu_ && !noMoeBatch &&
+                               nSel >= 2 && QuantDot::BeginBatch();
         size_t queuedGate = 0;
+        if (genericGateType && nSel > 0) {
+            std::vector<GenericVulkan::MatVecSlice> slices;
+            slices.reserve(nSel);
+            bool geometry_ok = true;
+            for (size_t e = 0; e < nSel; ++e) {
+                GenericVulkan::MatVecSlice slice;
+                if (!genericExpertSlice(*gateT, static_cast<size_t>(ids[e]), glen,
+                                        gOut, gIn, slice)) {
+                    geometry_ok = false;
+                    break;
+                }
+                slices.push_back(slice);
+            }
+            if (geometry_ok) {
+                std::vector<float> batch_output(nSel * glen, 0.0f);
+                if (GenericVulkan::MatVecBatch(BlockVkFor(gateT->name),
+                                               gateT->ggml_type, slices.data(),
+                                               slices.size(), glen, gIn,
+                                               x.data(), 0, batch_output.data(), glen)) {
+                    for (size_t e = 0; e < nSel; ++e) {
+                        std::copy_n(batch_output.data() + e * glen, glen,
+                                    gAll.data() + e * ffn);
+                        gateDone[e] = 1;
+                    }
+                    ++gpu_calls_;
+                }
+            }
+        }
         for (size_t e = 0; e < nSel; ++e) {
             const size_t ex = (size_t)ids[e];
-            if (ex >= usableE || !gGpuShape) continue;
+            if (ex >= usableE) continue;
+            if (gateDone[e]) continue;
+            if (genericGateType) {
+                std::vector<float> expert_output;
+                if (genericExpertMatVec(*gateT, ex, glen, gOut, gIn, x, expert_output)) {
+                    std::copy(expert_output.begin(), expert_output.end(),
+                              &gAll[e * ffn]);
+                    gateDone[e] = 1;
+                    ++gpu_calls_;
+                    continue;
+                }
+                if (!gGpuShape) continue;
+            }
+            if (!gGpuShape) continue;
             float* out = &gAll[e * ffn];
             const uint8_t* packed = reinterpret_cast<const uint8_t*>(gateT->data) +
                                     ex * glen * gRowBytes;
@@ -2630,40 +2855,22 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
         else
         {
-            // CPU path: dequantise only this expert's slice, dot in double.
-            std::vector<float> uSlice;
-            if (!DequantRange(*upT, ex * elemStrideU, elemStrideU, uSlice))
-            {
+            std::string row_failure;
+            if (!QuantizedRowsDot(*upT, ex * elemStrideU, uIn, ulen, x, u, row_failure)) {
                 err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
-                      " expert=" + std::to_string(ex) + ")";
+                      " expert=" + std::to_string(ex) + "): " + row_failure;
                 return false;
-            }
-            const size_t lim = std::min(uIn, x.size());
-            for (size_t j = 0; j < ulen; ++j)
-            {
-                double acc = 0.0;
-                for (size_t i = 0; i < lim; ++i) acc += double(uSlice[j * uIn + i]) * double(x[i]);
-                u[j] = (float)acc;
             }
             if (!have_gate) {
                 std::copy(u.begin(), u.begin() + (std::ptrdiff_t)glen, g.begin());
             }
         }
         if (have_gate && !gateDone[e]) {
-            // CPU path for the gate bank: same per-expert dequant + double dot.
-            std::vector<float> gSlice;
-            if (!DequantRange(*gateT, ex * elemStrideG, elemStrideG, gSlice))
-            {
+            std::string row_failure;
+            if (!QuantizedRowsDot(*gateT, ex * elemStrideG, gIn, glen, x, g, row_failure)) {
                 err = "moe: gate expert slice dequant failed (block=" + std::to_string(moe.block) +
-                      " expert=" + std::to_string(ex) + ")";
+                      " expert=" + std::to_string(ex) + "): " + row_failure;
                 return false;
-            }
-            const size_t lim = std::min(gIn, x.size());
-            for (size_t j = 0; j < glen; ++j)
-            {
-                double acc = 0.0;
-                for (size_t i = 0; i < lim; ++i) acc += double(gSlice[j * gIn + i]) * double(x[i]);
-                g[j] = (float)acc;
             }
         }
 
@@ -2679,12 +2886,59 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
     const bool dShapeAll = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) &&
                            (dIn <= ffn);
     const size_t downRowBytes = dShapeAll ? QuantRowBytes(dKind, dIn) : 0u;
-    const bool batchDown = !force_cpu_ && !noMoeBatch && nSel >= 2 && QuantDot::BeginBatch();
+    const bool batchDown = !genericDownType && !force_cpu_ && !noMoeBatch &&
+                           nSel >= 2 && QuantDot::BeginBatch();
     size_t queuedDown = 0;
+    bool genericDownBatchDone = false;
+    if (genericDownType && dIn <= ffn && nSel > 0) {
+        std::vector<GenericVulkan::MatVecSlice> slices;
+        slices.reserve(nSel);
+        bool geometry_ok = true;
+        for (size_t e = 0; e < nSel; ++e) {
+            GenericVulkan::MatVecSlice slice;
+            if (!genericExpertSlice(*downT, static_cast<size_t>(ids[e]), olen,
+                                    dOut, dIn, slice)) {
+                geometry_ok = false;
+                break;
+            }
+            slices.push_back(slice);
+        }
+        if (geometry_ok) {
+            std::vector<float> batch_output(nSel * embd, 0.0f);
+            if (GenericVulkan::MatVecBatch(BlockVkFor(downT->name),
+                                           downT->ggml_type, slices.data(),
+                                           slices.size(), olen, dIn,
+                                           hAll.data(), ffn,
+                                           batch_output.data(), embd)) {
+                for (size_t e = 0; e < nSel; ++e) {
+                    std::copy_n(batch_output.data() + e * embd, olen,
+                                dyAll.data() + e * embd);
+                }
+                gpu_calls_++;
+                expertsProcessed += nSel;
+                genericDownBatchDone = true;
+            }
+        }
+    }
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
         if (ex >= usableE) continue;
+        if (genericDownBatchDone) continue;
+        if (genericDownType && dIn <= ffn) {
+            const std::vector<float> expert_hidden(
+                hAll.begin() + static_cast<std::ptrdiff_t>(e * ffn),
+                hAll.begin() + static_cast<std::ptrdiff_t>(e * ffn + dIn));
+            std::vector<float> expert_output;
+            if (genericExpertMatVec(*downT, ex, olen, dOut, dIn,
+                                    expert_hidden, expert_output)) {
+                std::copy(expert_output.begin(), expert_output.end(),
+                          dyAll.begin() + static_cast<std::ptrdiff_t>(e * embd));
+                ++gpu_calls_;
+                ++expertsProcessed;
+                continue;
+            }
+        }
         if (dShapeAll)
         {
             std::vector<float> q8h;
@@ -2712,19 +2966,22 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         }
         else
         {
-            std::vector<float> dSlice;
-            if (!DequantRange(*downT, ex * elemStrideD, elemStrideD, dSlice))
-            {
-                err = "moe: expert slice dequant failed (block=" + std::to_string(moe.block) +
-                      " expert=" + std::to_string(ex) + ")";
+            if (dIn > ffn) {
+                err = "moe: down input width exceeds expert activation width";
                 return false;
             }
-            for (size_t i = 0; i < olen; ++i)
-            {
-                double acc = 0.0;
-                for (size_t j = 0; j < dIn; ++j) acc += double(dSlice[i * dIn + j]) * double(hAll[e * ffn + j]);
-                dyAll[e * embd + i] = (float)acc;
+            std::vector<float> expert_hidden(dIn, 0.0f);
+            std::copy_n(hAll.data() + e * ffn, dIn, expert_hidden.data());
+            std::vector<float> expert_output;
+            std::string row_failure;
+            if (!QuantizedRowsDot(*downT, ex * elemStrideD, dIn, olen,
+                                  expert_hidden, expert_output, row_failure)) {
+                err = "moe: expert down slice dequant failed (block=" + std::to_string(moe.block) +
+                      " expert=" + std::to_string(ex) + "): " + row_failure;
+                return false;
             }
+            std::copy(expert_output.begin(), expert_output.end(),
+                      dyAll.begin() + static_cast<std::ptrdiff_t>(e * embd));
         }
         ++expertsProcessed;
     }
@@ -3165,6 +3422,32 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                 for (size_t t = 0; t < P; ++t) {
                     std::vector<float> y;
                     std::string e;
+                    if (in.detail == "gated_qkv") {
+                        if (in.b < 0 || in.c < 0) {
+                            last_error_ = "prefill-batch: gated mixer weights are not bound";
+                            return false;
+                        }
+                        bool token_ok = true;
+                        const std::vector<float>& x = resolveIn(t, in, token_ok);
+                        if (!token_ok) return false;
+                        std::vector<float> qkv;
+                        if (!OpLinear(in.b, x, qkv, e)) { last_error_ = e; return false; }
+                        if (qkv.empty() || (qkv.size() & 1u) != 0) {
+                            last_error_ = "prefill-batch: gated mixer projection is not an even [value|gate] tensor";
+                            return false;
+                        }
+                        const size_t half = qkv.size() / 2;
+                        std::vector<float> gated(half);
+                        for (size_t i = 0; i < half; ++i) {
+                            const float gate = qkv[half + i];
+                            gated[i] = qkv[i] * (gate / (1.0f + std::exp(-gate)));
+                        }
+                        if (!OpLinear(in.c, gated, y, e)) { last_error_ = e; return false; }
+                        ts[t].act["attn"] = y;
+                        ts[t].act[in.outName.empty() ? std::string("attn_proj") : in.outName] = y;
+                        ts[t].hidden = y;
+                        continue;
+                    }
                     std::vector<float> qv, kv, vv;
                     const std::vector<float>* q = findAct(t, "q");
                     const std::vector<float>* k = findAct(t, "k");
@@ -3987,6 +4270,29 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             case OpKind::Attention: {
                 std::vector<float> y;
                 std::string e;
+                if (in.detail == "gated_qkv") {
+                    if (in.b < 0 || in.c < 0) {
+                        last_error_ = "attention: gated mixer weights are not bound";
+                        return false;
+                    }
+                    std::vector<float> qkv;
+                    if (!OpLinear(in.b, xi, qkv, e)) { last_error_ = e; return false; }
+                    if (qkv.empty() || (qkv.size() & 1u) != 0) {
+                        last_error_ = "attention: gated mixer projection is not an even [value|gate] tensor";
+                        return false;
+                    }
+                    const size_t half = qkv.size() / 2;
+                    std::vector<float> gated(half);
+                    for (size_t i = 0; i < half; ++i) {
+                        const float gate = qkv[half + i];
+                        gated[i] = qkv[i] * (gate / (1.0f + std::exp(-gate)));
+                    }
+                    if (!OpLinear(in.c, gated, y, e)) { last_error_ = e; return false; }
+                    arena("attn") = y;
+                    arena(in.outName.empty() ? std::string("attn_proj") : in.outName) = y;
+                    hidden_ = y;
+                    break;
+                }
                 if (std::getenv("ATTN_TRACE")) {
                     std::fprintf(stderr, "[attn-enter] block=%d pos=%zu aName='%s' hidden_=%zu\n",
                                  (int)in.block, position, in.aName.c_str(), hidden_.size());
