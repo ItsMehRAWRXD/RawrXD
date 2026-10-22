@@ -130,6 +130,10 @@ const char* keyword_spelling(TokenKind k) {
     return "";
 }
 
+bool is_keyword(TokenKind k) {
+    return k >= TokenKind::KwAlignas && k <= TokenKind::KwWhile;
+}
+
 bool is_punctuator(TokenKind k) {
     return k >= TokenKind::LParen && k <= TokenKind::HashHash;
 }

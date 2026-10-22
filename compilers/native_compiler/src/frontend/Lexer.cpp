@@ -29,6 +29,13 @@ Lexer::Lexer(SourceManager* sources, DiagnosticEngine* diags, uint32 file_id)
     pos_ = 0;
 }
 
+Lexer::Lexer(SourceManager* sources, DiagnosticEngine* diags, const char* text, size_type size)
+    : sources_(sources), diags_(diags), file_id_(0) {
+    text_ = text;
+    size_ = size;
+    pos_ = 0;
+}
+
 char Lexer::peek_char(size_type ahead) const {
     size_type p = pos_ + ahead;
     return p < size_ ? text_[p] : '\0';
@@ -66,6 +73,7 @@ void Lexer::skip_whitespace_and_comments() {
             if (p < size_ && text_[p] == '\n') {
                 pos_ = p + 1;
                 at_line_start_ = true;
+                space_before_ = true;
                 continue;
             }
         }
@@ -73,16 +81,19 @@ void Lexer::skip_whitespace_and_comments() {
         if (c == '\n') {
             advance();
             at_line_start_ = true;
+            space_before_ = true;
             continue;
         }
 
         if (c == ' ' || c == '\t' || c == '\r' || c == '\v' || c == '\f') {
             advance();
+            space_before_ = true;
             continue;
         }
 
         // Line comment.
         if (c == '/' && peek_char(1) == '/') {
+            space_before_ = true;
             while (!at_end() && peek_char() != '\n') {
                 // A line splice inside a line comment continues the comment.
                 if (peek_char() == '\\') {
@@ -97,6 +108,7 @@ void Lexer::skip_whitespace_and_comments() {
 
         // Block comment (nestable in C++).
         if (c == '/' && peek_char(1) == '*') {
+            space_before_ = true;
             advance();
             advance();
             int depth = 1;
@@ -627,10 +639,15 @@ bool Lexer::next(Token* out) {
     skip_whitespace_and_comments();
 
     out->loc = current_loc();
+    // The line is recognised here: the white space that was skipped is the
+    // one that ends the previous line.
+    out->at_line_start = at_line_start_;
     out->length = 0;
     out->text.clear();
     out->suffix.clear();
     out->from_macro = false;
+    out->space_before = space_before_;
+    space_before_ = false;
 
     if (at_end()) {
         out->kind = TokenKind::EndOfFile;

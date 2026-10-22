@@ -41,7 +41,8 @@ cl /nologo /c /std:c++17 /EHsc /W3 /O2 /GS- ^
    "%ROOT%\src\common\SourceManager.cpp" ^
    "%ROOT%\src\common\Diagnostics.cpp" ^
    "%ROOT%\src\frontend\Token.cpp" ^
-   "%ROOT%\src\frontend\Lexer.cpp" 2>&1
+   "%ROOT%\src\frontend\Lexer.cpp" ^
+   "%ROOT%\src\frontend\Preprocessor.cpp" 2>&1
 if errorlevel 1 ( echo [FAIL] compiler core & exit /b 1 )
 echo   [OK]
 
@@ -116,8 +117,22 @@ cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    %COMMON_OBJS% "%OUT%\CoffWriter.obj" 2>&1
 if errorlevel 1 ( echo [FAIL] C08 build & exit /b 1 )
 
+cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
+   /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" /Fo:"%OUT%\\" ^
+   /Fe:"%OUT%\c09_provenance_test.exe" ^
+   "%ROOT%\tests\c09_provenance_test.cpp" ^
+   %COMMON_OBJS% 2>&1
+if errorlevel 1 ( echo [FAIL] C09 build & exit /b 1 )
 echo   [OK]
 
+cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
+   /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" /Fo:"%OUT%\\" ^
+   /Fe:"%OUT%\c10_preprocessor_test.exe" ^
+   "%ROOT%\tests\c10_preprocessor_test.cpp" ^
+   %COMMON_OBJS% "%OUT%\SourceManager.obj" "%OUT%\Diagnostics.obj" ^
+   "%OUT%\Token.obj" "%OUT%\Lexer.obj" "%OUT%\Preprocessor.obj" 2>&1
+if errorlevel 1 ( echo [FAIL] C10 build & exit /b 1 )
+echo   [OK]
 echo [5/6] running certification suites...
 echo.
 "%OUT%\c01_lexer_test.exe"
@@ -159,6 +174,15 @@ echo.
 if errorlevel 1 ( echo [FAIL] C07 & exit /b 1 )
 echo.
 
+"%OUT%\c10_preprocessor_test.exe" "%OUT%"
+
+if errorlevel 1 ( echo [FAIL] C10 & exit /b 1 )
+echo.
+
+REM The provenance gate runs last, so it inspects the objects this build
+REM produced rather than the ones a previous build left behind.
+"%OUT%\c09_provenance_test.exe" "%OUT%" "%ROOT%"
+if errorlevel 1 ( echo [FAIL] C09 & exit /b 1 )
 
 echo.
 echo RAWR_NATIVE_COMPILER_STAGE1 = PASS

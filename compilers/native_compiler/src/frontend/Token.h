@@ -77,6 +77,10 @@ enum class TokenKind : uint16 {
 // Returns true when the token is a punctuator.
 bool is_punctuator(TokenKind k);
 
+// Returns true when the token is a keyword. The keyword kinds are a
+// contiguous range, so one comparison covers all of them.
+bool is_keyword(TokenKind k);
+
 // Returns true when the token can begin an expression.
 bool is_primary_expression_start(TokenKind k);
 
@@ -110,6 +114,15 @@ struct Token {
 
     // Set when the token was produced by macro expansion.
     bool from_macro = false;
+
+    // True when white space (or a comment) appeared before the token. The
+    // preprocessor needs it to build a string literal from a macro argument,
+    // where every run of white space becomes a single space.
+    bool space_before = false;
+
+    // True when the token is the first one on its line. The preprocessor
+    // needs it to find a directive, which is a '#' at the start of a line.
+    bool at_line_start = false;
 
     const char* begin() const { return text.data(); }
     size_type size() const { return text.size(); }

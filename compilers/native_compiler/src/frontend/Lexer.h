@@ -21,6 +21,10 @@ class Lexer {
 public:
     Lexer(SourceManager* sources, DiagnosticEngine* diags, uint32 file_id);
 
+    // Lexes a string that belongs to no file. The preprocessor uses this to
+    // re-lex the result of pasting two tokens together.
+    Lexer(SourceManager* sources, DiagnosticEngine* diags, const char* text, size_type size);
+
     // Reads the next token. Returns false at end of file.
     bool next(Token* out);
 
@@ -61,6 +65,7 @@ private:
     size_type size_ = 0;    size_type pos_ = 0;
 
     bool at_line_start_ = true;
+    bool space_before_ = false;
     bool has_peeked_ = false;
     Token peeked_;
 };
