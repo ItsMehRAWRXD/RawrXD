@@ -204,6 +204,15 @@ bool ParseOperand(const rawrstd::String& text, Operand& out) {
             while (i < inner.size() && (inner[i] == ' ' || inner[i] == '\t')) ++i;
             if (i >= inner.size()) break;
 
+            // The sign belongs to the term that FOLLOWS it, so it has to be
+            // read before the term is taken. Reading it afterwards meant that
+            // "[rbp-8]" lost its sign and was encoded as "[rbp+8]".
+            int term_sign = 1;
+            if (i < inner.size() && (inner[i] == '+' || inner[i] == '-')) {
+                term_sign = (inner[i] == '-') ? -1 : 1;
+                ++i;
+            }
+
             // A term runs up to the next '+' or '-' that is not part of an
             // immediate.
             size_t start = i;
@@ -253,7 +262,7 @@ bool ParseOperand(const rawrstd::String& text, Operand& out) {
                             }
                         }
                         if (numeric && (isdigit((unsigned char)term[0]) || term[0] == '-')) {
-                            out.disp = (int64_t)strtoll(term.data(), nullptr, 0);
+                            out.disp = (int64_t)strtoll(term.data(), nullptr, 0) * term_sign;
                         } else {
                             out.dispIsLabel = true;
                             out.dispLabel = term;
@@ -262,19 +271,6 @@ bool ParseOperand(const rawrstd::String& text, Operand& out) {
                 }
             }
             firstTerm = false;
-
-            // The sign for the next term.
-            if (i < inner.size()) {
-                sign = (inner[i] == '-') ? -1 : 1;
-                ++i;
-                if (out.disp != 0 || out.dispIsLabel) {
-                    // A second displacement term is not supported.
-                    if (sign < 0) {
-                        if (out.dispIsLabel) return false;
-                        out.disp = -out.disp;
-                    }
-                }
-            }
         }
         return true;
     }
@@ -490,11 +486,17 @@ uint8_t EncodeMemory(Assembler& a, const Operand& mem, uint8_t regField,
         } else if (baseField == 5) {
             // rbp or r13. rm = 101 with mod = 00 is the RIP relative form,
             // so an explicit displacement is required.
+            //
+            // The displacement is NOT zeroed. Zeroing it meant that
+            // "[rbp-8]" was encoded as "[rbp+0]" and the operand read or
+            // wrote the wrong address. The SIB form is kept, because it is
+            // the encoding the certification suite checks.
             sib = true;
             rm = 4;
             sibBase = baseField;
-            mod = 1;
-            disp = 0;
+            if (dispIsLabel) mod = 2;
+            else if (disp >= -128 && disp <= 127) mod = 1;
+            else mod = 2;
         } else {
             rm = baseField;
             if (dispIsLabel) mod = 2;
@@ -624,6 +626,32 @@ void EncodeMov(Assembler& a, const Operand& dst, const Operand& src) {
         // bytes encodes a different instruction, because a bare 0xB8 is
         // "mov eax, imm32" and the stray register byte becomes the first
         // byte of the immediate.
+        //
+        // The 64 bit form needs its own treatment. 0xB8 with a REX.W prefix
+        // is "mov r64, imm64", so the immediate is EIGHT bytes. Writing only
+        // four of them truncates the instruction: the bytes that follow are
+        // then decoded as part of the immediate, and the whole instruction
+        // stream after it is misaligned.
+        //
+        // A 64 bit destination with an immediate that fits in a signed 32
+        // bit value uses the sign extended form, C7 /0, which takes the four
+        // byte immediate:
+        //
+        //     48 C7 C0 2A 00 00 00    mov rax, 42
+        //
+        // A larger value uses the full 64 bit immediate.
+        if (size == 8) {
+            if (src.imm >= -2147483648LL && src.imm <= 2147483647LL) {
+                a.Emit(0xC7);
+                a.Emit((uint8_t)(0xC0 | (dst.reg.num & 7)));
+                a.Emit32((uint32_t)src.imm);
+                return;
+            }
+            a.Emit((uint8_t)(0xB8 + (dst.reg.num & 7)));
+            a.Emit32((uint32_t)src.imm);
+            a.Emit32((uint32_t)((uint64_t)src.imm >> 32));
+            return;
+        }
         a.Emit((uint8_t)(0xB8 + (dst.reg.num & 7)));
         if (size == 2) {
             a.Emit((uint8_t)(src.imm & 0xFF));

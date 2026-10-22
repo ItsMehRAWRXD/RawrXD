@@ -391,6 +391,41 @@ int main(int argc, char** argv) {
     }
 
 
+    // ---- Stage 1c: the 64 bit immediate form ----------------------------
+    //
+    // A 64 bit destination with an immediate is the sign extended form,
+    // C7 /0. The B8 form takes a 64 bit immediate, so writing only four
+    // bytes of it truncates the instruction and the bytes that follow are
+    // decoded as part of it.
+    {
+        static const char kWideProgram[] =
+            "bits 64\n"
+            "section .text\n"
+            "main:\n"
+            "    mov  rax, 42\n"
+            "    mov  rcx, rax\n";
+        static const uint8_t kExpectedWide[] = {
+            0x48, 0xC7, 0xC0, 0x2A, 0x00, 0x00, 0x00,   // mov rax, 42
+            0x48, 0x89, 0xC1                            // mov rcx, rax
+        };
+        AsmObject object;
+        rawrstd::String error;
+        const bool encoded = assembleX64(rawrstd::String(kWideProgram),
+                                          "c07_wide.asm", object, error);
+        const AsmSection* text = nullptr;
+        for (const AsmSection& section : object.sections) {
+            if (section.name == ".text") text = &section;
+        }
+        bool matches = encoded && text != nullptr &&
+                       text->data.size() == sizeof(kExpectedWide);
+        for (size_t i = 0; matches && i < sizeof(kExpectedWide); ++i) {
+            if (text->data[i] != kExpectedWide[i]) matches = false;
+        }
+        check(matches, "the assembler encodes a 64 bit immediate without truncating it",
+              encoded ? String("the .text section does not hold the expected bytes")
+                      : error);
+    }
+
     // ---- Stage 2: link the first program ----
     bool linked = false;
     {

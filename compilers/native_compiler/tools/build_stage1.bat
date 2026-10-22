@@ -159,6 +159,16 @@ echo.
 if errorlevel 1 ( echo [FAIL] C07 & exit /b 1 )
 echo.
 
+REM ---- Stage 2: the C front end, the assembler driver and the pipeline ----
+REM The tools are the ones the pipeline is made of, so the Stage 2 gates
+REM drive the same chain a user would.
+call "%~dp0build_stage2_tools.bat" "%OUT%"
+if errorlevel 1 ( echo [FAIL] the Stage 2 tools & exit /b 1 )
+echo.
+"%OUT%\s2_pipeline_test.exe" "%OUT%\rawr_c.exe" "%OUT%\rawr_asm.exe" "%LINKER%" "%OUT%\s2_ws"
+if errorlevel 1 ( echo [FAIL] S2 & exit /b 1 )
+echo.
+
 
 echo.
 echo RAWR_NATIVE_COMPILER_STAGE1 = PASS
