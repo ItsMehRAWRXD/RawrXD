@@ -25,10 +25,14 @@ source ac655f03af0d4f57eb50f949f205816e87e6c3f63cc4b96559638de8896c47f5 src/comm
 source 41d184eeff171d9410286d34a7f8135682281ae36c2ad9934c8c715fa9c02a39 src/common/SourceManager.cpp
 source 7d3fc6e67af369d1c6a4abe5642aab9020d23ffed82dfe5f7bb0b4c6ba5d30f6 src/common/SourceManager.h
 source c27b4704a019919ecd595559d1667bafdd0b352def6241c7664ab0ffbc484750 src/common/Types.h
+source b0f0333f23ddf3f31a3f1796a0c0ddb18f256bbd5de826c4838a49eaf9a588ff src/frontend/AST.cpp
+source 2b80cddeb6991553d986c0ebfa38d98fd347e364ed160ac28705463901f13aa6 src/frontend/AST.h
 source 207872d33e3898d09ef72f96107245749504f39069a82819649274b86bd94619 src/frontend/c_stage2.cpp
 source 37f64d53150c206dc866d087e2d6a61c56996300dcf49aedd849f76785aab400 src/frontend/c_stage2.h
 source bb7ebb2a3365350a0ab203e3a4bba796b181a3ca653bb30a3893d7da7ace6922 src/frontend/Lexer.cpp
 source 699c5d5953d6533be838840d0a4db353b09a663ddfbead8f871f748d379a7c9a src/frontend/Lexer.h
+source 7c66a0a0071dff524a829b9ba6c41bc869275d627970283eba947ec0cf7cc17e src/frontend/Parser.cpp
+source a2dcd57e2a13e67d93f3f07ffa262b38674b804868a108a99887437a1722fe7c src/frontend/Parser.h
 source 83d7b7a37b6beb5028b6fbea4c2a801ace51decea614c2168bfccbd00740ac73 src/frontend/Preprocessor.cpp
 source fc150c0dc511f2f770337c9e9536f1a07267d64659b5ac513d0c97e31a7be1e9 src/frontend/Preprocessor.h
 source ba481acd417c42cf63b6372f2f4b632da0dab737158dc518ca6772e1a6136f8a src/frontend/Token.cpp
@@ -46,6 +50,7 @@ source 9ddde2f76fd7f842b4fba150a0234928e8f0d7fe1368b665067ab5bfdce9eb53 tests/c0
 source 5bb9e9cb183457be4b081540bda6b207fcf1e395bec45a99e9f2fa57ace9c47c tests/c08_negative_test.cpp
 source 7453073fd2430969162c40e8c361411b97df62613323522d5505b8ccf8ba1f79 tests/c09_provenance_test.cpp
 source 73006af5870d397c25833d0fcdc54e3cda917bc40fd3ce0f6a1f2437d3a62559 tests/c10_preprocessor_test.cpp
+source 2bbd23ce4f3dd69b02791634e0301f93def5e25bef1e3ecc0d498a2fbf953cbf tests/c11_parser_test.cpp
 source 36815ea49d51c95cf19281680fa845326d47e3c2201fc7edbd6d280cab4a6bc9 tests/call_export.cpp
 source 5a6d50040959b569237ae15da4986fc32c0e5615265dd0915a97f4826caad941 tests/probe_exports.cpp
 source 3c04b99917d3d8de6a36275810f815c9b54e95f219938ebee0a88bea33b26993 tests/rawrstd_test.cpp
@@ -63,6 +68,8 @@ object Diagnostics.obj src/common/Diagnostics.cpp
 object Token.obj src/frontend/Token.cpp
 object Lexer.obj src/frontend/Lexer.cpp
 object Preprocessor.obj src/frontend/Preprocessor.cpp
+object AST.obj src/frontend/AST.cpp
+object Parser.obj src/frontend/Parser.cpp
 object CoffWriter.obj src/object/CoffWriter.cpp
 object X64Assembler.obj src/asm/X64Assembler.cpp
 object c01_lexer_test.obj tests/c01_lexer_test.cpp
@@ -75,3 +82,4 @@ object c07_e2e_test.obj tests/c07_e2e_test.cpp
 object c08_negative_test.obj tests/c08_negative_test.cpp
 object c09_provenance_test.obj tests/c09_provenance_test.cpp
 object c10_preprocessor_test.obj tests/c10_preprocessor_test.cpp
+object c11_parser_test.obj tests/c11_parser_test.cpp
