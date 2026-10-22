@@ -1027,6 +1027,10 @@ bool assembleX64(const rawrstd::String& source, const rawrstd::String& sourceNam
         } else if (m == "imul" || m == "idiv") {
             if (operands.size() != 1) { a.Fail(m + " needs one operand"); break; }
             if (m == "idiv") {
+                // The extended registers need a REX prefix. Without it
+                // "idiv r10" is encoded as "idiv rdx", because the rm field
+                // of the ModRM byte only holds the low three bits.
+                EmitRex(a, true, false, false, operands[0].reg.num >= 8);
                 a.Emit(0xF7);
                 a.Emit((uint8_t)(0xF8 | (operands[0].reg.num & 7)));
             } else {

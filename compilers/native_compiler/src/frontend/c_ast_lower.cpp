@@ -546,26 +546,26 @@ private:
         if (!emit_expression(expr->left)) return false;
         emit(String("mov ") + slot_ref(saved) + ", rax");
         if (!emit_expression(expr->right)) return false;
-        emit(String("mov rbx, rax"));
+        emit(String("mov r10, rax"));
         emit(String("mov rax, ") + slot_ref(saved));
         temp_top_ = saved;
 
         switch (expr->op) {
-        case TokenKind::Plus:  emit(String("add rax, rbx")); return true;
-        case TokenKind::Minus: emit(String("sub rax, rbx")); return true;
-        case TokenKind::Star:  emit(String("imul rbx")); return true;
+        case TokenKind::Plus:  emit(String("add rax, r10")); return true;
+        case TokenKind::Minus: emit(String("sub rax, r10")); return true;
+        case TokenKind::Star:  emit(String("imul r10")); return true;
         case TokenKind::Slash:
             emit(String("cqo"));
-            emit(String("idiv rbx"));
+            emit(String("idiv r10"));
             return true;
         case TokenKind::Percent:
             emit(String("cqo"));
-            emit(String("idiv rbx"));
+            emit(String("idiv r10"));
             emit(String("mov rax, rdx"));
             return true;
-        case TokenKind::Amp:   emit(String("and rax, rbx")); return true;
-        case TokenKind::Pipe:  emit(String("or rax, rbx")); return true;
-        case TokenKind::Caret: emit(String("xor rax, rbx")); return true;
+        case TokenKind::Amp:   emit(String("and rax, r10")); return true;
+        case TokenKind::Pipe:  emit(String("or rax, r10")); return true;
+        case TokenKind::Caret: emit(String("xor rax, r10")); return true;
         default:
             break;
         }
@@ -598,7 +598,7 @@ private:
     // built afterwards.
     void emit_comparison_value(TokenKind op) {
         const int false_label = new_label();
-        emit(String("cmp rax, rbx"));
+        emit(String("cmp rax, r10"));
         emit(String("mov rax, 0"));
         emit(String(invert_condition(op)) + " " + label_name(false_label));
         emit(String("mov rax, 1"));
@@ -710,5 +710,6 @@ bool c_ast_compile_to_asm(const char* source_path, const char* asm_path,
 }
 
 } // namespace rawr
+
 
 
