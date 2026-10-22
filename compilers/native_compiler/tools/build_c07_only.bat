@@ -21,7 +21,9 @@ cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    %COMMON_OBJS% "%OUT%\CoffWriter.obj" "%OUT%\X64Assembler.obj" 2>&1
 if errorlevel 1 ( echo [FAIL] C07 build & exit /b 1 )
 echo [OK] C07 build
-set "LINKER=F:\rawrxd\_pre_merge_backup\toolchain\from_scratch\phase2_linker\build\rawrxd_link.exe"
+REM RAWR_LINKER overrides the linker location; the default is unchanged.
+if "%RAWR_LINKER%"=="" set "LINKER=F:\rawrxd\_pre_merge_backup\toolchain\from_scratch\phase2_linker\build\rawrxd_link.exe"
+if not "%RAWR_LINKER%"=="" set "LINKER=%RAWR_LINKER%"
 "%OUT%\c07_e2e_test.exe" "%OUT%" "%LINKER%"
 echo C07 exit=%errorlevel%
 exit /b %errorlevel%
