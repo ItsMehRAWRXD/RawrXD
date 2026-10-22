@@ -484,6 +484,7 @@ private:
     int param_count_ = 0;
     int epilogue_label_ = 0;
     bool is_main_ = false;
+    bool frameless_ = false;
     bool uses_exit_ = false;
 
     // A label on a line of its own.
@@ -564,11 +565,22 @@ private:
         int frame = 32 + 8 * slots;
         frame = ((frame + 15) / 16) * 16;
 
+        // A function with no locals, no parameters and no temporaries needs
+        // no frame pointer. It still has to reserve the shadow space for
+        // the calls it makes, and the stack still has to be aligned at a
+        // call, so it reserves 32 bytes of shadow space plus 8 bytes of
+        // alignment.
+        frameless_ = (slots == 0);
+
         line((rawrstd::String("global ") + fn->text).data());
         line_label(fn->text);
-        emit(rawrstd::String("push rbp"));
-        emit(rawrstd::String("mov rbp, rsp"));
-        emit(rawrstd::String("sub rsp, ") + num(frame));
+        if (frameless_) {
+            emit(rawrstd::String("sub rsp, 40"));
+        } else {
+            emit(rawrstd::String("push rbp"));
+            emit(rawrstd::String("mov rbp, rsp"));
+            emit(rawrstd::String("sub rsp, ") + num(frame));
+        }
 
         // The parameters are moved into their slots before anything else can
         // overwrite the argument registers.
@@ -582,14 +594,8 @@ private:
         // The epilogue. A return anywhere in the body jumps here.
         line_label(label_name(epilogue_label_));
 
-        if (is_main_) {
-            // main is the entry point, so it has to hand the value to
-            // ExitProcess rather than return it.
-            uses_exit_ = true;
-            emit(rawrstd::String("mov ecx, eax"));
-            emit(rawrstd::String("sub rsp, 32"));
-            emit(rawrstd::String("call ExitProcess"));
-            emit(rawrstd::String("add rsp, 32"));
+        if (frameless_) {
+            emit(rawrstd::String("add rsp, 40"));
             emit(rawrstd::String("ret"));
         } else {
             emit(rawrstd::String("leave"));
@@ -603,6 +609,29 @@ private:
         if (!stmt) return;
         switch (stmt->kind) {
         case CKind::Return: {
+            if (is_main_) {
+                // main is the entry point, so it hands its value to
+                // ExitProcess, and the value goes into the first argument
+                // register. A literal is materialised straight into it, so
+                // the generated code is the canonical form:
+                //
+                //     sub  rsp, 40
+                //     mov  ecx, 87
+                //     call ExitProcess
+                //
+                // ExitProcess does not return, so the code after the call is
+                // unreachable and the epilogue that follows simply unwinds
+                // the frame.
+                uses_exit_ = true;
+                if (stmt->a && stmt->a->kind == CKind::Number) {
+                    emit(rawrstd::String("mov ecx, ") + num(stmt->a->value));
+                } else {
+                    emit_expression(stmt->a);
+                    emit(rawrstd::String("mov ecx, eax"));
+                }
+                emit(rawrstd::String("call ExitProcess"));
+                break;
+            }
             emit_expression(stmt->a);
             // A return has to LEAVE the function, not fall through to
             // whatever follows it. The value is in rax and the epilogue does
@@ -917,6 +946,7 @@ bool c_compile_to_asm(const char* source_path, const char* asm_path,
     return true;
 }
 } // namespace rawr
+
 
 
 

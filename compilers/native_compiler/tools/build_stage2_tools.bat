@@ -35,12 +35,21 @@ cl /nologo /c /std:c++17 /EHsc /W3 /O2 /GS- ^
    "%ROOT%\src\object\CoffWriter.cpp" "%ROOT%\src\asm\X64Assembler.cpp" 2>&1
 if errorlevel 1 ( echo [FAIL] the assembler & exit /b 1 )
 
+cl /nologo /c /std:c++17 /EHsc /W3 /O2 /GS- ^
+   /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" /Fo:"%OUT%\\" ^
+   "%ROOT%\src\frontend\Preprocessor.cpp" ^
+   "%ROOT%\src\frontend\Parser.cpp" ^
+   "%ROOT%\src\frontend\AST.cpp" ^
+   "%ROOT%\src\frontend\c_ast_lower.cpp" 2>&1
+if errorlevel 1 ( echo [FAIL] the C11 front end & exit /b 1 )
+
 cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" ^
    /Fe:"%OUT%\rawr_c.exe" ^
    "%ROOT%\tools\rawr_c.cpp" ^
-   %COMMON_OBJS% "%OUT%\SourceManager.obj" "%OUT%\Token.obj" "%OUT%\Lexer.obj" ^
-   "%OUT%\c_stage2.obj" "%OUT%\Diagnostics.obj" 2>&1
+   %COMMON_OBJS% "%OUT%\SourceManager.obj" "%OUT%\Diagnostics.obj" ^
+   "%OUT%\Token.obj" "%OUT%\Lexer.obj" "%OUT%\Preprocessor.obj" ^
+   "%OUT%\Parser.obj" "%OUT%\AST.obj" "%OUT%\c_ast_lower.obj" 2>&1
 if errorlevel 1 ( echo [FAIL] rawr_c & exit /b 1 )
 
 cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
