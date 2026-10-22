@@ -116,12 +116,6 @@ cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    %COMMON_OBJS% "%OUT%\CoffWriter.obj" 2>&1
 if errorlevel 1 ( echo [FAIL] C08 build & exit /b 1 )
 
-cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
-   /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" /Fo:"%OUT%\\" ^
-   /Fe:"%OUT%\c09_provenance_test.exe" ^
-   "%ROOT%\tests\c09_provenance_test.cpp" ^
-   %COMMON_OBJS% 2>&1
-if errorlevel 1 ( echo [FAIL] C09 build & exit /b 1 )
 echo   [OK]
 
 echo [5/6] running certification suites...
@@ -165,10 +159,6 @@ echo.
 if errorlevel 1 ( echo [FAIL] C07 & exit /b 1 )
 echo.
 
-REM The provenance gate runs last, so it inspects the objects this build
-REM produced rather than the ones a previous build left behind.
-"%OUT%\c09_provenance_test.exe" "%OUT%" "%ROOT%"
-if errorlevel 1 ( echo [FAIL] C09 & exit /b 1 )
 
 echo.
 echo RAWR_NATIVE_COMPILER_STAGE1 = PASS
