@@ -44,6 +44,8 @@
 #include <vector>
 
 #include "ggml.h"
+#include "deep2/Q8KQuant.h"
+#include "deep2/Q8KQuant.h"
 #include "runtime_graph_executor.hpp"
 #include "universal_gguf.hpp"
 
@@ -65,6 +67,11 @@ struct Metrics {
     double cosine = 0.0;
     int64_t firstDivergence = -1;
     size_t count = 0;
+    // The norm of the reference vector. A comparison against an all-zero
+    // vector is vacuous: two empty results agree perfectly, and a
+    // certificate that reports that as a pass is worse than no certificate.
+    double referenceNorm = 0.0;
+    bool degenerate = false;
 };
 
 Metrics Compare(const std::vector<float>& reference, const std::vector<float>& actual) {
@@ -90,6 +97,8 @@ Metrics Compare(const std::vector<float>& reference, const std::vector<float>& a
     m.rmse = std::sqrt(sumSquared / static_cast<double>(n));
     const double denominator = std::sqrt(normReference * normActual);
     m.cosine = denominator > 0.0 ? dot / denominator : 0.0;
+    m.referenceNorm = std::sqrt(normReference);
+    m.degenerate = (normReference <= 0.0) || (normActual <= 0.0);
     return m;
 }
 
@@ -128,7 +137,15 @@ bool DequantizeWindow(const Universal::TensorRec& tensor, size_t elementOffset,
         ggml_free(ctx);
         return false;
     }
-    t->data = const_cast<uint8_t*>(tensor.data) + elementOffset * traits->type_size;
+    // The byte offset of a quantised element offset is NOT offset * type_size.
+    // A block holds blck_size elements in type_size bytes, so the byte
+    // offset of a block-aligned element offset is (offset / blck_size) *
+    // type_size. Multiplying by type_size reads three times too far and
+    // yields zeros - which the certificate would have compared against
+    // zeros and called a pass.
+    const size_t byteOffset = (elementOffset / static_cast<size_t>(traits->blck_size)) *
+                              static_cast<size_t>(traits->type_size);
+    t->data = const_cast<uint8_t*>(tensor.data) + byteOffset;
     t->ne[0] = static_cast<int64_t>(cols);
     t->ne[1] = static_cast<int64_t>(rows);
     t->nb[0] = traits->type_size;
@@ -154,6 +171,32 @@ std::vector<float> MakeHidden(size_t size, uint64_t seed) {
     return x;
 }
 
+// Quantises a vector to Q8_K and back, exactly as the kernel's dot path
+// does. The quantised fast path dots a Q8_K-quantised activation against the
+// dequantised weight, so the reference has to model that: comparing against
+// an exact float projection would measure the quantisation error rather than
+// a defect, and a certificate that measures the wrong thing certifies the
+// wrong thing.
+std::vector<float> QuantiseRoundTrip(const std::vector<float>& x) {
+    const size_t n = x.size();
+    if (n == 0) return x;
+    const ggml_type_traits* traits = ggml_get_type_traits(GGML_TYPE_Q8_K);
+    if (traits == nullptr || traits->to_float == nullptr) return x;
+    // The tree's own Q8_K quantiser, which is certified byte-level against
+    // ggml's quantize_row_q8_K_ref. It writes the same block layout ggml's
+    // dequantiser reads, so the round trip is the kernel's own arithmetic.
+    //
+    // It covers whole 256-element blocks only, so the tail of a vector whose
+    // length is not a multiple of the block size keeps its float values.
+    const size_t full = (n / 256) * 256;
+    if (full == 0) return x;
+    std::vector<RawrXD::Deep2::Q8KBlock> buffer(full / 256);
+    RawrXD::Deep2::QuantizeRowQ8K(x.data(), buffer.data(), static_cast<int64_t>(full));
+    std::vector<float> out = x;
+    traits->to_float(buffer.data(), out.data(), static_cast<int64_t>(full));
+    return out;
+}
+
 // One expert's contribution, computed independently.
 //
 // The expert tensor is [in, out, expert]: the up projection is [in, out] per
@@ -164,11 +207,19 @@ struct ExpertResult {
     std::vector<float> up;      // the up projection
     std::vector<float> act;     // after the squared ReLU
     std::vector<float> down;    // the down projection
-    float maxAbsAct = 0.0;
+    bool quantised = false;     // whether the activation was quantised
 };
 
+// Quantises the activation the way the kernel's dot path does, so the
+// reference reproduces the kernel's arithmetic rather than an idealised one.
+void ApplyActivationQuantisation(bool enable, std::vector<float>& vector) {
+    if (!enable) return;
+    vector = QuantiseRoundTrip(vector);
+}
+
 bool ReferenceExpert(const Universal::TensorRec& upTensor, const Universal::TensorRec& downTensor,
-                     size_t expertIndex, const std::vector<float>& x, ExpertResult& out) {
+                     size_t expertIndex, const std::vector<float>& x, bool quantiseActivation,
+                     ExpertResult& out) {
     const size_t upIn = (size_t)upTensor.dims[0];
     const size_t upOut = (size_t)upTensor.dims[1];
     const size_t downIn = (size_t)downTensor.dims[0];
@@ -186,10 +237,12 @@ bool ReferenceExpert(const Universal::TensorRec& upTensor, const Universal::Tens
 
     // up: out[j] = sum_i M[j*upIn + i] * x[i]
     out.up.assign(upOut, 0.0f);
+    std::vector<float> upInput = x;
+    ApplyActivationQuantisation(quantiseActivation, upInput);
     for (size_t j = 0; j < upOut; ++j) {
         const float* row = upMatrix.data() + j * upIn;
         double acc = 0.0;
-        for (size_t i = 0; i < upIn; ++i) acc += static_cast<double>(row[i]) * static_cast<double>(x[i]);
+        for (size_t i = 0; i < upIn; ++i) acc += static_cast<double>(row[i]) * static_cast<double>(upInput[i]);
         out.up[j] = static_cast<float>(acc);
     }
     // The activation: LLM_FFN_RELU_SQR, squared ReLU.
@@ -199,13 +252,16 @@ bool ReferenceExpert(const Universal::TensorRec& upTensor, const Universal::Tens
         out.act[j] = v * v;
     }
     // down: out[k] = sum_j M[k*downIn + j] * act[j]
+    std::vector<float> downInput = out.act;
+    ApplyActivationQuantisation(quantiseActivation, downInput);
     out.down.assign(downOut, 0.0f);
     for (size_t k = 0; k < downOut; ++k) {
         const float* row = downMatrix.data() + k * downIn;
         double acc = 0.0;
-        for (size_t j = 0; j < downIn; ++j) acc += static_cast<double>(row[j]) * static_cast<double>(out.act[j]);
+        for (size_t j = 0; j < downIn; ++j) acc += static_cast<double>(row[j]) * static_cast<double>(downInput[j]);
         out.down[k] = static_cast<float>(acc);
     }
+    out.quantised = quantiseActivation;
     return true;
 }
 
@@ -348,15 +404,24 @@ int main(int argc, char** argv) {
     printf("\nPER-EXPERT CONTRIBUTION\n");
     int firstDivergentExpert = -1;
     double worstExpertError = 0.0;
+    double worstExactError = 0.0;
     std::vector<float> referenceSum;
     for (size_t k = 0; k < ids.size(); ++k) {
-        ExpertResult reference;
-        if (!ReferenceExpert(*upTensor, *downTensor, ids[k], x, reference)) {
+        // Two references: the EXACT float projection, which is what the model
+        // specifies, and the QUANTISED projection, which is what the kernel
+        // computes. The executor is compared against the quantised one, and
+        // the distance between the two references is reported as the
+        // quantisation error the fast path introduces.
+        ExpertResult exactReference;
+        if (!ReferenceExpert(*upTensor, *downTensor, ids[k], x, false, exactReference)) {
             printf("  expert %u: the reference could not be computed\n", ids[k]);
             Report("the independent expert reference could be computed", false,
                    "the expert slice could not be dequantised");
             return 1;
         }
+        ExpertResult reference;
+        ReferenceExpert(*upTensor, *downTensor, ids[k], x, true, reference);
+
         std::vector<float> executorOut;
         const std::vector<uint32_t> oneId = {ids[k]};
         const std::vector<float> oneWeight = {1.0f};
@@ -366,15 +431,27 @@ int main(int argc, char** argv) {
             return 1;
         }
         const Metrics m = Compare(reference.down, executorOut);
+        const Metrics exact = Compare(exactReference.down, executorOut);
+        if (m.degenerate) {
+            printf("  expert %-3u DEGENERATE - the comparison is against an empty vector\n",
+                   ids[k]);
+            Report("the expert comparison is not vacuous", false,
+                   "expert " + std::to_string(ids[k]) +
+                       " produced an empty vector on one side: the reference norm is " +
+                       std::to_string(m.referenceNorm));
+            return 1;
+        }
         if (m.maxAbs > worstExpertError) worstExpertError = m.maxAbs;
         if (firstDivergentExpert < 0 && m.maxAbs > 1e-2) firstDivergentExpert = static_cast<int>(k);
-        printf("  expert %-3u %s\n", ids[k], FormatMetrics(m).c_str());
+        if (exact.maxAbs > worstExactError) worstExactError = exact.maxAbs;
+        printf("  expert %-3u kernel: %s\n", ids[k], FormatMetrics(m).c_str());
+        printf("  %-9s exact: %s\n", "", FormatMetrics(exact).c_str());
         if (referenceSum.empty()) referenceSum.assign(reference.down.size(), 0.0f);
         for (size_t i = 0; i < reference.down.size(); ++i) {
             referenceSum[i] += static_cast<float>(weights[k] * reference.down[i]);
         }
     }
-    Report("every expert's contribution matches the reference",
+    Report("every expert's contribution matches the QUANTISED reference",
            worstExpertError <= 1e-2,
            "worst expert max_abs=" + std::to_string(worstExpertError) +
                (firstDivergentExpert >= 0
@@ -407,6 +484,7 @@ int main(int argc, char** argv) {
             for (size_t k = 0; k < ids.size(); ++k) fprintf(file, "%s%u", k ? "," : "", ids[k]);
             fprintf(file, "],\n");
             fprintf(file, "  \"worst_expert_max_abs\": %.9e,\n", worstExpertError);
+    fprintf(file, "  \"worst_exact_reference_max_abs\": %.9e,\n", worstExactError);
             fprintf(file, "  \"first_divergent_expert_index\": %d,\n", firstDivergentExpert);
             fprintf(file, "  \"aggregation\": {\"max_abs\": %.9e, \"rmse\": %.9e, \"cosine\": %.9f, \"first_divergence\": %lld},\n",
                     aggregation.maxAbs, aggregation.rmse, aggregation.cosine,
