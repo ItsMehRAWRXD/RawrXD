@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 REM ============================================================================
 REM  rawr - stage1 build: compiler frontend, COFF object writer, and the
 REM  C01-C08 certification suites.
@@ -194,6 +194,11 @@ if errorlevel 1 ( echo [FAIL] the Stage 2 tools & exit /b 1 )
 echo.
 "%OUT%\s2_pipeline_test.exe" "%OUT%\rawr_c.exe" "%OUT%\rawr_asm.exe" "%LINKER%" "%OUT%\s2_ws"
 if errorlevel 1 ( echo [FAIL] S2 & exit /b 1 )
+echo.
+
+REM ---- Stage 3: the semantic analysis ----
+"%OUT%\c13_semantics_test.exe" "%OUT%\rawr_c.exe" "%OUT%\rawr_asm.exe" "%LINKER%" "%OUT%\s2_ws"
+if errorlevel 1 ( echo [FAIL] C13 & exit /b 1 )
 echo.
 
 REM ---- Stage 2.1: the exit 87 certification ----

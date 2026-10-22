@@ -33,6 +33,7 @@
 #include "frontend/AST.h"
 #include "frontend/Parser.h"
 #include "frontend/Preprocessor.h"
+#include "frontend/Sema.h"
 #include "frontend/Token.h"
 
 #include "rawrstd/string.h"
@@ -690,6 +691,15 @@ bool c_ast_compile_to_asm(const char* source_path, const char* asm_path,
         return false;
     }
 
+    // The semantic analysis runs BEFORE the lowering. A program that does
+    // not make sense never becomes machine code: it becomes a diagnostic.
+    Sema sema;
+    if (!sema.analyze(parser.translation_unit())) {
+        *error = sema.diagnostics();
+        if (error->empty()) *error = String("the source did not pass the semantic analysis");
+        return false;
+    }
+
     // Lower the tree.
     String assembly;
     Lowerer lowerer(&assembly);
@@ -710,6 +720,7 @@ bool c_ast_compile_to_asm(const char* source_path, const char* asm_path,
 }
 
 } // namespace rawr
+
 
 
 

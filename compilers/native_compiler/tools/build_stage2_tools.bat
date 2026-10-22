@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 REM Build the Stage 2 tools: the C front end and the assembler driver.
 REM The same flags as build_stage1.bat.
 setlocal enabledelayedexpansion
@@ -40,7 +40,8 @@ cl /nologo /c /std:c++17 /EHsc /W3 /O2 /GS- ^
    "%ROOT%\src\frontend\Preprocessor.cpp" ^
    "%ROOT%\src\frontend\Parser.cpp" ^
    "%ROOT%\src\frontend\AST.cpp" ^
-   "%ROOT%\src\frontend\c_ast_lower.cpp" 2>&1
+   "%ROOT%\src\frontend\c_ast_lower.cpp" ^
+   "%ROOT%\src\frontend\Sema.cpp" 2>&1
 if errorlevel 1 ( echo [FAIL] the C11 front end & exit /b 1 )
 
 cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
@@ -49,7 +50,7 @@ cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    "%ROOT%\tools\rawr_c.cpp" ^
    %COMMON_OBJS% "%OUT%\SourceManager.obj" "%OUT%\Diagnostics.obj" ^
    "%OUT%\Token.obj" "%OUT%\Lexer.obj" "%OUT%\Preprocessor.obj" ^
-   "%OUT%\Parser.obj" "%OUT%\AST.obj" "%OUT%\c_ast_lower.obj" 2>&1
+   "%OUT%\Parser.obj" "%OUT%\AST.obj" "%OUT%\c_ast_lower.obj" "%OUT%\Sema.obj" 2>&1
 if errorlevel 1 ( echo [FAIL] rawr_c & exit /b 1 )
 
 cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
@@ -73,7 +74,16 @@ cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    %COMMON_OBJS% 2>&1
 if errorlevel 1 ( echo [FAIL] s2_1_exit87_test & exit /b 1 )
 
+cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
+   /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" ^
+   /Fe:"%OUT%\c13_semantics_test.exe" ^
+   "%ROOT%\tests\c13_semantics_test.cpp" ^
+   %COMMON_OBJS% 2>&1
+if errorlevel 1 ( echo [FAIL] c13_semantics_test & exit /b 1 )
+
 if not exist "%OUT%\s2_ws" mkdir "%OUT%\s2_ws" 2>nul
 
 echo   [OK]
 exit /b 0
+
+
