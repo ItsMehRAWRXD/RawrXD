@@ -1,8 +1,8 @@
 # RAWR_NATIVE_COMPILER_STAGE2_001
 
 **Date:** 2026-10-22
-**Branch:** `feature/native-compiler-stage2`
-**Result:** **182 checks, 0 failures.** Stage 1: 161/161. Stage 2: 21/21. `RAWR_NATIVE_COMPILER_STAGE1 = PASS`.
+**Branch:** `feature/native-compiler-stage2` (merged with `preservation/source-baseline-20261021`)
+**Result:** **232 checks, 0 failures.** Stage 1: 161/161. Stage 2: 21/21. C09 provenance: 6/6. C10 preprocessor: 44/44. `RAWR_NATIVE_COMPILER_STAGE1 = PASS`.
 
 ---
 
@@ -40,8 +40,36 @@ compiled, assembled, linked, loaded by Windows, and observed to exit **42**.
 | C01–C08 unchanged | PASS — 161/161, no regression |
 | Stage 2 gates | **21/21** |
 | Source to executable | **PASS** — exit code 42, verified |
-| Clean `git archive HEAD` reproduction | **PASS** — 182/182, exit 0, linker rebuilt from the export |
+| Clean `git archive HEAD` reproduction | **PASS** — 232/232, exit 0, linker rebuilt from the export |
 | All new source and test dependencies tracked | PASS — 9 files, 0 deletions |
+
+### Merged with the shared branch
+
+While this work was in progress the shared branch gained a **provenance gate**
+(C09) and a **preprocessor gate** (C10) from another session, and that
+session's commit replaced the `native_compiler` tree — which removed the Stage 2
+files and the three assembler fixes from the shared branch.
+
+The two were merged rather than chosen between. Both sets of gates are kept:
+
+| Suite | Checks |
+|---|---|
+| C01–C08 — Stage 1 | 161 |
+| S2 — Stage 2 | 21 |
+| C09 — provenance | 6 |
+| C10 — preprocessor | 44 |
+| **total** | **232** |
+
+The single conflict was in `tools/build_stage1.bat`, and the resolution runs the
+Stage 2 pipeline *and* the provenance and preprocessor suites.
+`tools/certification_manifest.txt` was regenerated so the provenance gate covers
+the files this work added.
+
+**The shared branch was left where it was.** Its working tree holds another
+session's 401 uncommitted entries, and moving the branch under it would have
+shown that session a large unrelated diff. The merge commit is a descendant of
+the shared branch, so the branch can fast-forward to it when that session's
+work is committed.
 
 ## 3. The three assembler defects Stage 2 found
 
@@ -161,13 +189,15 @@ with CMake and Ninja. The suite was then built and run **from the exported
 directory**:
 
 ```
-C01 97/97   C02 10/10   C03 7/7    C04 7/7
+C01 97/97   C02 10/10   C03  7/7   C04  7/7
 C05  5/5    C06 14/14   C07 11/11   C08 10/10
-S2  21/21
-182 checks, 0 failures, exit 0
+S2  21/21   C09  6/6    C10 44/44
+232 checks, 0 failures, exit 0
 ```
 
-Evidence: `RAWR_NATIVE_COMPILER_STAGE2_001.log`.
+Evidence: `RAWR_NATIVE_COMPILER_STAGE2_001.log` (the Stage 2 tree alone, 182
+checks) and `RAWR_NATIVE_COMPILER_STAGE2_001.merged_run.log` (the merged tree,
+232 checks).
 
 ## 8. The external compiler, stated plainly
 
