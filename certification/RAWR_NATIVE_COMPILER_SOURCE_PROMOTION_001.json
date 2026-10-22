@@ -1,0 +1,447 @@
+﻿{
+    "schema":  "rawr.native.source.promotion/1",
+    "milestone":  "RAWR_NATIVE_COMPILER_SOURCE_PROMOTION_001",
+    "generated_utc":  "2026-10-22T01:06:32Z",
+    "acceptance":  {
+                       "RAWR_NATIVE_COMPILER_STAGE1":  "PASS",
+                       "C01-C08":  "160/160",
+                       "SOURCE_TRACKED":  "YES",
+                       "CLEAN_GIT_ARCHIVE_BUILD":  "PASS",
+                       "EXTERNAL_COMPILER_USED_FOR_TEST_HARNESS":  "documented"
+                   },
+    "state_at_start":  {
+                           "branch":  "preservation/source-baseline-20261021",
+                           "head":  "487092998ff3edc27306a378e3d177cfcfe1bf7f",
+                           "worktree_entries":  395,
+                           "modified":  99,
+                           "untracked":  296,
+                           "deleted":  0,
+                           "note":  "compilers/native_compiler was entirely untracked: git ls-files reported 0 files"
+                       },
+    "promotion":  {
+                      "commits":  [
+                                      {
+                                          "sha":  "e695cf16e9400aa37cdcc6a3801f78c858839062",
+                                          "subject":  "preserve: track the certified native compiler implementation",
+                                          "files":  51,
+                                          "additions_only":  true,
+                                          "deletions":  0
+                                      },
+                                      {
+                                          "sha":  "be4086fe56d5874c5fcc492dbbbd6d570e5c4546",
+                                          "subject":  "build: let the linker location be overridden",
+                                          "files":  2,
+                                          "additions_only":  true,
+                                          "deletions":  0
+                                      },
+                                      {
+                                          "sha":  "82053fffb8eb067a2281d012fbe513b089e73f98",
+                                          "subject":  "build: keep the certified build script self consistent",
+                                          "files":  1,
+                                          "additions_only":  true,
+                                          "deletions":  0
+                                      }
+                                  ],
+                      "files_tracked":  51,
+                      "files_generated_excluded":  17,
+                      "generated_excluded":  [
+                                                 "*.obj (17 files, already covered by the repository .gitignore rule *.obj)"
+                                             ],
+                      "ignore_rule_added":  "!compilers/native_compiler/tools/*.bat, so the certified build definitions are not excluded with the blanket *.bat rule",
+                      "unrelated_changes_swept":  0,
+                      "concurrent_work_committed":  0,
+                      "concurrent_work_note":  "another session\u0027s c09_provenance_test.cpp and its build script lines are in the working tree; the staged script was written straight into the index so that session\u0027s working tree was not disturbed, and the commit references only tests the commit contains"
+                  },
+    "backup":  {
+                   "path":  "F:\\rawrxd_source_promotion_backup_20260722",
+                   "files":  69,
+                   "manifest":  "F:\\rawrxd_source_promotion_backup_20260722\\SOURCE_MANIFEST.csv",
+                   "verification":  "51/51 byte-identical (SHA-256)",
+                   "originals_intact":  true,
+                   "source_changed_since_backup":  5
+               },
+    "clean_archive_validation":  {
+                                     "export":  "git archive --format=tar HEAD compilers/native_compiler toolchain/from_scratch/phase2_linker",
+                                     "exported_files":  73,
+                                     "location":  "a directory outside the repository",
+                                     "linker_build":  "cmake -S toolchain/from_scratch/phase2_linker -B \u003cout\u003e -G Ninja -DCMAKE_BUILD_TYPE=Release \u0026\u0026 cmake --build \u003cout\u003e",
+                                     "linker_sha256":  "90A280EA5542B5B6A3FB070E2A4A8747797764FB3D456FAAD06B63633C30A0F9",
+                                     "suite_build":  "build_stage1.bat \u003cout\u003e   with RAWR_LINKER=\u003cout\u003e/rawrxd_link.exe",
+                                     "result":  "160 passed, 0 failed; RAWR_NATIVE_COMPILER_STAGE1 = PASS",
+                                     "exit_code":  0,
+                                     "default_linker_path_result":  "160 passed, 0 failed with RAWR_LINKER unset, so the default behaviour is unchanged",
+                                     "log":  "certification/RAWR_NATIVE_COMPILER_GIT_ARCHIVE_RUN.log"
+                                 },
+    "external_build_requirements":  {
+                                        "compiler":  "MSVC (Visual Studio 2022 Build Tools 19.44) - the CERTIFICATION HARNESS is built with it; this is not the compiler being certified",
+                                        "build_tools":  "CMake and Ninja for the native linker",
+                                        "windows_sdk":  "required for the C++ and C units",
+                                        "python":  "not required",
+                                        "qt":  "not required",
+                                        "third_party":  "none: the assembler, the COFF writer, the lexer and the rawrstd runtime are all first-party",
+                                        "distinction":  "using MSVC to build the test harness is compatible with certifying the first-party assembler\u0027s functionality. It is NOT evidence of compiler self-hosting, which remains Stage 4."
+                                    },
+    "scope":  {
+                  "proves":  "the repository now contains every source the 160 Stage-1 checks need, and an exported tree reproduces them outside the repository",
+                  "does_not_prove":  "that a C/C++ front end exists; the lexer is certified at C01, and nothing yet connects C++ source to the assembler\u0027s input"
+              },
+    "manifest":  [
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/algo.h",
+                         "bytes":  2227,
+                         "sha256_at_promotion":  "ABD4EE1EADA4DDA194D3E0636A231F7265D9C54BA87EE2CF49497FA94E0CA39B",
+                         "sha256_at_backup":  "ABD4EE1EADA4DDA194D3E0636A231F7265D9C54BA87EE2CF49497FA94E0CA39B",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/base.h",
+                         "bytes":  1406,
+                         "sha256_at_promotion":  "BBF872FAB6CB99A3EAD1EDA9EA3530B0CDB901C8EE487928E3C92BA7956CD917",
+                         "sha256_at_backup":  "BBF872FAB6CB99A3EAD1EDA9EA3530B0CDB901C8EE487928E3C92BA7956CD917",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/map.h",
+                         "bytes":  6289,
+                         "sha256_at_promotion":  "A0AAE21218D672BE2A0880DBAA83E24A470E6E3CDB8220A2298BD1D50B13DCC7",
+                         "sha256_at_backup":  "A0AAE21218D672BE2A0880DBAA83E24A470E6E3CDB8220A2298BD1D50B13DCC7",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/sha256.h",
+                         "bytes":  799,
+                         "sha256_at_promotion":  "00D18F4A02FF82BAD55AA5D268B89825278A18240C515E19946556855174DE62",
+                         "sha256_at_backup":  "00D18F4A02FF82BAD55AA5D268B89825278A18240C515E19946556855174DE62",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/string.h",
+                         "bytes":  5621,
+                         "sha256_at_promotion":  "F13B268BD2AC6E3B1B7591E3A76B61EDA2FE2280854CF3E18B628F7688E4B036",
+                         "sha256_at_backup":  "F13B268BD2AC6E3B1B7591E3A76B61EDA2FE2280854CF3E18B628F7688E4B036",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/sys.h",
+                         "bytes":  3195,
+                         "sha256_at_promotion":  "A01CE39135BC4C9367C24747601619757D1F57464E15969EDCF0F494DD4631FE",
+                         "sha256_at_backup":  "A01CE39135BC4C9367C24747601619757D1F57464E15969EDCF0F494DD4631FE",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/include/rawrstd/vector.h",
+                         "bytes":  4619,
+                         "sha256_at_promotion":  "8DFDE36BFFFD3E5700AEF3DD5E9D51409ED91D04BF8E8039B57724BEC7A20616",
+                         "sha256_at_backup":  "8DFDE36BFFFD3E5700AEF3DD5E9D51409ED91D04BF8E8039B57724BEC7A20616",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/src/sha256.cpp",
+                         "bytes":  4270,
+                         "sha256_at_promotion":  "A937FB330246433691048E6E72E93303F39EC3BA9FBF7BECCA73423683922DEF",
+                         "sha256_at_backup":  "A937FB330246433691048E6E72E93303F39EC3BA9FBF7BECCA73423683922DEF",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/src/string.cpp",
+                         "bytes":  4579,
+                         "sha256_at_promotion":  "E563DCC70864C2CDE62A46B510A4B63F4E5EAEA107898A287185BB61CD319AD6",
+                         "sha256_at_backup":  "E563DCC70864C2CDE62A46B510A4B63F4E5EAEA107898A287185BB61CD319AD6",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/rawrstd/src/sys.cpp",
+                         "bytes":  7700,
+                         "sha256_at_promotion":  "221460260ADA282BDE8EB23EF30F915123190B15146B3BA651E525F7D8C55D82",
+                         "sha256_at_backup":  "221460260ADA282BDE8EB23EF30F915123190B15146B3BA651E525F7D8C55D82",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                         "bytes":  44740,
+                         "sha256_at_promotion":  "AD07308582794A718A61C7057E0AADF9F8D11250BB72FEF6A97523A4EF13E31E",
+                         "sha256_at_backup":  "AD07308582794A718A61C7057E0AADF9F8D11250BB72FEF6A97523A4EF13E31E",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/asm/X64Assembler.h",
+                         "bytes":  3173,
+                         "sha256_at_promotion":  "F0BE8F8E646FC96F87828611A2613DD45B78139BC183EEDE9F4EDF6E3065A176",
+                         "sha256_at_backup":  "F0BE8F8E646FC96F87828611A2613DD45B78139BC183EEDE9F4EDF6E3065A176",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/common/Diagnostics.cpp",
+                         "bytes":  3223,
+                         "sha256_at_promotion":  "12A20C11649F7D7216309902EA93FE443CEA0064B5D5ADE12154F1E2FE23B02F",
+                         "sha256_at_backup":  "12A20C11649F7D7216309902EA93FE443CEA0064B5D5ADE12154F1E2FE23B02F",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/common/Diagnostics.h",
+                         "bytes":  2942,
+                         "sha256_at_promotion":  "0C5C8C1E76AF656D1D70E99DEB20D706D7072105CD1C2B598DF832C24F0F9C9C",
+                         "sha256_at_backup":  "0C5C8C1E76AF656D1D70E99DEB20D706D7072105CD1C2B598DF832C24F0F9C9C",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/common/SourceManager.cpp",
+                         "bytes":  4970,
+                         "sha256_at_promotion":  "41D184EEFF171D9410286D34A7F8135682281AE36C2AD9934C8C715FA9C02A39",
+                         "sha256_at_backup":  "41D184EEFF171D9410286D34A7F8135682281AE36C2AD9934C8C715FA9C02A39",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/common/SourceManager.h",
+                         "bytes":  2840,
+                         "sha256_at_promotion":  "3D71115D1CC6A9BFCF0DF3AB80E2F2C1D6828F11CCBDC3DF647583057AE9E69E",
+                         "sha256_at_backup":  "3D71115D1CC6A9BFCF0DF3AB80E2F2C1D6828F11CCBDC3DF647583057AE9E69E",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/common/Types.h",
+                         "bytes":  830,
+                         "sha256_at_promotion":  "C27B4704A019919ECD595559D1667BAFDD0B352DEF6241C7664AB0FFBC484750",
+                         "sha256_at_backup":  "C27B4704A019919ECD595559D1667BAFDD0B352DEF6241C7664AB0FFBC484750",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/frontend/Lexer.cpp",
+                         "bytes":  26235,
+                         "sha256_at_promotion":  "A23CB3AACAB38E599BE4EE5251A9F20E09A58FDCD9F33DD18B4DC6E365A692F8",
+                         "sha256_at_backup":  "1DD37A4BC9386089C5B36FD1AB9EE45C7B78CAF654AB2AD770C6D5AFB2C5F9D1",
+                         "unchanged_since_backup":  false
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/frontend/Lexer.h",
+                         "bytes":  2111,
+                         "sha256_at_promotion":  "0FCFC2975A6018781D8239DF45280DDBFA8A6625B144BAED775929D10557FDD8",
+                         "sha256_at_backup":  "6407969EDE90CA40E9B8CA898E984E3819E0333A85C9F0CCF8C3ED17564DFDBB",
+                         "unchanged_since_backup":  false
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/frontend/Token.cpp",
+                         "bytes":  6592,
+                         "sha256_at_promotion":  "6B55C125D0D90C6515FCAE5415187358C0C2F67FDD7CEF13ECD71A4EAB53F6DE",
+                         "sha256_at_backup":  "6B55C125D0D90C6515FCAE5415187358C0C2F67FDD7CEF13ECD71A4EAB53F6DE",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/frontend/Token.h",
+                         "bytes":  4313,
+                         "sha256_at_promotion":  "1FEE2A8C37429E31A6F2CD0E89B34AF9CCAC3D28FAA95CC0B82FED4BDF030160",
+                         "sha256_at_backup":  "68DA5F38E9705372DD56C205004502E9803469DEF339F6237834128D78671BE6",
+                         "unchanged_since_backup":  false
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/object/CoffWriter.cpp",
+                         "bytes":  11060,
+                         "sha256_at_promotion":  "3F4DF8F32370FFB1EE246D65572164862D0BFBFA0FED5A78FEA78438C55EEEFD",
+                         "sha256_at_backup":  "3F4DF8F32370FFB1EE246D65572164862D0BFBFA0FED5A78FEA78438C55EEEFD",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/src/object/CoffWriter.h",
+                         "bytes":  4594,
+                         "sha256_at_promotion":  "2F2CE4A5F000258F98BC29DD0E44F8055914A6D6DBFA69D64C0936CE0B71769A",
+                         "sha256_at_backup":  "2F2CE4A5F000258F98BC29DD0E44F8055914A6D6DBFA69D64C0936CE0B71769A",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c01_lexer_test.cpp",
+                         "bytes":  18143,
+                         "sha256_at_promotion":  "D0260DFD633B8B8052B68FFAFE41680BEB9DB262CD6527233C44BA7C3C1A6DF9",
+                         "sha256_at_backup":  "D0260DFD633B8B8052B68FFAFE41680BEB9DB262CD6527233C44BA7C3C1A6DF9",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c02_coff_writer_test.cpp",
+                         "bytes":  6855,
+                         "sha256_at_promotion":  "BA692CC72A5912328DE478BC441879941C8A42199C8EEABAF6DA31DF0F0DDFEE",
+                         "sha256_at_backup":  "BA692CC72A5912328DE478BC441879941C8A42199C8EEABAF6DA31DF0F0DDFEE",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c03_e2e_test.cpp",
+                         "bytes":  7613,
+                         "sha256_at_promotion":  "1F764A8B9AC0BFDDD515BE407603A59C235F7FCAB370D11CA602A1CC9D530EF3",
+                         "sha256_at_backup":  "1F764A8B9AC0BFDDD515BE407603A59C235F7FCAB370D11CA602A1CC9D530EF3",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c04_multi_object_test.cpp",
+                         "bytes":  7850,
+                         "sha256_at_promotion":  "10CEDB60428B20553F92BA933DA019D63E680942ACDE18162F8AFA0712905B48",
+                         "sha256_at_backup":  "10CEDB60428B20553F92BA933DA019D63E680942ACDE18162F8AFA0712905B48",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c05_reloc_import_test.cpp",
+                         "bytes":  8690,
+                         "sha256_at_promotion":  "61A94A29BA35B616FA649EC0AAAFA5683D858B37029073F481F275F6CE22A808",
+                         "sha256_at_backup":  "61A94A29BA35B616FA649EC0AAAFA5683D858B37029073F481F275F6CE22A808",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c06_dll_test.cpp",
+                         "bytes":  16458,
+                         "sha256_at_promotion":  "28F87308854199B9CC96CADA8BEA6F059F06E68FE795418BE3144C66AFEF3B31",
+                         "sha256_at_backup":  "28F87308854199B9CC96CADA8BEA6F059F06E68FE795418BE3144C66AFEF3B31",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c07_e2e_test.cpp",
+                         "bytes":  18913,
+                         "sha256_at_promotion":  "EBF768F15908E0E89F601A5ECD805C9C9F071A5BB36BBEEF9B8AF11FC002E942",
+                         "sha256_at_backup":  "EBF768F15908E0E89F601A5ECD805C9C9F071A5BB36BBEEF9B8AF11FC002E942",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c07_probe.cpp",
+                         "bytes":  6874,
+                         "sha256_at_promotion":  "9DDDE2F76FD7F842B4FBA150A0234928E8F0D7FE1368B665067AB5BFDCE9EB53",
+                         "sha256_at_backup":  "9DDDE2F76FD7F842B4FBA150A0234928E8F0D7FE1368B665067AB5BFDCE9EB53",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/c08_negative_test.cpp",
+                         "bytes":  9847,
+                         "sha256_at_promotion":  "5BB9E9CB183457BE4B081540BDA6B207FCF1E395BEC45A99E9F2FA57ACE9C47C",
+                         "sha256_at_backup":  "5BB9E9CB183457BE4B081540BDA6B207FCF1E395BEC45A99E9F2FA57ACE9C47C",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/call_export.cpp",
+                         "bytes":  1135,
+                         "sha256_at_promotion":  "36815EA49D51C95CF19281680FA845326D47E3C2201FC7EDBD6D280CAB4A6BC9",
+                         "sha256_at_backup":  "36815EA49D51C95CF19281680FA845326D47E3C2201FC7EDBD6D280CAB4A6BC9",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/probe_exports.cpp",
+                         "bytes":  4188,
+                         "sha256_at_promotion":  "5A6D50040959B569237AE15DA4986FC32C0E5615265DD0915A97F4826CAAD941",
+                         "sha256_at_backup":  "5A6D50040959B569237AE15DA4986FC32C0E5615265DD0915A97F4826CAAD941",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tests/rawrstd_test.cpp",
+                         "bytes":  3777,
+                         "sha256_at_promotion":  "3C04B99917D3D8DE6A36275810F815C9B54E95F219938EBEE0A88BEA33B26993",
+                         "sha256_at_backup":  "3C04B99917D3D8DE6A36275810F815C9B54E95F219938EBEE0A88BEA33B26993",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/build_c07_only.bat",
+                         "bytes":  1428,
+                         "sha256_at_promotion":  "07551D747BCEE86B585FD3DA29D331CA484C5AD47381761A249F3C2FB4BBFC62",
+                         "sha256_at_backup":  "502A982E62BA0618CC8685046F238ECAE7AF81315903D95BCA24470FC9031A81",
+                         "unchanged_since_backup":  false
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/build_c07_probe.bat",
+                         "bytes":  736,
+                         "sha256_at_promotion":  "697499811F9176753F5B10DEB101D7A62997A00BA7F81F931833CDB4B5744173",
+                         "sha256_at_backup":  "697499811F9176753F5B10DEB101D7A62997A00BA7F81F931833CDB4B5744173",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/build_dbglaunch.bat",
+                         "bytes":  1434,
+                         "sha256_at_promotion":  "DA59E3C0DB96470E52F10D4C47B106F3D2E76B7CF733D8938231A2F1918DF58A",
+                         "sha256_at_backup":  "DA59E3C0DB96470E52F10D4C47B106F3D2E76B7CF733D8938231A2F1918DF58A",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/build_stage0.bat",
+                         "bytes":  2351,
+                         "sha256_at_promotion":  "67E573A7CE88D70265B7A24A887458128333D4596D493A563D973CA2583561E3",
+                         "sha256_at_backup":  "67E573A7CE88D70265B7A24A887458128333D4596D493A563D973CA2583561E3",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/build_stage1.bat",
+                         "bytes":  5535,
+                         "sha256_at_promotion":  "2B4ADCB66FD4B05239A632E19C42C47F905383217688A9255C083E070EB5F0E3",
+                         "sha256_at_backup":  "422EA4AF0E38E0AA2EB39FB7AA5D7AA101A3FCF56E603CC38DD768B588584165",
+                         "unchanged_since_backup":  false
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/compare_pe.ps1",
+                         "bytes":  3208,
+                         "sha256_at_promotion":  "0766C4987BD048D6B4F22FFD71D47DF3D25A102EDD2290DBB06A94461FFBE771",
+                         "sha256_at_backup":  "0766C4987BD048D6B4F22FFD71D47DF3D25A102EDD2290DBB06A94461FFBE771",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/dbglaunch.c",
+                         "bytes":  4884,
+                         "sha256_at_promotion":  "4F474EE91DE59FA74C6B45834B4A97E272C8AEBA6C5D6D184F5EBE1776699752",
+                         "sha256_at_backup":  "4F474EE91DE59FA74C6B45834B4A97E272C8AEBA6C5D6D184F5EBE1776699752",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/dump_exports.ps1",
+                         "bytes":  3074,
+                         "sha256_at_promotion":  "94A419CF20B50F2E738D27319DEE10D97F5720858CB06FAE7DEA80D4C134AA2A",
+                         "sha256_at_backup":  "94A419CF20B50F2E738D27319DEE10D97F5720858CB06FAE7DEA80D4C134AA2A",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/dump_pe.ps1",
+                         "bytes":  3520,
+                         "sha256_at_promotion":  "2AE2EFD755BD5139B662040A5E99B61AA621E97BAFF9914625B5040B6A7393CB",
+                         "sha256_at_backup":  "2AE2EFD755BD5139B662040A5E99B61AA621E97BAFF9914625B5040B6A7393CB",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/dump_pe_headers.ps1",
+                         "bytes":  3519,
+                         "sha256_at_promotion":  "EC4A3E89D64DCF4554A715611E8F865E8BAD646BB4622DCFDEEC1A5F4DAB1C21",
+                         "sha256_at_backup":  "EC4A3E89D64DCF4554A715611E8F865E8BAD646BB4622DCFDEEC1A5F4DAB1C21",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/find_callsite.ps1",
+                         "bytes":  3019,
+                         "sha256_at_promotion":  "C68806686358A08A5B133DC0AD6AF50F7A9037A562C5B9E8F7A17F0DDF949A10",
+                         "sha256_at_backup":  "C68806686358A08A5B133DC0AD6AF50F7A9037A562C5B9E8F7A17F0DDF949A10",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/hexdump.ps1",
+                         "bytes":  534,
+                         "sha256_at_promotion":  "71F2131B615B8F5AB9A0FD098994CCE58A3B3A2DE1A7EC81B0CB4EDF6081C79D",
+                         "sha256_at_backup":  "71F2131B615B8F5AB9A0FD098994CCE58A3B3A2DE1A7EC81B0CB4EDF6081C79D",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/patch_coff_symbol.ps1",
+                         "bytes":  945,
+                         "sha256_at_promotion":  "C72F73D7A5EFFDB9D0BBF76843E341CFB1EAD3624D134EDD4F8AA5AFBC362701",
+                         "sha256_at_backup":  "C72F73D7A5EFFDB9D0BBF76843E341CFB1EAD3624D134EDD4F8AA5AFBC362701",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/patch_pe.ps1",
+                         "bytes":  2514,
+                         "sha256_at_promotion":  "2CF79C3D043E06DE26F6485763411AFB7476E77C0CAF0A64B7E4D49CAA960BE7",
+                         "sha256_at_backup":  "2CF79C3D043E06DE26F6485763411AFB7476E77C0CAF0A64B7E4D49CAA960BE7",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/recovered_c/c_compiler_minimal.c",
+                         "bytes":  30752,
+                         "sha256_at_promotion":  "6BB9C655756C9BB8880C34B008126805E119F560C6415796AAAAD30B6C80CBF8",
+                         "sha256_at_backup":  "6BB9C655756C9BB8880C34B008126805E119F560C6415796AAAAD30B6C80CBF8",
+                         "unchanged_since_backup":  true
+                     },
+                     {
+                         "path":  "compilers/native_compiler/tools/try_load_dll.ps1",
+                         "bytes":  857,
+                         "sha256_at_promotion":  "BC99630DFF0934229E53F40DE80056DA001A230ED6B85BE3B15211533E040316",
+                         "sha256_at_backup":  "BC99630DFF0934229E53F40DE80056DA001A230ED6B85BE3B15211533E040316",
+                         "unchanged_since_backup":  true
+                     }
+                 ]
+}
