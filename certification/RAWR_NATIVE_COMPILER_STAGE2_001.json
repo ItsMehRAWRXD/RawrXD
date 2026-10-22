@@ -7,8 +7,8 @@
                        "C01-C08":  "161/161",
                        "S2":  "21/21",
                        "SOURCE_TO_EXECUTABLE":  "PASS - int main(void) { return 42; } produced a Windows executable that exits 42",
-                       "CLEAN_GIT_ARCHIVE_BUILD":  "PASS",
-                       "total_checks":  182
+                       "CLEAN_GIT_ARCHIVE_BUILD":  "PASS - 232 checks, 0 failures, exit 0, linker rebuilt from the export",
+                       "total_checks":  232
                    },
     "pipeline":  {
                      "stages":  [
@@ -183,5 +183,21 @@
                   "does_not_prove":  "a complete C or C++ language. The subset is listed above. Self-hosting remains Stage 4."
               },
     "source_manifest":  "certification/RAWR_NATIVE_COMPILER_STAGE2_001.source_manifest.csv",
-    "report":  "certification/RAWR_NATIVE_COMPILER_STAGE2_001.md"
+    "report":  "certification/RAWR_NATIVE_COMPILER_STAGE2_001.md",
+    "merge_with_the_shared_branch":  {
+                                         "merged_branch":  "feature/native-compiler-stage2",
+                                         "merge_commit":  "edf844427e",
+                                         "merged_from":  "preservation/source-baseline-20261021",
+                                         "combined_gates":  {
+                                                                "C01-C08 (Stage 1)":  161,
+                                                                "S2 (Stage 2)":  21,
+                                                                "C09 (provenance)":  6,
+                                                                "C10 (preprocessor)":  44
+                                                            },
+                                         "total":  232,
+                                         "conflicts_resolved":  "one, in tools/build_stage1.bat: both sides\u0027 gates are kept, the Stage 2 integration and the provenance and preprocessor runs",
+                                         "manifest":  "tools/certification_manifest.txt was regenerated so the C09 provenance gate covers the files this work added",
+                                         "shared_branch_note":  "the shared branch was left where it was. Its working tree holds another session\u0027s 401 uncommitted entries, and moving the branch under it would have shown that session a large unrelated diff. The merge commit is a descendant of the shared branch, so the branch can fast-forward to it.",
+                                         "clean_archive":  "232 checks, 0 failures, exit 0, from a git archive of the merge commit with the linker rebuilt from the exported source"
+                                     }
 }
