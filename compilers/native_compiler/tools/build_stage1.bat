@@ -196,6 +196,12 @@ echo.
 if errorlevel 1 ( echo [FAIL] S2 & exit /b 1 )
 echo.
 
+REM ---- Stage 2.1: the exit 87 certification ----
+REM The same pipeline, asked for a different value, by several routes.
+"%OUT%\s2_1_exit87_test.exe" "%OUT%\rawr_c.exe" "%OUT%\rawr_asm.exe" "%LINKER%" "%OUT%\s2_ws"
+if errorlevel 1 ( echo [FAIL] S2.1 & exit /b 1 )
+echo.
+
 "%OUT%\c10_preprocessor_test.exe" "%OUT%"
 
 if errorlevel 1 ( echo [FAIL] C10 & exit /b 1 )

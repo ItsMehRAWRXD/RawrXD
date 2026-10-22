@@ -1,4 +1,4 @@
-// c_ast_lower.cpp — the C11 tree lowered to x64 assembly.
+﻿// c_ast_lower.cpp â€” the C11 tree lowered to x64 assembly.
 //
 // The input is the tree of the certified C11 parser. The output is the
 // assembly the certified first-party assembler reads.
@@ -39,12 +39,18 @@
 #include "rawrstd/sys.h"
 #include "rawrstd/vector.h"
 
+#include <cstdio>
+
 namespace rawr {
 
 namespace {
 
 using rawrstd::String;
 using rawrstd::Vector;
+
+void append_string(String* target, const String& value) {
+    target->append(value.data(), value.size());
+}
 
 String num(long long value) {
     char buffer[32];
@@ -85,17 +91,21 @@ public:
             ASTNode* child = unit->children[i];
             if (!child) continue;
             if (child->kind == ASTNodeKind::FunctionDecl) {
+                // A prototype declares a function that is defined
+                // elsewhere. It has no body, so it produces no code.
+                if (!child->body) continue;
                 if (!emit_function(child)) { out_ = saved; return false; }
             } else if (child->kind == ASTNodeKind::DeclStmt) {
-                // A file scope variable has no home yet, so it is reported
-                // rather than silently dropped.
+                // A file scope declaration is either a prototype of a
+                // function that is defined elsewhere, or a variable.
+                // A prototype produces no code: the function is external.
                 for (size_type d = 0; d < child->children.size(); ++d) {
                     ASTNode* var = child->children[d];
-                    if (var && !var->name.empty()) {
-                        out_ = saved;
-                        return fail("a file scope variable is not supported yet: " +
-                                    var->name);
-                    }
+                    if (!var || var->name.empty()) continue;
+                    if (declarator_is_function(var->declarator)) continue;
+                    out_ = saved;
+                    return fail("a file scope variable is not supported yet: " +
+                                var->name);
                 }
             }
         }
@@ -125,6 +135,28 @@ public:
         return false;
     }
 
+    // Is the declarator chain a function declarator?
+    //
+    // The chain is built from the inside out and hangs together through
+    // "left", so "int *a[10]" is an array node whose left is a pointer node
+    // whose left is the identifier. A chain that holds a DeclaratorFunction
+    // declares a function.
+    static bool declarator_is_function(ASTNode* declarator) {
+        for (ASTNode* node = declarator; node; node = node->left) {
+            if (node->kind == ASTNodeKind::DeclaratorFunction) return true;
+        }
+        return false;
+    }
+
+    // Does the function return nothing?
+    bool returns_void(ASTNode* fn) const {
+        for (size_type i = 0; i < fn->specifiers.size(); ++i) {
+            const ASTNode* spec = fn->specifiers[i];
+            if (spec && spec->name == "void") return true;
+        }
+        return false;
+    }
+
     const String& diagnostics() const { return diagnostics_; }
 
 private:
@@ -140,6 +172,7 @@ private:
     int max_temp_ = 0;
     int epilogue_label_ = 0;
     bool is_main_ = false;
+    bool returns_void_ = false;
     bool frameless_ = false;
     Vector<Local> locals_;
     Vector<String> defined_;
@@ -147,17 +180,17 @@ private:
 
     // ---- output ----
     void line(const char* text) {
-        *out_ += String(text);
-        *out_ += String("\n");
+        out_->append(text, rawrstd::strlen_raw(text));
+        out_->append("\n", 1);
     }
     void line(const String& text) {
-        *out_ += text;
-        *out_ += String("\n");
+        out_->append(text.data(), text.size());
+        out_->append("\n", 1);
     }
     void emit(const String& text) {
-        *out_ += String("    ");
-        *out_ += text;
-        *out_ += String("\n");
+        out_->append("    ", 4);
+        out_->append(text.data(), text.size());
+        out_->append("\n", 1);
     }
     void emit(const char* text) { emit(String(text)); }
 
@@ -172,13 +205,13 @@ private:
     int new_label() { return ++label_counter_; }
     String label_name(int n) {
         String s(".L");
-        s += num(n);
+        append_string(&s, num(n));
         return s;
     }
     String slot_ref(int slot) {
         String s("[rbp - ");
-        s += num(8 * (slot + 1));
-        s += String("]");
+        append_string(&s, num(8 * (slot + 1)));
+        append_string(&s, String("]"));
         return s;
     }
 
@@ -212,6 +245,7 @@ private:
     // ---- functions ----
     bool emit_function(ASTNode* fn) {
         is_main_ = (fn->name == "main");
+        returns_void_ = returns_void(fn);
         local_count_ = 0;
         param_count_ = 0;
         locals_.clear();
@@ -288,9 +322,9 @@ private:
     }
 
     void line_label(const String& name) {
-        *out_ += name;
-        *out_ += String(":");
-        *out_ += String("\n");
+        out_->append(name.data(), name.size());
+        out_->append(":", 1);
+        out_->append("\n", 1);
     }
 
     // ---- statements ----
@@ -324,6 +358,11 @@ private:
             return true;
 
         case ASTNodeKind::ReturnStmt: {
+            if (!stmt->value && !returns_void_) {
+                // A function that returns a value has to return one. The
+                // parser is happy with an empty return, so the check is here.
+                return fail("a return with no value in a function that returns one");
+            }
             if (is_main_) {
                 // main hands its value to ExitProcess, and the value goes into
                 // the first argument register. A literal is materialised
@@ -671,3 +710,5 @@ bool c_ast_compile_to_asm(const char* source_path, const char* asm_path,
 }
 
 } // namespace rawr
+
+

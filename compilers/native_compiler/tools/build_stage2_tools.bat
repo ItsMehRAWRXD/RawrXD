@@ -66,6 +66,13 @@ cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
    %COMMON_OBJS% 2>&1
 if errorlevel 1 ( echo [FAIL] s2_pipeline_test & exit /b 1 )
 
+cl /nologo /std:c++17 /EHsc /W3 /O2 /GS- ^
+   /I"%ROOT%\rawrstd\include" /I"%ROOT%\src" ^
+   /Fe:"%OUT%\s2_1_exit87_test.exe" ^
+   "%ROOT%\tests\s2_1_exit87_test.cpp" ^
+   %COMMON_OBJS% 2>&1
+if errorlevel 1 ( echo [FAIL] s2_1_exit87_test & exit /b 1 )
+
 if not exist "%OUT%\s2_ws" mkdir "%OUT%\s2_ws" 2>nul
 
 echo   [OK]
