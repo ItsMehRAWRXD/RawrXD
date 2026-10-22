@@ -5453,6 +5453,42 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_moe_cpu_parity.cpp")
     set_target_properties(deep2_moe_cpu_parity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     add_test(NAME deep2_moe_cpu_parity COMMAND deep2_moe_cpu_parity
              --model "${CMAKE_SOURCE_DIR}/../models/nemotron-3.5-lightning-30b.gguf")
+
+    # DEEP2_NEMOTRON_MOE_EXPERT_CPU_PARITY_001
+    #
+    # The expert arithmetic: the up projection, the activation, the down
+    # projection and the weighted aggregation, against an independent
+    # reference that dequantises the expert tensors with ggml's own type
+    # traits. The divergence is localised at the EXPERT, because the
+    # executor's expert path is invoked once per selected expert.
+    add_executable(deep2_moe_expert_cpu_parity
+        tools/deep2_moe_expert_cpu_parity.cpp
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/op_gdn.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/gguf_loader.cpp
+        src/utils/Diagnostics.cpp
+        src/utils/input_sanitizer.cpp)
+    target_include_directories(deep2_moe_expert_cpu_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include)
+    target_link_libraries(deep2_moe_expert_cpu_parity PRIVATE deep2_engine_lib ggml_interface Vulkan::Vulkan psapi)
+    target_compile_options(deep2_moe_expert_cpu_parity PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+    target_compile_definitions(deep2_moe_expert_cpu_parity PRIVATE NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    set_target_properties(deep2_moe_expert_cpu_parity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    add_test(NAME deep2_moe_expert_cpu_parity COMMAND deep2_moe_expert_cpu_parity
+             --model "${CMAKE_SOURCE_DIR}/../models/nemotron-3.5-lightning-30b.gguf")
 endif()
 
 # ============================================================================

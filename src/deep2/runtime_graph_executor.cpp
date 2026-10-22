@@ -2733,6 +2733,28 @@ bool Executor::RunMoeRouting(int32_t block, const std::vector<float>& x,
     return true;
 }
 
+bool Executor::RunMoeExperts(int32_t block, const std::vector<float>& x,
+                              const std::vector<uint32_t>& ids,
+                              const std::vector<float>& weights,
+                              std::vector<float>& y, std::string& err) {
+    // Find the expert-execution operation for the block.
+    const Instr* moe = nullptr;
+    for (const auto& in : program_) {
+        if (in.op != OpKind::MoEExecute) continue;
+        if (in.block != block) continue;
+        moe = &in;
+        break;
+    }
+    if (moe == nullptr) {
+        err = "no MoEExecute operation for block " + std::to_string(block);
+        return false;
+    }
+    if (!OpMoEExecute(*moe, x, ids, weights, y, err)) {
+        return false;
+    }
+    return true;
+}
+
 bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {

@@ -215,6 +215,16 @@ public:
                        std::vector<uint32_t>& ids, std::vector<float>& weights,
                        RouterTrace& trace, std::string& err);
 
+    // Run ONE MoE block's expert computation over a given hidden state, with
+    // an explicit expert selection and weight vector. Passing a single expert
+    // with a weight of 1.0 yields that expert's own contribution, which is
+    // what lets the numerical parity certificate locate a divergence at the
+    // expert that caused it rather than only at the block's output.
+    bool RunMoeExperts(int32_t block, const std::vector<float>& x,
+                        const std::vector<uint32_t>& ids,
+                        const std::vector<float>& weights,
+                        std::vector<float>& y, std::string& err);
+
     // ---- Context admission guard --------------------------------------------
     //
     // The three counters a host must keep straight, because conflating them is
