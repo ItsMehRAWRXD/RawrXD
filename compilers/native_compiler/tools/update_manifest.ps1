@@ -82,6 +82,8 @@ $compiledSources = @(
     'src/frontend/Token.cpp',
     'src/frontend/Lexer.cpp',
     'src/frontend/Preprocessor.cpp',
+    'src/frontend/AST.cpp',
+    'src/frontend/Parser.cpp',
     'src/object/CoffWriter.cpp',
     'src/asm/X64Assembler.cpp',
     'tests/c01_lexer_test.cpp',
@@ -93,7 +95,8 @@ $compiledSources = @(
     'tests/c07_e2e_test.cpp',
     'tests/c08_negative_test.cpp',
     'tests/c09_provenance_test.cpp',
-    'tests/c10_preprocessor_test.cpp'
+    'tests/c10_preprocessor_test.cpp',
+    'tests/c11_parser_test.cpp'
 )
 
 $lines = New-Object System.Collections.Generic.List[string]
