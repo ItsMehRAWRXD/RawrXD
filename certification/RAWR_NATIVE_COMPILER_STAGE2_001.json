@@ -1,0 +1,187 @@
+﻿{
+    "schema":  "rawr.native.compiler.stage2/1",
+    "milestone":  "RAWR_NATIVE_COMPILER_STAGE2_001",
+    "generated_utc":  "2026-10-22T03:34:44Z",
+    "acceptance":  {
+                       "RAWR_NATIVE_COMPILER_STAGE1":  "PASS",
+                       "C01-C08":  "161/161",
+                       "S2":  "21/21",
+                       "SOURCE_TO_EXECUTABLE":  "PASS - int main(void) { return 42; } produced a Windows executable that exits 42",
+                       "CLEAN_GIT_ARCHIVE_BUILD":  "PASS",
+                       "total_checks":  182
+                   },
+    "pipeline":  {
+                     "stages":  [
+                                    "C source",
+                                    "rawr_c (the C front end)",
+                                    "rawr_asm (the certified assembler)",
+                                    "rawrxd_link (the certified native linker)",
+                                    "Windows"
+                                ],
+                     "all_first_party":  true,
+                     "external_compiler_used_for_the_harness":  "MSVC 19.44 builds the certification harness and the tools. It does not take part in the compilation of the program under test: the program is compiled by the RawrXD front end and assembler. This is NOT compiler self-hosting, which remains Stage 4."
+                 },
+    "source_revision":  {
+                            "branch":  "feature/native-compiler-stage2",
+                            "commit":  "402e5d0f0b838fc5732e47e85c378d0cd8ab2c1e"
+                        },
+    "gates":  [
+                  {
+                      "gate":  "C01",
+                      "passed":  97,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C02",
+                      "passed":  10,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C03",
+                      "passed":  7,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C04",
+                      "passed":  7,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C05",
+                      "passed":  5,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C06",
+                      "passed":  14,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C07",
+                      "passed":  11,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C08",
+                      "passed":  10,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "S2",
+                      "passed":  21,
+                      "failed":  0
+                  }
+              ],
+    "stage2_gates":  [
+                         {
+                             "id":  "S2-01",
+                             "name":  "the lexer and the parser are connected",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-02",
+                             "name":  "integer expressions and their precedence",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-03",
+                             "name":  "local variables and assignment",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-04",
+                             "name":  "functions, calls and returns",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-05",
+                             "name":  "conditionals and loops",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-06",
+                             "name":  "Win64 ABI correctness",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-07",
+                             "name":  "COFF object generation",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-08",
+                             "name":  "the Windows executable exits 42",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-09",
+                             "name":  "multiple translation units",
+                             "result":  "PASS"
+                         },
+                         {
+                             "id":  "S2-10",
+                             "name":  "clean Git archive reproducibility",
+                             "result":  "PASS"
+                         }
+                     ],
+    "assembler_defects_fixed":  [
+                                    {
+                                        "id":  "A-01",
+                                        "title":  "mov r64, imm was truncated",
+                                        "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                                        "function":  "EncodeMov",
+                                        "cause":  "the B8 form takes a 64 bit immediate, so writing only four bytes of it truncated the instruction and the bytes after it were decoded as part of it",
+                                        "fix":  "a 64 bit destination with a sign extendable value uses the C7 /0 form; a larger value uses the full 64 bit immediate",
+                                        "regression":  "C07 encodes the 64 bit immediate byte for byte"
+                                    },
+                                    {
+                                        "id":  "A-02",
+                                        "title":  "the displacement of an rbp based operand was zeroed",
+                                        "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                                        "function":  "EncodeMemory",
+                                        "cause":  "the encoder forced mod = 1 and then set the displacement to zero, so [rbp-8] was encoded as [rbp+0] and the operand read or wrote the wrong address",
+                                        "fix":  "the displacement is kept; the mod is chosen from its size",
+                                        "regression":  "the C07 memory form table covers [rbp]"
+                                    },
+                                    {
+                                        "id":  "A-03",
+                                        "title":  "the sign of a memory term was read after the term it belonged to",
+                                        "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                                        "function":  "ParseOperand",
+                                        "cause":  "the sign was consumed after the term had been processed, so [rbp-8] lost its sign entirely",
+                                        "fix":  "the sign is read before the term it belongs to",
+                                        "regression":  "the C07 memory form table and the Stage 2 locals cover it"
+                                    }
+                                ],
+    "front_end":  {
+                      "file":  "compilers/native_compiler/src/frontend/c_stage2.cpp",
+                      "reuses":  "the certified lexer from src/frontend/Lexer.h; nothing re-implements lexing",
+                      "supports":  [
+                                       "functions with parameters",
+                                       "local variables",
+                                       "assignment",
+                                       "the binary operators with C precedence",
+                                       "the unary operators",
+                                       "if / else",
+                                       "while",
+                                       "function calls",
+                                       "prototypes"
+                                   ],
+                      "frame":  "32 bytes of shadow space, a multiple of 16 so that the stack is aligned at every call",
+                      "recovered_parser":  "tools/recovered_c/c_compiler_minimal.c was audited and left where it was. It is a reference artifact: its parser knows only return statements and functions without parameters. The front end here is built on the certified lexer instead."
+                  },
+    "clean_archive_validation":  {
+                                     "export":  "git archive HEAD compilers/native_compiler toolchain/from_scratch/phase2_linker",
+                                     "exported_files":  79,
+                                     "linker":  "built from the exported source with cmake and Ninja",
+                                     "run":  "the suite was built and run from the exported directory",
+                                     "result":  "182 checks, 0 failures, exit 0",
+                                     "log":  "certification/RAWR_NATIVE_COMPILER_STAGE2_001.log"
+                                 },
+    "scope":  {
+                  "proves":  "C source becomes a Windows executable through RawrXD\u0027s own front end, assembler and linker, and the exit code is exactly what the program returned",
+                  "does_not_prove":  "a complete C or C++ language. The subset is listed above. Self-hosting remains Stage 4."
+              },
+    "source_manifest":  "certification/RAWR_NATIVE_COMPILER_STAGE2_001.source_manifest.csv",
+    "report":  "certification/RAWR_NATIVE_COMPILER_STAGE2_001.md"
+}
