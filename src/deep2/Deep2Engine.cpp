@@ -9407,6 +9407,14 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
     if (layer == 1 && !MoEFirstNanProbe("GATE_PROJECTION", layer, expertId, 0.0f,
                                          gateOut, expertDim))
     {
+        // Additional diagnostics: dump input and handle state
+        fprintf(stderr,
+            "[DEEP2_MOE_FIRST_NAN_001] E1 diag: expert=%d quantType=%d handleValid=%d "
+            "gateWeights=%p input[0..3]=%g,%g,%g,%g\n",
+            expertId, handle.quantType, handle.valid ? 1 : 0,
+            static_cast<const void*>(handle.gateWeights),
+            (double)input[0], (double)input[1], (double)input[2], (double)input[3]);
+        fflush(stderr);
         fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E1 GATE_PROJECTION\n");
         fflush(stderr);
         throw std::runtime_error("gate projection non-finite");
@@ -9432,6 +9440,14 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
     if (layer == 1 && !MoEFirstNanProbe("ACTIVATION", layer, expertId, 0.0f,
                                          gateOut, expertDim))
     {
+        // Additional diagnostics: dump gate/up values around first bad index
+        fprintf(stderr,
+            "[DEEP2_MOE_FIRST_NAN_001] E3 diag: expert=%d badIndex=%zu "
+            "gate[0..3]=%g,%g,%g,%g up[0..3]=%g,%g,%g,%g\n",
+            expertId, 1,
+            (double)gateOut[0], (double)gateOut[1], (double)gateOut[2], (double)gateOut[3],
+            (double)upOut[0], (double)upOut[1], (double)upOut[2], (double)upOut[3]);
+        fflush(stderr);
         fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E3 ACTIVATION\n");
         fflush(stderr);
         throw std::runtime_error("activation non-finite");

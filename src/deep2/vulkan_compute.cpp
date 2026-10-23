@@ -769,6 +769,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
         cmd,qBatch8RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
     vkCmdDispatch(cmd,(rows+7u)/8u,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     ++q4kBatch8RowOps_;
     q4kBatchWeightBytes_+=weightBytes;
@@ -853,6 +854,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch4Row(
         cmd,qBatch4RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
     vkCmdDispatch(cmd,(rows+3u)/4u,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     ++q4kBatch4RowOps_;
     q4kBatchWeightBytes_+=weightBytes;
@@ -906,6 +908,7 @@ bool VulkanCompute::RunSpecAttentionHostBatch(
         0,sizeof(p),&p);
     const uint32_t total=batch*heads*headDim;
     vkCmdDispatch(cmd,(total+63u)/64u,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!endSubmitWait(
             cmd,query,GpuWorkKind::ModelCompute,0,epoch,nullptr))
@@ -932,6 +935,7 @@ bool VulkanCompute::dispatchSpecOps(
         cmd,specOpsPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
     vkCmdDispatch(cmd,p.batch,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!own) return true;
     return endSubmitWait(
@@ -1009,6 +1013,7 @@ bool VulkanCompute::DispatchArgmaxBatch(
         cmd,argmaxPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
     vkCmdDispatch(cmd,batch,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!own) return true;
     return endSubmitWait(
@@ -1709,6 +1714,7 @@ bool VulkanCompute::RunSpecAttentionResident(
         0,sizeof(p),&p);
     const uint32_t total=batch*heads*headDim;
     vkCmdDispatch(cmd,(total+63u)/64u,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!endSubmitWait(
             cmd,query,GpuWorkKind::ModelCompute,0,epoch,nullptr))
@@ -1778,6 +1784,7 @@ bool VulkanCompute::dispatchOps(
     vkCmdPushConstants(cmd, opsPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
                        0, sizeof(push), &push);
     vkCmdDispatch(cmd, groupsX, 1, 1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
 
     if (sampleOps) {
@@ -1852,6 +1859,7 @@ bool VulkanCompute::dispatchQuant(
                        0, sizeof(push), &push);
     // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
     vkCmdDispatch(cmd, push.rows, 1, 1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
 
     if (sample) {
@@ -1894,6 +1902,7 @@ bool VulkanCompute::dispatchQuantNvfp4(
     vkCmdPushConstants(cmd, qNvfp4PipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
                        0, sizeof(push), &push);
     vkCmdDispatch(cmd, push.rows, 1, 1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
 
     if (!own) return true;
@@ -2623,6 +2632,7 @@ bool VulkanCompute::SubmitRecordedResidentQ4K(
         vkCmdDispatch(
             r.cmd,
             (weight.rows+(tileN-1u))/tileN,1,1);
+        deep2::perf::Probe::instance().dispatch();
         recordComputeBarrier(r.cmd);
         if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
         VkFenceCreateInfo fi{};
@@ -2729,6 +2739,7 @@ bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
             const uint32_t tileN=(uint32_t)tile;
             vkCmdDispatch(
                 r.cmd,(weights[i].rows+tileN-1u)/tileN,1,1);
+            deep2::perf::Probe::instance().dispatch();
             recordComputeBarrier(r.cmd);
         }
         if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
@@ -3295,6 +3306,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
         cmd,qBatchPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
     vkCmdDispatch(cmd,rows,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!own) return true;
     const bool ok=endSubmitWait(
@@ -3718,6 +3730,7 @@ bool VulkanCompute::DispatchGdn(
         cmd, gdnPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
         0, sizeof(push), &push);
     vkCmdDispatch(cmd, valueHeads, 1, 1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if (!recordCopy(cmd, outputBuffer, *downloadStage, outputBytes)) {
         vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
@@ -4366,6 +4379,7 @@ bool VulkanCompute::recordQuantRowsResident(
         cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
         0, sizeof(push), &push);
     vkCmdDispatch(cmd, rowCount, 1, 1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     ++residentDirectDispatches_;
     return true;
@@ -5737,6 +5751,7 @@ bool VulkanCompute::DispatchWeightResidentLane(
             lane.cmd, opsPipelineLayout_,
             VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(p), &p);
         vkCmdDispatch(lane.cmd, (meta.rows+63u)/64u, 1, 1);
+        deep2::perf::Probe::instance().dispatch();
         recordComputeBarrier(lane.cmd);
         ++residentDirectDispatches_;
         ++lane.residentDispatches;
@@ -5769,6 +5784,7 @@ bool VulkanCompute::DispatchWeightResidentLane(
         lane.cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
         0, sizeof(push), &push);
     vkCmdDispatch(lane.cmd, meta.rows, 1, 1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(lane.cmd);
     ++residentDirectDispatches_;
     ++lane.residentDispatches;
@@ -6873,10 +6889,11 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     vkCmdPushConstants(
         t.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(p),&p);
-    const uint32_t tileN=(uint32_t)tile;
-    vkCmdDispatch(t.cmd,(weight.rows+tileN-1u)/tileN,1,1);
-    recordComputeBarrier(t.cmd);
-    if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
+        const uint32_t tileN=(uint32_t)tile;
+        vkCmdDispatch(t.cmd,(weight.rows+tileN-1u)/tileN,1,1);
+        deep2::perf::Probe::instance().dispatch();
+        recordComputeBarrier(t.cmd);
+        if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
         CancelQ4KAsync(t); return false;
     }
     VkSubmitInfo si{};
@@ -6969,10 +6986,11 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
     vkCmdPushConstants(
         ccmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(p),&p);
-    const uint32_t tileN=(uint32_t)tile;
-    vkCmdDispatch(ccmd,(weight.rows+tileN-1u)/tileN,1,1);
-    recordComputeBarrier(ccmd);
-    if(vkEndCommandBuffer(ccmd)!=VK_SUCCESS) return false;
+        const uint32_t tileN=(uint32_t)tile;
+        vkCmdDispatch(ccmd,(weight.rows+tileN-1u)/tileN,1,1);
+        deep2::perf::Probe::instance().dispatch();
+        recordComputeBarrier(ccmd);
+        if(vkEndCommandBuffer(ccmd)!=VK_SUCCESS) return false;
 
     const size_t bytes=(size_t)batch*weight.rows*sizeof(float);
     if(!EnsureDownloadRing(bytes)) return false;
@@ -7071,6 +7089,7 @@ bool VulkanCompute::RunSpecAcceptPrefix(
         cmd,specAcceptPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(count),&count);
     vkCmdDispatch(cmd,1,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!endSubmitWait(
             cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr))
@@ -7110,6 +7129,7 @@ bool VulkanCompute::RunSpecAcceptPrefixResident(
         cmd,specAcceptPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
         0,sizeof(count),&count);
     vkCmdDispatch(cmd,1,1,1);
+    deep2::perf::Probe::instance().dispatch();
     recordComputeBarrier(cmd);
     if(!endSubmitWait(
             cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr))
