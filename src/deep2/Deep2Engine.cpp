@@ -5155,6 +5155,15 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     }
 
     // --- Vulkan GPU dispatch (SOLO / MULTI / HYBRID GPU slots) ---
+    if (const char* trace = std::getenv("DEEP2_GPU_TRACE"))
+    {
+        static std::atomic<unsigned> linearTraceLines{0};
+        unsigned n = linearTraceLines.fetch_add(1, std::memory_order_relaxed);
+        if (trace[0] == '1' && n < 16)
+            std::fprintf(stderr, "[GPU_TRACE] LinearW tensor=%s vkEnabled=%d vkInitialized=%d devices=%zu plannedCpu=%d\n",
+                         wt.name.c_str(), vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0,
+                         vulkanDevices_.size(), plannedCpu ? 1 : 0);
+    }
     if (!plannedCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
@@ -5326,6 +5335,30 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         if (!nanGuardPrinted)
         {
             nanGuardPrinted = true;
+            // Diagnostics for layer 2 ssm_in failure
+            bool isTargetTensor = wtEffective.name.find("blk.2.ssm_in.weight") != std::string::npos;
+            if (isTargetTensor)
+            {
+                fprintf(stderr, "[DIAG] LinearW NaN target tensor: name=%s type=%d rows=%zu cols=%zu data=%p\n",
+                        wtEffective.name.c_str(), wtEffective.type, rows, cols, wtEffective.data);
+                // Check input vector
+                int badIn = 0; float minIn = 1e30f, maxIn = -1e30f, normIn = 0.0f;
+                for (size_t c = 0; c < cols; ++c) {
+                    float v = input[c];
+                    if (!std::isfinite(v)) badIn++;
+                    if (v < minIn) minIn = v;
+                    if (v > maxIn) maxIn = v;
+                    normIn += v * v;
+                }
+                fprintf(stderr, "[DIAG] Input: bad=%d/%zu min=%g max=%g norm=%g\n", badIn, cols, minIn, maxIn, sqrtf(normIn));
+                // Check weight tensor first block
+                if (wtEffective.data && wtEffective.type == 6) { // Q5_0
+                    const uint8_t* wptr = static_cast<const uint8_t*>(wtEffective.data);
+                    fprintf(stderr, "[DIAG] Weight first 64 bytes: ");
+                    for (int i = 0; i < 64; ++i) fprintf(stderr, "%02X ", wptr[i]);
+                    fprintf(stderr, "\n");
+                }
+            }
             fprintf(stderr,
                     "[LinearW:FATAL] name=%s type=%d rows=%zu cols=%zu "
                     "bad=%zu/%zu firstBad[%zu]=%g\n",
@@ -7319,32 +7352,63 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, output, hiddenDim);  // pre-residual attn (llama attn_out)
     }
 
-    // 3. Residual connection — AVX2 vectorized
-    if (profilingEnabled_ && profiler_)
-        profiler_->beginAttnResidual();
+// 3. Residual connection — AVX2 vectorized
+      if (profilingEnabled_ && profiler_)
+          profiler_->beginAttnResidual();
+      // Diagnostic: Layer 2 residual add isolation
+      if (layer == 2)
+      {
+          size_t nanAttn = 0, infAttn = 0, nanRes = 0, infRes = 0, firstBadAttn = hiddenDim, firstBadRes = hiddenDim;
+          for (size_t i = 0; i < hiddenDim; ++i) {
+              if (std::isnan(output[i])) { ++nanAttn; if (firstBadAttn == hiddenDim) firstBadAttn = i; }
+              else if (std::isinf(output[i])) { ++infAttn; if (firstBadAttn == hiddenDim) firstBadAttn = i; }
+              if (std::isnan(input[i])) { ++nanRes; if (firstBadRes == hiddenDim) firstBadRes = i; }
+              else if (std::isinf(input[i])) { ++infRes; if (firstBadRes == hiddenDim) firstBadRes = i; }
+          }
+          fprintf(stderr,
+                  "[L2-RESIDUAL] ATTN_PRE_ADD nan=%zu inf=%zu firstBad=%zu\n"
+                  "[L2-RESIDUAL] RESIDUAL_PRE_ADD nan=%zu inf=%zu firstBad=%zu\n"
+                  "[L2-RESIDUAL] output=%p input=%p overlap=%d\n",
+                  nanAttn, infAttn, firstBadAttn,
+                  nanRes, infRes, firstBadRes,
+                  static_cast<const void*>(output),
+                  static_cast<const void*>(input),
+                  (output <= input + hiddenDim && output + hiddenDim >= input) ? 1 : 0);
+          fflush(stderr);
+      }
 #if defined(__AVX2__) || defined(_MSC_VER)
-    if (hiddenDim >= 8)
-    {
-        size_t i = 0;
-        for (; i + 7 < hiddenDim; i += 8)
-        {
-            __m256 outv = _mm256_loadu_ps(output + i);
-            __m256 inv = _mm256_loadu_ps(input + i);
-            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, inv));
-        }
-        for (; i < hiddenDim; ++i)
-        {
-            output[i] += input[i];
-        }
-    }
-    else
+      if (hiddenDim >= 8)
+      {
+          size_t i = 0;
+          for (; i + 7 < hiddenDim; i += 8)
+          {
+              __m256 outv = _mm256_loadu_ps(output + i);
+              __m256 inv = _mm256_loadu_ps(input + i);
+              _mm256_storeu_ps(output + i, _mm256_add_ps(outv, inv));
+          }
+          for (; i < hiddenDim; ++i)
+          {
+              output[i] += input[i];
+          }
+      }
+      else
 #endif
-    {
-        for (size_t i = 0; i < hiddenDim; ++i)
-        {
-            output[i] += input[i];
-        }
-    }
+      {
+          for (size_t i = 0; i < hiddenDim; ++i)
+          {
+              output[i] += input[i];
+          }
+      }
+      if (layer == 2)
+      {
+          size_t nanPost = 0, infPost = 0, firstBadPost = hiddenDim;
+          for (size_t i = 0; i < hiddenDim; ++i) {
+              if (std::isnan(output[i])) { ++nanPost; if (firstBadPost == hiddenDim) firstBadPost = i; }
+              else if (std::isinf(output[i])) { ++infPost; if (firstBadPost == hiddenDim) firstBadPost = i; }
+          }
+          fprintf(stderr, "[L2-RESIDUAL] POST_ADD nan=%zu inf=%zu firstBad=%zu\n", nanPost, infPost, firstBadPost);
+          fflush(stderr);
+      }
     if (profilingEnabled_ && profiler_)
         profiler_->endAttnResidual();
     if (layer == 0)
@@ -7353,19 +7417,34 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         AttnCert::record(AttnCert::Stage::ResidualHint, 0, pos, output, hiddenDim);
     }
 #if 1
-    {
-        char phase[32];
-        snprintf(phase, sizeof(phase), "LAYER%zu_POST_ATTN", layer);
-        B3_TraceState(phase, layer, output, hiddenDim);
-    }
-#endif
-    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
-    {
-        const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
-        char key[64];
-        std::snprintf(key, sizeof(key), "FFN_INP_%zu", layer);
-        B3_StageDigest(key, tokPos, output, hiddenDim);  // post-attn residual (llama ffn_inp)
-    }  // 4. FFN / SSM RMSNorm
+      {
+          char phase[32];
+          snprintf(phase, sizeof(phase), "LAYER%zu_POST_ATTN", layer);
+          B3_TraceState(phase, layer, output, hiddenDim);
+      }
+  #endif
+      // Diagnostic: check post-attention residual for NaN (layer 2 specifically)
+      if (layer == 2)
+      {
+          size_t badOut = 0; float minOut = 1e30f, maxOut = -1e30f, normOut = 0.0f;
+          for (size_t c = 0; c < hiddenDim; ++c) {
+              float v = output[c];
+              if (!std::isfinite(v)) badOut++;
+              if (v < minOut) minOut = v;
+              if (v > maxOut) maxOut = v;
+              normOut += v * v;
+          }
+          fprintf(stderr, "[DIAG-ATTN] layer=%zu POST_ATTN output: bad=%zu/%zu min=%g max=%g norm=%g\n",
+                  layer, badOut, hiddenDim, minOut, maxOut, sqrtf(normOut));
+          fflush(stderr);
+      }
+      if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
+      {
+          const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
+          char key[64];
+          std::snprintf(key, sizeof(key), "FFN_INP_%zu", layer);
+          B3_StageDigest(key, tokPos, output, hiddenDim);  // post-attn residual (llama ffn_inp)
+      }  // 4. FFN / SSM RMSNorm
     if (profilingEnabled_ && profiler_)
         profiler_->beginFFNNorm();
     RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
@@ -7380,18 +7459,32 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, layerTemp, hiddenDim);
     }
 
-    // 5. FFN (SwiGLU) OR SSM (Mamba) OR MoE with real weight projections
-    ResidencyCounters::BeginFFN();
-    if (profilingEnabled_ && profiler_)
-        profiler_->beginFFNGate();
-    if (lw.hasSSM)
-    {
-        // Hybrid layer: use SSM instead of FFN
-        if (layer == 86)
-            traceActivation("L86.input", layerTemp, hiddenDim);
-        computeSSM(layer, layerTemp, ffnOutput);
-        B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
-    }
+// 5. FFN (SwiGLU) OR SSM (Mamba) OR MoE with real weight projections
+      ResidencyCounters::BeginFFN();
+      if (profilingEnabled_ && profiler_)
+          profiler_->beginFFNGate();
+      if (lw.hasSSM)
+      {
+          // Hybrid layer: use SSM instead of FFN
+          // Diagnostic: check layerTemp (input to SSM) for NaN
+          {
+              size_t badIn = 0; float minIn = 1e30f, maxIn = -1e30f, normIn = 0.0f;
+              for (size_t c = 0; c < hiddenDim; ++c) {
+                  float v = layerTemp[c];
+                  if (!std::isfinite(v)) badIn++;
+                  if (v < minIn) minIn = v;
+                  if (v > maxIn) maxIn = v;
+                  normIn += v * v;
+              }
+              fprintf(stderr, "[DIAG-SSM] layer=%zu layerTemp input: bad=%zu/%zu min=%g max=%g norm=%g\n",
+                      layer, badIn, hiddenDim, minIn, maxIn, sqrtf(normIn));
+              fflush(stderr);
+          }
+          if (layer == 86)
+              traceActivation("L86.input", layerTemp, hiddenDim);
+          computeSSM(layer, layerTemp, ffnOutput);
+          B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
+      }
     else if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0)
     {
         // Per-layer MoE: use MoE FFN
@@ -10394,13 +10487,24 @@ void Deep2Engine::enableVulkan(bool enable)
 
 bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim)
 {
+    static std::atomic<unsigned> gpuTraceLines{0};
+    auto traceGpu = [&](const char* reason) {
+        const char* enabled = std::getenv("DEEP2_GPU_TRACE");
+        unsigned n = gpuTraceLines.fetch_add(1, std::memory_order_relaxed);
+        if (enabled && enabled[0] == '1' && n < 16)
+            std::fprintf(stderr, "[GPU_TRACE] reason=%s tensor=%s type=%d rows=%zu cols=%zu enabled=%d initialized=%d devices=%zu\n",
+                         reason, wt.name.c_str(), wt.type, wt.rows, wt.cols,
+                         vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0, vulkanDevices_.size());
+    };
     if (!vulkanInitialized_ || !vulkanEnabled_ || vulkanDevices_.empty())
     {
+        traceGpu("lane_unavailable");
         ++vulkanGemvFail_;
         return false;
     }
     if (!wt.data || !input || !output || wt.rows == 0 || wt.cols == 0)
     {
+        traceGpu("invalid_tensor_or_buffers");
         ++vulkanGemvFail_;
         return false;
     }
@@ -10476,6 +10580,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
             return true;
         }
         ++vulkanGemvFail_;
+        traceGpu("quant_dispatch_failed");
         QuantKernelRegistry::Instance().GetBatch21Counters().vulkanComputeFailures.fetch_add(1,
                                                                                              std::memory_order_relaxed);
         return false;
@@ -10547,6 +10652,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
         return true;
     }
     ++vulkanGemvFail_;
+    traceGpu("f32_dispatch_failed");
     QuantKernelRegistry::Instance().GetBatch21Counters().vulkanComputeFailures.fetch_add(1, std::memory_order_relaxed);
     return false;
 }
