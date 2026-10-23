@@ -1,0 +1,78 @@
+# Build artifacts
+*.obj
+*.exe
+*.dll
+*.spv
+*.comp
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.o
+
+# Build outputs
+*.out
+*.log
+*.txt
+*.jsonl
+*.asm
+*.bin
+*.dat
+*.pak
+*.dmp
+*.vpk
+*.vvd
+
+# Directories
+build/
+build-cli/
+bin/
+obj/
+__pycache__/
+*.egg-info/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+*.code-workspace
+.rawrxd/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Large binary/model files
+*.gguf
+*.bin
+*.weights
+*.safetensors
+
+# Output artifacts
+*_test.out
+*_suite.err
+*_suite.out
+agentic_*.out
+build_*.out
+certify_*.out
+mapgen_*.out
+rawrxd_*.out
+sweep_*.out
+test_*.out
+waaf_*.out
+
+# Deep2Engine specific outputs
+Deep2Engine/**/*.obj
+Deep2Engine/**/*.spv
+Deep2Engine/**/*.comp
+Deep2Engine/**/*.exe
+Deep2Engine/**/*.dll
+Deep2Engine/**/*.spv
+
+# Logs
+logs/
+debug.log
+
+# Workspace
+workspaceStorage/
+globalStorage/
