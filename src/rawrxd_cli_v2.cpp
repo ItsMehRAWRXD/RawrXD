@@ -4625,8 +4625,37 @@ static std::string ServeRequest(const std::string& method, const std::string& pa
     if (method == "GET" && path == "/api/engine/capabilities")
         return HttpJson({{"deep2", true}, {"agent", true}, {"streaming", true},
                          {"tools", true}, {"native_http", true}, {"certification", "NOT_CERTIFIED"}});
+    if (method == "GET" && path == "/api/model/profiles") {
+        json profile = {{"id", 0}, {"name", ServeModelName()}, {"tier", "native"},
+                        {"params_b", 0}, {"quant", "GGUF"}, {"ram_mb", 0},
+                        {"requires_swarm", false}, {"engine_mode", "Deep2"}};
+        return HttpJson({{"profiles", json::array({profile})}, {"bridge", "RawrXD-Deep2"},
+                         {"hardware", json::array()}, {"active", ServeModelName()}});
+    }
+    if (method == "POST" && path == "/api/model/load") {
+        try {
+            const json req = json::parse(body);
+            const std::string requested = req.value("path", req.value("name", ""));
+            if (requested.empty()) return HttpJson({{"error", "model name is required"}}, 400);
+            if (!InitBackend(BackendMode::Deep2, requested, g_requested_max_tokens))
+                return HttpJson({{"error", "Deep2 could not load model"}}, 422);
+            return HttpJson({{"loaded", true}, {"bridge", "RawrXD-Deep2"},
+                             {"name", ServeModelName()}, {"engine_mode", "Deep2"},
+                             {"full_model_certification", "NOT_CERTIFIED"}});
+        } catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
+    }
+    if (method == "POST" && path == "/api/model/unload") {
+        if (localEngine) { deep2_free(localEngine); localEngine = nullptr; }
+        g_model.clear(); g_modelProvider = nullptr; g_streamProvider = nullptr;
+        return HttpJson({{"unloaded", true}, {"bridge", "RawrXD-Deep2"}});
+    }
     if (method == "GET" && path == "/api/cli")
         return HttpJson({{"enabled", true}, {"read_only", true}, {"native", true}});
+    if (method == "GET" && (path == "/api/agents/status" || path == "/api/backends/status" ||
+                             path == "/api/governor/status" || path == "/api/lsp/status" ||
+                             path == "/api/debug/status" || path == "/api/phase"))
+        return HttpJson({{"status", "ready"}, {"native", true}, {"active", true},
+                         {"model", ServeModelName()}, {"certification", "NOT_CERTIFIED"}});
     if (method == "POST" && (path == "/v1/chat/completions" || path == "/api/chat")) {
         try { return HttpJson(ServeCompletion(json::parse(body), path == "/api/chat")); }
         catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
