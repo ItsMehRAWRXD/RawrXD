@@ -3,6 +3,7 @@
 // ============================================================================
 #include "vulkan_compute.h"
 #include "QuantKernelRegistry.hpp"
+#include "Deep2PerfProbe.hpp"   // DEEP2_STRATA_TPS_PARITY_001 — opt-in performance attribution
 
 #include <algorithm>
 #include <atomic>
@@ -11,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -50,6 +52,18 @@ uint64_t quantWeightKey(const void* p, size_t bytes, int type) {
     x ^= x >> 33; x *= 0xc4ceb9fe1a85ec53ULL;
     x ^= x >> 33;
     return x;
+}
+
+uint64_t f32WeightCacheKey(uint64_t key, uint32_t logicalCols,
+                           uint32_t physicalRowStride) {
+    if (physicalRowStride == logicalCols) return key;
+    uint64_t x = key ^ 0x4653545249444531ull;
+    x ^= static_cast<uint64_t>(logicalCols) << 32;
+    x ^= static_cast<uint64_t>(physicalRowStride);
+    x ^= x >> 30; x *= 0xbf58476d1ce4e5b9ull;
+    x ^= x >> 27; x *= 0x94d049bb133111ebull;
+    x ^= x >> 31;
+    return x ? x : 0x4653545249444531ull;
 }
 
 bool finiteVector(const std::vector<float>& v) {
@@ -558,7 +572,21 @@ bool VulkanCompute::createDescriptorSystems() {
     qi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     qi.bindingCount = 3;
     qi.pBindings = qb;
-    return vkCreateDescriptorSetLayout(device_, &qi, nullptr, &qSetLayout_) == VK_SUCCESS;
+    if (vkCreateDescriptorSetLayout(device_, &qi, nullptr, &qSetLayout_) != VK_SUCCESS)
+        return false;
+
+    VkDescriptorSetLayoutBinding gb[9]{};
+    for (uint32_t i = 0; i < 9; ++i) {
+        gb[i].binding = i;
+        gb[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        gb[i].descriptorCount = 1;
+        gb[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo gi{};
+    gi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    gi.bindingCount = 9;
+    gi.pBindings = gb;
+    return vkCreateDescriptorSetLayout(device_, &gi, nullptr, &gdnSetLayout_) == VK_SUCCESS;
 }
 
 std::string VulkanCompute::shaderPath(const char* file) const {
@@ -649,9 +677,10 @@ bool VulkanCompute::createPipelines() {
     const std::string so = shaderPath("deep2_spec_ops.spv");
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
+    const std::string gd = shaderPath("deep2_qwen4exp_gdn.spv");
 
     std::fprintf(stderr,
-        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s\n",
+        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s gd=%s\n",
         ops.empty()?"NOTFOUND":ops.c_str(),
         q.empty()?"NOTFOUND":q.c_str(),
         qb.empty()?"NOTFOUND":qb.c_str(),
@@ -661,7 +690,8 @@ bool VulkanCompute::createPipelines() {
         am.empty()?"NOTFOUND":am.c_str(),
         so.empty()?"NOTFOUND":so.c_str(),
         sa.empty()?"NOTFOUND":sa.c_str(),
-        ac.empty()?"NOTFOUND":ac.c_str());
+        ac.empty()?"NOTFOUND":ac.c_str(),
+        gd.empty()?"NOTFOUND":gd.c_str());
     std::fflush(stderr);
 
     bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false, okQn=false;
@@ -699,10 +729,15 @@ bool VulkanCompute::createPipelines() {
         (void)createPipelineFromFile(
             sa,opsSetLayout_,sizeof(SpecAttnPush),
             specAttnPipelineLayout_,specAttnPipeline_);
+    if(!gd.empty())
+        (void)createPipelineFromFile(
+            gd,gdnSetLayout_,sizeof(GdnPush),
+            gdnPipelineLayout_,gdnPipeline_);
 
     std::fprintf(stderr,
-        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u\n",
-        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u, okQn?1u:0u);
+        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u gdn=%u\n",
+        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u, okQn?1u:0u,
+        gdnPipeline_ ? 1u : 0u);
     std::fflush(stderr);
 
     return opsPipeline_ != VK_NULL_HANDLE;
@@ -1354,16 +1389,24 @@ bool VulkanCompute::endSubmitWait(
     si.pCommandBuffers = &cmd;
 
     const uint64_t submitNs = nowNs();
-    VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
-    if (submit != VK_SUCCESS) {
-        vkDestroyFence(device_, fence, nullptr);
-        return false;
+    {
+        DEEP2_PERF_SCOPE(GpuSubmit);
+        VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
+        if (submit != VK_SUCCESS) {
+            vkDestroyFence(device_, fence, nullptr);
+            return false;
+        }
+        deep2::perf::Probe::instance().queueSubmit();
     }
     const uint64_t submitReturnedNs = nowNs();
     ++queueSubmitCount_;
 
     const uint64_t waitStartedNs = nowNs();
-    VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, UINT64_MAX);
+    VkResult wait = VK_ERROR_UNKNOWN;
+    {
+        DEEP2_PERF_SCOPE(GpuWait);
+        wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, UINT64_MAX);
+    }
     const uint64_t completeNs = nowNs();
 
     GpuWorkInterval wi{};
@@ -1962,8 +2005,12 @@ bool VulkanCompute::SubmitMaterialUploadAsync(
     si.pCommandBuffers = &t.cmd;
 
     t.hostSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS)
-        return false;
+    {
+        DEEP2_PERF_SCOPE(GpuSubmit);
+        if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS)
+            return false;
+        deep2::perf::Probe::instance().queueSubmit();
+    }
 
     t.epoch = epoch;
     t.bytes = bytes;
@@ -1975,7 +2022,11 @@ bool VulkanCompute::WaitMaterialUpload(
     MaterialTicket& t, GpuWorkInterval* interval)
 {
     if (!t.submitted || !t.fence) return false;
-    VkResult wait = vkWaitForFences(device_, 1, &t.fence, VK_TRUE, UINT64_MAX);
+    VkResult wait = VK_ERROR_UNKNOWN;
+    {
+        DEEP2_PERF_SCOPE(GpuWait);
+        wait = vkWaitForFences(device_, 1, &t.fence, VK_TRUE, UINT64_MAX);
+    }
     const uint64_t done = nowNs();
 
     GpuWorkInterval wi{};
@@ -2001,7 +2052,7 @@ bool VulkanCompute::SubmitWeightPrimeAsync(
 {
     (void)cacheKey;
     if (!src || !bytes) return false;
-    if (type != 0 && type != 8 && type != 10 && type != 12 && type != 14 && type != 40)
+    if (type != 0 && type != 8 && type != 10 && type != 12 && type != 13 && type != 14 && type != 40)
         return false;
     return SubmitMaterialUploadAsync(src, bytes, epoch, ticket);
 }
@@ -2077,8 +2128,13 @@ bool VulkanCompute::EnsureForwardArena(
 
     uint32_t seqCap = std::min<uint32_t>(maxSeq, 4096);
     if (const char* e = std::getenv("DEEP2_GPU_KV_SEQ_CAP")) {
-        unsigned long v = std::strtoul(e, nullptr, 10);
-        if (v) seqCap = std::min<uint32_t>(maxSeq, static_cast<uint32_t>(v));
+        if (*e == '-') return false; // reject negative
+        char* end = nullptr;
+        errno = 0;
+        unsigned long v = std::strtoul(e, &end, 10);
+        if (errno == 0 && end != e && *end == '\0' && v > 0) {
+            seqCap = std::min<uint32_t>(maxSeq, static_cast<uint32_t>(v));
+        }
     }
 
     // kvLayers=0 preserves legacy all-layer K/V sizing. A multi-GPU
@@ -2885,7 +2941,15 @@ bool VulkanCompute::PinWeightView(const GpuWeightView& view) {
     if (!view.valid()) return false;
     DeviceBuf* b = nullptr;
     if (view.type == 0) {
-        const uint64_t key = view.key ? view.key : (uint64_t)(uintptr_t)view.data;
+        const uint32_t rowStride = view.rowStride ? view.rowStride : view.cols;
+        size_t expectedElems = 0, expectedBytes = 0;
+        if (rowStride < view.cols ||
+            mulOverflow(view.rows, rowStride, expectedElems) ||
+            mulOverflow(expectedElems, sizeof(float), expectedBytes) ||
+            view.bytes < expectedBytes)
+            return false;
+        const uint64_t baseKey = view.key ? view.key : (uint64_t)(uintptr_t)view.data;
+        const uint64_t key = f32WeightCacheKey(baseKey, view.cols, rowStride);
         if (!ensureWeightF32((const float*)view.data, key, view.bytes, b))
             return false;
     } else {
@@ -3124,15 +3188,36 @@ bool VulkanCompute::DispatchGemvDevice(
     DeviceBuf& input, DeviceBuf& output,
     uint32_t rows, uint32_t cols)
 {
-    if(!weights||!rows||!cols||rows*sizeof(float)>output.size ||
-       cols*sizeof(float)>input.size) return false;
-    size_t count=0;
-    if(mulOverflow(rows,cols,count) ||
-       count>std::numeric_limits<size_t>::max()/sizeof(float)) return false;
+    return DispatchGemvDeviceStrided(
+        weights, key, input, output, rows, cols, cols);
+}
 
-    DeviceBuf* w=nullptr;
-    if(!ensureWeightF32(weights,key,count*sizeof(float),w)) return false;
-    OpsPush p{}; p.op=OP_GEMV_F32; p.n=rows; p.p0=cols;
+bool VulkanCompute::DispatchGemvDeviceStrided(
+    const float* weights, uint64_t key,
+    DeviceBuf& input, DeviceBuf& output,
+    uint32_t rows, uint32_t logicalCols, uint32_t physicalRowStride)
+{
+    if (!weights || !rows || !logicalCols || physicalRowStride < logicalCols ||
+        static_cast<size_t>(rows) * sizeof(float) > output.size ||
+        static_cast<size_t>(logicalCols) * sizeof(float) > input.size)
+        return false;
+
+    size_t count = 0;
+    if (mulOverflow(rows, physicalRowStride, count) ||
+        count > std::numeric_limits<size_t>::max() / sizeof(float))
+        return false;
+
+    const uint64_t cacheKey = f32WeightCacheKey(
+        key, logicalCols, physicalRowStride);
+    DeviceBuf* w = nullptr;
+    if (!ensureWeightF32(
+            weights, cacheKey, count * sizeof(float), w))
+        return false;
+    OpsPush p{};
+    p.op = OP_GEMV_F32;
+    p.n = rows;
+    p.p0 = logicalCols;
+    p.p1 = physicalRowStride;
     bool ok=dispatchOps(*w,input,output,output,p,(rows+63u)/64u);
     if(ok) ++gemvSuccess_;
     return ok;
@@ -3142,7 +3227,7 @@ bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
 {
-    if(type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
+    if(type!=8 && type!=10 && type!=12 && type!=13 && type!=14 && type!=40) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;
@@ -3387,7 +3472,7 @@ bool VulkanCompute::SubmitGemvPrefetch(
     if(slot>=prefetch_.size()||!prefetch_[slot].valid) return false;
     auto& e=prefetch_[slot];
     if(packedBytes && quantType) {
-        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=14&&quantType!=40) return false;
+        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=13&&quantType!=14&&quantType!=40) return false;
         QPush p{};
         p.type=static_cast<uint32_t>(quantType);
         p.rows=rows;p.cols=cols;
@@ -3451,6 +3536,225 @@ bool VulkanCompute::UploadVector(
     return uploadToBuffer(dst, src, count*sizeof(float));
 }
 
+bool VulkanCompute::DispatchGdn(
+    const float* qkv, size_t qkvCount,
+    const float* beta, size_t betaCount,
+    const float* alpha, size_t alphaCount,
+    const float* aLog, size_t aLogCount,
+    const float* dtBias, size_t dtBiasCount,
+    const float* norm, size_t normCount,
+    const float* gate, size_t gateCount,
+    uint32_t keyHeads, uint32_t valueHeads, uint32_t headDim,
+    float epsilon, float scale, bool gateSigmoid,
+    uint64_t stateKey, std::vector<float>& output)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    output.clear();
+    if (!initialized_ || !gdnPipeline_ || !gdnSetLayout_ || !stateKey ||
+        !qkv || !beta || !alpha || !aLog || !dtBias || !norm || !gate ||
+        !keyHeads || !valueHeads || !headDim || headDim > 256u ||
+        valueHeads % keyHeads != 0u || !(epsilon > 0.0f) ||
+        !(scale > 0.0f) || !std::isfinite(epsilon) || !std::isfinite(scale))
+        return false;
+
+    const uint64_t qkvWidth =
+        (2ull * keyHeads + valueHeads) * static_cast<uint64_t>(headDim);
+    const uint64_t outputWidth =
+        static_cast<uint64_t>(valueHeads) * headDim;
+    const uint64_t stateCount = outputWidth * headDim;
+    if (qkvWidth > SIZE_MAX || outputWidth > SIZE_MAX || stateCount > SIZE_MAX ||
+        qkvCount != static_cast<size_t>(qkvWidth) ||
+        betaCount != valueHeads || alphaCount != valueHeads ||
+        aLogCount != valueHeads || dtBiasCount != valueHeads ||
+        normCount != headDim || gateCount != static_cast<size_t>(outputWidth) ||
+        stateCount > SIZE_MAX / sizeof(float))
+        return false;
+
+    // Scratch buffers are deliberately stable by role. Descriptor sets are
+    // refreshed below on every call because a model rebind may resize one of
+    // these buffers; stale buffer handles must never survive a rebind.
+    if (!EnsureScratch(180, static_cast<size_t>(qkvWidth)) ||
+        !EnsureScratch(181, valueHeads) ||
+        !EnsureScratch(182, valueHeads) ||
+        !EnsureScratch(183, valueHeads) ||
+        !EnsureScratch(184, valueHeads) ||
+        !EnsureScratch(185, headDim) ||
+        !EnsureScratch(186, static_cast<size_t>(outputWidth)) ||
+        !EnsureScratch(187, static_cast<size_t>(outputWidth)))
+        return false;
+
+    auto& qkvBuffer = Scratch(180);
+    auto& betaBuffer = Scratch(181);
+    auto& alphaBuffer = Scratch(182);
+    auto& aLogBuffer = Scratch(183);
+    auto& dtBiasBuffer = Scratch(184);
+    auto& normBuffer = Scratch(185);
+    auto& gateBuffer = Scratch(186);
+    auto& outputBuffer = Scratch(187);
+    auto stateIt = gdnStates_.find(stateKey);
+    const bool replaceState = stateIt == gdnStates_.end() ||
+        stateIt->second.keyHeads != keyHeads ||
+        stateIt->second.valueHeads != valueHeads ||
+        stateIt->second.headDim != headDim;
+    if (replaceState) {
+        if (stateIt != gdnStates_.end()) {
+            if (stateIt->second.descriptorSet)
+                vkFreeDescriptorSets(device_, descriptorPool_, 1,
+                                     &stateIt->second.descriptorSet);
+            destroyBuffer(stateIt->second.buffer);
+            gdnStates_.erase(stateIt);
+        }
+        GdnState fresh{};
+        if (!createBuffer(
+                static_cast<VkDeviceSize>(stateCount * sizeof(float)),
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                    VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                    VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, fresh.buffer))
+            return false;
+        fresh.keyHeads = keyHeads;
+        fresh.valueHeads = valueHeads;
+        fresh.headDim = headDim;
+        stateIt = gdnStates_.emplace(stateKey, std::move(fresh)).first;
+    }
+    GdnState& state = stateIt->second;
+    const bool initializeState = replaceState;
+
+    if (!state.descriptorSet) {
+        VkDescriptorSetAllocateInfo ai{};
+        ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        ai.descriptorPool = descriptorPool_;
+        ai.descriptorSetCount = 1;
+        ai.pSetLayouts = &gdnSetLayout_;
+        if (vkAllocateDescriptorSets(device_, &ai, &state.descriptorSet) != VK_SUCCESS)
+            return false;
+    }
+    DeviceBuf* buffers[9] = {
+        &qkvBuffer, &betaBuffer, &alphaBuffer, &aLogBuffer,
+        &dtBiasBuffer, &normBuffer, &gateBuffer, &state.buffer,
+        &outputBuffer};
+    VkDescriptorBufferInfo infos[9]{};
+    VkWriteDescriptorSet writes[9]{};
+    for (uint32_t i = 0; i < 9; ++i) {
+        infos[i].buffer = buffers[i]->buffer;
+        infos[i].offset = 0;
+        infos[i].range = buffers[i]->size;
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = state.descriptorSet;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 9, writes, 0, nullptr);
+
+    // Keep the entire stateful GDN turn inside one submission.  The previous
+    // implementation called uploadToBuffer seven times, then submitted the
+    // shader, then submitted a separate readback.  Each helper waited on its
+    // own fence, so one recurrent layer paid nine queue submissions before the
+    // next graph operator could consume its result.  The inputs are short-lived
+    // host activations and the state/output buffers are device-local; placing
+    // all copies, the state clear (on first use), dispatch, and readback in one
+    // command buffer preserves the dependency order while removing eight
+    // host-visible fence boundaries.
+    const size_t qkvBytes = qkvCount * sizeof(float);
+    const size_t betaBytes = betaCount * sizeof(float);
+    const size_t alphaBytes = alphaCount * sizeof(float);
+    const size_t aLogBytes = aLogCount * sizeof(float);
+    const size_t dtBiasBytes = dtBiasCount * sizeof(float);
+    const size_t normBytes = normCount * sizeof(float);
+    const size_t gateBytes = gateCount * sizeof(float);
+    const size_t outputBytes = static_cast<size_t>(outputWidth) * sizeof(float);
+    const size_t uploadBytes = qkvBytes + betaBytes + alphaBytes + aLogBytes +
+                               dtBiasBytes + normBytes + gateBytes;
+    DeviceBuf* uploadStage = nullptr;
+    void* uploadMapped = nullptr;
+    DeviceBuf* downloadStage = nullptr;
+    void* downloadMapped = nullptr;
+    if (!ensureMappedStaging(true, uploadBytes, uploadStage, uploadMapped) ||
+        !ensureMappedStaging(false, outputBytes, downloadStage, downloadMapped))
+        return false;
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if (!beginCommand(cmd, query, true)) return false;
+
+    size_t uploadOffset = 0;
+    auto copyInput = [&](const float* src, size_t bytes, DeviceBuf& dst) {
+        std::memcpy(static_cast<uint8_t*>(uploadMapped) + uploadOffset, src, bytes);
+        const bool ok = recordCopy(
+            cmd, *uploadStage, dst, bytes, uploadOffset, 0);
+        uploadOffset += bytes;
+        return ok;
+    };
+    if (!copyInput(qkv, qkvBytes, qkvBuffer) ||
+        !copyInput(beta, betaBytes, betaBuffer) ||
+        !copyInput(alpha, alphaBytes, alphaBuffer) ||
+        !copyInput(aLog, aLogBytes, aLogBuffer) ||
+        !copyInput(dtBias, dtBiasBytes, dtBiasBuffer) ||
+        !copyInput(norm, normBytes, normBuffer) ||
+        !copyInput(gate, gateBytes, gateBuffer)) {
+        vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+        if (query) vkDestroyQueryPool(device_, query, nullptr);
+        return false;
+    }
+    if (initializeState)
+        vkCmdFillBuffer(cmd, state.buffer.buffer, 0,
+                        static_cast<VkDeviceSize>(stateCount * sizeof(float)), 0);
+    recordComputeBarrier(cmd);
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gdnPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gdnPipelineLayout_,
+        0, 1, &state.descriptorSet, 0, nullptr);
+    GdnPush push{};
+    push.tokens = 1;
+    push.keyHeads = keyHeads;
+    push.valueHeads = valueHeads;
+    push.headDim = headDim;
+    push.epsilon = epsilon;
+    push.scale = scale;
+    push.gateSigmoid = gateSigmoid ? 1u : 0u;
+    vkCmdPushConstants(
+        cmd, gdnPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+        0, sizeof(push), &push);
+    vkCmdDispatch(cmd, valueHeads, 1, 1);
+    recordComputeBarrier(cmd);
+    if (!recordCopy(cmd, outputBuffer, *downloadStage, outputBytes)) {
+        vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+        if (query) vkDestroyQueryPool(device_, query, nullptr);
+        return false;
+    }
+    if (!endSubmitWait(
+            cmd, query, GpuWorkKind::ModelCompute, 0, workEpoch_, nullptr))
+        return false;
+    increment_dispatch_count();
+    output.resize(static_cast<size_t>(outputWidth));
+    std::memcpy(output.data(), downloadMapped, outputBytes);
+    return true;
+}
+
+void VulkanCompute::ResetGdnState(uint64_t stateKey) {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    auto it = gdnStates_.find(stateKey);
+    if (it == gdnStates_.end()) return;
+    if (it->second.descriptorSet)
+        vkFreeDescriptorSets(device_, descriptorPool_, 1,
+                             &it->second.descriptorSet);
+    destroyBuffer(it->second.buffer);
+    gdnStates_.erase(it);
+}
+
+void VulkanCompute::ResetAllGdnStates() {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    for (auto& entry : gdnStates_) {
+        if (entry.second.descriptorSet)
+            vkFreeDescriptorSets(device_, descriptorPool_, 1,
+                                 &entry.second.descriptorSet);
+        destroyBuffer(entry.second.buffer);
+    }
+    gdnStates_.clear();
+}
+
 bool VulkanCompute::DownloadVector(
     const DeviceBuf& src, float* dst, size_t count)
 {
@@ -3502,13 +3806,20 @@ bool VulkanCompute::DispatchWeight(
     }
 
     if (weight.type == 0) {
+        const uint32_t rowStride = weight.rowStride ? weight.rowStride : weight.cols;
+        size_t expectedElems = 0, expectedBytes = 0;
+        if (rowStride < weight.cols ||
+            mulOverflow(weight.rows, rowStride, expectedElems) ||
+            mulOverflow(expectedElems, sizeof(float), expectedBytes) ||
+            weight.bytes < expectedBytes)
+            return false;
         const uint64_t key = weight.key
             ? weight.key
             : static_cast<uint64_t>(
                 reinterpret_cast<uintptr_t>(weight.data));
-        return DispatchGemvDevice(
+        return DispatchGemvDeviceStrided(
             static_cast<const float*>(weight.data),key,
-            input,output,weight.rows,weight.cols);
+            input,output,weight.rows,weight.cols,rowStride);
     }
 
     bool ok = DispatchGemvQuant(
@@ -3935,9 +4246,17 @@ bool VulkanCompute::DispatchWeightResident(
         return false;
 
     if (weight.type == 0) {
+        const uint32_t rowStride = weight.rowStride ? weight.rowStride : weight.cols;
+        size_t expectedElems = 0, expectedBytes = 0;
+        if (rowStride < weight.cols ||
+            mulOverflow(weight.rows, rowStride, expectedElems) ||
+            mulOverflow(expectedElems, sizeof(float), expectedBytes) ||
+            weight.bytes < expectedBytes ||
+            residentWeight.size < expectedBytes)
+            return false;
         return DispatchGemvF32Resident(
             residentWeight, input, output,
-            weight.rows, weight.cols);
+            weight.rows, weight.cols, rowStride);
     }
 
     if (weight.bytes > std::numeric_limits<uint32_t>::max())
@@ -3957,19 +4276,24 @@ bool VulkanCompute::DispatchWeightResident(
 
 bool VulkanCompute::DispatchGemvF32Resident(
     DeviceBuf& residentWeight, DeviceBuf& input, DeviceBuf& output,
-    uint32_t rows, uint32_t cols)
+    uint32_t rows, uint32_t cols, uint32_t physicalRowStride)
 {
     // Admission-free F32 mirror of the quant resident dispatch.
     ResidentDispatchGuard guard(this);
-    if (!residentWeight || !rows || !cols)
-        return false;
-    if (static_cast<size_t>(rows)*static_cast<size_t>(cols)*sizeof(float) >
-        static_cast<size_t>(residentWeight.size))
+    if (!physicalRowStride) physicalRowStride = cols;
+    size_t weightElems = 0, weightBytes = 0;
+    if (!residentWeight || !rows || !cols || physicalRowStride < cols ||
+        static_cast<size_t>(cols) * sizeof(float) > input.size ||
+        static_cast<size_t>(rows) * sizeof(float) > output.size ||
+        mulOverflow(rows, physicalRowStride, weightElems) ||
+        mulOverflow(weightElems, sizeof(float), weightBytes) ||
+        weightBytes > residentWeight.size)
         return false;
     OpsPush p{};
     p.op = OP_GEMV_F32;
     p.n = rows;
     p.p0 = cols;
+    p.p1 = physicalRowStride;
     const bool ok = dispatchOps(
         residentWeight, input, output, output, p, (rows+63u)/64u);
     if (ok) ++gemvSuccess_;
@@ -6069,6 +6393,13 @@ void VulkanCompute::cleanup() {
 
     for (auto& b : scratch_) destroyBuffer(b);
     scratch_.clear();
+    for (auto& entry : gdnStates_) {
+        if (descriptorPool_ && entry.second.descriptorSet)
+            vkFreeDescriptorSets(device_, descriptorPool_, 1,
+                                 &entry.second.descriptorSet);
+        destroyBuffer(entry.second.buffer);
+    }
+    gdnStates_.clear();
     destroyBuffer(mlaKCache_);
     destroyBuffer(mlaVCache_);
     mlaCacheHeads_=mlaCacheKeyLen_=mlaCacheValueLen_=0;
@@ -6096,6 +6427,8 @@ void VulkanCompute::cleanup() {
         vkDestroyPipeline(device_,specAttnPipeline_,nullptr);
     if(device_ && specAcceptPipeline_)
         vkDestroyPipeline(device_,specAcceptPipeline_,nullptr);
+    if(device_ && gdnPipeline_)
+        vkDestroyPipeline(device_,gdnPipeline_,nullptr);
     if(device_ && opsPipelineLayout_) vkDestroyPipelineLayout(device_,opsPipelineLayout_,nullptr);
     if(device_ && qPipelineLayout_) vkDestroyPipelineLayout(device_,qPipelineLayout_,nullptr);
     if(device_ && qBatchPipelineLayout_)
@@ -6115,9 +6448,12 @@ void VulkanCompute::cleanup() {
         vkDestroyPipelineLayout(device_,specAttnPipelineLayout_,nullptr);
     if(device_ && specAcceptPipelineLayout_)
         vkDestroyPipelineLayout(device_,specAcceptPipelineLayout_,nullptr);
+    if(device_ && gdnPipelineLayout_)
+        vkDestroyPipelineLayout(device_,gdnPipelineLayout_,nullptr);
 
     if(device_ && opsSetLayout_) vkDestroyDescriptorSetLayout(device_,opsSetLayout_,nullptr);
     if(device_ && qSetLayout_) vkDestroyDescriptorSetLayout(device_,qSetLayout_,nullptr);
+    if(device_ && gdnSetLayout_) vkDestroyDescriptorSetLayout(device_,gdnSetLayout_,nullptr);
     if(device_ && descriptorPool_) vkDestroyDescriptorPool(device_,descriptorPool_,nullptr);
     if(device_ && commandPool_) vkDestroyCommandPool(device_,commandPool_,nullptr);
     if(device_) vkDestroyDevice(device_,nullptr);
@@ -6125,9 +6461,9 @@ void VulkanCompute::cleanup() {
 
     instance_=VK_NULL_HANDLE;physical_=VK_NULL_HANDLE;device_=VK_NULL_HANDLE;
     queue_=VK_NULL_HANDLE;commandPool_=VK_NULL_HANDLE;descriptorPool_=VK_NULL_HANDLE;
-    opsSetLayout_=qSetLayout_=VK_NULL_HANDLE;
-    opsPipelineLayout_=qPipelineLayout_=VK_NULL_HANDLE;
-    opsPipeline_=qPipeline_=qBatchPipeline_=VK_NULL_HANDLE;
+    opsSetLayout_=qSetLayout_=gdnSetLayout_=VK_NULL_HANDLE;
+    opsPipelineLayout_=qPipelineLayout_=gdnPipelineLayout_=VK_NULL_HANDLE;
+    opsPipeline_=qPipeline_=qBatchPipeline_=gdnPipeline_=VK_NULL_HANDLE;
     qBatchPipelineLayout_=VK_NULL_HANDLE;
 
     fpGetCalibrated_=nullptr;
@@ -6954,3 +7290,10 @@ VulkanCompute& GetDeep2VulkanCompute() {
 }
 
 } // namespace Deep2
+
+// Compatibility wrapper for Deep2 executor translation units that historically
+// consumed the accessor as a process-global symbol. Keep one owning singleton
+// in namespace Deep2 while exporting the legacy spelling explicitly.
+Deep2::VulkanCompute& GetDeep2VulkanCompute() {
+    return Deep2::GetDeep2VulkanCompute();
+}

@@ -72,6 +72,7 @@
 #endif
 #include "deep2_flight_recorder.hpp"
 #include "gguf_loader.h"
+#include "Deep2PerfProbe.hpp"   // DEEP2_STRATA_TPS_PARITY_001 — opt-in performance attribution
 
 #ifdef RAWRXD_DEEP2_CERT
 #include "Deep2CertBridge.hpp"
@@ -358,6 +359,9 @@ extern "C" void Sovereign_ExecuteMoEKernel(const void* weight_ptr, const void* a
     const float* weights = static_cast<const float*>(weight_ptr);
     const float* input = static_cast<const float*>(activation_ptr);
     float* output = static_cast<float*>(output_ptr);
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: MoE instrumentation ──
+    DEEP2_PERF_SCOPE_BYTES(Moe, hidden_dim * hidden_dim * sizeof(float));
 
     // Full matrix-vector multiplication for MoE expert
     // weights is [output_dim, hidden_dim], input is [hidden_dim]
@@ -665,6 +669,9 @@ static void dequantizeQ6KBlock(const block_q6_K* block, float* out)
 // ============================================================================
 static void fp32GEMV(const float* weights, const float* input, float* output, size_t rows, size_t cols)
 {
+    // ── DEEP2_STRATA_TPS_PARITY_001: QuantGemv instrumentation ──
+    DEEP2_PERF_SCOPE_BYTES(QuantGemv, rows * cols * sizeof(float));
+
     for (size_t r = 0; r < rows; ++r)
     {
         const float* row = weights + r * cols;
@@ -712,6 +719,9 @@ static void q4kGEMV(const void* weights, const float* input, float* output, size
 {
     size_t numBlocks = (cols + 255) / 256;
     constexpr size_t kBlockSize = sizeof(Q4_K_Block);  // 144 bytes
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: QuantGemv instrumentation ──
+    DEEP2_PERF_SCOPE_BYTES(QuantGemv, rows * cols * sizeof(float));
 
     ++g_q4kCalls;
     g_q4kBlocks += rows * numBlocks;
@@ -867,6 +877,9 @@ static void q5kGEMV(const void* weights, const float* input, float* output, size
 {
     size_t numBlocks = (cols + 255) / 256;
     constexpr size_t kBlockSize = sizeof(block_q5_K);  // 176 bytes
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: QuantGemv instrumentation ──
+    DEEP2_PERF_SCOPE_BYTES(QuantGemv, rows * cols * sizeof(float));
 
     ++g_q5kCalls;
     g_q5kBlocks += rows * numBlocks;
@@ -1107,6 +1120,9 @@ static void q2kGEMV(const void* weights, const float* input, float* output, size
     size_t numBlocks = (cols + 255) / 256;
     constexpr size_t kBlockSize = sizeof(block_q2_K);  // 84 bytes
 
+    // ── DEEP2_STRATA_TPS_PARITY_001: QuantGemv instrumentation ──
+    DEEP2_PERF_SCOPE_BYTES(QuantGemv, rows * cols * sizeof(float));
+
     alignas(32) float dequantBuf[256];
 
     for (size_t r = 0; r < rows; ++r)
@@ -1194,6 +1210,9 @@ static void q3kGEMV(const void* weights, const float* input, float* output, size
 {
     size_t numBlocks = (cols + 255) / 256;
     constexpr size_t kBlockSize = sizeof(block_q3_K);  // 110 bytes
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: QuantGemv instrumentation ──
+    DEEP2_PERF_SCOPE_BYTES(QuantGemv, rows * cols * sizeof(float));
 
     alignas(32) float dequantBuf[256];
 
@@ -1553,6 +1572,9 @@ Deep2Engine::~Deep2Engine()
     // Crash after "[TEST] Returning 0" / generation SUCCESS localizes here.
     std::fprintf(stderr, "[LIFE] ~Deep2Engine BEGIN\n");
     std::fflush(stderr);
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: Dump performance attribution ──
+    deep2::perf::Probe::instance().report(stderr);
 
     std::fprintf(stderr, "[LIFE] unloadModel\n");
     std::fflush(stderr);
@@ -5141,6 +5163,27 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
+    // Fail at the producer boundary instead of allowing a non-finite hidden
+    // state to be misreported as a quantized-weight failure.
+    size_t badInput = 0;
+    size_t firstBadInput = cols;
+    for (size_t i = 0; i < cols; ++i)
+    {
+        if (!std::isfinite(input[i]))
+        {
+            if (firstBadInput == cols)
+                firstBadInput = i;
+            ++badInput;
+        }
+    }
+    if (badInput > 0)
+    {
+        throw std::runtime_error(
+            "LinearW: nonfinite input: name=" + wt.name +
+            " bad=" + std::to_string(badInput) + "/" + std::to_string(cols) +
+            " firstBadIdx=" + std::to_string(firstBadInput));
+    }
+
     // Planned CPU slot: intentional CPU GEMV (not fallback).
     bool plannedCpu = false;
     if (multiGpuLayerPlan_.active)
@@ -6618,6 +6661,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             fflush(stdout);
         }
         int nextToken = sampleToken(logits);
+    // ── DEEP2_STRATA_TPS_PARITY_001: Sample instrumentation ──
+    DEEP2_PERF_SCOPE(Sample);
+    deep2::perf::Probe::instance().token();
         std::printf("[DBG] sampled token=%d eosId=%d\n", nextToken, tokenizer ? tokenizer->GetSpecialTokens().eosId : -1);
         std::fflush(stdout);
         if (B3_LogitsTraceEnabled())
@@ -6748,6 +6794,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
     printf("[Deep2Engine] PREFILL: %zu tok in %.2f ms (%.2f tok/s) | DECODE: %zu tok in %.2f ms (%.2f tok/s)\n",
            promptLen, prefillMs, prefillMs > 0 ? promptLen / (prefillMs / 1000.0) : 0.0, tokensGenerated, decodeMs,
            decodeMs > 0 && tokensGenerated > 0 ? tokensGenerated / (decodeMs / 1000.0) : 0.0);
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: Per-generation performance attribution report ──
+    deep2::perf::Probe::instance().report(stderr);
+    deep2::perf::Probe::instance().reset();
     // #region agent log
     {
         const auto& lc = LivePath_Counters();
@@ -7214,6 +7264,24 @@ std::string Deep2Engine::generateChat(const std::string& userMessage, const std:
 // ============================================================================
 // Forward Layer - Real transformer layer with weight projections
 // ============================================================================
+
+// Forward declarations for DEEP2_MOE_FIRST_NAN_001 bounded probe helpers
+// (defined before computeMoEFFN in this translation unit).
+static bool MoEFirstNanProbe(
+    const char* stage,
+    size_t layer,
+    int expertId,
+    float routingWeight,
+    const float* data,
+    size_t count);
+static bool MoEP5ScalarParity(
+    size_t layer,
+    int expertId,
+    float weight,
+    const float* outputKernel,
+    const float* expertOut,
+    size_t hiddenDim);
+
 void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen)
 {
     // Flight recorder scope for this layer
@@ -7234,7 +7302,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
         return;
     }
-
     const uint64_t liveSeq = kvCache ? static_cast<uint64_t>(kvCache->currentLength()) : static_cast<uint64_t>(seqLen);
     auto layerT0 = std::chrono::high_resolution_clock::now();
     if (LivePath_Active())
@@ -7242,8 +7309,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
-    fprintf(stderr, "[DBG-FWD] enter layer=%zu seqLen=%zu liveSeq=%zu\n", layer, seqLen, liveSeq);
-    fflush(stderr);
+
+    // ── DEEP2_STRATA_TPS_PARITY_001: Total layer time (includes all nested stage scopes) ──
+    DEEP2_PERF_SCOPE(LayerTotal);
 
     // MARS: Place layer weights on GPU before compute
     // Skip aggregate lease when placeAllModelTensorsMARS already inventoried weights.
@@ -7251,6 +7319,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (marsEnabled_ && marsController_ && !marsWeightsPlaced_ && !vulkanEnabled_ && vulkanDeviceCount() > 0)
     {
         uint64_t layerId = 1000ULL + layer;
+
         size_t layerBytes = lw.wq.sizeBytes + lw.wk.sizeBytes + lw.wv.sizeBytes + lw.wo.sizeBytes + lw.wGate.sizeBytes +
                             lw.wUp.sizeBytes + lw.wDown.sizeBytes;
         if (layerBytes > 0)
@@ -7265,7 +7334,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
 
-    // ── Residency: LinearW() handles ElasticResidencyManager acquisition ─
+    // ── DEEP2_STRATA_TPS_PARITY_001: CPU prepare (CPU-only setup before attention/GEMV compute) ──
+    {
+        DEEP2_PERF_SCOPE(CpuPrepare);
+
+        // ── Residency: LinearW() handles ElasticResidencyManager acquisition ─
     // The legacy residencyManager_->AcquireLease() path has been removed.
     // All weight tensor residency is now managed inside LinearW() via
     // elasticResidency_->AcquireTensor() / ReleaseTensor().
@@ -7285,9 +7358,10 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // 1. Attention RMSNorm
     if (profilingEnabled_ && profiler_)
         profiler_->beginAttnNorm();
-    RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_)
         profiler_->endAttnNorm();
+
     if (!HeapValidate(GetProcessHeap(), 0, NULL))
     {
         fprintf(stderr,
@@ -7295,8 +7369,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         fflush(stderr);
         throw std::runtime_error("heap corrupt after RMSNorm");
     }
-    fprintf(stderr, "[DBG-FWD] layer=%zu rmsnorm ok\n", layer);
-    fflush(stderr);
     B3_TraceState("ATTN_NORM", layer, layerTemp, hiddenDim);
     if (layer == 0)
     {
@@ -7317,15 +7389,18 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             printf("[STAGE_DIGEST] NORM_EPS=%.9e attnNorm.type=%d\n", (double)modelWeights.normEps, lw.attnNorm.type);
         }
     }
+    } // close DEEP2_STRATA_TPS_PARITY_001 CpuPrepare block
 
     // 2. Attention with real Q/K/V/O projections (skip for SSM/Mamba layers)
     ResidencyCounters::BeginAttention();
     if (profilingEnabled_ && profiler_)
         profiler_->beginQKVProj();
-    if (!lw.hasSSM && lw.wq.data)
-    {
-        computeAttention(layer, layerTemp, output, seqLen);
-        if (!HeapValidate(GetProcessHeap(), 0, NULL))
+if (!lw.hasSSM && lw.wq.data)
+      {
+    // ── DEEP2_STRATA_TPS_PARITY_001: Attention instrumentation ──
+    DEEP2_PERF_SCOPE(Attention);
+          computeAttention(layer, layerTemp, output, seqLen);
+          if (!HeapValidate(GetProcessHeap(), 0, NULL))
         {
             fprintf(stderr,
                     "[HEAP_CORRUPT] layer=%zu heap corrupt after computeAttention\n", layer);
@@ -7333,16 +7408,15 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             throw std::runtime_error("heap corrupt after computeAttention");
         }
     }
-    else
-    {
-        // SSM/Mamba layer or MoE-only layer without attention: pass attention norm output through as-is
-        memcpy(output, layerTemp, hiddenDim * sizeof(float));
-    }
-    if (profilingEnabled_ && profiler_)
-        profiler_->endAttnOutProj();
+else
+      {
+          // SSM/Mamba layer or MoE-only layer without attention: pass attention norm output through as-is
+          memcpy(output, layerTemp, hiddenDim * sizeof(float));
+      }
+      if (profilingEnabled_ && profiler_)
+          profiler_->endAttnOutProj();
     ResidencyCounters::EndAttention();
-    fprintf(stderr, "[DBG-FWD] layer=%zu attention ok\n", layer);
-    fflush(stderr);
+
 
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
@@ -7355,27 +7429,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 // 3. Residual connection — AVX2 vectorized
       if (profilingEnabled_ && profiler_)
           profiler_->beginAttnResidual();
-      // Diagnostic: Layer 2 residual add isolation
-      if (layer == 2)
-      {
-          size_t nanAttn = 0, infAttn = 0, nanRes = 0, infRes = 0, firstBadAttn = hiddenDim, firstBadRes = hiddenDim;
-          for (size_t i = 0; i < hiddenDim; ++i) {
-              if (std::isnan(output[i])) { ++nanAttn; if (firstBadAttn == hiddenDim) firstBadAttn = i; }
-              else if (std::isinf(output[i])) { ++infAttn; if (firstBadAttn == hiddenDim) firstBadAttn = i; }
-              if (std::isnan(input[i])) { ++nanRes; if (firstBadRes == hiddenDim) firstBadRes = i; }
-              else if (std::isinf(input[i])) { ++infRes; if (firstBadRes == hiddenDim) firstBadRes = i; }
-          }
-          fprintf(stderr,
-                  "[L2-RESIDUAL] ATTN_PRE_ADD nan=%zu inf=%zu firstBad=%zu\n"
-                  "[L2-RESIDUAL] RESIDUAL_PRE_ADD nan=%zu inf=%zu firstBad=%zu\n"
-                  "[L2-RESIDUAL] output=%p input=%p overlap=%d\n",
-                  nanAttn, infAttn, firstBadAttn,
-                  nanRes, infRes, firstBadRes,
-                  static_cast<const void*>(output),
-                  static_cast<const void*>(input),
-                  (output <= input + hiddenDim && output + hiddenDim >= input) ? 1 : 0);
-          fflush(stderr);
-      }
 #if defined(__AVX2__) || defined(_MSC_VER)
       if (hiddenDim >= 8)
       {
@@ -7399,16 +7452,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
               output[i] += input[i];
           }
       }
-      if (layer == 2)
-      {
-          size_t nanPost = 0, infPost = 0, firstBadPost = hiddenDim;
-          for (size_t i = 0; i < hiddenDim; ++i) {
-              if (std::isnan(output[i])) { ++nanPost; if (firstBadPost == hiddenDim) firstBadPost = i; }
-              else if (std::isinf(output[i])) { ++infPost; if (firstBadPost == hiddenDim) firstBadPost = i; }
-          }
-          fprintf(stderr, "[L2-RESIDUAL] POST_ADD nan=%zu inf=%zu firstBad=%zu\n", nanPost, infPost, firstBadPost);
-          fflush(stderr);
-      }
     if (profilingEnabled_ && profiler_)
         profiler_->endAttnResidual();
     if (layer == 0)
@@ -7423,21 +7466,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
           B3_TraceState(phase, layer, output, hiddenDim);
       }
   #endif
-      // Diagnostic: check post-attention residual for NaN (layer 2 specifically)
-      if (layer == 2)
-      {
-          size_t badOut = 0; float minOut = 1e30f, maxOut = -1e30f, normOut = 0.0f;
-          for (size_t c = 0; c < hiddenDim; ++c) {
-              float v = output[c];
-              if (!std::isfinite(v)) badOut++;
-              if (v < minOut) minOut = v;
-              if (v > maxOut) maxOut = v;
-              normOut += v * v;
-          }
-          fprintf(stderr, "[DIAG-ATTN] layer=%zu POST_ATTN output: bad=%zu/%zu min=%g max=%g norm=%g\n",
-                  layer, badOut, hiddenDim, minOut, maxOut, sqrtf(normOut));
-          fflush(stderr);
-      }
       if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
       {
           const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -7466,28 +7494,22 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
       if (lw.hasSSM)
       {
           // Hybrid layer: use SSM instead of FFN
-          // Diagnostic: check layerTemp (input to SSM) for NaN
-          {
-              size_t badIn = 0; float minIn = 1e30f, maxIn = -1e30f, normIn = 0.0f;
-              for (size_t c = 0; c < hiddenDim; ++c) {
-                  float v = layerTemp[c];
-                  if (!std::isfinite(v)) badIn++;
-                  if (v < minIn) minIn = v;
-                  if (v > maxIn) maxIn = v;
-                  normIn += v * v;
-              }
-              fprintf(stderr, "[DIAG-SSM] layer=%zu layerTemp input: bad=%zu/%zu min=%g max=%g norm=%g\n",
-                      layer, badIn, hiddenDim, minIn, maxIn, sqrtf(normIn));
-              fflush(stderr);
-          }
           if (layer == 86)
               traceActivation("L86.input", layerTemp, hiddenDim);
-          computeSSM(layer, layerTemp, ffnOutput);
-          B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
+ computeSSM(layer, layerTemp, ffnOutput);
+             B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
       }
     else if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0)
     {
         // Per-layer MoE: use MoE FFN
+        // P1: MoE input activation — whether corruption predates MoE
+        if (layer == 1 && !MoEFirstNanProbe("MOE_INPUT", layer, -1, 0.0f,
+                                             layerTemp, hiddenDim))
+        {
+            fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at P1 MOE_INPUT\n");
+            fflush(stderr);
+            throw std::runtime_error("MoE input non-finite");
+        }
         try
         {
             computeMoEFFN(layer, layerTemp, ffnOutput);
@@ -7499,6 +7521,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
                     layer, ex.what());
             fflush(stderr);
             throw;
+        }
+        // P6: MoE output — whether corruption occurs within MoE (after weighted accumulation)
+        if (layer == 1 && !MoEFirstNanProbe("MOE_OUTPUT", layer, -1, 0.0f,
+                                             ffnOutput, hiddenDim))
+        {
+            fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at P6 MOE_OUTPUT\n");
+            fflush(stderr);
+            throw std::runtime_error("MoE output non-finite");
         }
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
@@ -7528,8 +7558,6 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         fflush(stderr);
         throw std::runtime_error("heap corrupt after FFN");
     }
-    fprintf(stderr, "[DBG-FWD] layer=%zu ffn ok\n", layer);
-    fflush(stderr);
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
         const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -7564,6 +7592,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             output[i] += ffnOutput[i];
         }
     }
+    // P6: FFN residual addition — whether corruption occurs after MoE
+    if (layer == 1 && !MoEFirstNanProbe("FFN_RESIDUAL_ADD", layer, -1, 0.0f,
+                                         output, hiddenDim))
+    {
+        fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at P6 FFN_RESIDUAL_ADD\n");
+        fflush(stderr);
+        throw std::runtime_error("FFN residual add output non-finite");
+    }
     if (profilingEnabled_ && profiler_)
         profiler_->endFFNResidual();
 #if 1
@@ -7588,6 +7624,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // ── Telemetry: Record residency wait time ──────────────────────
     if (telemetryControllerEnabled_ && telemetryController_)
     {
+        auto residency_wait_start = std::chrono::high_resolution_clock::now();
         auto residency_wait_end = std::chrono::high_resolution_clock::now();
         auto residency_wait_ns =
             std::chrono::duration_cast<std::chrono::nanoseconds>(residency_wait_end - residency_wait_start).count();
@@ -7617,12 +7654,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr, static_cast<uint32_t>(layer), liveSeq, latUs);
     }
 
-    if (flight_recorder_ && layer_scope_id != 0)
-    {
-        flight_recorder_->end(layer_scope_id);
-    }
-    fprintf(stderr, "[DBG-FWD] layer=%zu exit\n", layer);
-    fflush(stderr);
+if (flight_recorder_ && layer_scope_id != 0)
+      {
+          flight_recorder_->end(layer_scope_id);
+      }
+    // Real layer execution mark: this forwardLayer completed on its planned device.
+    if (multiGpuLayerPlan_.active)
+        Deep2MultiGpu_MarkLayerExecuted(multiGpuLayerPlan_, (unsigned)layer);
 }
 
 // ============================================================================
@@ -8506,12 +8544,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         float* tempOut = ffnOutput;
         if (profilingEnabled_ && profiler_)
             profiler_->beginAttnOutProj();
-        LinearW(*attnOutWeight, output, nullptr, tempOut, hiddenDim);
-        if (profilingEnabled_ && profiler_)
-            profiler_->endAttnOutProj();
-        std::memcpy(output, tempOut, hiddenDim * sizeof(float));
-    }
-    B3_TraceState("ATTN_O", layer, output, hiddenDim);
+LinearW(*attnOutWeight, output, nullptr, tempOut, hiddenDim);
+          if (profilingEnabled_ && profiler_)
+              profiler_->endAttnOutProj();
+          std::memcpy(output, tempOut, hiddenDim * sizeof(float));
+      }
+      B3_TraceState("ATTN_O", layer, output, hiddenDim);
     if (layer == 0)
     {
         const std::uint32_t pos = static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
@@ -8978,6 +9016,77 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 // Router-driven prefetch: after routing layer N, prefetch layer N+1 experts.
 // NO dense fallback. NO stubs.
 // ============================================================================
+
+// Bounded, fail-fast numerical probe for DEEP2_MOE_FIRST_NAN_001.
+// Checks a single tensor boundary for non-finite values and reports the
+// first bad index, value, stage, expert ID, and routing weight.
+// Returns false (and prints) on the first non-finite element; callers must
+// stop immediately — do not sanitize, skip, or continue into layer 2.
+static bool MoEFirstNanProbe(
+    const char* stage,
+    size_t layer,
+    int expertId,
+    float routingWeight,
+    const float* data,
+    size_t count)
+{
+    if (!data) {
+        fprintf(stderr,
+            "[DEEP2_MOE_FIRST_NAN_001] layer=%zu stage=%s expert=%d "
+            "null_input count=%zu\n",
+            layer, stage, expertId, count);
+        fflush(stderr);
+        return false;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        if (!std::isfinite(data[i])) {
+            fprintf(stderr,
+                "[DEEP2_MOE_FIRST_NAN_001] layer=%zu stage=%s expert=%d "
+                "weight=%g index=%zu value=%g dims=%zu\n",
+                layer, stage, expertId, (double)routingWeight, i,
+                (double)data[i], count);
+            fflush(stderr);
+            return false;
+        }
+    }
+    return true;
+}
+
+// Scalar FP32 reference for the weighted expert accumulation stage (P5).
+// Computes output[i] += weight * expertOut[i] using plain scalar FP32.
+// Returns true if kernel and scalar results match within tolerance.
+static bool MoEP5ScalarParity(
+    size_t layer,
+    int expertId,
+    float weight,
+    const float* outputKernel,
+    const float* expertOut,
+    size_t hiddenDim)
+{
+    const float tol = 1e-4f;
+    for (size_t i = 0; i < hiddenDim; ++i) {
+        float ref = outputKernel[i] + weight * expertOut[i];
+        if (!std::isfinite(ref)) {
+            fprintf(stderr,
+                "[DEEP2_MOE_FIRST_NAN_001] P5 scalar reference non-finite "
+                "layer=%zu expert=%d index=%zu weight=%g\n",
+                layer, expertId, i, (double)weight);
+            fflush(stderr);
+            return false;
+        }
+        if (std::fabs(ref - outputKernel[i]) > tol * std::fmaxf(1.0f, std::fabs(ref))) {
+            fprintf(stderr,
+                "[DEEP2_MOE_FIRST_NAN_001] P5 parity mismatch "
+                "layer=%zu expert=%d index=%zu kernel=%g scalar=%g weight=%g\n",
+                layer, expertId, i,
+                (double)outputKernel[i], (double)ref, (double)weight);
+            fflush(stderr);
+            return false;
+        }
+    }
+    return true;
+}
+
 void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 {
     if (layer >= modelWeights.layers.size())
@@ -9006,6 +9115,42 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
     // 1. Route the token through the per-layer router
     TokenRoute route = moeRouters_[layer]->Route(input);
+
+    // P2: Router logits — whether router computation introduces NaNs
+    if (layer == 1 && !MoEFirstNanProbe("ROUTER_LOGITS", layer, -1, 0.0f,
+                                         route.routerLogits.data(),
+                                         route.routerLogits.size()))
+    {
+        fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at P2 ROUTER_LOGITS\n");
+        fflush(stderr);
+        throw std::runtime_error("router logits non-finite");
+    }
+
+    // P3: Top-6 expert IDs and routing weights — validate expert selection
+    if (layer == 1)
+    {
+        for (const auto& er : route.topExperts)
+        {
+            if (er.expertId < 0 || er.expertId >= (int)moeConfig_.numExperts)
+            {
+                fprintf(stderr,
+                    "[DEEP2_MOE_FIRST_NAN_001] layer=%zu stage=EXPERT_ID "
+                    "expert=%d OUT_OF_RANGE numExperts=%zu\n",
+                    layer, er.expertId, moeConfig_.numExperts);
+                fflush(stderr);
+                throw std::runtime_error("expert ID out of range");
+            }
+            if (!std::isfinite(er.weight))
+            {
+                fprintf(stderr,
+                    "[DEEP2_MOE_FIRST_NAN_001] layer=%zu stage=ROUTING_WEIGHTS "
+                    "expert=%d index=0 weight=%g\n",
+                    layer, er.expertId, (double)er.weight);
+                fflush(stderr);
+                throw std::runtime_error("routing weight non-finite");
+            }
+        }
+    }
 
     // 2. Check pending prefetches from layer N-1 (previous layer's async jobs)
     //    If fence signaled → expert is HOT, record telemetry
@@ -9106,7 +9251,24 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         auto tCompute0 = std::chrono::high_resolution_clock::now();
 
         // Execute expert FFN: gate/up SwiGLU -> down projection
-        computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim);
+        // E0: Expert input — verify input to expert computation is finite
+        if (layer == 1 && !MoEFirstNanProbe("EXPERT_INPUT", layer, expertId, weight,
+                                             input, hiddenDim))
+        {
+            fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E0 EXPERT_INPUT\n");
+            fflush(stderr);
+            throw std::runtime_error("expert input non-finite");
+        }
+        computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim, layer, expertId);
+
+        // P4: Each selected expert output — which expert first produces non-finite values
+        if (layer == 1 && !MoEFirstNanProbe("EXPERT_OUTPUT", layer, expertId, weight,
+                                             expertOut, hiddenDim))
+        {
+            fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at P4 EXPERT_OUTPUT\n");
+            fflush(stderr);
+            throw std::runtime_error("expert output non-finite");
+        }
 
         auto tCompute1 = std::chrono::high_resolution_clock::now();
         uint64_t computeUs = std::chrono::duration_cast<std::chrono::microseconds>(tCompute1 - tCompute0).count();
@@ -9114,6 +9276,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         if (telemetryEnabled_ && residencyTelemetry_)
         {
             residencyTelemetry_->RecordComputeTime((int)layer, expertId, computeUs);
+        }
+
+        // Capture pre-accumulation state for P5 scalar parity reference (layer 1 only)
+        static thread_local std::vector<float> preAccum;
+        if (layer == 1)
+        {
+            preAccum.resize(hiddenDim);
+            memcpy(preAccum.data(), output, hiddenDim * sizeof(float));
         }
 
 // Weighted accumulation into output — AVX2 vectorized
@@ -9141,6 +9311,41 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                 output[i] += weight * expertOut[i];
             }
         }
+
+        // P5: Weighted expert accumulation — whether aggregation introduces corruption
+        if (layer == 1)
+        {
+            if (!MoEFirstNanProbe("EXPERT_ACCUMULATION", layer, expertId, weight,
+                                   output, hiddenDim))
+            {
+                fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at P5 EXPERT_ACCUMULATION\n");
+                fflush(stderr);
+                throw std::runtime_error("expert accumulation non-finite");
+            }
+            // Scalar FP32 reference: output[i] should equal preAccum[i] +
+            // weight * expertOut[i]. preAccum was captured before this expert's
+            // accumulation at the top of the loop iteration.
+            bool parityOk = true;
+            for (size_t i = 0; i < hiddenDim; ++i)
+            {
+                float ref = preAccum[i] + weight * expertOut[i];
+                if (!std::isfinite(ref) ||
+                    std::fabs(ref - output[i]) > 1e-4f * std::fmaxf(1.0f, std::fabs(ref)))
+                {
+                    parityOk = false;
+                    break;
+                }
+            }
+            if (!parityOk)
+            {
+                fprintf(stderr,
+                    "[DEEP2_MOE_FIRST_NAN_001] P5 scalar parity mismatch "
+                    "layer=%zu expert=%d weight=%g\n",
+                    layer, expertId, (double)weight);
+                fflush(stderr);
+                throw std::runtime_error("scalar parity mismatch");
+            }
+        }
     }
     prefetchNextExperts((int)layer);
 }
@@ -9150,7 +9355,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 // Uses the same Q4_K GEMV path as dense layers.
 // ============================================================================
 void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* input, float* output, size_t hiddenDim,
-                                   size_t expertDim)
+                                   size_t expertDim, size_t layer, int expertId)
 {
     if (!handle.valid || !handle.gateWeights)
     {
@@ -9189,19 +9394,60 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
     size_t rowBytes = blocksPerRow * geom.blockSize;
 
     // Use gateBuf and upBuf as temp (both hiddenDim*4 sized, enough for expertDim)
+    // Zero temp buffers before GEMV — the Q4_K scalar kernel accumulates with
+    // y[r] += acc, so uninitialized temp buffer contents would corrupt output.
+    std::fill(gateBuf, gateBuf + ffnDim, 0.0f);
+    std::fill(upBuf, upBuf + ffnDim, 0.0f);
+
     // Gate projection: [expertDim, hiddenDim] * input -> [expertDim]
     float* gateOut = gateBuf;
     kernel((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
+
+    // E1: Gate projection output — is gate output finite?
+    if (layer == 1 && !MoEFirstNanProbe("GATE_PROJECTION", layer, expertId, 0.0f,
+                                         gateOut, expertDim))
+    {
+        fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E1 GATE_PROJECTION\n");
+        fflush(stderr);
+        throw std::runtime_error("gate projection non-finite");
+    }
 
     // Up projection: [expertDim, hiddenDim] * input -> [expertDim]
     float* upOut = upBuf;
     kernel((const uint8_t*)handle.upWeights, input, upOut, expertDim, hiddenDim);
 
+    // E2: Up projection output — is up output finite?
+    if (layer == 1 && !MoEFirstNanProbe("UP_PROJECTION", layer, expertId, 0.0f,
+                                         upOut, expertDim))
+    {
+        fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E2 UP_PROJECTION\n");
+        fflush(stderr);
+        throw std::runtime_error("up projection non-finite");
+    }
+
     // SwiGLU: silu(gate) * up
     SwiGLU(gateOut, upOut, gateOut, expertDim);
 
+    // E3: SwiGLU activation output — is activation finite?
+    if (layer == 1 && !MoEFirstNanProbe("ACTIVATION", layer, expertId, 0.0f,
+                                         gateOut, expertDim))
+    {
+        fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E3 ACTIVATION\n");
+        fflush(stderr);
+        throw std::runtime_error("activation non-finite");
+    }
+
     // Down projection: [hiddenDim, expertDim] * gateOut -> [hiddenDim]
     kernel((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim, expertDim);
+
+    // E4: Down projection output — is down projection output finite?
+    if (layer == 1 && !MoEFirstNanProbe("DOWN_PROJECTION", layer, expertId, 0.0f,
+                                         output, hiddenDim))
+    {
+        fprintf(stderr, "[DEEP2_MOE_FIRST_NAN_001] STOP at E4 DOWN_PROJECTION\n");
+        fflush(stderr);
+        throw std::runtime_error("down projection non-finite");
+    }
 }
 
 // ============================================================================
@@ -9324,7 +9570,7 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input, float
     handle.quantType = static_cast<int>(GGMLType::GGML_TYPE_Q4_K);
     handle.valid = true;
 
-    computeExpertFFN(handle, input, output, hiddenDim, sharedDim);
+    computeExpertFFN(handle, input, output, hiddenDim, sharedDim, layer, -2);
 }
 
 // ============================================================================
