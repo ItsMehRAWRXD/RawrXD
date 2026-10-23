@@ -1,15 +1,16 @@
 {
   "schema": "DEEP2_NATIVE_GPU_FORWARD_005",
-  "source_commit": "8a0640f181",
-  "deep2_engine_rebuilt": true,
-  "cli_rebuilt": true,
-  "gpu_enumeration": "R9700 + RX 7800 XT",
-  "verification": "BLOCKED_FILE_LOCK",
-  "required_counters": [
-    "DEEP2_REAL_GPU_FORWARD>0",
-    "DEEP2_GPU_Q4K_PACKED_OPS>0",
-    "DEEP2_GPU_LAYER_SUBMITS>0"
-  ],
+  "executable_sha256": "072D0A3087E8FCD02ECE4F71F205423E68242F49E020BCADFD254CF23355513B",
+  "exit_code": 0,
+  "vulkan_pipeline_created": false,
+  "device": "AMD Radeon AI PRO R9700",
+  "secondary_enumerated": true,
+  "gpu_forward_counter": 0,
+  "q4k_packed_ops": 0,
+  "layer_submits": 0,
+  "fallbacks": 0,
+  "generation": "GENERATION_RECEIPT prompt=40 generated=1 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED",
+  "status": "GPU_PIPELINE_INITIALIZED_FORWARD_UNOBSERVED",
   "certification": "NOT_CERTIFIED",
-  "note": "rawr.exe remained locked by Windows despite no visible rawr process; no GPU PASS claimed"
+  "next": "Trace tryVulkanGEMV rejection and end-of-generation counter commit"
 }
