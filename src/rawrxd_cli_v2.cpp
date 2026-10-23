@@ -4574,6 +4574,24 @@ static std::string HttpJson(const json& body, int status = 200,
     return h.str();
 }
 
+static std::string HttpSse(const std::string& model, const std::string& text) {
+    json delta = {{"role", "assistant"}, {"content", text}};
+    json chunk = {{"id", "rawr-" + std::to_string(GetTickCount64())},
+                  {"object", "chat.completion.chunk"}, {"model", model},
+                  {"choices", json::array({{{"index", 0}, {"delta", delta},
+                                             {"finish_reason", nullptr}}})}};
+    std::string payload = "data: " + chunk.dump() + "\n\n";
+    payload += "data: [DONE]\n\n";
+    std::ostringstream h;
+    h << "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n"
+      << "Cache-Control: no-cache\r\nConnection: close\r\n"
+      << "Access-Control-Allow-Origin: *\r\n"
+      << "Access-Control-Allow-Headers: Content-Type, X-MOTD-ACK\r\n"
+      << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+      << "Content-Length: " << payload.size() << "\r\n\r\n" << payload;
+    return h.str();
+}
+
 static std::string ServeModelName() {
     return g_model.empty() ? "rawrxd" : g_model;
 }
@@ -4657,11 +4675,26 @@ static std::string ServeRequest(const std::string& method, const std::string& pa
         return HttpJson({{"status", "ready"}, {"native", true}, {"active", true},
                          {"model", ServeModelName()}, {"certification", "NOT_CERTIFIED"}});
     if (method == "POST" && (path == "/v1/chat/completions" || path == "/api/chat")) {
-        try { return HttpJson(ServeCompletion(json::parse(body), path == "/api/chat")); }
+        try {
+            const json req = json::parse(body);
+            const json result = ServeCompletion(req, path == "/api/chat");
+            if (req.value("stream", false) && result.contains("choices") &&
+                result["choices"].is_array() && !result["choices"].empty()) {
+                return HttpSse(result.value("model", ServeModelName()),
+                                result["choices"][0]["message"].value("content", ""));
+            }
+            return HttpJson(result);
+        }
         catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
     }
     if (method == "POST" && path == "/api/generate") {
-        try { return HttpJson(ServeCompletion(json::parse(body), true)); }
+        try {
+            const json req = json::parse(body);
+            const json result = ServeCompletion(req, true);
+            if (req.value("stream", false))
+                return HttpSse(result.value("model", ServeModelName()), result.value("response", ""));
+            return HttpJson(result);
+        }
         catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
     }
     // Tool execution is intentionally fail-closed until the browser supplies
@@ -4693,8 +4726,20 @@ static int CmdServe(const Options& o) {
         while (req.size() < 16 * 1024 * 1024 && (headerEnd = req.find("\r\n\r\n")) == std::string::npos && (n = recv(client, buf, sizeof(buf), 0)) > 0) req.append(buf, n);
         if (headerEnd != std::string::npos) {
             std::istringstream hs(req.substr(0, headerEnd)); std::string method, path, version; hs >> method >> path >> version;
+            const size_t query = path.find('?');
+            if (query != std::string::npos) path.resize(query);
             size_t contentLength = 0; std::string line;
-            while (std::getline(hs, line)) { if (line.find("Content-Length:") == 0) contentLength = std::stoull(line.substr(15)); }
+            while (std::getline(hs, line)) {
+                if (line.size() >= 15 && _strnicmp(line.c_str(), "Content-Length:", 15) == 0) {
+                    try { contentLength = std::stoull(line.substr(15)); }
+                    catch (...) { contentLength = 16 * 1024 * 1024 + 1; }
+                }
+            }
+            if (contentLength > 16 * 1024 * 1024) {
+                const std::string response = HttpJson({{"error", "request body too large"}}, 413);
+                send(client, response.data(), static_cast<int>(response.size()), 0);
+                closesocket(client); continue;
+            }
             size_t bodyStart = headerEnd + 4;
             while (req.size() < bodyStart + contentLength && (n = recv(client, buf, sizeof(buf), 0)) > 0) req.append(buf, n);
             const std::string response = ServeRequest(method, path, req.substr(bodyStart, contentLength));
