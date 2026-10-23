@@ -1,0 +1,15 @@
+{
+  "agent_mode": true,
+  "backend": "auto",
+  "error": "",
+  "full_model_certification": "NOT_CERTIFIED",
+  "iterations": 2,
+  "max_tokens": 1,
+  "model": "F:\\models\\gguf\\library__n4-tiny-oracle__latest.gguf",
+  "motd_sha256": "3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de",
+  "prompt": "Inspect repository status and summarize it.",
+  "response": "[agent-1a15ca48987-0]\nè\n\n[agent-1a15ca48988-2]\nwhile",
+  "response_bytes": 53,
+  "schema": "rawr.run.receipt.v1",
+  "success": true
+}

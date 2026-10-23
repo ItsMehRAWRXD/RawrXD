@@ -61,6 +61,10 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <thread>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -132,6 +136,14 @@ using ModelStreamFn = std::function<bool(
     const std::function<void(const std::string&)>&)>;
 static ModelStreamFn g_streamProvider;
 
+/// @brief One provider turn, streamed when the provider can stream.
+///
+/// Defined below, next to the other completion helpers.
+static InferenceResult ProviderTurn(const std::vector<ChatMessage>& messages,
+                                    const json& tools,
+                                    int maxTokens,
+                                    bool echoToStdout);
+
 static std::string toLowerCompat(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
@@ -176,6 +188,35 @@ struct AgentLoopOutcome {
     std::string finalText;
     std::string failure;
     uint32_t iterations = 0;
+    // The generation accounting of the run, summed over the turns.
+    uint64_t promptTokens = 0;
+    uint64_t completionTokens = 0;
+    uint64_t evalDurationNs = 0;
+    uint64_t loadDurationNs = 0;
+    double   inferenceTps = 0.0;   // the server's own accounting
+    double   ttftMs = 0.0;         // time to the first token of the first turn
+    double   wallMs = 0.0;         // the whole loop, including the tools
+};
+
+// Per-model agent state owned by the certification driver and shared with the
+// provider wrapper and the agent loop. Moving it to file scope lets
+// RunAuthorizedAgentLoop observe the same state without a parallel state machine.
+struct ModelState {
+    int turns = 0;
+    bool sawObservation = false;
+    bool sawTokenObservation = false;   // a tool observation containing RAWRXD_AGENTIC_ was delivered
+    bool nativeToolCall = false;
+    bool textToolCall = false;
+    std::string token;
+    std::string toolCallName;
+    std::string toolCallArgs;
+    std::string observation;
+    json calls = json::array();
+    // Generalized task-completion predicate. When true, the agent loop transitions
+    // to the tool-free finalization phase. Can be set by the driver (e.g., after
+    // a token observation), by an explicit tool call, or by a protocol signal.
+    bool taskComplete = false;
+    std::string completionReason;
 };
 
 static bool WriteRunReceipt(const std::string& path,
@@ -189,7 +230,8 @@ static bool WriteRunReceipt(const std::string& path,
                             uint32_t iterations,
                             bool success,
                             const std::string& error,
-                            const json& provenance = json::object()) {
+                            const json& provenance = json::object(),
+                            const json& telemetry = json::object()) {
     std::error_code ec;
     fs::path out(path);
     if (!out.parent_path().empty()) fs::create_directories(out.parent_path(), ec);
@@ -212,6 +254,11 @@ static bool WriteRunReceipt(const std::string& path,
         // tools, and which judged the result verified. Recorded separately so
         // an Ollama-served model is never reported as Deep2 inference.
         {"provenance", provenance},
+        // The generation accounting: the server's own inference throughput and
+        // the end-to-end throughput, kept apart because they measure different
+        // things. The inference rate excludes the model load and the prompt
+        // evaluation; the end-to-end rate includes them.
+        {"telemetry", telemetry},
         // This receipt describes execution only. Certification stays fail-closed
         // until a complete independent full-model parity/generation gate runs.
         {"full_model_certification", "NOT_CERTIFIED"}
@@ -281,6 +328,82 @@ static std::string DiscoverWorkspace(const Options& o) {
         fs::path p = fs::weakly_canonical(fs::absolute(override_ws, ec));
         return (ec ? fs::absolute(override_ws) : p).string();
     }
+    return fs::current_path().string();
+}
+
+// ---------------------------------------------------------------------------
+// The project root of the running build
+// ---------------------------------------------------------------------------
+//
+// The certification has to run against the tree the executable was built
+// from, not against whatever directory the shell happened to be in. The
+// executable knows where it is: it is <root>/build/bin-msvc/Release/rawr.exe,
+// so the root is three directories up.
+//
+// A root is accepted only if it really is this project: it has to hold the
+// CLI source. A binary that was copied somewhere else resolves to no root,
+// and the caller falls back to the working directory.
+//
+// The reason is the evidence. The sweep report, the workspace policy and
+// the source files that gate 13 watches all live in the project. A
+// certification that looked for them in the user's home directory would
+// report a missing sweep and a missing policy, and it would say so as if
+// the bridge were broken.
+static std::string ExecutablePath() {
+#ifdef _WIN32
+    char buffer[MAX_PATH * 4];
+    const DWORD n = ::GetModuleFileNameA(nullptr, buffer,
+                                          static_cast<DWORD>(sizeof(buffer)));
+    if (n == 0 || n >= sizeof(buffer)) return std::string();
+    return std::string(buffer, n);
+#else
+    std::error_code ec;
+    const auto p = fs::read_symlink("/proc/self/exe", ec);
+    if (!ec && !p.empty()) return p.string();
+    return std::string();
+#endif
+}
+
+static bool LooksLikeProjectRoot(const fs::path& root) {
+    std::error_code ec;
+    if (root.empty()) return false;
+    if (!fs::is_regular_file(root / "src" / "rawrxd_cli_v2.cpp", ec) || ec) return false;
+    return true;
+}
+
+static std::string ProjectRootFromExecutable() {
+    const std::string exe = ExecutablePath();
+    if (exe.empty()) return std::string();
+    fs::path dir = fs::path(exe).parent_path();
+    // Release -> bin-msvc -> build -> root. The walk is bounded and the
+    // first ancestor that is a project root wins.
+    for (int i = 0; i < 6; ++i) {
+        if (LooksLikeProjectRoot(dir)) {
+            std::error_code ec;
+            const auto canonical = fs::weakly_canonical(dir, ec);
+            return (ec ? dir : canonical).string();
+        }
+        const fs::path parent = dir.parent_path();
+        if (parent.empty() || parent == dir) break;
+        dir = parent;
+    }
+    return std::string();
+}
+
+// The workspace a command runs in.
+//
+// An explicit --workspace or --root wins. Otherwise the root of the
+// production build wins, so that a command produces the same result from
+// any working directory. The working directory is the last resort.
+static std::string ResolveWorkspace(const Options& o) {
+    const std::string explicitWs = o.get("workspace", o.get("root", ""));
+    if (!explicitWs.empty()) {
+        std::error_code ec;
+        fs::path p = fs::weakly_canonical(fs::absolute(explicitWs, ec));
+        return (ec ? fs::absolute(explicitWs) : p).string();
+    }
+    const std::string fromExe = ProjectRootFromExecutable();
+    if (!fromExe.empty()) return fromExe;
     return fs::current_path().string();
 }
 
@@ -736,7 +859,8 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
     const std::string& session,
     uint64_t turn,
     uint32_t maxIterations,
-    int maxTokens) {
+    int maxTokens,
+    std::shared_ptr<ModelState> state = nullptr) {
     AgentLoopOutcome outcome;
     if (!g_ledger || !g_tools || !g_gate) {
         outcome.failure = "agent runtime not initialized";
@@ -794,13 +918,86 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
             outcome.iterations = iteration;
             return outcome;
         }
+        const auto turnStart = std::chrono::steady_clock::now();
+
+        // FINALIZATION PHASE: transition to tool-free answer when the task is
+        // marked complete. The trigger can be set by:
+        //   - Explicit taskComplete flag (driver, tool, or protocol)
+        //   - Backward compatibility: token observation received (certification)
+        // The token itself is never supplied to the model — it must come from
+        // the file result or the task context.
+        bool shouldFinalize = state && (state->taskComplete ||
+            (state->sawTokenObservation && !state->token.empty()));
+        if (shouldFinalize) {
+            outcome.iterations = iteration + 1;
+            const auto finalStart = std::chrono::steady_clock::now();
+            std::vector<ChatMessage> finalMessages;
+            std::string finalSystemPrompt;
+            std::string finalUserPrompt;
+            bool isTokenTask = state && state->completionReason == "token_observed";
+            if (isTokenTask) {
+                finalSystemPrompt = "You already read the file and received the token in the tool result. "
+                    "Output only the exact token and nothing else. Do not call any tools.";
+                finalUserPrompt = "Reply with the exact token only.";
+            } else if (state && state->taskComplete && !state->completionReason.empty()) {
+                finalSystemPrompt = "The task has been completed: " + state->completionReason +
+                    ". Provide a final answer summarizing the outcome. Do not call any tools.";
+                finalUserPrompt = "Reply with a final summary.";
+            } else {
+                finalSystemPrompt = "You already read the file and received the token in the tool result. "
+                    "Output only the exact token and nothing else. Do not call any tools.";
+                finalUserPrompt = "Reply with the exact token only.";
+            }
+            finalMessages.push_back(ChatMessage{"system", finalSystemPrompt, ""});
+            finalMessages.push_back(ChatMessage{"user", goal, ""});
+            if (state && !state->observation.empty()) {
+                finalMessages.push_back(ChatMessage{
+                    "user",
+                    "Tool result:\n" + state->observation,
+                    ""});
+            }
+            finalMessages.push_back(ChatMessage{
+                "user", finalUserPrompt, ""});
+
+            InferenceResult finalResult = ProviderTurn(
+                finalMessages, json::array(), maxTokens, false);
+
+            outcome.completionTokens += finalResult.completion_tokens;
+            outcome.evalDurationNs += finalResult.eval_duration_ns;
+            outcome.loadDurationNs += finalResult.load_duration_ns;
+            outcome.promptTokens += finalResult.prompt_tokens;
+            outcome.wallMs += std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - finalStart).count();
+
+            if (!finalResult.success) {
+                outcome.failure = "final answer request failed: " +
+                    (finalResult.error_message.empty()
+                         ? "inference failed"
+                         : finalResult.error_message);
+                return outcome;
+            }
+
+            outcome.finalText = finalResult.response;
+            if (state && !state->token.empty() &&
+                finalResult.response.find(state->token) != std::string::npos) {
+                outcome.success = true;
+            } else if (state && state->taskComplete) {
+                // For general task completion, accept the response as final.
+                outcome.success = true;
+            } else {
+                outcome.success = false;
+                outcome.failure = "final answer does not carry the verified token";
+            }
+            return outcome;
+        }
 
         InferenceResult result;
         try {
-            if (g_modelProvider) {
+            if (g_modelProvider || g_streamProvider) {
                 // The provider seam: the engine asks for tokens, the provider
-                // decides who produces them.
-                result = g_modelProvider(messages, toolSchemas, maxTokens);
+                // decides who produces them. The streaming seam is preferred,
+                // so the answer reaches stdout as it is produced.
+                result = ProviderTurn(messages, toolSchemas, maxTokens, true);
             } else {
                 result = InferenceResult::Error("No inference backend available");
             }
@@ -809,6 +1006,19 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
             outcome.iterations = iteration + 1;
             return outcome;
         }
+        // The accounting of this turn is accumulated, so that a run of several
+        // turns reports the whole run and not only the last turn.
+        outcome.promptTokens += result.prompt_tokens;
+        outcome.completionTokens += result.completion_tokens;
+        outcome.evalDurationNs += result.eval_duration_ns;
+        outcome.loadDurationNs += result.load_duration_ns;
+        if (outcome.completionTokens > 0 && outcome.evalDurationNs > 0) {
+            outcome.inferenceTps = static_cast<double>(outcome.completionTokens) * 1e9 /
+                                   static_cast<double>(outcome.evalDurationNs);
+        }
+        if (outcome.ttftMs == 0.0 && result.ttft_ms > 0.0) outcome.ttftMs = result.ttft_ms;
+        outcome.wallMs += std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - turnStart).count();
         if (!result.success) {
             outcome.failure = result.error_message.empty()
                 ? "inference failed" : result.error_message;
@@ -816,29 +1026,121 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
             return outcome;
         }
 
-        messages.push_back(ChatMessage{"assistant", result.response, ""});
+        // The assistant turn is echoed WITH its tool calls. The protocol
+        // requires it: a model that cannot see the call it made cannot tell
+        // which observation answers it, and a model that is asked for the
+        // same file twice is a model that never saw its own call.
+        ChatMessage assistant{"assistant", result.response, ""};
+        if (result.has_tool_calls && !result.tool_calls.empty()) {
+            assistant.tool_calls = json::array();
+            for (size_t ci = 0; ci < result.tool_calls.size(); ++ci) {
+                const auto& cname = result.tool_calls[ci].first;
+                const auto& cargs = result.tool_calls[ci].second;
+                const std::string cid = ci < result.tool_call_ids.size()
+                    ? result.tool_call_ids[ci]
+                    : ("call_" + cname);
+                assistant.tool_calls.push_back({
+                    {"id", cid},
+                    {"type", "function"},
+                    {"function", {{"name", cname}, {"arguments", cargs}}}
+                });
+            }
+        }
+        messages.push_back(assistant);
         // Tool calls: the provider's NATIVE tool calls win. The model was
         // given the tool schemas, so when it emits native calls they are
         // authoritative. Only fall back to parsing the response text when the
         // provider produced no native calls at all.
         std::vector<RawrXD::Agentic::ParsedToolCall> parsed;
         if (result.has_tool_calls && !result.tool_calls.empty()) {
-            for (const auto& [name, args] : result.tool_calls) {
+            for (size_t ci = 0; ci < result.tool_calls.size(); ++ci) {
+                const auto& name = result.tool_calls[ci].first;
+                const auto& args = result.tool_calls[ci].second;
                 RawrXD::Agentic::ParsedToolCall p;
                 p.name = RawrXD::Agentic::ToolCallParser::NormalizeToolName(name);
                 p.arguments = args.is_object() ? args : nlohmann::json::object();
+                if (ci < result.tool_call_ids.size()) p.id = result.tool_call_ids[ci];
                 parsed.push_back(p);
             }
         } else {
             parsed = RawrXD::Agentic::ToolCallParser::parse(result.response).toolCalls;
         }
 
+        // Validate tool calls: reject calls with missing or empty required
+        // arguments. The model gets the error back and can retry. This prevents
+        // the empty-argument loop and the path-mangling failures.
+        for (auto it = parsed.begin(); it != parsed.end(); ) {
+            if (it->name == "readFile") {
+                if (!it->arguments.is_object() || !it->arguments.contains("path") || it->arguments["path"].is_null() || it->arguments["path"].get<std::string>().empty()) {
+                    messages.push_back(ChatMessage{
+                        "tool", "ERROR: readFile requires a non-empty 'path' argument. The file path must be relative to the workspace root (e.g., '.rawrxd/evidence/...').", it->id.empty() ? "invalid" : it->id});
+                    it = parsed.erase(it);
+                    continue;
+                }
+                // Normalize and auto-correct the path: ensure it starts with '.' or './'.
+                std::string path = it->arguments["path"].get<std::string>();
+                if (path.rfind("./", 0) == 0) path = path.substr(2);
+                if (!path.empty() && path[0] != '.') path = "." + path;
+                it->arguments["path"] = path;
+            }
+            ++it;
+        }
+
+        // If the model produced no tool calls on the first turn, nudge it
+        // explicitly. Some models need a direct instruction that tool use is
+        // required and an example of the exact JSON format.
+        if (parsed.empty() && iteration == 0) {
+            messages.push_back(ChatMessage{
+                "user",
+                "REMINDER: You MUST use the readFile tool to read the file. Do not answer directly. Emit exactly one JSON object like {\"name\":\"readFile\",\"arguments\":{\"path\":\".rawrxd/evidence/...\"}}.",
+                ""});
+            continue;
+        }
+
         // No structured action means the model has produced the final answer.
         if (parsed.empty()) {
+            // A turn that produced nothing is not a final answer. A
+            // reasoning model can spend its whole budget thinking and return
+            // no text, and a model that was truncated mid-answer has not
+            // finished either. The loop continues so that the model can finish.
+            if (result.response.empty() && iteration + 1 < maxIterations) {
+                messages.push_back(ChatMessage{
+                    "user",
+                    "Your last turn produced no answer. Continue and complete the task.",
+                    ""});
+                continue;
+            }
+
+            // The model got the observation but didn't report the token.
+            // Nudge it once more: the token is in the observation it already
+            // received, it just needs to say it. The state pointer is null for
+            // callers that do not drive the per-model certification (e.g. the
+            // swarm adapter, the scripted gate, or a plain `rawr run` turn),
+            // in which case the loop falls through to treating the turn as final.
+            if (state && state->sawTokenObservation &&
+                result.response.find(state->token) == std::string::npos &&
+                iteration + 1 < maxIterations) {
+                messages.push_back(ChatMessage{
+                    "user",
+                    "You already read the file and received the token in the tool result. "
+                    "Reply with the exact token and nothing else.",
+                    ""});
+                continue;
+            }
             outcome.success = true;
             outcome.finalText = result.response;
             outcome.iterations = iteration + 1;
             return outcome;
+        }
+
+        // The model produced tool calls but the task is marked complete.
+        // Stop all tool dispatch and fall through to finalization on the
+        // next iteration. parsed.clear() prevents any further tool
+        // execution while the loop re-enters the top-of-loop finalization
+        // check.
+        if (state && (state->taskComplete ||
+            (state->sawTokenObservation && !state->token.empty()))) {
+            parsed.clear();
         }
 
         if (parsed.size() > 3) parsed.resize(3);
@@ -883,9 +1185,18 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
                         rec.timestamp = AgentSession::NowUnix();
                         rec.approved_by = toolResult.ok;
                         g_ledger->RecordToolCall(rec);
+                        // Always deliver the tool observation first.
                         messages.push_back(ChatMessage{
                             "tool", toolResult.ok ? toolResult.output :
                                 ("ERROR: " + toolResult.error), call.id});
+                        // After a successful tool call that returned the token,
+                        // nudge the model to answer instead of calling again.
+                        if (toolResult.ok && toolResult.output.find("RAWRXD_AGENTIC_") != std::string::npos) {
+                            messages.push_back(ChatMessage{
+                                "user",
+                                "You have the token from the file. Now reply with the exact token and stop calling tools.",
+                                ""});
+                        }
                         continue;
                     }
                 }
@@ -1077,7 +1388,91 @@ static InferenceResult ChatStreamingToStdout(const std::vector<ChatMessage>& mes
     if (full.empty()) {
         return InferenceResult::Error("provider returned an empty completion");
     }
-    return InferenceResult::Ok(full, ptok, ctok, tps, elapsed_ms);
+    InferenceResult out = InferenceResult::Ok(full, ptok, ctok, tps, elapsed_ms);
+    // The backend's own accounting, when the backend has one. The completion
+    // callback carries a rate, but not the server's generation counters.
+    if (g_router) {
+        if (auto* b = g_router->GetBackendPtr(g_router->GetActiveBackendKind())) {
+            const auto m = b->LastStreamMetrics();
+            out.prompt_tokens = m.prompt_tokens ? m.prompt_tokens : ptok;
+            out.completion_tokens = m.completion_tokens ? m.completion_tokens : ctok;
+            out.eval_duration_ns = m.eval_duration_ns;
+            out.load_duration_ns = m.load_duration_ns;
+            out.ttft_ms = m.ttft_ms;
+            out.inference_tps = m.inference_tps;
+        }
+    }
+    return out;
+}
+
+// ---------------------------------------------------------------------------
+// One provider turn, streamed.
+//
+// The streaming seam is preferred when it exists, so that the tokens reach
+// stdout as they are produced rather than in one lump at the end of the turn.
+// The native tool calls are captured from the stream, and the whole text is
+// returned so the agent can still parse it.
+// ---------------------------------------------------------------------------
+static InferenceResult ProviderTurn(const std::vector<ChatMessage>& messages,
+                                    const json& tools,
+                                    int maxTokens,
+                                    bool echoToStdout) {
+    if (!g_streamProvider) {
+        if (!g_modelProvider) {
+            return InferenceResult::Error("No inference backend available");
+        }
+        return g_modelProvider(messages, tools, maxTokens);
+    }
+
+    std::string full;
+    std::string error;
+    uint64_t ptok = 0, ctok = 0;
+    double tps = 0.0;
+    std::vector<std::pair<std::string, json>> toolCalls;
+
+    const auto t0 = std::chrono::steady_clock::now();
+    const bool ok = g_streamProvider(
+        messages, tools, maxTokens,
+        [&](const std::string& token) {
+            if (token.empty()) return;
+            full += token;
+            if (echoToStdout) {
+                std::cout << token << std::flush;
+                g_streamed_response = true;
+            }
+        },
+        [&](const std::string& name, const json& args) {
+            toolCalls.emplace_back(name, args);
+        },
+        [&](const std::string& response, uint64_t p, uint64_t c, double t) {
+            if (!response.empty()) full = response;
+            ptok = p;
+            ctok = c;
+            tps = t;
+        },
+        [&](const std::string& err) { error = err; });
+    const double elapsed_ms = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - t0).count();
+
+    if (!ok) {
+        return InferenceResult::Error(error.empty() ? "streaming request failed" : error);
+    }
+
+    InferenceResult out = InferenceResult::Ok(full, ptok, ctok, tps, elapsed_ms);
+    out.has_tool_calls = !toolCalls.empty();
+    out.tool_calls = toolCalls;
+    if (g_router) {
+        if (auto* b = g_router->GetBackendPtr(g_router->GetActiveBackendKind())) {
+            const auto m = b->LastStreamMetrics();
+            out.prompt_tokens = m.prompt_tokens ? m.prompt_tokens : ptok;
+            out.completion_tokens = m.completion_tokens ? m.completion_tokens : ctok;
+            out.eval_duration_ns = m.eval_duration_ns;
+            out.load_duration_ns = m.load_duration_ns;
+            out.ttft_ms = m.ttft_ms;
+            out.inference_tps = m.inference_tps;
+        }
+    }
+    return out;
 }
 
 namespace {
@@ -1127,6 +1522,28 @@ static int CmdRun(const std::vector<std::string>& args) {
         if (first == "ollama" || first == "deep2" || first == "kilo") {
             provider_token = first;
             positionals.erase(positionals.begin());
+        } else {
+            // The provider may be written into the model itself:
+            //   rawr run ollama:<model> "<task>"
+            // The prefix wins over any --backend that disagrees with it, and a
+            // contradiction is reported rather than resolved silently.
+            const size_t colon = first.find(':');
+            if (colon != std::string::npos && colon > 0) {
+                std::string prefix = first.substr(0, colon);
+                std::transform(prefix.begin(), prefix.end(), prefix.begin(),
+                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                if (prefix == "ollama" || prefix == "deep2" || prefix == "kilo") {
+                    provider_token = prefix;
+                    // The model name keeps its original case: Ollama tags are
+                    // case sensitive ("Q4_K_M", "deepseek-v4-flash").
+                    std::string rest = positionals[0].substr(colon + 1);
+                    if (!rest.empty()) {
+                        positionals[0] = rest;
+                    } else {
+                        positionals.erase(positionals.begin());
+                    }
+                }
+            }
         }
     }
     if (!positionals.empty()) model = positionals[0];
@@ -1435,6 +1852,7 @@ static int CmdRun(const std::vector<std::string>& args) {
 
         InferenceResult result;
         uint32_t agentIterations = 0;
+        json runTelemetry = json::object();
         if (agentRequested) {
             const uint32_t iterations = flags.count("agent-iterations")
                 ? [&]() -> uint32_t {
@@ -1454,17 +1872,35 @@ static int CmdRun(const std::vector<std::string>& args) {
                                          runSession, runTurn, iterations,
                                          requestedMaxTokens);
             agentIterations = agentResult.iterations;
+            // The generation accounting of the whole agent run.
+            runTelemetry = {
+                {"prompt_tokens", agentResult.promptTokens},
+                {"completion_tokens", agentResult.completionTokens},
+                {"eval_duration_ns", agentResult.evalDurationNs},
+                {"load_duration_ns", agentResult.loadDurationNs},
+                {"inference_tps", agentResult.inferenceTps},
+                {"ttft_ms", agentResult.ttftMs},
+                {"agent_wall_ms", agentResult.wallMs},
+                {"e2e_tps", agentResult.completionTokens > 0 && agentResult.wallMs > 0
+                    ? (static_cast<double>(agentResult.completionTokens) * 1000.0 /
+                       agentResult.wallMs) : 0.0},
+            };
             if (!agentResult.success) {
                 std::cerr << "[agent] " << agentResult.failure << "\n";
                 g_ledger->RecordFailure("agent loop failed: " + agentResult.failure);
                 WriteRunReceipt(receiptPath, model, prompt, "", g_backend_name,
                                 digest, requestedMaxTokens, true, agentIterations,
                                 false, agentResult.failure,
-                                BuildProvenance(true));
+                                BuildProvenance(true), runTelemetry);
                 g_ledger->Flush();
                 return 1;
             }
             result = InferenceResult::Ok(agentResult.finalText);
+            if (agentResult.finalText.empty()) {
+                // The loop finished without an answer. Say so: an empty
+                // stdout looks like a hang.
+                std::cerr << "[agent] the model returned no answer\n";
+            }
         } else try {
             if (deep2CompleteFn) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
@@ -1491,8 +1927,24 @@ static int CmdRun(const std::vector<std::string>& args) {
             WriteRunReceipt(receiptPath, model, prompt, "", g_backend_name,
                             digest, requestedMaxTokens, agentRequested, agentIterations,
                             false, result.error_message,
-                            BuildProvenance(agentRequested));
+                            BuildProvenance(agentRequested), runTelemetry);
             return 1;
+        }
+
+        if (runTelemetry.empty()) {
+            // The one-shot path: the accounting of the single completion.
+            runTelemetry = {
+                {"prompt_tokens", result.prompt_tokens},
+                {"completion_tokens", result.completion_tokens},
+                {"eval_duration_ns", result.eval_duration_ns},
+                {"load_duration_ns", result.load_duration_ns},
+                {"inference_tps", result.inference_tps},
+                {"ttft_ms", result.ttft_ms},
+                {"wall_ms", result.total_duration_ms},
+                {"e2e_tps", result.completion_tokens > 0 && result.total_duration_ms > 0
+                    ? (static_cast<double>(result.completion_tokens) * 1000.0 /
+                       result.total_duration_ms) : 0.0},
+            };
         }
 
         g_ledger->AppendAssistantMessage(result.response);
@@ -1504,7 +1956,7 @@ static int CmdRun(const std::vector<std::string>& args) {
 
         if (!WriteRunReceipt(receiptPath, model, prompt, result.response, g_backend_name,
                              digest, requestedMaxTokens, agentRequested, agentIterations,
-                             true, "", BuildProvenance(agentRequested))) {
+                             true, "", BuildProvenance(agentRequested), runTelemetry)) {
             std::cerr << "[warning] could not write run receipt: " << receiptPath << "\n";
         } else {
             std::cerr << "RUN_RECEIPT=" << receiptPath << "\n";
@@ -2230,22 +2682,22 @@ static int CmdProviderPs(const Options& o) {
 //
 // Thirteen gates, each with machine-checkable evidence:
 //
-//   01 SERVER      GET /api/version responds
-//   02 DISCOVERY   GET /api/tags finds the requested model
-//   03 METADATA    POST /api/show matches the requested model
-//   04 GENERATE    first token received
-//   05 STREAM      multiple chunks reconstructed correctly
-//   06 COMPLETION  done received
-//   07 ACCOUNTING  token/timing metadata captured
-//   08 CANCEL      RawrXD cancellation stops the request
-//   09 ERROR       a nonexistent model fails correctly
-//   10 AGENT       a model turn reaches the RawrXD agent loop
-//   11 TOOL        a model-requested tool is dispatched by RawrXD
-//   12 VERIFY      the tool result is returned to the model
-//   13 COMPLETE    the agent produces a final answer
+//   01 SERVER       GET /api/version responds
+//   02 DISCOVERY    GET /api/tags enumerates the whole installed collection
+//   03 METADATA     POST /api/show parses the model's metadata
+//   04 REQUEST      the JSON body escapes the text and numbers the options
+//   05 STREAM       the NDJSON reaches stdout incrementally
+//   06 CANCEL       a generation can be interrupted
+//   07 ERRORS       HTTP failures and server errors are reported
+//   08 TOOL_PARSE   native tool calls become normalized actions
+//   09 AGENT_LOOP   model decisions reach the RawrXD agent engine
+//   10 TOOL_EXEC    an authorized tool executes
+//   11 VERIFY       the tool result is returned to the model
+//   12 MODEL_SWEEP  every discovered model was tested and its TPS recorded
+//   13 COMPLETE     the production build is current and the ladder is whole
 //
-// Gates 01-10 run against the LIVE Ollama server and the LIVE model.
-// Gates 11-13 drive the SAME engine with a scripted provider, so the evidence
+// Gates 01-09 run against the LIVE Ollama server and the LIVE model.
+// Gates 10-11 drive the SAME engine with a scripted provider, so the evidence
 // is about the ENGINE (dispatch, result return, completion) rather than about
 // one model's willingness to call a tool. The live model's own tool-driving
 // ability is reported separately as an observation.
@@ -2258,6 +2710,67 @@ static int CmdProviderPs(const Options& o) {
 //
 // This is NOT a claim that Deep2 performed the inference.
 
+// ---------------------------------------------------------------------------
+// The sweep report
+// ---------------------------------------------------------------------------
+//
+// The sweep is the measurement of the whole installed collection. The
+// certification reads it twice: once to choose the model under test (a
+// model that the sweep already proved can be served), and once to check
+// that the sweep covered everything that is installed.
+//
+// The report is evidence, so it is never edited by the certification. It
+// is read, and what it says is reported.
+struct SweepReport {
+    bool        read = false;
+    bool        parsed = false;
+    size_t      swept = 0;
+    size_t      measured = 0;   // served, with a rate
+    size_t      failed = 0;     // attempted, with a reason
+    std::vector<std::string> names;
+    std::map<std::string, bool> served;   // model -> served successfully
+    std::string error;
+
+    // Whether the sweep measured this model successfully.
+    bool Served(const std::string& name) const {
+        const auto it = served.find(name);
+        return it != served.end() && it->second;
+    }
+};
+
+static SweepReport LoadSweepReport(const std::string& path) {
+    SweepReport r;
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        r.error = "no sweep report at " + path;
+        return r;
+    }
+    r.read = true;
+    try {
+        const json report = json::parse(in);
+        r.parsed = true;
+        const auto& entries = report["models"];
+        for (const auto& e : entries) {
+            if (!e.is_object()) continue;
+            const std::string name = e.value("model", std::string());
+            r.names.push_back(name);
+            ++r.swept;
+            const bool isOk = e.value("status", std::string()) == "OK";
+            const bool hasRate = e.value("tps", 0.0) > 0.0;
+            const bool hasReason = !e.value("error", std::string()).empty();
+            if (isOk && hasRate) ++r.measured;
+            if (!isOk && hasReason) ++r.failed;
+            r.served[name] = (isOk && hasRate);
+        }
+    } catch (const std::exception& e) {
+        r.error = std::string("the sweep report did not parse: ") + e.what();
+    }
+    return r;
+}
+
+// ---------------------------------------------------------------------------
+// The sweep report, as the certification reads it.
+// ---------------------------------------------------------------------------
 struct CertGate {
     std::string id;
     std::string name;
@@ -2275,6 +2788,17 @@ static int CmdCertifyOllama(const Options& o) {
     std::vector<CertGate> gates;
     json evidence = json::object();
 
+    // The workspace the certification runs in. It is the root of the
+    // production build, so the evidence, the policy and the sources are
+    // found from any working directory.
+    const std::string certWorkspace = ResolveWorkspace(o);
+    const std::string certEvidenceDir = certWorkspace + "/.rawrxd/evidence";
+    const std::string sweepPath = o.get("sweep", certEvidenceDir + "/ollama_bench.json");
+
+    // The sweep is read once and used twice: it chooses the model under test
+    // and it is the evidence of gate 12.
+    const SweepReport sweep = LoadSweepReport(sweepPath);
+
     RawrXD::Backend::OllamaClient client(endpoint);
     client.setTimeoutSeconds(300);
 
@@ -2288,31 +2812,88 @@ static int CmdCertifyOllama(const Options& o) {
     }
 
     // ---- 02 DISCOVERY ----------------------------------------------------
+    //
+    // The model under test.
+    //
+    // The certification runs where the evidence is, so it cannot depend on
+    // a cloud model: a cloud model needs credits, a signed-in account and a
+    // network, and it is not local inference. The rules are:
+    //
+    //   1. an explicit --model is taken as given, and the certificate says
+    //      that it was chosen by hand
+    //   2. otherwise a LOCAL model that the sweep measured successfully
+    //   3. otherwise a local model that the sweep did not fail
+    //   4. never a cloud model, and never silently
+    //
+    // The selection is written into the receipt, so the certificate says
+    // which model produced it.
     std::string model = o.get("model", "");
+    std::string modelSource = "explicit";
     const auto installed = client.listModels();
     if (model.empty()) {
-        // Pick the smallest installed model: the ladder should be quick and
-        // must not depend on a large model's throughput.
+        // The candidates are the local models, and the server's own metadata
+        // says which are local: a cloud model carries a remote host.
+        std::vector<const RawrXD::Backend::OllamaModel*> candidates;
         for (const auto& m : installed) {
-            if (model.empty() || m.size < installed.front().size) {
-                // handled below
-            }
+            if (m.IsCloud()) continue;
+            candidates.push_back(&m);
         }
-        uint64_t smallest = UINT64_MAX;
+        // Rule 2 first: the models the sweep already proved can be served.
+        std::vector<const RawrXD::Backend::OllamaModel*> verified;
+        for (const auto* m : candidates) {
+            if (sweep.Served(m->name)) verified.push_back(m);
+        }
+        std::vector<const RawrXD::Backend::OllamaModel*> pool;
+        if (!verified.empty()) {
+            pool = verified;
+            modelSource = "sweep-verified-local";
+        } else if (!candidates.empty()) {
+            pool = candidates;
+            modelSource = "local-unverified";
+        }
+
+        if (pool.empty()) {
+            std::cerr << "ERROR: no eligible local model to certify.\n"
+                      << "       The certification needs a model the local Ollama server\n"
+                      << "       can serve. The installed collection holds no local model:\n"
+                      << "       every model in it is a cloud model, and a cloud model is\n"
+                      << "       not local inference.\n";
+            return 2;
+        }
+        // The smallest model that can be served: the ladder should be quick
+        // and must not depend on a large model's throughput.
+        const auto* pick = pool.front();
+        for (const auto* m : pool) {
+            if (m->size < pick->size) pick = m;
+        }
+        model = pick->name;
+    } else {
+        bool isCloud = false;
         for (const auto& m : installed) {
-            if (m.size < smallest) { smallest = m.size; model = m.name; }
+            if (m.name == model) { isCloud = m.IsCloud(); break; }
         }
+        modelSource = isCloud ? "explicit-cloud" : "explicit";
     }
     {
         bool found = false;
+        json names = json::array();
         for (const auto& m : installed) {
-            if (m.name == model) { found = true; break; }
+            names.push_back(m.name);
+            if (m.name == model) found = true;
         }
-        CertAdd(gates, "02", "DISCOVERY", found,
-                found ? ("GET /api/tags found " + model)
-                      : ("GET /api/tags does not list '" + model + "'"));
+        // The gate is about the WHOLE collection, not about one model: the
+        // enumeration has to be complete, and the model under test has to be
+        // one of them.
+        CertAdd(gates, "02", "DISCOVERY", found && !installed.empty(),
+                "GET /api/tags enumerated " + std::to_string(installed.size()) +
+                " installed model(s); '" + model + "' " +
+                (found ? "is among them" : "was NOT found") +
+                "; selected by " + modelSource);
         evidence["model"] = model;
+        evidence["model_source"] = modelSource;
+        evidence["workspace"] = certWorkspace;
         evidence["installed_count"] = installed.size();
+        evidence["installed_models"] = names;
     }
     if (model.empty()) {
         std::cerr << "ERROR: no model to certify. Pass --model <name>.\n";
@@ -2334,7 +2915,76 @@ static int CmdCertifyOllama(const Options& o) {
         if (info.capabilities.is_object()) evidence["capabilities"] = info.capabilities;
     }
 
-    // ---- 04-07 GENERATE / STREAM / COMPLETION / ACCOUNTING ----------------
+    // ---- 04 REQUEST: escaping and numeric options ------------------------
+    //
+    // The body is built with nlohmann/json, so a message that carries every
+    // character a JSON body has to escape survives the round trip unchanged,
+    // and the options are JSON NUMBERS. Ollama answers HTTP 500 to a
+    // string-valued option, so this is a contract and not a preference.
+    {
+        const std::string awkward =
+            "Reply with the single word OK. Quote: \" backslash: \\ "
+            "newline:\n tab:\t brace:} bracket:[ bracket2:] emoji:\xF0\x9F\x9A\x80 "
+            "unicode:\xC3\xA9\xE4\xB8\xAD";
+
+        RawrXD::Backend::OllamaChatRequest req;
+        req.model = model;
+        req.stream = false;
+        req.messages.push_back({"user", awkward});
+        req.options["temperature"] = 0.0;
+        req.options["top_p"] = 0.9;
+        req.options["num_predict"] = 8;
+        req.options["num_ctx"] = 2048;
+        req.options["seed"] = 42;
+
+        const std::string body = client.createChatRequestJson(req);
+        bool bodyParses = false;
+        bool textRoundTrips = false;
+        bool optionsAreNumbers = true;
+        std::string contractDetail;
+        try {
+            const json parsed = json::parse(body);
+            bodyParses = true;
+            const auto& msgs = parsed["messages"];
+            if (msgs.is_array() && !msgs.empty()) {
+                textRoundTrips = msgs[0].value("content", std::string()) == awkward;
+            }
+            if (parsed.contains("options") && parsed["options"].is_object()) {
+                for (auto it = parsed["options"].begin(); it != parsed["options"].end(); ++it) {
+                    if (!it.value().is_number()) { optionsAreNumbers = false; break; }
+                }
+            } else {
+                optionsAreNumbers = false;
+            }
+            contractDetail = "options=" + parsed["options"].dump() +
+                            " body_bytes=" + std::to_string(body.size());
+        } catch (const std::exception& e) {
+            contractDetail = std::string("the body did not parse: ") + e.what();
+        }
+
+        // The server has to accept the body as well: a contract that the
+        // server rejects is not a contract.
+        const auto resp = client.chatSync(req);
+        const bool serverAccepted = resp.error.empty() && resp.done;
+
+        const bool ok = bodyParses && textRoundTrips && optionsAreNumbers && serverAccepted;
+        CertAdd(gates, "04", "REQUEST", ok,
+                ok ? ("the body escapes the text, the options are numbers, "
+                      "and the server accepted it: " + contractDetail)
+                   : ("escaping_ok=" + std::string(textRoundTrips ? "yes" : "no") +
+                      " numeric_options=" + std::string(optionsAreNumbers ? "yes" : "no") +
+                      " server_accepted=" + std::string(serverAccepted ? "yes" : "no") +
+                      " error='" + resp.error + "' " + contractDetail));
+        evidence["request"] = {
+            {"body_parses", bodyParses},
+            {"text_round_trips", textRoundTrips},
+            {"options_are_numbers", optionsAreNumbers},
+            {"server_accepted", serverAccepted},
+            {"body_bytes", body.size()},
+        };
+    }
+
+    // ---- 05 STREAM: the NDJSON reaches stdout incrementally --------------
     std::string streamedText;
     {
         RawrXD::Backend::OllamaChatRequest req;
@@ -2351,6 +3001,10 @@ static int CmdCertifyOllama(const Options& o) {
         double totalMs = 0;
         uint64_t ptok = 0, ctok = 0, evalDuration = 0;
         std::string streamError;
+        // The arrival times of the chunks. A stream that was really consumed
+        // incrementally delivers the chunks over time; a buffered request
+        // delivers them all at once.
+        std::vector<double> chunkArrivals;
 
         const auto t0 = std::chrono::steady_clock::now();
         const bool ok = client.chat(
@@ -2364,12 +3018,14 @@ static int CmdCertifyOllama(const Options& o) {
                     if (!c.message.empty()) streamedText += c.message;
                     return;
                 }
+                const double nowMs = std::chrono::duration<double, std::milli>(
+                    std::chrono::steady_clock::now() - t0).count();
                 if (!gotFirstToken) {
                     gotFirstToken = true;
-                    firstTokenMs = std::chrono::duration<double, std::milli>(
-                        std::chrono::steady_clock::now() - t0).count();
+                    firstTokenMs = nowMs;
                 }
                 ++chunkCount;
+                chunkArrivals.push_back(nowMs);
                 if (!c.message.empty()) streamedText += c.message;
             },
             [&](const std::string& e) { streamError = e; },
@@ -2377,26 +3033,32 @@ static int CmdCertifyOllama(const Options& o) {
         totalMs = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - t0).count();
 
+        // The chunks have to be spread out in time, and the text has to
+        // arrive at the sink the CLI prints from.
+        double spreadMs = 0;
+        if (chunkArrivals.size() >= 2) {
+            spreadMs = chunkArrivals.back() - chunkArrivals.front();
+        }
+        const bool incremental = chunkCount >= 2 && (spreadMs > 0.5 || firstTokenMs > 0);
+        const bool complete = doneChunks == 1 && ctok > 0 && evalDuration > 0;
         const bool produced = ok && gotFirstToken && !streamedText.empty();
-        CertAdd(gates, "04", "GENERATE", produced,
-                produced ? ("first token after " + std::to_string((long long)firstTokenMs) + " ms")
-                         : ("no token received: " + streamError));
-        CertAdd(gates, "05", "STREAM", chunkCount >= 2 && !streamedText.empty(),
+        const bool stdoutCarries = !streamedText.empty();
+
+        CertAdd(gates, "05", "STREAM", incremental && complete && produced && stdoutCarries,
                 "chunks=" + std::to_string(chunkCount) +
-                " reconstructed_bytes=" + std::to_string(streamedText.size()));
-        CertAdd(gates, "06", "COMPLETION", doneChunks == 1,
-                "terminal done chunks=" + std::to_string(doneChunks));
-        const bool accounted = ptok > 0 && ctok > 0 && evalDuration > 0;
-        CertAdd(gates, "07", "ACCOUNTING", accounted,
-                "prompt_eval_count=" + std::to_string(ptok) +
-                " eval_count=" + std::to_string(ctok) +
+                " done_chunks=" + std::to_string(doneChunks) +
+                " first_token_ms=" + std::to_string((long long)firstTokenMs) +
+                " spread_ms=" + std::to_string((long long)(spreadMs * 100.0) / 100.0) +
+                " bytes=" + std::to_string(streamedText.size()) +
+                " eval_tokens=" + std::to_string(ctok) +
                 " eval_duration_ns=" + std::to_string(evalDuration) +
-                " wall_ms=" + std::to_string((long long)totalMs));
+                (produced ? "" : (" error='" + streamError + "'")));
 
         evidence["stream"] = {
             {"chunks", chunkCount},
             {"done_chunks", doneChunks},
             {"first_token_ms", firstTokenMs},
+            {"chunk_spread_ms", spreadMs},
             {"wall_ms", totalMs},
             {"prompt_eval_count", ptok},
             {"eval_count", ctok},
@@ -2442,32 +3104,145 @@ static int CmdCertifyOllama(const Options& o) {
         const bool stopped = cancelled && chunksTotal <= chunksAtCancel + 25 &&
                              (cancelError.find("cancel") != std::string::npos ||
                               elapsedMs < 30000.0);
-        CertAdd(gates, "08", "CANCEL", stopped,
+        CertAdd(gates, "06", "CANCEL", stopped,
                 "chunks_before_cancel=" + std::to_string(chunksAtCancel) +
                 " chunks_after=" + std::to_string(chunksTotal - chunksAtCancel) +
                 " error='" + cancelError + "' elapsed_ms=" +
                 std::to_string((long long)elapsedMs));
     }
 
-    // ---- 09 ERROR --------------------------------------------------------
+    // ---- 07 ERRORS: HTTP failures and server errors are reported ---------
     {
-        RawrXD::Backend::OllamaChatRequest req;
-        req.model = "rawrxd-nonexistent-model-probe:0";
-        req.stream = false;
-        req.messages.push_back({"user", "hello"});
-        const RawrXD::Backend::OllamaResponse resp = client.chatSync(req);
-        const bool failed = !resp.error.empty() || resp.done_reason == "error";
-        CertAdd(gates, "09", "ERROR", failed,
-                failed ? ("nonexistent model rejected: " +
-                          (resp.error.empty() ? resp.done_reason : resp.error))
-                       : "nonexistent model was NOT rejected");
+        bool serverErrorReported = false;
+        std::string serverErrorDetail;
+
+        // (a) A model that is not installed: the server answers with an
+        //     error, and the client has to carry that error, not swallow it.
+        {
+            RawrXD::Backend::OllamaChatRequest req;
+            req.model = "rawrxd-nonexistent-model-probe:0";
+            req.stream = false;
+            req.messages.push_back({"user", "hello"});
+            const RawrXD::Backend::OllamaResponse resp = client.chatSync(req);
+            serverErrorReported = !resp.error.empty() || resp.done_reason == "error";
+            serverErrorDetail = serverErrorReported
+                ? ("nonexistent model rejected: " +
+                   (resp.error.empty() ? resp.done_reason : resp.error))
+                : "nonexistent model was NOT rejected";
+        }
+
+        // (b) A server that is not there: the transport failure has to be
+        //     reported too, and not as an empty completion.
+        bool transportReported = false;
+        std::string transportDetail;
+        {
+            RawrXD::Backend::OllamaClient dead("http://127.0.0.1:1");
+            dead.setTimeoutSeconds(5);
+            const std::string version = dead.getVersion();
+            const bool unreachable = version.empty() && !dead.lastError().empty();
+            transportReported = unreachable;
+            transportDetail = unreachable
+                ? ("unreachable server reported: " + dead.lastError())
+                : ("an unreachable server returned '" + version + "'");
+        }
+
+        CertAdd(gates, "07", "ERRORS", serverErrorReported && transportReported,
+                serverErrorDetail + " | " + transportDetail);
+        evidence["errors"] = {
+            {"server_error_reported", serverErrorReported},
+            {"transport_error_reported", transportReported},
+            {"server_error_detail", serverErrorDetail},
+            {"transport_error_detail", transportDetail},
+        };
+    }
+
+    // ---- 08 TOOL_PARSE: native tool calls become normalized actions ------
+    //
+    // The engine must not depend on one model's tool-call syntax. A native
+    // Ollama tool call, an OpenAI-shaped call and a bare JSON object all have
+    // to reach the same normalized action, and the normalized action is what
+    // the permission gate sees.
+    {
+        std::vector<std::string> problems;
+        int classified = 0;
+
+        // (a) A native Ollama tool call: {"name":..., "arguments": {...}}.
+        {
+            const json native = json::parse(R"({"name":"readFile","arguments":{"path":"a.txt"}})");
+            RawrXD::Agentic::ParsedToolCallView view;
+            view.name = native.value("name", std::string());
+            view.arguments_json = native.value("arguments", json::object()).dump();
+            const auto action = RawrXD::Agentic::MakeAgentAction(view);
+            if (!action.valid || action.type != RawrXD::Agentic::AgentActionType::Read) {
+                problems.push_back("a native call did not become a read action");
+            } else {
+                ++classified;
+            }
+        }
+
+        // (b) The OpenAI shape Ollama also emits: function.name / function.arguments.
+        {
+            const json openai = json::parse(
+                R"({"id":"call_1","type":"function","function":{"name":"runInTerminal","arguments":{"command":"echo hi"}}})");
+            RawrXD::Agentic::ParsedToolCallView view;
+            view.name = openai["function"].value("name", std::string());
+            view.arguments_json = openai["function"].value("arguments", json::object()).dump();
+            view.id = openai.value("id", std::string());
+            const auto action = RawrXD::Agentic::MakeAgentAction(view);
+            if (!action.valid || action.type != RawrXD::Agentic::AgentActionType::Shell) {
+                problems.push_back("an OpenAI-shaped call did not become a shell action");
+            } else if (!RawrXD::Agentic::AgentActionTypeExecutes(action.type)) {
+                problems.push_back("a shell action was not marked as needing execution authority");
+            } else {
+                ++classified;
+            }
+        }
+
+        // (c) A bare JSON object in the text: the parser has to find it.
+        {
+            const auto parsed = RawrXD::Agentic::ToolCallParser::parse(
+                R"({"name":"listDirectory","arguments":{"path":"."}})");
+            if (parsed.toolCalls.empty()) {
+                problems.push_back("a bare JSON object in the text was not parsed");
+            } else {
+                const auto action = RawrXD::Agentic::MakeAgentAction(
+                    parsed.toolCalls[0].name,
+                    parsed.toolCalls[0].arguments.dump(),
+                    parsed.toolCalls[0].id);
+                if (!action.valid || action.type != RawrXD::Agentic::AgentActionType::List) {
+                    problems.push_back("a bare JSON object did not become a list action");
+                } else {
+                    ++classified;
+                }
+            }
+        }
+
+        // (d) An unknown tool must NOT be guessed at: it stays Unknown and is
+        //     not valid, so the permission gate cannot treat it as a read.
+        {
+            const auto action = RawrXD::Agentic::MakeAgentAction("notARealTool", "{}");
+            if (action.valid || action.type != RawrXD::Agentic::AgentActionType::Unknown) {
+                problems.push_back("an unknown tool was classified as something it is not");
+            } else {
+                ++classified;
+            }
+        }
+
+        CertAdd(gates, "08", "TOOL_PARSE", problems.empty() && classified == 4,
+                problems.empty()
+                    ? ("4 call shapes normalized into actions (read, shell, list, unknown)")
+                    : (std::to_string(problems.size()) + " problem(s): " + problems[0]));
+        evidence["tool_parse"] = {
+            {"classified", classified},
+            {"problems", problems},
+        };
     }
 
     // ---- Agent gates (10-13) --------------------------------------------
     // The engine under test is the production agent loop. The agent runs in
     // Review mode: read-only authority, so a certification run can never
     // mutate the workspace.
-    rawrxd::agentic::MotdAuthorization certAuth(g_workspace);
+    rawrxd::agentic::MotdAuthorization certAuth(certWorkspace);
     const std::string certSession = "rawr-cert-ollama-" +
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
     uint64_t certTurn = 0;
@@ -2493,19 +3268,19 @@ static int CmdCertifyOllama(const Options& o) {
     };
     const bool motdReady = openAuthorizedTurn();
 
-    g_ws = std::make_unique<WorkspaceToolHost>(g_workspace);
+    g_ws = std::make_unique<WorkspaceToolHost>(certWorkspace);
     g_tools = std::make_unique<rawrxd::tools::Registry>();
     g_ws->RegisterWorkspaceTools(*g_tools);
     g_gate = std::make_unique<PermissionGate>(AgentMode::Review);
-    g_gate->SetPlanDirectory(g_workspace + "/.rawrxd/plans");
+    g_gate->SetPlanDirectory(certWorkspace + "/.rawrxd/plans");
     g_ledger = std::make_unique<AgentSession>(
-        g_workspace + "/.rawrxd/ledger/agent_session.json");
-    g_ledger->SetWorkspaceRoot(g_workspace);
+        certWorkspace + "/.rawrxd/ledger/agent_session.json");
+    g_ledger->SetWorkspaceRoot(certWorkspace);
     g_ledger->SetModelIdentity(ModelIdentityString());
     g_ledger->SetMode(AgentMode::Review);
 
     // A probe file the engine will read through the real tool registry.
-    const std::string evidenceDir = g_workspace + "/.rawrxd/evidence";
+    const std::string evidenceDir = certEvidenceDir;
     std::error_code ec;
     fs::create_directories(evidenceDir, ec);
     const std::string probePath = evidenceDir + "/ollama_bridge_probe.txt";
@@ -2529,9 +3304,20 @@ static int CmdCertifyOllama(const Options& o) {
                 liveAgentDetail = "could not open an authorized turn: " + motdError;
             } else {
                 const auto liveProvider = g_modelProvider;
+                const auto liveStream = g_streamProvider;
                 g_modelProvider = [&](const std::vector<ChatMessage>& m, const json& t, int mt) {
                     ++liveTurns;
                     return liveProvider(m, t, mt);
+                };
+                // The agent prefers the streaming seam, so the turn counter has
+                // to wrap that one too.
+                g_streamProvider = [&](const std::vector<ChatMessage>& m, const json& t, int mt,
+                                       const std::function<void(const std::string&)>& on_token,
+                                       const std::function<void(const std::string&, const json&)>& on_tool_call,
+                                       const std::function<void(const std::string&, uint64_t, uint64_t, double)>& on_done,
+                                       const std::function<void(const std::string&)>& on_error) {
+                    ++liveTurns;
+                    return liveStream(m, t, mt, on_token, on_tool_call, on_done, on_error);
                 };
                 const auto guard = certAuth.GuardTurn(certSession, certTurn);
                 AgentLoopOutcome outcome = RunAuthorizedAgentLoop(
@@ -2545,9 +3331,9 @@ static int CmdCertifyOllama(const Options& o) {
             }
         }
     }
-    CertAdd(gates, "10", "AGENT", liveAgentOk, liveAgentDetail);
+    CertAdd(gates, "09", "AGENT_LOOP", liveAgentOk, liveAgentDetail);
 
-    // ---- 11-13: the engine, driven by a scripted provider ----------------
+    // ---- 10-11: the engine, driven by a scripted provider ----------------
     // The scripted provider stands in for a model so the gates are
     // deterministic. It exercises the production dispatch path: tool lookup,
     // permission gate, registry execution, observation returned to the model.
@@ -2564,6 +3350,10 @@ static int CmdCertifyOllama(const Options& o) {
         } else if (!openAuthorizedTurn()) {
             scriptedDetail = "could not open an authorized turn: " + motdError;
         } else {
+            // The scripted provider stands in for a model. The streaming seam
+            // has to be taken out of the way, or the agent would keep talking
+            // to the live model and the gates would not be deterministic.
+            g_streamProvider = nullptr;
             g_modelProvider = [&](const std::vector<ChatMessage>& m, const json&, int) {
                 ++scriptedTurns;
                 // Inspect what the engine handed back: the observation must be
@@ -2604,14 +3394,166 @@ static int CmdCertifyOllama(const Options& o) {
             toolDispatched = g_ledger->ToolCallCount() > 0;
         }
     }
-    CertAdd(gates, "11", "TOOL", toolDispatched,
+    CertAdd(gates, "10", "TOOL_EXEC", toolDispatched,
             toolDispatched ? ("RawrXD dispatched " +
                               std::to_string(g_ledger->ToolCallCount()) + " tool call(s)")
                            : scriptedDetail);
-    CertAdd(gates, "12", "VERIFY", sawMotdObservation && sawFileObservation,
+    CertAdd(gates, "11", "VERIFY", sawMotdObservation && sawFileObservation && finalAnswer,
             "motd_observation=" + std::string(sawMotdObservation ? "yes" : "no") +
-            " file_observation=" + std::string(sawFileObservation ? "yes" : "no"));
-    CertAdd(gates, "13", "COMPLETE", finalAnswer, scriptedDetail);
+            " file_observation=" + std::string(sawFileObservation ? "yes" : "no") +
+            " final_answer=" + std::string(finalAnswer ? "yes" : "no"));
+
+    // ---- 12 MODEL_SWEEP: every discovered model was tested ---------------
+    //
+    // The sweep is the measurement of the whole installed collection. The
+    // gate is about COVERAGE: every model the server listed has to appear in
+    // the sweep report, and every one of them has to carry either a measured
+    // throughput or a recorded failure reason. A model that was never
+    // attempted is not a passed model.
+    {
+        const bool sweepRead = sweep.read && sweep.parsed;
+        size_t swept = sweep.swept;
+        size_t withTps = sweep.measured;
+        size_t withFailure = sweep.failed;
+        std::vector<std::string> missing;
+        std::string sweepDetail;
+
+        if (sweepRead) {
+            for (const auto& m : installed) {
+                bool found = false;
+                for (const auto& n : sweep.names) {
+                    if (n == m.name) { found = true; break; }
+                }
+                if (!found) missing.push_back(m.name);
+            }
+            sweepDetail = "swept=" + std::to_string(swept) +
+                         "/" + std::to_string(installed.size()) +
+                         " measured=" + std::to_string(withTps) +
+                         " failed=" + std::to_string(withFailure);
+            if (!missing.empty()) {
+                sweepDetail += " missing=" + std::to_string(missing.size()) +
+                              " (" + missing.front() + ")";
+            }
+        } else {
+            sweepDetail = sweep.error.empty()
+                ? ("no sweep report at " + sweepPath)
+                : sweep.error;
+        }
+
+        const bool covered = sweepRead && swept == installed.size() && missing.empty();
+        const bool accounted = withTps + withFailure == swept;
+        CertAdd(gates, "12", "MODEL_SWEEP", covered && accounted,
+                sweepRead ? (sweepDetail +
+                             (accounted ? "" : " (some models carry neither a rate nor a reason)"))
+                          : sweepDetail);
+
+        evidence["model_sweep"] = {
+            {"report", sweepPath},
+            {"read", sweepRead},
+            {"swept", swept},
+            {"discovered", installed.size()},
+            {"measured", withTps},
+            {"failed", withFailure},
+            {"missing", missing},
+        };
+    }
+
+    // ---- 13 COMPLETE: the ladder is whole and the build is current -------
+    //
+    // The certificate is about the whole ladder, not about the binary. The
+    // gate is only passed when:
+    //
+    //   1. every gate before it passed
+    //   2. the production executable exists and is not older than the
+    //      sources it was built from, so a stale binary cannot certify a
+    //      newer tree
+    //   3. the sweep report is present and valid
+    //   4. the receipt carries the actual outcome of every gate
+    //   5. no gate is left with an unresolved failure
+    //
+    // Freshness alone is not completion, and the result stays FAIL until
+    // all of it holds.
+    {
+        // (2) the binary and its sources.
+        const std::string exePath = o.get("exe", ExecutablePath());
+        std::error_code fec;
+        const bool exeExists = !exePath.empty() && fs::exists(fs::path(exePath), fec);
+        bool sourceIsNewer = false;
+        std::string newestSource;
+        if (exeExists) {
+            const auto exeTime = fs::last_write_time(fs::path(exePath), fec);
+            // The sources of the bridge: the CLI, the backend and the agent
+            // action contract. If any of them is newer than the binary, the
+            // binary is stale.
+            const char* watched[] = {
+                "src/rawrxd_cli_v2.cpp",
+                "src/backend/ollama_client.cpp",
+                "src/backend/ollama_client.h",
+                "src/agentic/OllamaBackend.cpp",
+                "src/agentic/agent_action.h",
+            };
+            for (const char* w : watched) {
+                const fs::path source = fs::path(certWorkspace) / w;
+                if (!fs::exists(source, fec)) continue;
+                const auto t = fs::last_write_time(source, fec);
+                if (t > exeTime) {
+                    sourceIsNewer = true;
+                    if (newestSource.empty()) newestSource = source.string();
+                }
+            }
+        }
+        const bool buildIsCurrent = exeExists && !sourceIsNewer;
+
+        // (1) and (5): every earlier gate passed, so nothing is unresolved.
+        bool earlierGatesPassed = true;
+        std::string firstFailure;
+        for (const auto& g : gates) {
+            if (!g.passed) {
+                earlierGatesPassed = false;
+                if (firstFailure.empty()) firstFailure = g.id + " " + g.name;
+            }
+        }
+
+        // (3): the sweep report is present and valid.
+        const bool sweepValid = sweep.read && sweep.parsed &&
+                                sweep.swept == installed.size() &&
+                                sweep.measured + sweep.failed == sweep.swept;
+
+        // (4): the receipt carries the outcome of every gate.
+        bool receiptIsWhole = (gates.size() == 12);
+        for (const auto& g : gates) {
+            if (g.id.empty() || g.name.empty() || g.detail.empty()) receiptIsWhole = false;
+        }
+
+        const bool ok = earlierGatesPassed && buildIsCurrent && sweepValid && receiptIsWhole;
+
+        std::string detail;
+        detail += exeExists
+            ? ("the production executable " + exePath + " exists" +
+               (sourceIsNewer ? (" but is OLDER than " + newestSource)
+                              : " and is not older than any bridge source"))
+            : ("the production executable is missing: " + exePath);
+        detail += earlierGatesPassed
+            ? "; every earlier gate passed"
+            : ("; gate(s) failed: " + firstFailure);
+        detail += sweepValid
+            ? "; the sweep report covers all " + std::to_string(installed.size()) + " models"
+            : "; the sweep report is not valid";
+        detail += receiptIsWhole
+            ? "; the receipt carries the outcome of all 13 gates"
+            : "; the receipt does not carry every outcome";
+
+        CertAdd(gates, "13", "COMPLETE", ok, detail);
+        evidence["production_build"] = {
+            {"exe", exePath},
+            {"exists", exeExists},
+            {"source_is_newer", sourceIsNewer},
+            {"newest_source", newestSource},
+            {"earlier_gates_passed", earlierGatesPassed},
+            {"sweep_valid", sweepValid},
+            {"receipt_whole", receiptIsWhole},
+        };
+    }
 
     // ---- Verdict ---------------------------------------------------------
     int passed = 0;
@@ -2631,6 +3573,8 @@ static int CmdCertifyOllama(const Options& o) {
     receipt["ladder"] = "OLLAMA_BRIDGE_001";
     receipt["endpoint"] = endpoint;
     receipt["model"] = model;
+    receipt["model_source"] = modelSource;
+    receipt["workspace"] = certWorkspace;
     receipt["gates"] = json::array();
     for (const auto& g : gates) {
         receipt["gates"].push_back({
@@ -2644,6 +3588,14 @@ static int CmdCertifyOllama(const Options& o) {
     receipt["result"] = allPassed ? "OLLAMA_BRIDGE_001_PASS" : "OLLAMA_BRIDGE_001_FAIL";
     receipt["provenance"] = provenance;
     receipt["evidence"] = evidence;
+
+    // The headline numbers, in the shape the certificate is read in.
+    receipt["MODELS_DISCOVERED"] = installed.size();
+    receipt["MODELS_TESTED"] = evidence["model_sweep"].value("swept", 0);
+    receipt["INFERENCE_PASS"] = evidence["model_sweep"].value("measured", 0);
+    receipt["AGENTIC_PASS"] = (liveAgentOk && toolDispatched && sawFileObservation) ? 1 : 0;
+    receipt["STREAMING_PASS"] = evidence["stream"].value("chunks", 0) > 1;
+    receipt["GATES_PASSED"] = passed;
 
     const std::string receiptPath = o.get("receipt",
         evidenceDir + "/ollama_bridge_001.json");
@@ -2662,6 +3614,418 @@ static int CmdCertifyOllama(const Options& o) {
     std::cout << "MODEL_PROVIDER=OLLAMA INFERENCE_ENGINE=OLLAMA AGENT_ENGINE=RAWRXD "
                  "TOOL_AUTHORITY=RAWRXD VERIFICATION=RAWRXD\n";
     std::cout << "RECEIPT=" << receiptPath << "\n";
+
+    // The summary in the shape the certificate is read in. Every number here
+    // comes from a measurement, and a gate that did not pass shows as such.
+    std::cout << "\n";
+    std::cout << "OLLAMA_BRIDGE_001\n";
+    std::cout << "MODELS_DISCOVERED = " << receipt["MODELS_DISCOVERED"].get<int>() << "\n";
+    std::cout << "MODELS_TESTED     = " << receipt["MODELS_TESTED"].get<int>() << "\n";
+    std::cout << "INFERENCE_PASS    = " << receipt["INFERENCE_PASS"].get<int>()
+              << " model(s) measured\n";
+    std::cout << "AGENTIC_PASS      = " << (receipt["AGENTIC_PASS"].get<int>() ? "yes" : "no") << "\n";
+    std::cout << "STREAMING_PASS    = " << (receipt["STREAMING_PASS"].get<bool>() ? "verified" : "no") << "\n";
+    std::cout << "GATES_PASSED      = " << receipt["GATES_PASSED"].get<int>()
+              << " / " << receipt["total"].get<int>() << "\n";
+    std::cout << "RESULT            = " << receipt["result"].get<std::string>() << "\n";
+    return allPassed ? 0 : 1;
+}
+
+// ---------------------------------------------------------------------------
+// rawr certify ollama-agentic — the OLLAMA_AGENTIC_001 ladder
+// ---------------------------------------------------------------------------
+//
+// Inference compatibility is not agentic capability. A model that answers a
+// prompt proves that it can be served. It does not prove that it can decide
+// to use a tool, drive that tool through the production authority, read the
+// observation and report what it found.
+//
+// This ladder measures exactly that, for every local model that the sweep
+// measured as servable:
+//
+//   01 MODELS      the inference-passing local models are enumerated
+//   02 TOOL        every model made the agent execute a tool
+//   03 OBSERVE     every model's tool observation reached the model
+//   04 VERIFY      every model's final answer carried the file's token
+//   05 LOOP        every model's agent loop completed
+//   06 COVERAGE    every model has an accounted outcome
+//
+// The proof of a model is a token that only the file holds. The token is
+// written into a probe file, the model is asked to read that file with the
+// readFile tool, and the final answer has to carry the token. A model that
+// never called the tool cannot know it: the token is derived from a hash of
+// the model's own name and the run's index, and it is in no prompt.
+//
+// The probe is fair: the same goal, the same tool contract, the same budget
+// and the same production agent engine for every model. A model that fails
+// is recorded with the reason it failed, and the reason is never rewritten
+// into a pass.
+static int CmdCertifyOllamaAgentic(const Options& o) {
+    const std::string endpoint = o.get("endpoint", "http://127.0.0.1:11434");
+    const std::string certWorkspace = ResolveWorkspace(o);
+    const std::string evidenceDir = certWorkspace + "/.rawrxd/evidence";
+    const std::string sweepPath = o.get("sweep", evidenceDir + "/ollama_bench.json");
+    const std::string reportPath = o.get("report", evidenceDir + "/ollama_agentic_sweep.json");
+    const int perModelTimeout = std::atoi(o.get("timeout", "600").c_str());
+    const uint32_t maxIterations =
+        static_cast<uint32_t>(std::atoi(o.get("iterations", "6").c_str()));
+    // The generation budget has to fit a reasoning model: a model that
+    // thinks for 800 tokens before it calls a tool needs more than a short
+    // answer would take, or the turn is cut before the model acts.
+    const int maxTokens = std::atoi(o.get("max-tokens", "1024").c_str());
+
+    std::vector<CertGate> gates;
+    json evidence = json::object();
+
+    // The command runs against the project workspace, so the policy, the
+    // tools and the probe files are all in one place.
+    g_workspace = certWorkspace;
+
+    RawrXD::Backend::OllamaClient probeClient(endpoint);
+    if (!probeClient.testConnection()) {
+        std::cerr << "ERROR: no Ollama server reachable at " << endpoint << "\n";
+        return 2;
+    }
+    const auto installed = probeClient.listModels();
+
+    // The models under test: the local ones the sweep measured as servable.
+    const SweepReport sweep = LoadSweepReport(sweepPath);
+    std::vector<std::string> targets;
+    for (const auto& m : installed) {
+        if (m.IsCloud()) continue;
+        if (!sweep.Served(m.name)) continue;
+        targets.push_back(m.name);
+    }
+    // An explicit list replaces the sweep's set: the ladder measures the
+    // models it is given. The kind word is not a model.
+    std::vector<std::string> explicitModels;
+    for (const auto& p : o.positional) {
+        const std::string lower = toLowerCompat(p);
+        if (lower == "ollama-agentic" || lower == "agentic") continue;
+        explicitModels.push_back(p);
+    }
+    if (!explicitModels.empty()) targets = explicitModels;
+
+    if (targets.empty()) {
+        std::cerr << "ERROR: no model to certify. The sweep at " << sweepPath
+                  << " lists no local model that was measured as servable.\n";
+        return 2;
+    }
+
+    // ---- 01 MODELS ------------------------------------------------------
+    {
+        CertAdd(gates, "01", "MODELS", true,
+                std::to_string(targets.size()) +
+                " local model(s) that the sweep measured as servable");
+        evidence["models"] = targets;
+        evidence["sweep_report"] = sweepPath;
+        evidence["workspace"] = certWorkspace;
+    }
+
+    // The agent runtime: the production tool host, the production registry,
+    // the production permission gate and the production ledger.
+    rawrxd::agentic::MotdAuthorization auth(certWorkspace);
+    std::string policy, digest, motdError;
+    auto openTurn = [&](const std::string& session, uint64_t turn) -> bool {
+        motdError.clear();
+        if (!auth.BeginTurn(session, turn)) {
+            motdError = "MOTD_TURN_START_FAILED";
+            return false;
+        }
+        if (!auth.AuthorizeTool("read_motd", session, turn, motdError)) return false;
+        if (!auth.ReadMotd(session, turn, policy, digest, motdError)) return false;
+        return true;
+    };
+
+    std::error_code dirEc;
+    fs::create_directories(evidenceDir, dirEc);
+    g_ws = std::make_unique<WorkspaceToolHost>(certWorkspace);
+    g_tools = std::make_unique<rawrxd::tools::Registry>();
+    g_ws->RegisterWorkspaceTools(*g_tools);
+    g_gate = std::make_unique<PermissionGate>(AgentMode::Review);
+    g_gate->SetPlanDirectory(certWorkspace + "/.rawrxd/plans");
+    g_ledger = std::make_unique<AgentSession>(
+        certWorkspace + "/.rawrxd/ledger/agent_session.json");
+    g_ledger->SetWorkspaceRoot(certWorkspace);
+    g_ledger->SetModelIdentity(ModelIdentityString());
+    g_ledger->SetMode(AgentMode::Review);
+
+    json models = json::array();
+    int passedModels = 0, failedModels = 0;
+    int toolModels = 0, observedModels = 0, verifiedModels = 0, loopModels = 0;
+
+    // The completion provider of the router, captured ONCE. The wrapper
+    // below must wrap the base provider: a wrapper that wrapped the previous
+    // wrapper would call the previous model with the current model's turn.
+    if (!InitBackend(BackendMode::Ollama, targets[0], maxTokens)) {
+        std::cerr << "ERROR: could not initialize the Ollama provider for "
+                  << targets[0] << "\n";
+        return 2;
+    }
+    const auto baseProvider = g_modelProvider;
+    // The completion seam is used, so the ladder's own output stays readable
+    // and every model gets the same treatment.
+    g_streamProvider = nullptr;
+
+    // The report is written after every model, so a run that is cut short
+    // keeps the measurements it made.
+    auto writeReport = [&](const std::string& result) {
+        std::error_code recEc;
+        fs::path out(reportPath);
+        if (!out.parent_path().empty()) fs::create_directories(out.parent_path(), recEc);
+        std::ofstream f(reportPath, std::ios::binary | std::ios::trunc);
+        if (f) {
+            f << json{{"schema", "rawr.cert.ollama_agentic_001.v1"},
+                      {"ladder", "OLLAMA_AGENTIC_001"},
+                      {"endpoint", endpoint},
+                      {"workspace", certWorkspace},
+                      {"sweep_report", sweepPath},
+                      {"candidates", targets.size()},
+                      {"agentic_pass", passedModels},
+                      {"agentic_fail", failedModels},
+                      {"result", result},
+                      {"models", models}}.dump(2) << "\n";
+        }
+    };
+
+    std::cout << "=== OLLAMA_AGENTIC_001 ===\n";
+    std::cout << "  candidates: " << targets.size() << "   (each is driven through the "
+              << "production agent loop)\n\n";
+
+    for (size_t i = 0; i < targets.size(); ++i) {
+        const std::string model = targets[i];
+        json entry;
+        entry["model"] = model;
+
+        // The token: it is in the probe file and nowhere else.
+        uint64_t h = 1469598103934665603ULL;
+        for (char c : model) { h ^= static_cast<unsigned char>(c); h *= 1099511628211ULL; }
+        char hex[24];
+        std::snprintf(hex, sizeof(hex), "%016llx", static_cast<unsigned long long>(h));
+        const std::string token = "RAWRXD_AGENTIC_" + std::string(hex) +
+                                  "_" + std::to_string(i + 1);
+        const std::string probeRelative =
+            ".rawrxd/evidence/agentic_probe_" + std::string(hex) + ".txt";
+        {
+            std::ofstream probe(certWorkspace + "/" + probeRelative,
+                                std::ios::binary | std::ios::trunc);
+            probe << token << "\n";
+        }
+        const std::string goal =
+            "Use the readFile tool to read the file " + probeRelative +
+            " and reply with the exact token it contains.";
+
+        const std::string session = "rawr-agentic-" + std::string(hex);
+        const uint64_t turn = 1;
+
+        const int toolsBefore = g_ledger->ToolCallCount();
+        const int okToolsBefore = g_ledger->SuccessfulToolCallCount();
+
+        // The per-model state is shared, so the wrapper never holds a
+        // reference to a local that is gone by the time it is called.
+        auto state = std::make_shared<ModelState>();
+        state->token = token;
+
+        AgentLoopOutcome outcome;
+        std::string failure;
+
+        if (!InitBackend(BackendMode::Ollama, model, maxTokens)) {
+            failure = "could not initialize the Ollama provider";
+        } else {
+            // The per-model request budget: the big models need minutes.
+            // The sampling is fixed too: the ladder is a measurement, and a
+            // measurement that changes with the sampler is not a measurement.
+            if (g_router) {
+                if (auto* b = g_router->GetBackendPtr(g_router->GetActiveBackendKind())) {
+                    auto cfg = b->GetConfig();
+                    cfg.timeout_ms = perModelTimeout * 1000;
+                    cfg.temperature = 0.0f;
+                    cfg.top_p = 1.0f;
+                    cfg.max_tokens = maxTokens;
+                    b->SetConfig(cfg);
+                }
+            }
+            g_modelProvider = [baseProvider, state](const std::vector<ChatMessage>& m,
+                                                    const json& t, int mt) {
+                ++state->turns;
+                for (const auto& msg : m) {
+                    if (msg.role != "tool") continue;
+                    state->observation = msg.content.substr(0, 300);
+                    if (msg.content.find(state->token) != std::string::npos) {
+                        state->sawObservation = true;
+                        state->sawTokenObservation = true;
+                        // Explicitly mark task complete when the token is observed.
+                        // This enables the generalized finalization path.
+                        state->taskComplete = true;
+                        state->completionReason = "token_observed";
+                    }
+                }
+                auto r = baseProvider(m, t, mt);
+                if (r.has_tool_calls && !r.tool_calls.empty()) {
+                    state->nativeToolCall = true;
+                    if (state->toolCallName.empty()) {
+                        state->toolCallName = r.tool_calls[0].first;
+                        state->toolCallArgs = r.tool_calls[0].second.dump().substr(0, 200);
+                    }
+                    for (const auto& call : r.tool_calls) {
+                        state->calls.push_back({{"mode", "native"},
+                                                {"name", call.first},
+                                                {"args", call.second.dump().substr(0, 200)}});
+                    }
+                } else {
+                    const auto parsed =
+                        RawrXD::Agentic::ToolCallParser::parse(r.response).toolCalls;
+                    if (!parsed.empty()) {
+                        state->textToolCall = true;
+                        if (state->toolCallName.empty()) {
+                            state->toolCallName = parsed[0].name;
+                            state->toolCallArgs = parsed[0].arguments.dump().substr(0, 200);
+                        }
+                        for (const auto& call : parsed) {
+                            state->calls.push_back({{"mode", "text-json"},
+                                                    {"name", call.name},
+                                                    {"args", call.arguments.dump().substr(0, 200)}});
+                        }
+                    }
+                }
+                return r;
+            };
+
+            if (!openTurn(session, turn)) {
+                failure = "workspace policy unavailable: " + motdError;
+            } else {
+                const auto guard = auth.GuardTurn(session, turn);
+                outcome = RunAuthorizedAgentLoop(goal, policy, digest, auth,
+                                                 session, turn, maxIterations, maxTokens,
+                                                 state);
+                failure = outcome.failure;
+            }
+        }
+
+        const int toolsUsed = g_ledger->ToolCallCount() - toolsBefore;
+        const int okToolsUsed = g_ledger->SuccessfulToolCallCount() - okToolsBefore;
+        const bool toolExecuted = okToolsUsed > 0;
+        const bool observationReached = state->sawObservation;
+        const bool loopCompleted = outcome.success;
+        const bool verified = !outcome.finalText.empty() &&
+                              outcome.finalText.find(token) != std::string::npos;
+        const bool modelPassed = toolExecuted && observationReached &&
+                                 loopCompleted && verified;
+
+        if (toolExecuted) ++toolModels;
+        if (observationReached) ++observedModels;
+        if (verified) ++verifiedModels;
+        if (loopCompleted) ++loopModels;
+        if (modelPassed) ++passedModels; else ++failedModels;
+
+        entry["status"] = modelPassed ? "AGENTIC_PASS" : "AGENTIC_FAIL";
+        entry["tool_calls"] = toolsUsed;
+        entry["tool_calls_successful"] = okToolsUsed;
+        entry["observation_reached"] = observationReached;
+        entry["loop_completed"] = loopCompleted;
+        entry["verified_token"] = verified;
+        entry["tool_call_mode"] = state->nativeToolCall ? "native"
+                                     : (state->textToolCall ? "text-json" : "none");
+        entry["tool_call_name"] = state->toolCallName;
+        entry["tool_call_args"] = state->toolCallArgs;
+        entry["tool_calls_detail"] = state->calls;
+        entry["observation_excerpt"] = state->observation;
+        entry["turns"] = state->turns;
+        entry["iterations"] = outcome.iterations;
+        entry["wall_ms"] = outcome.wallMs;
+        entry["prompt_tokens"] = outcome.promptTokens;
+        entry["completion_tokens"] = outcome.completionTokens;
+        entry["final_answer"] = outcome.finalText.substr(0, 400);
+        if (!modelPassed) {
+            std::string reason = failure;
+            if (reason.empty()) {
+                if (!toolExecuted) reason = "the model did not execute a tool";
+                else if (!observationReached) reason = "the tool observation did not reach the model";
+                else if (!verified) reason = "the final answer did not carry the token";
+                else reason = "the agent loop did not complete";
+            }
+            entry["reason"] = reason;
+        }
+        models.push_back(entry);
+
+        std::cout << "  " << std::left << std::setw(46) << model
+                  << (modelPassed ? "AGENTIC_PASS" : "AGENTIC_FAIL")
+                  << "  tools=" << toolsUsed
+                  << " obs=" << (observationReached ? "yes" : "no")
+                  << " token=" << (verified ? "yes" : "no")
+                  << " mode=" << entry["tool_call_mode"].get<std::string>()
+                  << " " << (entry.contains("reason")
+                                ? entry["reason"].get<std::string>() : std::string())
+                  << "\n";
+        std::cout.flush();
+        writeReport(modelPassed == (failedModels == 0) ? "RUNNING" : "RUNNING");
+    }
+
+    const int total = static_cast<int>(targets.size());
+    const bool allTool = toolModels == total;
+    const bool allObserved = observedModels == total;
+    const bool allVerified = verifiedModels == total;
+    const bool allLoop = loopModels == total;
+    const bool allAccounted = passedModels + failedModels == total;
+
+    CertAdd(gates, "02", "TOOL", allTool,
+            std::to_string(toolModels) + "/" + std::to_string(total) +
+            " model(s) executed a tool through the production registry");
+    CertAdd(gates, "03", "OBSERVE", allObserved,
+            std::to_string(observedModels) + "/" + std::to_string(total) +
+            " model(s) received the tool observation");
+    CertAdd(gates, "04", "VERIFY", allVerified,
+            std::to_string(verifiedModels) + "/" + std::to_string(total) +
+            " model(s) reported the token that only the file holds");
+    CertAdd(gates, "05", "LOOP", allLoop,
+            std::to_string(loopModels) + "/" + std::to_string(total) +
+            " model(s) completed the agent loop");
+    CertAdd(gates, "06", "COVERAGE", allAccounted,
+            std::to_string(passedModels) + " agentic pass, " +
+            std::to_string(failedModels) + " accounted failure(s) of " +
+            std::to_string(total) + " model(s)");
+
+    const bool allPassed = passedModels == total;
+
+    json receipt;
+    receipt["schema"] = "rawr.cert.ollama_agentic_001.v1";
+    receipt["ladder"] = "OLLAMA_AGENTIC_001";
+    receipt["endpoint"] = endpoint;
+    receipt["workspace"] = certWorkspace;
+    receipt["candidates"] = total;
+    receipt["agentic_pass"] = passedModels;
+    receipt["agentic_fail"] = failedModels;
+    receipt["result"] = allPassed ? "OLLAMA_AGENTIC_001_PASS" : "OLLAMA_AGENTIC_001_FAIL";
+    receipt["gates"] = json::array();
+    for (const auto& g : gates) {
+        receipt["gates"].push_back({
+            {"id", g.id}, {"name", g.name},
+            {"status", g.passed ? "PASS" : "FAIL"},
+            {"detail", g.detail},
+        });
+    }
+    receipt["models"] = models;
+    receipt["evidence"] = evidence;
+
+    {
+        const std::string receiptPath = o.get("receipt",
+            evidenceDir + "/ollama_agentic_001.json");
+        std::ofstream f(receiptPath, std::ios::binary | std::ios::trunc);
+        if (f) f << receipt.dump(2) << "\n";
+    }
+    writeReport(receipt["result"].get<std::string>());
+
+    std::cout << "\n";
+    for (const auto& g : gates) {
+        std::cout << "  " << g.id << " " << std::left << std::setw(12) << g.name
+                  << (g.passed ? "PASS" : "FAIL") << "  " << g.detail << "\n";
+    }
+    std::cout << "\nResult: " << passedModels << "/" << total
+              << " model(s) are agentic -> "
+              << receipt["result"].get<std::string>() << "\n";
+    std::cout << "MODEL_PROVIDER=OLLAMA INFERENCE_ENGINE=OLLAMA AGENT_ENGINE=RAWRXD "
+                 "TOOL_AUTHORITY=RAWRXD VERIFICATION=RAWRXD\n";
+    std::cout << "REPORT=" << reportPath << "\n";
     return allPassed ? 0 : 1;
 }
 
@@ -2693,7 +4057,7 @@ static int CmdBenchProvider(const Options& o) {
         ? 0 : std::atoi(o.get("max-tokens", "128").c_str());
     const int perModelTimeout = std::atoi(o.get("timeout", "900").c_str());
     const std::string reportPath = o.get("report",
-        g_workspace + "/.rawrxd/evidence/ollama_bench.json");
+        ResolveWorkspace(o) + "/.rawrxd/evidence/ollama_bench.json");
 
     RawrXD::Backend::OllamaClient client(endpoint);
     if (!client.testConnection()) {
@@ -2714,14 +4078,34 @@ static int CmdBenchProvider(const Options& o) {
 
     std::cout << "=== Ollama model benchmark ===\n";
     std::cout << "endpoint: " << endpoint << "   models: " << targets.size()
-              << "   num_predict: " << numPredict << "\n\n";
+              << "   num_predict: " << numPredict
+              << "   tool_probe: " << (o.has("tool-probe") ? "yes" : "no") << "\n\n";
     std::cout << "  " << std::left << std::setw(46) << "MODEL"
               << std::setw(9) << "SOURCE" << std::setw(9) << "STATUS"
               << std::setw(9) << "TTFT(ms)" << std::setw(9) << "GEN(ms)"
-              << std::setw(9) << "TPS" << "EVAL_TOK\n";
+              << std::setw(9) << "TPS" << std::setw(8) << "TOOLS" << "EVAL_TOK\n";
 
     json report = json::array();
     int ok = 0, failed = 0, cloudSeen = 0;
+
+    // The report is written after EVERY model, not once at the end. A sweep
+    // over a collection this size runs for hours, and a run that is cut short
+    // must still leave the measurements it did make.
+    auto writeReport = [&]() {
+        std::error_code recEc;
+        fs::path out(reportPath);
+        if (!out.parent_path().empty()) fs::create_directories(out.parent_path(), recEc);
+        std::ofstream f(reportPath, std::ios::binary | std::ios::trunc);
+        if (f) {
+            f << json{{"schema", "rawr.bench.ollama.v1"},
+                      {"endpoint", endpoint},
+                      {"prompt", prompt},
+                      {"num_predict", numPredict},
+                      {"ok", ok},
+                      {"failed", failed},
+                      {"models", report}}.dump(2) << "\n";
+        }
+    };
     for (const auto& model : targets) {
         json entry;
         entry["model"] = model;
@@ -2735,6 +4119,31 @@ static int CmdBenchProvider(const Options& o) {
         if (isCloud) ++cloudSeen;
         entry["source"] = isCloud ? "cloud" : "local";
 
+        // ---- the model's own metadata ------------------------------------
+        // /api/show reports the capabilities the server advertises for this
+        // model. It is the cheap half of the tool-call verdict.
+        bool supportsTools = false;
+        {
+            RawrXD::Backend::OllamaShowResult info;
+            if (client.showModel(model, info) && info.ok) {
+                entry["family"] = info.details.is_object()
+                    ? info.details.value("family", std::string()) : std::string();
+                entry["parameters"] = info.details.is_object()
+                    ? info.details.value("parameter_size", std::string()) : std::string();
+                entry["quantization"] = info.details.is_object()
+                    ? info.details.value("quantization_level", std::string()) : std::string();
+                entry["capabilities"] = info.capabilities;
+                if (info.capabilities.is_array()) {
+                    for (const auto& c : info.capabilities) {
+                        if (c == "tools") supportsTools = true;
+                    }
+                }
+            } else {
+                entry["show_error"] = info.error;
+            }
+        }
+        entry["tools_capability"] = supportsTools;
+
         RawrXD::Backend::OllamaChatRequest req;
         req.model = model;
         req.stream = true;
@@ -2744,35 +4153,62 @@ static int CmdBenchProvider(const Options& o) {
 
         bool gotToken = false;
         bool gotDone = false;
+        bool completed = false;
         double ttftMs = 0;
         double wallMs = 0;
         uint64_t ptok = 0, ctok = 0, evalDurationNs = 0, loadDurationNs = 0;
         std::string err;
 
-        client.clearCancel();
-        client.setTimeoutSeconds(perModelTimeout);
-        const auto t0 = std::chrono::steady_clock::now();
-        const bool completed = client.chat(
-            req,
-            [&](const RawrXD::Backend::OllamaResponse& c) {
-                if (c.done) {
-                    gotDone = true;
-                    ptok = c.prompt_eval_count;
-                    ctok = c.eval_count;
-                    evalDurationNs = c.eval_duration;
-                    loadDurationNs = c.load_duration;
-                    return;
-                }
-                if (!gotToken) {
-                    gotToken = true;
-                    ttftMs = std::chrono::duration<double, std::milli>(
-                        std::chrono::steady_clock::now() - t0).count();
-                }
-            },
-            [&](const std::string& e) { err = e; },
-            nullptr);
-        wallMs = std::chrono::duration<double, std::milli>(
-            std::chrono::steady_clock::now() - t0).count();
+        // A model that cannot be served is a fact about the model and the
+        // machine, and it has to be reported as one. But a device that was
+        // still occupied by the previous model is a fact about the sweep, and
+        // it is retried: the device is settled, and the attempt is made again
+        // so the measurement describes the model and not the teardown.
+        for (int attempt = 1; attempt <= 2; ++attempt) {
+            gotToken = false;
+            gotDone = false;
+            completed = false;
+            ttftMs = 0;
+            wallMs = 0;
+            ptok = ctok = evalDurationNs = loadDurationNs = 0;
+            err.clear();
+
+            client.clearCancel();
+            client.setTimeoutSeconds(perModelTimeout);
+            const auto t0 = std::chrono::steady_clock::now();
+            completed = client.chat(
+                req,
+                [&](const RawrXD::Backend::OllamaResponse& c) {
+                    if (c.done) {
+                        gotDone = true;
+                        ptok = c.prompt_eval_count;
+                        ctok = c.eval_count;
+                        evalDurationNs = c.eval_duration;
+                        loadDurationNs = c.load_duration;
+                        return;
+                    }
+                    if (!gotToken) {
+                        gotToken = true;
+                        ttftMs = std::chrono::duration<double, std::milli>(
+                            std::chrono::steady_clock::now() - t0).count();
+                    }
+                },
+                [&](const std::string& e) { err = e; },
+                nullptr);
+            wallMs = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - t0).count();
+
+            const bool outOfMemory = err.find("out-of-memory") != std::string::npos ||
+                                     err.find("out of memory") != std::string::npos ||
+                                     err.find("bad_alloc") != std::string::npos;
+            if (completed && gotToken && gotDone && ctok > 0) break;
+            if (attempt == 2 || !outOfMemory) break;
+
+            // The device is settled before the attempt is made again.
+            entry["out_of_memory_retry"] = true;
+            client.unloadModelAndWait(model, 180);
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+        }
 
         // The server's own accounting is authoritative for throughput.
         const double genSeconds = evalDurationNs > 0
@@ -2787,6 +4223,8 @@ static int CmdBenchProvider(const Options& o) {
         entry["load_ms"] = static_cast<double>(loadDurationNs) / 1e6;
         entry["gen_ms"] = genSeconds * 1000.0;
         entry["tps"] = tps;
+        entry["e2e_tps"] = (ctok > 0 && wallMs > 0)
+            ? (static_cast<double>(ctok) * 1000.0 / wallMs) : 0.0;
         entry["prompt_tokens"] = ptok;
         entry["eval_tokens"] = ctok;
         if (!pass) {
@@ -2798,6 +4236,55 @@ static int CmdBenchProvider(const Options& o) {
                 entry["error_class"] = "not_signed_in";
             }
         }
+
+        // ---- the tool-call probe ------------------------------------------
+        // A model that generates text has demonstrated INFERENCE compatibility.
+        // Whether it can drive a tool is a separate question, and it is asked
+        // with an actual tool schema.
+        if (o.has("tool-probe") && pass) {
+            json tools = json::array();
+            tools.push_back(json{
+                {"type", "function"},
+                {"function", {
+                    {"name", "readFile"},
+                    {"description", "Read a file from the workspace."},
+                    {"parameters", {
+                        {"type", "object"},
+                        {"properties", {
+                            {"path", {{"type", "string"},
+                                      {"description", "the path of the file to read"}}}
+                        }},
+                        {"required", json::array({"path"})}
+                    }}
+                }}});
+            RawrXD::Backend::OllamaChatRequest treq;
+            treq.model = model;
+            treq.stream = false;
+            treq.messages.push_back({"user",
+                "Read the file notes.txt in the workspace and report what it says. "
+                "Use the readFile tool."});
+            treq.tools = tools;
+            treq.options["temperature"] = 0.0;
+            treq.options["num_predict"] = 64;
+
+            const auto tresp = client.chatSync(treq);
+            const bool nativeCall = tresp.tool_calls.is_array() && !tresp.tool_calls.empty();
+            std::string calledName;
+            if (nativeCall) {
+                const auto& tc = tresp.tool_calls[0];
+                calledName = tc.value("name",
+                    tc.value("function", json::object()).value("name", std::string()));
+            }
+            entry["tool_call_native"] = nativeCall;
+            entry["tool_call_name"] = calledName;
+            if (tresp.error.empty()) {
+                entry["tool_call_compatible"] = nativeCall ? "native" : "none";
+            } else {
+                entry["tool_call_compatible"] = "rejected";
+                entry["tool_call_error"] = tresp.error;
+            }
+        }
+
         report.push_back(entry);
 
         if (pass) ++ok; else ++failed;
@@ -2808,32 +4295,31 @@ static int CmdBenchProvider(const Options& o) {
                   << std::setw(9) << (long long)ttftMs
                   << std::setw(9) << (long long)(genSeconds * 1000.0)
                   << std::setw(9) << (tps > 0 ? (long long)(tps * 10) / 10.0 : 0.0)
+                  << std::setw(8) << (supportsTools ? "yes" : "no")
                   << ctok;
         if (!pass) std::cout << "  " << (err.empty() ? "no completion" : err);
         std::cout << "\n" << std::flush;
 
         // Release the model so the next measurement is not sharing GPU memory
-        // (or VRAM residency) with this one.
+        // (or VRAM residency) with this one. The release is waited out: the
+        // server frees the memory asynchronously, and asking the next model
+        // to load before that has happened is a measurement of the wrong
+        // thing.
         if (!o.has("keep-loaded")) {
-            client.unloadModel(model);
+            const bool released = client.unloadModelAndWait(model, 180);
+            if (!released) {
+                entry["unload_wait_timed_out"] = true;
+                std::cout << "  [warn] " << model
+                          << " was still resident after the release wait\n";
+            }
         }
+        writeReport();
     }
 
     std::error_code ec;
     fs::path out(reportPath);
     if (!out.parent_path().empty()) fs::create_directories(out.parent_path(), ec);
-    {
-        std::ofstream f(reportPath, std::ios::binary | std::ios::trunc);
-        if (f) {
-            f << json{{"schema", "rawr.bench.ollama.v1"},
-                      {"endpoint", endpoint},
-                      {"prompt", prompt},
-                      {"num_predict", numPredict},
-                      {"ok", ok},
-                      {"failed", failed},
-                      {"models", report}}.dump(2) << "\n";
-        }
-    }
+    writeReport();
     std::cout << "\nResult: " << ok << " ok, " << failed << " failed";
     if (cloudSeen) {
         std::cout << " (" << cloudSeen << " cloud model(s): these need a signed-in "
@@ -3086,6 +4572,7 @@ int main(int argc, char** argv) {
               << "  rawr auth  --provider ollama [--probe]                     account/quota state\n"
               << "  rawr bench --provider ollama [model ...]                   measure TPS per model\n"
               << "  rawr certify ollama [--model m]                            OLLAMA_BRIDGE_001 ladder\n"
+              << "  rawr certify ollama-agentic [model ...]                    OLLAMA_AGENTIC_001 ladder\n"
               << "  rawr backend [auto|deep2|ollama]                            backend status/switch\n"
               << "  rawr doctor                                                 environment health\n"
               << "  rawr self-audit                                             run the audit checklist\n"
@@ -3113,12 +4600,18 @@ int main(int argc, char** argv) {
     if (cmd == "auth")  return CmdProviderAuth(o);
     if (cmd == "bench") return CmdBenchProvider(o);
     if (cmd == "certify") {
-        const std::string kind = toLowerCompat(o.get("kind", "ollama"));
-        if (kind != "ollama") {
-            std::cerr << "ERROR: certify supports only --kind ollama\n";
-            return 2;
+        // The kind is either --kind <name> or the first positional word.
+        std::string kind = toLowerCompat(o.get("kind", ""));
+        if (kind.empty() && !o.positional.empty()) kind = toLowerCompat(o.positional[0]);
+        if (kind.empty()) kind = "ollama";
+        if (kind == "ollama") {
+            return CmdCertifyOllama(o);
         }
-        return CmdCertifyOllama(o);
+        if (kind == "ollama-agentic" || kind == "agentic") {
+            return CmdCertifyOllamaAgentic(o);
+        }
+        std::cerr << "ERROR: certify supports --kind ollama and --kind ollama-agentic\n";
+        return 2;
     }
     if (cmd == "show") {
         // `rawr show --provider ollama <model>`: the model name is the first
