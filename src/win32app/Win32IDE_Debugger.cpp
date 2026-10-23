@@ -63,6 +63,16 @@ void Win32IDE::createDebuggerUI()
 
     if (!m_hwndDebuggerContainer) return;
 
+    // The container is a STATIC control, so child toolbar notifications would
+    // otherwise be swallowed by DefWindowProc. Subclass it so debugger buttons
+    // and future debug-console controls reach the real IDE debugger state.
+    SetPropA(m_hwndDebuggerContainer, "IDE_PTR", this);
+    const WNDPROC oldDebuggerProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
+        m_hwndDebuggerContainer, GWLP_WNDPROC,
+        reinterpret_cast<LONG_PTR>(DebuggerContainerProc)));
+    SetPropA(m_hwndDebuggerContainer, "OLDPROC",
+             reinterpret_cast<HANDLE>(oldDebuggerProc));
+
     // Create toolbar with control buttons
     m_hwndDebuggerToolbar = CreateWindowExA(
         0,
@@ -288,6 +298,27 @@ void Win32IDE::createDebuggerUI()
 
     m_debuggerEnabled = true;
     updateDebuggerUI();
+}
+
+LRESULT CALLBACK Win32IDE::DebuggerContainerProc(HWND hwnd, UINT uMsg,
+                                                  WPARAM wParam, LPARAM lParam)
+{
+    auto* ide = reinterpret_cast<Win32IDE*>(GetPropA(hwnd, "IDE_PTR"));
+    WNDPROC oldProc = reinterpret_cast<WNDPROC>(GetPropA(hwnd, "OLDPROC"));
+    if (uMsg == WM_COMMAND && ide) {
+        ide->handleDebuggerToolbarCommand(static_cast<int>(LOWORD(wParam)));
+        return 0;
+    }
+    if (uMsg == WM_NCDESTROY) {
+        RemovePropA(hwnd, "IDE_PTR");
+        RemovePropA(hwnd, "OLDPROC");
+        if (oldProc) {
+            SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(oldProc));
+            return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
+        }
+    }
+    return oldProc ? CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam)
+                   : DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 // ============================================================================

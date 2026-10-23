@@ -2481,6 +2481,7 @@ class Win32IDE
     // ========================================================================
     // Debugger UI Creation & Management
     void createDebuggerUI();
+    static LRESULT CALLBACK DebuggerContainerProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void updateDebuggerUI();
     void toggleDebugger();
     void attachDebugger();

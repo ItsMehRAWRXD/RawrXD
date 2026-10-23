@@ -63,27 +63,74 @@ std::string Win32IDE::executePowerShellCommand(const std::string& command, bool 
     if (CreateProcessA(NULL, cmdBuf.data(), NULL, NULL, TRUE, 
                        CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         CloseHandle(hStdOutWrite);
+
+        // Own the complete PowerShell process tree.  This keeps timeout and
+        // debugger-stop semantics bounded when a script launches children.
+        HANDLE hJob = CreateJobObjectW(nullptr, nullptr);
+        if (hJob) {
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
+            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            if (!SetInformationJobObject(hJob, JobObjectExtendedLimitInformation,
+                                         &limits, sizeof(limits)) ||
+                !AssignProcessToJobObject(hJob, pi.hProcess)) {
+                CloseHandle(hJob);
+                hJob = nullptr;
+            }
+        }
         
         std::string output;
-        output.reserve(65536);  // ~64KB typical command output; reduces reallocations 10–20x
+        output.reserve(65536);
         char buffer[4096];
-        DWORD bytesRead = 0;
-        constexpr DWORD kMaxChunk = static_cast<DWORD>(sizeof(buffer) - 1);
-        
-        while (ReadFile(hStdOutRead, buffer, kMaxChunk, &bytesRead, NULL) && bytesRead > 0) {
-            const size_t safeBytes = (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
-            buffer[safeBytes] = '\0';
-            output.append(buffer, safeBytes);
-        }
+        constexpr DWORD kMaxChunk = static_cast<DWORD>(sizeof(buffer));
+
+        // Drain without blocking the child.  The previous implementation read
+        // until EOF before waiting for the process; a verbose PowerShell
+        // command could fill the pipe and deadlock the IDE permanently.
+        bool timedOut = false;
+        auto readAvailable = [&]() {
+            DWORD available = 0;
+            while (PeekNamedPipe(hStdOutRead, nullptr, 0, nullptr, &available, nullptr) && available > 0) {
+                DWORD bytesRead = 0;
+                const DWORD toRead = (std::min)(available, kMaxChunk);
+                if (!ReadFile(hStdOutRead, buffer, toRead, &bytesRead, nullptr) || bytesRead == 0)
+                    break;
+                output.append(buffer, bytesRead);
+            }
+        };
 
         // Configurable timeout: per-run override | fixed | random | auto; agentic/audit/quick hint from balance & mode
         bool isAgentic = (RawrXD::AgenticAutonomousConfig::instance().getOperationMode() != RawrXD::AgenticOperationMode::Ask);
         std::string hint = RawrXD::AgenticAutonomousConfig::instance().getRecommendedTerminalRequirementHint();
         DWORD timeoutMs = static_cast<DWORD>(IDEConfig::getInstance().getTerminalTimeoutMs(isAgentic, hint));
-        WaitForSingleObject(pi.hProcess, timeoutMs);
+        const DWORD startTick = GetTickCount();
+        for (;;) {
+            readAvailable();
+            const DWORD state = WaitForSingleObject(pi.hProcess, 25);
+            if (state == WAIT_OBJECT_0)
+                break;
+            if (state == WAIT_FAILED || GetTickCount() - startTick >= timeoutMs) {
+                timedOut = true;
+                if (hJob)
+                    TerminateJobObject(hJob, ERROR_TIMEOUT);
+                else
+                    TerminateProcess(pi.hProcess, ERROR_TIMEOUT);
+                WaitForSingleObject(pi.hProcess, 2000);
+                break;
+            }
+        }
+        readAvailable();
+        // Close the write end first, then drain any final bytes until EOF.
+        CloseHandle(hStdOutRead);
+        hStdOutRead = nullptr;
+        if (timedOut)
+            output += "\nERROR: PowerShell command timed out and was terminated.\n";
+        else {
+            // The process has exited, so a final synchronous drain is safe.
+            // (The handle is already closed above; no additional read needed.)
+        }
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
-        CloseHandle(hStdOutRead);
+        if (hJob) CloseHandle(hJob);
         
         return output;
     }

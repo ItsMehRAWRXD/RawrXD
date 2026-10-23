@@ -1,0 +1,32 @@
+{
+  "protocol": "RAWRXD_DEBUG_SURFACES_001",
+  "timestamp": "2026-10-23T21:33:19.2908605Z",
+  "source_changes": {
+    "powershell": "PASS_SOURCE_REPAIRED",
+    "powershell_panel_subclass": "PASS_SOURCE_WIRED",
+    "debugger_container_subclass": "PASS_SOURCE_WIRED",
+    "cmake_win32ide_generation": "PASS"
+  },
+  "build": {
+    "configuration": "Release",
+    "target": "RawrXD-Win32IDE",
+    "serialized": true,
+    "masm_dependency": "PASS",
+    "modified_sources_reached": "Win32IDE.cpp, Win32IDE_Debugger.cpp, Win32IDE_PowerShell.cpp, Win32IDE_PowerShellPanel.cpp",
+    "result": "BLOCKED",
+    "reason": "MSVC C1060 compiler out of heap space in pre-existing large translation units",
+    "first_observed": "Win32IDE_PDBSymbols.cpp",
+    "subsequent": "Win32IDE_QuickWins.cpp, autonomous_agentic_orchestrator.cpp, ssot_handlers.cpp"
+  },
+  "runtime": {
+    "physical_ide_launch": "PENDING",
+    "powershell_short_command": "PENDING",
+    "high_volume_output": "PENDING",
+    "timeout_cleanup": "PENDING",
+    "stop_cleanup": "PENDING",
+    "toolbar_actions": "PENDING",
+    "panel_reopen": "PENDING",
+    "no_new_dependencies": "PASS_SOURCE_AUDIT"
+  },
+  "certification": "NOT_CERTIFIED"
+}

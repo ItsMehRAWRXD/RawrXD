@@ -93,6 +93,13 @@ void Win32IDE::createPowerShellPanel() {
     
     // Store IDE pointer for callbacks
     SetPropA(m_hwndPowerShellPanel, "IDE_PTR", this);
+    // STATIC does not forward child button notifications to the IDE's command
+    // surface. Route them through the panel procedure so Execute/Stop/Restart
+    // work consistently from both the toolbar and keyboard.
+    const WNDPROC oldPanelProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
+        m_hwndPowerShellPanel, GWLP_WNDPROC,
+        reinterpret_cast<LONG_PTR>(PowerShellPanelProc)));
+    SetPropA(m_hwndPowerShellPanel, "OLDPROC", reinterpret_cast<HANDLE>(oldPanelProc));
     
     // Create toolbar
     createPowerShellToolbar();
@@ -868,6 +875,7 @@ void Win32IDE::scrollPowerShellOutputToBottom() {
 
 LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     Win32IDE* ide = (Win32IDE*)GetPropA(hwnd, "IDE_PTR");
+    WNDPROC oldProc = reinterpret_cast<WNDPROC>(GetPropA(hwnd, "OLDPROC"));
     
     switch (uMsg) {
         case WM_COMMAND: {
@@ -895,9 +903,17 @@ LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wPar
             }
             break;
         }
+        case WM_NCDESTROY:
+            RemovePropA(hwnd, "IDE_PTR");
+            RemovePropA(hwnd, "OLDPROC");
+            if (oldProc) {
+                SetWindowLongPtrW(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(oldProc));
+                return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
+            }
+            break;
     }
-    
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return oldProc ? CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam)
+                   : DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK Win32IDE::PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
