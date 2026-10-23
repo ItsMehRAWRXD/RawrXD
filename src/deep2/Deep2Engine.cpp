@@ -3306,6 +3306,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     printf("[Deep2Engine] Model loaded successfully (%zu tensors)\n",
            isMultiShard ? globalIndex_->TotalTensors() : ggufResult.tensors.size());
 
+    // loadModel-only clients (rawr run, the C bridge, and the native HTTP
+    // gateway) do not call initialize()/switchModel().  They still need the
+    // same admitted Vulkan execution lane as initialized clients.  Previously
+    // this left vulkanEnabled_ false while generation proceeded successfully
+    // through the host path, producing zero GPU-forward counters without a
+    // fallback event.  Opt out explicitly for CPU diagnostics; otherwise bind
+    // the already-admitted device plan before the first token is generated.
+    const char* disableGpu = std::getenv("DEEP2_GPU_DISABLE");
+    if (!disableGpu || disableGpu[0] != '1')
+        enableVulkan(true);
+
     // Wire MoE streaming loader
     if (meta.numExperts > 0)
     {
@@ -8913,14 +8924,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         {
             for (uint64_t jobHandle : it->second)
             {
-                const PrefetchJob* job = moeWeightProxy_->GetPrefetchJob(jobHandle);
-                if (!job)
+                PrefetchJob job;
+                if (!moeWeightProxy_->TryGetPrefetchJob(jobHandle, job))
                     continue;
 
                 bool ready = moeWeightProxy_->CheckPrefetchReady(jobHandle, vulkanCompute_.get());
                 if (telemetryEnabled_ && residencyTelemetry_)
                 {
-                    residencyTelemetry_->RecordAsyncPrefetchReadyAtCompute(job->layer, job->expertId, ready);
+                    residencyTelemetry_->RecordAsyncPrefetchReadyAtCompute(job.layer, job.expertId, ready);
                 }
             }
             // Clear checked prefetches for this layer
