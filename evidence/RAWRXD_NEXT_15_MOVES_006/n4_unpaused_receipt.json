@@ -1,0 +1,11 @@
+{
+  "model": "library__n4-tiny-oracle__latest.gguf",
+  "exit_code": 0,
+  "gpu_forward": "0",
+  "cpu_fallback": "0",
+  "decode_tps": "18.01",
+  "tokens": "2",
+  "status": "RUN_COMPLETED_HOST_PATH",
+  "certification": "NOT_CERTIFIED",
+  "reason": "GPU counters zero and independent full-model parity not established"
+}
