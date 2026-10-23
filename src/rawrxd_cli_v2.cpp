@@ -20,6 +20,13 @@
 //   * Builds/tests are certified from process exit codes + disk artifacts.
 //   * Fail-closed: no tool call is executed that the mode policy denies.
 // =============================================================================
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 #include "agentic/InferenceBackend.h"
 #include "agentic/BackendRouter.h"
 #include "agentic/OllamaBackend.h"
@@ -64,6 +71,7 @@
 #include <thread>
 #ifdef _WIN32
 #include <windows.h>
+#pragma comment(lib, "Ws2_32.lib")
 #endif
 
 using json = nlohmann::json;
@@ -4547,6 +4555,131 @@ static int CmdSelfAudit() {
 }
 
 // ---------------------------------------------------------------------------
+// Native browser gateway.  This deliberately lives beside the CLI provider
+// seam: the hosted IDE speaks HTTP, but inference and authorization remain the
+// same native Deep2 path used by `rawr run`.
+// ---------------------------------------------------------------------------
+#ifdef _WIN32
+static std::string HttpJson(const json& body, int status = 200,
+                            const std::string& contentType = "application/json") {
+    const std::string payload = body.dump();
+    std::ostringstream h;
+    h << "HTTP/1.1 " << status << (status == 200 ? " OK" : " Error") << "\r\n"
+      << "Content-Type: " << contentType << "\r\n"
+      << "Access-Control-Allow-Origin: *\r\n"
+      << "Access-Control-Allow-Headers: Content-Type, X-MOTD-ACK\r\n"
+      << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+      << "Content-Length: " << payload.size() << "\r\nConnection: close\r\n\r\n"
+      << payload;
+    return h.str();
+}
+
+static std::string ServeModelName() {
+    return g_model.empty() ? "rawrxd" : g_model;
+}
+
+static json ServeCompletion(const json& request, bool ollamaShape) {
+    std::vector<ChatMessage> messages;
+    if (request.contains("messages") && request["messages"].is_array()) {
+        for (const auto& m : request["messages"]) {
+            if (!m.is_object()) continue;
+            ChatMessage cm;
+            cm.role = m.value("role", "user");
+            cm.content = m.value("content", "");
+            messages.push_back(std::move(cm));
+        }
+    } else if (request.contains("prompt")) {
+        messages.push_back({"user", request.value("prompt", ""), "", {}});
+    }
+    const int maxTokens = std::max(1, request.value("max_tokens",
+                                      request.value("num_predict", g_requested_max_tokens)));
+    if (messages.empty()) return { {"error", "messages or prompt is required"} };
+    InferenceResult r = ProviderTurn(messages, json::array(), maxTokens, false);
+    if (!r.success) return {{"error", r.error_message.empty() ? "inference failed" : r.error_message}};
+    if (ollamaShape) {
+        return {{"model", ServeModelName()}, {"created_at", ""},
+                {"response", r.response}, {"done", true},
+                {"eval_count", r.completion_tokens}, {"prompt_eval_count", r.prompt_tokens},
+                {"eval_duration", r.eval_duration_ns}, {"load_duration", r.load_duration_ns},
+                {"rawr_full_model_certification", "NOT_CERTIFIED"}};
+    }
+    json message = {{"role", "assistant"}, {"content", r.response}};
+    json choice = {{"index", 0}, {"message", message}, {"finish_reason", "stop"}};
+    json usage = {{"prompt_tokens", r.prompt_tokens},
+                  {"completion_tokens", r.completion_tokens},
+                  {"total_tokens", r.prompt_tokens + r.completion_tokens}};
+    return {{"id", "rawr-" + std::to_string(GetTickCount64())}, {"object", "chat.completion"},
+            {"model", ServeModelName()}, {"choices", json::array({choice})},
+            {"usage", usage}, {"rawr_full_model_certification", "NOT_CERTIFIED"}};
+}
+
+static std::string ServeRequest(const std::string& method, const std::string& path,
+                                const std::string& body) {
+    if (method == "OPTIONS") return HttpJson({{"ok", true}});
+    if (method == "GET" && (path == "/health" || path == "/api/status" || path == "/status"))
+        return HttpJson({{"status", "ok"}, {"backend", g_backend_name},
+                         {"model", ServeModelName()}, {"agent", true},
+                         {"full_model_certification", "NOT_CERTIFIED"}});
+    if (method == "GET" && (path == "/v1/models" || path == "/api/tags" || path == "/models"))
+        return HttpJson({{"models", json::array({{{"id", ServeModelName()}, {"name", ServeModelName()}, {"owned_by", "rawrxd"}}})}});
+    if (method == "GET" && path == "/api/engine/capabilities")
+        return HttpJson({{"deep2", true}, {"agent", true}, {"streaming", true},
+                         {"tools", true}, {"native_http", true}, {"certification", "NOT_CERTIFIED"}});
+    if (method == "GET" && path == "/api/cli")
+        return HttpJson({{"enabled", true}, {"read_only", true}, {"native", true}});
+    if (method == "POST" && (path == "/v1/chat/completions" || path == "/api/chat")) {
+        try { return HttpJson(ServeCompletion(json::parse(body), path == "/api/chat")); }
+        catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
+    }
+    if (method == "POST" && path == "/api/generate") {
+        try { return HttpJson(ServeCompletion(json::parse(body), true)); }
+        catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
+    }
+    // Tool execution is intentionally fail-closed until the browser supplies
+    // a real session/turn MOTD authorization token through the central gate.
+    if (path == "/api/tool" || path == "/api/cli/exec")
+        return HttpJson({{"error", "tool execution requires native MOTD authorization"},
+                         {"certification", "NOT_CERTIFIED"}}, 403);
+    return HttpJson({{"error", "route not found"}, {"path", path}}, 404);
+}
+
+static int CmdServe(const Options& o) {
+    std::string model = o.get("model", o.positional.empty() ? "" : o.positional[0]);
+    if (model.empty()) { std::cerr << "rawr serve requires --model <path-or-alias>\n"; return 2; }
+    const std::string device = toLowerCompat(o.get("device", "cpu"));
+    BackendMode mode = (device == "cpu") ? BackendMode::Deep2 : BackendMode::Deep2;
+    if (!InitBackend(mode, model, std::max(1, std::stoi(o.get("max-tokens", "256"))))) return 3;
+    unsigned short port = static_cast<unsigned short>(std::stoi(o.get("port", "11435")));
+    WSADATA wsa{}; if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) return 4;
+    SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listener == INVALID_SOCKET) { WSACleanup(); return 4; }
+    sockaddr_in addr{}; addr.sin_family = AF_INET; addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); addr.sin_port = htons(port);
+    if (bind(listener, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR || listen(listener, 8) == SOCKET_ERROR) {
+        closesocket(listener); WSACleanup(); return 4;
+    }
+    std::cerr << "rawr native gateway listening on http://127.0.0.1:" << port << " model=" << model << "\n";
+    while (g_running) {
+        SOCKET client = accept(listener, nullptr, nullptr); if (client == INVALID_SOCKET) break;
+        std::string req; char buf[8192]; int n = 0; size_t headerEnd = std::string::npos;
+        while (req.size() < 16 * 1024 * 1024 && (headerEnd = req.find("\r\n\r\n")) == std::string::npos && (n = recv(client, buf, sizeof(buf), 0)) > 0) req.append(buf, n);
+        if (headerEnd != std::string::npos) {
+            std::istringstream hs(req.substr(0, headerEnd)); std::string method, path, version; hs >> method >> path >> version;
+            size_t contentLength = 0; std::string line;
+            while (std::getline(hs, line)) { if (line.find("Content-Length:") == 0) contentLength = std::stoull(line.substr(15)); }
+            size_t bodyStart = headerEnd + 4;
+            while (req.size() < bodyStart + contentLength && (n = recv(client, buf, sizeof(buf), 0)) > 0) req.append(buf, n);
+            const std::string response = ServeRequest(method, path, req.substr(bodyStart, contentLength));
+            send(client, response.data(), static_cast<int>(response.size()), 0);
+        }
+        closesocket(client);
+    }
+    closesocket(listener); WSACleanup();
+    if (localEngine) { deep2_free(localEngine); localEngine = nullptr; }
+    return 0;
+}
+#endif
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 int main(int argc, char** argv) {
@@ -4563,6 +4696,7 @@ int main(int argc, char** argv) {
               << "       [--swarm [<prompt>]] [--workers n] [--workspace d]   bounded swarm run\n"
               << "  rawr run <model> \"new project\"                          project wizard\n"
               << "  rawr run <model> \"add a GUI\"                            follow-up wizard\n"
+              << "  rawr serve --model <model> [--port 11435]                  native IDE HTTP gateway\n"
               << "  rawr modes                                                  list agent modes\n"
               << "  rawr tools list|describe <name>|run <name> [k=v ...]       tool interface\n"
               << "  rawr models                                                 list models\n"
@@ -4591,6 +4725,11 @@ int main(int argc, char** argv) {
     if (cmd == "run") {
         return CmdRun(args);
     }
+#ifdef _WIN32
+    if (cmd == "serve") return CmdServe(o);
+#else
+    if (cmd == "serve") { std::cerr << "serve is currently supported on Windows builds\n"; return 2; }
+#endif
     if (cmd == "modes")     return CmdModes();
     if (cmd == "doctor")    return CmdDoctor();
     if (cmd == "self-audit") return CmdSelfAudit();
