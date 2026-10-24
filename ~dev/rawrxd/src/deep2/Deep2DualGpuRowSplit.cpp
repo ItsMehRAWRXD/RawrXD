@@ -164,7 +164,7 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
        !wt.rows||!wt.cols||wt.cols%256u!=0u) return nullptr;
 
-    struct Entry { Q4KColumnSlices s; uint16_t ratioPermille=0; };
+    struct Entry { Q4KColumnSlices s; uint32_t boundaryBlocks=0; };
     static std::mutex mu;
     static std::unordered_map<const void*, Entry> cache;
 
@@ -175,16 +175,14 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
         const double a1=gColSpeed1.load(std::memory_order_relaxed);
         if(a0>0.0&&a1>0.0){s0=a0;s1=a1;}
     }
-    const long double ratio=s0/(s0+s1);
-    const uint16_t pm=(uint16_t)std::max<long double>(
-        1.0L,std::min<long double>(999.0L,ratio*1000.0L+0.5L));
-
     const uint32_t blocks=(uint32_t)wt.cols/256u;
     if(blocks<2) return nullptr;
     uint32_t b0=(uint32_t)(
         (long double)blocks*s0/(s0+s1)+0.5L);
     b0=std::max<uint32_t>(1,std::min<uint32_t>(blocks-1,b0));
     const uint32_t b1=blocks-b0;
+    // Reuse packed slices while the actual quant-block boundary is unchanged.
+    // Timing noise must not trigger a full weight copy at every GEMV.
     constexpr size_t QB=144;
     const size_t rowBytes=(size_t)blocks*QB;
     const size_t row0=(size_t)b0*QB;
@@ -193,7 +191,7 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
 
     std::lock_guard<std::mutex> g(mu);
     auto it=cache.find(wt.data);
-    if(it!=cache.end() && it->second.ratioPermille==pm)
+    if(it!=cache.end() && it->second.boundaryBlocks==b0)
         return &it->second.s;
 
     // Rebuild under drift: free the old slice pair BEFORE constructing the
@@ -213,7 +211,7 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     // overwrite in place instead of inserting a second Entry.
     auto [it2, inserted] = cache.try_emplace(wt.data);
     it2->second.s = std::move(s);
-    it2->second.ratioPermille = pm;
+    it2->second.boundaryBlocks = b0;
     return &it2->second.s;
 }
 
