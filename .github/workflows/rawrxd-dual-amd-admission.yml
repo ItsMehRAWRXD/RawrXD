@@ -25,6 +25,14 @@ jobs:
           if ($r9700.Count -ne 1 -or $rx7800.Count -ne 1) {
             throw "Expected one R9700 and one RX 7800 XT; integrated GPU does not count"
           }
+          foreach ($gpu in @($r9700[0], $rx7800[0])) {
+            if ($gpu.Status -and $gpu.Status -ne 'OK') {
+              throw "GPU not healthy: $($gpu.Name), status=$($gpu.Status)"
+            }
+            if (-not $gpu.DriverVersion) {
+              throw "GPU driver version missing: $($gpu.Name)"
+            }
+          }
           $vulkan = Get-Command vulkaninfo.exe -ErrorAction SilentlyContinue
           if (-not $vulkan) { throw "Vulkan SDK utility vulkaninfo.exe missing" }
           & $vulkan.Source --summary
@@ -41,7 +49,7 @@ jobs:
           if (!(Test-Path $vcvars)) { throw "vcvars64.bat missing" }
           New-Item -ItemType Directory -Force build_reap | Out-Null
           foreach ($name in @('reap_rom_pinball_smoke','reap_ternary_trace_smoke','reap_projection_bridge_smoke','reap_route_mask_smoke','native_lsp_framing_smoke','top25_parity_matrix_smoke')) {
-            $cmd = 'call "' + $vcvars + '" && cl /nologo /std:c++20 /EHsc /W4 /WX /Fe:build_reap\' + $name + '.exe tests\' + $name + '.cpp && build_reap\' + $name + '.exe'
+            $cmd = 'call "' + $vcvars + '" && cl /nologo /std:c++20 /EHsc /W4 /WX /UNDEBUG /Fe:build_reap\' + $name + '.exe tests\' + $name + '.cpp && build_reap\' + $name + '.exe'
             cmd.exe /d /s /c $cmd
             if ($LASTEXITCODE -ne 0) { throw "Smoke test failed: $name" }
           }
