@@ -2246,7 +2246,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>();
         for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s)
         {
-            residencyCache_->register_shard(s, globalIndex_->ShardPath(s).string());
+            const auto shardPath = globalIndex_->ShardPath(s).string();
+            if (!residencyCache_->register_shard(s, shardPath))
+            {
+                fprintf(stderr, "[Deep2Engine] ERROR: shard registration failed id=%u path=%s\n",
+                        s, shardPath.c_str());
+                residencyCache_.reset();
+                globalIndex_.reset();
+                return false;
+            }
         }
         printf("[Deep2Engine] TensorResidencyCache ready\n");
     }
