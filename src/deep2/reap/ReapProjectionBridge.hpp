@@ -115,6 +115,10 @@ public:
                 residentBytes_+=b.bytes;
                 ++stats_.cacheMisses;
             }
+        }
+        for(auto p:{Projection::Gate,Projection::Up,Projection::Down}) {
+            auto it=resident_.find({layer,expert,p});
+            if(it==resident_.end()) return false;
             ++stats_.bindingUses;
             if(!execute_(p,it->second,layer,expert)) return false;
         }
