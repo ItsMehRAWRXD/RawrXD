@@ -46,6 +46,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Compile and execute dependency-free smoke tests
         shell: bash
         run: |
@@ -100,6 +102,7 @@ jobs:
           python3 tools/rawrxd_no_deps_audit.py
           python3 tools/rawrxd_per_file_source_audit.py --strict-missing
           python3 tools/rawrxd_cmake_source_admission.py
+          python3 -m py_compile tools/rawrxd_cmake_source_admission.py tools/rawrxd_per_file_source_audit.py tools/rawrxd_e2e_source_audit.py tools/rawrxd_no_deps_audit.py
       - name: Upload machine-readable audit
         uses: actions/upload-artifact@v4
         with:
