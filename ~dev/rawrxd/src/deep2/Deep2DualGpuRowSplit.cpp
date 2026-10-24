@@ -1,5 +1,6 @@
 // Deep2DualGpuRowSplit.cpp
 #include "Deep2DualGpuRowSplit.hpp"
+#include "Deep2DualRowExecutor.hpp"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -217,85 +218,6 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     it2->second.s = std::move(s);
     it2->second.boundaryBlocks = b0;
     return &it2->second.s;
-}
-
-struct DualRowJob {
-    bool (*fn)(void*) noexcept = nullptr;
-    void* ctx = nullptr;
-};
-
-class DualRowExecutor {
-public:
-    DualRowExecutor() {
-        worker_[0] = std::thread([this]{ loop(0); });
-        worker_[1] = std::thread([this]{ loop(1); });
-    }
-    ~DualRowExecutor() {
-        {
-            std::lock_guard<std::mutex> g(mu_);
-            stop_ = true;
-            ++generation_;
-        }
-        cv_.notify_all();
-        for (auto& t : worker_) if (t.joinable()) t.join();
-    }
-
-    bool run(DualRowJob a, DualRowJob b) {
-        std::unique_lock<std::mutex> lk(mu_);
-        done_[0] = done_[1] = false;
-        result_[0] = result_[1] = false;
-        job_[0] = a;
-        job_[1] = b;
-        const uint64_t g = ++generation_;
-        cv_.notify_all();
-        doneCv_.wait(lk, [&] {
-            return stop_ || (done_[0] && done_[1] && completedGeneration_ == g);
-        });
-        return !stop_ && result_[0] && result_[1];
-    }
-
-private:
-    void loop(unsigned lane) {
-        uint64_t seen = 0;
-        for (;;) {
-            DualRowJob j{};
-            uint64_t g = 0;
-            {
-                std::unique_lock<std::mutex> lk(mu_);
-                cv_.wait(lk, [&]{ return stop_ || generation_ != seen; });
-                if (stop_) return;
-                seen = generation_;
-                g = seen;
-                j = job_[lane];
-            }
-            const bool r = j.fn ? j.fn(j.ctx) : false;
-            {
-                std::lock_guard<std::mutex> lk(mu_);
-                result_[lane] = r;
-                done_[lane] = true;
-                if (done_[0] && done_[1]) {
-                    completedGeneration_ = g;
-                    doneCv_.notify_one();
-                }
-            }
-        }
-    }
-
-    std::mutex mu_;
-    std::condition_variable cv_;
-    std::condition_variable doneCv_;
-    std::thread worker_[2];
-    DualRowJob job_[2];
-    bool done_[2] = {false,false};
-    bool result_[2] = {false,false};
-    bool stop_ = false;
-    uint64_t generation_ = 0;
-    uint64_t completedGeneration_ = 0;
-};
-
-DualRowExecutor& rowExecutor() {
-    static DualRowExecutor ex;
-    return ex;
 }
 
 static std::atomic<uint64_t> gDualRowTimingCalls{0};
