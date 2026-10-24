@@ -4864,6 +4864,13 @@ int main(int argc, char** argv) {
         args.push_back("--ghost-text");
         return CmdRun(args);
     }
+    // Explicit dispatch witness: identifies the CLI v2 executable that handled
+    // this invocation. Disabled by default to preserve scripting output.
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE") != nullptr) {
+        std::cerr << "[RAWRXD_CLI_V2_DISPATCH] command=" << cmd
+                  << " argc=" << argc << "\\n";
+    }
+
     if (cmd == "run") {
         return CmdRun(args);
     }
