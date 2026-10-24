@@ -43,6 +43,9 @@ bool Deep2Backend::Initialize(const BackendConfig& config) {
         m_config = DefaultConfig();
     }
 
+    // Initialization establishes the client transport configuration.
+    // The server may still be loading a large GGUF; health is probed
+    // separately and must never be assumed healthy.
     m_initialized.store(true);
     return CheckHealth();
 }
@@ -92,7 +95,7 @@ BackendHealth Deep2Backend::GetHealth() const {
 bool Deep2Backend::CheckHealth() {
     if (!m_initialized.load()) return false;
 
-    std::string resp = makeGetRequest("/api/health");
+    std::string resp = makeGetRequest("/health");
     if (resp.empty()) {
         RecordFailure("Deep2 backend health check failed: " + m_config.endpoint);
         return false;
@@ -109,9 +112,8 @@ bool Deep2Backend::CheckHealth() {
         }
         return ok;
     } catch (const json::exception&) {
-        // Non-JSON response — assume OK if we got *anything* back
-        m_consecutiveErrors = 0;
-        return true;
+        RecordFailure("Deep2 health returned invalid JSON");
+        return false;
     }
 }
 
@@ -134,15 +136,23 @@ bool Deep2Backend::Supports(BackendCapability cap) const {
 }
 
 std::vector<std::string> Deep2Backend::ListModels() {
-    std::string resp = makeGetRequest("/api/models");
+    std::string resp = makeGetRequest("/v1/models");
     std::vector<std::string> models;
     if (resp.empty()) return models;
 
     try {
         json j = json::parse(resp);
-        if (j.contains("models") && j["models"].is_array()) {
-            for (const auto& m : j["models"]) {
-                models.push_back(m.value("name", m.value("id", std::string())));
+        const json* entries = nullptr;
+        if (j.contains("data") && j["data"].is_array()) {
+            entries = &j["data"]; // OpenAI-compatible /v1/models
+        } else if (j.contains("models") && j["models"].is_array()) {
+            entries = &j["models"]; // Native Deep2 model listing
+        }
+        if (entries) {
+            for (const auto& m : *entries) {
+                if (!m.is_object()) continue;
+                const std::string id = m.value("id", m.value("name", std::string()));
+                if (!id.empty()) models.push_back(id);
             }
         }
     } catch (const json::exception&) {}
@@ -199,7 +209,7 @@ InferenceResult Deep2Backend::ChatSync(
     if (!tools.is_null()) req["tools"] = tools;
 
     auto t0 = std::chrono::steady_clock::now();
-    std::string resp = makePostRequest("/chat/completions", req.dump());
+    std::string resp = makePostRequest("/v1/chat/completions", req.dump());
 
     auto t1 = std::chrono::steady_clock::now();
     double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -369,21 +379,26 @@ bool Deep2Backend::ChatStream(
         if (on_error) on_error(err);
     };
 
-    // Check if any tool calls were accumulated
-    auto on_complete = [&](const OllamaResponse&) {
-        if (has_tool_calls && on_tool_call) {
-            for (const auto& tc : accumulated_tool_calls) {
-                std::string name = tc.value("function", json::object()).value("name", "");
-                json args = tc.value("function", json::object()).value("arguments", json::object());
-                if (args.is_string()) {
-                    try { args = json::parse(args.get<std::string>()); } catch (...) {}
-                }
-                on_tool_call(name, args);
+    // Tool deltas are delivered only after a successful completed stream.
+    auto deliver_tool_calls = [&]() {
+        if (!has_tool_calls || !on_tool_call) return;
+        for (const auto& tc : accumulated_tool_calls) {
+            if (!tc.is_object() || !tc.contains("function") ||
+                !tc["function"].is_object()) continue;
+            const auto& fn = tc["function"];
+            const std::string name = fn.value("name", std::string());
+            if (name.empty()) continue;
+            json args = fn.value("arguments", json::object());
+            if (args.is_string()) {
+                try { args = json::parse(args.get<std::string>()); }
+                catch (const json::exception&) { continue; }
             }
+            if (!args.is_object()) continue;
+            on_tool_call(name, args);
         }
     };
 
-    std::string resp = makePostRequestStreaming("/chat/completions", req.dump(), on_chunk);
+    std::string resp = makePostRequestStreaming("/v1/chat/completions", req.dump(), on_chunk);
 
     m_streaming.store(false);
 
@@ -392,7 +407,8 @@ bool Deep2Backend::ChatStream(
         on_err("Deep2 ChatStream: empty response");
     }
 
-    return !stream_failed;
+    if (!stream_failed && !m_cancelRequested.load()) deliver_tool_calls();
+    return !stream_failed && !m_cancelRequested.load();
 }
 
 InferenceResult Deep2Backend::FIMSync(
@@ -494,7 +510,7 @@ bool Deep2Backend::FIMStream(
         if (on_error) on_error(err);
     };
 
-    std::string resp = makePostRequestStreaming("/chat/completions", req.dump(), on_chunk);
+    std::string resp = makePostRequestStreaming("/v1/chat/completions", req.dump(), on_chunk);
     m_streaming.store(false);
 
     if (resp.empty() && !stream_failed) {
