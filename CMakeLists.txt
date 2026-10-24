@@ -2596,7 +2596,7 @@ endif()
 # inference -> tool-call -> real execution -> observation -> resumed inference
 # loop over the native Deep2 executor, and prints a tool receipt (every
 # invocation, its observation size, and the final verdict) as its conclusion.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp")
     add_executable(deep2_agentic_loop
         tools/deep2_agentic_loop.cpp
         # Logf_() is defined exactly once, in Deep2Log.cpp, for this target too.
