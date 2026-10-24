@@ -47,4 +47,7 @@ if(WIN32)
 endif()
 
 # ---- Tests ----
+# Enable CTest at the top-level: enabling it only inside tests/ makes
+# `ctest --test-dir <root build>` report zero tests and falsely pass.
+enable_testing()
 add_subdirectory(tests)
