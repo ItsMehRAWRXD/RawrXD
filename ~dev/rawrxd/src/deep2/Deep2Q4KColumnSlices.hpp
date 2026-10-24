@@ -4,11 +4,13 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <condition_variable>
 #include <cstring>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Deep2 {
@@ -40,7 +42,7 @@ public:
         // Capture the generation so clear() cannot resurrect stale weights.
         size_t generation = 0;
         {
-            std::lock_guard<std::mutex> guard(mu_);
+            std::unique_lock<std::mutex> guard(mu_);
             generation = generation_;
             auto it = cache_.find(source);
             if (it != cache_.end() && it->second.rows == rows &&
@@ -51,33 +53,50 @@ public:
                     (old == requestedBlocks0 + 1 || old + 1 == requestedBlocks0);
                 if (old == requestedBlocks0 || near) return it->second.snapshot;
             }
+            // Single-flight repacking: only one caller copies a given source.
+            // Other weights may repack concurrently without holding mu_.
+            while (inflight_.find(source) != inflight_.end()) {
+                cv_.wait(guard);
+                if (generation != generation_) return {};
+                it = cache_.find(source);
+                if (it != cache_.end() && it->second.rows == rows &&
+                    it->second.cols == cols && it->second.bytes == availableBytes &&
+                    it->second.snapshot) {
+                    const uint32_t old = it->second.blocks0;
+                    const bool near = blocks >= 64 &&
+                        (old == requestedBlocks0 + 1 || old + 1 == requestedBlocks0);
+                    if (old == requestedBlocks0 || near) return it->second.snapshot;
+                }
+            }
+            inflight_.insert(source);
         }
 
-        auto fresh = std::make_shared<Q4KColumnSlices>();
-        fresh->cols0 = requestedBlocks0 * static_cast<uint32_t>(blockColumns);
-        fresh->cols1 = static_cast<uint32_t>(cols) - fresh->cols0;
-        fresh->w0.resize(rows * bytes0);
-        fresh->w1.resize(rows * bytes1);
-        const auto* raw = static_cast<const uint8_t*>(source);
-        for (size_t row = 0; row < rows; ++row) {
-            std::memcpy(fresh->w0.data() + row * bytes0,
-                        raw + row * rowBytes, bytes0);
-            std::memcpy(fresh->w1.data() + row * bytes1,
-                        raw + row * rowBytes + bytes0, bytes1);
+        Snapshot fresh;
+        try {
+            auto packed = std::make_shared<Q4KColumnSlices>();
+            packed->cols0 = requestedBlocks0 * static_cast<uint32_t>(blockColumns);
+            packed->cols1 = static_cast<uint32_t>(cols) - packed->cols0;
+            packed->w0.resize(rows * bytes0);
+            packed->w1.resize(rows * bytes1);
+            const auto* raw = static_cast<const uint8_t*>(source);
+            for (size_t row = 0; row < rows; ++row) {
+                std::memcpy(packed->w0.data() + row * bytes0,
+                            raw + row * rowBytes, bytes0);
+                std::memcpy(packed->w1.data() + row * bytes1,
+                            raw + row * rowBytes + bytes0, bytes1);
+            }
+            fresh = std::move(packed);
+        } catch (...) {
+            std::lock_guard<std::mutex> guard(mu_);
+            inflight_.erase(source);
+            cv_.notify_all();
+            throw;
         }
         {
             std::lock_guard<std::mutex> guard(mu_);
+            inflight_.erase(source);
+            cv_.notify_all();
             if (generation != generation_) return {};
-            // A competing request may have finished the same expensive repack.
-            auto it = cache_.find(source);
-            if (it != cache_.end() && it->second.rows == rows &&
-                it->second.cols == cols && it->second.bytes == availableBytes &&
-                it->second.snapshot) {
-                const uint32_t old = it->second.blocks0;
-                const bool near = blocks >= 64 &&
-                    (old == requestedBlocks0 + 1 || old + 1 == requestedBlocks0);
-                if (old == requestedBlocks0 || near) return it->second.snapshot;
-            }
             cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
             ++rebuilds_;
         }
@@ -87,7 +106,8 @@ public:
     void clear() noexcept {
         std::lock_guard<std::mutex> guard(mu_);
         ++generation_;
-        cache_.clear(); // Active callers retain their own immutable snapshots.
+        cache_.clear();
+        cv_.notify_all();
     }
     size_t rebuilds() const noexcept {
         std::lock_guard<std::mutex> guard(mu_);
@@ -101,6 +121,8 @@ private:
         Snapshot snapshot;
     };
     mutable std::mutex mu_;
+    std::condition_variable cv_;
+    std::unordered_set<const void*> inflight_;
     std::unordered_map<const void*, Entry> cache_;
     size_t rebuilds_ = 0;
     size_t generation_ = 0;
