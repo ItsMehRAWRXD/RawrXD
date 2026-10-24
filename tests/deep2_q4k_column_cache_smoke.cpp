@@ -45,7 +45,9 @@ int main() {
     assert(shifted && shifted != first && cache.rebuilds() == 2);
     check(weights, rows, cols, *first);
     check(weights, rows, cols, *shifted);
+    assert(cache.cachedBytes() == weights.size());
     cache.clear();
+    assert(cache.cachedBytes() == 0);
     check(weights, rows, cols, *first);
     check(weights, rows, cols, *shifted);
 
@@ -87,6 +89,22 @@ int main() {
     release.store(true, std::memory_order_release);
     for (auto& t : simultaneous) t.join();
     assert(singleFlight.rebuilds() == 1);
+    assert(singleFlight.cachedBytes() == weights.size());
+
+    // Eviction is safe for active readers: their immutable snapshot survives
+    // removal of its cache entry, and the host working set stays bounded.
+    Deep2::Q4KColumnSliceCache bounded;
+    constexpr size_t largeRows = 4096;
+    std::vector<uint8_t> largeA(largeRows * rowBytes, 0x2a);
+    std::vector<uint8_t> largeB(largeRows * rowBytes, 0x4b);
+    auto held = bounded.get(largeA.data(), largeA.size(), largeRows, cols, 32);
+    assert(held && bounded.cachedBytes() == largeA.size());
+    auto next = bounded.get(largeB.data(), largeB.size(), largeRows, cols, 32);
+    assert(next);
+    assert(bounded.cachedBytes() == largeA.size() + largeB.size());
+    assert(held->w0.front() == 0x2a);
+    assert(next->w0.front() == 0x4b);
+
 
 
     // Concurrent invalidation cannot publish a snapshot built for a
