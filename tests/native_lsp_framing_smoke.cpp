@@ -56,5 +56,21 @@ int main() {
     try { (void)emptyHeader.Feed("X-Test: value\r\n\r\n"); }
     catch(const std::length_error&) { threw=true; }
     assert(threw);
+    threw=false;
+    try { Framer zeroLimit(0); }
+    catch(const std::invalid_argument&) { threw=true; }
+    assert(threw);
+    threw=false;
+    try {
+        Framer oversizedHeader(1024);
+        (void)oversizedHeader.Feed(std::string(8193, 'X'));
+    } catch(const std::length_error&) { threw=true; }
+    assert(threw);
+    threw=false;
+    try {
+        Framer malformedLength(1024);
+        (void)malformedLength.Feed("Content-Length: abc\r\n\r\n");
+    } catch(const std::invalid_argument&) { threw=true; }
+    assert(threw);
     std::cout<<"NATIVE_LSP_FRAMING_SMOKE_PASS\n";
 }
