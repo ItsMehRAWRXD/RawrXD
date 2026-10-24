@@ -306,6 +306,14 @@ static std::string buildSseDone() {
     return "data: [DONE]\n\n";
 }
 
+static bool isChatBoundary(const std::string& piece) {
+    return piece.find("<|user|>") != std::string::npos ||
+           piece.find("<|assistant|>") != std::string::npos ||
+           piece.find("<|system|>") != std::string::npos ||
+           piece.find("<|endoftext|>") != std::string::npos ||
+           piece.find("</s>") != std::string::npos;
+}
+
 // ---------------------------------------------------------------------------
 // Connection handler
 // ---------------------------------------------------------------------------
@@ -537,6 +545,7 @@ static void handleConnection(SOCKET clientSock,
                 Deep2::GenerationResult result = engine->generateStream(
                     prompt, opts,
                     [&](int32_t tokenId, const std::string& piece) -> bool {
+                        if (isChatBoundary(piece)) return false;
                         accumulated += piece;
                         ++tokenCount;
                         ChatCompletionStreamChunk chunk{};
@@ -583,6 +592,7 @@ static void handleConnection(SOCKET clientSock,
                 Deep2::GenerationResult result = engine->generateStream(
                     prompt, opts,
                     [&](int32_t tokenId, const std::string& piece) -> bool {
+                        if (isChatBoundary(piece)) return false;
                         accumulated += piece;
                         ++tokenCount;
                         return true;

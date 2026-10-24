@@ -7041,7 +7041,9 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         ChatTemplate chatTmpl;
         const ModelMetadata& meta = ggufResult.metadata;
         const bool hasMetaTmpl = !meta.chatTemplate.empty();
-        chatTmpl.initFromMetadata(meta.architecture, "", meta.chatTemplate,
+        // Preserve the model filename for built-in template detection when
+        // tokenizer.chat_template is absent (TinyLlama and similar GGUFs).
+        chatTmpl.initFromMetadata(meta.architecture, getModelPath(), meta.chatTemplate,
                                   meta.bosToken, meta.eosToken);
         const auto ty = chatTmpl.getType();
         const bool usable =
@@ -7049,7 +7051,22 @@ Deep2::GenerationResult Deep2Engine::generateStream(
             (ty != ChatTemplateType::UNKNOWN && ty != ChatTemplateType::RAW_BOS);
         genQualityChatValid_ = usable ? 1 : (forceRaw ? 1 : 0);
         if (usable) {
-            runtimePrompt = chatTmpl.formatSingle(prompt, "");
+            // The native HTTP adapter may already serialize the complete
+            // multi-message conversation.  Formatting that string a second
+            // time turns the serialized transcript into a user message and
+            // duplicates role headers, which shifts prefill and corrupts
+            // generation.  Preserve recognized serialized prompts.
+            const bool alreadyFormatted =
+                prompt.find("<|begin_of_text|>") != std::string::npos ||
+                prompt.find("<|start_header_id|>") != std::string::npos ||
+                prompt.find("<|im_start|>") != std::string::npos ||
+                prompt.find("<|user|>") != std::string::npos ||
+                prompt.find("<start_of_turn>") != std::string::npos;
+            runtimePrompt = alreadyFormatted ? prompt : chatTmpl.formatSingle(prompt, "");
+            if (envFlagEnabled("DEEP2_CHAT_TRACE")) {
+                std::fprintf(stderr, "[DEEP2_CHAT_TRACE] template=%s prompt_bytes=%zu prompt=%s\n",
+                             chatTmpl.getTypeName(), runtimePrompt.size(), runtimePrompt.c_str());
+            }
             const char* src = hasMetaTmpl ? "gguf" : "builtin-model-rule";
             const std::string& hs =
                 hasMetaTmpl ? meta.chatTemplate
@@ -7263,6 +7280,12 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     }
 
     std::vector<int> promptTokens = tokenize(runtimePrompt);
+    if (envFlagEnabled("DEEP2_CHAT_TRACE")) {
+        std::fprintf(stderr, "[DEEP2_CHAT_TRACE] prompt_tokens=%zu ids=", promptTokens.size());
+        const size_t limit = std::min<size_t>(promptTokens.size(), 64);
+        for (size_t i = 0; i < limit; ++i) std::fprintf(stderr, "%s%d", i ? "," : "", promptTokens[i]);
+        std::fprintf(stderr, "\n");
+    }
     Deep2::Ev512::HostEmitTokenizeComplete((uint64_t)promptTokens.size(), 0);
     Deep2::Ev512::HostEmitPrefillEntry(1, (uint64_t)promptTokens.size());
     Deep2::Ev512::HostEmitPrefillComplete(1, (uint64_t)promptTokens.size());
@@ -11075,6 +11098,16 @@ uint64_t Deep2Engine::vulkanSlotWeightUploads(unsigned slot) const {
 uint64_t Deep2Engine::vulkanSlotWeightHits(unsigned slot) const {
     auto* vc = getVulkanComputeSlot(slot);
     return vc ? vc->GemvWeightHits() : 0;
+}
+
+uint64_t Deep2Engine::vulkanSlotQueueSubmits(unsigned slot) const {
+    auto* vc = getVulkanComputeSlot(slot);
+    return vc ? vc->LayerSubmits() : 0;
+}
+
+uint64_t Deep2Engine::vulkanSlotUploadBytes(unsigned slot) const {
+    auto* vc = getVulkanComputeSlot(slot);
+    return vc ? vc->GemvWeightUploadBytes() : 0;
 }
 
 void Deep2Engine::enableVulkan(bool enable) {

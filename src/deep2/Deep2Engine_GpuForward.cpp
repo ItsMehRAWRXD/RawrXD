@@ -95,12 +95,24 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
                                  ? modelWeights.layers[0].wGate.rows
                                  : modelWeights.intermediateDim));
     const uint32_t inter = I ? I : (uint32_t)modelWeights.intermediateDim;
+    // The forward arena owns per-layer K/V scratch.  Reserving the full
+    // advertised context (for example 131072 tokens) would allocate tens of
+    // gigabytes before the first dispatch and guarantees admission failure on
+    // ordinary GPUs.  Keep the large context as a KV-admission limit, but use
+    // a bounded working window for GPU decode; callers beyond it remain
+    // explicitly eligible for the host path until a paged-KV arena exists.
+    uint32_t arenaSeq = std::min<uint32_t>(config.maxSeqLen ? config.maxSeqLen : 4096u, 4096u);
+    if (const char* e = std::getenv("DEEP2_GPU_ARENA_CONTEXT")) {
+        const long v = std::strtol(e, nullptr, 10);
+        if (v > 0) arenaSeq = std::min<uint32_t>(config.maxSeqLen ? config.maxSeqLen : 4096u,
+                                                 static_cast<uint32_t>(v));
+    }
     if (!vc->EnsureForwardArena(
         H, inter ? inter : H * 4,
         (uint32_t)modelWeights.numHeads,
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
-        (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
+        arenaSeq,
         (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22))) {
         std::fprintf(stderr, "GPU_ARENA_ENSURE_FAIL slot=%u H=%u I=%u\n",
                      slot, H, inter);
@@ -145,7 +157,7 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         (uint32_t)modelWeights.numHeads,
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
-        (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
+        arenaSeq,
         (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22));
     if (!vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena)) {
         std::fprintf(stderr,
@@ -306,13 +318,28 @@ bool Deep2Engine::forwardLayerGpuResident(
                 }
             }
             if (prefetch && vc->WeightStreamActive()) {
-                if (!vc->FlushWeightComputes()) return false;
+                if (!vc->FlushWeightComputes()) {
+                    std::fprintf(stderr, "GPU_PREFETCH_FAIL stage=flush layer=%u name=%s\\n", layer, wt.name.c_str());
+                    return false;
+                }
                 uint32_t sl = 0;
-                if (!vc->PrefetchWeight(wt.data, wt.sizeBytes, sl)) return false;
-                return vc->SubmitGemvPrefetch(sl, in, out, rows, cols, wt.sizeBytes, wt.type);
+                if (!vc->PrefetchWeight(wt.data, wt.sizeBytes, sl)) {
+                    std::fprintf(stderr, "GPU_PREFETCH_FAIL stage=upload layer=%u name=%s type=%d\\n", layer, wt.name.c_str(), wt.type);
+                    return false;
+                }
+                const bool ok = vc->SubmitGemvPrefetch(sl, in, out, rows, cols, wt.sizeBytes, wt.type);
+                if (!ok) std::fprintf(stderr, "GPU_PREFETCH_FAIL stage=submit layer=%u name=%s type=%d rows=%u cols=%u\\n", layer, wt.name.c_str(), wt.type, rows, cols);
+                return ok;
             }
             /* DualStick armed: prefer in-process 84-byte packed Q2_K (never 72-byte MASM). */
-            return vc->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
+            const bool dispatched = vc->DispatchGemvQuant(
+                wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
+            if (!dispatched) {
+                std::fprintf(stderr,
+                    "GPU_QUANT_GEMV_FAIL layer=%u slot=%u type=%d rows=%u cols=%u name=%s bytes=%zu\\n",
+                    layer, slot, wt.type, rows, cols, wt.name.c_str(), wt.sizeBytes);
+            }
+            return dispatched;
         }
         /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
         if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {

@@ -30,7 +30,7 @@ ChatTemplateType ChatTemplate::detectFromTemplate(const std::string& templateStr
     if (lower.find("<|user|>") != std::string::npos &&
         lower.find("<|assistant|>") != std::string::npos) {
         if (lower.find("<|im_start|>") != std::string::npos) return ChatTemplateType::PHI4;
-        return ChatTemplateType::PHI3;
+        return ChatTemplateType::TINYLLAMA;
     }
     if (lower.find("<|begin_of_text|>") != std::string::npos ||
         lower.find("<|start_header_id|>") != std::string::npos) {
@@ -68,7 +68,7 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
     if (name.find("tinyllama") != std::string::npos ||
         name.find("tiny-llama") != std::string::npos ||
         name.find("zephyr") != std::string::npos) {
-        return ChatTemplateType::PHI3;
+        return ChatTemplateType::TINYLLAMA;
     }
 
     // Phi family
@@ -176,6 +176,7 @@ const char* ChatTemplate::getTypeName() const {
     switch (config_.type) {
         case ChatTemplateType::RAW_BOS:        return "raw_bos";
         case ChatTemplateType::PHI3:           return "phi3";
+        case ChatTemplateType::TINYLLAMA:      return "tinyllama";
         case ChatTemplateType::PHI4:           return "phi4";
         case ChatTemplateType::LLAMA2:         return "llama2";
         case ChatTemplateType::LLAMA3:         return "llama3";
@@ -214,7 +215,15 @@ bool ChatTemplate::initFromGGUF(const std::string& ggufPath) {
     }
 
     const ModelMetadata& meta = result.metadata;
-    return initFromMetadata(meta.architecture, "", meta.chatTemplate,
+    // Some GGUFs (notably TinyLlama chat) omit tokenizer.chat_template but
+    // encode the family in the model filename.  Preserve that signal instead
+    // of silently falling back to raw BOS formatting.
+    std::string modelName = ggufPath;
+    const size_t slash = modelName.find_last_of("\\/");
+    if (slash != std::string::npos) modelName.erase(0, slash + 1);
+    const size_t dot = modelName.find_last_of('.');
+    if (dot != std::string::npos) modelName.erase(dot);
+    return initFromMetadata(meta.architecture, modelName, meta.chatTemplate,
                             meta.bosToken, meta.eosToken);
 }
 
@@ -293,6 +302,7 @@ void ChatTemplate::init(ChatTemplateType type, const ChatTemplateConfig& cfg) {
 std::string ChatTemplate::format(const std::vector<ChatMessage>& messages) const {
     switch (config_.type) {
         case ChatTemplateType::PHI3:           return formatPhi3(messages);
+        case ChatTemplateType::TINYLLAMA:      return formatTinyLlama(messages);
         case ChatTemplateType::PHI4:           return formatPhi4(messages);
         case ChatTemplateType::LLAMA2:         return formatLlama2(messages);
         case ChatTemplateType::LLAMA3:         return formatLlama3(messages);
@@ -328,6 +338,7 @@ std::string ChatTemplate::formatSingle(const std::string& userMessage,
 std::string ChatTemplate::getAssistantPrefix() const {
     switch (config_.type) {
         case ChatTemplateType::PHI3:           return "<|assistant|>";
+        case ChatTemplateType::TINYLLAMA:      return "<|assistant|>\n";
         case ChatTemplateType::PHI4:           return "<|im_start|>assistant\n";
         case ChatTemplateType::LLAMA3:         return "<|start_header_id|>assistant<|end_header_id|>\n\n";
         case ChatTemplateType::MISTRAL:
@@ -351,6 +362,7 @@ std::string ChatTemplate::getAssistantPrefix() const {
 bool ChatTemplate::isEndOfTurn(const std::string& tokenPiece) const {
     switch (config_.type) {
         case ChatTemplateType::PHI3:
+        case ChatTemplateType::TINYLLAMA:
             return tokenPiece == "<|end|>" || tokenPiece == "<|endoftext|>" ||
                    tokenPiece == config_.eosToken || tokenPiece == "</s>";
         case ChatTemplateType::PHI4:
@@ -402,6 +414,18 @@ std::string ChatTemplate::formatPhi3(const std::vector<ChatMessage>& messages) c
         }
     }
     out += "<|assistant|>";
+    return out;
+}
+
+// TinyLlama/ChatML-style role turns. The newline after each turn is part of
+// the published tokenizer template and must remain outside the EOS token.
+std::string ChatTemplate::formatTinyLlama(const std::vector<ChatMessage>& messages) const {
+    std::string out;
+    const std::string& end = config_.eosToken.empty() ? "</s>" : config_.eosToken;
+    for (const auto& msg : messages) {
+        out += "<|" + msg.role + "|>\n" + msg.content + end + "\n";
+    }
+    out += "<|assistant|>\n";
     return out;
 }
 
