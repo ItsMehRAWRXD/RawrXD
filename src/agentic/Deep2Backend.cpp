@@ -378,17 +378,22 @@ bool Deep2Backend::ChatStream(
         if (on_error) on_error(err);
     };
 
-    // Check if any tool calls were accumulated
-    auto on_complete = [&](const OllamaResponse&) {
-        if (has_tool_calls && on_tool_call) {
-            for (const auto& tc : accumulated_tool_calls) {
-                std::string name = tc.value("function", json::object()).value("name", "");
-                json args = tc.value("function", json::object()).value("arguments", json::object());
-                if (args.is_string()) {
-                    try { args = json::parse(args.get<std::string>()); } catch (...) {}
-                }
-                on_tool_call(name, args);
+    // Tool deltas are delivered only after a successful completed stream.
+    auto deliver_tool_calls = [&]() {
+        if (!has_tool_calls || !on_tool_call) return;
+        for (const auto& tc : accumulated_tool_calls) {
+            if (!tc.is_object() || !tc.contains("function") ||
+                !tc["function"].is_object()) continue;
+            const auto& fn = tc["function"];
+            const std::string name = fn.value("name", std::string());
+            if (name.empty()) continue;
+            json args = fn.value("arguments", json::object());
+            if (args.is_string()) {
+                try { args = json::parse(args.get<std::string>()); }
+                catch (const json::exception&) { continue; }
             }
+            if (!args.is_object()) continue;
+            on_tool_call(name, args);
         }
     };
 
@@ -401,7 +406,8 @@ bool Deep2Backend::ChatStream(
         on_err("Deep2 ChatStream: empty response");
     }
 
-    return !stream_failed;
+    if (!stream_failed && !m_cancelRequested.load()) deliver_tool_calls();
+    return !stream_failed && !m_cancelRequested.load();
 }
 
 InferenceResult Deep2Backend::FIMSync(
