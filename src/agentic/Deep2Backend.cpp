@@ -84,10 +84,14 @@ BackendHealth Deep2Backend::GetHealth() const {
         return health;
     }
 
-    health.available = (m_consecutiveErrors < 3);
-    health.healthy   = (m_consecutiveErrors < 3);
-    if (!m_recentErrors.empty()) {
-        health.last_error = m_recentErrors.back();
+    {
+        std::lock_guard<std::mutex> lock(m_stats_mtx);
+        health.available = m_lastHealthOk;
+        health.healthy   = m_lastHealthOk;
+        health.error_count = m_consecutiveErrors;
+        if (!m_recentErrors.empty()) {
+            health.last_error = m_recentErrors.back();
+        }
     }
     return health;
 }
@@ -106,7 +110,9 @@ bool Deep2Backend::CheckHealth() {
         bool ok = j.value("status", std::string()) == "ok" ||
                   j.value("healthy", false) == true;
         if (ok) {
+            std::lock_guard<std::mutex> lock(m_stats_mtx);
             m_consecutiveErrors = 0;
+            m_lastHealthOk = true;
         } else {
             RecordFailure("Deep2 health returned unhealthy: " + resp.substr(0, 128));
         }
@@ -562,11 +568,15 @@ bool Deep2Backend::ShouldEmitError(const std::string& msg) {
         m_recentErrors.pop_front();
     }
     m_consecutiveErrors++;
+    m_lastHealthOk = false;
     return true;
 }
 
 void Deep2Backend::RecordSuccess(double tps, uint64_t ptok, uint64_t ctok) {
-    m_consecutiveErrors = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_stats_mtx);
+        m_consecutiveErrors = 0;
+    }
     m_totalTokens.fetch_add(ptok + ctok);
     double current_avg = m_accumulatedTps.load();
     uint64_t total_req = m_totalRequests.load();
