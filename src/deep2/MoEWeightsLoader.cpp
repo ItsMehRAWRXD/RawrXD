@@ -819,7 +819,9 @@ void MoEWeightsLoader::SetMaxCacheSize(size_t bytes) {
     std::lock_guard<std::mutex> lock(cacheMutex_);
     maxCacheBytes_ = bytes;
     while (currentCacheBytes_ > maxCacheBytes_ && !cache_.empty()) {
+        const size_t previous = currentCacheBytes_;
         EvictLRU();
+        if (currentCacheBytes_ == previous) break; // pinned entries remain until unpinned
     }
 }
 
