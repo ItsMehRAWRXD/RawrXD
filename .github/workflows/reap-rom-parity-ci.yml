@@ -94,31 +94,10 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $cache = Get-Content build_native_ide_ci/CMakeCache.txt
-          $qt = $cache | Select-String -Pattern '^RAWRXD_REQUIRE_QT:BOOL=ON        shell: pwsh
-        run: |
-          cmake --build build_native_ide_ci --config Release --target RawrXD-Win32IDE-Native --parallel 2
-          if ($LASTEXITCODE -ne 0) { throw "Native Win32 IDE build failed" }
-      - name: Check built native IDE artifact exists
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $exe = Get-ChildItem -Path build_native_ide_ci -Filter 'RawrXD-Win32IDE-Native.exe' -Recurse -File | Select-Object -First 1
-          if (!$exe) { throw 'Native IDE target returned success without expected executable' }
-          if ($exe.Length -lt 4096) { throw "Native IDE executable unexpectedly small: $($exe.Length) bytes" }
-          Write-Host "Native IDE artifact: $($exe.FullName), bytes=$($exe.Length)"
-      - name: Upload executable and build evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rawrxd-native-ide-build
-          path: |
-            build_native_ide_ci/**/Release/RawrXD-Win32IDE-Native.exe
-            build_native_ide_ci/**/RawrXD-Win32IDE-Native.exe
-          if-no-files-found: error
-
-          if ($qt) { throw 'Qt requirement unexpectedly enabled in native IDE build' }
           if (!(Test-Path build_native_ide_ci/CMakeCache.txt)) { throw 'Missing CMake configuration evidence' }
+          $cache = Get-Content build_native_ide_ci/CMakeCache.txt
+          $qt = $cache | Select-String -Pattern '^RAWRXD_REQUIRE_QT:BOOL=ON$'
+          if ($qt) { throw 'Qt requirement unexpectedly enabled in native IDE build' }
       - name: Build real Win32 IDE executable
         shell: pwsh
         run: |
