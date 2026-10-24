@@ -20,6 +20,11 @@ on:
       - 'src/parity/**'
       - 'tests/reap_*'
       - 'tests/top25_parity_matrix_smoke.cpp'
+      - 'tests/native_lsp_framing_smoke.cpp'
+      - 'src/win32app/native/**'
+      - 'tools/rawrxd_e2e_source_audit.py'
+      - 'tools/rawrxd_no_deps_audit.py'
+      - '.github/workflows/reap-rom-parity-ci.yml'
 jobs:
   portable:
     runs-on: ubuntu-24.04
