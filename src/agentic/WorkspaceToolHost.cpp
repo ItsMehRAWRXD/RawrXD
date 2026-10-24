@@ -41,6 +41,14 @@ fs::path WorkspaceToolHost::ResolveInWorkspace(const std::string& path,
 
     // Empty / "." / "./" all mean the workspace root.
     std::string effective = path.empty() ? "." : path;
+    // Coding models often emit the container-style workspace aliases used in
+    // their training examples. Map only these exact aliases to the already
+    // admitted host root; all other absolute paths remain fail-closed.
+    if (effective == "/home/user/workspace" ||
+        effective == "/workspace" ||
+        effective == "workspace") {
+        effective = ".";
+    }
 
     // Reject anything that is clearly not a filesystem path at all: a phrase
     // containing spaces that is neither absolute nor relative to the root.
@@ -282,26 +290,105 @@ std::string WorkspaceToolHost::RunProcess(const std::string& cmd,
                                           int& exit_code,
                                           int timeout_minutes) const {
     exit_code = -1;
-    std::string full = cmd;
-    // Capture stdout+stderr on both shells.
 #ifdef _WIN32
-    full += " 2>&1";
+    SECURITY_ATTRIBUTES security{};
+    security.nLength = sizeof(security);
+    security.bInheritHandle = TRUE;
+
+    HANDLE readHandle = nullptr;
+    HANDLE writeHandle = nullptr;
+    if (!CreatePipe(&readHandle, &writeHandle, &security, 0)) {
+        return "failed to create process output pipe";
+    }
+    SetHandleInformation(readHandle, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA startup{};
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESTDHANDLES;
+    startup.hStdOutput = writeHandle;
+    startup.hStdError = writeHandle;
+    PROCESS_INFORMATION process{};
+    std::string commandLine = "cmd.exe /d /s /c \"" + cmd + " 2>&1\"";
+    std::vector<char> mutableCommand(commandLine.begin(), commandLine.end());
+    mutableCommand.push_back('\0');
+
+    if (!CreateProcessA(nullptr, mutableCommand.data(), nullptr, nullptr, TRUE,
+                        CREATE_NO_WINDOW, nullptr, nullptr, &startup, &process)) {
+        CloseHandle(readHandle);
+        CloseHandle(writeHandle);
+        return "failed to start process";
+    }
+    CloseHandle(writeHandle);
+
+    std::string output;
+    constexpr size_t outputCap = 8 * 1024 * 1024;
+    const uint64_t timeoutMs = timeout_minutes > 0
+        ? static_cast<uint64_t>(timeout_minutes) * 60ULL * 1000ULL : 60000ULL;
+    const auto start = std::chrono::steady_clock::now();
+    bool timedOut = false;
+
+    auto drain = [&]() {
+        char buffer[4096];
+        DWORD available = 0;
+        while (PeekNamedPipe(readHandle, nullptr, 0, nullptr, &available, nullptr) &&
+               available > 0) {
+            DWORD read = 0;
+            const DWORD requested = (std::min<DWORD>)(available, sizeof(buffer));
+            if (!ReadFile(readHandle, buffer, requested, &read, nullptr) || read == 0) break;
+            output.append(buffer, buffer + read);
+            if (output.size() >= outputCap) {
+                output.resize(outputCap);
+                output.append("\n...[output truncated]\n");
+                break;
+            }
+        }
+    };
+
+    for (;;) {
+        drain();
+        const DWORD wait = WaitForSingleObject(process.hProcess, 50);
+        if (wait == WAIT_OBJECT_0) break;
+        if (wait == WAIT_FAILED) {
+            output += "\nprocess wait failed\n";
+            break;
+        }
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - start).count();
+        if (static_cast<uint64_t>(elapsed) >= timeoutMs) {
+            timedOut = true;
+            TerminateProcess(process.hProcess, 124);
+            WaitForSingleObject(process.hProcess, 2000);
+            break;
+        }
+    }
+    drain();
+    if (timedOut) {
+        exit_code = -2;
+        output += "\nprocess timed out and was terminated\n";
+    } else {
+        DWORD code = 1;
+        GetExitCodeProcess(process.hProcess, &code);
+        exit_code = static_cast<int>(code);
+    }
+    CloseHandle(process.hThread);
+    CloseHandle(process.hProcess);
+    CloseHandle(readHandle);
+    return output;
 #else
-    full += " 2>&1";
-#endif
-
-    FILE* pipe = x_popen(full.c_str(), "r");
+    const std::string full = cmd + " 2>&1";
+    FILE* pipe = popen(full.c_str(), "r");
     if (!pipe) return "failed to start process";
-
     std::string out;
     char buf[4096];
-    size_t cap = 8 * 1024 * 1024;   // bounded output
+    constexpr size_t cap = 8 * 1024 * 1024;
     while (fgets(buf, sizeof(buf), pipe)) {
         out += buf;
         if (out.size() > cap) { out.append("\n...[output truncated]\n"); break; }
     }
-    exit_code = x_pclose(pipe);
+    exit_code = pclose(pipe);
+    (void)timeout_minutes;
     return out;
+#endif
 }
 
 // ---------------------------------------------------------------------------

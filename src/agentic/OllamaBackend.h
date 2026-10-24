@@ -90,6 +90,9 @@ public:
     uint64_t GetTotalRequests() const override;
     double   GetAvgTokensPerSec() const override;
 
+    /// @brief The accounting of the last generation this backend ran.
+    StreamMetrics LastStreamMetrics() const override;
+
 private:
     // ---- OllamaClient delegation ----
     std::unique_ptr<Backend::OllamaClient> m_client;
@@ -110,8 +113,11 @@ private:
     std::atomic<uint64_t> m_totalRequests{0};
     std::atomic<uint64_t> m_totalTokens{0};
     std::atomic<double>   m_accumulatedTps{0.0};
-    int                   m_consecutiveErrors{0};
+    std::atomic<int>      m_consecutiveErrors{0};
     std::deque<std::string> m_recentErrors;
+
+    // The accounting of the last generation. Guarded by m_stats_mtx.
+    StreamMetrics m_lastMetrics;
 
     // ---- Helpers ----
     void ConvertMessages(const std::vector<ChatMessage>& messages,

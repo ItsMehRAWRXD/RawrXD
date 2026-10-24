@@ -8,6 +8,7 @@
 #include "ModelConnection.h"
 #include "IDELogger.h"
 #include <sstream>
+#include <commdlg.h>
 
 // Initialize the Agentic Bridge
 void Win32IDE::initializeAgenticBridge() {
@@ -355,11 +356,10 @@ void Win32IDE::initializeDeep2Bridge() {
             }
         });
         
-        // Try to initialize with default model if available
-        std::string defaultModel = "F:\\rawrxd\\models\\deepseek-coder-v2-lite-instruct.Q4_K_M.gguf";
-        if (m_deep2Bridge->Initialize(defaultModel)) {
-            LOG_INFO("Deep2 Bridge initialized successfully with model: " + defaultModel);
-            appendToOutput(" Deep2 Engine initialized: " + defaultModel + "\n", "Output", OutputSeverity::Info);
+        if (m_deep2Bridge->Initialize()) {
+            LOG_INFO("Deep2 Bridge initialized successfully without a fixed model");
+            appendToOutput(" Deep2 Engine initialized; load a model from the native explorer or Deep2 menu.\n",
+                           "Output", OutputSeverity::Info);
         } else {
             LOG_WARNING("Deep2 Bridge initialized without model (model can be loaded later)");
             appendToOutput(" Deep2 Engine initialized (no model loaded)\n", "Output", OutputSeverity::Warning);

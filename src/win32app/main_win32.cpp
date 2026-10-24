@@ -1,6 +1,8 @@
 #include "Win32IDE.h"
+#include "Win32IDE_ExtensionCert.h"
 #include "IDELogger.h"
 #include "ProductionRuntime.hpp"
+#include "Deep2Next15Hooks.hpp"
 #include <windows.h>
 #include <exception>
 #include <iostream>
@@ -67,12 +69,18 @@ int RunHealthCheckProbe(const std::string& flag) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    deep2::next15::initialize();
     // Operational probe requested before any UI work, so a supervisor can
     // observe process state in a headless environment.
     if (__argc >= 2) {
         const std::string arg = __argv[1];
         if (arg == "--health-check" || arg == "--health-check-json") {
             return RunHealthCheckProbe(arg.c_str());
+        }
+        // The extension runtime certificate, run from the production
+        // binary so that it exercises the code the IDE actually ships.
+        if (arg == "--extension-cert") {
+            return RunExtensionCertProbe(__argc, __argv);
         }
     }
 

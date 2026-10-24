@@ -20,6 +20,13 @@ constexpr const char* kWindowClass = "RawrXD_IDE_Window";
 constexpr const char* kWindowTitle = "RawrXD IDE";
 
 Win32IDE* g_ideInstance = nullptr;
+
+void configureModelSelectorCombo(HWND combo, int minimumVisibleRows)
+{
+    if (!combo) return;
+    SendMessageA(combo, CB_SETDROPPEDWIDTH, 560, 0);
+    SendMessageA(combo, CB_SETMINVISIBLE, minimumVisibleRows, 0);
+}
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -81,6 +88,34 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                                reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }
             return 0;
+        case WM_HSCROLL:
+            if (ide && reinterpret_cast<HWND>(lParam) == ide->m_hwndMaxTokensSlider) {
+                ide->onMaxTokensChanged(static_cast<int>(SendMessage(
+                    ide->m_hwndMaxTokensSlider, TBM_GETPOS, 0, 0)));
+                return 0;
+            }
+            if (ide && reinterpret_cast<HWND>(lParam) == ide->m_hwndContextSlider) {
+                ide->m_currentContextTokens = static_cast<int>(SendMessage(
+                    ide->m_hwndContextSlider, TBM_GETPOS, 0, 0));
+                ide->updateContextControls();
+                return 0;
+            }
+            break;
+        case WM_KEYDOWN:
+            if (ide && wParam == VK_F4 && ide->m_hwndProblemsListView) {
+                const int count = ListView_GetItemCount(ide->m_hwndProblemsListView);
+                if (count > 0) {
+                    int selected = ListView_GetNextItem(
+                        ide->m_hwndProblemsListView, -1, LVNI_SELECTED);
+                    selected = (selected < 0 || selected + 1 >= count) ? 0 : selected + 1;
+                    ListView_SetItemState(ide->m_hwndProblemsListView, selected,
+                                          LVIS_SELECTED | LVIS_FOCUSED,
+                                          LVIS_SELECTED | LVIS_FOCUSED);
+                    ide->goToProblem(selected);
+                    return 0;
+                }
+            }
+            break;
         case WM_NOTIFY: {
             auto* nmhdr = reinterpret_cast<NMHDR*>(lParam);
             if (!nmhdr || !ide) return 0;
@@ -106,6 +141,11 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 }
             } else if (nmhdr->idFrom == IDC_FILE_EXPLORER && nmhdr->code == NM_DBLCLK) {
                 ide->onFileExplorerDoubleClick();
+            } else if (nmhdr->idFrom == IDC_PANEL_PROBLEMS_LIST &&
+                       (nmhdr->code == NM_DBLCLK || nmhdr->code == NM_RETURN)) {
+                const int selected = ListView_GetNextItem(
+                    nmhdr->hwndFrom, -1, LVNI_SELECTED);
+                if (selected >= 0) ide->goToProblem(selected);
             }
             return 0;
         }
@@ -126,6 +166,9 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             }
             return 0;
         }
+        case WM_APP + 73:
+            if (ide) return ide->handleNativeGhostTextMessage(uMsg, wParam, lParam) ? 0 : 1;
+            return 0;
         case WM_APP + 101: {
             // Deep2Bridge token stream (if needed)
             return 0;
@@ -206,15 +249,33 @@ void Win32IDE::onCreate(HWND hwnd)
     createStatusBar(hwnd);
     createOutputTabs();
     createChatPanel();
+    // Launch-time connection validation requires the bridges to be alive before
+    // the window is reported ready; menu actions remain idempotent.
+    initializeDeep2Bridge();
+    initializeAgenticLoopBridge();
     if (m_hwndSecondarySidebar) {
         SetWindowSubclass(m_hwndSecondarySidebar, forwardPaneNotifications, 3, 0);
     }
     initializeEditorSurface();
+    initializeNativeGhostText();
+
+    // Keep the native PowerShell surface reachable immediately after launch.
+    // The terminal manager remains lazy about starting pwsh itself, but the
+    // real RichEdit host must exist so agents and users can navigate to it
+    // without depending on a menu click that may not have been delivered.
+    if (m_terminalPanes.empty()) {
+        const int paneId = createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell");
+        if (paneId >= 0) {
+            LOG_INFO("PowerShell terminal surface created at launch");
+            startPowerShell();
+        }
+    }
 
     RECT client{};
     if (GetClientRect(hwnd, &client)) {
         onSize(client.right, client.bottom);
     }
+    validateLaunchConnections();
 }
 
 void Win32IDE::onDestroy()
@@ -237,6 +298,32 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         onModelSelectionChanged();
         return;
     }
+    if (hwndCtl == m_hwndGhostModelSelector && codeNotify == CBN_SELCHANGE) {
+        onGhostTextSelectionChanged();
+        return;
+    }
+    if (hwndCtl == m_hwndAllowCloudGhostText && codeNotify == BN_CLICKED) {
+        onGhostTextCloudConsentChanged();
+        return;
+    }
+    if ((hwndCtl == m_hwndModelSelector || hwndCtl == m_hwndGhostModelSelector) &&
+        codeNotify == CBN_DROPDOWN) {
+        RECT dropped{};
+        const LRESULT count = SendMessage(hwndCtl, CB_GETCOUNT, 0, 0);
+        const LRESULT open = SendMessage(hwndCtl, CB_GETDROPPEDSTATE, 0, 0);
+        const LRESULT rectOk = SendMessage(hwndCtl,
+            CB_GETDROPPEDCONTROLRECT, 0, reinterpret_cast<LPARAM>(&dropped));
+        const char* selectorName = hwndCtl == m_hwndGhostModelSelector
+            ? "GhostTextSelector" : "ModelSelector";
+        std::string diagnostic = std::string("[") + selectorName + "] dropdown count=" +
+            std::to_string(count) + " open=" + std::to_string(open ? 1 : 0) +
+            " rect=" + std::to_string(rectOk ? 1 : 0) +
+            " width=" + std::to_string(rectOk ? (dropped.right - dropped.left) : 0) +
+            " height=" + std::to_string(rectOk ? (dropped.bottom - dropped.top) : 0);
+        logInfo(diagnostic);
+        appendToOutput(diagnostic + "\n", "Debug", OutputSeverity::Info);
+        return;
+    }
     if (hwndCtl) {
         if (hwndCtl == m_hwndEditor) {
             if (codeNotify == EN_CHANGE) {
@@ -244,6 +331,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                     m_fileModified = true;
                     updateTitleBarText();
                 }
+                if (m_ghostText) m_ghostText->onEditorChanged();
             }
             return;
         }
@@ -401,13 +489,24 @@ void Win32IDE::onSize(int width, int height)
         ShowWindow(m_hwndSecondarySidebar, rightWidth > 0 ? SW_SHOW : SW_HIDE);
         const int buttonY = std::max(110, workHeight - 35);
         const int inputHeight = std::min(80, std::max(45, buttonY - 115));
-        const int inputY = std::max(110, buttonY - inputHeight - 5);
-        const int outputHeight = std::max(0, inputY - 115);
+        const int inputY = std::max(158, buttonY - inputHeight - 5);
+        const int outputHeight = std::max(0, inputY - 163);
         if (m_hwndSecondarySidebarHeader) MoveWindow(m_hwndSecondarySidebarHeader, 5, 5, std::max(0, rightWidth - 10), 25, TRUE);
-        if (m_hwndModelSelector) MoveWindow(m_hwndModelSelector, 60, 35, std::max(0, rightWidth - 65), 24, TRUE);
-        if (m_hwndMaxTokensSlider) MoveWindow(m_hwndMaxTokensSlider, 5, 80, std::max(0, rightWidth - 10), 25, TRUE);
-        if (m_hwndMaxTokensLabel) MoveWindow(m_hwndMaxTokensLabel, std::max(5, rightWidth - 55), 60, 50, 18, TRUE);
-        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, 110, std::max(0, rightWidth - 10), outputHeight, TRUE);
+        if (m_hwndModelLabel) MoveWindow(m_hwndModelLabel, 5, 35, 85, 18, TRUE);
+        if (m_hwndModelSelector) {
+            MoveWindow(m_hwndModelSelector, 95, 35, std::max(0, rightWidth - 100), 24, TRUE);
+            configureModelSelectorCombo(m_hwndModelSelector, 18);
+        }
+        if (m_hwndGhostTextModelLabel) MoveWindow(m_hwndGhostTextModelLabel, 5, 62, 85, 18, TRUE);
+        if (m_hwndGhostModelSelector) {
+            MoveWindow(m_hwndGhostModelSelector, 95, 62, std::max(0, rightWidth - 100), 24, TRUE);
+            configureModelSelectorCombo(m_hwndGhostModelSelector, 18);
+        }
+        if (m_hwndAllowCloudGhostText) MoveWindow(m_hwndAllowCloudGhostText, 5, 89, std::max(0, rightWidth - 10), 18, TRUE);
+        if (m_hwndMaxTokensCaption) MoveWindow(m_hwndMaxTokensCaption, 5, 110, 85, 18, TRUE);
+        if (m_hwndMaxTokensSlider) MoveWindow(m_hwndMaxTokensSlider, 5, 128, std::max(0, rightWidth - 10), 25, TRUE);
+        if (m_hwndMaxTokensLabel) MoveWindow(m_hwndMaxTokensLabel, std::max(5, rightWidth - 55), 108, 50, 18, TRUE);
+        if (m_hwndCopilotChatOutput) MoveWindow(m_hwndCopilotChatOutput, 5, 158, std::max(0, rightWidth - 10), outputHeight, TRUE);
         if (m_hwndCopilotChatInput) MoveWindow(m_hwndCopilotChatInput, 5, inputY, std::max(0, rightWidth - 10), inputHeight, TRUE);
         const int buttonWidth = std::max(0, (rightWidth - 15) / 2);
         if (m_hwndCopilotSendBtn) MoveWindow(m_hwndCopilotSendBtn, 5, buttonY, buttonWidth, 30, TRUE);
@@ -454,6 +553,18 @@ void Win32IDE::initializeEditorSurface()
     if (m_hwndEditor) {
         SendMessageA(m_hwndEditor, EM_EXLIMITTEXT, 0, 64 * 1024 * 1024);
         SendMessageA(m_hwndEditor, EM_SETEVENTMASK, 0, ENM_CHANGE);
+        // Establish a visible baseline before applying any persisted theme.
+        // This prevents an uninitialized/invalid theme from producing a
+        // black editor with no readable document text on first launch.
+        SendMessageA(m_hwndEditor, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+        CHARFORMAT2A initialFormat{};
+        initialFormat.cbSize = sizeof(initialFormat);
+        initialFormat.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
+        initialFormat.crTextColor = RGB(220, 220, 220);
+        initialFormat.yHeight = 200;
+        strncpy_s(initialFormat.szFaceName, LF_FACESIZE, "Consolas", _TRUNCATE);
+        SendMessageA(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL,
+                     reinterpret_cast<LPARAM>(&initialFormat));
         applyTheme();
     }
     // Initial control creation and theme application are not user edits.

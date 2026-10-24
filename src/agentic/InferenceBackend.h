@@ -107,12 +107,28 @@ struct InferenceResult {
     // Tool call fields
     bool                                         has_tool_calls = false;
     std::vector<std::pair<std::string, json>>    tool_calls;     // [(name, args)]
+    // The ids the server gave the calls, in the same order. A tool result
+    // has to name the call it answers, and the assistant turn has to be
+    // echoed with its calls: a model that cannot see its own call cannot
+    // tell which result belongs to it.
+    std::vector<std::string>                     tool_call_ids;
 
     // Perf metrics
     uint64_t prompt_tokens    = 0;
     uint64_t completion_tokens = 0;
     double   tokens_per_sec   = 0.0;
     double   total_duration_ms = 0.0;
+
+    // The server's own generation accounting.
+    //
+    // tokens_per_sec above is wall clock, and it includes the model load and
+    // the prompt evaluation. The inference throughput is the server's own
+    // number: eval_count * 1e9 / eval_duration, where eval_duration is the
+    // time the server spent generating and nothing else.
+    uint64_t eval_duration_ns = 0;
+    uint64_t load_duration_ns = 0;
+    double   inference_tps     = 0.0;   // eval_count * 1e9 / eval_duration
+    double   ttft_ms           = 0.0;   // time to the first streamed token
 
     static InferenceResult Ok(const std::string& resp,
                               uint64_t ptok = 0, uint64_t ctok = 0,
@@ -211,6 +227,22 @@ public:
     // ---- Stats ----
     virtual uint64_t GetTotalRequests() const = 0;
     virtual double   GetAvgTokensPerSec() const = 0;
+
+    // ---- The accounting of the last generation ----
+    //
+    // The completion callbacks carry a rate, but not the server's own
+    // generation accounting. A backend that talks to a server that reports
+    // its own counters fills this in, so that the caller can report the
+    // inference throughput separately from the wall-clock throughput.
+    struct StreamMetrics {
+        uint64_t prompt_tokens     = 0;
+        uint64_t completion_tokens = 0;
+        uint64_t eval_duration_ns  = 0;   // the time spent generating
+        uint64_t load_duration_ns  = 0;   // the time spent loading the model
+        double   ttft_ms           = 0.0;
+        double   inference_tps     = 0.0; // eval_count * 1e9 / eval_duration
+    };
+    virtual StreamMetrics LastStreamMetrics() const { return StreamMetrics{}; }
 };
 
 // ---------------------------------------------------------------------------

@@ -30,39 +30,54 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
     deep2_cfg.num_gpu      = 99;
 
     m_deep2 = std::make_unique<Deep2Backend>();
-    m_deep2->Initialize(deep2_cfg);
+    const bool deep2_ready = m_deep2->Initialize(deep2_cfg);
 
     // Initialize Ollama backend (fallback)
     BackendConfig ollama_cfg;
     ollama_cfg.kind     = BackendKind::Ollama;
     ollama_cfg.endpoint = config.fallback_endpoint;
     ollama_cfg.model    = config.fallback_model;
-    if (ollama_cfg.model.empty()) ollama_cfg.model = "qwen2.5-coder:32b";
     ollama_cfg.temperature  = 0.2f;
     ollama_cfg.top_p        = 0.9f;
-    ollama_cfg.max_tokens   = 4096;
-    ollama_cfg.num_ctx      = 8192;
+    ollama_cfg.max_tokens   = config.fallback_max_tokens > 0
+        ? config.fallback_max_tokens : 4096;
+    ollama_cfg.num_ctx      = config.fallback_num_ctx > 0
+        ? config.fallback_num_ctx : 8192;
     ollama_cfg.timeout_ms   = 120000;
     ollama_cfg.use_gpu      = true;
     ollama_cfg.num_gpu      = 99;
 
     m_ollama = std::make_unique<OllamaBackend>();
-    m_ollama->Initialize(ollama_cfg);
+    const bool ollama_ready = m_ollama->Initialize(ollama_cfg);
+
+    // Auto mode accepts either backend, but an explicit mode requires its
+    // requested backend. Never report a healthy router with no usable route.
+    const bool requestedBackendReady =
+        config.mode == BackendMode::Ollama ? ollama_ready :
+        config.mode == BackendMode::Deep2  ? deep2_ready  :
+        (deep2_ready || ollama_ready);
+    if (!requestedBackendReady) {
+        if (m_deep2) m_deep2->Shutdown();
+        if (m_ollama) m_ollama->Shutdown();
+        return false;
+    }
 
     // Determine active backend based on mode
     {
         std::lock_guard<std::mutex> lock(m_active_mtx);
         if (config.mode == BackendMode::Ollama) {
             m_active_kind = BackendKind::Ollama;
-            m_active_model = ollama_cfg.model;
+            m_active_model = m_ollama->GetConfig().model;
             m_active_endpoint = ollama_cfg.endpoint;
         } else {
             // Default: primary (Deep2)
             m_active_kind = BackendKind::Deep2;
-            m_active_model = deep2_cfg.model;
+            m_active_model = m_deep2->GetConfig().model;
             m_active_endpoint = deep2_cfg.endpoint;
         }
     }
+
+    m_initialized.store(true);
 
     // Start health check thread
     m_health_running.store(true);
@@ -75,7 +90,6 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
         }
     });
 
-    m_initialized.store(true);
     return true;
 }
 
@@ -182,6 +196,21 @@ std::vector<std::string> BackendRouter::ListModels(BackendKind preferred) {
     if (m_deep2) return m_deep2->ListModels();
     if (m_ollama) return m_ollama->ListModels();
     return {};
+}
+
+std::vector<std::string> BackendRouter::ListAllModels() {
+    std::vector<std::string> result;
+    auto appendUnique = [&result](const std::vector<std::string>& names) {
+        for (const auto& name : names) {
+            if (name.empty()) continue;
+            if (std::find(result.begin(), result.end(), name) == result.end()) {
+                result.push_back(name);
+            }
+        }
+    };
+    if (m_deep2) appendUnique(m_deep2->ListModels());
+    if (m_ollama) appendUnique(m_ollama->ListModels());
+    return result;
 }
 
 bool BackendRouter::IsCloudModel(const std::string& model_name) {

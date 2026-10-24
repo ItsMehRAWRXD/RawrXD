@@ -4,7 +4,10 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
+#include "Win32IDE_Deep2Bridge.h"
 #include "../native_agent.hpp"
+#include "../agentic_workflow_bridge.h"
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <algorithm>
 #include <regex>
@@ -77,6 +80,57 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     if (!m_initialized || !m_nativeAgent) {
         response.type = AgentResponseType::AGENT_ERROR;
         response.content = "Agent not initialized.";
+        return response;
+    }
+
+    std::string workflowTool;
+    std::string workflowArgs = "{}";
+    if (prompt.rfind("/browser ", 0) == 0) {
+        workflowTool = "browser_navigate";
+        nlohmann::json browserParams;
+        browserParams["url"] = prompt.substr(9);
+        browserParams["visible"] = true;
+        workflowArgs = browserParams.dump();
+    } else if (prompt.rfind("/tool ", 0) == 0) {
+        const std::string request = prompt.substr(6);
+        const size_t separator = request.find_first_of(" \t");
+        workflowTool = separator == std::string::npos ? request : request.substr(0, separator);
+        if (separator != std::string::npos) workflowArgs = request.substr(separator + 1);
+    } else if (prompt.rfind("tool:", 0) == 0) {
+        const std::string request = prompt.substr(5);
+        const size_t separator = request.find_first_of(" \t");
+        workflowTool = separator == std::string::npos ? request : request.substr(0, separator);
+        if (separator != std::string::npos) workflowArgs = request.substr(separator + 1);
+    }
+
+    if (!workflowTool.empty()) {
+        response.type = AgentResponseType::TOOL_CALL;
+        response.toolName = workflowTool;
+        response.toolArgs = workflowArgs;
+        try {
+            const auto params = nlohmann::json::parse(workflowArgs);
+            nlohmann::json result;
+            if (!RawrXD::Workflow::dispatchWorkflowTool(workflowTool, params, result)) {
+                response.type = AgentResponseType::AGENT_ERROR;
+                response.content = "Unknown native workflow tool: " + workflowTool;
+            } else {
+                response.content = result.dump(2);
+            }
+        } catch (const std::exception& e) {
+            response.type = AgentResponseType::AGENT_ERROR;
+            response.content = "Native workflow tool input error: ";
+            response.content += e.what();
+        }
+        response.rawOutput = response.content;
+        return response;
+    }
+
+    if (m_ide && m_ide->m_deep2Bridge && m_ide->m_deep2Bridge->IsModelLoaded()) {
+        response.content = m_ide->m_deep2Bridge->GenerateSync(prompt, 512);
+        response.rawOutput = response.content;
+        if (response.content.empty() || response.content.rfind("Error:", 0) == 0) {
+            response.type = AgentResponseType::AGENT_ERROR;
+        }
         return response;
     }
 
@@ -307,6 +361,11 @@ std::vector<std::string> AgenticBridge::GetAvailableTools() {
     std::vector<std::string> tools = {
         "list_dir", "read_file", "write_file", "run_command", "search_text"
     };
+    for (const auto& schema : RawrXD::Workflow::workflowToolSchemas()) {
+        if (schema.contains("name") && schema.at("name").is_string()) {
+            tools.push_back(schema.at("name").get<std::string>());
+        }
+    }
     return tools;
 }
 

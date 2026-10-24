@@ -31,6 +31,7 @@
 #include "agentic/BackendRouter.h"
 #include "agentic/OllamaBackend.h"
 #include "agentic/Deep2Backend.h"
+#include "Deep2Next15Hooks.hpp"
 #include "agentic/ToolCallBridge.h"
 #include "agentic/tool_call_parser.h"
 #include "agentic/agent_action.h"
@@ -474,26 +475,33 @@ static bool InitBackend(BackendMode mode, const std::string& model, int maxToken
                      deep2_num_layers(localEngine));
 
         deep2CompleteFn = [](const std::vector<ChatMessage>& msgs, int maxTokens) {
-            // Apply TinyLlama-compatible chat template so the base model
-            // interprets the user turn as an instruction rather than text
-            // to continue. Without this, TinyLlama generates training-data
-            // style QA content instead of following instructions.
-            std::string prompt = "<|system|>\n"
-                                 "You are a helpful assistant. Follow the user's instructions directly and concisely.\n"
-                                 "<|user|>\n";
-            for (size_t i = 0; i < msgs.size(); ++i) {
-                const auto& m = msgs[i];
-                if (m.role == "user") {
-                    prompt += m.content;
-                    prompt += "\n<|assistant|>\n";
-                } else if (m.role == "assistant") {
-                    prompt += m.content;
-                    if (i + 1 < msgs.size() && msgs[i + 1].role == "user") {
-                        prompt += "<|user|>\n";
+            // The GGUF tokenizer/chat metadata is authoritative.  A fixed
+            // TinyLlama template makes Nemotron, Qwen, Phi and other models
+            // tokenize the wrong control tokens and can legitimately yield an
+            // immediate EOS with no visible response.
+            std::string systemPrompt =
+                "You are a helpful assistant. Follow the user's instructions directly and concisely.";
+            std::string userPrompt;
+            for (const auto& m : msgs) {
+                if (m.role == "system") {
+                    if (!m.content.empty()) {
+                        if (!systemPrompt.empty()) systemPrompt += "\n";
+                        systemPrompt += m.content;
                     }
-                } else if (m.role == "system") {
-                    // System content already emitted above; skip duplicates.
+                } else if (m.role == "user") {
+                    if (!userPrompt.empty()) userPrompt += "\n";
+                    userPrompt += m.content;
+                } else if (!m.content.empty()) {
+                    if (!userPrompt.empty()) userPrompt += "\n";
+                    userPrompt += m.role + ": " + m.content;
                 }
+            }
+            if (userPrompt.empty()) userPrompt = "Hello.";
+
+            std::string prompt;
+            if (!deep2_format_chat_prompt(localEngine, systemPrompt.c_str(),
+                                          userPrompt.c_str(), prompt)) {
+                return InferenceResult::Error("Deep2Engine could not format model chat prompt");
             }
             std::string text;
             auto emit = [](int32_t, const char* bytes, size_t count, void*) -> bool {
@@ -508,7 +516,11 @@ static bool InitBackend(BackendMode mode, const std::string& model, int maxToken
             if (!deep2_generate_stream(localEngine, prompt.c_str(),
                                         static_cast<size_t>(maxTokens), emit,
                                         nullptr, text)) {
-                return InferenceResult::Error("Deep2Engine generated empty response");
+                const char* reason = deep2_generation_stop_reason_name(localEngine);
+                std::string detail = "Deep2Engine generation failed: stop_reason=" +
+                                     std::string(reason ? reason : "UNKNOWN") +
+                                     " prompt_bytes=" + std::to_string(prompt.size());
+                return InferenceResult::Error(detail);
             }
             InferenceResult r = InferenceResult::Ok(text);
             r.prompt_tokens = static_cast<int>(prompt.size() / 4);
@@ -1832,6 +1844,10 @@ static int CmdRun(const std::vector<std::string>& args) {
         [[maybe_unused]] auto motdTurnGuard = runAuthorization.GuardTurn(runSession, runTurn);
         std::cerr << "MOTD_ACK=1 MOTD_SHA256=" << digest << "\n";
         std::string prompt = flags.count("prompt") ? flags["prompt"] : flags["task"];
+        const bool ghostText = flags.count("ghost-text") != 0;
+        if (ghostText) {
+            prompt = "Complete the following source text. Return only the completion text, without markdown or explanation:\n" + prompt;
+        }
         const std::string receiptPath = flags.count("receipt")
             ? flags.at("receipt")
             : (g_workspace + "/.rawrxd/evidence/rawr_run_receipt.json");
@@ -4596,6 +4612,33 @@ static std::string ServeModelName() {
     return g_model.empty() ? "rawrxd" : g_model;
 }
 
+static std::string ExecuteCliCommand(const std::string& command) {
+    if (!localEngine) return "No model loaded";
+    Options opts;
+    opts.positional.clear();
+    if (command.rfind("!engine ", 0) == 0) {
+        std::string sub = command.substr(8);
+        std::istringstream iss(sub);
+        std::string cmd, arg;
+        iss >> cmd >> arg;
+        if (cmd == "compile") return "Engine compile: " + arg + " (stub)";
+        if (cmd == "dumpbin") return "Dumpbin: " + arg + " (stub)";
+        if (cmd == "disasm") return "Disasm: " + arg + " (stub)";
+        if (cmd == "analyze") return "Analyze: " + arg + " (stub)";
+    }
+    // Fallback: treat as chat prompt
+    std::vector<ChatMessage> msgs = {{"user", command, "", {}}};
+    InferenceResult r = ProviderTurn(msgs, json::array(), 256, false);
+    if (!r.success) return "Error: " + r.error_message;
+    return r.response;
+}
+
+static bool RegisterNativeRuntime(const std::string& model, const std::string& path) {
+    if (!localEngine) return false;
+    std::string modelPath = path.empty() ? model : path;
+    return InitBackend(BackendMode::Deep2, modelPath, g_requested_max_tokens);
+}
+
 static json ServeCompletion(const json& request, bool ollamaShape) {
     std::vector<ChatMessage> messages;
     if (request.contains("messages") && request["messages"].is_array()) {
@@ -4669,6 +4712,25 @@ static std::string ServeRequest(const std::string& method, const std::string& pa
     }
     if (method == "GET" && path == "/api/cli")
         return HttpJson({{"enabled", true}, {"read_only", true}, {"native", true}});
+    if (method == "POST" && path == "/api/cli") {
+        try {
+            const json req = json::parse(body);
+            const std::string command = req.value("command", "");
+            if (command.empty()) return HttpJson({{"error", "command required"}}, 400);
+            std::string output = ExecuteCliCommand(command);
+            return HttpJson({{"output", output}, {"certification", "NOT_CERTIFIED"}});
+        } catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
+    }
+    if (method == "POST" && path == "/api/native/runtime/register") {
+        try {
+            const json req = json::parse(body);
+            const std::string model = req.value("model", "");
+            const std::string path = req.value("path", "");
+            if (model.empty()) return HttpJson({{"error", "model required"}}, 400);
+            bool ok = RegisterNativeRuntime(model, path);
+            return HttpJson({{"registered", ok}, {"model", model}, {"certification", "NOT_CERTIFIED"}});
+        } catch (const std::exception& e) { return HttpJson({{"error", e.what()}}, 400); }
+    }
     if (method == "GET" && (path == "/api/agents/status" || path == "/api/backends/status" ||
                              path == "/api/governor/status" || path == "/api/lsp/status" ||
                              path == "/api/debug/status" || path == "/api/phase"))
@@ -4757,6 +4819,7 @@ static int CmdServe(const Options& o) {
 // main
 // ---------------------------------------------------------------------------
 int main(int argc, char** argv) {
+    deep2::next15::initialize();
     std::signal(SIGINT, OnSignal);
     std::signal(SIGTERM, OnSignal);
     g_workspace = fs::current_path().string();
@@ -4769,6 +4832,7 @@ int main(int argc, char** argv) {
               << "       [--max-tokens n] [--agent [<prompt>]] [--agent-iterations n]\n"
               << "       [--swarm [<prompt>]] [--workers n] [--workspace d]   bounded swarm run\n"
               << "  rawr run <model> \"new project\"                          project wizard\n"
+              << "  rawr ghost <model> \"<source prefix>\"                  native GhostText completion\n"
               << "  rawr run <model> \"add a GUI\"                            follow-up wizard\n"
               << "  rawr serve --model <model> [--port 11435]                  native IDE HTTP gateway\n"
               << "  rawr modes                                                  list agent modes\n"
@@ -4796,6 +4860,10 @@ int main(int argc, char** argv) {
     Options o = ParseOptions(argc, argv, 2);
     g_workspace = DiscoverWorkspace(o);
 
+    if (cmd == "ghost") {
+        args.push_back("--ghost-text");
+        return CmdRun(args);
+    }
     if (cmd == "run") {
         return CmdRun(args);
     }
@@ -4888,12 +4956,14 @@ int main(int argc, char** argv) {
         cfg.primary_endpoint = "http://127.0.0.1:11436";
         cfg.fallback_endpoint = "http://127.0.0.1:11434";
         g_router = std::make_unique<BackendRouter>();
-        if (g_router->Initialize(cfg)) {
-            for (const auto& m : g_router->ListModels(BackendKind::Ollama))
-                std::cout << "ollama  " << m << "\n";
-            for (const auto& m : g_router->ListModels(BackendKind::Deep2))
-                std::cout << "deep2   " << m << "\n";
+        if (!g_router->Initialize(cfg)) {
+            std::cerr << "model discovery failed: no configured backend is reachable\n";
+            return 1;
         }
+        for (const auto& m : g_router->ListModels(BackendKind::Ollama))
+            std::cout << "ollama  " << m << "\n";
+        for (const auto& m : g_router->ListModels(BackendKind::Deep2))
+            std::cout << "deep2   " << m << "\n";
         return 0;
     }
 

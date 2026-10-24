@@ -1,6 +1,73 @@
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
+# ============================================================
+# rawrxd_snapshot: RawrXD Snapshot Engine Library
+# Content-addressed incremental snapshots for autonomous agents.
+# Dependency-free C++20: Windows system libraries only.
+# ============================================================
+add_library(rawrxd_snapshot STATIC
+    src/snapshot/SnapshotStorage.cpp
+    src/snapshot/SnapshotJournal.cpp
+    src/snapshot/SnapshotEngine.cpp
+    src/snapshot/SnapshotCLI.cpp
+)
+
+target_link_libraries(rawrxd_snapshot PRIVATE
+    advapi32
+    crypt32
+    user32
+)
+
+target_include_directories(rawrxd_snapshot PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+target_compile_features(rawrxd_snapshot PUBLIC cxx_std_20)
+
+set_target_properties(rawrxd_snapshot PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+)
+
+message(STATUS "rawrxd_snapshot: Snapshot engine library enabled")
+
+# ============================================================
+# rawr-snapshot: Snapshot CLI executable
+# ============================================================
+add_executable(rawr-snapshot
+    src/snapshot/SnapshotCLIMain.cpp
+)
+
+target_link_libraries(rawr-snapshot PRIVATE rawrxd_snapshot)
+target_include_directories(rawr-snapshot PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+set_target_properties(rawr-snapshot PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+message(STATUS "rawr-snapshot: Snapshot CLI enabled")
+
+# ============================================================
+# rawr-agent-headless: Headless agent test runner (no Qt)
+# Certifies snapshot transaction safety without Qt6 dependency.
+# ============================================================
+add_executable(rawr-agent-headless
+    src/agent/self_patch.cpp
+    src/agent/headless_main.cpp
+)
+
+target_link_libraries(rawr-agent-headless PRIVATE rawrxd_snapshot)
+target_include_directories(rawr-agent-headless PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+
+set_target_properties(rawr-agent-headless PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    WIN32_EXECUTABLE FALSE
+)
+
+message(STATUS "rawr-agent-headless: Headless agent test runner enabled")
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_rom_roundtrip.cpp")
     add_executable(deep2_rom_roundtrip tools/deep2_rom_roundtrip.cpp)
     target_include_directories(deep2_rom_roundtrip PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")
@@ -749,6 +816,69 @@ else()
     message(STATUS "Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint")
 endif()
 
+# ============================================================
+# RawrXD Reverse Engineering Library + CODEX CLI (dependency-free)
+# PE analysis, disassembly, decompilation, binary patching.
+# Built from existing RawrXD-owned source in ~dev/reverse_engineering.
+# No Qt, no external dependencies.
+# ============================================================
+set(_RE_DIR "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/reverse_engineering")
+if(EXISTS "${_RE_DIR}/pe_analyzer.cpp")
+    set(RE_CPP_SOURCES
+        "${_RE_DIR}/pe_tools/re_tools.cpp"
+        "${_RE_DIR}/disassembler.cpp"
+        "${_RE_DIR}/pe_analyzer.cpp"
+        "${_RE_DIR}/decompiler.cpp"
+        "${_RE_DIR}/binary_patcher.cpp"
+    )
+    set(RE_CPP_HEADERS
+        "${_RE_DIR}/RawrCodex.hpp"
+        "${_RE_DIR}/RawrCompiler.hpp"
+        "${_RE_DIR}/RawrDumpBin.hpp"
+        "${_RE_DIR}/RawrReverseEngine.hpp"
+        "${_RE_DIR}/pe_tools/re_tools.h"
+    )
+
+    add_library(RawrXD-RE-Library STATIC ${RE_CPP_SOURCES})
+    target_include_directories(RawrXD-RE-Library PUBLIC
+        "${_RE_DIR}"
+        "${_RE_DIR}/pe_tools"
+        "${CMAKE_SOURCE_DIR}/include"
+    )
+    if(MSVC)
+        target_link_libraries(RawrXD-RE-Library PRIVATE shlwapi dbghelp)
+        target_compile_options(RawrXD-RE-Library PRIVATE /EHsc /std:c++20)
+    endif()
+    message(STATUS "RawrXD-RE-Library: PE analyzer, disassembler, decompiler, binary patcher enabled")
+else()
+    message(STATUS "RawrXD-RE-Library EXCLUDED: sources absent from ${_RE_DIR}")
+endif()
+
+# CODEX CLI executable — rawrxd codex / /codex command entry point
+if(TARGET RawrXD-RE-Library AND EXISTS "${_RE_DIR}/codex_ide_integration.cpp")
+    add_executable(rawrxd-codex
+        "${_RE_DIR}/codex_ide_integration.cpp"
+        "${CMAKE_SOURCE_DIR}/src/asm/RawrXD_Disasm_Kernel.cpp"
+    )
+    target_link_libraries(rawrxd-codex PRIVATE RawrXD-RE-Library shlwapi dbghelp)
+    target_include_directories(rawrxd-codex PRIVATE
+        "${_RE_DIR}"
+        "${CMAKE_SOURCE_DIR}/include"
+        "${CMAKE_SOURCE_DIR}/~dev/rawrxd/include"
+        "${CMAKE_SOURCE_DIR}/src/asm"
+    )
+    if(MSVC)
+        target_compile_options(rawrxd-codex PRIVATE /EHsc /std:c++20)
+    endif()
+    set_target_properties(rawrxd-codex PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        WIN32_EXECUTABLE TRUE
+    )
+    message(STATUS "rawrxd-codex: CODEX CLI executable enabled (decode/disasm/analyze/list-arch)")
+else()
+    message(STATUS "rawrxd-codex EXCLUDED: RawrXD-RE-Library or codex_ide_integration.cpp absent")
+endif()
+
 # Qt-based IDE shell (separate executable, no Vulkan)
 # NOTE: Qt6 is optional and this project does not depend on it. When Qt6 is
 # absent these targets are excluded and reported (see the summary at the end
@@ -1367,15 +1497,40 @@ if(MSVC)
             target_compile_options(RawrXD-Agent PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
         endif()
         
-        message(STATUS "RawrXD-Agent: Autonomous coding agent enabled")
+message(STATUS "RawrXD-Agent: Autonomous coding agent enabled")
 
-        # ============================================================
-        # RawrXD-Compiler: Full CLI Compiler Tool
-        # Compiles Eon/ASM source code to native executables
-        # Supports: x86-64, x86-32, ARM64, WASM targets
-        # Output: exe, dll, lib, obj, asm, ir formats
-        # ============================================================
-        if(EXISTS "${CMAKE_SOURCE_DIR}/src/cli/rawrxd_cli_compiler.cpp")
+# Link snapshot engine into the production agent
+target_link_libraries(RawrXD-Agent PRIVATE rawrxd_snapshot)
+
+target_include_directories(RawrXD-Agent PRIVATE 
+    include 
+    ${CMAKE_SOURCE_DIR}/src 
+    ${CMAKE_SOURCE_DIR}/src/agent
+    ${CMAKE_SOURCE_DIR}/src/orchestration
+    ${CMAKE_SOURCE_DIR}/src/git
+    ${CMAKE_SOURCE_DIR}/src/terminal
+)
+
+set_target_properties(RawrXD-Agent PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    WIN32_EXECUTABLE FALSE
+)
+
+if(MSVC)
+    target_compile_options(RawrXD-Agent PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+else()
+    target_compile_options(RawrXD-Agent PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+endif()
+
+message(STATUS "RawrXD-Agent: Autonomous coding agent enabled")
+
+# ============================================================
+# RawrXD-Compiler: Full CLI Compiler Tool
+# Compiles Eon/ASM source code to native executables
+# Supports: x86-64, x86-32, ARM64, WASM targets
+# Output: exe, dll, lib, obj, asm, ir formats
+# ============================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/cli/rawrxd_cli_compiler.cpp")
             add_executable(RawrXD-Compiler
                 src/cli/rawrxd_cli_compiler.cpp
             )
@@ -1463,6 +1618,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE_QT AND Qt6_FOUND)
                 src/win32app/Win32IDE.h
                 src/win32app/Win32IDE_Sidebar.cpp
                 src/win32app/Win32IDE_VSCodeUI.cpp
+                src/ui/tool_action_status.cpp
+                src/win32app/Win32ExtensionHostBridge.cpp
+                src/win32app/Win32IDE_ExtensionCert.cpp
                 src/win32app/Win32IDE_PowerShellPanel.cpp
                 src/win32app/Win32IDE_PowerShell.cpp
                 src/win32app/Win32IDE_Logger.cpp
@@ -1719,9 +1877,13 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AN
         src/deep2/generic_vulkan_matmul.cpp
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/next15.cpp
+        src/deep2/Deep2Next15Hooks.cpp
         src/deep2/asm_stubs.cpp
         src/deep2/op_linear.cpp
         src/deep2/op_gdn.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         # RAWRXD_GATE4_LINK_001: the QuantDot implementation layer and the
         # Vulkan engine it drives. The dispatch layer's five entry points
@@ -1895,6 +2057,17 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GL
 endif()
 
 if(GLSLC_EXECUTABLE)
+    add_custom_command(
+        OUTPUT "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.spv"
+        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.2
+            "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.comp"
+            -o "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.spv"
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.comp"
+        VERBATIM
+        COMMENT "Compiling Deep2 quantized GEMV shader")
+    add_custom_target(deep2_qgemv_shader ALL
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.spv")
+
     # Quant GEMV is intentionally specialized by format.  Keeping one
     # runtime type-switch shader forces the register allocator and control
     # flow to pay for the worst Q6 path on every invocation.  This target
@@ -2135,6 +2308,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOU
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        # Production GDN lowering resolves these symbols from the Deep2
+        # VulkanCompute implementation, not the legacy root wrapper.
+        src/deep2/vulkan_compute.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
@@ -2606,17 +2782,22 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp")
         src/deep2/runtime_graph_executor.cpp
         src/deep2/generic_vulkan_matmul.cpp
         src/deep2/op_linear.cpp
-        src/deep2/op_gdn.cpp
-        src/deep2/modelgenie/universal_gguf.cpp
-        src/deep2/quant_dot_dispatch.cpp
-        src/vulkan_compute.cpp
-        src/streaming_gguf_loader.cpp
-        src/gguf_loader.cpp
-        src/gguf_vocab_resolver.cpp
-        src/utils/Diagnostics.cpp
-        src/utils/input_sanitizer.cpp
-        src/utils/secure_buffer.cpp
-        src/utils/crash_handler.cpp
+          src/deep2/op_gdn.cpp
+          src/deep2/QuantKernelRegistry.cpp
+          src/deep2/next15.cpp
+          src/deep2/Deep2Next15Hooks.cpp
+          src/deep2/asm_stubs.cpp
+          src/deep2/vulkan_compute.cpp
+          src/deep2/modelgenie/universal_gguf.cpp
+          src/deep2/quant_dot_dispatch.cpp
+          src/vulkan_compute.cpp
+          src/streaming_gguf_loader.cpp
+          src/gguf_loader.cpp
+          src/gguf_vocab_resolver.cpp
+          src/utils/Diagnostics.cpp
+          src/utils/input_sanitizer.cpp
+          src/utils/secure_buffer.cpp
+          src/utils/crash_handler.cpp
         # Cloud API client (Qt-free, WinHTTP native)
         src/cloud_api_client.cpp
         src/universal_model_router.cpp
@@ -2724,6 +2905,91 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND Vulkan_FOUND 
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
     message(STATUS "deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)")
+endif()
+
+# ============================================================================
+# Deep2 OpenAI-Compatible HTTP Server
+# Standalone OpenAI-compatible /v1/chat/completions endpoint on port 11436
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/deep2_openai_server_main.cpp" AND EXISTS 
+"${CMAKE_SOURCE_DIR}/src/deep2/deep2_openai_server.cpp")
+    add_executable(deep2_openai_server
+        src/deep2/deep2_openai_server_main.cpp
+        src/deep2/deep2_openai_server.cpp
+        src/deep2/ChatTemplate.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/vulkan_compute.cpp
+    )
+    set_target_properties(deep2_openai_server PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_include_directories(deep2_openai_server PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
+        ${Vulkan_INCLUDE_DIR}
+    )
+    target_link_libraries(deep2_openai_server PRIVATE
+        $<TARGET_FILE:deep2_engine_lib>
+        ${Vulkan_LIBRARY}
+        ggml
+        ws2_32.lib
+    )
+    if(MSVC)
+        target_compile_options(deep2_openai_server PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
+        target_compile_definitions(deep2_openai_server PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(deep2_openai_server PRIVATE -std=c++20)
+    endif()
+    message(STATUS "deep2_openai_server: OpenAI-compatible HTTP server target configured")
+endif()
+# ============================================================================
+# RawrXD IDE Test Agent - Physical GUI automation testing
+# Tests editor, explorer, tabs, search, source control, debugger, extensions,
+# outline, timeline, terminal, AI chat, model selector, browser, Debug log output
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/test_runner.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/IDETestAgent.h")
+    add_executable(IDETestAgent
+        src/win32app/test_runner.cpp
+    )
+    target_include_directories(IDETestAgent PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp
+        ${CMAKE_SOURCE_DIR}/tools/agent_esp
+        ${CMAKE_SOURCE_DIR}/src/snap
+        ${CMAKE_SOURCE_DIR}/src/deep2/watchdog
+        ${CMAKE_SOURCE_DIR}/src/deep2/watchdog/deep2_watchdog
+    )
+    target_link_libraries(IDETestAgent PRIVATE
+        user32.lib
+        shell32.lib
+        ole32.lib
+        oleaut32.lib
+        advapi32.lib
+        version.lib
+        gdi32.lib
+        ws2_32.lib
+        uxtheme.lib
+        comctl32.lib
+    )
+    if(MSVC)
+        target_compile_options(IDETestAgent PRIVATE /EHsc /std:c++20 /bigobj $<$<CONFIG:Release>:/O2>)
+    else()
+        target_compile_options(IDETestAgent PRIVATE -std=c++20 $<$<CONFIG:Release>:-O2>)
+    endif()
+    set_target_properties(IDETestAgent PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
+    message(STATUS "IDETestAgent: Physical GUI automation test runner target configured")
 endif()
 
 # ============================================================================
@@ -3054,6 +3320,8 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_ModelFit.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/next15.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Next15Hooks.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/engine_subsystems.cpp
             ${_DEEP2_ENGINE_SUBSYSTEM_SOURCES}
         )
@@ -3278,6 +3546,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE.cpp
         src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
+                src/ui/tool_action_status.cpp
+                src/win32app/Win32ExtensionHostBridge.cpp
+                src/win32app/Win32IDE_ExtensionCert.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_Logger.cpp
@@ -3290,6 +3561,13 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Autonomy.cpp
         src/win32app/Win32IDE_Deep2Bridge.cpp
         src/win32app/Win32IDE_AgenticLoopBridge.cpp
+        src/win32app/Win32IDE_GhostText.cpp
+        src/win32app/Win32IDE_GhostTextIntegration.cpp
+        src/win32app/Win32IDE_CodexCommands.cpp
+        # Native agent navigation: real HWND discovery and Win32 interaction
+        # for the dependency-free IDE (menus, toolbar, panels, editor, and
+        # model selectors).
+        src/agentic/AgenticNavigator.cpp
         src/cloud_api_client.cpp
         # Lifecycle methods declared in Win32IDE.h but defined in their own
         # translation unit (createWindow/showWindow/runMessageLoop/onSize/
@@ -3306,6 +3584,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/cpu_inference_engine_impl.cpp
         src/utils/ErrorReporter.cpp
         src/utils/Diagnostics.cpp
+        src/utils/json_mini.cpp
     )
     set(RAWRXD_NATIVE_IDE_COMPLETE TRUE)
     foreach(_src ${RAWRXD_NATIVE_IDE_SOURCES})
@@ -3320,6 +3599,13 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             "${_chat_route_generated_header}"
             $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         )
+
+    # The VS Code extension runtime is shared with the command line, so
+    # the IDE and the CLI compile exactly the same implementation.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/extensions/rawrxd_extension_runtime/CMakeLists.txt")
+        add_subdirectory(${CMAKE_SOURCE_DIR}/extensions/rawrxd_extension_runtime
+                         ${CMAKE_BINARY_DIR}/rawrxd_extension_runtime)
+    endif()
         target_include_directories(RawrXD-Win32IDE-Native PRIVATE
             "${_chat_route_generated_dir}"
             ${CMAKE_SOURCE_DIR}/src
@@ -3372,6 +3658,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             message(STATUS "RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK")
         endif()
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
+            rawrxd_extension_runtime
             comctl32 comdlg32 winhttp
             ${RAWRXD_RICHEDIT_LIBS}
             shell32 user32 gdi32
@@ -3412,6 +3699,14 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
             WIN32_EXECUTABLE TRUE
         )
+        # Activate the Windows Common Controls v6 context used by the native
+        # model selectors.  CB_SETMINVISIBLE is ignored without this system
+        # manifest, leaving the ComboLBox popup with only a border-high row.
+        if(MSVC)
+            target_link_options(RawrXD-Win32IDE-Native PRIVATE
+                "/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'"
+            )
+        endif()
         # The CPU executor's row_geom()/row_dot()/dequant_all() read block size,
         # type size and the to_float converter from ggml's authoritative type
         # table, so ggml_get_type_traits must link.
@@ -3421,6 +3716,10 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         endif()
         if(TARGET rawrxd_agent_esp)
             target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_agent_esp)
+        endif()
+        if(TARGET rawrxd_workflow)
+            target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_workflow)
+            target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE HAVE_RAWRXD_WORKFLOW=1)
         endif()
         # Link the real Deep2Engine so Win32IDE_Deep2Bridge uses GPU inference
         if(TARGET deep2_engine_lib)
@@ -4290,6 +4589,9 @@ add_executable(RawrXD-TestRunner
     src/win32app/Win32IDE_PowerShellPanel.cpp
     src/win32app/Win32IDE_Sidebar.cpp
     src/win32app/Win32IDE_VSCodeUI.cpp
+                src/ui/tool_action_status.cpp
+                src/win32app/Win32ExtensionHostBridge.cpp
+                src/win32app/Win32IDE_ExtensionCert.cpp
     src/win32app/Win32IDE_AgenticBridge.cpp
     src/win32app/Win32IDE_AgentCommands.cpp
     src/win32app/Win32TerminalManager.cpp
@@ -4857,6 +5159,8 @@ add_library(rawrxd_agentic_backend STATIC
     src/agentic/OllamaBackend.cpp
     src/agentic/Deep2Backend.cpp
     src/agentic/BackendRouter.cpp
+    src/agentic/BoundedAgentLoop.cpp
+    src/agentic/tool_call_parser.cpp
     src/agentic/PersistentTaskBacklog.cpp
     src/agentic/SelfRepairLoop.cpp
     src/agentic/AgentMode.cpp
@@ -4886,6 +5190,28 @@ else()
     target_link_libraries(rawrxd_agentic_backend PUBLIC Threads::Threads)
 endif()
     message(STATUS "rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled")
+
+# Bounded autonomous agent smoke test. The default invocation is deterministic
+# and offline; --live performs a real Ollama/tool-loop probe.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/agentic_bounded_smoke.cpp")
+    add_executable(rawrxd_agentic_bounded_smoke
+        tools/agentic_bounded_smoke.cpp)
+    target_include_directories(rawrxd_agentic_bounded_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    target_link_libraries(rawrxd_agentic_bounded_smoke PRIVATE
+        rawrxd_agentic_backend
+        nlohmann_json::nlohmann_json)
+    if(MSVC)
+        target_compile_options(rawrxd_agentic_bounded_smoke PRIVATE /EHsc /std:c++20)
+        target_compile_definitions(rawrxd_agentic_bounded_smoke PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(rawrxd_agentic_bounded_smoke PRIVATE -std=c++20 -fexceptions)
+    endif()
+    add_test(NAME rawrxd_agentic_bounded_self_test
+             COMMAND rawrxd_agentic_bounded_smoke)
+endif()
 
 # ============================================================================
 # Q8_K activation parity harness

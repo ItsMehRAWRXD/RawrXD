@@ -5,9 +5,26 @@
 #include <thread>
 #include <algorithm>
 #include <random>
+#include <cctype>
 
 namespace RawrXD {
 namespace Agentic {
+
+namespace {
+HWND FindRawrXDWindow()
+{
+    HWND hwnd = FindWindowA("RawrXD_IDE_Window", nullptr);
+    if (!hwnd) hwnd = GetForegroundWindow();
+    return (hwnd && IsWindow(hwnd)) ? hwnd : nullptr;
+}
+
+std::string Lower(std::string value)
+{
+    std::transform(value.begin(), value.end(), value.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return value;
+}
+}
 
 AgenticNavigator::AgenticNavigator() 
     : m_currentStrategy(NavigationStrategy::AutoDetect) {
@@ -191,13 +208,27 @@ NavigationResult AgenticNavigator::navigateAndExecute(const std::string& target,
 }
 
 std::vector<UIElement> AgenticNavigator::detectUIElements(const std::string& filter) {
-    return detectElementsDirectAPI();
+    auto elements = detectElementsDirectAPI();
+    if (filter.empty()) return elements;
+
+    const std::string wanted = Lower(filter);
+    elements.erase(std::remove_if(elements.begin(), elements.end(),
+        [&](const UIElement& element) {
+            const std::string name = Lower(element.name);
+            const std::string cls = Lower(element.className);
+            const std::string text = Lower(element.text);
+            return name.find(wanted) == std::string::npos &&
+                   cls.find(wanted) == std::string::npos &&
+                   text.find(wanted) == std::string::npos;
+        }), elements.end());
+    return elements;
 }
 
 UIElement AgenticNavigator::findElementByName(const std::string& name) {
     auto elements = detectUIElements();
+    const std::string wanted = Lower(name);
     for (const auto& element : elements) {
-        if (element.name.find(name) != std::string::npos) {
+        if (Lower(element.name).find(wanted) != std::string::npos) {
             return element;
         }
     }
@@ -206,8 +237,9 @@ UIElement AgenticNavigator::findElementByName(const std::string& name) {
 
 UIElement AgenticNavigator::findElementByClass(const std::string& className) {
     auto elements = detectUIElements();
+    const std::string wanted = Lower(className);
     for (const auto& element : elements) {
-        if (element.className.find(className) != std::string::npos) {
+        if (Lower(element.className).find(wanted) != std::string::npos) {
             return element;
         }
     }
@@ -216,8 +248,9 @@ UIElement AgenticNavigator::findElementByClass(const std::string& className) {
 
 UIElement AgenticNavigator::findElementByText(const std::string& text) {
     auto elements = detectUIElements();
+    const std::string wanted = Lower(text);
     for (const auto& element : elements) {
-        if (element.text.find(text) != std::string::npos) {
+        if (Lower(element.text).find(wanted) != std::string::npos) {
             return element;
         }
     }
@@ -288,9 +321,15 @@ NavigationResult AgenticNavigator::executeCommand(int commandId) {
     // This uses IDE command infrastructure directly
     auto start = std::chrono::high_resolution_clock::now();
     
-    // Simulate command execution
-    bool success = true; // This would integrate with actual IDE command system
-    std::string message = success ? "Command executed successfully" : "Command execution failed";
+    HWND main = FindRawrXDWindow();
+    if (!main || commandId <= 0) {
+        return createResult(false, "Cannot execute command: IDE window or command ID is invalid", main);
+    }
+    // Dispatch synchronously so the result does not report success merely
+    // because Windows accepted a queued message that may never be handled.
+    SendMessageA(main, WM_COMMAND, MAKEWPARAM(commandId, 0), 0);
+    const bool success = IsWindow(main) != FALSE;
+    std::string message = success ? "Command dispatched to RawrXD" : "Command dispatch failed";
     
     auto end = std::chrono::high_resolution_clock::now();
     double executionTime = std::chrono::duration<double, std::milli>(end - start).count();
@@ -378,11 +417,48 @@ NavigationStrategy AgenticNavigator::recommendStrategy(const std::string& operat
 
 // Direct Win32 API implementation
 NavigationResult AgenticNavigator::navigateDirectAPI(const std::string& target) {
-    // Simulate direct API navigation
-    bool success = true; // This would implement actual Win32 API calls
-    std::string message = "Direct API navigation to " + target;
-    
-    return createResult(success, message);
+    const HWND main = FindRawrXDWindow();
+    if (!main) return createResult(false, "RawrXD main window is not available");
+
+    const std::string wanted = Lower(target);
+    // The native terminal is intentionally lazy-created.  Make navigation
+    // actionable: opening the terminal target must invoke the same command
+    // as Terminal -> New PowerShell, not merely search for an absent HWND.
+    const bool terminalTarget = wanted == "terminal" || wanted == "powershell" ||
+        wanted == "terminal:powershell";
+    if (terminalTarget) {
+        const BOOL posted = SendMessageA(main, WM_COMMAND,
+            MAKEWPARAM(3001 /* IDM_TERMINAL_POWERSHELL */, 0), 0) != 0;
+        if (!posted) {
+            // WM_COMMAND handlers commonly return zero even after creating
+            // the pane; discovery below is the authoritative result.
+            UpdateWindow(main);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    }
+    const auto elements = detectElementsDirectAPI();
+    // The terminal is created after the editor, so inspect newest controls
+    // first when resolving the lazy terminal target.
+    auto begin = terminalTarget ? elements.rbegin() : elements.rbegin();
+    auto end = terminalTarget ? elements.rend() : elements.rend();
+    for (auto it = begin; it != end; ++it) {
+        const auto& element = *it;
+        const std::string name = Lower(element.name + " " + element.text + " " + element.className);
+        bool match = name.find(wanted) != std::string::npos;
+        if (wanted == "fileexplorer") match = name.find("systreeview32") != std::string::npos;
+        if (wanted == "editor") match = name.find("richedit") != std::string::npos;
+        if (terminalTarget) match = name.find("terminal") != std::string::npos ||
+            name.find("powershell") != std::string::npos ||
+            name.find("richedit") != std::string::npos;
+        if (wanted == "copilotchat") match = name.find("ai chat") != std::string::npos ||
+            element.controlId == 1202 || element.controlId == 1203;
+        if (match && element.visible && element.enabled) {
+            ShowWindow(element.handle, SW_SHOW);
+            SetFocus(element.handle);
+            return createResult(true, "Navigated to " + target, element.handle);
+        }
+    }
+    return createResult(false, "No visible RawrXD control matched target: " + target, main);
 }
 
 namespace {
@@ -430,52 +506,93 @@ BOOL CALLBACK EnumTopProc(HWND hwnd, LPARAM lParam) {
 
 std::vector<UIElement> AgenticNavigator::detectElementsDirectAPI() {
     std::vector<UIElement> elements;
-    // Real Win32 API element detection: enumerate every top-level window and
-    // its child controls, filling in handle, class, text, bounds, visibility
-    // and enabled state. Replaces the previous empty placeholder.
-    EnumWindows(EnumTopProc, reinterpret_cast<LPARAM>(&elements));
+    const HWND main = FindRawrXDWindow();
+    if (main) {
+        UIElement root{};
+        root.handle = main;
+        root.className = "RawrXD_IDE_Window";
+        char title[1024] = {};
+        GetWindowTextA(main, title, sizeof(title));
+        root.text = title;
+        root.name = root.text;
+        root.visible = IsWindowVisible(main) != FALSE;
+        root.enabled = IsWindowEnabled(main) != FALSE;
+        GetWindowRect(main, &root.bounds);
+        elements.push_back(root);
+        EnumChildWindows(main, EnumChildProc, reinterpret_cast<LPARAM>(&elements));
+    }
     return elements;
 }
 
 NavigationResult AgenticNavigator::clickElementDirectAPI(const UIElement& element) {
-    // Simulate direct API click
-    bool success = true; // This would implement actual Win32 API click
-    std::string message = "Direct API click on " + element.name;
-    
-    return createResult(success, message, element.handle);
+    if (!isElementValid(element) || !element.enabled) {
+        return createResult(false, "Element is invalid or disabled", element.handle);
+    }
+    SetFocus(element.handle);
+    const std::string cls = Lower(element.className);
+    LRESULT result = 0;
+    if (cls == "button") {
+        result = SendMessageA(element.handle, BM_CLICK, 0, 0);
+    } else if (cls.find("combobox") != std::string::npos) {
+        SendMessageA(element.handle, CB_SHOWDROPDOWN, TRUE, 0);
+        result = 1;
+    } else if (cls == "systabcontrol32") {
+        result = SendMessageA(element.handle, TCM_SETCURSEL, 0, 0) >= 0;
+        InvalidateRect(element.handle, nullptr, TRUE);
+    } else {
+        POINT point{};
+        GetCursorPos(&point);
+        RECT bounds{};
+        GetWindowRect(element.handle, &bounds);
+        LPARAM lp = MAKELPARAM((bounds.right - bounds.left) / 2,
+                               (bounds.bottom - bounds.top) / 2);
+        SendMessageA(element.handle, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+        SendMessageA(element.handle, WM_LBUTTONUP, 0, lp);
+        result = 1;
+    }
+    return createResult(result != 0, result ? "Element activated" : "Element activation failed", element.handle);
 }
 
 NavigationResult AgenticNavigator::sendTextDirectAPI(const UIElement& element, const std::string& text) {
-    // Simulate direct API text sending
-    bool success = true; // This would implement actual Win32 API text sending
-    std::string message = "Direct API sent text to " + element.name;
-    
-    return createResult(success, message, element.handle);
+    if (!isElementValid(element) || !element.enabled) {
+        return createResult(false, "Text target is invalid or disabled", element.handle);
+    }
+    SetFocus(element.handle);
+    const std::string cls = Lower(element.className);
+    LRESULT result = 0;
+    if (cls.find("richedit") != std::string::npos || cls == "edit") {
+        result = SendMessageA(element.handle, WM_SETTEXT, 0,
+            reinterpret_cast<LPARAM>(text.c_str()));
+    } else if (cls.find("combobox") != std::string::npos) {
+        result = SendMessageA(element.handle, CB_SELECTSTRING, static_cast<WPARAM>(-1),
+            reinterpret_cast<LPARAM>(text.c_str()));
+    } else {
+        return createResult(false, "Control does not accept text: " + element.className, element.handle);
+    }
+    return createResult(result != 0 || GetLastError() == ERROR_SUCCESS,
+                        result != 0 ? "Text sent" : "Text target rejected input", element.handle);
 }
 
 // IDE Command implementation
 NavigationResult AgenticNavigator::navigateIDECommands(const std::string& target) {
-    // Simulate IDE command navigation
-    bool success = true; // This would integrate with actual IDE command system
-    std::string message = "IDE command navigation to " + target;
-    
-    return createResult(success, message);
+    // Command routing requires a known command ID. Do not report success for
+    // a target that was not actually found by the live control tree.
+    const auto elements = detectElementsDirectAPI();
+    for (const auto& element : elements) {
+        const std::string haystack = Lower(element.name + " " + element.text);
+        if (haystack.find(Lower(target)) != std::string::npos) {
+            return clickElementDirectAPI(element);
+        }
+    }
+    return createResult(false, "IDE command target not found: " + target);
 }
 
 NavigationResult AgenticNavigator::clickElementIDECommands(const UIElement& element) {
-    // Simulate IDE command click
-    bool success = true; // This would integrate with actual IDE command system
-    std::string message = "IDE command click on " + element.name;
-    
-    return createResult(success, message, element.handle);
+    return clickElementDirectAPI(element);
 }
 
 NavigationResult AgenticNavigator::sendTextIDECommands(const UIElement& element, const std::string& text) {
-    // Simulate IDE command text sending
-    bool success = true; // This would integrate with actual IDE command system
-    std::string message = "IDE command sent text to " + element.name;
-    
-    return createResult(success, message, element.handle);
+    return sendTextDirectAPI(element, text);
 }
 
 // Hybrid implementation

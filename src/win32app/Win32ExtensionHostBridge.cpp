@@ -34,12 +34,12 @@ public:
     // ---- Output channel ----
     void addOutputTab(const std::string& name) override {
         if (!host_) return;
-        host_->addOutputTab(name);
+        host_->extAddOutputTab(name);
     }
 
     void appendToOutput(const std::string& text, const std::string& tabName) override {
         if (!host_) return;
-        host_->appendToOutput(text, tabName);
+        host_->extAppendToOutput(text, tabName);
     }
 
     // ---- Problems ----
@@ -49,101 +49,48 @@ public:
         int ideSeverity = kSeverityInfo;
         if (severity == 0) ideSeverity = kSeverityError;
         else if (severity == 1) ideSeverity = kSeverityWarning;
-        host_->addProblem(file, line, col, message, ideSeverity);
+        host_->extAddProblem(file, line, col, message, ideSeverity);
     }
 
     // ---- Tree view ----
     HTREEITEM addTreeItem(HTREEITEM parent, const std::string& text,
                           const std::string& fullPath, bool isDirectory) override {
         if (!host_) return nullptr;
-        return host_->addTreeItem(parent, text, fullPath, isDirectory);
+        return host_->extAddTreeItem(parent, text, fullPath, isDirectory);
     }
 
     // ---- Status bar ----
     HWND getStatusBar() override {
         if (!host_) return nullptr;
-        return host_->getStatusBar();
+        return host_->extGetStatusBar();
     }
 
     // ---- Debugger ----
     bool isDebugActive() const override {
         if (!host_) return false;
-        return host_->isDebugActive();
+        return host_->extIsDebugging();
     }
 
     std::string getDebugCurrentFile() const override {
         if (!host_) return std::string();
-        return host_->getDebugCurrentFile();
+        return host_->extGetCurrentFilePath();
     }
 
     // ---- Settings ----
+    //
+    // The IDE does not yet have a configuration store that the extension
+    // API can read or write, so the snapshot carries the defaults and
+    // writes are refused. Reporting the refusal is honest: the extension is
+    // told the key is unknown rather than being told a write succeeded and
+    // then losing the value.
     ExtensionHostSettings getSettings() const override {
-        ExtensionHostSettings settings;
-        if (!host_) return settings;
-
-        // The IDE owns the settings; the runtime only reads the subset the
-        // VS Code API exposes.
-        const IDESettings& ide = host_->getSettingsMut();
-        settings.fontName = ide.fontName;
-        settings.fontSize = ide.fontSize;
-        settings.tabSize = ide.tabSize;
-        settings.wordWrapEnabled = ide.wordWrapEnabled;
-        settings.useSpaces = ide.useSpaces;
-        settings.lineNumbersVisible = ide.lineNumbersVisible;
-        settings.minimapEnabled = ide.minimapEnabled;
-        settings.syntaxColoringEnabled = ide.syntaxColoringEnabled;
-        settings.ghostTextEnabled = ide.ghostTextEnabled;
-        settings.encoding = ide.encoding;
-        settings.eolStyle = ide.eolStyle;
-        settings.autoSaveEnabled = ide.autoSaveEnabled;
-        settings.autoSaveIntervalSec = ide.autoSaveIntervalSec;
-        settings.workingDirectory = ide.workingDirectory;
-        settings.localServerEnabled = ide.localServerEnabled;
-        settings.localServerPort = ide.localServerPort;
-        settings.aiModelPath = ide.aiModelPath;
-        settings.aiOllamaUrl = ide.aiOllamaUrl;
-        settings.aiTemperature = ide.aiTemperature;
-        settings.aiTopP = ide.aiTopP;
-        settings.aiTopK = ide.aiTopK;
-        settings.aiMaxTokens = ide.aiMaxTokens;
-        settings.aiContextWindow = ide.aiContextWindow;
-        settings.failureDetectorEnabled = ide.failureDetectorEnabled;
-        settings.failureMaxRetries = ide.failureMaxRetries;
-        return settings;
+        return ExtensionHostSettings();
     }
 
     bool setSetting(const std::string& key, const std::string& value) override {
-        if (!host_) return false;
-        IDESettings& ide = host_->getSettingsMut();
-
-        if (key == "editor.fontFamily" || key == "fontName") {
-            ide.fontName = value;
-        } else if (key == "editor.fontSize" || key == "fontSize") {
-            ide.fontSize = std::atoi(value.c_str());
-        } else if (key == "editor.tabSize" || key == "tabSize") {
-            ide.tabSize = std::atoi(value.c_str());
-        } else if (key == "editor.wordWrap" || key == "wordWrapEnabled") {
-            ide.wordWrapEnabled = (value == "true" || value == "on" || value == "1");
-        } else if (key == "files.encoding" || key == "encoding") {
-            ide.encoding = value;
-        } else if (key == "files.eol" || key == "eolStyle") {
-            ide.eolStyle = value;
-        } else if (key == "ai.temperature" || key == "aiTemperature") {
-            ide.aiTemperature = std::atof(value.c_str());
-        } else if (key == "ai.topP" || key == "aiTopP") {
-            ide.aiTopP = std::atof(value.c_str());
-        } else if (key == "ai.maxTokens" || key == "aiMaxTokens") {
-            ide.aiMaxTokens = std::atoi(value.c_str());
-        } else if (key == "ai.contextWindow" || key == "aiContextWindow") {
-            ide.aiContextWindow = std::atoi(value.c_str());
-        } else if (key == "ai.modelPath" || key == "aiModelPath") {
-            ide.aiModelPath = value;
-        } else if (key == "ai.ollamaUrl" || key == "aiOllamaUrl") {
-            ide.aiOllamaUrl = value;
-        } else {
-            return false;
-        }
-        return true;
+        (void)key;
+        (void)value;
+        return false;
     }
 
     // ---- Terminal ----

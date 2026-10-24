@@ -65,7 +65,11 @@ struct RouterConfig {
     std::string primary_endpoint  = "http://127.0.0.1:11436";
     std::string fallback_endpoint = "http://127.0.0.1:11434";
     std::string primary_model;
-    std::string fallback_model    = "qwen2.5-coder:32b";
+    // Empty lets OllamaBackend select an installed local model. An explicit
+    // tag is validated and never implicitly pulled by the router.
+    std::string fallback_model;
+    int         fallback_max_tokens = 4096;
+    int         fallback_num_ctx    = 8192;
     int         health_check_interval_s = 30;
     bool        retry_from_complete_context = true;  // Retry with full history on failover
     bool        retry_after_tool_side_effects = false; // DANGER: can duplicate side-effects
@@ -100,6 +104,9 @@ public:
 
     // ---- Model discovery (delegates to active backend) ----
     std::vector<std::string> ListModels(BackendKind preferred = BackendKind::Deep2);
+    // Union of all locally reachable model inventories. Names are unique and
+    // retain backend discovery order (Deep2 first, then Ollama).
+    std::vector<std::string> ListAllModels();
 
     /// @brief Is this Ollama model served by ollama.com rather than locally?
     bool IsCloudModel(const std::string& model_name);

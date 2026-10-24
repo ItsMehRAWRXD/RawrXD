@@ -534,9 +534,13 @@ void Win32IDE::updateWatchList()
 
 void Win32IDE::evaluateWatch(WatchItem& item)
 {
-    // Simulate expression evaluation
-    item.value = "< " + item.expression + " >";
-    item.type = "object";
+    // This build does not have a live debug-engine expression evaluator.
+    // Never fabricate a value: a watch is either evaluated by a real backend
+    // or is explicitly reported as unavailable.
+    item.value = "<unavailable: debugger expression evaluation is not connected>";
+    item.type = "unavailable";
+    appendToOutput("Watch not evaluated (no live debugger expression backend): " +
+                   item.expression, "Debugger", OutputSeverity::Warning);
 }
 
 // ============================================================================

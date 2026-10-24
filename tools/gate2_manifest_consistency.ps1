@@ -46,7 +46,16 @@ Say "=== Gate 2: manifest consistency ($(Get-Date -Format o)) ==="
 
 # ---- C1: authoritative registry emitter --------------------------------------
 $registryJson = Join-Path $EvidenceDir "registry.json"
-$regOut = & (Join-Path $BuildDir "bin-msvc\Release\quant_parity_cert.exe") --blocks 8 --seed 12345 --json $registryJson 2>&1
+$regCandidates = @(
+    (Join-Path $BuildDir "bin-msvc\Release\quant_parity_cert.exe"),
+    (Join-Path $BuildDir "bin-msvc\quant_parity_cert.exe"),
+    (Join-Path $BuildDir "Release\quant_parity_cert.exe"),
+    (Join-Path $BuildDir "quant_parity_cert.exe")
+)
+$regExe = $regCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+if (-not $regExe) { $regExe = (Get-ChildItem $BuildDir -Recurse -Filter quant_parity_cert.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
+if (-not $regExe) { Fail "quant_parity_cert.exe not found under build directory" }
+$regOut = & $regExe --blocks 8 --seed 12345 --json $registryJson 2>&1
 if ($LASTEXITCODE -ne 0) { Fail "quant_parity_cert exited $LASTEXITCODE" }
 Say "C1 quant_parity_cert           PASS (exit 0, RESULT: $(($regOut | Select-String 'RESULT:').Line))"
 
@@ -98,6 +107,7 @@ foreach ($q in $verified) {
     }
 }
 $kq = Join-Path $BuildDir "bin-msvc\Release\kquant_dot_parity.exe"
+if (-not (Test-Path $kq)) { $kq = Join-Path $BuildDir "bin-msvc\kquant_dot_parity.exe" }
 if (-not (Test-Path $kq)) { $kq = (Get-ChildItem $RepoRoot -Recurse -Filter kquant_dot_parity.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
 if (-not $kq) { Fail "kquant_dot_parity.exe not found" }
 & $kq | Out-Null

@@ -2,22 +2,85 @@
 // Complete PowerShell integration for Win32IDE
 
 #include "Win32IDE.h"
+#include "json_mini.h"
 #include <sstream>
 #include <fstream>
 #include <algorithm>
 #include <chrono>
+#include <vector>
+#include <cstdint>
+
+// ---------------------------------------------------------------------------
+// Base64 encoder (no external dependencies). Used for PowerShell
+// -EncodedCommand so the command is passed as opaque data rather than
+// embedded in a shell string, eliminating command-injection risk.
+// ---------------------------------------------------------------------------
+namespace {
+const char* k_base64Chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+std::string base64Encode(const std::string& input) {
+    std::string output;
+    output.reserve(((input.size() + 2) / 3) * 4);
+    for (size_t i = 0; i < input.size(); i += 3) {
+        uint32_t triple = 0;
+        int bytes = 0;
+        for (int j = 0; j < 3; ++j) {
+            if (i + j < input.size()) {
+                triple = (triple << 8) | static_cast<uint8_t>(input[i + j]);
+                ++bytes;
+            }
+        }
+        // Emit 4 base64 chars for the 24-bit group (padding with zero bits)
+        output.push_back(k_base64Chars[(triple >> 18) & 0x3F]);
+        output.push_back(k_base64Chars[(triple >> 12) & 0x3F]);
+        if (bytes >= 2) {
+            output.push_back(k_base64Chars[(triple >> 6) & 0x3F]);
+        } else {
+            output.push_back('=');
+        }
+        if (bytes >= 3) {
+            output.push_back(k_base64Chars[triple & 0x3F]);
+        } else {
+            output.push_back('=');
+        }
+    }
+    return output;
+}
+
+// PowerShell -EncodedCommand expects the UTF-16-LE bytes of the command,
+// base64-encoded.
+std::string encodedPowerShellCommand(const std::string& command) {
+    std::wstring wide;
+    wide.reserve(command.size());
+    for (char c : command) {
+        wide.push_back(static_cast<wchar_t>(static_cast<unsigned char>(c)));
+    }
+    std::string utf16le;
+    utf16le.reserve(wide.size() * 2);
+    for (wchar_t wc : wide) {
+        uint8_t lo = static_cast<uint8_t>(wc & 0xFF);
+        uint8_t hi = static_cast<uint8_t>((wc >> 8) & 0xFF);
+        utf16le.push_back(static_cast<char>(lo));
+        utf16le.push_back(static_cast<char>(hi));
+    }
+    return base64Encode(utf16le);
+}
+} // namespace
 
 // ============================================================================
 // POWERSHELL EXECUTION
 // ============================================================================
 
 std::string Win32IDE::executePowerShellScript(const std::string& scriptPath, const std::vector<std::string>& args) {
-    std::string command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"" + scriptPath + "\"";
-    
+    // Build command line WITHOUT -ExecutionPolicy Bypass.
+    // Arguments are passed as separate quoted tokens to avoid shell injection.
+    std::string command = "powershell.exe -NoProfile -File \"" + scriptPath + "\"";
+
     for (const auto& arg : args) {
         command += " \"" + escapePowerShellString(arg) + "\"";
     }
-    
+
     return executePowerShellCommand(command, false);
 }
 
@@ -39,8 +102,11 @@ std::string Win32IDE::executePowerShellCommand(const std::string& command, bool 
         return "Executed in terminal pane " + std::to_string(activePane->id);
     }
     
-    // Fallback: direct PowerShell execution
-    std::string fullCmd = "powershell.exe -NoProfile -Command \"" + escapePowerShellString(command) + "\"";
+    // Fallback: direct PowerShell execution using -EncodedCommand so the
+    // command is passed as opaque base64 data rather than embedded in a
+    // shell string, eliminating command-injection risk.
+    std::string encoded = encodedPowerShellCommand(command);
+    std::string fullCmd = "powershell.exe -NoProfile -EncodedCommand " + encoded;
     
     HANDLE hStdOutRead, hStdOutWrite;
     SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
@@ -109,16 +175,22 @@ std::vector<std::string> Win32IDE::getPowerShellModules() {
     std::string output = executePowerShellCommand("Get-Module -ListAvailable | Select-Object Name | ConvertTo-Json", false);
     
     std::vector<std::string> modules;
-    // Parse JSON output (simplified)
-    size_t pos = 0;
-    while ((pos = output.find("\"Name\":", pos)) != std::string::npos) {
-        pos += 7;
-        size_t start = output.find("\"", pos);
-        size_t end = output.find("\"", start + 1);
-        if (start != std::string::npos && end != std::string::npos) {
-            modules.push_back(output.substr(start + 1, end - start - 1));
+    // Parse JSON output properly (no string-search parsing)
+    try {
+        RawrXD::Json::Value v = RawrXD::Json::parse(output);
+        if (v.isArray()) {
+            for (size_t i = 0; i < v.asArray().size(); ++i) {
+                const RawrXD::Json::Value& item = v.at(i);
+                if (item.isObject() && item.has("Name")) {
+                    modules.push_back(item.at("Name").asString());
+                }
+            }
+        } else if (v.isObject() && v.has("Name")) {
+            // Single module returned as object
+            modules.push_back(v.at("Name").asString());
         }
-        pos = end;
+    } catch (const std::exception&) {
+        // If JSON parsing fails, return empty list rather than guessing
     }
     
     return modules;

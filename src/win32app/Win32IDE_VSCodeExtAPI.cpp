@@ -14,7 +14,8 @@
 
 #include "Win32IDE.h"
 #include "../modules/vscode_extension_api.h"
-#include "../modules/vsix_loader.h"
+#include "../modules/vsix_loader.h"
+#include "../modules/extension_host_bridge.h"
 #include "quickjs_extension_host.h"
 
 #include <commdlg.h>    // OPENFILENAMEW, GetOpenFileNameW, GetSaveFileNameW
@@ -29,7 +30,14 @@ void Win32IDE::initVSCodeExtensionAPI() {
     if (m_vscExtAPIInitialized) return;
 
     auto& api = vscode::VSCodeExtensionAPI::instance();
-    auto result = api.initialize(this, m_hwndMain);
+
+    // The extension runtime is shared with the command line, so it reaches
+    // the IDE through a narrow bridge rather than through this class
+    // directly. The bridge is owned here and released on shutdown.
+    if (!m_extensionHostBridge) {
+        m_extensionHostBridge = RawrXD::Extensions::CreateWin32ExtensionHostBridge(this);
+    }
+    auto result = api.initialize(m_extensionHostBridge, m_hwndMain);
 
     if (result.success) {
         m_vscExtAPIInitialized = true;

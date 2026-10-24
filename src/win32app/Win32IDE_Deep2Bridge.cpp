@@ -56,6 +56,10 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
     }
 
     LOG_INFO("Initializing Deep2 Bridge...");
+    {
+        std::lock_guard<std::mutex> lock(m_errorMutex);
+        m_lastError.clear();
+    }
     
     try {
 #ifdef HAVE_DEEP2_ENGINE
@@ -71,6 +75,8 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
         config.kvCacheQuant = Deep2::EngineConfig::QuantType::FP16;
         
         if (!m_engine->initialize(config)) {
+            std::lock_guard<std::mutex> lock(m_errorMutex);
+            m_lastError = "Deep2Engine initialization returned false";
             LOG_ERROR("Deep2Engine initialization failed");
             delete m_engine;
             m_engine = nullptr;
@@ -86,6 +92,8 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
         // Load model if path provided
         if (!modelPath.empty()) {
             if (!m_engine->loadModel(modelPath)) {
+                std::lock_guard<std::mutex> lock(m_errorMutex);
+                m_lastError = "Deep2Engine::loadModel returned false";
                 LOG_WARNING("Failed to load model into Deep2Engine: " + modelPath);
                 // Don't fail - allow lazy loading
             } else {
@@ -127,10 +135,16 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
 #endif
     }
     catch (const std::exception& e) {
+        {
+            std::lock_guard<std::mutex> lock(m_errorMutex);
+            m_lastError = e.what();
+        }
         LOG_ERROR("Deep2Bridge initialization failed: " + std::string(e.what()));
         return false;
     }
     catch (...) {
+        std::lock_guard<std::mutex> lock(m_errorMutex);
+        m_lastError = "unknown initialization exception";
         LOG_ERROR("Deep2Bridge initialization failed with unknown exception");
         return false;
     }
@@ -143,6 +157,10 @@ bool Deep2Bridge::LoadModel(const std::string& modelPath)
     }
 
     LOG_INFO("Loading model: " + modelPath);
+    {
+        std::lock_guard<std::mutex> lock(m_errorMutex);
+        m_lastError.clear();
+    }
 
     if (m_espBus) {
         m_espBus->publish(rawrxd::esp::Kind::ModelLoad, modelPath, m_espRequestId);
@@ -162,6 +180,10 @@ bool Deep2Bridge::LoadModel(const std::string& modelPath)
     }
 #endif
 
+    {
+        std::lock_guard<std::mutex> lock(m_errorMutex);
+        m_lastError = "Deep2Engine::loadModel returned false";
+    }
     LOG_ERROR("Failed to load model: " + modelPath);
     if (m_espBus) {
         m_espBus->publish(rawrxd::esp::Kind::Error, "Model load failed: " + modelPath, m_espRequestId);
@@ -420,7 +442,10 @@ std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
         options.seed = 0;
         
         m_engine->configureGeneration(options);
-        return m_engine->generateText(prompt, maxTokens);
+        // Chat requests must use the GGUF-declared template.  Feeding a raw
+        // user string into an instruction model produces code-training
+        // continuation rather than an assistant turn.
+        return m_engine->generateChat(prompt, "", static_cast<size_t>(maxTokens));
 #else
         if (!m_cpuEngine) {
             return "Error: CPU engine not available";
@@ -488,6 +513,12 @@ std::string Deep2Bridge::GetModelInfo() const
     oss << "Heads: " << m_cpuEngine->GetNumHeads() << "\n";
     return oss.str();
 #endif
+}
+
+std::string Deep2Bridge::GetLastError() const
+{
+    std::lock_guard<std::mutex> lock(m_errorMutex);
+    return m_lastError;
 }
 
 void Deep2Bridge::SetGenerationConfig(int maxTokens, float temperature, float topP, int topK)

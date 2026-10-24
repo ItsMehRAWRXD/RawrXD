@@ -6,6 +6,39 @@
 #include <sstream>
 #include <algorithm>
 
+namespace {
+
+bool HasCapability(const RawrXD::Backend::OllamaModel& model,
+                   const char* capability) {
+    return std::find(model.capabilities.begin(), model.capabilities.end(),
+                     capability) != model.capabilities.end();
+}
+
+// Pick a real installed local model only when the caller did not specify one.
+// Never silently replace an explicit model selection: a typo or an unloaded
+// tag must be reported to the caller instead of causing an implicit pull.
+std::string SelectDefaultLocalModel(
+    const std::vector<RawrXD::Backend::OllamaModel>& models) {
+    int bestScore = -1;
+    std::string best;
+    for (const auto& model : models) {
+        if (model.IsCloud()) continue;
+        int score = 0;
+        if (HasCapability(model, "tools")) score += 100;
+        if (model.name.find("coder") != std::string::npos) score += 30;
+        if (model.name.find("instruct") != std::string::npos) score += 20;
+        if (model.name.find("base") != std::string::npos) score -= 20;
+        if (model.name.find("latest") != std::string::npos) score += 1;
+        if (score > bestScore) {
+            bestScore = score;
+            best = model.name;
+        }
+    }
+    return best;
+}
+
+} // namespace
+
 namespace RawrXD {
 namespace Agent {
 
@@ -16,7 +49,9 @@ BackendConfig OllamaBackend::DefaultConfig() const {
     BackendConfig cfg;
     cfg.kind          = BackendKind::Ollama;
     cfg.endpoint      = "http://127.0.0.1:11434";
-    cfg.model         = "qwen2.5-coder:32b";
+    // Empty means "select an installed local model with the required
+    // capabilities".  It must not name a tag that may not exist locally.
+    cfg.model         = {};
     cfg.temperature   = 0.2f;
     cfg.top_p         = 0.9f;
     cfg.max_tokens    = 4096;
@@ -34,20 +69,33 @@ bool OllamaBackend::Initialize(const BackendConfig& config) {
     if (m_config.endpoint.empty()) {
         m_config.endpoint = "http://127.0.0.1:11434";
     }
-    if (m_config.model.empty()) {
-        m_config.model = "qwen2.5-coder:32b";
-    }
-
     m_client = std::make_unique<Backend::OllamaClient>(m_config.endpoint);
     m_client->setTimeoutSeconds(m_config.timeout_ms / 1000);
 
     // Test connection
     if (!m_client->testConnection()) {
-        m_config = DefaultConfig();
-        m_client = std::make_unique<Backend::OllamaClient>(m_config.endpoint);
-        m_client->setTimeoutSeconds(m_config.timeout_ms / 1000);
-        if (!m_client->testConnection()) {
-            RecordFailure("Ollama backend: cannot connect to " + m_config.endpoint);
+        RecordFailure("Ollama backend: cannot connect to " + m_config.endpoint);
+        m_client.reset();
+        return false;
+    }
+
+    const auto installed = m_client->listModels();
+    if (m_config.model.empty()) {
+        m_config.model = SelectDefaultLocalModel(installed);
+        if (m_config.model.empty() && !installed.empty()) {
+            RecordFailure("Ollama backend: no installed local model is available");
+            m_client.reset();
+            return false;
+        }
+    } else if (!installed.empty()) {
+        const auto it = std::find_if(installed.begin(), installed.end(),
+            [this](const Backend::OllamaModel& model) {
+                return model.name == m_config.model;
+            });
+        if (it == installed.end()) {
+            RecordFailure("Ollama backend: requested model is not installed: " +
+                          m_config.model);
+            m_client.reset();
             return false;
         }
     }
@@ -96,10 +144,9 @@ BackendHealth OllamaBackend::GetHealth() const {
 
     if (m_client) {
         health.available = m_client->isRunning();
-        health.healthy   = m_consecutiveErrors < 3;
-        if (!m_recentErrors.empty()) {
-            health.last_error = m_recentErrors.back();
-        }
+        health.healthy   = m_consecutiveErrors.load() < 3;
+        std::lock_guard<std::mutex> lock(m_stats_mtx);
+        if (!m_recentErrors.empty()) health.last_error = m_recentErrors.back();
     }
 
     return health;
@@ -117,13 +164,16 @@ bool OllamaBackend::CheckHealth() {
 bool OllamaBackend::Supports(BackendCapability cap) const {
     switch (cap) {
         case BackendCapability::Chat:
-        case BackendCapability::ToolCalling:
         case BackendCapability::Streaming:
         case BackendCapability::FIM:
         case BackendCapability::Cancellation:
         case BackendCapability::ModelDiscovery:
         case BackendCapability::Embeddings:
             return true;
+        case BackendCapability::ToolCalling:
+            // Runtime capability: the provider can explicitly reject native
+            // tools even though the transport supports them.
+            return !m_nativeToolsUnsupported.load();
         case BackendCapability::StructuredOutput:
             // Ollama supports JSON format via options
             return true;
@@ -183,9 +233,9 @@ bool OllamaBackend::LoadModel(const std::string& model_name) {
             return true;
         }
     }
-    // Model may not be loaded yet; Ollama will pull it on first generate
-    m_config.model = model_name;
-    return true;
+    // Do not silently pull an unknown tag. Discovery is authoritative for
+    // local orchestration and callers receive an explicit admission failure.
+    return false;
 }
 
 void OllamaBackend::ConvertMessages(
@@ -198,9 +248,17 @@ void OllamaBackend::ConvertMessages(
         omsg.role    = msg.role;
         omsg.content = msg.content;
         omsg.tool_call_id = msg.tool_call_id;
-        // Only forward tool calls the provider can represent; an empty
-        // array would make Ollama reject the request.
-        if (msg.tool_calls.is_array() && !msg.tool_calls.empty()) {
+        if (msg.role == "tool" && m_nativeToolsUnsupported.load()) {
+            // The server does not speak the tool protocol, so a tool result
+            // cannot be a tool message: the model would not see it, and it
+            // would ask for the same file again. The observation is delivered
+            // as the next user turn, which every chat template renders.
+            omsg.role = "user";
+            omsg.content = "Tool result:\n" + msg.content;
+            omsg.tool_call_id.clear();
+        } else if (msg.tool_calls.is_array() && !msg.tool_calls.empty()) {
+            // Only forward tool calls the provider can represent; an empty
+            // array would make Ollama reject the request.
             omsg.tool_calls = msg.tool_calls;
         }
         out.push_back(omsg);
@@ -255,7 +313,7 @@ InferenceResult OllamaBackend::ChatSync(
     if (m_config.max_tokens > 0) {
         req.options["num_predict"] = m_config.max_tokens;
     }
-    if (!tools.is_null()) {
+    if (!tools.is_null() && !m_nativeToolsUnsupported.load()) {
         req.tools = tools;
     }
 
@@ -295,10 +353,23 @@ InferenceResult OllamaBackend::ChatSync(
     // A tool call is a complete reply even when the content is empty: a
     // model asked to call a function answers with tool_calls and no text.
     const bool hasToolCalls = resp.tool_calls.is_array() && !resp.tool_calls.empty();
-    if (!resp.done || (text.empty() && !hasToolCalls)) {
+    // A turn the server finished but that carries no visible answer is
+    // INCOMPLETE, not failed: a reasoning model can spend the whole budget
+    // thinking and return nothing, and the agent loop asks such a model to
+    // continue. Only a turn the server did not finish, or an error it
+    // reported, is a failure.
+    if (!resp.done) {
         const std::string err = resp.done_reason == "error"
             ? (resp.error.empty() ? "Ollama reported an error" : resp.error)
-            : "Ollama returned an empty completion";
+            : "Ollama returned an incomplete completion";
+        RecordFailure("Ollama chatSync failed: " + err);
+        return InferenceResult::Error(err);
+    }
+
+    if (!hasToolCalls && text.empty()) {
+        const std::string err = resp.thinking.empty()
+            ? "Ollama returned an empty visible answer"
+            : "Ollama exhausted the completion budget in thinking without a visible answer";
         RecordFailure("Ollama chatSync failed: " + err);
         return InferenceResult::Error(err);
     }
@@ -321,6 +392,11 @@ InferenceResult OllamaBackend::ChatSync(
             }
             if (!args.is_object()) args = json::object();
             result.tool_calls.emplace_back(name, args);
+            // The id names the call. The tool result carries it, and the
+            // assistant turn is echoed with it.
+            std::string id = tc.value("id", tc.value("function", json::object()).value("id", std::string()));
+            if (id.empty()) id = "call_" + name;
+            result.tool_call_ids.push_back(id);
         }
     }
 
@@ -335,6 +411,27 @@ InferenceResult OllamaBackend::ChatSync(
     result.completion_tokens = ctok;
     result.tokens_per_sec = tps;
     result.total_duration_ms = elapsed_ms;
+
+    // The server's own accounting: eval_count * 1e9 / eval_duration is the
+    // inference throughput, free of the model load and the prompt evaluation.
+    result.eval_duration_ns = resp.eval_duration;
+    result.load_duration_ns = resp.load_duration;
+    result.inference_tps = (resp.eval_duration > 0 && ctok > 0)
+        ? (static_cast<double>(ctok) * 1e9 / static_cast<double>(resp.eval_duration))
+        : 0.0;
+    // A synchronous completion arrives in one piece, so the first token and
+    // the last token are the same moment.
+    result.ttft_ms = elapsed_ms;
+
+    {
+        std::lock_guard<std::mutex> lock(m_stats_mtx);
+        m_lastMetrics.prompt_tokens = ptok;
+        m_lastMetrics.completion_tokens = ctok;
+        m_lastMetrics.eval_duration_ns = resp.eval_duration;
+        m_lastMetrics.load_duration_ns = resp.load_duration;
+        m_lastMetrics.ttft_ms = elapsed_ms;
+        m_lastMetrics.inference_tps = result.inference_tps;
+    }
 
     return result;
 }
@@ -373,6 +470,8 @@ bool OllamaBackend::ChatStream(
     auto t0 = std::chrono::steady_clock::now();
     std::string full_response;
     uint64_t ptok = 0, ctok = 0;
+    uint64_t evalDurationNs = 0, loadDurationNs = 0;
+    double ttftMs = 0;
     bool stream_failed = false;
     std::string fail_reason;
 
@@ -381,13 +480,24 @@ bool OllamaBackend::ChatStream(
             return;
         }
 
+        // The first token of the answer, measured from the request.
+        if (ttftMs == 0 && !chunk.message.empty()) {
+            ttftMs = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - t0).count();
+        }
+
         // Streamed chat responses come as SSE-like JSON lines
         // Reasoning is a separate channel from the answer.
         if (!chunk.thinking.empty() && m_thinking_sink) {
             m_thinking_sink(chunk.thinking);
         }
+        // The answer arrives in "message.content" for /api/chat and in
+        // "response" for /api/generate. Both are the token stream, and both
+        // have to reach the caller as they arrive: a chat stream that only
+        // accumulates the text would print nothing at all.
         if (!chunk.message.empty()) {
             full_response += chunk.message;
+            if (on_token) on_token(chunk.message);
         }
         if (!chunk.response.empty()) {
             full_response += chunk.response;
@@ -396,6 +506,8 @@ bool OllamaBackend::ChatStream(
 
         ptok = chunk.prompt_eval_count;
         ctok = chunk.eval_count;
+        evalDurationNs = chunk.eval_duration;
+        loadDurationNs = chunk.load_duration;
 
         // Check for tool calls in streaming mode
         if (!chunk.tool_calls.is_null() && on_tool_call) {
@@ -416,6 +528,19 @@ bool OllamaBackend::ChatStream(
             double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
             double tps = (elapsed_ms > 0 && ctok > 0)
                 ? (ctok / (elapsed_ms / 1000.0)) : 0.0;
+            const double inferenceTps = (evalDurationNs > 0 && ctok > 0)
+                ? (static_cast<double>(ctok) * 1e9 / static_cast<double>(evalDurationNs))
+                : 0.0;
+
+            {
+                std::lock_guard<std::mutex> lock(m_stats_mtx);
+                m_lastMetrics.prompt_tokens = ptok;
+                m_lastMetrics.completion_tokens = ctok;
+                m_lastMetrics.eval_duration_ns = evalDurationNs;
+                m_lastMetrics.load_duration_ns = loadDurationNs;
+                m_lastMetrics.ttft_ms = ttftMs;
+                m_lastMetrics.inference_tps = inferenceTps;
+            }
 
             m_totalRequests.fetch_add(1);
 
@@ -444,7 +569,31 @@ bool OllamaBackend::ChatStream(
         // Already handled in on_chunk when done=true. No-op.
     };
 
-    bool ok = m_client->chat(req, on_chunk, on_err, on_complete);
+    // A model that does not speak the native tool protocol rejects the
+    // request outright. The agent then falls back to the JSON tool contract
+    // in its prompt, which every model can produce. The retry is made once,
+    // without the tool schemas.
+    bool sentTools = req.tools.is_array() && !req.tools.empty();
+    bool ok = false;
+    for (int attempt = 0; attempt < 2; ++attempt) {
+        stream_failed = false;
+        fail_reason.clear();
+        full_response.clear();
+        ptok = ctok = evalDurationNs = loadDurationNs = 0;
+        ttftMs = 0;
+        t0 = std::chrono::steady_clock::now();
+
+        ok = m_client->chat(req, on_chunk, on_err, on_complete);
+
+        const bool rejectedTools = sentTools &&
+            fail_reason.find("does not support tools") != std::string::npos;
+        if (!rejectedTools) break;
+
+        // Remember the limitation, take the schemas away, and ask again.
+        m_nativeToolsUnsupported.store(true);
+        req.tools = json();
+        sentTools = false;
+    }
     m_streaming.store(false);
 
     return ok && !stream_failed;
@@ -624,22 +773,30 @@ double OllamaBackend::GetAvgTokensPerSec() const {
     return m_accumulatedTps.load() / std::max<uint64_t>(m_totalRequests.load(), 1);
 }
 
+InferenceBackend::StreamMetrics OllamaBackend::LastStreamMetrics() const {
+    std::lock_guard<std::mutex> lock(m_stats_mtx);
+    return m_lastMetrics;
+}
+
 bool OllamaBackend::ShouldEmitError(const std::string& msg) {
     std::lock_guard<std::mutex> lock(m_stats_mtx);
     m_recentErrors.push_back(msg);
     if (m_recentErrors.size() > 10) {
         m_recentErrors.pop_front();
     }
-    m_consecutiveErrors++;
+    m_consecutiveErrors.fetch_add(1);
     return true;
 }
 
 void OllamaBackend::RecordSuccess(double tps, uint64_t ptok, uint64_t ctok) {
-    m_consecutiveErrors = 0;
+    m_consecutiveErrors.store(0);
     m_totalTokens.fetch_add(ptok + ctok);
     double current_avg = m_accumulatedTps.load();
     uint64_t total_req = m_totalRequests.load();
-    m_accumulatedTps.store(((current_avg * total_req) + tps) / (total_req + 1));
+    if (total_req == 0) total_req = 1;
+    const uint64_t previous = total_req - 1;
+    m_accumulatedTps.store(((current_avg * previous) + tps) /
+                           static_cast<double>(total_req));
 }
 
 void OllamaBackend::RecordFailure(const std::string& error) {

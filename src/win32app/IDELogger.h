@@ -34,6 +34,8 @@ public:
         log(Level::INFO, "IDELogger", "Logging system initialized");
     }
 
+    bool isInitialized() const { return m_initialized; }
+
     void setLevel(Level level) {
         m_minLevel = level;
     }

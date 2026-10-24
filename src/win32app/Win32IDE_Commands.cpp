@@ -10,6 +10,7 @@
 #include <cctype>
 
 #include "Win32IDE_CommandIDs.h"
+#include "Win32IDE_CodexCommands.h"
 
 // The menu IDs are sparse and mix File/Edit/View commands in the 2000 range.
 // Range routing misclassified them and claimed unknown commands were handled.
@@ -71,6 +72,10 @@ bool Win32IDE::routeCommand(int commandId) {
     case IDM_AUTONOMY_SET_GOAL: onAutonomySetGoal(); return true;
     case IDM_AUTONOMY_STATUS: onAutonomyViewStatus(); return true;
     case IDM_AUTONOMY_MEMORY: onAutonomyViewMemory(); return true;
+    case IDM_CODEX_COMPLETE: runNativeCodexPrompt("Complete the selected code. Return only the replacement text."); return true;
+    case IDM_CODEX_EXPLAIN: runNativeCodexPrompt("Explain the selected code clearly."); return true;
+    case IDM_CODEX_REFACTOR: runNativeCodexPrompt("Refactor the selected code and return only the replacement text."); return true;
+    case IDM_CODEX_FIX: runNativeCodexPrompt("Fix the selected code and return only the replacement text."); return true;
     default: return false;
     }
 }
@@ -92,7 +97,9 @@ bool Win32IDE::isCommandEnabled(int commandId) const {
     if (it != m_commandStates.end()) {
         return it->second;
     }
-    return true; // Default to enabled
+    // Unknown commands must fail closed.  Reporting arbitrary IDs as enabled
+    // makes agent command discovery look connected when no handler exists.
+    return false;
 }
 
 void Win32IDE::updateCommandStates() {
@@ -389,6 +396,7 @@ void Win32IDE::handleHelpCommand(int commandId) {
 void Win32IDE::buildCommandRegistry()
 {
     m_commandRegistry.clear();
+    RegisterNativeCodexCommands(*this);
     
     // File commands
     m_commandRegistry.push_back({IDM_FILE_NEW, "File: New File", "Ctrl+N", "File"});
@@ -452,6 +460,10 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({IDM_HELP_SEARCH, "Help: Search Help", "", "Help"});
     m_commandRegistry.push_back({IDM_HELP_ABOUT, "Help: About", "", "Help"});
     m_commandRegistry.push_back({IDM_HELP_SHORTCUTS, "Help: Keyboard Shortcuts", "", "Help"});
+    m_commandRegistry.push_back({IDM_CODEX_COMPLETE, "Codex: Complete Selection", "", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_EXPLAIN, "Codex: Explain Selection", "", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_REFACTOR, "Codex: Refactor Selection", "", "Codex"});
+    m_commandRegistry.push_back({IDM_CODEX_FIX, "Codex: Fix Selection", "", "Codex"});
     
     m_filteredCommands = m_commandRegistry;
 }

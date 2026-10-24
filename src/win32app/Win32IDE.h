@@ -32,6 +32,7 @@
 #include <atomic>
 #include <functional>
 #include "IDELogger.h"
+#include "../ui/tool_action_status.h"
 #include "Win32TerminalManager.h"
 #include "TransparentRenderer.h"
 #include "gguf_loader.h"
@@ -41,6 +42,7 @@
 #include "Win32IDE_Autonomy.h"
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "agent_esp.hpp"
+#include "Win32IDE_GhostText.h"
 
 // Forward declaration for Deep2Bridge
 class Deep2Bridge;
@@ -56,6 +58,8 @@ struct ChatModelEntry {
     std::string breadcrumb;
     std::string identifier;
 };
+
+enum class GhostTextMode { Disabled, AutoLocal, FollowChat, Independent };
 
 // Define LOG_FUNCTION macro if not already defined
 #ifndef LOG_FUNCTION
@@ -180,6 +184,26 @@ public:
     Win32IDE(HINSTANCE hInstance);
     ~Win32IDE();
 
+    // ---- Extension host surface ----
+    //
+    // The VS Code extension runtime is shared with the command line, so it
+    // reaches the IDE through a narrow bridge rather than through this class
+    // directly. These public forwarders are what that bridge calls, and
+    // they keep the extension surface explicit and small.
+    void extAddOutputTab(const std::string& name) { addOutputTab(name); }
+    void extAppendToOutput(const std::string& text, const std::string& tab) { appendToOutput(text, tab); }
+    void extAddProblem(const std::string& file, int line, int col,
+                       const std::string& message, int severity) {
+        addProblem(file, line, col, message, severity);
+    }
+    HTREEITEM extAddTreeItem(HTREEITEM parent, const std::string& text,
+                             const std::string& path, bool isDirectory) {
+        return addTreeItem(parent, text, path, isDirectory);
+    }
+    HWND extGetStatusBar() const { return m_hwndStatusBar; }
+    bool extIsDebugging() const { return m_debuggingActive; }
+    std::string extGetCurrentFilePath() const { return m_currentFile; }
+
     bool createWindow();
     void showWindow();
     int runMessageLoop();
@@ -187,6 +211,10 @@ public:
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
+    HWND editorHandle() const { return m_hwndEditor; }
+    void runNativeCodexPrompt(const std::string& prompt);
+    void initializeNativeGhostText();
+    bool handleNativeGhostTextMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
     // Agentic Framework
     std::unique_ptr<AgenticBridge> m_agenticBridge;
@@ -243,6 +271,7 @@ private:
     // Message handlers
     LRESULT handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void onCreate(HWND hwnd);
+    void validateLaunchConnections();
     void onDestroy();
     void onSize(int width, int height);
     void onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
@@ -290,7 +319,7 @@ private:
     
     // AI Inference Engine - Local GGUF Model Chat
     struct InferenceConfig {
-        int maxTokens = 512;
+        int maxTokens = 4096;
         float temperature = 0.7f;
         float topP = 0.9f;
         int topK = 40;
@@ -310,6 +339,8 @@ private:
     std::string buildChatPrompt(const std::string& userMessage);
     void onInferenceToken(const std::string& token);
     void onInferenceComplete(const std::string& fullResponse);
+    void updateContextControls();
+    int effectiveMaxTokensForPrompt(const std::string& prompt) const;
 
     // Editor Operations
     void undo();
@@ -330,9 +361,9 @@ private:
     void executeCommand();
     
     // ========================================================================
-    // FULL POWERSHELL ACCESS - Complete PowerShell Integration
+    // Public PowerShell API for test agent access
     // ========================================================================
-    
+public:
     // PowerShell Execution
     std::string executePowerShellScript(const std::string& scriptPath, const std::vector<std::string>& args = {});
     std::string executePowerShellCommand(const std::string& command, bool async = false);
@@ -580,6 +611,7 @@ private:
     std::vector<CommandPaletteItem> m_filteredCommands;
     std::vector<int> m_commandPaletteFilteredIndices; // maps listbox index -> registry index
     std::unordered_map<int, std::function<void()>> m_commandHandlers;
+    std::unique_ptr<NativeGhostTextController> m_ghostText;
 
     // Utility
     std::string getWindowText(HWND hwnd);
@@ -848,6 +880,21 @@ private:
     // Multi-terminal support
     std::vector<TerminalPane> m_terminalPanes;
     int m_nextTerminalId;
+
+    // Chat tool action status. The chat view renders the tool actions that
+    // were performed for each assistant turn, and the accumulator holds the
+    // actions of the response currently being produced.
+    std::map<size_t, std::vector<RawrXD::UI::ToolActionStatus>> m_chatToolActions;
+    RawrXD::UI::ToolActionAccumulator m_currentToolActions;
+
+    // ---- Extension host accessors ----
+    //
+    // The VS Code extension runtime is shared with the command line, so it
+    // reaches the IDE through a narrow bridge rather than through this
+    // class directly. These accessors are what the bridge forwards to.
+    HWND getStatusBarHandle() const { return m_hwndStatusBar; }
+    bool isDebugging() const { return m_debuggingActive; }
+    std::string getCurrentFilePath() const { return m_currentFile; }
     int m_activeTerminalId;
     bool m_terminalSplitHorizontal;
     
@@ -1048,14 +1095,27 @@ private:
     HWND m_hwndCopilotChatOutput = nullptr;
     HWND m_hwndCopilotSendBtn = nullptr;
     HWND m_hwndCopilotClearBtn = nullptr;
+    HWND m_hwndModelLabel = nullptr;
     HWND m_hwndModelSelector = nullptr;
+    HWND m_hwndGhostTextModelLabel = nullptr;
+    HWND m_hwndGhostModelSelector = nullptr;
+    HWND m_hwndAllowCloudGhostText = nullptr;
+    HWND m_hwndMaxTokensCaption = nullptr;
     HWND m_hwndMaxTokensSlider = nullptr;
     HWND m_hwndMaxTokensLabel = nullptr;
+    HWND m_hwndContextCaption = nullptr;
+    HWND m_hwndContextLabel = nullptr;
+    HWND m_hwndContextSlider = nullptr;
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
-    int m_currentMaxTokens;
+    int m_currentMaxTokens = 4096;
+    int m_currentContextTokens = 65536;
     std::vector<ChatModelEntry> m_availableModels;
     ChatModelEntry m_selectedChatModel;
+    ChatModelEntry m_ghostTextModel;
+    ChatModelEntry m_pendingInferenceModel;
+    GhostTextMode m_ghostTextMode = GhostTextMode::AutoLocal;
+    bool m_allowCloudGhostText = false;
     std::string m_agenticChatLoadedModelPath;
     std::thread m_modelDiscoveryThread;
     std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
@@ -1292,6 +1352,8 @@ private:
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
     void populateModelSelector();
     void onModelSelectionChanged();
+    void onGhostTextSelectionChanged();
+    void onGhostTextCloudConsentChanged();
     void onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered);
     void onMaxTokensChanged(int newValue);
     

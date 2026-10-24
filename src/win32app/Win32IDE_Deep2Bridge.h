@@ -68,6 +68,7 @@ public:
     void UnloadModel();
     std::string GetCurrentModel() const { return m_modelPath; }
     std::string GetModelInfo() const;
+    std::string GetLastError() const;
 
     // Configuration
     void SetGenerationConfig(int maxTokens, float temperature, float topP, int topK);
@@ -104,6 +105,8 @@ private:
     std::atomic<bool> m_stopRequested{false};
     
     std::string m_modelPath;
+    mutable std::mutex m_errorMutex;
+    std::string m_lastError;
     std::thread m_generationThread;
     std::mutex m_callbackMutex;
     

@@ -36,6 +36,7 @@
 #include <unordered_set>
 #include <cctype>
 #include <winhttp.h>
+#include <filesystem>
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -48,6 +49,40 @@
 #include <nlohmann/json.hpp>
 
 namespace {
+
+std::wstring utf8ToWide(const std::string& text)
+{
+    if (text.empty()) return {};
+    const int required = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                             text.data(), static_cast<int>(text.size()),
+                                             nullptr, 0);
+    if (required <= 0) return std::wstring(text.begin(), text.end());
+    std::wstring result(static_cast<size_t>(required), L'\0');
+    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(),
+                        static_cast<int>(text.size()), result.data(), required);
+    return result;
+}
+
+void appendUtf8ToRichEdit(HWND control, const std::string& text)
+{
+    if (!control || text.empty()) return;
+    const std::wstring wide = utf8ToWide(text);
+    const int length = GetWindowTextLengthW(control);
+    SendMessageW(control, EM_SETSEL, length, length);
+    SendMessageW(control, EM_REPLACESEL, FALSE,
+                 reinterpret_cast<LPARAM>(wide.c_str()));
+    SendMessageW(control, WM_VSCROLL, SB_BOTTOM, 0);
+}
+
+// Keep the compact selector row independent from the native popup list.  The
+// sidebar is resized frequently, and MoveWindow() otherwise causes the combo
+// control to forget the popup dimensions established during creation.
+void configureModelSelectorCombo(HWND combo, int minimumVisibleRows)
+{
+    if (!combo) return;
+    SendMessageA(combo, CB_SETDROPPEDWIDTH, 560, 0);
+    SendMessageA(combo, CB_SETMINVISIBLE, minimumVisibleRows, 0);
+}
 
 // ---------------------------------------------------------------------------
 // Native CPU inference helper.
@@ -76,6 +111,36 @@ std::string NativeEngineInfer(RawrXD::CPUInferenceEngine* engine,
         []() {},
         nullptr);
     return out;
+}
+
+void writeProviderRouteReceipt(const ChatModelEntry& model,
+                               const std::string& state,
+                               const std::string& response,
+                               uint64_t elapsedMs)
+{
+    const char* localAppData = std::getenv("LOCALAPPDATA");
+    if (!localAppData || !*localAppData) return;
+    try {
+        const std::filesystem::path directory =
+            std::filesystem::path(localAppData) / "RawrXD" / "evidence";
+        std::filesystem::create_directories(directory);
+        const auto path = directory / "provider_route_e2e.jsonl";
+        nlohmann::json receipt = {
+            {"schema", "RAWRXD_PROVIDER_ROUTE_E2E_001"},
+            {"source", model.source == ChatModelEntry::Source::LocalFile ? "local" :
+                       model.source == ChatModelEntry::Source::Ollama ? "ollama" : "kilo"},
+            {"model", model.identifier},
+            {"state", state},
+            {"generated", !response.empty()},
+            {"generated_bytes", response.size()},
+            {"elapsed_ms", elapsedMs},
+            {"fallback", false}
+        };
+        std::ofstream output(path, std::ios::app);
+        output << receipt.dump() << '\n';
+    } catch (...) {
+        // Diagnostics must never change inference behavior.
+    }
 }
 
 // Run a child process and capture its stdout. Used by refreshModuleList()'s
@@ -156,6 +221,15 @@ bool isSelectableGguf(const char* filename)
     return true;
 }
 
+bool isSelectableOllamaBlob(const std::string& path, const char* filename)
+{
+    const std::string name = toLowerAscii(filename ? filename : "");
+    if (name.size() < 8 || name.compare(0, 7, "sha256-") != 0) return false;
+    const std::string lowerPath = toLowerAscii(path);
+    return lowerPath.find("\\blobs\\") != std::string::npos &&
+           lowerPath.find("/.blobs/") == std::string::npos;
+}
+
 // Some GGUF files contain tokenizer metadata only (for example
 // ggml-vocab-aquila.gguf). They are valid GGUF containers but cannot be
 // loaded as inference models. Read only the fixed header so recursive model
@@ -192,6 +266,25 @@ bool skipModelScanDirectory(const std::string& name)
     return skipped.find(lower) != skipped.end();
 }
 
+std::string configuredEnvironmentValue(const char* name)
+{
+    if (!name || !*name) return {};
+    if (const char* value = std::getenv(name); value && *value) return value;
+
+    HKEY key = nullptr;
+    if (RegOpenKeyExA(HKEY_CURRENT_USER, "Environment", 0, KEY_READ, &key) != ERROR_SUCCESS) {
+        return {};
+    }
+    char value[4096] = {};
+    DWORD type = 0;
+    DWORD size = sizeof(value);
+    const LONG result = RegQueryValueExA(key, name, nullptr, &type,
+        reinterpret_cast<LPBYTE>(value), &size);
+    RegCloseKey(key);
+    if (result != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ)) return {};
+    return value;
+}
+
 void scanModelTree(const std::string& root,
                    std::vector<ChatModelEntry>& models,
                    std::unordered_set<std::string>& seen,
@@ -224,7 +317,8 @@ void scanModelTree(const std::string& root,
                     current.second < 48 && !skipModelScanDirectory(data.cFileName)) {
                     pending.emplace_back(fullPath, current.second + 1);
                 }
-            } else if (isSelectableGguf(data.cFileName) &&
+            } else if ((isSelectableGguf(data.cFileName) ||
+                        isSelectableOllamaBlob(fullPath, data.cFileName)) &&
                        hasGgufModelTensors(fullPath)) {
                 const std::string key = toLowerAscii(fullPath);
                 if (seen.insert(key).second) {
@@ -246,7 +340,30 @@ std::vector<ChatModelEntry> discoverLocalModels(
     size_t visitedDirectories = 0;
     char driveStrings[MAX_PATH + 1] = {};
     const DWORD driveStringLength = GetLogicalDriveStringsA(MAX_PATH, driveStrings);
+    std::vector<std::string> fastRoots;
     if (driveStringLength && driveStringLength < MAX_PATH) {
+        for (const char* drive = driveStrings; *drive && !cancel->load();
+             drive += std::strlen(drive) + 1) {
+            const UINT driveType = GetDriveTypeA(drive);
+            if (driveType == DRIVE_FIXED || driveType == DRIVE_REMOVABLE) {
+                fastRoots.push_back(std::string(drive) + "models");
+                fastRoots.push_back(std::string(drive) + "OllamaModels");
+            }
+        }
+    }
+    if (const char* profile = std::getenv("USERPROFILE"); profile && *profile) {
+        fastRoots.emplace_back(std::string(profile) + "\\.ollama\\models");
+    }
+    if (const char* localAppData = std::getenv("LOCALAPPDATA"); localAppData && *localAppData) {
+        fastRoots.emplace_back(std::string(localAppData) + "\\Ollama\\models");
+    }
+    for (const auto& root : fastRoots) {
+        if (cancel->load()) break;
+        if (GetFileAttributesA(root.c_str()) != INVALID_FILE_ATTRIBUTES) {
+            scanModelTree(root, models, seen, cancel, visitedDirectories);
+        }
+    }
+    if (models.empty() && !cancel->load() && driveStringLength && driveStringLength < MAX_PATH) {
         for (const char* drive = driveStrings; *drive && !cancel->load();
              drive += std::strlen(drive) + 1) {
             const UINT driveType = GetDriveTypeA(drive);
@@ -301,6 +418,20 @@ std::vector<ChatModelEntry> discoverLocalModels(
                 WinHttpCloseHandle(connect);
             }
             WinHttpCloseHandle(session);
+        }
+    }
+
+    const std::string kiloKey = configuredEnvironmentValue("KILO_API_KEY");
+    if (!cancel->load() && !kiloKey.empty()) {
+        ModelConfig config{};
+        config.backend = ModelBackend::KILO_GATEWAY;
+        config.api_key = kiloKey;
+        CloudApiClient client;
+        for (const auto& model : client.listModels(config)) {
+            if (model.empty()) continue;
+            models.push_back({ChatModelEntry::Source::KiloFree,
+                modelRouteBreadcrumb(RawrXD::ChatRouteMenu::RouteKind::KiloFree,
+                    model), model});
         }
     }
 
@@ -413,7 +544,7 @@ std::string generateOllamaModel(const std::string& baseUrl,
 #define IDC_COPILOT_SEND_BTN 1204
 #define IDC_COPILOT_CLEAR_BTN 1205
 #define IDC_COPILOT_MODEL_SELECTOR 1206
-#define IDC_COPILOT_TOKEN_SLIDER 1207
+#define IDC_COPILOT_TOKEN_SLIDER 1209
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
 #define IDC_PANEL_CONTAINER 1300
@@ -540,8 +671,24 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     m_dedicatedPowerShellTerminal(nullptr)
     , m_hwndCommandPalette(nullptr), m_hwndCommandPaletteInput(nullptr), m_hwndCommandPaletteList(nullptr), m_commandPaletteVisible(false)
     , m_hwndModelSelector(nullptr), m_hwndMaxTokensSlider(nullptr), m_hwndMaxTokensLabel(nullptr)
-    , m_currentMaxTokens(512)
+    , m_currentMaxTokens(4096)
 {
+    // Initialize the theme before onCreate() creates the RichEdit editor.
+    // Leaving this aggregate uninitialized produces an unreadable
+    // black-on-black editor while the gutter can still remain visible.
+    m_currentTheme.backgroundColor = RGB(30, 30, 30);
+    m_currentTheme.textColor = RGB(220, 220, 220);
+    m_currentTheme.keywordColor = RGB(86, 156, 214);
+    m_currentTheme.commentColor = RGB(106, 153, 85);
+    m_currentTheme.stringColor = RGB(206, 145, 120);
+    m_currentTheme.numberColor = RGB(181, 206, 168);
+    m_currentTheme.operatorColor = RGB(212, 212, 212);
+    m_currentTheme.selectionColor = RGB(60, 120, 200);
+    m_currentTheme.lineNumberColor = RGB(128, 128, 128);
+    m_currentTheme.fontName = "Consolas";
+    m_currentTheme.fontSize = 10;
+    m_currentTheme.darkMode = true;
+
     // Initialize Native Fallback Engine
     try {
         m_nativeEngine = new RawrXD::CPUInferenceEngine();
@@ -2323,6 +2470,14 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
                                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
                                 0, 0, 0, 0, m_hwndMain, nullptr, m_hInstance, nullptr);
+    if (!hwnd) {
+        const DWORD error = GetLastError();
+        const std::string message = "PowerShell terminal creation failed (Win32 error " +
+            std::to_string(error) + ")";
+        LOG_ERROR(message);
+        appendToOutput(message + "\n", "Terminal", OutputSeverity::Error);
+        return -1;
+    }
 
     CHARFORMAT2A cf;
     memset(&cf, 0, sizeof(cf));
@@ -2351,6 +2506,17 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
 
     m_terminalPanes.push_back(std::move(pane));
     setActiveTerminalPane(paneId);
+    // A pane can be created after the last WM_SIZE (the normal lazy-open
+    // path). Lay it out immediately instead of leaving a visible child at
+    // the constructor's 0x0 size.
+    RECT client{};
+    RECT toolbar{};
+    GetClientRect(m_hwndMain, &client);
+    if (m_hwndToolbar && GetWindowRect(m_hwndToolbar, &toolbar)) {
+        const int toolbarHeight = toolbar.bottom - toolbar.top;
+        layoutTerminalPanes(client.right - client.left,
+                            toolbarHeight + m_editorHeight, m_terminalHeight);
+    }
     applyTheme();
     return paneId;
 }
@@ -2695,7 +2861,12 @@ bool Win32IDE::saveFileAs()
 void Win32IDE::startPowerShell()
 {
     TerminalPane* pane = getActiveTerminalPane();
-    if (!pane || !pane->manager) return;
+    if (!pane || !pane->manager) {
+        const std::string message = "PowerShell start rejected: no terminal pane is available";
+        LOG_ERROR(message);
+        appendToOutput(message + "\n", "Terminal", OutputSeverity::Error);
+        return;
+    }
     stopTerminal();
     if (pane->manager->start(Win32TerminalManager::PowerShell)) {
         appendText(pane->hwnd, "PowerShell started...\n");
@@ -2870,6 +3041,8 @@ void Win32IDE::saveTheme(const std::string& themeName)
 
 void Win32IDE::applyTheme()
 {
+    if (!m_hwndEditor) return;
+
     // Apply theme to main editor
     SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, m_currentTheme.backgroundColor);
     
@@ -2877,8 +3050,11 @@ void Win32IDE::applyTheme()
     CHARFORMAT2 cf;
     ZeroMemory(&cf, sizeof(cf));
     cf.cbSize = sizeof(cf);
-    cf.dwMask = CFM_COLOR;
+    cf.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
     cf.crTextColor = m_currentTheme.textColor;
+    cf.yHeight = static_cast<LONG>((m_currentTheme.fontSize > 0 ? m_currentTheme.fontSize : 10) * 20);
+    strncpy_s(cf.szFaceName, LF_FACESIZE, m_currentTheme.fontName.empty()
+        ? "Consolas" : m_currentTheme.fontName.c_str(), _TRUNCATE);
     SendMessage(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
     
     // Apply to terminal panes
@@ -4341,26 +4517,28 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
         tvis.hInsertAfter = TVI_LAST;
         tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
 
-        // Add all available drives
-        for (char drive = 'C'; drive <= 'Z'; ++drive) {
-            std::string drivePath = std::string(1, drive) + ":";
-            DWORD drives = GetLogicalDrives();
-            int driveNum = drive - 'A';
+        // Enumerate the actual logical drives instead of assuming a C:..Z:
+        // range. This includes removable, mounted, and network volumes.
+        const DWORD driveChars = GetLogicalDriveStringsA(0, nullptr);
+        std::vector<char> driveBuffer(driveChars + 2, '\0');
+        if (driveChars > 0 &&
+            GetLogicalDriveStringsA(driveChars + 1, driveBuffer.data()) > 0) {
+            for (char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
+                const std::string drivePath(drive);
+                std::string displayName = drivePath;
+                tvis.item.pszText = const_cast<char*>(displayName.c_str());
+                tvis.item.lParam = reinterpret_cast<LPARAM>(new std::string(drivePath));
 
-            if (drives & (1 << driveNum)) {
-                std::string displayName = drivePath + "\\";
-                tvis.item.pszText = (LPSTR)displayName.c_str();
-                tvis.item.lParam = (LPARAM) new std::string(drivePath);
-
-                HTREEITEM driveItem = (HTREEITEM)SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
+                HTREEITEM driveItem = reinterpret_cast<HTREEITEM>(
+                    SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&tvis)));
                 m_treeItemPaths[driveItem] = drivePath;
 
-                // Add a dummy child so expand button appears
+                // Add a dummy child so expand button appears.
                 TVINSERTSTRUCTA dummyVis = {};
                 dummyVis.hParent = driveItem;
                 dummyVis.item.mask = TVIF_TEXT;
-                dummyVis.item.pszText = (LPSTR)"...";
-                SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
+                dummyVis.item.pszText = const_cast<char*>("...");
+                SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&dummyVis));
             }
         }
         return;
@@ -4413,9 +4591,10 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
                 dummyVis.item.pszText = (LPSTR)"...";
                 SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
             }
-            else if (strlen(findData.cFileName) > 5 &&
-                     strcmp(findData.cFileName + strlen(findData.cFileName) - 5, ".gguf") == 0) {
-                // It's a GGUF file
+            else {
+                // The native explorer is the complete system tree. Do not
+                // filter by extension or visibility; the user may inspect
+                // hidden/system files and any native model or source format.
                 tvis.item.pszText = findData.cFileName;
                 tvis.item.lParam = (LPARAM) new std::string(fullPath);
 
@@ -4709,8 +4888,8 @@ void Win32IDE::populateFileTree()
     // Clear existing items
     TreeView_DeleteAllItems(m_hwndFileExplorer);
 
-    // Put the active workspace first so Explorer opens on the project rather
-    // than showing an empty model-only tree on machines without OllamaModels.
+    // Enumerate every logical volume first. Directory contents remain lazy so
+    // a large system disk does not block IDE startup.
     std::vector<std::string> modelPaths;
     auto addRootIfPresent = [&modelPaths](const std::string& path) {
         if (path.empty() || GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES) return;
@@ -4719,6 +4898,18 @@ void Win32IDE::populateFileTree()
         }
         modelPaths.push_back(path);
     };
+
+    const DWORD driveChars = GetLogicalDriveStringsA(0, nullptr);
+    std::vector<char> driveBuffer(driveChars + 2, '\0');
+    if (driveChars > 0 &&
+        GetLogicalDriveStringsA(driveChars + 1, driveBuffer.data()) > 0) {
+        for (char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
+            addRootIfPresent(drive);
+        }
+    }
+
+    // Put the active workspace after the drive roots so the left tree remains
+    // a complete system view while still exposing the project conveniently.
 
     char currentDirectory[MAX_PATH] = {};
     if (GetCurrentDirectoryA(MAX_PATH, currentDirectory) > 0) {
@@ -4757,7 +4948,9 @@ void Win32IDE::populateFileTree()
         if (GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES) {
         std::string displayName = path;
             size_t lastSlash = path.find_last_of("\\/");
-            if (lastSlash != std::string::npos) {
+            const bool isDriveRoot = path.size() == 3 && path[1] == ':' &&
+                (path[2] == '\\' || path[2] == '/');
+            if (lastSlash != std::string::npos && !isDriveRoot) {
                 displayName = path.substr(lastSlash + 1) + " (" + path + ")";
             }
             
@@ -4818,33 +5011,6 @@ void Win32IDE::scanDirectory(const std::string& dirPath, HTREEITEM hParent)
         std::string fullPath = dirPath + "\\" + findData.cFileName;
         bool isDirectory = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
         
-        // Skip hidden and system files
-        if (findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) {
-            continue;
-        }
-        
-        // Show source, project, documentation, and model files in the workspace.
-        if (!isDirectory) {
-            std::string fileName = findData.cFileName;
-            std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-
-            const size_t extensionStart = fileName.find_last_of('.');
-            const std::string extension = extensionStart == std::string::npos
-                ? std::string() : fileName.substr(extensionStart);
-            static const char* visibleExtensions[] = {
-                ".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx",
-                ".inl", ".ixx", ".cs", ".py", ".pyi", ".js", ".jsx", ".ts",
-                ".tsx", ".html", ".css", ".scss", ".json", ".md", ".txt",
-                ".log", ".cmake", ".toml", ".yaml", ".yml", ".xml", ".ini",
-                ".bat", ".cmd", ".ps1", ".sh", ".sln", ".vcxproj"
-            };
-            const bool sourceOrProjectFile = std::find(std::begin(visibleExtensions),
-                std::end(visibleExtensions), extension) != std::end(visibleExtensions);
-            if (!isModelFile(fullPath) && !sourceOrProjectFile) {
-                continue;
-            }
-        }
-
         HTREEITEM hItem = addTreeItem(hParent, findData.cFileName, fullPath, isDirectory);
         
         // For directories, add a dummy child so we can expand later
@@ -5098,7 +5264,8 @@ void Win32IDE::refreshFileExplorer()
 bool Win32IDE::isModelLoaded() const
 {
     // Model is loaded if we have a path and the streaming loader has opened the file
-    return m_ggufLoader && !m_loadedModelPath.empty() && !m_modelTensors.empty();
+    const bool loaderReady = m_ggufLoader && !m_loadedModelPath.empty() && !m_modelTensors.empty();
+    return loaderReady || (m_deep2Bridge && m_deep2Bridge->IsModelLoaded());
 }
 
 std::string Win32IDE::sendMessageToModel(const std::string& message)
@@ -5106,8 +5273,28 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
     if (!isModelLoaded()) {
         return "Error: No model loaded";
     }
+
+    if (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) {
+        const std::string response = m_deep2Bridge->GenerateSync(
+            message, effectiveMaxTokensForPrompt(message));
+        if (!response.empty() && response.rfind("Error:", 0) != 0) {
+            m_chatHistory.push_back({message, response});
+            return response;
+        }
+    }
+
+    if (m_nativeEngine && m_nativeEngineLoaded) {
+        auto* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
+        const std::string response = NativeEngineInfer(
+            engine, message, effectiveMaxTokensForPrompt(message));
+        if (!response.empty()) {
+            m_chatHistory.push_back({message, response});
+            return response;
+        }
+    }
     
-    // First try: send through local Ollama if available
+    // Keep the remote compatibility path only when no native engine produced a
+    // response. Normal local model chat never depends on Ollama.
     std::string llmResponse;
     if (trySendToOllama(message, llmResponse)) {
         m_chatHistory.push_back({message, llmResponse});
@@ -5515,6 +5702,11 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
         m_modelTensors.clear();
         return false;
     }
+    initializeDeep2Bridge();
+    if (m_deep2Bridge && !m_deep2Bridge->LoadModel(filepath)) {
+        appendToOutput("Deep2 model load failed; retaining the native CPU path.",
+                       "Errors", OutputSeverity::Warning);
+    }
     return m_nativeEngine && m_nativeEngine->IsModelLoaded();
 }
 
@@ -5557,7 +5749,7 @@ bool Win32IDE::initializeInference()
     }
 
     // Set up inference config from model metadata
-    m_inferenceConfig.maxTokens = 512;
+    m_inferenceConfig.maxTokens = 4096;
     m_inferenceConfig.temperature = 0.7f;
     m_inferenceConfig.topP = 0.9f;
     m_inferenceConfig.topK = 40;
@@ -5565,8 +5757,10 @@ bool Win32IDE::initializeInference()
     
     // Use model context length if available
     if (m_currentModelMetadata.context_length > 0) {
-        m_inferenceConfig.maxTokens = std::min(512, (int)m_currentModelMetadata.context_length / 4);
+        m_inferenceConfig.maxTokens = std::min(1048576, std::max(32,
+            (int)m_currentModelMetadata.context_length / 4));
     }
+    updateContextControls();
     
     appendToOutput(" Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
     return true;
@@ -5699,7 +5893,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     if (m_inferenceThread.joinable()) {
         m_inferenceThread.join();
     }
-    const ChatModelEntry selectedModel = m_selectedChatModel;
+    const ChatModelEntry selectedModel = m_pendingInferenceModel.identifier.empty()
+        ? m_selectedChatModel : m_pendingInferenceModel;
+    m_pendingInferenceModel = {};
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;
@@ -5709,7 +5905,21 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     // Route from the selected model entry. Local GGUF uses the native agent,
     // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel]() {
-        auto finish = [this, &callback](const std::string& result) {
+        const auto inferenceStarted = std::chrono::steady_clock::now();
+        auto finish = [this, &callback, selectedModel, inferenceStarted](const std::string& result) {
+            const bool verified = !result.empty() &&
+                result.rfind("Error:", 0) != 0 &&
+                result.find("did not return a response") == std::string::npos &&
+                result.find("did not respond") == std::string::npos &&
+                result.find("not initialized") == std::string::npos;
+            const auto elapsedMs = static_cast<uint64_t>(std::chrono::duration_cast<
+                std::chrono::milliseconds>(std::chrono::steady_clock::now() - inferenceStarted).count());
+            writeProviderRouteReceipt(selectedModel,
+                verified ? "INFERENCE_VERIFIED" : "LOADED_OR_REACHABLE",
+                result, elapsedMs);
+            logInfo("Provider route " + selectedModel.identifier + " -> " +
+                (verified ? "INFERENCE_VERIFIED" : "INFERENCE_FAILED") +
+                " (" + std::to_string(elapsedMs) + " ms)");
             if (callback) callback(result, true);
             m_inferenceRunning = false;
         };
@@ -5724,9 +5934,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             case ChatModelEntry::Source::KiloFree: {
                 const auto* route = RawrXD::ChatRouteMenu::find(
                     RawrXD::ChatRouteMenu::RouteKind::KiloFree);
-                const char* apiKey = route && route->authEnv[0]
-                    ? std::getenv(route->authEnv) : nullptr;
-                if (!apiKey || !*apiKey) {
+                const std::string configuredKey = route && route->authEnv[0]
+                    ? configuredEnvironmentValue(route->authEnv) : std::string();
+                if (configuredKey.empty()) {
                     finish("Kilo free cloud route is selected, but RawrXD cannot find its Kilo credential. Set KILO_API_KEY and restart RawrXD.");
                     return;
                 }
@@ -5737,8 +5947,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 ModelConfig config{};
                 config.backend = ModelBackend::KILO_GATEWAY;
                 config.model_id = selectedModel.identifier;
-                config.api_key = apiKey;
-                config.parameters["max_tokens"] = std::to_string(m_currentMaxTokens);
+                config.api_key = configuredKey;
+                config.parameters["max_tokens"] = std::to_string(
+                    effectiveMaxTokensForPrompt(prompt));
                 CloudApiClient client;
                 const std::string response = client.generate(prompt, config);
                 finish(response.empty()
@@ -5754,7 +5965,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     return;
                 }
                 const std::string response = generateOllamaModel(
-                    m_ollamaBaseUrl, selectedModel.identifier, prompt, m_currentMaxTokens);
+                    m_ollamaBaseUrl, selectedModel.identifier, prompt,
+                    effectiveMaxTokensForPrompt(prompt));
                 finish(response.empty()
                     ? "The selected Ollama model did not respond. Check that Ollama is running locally."
                     : response);
@@ -5767,8 +5979,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     finish("The generated local model route is missing its native-agent runtime mapping.");
                     return;
                 }
-                if (!m_agenticBridge || !m_agenticBridge->IsInitialized()) {
-                    finish("The native agent bridge is not initialized.");
+                if (!m_deep2Bridge || !m_deep2Bridge->IsInitialized()) {
+                    finish("The Deep2 bridge is not initialized.");
                     return;
                 }
                 if (!hasGgufModelTensors(selectedModel.identifier)) {
@@ -5776,23 +5988,22 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         selectedModel.identifier);
                     return;
                 }
-                if (m_agenticChatLoadedModelPath != selectedModel.identifier) {
-                    const AgentResponse load = m_agenticBridge->ExecuteAgentCommand(
-                        "/load " + selectedModel.identifier);
-                    if (load.type == AgentResponseType::AGENT_ERROR) {
-                        finish(load.content.empty()
-                            ? "The selected local model could not be loaded."
-                            : load.content);
+                if (m_deep2Bridge->GetCurrentModel() != selectedModel.identifier) {
+                    if (!m_deep2Bridge->LoadModel(selectedModel.identifier)) {
+                        const std::string reason = m_deep2Bridge->GetLastError();
+                        const std::string message = reason.empty()
+                            ? "The selected local model could not be loaded by Deep2."
+                            : "The selected local model could not be loaded by Deep2: " + reason;
+                        logInfo("Deep2 model load failed: " + selectedModel.identifier +
+                                " reason=" + (reason.empty() ? "unspecified" : reason));
+                        finish(message);
                         return;
                     }
                     m_agenticChatLoadedModelPath = selectedModel.identifier;
                 }
-                m_agenticBridge->SetOutputCallback(
-                    [this, &callback](const std::string&, const std::string& chunk) {
-                        if (!m_inferenceStopRequested && callback) callback(chunk, false);
-                    });
-                m_agenticBridge->ExecuteAgentCommand(prompt);
-                finish("");
+                logInfo("GhostText/local route uses Deep2: " + m_deep2Bridge->GetModelInfo());
+                finish(m_deep2Bridge->GenerateSync(
+                    prompt, effectiveMaxTokensForPrompt(prompt)));
                 return;
             }
             }
@@ -6035,54 +6246,107 @@ void Win32IDE::createChatPanel() {
     }
     
     // Model Selection Label
-    CreateWindowExA(0, "STATIC", "Model:",
+    m_hwndModelLabel = CreateWindowExA(0, "STATIC", "Chat model:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        5, 35, 50, 18,
+        5, 35, 85, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     // Model Selector Combobox
     m_hwndModelSelector = CreateWindowExA(
         0, "COMBOBOX", "",
-        WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL,
-        60, 35, 235, 200,
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL,
+        95, 35, 200, 200,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_MODEL_SELECTOR, m_hInstance, nullptr);
     
     if (m_hwndModelSelector) {
         SendMessage(m_hwndModelSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
+        configureModelSelectorCombo(m_hwndModelSelector, 18);
         populateModelSelector();
     }
-    
-    // Max Tokens Label
-    CreateWindowExA(0, "STATIC", "Max Tokens:",
+
+    m_hwndGhostTextModelLabel = CreateWindowExA(0, "STATIC", "GhostText model:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        5, 60, 80, 18,
+        5, 62, 85, 18, m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndGhostModelSelector = CreateWindowExA(
+        0, "COMBOBOX", "",
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_VSCROLL,
+        95, 62, 200, 200,
+        m_hwndSecondarySidebar, (HMENU)IDC_GHOST_MODEL_SELECTOR, m_hInstance, nullptr);
+    if (m_hwndGhostModelSelector) {
+        SendMessage(m_hwndGhostModelSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
+        configureModelSelectorCombo(m_hwndGhostModelSelector, 18);
+        SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Off"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, 0, static_cast<LPARAM>(-2));
+        SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Follow Chat"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, 1, static_cast<LPARAM>(-3));
+        SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Auto Local"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, 2, static_cast<LPARAM>(-1));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETCURSEL, 2, 0);
+    }
+
+    m_hwndAllowCloudGhostText = CreateWindowExA(
+        0, "BUTTON", "Allow cloud GhostText for this session",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        5, 89, 285, 18, m_hwndSecondarySidebar,
+        (HMENU)IDC_GHOST_ALLOW_CLOUD, m_hInstance, nullptr);
+    if (m_hwndAllowCloudGhostText) {
+        SendMessage(m_hwndAllowCloudGhostText, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(m_hwndAllowCloudGhostText, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
+    
+    // Max Tokens controls generation length. Context is displayed separately;
+    // it is model-admitted and never exceeds the GGUF context metadata.
+    m_hwndMaxTokensCaption = CreateWindowExA(0, "STATIC", "Max tokens:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        5, 110, 85, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     // Max Tokens Label (value display)
-    m_hwndMaxTokensLabel = CreateWindowExA(0, "STATIC", "512",
+    m_hwndMaxTokensLabel = CreateWindowExA(0, "STATIC", "4096",
         WS_CHILD | WS_VISIBLE | SS_RIGHT,
-        245, 60, 50, 18,
+        245, 108, 50, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     // Max Tokens Slider
     m_hwndMaxTokensSlider = CreateWindowExA(
         0, "TRACKBAR_CLASS", "",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
-        5, 80, 290, 25,
+        5, 128, 290, 25,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_TOKEN_SLIDER, m_hInstance, nullptr);
     
     if (m_hwndMaxTokensSlider) {
-        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGE, TRUE, MAKELPARAM(32, 2048));
-        SendMessage(m_hwndMaxTokensSlider, TBM_SETPOS, TRUE, 512);
-        SendMessage(m_hwndMaxTokensSlider, TBM_SETTICFREQ, 256, 0);
-        m_currentMaxTokens = 512;
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGEMIN, TRUE, 32);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGEMAX, TRUE, 1048576);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETPOS, TRUE, 4096);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETTICFREQ, 4096, 0);
+        m_currentMaxTokens = 4096;
+    }
+
+    m_hwndContextCaption = CreateWindowExA(0, "STATIC", "Context:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 145, 85, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndContextLabel = CreateWindowExA(0, "STATIC", "64K (pending model admission)",
+        WS_CHILD | WS_VISIBLE | SS_RIGHT, 180, 143, 115, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndContextSlider = CreateWindowExA(
+        0, "TRACKBAR_CLASS", "", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
+        5, 163, 290, 25, m_hwndSecondarySidebar,
+        (HMENU)IDC_COPILOT_CONTEXT_SLIDER, m_hInstance, nullptr);
+    if (m_hwndContextSlider) {
+        SendMessage(m_hwndContextSlider, TBM_SETRANGEMIN, TRUE, 8192);
+        SendMessage(m_hwndContextSlider, TBM_SETRANGEMAX, TRUE, 1048576);
+        SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 65536);
+        SendMessage(m_hwndContextSlider, TBM_SETTICFREQ, 16384, 0);
     }
     
     // Chat Output Textbox
     m_hwndCopilotChatOutput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL,
-        5, 110, 290, 300,
+        5, 193, 290, 242,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
     
     if (m_hwndCopilotChatOutput) {
@@ -6095,7 +6359,7 @@ void Win32IDE::createChatPanel() {
     m_hwndCopilotChatInput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL,
-        5, 415, 290, 85,
+        5, 440, 290, 60,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
     
     if (m_hwndCopilotChatInput) {
@@ -6164,7 +6428,7 @@ void Win32IDE::populateModelSelector() {
             }
         }
     }
-    SendMessage(m_hwndModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
+    configureModelSelectorCombo(m_hwndModelSelector, 18);
     if (defaultRouteRow >= 0) {
         SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(defaultRouteRow), 0);
@@ -6212,6 +6476,32 @@ void Win32IDE::onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered)
         if (!duplicate) m_availableModels.push_back(std::move(entry));
     }
 
+    if (m_hwndGhostModelSelector) {
+        SendMessageA(m_hwndGhostModelSelector, CB_RESETCONTENT, 0, 0);
+        const LRESULT off = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Off"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(off), static_cast<LPARAM>(-2));
+        const LRESULT followChat = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Follow Chat"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(followChat), static_cast<LPARAM>(-3));
+        const LRESULT autoLocal = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Auto Local"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(autoLocal), static_cast<LPARAM>(-1));
+        int ghostRow = m_ghostTextMode == GhostTextMode::Disabled ? 0 :
+            (m_ghostTextMode == GhostTextMode::FollowChat ? 1 : 2);
+        for (size_t i = 0; i < m_availableModels.size(); ++i) {
+            const auto& entry = m_availableModels[i];
+            const LRESULT row = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+                reinterpret_cast<LPARAM>(entry.breadcrumb.c_str()));
+            if (row == CB_ERR || row == CB_ERRSPACE) continue;
+            SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(row), static_cast<LPARAM>(i));
+            if (m_ghostTextMode == GhostTextMode::Independent && entry.source == m_ghostTextModel.source && entry.identifier == m_ghostTextModel.identifier &&
+                !m_ghostTextModel.identifier.empty()) ghostRow = static_cast<int>(row);
+        }
+        SendMessageA(m_hwndGhostModelSelector, CB_SETCURSEL, static_cast<WPARAM>(ghostRow), 0);
+        configureModelSelectorCombo(m_hwndGhostModelSelector, 18);
+    }
+
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
     if (m_availableModels.size() == 1) {
         const LRESULT row = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
@@ -6251,10 +6541,45 @@ void Win32IDE::onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered)
         [](const ChatModelEntry& entry) {
             return entry.source != ChatModelEntry::Source::KiloFree;
         }));
+    const size_t ollamaModelCount = static_cast<size_t>(std::count_if(
+        m_availableModels.begin(), m_availableModels.end(),
+        [](const ChatModelEntry& entry) {
+            return entry.source == ChatModelEntry::Source::Ollama;
+        }));
+    const size_t kiloModelCount = static_cast<size_t>(std::count_if(
+        m_availableModels.begin(), m_availableModels.end(),
+        [](const ChatModelEntry& entry) {
+            return entry.source == ChatModelEntry::Source::KiloFree;
+        }));
+    const LRESULT selectorCount = SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+    const LRESULT selectorSelection = SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+    appendToOutput("[ModelSelector] populated count=" + std::to_string(selectorCount) +
+        " selected=" + std::to_string(selectorSelection) +
+        " local=" + std::to_string(localModelCount) +
+        " ollama=" + std::to_string(ollamaModelCount) +
+        " kilo=" + std::to_string(kiloModelCount) + "\n",
+        "Debug", OutputSeverity::Info);
+    if (m_hwndGhostModelSelector) {
+        const LRESULT ghostCount = SendMessageA(m_hwndGhostModelSelector, CB_GETCOUNT, 0, 0);
+        appendToOutput("[GhostTextSelector] populated count=" + std::to_string(ghostCount) +
+            " selected=" + std::to_string(SendMessageA(m_hwndGhostModelSelector, CB_GETCURSEL, 0, 0)) +
+            "\n", "Debug", OutputSeverity::Info);
+    }
+    const bool kiloCredentialPresent = !configuredEnvironmentValue("KILO_API_KEY").empty();
+    const std::string probeSummary =
+        "Startup route probe: local=" + std::to_string(localModelCount - ollamaModelCount) +
+        " validated GGUF/blob, ollama=" + std::to_string(ollamaModelCount) +
+        " live catalog, kilo=" + std::to_string(kiloModelCount) +
+        (kiloCredentialPresent ? " live catalog" : " credential unavailable") + ".";
+    logInfo(probeSummary);
+    appendToOutput("[ProviderProbe] " + probeSummary + "\n", "Debug", OutputSeverity::Info);
     if (m_hwndStatusBar) {
         const std::string status = "Model routes ready: " +
             std::to_string(localModelCount) +
-            " local model(s), Kilo free cloud route available";
+            " local model(s), Ollama=" + std::to_string(ollamaModelCount) +
+            ", Kilo=" + (kiloCredentialPresent
+                ? (kiloModelCount ? "connected" : "unreachable")
+                : "credential unavailable");
         SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
             reinterpret_cast<LPARAM>(status.c_str()));
     }
@@ -6264,9 +6589,17 @@ void Win32IDE::HandleCopilotSend() {
     if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput) return;
 
     // Get input text
-    char inputBuffer[2048] = {0};
-    GetWindowTextA(m_hwndCopilotChatInput, inputBuffer, sizeof(inputBuffer) - 1);
-    std::string userMessage(inputBuffer);
+    wchar_t inputBuffer[2048] = {0};
+    GetWindowTextW(m_hwndCopilotChatInput, inputBuffer,
+                   static_cast<int>(std::size(inputBuffer)));
+    int utf8Size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+                                       inputBuffer, -1, nullptr, 0, nullptr, nullptr);
+    std::string userMessage;
+    if (utf8Size > 1) {
+        userMessage.resize(static_cast<size_t>(utf8Size - 1), '\0');
+        WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, inputBuffer, -1,
+                            userMessage.data(), utf8Size, nullptr, nullptr);
+    }
     
     if (userMessage.empty()) {
         LOG_WARNING("Empty message - ignoring");
@@ -6286,11 +6619,7 @@ void Win32IDE::HandleCopilotSend() {
     std::string displayText = "\n> User: " + userMessage + "\n";
     
     // Append to output
-    int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
-    if (len > 0) {
-        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-    }
-    SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayText.c_str());
+    appendUtf8ToRichEdit(m_hwndCopilotChatOutput, displayText);
     
     // Clear input
     SetWindowTextA(m_hwndCopilotChatInput, "");
@@ -6300,11 +6629,7 @@ void Win32IDE::HandleCopilotSend() {
         if (!m_hwndCopilotChatOutput) return;
         
         std::string displayResp = "AI: " + response + (complete ? "\n" : "");
-        int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
-        if (len > 0) {
-            SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-        }
-        SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayResp.c_str());
+        appendUtf8ToRichEdit(m_hwndCopilotChatOutput, displayResp);
     };
     
     // Generate response
@@ -6333,10 +6658,7 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length) {
 
     if (chunk.empty()) return;
 
-    int currentLen = GetWindowTextLengthA(m_hwndCopilotChatOutput);
-    SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, currentLen, currentLen);
-    SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)chunk.c_str());
-    SendMessage(m_hwndCopilotChatOutput, WM_VSCROLL, SB_BOTTOM, 0);
+    appendUtf8ToRichEdit(m_hwndCopilotChatOutput, chunk);
 }
 
 void Win32IDE::onModelSelectionChanged() {
@@ -6357,6 +6679,78 @@ void Win32IDE::onModelSelectionChanged() {
     }
 }
 
+void Win32IDE::onGhostTextSelectionChanged() {
+    if (!m_hwndGhostModelSelector) return;
+    const LRESULT row = SendMessageA(m_hwndGhostModelSelector, CB_GETCURSEL, 0, 0);
+    if (row < 0) { m_ghostTextModel = {}; m_ghostTextMode = GhostTextMode::Disabled; return; }
+    const LRESULT data = SendMessageA(m_hwndGhostModelSelector, CB_GETITEMDATA,
+        static_cast<WPARAM>(row), 0);
+    if (data == -2) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::Disabled;
+        logInfo("GhostText route disabled.");
+    } else if (data == -3) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::FollowChat;
+        logInfo("GhostText route follows chat selection.");
+    } else if (data == -1) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::AutoLocal;
+        logInfo("GhostText route set to Auto Local.");
+    } else if (data >= 0 && static_cast<size_t>(data) < m_availableModels.size()) {
+        m_ghostTextModel = m_availableModels[static_cast<size_t>(data)];
+        m_ghostTextMode = GhostTextMode::Independent;
+        logInfo("GhostText route selected: " + m_ghostTextModel.identifier);
+    }
+}
+
+void Win32IDE::onGhostTextCloudConsentChanged() {
+    if (!m_hwndAllowCloudGhostText) return;
+    m_allowCloudGhostText = SendMessage(
+        m_hwndAllowCloudGhostText, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    logInfo(std::string("GhostText cloud transmission ") +
+        (m_allowCloudGhostText ? "enabled for this session." : "disabled."));
+}
+
+void Win32IDE::validateLaunchConnections()
+{
+    struct Connection { const char* name; bool connected; };
+    const Connection connections[] = {
+        {"main_window", m_hwndMain != nullptr},
+        {"document_tabs", m_hwndDocTabs != nullptr},
+        {"file_explorer", m_hwndFileExplorer != nullptr},
+        {"status_bar", m_hwndStatusBar != nullptr},
+        {"output_tabs", m_hwndOutputTabs != nullptr},
+        {"editor", m_hwndEditor != nullptr},
+        {"ai_chat", m_hwndCopilotChatInput != nullptr && m_hwndCopilotChatOutput != nullptr},
+        {"model_selector", m_hwndModelSelector != nullptr},
+        {"agentic_bridge", m_agenticBridge != nullptr && m_agenticBridge->IsInitialized()},
+        {"deep2_bridge", m_deep2Bridge != nullptr},
+        {"agentic_loop_bridge", m_agenticLoopBridge != nullptr}
+    };
+    size_t connected = 0;
+    std::string missing;
+    for (const auto& connection : connections) {
+        if (connection.connected) {
+            ++connected;
+        } else {
+            if (!missing.empty()) missing += ",";
+            missing += connection.name;
+        }
+    }
+    const size_t total = sizeof(connections) / sizeof(connections[0]);
+    const std::string status = missing.empty()
+        ? "Launch connections ready: " + std::to_string(connected) + "/" + std::to_string(total)
+        : "Launch connections incomplete: " + std::to_string(connected) + "/" +
+          std::to_string(total) + " missing=" + missing;
+    logInfo(status);
+    appendToOutput("[LaunchValidation] " + status + "\n", "Debug", OutputSeverity::Info);
+    if (m_hwndStatusBar) {
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+            reinterpret_cast<LPARAM>(status.c_str()));
+    }
+}
+
 void Win32IDE::onMaxTokensChanged(int newValue) {
     m_currentMaxTokens = newValue;
     m_inferenceConfig.maxTokens = newValue;
@@ -6366,6 +6760,46 @@ void Win32IDE::onMaxTokensChanged(int newValue) {
         SetWindowTextA(m_hwndMaxTokensLabel, std::to_string(newValue).c_str());
     }
 
+}
+
+void Win32IDE::updateContextControls() {
+    const int modelContext = m_currentModelMetadata.context_length > 0
+        ? static_cast<int>(std::min<uint64_t>(m_currentModelMetadata.context_length, 1048576u))
+        : 65536;
+    m_currentContextTokens = std::max(8192, modelContext);
+    if (m_hwndContextSlider) {
+        SendMessage(m_hwndContextSlider, TBM_SETRANGEMIN, TRUE, 8192);
+        SendMessage(m_hwndContextSlider, TBM_SETRANGEMAX, TRUE,
+            std::max(8192, modelContext));
+        SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, m_currentContextTokens);
+    }
+    if (m_hwndContextLabel) {
+        std::string label;
+        if (m_currentContextTokens >= 1024 * 1024) {
+            label = std::to_string(m_currentContextTokens / (1024 * 1024)) + "M";
+        } else if (m_currentContextTokens >= 1024) {
+            label = std::to_string(m_currentContextTokens / 1024) + "K";
+        } else {
+            label = std::to_string(m_currentContextTokens);
+        }
+        label += " (model-admitted)";
+        SetWindowTextA(m_hwndContextLabel, label.c_str());
+    }
+}
+
+int Win32IDE::effectiveMaxTokensForPrompt(const std::string& prompt) const {
+    // This is deliberately conservative: GGUF tokenizers vary, so reserve one
+    // token for every four UTF-8 bytes and leave the requested output inside
+    // the admitted context. The engine performs its own exact admission too.
+    const uint64_t declared = m_currentModelMetadata.context_length;
+    const uint64_t admitted = declared > 0
+        ? std::min<uint64_t>(declared, 1048576u)
+        : static_cast<uint64_t>(std::max(8192, m_currentContextTokens));
+    const uint64_t promptEstimate = (prompt.size() + 3u) / 4u;
+    const uint64_t reserve = promptEstimate + 1u;
+    const uint64_t remaining = admitted > reserve ? admitted - reserve : 1u;
+    return static_cast<int>(std::min<uint64_t>(
+        static_cast<uint64_t>(std::max(1, m_currentMaxTokens)), remaining));
 }
 
 Win32IDE::~Win32IDE() {
