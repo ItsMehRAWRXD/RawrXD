@@ -46,7 +46,9 @@ jobs:
       - name: Compile and execute dependency-free smoke tests (MSVC)
         shell: cmd
         run: |
-          call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          for /f "usebackq delims=" %%V in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%V"
+          if not defined VSROOT exit /b 1
+          call "%VSROOT%\VC\Auxiliary\Build\vcvars64.bat"
           if errorlevel 1 exit /b 1
           if not exist build_reap mkdir build_reap
           for %%F in (reap_rom_pinball_smoke reap_ternary_trace_smoke reap_projection_bridge_smoke reap_route_mask_smoke native_lsp_framing_smoke top25_parity_matrix_smoke) do (
