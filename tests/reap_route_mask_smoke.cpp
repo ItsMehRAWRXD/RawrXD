@@ -9,8 +9,10 @@ int main() {
     MaskUnretained(logits,keep,2);
     assert(std::isinf(logits[1]) && logits[1]<0);
     assert(logits[0]==2.f && logits[2]==3.f);
-    assert(RouteIsRetained({0,2},keep));
-    assert(!RouteIsRetained({0,1},keep));
+    const std::vector<uint32_t> accepted{0,2};
+    assert(RouteIsRetained(accepted,keep));
+    const std::vector<uint32_t> denied{0,1};
+    assert(!RouteIsRetained(denied,keep));
     bool threw=false;
     try { auto a=logits; MaskUnretained(a,keep,3); }
     catch(const std::invalid_argument&){threw=true;}
