@@ -63,7 +63,8 @@ public:
         Key key{layer, expert};
         if (!retained_.contains(key) || !binding.deviceHandle || !binding.bytes)
             throw std::invalid_argument("invalid resident binding");
-        resident_[key] = binding;
+        if (resident_.contains(key)) throw std::logic_error("resident binding already exists; synchronize and forget before replacement");
+        resident_.emplace(key, binding);
     }
     bool Run(uint32_t layer, uint32_t expert) {
         Key key{layer, expert};
