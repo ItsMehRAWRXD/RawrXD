@@ -19,12 +19,13 @@ inline constexpr std::array<std::string_view,20> kCapabilities = {{
  "chat","agent-tools","multi-file-edit","build-test-verify","rollback",
  "local-models","model-switching","context-management","offline-operation"
 }};
-struct Cell { Status status=Status::Unknown; };
+// Certification requires a retained, reviewable test receipt, not just a flag.
+struct Cell { Status status=Status::Unknown; std::string_view evidence_ref{}; };
 using Matrix = std::array<std::array<Cell,kCapabilities.size()>,kTargets.size()>;
 inline constexpr size_t CertifiedCount(const Matrix& m) {
     size_t n=0;
     for(const auto& row:m) for(const auto& c:row)
-        if(c.status==Status::Certified) ++n;
+        if(c.status==Status::Certified && !c.evidence_ref.empty()) ++n;
     return n;
 }
 inline constexpr size_t TotalCells() { return kTargets.size()*kCapabilities.size(); }
