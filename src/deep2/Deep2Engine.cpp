@@ -4029,13 +4029,18 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 reg.Initialize();
             }
             auto dequant = reg.GetDequant(modelWeights.tokenEmbed.type);
-            fprintf(stderr, "[EMBED_DIAG] dequant=%p type=%d\n", (void*)dequant, modelWeights.tokenEmbed.type);
+            static const bool embedDiagEnabled = [] {
+                const char* flag = std::getenv("DEEP2_EMBED_DIAG");
+                return flag && flag[0] == '1';
+            }();
+            if (embedDiagEnabled)
+                fprintf(stderr, "[EMBED_DIAG] dequant=%p type=%d\n", (void*)dequant, modelWeights.tokenEmbed.type);
             if (dequant)
             {
                 // Registry handles all quant types uniformly
                 dequant(row, output, hiddenDim);
 
-                // ── Full-output NaN/Inf scan ──────────────────────────────
+                if (embedDiagEnabled) {\r\n                // ── Full-output NaN/Inf scan ──────────────────────────────
                 int firstBadIdx = -1;
                 float firstBadVal = 0.0f;
                 const char* firstBadKind = "";
@@ -4086,7 +4091,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 fprintf(stderr, "[EMBED_DIAG] token=%d rowBytes=%zu first8=", tokenId, rowBytes);
                 for (int i = 0; i < 8; ++i)
                     fprintf(stderr, " %.3f", output[i]);
-                fprintf(stderr, "\n");
+                fprintf(stderr, "\n");\r\n                }
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
             {
