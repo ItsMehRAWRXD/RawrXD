@@ -303,6 +303,7 @@ bool Deep2Backend::ChatStream(
     req["model"]    = m_config.model;
     req["messages"]  = BuildOpenAiMessages(messages);
     req["stream"]    = true;
+    req["stream_options"] = {{"include_usage", true}};
     req["temperature"] = m_config.temperature;
     req["top_p"]       = m_config.top_p;
     if (m_config.max_tokens > 0) req["max_tokens"] = m_config.max_tokens;
@@ -379,12 +380,13 @@ bool Deep2Backend::ChatStream(
                         }
                     }
 
-                    // Usage (may arrive at end)
-                    if (choice.contains("usage")) {
-                        const auto& usage = choice["usage"];
-                        ptok = usage.value("prompt_tokens", uint64_t(0));
-                        ctok = usage.value("completion_tokens", uint64_t(0));
-                    }
+                }
+                // OpenAI-compatible streaming usage is top-level, usually
+                // on the final data object when include_usage is requested.
+                if (delta.contains("usage") && delta["usage"].is_object()) {
+                    const auto& usage = delta["usage"];
+                    ptok = usage.value("prompt_tokens", ptok);
+                    ctok = usage.value("completion_tokens", ctok);
                 }
             } catch (const json::exception&) {
                 // Ignore parse errors for individual chunks
