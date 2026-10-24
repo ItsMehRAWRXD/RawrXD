@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "MoEWeightsLoader.hpp"
+#include "ExpertSliceBounds.hpp"
 #include <cstdio>
 #include <cstring>
 #include <chrono>
@@ -657,14 +658,12 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
             !info->bytesPerExpert ||
             info->bytesPerExpert > SIZE_MAX - expertBytes)
             return nullptr;
-        const uint64_t index = static_cast<uint64_t>(expert);
-        const uint64_t stride = static_cast<uint64_t>(info->bytesPerExpert);
-        if (index > UINT64_MAX / stride) return nullptr;
-        const uint64_t relative = index * stride;
-        if (relative > info->sizeBytes ||
-            stride > info->sizeBytes - relative ||
-            info->fileOffset > UINT64_MAX - relative ||
-            info->fileOffset + relative > UINT64_MAX - stride)
+        uint64_t checkedOffset = 0;
+        if (!rawrxd::deep2::checkedExpertSlice(
+                {info->fileOffset, info->sizeBytes,
+                 static_cast<uint64_t>(info->bytesPerExpert),
+                 static_cast<uint64_t>(info->numExperts)},
+                static_cast<uint64_t>(expert), checkedOffset))
             return nullptr;
         expertBytes += info->bytesPerExpert;
     }
@@ -808,14 +807,12 @@ bool MoEWeightsLoader::LoadExpertDirect(int layer, int expert, void* buffer, siz
             !info->bytesPerExpert ||
             info->bytesPerExpert > bufferSize - totalBytes)
             return false;
-        const uint64_t index = static_cast<uint64_t>(expert);
-        const uint64_t stride = static_cast<uint64_t>(info->bytesPerExpert);
-        if (index > UINT64_MAX / stride) return false;
-        const uint64_t relative = index * stride;
-        if (relative > info->sizeBytes ||
-            stride > info->sizeBytes - relative ||
-            info->fileOffset > UINT64_MAX - relative ||
-            info->fileOffset + relative > UINT64_MAX - stride)
+        uint64_t checkedOffset = 0;
+        if (!rawrxd::deep2::checkedExpertSlice(
+                {info->fileOffset, info->sizeBytes,
+                 static_cast<uint64_t>(info->bytesPerExpert),
+                 static_cast<uint64_t>(info->numExperts)},
+                static_cast<uint64_t>(expert), checkedOffset))
             return false;
         totalBytes += info->bytesPerExpert;
     }
