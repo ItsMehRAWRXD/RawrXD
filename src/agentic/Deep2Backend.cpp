@@ -402,7 +402,7 @@ bool Deep2Backend::ChatStream(
 
     m_streaming.store(false);
 
-    if (resp.empty() && !stream_failed) {
+    if (resp.empty() && !stream_failed && !m_cancelRequested.load()) {
         stream_failed = true;
         on_err("Deep2 ChatStream: empty response");
     }
