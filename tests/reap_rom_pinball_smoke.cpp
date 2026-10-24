@@ -35,5 +35,16 @@ int main() {
     b.BindResident(2,7,Binding{&fakeGpu,4,3});
     assert(b.Run(2,7));
     assert(reads==1 && uploads==1 && executions==3);
+    bool budgetRejected=false;
+    try {
+        Bridge bounded(
+            [](const std::string&, uint64_t, void*, size_t) { return true; },
+            [](const Slice&, const std::vector<uint8_t>&, Binding&) { return true; },
+            [](const Binding&, uint32_t, uint32_t) { return true; },
+            4);
+        bounded.Register({"oversized.gguf", 0, 5, 1, 1, 0});
+    } catch(const std::invalid_argument&) { budgetRejected=true; }
+    assert(budgetRejected);
+    assert(reads==1 && uploads==1);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
