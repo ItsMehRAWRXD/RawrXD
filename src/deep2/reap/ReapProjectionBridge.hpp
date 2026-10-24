@@ -31,10 +31,14 @@ public:
                                                 const std::vector<uint8_t>&,Binding&)>;
     using ExecuteProjection = std::function<bool(Projection,const Binding&,
                                                  uint32_t,uint32_t)>;
+    using IdleCheck = std::function<bool()>;
     ProjectionBridge(Read read, UploadProjection upload, ExecuteProjection execute,
-                     uint64_t maxReadBytes)
+                     uint64_t maxReadBytes, uint64_t maxResidentBytes=0,
+                     IdleCheck idleCheck={})
         : read_(std::move(read)), upload_(std::move(upload)),
-          execute_(std::move(execute)), maxReadBytes_(maxReadBytes) {
+          execute_(std::move(execute)), maxReadBytes_(maxReadBytes),
+          maxResidentBytes_(maxResidentBytes ? maxResidentBytes : maxReadBytes),
+          idleCheck_(std::move(idleCheck)) {
         if(!read_ || !upload_ || !execute_ || !maxReadBytes_)
             throw std::invalid_argument("invalid projection bridge");
     }
@@ -62,13 +66,22 @@ public:
                 const auto slice=slices_.find(k);
                 if(slice==slices_.end()) { ++stats_.rejected; return false; }
                 const Slice& s=slice->second;
+                // The upload callback must report device residency in bytes.
+                // Reserve conservatively by packed slice size before any I/O.
+                if(s.bytes>maxResidentBytes_ || residentBytes_>maxResidentBytes_-s.bytes) {
+                    ++stats_.rejected; return false;
+                }
                 std::vector<uint8_t> packed(static_cast<size_t>(s.bytes));
                 ++stats_.readCalls;
                 if(!read_(s.path,s.offset,packed.data(),packed.size())) return false;
                 stats_.diskBytes+=s.bytes;
                 Binding b;
                 if(!upload_(p,s,packed,b) || !b.deviceHandle || !b.bytes) return false;
+                if(b.bytes>maxResidentBytes_ || residentBytes_>maxResidentBytes_-b.bytes) {
+                    ++stats_.rejected; return false;
+                }
                 it=resident_.emplace(k,b).first;
+                residentBytes_+=b.bytes;
                 ++stats_.cacheMisses;
             }
             ++stats_.bindingUses;
@@ -76,17 +89,24 @@ public:
         }
         return true;
     }
-    // Does not free GPU memory. Caller synchronizes all in-flight work first.
-    void ForgetAfterGpuIdle(uint32_t layer,uint32_t expert) {
-        for(auto p:{Projection::Gate,Projection::Up,Projection::Down})
-            resident_.erase({layer,expert,p});
+    // The caller owns GPU memory; this only removes bindings AFTER verified idle.
+    // Without an idle callback eviction fails closed (cannot assume GPU is idle).
+    bool ForgetAfterGpuIdle(uint32_t layer,uint32_t expert) {
+        if(!idleCheck_ || !idleCheck_()) return false;
+        for(auto p:{Projection::Gate,Projection::Up,Projection::Down}) {
+            auto it=resident_.find({layer,expert,p});
+            if(it!=resident_.end()) { residentBytes_-=it->second.bytes; resident_.erase(it); }
+        }
+        return true;
     }
+    uint64_t ResidentBytes() const noexcept { return residentBytes_; }
     const Counters& Stats() const noexcept { return stats_; }
 private:
     Read read_;
     UploadProjection upload_;
     ExecuteProjection execute_;
-    uint64_t maxReadBytes_;
+    uint64_t maxReadBytes_, maxResidentBytes_, residentBytes_=0;
+    IdleCheck idleCheck_;
     std::unordered_map<ProjectionKey,Slice,ProjectionKeyHash> slices_;
     std::unordered_map<ProjectionKey,Binding,ProjectionKeyHash> resident_;
     std::unordered_map<Key,bool,KeyHash> retained_;
