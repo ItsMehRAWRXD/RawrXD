@@ -41,13 +41,14 @@ using Execute = std::function<bool(const Binding&, uint32_t, uint32_t)>;
 
 class Bridge {
 public:
-    Bridge(Read read, Upload upload, Execute execute)
-        : read_(std::move(read)), upload_(std::move(upload)), execute_(std::move(execute)) {
-        if (!read_ || !upload_ || !execute_) throw std::invalid_argument("missing callback");
+    Bridge(Read read, Upload upload, Execute execute, size_t maxReadBytes = 256u * 1024u * 1024u)
+        : read_(std::move(read)), upload_(std::move(upload)), execute_(std::move(execute)), maxReadBytes_(maxReadBytes) {
+        if (!read_ || !upload_ || !execute_ || !maxReadBytes_) throw std::invalid_argument("missing callback or invalid read budget");
     }
     void Register(Slice slice) {
         if (slice.path.empty() || !slice.bytes ||
             slice.bytes > std::numeric_limits<size_t>::max() ||
+            slice.bytes > maxReadBytes_ ||
             slice.offset > std::numeric_limits<uint64_t>::max() - slice.bytes)
             throw std::invalid_argument("invalid shard slice");
         Key key{slice.layer, slice.expert};
@@ -104,5 +105,6 @@ private:
     std::unordered_map<Key, bool, KeyHash> retained_;
     std::unordered_map<Key, Binding, KeyHash> resident_;
     Counters stats_{};
+    size_t maxReadBytes_;
 };
 } // namespace Deep2::ReapRom
