@@ -5,6 +5,7 @@
 
 #include "MoEWeightsLoader.hpp"
 #include "ExpertSliceBounds.hpp"
+#include "ExpertCacheBudget.hpp"
 #include <cstdio>
 #include <cstring>
 #include <chrono>
@@ -722,14 +723,12 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
             }
             return existing->second.data;
         }
-        while (expertBytes <= maxCacheBytes_ &&
-               currentCacheBytes_ > maxCacheBytes_ - expertBytes && !cache_.empty()) {
+        while (!rawrxd::deep2::expertFitsBudget(currentCacheBytes_, expertBytes, maxCacheBytes_) && !cache_.empty()) {
             const size_t previous = currentCacheBytes_;
             EvictLRU();
             if (currentCacheBytes_ == previous) break;
         }
-        if (expertBytes > maxCacheBytes_ ||
-            currentCacheBytes_ > maxCacheBytes_ - expertBytes) {
+        if (!rawrxd::deep2::expertFitsBudget(currentCacheBytes_, expertBytes, maxCacheBytes_)) {
             _aligned_free(buffer);
             return nullptr;
         }
