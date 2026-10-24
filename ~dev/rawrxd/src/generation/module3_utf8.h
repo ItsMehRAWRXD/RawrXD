@@ -17,11 +17,11 @@ public:
     // Feed raw token bytes. Returns valid UTF-8 string (may be empty
     // if bytes are incomplete and waiting for more data).
     std::string sanitize(const char* token) {
-        if (token == nullptr || token[0] == '\0') {
-            return std::string();
-        }
+        return token ? sanitize(std::string(token)) : std::string();
+    }
 
-        std::string raw(token);
+    // Binary-safe input: token pieces may contain NUL and incomplete UTF-8.
+    std::string sanitize(const std::string& raw) {
         std::string result;
         result.reserve(raw.size());
 
@@ -43,7 +43,8 @@ public:
             return std::string();
         }
         std::string result;
-        for (size_t i = 0; i < buffer_.size(); ++i) {
+        // One replacement per incomplete sequence rather than per byte.
+        if (!buffer_.empty()) {
             // U+FFFD in UTF-8: EF BF BD
             result += static_cast<char>(0xEF);
             result += static_cast<char>(0xBF);
@@ -67,14 +68,17 @@ private:
         if (buf.empty()) return 0;
         uint8_t lead = buf[0];
         if (lead < 0x80) return 1;        // ASCII
-        if ((lead & 0xE0) == 0xC0) return 2;  // 2-byte sequence
+        if (lead >= 0xC2 && lead <= 0xDF) return 2;  // 2-byte sequence
         if ((lead & 0xF0) == 0xE0) return 3;  // 3-byte sequence
-        if ((lead & 0xF8) == 0xF0) return 4;  // 4-byte sequence
+        if (lead >= 0xF0 && lead <= 0xF4) return 4;  // 4-byte sequence
         return 0;  // Invalid lead byte
     }
 
     // Validates a complete multi-byte UTF-8 sequence.
     static bool isValidSequence(const std::vector<uint8_t>& buf, size_t len) {
+        // Reject invalid leads before reading continuation bytes.
+        if (buf.empty() || len < 1 || len > 4 || expectedBytes(buf) != len)
+            return false;
         // Check continuation bytes
         for (size_t i = 1; i < len; ++i) {
             if ((buf[i] & 0xC0) != 0x80) return false;

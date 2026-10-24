@@ -3125,6 +3125,23 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen)
     if (modelWeights.layers.size() < modelWeights.numLayers)
         return false;
 
+    // Strict GPU authority means every layer runs on Vulkan, not merely
+    // that the expensive GEMV calls are GPU-backed. Fail closed before
+    // host orchestration or hybrid paths can be selected.
+    if (vulkanStrictNoCpuFallback_)
+    {
+        if (!vulkanEnabled_ || !vulkanInitialized_ ||
+            modelWeights.isMoE || modelWeights.useMLA ||
+            !tryGpuTokenForward(hidden))
+        {
+            vulkanStrictViolation_ = true;
+            gpuFwdCommitted_ = false;
+            return false;
+        }
+        gpuFwdCommitted_ = true;
+        return true;
+    }
+
     // Batch10: MoE and MLA currently use host-orchestrated GPU-heavy execution.
     // It is a product execution lane, but NOT fully-resident GPU authority.
     if (vulkanEnabled_ && vulkanInitialized_ && (modelWeights.isMoE || modelWeights.useMLA))
@@ -3158,7 +3175,10 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen)
     // two-stick models; the dual-row lane remains the fallback. Fail-
     // closed: under strict mode a resident failure still refuses CPU.
     const char* residentFirstEnv = std::getenv("DEEP2_RESIDENT_FIRST");
-    const bool residentFirst = residentFirstEnv && residentFirstEnv[0] == '1';
+    // Vulkan must execute the forward pass. Prefer the device-resident graph
+    // instead of host forwardLayer() orchestration on dense models.
+    // DEEP2_RESIDENT_FIRST=0 is an explicit diagnostic opt-out.
+    const bool residentFirst = !residentFirstEnv || residentFirstEnv[0] != '0';
     const bool dualRowDense = !forceLayerSplit && !residentFirst && vulkanEnabled_ && vulkanInitialized_ &&
                               vulkanDevices_.size() >= 2 && !modelWeights.isMoE && !modelWeights.useMLA;
 

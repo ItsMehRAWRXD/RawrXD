@@ -45,7 +45,9 @@ int main() {
     assert(shifted && shifted != first && cache.rebuilds() == 2);
     check(weights, rows, cols, *first);
     check(weights, rows, cols, *shifted);
+    assert(cache.cachedBytes() == weights.size());
     cache.clear();
+    assert(cache.cachedBytes() == 0);
     check(weights, rows, cols, *first);
     check(weights, rows, cols, *shifted);
 
@@ -65,5 +67,76 @@ int main() {
     }
     for (auto& t : callers) t.join();
     assert(good.load() == 800);
+
+    // Cold-start contention for the same source must pack exactly once.
+    Deep2::Q4KColumnSliceCache singleFlight;
+    std::atomic<unsigned> ready{0};
+    std::atomic<bool> release{false};
+    std::vector<std::thread> simultaneous;
+    for (unsigned t = 0; t < 12; ++t) {
+        simultaneous.emplace_back([&] {
+            ready.fetch_add(1, std::memory_order_release);
+            while (!release.load(std::memory_order_acquire))
+                std::this_thread::yield();
+            auto snapshot = singleFlight.get(weights.data(), weights.size(),
+                                             rows, cols, 32);
+            assert(snapshot);
+            check(weights, rows, cols, *snapshot);
+        });
+    }
+    while (ready.load(std::memory_order_acquire) != 12)
+        std::this_thread::yield();
+    release.store(true, std::memory_order_release);
+    for (auto& t : simultaneous) t.join();
+    assert(singleFlight.rebuilds() == 1);
+    assert(singleFlight.cachedBytes() == weights.size());
+
+    // Eviction is safe for active readers: their immutable snapshot survives
+    // removal of its cache entry, and the host working set stays bounded.
+    constexpr size_t largeRows = 4096;
+    Deep2::Q4KColumnSliceCache bounded(largeRows * rowBytes);
+    std::vector<uint8_t> largeA(largeRows * rowBytes, 0x2a);
+    std::vector<uint8_t> largeB(largeRows * rowBytes, 0x4b);
+    auto held = bounded.get(largeA.data(), largeA.size(), largeRows, cols, 32);
+    assert(held && bounded.cachedBytes() == largeA.size());
+    auto next = bounded.get(largeB.data(), largeB.size(), largeRows, cols, 32);
+    assert(next);
+    assert(bounded.cachedBytes() == largeB.size());
+    // Evicted source is repacked if requested again.
+    auto restored = bounded.get(largeA.data(), largeA.size(), largeRows, cols, 32);
+    assert(restored && bounded.rebuilds() == 3);
+    assert(bounded.cachedBytes() == largeA.size());
+    // No retained data if the configured budget is smaller than one tensor.
+    Deep2::Q4KColumnSliceCache uncached(largeA.size() - 1);
+    auto transient = uncached.get(largeA.data(), largeA.size(), largeRows, cols, 32);
+    assert(transient && uncached.cachedBytes() == 0);
+    assert(uncached.rebuilds() == 1);
+    assert(uncached.get(largeA.data(), largeA.size(), largeRows, cols, 32));
+    assert(uncached.rebuilds() == 2);
+    assert(held->w0.front() == 0x2a);
+    assert(next->w0.front() == 0x4b);
+
+
+
+    // Concurrent invalidation cannot publish a snapshot built for a
+    // previous cache generation. Source weights remain alive throughout.
+    std::atomic<bool> start{false};
+    std::thread invalidator([&] {
+        while (!start.load(std::memory_order_acquire)) std::this_thread::yield();
+        for (unsigned i = 0; i < 100; ++i) {
+            cache.clear();
+            std::this_thread::yield();
+        }
+    });
+    start.store(true, std::memory_order_release);
+    for (unsigned i = 0; i < 100; ++i) {
+        const auto snapshot = cache.get(weights.data(), weights.size(),
+                                        rows, cols, 32);
+        if (snapshot) check(weights, rows, cols, *snapshot);
+    }
+    invalidator.join();
+    auto final = cache.get(weights.data(), weights.size(), rows, cols, 32);
+    assert(final);
+    check(weights, rows, cols, *final);
     return 0;
 }
