@@ -191,9 +191,7 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     if ((size_t)wt.rows > SIZE_MAX / rowBytes ||
         wt.sizeBytes < (size_t)wt.rows * rowBytes) return nullptr;
 
-    // Avoid unbounded retention of packed copies across model reloads.
     std::lock_guard<std::mutex> g(mu);
-    if (cache.size() > 64 && cache.find(wt.data) == cache.end()) cache.clear();
     auto it=cache.find(wt.data);
     if(it!=cache.end() && it->second.boundaryBlocks==b0 &&
        it->second.s.w0.size()==(size_t)wt.rows*row0 &&
