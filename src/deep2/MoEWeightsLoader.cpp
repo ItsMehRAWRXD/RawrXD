@@ -648,10 +648,28 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
     // Gate is optional (Nemotron uses ReLU² FFN with only up+down)
     if (!upInfo || !downInfo) return nullptr;
     
-    size_t gateBytes = gateInfo ? gateInfo->bytesPerExpert : 0;
-    size_t expertBytes = gateBytes + upInfo->bytesPerExpert + downInfo->bytesPerExpert;
-    if (expertBytes == 0) return nullptr;
-    
+    // Validate tensor bounds and all size arithmetic before allocating.
+    if (layer < 0 || expert < 0) return nullptr;
+    size_t expertBytes = 0;
+    for (const auto* info : {gateInfo, upInfo, downInfo}) {
+        if (!info) continue;
+        if (static_cast<size_t>(expert) >= info->numExperts ||
+            !info->bytesPerExpert ||
+            info->bytesPerExpert > SIZE_MAX - expertBytes)
+            return nullptr;
+        const uint64_t index = static_cast<uint64_t>(expert);
+        const uint64_t stride = static_cast<uint64_t>(info->bytesPerExpert);
+        if (index > UINT64_MAX / stride) return nullptr;
+        const uint64_t relative = index * stride;
+        if (relative > info->sizeBytes ||
+            stride > info->sizeBytes - relative ||
+            info->fileOffset > UINT64_MAX - relative ||
+            info->fileOffset + relative > UINT64_MAX - stride)
+            return nullptr;
+        expertBytes += info->bytesPerExpert;
+    }
+    if (!expertBytes) return nullptr;
+
     void* buffer = _aligned_malloc(expertBytes, 32);
     if (!buffer) return nullptr;
     
