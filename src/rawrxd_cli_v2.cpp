@@ -4868,7 +4868,7 @@ int main(int argc, char** argv) {
     // this invocation. Disabled by default to preserve scripting output.
     if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE") != nullptr) {
         std::cerr << "[RAWRXD_CLI_V2_DISPATCH] command=" << cmd
-                  << " argc=" << argc << "\\n";
+                  << " argc=" << argc << "\n";
     }
 
     if (cmd == "run") {
