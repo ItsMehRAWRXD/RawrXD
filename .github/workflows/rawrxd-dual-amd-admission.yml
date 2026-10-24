@@ -20,7 +20,11 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $gpus = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name -match 'AMD|Radeon' })
           $gpus | Select-Object Name, DriverVersion, Status | Format-Table -AutoSize
-          if ($gpus.Count -lt 2) { throw "Dual AMD GPU admission failed: found $($gpus.Count)" }
+          $r9700 = @($gpus | Where-Object { $_.Name -match 'R9700' })
+          $rx7800 = @($gpus | Where-Object { $_.Name -match '7800 XT' })
+          if ($r9700.Count -ne 1 -or $rx7800.Count -ne 1) {
+            throw "Expected one R9700 and one RX 7800 XT; integrated GPU does not count"
+          }
           $vulkan = Get-Command vulkaninfo.exe -ErrorAction SilentlyContinue
           if (-not $vulkan) { throw "Vulkan SDK utility vulkaninfo.exe missing" }
           & $vulkan.Source --summary
