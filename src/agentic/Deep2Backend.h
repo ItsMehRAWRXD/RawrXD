@@ -86,6 +86,7 @@ private:
     std::atomic<uint64_t> m_totalTokens{0};
     std::atomic<double>   m_accumulatedTps{0.0};
     int                   m_consecutiveErrors{0};
+    bool                  m_lastHealthOk{false};
     std::deque<std::string> m_recentErrors;
 
     // ---- HTTP helpers (WinHTTP) ----
