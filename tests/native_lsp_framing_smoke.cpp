@@ -32,5 +32,9 @@ int main() {
     try { Framer invalidLimit(std::numeric_limits<size_t>::max()); }
     catch(const std::invalid_argument&) { threw=true; }
     assert(threw);
+    threw=false;
+    try { Framer emptyBody; (void)emptyBody.Feed("Content-Length: 0\\r\\n\\r\\n"); }
+    catch(const std::invalid_argument&) { threw=true; }
+    assert(threw);
     std::cout<<"NATIVE_LSP_FRAMING_SMOKE_PASS\n";
 }
