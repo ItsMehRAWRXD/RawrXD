@@ -4,24 +4,6 @@ on:
   push:
     branches:
       - feature/reap-deepseek-671b-150tps
-    paths:
-      - 'src/deep2/reap/**'
-      - 'src/parity/**'
-      - 'src/win32app/native/**'
-      - 'tools/rawrxd_e2e_source_audit.py'
-      - 'tools/rawrxd_no_deps_audit.py'
-      - 'tools/rawrxd_per_file_source_audit.py'
-      - 'tools/rawrxd_cmake_source_admission.py'
-      - 'tests/reap_*'
-      - 'tests/top25_parity_matrix_smoke.cpp'
-      - 'tests/native_lsp_framing_smoke.cpp'
-      - '.github/workflows/reap-rom-parity-ci.yml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'src/win32app/**'
-      - 'src/snapshot/**'
-      - 'src/rawrxd_cli_v2.cpp'
-      - 'src/deep2/Deep2Engine.cpp'
   pull_request:
 jobs:
   portable:
