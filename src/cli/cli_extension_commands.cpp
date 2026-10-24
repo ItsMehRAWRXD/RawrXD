@@ -24,6 +24,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -85,11 +86,11 @@ int ReportResult(const Extensions::ExtResult& result) {
 
 // Handles a `rawr plugin ...` command line. `input` is everything after the
 // word "plugin". Returns a process exit code.
-bool handlePluginCommand(const std::string& input) {
+int handlePluginCommand(const std::string& input) {
     std::vector<std::string> words = SplitWords(input);
     if (words.empty()) {
         PrintUsage();
-        return true;
+        return 0;
     }
 
     const std::string& action = words[0];
@@ -105,7 +106,7 @@ bool handlePluginCommand(const std::string& input) {
 
     if (action == "help" || action == "--help" || action == "-h") {
         PrintUsage();
-        return true;
+        return 0;
     }
 
     if (action == "list") {
@@ -116,7 +117,7 @@ bool handlePluginCommand(const std::string& input) {
             std::cout << manifests.size() << " extension(s):\n";
             for (const auto& manifest : manifests) PrintManifest(manifest);
         }
-        return true;
+        return 0;
     }
 
     if (action == "installed") {
@@ -126,7 +127,7 @@ bool handlePluginCommand(const std::string& input) {
         } else {
             for (const auto& manifest : manifests) PrintManifest(manifest);
         }
-        return true;
+        return 0;
     }
 
     if (action == "enabled") {
@@ -136,66 +137,80 @@ bool handlePluginCommand(const std::string& input) {
         } else {
             for (const auto& manifest : manifests) PrintManifest(manifest);
         }
-        return true;
+        return 0;
     }
 
     if (action == "install") {
         if (argument.empty()) {
             std::cerr << "error: install requires a .vsix path\n";
-            return true;
+            return 1;
         }
         Extensions::ExtResult result = marketplace.installFromVsix(argument);
         ReportResult(result);
-        return true;
+        return result.success ? 0 : 1;
     }
 
     if (action == "load") {
         if (argument.empty()) {
             std::cerr << "error: load requires an extension id\n";
-            return true;
+            return 1;
         }
-        Extensions::ExtResult result = marketplace.installWithDependencies(argument);
-        if (result.success) {
+        // A locally installed VSIX must not trigger a registry/dependency
+        // fetch.  That made `rawr plugin load <local-id>` report an HTTP
+        // failure even though installation had already succeeded.
+        Extensions::ExtResult result;
+        const auto installed = marketplace.listInstalled();
+        const bool isInstalled = std::any_of(
+            installed.begin(), installed.end(),
+            [&](const Extensions::ExtensionManifest& m) { return m.id == argument; });
+        if (isInstalled) {
             result = marketplace.activate(argument);
+        } else {
+            result = marketplace.installWithDependencies(argument);
+            if (result.success) result = marketplace.activate(argument);
         }
         ReportResult(result);
-        return true;
+        return result.success ? 0 : 1;
     }
 
     if (action == "unload") {
         if (argument.empty()) {
             std::cerr << "error: unload requires an extension id\n";
-            return true;
+            return 1;
         }
-        ReportResult(marketplace.deactivate(argument));
-        return true;
+        const auto result = marketplace.deactivate(argument);
+        ReportResult(result);
+        return result.success ? 0 : 1;
     }
 
     if (action == "enable") {
         if (argument.empty()) {
             std::cerr << "error: enable requires an extension id\n";
-            return true;
+            return 1;
         }
-        ReportResult(marketplace.enable(argument));
-        return true;
+        const auto result = marketplace.enable(argument);
+        ReportResult(result);
+        return result.success ? 0 : 1;
     }
 
     if (action == "disable") {
         if (argument.empty()) {
             std::cerr << "error: disable requires an extension id\n";
-            return true;
+            return 1;
         }
-        ReportResult(marketplace.disable(argument));
-        return true;
+        const auto result = marketplace.disable(argument);
+        ReportResult(result);
+        return result.success ? 0 : 1;
     }
 
     if (action == "uninstall") {
         if (argument.empty()) {
             std::cerr << "error: uninstall requires an extension id\n";
-            return true;
+            return 1;
         }
-        ReportResult(marketplace.uninstall(argument));
-        return true;
+        const auto result = marketplace.uninstall(argument);
+        ReportResult(result);
+        return result.success ? 0 : 1;
     }
 
     if (action == "search") {
@@ -205,7 +220,7 @@ bool handlePluginCommand(const std::string& input) {
         Extensions::ExtResult result = marketplace.search(query, response);
         if (!result.success) {
             ReportResult(result);
-            return true;
+            return 1;
         }
         if (response.results.empty()) {
             std::cout << "no extensions matched\n";
@@ -221,17 +236,18 @@ bool handlePluginCommand(const std::string& input) {
                 std::cout << "\n";
             }
         }
-        return true;
+        return 0;
     }
 
     if (action == "sync") {
-        ReportResult(marketplace.updateAll());
-        return true;
+        const auto result = marketplace.updateAll();
+        ReportResult(result);
+        return result.success ? 0 : 1;
     }
 
     std::cerr << "error: unknown plugin action '" << action << "'\n";
     PrintUsage();
-    return true;
+    return 1;
 }
 
 } // namespace CLI

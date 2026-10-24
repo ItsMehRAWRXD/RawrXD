@@ -1,0 +1,26 @@
+{
+  "schema": "rawrxd.extension.runtime.cert/1",
+  "passed": 19,
+  "failed": 0,
+  "tests": [
+    { "test": "the runtime is built with a real JavaScript engine", "pass": true },
+    { "test": "the install directory is configurable", "pass": true, "detail": "Install directory set" },
+    { "test": "a test VSIX package was written", "pass": true, "detail": "F:\\rawrxd\\extensions\\rawrxd_extension_runtime\\.rawrxd\\extensions/cert_extension.vsix" },
+    { "test": "the extension installed from the VSIX package", "pass": true, "detail": "Extension installed from VSIX" },
+    { "test": "the installed extension appears in the shared registry", "pass": true, "detail": "installed count 2" },
+    { "test": "the registry is persisted so the IDE sees the same state", "pass": true, "detail": "C:\\Users\\Garrett\\AppData\\Local/RawrXD/extensions.json" },
+    { "test": "the JavaScript extension host initialises", "pass": true, "detail": "JSExtensionHost initialized" },
+    { "test": "the VS Code extension API initialises", "pass": true, "detail": "VSCodeExtensionAPI initialized" },
+    { "test": "the extension loads into the JavaScript host", "pass": true, "detail": "Extension loaded" },
+    { "test": "the extension activates and its JavaScript runs", "pass": true, "detail": "Extension activated" },
+    { "test": "the engine evaluates JavaScript in the extension context and returns 42", "pass": true, "detail": "42" },
+    { "test": "the command registered by the extension executes", "pass": true, "detail": "Command executed" },
+    { "test": "an unknown command is refused rather than crashing", "pass": true, "detail": "executeCommand: command not found" },
+    { "test": "activating an unknown extension is refused", "pass": true, "detail": "Extension not installed" },
+    { "test": "a JavaScript exception is reported rather than crashing the host", "pass": true, "detail": "Extension not found" },
+    { "test": "the extension can be disabled", "pass": true, "detail": "Extension disabled" },
+    { "test": "the extension can be uninstalled", "pass": true, "detail": "Extension uninstalled" },
+    { "test": "the uninstalled extension left the shared registry", "pass": true },
+    { "test": "the JavaScript extension host shuts down cleanly", "pass": true, "detail": "JSExtensionHost shutdown" }
+  ]
+}
