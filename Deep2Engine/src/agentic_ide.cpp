@@ -86,6 +86,11 @@ AgenticIDE::AgenticIDE(HINSTANCE hInstance, int nCmdShow)
     // Initialize customizable hook system (IDE_HOOKS.md)
     initHooks();
     m_hooks.fire(RawrXD::IdeHooks::HookEvent::Startup);
+
+    // Set default toolchain paths
+    m_rawrAsmPath = L"G:\\~dev\\rawrxd\\rawrxd_asm.exe";
+    m_rawrLinkPath = L"F:\\rawrxd\\_pre_merge_backup\\toolchain\\from_scratch\\phase2_linker\\build\\rawrxd_link.exe";
+    m_outputDir = L"G:\\~dev\\rawrxd\\cert_work";
 }
 
 AgenticIDE::~AgenticIDE() {
@@ -149,6 +154,15 @@ bool AgenticIDE::initMenu() {
     HMENU hAgent = CreateMenu();
     AppendMenuW(hAgent, MF_STRING, kCmdAgentRun, L"&Run Agent Mission");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgent, L"&Agent");
+
+    // Build menu (native RawrXD toolchain)
+    HMENU hBuild = CreateMenu();
+    AppendMenuW(hBuild, MF_STRING, kCmdBuildCompile, L"&Compile Current File\tF7");
+    AppendMenuW(hBuild, MF_STRING, kCmdBuildLink, L"&Link Object File\tF8");
+    AppendMenuW(hBuild, MF_STRING, kCmdBuildRun, L"&Build and Run\tF9");
+    AppendMenuW(hBuild, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hBuild, MF_STRING, kCmdBuildClean, L"&Clean Output\tCtrl+Shift+C");
+    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hBuild, L"&Build");
 
     // Help menu
     HMENU hHelp = CreateMenu();
@@ -447,15 +461,63 @@ void AgenticIDE::onCommand(WORD id, WORD cmd, HWND hwndCtl) {
             // Fire build_start hook before running agent mission
             m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildStart);
             if (m_hChat) {
-                std::wstring msg = L"> Running agent mission...\n";
+                std::wstring msg = L"> Agent mission: compiling and running current file...\n";
                 int len = GetWindowTextLengthW(m_hChat);
                 std::wstring existing;
                 existing.resize(len);
                 GetWindowTextW(m_hChat, &existing[0], len + 1);
                 SetWindowTextW(m_hChat, (existing + msg).c_str());
             }
+            if (auto* editor = activeEditor(); editor && !editor->filePath().empty()) {
+                buildAndRun();
+            } else {
+                if (m_hChat) {
+                    std::wstring msg = L"> Agent mission: no source file open. Open a .asm or .cpp file first.\n";
+                    int len = GetWindowTextLengthW(m_hChat);
+                    std::wstring existing;
+                    existing.resize(len);
+                    GetWindowTextW(m_hChat, &existing[0], len + 1);
+                    SetWindowTextW(m_hChat, (existing + msg).c_str());
+                }
+            }
             // Fire build_end hook after agent mission completes
             m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildEnd);
+            break;
+        }
+        case kCmdBuildCompile: {
+            // Compile current editor file using RawrXD native toolchain
+            m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildStart);
+            if (auto* editor = activeEditor()) {
+                std::wstring filePath = editor->filePath();
+                if (filePath.empty()) {
+                    MessageBoxW(m_hwnd,
+                        L"No file path assigned. Save the file first.",
+                        L"Build: Compile", MB_OK | MB_ICONWARNING);
+                } else {
+                    compileFile(filePath);
+                }
+            } else {
+                MessageBoxW(m_hwnd,
+                    L"No active editor tab.",
+                    L"Build: Compile", MB_OK | MB_ICONWARNING);
+            }
+            m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildEnd);
+            break;
+        }
+        case kCmdBuildLink: {
+            m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildStart);
+            linkObjectFile();
+            m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildEnd);
+            break;
+        }
+        case kCmdBuildRun: {
+            m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildStart);
+            buildAndRun();
+            m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildEnd);
+            break;
+        }
+        case kCmdBuildClean: {
+            cleanOutput();
             break;
         }
         case kCmdHelpAbout:
@@ -664,6 +726,183 @@ void AgenticIDE::onTreeDoubleClick(HTREEITEM hItem) {
         // File - open in editor
         loadFileIntoEditor(path);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Native Toolchain Build Operations
+// ---------------------------------------------------------------------------
+
+void AgenticIDE::compileFile(const std::wstring& sourcePath) {
+    if (m_rawrAsmPath.empty()) {
+        m_rawrAsmPath = L"G:\\~dev\\rawrxd\\rawrxd_asm.exe";
+    }
+    if (m_outputDir.empty()) {
+        m_outputDir = L"G:\\~dev\\rawrxd\\cert_work";
+    }
+
+    std::wstring sourceName = sourcePath;
+    size_t slash = sourceName.find_last_of(L"/\\");
+    if (slash != std::wstring::npos) sourceName = sourceName.substr(slash + 1);
+    size_t dot = sourceName.rfind(L'.');
+    if (dot != std::wstring::npos) sourceName = sourceName.substr(0, dot);
+
+    m_lastObjPath = m_outputDir + L"\\" + sourceName + L".obj";
+
+    std::wstring cmd = L"\"" + m_rawrAsmPath + L"\" \"" + sourcePath + L"\" \"" + m_lastObjPath + L"\"";
+
+    appendChatOutput(L"> [BUILD] Compile: " + sourcePath + L"\n");
+    appendChatOutput(L"> [CMD] " + cmd + L"\n");
+
+    std::wstring output = runCommand(cmd);
+    appendChatOutput(output);
+
+    if (output.find(L"ASSEMBLED OK") != std::wstring::npos) {
+        appendChatOutput(L"> [BUILD] Compile SUCCESS: " + m_lastObjPath + L"\n");
+        SetWindowTextW(m_hStatusBar, L"Build: compile OK");
+    } else {
+        appendChatOutput(L"> [BUILD] Compile FAILED\n");
+        SetWindowTextW(m_hStatusBar, L"Build: compile FAILED");
+        MessageBoxW(m_hwnd,
+            (L"Compilation failed.\n\n" + output).c_str(),
+            L"Build: Compile Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void AgenticIDE::linkObjectFile() {
+    if (m_rawrLinkPath.empty()) {
+        m_rawrLinkPath = L"F:\\rawrxd\\_pre_merge_backup\\toolchain\\from_scratch\\phase2_linker\\build\\rawrxd_link.exe";
+    }
+    if (m_outputDir.empty()) {
+        m_outputDir = L"G:\\~dev\\rawrxd\\cert_work";
+    }
+
+    std::wstring objPath = m_lastObjPath;
+    if (objPath.empty()) {
+        objPath = m_outputDir + L"\\test_exit42.obj";
+    }
+
+    std::wstring exeName = objPath;
+    size_t slash = exeName.find_last_of(L"/\\");
+    if (slash != std::wstring::npos) exeName = exeName.substr(slash + 1);
+    size_t dot = exeName.rfind(L'.');
+    if (dot != std::wstring::npos) exeName = exeName.substr(0, dot);
+    m_lastExePath = m_outputDir + L"\\" + exeName + L".exe";
+
+    std::wstring cmd = L"\"" + m_rawrLinkPath + L"\" \"" + objPath + L"\" -o \"" + m_lastExePath + L"\"";
+
+    appendChatOutput(L"> [BUILD] Link: " + objPath + L"\n");
+    appendChatOutput(L"> [CMD] " + cmd + L"\n");
+
+    std::wstring output = runCommand(cmd);
+    appendChatOutput(output);
+
+    if (output.find(L"exit 0") != std::wstring::npos || output.find(L"written successfully") != std::wstring::npos) {
+        appendChatOutput(L"> [BUILD] Link SUCCESS: " + m_lastExePath + L"\n");
+        SetWindowTextW(m_hStatusBar, L"Build: link OK");
+    } else {
+        appendChatOutput(L"> [BUILD] Link FAILED\n");
+        SetWindowTextW(m_hStatusBar, L"Build: link FAILED");
+        MessageBoxW(m_hwnd,
+            (L"Linking failed.\n\n" + output).c_str(),
+            L"Build: Link Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void AgenticIDE::buildAndRun() {
+    if (m_lastObjPath.empty()) {
+        if (auto* editor = activeEditor(); editor && !editor->filePath().empty()) {
+            compileFile(editor->filePath());
+        } else {
+            MessageBoxW(m_hwnd,
+                L"No source file to build. Open or create a file first.",
+                L"Build: Build and Run", MB_OK | MB_ICONWARNING);
+            return;
+        }
+    }
+
+    linkObjectFile();
+
+    if (m_lastExePath.empty()) {
+        appendChatOutput(L"> [BUILD] Cannot run: no executable produced\n");
+        return;
+    }
+
+    appendChatOutput(L"> [BUILD] Run: " + m_lastExePath + L"\n");
+    std::wstring output = runCommand(m_lastExePath);
+    appendChatOutput(output);
+    appendChatOutput(L"> [BUILD] Run complete\n");
+    SetWindowTextW(m_hStatusBar, L"Build: run complete");
+}
+
+void AgenticIDE::cleanOutput() {
+    if (!m_lastObjPath.empty()) {
+        DeleteFileW(m_lastObjPath.c_str());
+        appendChatOutput(L"> [BUILD] Cleaned: " + m_lastObjPath + L"\n");
+    }
+    if (!m_lastExePath.empty()) {
+        DeleteFileW(m_lastExePath.c_str());
+        appendChatOutput(L"> [BUILD] Cleaned: " + m_lastExePath + L"\n");
+    }
+    SetWindowTextW(m_hStatusBar, L"Build: cleaned");
+}
+
+std::wstring AgenticIDE::runCommand(const std::wstring& cmd) {
+    std::wstring result;
+
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = nullptr;
+
+    HANDLE hRead, hWrite;
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return L"[runCommand] Failed to create pipe\n";
+
+    STARTUPINFOW si = {};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.hStdOutput = hWrite;
+    si.hStdError = hWrite;
+    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    si.wShowWindow = SW_HIDE;
+
+    PROCESS_INFORMATION pi = {};
+    std::wstring fullCmd = L"/c " + cmd;
+
+    if (!CreateProcessW(
+            L"C:\\Windows\\System32\\cmd.exe",
+            &fullCmd[0],
+            nullptr, nullptr, TRUE,
+            CREATE_NO_WINDOW, nullptr, nullptr,
+            &si, &pi)) {
+        CloseHandle(hRead);
+        CloseHandle(hWrite);
+        return L"[runCommand] Failed to start process\n";
+    }
+
+    CloseHandle(hWrite);
+    CloseHandle(pi.hThread);
+
+    wchar_t buf[4096];
+    DWORD bytesRead;
+    while (ReadFile(hRead, buf, sizeof(buf) - sizeof(wchar_t), &bytesRead, nullptr) && bytesRead > 0) {
+        result.append(buf, bytesRead / sizeof(wchar_t));
+    }
+
+    CloseHandle(hRead);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hProcess);
+
+    return result;
+}
+
+void AgenticIDE::appendChatOutput(const std::wstring& text) {
+    if (!m_hChat) return;
+    int len = GetWindowTextLengthW(m_hChat);
+    std::wstring existing;
+    existing.resize(len);
+    GetWindowTextW(m_hChat, &existing[0], len + 1);
+    SetWindowTextW(m_hChat, (existing + text).c_str());
+    SendMessageW(m_hChat, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
 }
 
 // Entry point for the native Win32 IDE.

@@ -35,6 +35,13 @@ private:
     // Customizable hook system (IDE_HOOKS.md in workspace root)
     RawrXD::IdeHooks::HookSystem m_hooks;
 
+    // Native toolchain paths (configurable via hooks or defaults)
+    std::wstring m_rawrAsmPath;   // rawrxd_asm.exe
+    std::wstring m_rawrLinkPath;  // rawrxd_link.exe
+    std::wstring m_outputDir;     // Build output directory
+    std::wstring m_lastObjPath;   // Last generated object file
+    std::wstring m_lastExePath;   // Last generated executable
+
     // Dock-like child areas
     HWND m_hFileBrowser = nullptr;
     HWND m_hTerminal = nullptr;
@@ -70,6 +77,14 @@ private:
     CodeEditor* activeEditor() { return m_activeTab >= 0 && m_activeTab < (int)m_editorTabs.size() ? m_editorTabs[m_activeTab].get() : nullptr; }
     void loadFileIntoEditor(const std::wstring& path);
 
+    // Native toolchain build operations
+    void compileFile(const std::wstring& sourcePath);
+    void linkObjectFile();
+    void buildAndRun();
+    void cleanOutput();
+    std::wstring runCommand(const std::wstring& cmd);
+    void appendChatOutput(const std::wstring& text);
+
     // File browser tree helpers
     void populateTreeDrives();
     void populateTreeChildren(HTREEITEM hParent, const std::wstring& path);
@@ -85,5 +100,9 @@ private:
     static constexpr int kCmdViewChat = 2002;
     static constexpr int kCmdViewTerminal = 2003;
     static constexpr int kCmdAgentRun = 3001;
-    static constexpr int kCmdHelpAbout = 4001;
+    static constexpr int kCmdBuildCompile = 4001;
+    static constexpr int kCmdBuildLink = 4002;
+    static constexpr int kCmdBuildRun = 4003;
+    static constexpr int kCmdBuildClean = 4004;
+    static constexpr int kCmdHelpAbout = 5001;
 };
