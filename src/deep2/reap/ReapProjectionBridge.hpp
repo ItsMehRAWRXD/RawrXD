@@ -96,7 +96,15 @@ public:
                 if(!read_(s.path,s.offset,packed.data(),packed.size())) return false;
                 stats_.diskBytes+=s.bytes;
                 Binding b;
-                if(!upload_(p,s,packed,b) || !b.deviceHandle || !b.bytes) return false;
+                const bool uploaded=upload_(p,s,packed,b);
+                if(!uploaded || !b.deviceHandle || !b.bytes) {
+                    // A failed uploader may still have allocated a binding.
+                    // Release only after a positive GPU idle check.
+                    if(b.deviceHandle && b.bytes && release_ && idleCheck_ && idleCheck_())
+                        release_(p,b);
+                    ++stats_.rejected;
+                    return false;
+                }
                 if(b.bytes>maxResidentBytes_ || residentBytes_>maxResidentBytes_-b.bytes) {
                     // Allocation was created but is not admitted; without a
                     // release callback it cannot be safely reclaimed here.
