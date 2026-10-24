@@ -11,6 +11,7 @@ on:
       - 'tools/rawrxd_e2e_source_audit.py'
       - 'tools/rawrxd_no_deps_audit.py'
       - 'tools/rawrxd_per_file_source_audit.py'
+      - 'tools/rawrxd_cmake_source_admission.py'
       - 'tests/reap_*'
       - 'tests/top25_parity_matrix_smoke.cpp'
       - 'tests/native_lsp_framing_smoke.cpp'
@@ -32,6 +33,7 @@ on:
       - 'tools/rawrxd_e2e_source_audit.py'
       - 'tools/rawrxd_no_deps_audit.py'
       - 'tools/rawrxd_per_file_source_audit.py'
+      - 'tools/rawrxd_cmake_source_admission.py'
       - '.github/workflows/reap-rom-parity-ci.yml'
       - 'CMakeLists.txt'
       - 'cmake/**'
@@ -97,6 +99,7 @@ jobs:
           python3 tools/rawrxd_e2e_source_audit.py
           python3 tools/rawrxd_no_deps_audit.py
           python3 tools/rawrxd_per_file_source_audit.py --strict-missing
+          python3 tools/rawrxd_cmake_source_admission.py
       - name: Upload machine-readable audit
         uses: actions/upload-artifact@v4
         with:
@@ -105,6 +108,7 @@ jobs:
             evidence/rawrxd_e2e_source_audit.json
             evidence/rawrxd_no_deps_audit.json
             evidence/rawrxd_per_file_source_audit.json
+            evidence/rawrxd_cmake_source_admission.json
 
   native-ide:
     runs-on: windows-2022
