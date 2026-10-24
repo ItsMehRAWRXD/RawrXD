@@ -5008,6 +5008,50 @@ else()
     message(STATUS "RawrXD-CLI-V2 EXCLUDED: src/rawrxd_cli_v2.cpp not present in this tree")
 endif()
 
+# Read-only REAP inventory/planning surface.  This intentionally does not
+# rewrite checkpoints until calibration, router remapping and parity gates
+# are implemented; it is the only safe way to expose real model evidence.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
+    add_executable(rawr-reap src/reap_cli.cpp)
+    target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
+    target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_corpus_cli.cpp")
+    add_executable(rawr-reap-corpus src/reap_corpus_cli.cpp)
+    # Corpus generation is intentionally isolated from the monolithic inference
+    # library.  CanonicalTokenizer and the metadata-only GGUF loader are header
+    # implemented; linking deep2_engine_lib here creates unnecessary rebuild
+    # contention and can accidentally pull GPU execution into a read-only tool.
+    target_link_libraries(rawr-reap-corpus PRIVATE bcrypt)
+    target_include_directories(rawr-reap-corpus PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(rawr-reap-corpus PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_writer_cli.cpp")
+    add_executable(rawr-reap-writer src/reap_writer_cli.cpp)
+    target_include_directories(rawr-reap-writer PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(rawr-reap-writer PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(rawr-reap-writer PRIVATE /EHsc /std:c++20)
+    endif()
+    set_target_properties(rawr-reap-writer PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+        "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_mask_cli.cpp")
+  add_executable(rawr-reap-mask src/reap_mask_cli.cpp)
+  target_link_libraries(rawr-reap-mask PRIVATE bcrypt)
+  set_target_properties(rawr-reap-mask PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_replay_cli.cpp" AND TARGET deep2_engine_lib)
+  add_executable(rawr-reap-replay src/reap_replay_cli.cpp)
+  target_link_libraries(rawr-reap-replay PRIVATE deep2_engine_lib)
+  target_include_directories(rawr-reap-replay PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/include)
+  set_target_properties(rawr-reap-replay PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+
 # ============================================================================
 # Final Project Summary
 # ============================================================================
