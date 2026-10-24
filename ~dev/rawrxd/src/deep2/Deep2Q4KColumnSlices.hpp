@@ -96,19 +96,23 @@ public:
         }
         {
             std::lock_guard<std::mutex> guard(mu_);
-            inflight_.erase(source);
-            cv_.notify_all();
-            if (generation != generation_) return {};
-            // Do not throw while holding the single-flight reservation:
-            // operator[] may allocate. Reserve before assigning to ensure
-            // exceptions leave all waiting threads able to retry.
+            if (generation != generation_) {
+                inflight_.erase(source);
+                cv_.notify_all();
+                return {};
+            }
+            // Keep the reservation until publication succeeds; on allocation
+            // failure wake waiters so another caller can retry safely.
             try {
                 cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
                 ++rebuilds_;
             } catch (...) {
+                inflight_.erase(source);
                 cv_.notify_all();
                 throw;
             }
+            inflight_.erase(source);
+            cv_.notify_all();
         }
         return fresh;
     }
