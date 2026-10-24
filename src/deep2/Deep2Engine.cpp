@@ -4382,35 +4382,24 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     if (dim == 0)
         return;
 
-    // Compute sum of squares with AVX2 (accumulate in double)
-    __m256 sum_sq_vec = _mm256_setzero_ps();
-    size_t i = 0;
-
-    for (; i + 8 <= dim; i += 8)
+    // Accumulate in FP64 from the first multiplication. The previous AVX2
+    // FP32 FMA overflowed for finite Nemotron activations near 1e37 and
+    // promoting the already-infinite sum to double could not recover it.
+    // Keep the FP32 AVX2 normalization/output path below unchanged.
+    double sumSq = 0.0;
+    for (size_t j = 0; j < dim; ++j)
     {
-        __m256 vx = _mm256_loadu_ps(&input[i]);
-        sum_sq_vec = _mm256_fmadd_ps(vx, vx, sum_sq_vec);
-    }
-
-    // Horizontal sum → float, then promote to double
-    __m128 hi = _mm256_extractf128_ps(sum_sq_vec, 1);
-    __m128 lo = _mm256_castps256_ps128(sum_sq_vec);
-    __m128 sum128 = _mm_add_ps(lo, hi);
-    sum128 = _mm_hadd_ps(sum128, sum128);
-    sum128 = _mm_hadd_ps(sum128, sum128);
-    double sumSq = static_cast<double>(_mm_cvtss_f32(sum128));
-
-    // Scalar remainder in double
-    for (; i < dim; ++i)
-    {
-        double v = static_cast<double>(input[i]);
+        const double v = static_cast<double>(input[j]);
+        if (!std::isfinite(v))
+            throw std::runtime_error("RMSNormW: non-finite input");
         sumSq += v * v;
     }
-
-    // Compute RMS in double
-    double meanSq = sumSq / static_cast<double>(dim);
-    double rms = std::sqrt(meanSq + static_cast<double>(eps));
-    float invRms = static_cast<float>(1.0 / rms);
+    const double meanSq = sumSq / static_cast<double>(dim);
+    const double rms = std::sqrt(meanSq + static_cast<double>(eps));
+    if (!(rms > 0.0) || !std::isfinite(rms))
+        throw std::runtime_error("RMSNormW: invalid RMS");
+    const float invRms = static_cast<float>(1.0 / rms);
+    size_t i = 0;
     __m256 vinvRms = _mm256_set1_ps(invRms);
 
     // Diagnostic: if input was huge, print what happened
