@@ -692,8 +692,16 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
     
     {
         std::lock_guard<std::mutex> lock(cacheMutex_);
-        while (currentCacheBytes_ + expertBytes > maxCacheBytes_ && !cache_.empty()) {
+        while (expertBytes <= maxCacheBytes_ &&
+               currentCacheBytes_ > maxCacheBytes_ - expertBytes && !cache_.empty()) {
+            const size_t previous = currentCacheBytes_;
             EvictLRU();
+            if (currentCacheBytes_ == previous) break;
+        }
+        if (expertBytes > maxCacheBytes_ ||
+            currentCacheBytes_ > maxCacheBytes_ - expertBytes) {
+            _aligned_free(buffer);
+            return nullptr;
         }
         ExpertCacheEntry entry;
         entry.data = buffer;
