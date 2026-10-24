@@ -67,6 +67,15 @@ jobs:
           if ($exe.Length -lt 4096) { throw 'Production CLI artifact unexpectedly small' }
           Write-Host "Production CLI: $($exe.FullName) ($($exe.Length) bytes)"
 
+      - name: Upload production CLI build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-production-cli-build
+          path: |
+            build_native_ci/**/rawr.exe
+          if-no-files-found: error
+
   source-audit:
     runs-on: ubuntu-24.04
     steps:
