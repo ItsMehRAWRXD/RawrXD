@@ -167,5 +167,25 @@ int main() {
     assert(!failedExecute.Run(6,1));
     assert(failedExecute.Run(6,1));
     assert(executeFailureReads==1 && executeFailureUploads==1 && executeFailureCalls==2);
+    bool missingBindingRejected=false;
+    try { b.BindResident(999,999,Binding{&fakeGpu,4,1}); }
+    catch (const std::invalid_argument&) { missingBindingRejected=true; }
+    assert(missingBindingRejected);
+    int noAllocationReads=0, noAllocationUploads=0;
+    Bridge failedUploadWithoutAllocation(
+        [&](const std::string&, uint64_t, void* dst, size_t n) {
+            ++noAllocationReads;
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(dst)[i]=0;
+            return true;
+        },
+        [&](const Slice&, const std::vector<uint8_t>&, Binding&) {
+            ++noAllocationUploads; return false;
+        },
+        [](const Binding&, uint32_t, uint32_t) { return true; });
+    failedUploadWithoutAllocation.Register({"test.gguf",0,4,7,1,0});
+    failedUploadWithoutAllocation.Retain(7,1);
+    assert(!failedUploadWithoutAllocation.Run(7,1));
+    assert(!failedUploadWithoutAllocation.Run(7,1));
+    assert(noAllocationReads==2 && noAllocationUploads==2);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
