@@ -20,5 +20,12 @@ int main() {
     try { (void)q.Feed("Content-Length: 1\r\nContent-Length: 1\r\n\r\na"); }
     catch(const std::invalid_argument&){threw=true;}
     assert(threw);
+    for (const auto* signedHeader : {"Content-Length: +1\\r\\n\\r\\na", "Content-Length: -1\\r\\n\\r\\na"}) {
+        Framer signedFramer(1024);
+        bool signedRejected=false;
+        try { (void)signedFramer.Feed(signedHeader); }
+        catch(const std::invalid_argument&) { signedRejected=true; }
+        assert(signedRejected);
+    }
     std::cout<<"NATIVE_LSP_FRAMING_SMOKE_PASS\n";
 }
