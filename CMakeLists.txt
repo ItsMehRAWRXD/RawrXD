@@ -1663,7 +1663,7 @@ if(NOT EXISTS "${_rawrxd_vk_sdk_inc}/vulkan/vulkan.h")
     set(_rawrxd_vk_sdk_inc "")
 endif()
 message(STATUS "profiler gate: Vulkan_FOUND=${Vulkan_FOUND} vulkan_include='${_rawrxd_vk_sdk_inc}'")
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_token_profiler.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_token_profiler.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_token_profiler
         tools/deep2_token_profiler.cpp
         src/streaming_gguf_loader.cpp
@@ -1710,7 +1710,7 @@ endif()
 # requires the Vulkan SDK include path, and on a machine without it the target
 # must be EXCLUDED with a message rather than silently building a GPU-less
 # auditor and letting a missing Vulkan path look like a certification pass.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_parity_trace.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_parity_trace
         tools/deep2_parity_trace.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -1780,7 +1780,7 @@ endif()
 # supplied token sequence, and compares the full vocabulary logits on the GPU
 # and CPU-pinned paths.  A build or metadata pass must never be reported as a
 # full-model certification result.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_certify.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_gpu_certify
         tools/deep2_gpu_certify.cpp
         src/deep2/op_gdn.cpp
@@ -1969,7 +1969,7 @@ endif()
 # Physical Vulkan topology telemetry. This target reports real device heaps and
 # queues only; it is deliberately separate from the certifier and never claims
 # an operator allocation or execution.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dynamic_interceptor.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_dynamic_interceptor.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_dynamic_interceptor tools/deep2_dynamic_interceptor.cpp)
     target_include_directories(deep2_dynamic_interceptor PRIVATE ${_rawrxd_vk_sdk_inc})
     if(TARGET Vulkan::Vulkan)
@@ -1988,7 +1988,7 @@ endif()
 
 # Qwen4Exp shader-to-Vulkan wiring probe. It creates real PLE and
 # Hyperconnection pipeline objects but submits no inference work.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_pipeline_probe.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_qwen4exp_pipeline_probe.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_qwen4exp_pipeline_probe tools/deep2_qwen4exp_pipeline_probe.cpp)
     target_include_directories(deep2_qwen4exp_pipeline_probe PRIVATE ${_rawrxd_vk_sdk_inc})
     if(TARGET Vulkan::Vulkan)
@@ -2125,7 +2125,7 @@ endif()
 # serial ExecuteToken path: full-logit BIT_EXACT over a prefix sweep + causal
 # KV via continued decode. Same source set as deep2_parity_trace so the
 # batched path is exercised against the identical kernels the cert path uses.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_d1_prefill_parity
         tools/deep2_d1_prefill_parity.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2180,7 +2180,7 @@ endif()
 # greedy decode path on a REAL GGUF, with per-workload (code/prose) acceptance
 # rates. The fused LM-head path (DispatchGemvQ4KBatch) is exercised when the
 # model has a Q4_K LM head and perPosLogits is requested.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_spec_bench
         tools/deep2_spec_bench.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2341,7 +2341,7 @@ endif()
 # Gate 11 — Long-Context KV Correctness (DEEP2_CONTEXT_SCALING_001).
 # Progress through 4K, 32K, 128K, 512K, and 1M where supported.
 # Verify KV contents, memory residency, position handling, and measured decode scaling.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_context_scaling
         tools/deep2_context_scaling.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2394,7 +2394,7 @@ endif()
 # Tests load, generate, cancel, unload, reload, and corrupted GGUF handling
 # with memory accounting and fail-closed architecture dispatch.
 # Uses the same minimal source set as deep2_spec_bench.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_gguf_lifecycle
         tools/deep2_gguf_lifecycle.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2676,7 +2676,7 @@ endif()
 # Host controls: read -> present to model -> get patch -> apply -> build -> test -> retry
 # Model only outputs fixed source code. No TOOL protocol, no free-form commands.
 # ============================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_agentic_repair
         tools/deep2_agentic_repair.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2729,7 +2729,7 @@ endif()
 # Answers "one pass per layer" vs "one pass per token per layer", and proves
 # which backend actually executes each tensor op (with fallback reasons).
 # ============================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_exec_trace.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_exec_trace
         tools/deep2_exec_trace.cpp
         src/deep2/runtime_graph_executor.cpp
@@ -2786,7 +2786,7 @@ endif()
 # H11-P1..P4: batched-prefill numerical parity vs the serial reference.
 # Gate 5 (command fusion) may only be optimised after this passes.
 # ============================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
     add_executable(deep2_prefill_parity
         tools/deep2_prefill_parity.cpp
         src/deep2/runtime_graph_executor.cpp
