@@ -3272,6 +3272,35 @@ async function connectBackend() {
     logDebug('Primary backend (' + State.backend.url + ') failed: ' + e.message, 'warn');
   }
 
+  // ---- Try 1b: native Deep2 server (:11436) ----
+  // Keep this separate from Ollama Direct so a running native server is
+  // discoverable even when the IDE gateway on :11435 is not started.
+  try {
+    var deep2Url = 'http://127.0.0.1:11436';
+    var deep2Health = await fetch(deep2Url + '/health', { signal: AbortSignal.timeout(3000) });
+    if (deep2Health.ok) {
+      var deep2Data = await deep2Health.json();
+      if (deep2Data.status === 'ok' && deep2Data.model_loaded) {
+        State.backend.url = deep2Url;
+        State.backend.online = true;
+        State.backend.directMode = false;
+        State.backend.serverType = 'deep2-native';
+        State.backend.lastPing = Date.now();
+        status.className = 'status-pill online';
+        text.textContent = 'DEEP2 NATIVE';
+        updateBackendInfo({ backend: 'deep2-native', model_loaded: true }, 0);
+        updateModeBadge(false);
+        syncTitlebarStatus();
+        logDebug('\u2705 Connected to native Deep2 at ' + deep2Url, 'info');
+        await fetchModels();
+        await beaconProbeCliEndpoint();
+        return;
+      }
+    }
+  } catch (eDeep2) {
+    logDebug('Native Deep2 (' + 'http://127.0.0.1:11436' + ') unavailable: ' + eDeep2.message, 'warn');
+  }
+
   // ---- Try 2: Ollama direct fallback (:11434) ----
   if (State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
     try {
