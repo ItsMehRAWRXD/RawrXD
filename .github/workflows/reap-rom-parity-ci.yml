@@ -79,6 +79,7 @@ jobs:
             evidence/rawrxd_no_deps_audit.json
             evidence/rawrxd_per_file_source_audit.json
             evidence/rawrxd_cmake_source_admission.json
+          if-no-files-found: error
 
   native-ide:
     runs-on: windows-2022
