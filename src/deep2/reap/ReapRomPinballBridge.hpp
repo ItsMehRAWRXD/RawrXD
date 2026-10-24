@@ -106,7 +106,7 @@ public:
         if (!uploaded.deviceHandle || uploaded.bytes < bytes.size())
             throw std::runtime_error("upload reported success with invalid GPU binding");
         if (stats_.bindingUses == std::numeric_limits<uint64_t>::max())
-            throw std::overflow_error("REAP binding-use counter overflow");
+            throw std::overflow_error("REAP binding-use counter overflow; uploaded allocation requires retirement");
         const auto inserted = resident_.emplace(key, uploaded).second;
         if (!inserted) throw std::logic_error("REAP resident binding changed during upload");
         ++stats_.bindingUses;
