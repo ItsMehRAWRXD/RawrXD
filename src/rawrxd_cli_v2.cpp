@@ -1147,6 +1147,14 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
                     ""});
                 continue;
             }
+            // Never certify an empty inference response as a successful
+            // agent turn. The retry budget above may already be exhausted.
+            if (result.response.find_first_not_of(" \\t\\r\\n") == std::string::npos) {
+                outcome.success = false;
+                outcome.failure = "EMPTY_MODEL_RESPONSE: backend returned no visible answer";
+                outcome.iterations = iteration + 1;
+                return outcome;
+            }
             outcome.success = true;
             outcome.finalText = result.response;
             outcome.iterations = iteration + 1;
