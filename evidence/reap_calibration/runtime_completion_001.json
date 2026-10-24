@@ -1,0 +1,17 @@
+{
+  "schema": "RAWRXD_REAP_RUNTIME_COMPLETION_001",
+  "timestamp": "2026-10-24T23:00:15.6226924Z",
+  "sourceRoot": "F:\\rawrxd",
+  "branch": "feature/reap-size-integration",
+  "commit": "18e67ac13f7c4ae1f59634b98a8e7b2df3c3eb1c",
+  "replayHash": "5D715A73971BCA6D2F35CDF79CC83E2D11A43CF03ED5124C108B050E122C08CD",
+  "writerHash": "AF4A065B59455D142BA61D3FA589112C92B2898AF714B7E3F38BC4B466E02712",
+  "build": "build_reap_baseline",
+  "denseCalibration": "PASS_CALIBRATED_UNSEALED",
+  "denseMlaSeal": false,
+  "multiWindowMla": "BLOCKED_FAIL_CLOSED",
+  "blocker": "K2NativeStreamGate provider set is not ABI-compatible with current F checkout",
+  "unsafeMlaUsed": false,
+  "writer": "PASS_LOSSLESS_ROUND_TRIP",
+  "gpuDispatch": "NOT_CERTIFIED"
+}

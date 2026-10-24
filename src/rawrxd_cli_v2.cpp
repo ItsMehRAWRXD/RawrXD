@@ -24,6 +24,7 @@
 #include "agentic/BackendRouter.h"
 #include "agentic/OllamaBackend.h"
 #include "agentic/Deep2Backend.h"
+#include "backend/ollama_client.h"
 #include "agentic/ToolCallBridge.h"
 #include "agentic/PersistentTaskBacklog.h"
 #include "agentic/SelfRepairLoop.h"
@@ -54,6 +55,8 @@
 #include <cstdlib>
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <limits>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -75,6 +78,32 @@ static std::string                         g_workspace;
 static std::string                         g_model;
 static std::string                         g_backend_name = "auto";
 static std::atomic<bool>                   g_streamed_response{false};
+
+static json BuildToolDefinitions() {
+    json definitions = json::array();
+    if (!g_tools) return definitions;
+    for (const auto& name : g_tools->names()) {
+        rawrxd::tools::Tool tool;
+        if (!g_tools->find(name, tool)) continue;
+        json properties = json::object();
+        for (const auto& required : tool.required) {
+            properties[required] = { {"type", "string"} };
+        }
+        definitions.push_back({
+            {"type", "function"},
+            {"function", {
+                {"name", tool.name},
+                {"description", tool.description},
+                {"parameters", {
+                    {"type", "object"},
+                    {"properties", properties},
+                    {"required", tool.required}
+                }}
+            }}
+        });
+    }
+    return definitions;
+}
 
 // ---------------------------------------------------------------------------
 // Signal handling
@@ -125,6 +154,32 @@ static Options ParseOptions(int argc, char** argv, int start_index) {
         }
     }
     return o;
+}
+
+// `--size` was historically accepted by the generic flag parser and then
+// silently ignored.  That is unsafe: callers could believe REAP admission or
+// pruning had happened when the ordinary model path was used unchanged.
+static bool ParseMemoryBudget(const std::string& text, uint64_t& bytes) {
+    if (text.empty()) return false;
+    size_t split = 0;
+    while (split < text.size() && (std::isdigit(static_cast<unsigned char>(text[split])) || text[split] == '.')) ++split;
+    if (split == 0 || split == text.size()) return false;
+    char* end = nullptr;
+    const double value = std::strtod(text.substr(0, split).c_str(), &end);
+    if (!std::isfinite(value) || value <= 0.0) return false;
+    std::string unit = text.substr(split);
+    std::transform(unit.begin(), unit.end(), unit.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    uint64_t multiplier = 1;
+    if (unit == "B") multiplier = 1;
+    else if (unit == "KB" || unit == "KIB") multiplier = 1024ull;
+    else if (unit == "MB" || unit == "MIB") multiplier = 1024ull * 1024ull;
+    else if (unit == "GB" || unit == "GIB") multiplier = 1024ull * 1024ull * 1024ull;
+    else if (unit == "TB" || unit == "TIB") multiplier = 1024ull * 1024ull * 1024ull * 1024ull;
+    else return false;
+    const long double result = static_cast<long double>(value) * multiplier;
+    if (result > static_cast<long double>(std::numeric_limits<uint64_t>::max())) return false;
+    bytes = static_cast<uint64_t>(result);
+    return bytes != 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -510,6 +565,23 @@ static int CmdRun(const std::vector<std::string>& args) {
         }
     }
 
+    // REAP expert pruning/residency is not part of this production binary
+    // yet. Reject the option explicitly instead of silently running an
+    // unmodified model and reporting a misleading success.
+    if (flags.count("size")) {
+        uint64_t budget = 0;
+        if (!ParseMemoryBudget(flags["size"], budget)) {
+            std::cerr << "Invalid --size value: " << flags["size"]
+                      << " (use B, MB, GB, or TB)\n";
+            return 2;
+        }
+        std::cerr << "MODEL_SIZE_REQUESTED=" << flags["size"]
+                  << " (" << budget << " bytes)\n"
+                  << "REAP_RUNTIME_UNAVAILABLE: no validated expert-pruning or"
+                     " residency planner is linked into this executable\n";
+        return 2;
+    }
+
     // Resolve model alias → actual GGUF path before backend initialization.
     // This lets `rawr run nemotron-3.5-bolt` resolve to F:\rawrxd\nemotron-bolt.gguf.
     {
@@ -715,7 +787,7 @@ static int CmdRun(const std::vector<std::string>& args) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
                 result = deep2CompleteFn(messages, 4096);
             } else if (g_router) {
-                result = g_router->ChatSync(messages, json::array());
+                result = g_router->ChatSync(messages, BuildToolDefinitions());
             } else {
                 result = InferenceResult::Error("No inference backend available");
             }
@@ -728,9 +800,59 @@ static int CmdRun(const std::vector<std::string>& args) {
             g_ledger->RecordFailure("inference unknown exception");
             return 1;
         }
+
+        // Complete bounded agentic turns: execute returned tool calls, feed
+        // their real results back to the model, and stop only on final text.
+        for (int tool_round = 0; result.success && result.has_tool_calls && tool_round < 8;
+             ++tool_round) {
+            json assistant_calls = json::array();
+            for (size_t i = 0; i < result.tool_calls.size(); ++i) {
+                const auto& call = result.tool_calls[i];
+                const std::string id = "rawr-call-" + std::to_string(tool_round) + "-" + std::to_string(i);
+                assistant_calls.push_back({
+                    {"id", id}, {"type", "function"},
+                    {"function", {{"name", call.first}, {"arguments", call.second}}}
+                });
+                rawrxd::tools::Tool tool;
+                rawrxd::tools::Request request;
+                request.name = call.first;
+                if (call.second.is_object()) {
+                    for (auto it = call.second.begin(); it != call.second.end(); ++it)
+                        request.args[it.key()] = it.value().is_string() ? it.value().get<std::string>() : it.value().dump();
+                }
+                json approval_args = call.second;
+                auto approve = [&](const rawrxd::tools::Tool& t, const rawrxd::tools::Request&) {
+                    return ApproveMutation(t.name, approval_args);
+                };
+                if (!g_tools->find(request.name, tool) || !g_gate->AllowsWithApproval(tool, request, approve)) {
+                    result = InferenceResult::Error("tool denied: " + request.name);
+                    break;
+                }
+                auto tool_result = g_tools->call(request, approve);
+                g_ledger->RecordToolCall(ToolCallRecord{
+                    request.name, call.second, tool_result.ok, tool_result.output,
+                    tool_result.error, 0, 0.0, true
+                });
+                if (!tool_result.ok) {
+                    result = InferenceResult::Error("tool failed: " + tool_result.error);
+                    break;
+                }
+                messages.push_back({"tool", tool_result.output, id, json()});
+            }
+            if (!result.success) break;
+            messages.push_back({"assistant", result.response, "", assistant_calls});
+            result = g_router ? g_router->ChatSync(messages, BuildToolDefinitions())
+                              : InferenceResult::Error("No inference backend available");
+        }
         if (!result.success) {
             std::cerr << "[error] " << result.error_message << "\n";
             g_ledger->RecordFailure("inference failed: " + result.error_message);
+            return 1;
+        }
+        if (result.response.find_first_not_of(" \t\r\n") == std::string::npos) {
+            constexpr const char* kEmpty = "EMPTY_MODEL_RESPONSE: backend returned no visible answer";
+            std::cerr << "[error] " << kEmpty << "\n";
+            g_ledger->RecordFailure(kEmpty);
             return 1;
         }
 
@@ -861,7 +983,7 @@ static int CmdRun(const std::vector<std::string>& args) {
                 // Use in-process Deep2Engine directly — no HTTP router needed.
                 result = deep2CompleteFn(messages, 4096);
             } else if (g_router) {
-                result = g_router->ChatSync(messages, json::array());
+                result = g_router->ChatSync(messages, BuildToolDefinitions());
             } else {
                 result = InferenceResult::Error("No inference backend available");
             }
@@ -877,6 +999,12 @@ static int CmdRun(const std::vector<std::string>& args) {
         if (!result.success) {
             std::cerr << "[error] " << result.error_message << "\n";
             g_ledger->RecordFailure("inference failed: " + result.error_message);
+            continue;
+        }
+        if (result.response.find_first_not_of(" \t\r\n") == std::string::npos) {
+            constexpr const char* kEmpty = "EMPTY_MODEL_RESPONSE: backend returned no visible answer";
+            std::cerr << "[error] " << kEmpty << "\n";
+            g_ledger->RecordFailure(kEmpty);
             continue;
         }
 
@@ -1152,22 +1280,23 @@ static int CmdModes() {
 
 static int CmdDoctor() {
     std::cout << "=== RawrXD doctor ===\n";
+    std::cout.flush();
     std::cout << "Workspace: " << (g_workspace.empty() ? fs::current_path().string() : g_workspace) << "\n";
 
-    // Backend health.
-    RouterConfig cfg;
-    cfg.mode = BackendMode::Auto;
-    cfg.primary_endpoint = "http://127.0.0.1:11436";
-    cfg.fallback_endpoint = "http://127.0.0.1:11434";
-    g_router = std::make_unique<BackendRouter>();
-    if (g_router->Initialize(cfg)) {
-        auto deep2 = g_router->GetPrimaryHealth();
-        auto ollama = g_router->GetFallbackHealth();
-        std::cout << "Deep2  (11436): " << (deep2.available ? "AVAILABLE" : "not running") << "\n";
-        std::cout << "Ollama (11434): " << (ollama.available ? "AVAILABLE" : "not running") << "\n";
-        if (ollama.available) {
-            std::cout << "  Ollama models: " << g_router->ListModels(BackendKind::Ollama).size() << "\n";
-        }
+    // Read-only diagnostics must not start BackendRouter: its background health
+    // loop is appropriate for a long-lived agent, but can outlive or stall a
+    // short CLI command. Use bounded direct clients instead.
+    RawrXD::Backend::OllamaClient deep2("http://127.0.0.1:11436");
+    RawrXD::Backend::OllamaClient ollama("http://127.0.0.1:11434");
+    deep2.setTimeoutSeconds(5);
+    ollama.setTimeoutSeconds(5);
+    const bool deep2_ok = deep2.testConnection();
+    const bool ollama_ok = ollama.testConnection();
+    std::cout << "Deep2  (11436): " << (deep2_ok ? "AVAILABLE" : "not running") << "\n";
+    std::cout << "Ollama (11434): " << (ollama_ok ? "AVAILABLE" : "not running") << "\n";
+    if (ollama_ok) {
+        const auto models = ollama.listModels();
+        std::cout << "  Ollama models: " << models.size() << "\n";
     }
 
     // Toolchain.
@@ -1199,6 +1328,28 @@ static int CmdDoctor() {
         }
     }
 
+    std::cout.flush();
+    return 0; // doctor reports the environment; unavailable services are valid findings.
+}
+
+static int CmdModels() {
+    std::cout << "=== RawrXD models ===\n";
+    std::cout.flush();
+
+    RawrXD::Backend::OllamaClient ollama("http://127.0.0.1:11434");
+    ollama.setTimeoutSeconds(10);
+    const auto models = ollama.listModels();
+    if (models.empty()) {
+        std::cerr << "Ollama model inventory unavailable or empty (http://127.0.0.1:11434/api/tags)\n";
+        return 1;
+    }
+    for (const auto& model : models) {
+        std::cout << "ollama  " << model.name;
+        if (!model.digest.empty()) std::cout << "  digest=" << model.digest;
+        if (model.size != 0) std::cout << "  bytes=" << model.size;
+        std::cout << "\n";
+    }
+    std::cout.flush();
     return 0;
 }
 
@@ -1317,6 +1468,10 @@ int main(int argc, char** argv) {
     std::string cmd = argv[1];
     std::vector<std::string> args;
     for (int i = 2; i < argc; ++i) args.push_back(argv[i]);
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE")) {
+        std::cerr << "[rawr-cli-dispatch] command=" << cmd
+                  << " argc=" << argc << " args=" << args.size() << "\n";
+    }
 
     Options o = ParseOptions(argc, argv, 2);
     g_workspace = DiscoverWorkspace(o);
@@ -1377,20 +1532,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    if (cmd == "models") {
-        RouterConfig cfg;
-        cfg.mode = BackendMode::Auto;
-        cfg.primary_endpoint = "http://127.0.0.1:11436";
-        cfg.fallback_endpoint = "http://127.0.0.1:11434";
-        g_router = std::make_unique<BackendRouter>();
-        if (g_router->Initialize(cfg)) {
-            for (const auto& m : g_router->ListModels(BackendKind::Ollama))
-                std::cout << "ollama  " << m << "\n";
-            for (const auto& m : g_router->ListModels(BackendKind::Deep2))
-                std::cout << "deep2   " << m << "\n";
-        }
-        return 0;
-    }
+    if (cmd == "models") return CmdModels();
 
     if (cmd == "build" || cmd == "test") {
         WorkspaceToolHost ws(g_workspace);

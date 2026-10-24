@@ -26,11 +26,20 @@
 #include <mutex>
 #include <memory>
 #include <atomic>
+#include <cstdio>
+#include <cstdlib>
 
 #include "GGUFLoader.hpp"
 #include "Tokenizer.hpp"
 
 namespace Deep2 {
+
+inline void ReapTokenizerTrace(const char* phase) {
+    if (std::getenv("RAWR_REAP_TOKENIZER_TRACE")) {
+        std::fprintf(stderr, "[REAP_TOKENIZER] %s\n", phase);
+        std::fflush(stderr);
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Everything Deep2Engine needs to bootstrap a tokenizer from a GGUF shard.
@@ -50,23 +59,30 @@ struct TokenizerBundle {
 // Returns ok=false with a real reason in `error` if the file has no usable
 // vocabulary - it never invents one.
 inline TokenizerBundle LoadTokenizerFromGGUF(const char* path) {
+    ReapTokenizerTrace("load.begin");
     TokenizerBundle b;
     if (!path || !*path) { b.error = "empty path"; return b; }
 
     GGUFLoader loader;
+    std::fprintf(stderr,"[REAP_TOKENIZER] loader_begin\\n");
     if (!loader.load(std::string(path))) {
         b.error = "GGUFLoader failed for " + std::string(path);
         return b;
     }
+    ReapTokenizerTrace("load.gguf.ok");
+    std::fprintf(stderr,"[REAP_TOKENIZER] loader_ok\\n");
 
     if (!loader.getMetaStringArray("tokenizer.ggml.tokens", b.vocab) ||
         b.vocab.empty()) {
         b.error = "no tokenizer.ggml.tokens in " + std::string(path);
         return b;
     }
+    ReapTokenizerTrace("load.vocab.ok");
+    std::fprintf(stderr,"[REAP_TOKENIZER] vocab=%zu\\n",b.vocab.size());
 
     b.model = loader.getMetaString("tokenizer.ggml.model", b.model);
     (void)loader.getMetaStringArray("tokenizer.ggml.merges", b.merges);
+    std::fprintf(stderr,"[REAP_TOKENIZER] merges=%zu\\n",b.merges.size());
 
     // Scores are floats in GGUF. Some models ship them all zero (the header
     // note in Tokenizer.hpp records this), so absence is not an error - the
@@ -90,6 +106,7 @@ inline TokenizerBundle LoadTokenizerFromGGUF(const char* path) {
         b.special.unkId = static_cast<int>(loader.getMetaInt("tokenizer.ggml.unknown_token_id", b.special.unkId));
 
     b.vocabSizeFromMeta = b.vocab.size();
+    std::fprintf(stderr,"[REAP_TOKENIZER] bundle_ready\\n");
     b.ok = true;
     return b;
 }
@@ -97,14 +114,20 @@ inline TokenizerBundle LoadTokenizerFromGGUF(const char* path) {
 // Applies a bundle to a real BPE tokenizer. Returns false only when the
 // vocabulary is missing, which no caller should treat as success.
 inline bool ApplyTokenizerBundle(BPETokenizer& tok, const TokenizerBundle& b) {
+    ReapTokenizerTrace("apply.begin");
     if (!b.ok || b.vocab.empty()) return false;
+    std::fprintf(stderr,"[REAP_TOKENIZER] apply_vocab_begin\\n");
     if (!tok.LoadVocab(b.vocab)) return false;
+    ReapTokenizerTrace("apply.vocab.ok");
+    std::fprintf(stderr,"[REAP_TOKENIZER] apply_vocab_ok\\n");
     if (!b.scores.empty() && b.scores.size() == tok.VocabSize()) {
         (void)tok.LoadScores(b.scores);
     }
     if (!b.merges.empty()) {
+        std::fprintf(stderr,"[REAP_TOKENIZER] apply_merges_begin\\n");
         (void)tok.LoadMergesAsScores(b.merges);
     }
+    std::fprintf(stderr,"[REAP_TOKENIZER] apply_merges_ok\\n");
     if (!b.model.empty()) tok.SetTokenizerModel(b.model);
     else tok.InferTokenizerFamily();     // detects gpt2 vs llama from the vocab
     tok.SetSpecialTokens(b.special);
@@ -124,6 +147,7 @@ public:
     // Loads vocab/merges/scores/model from a GGUF shard into the real BPE
     // tokenizer. Returns false and records why if the file is unusable.
     bool LoadFromGGUF(const std::string& path) {
+        ReapTokenizerTrace("canonical.begin");
         TokenizerBundle b = LoadTokenizerFromGGUF(path.c_str());
         if (!b.ok) {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -140,10 +164,12 @@ public:
             impl_.reset();
             return false;
         }
+        ReapTokenizerTrace("canonical.apply.ok");
         std::lock_guard<std::mutex> lock(mutex_);
         impl_ = std::move(tok);
         error_.clear();
         loaded_ = true;
+        ReapTokenizerTrace("canonical.done");
         return true;
     }
 
@@ -153,16 +179,22 @@ public:
 
     // Real SentencePiece / GPT-2 encode with special-token handling.
     std::vector<int> Encode(const std::string& text) const {
+        ReapTokenizerTrace("encode.begin");
         std::lock_guard<std::mutex> lock(mutex_);
         if (!impl_) return {};
-        return impl_->Encode(text);
+        auto out = impl_->Encode(text);
+        ReapTokenizerTrace("encode.done");
+        return out;
     }
 
     // Real decode, including byte-fallback and SentencePiece metaspace.
     std::string Decode(const std::vector<int>& tokens) const {
+        ReapTokenizerTrace("decode.begin");
         std::lock_guard<std::mutex> lock(mutex_);
         if (!impl_) return {};
-        return impl_->Decode(tokens);
+        auto out = impl_->Decode(tokens);
+        ReapTokenizerTrace("decode.done");
+        return out;
     }
 
     std::string Decode(int token) const {

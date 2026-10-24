@@ -101,6 +101,10 @@ struct ModuleInfo {
 struct TerminalPane {
     int id;
     HWND hwnd;
+    HWND input = nullptr;
+    HWND execute = nullptr;
+    HWND stop = nullptr;
+    HWND clear = nullptr;
     std::unique_ptr<Win32TerminalManager> manager;
     std::string name;
     Win32TerminalManager::ShellType shellType;
@@ -1270,6 +1274,7 @@ private:
     void scrollPowerShellOutputToBottom();
     static LRESULT CALLBACK PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK TerminalInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // ========================================================================
     // DEBUGGER IMPLEMENTATION

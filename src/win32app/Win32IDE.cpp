@@ -2336,6 +2336,24 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     TerminalPane pane;
     pane.id = paneId;
     pane.hwnd = hwnd;
+    const UINT_PTR base = 7100u + static_cast<UINT_PTR>(paneId) * 10u;
+    pane.input = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
+        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        0, 0, 0, 0, m_hwndMain, reinterpret_cast<HMENU>(base + 1), m_hInstance, nullptr);
+    pane.execute = CreateWindowExA(0, "BUTTON", "Execute",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        0, 0, 0, 0, m_hwndMain, reinterpret_cast<HMENU>(base + 2), m_hInstance, nullptr);
+    pane.stop = CreateWindowExA(0, "BUTTON", "Stop",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        0, 0, 0, 0, m_hwndMain, reinterpret_cast<HMENU>(base + 3), m_hInstance, nullptr);
+    pane.clear = CreateWindowExA(0, "BUTTON", "Clear",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        0, 0, 0, 0, m_hwndMain, reinterpret_cast<HMENU>(base + 4), m_hInstance, nullptr);
+    if (pane.input) {
+        // Keep this a stock EDIT control.  The parent handles the Execute
+        // button and avoids subclass lifetime hazards during pane teardown.
+        SetPropA(pane.input, "RAWRXD_TERMINAL_PANE", reinterpret_cast<HANDLE>(static_cast<ULONG_PTR>(paneId)));
+    }
     pane.manager = std::make_unique<Win32TerminalManager>();
     pane.name = name.empty() ? ("Terminal " + std::to_string(paneId)) : name;
     pane.shellType = shellType;
@@ -2351,6 +2369,11 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
 
     m_terminalPanes.push_back(std::move(pane));
     setActiveTerminalPane(paneId);
+    RECT client{};
+    if (GetClientRect(m_hwndMain, &client)) {
+        const int top = 40 + DOC_TAB_HEIGHT + m_editorHeight;
+        layoutTerminalPanes(client.right - client.left, top, m_terminalHeight);
+    }
     applyTheme();
     return paneId;
 }
@@ -2402,6 +2425,19 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
     if (count == 1) {
         auto& pane = m_terminalPanes[0];
         MoveWindow(pane.hwnd, 0, top, width, height, TRUE);
+        const int controlHeight = 28;
+        const int buttonWidth = 64;
+        const int gap = 4;
+        const int inputWidth = std::max(0, width - (buttonWidth * 3 + gap * 4));
+        const int y = std::max(top, top + height - controlHeight - 4);
+        if (pane.input) MoveWindow(pane.input, 4, y, inputWidth, controlHeight, TRUE);
+        if (pane.execute) MoveWindow(pane.execute, 4 + inputWidth + gap, y, buttonWidth, controlHeight, TRUE);
+        if (pane.stop) MoveWindow(pane.stop, 4 + inputWidth + gap * 2 + buttonWidth, y, buttonWidth, controlHeight, TRUE);
+        if (pane.clear) MoveWindow(pane.clear, 4 + inputWidth + gap * 3 + buttonWidth * 2, y, buttonWidth, controlHeight, TRUE);
+        if (pane.input) ShowWindow(pane.input, pane.isActive ? SW_SHOW : SW_HIDE);
+        if (pane.execute) ShowWindow(pane.execute, pane.isActive ? SW_SHOW : SW_HIDE);
+        if (pane.stop) ShowWindow(pane.stop, pane.isActive ? SW_SHOW : SW_HIDE);
+        if (pane.clear) ShowWindow(pane.clear, pane.isActive ? SW_SHOW : SW_HIDE);
         pane.bounds = {0, top, width, top + height};
         return;
     }
@@ -2413,6 +2449,19 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
             int currentHeight = (i == count - 1) ? (height - paneHeight * (count - 1)) : paneHeight;
             auto& pane = m_terminalPanes[i];
             MoveWindow(pane.hwnd, 0, y, width, currentHeight, TRUE);
+            const int controlHeight = 28;
+            const int buttonWidth = 64;
+            const int gap = 4;
+            const int inputWidth = std::max(0, width - (buttonWidth * 3 + gap * 4));
+            const int cy = std::max(y, y + currentHeight - controlHeight - 4);
+            if (pane.input) MoveWindow(pane.input, 4, cy, inputWidth, controlHeight, TRUE);
+            if (pane.execute) MoveWindow(pane.execute, 4 + inputWidth + gap, cy, buttonWidth, controlHeight, TRUE);
+            if (pane.stop) MoveWindow(pane.stop, 4 + inputWidth + gap * 2 + buttonWidth, cy, buttonWidth, controlHeight, TRUE);
+            if (pane.clear) MoveWindow(pane.clear, 4 + inputWidth + gap * 3 + buttonWidth * 2, cy, buttonWidth, controlHeight, TRUE);
+            if (pane.input) ShowWindow(pane.input, pane.isActive ? SW_SHOW : SW_HIDE);
+            if (pane.execute) ShowWindow(pane.execute, pane.isActive ? SW_SHOW : SW_HIDE);
+            if (pane.stop) ShowWindow(pane.stop, pane.isActive ? SW_SHOW : SW_HIDE);
+            if (pane.clear) ShowWindow(pane.clear, pane.isActive ? SW_SHOW : SW_HIDE);
             pane.bounds = {0, y, width, y + currentHeight};
             y += currentHeight;
         }
@@ -2423,6 +2472,19 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
             int currentWidth = (i == count - 1) ? (width - paneWidth * (count - 1)) : paneWidth;
             auto& pane = m_terminalPanes[i];
             MoveWindow(pane.hwnd, x, top, currentWidth, height, TRUE);
+            const int controlHeight = 28;
+            const int buttonWidth = 64;
+            const int gap = 4;
+            const int inputWidth = std::max(0, currentWidth - (buttonWidth * 3 + gap * 4));
+            const int cy = std::max(top, top + height - controlHeight - 4);
+            if (pane.input) MoveWindow(pane.input, x + 4, cy, inputWidth, controlHeight, TRUE);
+            if (pane.execute) MoveWindow(pane.execute, x + 4 + inputWidth + gap, cy, buttonWidth, controlHeight, TRUE);
+            if (pane.stop) MoveWindow(pane.stop, x + 4 + inputWidth + gap * 2 + buttonWidth, cy, buttonWidth, controlHeight, TRUE);
+            if (pane.clear) MoveWindow(pane.clear, x + 4 + inputWidth + gap * 3 + buttonWidth * 2, cy, buttonWidth, controlHeight, TRUE);
+            if (pane.input) ShowWindow(pane.input, pane.isActive ? SW_SHOW : SW_HIDE);
+            if (pane.execute) ShowWindow(pane.execute, pane.isActive ? SW_SHOW : SW_HIDE);
+            if (pane.stop) ShowWindow(pane.stop, pane.isActive ? SW_SHOW : SW_HIDE);
+            if (pane.clear) ShowWindow(pane.clear, pane.isActive ? SW_SHOW : SW_HIDE);
             pane.bounds = {x, top, x + currentWidth, top + height};
             x += currentWidth;
         }

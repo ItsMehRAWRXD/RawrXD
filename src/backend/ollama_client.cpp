@@ -129,7 +129,8 @@ std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest&
     oss << "{";
     oss << "\"model\":\"" << req.model << "\",";
     oss << "\"prompt\":\"" << req.prompt << "\",";
-    oss << "\"stream\":" << (req.stream ? "true" : "false");
+    oss << "\"stream\":" << (req.stream ? "true" : "false")
+        << ",\"think\":false";
     
     if (!req.options.empty()) {
         oss << ",\"options\":{";
@@ -155,11 +156,20 @@ std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
     for (size_t i = 0; i < req.messages.size(); ++i) {
         if (i > 0) oss << ",";
         oss << "{\"role\":\"" << req.messages[i].role << "\",";
-        oss << "\"content\":\"" << req.messages[i].content << "\"}";
+        oss << "\"content\":\"" << req.messages[i].content << "\"";
+        if (!req.messages[i].tool_call_id.empty())
+            oss << ",\"tool_call_id\":\"" << req.messages[i].tool_call_id << "\"";
+        if (!req.messages[i].tool_calls.is_null() && req.messages[i].tool_calls.is_array())
+            oss << ",\"tool_calls\":" << req.messages[i].tool_calls.dump();
+        oss << "}";
     }
     
     oss << "],";
-    oss << "\"stream\":" << (req.stream ? "true" : "false");
+    oss << "\"stream\":" << (req.stream ? "true" : "false")
+        << ",\"think\":false";
+    if (!req.tools.is_null() && req.tools.is_array() && !req.tools.empty()) {
+        oss << ",\"tools\":" << req.tools.dump();
+    }
     oss << "}";
     return oss.str();
 }

@@ -77,8 +77,36 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             return 0;
         case WM_COMMAND:
             if (ide) {
-                ide->onCommand(hwnd, static_cast<int>(LOWORD(wParam)),
-                               reinterpret_cast<HWND>(lParam), HIWORD(wParam));
+                const int command = static_cast<int>(LOWORD(wParam));
+                const int paneId = (command >= 7100) ? (command - 7100) / 10 : -1;
+                TerminalPane* pane = (paneId > 0) ? ide->findTerminalPane(paneId) : nullptr;
+                const int action = (command >= 7100) ? (command - 7100) % 10 : 0;
+                // The terminal EDIT sends focus/change notifications using
+                // its control ID. They are not menu commands and must not be
+                // forwarded through the global command dispatcher.
+                if (pane && action == 1) return 0;
+                if (pane && action >= 2 && action <= 4) {
+                    if (action == 2 && pane->input) {
+                        char text[8192]{};
+                        GetWindowTextA(pane->input, text, static_cast<int>(sizeof(text)));
+                        if (text[0] && pane->manager) {
+                            // Reuse the established command path so chat-mode,
+                            // terminal routing and output-thread ownership remain
+                            // identical to the legacy command box.
+                            if (ide->m_hwndCommandInput) {
+                                SetWindowTextA(ide->m_hwndCommandInput, text);
+                                ide->executeCommand();
+                            }
+                            SetWindowTextA(pane->input, "");
+                        }
+                    } else if (action == 3 && pane->manager) {
+                        pane->manager->writeInput("\x03");
+                    } else if (action == 4 && pane->hwnd) {
+                        SetWindowTextA(pane->hwnd, "");
+                    }
+                    return 0;
+                }
+                ide->onCommand(hwnd, command, reinterpret_cast<HWND>(lParam), HIWORD(wParam));
             }
             return 0;
         case WM_NOTIFY: {
@@ -428,13 +456,18 @@ void Win32IDE::onSize(int width, int height)
         ShowWindow(output.second,
             showOutput && output.first == m_activeOutputTab ? SW_SHOW : SW_HIDE);
     }
-    for (auto& pane : m_terminalPanes) {
-        if (!pane.hwnd) continue;
-        if (terminalVisible) {
-            MoveWindow(pane.hwnd, 0, bottomTop, width, bottomHeight, TRUE);
-            ShowWindow(pane.hwnd, SW_SHOW);
-        } else {
-            ShowWindow(pane.hwnd, SW_HIDE);
+    if (terminalVisible) {
+        layoutTerminalPanes(width, bottomTop, bottomHeight);
+        for (auto& pane : m_terminalPanes) {
+            if (pane.hwnd) ShowWindow(pane.hwnd, SW_SHOW);
+        }
+    } else {
+        for (auto& pane : m_terminalPanes) {
+            if (pane.hwnd) ShowWindow(pane.hwnd, SW_HIDE);
+            if (pane.input) ShowWindow(pane.input, SW_HIDE);
+            if (pane.execute) ShowWindow(pane.execute, SW_HIDE);
+            if (pane.stop) ShowWindow(pane.stop, SW_HIDE);
+            if (pane.clear) ShowWindow(pane.clear, SW_HIDE);
         }
     }
     m_editorHeight = workHeight;

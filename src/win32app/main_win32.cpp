@@ -101,7 +101,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // to see why. RAWRXD_FAIL_FAST_GATES=false opts into degraded startup.
         LOG_ERROR("Readiness gates blocked startup; see the structured log");
         const std::string readiness_report =
-            Sovereign::Production::ProductionRuntime::last_readiness_report();
+            Sovereign::Production::ReadinessRunner::instance().run().summary();
         const std::string startup_error =
             "RawrXD refused to start because a readiness gate failed.\n\n" +
             readiness_report + "\n\nSee the structured log for details.";

@@ -705,22 +705,23 @@ private:
             return false;
         }
 
-        // Block-quantized types (blockElems > 1): GGUF quantizes along the LAST dimension.
-// shape.back() need NOT be divisible by blockElems — the final block is padded.
-// Use ceiling division so partial blocks are sized correctly.
-        const size_t lastDim = static_cast<size_t>(t.shape.back());
-        const size_t blocksPerLastDimRow = (lastDim + blockElems - 1) / blockElems;
-        size_t lastDimRowBytes = 0;
-        if (mulOverflow(blocksPerLastDimRow, blockBytes, lastDimRowBytes)) {
+        // GGML/GGUF stores the contiguous quantized dimension in ne[0],
+        // represented here by shape[0].  This matters for Kimi's packed MoE
+        // tensors (7168 x 2048 x 384): quantizing shape.back() overestimates
+        // the payload and falsely rejects an otherwise valid shard.
+        const size_t contiguousDim = static_cast<size_t>(t.shape[0]);
+        const size_t blocksPerRow = (contiguousDim + blockElems - 1) / blockElems;
+        size_t rowBytes = 0;
+        if (mulOverflow(blocksPerRow, blockBytes, rowBytes)) {
             fprintf(stderr,
-                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u blocksPerLastDimRow=%zu blockBytes=%zu overflow\n",
-                t.name.c_str(), static_cast<uint32_t>(t.type), blocksPerLastDimRow, blockBytes);
+                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u blocksPerRow=%zu blockBytes=%zu overflow\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type), blocksPerRow, blockBytes);
             return false;
         }
 
-        // Total rows = product of all dimensions except the last
+        // Total rows = product of all dimensions except the contiguous first.
         size_t rows = 1;
-        for (size_t d = 0; d + 1 < t.shape.size(); ++d) {
+        for (size_t d = 1; d < t.shape.size(); ++d) {
             size_t next = 0;
             if (mulOverflow(rows, static_cast<size_t>(t.shape[d]), next)) {
                 fprintf(stderr,
@@ -731,15 +732,15 @@ private:
             rows = next;
         }
 
-        if (!mulOverflow(lastDimRowBytes, rows, out)) {
+        if (!mulOverflow(rowBytes, rows, out)) {
             fprintf(stderr,
-                "[GGUF_DIAG] tensorByteSize PASS: name=%s type=%u shape.back()=%zu blocksPerRow=%zu rows=%zu out=%zu\n",
-                t.name.c_str(), static_cast<uint32_t>(t.type), lastDim, blocksPerLastDimRow, rows, out);
+                "[GGUF_DIAG] tensorByteSize PASS: name=%s type=%u contiguousDim=%zu blocksPerRow=%zu rows=%zu out=%zu\n",
+                t.name.c_str(), static_cast<uint32_t>(t.type), contiguousDim, blocksPerRow, rows, out);
             return true;
         }
         fprintf(stderr,
-            "[GGUF_DIAG] tensorByteSize FAIL: name=%s final overflow lastDimRowBytes=%zu rows=%zu\n",
-            t.name.c_str(), lastDimRowBytes, rows);
+            "[GGUF_DIAG] tensorByteSize FAIL: name=%s final overflow rowBytes=%zu rows=%zu\n",
+            t.name.c_str(), rowBytes, rows);
         return false;
     }
 
@@ -1006,7 +1007,12 @@ private:
             if (addOverflow(dataStart, pt.relativeOffset, abs) ||
                 abs > mf->size ||
                 bytes > static_cast<size_t>(mf->size - static_cast<size_t>(abs))) {
-                return fail("GGUF tensor range outside mapped shard: " + pt.name);
+                return fail("GGUF tensor range outside mapped shard: " + pt.name +
+                    " shard=" + std::to_string(shardId + 1) +
+                    " data_start=" + std::to_string(dataStart) +
+                    " offset=" + std::to_string(pt.relativeOffset) +
+                    " bytes=" + std::to_string(bytes) +
+                    " file_size=" + std::to_string(mf->size));
             }
 
             if (tensors_.find(pt.name) != tensors_.end())
@@ -1168,6 +1174,13 @@ struct ModelMetadata {
     uint32_t valueLengthMla = 0;
     uint32_t qLoraRank = 0;
     uint32_t kvLoraRank = 0;
+    // Derived MLA head dimensions from tensor geometry when metadata keys
+    // are absent. Populated by the MLA geometry derivation block; consumed
+    // by Deep2Engine.cpp to avoid the incorrect keyLengthMla - ropeDim
+    // assumption for DeepSeek-style MLA (where keyLengthMla = kvLoraRank +
+    // qkRopeHeadDim, NOT qkNopeHeadDim + qkRopeHeadDim).
+    uint32_t qkNopeHeadDim = 0;
+    uint32_t vHeadDim = 0;
     float    rmsNormEps = 0.0f;
     float    ropeTheta = 0.0f;
     uint32_t ropeScaling = 0;   // 0 = linear/off; engine reads it as a flag
@@ -1394,6 +1407,23 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
     meta.chatTemplate = ld.getMetaString("tokenizer.chat_template", "");
 
     // ---- MoE ----
+    // Diagnostic: print all metadata keys containing "expert" or "moe"
+    {
+        auto allMeta = ld.getMetaAllStrings();
+        fprintf(stderr,
+                "[MOE_KEYS_DIAG] Scanning %zu metadata keys for expert/moe keys\n",
+                allMeta.size());
+        for (const auto& kv : allMeta) {
+            const std::string& key = kv.first;
+            if (key.find("expert") != std::string::npos ||
+                key.find("moe") != std::string::npos) {
+                fprintf(stderr,
+                        "[MOE_KEYS_DIAG]   %s = %s\n", key.c_str(), kv.second.c_str());
+            }
+        }
+        fflush(stderr);
+    }
+
     meta.numExperts = static_cast<uint32_t>(readInt(
         keyWithFallback("expert_count"), 0));
     {
@@ -1411,7 +1441,15 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
     meta.sharedExpertIntermediateSize = static_cast<uint32_t>(readInt(
         keyWithFallback("expert_shared_feed_forward_length"), 0));
     meta.leadingDenseBlockCount = static_cast<uint32_t>(readInt(
-        keyWithFallback("attention.sliding_window"), 0));
+        keyWithFallback("expert_leading_dense_count"), 0));
+    if (meta.leadingDenseBlockCount == 0) {
+        meta.leadingDenseBlockCount = static_cast<uint32_t>(readInt(
+            keyWithFallback("moe_leading_dense_block_count"), 0));
+    }
+    if (meta.leadingDenseBlockCount == 0) {
+        meta.leadingDenseBlockCount = static_cast<uint32_t>(readInt(
+            keyWithFallback("llama.expert_leading_dense_count"), 0));
+    }
 
     // ---- MLA / LoRA, present on DeepSeek-style models and absent elsewhere ----
     meta.keyLengthMla = static_cast<uint32_t>(readInt(
@@ -1422,6 +1460,94 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
         keyWithFallback("q_lora_rank"), 0));
     meta.kvLoraRank = static_cast<uint32_t>(readInt(
         keyWithFallback("kv_lora_rank"), 0));
+
+    // ---- MLA geometry derivation (fallback when metadata keys are absent) ----
+    // Some DeepSeek GGUF checkpoints omit q_lora_rank/kv_lora_rank/key_length_mla
+    // metadata keys. Derive them from tensor geometry instead of hardcoding ranks,
+    // which would risk contaminating downstream pruning evidence with incorrect
+    // inference. The derivation is cross-checked against normalization tensors and
+    // rejected if any contradiction is found.
+    if ((meta.qLoraRank == 0 || meta.kvLoraRank == 0) && meta.architecture == "deepseek2")
+    {
+        const auto* q_a = ld.getTensor("blk.0.attn_q_a.weight");
+        const auto* q_a_norm = ld.getTensor("blk.0.attn_q_a_norm.weight");
+        const auto* kv_a_mqa = ld.getTensor("blk.0.attn_kv_a_mqa.weight");
+        const auto* kv_a_norm = ld.getTensor("blk.0.attn_kv_a_norm.weight");
+
+        if (q_a && kv_a_mqa && q_a->shape.size() >= 2 && kv_a_mqa->shape.size() >= 2)
+        {
+            const uint32_t derived_qLoraRank = static_cast<uint32_t>(q_a->shape[1]);
+            const uint32_t derived_keyLengthMla = static_cast<uint32_t>(kv_a_mqa->shape[1]);
+            const uint32_t derived_kvLoraRank =
+                derived_keyLengthMla > meta.ropeDimensionCount
+                    ? derived_keyLengthMla - meta.ropeDimensionCount
+                    : 0;
+
+            // Cross-check against normalization tensors when present
+            const bool q_norm_ok =
+                !q_a_norm || q_a_norm->shape.size() < 1 ||
+                static_cast<uint32_t>(q_a_norm->shape[0]) == derived_qLoraRank;
+            const bool kv_norm_ok =
+                !kv_a_norm || kv_a_norm->shape.size() < 1 ||
+                static_cast<uint32_t>(kv_a_norm->shape[0]) == derived_kvLoraRank;
+
+            // Validate: all dimensions nonzero, KV split consistent, norm cross-checks pass
+            if (derived_qLoraRank > 0 && derived_kvLoraRank > 0 &&
+                derived_keyLengthMla == derived_kvLoraRank + meta.ropeDimensionCount &&
+                q_norm_ok && kv_norm_ok)
+            {
+                if (meta.qLoraRank == 0) meta.qLoraRank = derived_qLoraRank;
+                if (meta.kvLoraRank == 0) meta.kvLoraRank = derived_kvLoraRank;
+                if (meta.keyLengthMla == 0) meta.keyLengthMla = derived_keyLengthMla;
+
+                // Derive qkNopeHeadDim from the Q output projection:
+                // attn_q_b.weight[1] = numHeads * (qkNopeHeadDim + qkRopeHeadDim)
+                // => qkNopeHeadDim = attn_q_b.weight[1] / numHeads - qkRopeHeadDim
+                const auto* q_b = ld.getTensor("blk.0.attn_q_b.weight");
+                if (q_b && q_b->shape.size() >= 2 && meta.numHeads > 0)
+                {
+                    const uint32_t q_b_out_per_head =
+                        static_cast<uint32_t>(q_b->shape[1]) / meta.numHeads;
+                    const uint32_t derived_qkNopeHeadDim =
+                        q_b_out_per_head > meta.ropeDimensionCount
+                            ? q_b_out_per_head - meta.ropeDimensionCount
+                            : 0;
+
+                    if (derived_qkNopeHeadDim > 0 && meta.qkNopeHeadDim == 0)
+                    {
+                        meta.qkNopeHeadDim = derived_qkNopeHeadDim;
+                    }
+
+                    fprintf(stderr,
+                            "[MLA_GEOMETRY] Derived MLA head dims: qkNopeHeadDim=%u "
+                            "(q_b_out_per_head=%u ropeDim=%u)\n",
+                            meta.qkNopeHeadDim, q_b_out_per_head, meta.ropeDimensionCount);
+                }
+
+                fprintf(stderr,
+                        "[MLA_GEOMETRY] Derived MLA ranks from tensor geometry: "
+                        "qLoraRank=%u kvLoraRank=%u keyLengthMla=%u ropeDim=%u\n",
+                        meta.qLoraRank, meta.kvLoraRank, meta.keyLengthMla,
+                        meta.ropeDimensionCount);
+            }
+            else
+            {
+                fprintf(stderr,
+                        "[MLA_GEOMETRY] WARNING: Tensor geometry cross-check failed "
+                        "(qLoraRank=%u kvLoraRank=%u keyLengthMla=%u ropeDim=%u "
+                        "q_norm_ok=%d kv_norm_ok=%d). MLA metadata remains unresolved.\n",
+                        derived_qLoraRank, derived_kvLoraRank, derived_keyLengthMla,
+                        meta.ropeDimensionCount, q_norm_ok ? 1 : 0, kv_norm_ok ? 1 : 0);
+            }
+        }
+        else
+        {
+            fprintf(stderr,
+                    "[MLA_GEOMETRY] WARNING: Could not locate MLA projection tensors "
+                    "(attn_q_a.weight / attn_kv_a_mqa.weight). MLA metadata remains "
+                    "unresolved.\n");
+        }
+    }
 
     meta.rmsNormEps = static_cast<float>(
         ld.getMetaFloat(archKey("attention.layer_norm_rms_epsilon"), 0.0));

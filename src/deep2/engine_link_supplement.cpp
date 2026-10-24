@@ -43,22 +43,18 @@ bool GpuPowerValidForPolicy() noexcept { return false; }
 
 #include "K2NativeStreamGate.hpp"
 
-// K2NativeStreamGate::Run — the native K2 shard streaming forward path. The
-// full gate (Q4_K embed + streamed MLA layers + Q6_K logits) lives in a large
-// translation unit built against a diverged fork; here we provide the contract
-// entry point so the engine links, returning a fail-closed Result. Callers
-// treat ok=false as "native gate not selected" and fall back to the standard
-// engine forward path, which is the certified baseline.
+// The production K2 stream gate is not source-compatible with this checkout's
+// current Deep2 ABI. Keep the baseline fail-closed until the complete provider
+// set is integrated as one coherent revision.
 namespace K2NativeStreamGate {
-Result Run(const std::filesystem::path& /*shardDir*/,
-           const Deep2::GlobalTensorIndex& /*index*/,
-           const Deep2::KimiK2Config& /*k2cfg*/,
-           const std::vector<std::filesystem::path>& /*shards*/,
-           const Config& /*cfg*/) {
+Result Run(const std::filesystem::path&,
+           const Deep2::GlobalTensorIndex&,
+           const Deep2::KimiK2Config&,
+           const std::vector<std::filesystem::path>&,
+           const Config&) {
     Result r;
     r.ok = false;
-    r.error = "K2NativeStreamGate::Run: native shard-streaming gate not linked "
-              "in this build; using standard engine forward path.";
+    r.error = "K2NativeStreamGate: provider set is not ABI-compatible with this build";
     return r;
 }
 } // namespace K2NativeStreamGate

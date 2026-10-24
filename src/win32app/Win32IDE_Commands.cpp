@@ -291,6 +291,10 @@ void Win32IDE::handleTerminalCommand(int commandId) {
     case IDM_TERMINAL_CLEAR_ALL: clearAllTerminals(); break;
     default: break;
     }
+    RECT client{};
+    if (m_hwndMain && GetClientRect(m_hwndMain, &client)) {
+        onSize(client.right - client.left, client.bottom - client.top);
+    }
 }
 
 void Win32IDE::handleToolsCommand(int commandId) {

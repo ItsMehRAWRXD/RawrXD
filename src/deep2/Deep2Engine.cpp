@@ -47,6 +47,7 @@
 #include "execution_policy/ExecutionPolicyApply.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "execution_policy/PolicyApply.hpp"
+#include "generic_vulkan_matmul.hpp"
 #include "ollama_blob_parser.h"
 #include "deep2/HostQ8GemvSafe.hpp"
 #include "deep2/RawrReverseCompletion.hpp"
@@ -2246,9 +2247,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>();
         for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s)
         {
-            residencyCache_->register_shard(s, globalIndex_->ShardPath(s).string());
+            if (!residencyCache_->register_shard(s, globalIndex_->ShardPath(s).string()))
+            {
+                fprintf(stderr, "[Deep2Engine] ERROR: Failed to register shard %u: %s\n",
+                        s, globalIndex_->ShardPath(s).string().c_str());
+                globalIndex_.reset();
+                residencyCache_.reset();
+                return false;
+            }
         }
-        printf("[Deep2Engine] TensorResidencyCache ready\n");
+        printf("[Deep2Engine] TensorResidencyCache ready (%u shards registered)\n",
+               static_cast<uint32_t>(globalIndex_->TotalShards()));
     }
 
     isMultiShard_ = isMultiShard;
@@ -2283,7 +2292,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
 
         // Compute MLA head dimensions
-        if (meta.ropeDimensionCount > 0 && meta.keyLengthMla > meta.ropeDimensionCount)
+        // qkNopeHeadDim is derived from tensor geometry (attn_q_b.weight) in the
+        // GGUF loader. Do NOT compute it as keyLengthMla - ropeDimensionCount:
+        // for DeepSeek MLA, keyLengthMla = kvLoraRank + qkRopeHeadDim, not
+        // qkNopeHeadDim + qkRopeHeadDim.
+        if (meta.qkNopeHeadDim > 0)
+        {
+            modelWeights.qkNopeHeadDim = meta.qkNopeHeadDim;
+        }
+        else if (meta.ropeDimensionCount > 0 && meta.keyLengthMla > meta.ropeDimensionCount)
         {
             modelWeights.qkNopeHeadDim = meta.keyLengthMla - meta.ropeDimensionCount;
         }
@@ -3310,17 +3327,83 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     printf("[Deep2Engine] Model loaded successfully (%zu tensors)\n",
            isMultiShard ? globalIndex_->TotalTensors() : ggufResult.tensors.size());
 
+    // ── P0: MoE topology auto-detection ──
+    // Nemotron-H GGUF checkpoints often omit the explicit "expert_count"
+    // metadata key. When meta.numExperts is 0, scan the GGUF tensor directory
+    // for multi-dimensional expert weight tensors (e.g. blk.12.ffn_gate.weight
+    // stored as [num_experts, out_dim, in_dim]) or flat arrays of per-expert
+    // tensors (blk.12.ffn_gate.0.weight ... blk.12.ffn_gate.N.weight).
+    if (modelWeights.numExperts == 0 && !isMultiShard)
+    {
+        size_t detectedExperts = 0;
+        for (const auto& tensor : ggufResult.tensors)
+        {
+            const std::string& name = tensor.name;
+            if (name.find("ffn_gate") == std::string::npos &&
+                name.find("ffn_gate_exps") == std::string::npos)
+                continue;
+
+            // Scenario A: 3D tensor [num_experts, out_dim, in_dim]
+            if (tensor.dimensions.size() >= 3)
+            {
+                size_t expertDim = (size_t)tensor.dimensions[0];
+                if (expertDim > detectedExperts)
+                    detectedExperts = expertDim;
+            }
+            // Scenario B: Flat per-expert tensors; parse expert index from name
+            else
+            {
+                // Look for patterns like "blk.12.ffn_gate.7.weight" or "blk.12.ffn_gate_exps.7.weight"
+                size_t gatePos = name.rfind("ffn_gate");
+                if (gatePos != std::string::npos)
+                {
+                    // Scan forward from "ffn_gate" for a digit sequence
+                    size_t pos = gatePos + 8;
+                    while (pos < name.size() && !std::isdigit(static_cast<unsigned char>(name[pos])))
+                        ++pos;
+                    if (pos < name.size())
+                    {
+                        size_t end = pos;
+                        while (end < name.size() && std::isdigit(static_cast<unsigned char>(name[end])))
+                            ++end;
+                        if (end > pos)
+                        {
+                            int expertIdx = std::stoi(name.substr(pos, end - pos));
+                            if ((size_t)(expertIdx + 1) > detectedExperts)
+                                detectedExperts = (size_t)(expertIdx + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (detectedExperts > 0)
+        {
+            modelWeights.numExperts = detectedExperts;
+            modelWeights.isMoE = true;
+            if (modelWeights.numExpertsPerToken == 0)
+                modelWeights.numExpertsPerToken = 2;  // Nemotron-H default: top-2
+            if (modelWeights.numSharedExperts == 0)
+                modelWeights.numSharedExperts = 1;    // Nemotron-H default: 1 shared expert
+            if (modelWeights.moeIntermediateDim == 0)
+                modelWeights.moeIntermediateDim = modelWeights.intermediateDim;
+
+            printf("[Deep2Engine] MoE topology auto-detected: %u experts, top-%u, %u shared, intermediateDim=%zu\n",
+                   modelWeights.numExperts, modelWeights.numExpertsPerToken,
+                   modelWeights.numSharedExperts, modelWeights.moeIntermediateDim);
+        }
+    }
+
     // Wire MoE streaming loader
-    if (meta.numExperts > 0)
+    if (modelWeights.numExperts > 0)
     {
         modelWeights.isMoE = true;
-        modelWeights.numExperts = meta.numExperts;
-        modelWeights.numExpertsPerToken = meta.numExpertsPerToken > 0 ? meta.numExpertsPerToken : 8;
-        modelWeights.numSharedExperts = meta.numSharedExperts;
-        modelWeights.moeIntermediateDim = meta.moeIntermediateSize;
+        // numExperts, numExpertsPerToken, numSharedExperts, moeIntermediateDim
+        // already set from detection or metadata above
 
-        printf("[Deep2Engine] MoE model: %u experts, top-%u, %u shared\n", meta.numExperts, meta.numExpertsPerToken,
-               meta.numSharedExperts);
+        printf("[Deep2Engine] MoE model: %u experts, top-%u, %u shared\n",
+               modelWeights.numExperts, modelWeights.numExpertsPerToken,
+               modelWeights.numSharedExperts);
 
         // For multi-shard, MoE weights are resolved via GlobalTensorIndex + residency cache
         if (!isMultiShard)
@@ -3336,12 +3419,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             {
                 printf("[Deep2Engine] MoE streaming loader ready\n");
 
-                moeConfig_.numExperts = meta.numExperts;
+                moeConfig_.numExperts = modelWeights.numExperts;
                 moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
-                moeConfig_.useSharedExpert = meta.numSharedExperts > 0;
-                moeConfig_.expertDim = meta.moeIntermediateSize > 0 ? meta.moeIntermediateSize : meta.intermediateSize;
+                moeConfig_.useSharedExpert = modelWeights.numSharedExperts > 0;
+                moeConfig_.expertDim = modelWeights.moeIntermediateDim > 0 ? modelWeights.moeIntermediateDim : config.intermediateDim;
                 moeConfig_.sharedExpertDim = moeConfig_.expertDim;
-                moeConfig_.hiddenDim = meta.hiddenSize;
+                moeConfig_.hiddenDim = config.hiddenDim;
 
                 // Create per-layer routers and inject weights
                 moeRouters_.clear();
@@ -3815,7 +3898,25 @@ std::string Deep2Engine::detokenize(const std::vector<int>& tokens)
 // ============================================================================
 bool Deep2Engine::embedToken(int tokenId, float* output)
 {
-    if (!modelWeights.loaded || !modelWeights.tokenEmbed.data || !output)
+    if (!modelWeights.loaded || !output)
+    {
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
+    // For multi-shard models, token_embd.weight data is not eagerly loaded into
+    // modelWeights.tokenEmbed.data (options.loadTensors = false). Fall back to
+    // reading the single token row from the GGUF shard via GlobalTensorIndex +
+    // TensorResidencyCache.
+    if (!modelWeights.tokenEmbed.data && isMultiShard_ && globalIndex_ && residencyCache_)
+    {
+        return embedTokenFromShard(tokenId, output);
+    }
+
+    if (!modelWeights.tokenEmbed.data)
     {
         if (output && config.hiddenDim > 0)
         {
@@ -4338,6 +4439,215 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
             output[0] = 1.0e-6f;
         }
     }
+    return true;
+}
+
+// ============================================================================
+// Multi-shard token embedding lookup
+// Reads a single token_embd row from the GGUF shard via GlobalTensorIndex +
+// TensorResidencyCache, without eagerly loading the entire embedding tensor.
+// Used when modelWeights.tokenEmbed.data is null (multi-shard models).
+// ============================================================================
+bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
+{
+    if (!globalIndex_ || !residencyCache_ || !output || tokenId < 0)
+    {
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
+    const auto embedOpt = globalIndex_->Find("token_embd.weight");
+    if (!embedOpt.has_value())
+    {
+        fprintf(stderr, "[MULTISHARD_EMBED] token_embd.weight not found in GlobalTensorIndex\n");
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+    const auto& embedRef = embedOpt.value();
+
+    // Validate shape: [vocabSize, hiddenDim]
+    if (embedRef.shape.size() < 2)
+    {
+        fprintf(stderr, "[MULTISHARD_EMBED] token_embd.weight shape invalid (ndim=%zu)\n", embedRef.shape.size());
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
+    size_t vocabSize = embedRef.shape[0];
+    size_t hiddenDim = embedRef.shape[1];
+    if (tokenId >= (int)vocabSize)
+    {
+        fprintf(stderr, "[MULTISHARD_EMBED] token=%d out of range vocabSize=%zu\n", tokenId, vocabSize);
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
+    // Compute row bytes from GGML type
+    size_t rowBytes = 0;
+    switch (embedRef.ggmlType)
+    {
+        case (int)GGMLType::GGML_TYPE_F32:
+            rowBytes = hiddenDim * sizeof(float);
+            break;
+        case (int)GGMLType::GGML_TYPE_F16:
+            rowBytes = hiddenDim * sizeof(uint16_t);
+            break;
+        case (int)GGMLType::GGML_TYPE_Q4_K:
+        {
+            size_t numBlocks = (hiddenDim + 255) / 256;
+            rowBytes = numBlocks * sizeof(block_q4_K);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q8_0:
+        {
+            size_t numBlocks = hiddenDim / 32;
+            rowBytes = numBlocks * sizeof(block_q8_0);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q4_0:
+        {
+            size_t numBlocks = hiddenDim / 32;
+            rowBytes = numBlocks * sizeof(block_q4_0);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q2_K:
+        {
+            size_t numBlocks = (hiddenDim + 255) / 256;
+            rowBytes = numBlocks * sizeof(block_q2_K);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q3_K:
+        {
+            size_t numBlocks = (hiddenDim + 255) / 256;
+            rowBytes = numBlocks * sizeof(block_q3_K);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q6_K:
+        {
+            size_t numBlocks = (hiddenDim + 255) / 256;
+            rowBytes = numBlocks * sizeof(block_q6_K);
+            break;
+        }
+        default:
+            fprintf(stderr, "[MULTISHARD_EMBED] unsupported GGML type %d for token_embd\n", embedRef.ggmlType);
+            if (output && config.hiddenDim > 0)
+            {
+                memset(output, 0, config.hiddenDim * sizeof(float));
+            }
+            return false;
+    }
+
+    uint64_t rowOffset = embedRef.fileOffset + static_cast<uint64_t>(tokenId) * rowBytes;
+    if (rowOffset + rowBytes > embedRef.fileOffset + embedRef.byteSize)
+    {
+        fprintf(stderr, "[MULTISHARD_EMBED] row out of tensor range: offset=%llu bytes=%llu total=%llu\n",
+                (unsigned long long)rowOffset, (unsigned long long)rowBytes,
+                (unsigned long long)embedRef.byteSize);
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
+    // Acquire mapping via TensorResidencyCache (page-aligned region around row)
+    // Diagnostic: verify shard registration before acquire
+    fprintf(stderr, "[MULTISHARD_EMBED_DIAG] shardId=%u shardCount=%u rowOffset=%llu rowBytes=%llu "
+            "tensorFileOffset=%llu tensorByteSize=%llu\n",
+            embedRef.shardId, globalIndex_->TotalShards(),
+            (unsigned long long)rowOffset, (unsigned long long)rowBytes,
+            (unsigned long long)embedRef.fileOffset, (unsigned long long)embedRef.byteSize);
+    fprintf(stderr, "[MULTISHARD_EMBED_DIAG] shardPath=%s\n",
+            globalIndex_->ShardPath(embedRef.shardId).string().c_str());
+    auto* mapping = residencyCache_->acquire(embedRef.shardId, rowOffset, rowBytes);
+    if (!mapping)
+    {
+        fprintf(stderr, "[MULTISHARD_EMBED] residencyCache acquire failed shard=%u offset=%llu bytes=%llu\n",
+                embedRef.shardId, (unsigned long long)rowOffset, (unsigned long long)rowBytes);
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
+    const uint8_t* row = static_cast<const uint8_t*>(mapping->data);
+
+    // Dequantize according to GGML type
+    bool ok = false;
+    switch (embedRef.ggmlType)
+    {
+        case (int)GGMLType::GGML_TYPE_F32:
+        {
+            const float* src = (const float*)row;
+            memcpy(output, src, hiddenDim * sizeof(float));
+            ok = true;
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_F16:
+        {
+            const uint16_t* src = (const uint16_t*)row;
+            for (size_t i = 0; i < hiddenDim; ++i)
+            {
+                output[i] = fp16ToFloat(src[i]);
+            }
+            ok = true;
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q4_K:
+        {
+            auto& reg = Deep2::QuantKernelRegistry::Instance();
+            if (reg.GetRegisteredCount() == 0)
+            {
+                reg.Initialize();
+            }
+            auto dequant = reg.GetDequant((int)GGMLType::GGML_TYPE_Q4_K);
+            if (dequant)
+            {
+                dequant(row, output, (int)hiddenDim);
+                ok = true;
+            }
+            else
+            {
+                const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(row);
+                size_t numBlocks = (hiddenDim + 255) / 256;
+                for (size_t b = 0; b < numBlocks; ++b)
+                {
+                    dequantizeQ4KBlock(reinterpret_cast<const Q4_K_Block*>(&blocks[b]), output + b * 256);
+                }
+                ok = true;
+            }
+            break;
+        }
+        default:
+            fprintf(stderr, "[MULTISHARD_EMBED] dequant not implemented for GGML type %d\n", embedRef.ggmlType);
+            ok = false;
+            break;
+    }
+
+    residencyCache_->release(mapping);
+
+    if (!ok)
+    {
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
+
     return true;
 }
 
@@ -8434,11 +8744,17 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     // projection as both gate and up in SwiGLU: silu(up) * up.
     bool hasGate = (lw.wGate.data != nullptr && lw.wGate.sizeBytes > 0);
 
-    // FFN requires both up and down projections. If either is missing, the
-    // layer cannot produce a valid FFN output — zero the output and skip
-    // rather than passing a null weight pointer to LinearW.
+    // FFN requires both up and down projections. If up is missing but gate
+    // exists, use gate as up (self-gating SwiGLU: silu(gate) * gate).
     bool hasUp   = (lw.wUp.data   != nullptr && lw.wUp.sizeBytes   > 0);
+    const WeightTensor* upWt = &lw.wUp;
+    if (!hasUp && hasGate && lw.wGate.data)
+    {
+        upWt = &lw.wGate;
+        hasUp = true;
+    }
     bool hasDown = (lw.wDown.data != nullptr && lw.wDown.sizeBytes > 0);
+
     if (!hasUp || !hasDown)
     {
         fprintf(stderr,
@@ -8480,7 +8796,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     if (profilingEnabled_ && profiler_)
         profiler_->beginFFNUp();
     std::fill(upBuf, upBuf + intermediateDim, 0.0f);
-    LinearW(lw.wUp, input, nullptr, upBuf, intermediateDim);
+    LinearW(*upWt, input, nullptr, upBuf, intermediateDim);
     if (profilingEnabled_ && profiler_)
         profiler_->endFFNUp();
 
@@ -8909,11 +9225,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // Write directly to output (ffnOutput). Do NOT use attentionOutput as
     // sharedOut — forwardLayer uses attentionOutput as its output buffer and
     // it holds the attention+input residual that must be preserved.
-    fprintf(stderr, "[MOE_DIAG] layer=%zu calling computeSharedExpertFFN\n", layer);
-    fflush(stderr);
     computeSharedExpertFFN(layer, input, output);
-    fprintf(stderr, "[MOE_DIAG] layer=%zu computeSharedExpertFFN done\n", layer);
-    fflush(stderr);
     // output now contains shared expert output; routed experts add below.
 
     // --- Routed experts ---
@@ -9005,16 +9317,10 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         if (expertId < 0)
             continue;
 
-        fprintf(stderr, "[MOE_DIAG] layer=%zu expertId=%d before Acquire\n", layer, expertId);
-        fflush(stderr);
-
         auto tAcquire0 = std::chrono::high_resolution_clock::now();
 
         // Acquire expert weights via proxy (streams from disk if needed)
         MoEWeightHandle handle = moeWeightProxy_->Acquire((int)layer, expertId);
-
-        fprintf(stderr, "[MOE_DIAG] layer=%zu expertId=%d after Acquire valid=%d\n", layer, expertId, handle.valid ? 1 : 0);
-        fflush(stderr);
 
         auto tAcquire1 = std::chrono::high_resolution_clock::now();
         uint64_t acquireUs = std::chrono::duration_cast<std::chrono::microseconds>(tAcquire1 - tAcquire0).count();
@@ -9034,9 +9340,6 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
         // Execute expert FFN: gate/up SwiGLU -> down projection
         computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim);
-
-        fprintf(stderr, "[MOE_DIAG] layer=%zu expertId=%d after computeExpertFFN\n", layer, expertId);
-        fflush(stderr);
 
         auto tCompute1 = std::chrono::high_resolution_clock::now();
         uint64_t computeUs = std::chrono::duration_cast<std::chrono::microseconds>(tCompute1 - tCompute0).count();
@@ -11925,7 +12228,15 @@ Deep2::KimiK2Config makeK2ConfigFromMetadata(const Deep2::ModelMetadata& meta, u
     cfg.kvLoraRank = meta.kvLoraRank;
     cfg.qkRopeHeadDim = meta.ropeDimensionCount;
 
-    if (meta.keyLengthMla > cfg.qkRopeHeadDim)
+    // qkNopeHeadDim is derived from tensor geometry (attn_q_b.weight) in the
+    // GGUF loader. Do NOT compute it as keyLengthMla - ropeDimensionCount:
+    // for DeepSeek MLA, keyLengthMla = kvLoraRank + qkRopeHeadDim, not
+    // qkNopeHeadDim + qkRopeHeadDim.
+    if (meta.qkNopeHeadDim > 0)
+    {
+        cfg.qkNopeHeadDim = meta.qkNopeHeadDim;
+    }
+    else if (meta.keyLengthMla > cfg.qkRopeHeadDim)
     {
         cfg.qkNopeHeadDim = meta.keyLengthMla - cfg.qkRopeHeadDim;
     }

@@ -3052,6 +3052,9 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_ModelFit.cpp
             ${CMAKE_SOURCE_DIR}/src/ChatTemplate.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute_engine_adapter.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2MlaLifecycleAdapter.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/MlaCertAuthority.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/engine_subsystems.cpp
             ${_DEEP2_ENGINE_SUBSYSTEM_SOURCES}
         )
@@ -5028,8 +5031,22 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_corpus_cli.cpp")
     set_target_properties(rawr-reap-corpus PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_writer_cli.cpp")
-    add_executable(rawr-reap-writer src/reap_writer_cli.cpp)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/mla_lifecycle_test.cpp")
+    add_executable(deep2_mla_lifecycle_test
+        src/deep2/mla_lifecycle_test.cpp
+        src/deep2/Deep2MlaLifecycleAdapter.cpp)
+    target_include_directories(deep2_mla_lifecycle_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_compile_features(deep2_mla_lifecycle_test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_mla_lifecycle_test PRIVATE /EHsc /std:c++20)
+    endif()
+    enable_testing()
+    add_test(NAME deep2_mla_lifecycle_test COMMAND deep2_mla_lifecycle_test)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_writer_cli.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/ReapWriter.cpp")
+    add_executable(rawr-reap-writer src/reap_writer_cli.cpp src/deep2/ReapWriter.cpp)
     target_include_directories(rawr-reap-writer PRIVATE
         ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
         ${CMAKE_SOURCE_DIR}/include)

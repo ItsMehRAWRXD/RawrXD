@@ -50,6 +50,8 @@ struct OllamaGenerateRequest {
 struct OllamaChatMessage {
     std::string role;
     std::string content;
+    std::string tool_call_id;
+    json tool_calls;
 };
 
 struct OllamaChatRequest {

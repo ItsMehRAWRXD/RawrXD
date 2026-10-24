@@ -48,6 +48,7 @@
 #include "K2LogitsArgmaxContract.hpp"
 #include "lavapath/GreedyDetTrace.hpp"
 #include "lavapath/DualStickImbalance_Det.hpp"
+#include "RuntimeEvidence512HostIDE.hpp"
 #include <cstdint>
 #include <algorithm>
 #include <cmath>
@@ -713,6 +714,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         uint64_t bytes = 0;
         std::string err;
         Deep2::TensorReady gate;
+        bool gate_ready = false;
         Deep2::TensorLife life;
         std::thread worker;
         uint32_t owner = ~0u;
@@ -727,6 +729,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         s.life.lease.bytes = ok ? (const void*)s.payloads[0].data() : nullptr;
         s.gate.failed.store(!ok, std::memory_order_release);
         s.gate.ready.store(ok, std::memory_order_release);
+        s.gate_ready = ok;
     };
     auto awaitSlot = [&](LayerSlot& s) {
         if (s.worker.joinable()) s.worker.join();
@@ -736,6 +739,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         Deep2::completeConsumer(s.life);
         for (auto& p : s.payloads) std::vector<uint8_t>().swap(p);
         s.gate.ready.store(false, std::memory_order_relaxed);
+        s.gate_ready = false;
         s.bytes = 0;
         s.owner = ~0u;
     };
@@ -749,6 +753,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         if (!Deep2::scoreboard::TryWorkerDoneAwaitTip(s))
             awaitSlot(s);
         s.owner = layer;
+        s.gate_ready = false;
         s.gate.ready.store(false, std::memory_order_relaxed);
         s.worker = std::thread([&, layer] { loadSlot(s, layer); });
     };

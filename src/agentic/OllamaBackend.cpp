@@ -165,6 +165,8 @@ void OllamaBackend::ConvertMessages(
         Backend::OllamaChatMessage omsg;
         omsg.role    = msg.role;
         omsg.content = msg.content;
+        omsg.tool_call_id = msg.tool_call_id;
+        omsg.tool_calls = msg.tool_calls;
         out.push_back(omsg);
     }
 }
@@ -235,15 +237,21 @@ InferenceResult OllamaBackend::ChatSync(
 
     m_totalRequests.fetch_add(1);
 
-    if (!resp.done || resp.response.empty()) {
-        std::string err = resp.done_reason == "error" ? resp.response : "Unknown error";
+    // /api/chat returns content in message.content, while /api/generate uses
+    // response. Validate the unified text after selecting the correct field.
+    std::string text = !resp.message.empty() ? resp.message : resp.response;
+    const bool has_tool_calls = !resp.tool_calls.is_null() &&
+                                resp.tool_calls.is_array() &&
+                                !resp.tool_calls.empty();
+    if (!resp.done || (text.empty() && !has_tool_calls)) {
+        std::string err = resp.done_reason == "error"
+            ? (!resp.response.empty() ? resp.response : resp.message)
+            : "Ollama returned no chat content";
         RecordFailure("Ollama chatSync failed: " + err);
         return InferenceResult::Error(err);
     }
 
     // Extract response text (chat mode uses .message, generate mode uses .response)
-    std::string text = !resp.message.empty() ? resp.message : resp.response;
-
     InferenceResult result = InferenceResult::Ok(text);
     result.tool_calls.clear();
 

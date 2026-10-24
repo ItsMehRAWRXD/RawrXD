@@ -711,3 +711,25 @@ LRESULT CALLBACK Win32IDE::PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wPar
     
     return CallWindowProc(oldProc, hwnd, uMsg, wParam, lParam);
 }
+
+LRESULT CALLBACK Win32IDE::TerminalInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    WNDPROC oldProc = reinterpret_cast<WNDPROC>(GetPropA(hwnd, "RAWRXD_TERMINAL_OLDPROC"));
+    if (uMsg == WM_KEYDOWN && wParam == VK_RETURN) {
+        HWND root = GetAncestor(hwnd, GA_ROOT);
+        auto* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(root, GWLP_USERDATA));
+        const auto paneValue = reinterpret_cast<ULONG_PTR>(GetPropA(hwnd, "RAWRXD_TERMINAL_PANE"));
+        if (ide && paneValue) {
+            TerminalPane* pane = ide->findTerminalPane(static_cast<int>(paneValue));
+            char text[8192]{};
+            GetWindowTextA(hwnd, text, static_cast<int>(sizeof(text)));
+            if (pane && pane->manager && text[0]) {
+                ide->onTerminalOutput(pane->id, std::string("> ") + text + "\r\n");
+                pane->manager->writeInput(std::string(text) + "\r\n");
+                SetWindowTextA(hwnd, "");
+            }
+            return 0;
+        }
+    }
+    return oldProc ? CallWindowProcA(oldProc, hwnd, uMsg, wParam, lParam)
+                    : DefWindowProcA(hwnd, uMsg, wParam, lParam);
+}

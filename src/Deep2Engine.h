@@ -1089,6 +1089,12 @@ namespace Deep2
         bool allocateBuffers();
         void deallocateBuffers();
 
+        // Multi-shard embedding lookup: reads a single token_embd row from
+        // the appropriate GGUF shard via GlobalTensorIndex + TensorResidencyCache.
+        // Used when modelWeights.tokenEmbed.data is null (multi-shard models
+        // do not eagerly load tensor data). Returns false on any failure.
+        bool embedTokenFromShard(int tokenId, float *output);
+
         // Transformer layer forward pass (real implementation)
         void forwardLayer(size_t layer, const float *input, float *output, size_t seqLen);
         // SEH-safe wrapper around forwardLayer: catches access violations from

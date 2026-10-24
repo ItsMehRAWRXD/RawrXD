@@ -15,12 +15,19 @@
 
 #include "Deep2Engine.h"
 
+#include <windows.h>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
 #include <string>
 
 int main(int argc, char** argv) {
+    // Ensure the Windows console emits UTF-8 (not CP1252) so detokenized
+    // model output (which is UTF-8 from the BPE tokenizer) renders correctly
+    // instead of mojibake like Ã¡lÑ‘Ð½.
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     std::printf("[deep2-engine] rawrxd_deep2_engine starting\n");
 
     try {
