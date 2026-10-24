@@ -89,9 +89,9 @@ public:
         if (!read_(s.path, s.offset, bytes.data(), bytes.size())) return false;
         stats_.diskBytes += s.bytes;
         Binding uploaded;
-        if (!upload_(s, bytes, uploaded) || !uploaded.deviceHandle ||
-            uploaded.bytes < bytes.size())
-            return false;
+        if (!upload_(s, bytes, uploaded)) return false;
+        if (!uploaded.deviceHandle || uploaded.bytes < bytes.size())
+            throw std::runtime_error("upload reported success with invalid GPU binding");
         resident_[key] = uploaded;
         ++stats_.bindingUses;
         return execute_(uploaded, layer, expert);
