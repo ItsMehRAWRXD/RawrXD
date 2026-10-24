@@ -31,7 +31,11 @@ void DiagnosticEngine::report(DiagnosticSeverity severity, const SourceLoc& loc,
     d.loc = loc;
     d.code = code ? code : "";
 
-    if (sources_ && loc.valid()) {
+    // Invalid source IDs must not index the source table out of bounds.
+    const bool hasSource = sources_ && loc.valid() &&
+                           loc.file_id <= sources_->file_count();
+    if (!hasSource) d.loc = SourceLoc{};
+    if (hasSource) {
         const SourceFile& f = sources_->file(loc.file_id);
         d.file_path = f.path;
         uint32 line = 0, col = 0;
@@ -40,10 +44,17 @@ void DiagnosticEngine::report(DiagnosticSeverity severity, const SourceLoc& loc,
         d.column = col;
         d.source_line = sources_->line_text(loc.file_id, line);
 
-        // Build the caret line: spaces up to the column, then '^'.
-        for (uint32 i = 1; i < col; ++i) {
-            d.caret_line.push_back(d.source_line[rawrstd::min_of<size_type>(i - 1, d.source_line.size())] == '\t' ? '\t' : ' ');
+        // Bound display allocations for malformed/extreme columns and
+        // never index the source string at size() (rawrstd::String is unchecked).
+        constexpr uint32 kMaxCaretPadding = 4096;
+        const uint32 spaces = col > 0 ? col - 1 : 0;
+        const uint32 padding = rawrstd::min_of<uint32>(spaces, kMaxCaretPadding);
+        for (uint32 i = 0; i < padding; ++i) {
+            const bool tab = i < d.source_line.size() &&
+                             d.source_line[i] == '\t';
+            d.caret_line.push_back(tab ? '\t' : ' ');
         }
+        if (spaces > kMaxCaretPadding) d.caret_line.append("...");
         d.caret_line.push_back('^');
     }
 
