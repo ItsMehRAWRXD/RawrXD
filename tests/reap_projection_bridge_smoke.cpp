@@ -57,5 +57,23 @@ int main() {
     assert(limited.ResidentBytes()==0 && limitedExec==0 && limitedReads==0);
     assert(limited.ForgetAfterGpuIdle(2,4));
     assert(limited.ResidentBytes()==0);
+    int released=0, releaseHandles[3]={7,8,9};
+    ProjectionBridge releasable(
+        [](const std::string&,uint64_t,void* out,size_t n){
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(out)[i]=1;
+            return true;
+        },
+        [&](Projection p,const Slice&,const std::vector<uint8_t>&,Binding& out){
+            out={&releaseHandles[static_cast<int>(p)],4,1}; return true;
+        },
+        [](Projection,const Binding&,uint32_t,uint32_t){return true;},
+        1024,12,[]{return true;},
+        [&](Projection,const Binding& binding){assert(binding.deviceHandle); ++released;});
+    for(auto p:{Projection::Gate,Projection::Up,Projection::Down})
+        releasable.Register(p,{"immutable.gguf",100,4,3,5,0});
+    releasable.Retain(3,5);
+    assert(releasable.Run(3,5));
+    assert(releasable.ForgetAfterGpuIdle(3,5));
+    assert(released==3 && releasable.ResidentBytes()==0);
     std::cout<<"REAP_PROJECTION_BRIDGE_SMOKE_PASS\n";
 }
