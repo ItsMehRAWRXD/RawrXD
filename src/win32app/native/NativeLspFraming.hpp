@@ -38,7 +38,12 @@ public:
                     auto line=header.substr(pos,end-pos);
                     constexpr std::string_view prefix="Content-Length:";
                     if(line.size()>=prefix.size() &&
-                       line.substr(0,prefix.size())==prefix) {
+                       [&] { for(size_t i=0;i<prefix.size();++i) {
+                           const unsigned char c=static_cast<unsigned char>(line[i]);
+                           const char lower=(c>=65 && c<=90) ? static_cast<char>(c+32) : static_cast<char>(c);
+                           const char expected=(prefix[i]>=65 && prefix[i]<=90) ? static_cast<char>(prefix[i]+32) : prefix[i];
+                           if(lower!=expected) return false;
+                       } return true; }()) {
                         if(length!=npos) throw std::invalid_argument("duplicate Content-Length");
                         auto value=line.substr(prefix.size());
                         while(!value.empty() && value.front()==' ') value.remove_prefix(1);
