@@ -136,5 +136,36 @@ int main() {
     try { b.Register({"test.gguf",128,4,2,7,0}); }
     catch (const std::invalid_argument&) { duplicateRejected=true; }
     assert(duplicateRejected);
+    bool offsetOverflowRejected=false;
+    try {
+        Bridge overflowSlice(
+            [](const std::string&, uint64_t, void*, size_t) { return true; },
+            [](const Slice&, const std::vector<uint8_t>&, Binding&) { return true; },
+            [](const Binding&, uint32_t, uint32_t) { return true; });
+        overflowSlice.Register({"test.gguf", UINT64_MAX, 4, 5, 1, 0});
+    } catch (const std::invalid_argument&) { offsetOverflowRejected=true; }
+    assert(offsetOverflowRejected);
+    bool unknownRetainRejected=false;
+    try { b.Retain(999,999); }
+    catch (const std::invalid_argument&) { unknownRetainRejected=true; }
+    assert(unknownRetainRejected);
+    int executeFailureReads=0, executeFailureUploads=0, executeFailureCalls=0;
+    Bridge failedExecute(
+        [&](const std::string&, uint64_t, void* dst, size_t n) {
+            ++executeFailureReads;
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(dst)[i]=0;
+            return true;
+        },
+        [&](const Slice&, const std::vector<uint8_t>&, Binding& out) {
+            ++executeFailureUploads; out={&fakeGpu,4,1}; return true;
+        },
+        [&](const Binding&, uint32_t, uint32_t) {
+            ++executeFailureCalls; return executeFailureCalls>1;
+        });
+    failedExecute.Register({"test.gguf",0,4,6,1,0});
+    failedExecute.Retain(6,1);
+    assert(!failedExecute.Run(6,1));
+    assert(failedExecute.Run(6,1));
+    assert(executeFailureReads==1 && executeFailureUploads==1 && executeFailureCalls==2);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
