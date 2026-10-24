@@ -36,17 +36,21 @@ public:
         const size_t bytes0 = (size_t)requestedBlocks0 * blockBytes;
         const size_t bytes1 = rowBytes - bytes0;
 
-        std::lock_guard<std::mutex> guard(mu_);
-        auto it = cache_.find(source);
-        if (it != cache_.end() && it->second.rows == rows &&
-            it->second.cols == cols && it->second.bytes == availableBytes &&
-            it->second.snapshot) {
-            const uint32_t old = it->second.blocks0;
-            // For large tensors one 256-column quantum of timing jitter is
-            // cheaper to tolerate than repacking the entire matrix.
-            const bool near = blocks >= 64 &&
-                (old == requestedBlocks0 + 1 || old + 1 == requestedBlocks0);
-            if (old == requestedBlocks0 || near) return it->second.snapshot;
+        // Do not hold the cache mutex while copying megabytes of Q4_K data.
+        // Capture the generation so clear() cannot resurrect stale weights.
+        size_t generation = 0;
+        {
+            std::lock_guard<std::mutex> guard(mu_);
+            generation = generation_;
+            auto it = cache_.find(source);
+            if (it != cache_.end() && it->second.rows == rows &&
+                it->second.cols == cols && it->second.bytes == availableBytes &&
+                it->second.snapshot) {
+                const uint32_t old = it->second.blocks0;
+                const bool near = blocks >= 64 &&
+                    (old == requestedBlocks0 + 1 || old + 1 == requestedBlocks0);
+                if (old == requestedBlocks0 || near) return it->second.snapshot;
+            }
         }
 
         auto fresh = std::make_shared<Q4KColumnSlices>();
@@ -61,13 +65,28 @@ public:
             std::memcpy(fresh->w1.data() + row * bytes1,
                         raw + row * rowBytes + bytes0, bytes1);
         }
-        cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
-        ++rebuilds_;
+        {
+            std::lock_guard<std::mutex> guard(mu_);
+            if (generation != generation_) return {};
+            // A competing request may have finished the same expensive repack.
+            auto it = cache_.find(source);
+            if (it != cache_.end() && it->second.rows == rows &&
+                it->second.cols == cols && it->second.bytes == availableBytes &&
+                it->second.snapshot) {
+                const uint32_t old = it->second.blocks0;
+                const bool near = blocks >= 64 &&
+                    (old == requestedBlocks0 + 1 || old + 1 == requestedBlocks0);
+                if (old == requestedBlocks0 || near) return it->second.snapshot;
+            }
+            cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
+            ++rebuilds_;
+        }
         return fresh;
     }
 
     void clear() noexcept {
         std::lock_guard<std::mutex> guard(mu_);
+        ++generation_;
         cache_.clear(); // Active callers retain their own immutable snapshots.
     }
     size_t rebuilds() const noexcept {
@@ -84,5 +103,6 @@ private:
     mutable std::mutex mu_;
     std::unordered_map<const void*, Entry> cache_;
     size_t rebuilds_ = 0;
+    size_t generation_ = 0;
 };
 } // namespace Deep2
