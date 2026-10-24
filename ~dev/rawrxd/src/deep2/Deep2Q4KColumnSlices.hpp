@@ -68,6 +68,8 @@ public:
                     if (old == requestedBlocks0 || near) return it->second.snapshot;
                 }
             }
+            // Reserve before publishing in-flight state. Allocation failure
+            // must not leave waiters blocked on a key with no active owner.
             inflight_.insert(source);
         }
 
@@ -97,8 +99,16 @@ public:
             inflight_.erase(source);
             cv_.notify_all();
             if (generation != generation_) return {};
-            cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
-            ++rebuilds_;
+            // Do not throw while holding the single-flight reservation:
+            // operator[] may allocate. Reserve before assigning to ensure
+            // exceptions leave all waiting threads able to retry.
+            try {
+                cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
+                ++rebuilds_;
+            } catch (...) {
+                cv_.notify_all();
+                throw;
+            }
         }
         return fresh;
     }
