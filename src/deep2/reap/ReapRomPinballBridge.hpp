@@ -73,6 +73,8 @@ public:
         Key key{layer, expert};
         auto slice = slices_.find(key);
         if (slice == slices_.end() || !retained_.contains(key)) {
+            if (stats_.rejected == std::numeric_limits<uint64_t>::max())
+                throw std::overflow_error("REAP rejection counter overflow");
             ++stats_.rejected;
             return false;
         }
