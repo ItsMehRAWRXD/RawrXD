@@ -7883,17 +7883,17 @@
           <div>
             <div class="setting-row">
               <span class="setting-label">Context Window</span>
-              <span class="setting-value" id="ctxVal">8,192</span>
+              <span class="setting-value" id="ctxVal">65,536</span>
             </div>
-            <input type="range" class="setting-slider" min="512" max="131072" value="8192" step="512" id="ctxSlider"
+            <input type="range" class="setting-slider" min="512" max="131072" value="65536" step="512" id="ctxSlider"
               oninput="State.gen.context=parseInt(this.value); document.getElementById('ctxVal').textContent=parseInt(this.value).toLocaleString(); Conversation.persist();">
           </div>
           <div>
             <div class="setting-row">
               <span class="setting-label">Max Tokens</span>
-              <span class="setting-value" id="maxTokVal">512</span>
+              <span class="setting-value" id="maxTokVal">4,096</span>
             </div>
-            <input type="range" class="setting-slider" min="32" max="4096" value="512" step="32" id="maxTokSlider"
+            <input type="range" class="setting-slider" min="32" max="16384" value="4096" step="32" id="maxTokSlider"
               oninput="State.gen.maxTokens=parseInt(this.value); document.getElementById('maxTokVal').textContent=this.value; Conversation.persist();">
           </div>
           <div>
@@ -8120,18 +8120,18 @@
           <div style="margin-top:6px;">
             <div class="setting-row">
               <span class="setting-label">Safe Context</span>
-              <span class="setting-value" id="safeCtxVal">3,072</span>
+              <span class="setting-value" id="safeCtxVal">65,536</span>
             </div>
-            <input type="range" class="setting-slider" min="512" max="8192" value="3072" step="256" id="safeCtxSlider"
+            <input type="range" class="setting-slider" min="512" max="131072" value="65536" step="512" id="safeCtxSlider"
               oninput="State.gen.safeDecodeProfile.safeContext=parseInt(this.value); document.getElementById('safeCtxVal').textContent=parseInt(this.value).toLocaleString(); Conversation.persist();">
           </div>
 
           <div style="margin-top:6px;">
             <div class="setting-row">
               <span class="setting-label">Safe Max Tokens</span>
-              <span class="setting-value" id="safeTokVal">128</span>
+              <span class="setting-value" id="safeTokVal">4,096</span>
             </div>
-            <input type="range" class="setting-slider" min="32" max="1024" value="128" step="32" id="safeTokSlider"
+            <input type="range" class="setting-slider" min="32" max="16384" value="4096" step="32" id="safeTokSlider"
               oninput="State.gen.safeDecodeProfile.safeMaxTokens=parseInt(this.value); document.getElementById('safeTokVal').textContent=this.value; Conversation.persist();">
           </div>
 
@@ -10464,6 +10464,7 @@
                 style="flex:1;padding:3px 6px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-family:var(--font-mono);font-size:10px;"
                 onkeydown="if(event.key==='Enter')feRefreshTree()">
               <button class="code-btn" onclick="feRefreshTree()" style="padding:2px 6px;font-size:10px;">Go</button>
+              <button class="code-btn" onclick="feLoadRoots()" title="Enumerate all accessible drives, including hidden entries" style="padding:2px 6px;font-size:10px;">Drives</button>
             </div>
             <div id="feTreeContent" style="padding:4px 0;">
               <div style="padding:12px;color:var(--text-muted);font-size:10px;">Click &#x1F504; Refresh to load file
@@ -10792,7 +10793,7 @@
       },
       model: { current: null, list: [] },
       gen: {
-        context: 8192, maxTokens: 512, temperature: 0.7, stream: true,
+        context: 65536, maxTokens: 4096, temperature: 0.7, stream: true,
         top_p: 0.9, top_k: 40,
         // Tensor Bunny Hop: skip unneeded tensor layers during inference for faster large-model runs
         tensorHop: {
@@ -10808,8 +10809,8 @@
           enabled: true,
           autoClamp: true,      // auto-detect model size and clamp
           thresholdB: 27,       // models >= this size (in B) trigger safe profile
-          safeContext: 3072,
-          safeMaxTokens: 128,
+          safeContext: 65536,
+          safeMaxTokens: 4096,
           safeTemperature: 0.3,
           safeTopP: 0.9,
           safeTopK: 40,
@@ -10880,7 +10881,7 @@
         sessionId: 0,           // monotonic session counter
         waitingForIde: false,   // true when auto-retry polling for IDE
         autoRetryTimer: null,   // setInterval handle for auto-retry
-        scanPorts: [11435, 8080, 3000, 5000, 11434], // ports to scan for IDE
+        scanPorts: [19035, 11435, 19036, 3000, 5000, 11434], // ports to scan for IDE
         lastScanResults: [],    // [{port, status, backend}] from last scan
       },
       // VSIX Extension Manager state
@@ -10928,6 +10929,15 @@
         totalNavigations: 0,
       },
     };
+
+    // When the GUI is served by the RawrXD loopback gateway, that gateway is
+    // the active API backend.  The historical 11435 default is only valid for
+    // the separate Win32 IDE host; retaining it here made a same-origin GUI
+    // advertise models from one service and send chat requests to another.
+    if (!_isFileProtocol && /^https?:$/.test(window.location.protocol) &&
+      /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) {
+      State.backend.url = window.location.origin;
+    }
 
     // ======================================================================
     // ENGINE REGISTRY — All available engines in the RawrXD codebase
@@ -11631,7 +11641,7 @@
             var data = await res.json();
             entry.status = 'ok';
             entry.backend = data.backend || data.server || 'unknown';
-            if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+            if (data.backend === 'rawrxd-win32ide' || data.backend === 'rawrxd-node' || data.backend === 'rawrxd-native' || (data.server && (data.server.indexOf('Win32IDE') >= 0 || data.server.indexOf('RawrXD') >= 0))) {
               entry.status = 'ide';
               if (!foundUrl) { foundUrl = url; foundData = data; }
             }
@@ -11710,7 +11720,7 @@
           var res = await fetch('http://localhost:11435/status', { signal: AbortSignal.timeout(1500) });
           if (res.ok) {
             var data = await res.json();
-            if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+            if (data.backend === 'rawrxd-win32ide' || data.backend === 'rawrxd-node' || data.backend === 'rawrxd-native' || (data.server && (data.server.indexOf('Win32IDE') >= 0 || data.server.indexOf('RawrXD') >= 0))) {
               logDebug('\uD83D\uDC7B Auto-retry: IDE found! Connecting...', 'info');
               _ghostStopAutoRetry();
               // Close and re-ghost now that IDE is alive
@@ -11779,7 +11789,7 @@
         logDebug('\uD83D\uDC7B Beacon confirmed: Win32 IDE alive at ' + scan.foundUrl, 'info');
 
         // Inject iframe pointed at /gui
-        State.ghost.ideUrl = scan.foundUrl + '/gui';
+        var ghostOrigin = scan.foundUrl; try { var ghostUrl = new URL(scan.foundUrl); if (ghostUrl.hostname === 'localhost' && location.hostname) ghostUrl.hostname = location.hostname; ghostOrigin = ghostUrl.origin; } catch (_) {} State.ghost.ideUrl = ghostOrigin + '/gui';
         loading.style.display = 'none';
 
         var iframe = document.createElement('iframe');
@@ -15216,6 +15226,17 @@
           answer = data.answer || data.response || '[No response]';
         }
 
+        // A 200 response with zero visible tokens is an explicit runtime
+        // state, never a successful assistant turn.  Keep the stop reason so
+        // timeouts, EOS, cancellation and engine errors remain distinguishable.
+        if (!answer || !answer.trim()) {
+          var emptyReason = (data.choices && data.choices[0] && data.choices[0].finish_reason) ||
+            data.done_reason || data.stop_reason || 'empty_output';
+          addMessage('system', 'Generation produced no visible tokens (stop_reason=' + emptyReason + ').', { skipMemory: true });
+          recordMetric({ latency: latency, tokens: 0, model: model, endpoint: '/v1/chat/completions', success: false, errorMsg: emptyReason });
+          return;
+        }
+
         // Parse embedded tool action blocks from response text
         var parsed = ToolActionRenderer.parseToolActionsFromText(answer);
         if (parsed.actions.length > 0) {
@@ -15509,6 +15530,15 @@
 
         textEl.classList.remove('streaming-cursor');
 
+        if (!fullText.trim() && Object.keys(_toolCallAccum).length === 0) {
+          var emptyStreamReason = stream.finishReason || 'empty_output';
+          msgDiv.remove();
+          State.chat.messageCount--;
+          addMessage('system', 'Streaming ended without visible tokens (stop_reason=' + emptyStreamReason + ').', { skipMemory: true });
+          recordMetric({ latency: Math.round(performance.now() - t0), tokens: 0, model: model, endpoint: '/v1/chat/completions (stream)', success: false, errorMsg: emptyStreamReason });
+          return;
+        }
+
         // Parse tool action blocks from markdown text (```tool-action ... ```)
         var parsed = ToolActionRenderer.parseToolActionsFromText(fullText);
         if (parsed.actions.length > 0) {
@@ -15556,6 +15586,14 @@
         recordMetric({ latency: latency, tokens: tokenCount, model: model, endpoint: '/v1/chat/completions (stream)', success: true });
       } catch (e) {
         textEl.classList.remove('streaming-cursor');
+        if (!fullText.trim()) {
+          var emptyLegacyReason = stream.finishReason || 'empty_output';
+          msgDiv.remove();
+          State.chat.messageCount--;
+          addMessage('system', 'Streaming ended without visible tokens (stop_reason=' + emptyLegacyReason + ').', { skipMemory: true });
+          recordMetric({ latency: Math.round(performance.now() - t0), tokens: 0, model: model, endpoint: '/api/generate (stream)', success: false, errorMsg: emptyLegacyReason });
+          return;
+        }
         if (e.name === 'AbortError') {
           // User cancelled — save partial response
           var partialText = textEl.textContent || '';
@@ -25235,6 +25273,22 @@
       if (tab) tab.title = title || 'New Tab';
     }
 
+    function _browserRecordNavigation(url) {
+      var tab = _browserGetActiveTab();
+      if (!tab || !url) return;
+      if (tab.url && tab.url !== url) {
+        tab.history = Array.isArray(tab.history) ? tab.history.slice(0, tab.historyIdx + 1) : [];
+        tab.history.push(tab.url);
+        tab.historyIdx = tab.history.length - 1;
+      }
+      tab.url = url;
+      tab.iframeRef = null;
+      var urlInput = document.getElementById('browserUrlInput');
+      if (urlInput) urlInput.value = url;
+      _browserUpdateLock(url);
+      _browserUpdateNavButtons();
+    }
+
     function _browserRenderTabs() {
       var bar = document.getElementById('browserTabBar');
       if (!bar) return;
@@ -25279,8 +25333,145 @@
       browserNavigate();
     }
 
-    function browserNavigateTo(url) {
+    function browserOpenExternal(url) {
+      if (!url || !/^https?:\/\//i.test(url)) return false;
+      var opened = null;
+      try {
+        // Sites may explicitly refuse iframe embedding.  Promote those
+        // navigations to a real browser tab instead of showing a dead frame.
+        opened = window.open(url, 'RawrXDExternalBrowser', 'noopener,noreferrer');
+      } catch (_) { opened = null; }
+      if (!opened) {
+        _browserShowBlocked(url, 'The host blocked a new browser tab. Allow pop-ups for RawrXD or use the embedded retry.');
+      }
+      _browserUpdateStatusBar(opened ? 'Opened in browser tab' : 'Unable to open external page', url);
+      logDebug((opened ? '🌐 Opened external page: ' : '⚠ External page blocked by host: ') + url, opened ? 'info' : 'error');
+      return !!opened;
+    }
+
+    function _browserEscapeText(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function _browserShowBlocked(url, reason) {
+      var viewport = document.getElementById('browserViewport');
+      if (!viewport) return;
+      viewport.querySelectorAll('iframe').forEach(function (f) { f.remove(); });
+      var card = document.createElement('div');
+      card.className = 'browser-home browser-blocked-card';
+      card.innerHTML = '<div class="browser-logo">🛡️</div>' +
+        '<div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--accent-cyan);">Embedded page blocked</div>' +
+        '<div style="max-width:680px;color:var(--text-muted);font-size:12px;text-align:center;line-height:1.6;">' +
+        _browserEscapeText(reason || 'The site refused to be embedded in an iframe.') + '<br><span style="word-break:break-all;color:var(--accent-secondary);">' + _browserEscapeText(url) + '</span></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;">' +
+        '<button class="code-btn" type="button" data-browser-open>Open in browser tab</button>' +
+        '<button class="code-btn" type="button" data-browser-retry>Try embedded view again</button></div>';
+      var openBtn = card.querySelector('[data-browser-open]');
+      var retryBtn = card.querySelector('[data-browser-retry]');
+      if (openBtn) openBtn.addEventListener('click', function () { browserOpenExternal(url); });
+      if (retryBtn) retryBtn.addEventListener('click', function () { browserNavigateTo(url, { forceEmbed: true }); });
+      viewport.appendChild(card);
+      _browserUpdateStatusBar('Blocked by site embedding policy', url);
+    }
+
+    function _browserIframeLooksBlocked(iframe) {
+      try {
+        var doc = iframe.contentDocument;
+        if (!doc) return false;
+        var text = ((doc.title || '') + ' ' + (doc.body ? (doc.body.innerText || doc.body.textContent || '') : '')).toLowerCase();
+        return /this content is blocked|refused to connect|refused to display|frame-ancestors|err_blocked_by_response|chrome-error/.test(text);
+      } catch (_) { return false; }
+    }
+
+    function _browserRenderReader(page) {
+      var viewport = document.getElementById('browserViewport');
+      if (!viewport || !page) return false;
+      _browserRecordNavigation(page.url || '');
+      viewport.querySelectorAll('iframe, .browser-blocked-card, .browser-reader-card, .browser-reader-page').forEach(function (node) { node.remove(); });
+      var homePage = document.getElementById('browserHomePage');
+      if (homePage) homePage.style.display = 'none';
+      var card = document.createElement('div');
+      card.className = 'browser-reader-page';
+      card.style.cssText = 'display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:auto;background:#fff;color:#202124;padding:32px 28px 48px;text-align:left;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;';
+      var content = document.createElement('div');
+      content.style.cssText = 'width:min(100%,1100px);margin:0 auto;';
+      var title = document.createElement('div');
+      title.style.cssText = 'font-size:28px;font-weight:700;line-height:1.25;color:#202124;margin:0 0 8px;';
+      title.textContent = page.title || page.url || 'Reader';
+      var source = document.createElement('div');
+      source.style.cssText = 'font-size:12px;line-height:1.4;color:#5f6368;word-break:break-all;margin:0 0 20px;padding-bottom:14px;border-bottom:1px solid #dadce0;';
+      source.textContent = 'RawrXD safe reader · ' + (page.url || '');
+      var body = document.createElement('div');
+      body.style.cssText = 'box-sizing:border-box;width:100%;min-height:84px;white-space:pre-wrap;overflow:auto;background:#f8f9fa;border:1px solid #dadce0;border-radius:8px;padding:20px;color:#202124;font-size:16px;line-height:1.65;text-align:left;';
+      body.textContent = page.text || '(empty response)';
+      var label = document.createElement('div');
+      label.style.cssText = 'width:100%;color:#5f6368;font-size:13px;margin:24px 0 8px;font-weight:600;';
+      var links = Array.isArray(page.links) ? page.links : [];
+      label.textContent = 'Links (' + links.length + ')';
+      var linkBox = document.createElement('div');
+      linkBox.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:stretch;gap:6px;';
+      links.forEach(function (link) {
+        var button = document.createElement('button');
+        button.type = 'button'; button.className = 'browser-bookmark-btn';
+        button.textContent = link.label || link.url; button.title = link.url;
+        button.style.cssText = 'display:block;width:100%;box-sizing:border-box;text-align:left;padding:9px 12px;border:1px solid #dadce0;border-radius:6px;background:#fff;color:#1a73e8;cursor:pointer;font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;';
+        button.addEventListener('click', function () { browserNavigateTo(link.url); });
+        linkBox.appendChild(button);
+      });
+      content.appendChild(title); content.appendChild(source); content.appendChild(body); content.appendChild(label); content.appendChild(linkBox);
+      card.appendChild(content); viewport.appendChild(card);
+      _browserUpdateTabTitle(page.title || 'Reader');
+      _browserUpdateStatusBar('Reader view', page.url || '');
+      return true;
+    }
+
+    function browserTryProxy(url) {
+      var bases = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+        ? [window.location.origin]
+        : [(typeof getActiveUrl === 'function' ? getActiveUrl() : ''),
+          'http://127.0.0.1:19035', 'http://127.0.0.1:11435'];
+      bases = bases.filter(function (base, i) { return base && bases.indexOf(base) === i; });
+      function attempt(i) {
+        if (i >= bases.length) return Promise.resolve(false);
+        return fetch(bases[i] + '/api/browse', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, extract: true }), signal: AbortSignal.timeout(20000) })
+          .then(function (res) { if (!res.ok) throw new Error('reader HTTP ' + res.status); return res.json(); })
+          .then(function (page) { if (!page || !page.ok) throw new Error(page && page.error || 'reader failed'); _browserRenderReader(page); return true; })
+          .catch(function () { return attempt(i + 1); });
+      }
+      return attempt(0);
+    }
+
+    function browserNavigateTo(url, options) {
+      options = options || {};
       if (!url) return;
+      try {
+        url = new URL(url, window.location.href).href;
+      } catch (_) {
+        _browserShowBlocked(url, 'The address is not a valid HTTP(S) URL.');
+        return;
+      }
+      var protocol = ''; try { protocol = new URL(url).protocol; } catch (_) {}
+      if (protocol !== 'http:' && protocol !== 'https:') {
+        _browserShowBlocked(url, 'Only HTTP and HTTPS pages can be opened by the integrated browser.');
+        return;
+      }
+      var external = false;
+      try { external = new URL(url).origin !== window.location.origin; } catch (_) { external = true; }
+      // A cross-origin iframe is rejected by many production sites.  Use a
+      // genuine top-level browser tab by default; users can explicitly retry
+      // the legacy embedded view from the diagnostic card.
+      if (external && !options.forceEmbed) {
+        // Commit the address before the asynchronous reader request so stale
+        // tab state cannot repaint a previous page while the fetch is pending.
+        _browserRecordNavigation(url);
+        _browserUpdateStatusBar('Fetching reader view...', url);
+        browserTryProxy(url).then(function (ok) { if (!ok) _browserShowBlocked(url, 'The site could not be fetched by the safe embedded reader.'); });
+        return;
+      }
       var viewport = document.getElementById('browserViewport');
       var homePage = document.getElementById('browserHomePage');
       var urlInput = document.getElementById('browserUrlInput');
@@ -26865,11 +27056,28 @@
       return null;
     }
 
+    async function feApiGet(endpoint) {
+      var urls = [feApiUrl()];
+      if (_ideServerUrl && urls.indexOf(_ideServerUrl) === -1) urls.push(_ideServerUrl);
+      if (urls.indexOf('http://localhost:11435') === -1) urls.push('http://localhost:11435');
+      for (var i = 0; i < urls.length; i++) {
+        try {
+          var res = await fetch(urls[i] + endpoint, { method: 'GET', signal: AbortSignal.timeout(10000) });
+          if (res.ok) return await res.json();
+        } catch (_) { }
+      }
+      return null;
+    }
+
     // ---- Tree Browser ----
     async function feRefreshTree() {
       var rootInput = document.getElementById('feTreePath');
       var root = rootInput ? rootInput.value.trim() : '.';
       if (!root) root = '.';
+
+      if (root === '.' || root.toLowerCase() === 'drives:' || root === '::drives') {
+        return feLoadRoots();
+      }
 
       feSetStatus('Loading tree...');
       var data = await feApiPost('/api/list-dir', { path: root });
@@ -26892,13 +27100,28 @@
       feSetStatus('Tree loaded: ' + data.entries.length + ' items');
     }
 
+    async function feLoadRoots() {
+      feSetStatus('Enumerating drives...');
+      var data = await feApiGet('/api/filesystem/roots');
+      var tc = document.getElementById('feTreeContent');
+      if (!data || !Array.isArray(data.roots)) {
+        feSetStatus('Drive enumeration unavailable');
+        if (tc) tc.innerHTML = '<div style="padding:12px;color:#ff6b6b;font-size:10px;">Could not enumerate local drives. Connect the RawrXD loopback backend.</div>';
+        return;
+      }
+      FE.treeCache['::drives'] = data.roots;
+      FE.treeExpanded['::drives'] = true;
+      feRenderTree('::drives', data.roots);
+      feSetStatus('Drives loaded: ' + data.roots.length + ' (hidden entries included)');
+    }
+
     function feRenderTree(root, entries) {
       var tc = document.getElementById('feTreeContent');
       if (!tc) return;
       var html = '';
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
-        var fullPath = root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+        var fullPath = (e.path || (root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
         if (e.type === 'dir') {
           var isExpanded = FE.treeExpanded[fullPath];
           html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -26962,7 +27185,7 @@
       var html = '';
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
-        var fullPath = path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+        var fullPath = (e.path || (path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
         if (e.type === 'dir') {
           var isExp = FE.treeExpanded[fullPath];
           html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -28594,7 +28817,14 @@
 
       function getBackendUrl() {
         try {
-          // Prefer proxy URL (11435) which routes to all backends (GGUF, Ollama, blob, cloud)
+          // The GUI gateway is the authoritative API when the page is served
+          // from loopback.  Do not send a new window to the historical 11435
+          // host just because _ideServerUrl was cached before the page loaded.
+          if (!_isFileProtocol && window.location && /^https?:$/.test(window.location.protocol) &&
+              /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) {
+            return window.location.origin;
+          }
+          // Prefer the configured proxy URL when opened from file://.
           if (window.State && window.State.backend && window.State.backend.url) return window.State.backend.url;
           if (typeof _ideServerUrl !== 'undefined' && _ideServerUrl) return _ideServerUrl;
           return 'http://localhost:11435';
@@ -29113,6 +29343,7 @@
         // Add user message
         appendChatMsg(id, 'user', text);
         setWindowStatus(id, 'busy', 'Generating...');
+        setPerfText(id, 'waiting…');
 
         // Stream from backend
         streamChat(id, text, ws.model);
@@ -29149,7 +29380,19 @@
         updateKernelStatus();
 
         var msgs = [];
-        if (ws && ws.messages) msgs = ws.messages.slice();
+        // Carry the main IDE's system instruction into a new window while
+        // keeping the window's own conversation history independent.  A
+        // previous request already stores the system message in ws.messages;
+        // remove that copy before prepending it so context does not grow with
+        // duplicate instructions on every turn.
+        if (window.Conversation && window.Conversation.systemPrompt) {
+          msgs.push({ role: 'system', content: window.Conversation.systemPrompt });
+        }
+        if (ws && Array.isArray(ws.messages)) {
+          var history = ws.messages.slice();
+          if (history.length && history[0] && history[0].role === 'system') history.shift();
+          msgs = msgs.concat(history);
+        }
         msgs.push({ role: 'user', content: query });
         if (ws) ws.messages = msgs;
 
@@ -29165,18 +29408,72 @@
             messages: msgs,
             stream: true,
             max_tokens: (window.State && window.State.gen && window.State.gen.maxTokens) || 4096,
-            temperature: (window.State && window.State.gen && window.State.gen.temperature) || 0.7
+            temperature: (window.State && window.State.gen && window.State.gen.temperature) || 0.7,
+            top_p: (window.State && window.State.gen && window.State.gen.top_p) || 0.9,
+            top_k: (window.State && window.State.gen && window.State.gen.top_k) || 40,
+            options: { num_ctx: (window.State && window.State.gen && window.State.gen.context) || 8192 }
           })
         }).then(function (resp) {
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          // Some compatible/native gateways return one JSON completion even
+          // when stream=true.  Consume it instead of silently reporting
+          // Done — 0 tokens.
+          var contentType = (resp.headers.get('content-type') || '').toLowerCase();
+          if (contentType.indexOf('application/json') !== -1) {
+            return resp.json().then(function (j) {
+              var answer = '';
+              if (j.choices && j.choices[0] && j.choices[0].message) answer = j.choices[0].message.content || '';
+              else answer = j.response || j.output || '';
+              if (!answer) throw new Error('backend returned an empty completion');
+              var assistant = appendChatMsg(id, 'assistant', answer);
+              if (ws) ws.messages.push({ role: 'assistant', content: answer });
+              tokenCount = Math.max(1, answer.trim().split(/\s+/).length);
+              var elapsed = Math.max(0.001, (performance.now() - startTime) / 1000);
+              setWindowStatus(id, 'idle', 'Done — ' + tokenCount + ' tokens');
+              setPerfText(id, (tokenCount / elapsed).toFixed(1) + ' tok/s');
+              taskCount--;
+              updateKernelStatus();
+            });
+          }
           var reader = resp.body.getReader();
           var decoder = new TextDecoder();
+          var pending = '';
           var assistantMsg = appendChatMsg(id, 'assistant', '');
           var fullText = '';
+
+          function consume(text, flush) {
+            pending += text;
+            var lines = pending.split(/\r?\n/);
+            pending = flush ? '' : (lines.pop() || '');
+            for (var li = 0; li < lines.length; li++) {
+              var line = lines[li].trim();
+              if (!line || line === 'data: [DONE]') continue;
+              if (line.indexOf('data: ') === 0) line = line.slice(6);
+              try {
+                var j = JSON.parse(line);
+                var delta = '';
+                if (j.choices && j.choices[0] && j.choices[0].delta) delta = j.choices[0].delta.content || '';
+                else if (j.message) delta = j.message.content || '';
+                else delta = j.response || j.output || '';
+                if (delta) {
+                  fullText += delta;
+                  tokenCount++;
+                  if (assistantMsg) {
+                    if (typeof DOMPurify !== 'undefined') assistantMsg.innerHTML = DOMPurify.sanitize(formatMd(fullText));
+                    else assistantMsg.textContent = fullText;
+                  }
+                }
+              } catch (e) { /* incomplete or non-JSON control line */ }
+            }
+            var c = document.getElementById(id + '-msgs');
+            if (c) c.scrollTop = c.scrollHeight;
+          }
 
           function pump() {
             return reader.read().then(function (result) {
               if (result.done) {
+                consume(decoder.decode(), true);
+                if (!fullText) throw new Error('backend returned an empty completion');
                 // Finalize
                 if (ws) ws.messages.push({ role: 'assistant', content: fullText });
                 var elapsed = (performance.now() - startTime) / 1000;
@@ -29188,55 +29485,28 @@
                 return;
               }
 
-              var chunk = decoder.decode(result.value, { stream: true });
-              var lines = chunk.split('\n');
-              for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (!line || line === 'data: [DONE]') continue;
-                if (line.startsWith('data: ')) line = line.slice(6);
-                try {
-                  var j = JSON.parse(line);
-                  var delta = '';
-                  // OpenAI format
-                  if (j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content) {
-                    delta = j.choices[0].delta.content;
-                  }
-                  // Ollama format
-                  else if (j.message && j.message.content) {
-                    delta = j.message.content;
-                  }
-                  // Raw text
-                  else if (j.response) {
-                    delta = j.response;
-                  }
-                  if (delta) {
-                    fullText += delta;
-                    tokenCount++;
-                    if (assistantMsg) {
-                      if (typeof DOMPurify !== 'undefined') {
-                        assistantMsg.innerHTML = DOMPurify.sanitize(formatMd(fullText));
-                      } else {
-                        assistantMsg.textContent = fullText;
-                      }
-                    }
-                    var c = document.getElementById(id + '-msgs');
-                    if (c) c.scrollTop = c.scrollHeight;
-                  }
-                } catch (e) { /* skip non-JSON lines */ }
-              }
+              consume(decoder.decode(result.value, { stream: true }), false);
               return pump();
             });
           }
           return pump();
         }).catch(function (err) {
-          // Fallback: try Ollama native /api/chat
+          // Fallback: preserve the full multi-turn message array through the
+          // same-origin Ollama-compatible chat bridge.  Flattening messages
+          // into /api/generate loses role boundaries and makes context appear
+          // to disappear in the UI.
           fetch(url + '/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               model: model,
               messages: msgs,
-              stream: true
+              stream: true,
+              options: {
+                num_ctx: (window.State && window.State.gen && window.State.gen.context) || 8192,
+                num_predict: (window.State && window.State.gen && window.State.gen.maxTokens) || 4096,
+                temperature: (window.State && window.State.gen && window.State.gen.temperature) || 0.7
+              }
             })
           }).then(function (resp) {
             if (!resp.ok) {
@@ -29248,12 +29518,25 @@
             }
             var reader = resp.body.getReader();
             var decoder = new TextDecoder();
+            var pending = '';
             var assistantMsg = appendChatMsg(id, 'assistant', '');
             var fullText = '';
 
             function pump2() {
               return reader.read().then(function (result) {
                 if (result.done) {
+                  pending += decoder.decode();
+                  pending.split(/\r?\n/).forEach(function (line) {
+                    line = line.trim();
+                    if (!line || line === 'data: [DONE]') return;
+                    if (line.indexOf('data: ') === 0) line = line.slice(6);
+                    try {
+                      var tail = JSON.parse(line);
+                      var tailDelta = tail.response || (tail.message && tail.message.content) || '';
+                      if (tailDelta) { fullText += tailDelta; tokenCount++; }
+                    } catch (e) {}
+                  });
+                  if (!fullText) throw new Error('backend returned an empty completion');
                   if (ws) ws.messages.push({ role: 'assistant', content: fullText });
                   var elapsed = (performance.now() - startTime) / 1000;
                   var tps = tokenCount > 0 ? (tokenCount / elapsed).toFixed(1) : '0';
@@ -29264,10 +29547,13 @@
                   return;
                 }
                 var chunk = decoder.decode(result.value, { stream: true });
-                var lines = chunk.split('\n');
+                pending += chunk;
+                var lines = pending.split(/\r?\n/);
+                pending = lines.pop() || '';
                 for (var i = 0; i < lines.length; i++) {
                   var line = lines[i].trim();
                   if (!line) continue;
+                  if (line.indexOf('data: ') === 0) line = line.slice(6);
                   try {
                     var j = JSON.parse(line);
                     var delta = (j.message && j.message.content) || j.response || '';
@@ -30129,11 +30415,27 @@
         var log = document.getElementById(id + '-log');
         if (log) log.textContent += '[Build] Starting ' + type + ' build...\n';
         setWindowStatus(id, 'busy', 'Building...');
-        // Simulate build (in real usage, this would call the backend)
-        setTimeout(function () {
-          if (log) log.textContent += '[Build] ' + type + ' build complete.\n';
-          setWindowStatus(id, 'idle', 'Build OK');
-        }, 1500);
+        var commands = { cmake: '!engine compile cmake', masm: '!engine compile masm',
+          msvc: '!engine compile msvc', clang: '!engine compile clang', clean: '!engine compile clean' };
+        var command = commands[type] || ('!engine compile ' + type);
+        var base = (typeof getActiveUrl === 'function') ? getActiveUrl() : 'http://127.0.0.1:11435';
+        fetch(base + '/api/compiler/capabilities', { signal: AbortSignal.timeout(5000) })
+          .then(function (r) { return r.ok ? r.json() : { available: false }; })
+          .then(function (caps) {
+            if (log) log.textContent += '[NativeCompiler] tools=' + (caps.available ? 'available' : 'unavailable') + '\n';
+            return fetch(base + '/api/cli', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ command: command }), signal: AbortSignal.timeout(120000) });
+          }).then(async function (res) {
+          var data = {}; try { data = await res.json(); } catch (_) { data = {}; }
+          if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
+          if (typeof data.output === 'string' && /\(stub\)|not implemented|unavailable/i.test(data.output))
+            throw new Error('native compiler route returned an unimplemented or unavailable result');
+          if (log) log.textContent += '[NativeCompiler] ' + (data.output || '(no output)') + '\n';
+          setWindowStatus(id, 'idle', 'Native build complete');
+        }).catch(function (err) {
+          if (log) log.textContent += '[NativeCompiler] FAILED: ' + err.message + '\n';
+          setWindowStatus(id, 'error', 'Native build failed');
+        });
       }
 
       function reAction(id, type) {
@@ -30290,7 +30592,37 @@
   <!-- Action Item #20: Chat Command Router — exposes /p, /preset, /cot, /fix, /agent etc. -->
   <script src="ide_chat_commands.js"
     onerror="console.warn('[RawrXD] ide_chat_commands.js not found — /commands disabled')"></script>
-  <script src="/gui/rawrxd-nav.js"></script>
+  <!-- Relative path works both from file:// and from the native /gui/ route. -->
+  <script src="rawrxd-nav.js"></script>
+  <!-- Browser-first launch: open the existing embedded browser directly. -->
+  <script>
+    (function () {
+      function launchBrowserFirst() {
+        try {
+          var params = new URLSearchParams(window.location.search || '');
+          var mode = (params.get('mode') || '').toLowerCase();
+          if (params.get('browser') !== '1' && mode !== 'browser') return;
+          var target = params.get('url') || '';
+          if (target) {
+            try { target = decodeURIComponent(target); } catch (_) { /* already decoded */ }
+            if (!/^https?:\/\//i.test(target)) target = '';
+          }
+          showBrowserPanel(target || null);
+          if (typeof logDebug === 'function') {
+            logDebug('\uD83C\uDF10 Browser-first launch active — embedded browser ready.', 'info');
+          }
+        } catch (err) {
+          console.warn('[RawrXD] browser-first launch failed', err);
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', launchBrowserFirst, { once: true });
+      } else {
+        launchBrowserFirst();
+      }
+      window.RawrXDBrowserFirst = launchBrowserFirst;
+    })();
+  </script>
 </body>
 
 </html>

@@ -33,7 +33,7 @@ var State = {
   },
   model: { current: null, list: [], local: [] },
   gen: {
-    context: 8192, maxTokens: 512, temperature: 0.7, stream: true,
+    context: 65536, maxTokens: 4096, temperature: 0.7, stream: true,
     top_p: 0.9, top_k: 40,
     // Tensor Bunny Hop: skip unneeded tensor layers during inference for faster large-model runs
     tensorHop: {
@@ -57,8 +57,8 @@ var State = {
       enabled: true,
       autoClamp: true,      // auto-detect model size and clamp
       thresholdB: 27,       // models >= this size (in B) trigger safe profile
-      safeContext: 3072,
-      safeMaxTokens: 128,
+      safeContext: 65536,
+      safeMaxTokens: 4096,
       safeTemperature: 0.3,
       safeTopP: 0.9,
       safeTopK: 40,
