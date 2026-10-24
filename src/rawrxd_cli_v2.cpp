@@ -1595,13 +1595,13 @@ static int CmdRun(const std::vector<std::string>& args) {
         }
     }
 
-    // A size request must never silently run the unpruned model.
+    // REAP capability is unavailable until a verified pruned artifact and\n    // model-specific runtime loader are actually integrated.
     // REAP admission and GGUF expert remapping are not yet wired into CmdRun.
     // Fail closed until a validated REAP artifact/residency plan can be selected.
     if (auto sizeIt = flags.find("size"); sizeIt != flags.end()) {
         std::cerr << "REAP_SIZE_UNAVAILABLE: --size=" << sizeIt->second
                   << " requires a certified REAP expert-pruning/admission pipeline; "
-                     "no model has been resized or loaded.\\n";
+                     "no model has been resized or loaded.\n";
         return 4;
     }
 
