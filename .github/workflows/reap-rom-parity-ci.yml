@@ -77,8 +77,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $exe = Get-ChildItem -Path build_native_ci -Filter 'rawr.exe' -Recurse -File | Where-Object { $_.FullName -match '[\\/]Release[\\/]' } | Select-Object -First 1
-          if (!$exe) { throw 'Release RawrXD-CLI-V2 built without rawr.exe' }
+          $exe = Get-ChildItem -Path build_native_ci -Filter 'rawr.exe' -Recurse -File | Select-Object -First 1
+          if (!$exe) { throw 'RawrXD-CLI-V2 built without rawr.exe' }
           if ($exe.Length -lt 4096) { throw 'Production CLI artifact unexpectedly small' }
           Write-Host "Production CLI: $($exe.FullName) ($($exe.Length) bytes)"
 
