@@ -8,6 +8,10 @@
 #include <cstdint>
 
 namespace Deep2 {
+// Invalidate cached packed column weights before replacing a model mapping.
+// Active in-flight calls retain immutable snapshots until they complete.
+void Deep2InvalidateColumnSlices() noexcept;
+
 struct DualAsyncFanIn {
     uint64_t wallNs=0;
     uint64_t gpu0Ns=0;
