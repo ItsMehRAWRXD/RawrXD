@@ -23,24 +23,6 @@ on:
       - 'src/rawrxd_cli_v2.cpp'
       - 'src/deep2/Deep2Engine.cpp'
   pull_request:
-    paths:
-      - 'src/deep2/reap/**'
-      - 'src/parity/**'
-      - 'tests/reap_*'
-      - 'tests/top25_parity_matrix_smoke.cpp'
-      - 'tests/native_lsp_framing_smoke.cpp'
-      - 'src/win32app/native/**'
-      - 'tools/rawrxd_e2e_source_audit.py'
-      - 'tools/rawrxd_no_deps_audit.py'
-      - 'tools/rawrxd_per_file_source_audit.py'
-      - 'tools/rawrxd_cmake_source_admission.py'
-      - '.github/workflows/reap-rom-parity-ci.yml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'src/win32app/**'
-      - 'src/snapshot/**'
-      - 'src/rawrxd_cli_v2.cpp'
-      - 'src/deep2/Deep2Engine.cpp'
 jobs:
   portable:
     runs-on: ubuntu-24.04
