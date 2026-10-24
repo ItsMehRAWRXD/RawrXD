@@ -13,7 +13,8 @@ namespace rawrxd::lsp {
 class Framer {
 public:
     explicit Framer(size_t maxBytes=16u*1024u*1024u): maxBytes_(maxBytes) {
-        if(!maxBytes_) throw std::invalid_argument("zero max frame");
+        if(!maxBytes_ || maxBytes_>std::numeric_limits<size_t>::max()-8192)
+            throw std::invalid_argument("invalid max frame");
     }
     std::vector<std::string> Feed(std::string_view bytes) {
         if(bytes.size()>maxBytes_+8192 || buffer_.size()>maxBytes_+8192-bytes.size())
