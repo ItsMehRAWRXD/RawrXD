@@ -709,6 +709,15 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
     
     {
         std::lock_guard<std::mutex> lock(cacheMutex_);
+        // A second thread may have loaded the same expert while our IO ran.
+        // Never replace an existing buffer with a duplicate allocation.
+        auto existing = cache_.find(CacheKey{layer, expert});
+        if (existing != cache_.end()) {
+            _aligned_free(buffer);
+            existing->second.lastAccess = std::chrono::steady_clock::now();
+            existing->second.accessCount++;
+            return existing->second.data;
+        }
         while (expertBytes <= maxCacheBytes_ &&
                currentCacheBytes_ > maxCacheBytes_ - expertBytes && !cache_.empty()) {
             const size_t previous = currentCacheBytes_;
