@@ -1,0 +1,69 @@
+name: Local 30B backend certification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - local-30b-backend
+  pull_request:
+
+jobs:
+  windows-native:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure native no-Qt build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake -S . -B build_cert -G "Visual Studio 17 2022" -A x64 -DRAWRXD_REQUIRE_QT=OFF -DUSE_ZLIB_FETCHCONTENT=OFF -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
+          if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
+
+      - name: Build production CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake --build build_cert --config Release --target RawrXD-CLI-V2 --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "RawrXD-CLI-V2 build failed" }
+
+      - name: Build native Win32 IDE
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake --build build_cert --config Release --target RawrXD-Win32IDE-Native --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "RawrXD-Win32IDE-Native build failed" }
+
+      - name: Run registered regression tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ctest --test-dir build_cert -C Release --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw "CTest regression suite failed" }
+
+      - name: Verify artifacts and SHA256
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rawr = Get-ChildItem build_cert -Recurse -File -Filter rawr.exe | Select-Object -First 1
+          $ide = Get-ChildItem build_cert -Recurse -File -Filter RawrXD-Win32IDE-Native.exe | Select-Object -First 1
+          if (!$rawr) { throw "rawr.exe missing" }
+          if (!$ide) { throw "RawrXD-Win32IDE-Native.exe missing" }
+          if ($rawr.Length -lt 4096) { throw "rawr.exe unexpectedly small" }
+          if ($ide.Length -lt 4096) { throw "Native IDE unexpectedly small" }
+          Get-FileHash $rawr.FullName -Algorithm SHA256
+          Get-FileHash $ide.FullName -Algorithm SHA256
+
+      - name: Upload native certification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-local-30b-native-cert
+          path: |
+            build_cert/**/rawr.exe
+            build_cert/**/RawrXD-Win32IDE-Native.exe
+            build_cert/Testing/**
+          if-no-files-found: warn
