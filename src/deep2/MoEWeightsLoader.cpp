@@ -732,6 +732,41 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
     return buffer;
 }
 
+bool MoEWeightsLoader::LoadExpertOwned(int layer, int expert, std::vector<uint8_t>& output) {
+    output.clear();
+    if (layer < 0 || expert < 0 || progress_.cancelled.load() || !IsOpen())
+        return false;
+    const ExpertProjectionInfo* gate = nullptr;
+    const ExpertProjectionInfo* up = nullptr;
+    const ExpertProjectionInfo* down = nullptr;
+    for (const auto& info : expertProjections_) {
+        if (info.layerIdx != layer || info.expertIdx != -1) continue;
+        switch (info.proj) {
+            case ExpertProjection::Gate: gate = &info; break;
+            case ExpertProjection::Up: up = &info; break;
+            case ExpertProjection::Down: down = &info; break;
+        }
+    }
+    if (!up || !down || static_cast<size_t>(expert) >= up->numExperts ||
+        static_cast<size_t>(expert) >= down->numExperts ||
+        (gate && static_cast<size_t>(expert) >= gate->numExperts))
+        return false;
+    const size_t max = output.max_size();
+    size_t bytes = 0;
+    for (const auto* info : {gate, up, down}) {
+        if (!info) continue;
+        if (!info->bytesPerExpert || info->bytesPerExpert > max - bytes)
+            return false;
+        bytes += info->bytesPerExpert;
+    }
+    if (!bytes) return false;
+    std::vector<uint8_t> temporary(bytes);
+    if (!LoadExpertDirect(layer, expert, temporary.data(), temporary.size()))
+        return false;
+    output.swap(temporary);
+    return true;
+}
+
 bool MoEWeightsLoader::LoadExpertDirect(int layer, int expert, void* buffer, size_t bufferSize) {
     if (!buffer || bufferSize == 0) return false;
     
