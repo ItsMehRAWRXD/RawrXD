@@ -1,0 +1,1869 @@
+﻿#include "Deep2Engine.hpp"
+
+#include <chrono>
+#include "TensorROM.hpp"
+#include "quant_kernels.hpp"
+#include "VulkanDevice.hpp"
+#include "core/KvWindowPlan.hpp"
+#include "core/HostKvRing.hpp"
+#include "VulkanDeviceAllocator.hpp"
+#include "Win32RomEmulator.hpp"
+#include "MasmCoreKernels.hpp"
+
+#include <iostream>
+#include <cmath>
+#include <cstring>
+#include <set>
+#include <utility>
+#include <exception>
+#include <fstream>
+#include <typeinfo>
+#include <windows.h>
+
+namespace {
+
+// Weighted RMSNorm: out = weight * x / sqrt(mean(x^2) + eps).
+//
+// Every transformer block normalizes before the projection, and so does the
+// final norm before the output projection. A forward pass that omits them
+// lets the residual stream grow without bound, which is what the Move 10
+// boundary probe was flagging as a math explosion.
+void rmsNormWeighted(float* x, const float* weight, size_t n, float eps) {
+    if (n == 0) return;
+    float ss = 0.0f;
+    for (size_t i = 0; i < n; ++i) ss += x[i] * x[i];
+    const float inv = 1.0f / std::sqrtf(ss / static_cast<float>(n) + eps);
+    for (size_t i = 0; i < n; ++i) x[i] = x[i] * inv * weight[i];
+}
+
+}  // namespace
+
+bool Deep2Engine::Initialize(const std::string& modelPath, const std::string& manifestPath, bool forceWholeLoader) {
+    if (!manifestPath.empty()) {
+        ParseOllamaManifest(manifestPath, &ctx);
+    }
+
+    if (forceWholeLoader || !romMode) {
+        bool result = LoadUniversalBlob(modelPath, &ctx);
+        if (result) { initialized = true; SynchronizeRoPEScaling(); }
+        return result;
+    }
+
+    // --- ROM (paged) path: header/tensor-directory only, no whole-model allocation ---
+    if (!rom.addShard(modelPath)) return false;
+    if (!rom.finalizeIndex()) return false;
+
+    // --- the admission gate ---
+    //
+    // The model is admitted or it is not, and the answer comes with the
+    // numbers that produced it. A model that does not fit is refused here,
+    // with the footprint and the room that was left, rather than failing
+    // later inside an allocation with no explanation.
+    //
+    // The context that is checked is the one the model declares, bounded by
+    // the room there is: asking for a hundred thousand positions of cache
+    // for a model that was indexed for four thousand would refuse every
+    // model on a host that is busy.
+    {
+        uint64_t packedBytes = 0;
+        for (const auto& shard : rom.shards()) {
+            packedBytes += shard.dataSize;
+        }
+        const auto& geometry = rom.geometry();
+        uint32_t context = static_cast<uint32_t>(geometry.maxSeqLen);
+        if (context == 0) context = 4096;
+
+        // The cache the engine will hold is the window it plans to run with,
+        // and not the context the model advertises.
+        //
+        // The engine chooses that window from the memory budget, and it
+        // says why: a model that advertises more context than the machine
+        // has is a fact about the model and not about the machine. This
+        // model advertises 131072 positions, whose key and value cache
+        // costs 48 GB in half precision, and the admission was being asked
+        // about that cache rather than about the 7 GB window the engine
+        // actually allocates. It refused a model that fits.
+        deep2::AdmissionPolicy policy;
+        // The packed resident path keeps the weights packed on the device,
+        // so the host is charged for the cache and the working set rather
+        // than for an expanded copy of the model.
+        policy.countExpandedWeights = false;
+
+        // The window the engine runs with is the one that fits in the room
+        // the host actually has, and the admission policy is what knows that
+        // room. Planning the window here from a fixed budget instead made the
+        // same model admitted on a quiet host and refused on a busy one, and
+        // that turns a correctness gate into a resource gate: the parity
+        // gates then fail or pass according to what else is running.
+        deep2::AdmissionReport report = deep2::EvaluateAdmission(geometry, packedBytes, context, policy);
+        if (!report.admitted && report.maxContext > 0 && report.maxContext < context) {
+            fprintf(stderr,
+                    "[ADMISSION] the %u position context does not fit; the engine runs with the "
+                    "%u position window that does\n",
+                    context, report.maxContext);
+            context = report.maxContext;
+            report = deep2::EvaluateAdmission(geometry, packedBytes, context, policy);
+        }
+        m_admission = report;
+        if (!report.admitted) {
+            fprintf(stderr,
+                    "[ADMISSION] the model is refused: %s\n"
+                    "[ADMISSION] the weights are %llu MB packed, the cache for %u positions is "
+                    "%llu MB, and the host has %llu MB of commit left\n",
+                    report.reason.c_str(),
+                    (unsigned long long)(report.footprint.packedWeightBytes / (1024ull * 1024ull)),
+                    report.requestedContext,
+                    (unsigned long long)(report.footprint.kvCacheBytes / (1024ull * 1024ull)),
+                    (unsigned long long)(report.commitAvailableBytes / (1024ull * 1024ull)));
+            return false;
+        }
+        fprintf(stderr,
+                "[ADMISSION] admitted: %llu MB of weights, %llu MB of cache for %u positions, "
+                "%llu MB of commit left, and the largest context that fits is %u\n",
+                (unsigned long long)(report.footprint.packedWeightBytes / (1024ull * 1024ull)),
+                (unsigned long long)(report.footprint.kvCacheBytes / (1024ull * 1024ull)),
+                report.requestedContext,
+                (unsigned long long)(report.commitAvailableBytes / (1024ull * 1024ull)),
+                report.maxContext);
+    }
+
+    // Best-effort Vulkan initialization on all discovered AMD discrete GPUs.
+    vulkan = std::make_unique<deep2::VulkanDevice>();
+    vulkanReady = vulkan->init();
+    if (vulkanReady) {
+        fprintf(stderr, "[ROM_EXEC_BRIDGE] Vulkan ready on %zu GPU(s)\n", vulkan->gpuCount());
+        for (size_t i = 0; i < vulkan->gpuCount(); ++i) {
+            const auto* g = vulkan->gpu(i);
+            fprintf(stderr, "[VULKAN] gpu%zu: %s (%llu MB)\n", i, g->name.c_str(),
+                    (unsigned long long)(g->vramBytes / (1024ull * 1024ull)));
+        }
+    } else {
+        fprintf(stderr, "[ROM_EXEC_BRIDGE] Vulkan unavailable; CPU-only execution\n");
+    }
+
+    initialized = true;
+    SynchronizeRoPEScaling();
+    return true;
+}
+
+void Deep2Engine::Shutdown() {
+    // The resident weights are device buffers. They have to go back before
+    // the device does, or the device is torn down with live allocations.
+    releaseResidentWeights();
+    releaseLlamaResidentWeights();
+    m_tokenEmb.data.clear();
+    m_tokenEmb.data.shrink_to_fit();
+    m_tokenEmbReady = false;
+    if (vulkan) { vulkan->shutdown(); vulkan.reset(); }
+    initialized = false;
+}
+
+bool Deep2Engine::ensureResidentWeights(size_t numLayers) {
+    if (m_residentPlaced) return true;
+    if (!vulkanReady || !vulkan) return false;
+    if (numLayers == 0) return false;
+
+    std::cout << "[Move 10] Placing the layer projections in device memory...\n" << std::flush;
+
+    m_residentLayers.assign(numLayers, ResidentLayer());
+
+    double dequantMs = 0.0;
+    double uploadMs = 0.0;
+    size_t tensorCount = 0;
+
+    auto place = [&](const std::string& name, ResidentProjection& slot) -> bool {
+        const deep2::TensorEntry* entry = rom.findTensor(name);
+        if (!entry) {
+            fprintf(stderr, "[Move 10] %s not found\n", name.c_str());
+            return false;
+        }
+
+        // The placement reads megabytes out of the ROM and hands them to the
+        // driver. An exception anywhere in that is reported against the
+        // tensor that was being placed, because a bare terminate() says
+        // nothing about where it came from.
+        try {
+        fprintf(stderr, "[PLACE] %s begin\n", name.c_str());
+        // A format with a packed shader is placed in its packed form: the
+        // bytes go from the ROM to the device and are dequantized there.
+        // The host never sees them expanded, so neither the host work nor
+        // the resident footprint pays for the f32 form.
+        //
+        // The format decides, not the model: a format the device can execute
+        // natively has a packed path, and one it cannot is placed expanded.
+        if (deep2::VulkanDevice::supportsPackedFormat(entry->type)) {
+            const auto tStart = std::chrono::steady_clock::now();
+            if (!uploadResidentQuantWeight(*entry, slot.quant)) {
+                fprintf(stderr, "[Move 10] Failed to place %s in packed form\n", name.c_str());
+                return false;
+            }
+            slot.packed = true;
+            slot.rows = slot.quant.totalRows;
+            slot.cols = slot.quant.cols;
+            uploadMs += std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - tStart).count();
+            ++tensorCount;
+            return true;
+        }
+
+        deep2::DequantizedTensor dq;
+        const auto tDequant = std::chrono::steady_clock::now();
+        if (!dequantTensor(*entry, dq)) {
+            fprintf(stderr, "[Move 10] Failed to dequantize %s\n", name.c_str());
+            return false;
+        }
+        fprintf(stderr, "[PLACE] %s dequantized\n", name.c_str());
+        const auto tUploaded = std::chrono::steady_clock::now();
+        slot.rows = dq.rows;
+        slot.cols = dq.cols;
+        const deep2::TensorView view{ deep2::TensorType::F32,
+                                      reinterpret_cast<const uint8_t*>(dq.data.data()),
+                                      dq.data.size() * sizeof(float),
+                                      { dq.rows, dq.cols }, true };
+        const bool ok = uploadResidentSplitWeight(view, slot.f32);
+        fprintf(stderr, "[PLACE] %s uploaded\n", name.c_str());
+        // Release the host copy straight away: only the device buffers are
+        // needed from here on.
+        dq.data.clear();
+        dq.data.shrink_to_fit();
+        const auto tDone = std::chrono::steady_clock::now();
+        dequantMs += std::chrono::duration<double, std::milli>(tUploaded - tDequant).count();
+        uploadMs += std::chrono::duration<double, std::milli>(tDone - tUploaded).count();
+        ++tensorCount;
+        fprintf(stderr, "[PLACE] %s end\n", name.c_str());
+        return ok;
+        }
+        catch (const std::exception& e) {
+            fprintf(stderr, "[Move 10] placing %s threw (%s): %s\n",
+                    name.c_str(), typeid(e).name(), e.what());
+            releaseResidentWeights();
+            return false;
+        }
+        catch (...) {
+            fprintf(stderr, "[Move 10] placing %s threw a non-standard exception\n", name.c_str());
+            releaseResidentWeights();
+            return false;
+        }
+    };
+
+    bool ok = true;
+    for (size_t layer = 0; layer < numLayers && ok; ++layer) {
+        const std::string prefix = "blk." + std::to_string(layer) + ".";
+        ResidentLayer& lw = m_residentLayers[layer];
+        lw.ready = place(prefix + "attn_qkv.weight", lw.qkv) &&
+                   place(prefix + "attn_output.weight", lw.attnOut) &&
+                   place(prefix + "ffn_up.weight", lw.up) &&
+                   place(prefix + "ffn_down.weight", lw.down);
+        lw.qkvRows = lw.qkv.rows; lw.qkvCols = lw.qkv.cols;
+        lw.upRows = lw.up.rows;   lw.upCols = lw.up.cols;
+        lw.downRows = lw.down.rows; lw.downCols = lw.down.cols;
+        if (!lw.ready) {
+            ok = false;
+            break;
+        }
+    }
+    if (ok) {
+        ok = place("output.weight", m_residentOutput);
+        m_residentOutputRows = m_residentOutput.rows;
+        m_residentOutputCols = m_residentOutput.cols;
+    }
+
+    if (!ok) {
+        // Release whatever was placed before the failure, so a failed
+        // placement does not leave half the weights on the devices.
+        releaseResidentWeights();
+        return false;
+    }
+
+    m_residentPlaced = true;
+    m_residentDequantMs = dequantMs;
+    m_residentUploadMs = uploadMs;
+    m_residentTensorCount = tensorCount;
+    m_residentPlacementMs = dequantMs + uploadMs;
+    return true;
+}
+
+void Deep2Engine::releaseResidentWeights() {
+    auto releaseProjection = [this](ResidentProjection& p) {
+        if (p.packed) {
+            releaseResidentQuantWeight(p.quant);
+        } else {
+            releaseResidentSplitWeight(p.f32);
+        }
+        p.packed = false;
+    };
+    if (!m_residentLayers.empty()) {
+        for (auto& lw : m_residentLayers) {
+            releaseProjection(lw.qkv);
+            releaseProjection(lw.attnOut);
+            releaseProjection(lw.up);
+            releaseProjection(lw.down);
+        }
+        m_residentLayers.clear();
+    }
+    releaseProjection(m_residentOutput);
+    m_residentPlaced = false;
+    m_residentTensorCount = 0;
+}
+
+void MatrixWorkerStub(size_t index, void* args) {
+    MatrixArgs* mArgs = reinterpret_cast<MatrixArgs*>(args);
+    mArgs->out[index] = mArgs->in[index] * 1.0002f;
+}
+
+void Deep2Engine::SynchronizeRoPEScaling(double modelThetaConfig) {
+    if (romMode && rom.shardCount() > 0) {
+        ctx.cfg = ModelConfig{};
+        ctx.cfg.hiddenDim = static_cast<size_t>(rom.geometry().hiddenDim);
+        ctx.cfg.numLayers = static_cast<size_t>(rom.geometry().numLayers);
+        ctx.cfg.numHeads = static_cast<size_t>(rom.geometry().numHeads);
+        ctx.cfg.numKVHeads = static_cast<size_t>(rom.geometry().numKVHeads);
+        ctx.cfg.intermediateDim = static_cast<size_t>(rom.geometry().intermediateDim);
+        ctx.cfg.vocabSize = static_cast<size_t>(rom.geometry().vocabSize);
+        ctx.cfg.maxSeqLen = static_cast<size_t>(rom.geometry().maxSeqLen);
+        ctx.cfg.ropeThetaGlobal = rom.geometry().ropeTheta;
+        ctx.cfg.ropeScaleFactor = 1.0;
+
+        // The rotary frequency base is the model's own value and the
+        // positions are not compressed. A model that wants a different
+        // treatment of its positions says so in its metadata, and the
+        // long-context adjustment that the whole-loader path applies is a
+        // Phi-3 thing that a llama-family model does not use: Llama-3.2
+        // declares a base of 500000 and a context of 131072, and dividing
+        // every position by 32 is not what it was trained with.
+    } else {
+        ctx.cfg.ropeThetaGlobal = (modelThetaConfig > 0.0) ? modelThetaConfig : 10000.0;
+        ctx.cfg.ropeScaleFactor = 1.0;
+        if (ctx.cfg.maxSeqLen > 4096) {
+            double contextRatio = static_cast<double>(ctx.cfg.maxSeqLen) / 4096.0;
+            ctx.cfg.ropeThetaGlobal = (ctx.cfg.ropeThetaGlobal == 10000.0) ? 500000.0 : ctx.cfg.ropeThetaGlobal;
+            ctx.cfg.ropeScaleFactor = 1.0 / contextRatio;
+        }
+    }
+    if (ctx.cfg.maxSeqLen > 4096) {
+        fprintf(stderr, "[ROPE_ADAPT] maxSeqLen=%zu -> Theta=%.2f Scale=%.6f\n",
+                ctx.cfg.maxSeqLen, ctx.cfg.ropeThetaGlobal, ctx.cfg.ropeScaleFactor);
+    }
+}
+
+    void Deep2Engine::ApplyRotaryEmbeddings(float* vectorData, size_t headIndex, size_t position) {
+        const size_t hiddenDim = ctx.cfg.hiddenDim;
+        const size_t heads = ctx.cfg.numHeads;
+        if (heads == 0 || hiddenDim == 0) return;
+        const size_t dim = hiddenDim / heads;
+        (void)headIndex;
+        // RoPE rotates the pairs inside a head, and the frequency of a pair
+        // depends only on its index within the head, so every head is rotated
+        // with the same frequency sequence. The previous version rotated only
+        // the first headDim elements of the vector, which left every head
+        // after the first unrotated.
+        for (size_t h = 0; h < heads; ++h) {
+            float* head = vectorData + (h * dim);
+            for (size_t i = 0; i < dim; i += 2) {
+                double frequency = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i) / dim);
+                double scaledArgument = static_cast<double>(position) * frequency * ctx.cfg.ropeScaleFactor;
+                float sinValue = std::sin(scaledArgument);
+                float cosValue = std::cos(scaledArgument);
+                float v0 = head[i];
+                float v1 = head[i + 1];
+                head[i]     = (v0 * cosValue) - (v1 * sinValue);
+                head[i + 1] = (v0 * sinValue) + (v1 * cosValue);
+            }
+        }
+    }
+
+    void Deep2Engine::DequantizeQ2_K_AVX512(const void* __restrict source, float* __restrict destination, size_t blockCount) {
+        // The ROM's Q2_K block is 84 bytes: scales[16] @0, qs[64] @16, d @80,
+        // dmin @82. Each scale byte carries a 4-bit scale in the low nibble
+        // and a 4-bit minimum in the high nibble, and the value is
+        //     value = d * (sc & 0xF) * q - dmin * (sc >> 4)
+        // over 16 sub-blocks of 16 values. The dequantizer in quant_kernels.cpp
+        // is the reference for this, and the shader mirrors it.
+        //
+        // The previous version of this function used a symmetric q * d with no
+        // scales and no minimums, and wrote 64 of a block's 256 values, so it
+        // produced weights unrelated to the ROM's.
+        const uint8_t* p = static_cast<const uint8_t*>(source);
+        const __m512i three = _mm512_set1_epi32(3);
+        const __m512 one = _mm512_set1_ps(1.0f);
+        for (size_t b = 0; b < blockCount; ++b) {
+            const float d    = ConvertFp16ToFloat32(static_cast<uint16_t>(p[80] | (p[81] << 8)));
+            const float dmin = ConvertFp16ToFloat32(static_cast<uint16_t>(p[82] | (p[83] << 8)));
+            const uint8_t* scales = p;
+            const uint8_t* qs = p + 16;
+
+            int is = 0;
+            for (int half = 0; half < 2; ++half) {
+                const uint8_t* q = qs + half * 32;
+                const size_t base = (b * 256) + (size_t)(half * 128);
+                for (int j = 0; j < 4; ++j) {
+                    const uint8_t sc1 = scales[is++];
+                    const uint8_t sc2 = scales[is++];
+                    const __m512 dl1 = _mm512_set1_ps(d * static_cast<float>(sc1 & 0x0F));
+                    const __m512 ml1 = _mm512_set1_ps(dmin * static_cast<float>(sc1 >> 4));
+                    const __m512 dl2 = _mm512_set1_ps(d * static_cast<float>(sc2 & 0x0F));
+                    const __m512 ml2 = _mm512_set1_ps(dmin * static_cast<float>(sc2 >> 4));
+
+                    // 32 outputs: the first 16 from bytes 0..15 with the
+                    // first scale, the last 16 from bytes 16..31 with the
+                    // second. The 2-bit fields sit at increasing offsets
+                    // within each byte.
+                    const __m128i rawA = _mm_loadu_si128(reinterpret_cast<const __m128i*>(q));
+                    const __m128i rawB = _mm_loadu_si128(reinterpret_cast<const __m128i*>(q + 16));
+                    const __m512i extA = _mm512_cvtepu8_epi32(rawA);
+                    const __m512i extB = _mm512_cvtepu8_epi32(rawB);
+                    const __m512 qA = _mm512_cvtepi32_ps(_mm512_and_si512(_mm512_srli_epi32(extA, 2 * j), three));
+                    const __m512 qB = _mm512_cvtepi32_ps(_mm512_and_si512(_mm512_srli_epi32(extB, 2 * j), three));
+                    _mm512_storeu_ps(destination + base + (size_t)(j * 32),
+                                     _mm512_fnmadd_ps(ml1, one, _mm512_mul_ps(qA, dl1)));
+                    _mm512_storeu_ps(destination + base + (size_t)(j * 32) + 16,
+                                     _mm512_fnmadd_ps(ml2, one, _mm512_mul_ps(qB, dl2)));
+                }
+            }
+            p += 84;
+        }
+    }
+
+inline void FastVectorSinCos256(__m256 x, __m256& sinOut, __m256& cosOut) {
+    __m256 c1 = _mm256_set1_ps(1.0f);
+    __m256 c2 = _mm256_set1_ps(-0.5f);
+    __m256 s1 = _mm256_set1_ps(-0.166666667f);
+
+    __m256 x2 = _mm256_mul_ps(x, x);
+    
+    cosOut = _mm256_fmadd_ps(x2, c2, c1);
+    
+    __m256 x3 = _mm256_mul_ps(x2, x);
+    sinOut = _mm256_fmadd_ps(x3, s1, x);
+}
+
+void Deep2Engine::ApplyRotaryEmbeddingsAVX512(float* vectorData, size_t dim, size_t position) {
+    size_t i = 0;
+    for (; i + 16 <= dim; i += 16) {
+        __m512 vData = _mm512_loadu_ps(&vectorData[i]);
+        alignas(64) float tempFreqs[16];
+        for (size_t v = 0; v < 16; v += 2) {
+            double freq = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i + v) / dim);
+            double arg  = static_cast<double>(position) * freq * ctx.cfg.ropeScaleFactor;
+            tempFreqs[v]     = static_cast<float>(arg);
+            tempFreqs[v + 1] = static_cast<float>(arg);
+        }
+        __m512 vArgs = _mm512_load_ps(tempFreqs);
+        __m256 xLow = _mm512_extractf32x8_ps(vArgs, 0);
+        __m256 xHigh = _mm512_extractf32x8_ps(vArgs, 1);
+        __m256 sinLow, cosLow, sinHigh, cosHigh;
+        FastVectorSinCos256(xLow, sinLow, cosLow);
+        FastVectorSinCos256(xHigh, sinHigh, cosHigh);
+        __m512 vSin = _mm512_insertf32x8(_mm512_castps256_ps512(sinLow), sinHigh, 1);
+        __m512 vCos = _mm512_insertf32x8(_mm512_castps256_ps512(cosLow), cosHigh, 1);
+        __m512 vPermuted = _mm512_permute_ps(vData, _MM_SHUFFLE(2, 3, 0, 1));
+        __m512 vSignsMask = _mm512_set_ps(1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f,
+                                          1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f);
+        __m512 vRotated = _mm512_mul_ps(vPermuted, vSignsMask);
+        __m512 vFinal = _mm512_fmadd_ps(vData, vCos, _mm512_mul_ps(vRotated, vSin));
+        _mm512_storeu_ps(&vectorData[i], vFinal);
+    }
+    for (; i + 1 < dim; i += 2) {
+        double frequency = 1.0 / std::pow(ctx.cfg.ropeThetaGlobal, static_cast<double>(i) / dim);
+        double scaledArgument = static_cast<double>(position) * frequency * ctx.cfg.ropeScaleFactor;
+        float sinValue = std::sin(scaledArgument);
+        float cosValue = std::cos(scaledArgument);
+        float v0 = vectorData[i];
+        float v1 = vectorData[i + 1];
+        vectorData[i]     = (v0 * cosValue) - (v1 * sinValue);
+        vectorData[i + 1] = (v0 * sinValue) + (v1 * cosValue);
+    }
+}
+
+Deep2Engine::TensorHandle Deep2Engine::getTensor(const std::string& name) {
+    TensorHandle h;
+    if (!romMode || !initialized) return h;
+    const deep2::TensorEntry* entry = rom.findTensor(name);
+    if (!entry) {
+        fprintf(stderr, "[ROM_EXEC_BRIDGE] tensor not found in ROM: %s\n", name.c_str());
+        return h;
+    }
+    h.lease = rom.leaseTensor(*entry);
+    if (!h.lease) {
+        fprintf(stderr, "[ROM_EXEC_BRIDGE] failed to lease tensor: %s\n", name.c_str());
+        return h;
+    }
+    h.view.type = entry->type;
+    h.view.dims = entry->dims;
+    h.view.byteSize = entry->byteSize();
+    h.view.contiguous = true;
+    h.view.data = h.lease.direct(0, entry->byteSize());
+    if (!h.view.data) {
+        // direct() only serves a tensor that fits inside a single page. A
+        // larger one has to be copied out, and reporting success with a null
+        // pointer would hand the caller a null it never checks for.
+        fprintf(stderr, "[ROM_EXEC_BRIDGE] tensor %s spans more than one page (%zu bytes); "
+                        "use readTensor() instead of a direct view\n",
+                name.c_str(), (size_t)entry->byteSize());
+        h.lease = deep2::TensorLease();
+        h.ok = false;
+        return h;
+    }
+    h.ok = true;
+    return h;
+}
+
+// The CPU path's weights for one layer, expanded once.
+//
+// The expansion is the fixed cost of a pass, and the incremental path makes
+// a pass per position, so the expansion has to be hoisted out of the loop
+// the measurement showed it was in.
+//
+// Only the small weights are kept. The two norms and the output projection
+// are a few megabytes each and are needed on every path, so keeping them
+// costs nothing and saves the expansion.
+//
+// The matrices are not kept. The whole model's projections in f32 are
+// about ten gigabytes for a 3B model, and the host that runs the
+// reference may not have ten gigabytes to give: the cache took the host's
+// commit down to nothing and the pass died with a bad allocation. The
+// matrices are therefore expanded per call, into a scratch that is reused,
+// which is what the path did before the cache existed.
+//
+// The returned pointer is to the cached tensor where there is one and to
+// the scratch otherwise, so the caller does not care which.
+const deep2::DequantizedTensor* Deep2Engine::ensureCpuWeight(size_t layer, int which) {
+    if (layer >= m_cpuLayerWeights.size()) return nullptr;
+    CpuLayerWeights& w = m_cpuLayerWeights[layer];
+
+    // The tensor's name, and where it goes.
+    const char* names[6] = { "attn_qkv.weight", "attn_norm.weight", "attn_output.weight",
+                              "ffn_up.weight", "ffn_down.weight", "ffn_norm.weight" };
+    bool* ready[6] = { &w.qkvReady, &w.attnNormReady, &w.attnOutReady,
+                       &w.upReady, &w.downReady, &w.ffnNormReady };
+    if (which < 0 || which > 5) return nullptr;
+
+    // The scratch for the weights that are not kept.
+    static thread_local deep2::DequantizedTensor scratch[4];
+    static constexpr int kScratchSlot[6] = { 0, -1, 1, 2, 3, -1 };
+
+    deep2::DequantizedTensor* dst = nullptr;
+    const bool keep = (kScratchSlot[which] < 0);
+    if (keep) {
+        switch (which) {
+            case 1: dst = &w.attnNorm; break;
+            case 5: dst = &w.ffnNorm; break;
+            default: dst = &w.attnOut; break;
+        }
+    } else {
+        dst = &scratch[kScratchSlot[which]];
+        if (*ready[which]) return dst;   // the scratch already holds it
+        *ready[which] = false;           // and it is not kept across calls
+    }
+
+    const std::string name = "blk." + std::to_string(layer) + "." + names[which];
+    const deep2::TensorEntry* entry = rom.findTensor(name);
+    if (!entry) {
+        fprintf(stderr, "[Move 10] Layer %zu: %s not found\n", layer, name.c_str());
+        return nullptr;
+    }
+    if (!dequantTensor(*entry, *dst)) {
+        fprintf(stderr, "[Move 10] Layer %zu: %s dequant failed\n", layer, name.c_str());
+        return nullptr;
+    }
+    // The matrices that replace a device computation are counted.
+    // The norms are always expanded on the host, by design.
+    if (!keep) ++m_passTelemetry.hostExpansions;
+    if (keep) *ready[which] = true;
+    return dst;
+}
+
+bool Deep2Engine::dequantTensor(const deep2::TensorEntry& entry, deep2::DequantizedTensor& out) {
+    if (!romMode) return false;
+    const uint64_t size = entry.byteSize();
+    std::vector<uint8_t> staged(size);
+    if (!rom.readTensor(entry, staged.data())) return false;
+    deep2::TensorView view{ entry.type, staged.data(), size, entry.dims, true };
+    return dequantizeTensor(view, out);
+}
+
+bool Deep2Engine::gemvFloat(const float* W, const float* x, float* y,
+                            uint64_t rows, uint64_t cols) const {
+    return deep2::gemvFloat(W, x, y, rows, cols);
+}
+
+bool Deep2Engine::prepareGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
+                              const deep2::TensorView& xView, uint32_t rowOffset, uint32_t rowCount,
+                              GemvScratch& out) {
+    if (!vulkanReady || !vulkan) return false;
+
+    if (wView.type != deep2::TensorType::F32 || xView.type != deep2::TensorType::F32 ||
+        !wView.data || !xView.data) {
+        fprintf(stderr, "[VULKAN_GEMV] requires contiguous f32 views\n");
+        return false;
+    }
+
+    if (wView.dims.size() < 2) return false;
+    const uint64_t rows = wView.dims[0];
+    const uint64_t cols = wView.dims[1];
+
+    // rowCount == 0 means the whole matrix.
+    if (rowCount == 0) {
+        if (rowOffset != 0) {
+            fprintf(stderr, "[VULKAN_GEMV] rowOffset without a row count\n");
+            return false;
+        }
+        rowCount = static_cast<uint32_t>(rows);
+    }
+    if (rowOffset > rows || rowCount > rows - rowOffset) {
+        fprintf(stderr, "[VULKAN_GEMV] invalid row range: offset=%u count=%u rows=%llu\n",
+                rowOffset, rowCount, (unsigned long long)rows);
+        return false;
+    }
+
+    // The weight matrix is f32 and row major, so a row is cols*4 bytes and
+    // the requested range must lie inside the view.
+    const size_t rowBytes = static_cast<size_t>(cols) * sizeof(float);
+    const size_t rangeBytes = static_cast<size_t>(rowCount) * rowBytes;
+    if (static_cast<size_t>(rowOffset) * rowBytes + rangeBytes > wView.byteSize) {
+        fprintf(stderr, "[VULKAN_GEMV] row range %u..%u exceeds the view (%zu bytes)\n",
+                rowOffset, rowOffset + rowCount, wView.byteSize);
+        return false;
+    }
+
+    // The compute program is cached per device inside VulkanDevice, so
+    // switching between the two halves of a split costs a map lookup rather
+    // than a pipeline rebuild.
+    const std::string spv = Deep2EngineExeDir() + "shaders\\gemv_f32.spv";
+    if (!vulkan->ensureProgram(gpu, spv, 8)) {
+        fprintf(stderr, "[VULKAN_GEMV] program init failed for %s\n", spv.c_str());
+        return false;
+    }
+
+    // Only the selected rows are uploaded, so the shader's W[i * cols + k]
+    // addressing is relative to the start of the range.
+    const VkDeviceSize Wsize = static_cast<VkDeviceSize>(rangeBytes);
+    const VkDeviceSize xsize = static_cast<VkDeviceSize>(cols) * 4;
+    const VkDeviceSize ysize = static_cast<VkDeviceSize>(rowCount) * 4;
+
+    const VkBufferUsageFlags usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    const VkMemoryPropertyFlags memProps =
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+    if (!vulkan->createBuffer(gpu, Wsize, usage, memProps, out.W, out.Wmem, &out.Wmapped) ||
+        !vulkan->createBuffer(gpu, xsize, usage, memProps, out.x, out.xmem, &out.xmapped) ||
+        !vulkan->createBuffer(gpu, ysize, usage, memProps, out.y, out.ymem, &out.ymapped)) {
+        releaseGemv(gpu, out);
+        return false;
+    }
+
+    std::memcpy(out.Wmapped, wView.data + (static_cast<size_t>(rowOffset) * rowBytes), rangeBytes);
+    std::memcpy(out.xmapped, xView.data, static_cast<size_t>(xsize));
+    std::memset(out.ymapped, 0, static_cast<size_t>(ysize));
+
+    out.rowCount = rowCount;
+    out.cols = static_cast<uint32_t>(cols);
+    return true;
+}
+
+bool Deep2Engine::submitGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch,
+                             deep2::VulkanProgram::Dispatch& out) {
+    if (!vulkanReady || !vulkan) return false;
+    return vulkan->beginDispatchProgram(gpu, scratch.W, scratch.x, scratch.y,
+                                        scratch.rowCount, scratch.cols, out);
+}
+
+bool Deep2Engine::collectGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch,
+                              std::vector<float>& y) {
+    const size_t yBytes = static_cast<size_t>(scratch.rowCount) * sizeof(float);
+    y.assign(scratch.rowCount, 0.0f);
+    std::memcpy(y.data(), scratch.ymapped, yBytes);
+    releaseGemv(gpu, scratch);
+    return true;
+}
+
+void Deep2Engine::releaseGemv(const deep2::VulkanDevice::Gpu& gpu, GemvScratch& scratch) {
+    if (!vulkan) return;
+    vulkan->destroyBuffer(gpu, scratch.W, scratch.Wmem);
+    vulkan->destroyBuffer(gpu, scratch.x, scratch.xmem);
+    vulkan->destroyBuffer(gpu, scratch.y, scratch.ymem);
+    scratch.W = scratch.x = scratch.y = VK_NULL_HANDLE;
+    scratch.Wmem = scratch.xmem = scratch.ymem = VK_NULL_HANDLE;
+    scratch.Wmapped = scratch.xmapped = scratch.ymapped = nullptr;
+    scratch.rowCount = 0;
+    scratch.cols = 0;
+}
+
+bool Deep2Engine::vulkanGemv(const deep2::VulkanDevice::Gpu& gpu, const deep2::TensorView& wView,
+                             const deep2::TensorView& xView, std::vector<float>& y,
+                             uint32_t rowOffset, uint32_t rowCount) {
+    if (!vulkanReady || !vulkan) return false;
+
+    GemvScratch scratch;
+    if (!prepareGemv(gpu, wView, xView, rowOffset, rowCount, scratch)) return false;
+
+    deep2::VulkanProgram::Dispatch dispatch;
+    if (!submitGemv(gpu, scratch, dispatch)) {
+        releaseGemv(gpu, scratch);
+        return false;
+    }
+    if (!dispatch.wait()) {
+        releaseGemv(gpu, scratch);
+        return false;
+    }
+
+    return collectGemv(gpu, scratch, y);
+}
+
+bool Deep2Engine::vulkanGemvSplit(const deep2::TensorView& wView, const deep2::TensorView& xView,
+                                  std::vector<float>& y, uint32_t* outSplitRow) {
+    if (!vulkanReady || !vulkan) return false;
+
+    const auto* g0 = vulkan->primary();
+    const auto* g1 = vulkan->secondary();
+    if (!g0 || !g1) {
+        fprintf(stderr, "[VULKAN_GEMV_SPLIT] needs two devices, found %zu\n", vulkan->gpuCount());
+        return false;
+    }
+    return vulkanGemvSplit(*g0, *g1, wView, xView, y, outSplitRow);
+}
+
+void Deep2EngineExecuteInferenceStep(Deep2Engine& engine) {
+    if (!engine.initialized) {
+        fprintf(stderr, "[ERROR] Engine not initialized\n");
+        return;
+    }
+
+    if (!engine.romMode) {
+        std::cout << "\n--- Engine Live Pipeline Footprint (whole-loader baseline) ---\n"
+                  << "  Layers: " << engine.ctx.cfg.numLayers
+                  << " | Width: " << engine.ctx.cfg.hiddenDim
+                  << " | Vocab: " << engine.ctx.cfg.vocabSize << "\n";
+        auto wUp = engine.ctx.tensors.find("blk.0.ffn_up.weight");
+        if (wUp == engine.ctx.tensors.end()) return;
+        std::vector<float> inState(engine.ctx.cfg.hiddenDim, 1.0f), outState(engine.ctx.cfg.hiddenDim, 0.0f);
+        MatrixArgs args{ inState.data(), outState.data(), wUp->second.dataData, engine.ctx.cfg.hiddenDim };
+        Deep2Engine::LockFreeThreadPool::ParallelTask task{ MatrixWorkerStub, &args, 0, engine.ctx.cfg.hiddenDim };
+        engine.threadPool.DispatchParallelJob(&task);
+        std::cout << "[STATUS] baseline run verification complete. Output check: " << outState[0] << "\n";
+        return;
+    }
+
+    std::cout << "\n--- ROM Execution Bridge Smoke ---\n"
+              << "  Geometry: layers=" << engine.ctx.cfg.numLayers
+              << " hidden=" << engine.ctx.cfg.hiddenDim
+              << " heads=" << engine.ctx.cfg.numHeads
+              << " vocab=" << engine.ctx.cfg.vocabSize << "\n";
+
+    // The smoke check needs one weight matrix to verify the GEMV against,
+    // and the two architectures name it differently: Phi-3 fuses the query,
+    // key and value projections into one matrix, Llama has a separate query
+    // projection.
+    const bool llamaArch = engine.rom.geometry().arch == deep2::ModelArch::Llama;
+    const char* smokeTensor = llamaArch ? "blk.0.attn_q.weight" : "blk.0.attn_qkv.weight";
+    const deep2::TensorEntry* qkv = engine.rom.findTensor(smokeTensor);
+    if (!qkv) {
+        std::cout << "[VERIFY] " << smokeTensor << " not present in ROM\n";
+        return;
+    }
+    deep2::DequantizedTensor dq;
+    if (!engine.dequantTensor(*qkv, dq)) {
+        std::cout << "[VERIFY] dequant of " << smokeTensor << " failed\n";
+        return;
+    }
+    std::cout << "[VERIFY] dequantized " << smokeTensor << " -> " << dq.rows << "x" << dq.cols << " f32\n";
+
+    uint64_t testRows = std::min<uint64_t>(16, dq.rows);
+    std::vector<float> x(dq.cols, 1.0f), y(testRows, 0.0f);
+    engine.gemvFloat(dq.data.data(), x.data(), y.data(), testRows, dq.cols);
+    float sum = 0.0f;
+    for (float v : y) sum += v;
+    std::cout << "[VERIFY] GEMV(" << testRows << "x" << dq.cols << ") sum = " << sum << "\n";
+
+    if (engine.vulkanReady) {
+        deep2::TensorView wSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(dq.data.data()),
+                           static_cast<size_t>(testRows * dq.cols * 4),
+                           { testRows, dq.cols }, true };
+        deep2::TensorView xSlice{ deep2::TensorType::F32, reinterpret_cast<const uint8_t*>(x.data()),
+                           static_cast<size_t>(x.size() * 4), { dq.cols }, true };
+        for (size_t gi = 0; gi < engine.vulkan->gpuCount(); ++gi) {
+            const auto* g = engine.vulkan->gpu(gi);
+            std::vector<float> yVulkan;
+            bool ok = engine.vulkanGemv(*g, wSlice, xSlice, yVulkan);
+            float vs = 0.0f;
+            for (float v : yVulkan) vs += v;
+            std::cout << "[VERIFY] Vulkan GEMV on " << g->name << ": " << (ok ? "OK" : "FAILED")
+                      << " sum = " << vs << "\n";
+        }
+
+        // Asymmetric split: device 0 takes the leading rows, device 1 the
+        // remainder. The concatenated result must match the single-device
+        // result, because the split is a partitioning of the same rows.
+        if (engine.vulkan->gpuCount() >= 2 && testRows >= 2) {
+            std::vector<float> ySplit;
+            uint32_t splitRow = 0;
+            bool splitOk = engine.vulkanGemvSplit(wSlice, xSlice, ySplit, &splitRow);
+            float splitSum = 0.0f;
+            for (float v : ySplit) splitSum += v;
+            std::cout << "[VERIFY] Vulkan split GEMV across 2 devices: "
+                      << (splitOk ? "OK" : "FAILED")
+                      << " splitRow=" << splitRow << "/" << testRows
+                      << " sum = " << splitSum << "\n";
+
+            // Reference: the CPU GEMV over the same rows.
+            std::vector<float> yRef(testRows, 0.0f);
+            engine.gemvFloat(dq.data.data(), x.data(), yRef.data(), testRows, dq.cols);
+            float refSum = 0.0f;
+            for (float v : yRef) refSum += v;
+
+            // The split is exact when every row matches, not just the sum.
+            size_t mismatches = 0;
+            float worst = 0.0f;
+            if (splitOk && ySplit.size() == yRef.size()) {
+                for (size_t i = 0; i < yRef.size(); ++i) {
+                    const float diff = std::fabs(ySplit[i] - yRef[i]);
+                    if (diff > worst) worst = diff;
+                    if (diff > 1e-3f) ++mismatches;
+                }
+            } else {
+                mismatches = yRef.size();
+            }
+            std::cout << "[VERIFY] split vs CPU GEMV: mismatched rows = " << mismatches
+                      << "/" << yRef.size() << ", worst abs diff = " << worst << "\n";
+        }
+    }
+    std::cout << "[STATUS] ROM execution bridge complete\n";
+}
+
+// ==================================================================================
+// ORACLE-TRACE: LAYER BOUNDARY INTEGRITY INSPECTOR
+// ==================================================================================
+
+void inspect_layer_boundary_tensors(uint32_t layer_idx, const float* hidden_states, size_t element_count) {
+    // Intercept exactly at the layer exit threshold of Layer 3 (4th block) and entrance of Layer 4 (5th block)
+    if (layer_idx == 3 || layer_idx == 4) {
+        std::cout << "\n[ORACLE-TRACE] --- CRITICAL BOUNDARY AUDIT: LAYER " << layer_idx << " ---\n";
+
+        float max_val = -1e9f;
+        float min_val = 1e9f;
+        float sum = 0.0f;
+        size_t nan_count = 0;
+        size_t inf_count = 0;
+        size_t exact_zero_count = 0;
+
+        for (size_t i = 0; i < element_count; ++i) {
+            float v = hidden_states[i];
+            
+            if (std::isnan(v)) {
+                nan_count++;
+                continue;
+            }
+            if (std::isinf(v)) {
+                inf_count++;
+                continue;
+            }
+            if (v == 0.0f) {
+                exact_zero_count++;
+            }
+
+            sum += v;
+            if (v > max_val) max_val = v;
+            if (v < min_val) min_val = v;
+        }
+
+        float mean = element_count ? (sum / element_count) : 0.0f;
+
+        std::cout << "  Tensor Address     : 0x" << std::hex << reinterpret_cast<uintptr_t>(hidden_states) << std::dec << "\n";
+        std::cout << "  Value Range        : [" << min_val << " to " << max_val << "]\n";
+        std::cout << "  Mathematical Mean  : " << mean << "\n";
+        std::cout << "  Zero Elements Count: " << exact_zero_count << " / " << element_count << "\n";
+        std::cout << "  NaN Exceptions     : " << nan_count << "\n";
+        std::cout << "  Inf Explosions     : " << inf_count << "\n";
+        std::cout << "---------------------------------------------------------\n";
+
+        // Assert code protection to hard-stop the execution the moment numbers disintegrate
+        if (nan_count > 0 || inf_count > 0 || std::abs(mean) > 1e4f) {
+            std::cerr << "[!] CRITICAL MATH EXPLOSION CONFIRMED AT BLOCK BOUNDARY " << layer_idx << "! HALTING LOOP.\n";
+            __debugbreak(); // Win32 intrinsic trap to pause execution precisely at the point of failure
+        }
+    }
+}
+
+// ==================================================================================
+// MOVE 10: FULL PHI-3 ROM-PATH FORWARD PASS WITH LOGITS PARITY VALIDATION
+// ==================================================================================
+
+// 64-byte aligned working buffers for AVX-512 routines
+__declspec(align(64)) thread_local float tls_hidden_states[3072];
+__declspec(align(64)) thread_local float tls_query_vector[3072];
+__declspec(align(64)) thread_local float tls_logits[32064];
+__declspec(align(64)) thread_local float tls_dequant_scratchpad[16384];
+
+// Standard scaled dot-product attention over the cached keys and values.
+//
+// Q is the current position's query, already RoPE-rotated. K_cache and
+// V_cache hold the keys and values of every position seen so far, laid out
+// as [position][hiddenDim]. The attention is causal: the cache only ever
+// holds positions up to and including the current one.
+//
+// The softmax subtracts the row maximum before exponentiating. That is what
+// keeps the exponentials in range and stops the attention output from
+// growing with the magnitude of the scores, which is the property the
+// residual stream depends on.
+static void ComputeWindowAttention(float* outputStates,
+                                   const float* Q,
+                                   const deep2::HostKvRing& kv,
+                                   uint32_t layer,
+                                   uint32_t startLogical,
+                                   uint32_t count,
+                                   uint32_t numHeads,
+                                   uint32_t headDim) {
+    if (!outputStates || !Q || count == 0) return;
+
+    const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+    std::vector<float> scores(count);
+
+    for (uint32_t h = 0; h < numHeads; ++h) {
+        const float* headQ = Q + (h * headDim);
+
+        // Scores for this head against every position in the window. The
+        // rows are read through the ring, so a wrapped window is read in
+        // the order the positions were produced.
+        float maxScore = -std::numeric_limits<float>::infinity();
+        for (uint32_t t = 0; t < count; ++t) {
+            const uint16_t* headK = kv.keyRow(layer, startLogical + t);
+            if (!headK) return;
+            headK += h * headDim;
+            float dotProduct = 0.0f;
+            for (uint32_t d = 0; d < headDim; ++d) {
+                // The keys are held in half precision, exactly as the device
+                // cache holds them, so the reference and the device read the
+                // same values.
+                dotProduct += headQ[d] * deep2::KvHalfToFloat(headK[d]);
+            }
+            const float score = dotProduct * scale;
+            scores[t] = score;
+            if (score > maxScore) maxScore = score;
+        }
+
+        // Softmax with the maximum subtracted out.
+        float expSum = 0.0f;
+        for (uint32_t t = 0; t < count; ++t) {
+            scores[t] = std::exp(scores[t] - maxScore);
+            expSum += scores[t];
+        }
+        const float invExpSum = (expSum > 0.0f) ? (1.0f / expSum) : 0.0f;
+        for (uint32_t t = 0; t < count; ++t) {
+            scores[t] *= invExpSum;
+        }
+
+        // Weighted sum of the values.
+        float* headOutput = outputStates + (h * headDim);
+        std::memset(headOutput, 0, headDim * sizeof(float));
+        for (uint32_t t = 0; t < count; ++t) {
+            const uint16_t* headV = kv.valueRow(layer, startLogical + t);
+            if (!headV) return;
+            headV += h * headDim;
+            const float weight = scores[t];
+            for (uint32_t d = 0; d < headDim; ++d) {
+                headOutput[d] += weight * deep2::KvHalfToFloat(headV[d]);
+            }
+        }
+    }
+}
+
+// The magnitude of a vector's components, for the component decomposition.
+//
+// The forward pass needs to say which part of a block is running away: the
+// attention output, its projection, the FFN, or the residual stream itself.
+// Without that, a runaway can only be guessed at.
+static double ComponentRms(const float* v, size_t n) {
+    double s = 0.0;
+    for (size_t i = 0; i < n; ++i) s += static_cast<double>(v[i]) * v[i];
+    return (n ? std::sqrt(s / n) : 0.0);
+}
+bool Deep2Engine::executePhi3ROMForwardPass(const std::vector<uint32_t>& inputTokens,
+                                             std::vector<float>& outputLogits,
+                                             std::vector<float>& baselineLogits,
+                                             bool forceCpuPath) {
+    return executePhi3ROMForwardImpl(inputTokens, outputLogits, baselineLogits,
+                                     nullptr, 0, forceCpuPath);
+}
+
+bool Deep2Engine::executePhi3ROMForwardStep(const std::vector<uint32_t>& inputTokens,
+                                             std::vector<float>& outputLogits,
+                                             std::vector<float>& baselineLogits,
+                                             deep2::HostKvRing& kvRing,
+                                             uint32_t startPosition,
+                                             bool forceCpuPath) {
+    return executePhi3ROMForwardImpl(inputTokens, outputLogits, baselineLogits,
+                                     &kvRing, startPosition, forceCpuPath);
+}
+
+bool Deep2Engine::executePhi3ROMForwardImpl(const std::vector<uint32_t>& inputTokens,
+                                             std::vector<float>& outputLogits,
+                                             std::vector<float>& baselineLogits,
+                                             deep2::HostKvRing* externalRingPtr,
+                                             uint32_t startPosition,
+                                             bool forceCpuPath) {
+    if (!initialized || !romMode) {
+        fprintf(stderr, "[Move 10] Engine not initialized or not in ROM mode\n");
+        return false;
+    }
+
+    std::cerr << "[Move 10] Starting Phi-3 ROM-path forward pass for " << inputTokens.size() << " tokens\n" << std::flush;
+
+    const auto& geometry = rom.geometry();
+    const size_t hiddenDim = geometry.hiddenDim;
+    const size_t numLayers = geometry.numLayers;
+    const size_t numHeads = geometry.numHeads;
+
+    // A model whose geometry the engine cannot read is refused here, before
+    // anything is divided by it. The head count comes from the metadata and
+    // is zero for an architecture the engine does not know, and a division
+    // by it is a crash rather than an error message.
+    if (hiddenDim == 0 || numLayers == 0 || numHeads == 0 || numHeads > hiddenDim) {
+        fprintf(stderr,
+                "[Move 10] the model geometry could not be read: hidden=%zu layers=%zu heads=%zu\n",
+                hiddenDim, numLayers, numHeads);
+        fprintf(stderr,
+                "[Move 10] this engine reads the phi3 layout; the model's architecture is not one it can run\n");
+        return false;
+    }
+    const size_t headDim = hiddenDim / numHeads;
+    size_t vocabSize = geometry.vocabSize;
+    const size_t intermediateDim = geometry.intermediateDim;
+
+    std::cout << "[Move 10] Model geometry: layers=" << numLayers
+              << " hidden=" << hiddenDim << " heads=" << numHeads
+              << " vocab=" << vocabSize << " intermediate=" << intermediateDim << "\n" << std::flush;
+
+    // Fallback for vocabSize if not parsed from metadata
+    if (vocabSize == 0) {
+        vocabSize = 32064;  // Phi-3 Mini default
+        std::cout << "[Move 10] Warning: vocabSize not in metadata, using fallback: " << vocabSize << "\n" << std::flush;
+    }
+
+    std::vector<float> hiddenStates(hiddenDim, 0.0f);
+    size_t qkvRows = 0, qkvCols = 0;
+
+    // The pass is timed in two halves: the one-time placement of the
+    // weights on the devices, and the layer loop that uses them.
+    lastTiming = ForwardPassTiming();
+    const auto tPassStart = std::chrono::steady_clock::now();
+
+    auto tokenEmb = rom.findTensor("token_embd.weight");
+    if (!tokenEmb) {
+        fprintf(stderr, "[Move 10] token_embd.weight not found\n");
+        return false;
+    }
+
+    if (!m_tokenEmbReady) {
+        const auto tDqStart = std::chrono::steady_clock::now();
+        std::cout << "[Move 10] Dequantizing token_embd.weight...\n" << std::flush;
+        if (!dequantTensor(*tokenEmb, m_tokenEmb)) {
+            fprintf(stderr, "[Move 10] Failed to dequantize token_embd.weight\n");
+            return false;
+        }
+        m_tokenEmbReady = true;
+        // The layer weights belong to this model, so the cache goes with it.
+        m_cpuLayerWeights.clear();
+        const auto tDqEnd = std::chrono::steady_clock::now();
+        const double dqMs = std::chrono::duration<double, std::milli>(tDqEnd - tDqStart).count();
+        m_weightDequantCalls++;
+        m_weightDequantBytes += static_cast<uint64_t>(m_tokenEmb.rows) * static_cast<uint64_t>(m_tokenEmb.cols) * sizeof(float);
+        m_weightDequantTimeMs += dqMs;
+        std::cout << "[Move 10] token_embd.weight dequantized: " << m_tokenEmb.rows << "x" << m_tokenEmb.cols << " (" << dqMs << " ms)\n" << std::flush;
+    }
+    const deep2::DequantizedTensor& tokenEmbDq = m_tokenEmb;
+
+    // The final norm's weight. It is read once and kept, like the token
+    // embedding, because it is needed on every pass and never changes.
+    if (m_outputNorm.data.empty()) {
+        const deep2::TensorEntry* outputNorm = rom.findTensor("output_norm.weight");
+        if (!outputNorm) {
+            fprintf(stderr, "[Move 10] output_norm.weight not found\n");
+            return false;
+        }
+        if (!dequantTensor(*outputNorm, m_outputNorm)) {
+            fprintf(stderr, "[Move 10] output_norm.weight dequant failed\n");
+            return false;
+        }
+    }
+    const deep2::DequantizedTensor& outputNormDq = m_outputNorm;
+
+    // The vocabulary size bounds the token ids.
+    //
+    // The embedding table is [vocab, hidden], so its column count is the
+    // hidden size and not the vocabulary size. Checking a token id against
+    // it rejects every id above the hidden size and silently substitutes
+    // the embedding of token zero, which for a 32064 token vocabulary and a
+    // 3072 wide model is most of the vocabulary. The prompt "The capital
+    // of France is" has two tokens above 3072, and both of them were
+    // quietly replaced.
+    //
+    // This reads the ROM's own value rather than the geometry copy above,
+    // which falls back to a hard-coded 32064 when the metadata has none.
+    // A model that does not report its vocabulary is a model this pass
+    // cannot bound a token id against, so it is refused here.
+    const uint32_t romVocabSize = static_cast<uint32_t>(rom.geometry().vocabSize);
+    if (romVocabSize == 0) {
+        fprintf(stderr, "[Move 10] the model reports no vocabulary size\n");
+        return false;
+    }
+
+    // Use first token's embedding as initial hidden state
+    if (inputTokens.empty()) return false;
+    uint32_t firstToken = inputTokens[0];
+    if (firstToken >= romVocabSize) firstToken = 0;
+    std::memcpy(hiddenStates.data(), &tokenEmbDq.data[firstToken * hiddenDim], hiddenDim * sizeof(float));
+    std::cout << "[Move 10] Initial hidden state set\n" << std::flush;
+    if (m_layer0Trace) {
+        m_layer0Checkpoints["0.embedding"].assign(hiddenStates.begin(),
+                                                  hiddenStates.begin() + hiddenDim);
+    }
+
+    // -------------------------------------------------------------------
+    // Phase 1: place the layer projections in device memory, once.
+    //
+    // The token loop is the outer loop, so without this the projections
+    // would be dequantized and re-uploaded for every token. A GEMV over a
+    // matrix this size is memory bound, so the cost that matters is the
+    // number of bytes that cross the bus per call. Re-uploading the matrix
+    // every call puts all of it on the PCIe link and is slower than the CPU
+    // path; keeping it on the device is several times faster than the CPU.
+    //
+    // The break-even is about 1.3 tokens, so this pays for itself as soon
+    // as there is a second token.
+    //
+    // The placement belongs to the model, not to the pass, so it is done
+    // once and kept on the engine. Placing it per pass made every pass pay
+    // the whole cost again: the placement was over 95% of a forward pass,
+    // and the device buffers it allocated were never released, so a second
+    // pass had to find room for another copy of every weight.
+    // -------------------------------------------------------------------
+    // The resident path needs a device, not two devices.
+    //
+    // The condition used to ask for two, and a machine whose second card
+    // was momentarily unavailable lost the whole acceleration: the
+    // placement had already put every layer on the card that was there,
+    // thirty-two of thirty-two, and the forward pass then declined to use
+    // them and ran on the host. The second card is an accelerator and not
+    // a requirement, and the placement's row split is what decides how the
+    // rows are divided, so one device is a one-way split and the path is
+    // the same path.
+    bool useResident = !forceCpuPath && vulkanReady && vulkan && vulkan->gpuCount() >= 1;
+
+    // The decision boundary, spelled out.
+    //
+    // The three conditions that decide whether a pass runs on the devices
+    // are printed when the pass is one that requires the devices, because
+    // "the resident leg did not run on the devices" is a statement about
+    // the engine and not about the model, and the difference between the
+    // three reasons is the difference between a missing device, a missing
+    // placement and a per-layer flag that is not what the loop reads.
+    if (m_requireResident) {
+        std::fprintf(stderr,
+                     "[DIAG] forceCpuPath=%s vulkanReady=%s vulkan=%s gpuCount=%zu "
+                     "residentPlaced=%s\n",
+                     forceCpuPath ? "YES" : "NO",
+                     vulkanReady ? "YES" : "NO",
+                     vulkan ? "VALID" : "NULL",
+                     vulkan ? (size_t)vulkan->gpuCount() : (size_t)0,
+                     m_residentPlaced ? "YES" : "NO");
+        size_t readyCount = 0;
+        for (size_t l = 0; l < m_residentLayers.size(); ++l) {
+            if (m_residentLayers[l].ready) ++readyCount;
+        }
+        std::fprintf(stderr, "[DIAG] layers ready: %zu of %zu\n",
+                     readyCount, m_residentLayers.size());
+        for (size_t l = 0; l < m_residentLayers.size() && l < 4; ++l) {
+            const ResidentLayer& rl = m_residentLayers[l];
+            const bool qkvOk = rl.qkv.packed ? rl.qkv.quant.valid : rl.qkv.f32.valid;
+            const bool attnOk = rl.attnOut.packed ? rl.attnOut.quant.valid : rl.attnOut.f32.valid;
+            const bool upOk = rl.up.packed ? rl.up.quant.valid : rl.up.f32.valid;
+            const bool downOk = rl.down.packed ? rl.down.quant.valid : rl.down.f32.valid;
+            std::fprintf(stderr, "[DIAG]   layer %zu: ready=%s qkv=%s attnOut=%s up=%s down=%s\n",
+                         l, rl.ready ? "TRUE" : "FALSE",
+                         qkvOk ? "TRUE" : "FALSE", attnOk ? "TRUE" : "FALSE",
+                         upOk ? "TRUE" : "FALSE", downOk ? "TRUE" : "FALSE");
+        }        std::fflush(stderr);
+    }
+
+    if (useResident) {
+        if (!m_residentPlaced) {
+            if (!ensureResidentWeights(numLayers)) {
+                if (m_requireResident) {
+                    // A run that requires the device path cannot have one. The
+                    // fallback would make the pass compare the host against
+                    // the host and report agreement.
+                    std::cerr << "[Move 10] the resident placement failed and the device "
+                                 "path is required\n";
+                    return false;
+                }
+                useResident = false;
+                std::cout << "[Move 10] Resident placement unavailable; using the CPU path\n" << std::flush;
+            } else {
+                std::cout << "[Move 10] Projections resident on the devices; the token loop reads them in place\n"
+                          << std::flush;
+            }
+        }
+        // The dequantization and upload figures describe the one-time
+        // placement, so they stay the same however many passes have run.
+        lastTiming.placementDequantMs = m_residentDequantMs;
+        lastTiming.placementUploadMs = m_residentUploadMs;
+        lastTiming.residentTensors = m_residentTensorCount;
+    }
+
+    // Keys and values for every layer, held in a bounded ring.
+    //
+    // A decoder-only transformer carries the context in this cache. The
+    // residual stream itself does not run from one position to the next:
+    // each position starts from its own token embedding, and the context
+    // reaches it through the cached keys and values.
+    //
+    // The window is chosen from the memory budget rather than from the
+    // model's advertised maximum context, which for this model is 131072
+    // tokens and would cost 96 GiB in f32 against 47 GiB of VRAM across
+    // two cards. A model that advertises more context than the machine
+    // has is a fact about the model, not about the machine.
+    // The window the engine runs with, chosen from the memory budget
+    // rather than from the model's advertised maximum context.
+    //
+    // The advertised maximum is a fact about the model, not about the
+    // machine. For this model it is 131072 tokens, which costs 96 GiB of
+    // key and value storage in f32 against 47 GiB of VRAM across the two
+    // cards, so the advertised context is not one this machine can serve.
+    uint32_t kvWindow = 4096;
+    {
+        const uint32_t kvHeads = (uint32_t)geometry.numKVHeads;
+        const uint32_t heads = (uint32_t)(geometry.numHeads ? geometry.numHeads : 1);
+        const uint32_t headDim = (uint32_t)(geometry.hiddenDim / heads);
+        uint64_t totalVram = 0;
+        if (vulkan) {
+            for (size_t i = 0; i < vulkan->gpuCount(); ++i) totalVram += vulkan->gpu(i)->vramBytes;
+        }
+        // The budget is what the cards have left, not what they have: the
+        // resident weights are already on them, and a quarter is held back
+        // so the window cannot consume the last of a card's memory.
+        const uint64_t resident = deep2::KvResidentWeightBytes(
+            (uint32_t)numLayers, (uint32_t)geometry.hiddenDim,
+            (uint32_t)geometry.intermediateDim, (uint32_t)geometry.vocabSize);
+        const uint64_t hostBudget = 8ull * 1024ull * 1024ull * 1024ull;
+        const uint64_t margin = totalVram / 4;
+        const uint64_t budget = (totalVram > resident + margin) ? (totalVram - resident - margin) : 0;
+        // If the GPU budget is zero (model too large for resident weights), fall back
+        // to the host budget so the window is not truncated to the minimum.
+        const uint64_t effectiveBudget = budget ? budget : hostBudget;
+        uint32_t chosen = deep2::DetermineSafeContextWindow(
+            (uint32_t)geometry.maxSeqLen, (uint32_t)numLayers, kvHeads, headDim,
+            deep2::kKvBytesFp16, effectiveBudget);
+        // The reference path keeps a copy of the same window in host memory,
+        // so the window also has to fit there. A window the cards could hold
+        // but the host could not would make the CPU path unusable and the
+        // parity comparison impossible to run.
+        const uint32_t hostWindow = deep2::DetermineSafeContextWindow(
+            (uint32_t)geometry.maxSeqLen, (uint32_t)numLayers, kvHeads, headDim,
+            deep2::kKvBytesFp16, hostBudget);
+        if (hostWindow && hostWindow < chosen) chosen = hostWindow;
+        if (chosen) kvWindow = chosen;
+        fprintf(stderr, "[KV_WINDOW] advertised=%u vram=%llu GB reserved=%llu GB budget=%llu GB -> window=%u (fp16, %llu MB)\n",
+                (uint32_t)geometry.maxSeqLen, (unsigned long long)(totalVram / (1024ull * 1024ull * 1024ull)),
+                (unsigned long long)(resident / (1024ull * 1024ull * 1024ull)),
+                (unsigned long long)(effectiveBudget / (1024ull * 1024ull * 1024ull)),
+                kvWindow,
+                (unsigned long long)(deep2::KvWindowBytes((uint32_t)numLayers, kvHeads, headDim,
+                                                           deep2::kKvBytesFp16, kvWindow) / (1024ull * 1024ull)));
+    }
+    // The ring holds the positions this pass actually processes. Reserving
+    // the whole advertised window instead cost 24 GB of host memory for a
+    // three-token pass, and that allocation is what made the run fail
+    // intermittently under memory pressure.
+    //
+    // The ring's window and the window the logical-to-physical mapping uses
+    // have to be the same number, or the reference attention and the device
+    // attention would read different tokens from different slots.
+    //
+    // A caller that supplies its own ring is generating: the ring already
+    // holds the positions that came before, and its window is the context
+    // window. It is not cleared, and the pass appends to it at the
+    // positions that follow.
+    const bool externalRing = (externalRingPtr != nullptr);
+    deep2::HostKvRing& kvRing = externalRing ? *externalRingPtr : m_scratchKvRing;
+    const uint32_t ringWindow = externalRing
+                                    ? kvRing.window()
+                                    : ((kvWindow < (uint32_t)inputTokens.size())
+                                           ? kvWindow
+                                           : (uint32_t)inputTokens.size());
+    if (ringWindow == 0) return false;
+    if (!externalRing) {
+        kvRing.reset((uint32_t)numLayers, ringWindow, (uint32_t)hiddenDim);
+    } else if (kvRing.window() != ringWindow || kvRing.hiddenDim() != (uint32_t)hiddenDim) {
+        fprintf(stderr, "[Move 10] the supplied cache does not match the model\n");
+        return false;
+    }
+
+    // The placement phase is over. Everything from here to the end of the
+    // token loop is the compute phase.
+    const auto tComputeStart = std::chrono::steady_clock::now();
+    lastTiming.placementTotalMs = std::chrono::duration<double, std::milli>(
+        tComputeStart - tPassStart).count();
+
+    // Process each token position
+    for (size_t tokenPos = 0; tokenPos < inputTokens.size(); ++tokenPos) {
+
+        // Each position starts from its own token embedding.
+        {
+            uint32_t token = inputTokens[tokenPos];
+            if (token >= romVocabSize) token = 0;
+            std::memcpy(hiddenStates.data(), &tokenEmbDq.data[static_cast<size_t>(token) * hiddenDim],
+                        hiddenDim * sizeof(float));
+        }
+
+        // Reusable dequantized tensors to avoid repeated allocation/deallocation
+        // The CPU path's weights, read from the cache. The pointers are set
+        // per layer, below, so the layer body reads the cache and not a copy.
+        const deep2::DequantizedTensor* qkvDq = nullptr;
+        const deep2::DequantizedTensor* upDq = nullptr;
+        const deep2::DequantizedTensor* downDq = nullptr;
+
+        // Process through all layers
+        //
+        // The CPU path's weights are expanded once and kept, so the layer
+        // body below reads them instead of expanding the model again on
+        // every call. The cache is sized here, before the loop, so the
+        // references the body holds stay valid.
+        //
+        // The cache is grown and never cleared here. Clearing it per pass
+        // would put the expansion back where it was, because the
+        // incremental path makes a pass per position.
+        if (m_cpuLayerWeights.size() < numLayers) {
+            m_cpuLayerWeights.resize(numLayers);
+        }
+        for (size_t layer = 0; layer < numLayers; ++layer) {
+            std::cout << "[Move 10] Starting layer " << layer << "\n" << std::flush;
+
+
+            // The first layer's checkpoints, captured as the pass runs.
+            //
+            // A divergence is traced by finding the first checkpoint where
+            // the two paths differ, so the capture is in the order the pass
+            // computes them and every stage is recorded, not only the ones
+            // that are suspected.
+            auto capture = [&](const char* name, const float* data, size_t n) {
+                if (!m_layer0Trace || layer != 0 || !data) return;
+                m_layer0Checkpoints[name].assign(data, data + n);
+            };
+
+            // --- ATTENTION QKV ---
+            std::string qkvName = "blk." + std::to_string(layer) + ".attn_qkv.weight";
+            const deep2::TensorEntry* qkv = rom.findTensor(qkvName);
+            if (!qkv) {
+                fprintf(stderr, "[Move 10] Layer %zu: %s not found\n", layer, qkvName.c_str());
+                return false;
+            }
+
+            const bool resident = useResident && m_residentLayers[layer].ready;
+            if (!resident) {
+                const auto tDqStart = std::chrono::steady_clock::now();
+                std::cout << "[Move 10] Layer " << layer << ": Dequantizing " << qkvName << "...\n" << std::flush;
+                qkvDq = ensureCpuWeight(layer, 0);
+                if (!qkvDq) {
+                    fprintf(stderr, "[Move 10] Layer %zu: Failed to dequantize QKV\n", layer);
+                    return false;
+                }
+                const auto tDqEnd = std::chrono::steady_clock::now();
+                const double dqMs = std::chrono::duration<double, std::milli>(tDqEnd - tDqStart).count();
+                m_qkvDequantCalls++;
+                m_qkvDequantBytes += static_cast<uint64_t>(qkvDq->rows) * static_cast<uint64_t>(qkvDq->cols) * sizeof(float);
+                m_qkvDequantTimeMs += dqMs;
+                m_weightDequantCalls++;
+                m_weightDequantBytes += static_cast<uint64_t>(qkvDq->rows) * static_cast<uint64_t>(qkvDq->cols) * sizeof(float);
+                m_weightDequantTimeMs += dqMs;
+                std::cout << "[Move 10] Layer " << layer << ": QKV dequantized: " << qkvDq->rows << "x" << qkvDq->cols << " (" << dqMs << " ms)\n" << std::flush;
+
+                qkvRows = qkvDq->rows;
+                qkvCols = qkvDq->cols;
+            } else {
+                qkvRows = m_residentLayers[layer].qkvRows;
+                qkvCols = m_residentLayers[layer].qkvCols;
+            }
+
+            // --- ATTENTION COMPUTATION ---
+            std::vector<float> hiddenStatesCopy(hiddenDim);
+            std::memcpy(hiddenStatesCopy.data(), hiddenStates.data(), hiddenDim * sizeof(float));
+
+            const auto tNormStart = std::chrono::steady_clock::now();
+            // RMSNorm before the QKV projection. Every transformer block
+            // normalizes first, and so does the final norm before the output
+            // projection. Omitting them lets the residual stream grow without
+            // bound, which is what the boundary probe reported as a math
+            // explosion at layer 4.
+            {
+                const deep2::TensorEntry* attnNorm =
+                    rom.findTensor("blk." + std::to_string(layer) + ".attn_norm.weight");
+                if (!attnNorm) {
+                    fprintf(stderr, "[Move 10] Layer %zu: attn_norm.weight not found\n", layer);
+                    return false;
+                }
+                const deep2::DequantizedTensor* attnNormDq = ensureCpuWeight(layer, 1);
+                if (!attnNormDq) {
+                    fprintf(stderr, "[Move 10] Layer %zu: attn_norm dequant failed\n", layer);
+                    return false;
+                }
+                rmsNormWeighted(hiddenStatesCopy.data(), attnNormDq->data.data(), hiddenDim, 1e-5f);
+            }
+            capture("1.attn_norm_out", hiddenStatesCopy.data(), hiddenDim);
+
+            std::vector<float> qkvOut(static_cast<size_t>(qkvRows), 0.0f);
+            const auto tQkvStart = std::chrono::steady_clock::now();
+            if (resident) {
+                const deep2::TensorView xView{ deep2::TensorType::F32,
+                                               reinterpret_cast<const uint8_t*>(hiddenStatesCopy.data()),
+                                               hiddenStatesCopy.size() * sizeof(float),
+                                               { static_cast<uint64_t>(hiddenDim) }, true };
+                ++m_passTelemetry.deviceSubmissions;
+                if (!gemvResidentProjection(m_residentLayers[layer].qkv, xView, qkvOut)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: resident QKV GEMV failed\n", layer);
+                    return false;
+                }
+            } else {
+                ++m_passTelemetry.hostProjections;
+                gemvFloat(qkvDq->data.data(), hiddenStatesCopy.data(), qkvOut.data(), qkvRows, qkvCols);
+            }
+            const auto tAttentionStart = std::chrono::steady_clock::now();
+            capture("2.qkv", qkvOut.data(), qkvOut.size());
+
+            // Split QKV into Q, K, V
+            size_t qSize = qkvOut.size() / 3;
+            std::vector<float> Q(qkvOut.begin(), qkvOut.begin() + qSize);
+            std::vector<float> K(qkvOut.begin() + qSize, qkvOut.begin() + 2 * qSize);
+            std::vector<float> V(qkvOut.begin() + 2 * qSize, qkvOut.end());
+
+            // The position in the context, which is not the same as the
+            // index within this call when a generation is running: the
+            // earlier positions are already in the cache.
+            const uint32_t logicalPos = startPosition + (uint32_t)tokenPos;
+
+            // Apply RoPE to Q and K
+            ApplyRotaryEmbeddings(Q.data(), 0, logicalPos);
+            ApplyRotaryEmbeddings(K.data(), 0, logicalPos);
+            capture("3.q_rope", Q.data(), Q.size());
+            capture("4.k_rope", K.data(), K.size());
+
+            // Append this position's key and value to the layer's ring, then
+            // attend over the window the ring holds.
+            kvRing.append(layer, logicalPos, K.data(), V.data());
+            const uint32_t logicalCount = logicalPos + 1;
+            const uint32_t windowStart = deep2::KvWindowStart(logicalCount, ringWindow);
+            const uint32_t windowCount = deep2::KvWindowCount(logicalCount, ringWindow);
+
+            std::vector<float> attnOut(hiddenDim, 0.0f);
+            ComputeWindowAttention(attnOut.data(), Q.data(), kvRing, layer,
+                                    windowStart, windowCount,
+                                    static_cast<uint32_t>(numHeads),
+                                    static_cast<uint32_t>(headDim));
+            capture("5.attention", attnOut.data(), attnOut.size());
+            const auto tFfnStart = std::chrono::steady_clock::now();
+
+            if (m_phaseTiming) {
+                lastTiming.normMs += std::chrono::duration<double, std::milli>(
+                    tQkvStart - tNormStart).count();
+                lastTiming.qkvMs += std::chrono::duration<double, std::milli>(
+                    tAttentionStart - tQkvStart).count();
+                lastTiming.attentionMs += std::chrono::duration<double, std::milli>(
+                    tFfnStart - tAttentionStart).count();
+            }
+
+            // The attention output is projected before it joins the residual
+            // stream.
+            //
+            // A transformer block does not add the attention output itself
+            // to the stream: it adds the projection of it. Phi-3 has a
+            // separate output projection, blk.N.attn_output.weight, and
+            // adding the raw attention output skipped it. That left the
+            // model producing a stream that is not the model's, and the
+            // text it generated was noise.
+            //
+            // The two paths agreed with each other while both being wrong,
+            // because the projection was missing from the CPU path as well
+            // as from the resident one. The parity check between them
+            // could not see it. The check against the oracle could.
+            {
+                std::vector<float> attnProj;
+                if (resident) {
+                    const deep2::TensorView xView{ deep2::TensorType::F32,
+                                                   reinterpret_cast<const uint8_t*>(attnOut.data()),
+                                                   attnOut.size() * sizeof(float),
+                                                   { static_cast<uint64_t>(hiddenDim) }, true };
+                    ++m_passTelemetry.deviceSubmissions;
+                    if (!gemvResidentProjection(m_residentLayers[layer].attnOut, xView, attnProj)) {
+                        fprintf(stderr, "[Move 10] Layer %zu: resident attention output GEMV failed\n", layer);
+                        return false;
+                    }
+                } else {
+                    // Each layer has its own attention output projection, so
+                    // this is dequantized per layer and not shared between
+                    // them. The tensor is declared inside the layer loop for
+                    // that reason: held across the loop, the "already
+                    // dequantized" check kept the first layer's weights and
+                    // used them for all of them.
+                    const deep2::TensorEntry* attnOutEntry =
+                        rom.findTensor("blk." + std::to_string(layer) + ".attn_output.weight");
+                    if (!attnOutEntry) {
+                        fprintf(stderr, "[Move 10] Layer %zu: attn_output.weight not found\n", layer);
+                        return false;
+                    }
+                    const deep2::DequantizedTensor* attnOutDq = ensureCpuWeight(layer, 2);
+                    if (!attnOutDq) {
+                        fprintf(stderr, "[Move 10] Layer %zu: attn_output dequant failed\n", layer);
+                        return false;
+                    }
+                    attnProj.assign(hiddenDim, 0.0f);
+                    ++m_passTelemetry.hostProjections;
+                    gemvFloat(attnOutDq->data.data(), attnOut.data(), attnProj.data(),
+                              static_cast<uint32_t>(hiddenDim), static_cast<uint32_t>(hiddenDim));
+                }
+
+                if (m_layerTrace) {
+                    std::cout << "[COMPTRACE] layer=" << layer
+                              << " attnOutRms=" << ComponentRms(attnOut.data(), attnOut.size())
+                              << " attnProjRms=" << ComponentRms(attnProj.data(), attnProj.size())
+                              << " streamRms=" << ComponentRms(hiddenStates.data(), hiddenDim)
+                              // The path is named here because the comparison
+                              // needs to know which execution a line came
+                              // from: the resident path and the CPU path are
+                              // compared against each other, and a line that
+                              // does not say which it is cannot be paired.
+                              << " path=" << (resident ? "resident" : "cpu")
+                              << "\n" << std::flush;
+                }
+                capture("6.attn_proj", attnProj.data(), attnProj.size());
+
+                // The attention block is a residual: the block adds its
+                // output to the stream. The previous code overwrote the
+                // stream with V instead, which is not an attention output
+                // and leaves the residual stream unbounded.
+                for (size_t i = 0; i < hiddenDim; ++i) {
+                    hiddenStates[i] += attnProj[i];
+                }
+            }
+
+            // --- FFN (UP + DOWN) ---
+            std::string upName = "blk." + std::to_string(layer) + ".ffn_up.weight";
+            std::string downName = "blk." + std::to_string(layer) + ".ffn_down.weight";
+
+            const deep2::TensorEntry* upEntry = rom.findTensor(upName);
+            const deep2::TensorEntry* downEntry = rom.findTensor(downName);
+
+            if (!upEntry || !downEntry) {
+                fprintf(stderr, "[Move 10] Layer %zu: FFN tensors not found\n", layer);
+                return false;
+            }
+
+            if (!resident) {
+                upDq = ensureCpuWeight(layer, 3);
+                if (!upDq) {
+                    fprintf(stderr, "[Move 10] Layer %zu: FFN up dequant failed\n", layer);
+                    return false;
+                }
+
+                downDq = ensureCpuWeight(layer, 4);
+                if (!downDq) {
+                    fprintf(stderr, "[Move 10] Layer %zu: FFN down dequant failed\n", layer);
+                    return false;
+                }
+            }
+
+            // FFN: hidden = down(silu(gate) * up(hidden))
+            //
+            // Phi-3's ffn_up is a *gated* projection: it produces 2 *
+            // intermediate rows, the first half the gate and the second half
+            // the up projection. Sizing the buffer at intermediateDim
+            // overran it by 2x, which is the heap corruption this pass died
+            // with. The activation is SwiGLU, not GELU.
+            // RMSNorm before the FFN projection.
+            std::vector<float> ffnIn(hiddenDim);
+            std::memcpy(ffnIn.data(), hiddenStates.data(), hiddenDim * sizeof(float));
+            {
+                const deep2::TensorEntry* ffnNorm =
+                    rom.findTensor("blk." + std::to_string(layer) + ".ffn_norm.weight");
+                if (!ffnNorm) {
+                    fprintf(stderr, "[Move 10] Layer %zu: ffn_norm.weight not found\n", layer);
+                    return false;
+                }
+                const deep2::DequantizedTensor* ffnNormDq = ensureCpuWeight(layer, 5);
+                if (!ffnNormDq) {
+                    fprintf(stderr, "[Move 10] Layer %zu: ffn_norm dequant failed\n", layer);
+                    return false;
+                }
+                rmsNormWeighted(ffnIn.data(), ffnNormDq->data.data(), hiddenDim, 1e-5f);
+            }
+            capture("7.ffn_norm_out", ffnIn.data(), ffnIn.size());
+
+            const size_t upRows = resident ? static_cast<size_t>(m_residentLayers[layer].upRows)
+                                           : static_cast<size_t>(upDq->rows);
+            const size_t gateRows = upRows / 2;
+            std::vector<float> upOut(upRows, 0.0f);
+            const auto tUpStart = std::chrono::steady_clock::now();
+            if (resident) {
+                const deep2::TensorView xView{ deep2::TensorType::F32,
+                                               reinterpret_cast<const uint8_t*>(ffnIn.data()),
+                                               ffnIn.size() * sizeof(float),
+                                               { static_cast<uint64_t>(hiddenDim) }, true };
+                ++m_passTelemetry.deviceSubmissions;
+                if (!gemvResidentProjection(m_residentLayers[layer].up, xView, upOut)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: resident ffn_up GEMV failed\n", layer);
+                    return false;
+                }
+            } else {
+                ++m_passTelemetry.hostProjections;
+                gemvFloat(upDq->data.data(), ffnIn.data(), upOut.data(), upRows, upDq->cols);
+            }
+            const auto tDownStart = std::chrono::steady_clock::now();
+            capture("8.ffn_up", upOut.data(), upOut.size());
+
+            // SwiGLU: silu(gate) * up
+            for (size_t i = 0; i < gateRows; ++i) {
+                const float gate = upOut[i];
+                const float up = upOut[gateRows + i];
+                upOut[i] = (gate / (1.0f + std::expf(-gate))) * up;
+            }
+            capture("9.ffn_swiglu", upOut.data(), upOut.size());
+
+            static thread_local float downOutStatic[3072];
+            float* downOut = downOutStatic;
+            std::fill_n(downOut, hiddenDim, 0.0f);
+            if (resident) {
+                const deep2::TensorView xView{ deep2::TensorType::F32,
+                                               reinterpret_cast<const uint8_t*>(upOut.data()),
+                                               upOut.size() * sizeof(float),
+                                               { static_cast<uint64_t>(upOut.size()) }, true };
+                std::vector<float> downRowsOut;
+                ++m_passTelemetry.deviceSubmissions;
+                if (!gemvResidentProjection(m_residentLayers[layer].down, xView, downRowsOut)) {
+                    fprintf(stderr, "[Move 10] Layer %zu: resident ffn_down GEMV failed\n", layer);
+                    return false;
+                }
+                std::memcpy(downOut, downRowsOut.data(),
+                            (std::min)(downRowsOut.size(), static_cast<size_t>(hiddenDim)) * sizeof(float));
+            } else {
+                ++m_passTelemetry.hostProjections;
+                gemvFloat(downDq->data.data(), upOut.data(), downOut, downDq->rows, downDq->cols);
+            }
+            const auto tLayerEnd = std::chrono::steady_clock::now();
+            capture("10.ffn_down", downOut, hiddenDim);
+            if (m_phaseTiming) {
+                lastTiming.ffnUpMs += std::chrono::duration<double, std::milli>(
+                    tDownStart - tUpStart).count();
+                lastTiming.ffnDownMs += std::chrono::duration<double, std::milli>(
+                    tLayerEnd - tDownStart).count();
+            }
+
+            if (m_layerTrace) {
+                // The state is recorded per token as well as per layer.
+                //
+                // A pass runs every layer for every token, and the slot was
+                // indexed by the layer alone, so each token overwrote the
+                // one before it. The comparison was then between a token
+                // and whichever token happened to be last in the run, which
+                // is not a difference between the two paths at all.
+                const size_t slot = tokenPos * numLayers + layer;
+                if (m_layerTraceStates.size() <= slot) m_layerTraceStates.resize(slot + 1);
+                m_layerTraceStates[slot] = hiddenStates;
+
+                // The relative difference, as a sum of absolute differences
+                // over a sum of absolute magnitudes.
+                //
+                // A sum of the differences would let positive and negative
+                // errors cancel, and a difference in the magnitude of the
+                // largest element would hide a difference in the direction
+                // of the whole state. The L1 form uses every element and
+                // cannot cancel.
+                if (m_layerTraceCompare && slot < m_layerTraceBaseline.size() &&
+                    m_layerTraceBaseline[slot].size() == hiddenStates.size()) {
+                    double absError = 0.0;
+                    double magnitude = 0.0;
+                    for (size_t i = 0; i < hiddenStates.size(); ++i) {
+                        absError += std::fabs(static_cast<double>(hiddenStates[i]) -
+                                             m_layerTraceBaseline[slot][i]);
+                        magnitude += std::fabs(static_cast<double>(m_layerTraceBaseline[slot][i]));
+                    }
+                    const double rel = (magnitude > 1e-9) ? (absError / magnitude) : 0.0;
+                    std::cout << "[LAYERDIFF] token=" << tokenPos << " layer=" << layer
+                              << " abs_error_sum=" << absError
+                              << " magnitude_sum=" << magnitude
+                              << " relative=" << rel << "\n" << std::flush;
+                }
+                else {
+                    // The comparison did not run, once per token position.
+                    //
+                    // The three conditions are the flag, the slot being
+                    // inside the baseline, and the slot being the same size
+                    // as the state being compared. Reporting once per token
+                    // position shows which of them fails and where.
+                    static std::set<std::pair<int, size_t>> reportedTokens;
+                    const int leg = m_layerTraceBaseline.empty() ? 0 : 1;
+                    if (reportedTokens.insert(std::make_pair(leg, tokenPos)).second) {
+                        std::fprintf(stderr,
+                                     "[LAYERDIAG] no comparison: token=%zu layer=%zu slot=%zu "
+                                     "baselineSlots=%zu baselineSlotSize=%zu stateSize=%zu "
+                                     "compare=%d\n",
+                                     tokenPos, layer, slot, m_layerTraceBaseline.size(),
+                                     slot < m_layerTraceBaseline.size()
+                                         ? m_layerTraceBaseline[slot].size() : 0,
+                                     hiddenStates.size(),
+                                     m_layerTraceCompare ? 1 : 0);
+                        std::fflush(stderr);
+                    }
+                }
+                std::cout << "[COMPTRACE] layer=" << layer
+                          << " upOutRms=" << ComponentRms(upOut.data(), upOut.size())
+                          << " downOutRms=" << ComponentRms(downOut, hiddenDim)
+                          << " streamRms=" << ComponentRms(hiddenStates.data(), hiddenDim)
+                          // The path is named here because the comparison pairs
+                          // the two executions against each other, and a line
+                          // that does not say which execution it came from
+                          // cannot be paired with one.
+                          << " path=" << (resident ? "resident" : "cpu")
+                          << "\n" << std::flush;
+            }
+            // Residual connection
+            for (size_t i = 0; i < hiddenDim; ++i) {
+                hiddenStates[i] += downOut[i];
+            }
+            capture("11.residual", hiddenStates.data(), hiddenDim);
+
+            // Layer trace: the running state after each layer. The resident
+            // path and the CPU path must produce the same sequence here, so
+            // the first layer where they differ localises the divergence.
+            // It is off by default because it flushes a line per layer.
+            if (m_layerTrace) {
+                double sum = 0.0;
+                float absMax = 0.0f;
+                for (size_t i = 0; i < hiddenDim; ++i) {
+                    sum += hiddenStates[i];
+                    const float a = std::fabs(hiddenStates[i]);
+                    if (a > absMax) absMax = a;
+                }
+                std::cout << "[LAYERTRACE] layer=" << layer
+                          << " sum=" << sum
+                          << " absmax=" << absMax
+                          << " path=" << (resident ? "resident" : "cpu")
+                          << "\n" << std::flush;
+            }
+
+            // ORACLE-TRACE: Layer boundary audit at blocks 3Ã¢â€ â€4
+            inspect_layer_boundary_tensors(static_cast<uint32_t>(layer), hiddenStates.data(), hiddenDim);
+        }
+
+        // After all layers, apply final layer norm and output projection.
+        //
+        // The final norm is the model's own: a weighted RMSNorm, x * w /
+        // sqrt(mean(x^2) + eps). The previous code standardized the stream
+        // instead, subtracting the mean and applying no weight at all.
+        // Neither is what the model does, and the logits come from the
+        // normalized stream, so the whole output was wrong.
+        if (!outputNormDq.data.empty()) {
+            rmsNormWeighted(hiddenStates.data(), outputNormDq.data.data(), hiddenDim, 1e-5f);
+        }
+
+        // Output projection
+        const deep2::TensorEntry* outputEntry = rom.findTensor("output.weight");
+        if (!outputEntry) {
+            fprintf(stderr, "[Move 10] output.weight not found\n");
+            return false;
+        }
+
+        if (!useResident) {
+            if (m_outputWeight.data.empty()) {
+                if (!dequantTensor(*outputEntry, m_outputWeight)) {
+                    fprintf(stderr, "[Move 10] Failed to dequantize output.weight\n");
+                    return false;
+                }
+            }
+            const deep2::DequantizedTensor& outputDq = m_outputWeight;
+            outputLogits.resize(vocabSize, 0.0f);
+            ++m_passTelemetry.hostProjections;
+            gemvFloat(outputDq.data.data(), hiddenStates.data(), outputLogits.data(), outputDq.rows, outputDq.cols);
+        } else {
+            const deep2::TensorView xView{ deep2::TensorType::F32,
+                                           reinterpret_cast<const uint8_t*>(hiddenStates.data()),
+                                           hiddenStates.size() * sizeof(float),
+                                           { static_cast<uint64_t>(hiddenDim) }, true };
+            ++m_passTelemetry.deviceSubmissions;
+            if (!gemvResidentProjection(m_residentOutput, xView, outputLogits)) {
+                fprintf(stderr, "[Move 10] resident output GEMV failed\n");
+                return false;
+            }
+            outputLogits.resize(vocabSize, 0.0f);
+        }
+
+        // Store baseline logits for first token (for parity check)
+        if (tokenPos == 0) {
+            baselineLogits = outputLogits;
+        }
+    }
+
+    const auto tPassEnd = std::chrono::steady_clock::now();
+    lastTiming.computeMs = std::chrono::duration<double, std::milli>(
+        tPassEnd - tComputeStart).count();
+    lastTiming.layers = numLayers;
+
+    if (m_phaseTiming) {
+        // The breakdown is printed to stderr on purpose: the throughput
+        // benchmark mutes stdout while it measures, and a diagnostic that
+        // disappears into the mute is no diagnostic at all.
+        fprintf(stderr,
+                "[TIMING] placement %.1f ms (host dequant %.1f ms, device upload %.1f ms, "
+                "%zu tensors)\n",
+                lastTiming.placementTotalMs, lastTiming.placementDequantMs,
+                lastTiming.placementUploadMs, lastTiming.residentTensors);
+        fprintf(stderr,
+                "[TIMING] compute   %.1f ms (norm %.1f, qkv %.1f, attention %.1f, "
+                "ffn_up %.1f, ffn_down %.1f) over %zu layers\n",
+                lastTiming.computeMs, lastTiming.normMs, lastTiming.qkvMs,
+                lastTiming.attentionMs, lastTiming.ffnUpMs, lastTiming.ffnDownMs,
+                lastTiming.layers);
+    }
+
+    std::cout << "[Move 10] Forward pass complete. Generated logits for " << inputTokens.size() << " tokens\n";
+    return true;
+}
+
+bool Deep2Engine::validateLogitsParity(const std::vector<float>& romLogits,
+                                       const std::vector<float>& baselineLogits,
+                                       float tolerance) {
+    if (romLogits.size() != baselineLogits.size()) {
+        fprintf(stderr, "[Move 10] Logits size mismatch: %zu vs %zu\n", romLogits.size(), baselineLogits.size());
+        return false;
+    }
+
+    float maxDiff = 0.0f;
+    size_t maxDiffIdx = 0;
+    float sumSqDiff = 0.0f;
+
+    for (size_t i = 0; i < romLogits.size(); ++i) {
+        float diff = std::abs(romLogits[i] - baselineLogits[i]);
+        float sqDiff = (romLogits[i] - baselineLogits[i]) * (romLogits[i] - baselineLogits[i]);
+        sumSqDiff += sqDiff;
+        if (diff > maxDiff) {
+            maxDiff = diff;
+            maxDiffIdx = i;
+        }
+        if (diff > 1.0f) {
+            fprintf(stderr, "[Move 10] Large logit divergence at idx %zu: rom=%.6f baseline=%.6f diff=%.6f\n",
+                    i, romLogits[i], baselineLogits[i], diff);
+        }
+    }
+
+    float rmsDiff = std::sqrt(sumSqDiff / romLogits.size());
+
+    std::cout << "[Move 10] Logits parity: max_diff=" << maxDiff
+              << " at idx " << maxDiffIdx
+              << " rms_diff=" << rmsDiff
+              << " tolerance=" << tolerance << "\n";
+
+    if (maxDiff > tolerance) {
+        fprintf(stderr, "[Move 10] LOGITS PARITY FAILED: max_diff %.6f > tolerance %.6f\n", maxDiff, tolerance);
+        return false;
+    }
+
+    std::cout << "[Move 10] LOGITS PARITY PASSED (max_diff=" << maxDiff << " <= " << tolerance << ")\n";
+    return true;
+}
