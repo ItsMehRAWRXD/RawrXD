@@ -54,6 +54,7 @@ public:
                     pos=end==header.size()?end:end+2;
                 }
                 if(length==npos || length>maxBytes_) throw std::length_error("missing or oversized Content-Length");
+                if(length==0) throw std::invalid_argument("empty LSP message");
                 expected_=length;
                 buffer_.erase(0,sep+4);
             }
