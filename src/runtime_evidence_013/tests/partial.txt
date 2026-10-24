@@ -1,0 +1,7 @@
+shader_compile=PASS
+real_weight_parity=PASS
+ffn_up_finite=PASS
+ffn_act_finite=PASS
+win32_build=PASS
+win32_launch=PASS
+# User's latest reported state: no generation/TPS evidence yet.
