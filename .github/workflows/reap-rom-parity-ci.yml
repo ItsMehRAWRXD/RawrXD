@@ -9,6 +9,7 @@ on:
       - 'src/parity/**'
       - 'src/win32app/native/**'
       - 'tools/rawrxd_e2e_source_audit.py'
+      - 'tools/rawrxd_no_deps_audit.py'
       - 'tests/reap_*'
       - 'tests/top25_parity_matrix_smoke.cpp'
       - 'tests/native_lsp_framing_smoke.cpp'
@@ -71,12 +72,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Generate source-only IDE gap inventory
-        run: python3 tools/rawrxd_e2e_source_audit.py
+        run: |
+          python3 tools/rawrxd_e2e_source_audit.py
+          python3 tools/rawrxd_no_deps_audit.py
       - name: Upload machine-readable audit
         uses: actions/upload-artifact@v4
         with:
           name: rawrxd-e2e-source-audit
-          path: evidence/rawrxd_e2e_source_audit.json
+          path: |
+            evidence/rawrxd_e2e_source_audit.json
+            evidence/rawrxd_no_deps_audit.json
 
   native-ide:
     runs-on: windows-2022
