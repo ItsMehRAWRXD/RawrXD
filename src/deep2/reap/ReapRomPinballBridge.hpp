@@ -82,11 +82,11 @@ public:
         }
         ++stats_.cacheMisses;
         const Slice& s = slice->second;
+        if (s.bytes > std::numeric_limits<uint64_t>::max() - stats_.diskBytes)
+            throw std::overflow_error("REAP disk byte counter overflow");
         std::vector<uint8_t> bytes(static_cast<size_t>(s.bytes));
         ++stats_.readCalls;
         if (!read_(s.path, s.offset, bytes.data(), bytes.size())) return false;
-        if (s.bytes > std::numeric_limits<uint64_t>::max() - stats_.diskBytes)
-            throw std::overflow_error("REAP disk byte counter overflow");
         stats_.diskBytes += s.bytes;
         Binding uploaded;
         if (!upload_(s, bytes, uploaded) || !uploaded.deviceHandle ||
