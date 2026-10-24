@@ -75,5 +75,24 @@ int main() {
     assert(releasable.Run(3,5));
     assert(releasable.ForgetAfterGpuIdle(3,5));
     assert(released==3 && releasable.ResidentBytes()==0);
+    int failedRelease=0, failedExec=0, failedHandle=10;
+    ProjectionBridge uploadFailure(
+        [](const std::string&,uint64_t,void* out,size_t n){
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(out)[i]=1;
+            return true;
+        },
+        [&](Projection,const Slice&,const std::vector<uint8_t>&,Binding& out){
+            out={&failedHandle,4,1}; return false;
+        },
+        [&](Projection,const Binding&,uint32_t,uint32_t){++failedExec; return true;},
+        1024,12,[]{return true;},
+        [&](Projection,const Binding& binding){
+            assert(binding.deviceHandle==&failedHandle); ++failedRelease;
+        });
+    for(auto p:{Projection::Gate,Projection::Up,Projection::Down})
+        uploadFailure.Register(p,{"immutable.gguf",100,4,4,6,0});
+    uploadFailure.Retain(4,6);
+    assert(!uploadFailure.Run(4,6));
+    assert(failedRelease==1 && failedExec==0 && uploadFailure.ResidentBytes()==0);
     std::cout<<"REAP_PROJECTION_BRIDGE_SMOKE_PASS\n";
 }
