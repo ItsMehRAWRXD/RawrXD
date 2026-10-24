@@ -114,21 +114,25 @@ public:
                 // from accumulating unbounded host-side packed duplicates.
                 const size_t packedBytes = fresh->w0.size() + fresh->w1.size();
                 if (packedBytes <= maxCachedBytes_) {
-                    auto existing = cache_.find(source);
-                    if (existing != cache_.end()) {
-                        cachedBytes_ -= existing->second.snapshot->w0.size()
-                                      + existing->second.snapshot->w1.size();
-                        cache_.erase(existing);
+                    // Publish before eviction: if insertion allocates and
+                    // throws, the previous entry and byte accounting survive.
+                    auto inserted = cache_.try_emplace(
+                        source, Entry{rows, cols, availableBytes, requestedBlocks0, fresh});
+                    if (!inserted.second) {
+                        cachedBytes_ -= inserted.first->second.snapshot->w0.size()
+                                      + inserted.first->second.snapshot->w1.size();
+                        inserted.first->second = Entry{rows, cols, availableBytes,
+                                                       requestedBlocks0, fresh};
                     }
-                    while (cachedBytes_ > maxCachedBytes_ - packedBytes &&
-                           !cache_.empty()) {
+                    cachedBytes_ += packedBytes;
+                    while (cachedBytes_ > maxCachedBytes_ && !cache_.empty()) {
                         auto victim = cache_.begin();
+                        if (victim == inserted.first && cache_.size() > 1)
+                            ++victim;
                         cachedBytes_ -= victim->second.snapshot->w0.size()
                                       + victim->second.snapshot->w1.size();
                         cache_.erase(victim);
                     }
-                    cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
-                    cachedBytes_ += packedBytes;
                 }
                 ++rebuilds_;
             } catch (...) {
