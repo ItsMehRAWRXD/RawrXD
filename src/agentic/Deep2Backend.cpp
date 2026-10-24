@@ -440,27 +440,51 @@ InferenceResult Deep2Backend::FIMSync(
         return InferenceResult::Error("Deep2 backend not initialized");
     }
 
-    // Deep2 supports FIM via the /api/inference endpoint
     json req;
     req["prompt"] = "<|fim_prefix|>" + prefix + "<|fim_suffix|>" + suffix + "<|fim_middle|>";
     req["model"]  = m_config.model;
     req["stream"] = false;
     req["temperature"] = m_config.temperature;
-    req["max_tokens"]  = 256;  // Short for ghost text
+    req["max_tokens"]  = m_config.fim_max_tokens > 0 ? m_config.fim_max_tokens : 256;
 
-    std::string resp = makePostRequest("/api/inference", req.dump());
+    const auto t0 = std::chrono::steady_clock::now();
+    std::string resp = makePostRequest("/v1/completions", req.dump());
+    const auto t1 = std::chrono::steady_clock::now();
+    const double elapsed_ms =
+        std::chrono::duration<double, std::milli>(t1 - t0).count();
+    m_totalRequests.fetch_add(1);
 
     if (resp.empty()) {
         RecordFailure("Deep2 FIMSync: empty response");
-        return InferenceResult::Error("Deep2 server returned empty response");
+        return InferenceResult::Error("Deep2 server returned empty FIM response");
     }
 
     try {
         json j = json::parse(resp);
-        std::string text = j.value("generated_text", j.value("response", std::string()));
-        RecordSuccess(0, 0, 0);
-        return InferenceResult::Ok(text);
+        std::string text;
+        if (j.contains("choices") && j["choices"].is_array() && !j["choices"].empty()) {
+            const auto& choice = j["choices"][0];
+            if (choice.is_object()) text = choice.value("text", std::string());
+        }
+
+        uint64_t ptok = 0, ctok = 0;
+        if (j.contains("usage") && j["usage"].is_object()) {
+            const auto& usage = j["usage"];
+            ptok = usage.value("prompt_tokens", uint64_t(0));
+            ctok = usage.value("completion_tokens", uint64_t(0));
+        }
+        const double tps = (elapsed_ms > 0.0 && ctok > 0)
+            ? ctok / (elapsed_ms / 1000.0) : 0.0;
+        RecordSuccess(tps, ptok, ctok);
+
+        InferenceResult result = InferenceResult::Ok(text);
+        result.prompt_tokens = ptok;
+        result.completion_tokens = ctok;
+        result.tokens_per_sec = tps;
+        result.total_duration_ms = elapsed_ms;
+        return result;
     } catch (const json::exception& e) {
+        RecordFailure("Deep2 FIMSync JSON error: " + std::string(e.what()));
         return InferenceResult::Error("Failed to parse Deep2 FIM response: " + std::string(e.what()));
     }
 }
@@ -485,58 +509,72 @@ bool Deep2Backend::FIMStream(
     req["model"]  = m_config.model;
     req["stream"] = true;
     req["temperature"] = m_config.temperature;
-    req["max_tokens"]  = 256;
+    req["max_tokens"]  = m_config.fim_max_tokens > 0 ? m_config.fim_max_tokens : 256;
+    req["stream_options"] = {{"include_usage", true}};
 
-    auto t0 = std::chrono::steady_clock::now();
+    const auto t0 = std::chrono::steady_clock::now();
     std::string full_response;
     uint64_t ptok = 0, ctok = 0;
     bool stream_failed = false;
+    bool done_emitted = false;
+
+    auto finish = [&]() {
+        if (done_emitted) return;
+        done_emitted = true;
+        const auto t1 = std::chrono::steady_clock::now();
+        const double elapsed_ms =
+            std::chrono::duration<double, std::milli>(t1 - t0).count();
+        const double tps = (elapsed_ms > 0.0 && ctok > 0)
+            ? ctok / (elapsed_ms / 1000.0) : 0.0;
+        m_totalRequests.fetch_add(1);
+        RecordSuccess(tps, ptok, ctok);
+        if (on_done) on_done(full_response, ptok, ctok, tps);
+    };
 
     auto on_chunk = [&](const std::string& chunk_data) -> bool {
         if (m_cancelRequested.load()) return false;
+        if (chunk_data.rfind("data:", 0) != 0) return true;
 
-        if (chunk_data.rfind("data: ", 0) == 0 || chunk_data.rfind("data:", 0) == 0) {
-            std::string data = chunk_data.substr(chunk_data.find(':') + 1);
-            data.erase(0, data.find_first_not_of(" \t\r\n"));
+        std::string data = chunk_data.substr(chunk_data.find(':') + 1);
+        const auto first = data.find_first_not_of(" \t\r\n");
+        data = first == std::string::npos ? std::string() : data.substr(first);
+        if (data == "[DONE]" || data == "[done]") {
+            finish();
+            return true;
+        }
 
-            if (data == "[DONE]" || data == "[done]") {
-                auto t1 = std::chrono::steady_clock::now();
-                double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-                double tps = (elapsed_ms > 0 && ctok > 0)
-                    ? (ctok / (elapsed_ms / 1000.0)) : 0.0;
-                m_totalRequests.fetch_add(1);
-                RecordSuccess(tps, ptok, ctok);
-                if (on_done) on_done(full_response, ptok, ctok, tps);
-                return true;
-            }
-
-            try {
-                json j = json::parse(data);
-                if (j.contains("choices") && !j["choices"].empty()) {
-                    const auto& choice = j["choices"][0];
-                    if (choice.contains("delta") && choice["delta"].contains("content")) {
-                        std::string content = choice["delta"]["content"].get<std::string>();
-                        full_response += content;
-                        if (on_token) on_token(content);
-                    }
+        try {
+            json j = json::parse(data);
+            if (j.contains("choices") && j["choices"].is_array() && !j["choices"].empty()) {
+                const auto& choice = j["choices"][0];
+                if (choice.is_object() && choice.contains("text") && choice["text"].is_string()) {
+                    const std::string content = choice["text"].get<std::string>();
+                    full_response += content;
+                    if (on_token) on_token(content);
                 }
-            } catch (const json::exception&) {}
+            }
+            if (j.contains("usage") && j["usage"].is_object()) {
+                const auto& usage = j["usage"];
+                ptok = usage.value("prompt_tokens", ptok);
+                ctok = usage.value("completion_tokens", ctok);
+            }
+        } catch (const json::exception&) {
+            // Ignore malformed individual SSE lines; transport errors are
+            // handled by the request layer.
         }
         return true;
     };
 
-    auto on_err = [&](const std::string& err) {
-        stream_failed = true;
-        RecordFailure("Deep2 FIMStream error: " + err);
-        if (on_error) on_error(err);
-    };
-
-    std::string resp = makePostRequestStreaming("/v1/chat/completions", req.dump(), on_chunk);
+    std::string resp = makePostRequestStreaming("/v1/completions", req.dump(), on_chunk);
     m_streaming.store(false);
 
-    if (resp.empty() && !stream_failed) {
+    if (m_cancelRequested.load()) return false;
+    if (resp.empty()) {
+        stream_failed = true;
+        RecordFailure("Deep2 FIMStream: empty response");
         if (on_error) on_error("Deep2 FIMStream: empty response");
-        return false;
+    } else if (!done_emitted) {
+        finish();
     }
 
     return !stream_failed;
