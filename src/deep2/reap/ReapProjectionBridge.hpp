@@ -59,6 +59,24 @@ public:
     }
     bool Run(uint32_t layer,uint32_t expert) {
         if(!retained_.contains(Key{layer,expert})) { ++stats_.rejected; return false; }
+        // Preflight all three projections before the first read/upload/execute.
+        // A missing slice or inadequate residency budget must not execute a
+        // partially loaded expert. Conservative packed-byte reservation.
+        uint64_t required=0;
+        for(auto p:{Projection::Gate,Projection::Up,Projection::Down}) {
+            const ProjectionKey k{layer,expert,p};
+            if(resident_.contains(k)) continue;
+            const auto slice=slices_.find(k);
+            if(slice==slices_.end() || slice->second.bytes>maxResidentBytes_ ||
+               required>maxResidentBytes_-slice->second.bytes) {
+                ++stats_.rejected; return false;
+            }
+            required+=slice->second.bytes;
+        }
+        if(residentBytes_>maxResidentBytes_ ||
+           required>maxResidentBytes_-residentBytes_) {
+            ++stats_.rejected; return false;
+        }
         for(auto p:{Projection::Gate,Projection::Up,Projection::Down}) {
             const ProjectionKey k{layer,expert,p};
             auto it=resident_.find(k);
