@@ -77,3 +77,28 @@ jobs:
         with:
           name: rawrxd-e2e-source-audit
           path: evidence/rawrxd_e2e_source_audit.json
+
+  native-ide:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure no-Qt native IDE
+        shell: pwsh
+        run: |
+          cmake -S . -B build_native_ide_ci -G "Visual Studio 17 2022" -A x64 -DRAWRXD_REQUIRE_QT=OFF -DUSE_ZLIB_FETCHCONTENT=OFF -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
+          if ($LASTEXITCODE -ne 0) { throw "Native IDE configure failed" }
+      - name: Build real Win32 IDE executable
+        shell: pwsh
+        run: |
+          cmake --build build_native_ide_ci --config Release --target RawrXD-Win32IDE-Native --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "Native Win32 IDE build failed" }
+      - name: Upload executable and build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-native-ide-build
+          path: |
+            build_native_ide_ci/**/Release/RawrXD-Win32IDE-Native.exe
+            build_native_ide_ci/**/RawrXD-Win32IDE-Native.exe
+          if-no-files-found: warn
