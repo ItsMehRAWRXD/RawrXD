@@ -32,13 +32,15 @@ public:
     using ExecuteProjection = std::function<bool(Projection,const Binding&,
                                                  uint32_t,uint32_t)>;
     using IdleCheck = std::function<bool()>;
+    // Callback must release backend allocation; called only after IdleCheck.
+    using ReleaseProjection = std::function<void(Projection,const Binding&)>;
     ProjectionBridge(Read read, UploadProjection upload, ExecuteProjection execute,
                      uint64_t maxReadBytes, uint64_t maxResidentBytes=0,
-                     IdleCheck idleCheck={})
+                     IdleCheck idleCheck={}, ReleaseProjection release={})
         : read_(std::move(read)), upload_(std::move(upload)),
           execute_(std::move(execute)), maxReadBytes_(maxReadBytes),
           maxResidentBytes_(maxResidentBytes ? maxResidentBytes : maxReadBytes),
-          idleCheck_(std::move(idleCheck)) {
+          idleCheck_(std::move(idleCheck)), release_(std::move(release)) {
         if(!read_ || !upload_ || !execute_ || !maxReadBytes_)
             throw std::invalid_argument("invalid projection bridge");
     }
@@ -96,6 +98,9 @@ public:
                 Binding b;
                 if(!upload_(p,s,packed,b) || !b.deviceHandle || !b.bytes) return false;
                 if(b.bytes>maxResidentBytes_ || residentBytes_>maxResidentBytes_-b.bytes) {
+                    // Allocation was created but is not admitted; without a
+                    // release callback it cannot be safely reclaimed here.
+                    if(release_ && idleCheck_ && idleCheck_()) release_(p,b);
                     ++stats_.rejected; return false;
                 }
                 it=resident_.emplace(k,b).first;
@@ -113,7 +118,10 @@ public:
         if(!idleCheck_ || !idleCheck_()) return false;
         for(auto p:{Projection::Gate,Projection::Up,Projection::Down}) {
             auto it=resident_.find({layer,expert,p});
-            if(it!=resident_.end()) { residentBytes_-=it->second.bytes; resident_.erase(it); }
+            if(it!=resident_.end()) {
+                if(release_) release_(p,it->second);
+                residentBytes_-=it->second.bytes; resident_.erase(it);
+            }
         }
         return true;
     }
@@ -125,6 +133,7 @@ private:
     ExecuteProjection execute_;
     uint64_t maxReadBytes_, maxResidentBytes_, residentBytes_=0;
     IdleCheck idleCheck_;
+    ReleaseProjection release_;
     std::unordered_map<ProjectionKey,Slice,ProjectionKeyHash> slices_;
     std::unordered_map<ProjectionKey,Binding,ProjectionKeyHash> resident_;
     std::unordered_map<Key,bool,KeyHash> retained_;
