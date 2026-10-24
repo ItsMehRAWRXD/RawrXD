@@ -45,3 +45,19 @@ jobs:
             build_reap\%%F.exe
             if errorlevel 1 exit /b 1
           )
+
+  native-headless:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure RawrXD native x64 project (no Qt installation)
+        shell: pwsh
+        run: |
+          cmake -S . -B build_native_ci -G "Visual Studio 17 2022" -A x64 -DRAWRXD_ENABLE_HARDENING=OFF
+          if ($LASTEXITCODE -ne 0) { throw "Native CMake configure failed: audit Qt/external dependencies" }
+      - name: Build headless agent and snapshot targets
+        shell: pwsh
+        run: |
+          cmake --build build_native_ci --config Release --target rawr-agent-headless rawr-snapshot --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "Native headless build failed" }
