@@ -27,12 +27,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Compile and run REAP bridge with address and undefined-behavior sanitizers
+      - name: Compile and run native core smoke tests with address and undefined-behavior sanitizers
         shell: bash
         run: |
           set -euo pipefail
-          g++ -std=c++20 -O1 -g -Wall -Wextra -Werror -pedantic -UNDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined tests/reap_rom_pinball_smoke.cpp -o /tmp/rawrxd-reap-sanitized
-          /tmp/rawrxd-reap-sanitized
+          for name in reap_rom_pinball_smoke reap_ternary_trace_smoke reap_projection_bridge_smoke reap_route_mask_smoke native_lsp_framing_smoke top25_parity_matrix_smoke; do
+            g++ -std=c++20 -O1 -g -Wall -Wextra -Werror -pedantic -UNDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined "tests/${name}.cpp" -o "/tmp/${name}-sanitized"
+            "/tmp/${name}-sanitized"
+          done
 
   msvc:
     runs-on: windows-2022
