@@ -77,3 +77,20 @@ This is an explicit parity failure. It confirms that sustained GPU execution
 does not yet establish numerical equivalence with the host reference. The
 next investigation must compare first-token logits and token IDs at the first
 divergence; certification remains `NOT_CERTIFIED`.
+
+## First-token numerical comparison (`DEEP2_FIRST_TOKEN_PARITY_020`)
+
+With `RAWRXD_STAGE_DIGEST=1` and `RAWRXD_LOGIT_TOP10=1`, identical `Say hello`
+and deterministic settings produced the same first-token argmax. The captured
+position-20 tensors were compared from the binary stage dumps:
+
+| Tensor | Max absolute difference | RMS difference | Argmax |
+|---|---:|---:|---|
+| Final hidden (3072) | `6.9886e-06` | `2.1329e-06` | n/a |
+| Output logits (128256) | `1.0575e-01` | `2.1598e-02` | GPU/CPU both `4936` |
+
+Top-10 token IDs were identical at the first position (ordering of close
+non-argmax values varied slightly). All values were finite. This localizes the
+first-token difference to the output projection/logit stage rather than the
+hidden-state forward path. It is not yet a numerical parity pass: the logits
+need a defined tolerance and multi-token KV-state comparison before promotion.

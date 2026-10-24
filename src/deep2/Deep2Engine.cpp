@@ -5720,6 +5720,33 @@ static void B3_StageDigest(const char* key, size_t pos, const float* data, size_
            static_cast<unsigned long long>(h), nf);
     fflush(stdout);
 
+    if (std::strcmp(key, "LOGITS") == 0 &&
+        std::getenv("RAWRXD_LOGIT_TOP10")) {
+        std::array<size_t, 10> top{};
+        top.fill(static_cast<size_t>(-1));
+        for (size_t i = 0; i < n; ++i) {
+            if (!std::isfinite(data[i])) continue;
+            size_t at = 10;
+            for (size_t j = 0; j < top.size(); ++j) {
+                if (top[j] == static_cast<size_t>(-1) || data[i] > data[top[j]]) {
+                    at = j;
+                    break;
+                }
+            }
+            if (at < top.size()) {
+                for (size_t j = top.size() - 1; j > at; --j) top[j] = top[j - 1];
+                top[at] = i;
+            }
+        }
+        std::printf("[LOGIT_TOP10] side=deep2 key=%s pos=%zu", key, pos);
+        for (size_t j = 0; j < top.size(); ++j) {
+            if (top[j] == static_cast<size_t>(-1)) break;
+            std::printf(" %zu:%.9e", top[j], static_cast<double>(data[top[j]]));
+        }
+        std::printf("\n");
+        std::fflush(stdout);
+    }
+
     if (const char* dumpDir = B3_StageDumpDir()) {
         // Collision-proof: deep2_<key>_pos<p>_layer0_full_n<N>_seq<SSS>.bin
         static int s_dumpSeq = 0;
