@@ -65,5 +65,26 @@ int main() {
     }
     for (auto& t : callers) t.join();
     assert(good.load() == 800);
+
+    // Concurrent invalidation cannot publish a snapshot built for a
+    // previous cache generation. Source weights remain alive throughout.
+    std::atomic<bool> start{false};
+    std::thread invalidator([&] {
+        while (!start.load(std::memory_order_acquire)) std::this_thread::yield();
+        for (unsigned i = 0; i < 100; ++i) {
+            cache.clear();
+            std::this_thread::yield();
+        }
+    });
+    start.store(true, std::memory_order_release);
+    for (unsigned i = 0; i < 100; ++i) {
+        const auto snapshot = cache.get(weights.data(), weights.size(),
+                                        rows, cols, 32);
+        if (snapshot) check(weights, rows, cols, *snapshot);
+    }
+    invalidator.join();
+    auto final = cache.get(weights.data(), weights.size(), rows, cols, 32);
+    assert(final);
+    check(weights, rows, cols, *final);
     return 0;
 }
