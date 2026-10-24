@@ -83,6 +83,30 @@ AgenticIDE::AgenticIDE(HINSTANCE hInstance, int nCmdShow)
 
     static AgenticFileOperations fileOps;
 
+    // Initialize Ollama client for real model inference
+    m_ollama = std::make_unique<RawrXD::Backend::OllamaClient>("http://localhost:11434");
+    if (m_ollama->isRunning()) {
+        appendChatOutput(L"> [MODEL] Ollama available at http://localhost:11434\n");
+        // List available models
+        auto models = m_ollama->listModels();
+        bool foundDefault = false;
+        for (const auto& m : models) {
+            appendChatOutput(L">   - " + std::wstring(m.name.begin(), m.name.end()) + L"\n");
+            if (m.name == m_ollamaModel) foundDefault = true;
+        }
+        if (foundDefault) {
+            appendChatOutput(L"> [MODEL] Model loaded: " + std::wstring(m_ollamaModel.begin(), m_ollamaModel.end()) + L"\n");
+        } else if (!models.empty()) {
+            appendChatOutput(L"> [MODEL] Default model not found, using: " + std::wstring(models[0].name.begin(), models[0].name.end()) + L"\n");
+            m_ollamaModel = models[0].name;
+        } else {
+            appendChatOutput(L"> [MODEL] No models found on Ollama server\n");
+        }
+    } else {
+        appendChatOutput(L"> [MODEL] WARNING: Ollama not available at http://localhost:11434\n");
+        appendChatOutput(L"> [MODEL] Start Ollama with: ollama serve\n");
+    }
+
     // Initialize customizable hook system (IDE_HOOKS.md)
     initHooks();
     m_hooks.fire(RawrXD::IdeHooks::HookEvent::Startup);
@@ -154,6 +178,11 @@ bool AgenticIDE::initMenu() {
     HMENU hAgent = CreateMenu();
     AppendMenuW(hAgent, MF_STRING, kCmdAgentRun, L"&Run Agent Mission");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgent, L"&Agent");
+
+    // Edit menu (completion)
+    HMENU hEdit = CreateMenu();
+    AppendMenuW(hEdit, MF_STRING, kCmdEditComplete, L"&Request Completion\tCtrl+Space");
+    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hEdit, L"&Edit");
 
     // Build menu (native RawrXD toolchain)
     HMENU hBuild = CreateMenu();
@@ -275,6 +304,10 @@ LRESULT CALLBACK AgenticIDE::s_wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 
 LRESULT CALLBACK AgenticIDE::wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_APP + 100:
+            // Ctrl+Space from editor: request ghost text completion
+            requestGhostTextCompletion();
+            return 0;
         case WM_SIZE:
             onSize(LOWORD(wParam), LOWORD(lParam), HIWORD(lParam));
             break;
@@ -522,8 +555,11 @@ void AgenticIDE::onCommand(WORD id, WORD cmd, HWND hwndCtl) {
         }
         case kCmdHelpAbout:
             MessageBoxW(m_hwnd,
-                L"RawrXD Agentic IDE\nNative Win32/C++20, no Qt\n\nFeatures:\n- Local AI inference (Deep2/GGUF/Ollama/OpenAI-compatible)\n- Agentic file tools + shell + build/test/verify\n- Independent Chat and GhostText model selectors\n- Multi-tab editor + file browser + integrated terminal\n- Snapshot/Keep/Undo file operations\n- Vulkan GPU inference (AMD dual-GPU)",
+                L"RawrXD Agentic IDE\nNative Win32/C++20, no Qt\n\nFeatures:\n- Local AI inference (Ollama + GGUF)\n- Agentic file tools + shell + build/test/verify\n- Independent Chat and GhostText model selectors\n- Multi-tab editor + file browser + integrated terminal\n- Snapshot/Keep/Undo file operations\n- Real model completion via Ollama\n- GhostText inline completion (Tab to accept, Esc to dismiss)",
                 L"About RawrXD IDE", MB_OK | MB_ICONINFORMATION);
+            break;
+        case kCmdEditComplete:
+            requestGhostTextCompletion();
             break;
         case CtrlId::kChatSend: {
             int len = GetWindowTextLengthW(m_hChatInput);
@@ -537,6 +573,8 @@ void AgenticIDE::onCommand(WORD id, WORD cmd, HWND hwndCtl) {
                 GetWindowTextW(m_hChat, &chat[0], chatLen + 1);
                 SetWindowTextW(m_hChat, (chat + L"> " + input + L"\n").c_str());
                 SetWindowTextW(m_hChatInput, L"");
+                // Send to real model via Ollama
+                sendChatToModel(input);
             }
             break;
         }
@@ -910,4 +948,118 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     (void)hPrevInstance; (void)pCmdLine;
     AgenticIDE ide(hInstance, nCmdShow);
     return ide.run();
+}
+
+// ---------------------------------------------------------------------------
+// Real model inference (Ollama)
+// ---------------------------------------------------------------------------
+
+void AgenticIDE::sendChatToModel(const std::wstring& userMessage) {
+    if (!m_ollama || !m_ollama->isRunning()) {
+        appendChatOutput(L"> [MODEL] Ollama not available\n");
+        return;
+    }
+
+    // Convert wstring to UTF-8
+    int need = WideCharToMultiByte(CP_UTF8, 0, userMessage.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    std::string utf8Msg(need, 0);
+    WideCharToMultiByte(CP_UTF8, 0, userMessage.c_str(), -1, &utf8Msg[0], need, nullptr, nullptr);
+
+    RawrXD::Backend::OllamaChatRequest req;
+    req.model = m_ollamaModel;
+    req.messages.push_back({"user", utf8Msg});
+    req.stream = false;
+
+    appendChatOutput(L"> [MODEL] Thinking...\n");
+
+    auto resp = m_ollama->chatSync(req);
+
+    if (!resp.response.empty()) {
+        // Convert response to wstring
+        int wneed = MultiByteToWideChar(CP_UTF8, 0, resp.response.c_str(), -1, nullptr, 0);
+        std::wstring wresp(wneed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, resp.response.c_str(), -1, &wresp[0], wneed);
+
+        appendChatOutput(L"> [MODEL] " + wresp + L"\n");
+        SetWindowTextW(m_hStatusBar, L"Model response received");
+    } else {
+        appendChatOutput(L"> [MODEL] Empty response from model\n");
+        SetWindowTextW(m_hStatusBar, L"Model error");
+    }
+}
+
+void AgenticIDE::requestGhostTextCompletion() {
+    if (!m_ollama || !m_ollama->isRunning()) return;
+
+    auto* editor = activeEditor();
+    if (!editor) return;
+
+    std::string code = editor->getText();
+    size_t cursorPos = editor->cursorPos();
+
+    // Build prefix/suffix for fill-in-the-middle completion
+    std::string prefix = code.substr(0, cursorPos);
+    std::string suffix = code.substr(cursorPos);
+
+    // Build a completion prompt
+    std::ostringstream oss;
+    oss << "<|fim_prefix|>" << prefix << "<|fim_suffix|>" << suffix << "<|fim_middle|>";
+
+    std::string prompt = oss.str();
+
+    RawrXD::Backend::OllamaGenerateRequest req;
+    req.model = m_ollamaModel;
+    req.prompt = prompt;
+    req.stream = false;
+    req.options = {{"temperature", "0.2"}, {"num_predict", "128"}};
+
+    auto resp = m_ollama->generateSync(req);
+
+    if (!resp.response.empty()) {
+        // Clean up the response: stop at common stop tokens
+        std::string completion = resp.response;
+        for (const char* stop : {"<|endoftext|>", "<|fim_suffix|>", "<|fim_prefix|>", "<|fim_middle|>"}) {
+            size_t pos = completion.find(stop);
+            if (pos != std::string::npos) {
+                completion = completion.substr(0, pos);
+            }
+        }
+
+        // Trim trailing newlines
+        while (!completion.empty() && (completion.back() == '\n' || completion.back() == '\r')) {
+            completion.pop_back();
+        }
+
+        if (!completion.empty()) {
+            editor->showGhostText(completion);
+            appendChatOutput(L"> [GHOST] Completion ready (Tab to accept, Esc to dismiss)\n");
+        }
+    }
+}
+
+void AgenticIDE::runAgentMission() {
+    // Fire build_start hook before running agent mission
+    m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildStart);
+    if (m_hChat) {
+        std::wstring msg = L"> Agent mission: compiling and running current file...\n";
+        int len = GetWindowTextLengthW(m_hChat);
+        std::wstring existing;
+        existing.resize(len);
+        GetWindowTextW(m_hChat, &existing[0], len + 1);
+        SetWindowTextW(m_hChat, (existing + msg).c_str());
+    }
+    if (auto* editor = activeEditor(); editor && !editor->filePath().empty()) {
+        buildAndRun();
+    } else {
+        if (m_hChat) {
+            std::wstring msg = L"> Agent mission: no source file open. Open a .asm or .cpp file first.\n";
+            int len = GetWindowTextLengthW(m_hChat);
+            std::wstring existing;
+            existing.resize(len);
+            GetWindowTextW(m_hChat, &existing[0], len + 1);
+            SetWindowTextW(m_hChat, (existing + msg).c_str());
+        }
+    }
+    // Fire build_end hook after agent mission completes
+    m_hooks.fire(RawrXD::IdeHooks::HookEvent::BuildEnd);
 }

@@ -6,6 +6,7 @@
 #include <memory>
 #include "code_editor.h"
 #include "ide_hooks.h"
+#include "backend/ollama_client.h"
 
 // AgenticIDE - native Win32/C++20 main window for RawrXD.
 //
@@ -34,6 +35,10 @@ private:
 
     // Customizable hook system (IDE_HOOKS.md in workspace root)
     RawrXD::IdeHooks::HookSystem m_hooks;
+
+    // Ollama client for real model inference
+    std::unique_ptr<RawrXD::Backend::OllamaClient> m_ollama;
+    std::string m_ollamaModel = "qwen2.5-coder:1.5b-base";
 
     // Native toolchain paths (configurable via hooks or defaults)
     std::wstring m_rawrAsmPath;   // rawrxd_asm.exe
@@ -85,6 +90,11 @@ private:
     std::wstring runCommand(const std::wstring& cmd);
     void appendChatOutput(const std::wstring& text);
 
+    // Real model inference (Ollama)
+    void sendChatToModel(const std::wstring& userMessage);
+    void requestGhostTextCompletion();
+    void runAgentMission();
+
     // File browser tree helpers
     void populateTreeDrives();
     void populateTreeChildren(HTREEITEM hParent, const std::wstring& path);
@@ -105,4 +115,5 @@ private:
     static constexpr int kCmdBuildRun = 4003;
     static constexpr int kCmdBuildClean = 4004;
     static constexpr int kCmdHelpAbout = 5001;
+    static constexpr int kCmdEditComplete = 6001;
 };
