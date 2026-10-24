@@ -1,5 +1,6 @@
 name: REAP ROM parity standalone
 on:
+  workflow_dispatch:
   push:
     branches:
       - feature/reap-deepseek-671b-150tps
