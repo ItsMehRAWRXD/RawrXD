@@ -3125,6 +3125,23 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen)
     if (modelWeights.layers.size() < modelWeights.numLayers)
         return false;
 
+    // Strict GPU authority means every layer runs on Vulkan, not merely
+    // that the expensive GEMV calls are GPU-backed. Fail closed before
+    // host orchestration or hybrid paths can be selected.
+    if (vulkanStrictNoCpuFallback_)
+    {
+        if (!vulkanEnabled_ || !vulkanInitialized_ ||
+            modelWeights.isMoE || modelWeights.useMLA ||
+            !tryGpuTokenForward(hidden))
+        {
+            vulkanStrictViolation_ = true;
+            gpuFwdCommitted_ = false;
+            return false;
+        }
+        gpuFwdCommitted_ = true;
+        return true;
+    }
+
     // Batch10: MoE and MLA currently use host-orchestrated GPU-heavy execution.
     // It is a product execution lane, but NOT fully-resident GPU authority.
     if (vulkanEnabled_ && vulkanInitialized_ && (modelWeights.isMoE || modelWeights.useMLA))
