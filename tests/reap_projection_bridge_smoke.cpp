@@ -94,5 +94,23 @@ int main() {
     uploadFailure.Retain(4,6);
     assert(!uploadFailure.Run(4,6));
     assert(failedRelease==1 && failedExec==0 && uploadFailure.ResidentBytes()==0);
+    int lateExec=0, lateUploads=0, lateHandles[3]={11,12,13};
+    ProjectionBridge lateFailure(
+        [](const std::string&,uint64_t,void* out,size_t n){
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(out)[i]=1;
+            return true;
+        },
+        [&](Projection p,const Slice&,const std::vector<uint8_t>&,Binding& out){
+            ++lateUploads;
+            if(p==Projection::Down) return false;
+            out={&lateHandles[static_cast<int>(p)],4,1}; return true;
+        },
+        [&](Projection,const Binding&,uint32_t,uint32_t){++lateExec; return true;},
+        1024,12);
+    for(auto p:{Projection::Gate,Projection::Up,Projection::Down})
+        lateFailure.Register(p,{"immutable.gguf",100,4,5,7,0});
+    lateFailure.Retain(5,7);
+    assert(!lateFailure.Run(5,7));
+    assert(lateUploads==3 && lateExec==0);
     std::cout<<"REAP_PROJECTION_BRIDGE_SMOKE_PASS\n";
 }
