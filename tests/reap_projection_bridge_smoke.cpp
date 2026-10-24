@@ -34,5 +34,27 @@ int main() {
     assert(b.Run(1,9) && b.Run(1,9));
     assert(reads==3 && uploads==3 && executions==6);
     assert(b.Stats().diskBytes==12 && b.Stats().rejected==1);
+    assert(b.ResidentBytes()==12);
+    assert(!b.ForgetAfterGpuIdle(1,9)); // no GPU fence proof
+    assert(b.ResidentBytes()==12);
+    // Total device budget must reject the third projection, not exceed the cap.
+    int local[3]={4,5,6};
+    ProjectionBridge limited(
+        [](const std::string&,uint64_t,void* out,size_t n){
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(out)[i]=1;
+            return true;
+        },
+        [&](Projection p,const Slice&,const std::vector<uint8_t>&,Binding& out){
+            out={&local[static_cast<int>(p)],4,1}; return true;
+        },
+        [](Projection,const Binding&,uint32_t,uint32_t){return true;},
+        1024,8,[]{return true;});
+    for(auto p:{Projection::Gate,Projection::Up,Projection::Down})
+        limited.Register(p,{"immutable.gguf",100,4,2,4,0});
+    limited.Retain(2,4);
+    assert(!limited.Run(2,4));
+    assert(limited.ResidentBytes()==8);
+    assert(limited.ForgetAfterGpuIdle(2,4));
+    assert(limited.ResidentBytes()==0);
     std::cout<<"REAP_PROJECTION_BRIDGE_SMOKE_PASS\n";
 }
