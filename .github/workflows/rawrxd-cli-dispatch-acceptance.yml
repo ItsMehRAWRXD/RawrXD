@@ -21,9 +21,11 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $exe = Get-ChildItem build_ci_native -Filter rawr.exe -Recurse -File |
-            Select-Object -First 1 -ExpandProperty FullName
-          if (-not $exe) { throw "rawr.exe not produced" }
+          $candidates = @(Get-ChildItem build_ci_native -Filter rawr.exe -Recurse -File)
+          if ($candidates.Count -ne 1) {
+            throw "Expected exactly one rawr.exe, found $($candidates.Count): $($candidates.FullName -join ', ')"
+          }
+          $exe = $candidates[0].FullName
           Write-Host "Executable: $exe"
           Get-FileHash $exe -Algorithm SHA256 | Format-List
           $env:RAWRXD_CLI_DISPATCH_TRACE = "1"
@@ -36,9 +38,13 @@ jobs:
             throw "doctor did not run; usage is not acceptance"
           }
           $models = & $exe models 2>&1 | Out-String
+          $modelsExit = $LASTEXITCODE
           Write-Host $models
           if ($models -notmatch '\[RAWRXD_CLI_V2_DISPATCH\] command=models') {
             throw "models command did not reach CLI v2"
+          }
+          if ($modelsExit -ne 0 -and $models -notmatch 'model discovery failed: no configured backend is reachable') {
+            throw "models failed unexpectedly with exit $modelsExit"
           }
           if ($models -match '(?m)^Usage:') {
             throw "models printed usage rather than dispatching"
