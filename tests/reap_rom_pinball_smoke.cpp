@@ -123,5 +123,18 @@ int main() {
     assert(transientRead.Run(3,1));
     assert(attempts==2 && uploadsAfterRetry==1);
     assert(transientRead.Stats().diskBytes==4);
+    bool zeroBudgetRejected=false;
+    try {
+        Bridge invalidBudget(
+            [](const std::string&, uint64_t, void*, size_t) { return true; },
+            [](const Slice&, const std::vector<uint8_t>&, Binding&) { return true; },
+            [](const Binding&, uint32_t, uint32_t) { return true; },
+            0);
+    } catch (const std::invalid_argument&) { zeroBudgetRejected=true; }
+    assert(zeroBudgetRejected);
+    bool duplicateRejected=false;
+    try { b.Register({"test.gguf",128,4,2,7,0}); }
+    catch (const std::invalid_argument&) { duplicateRejected=true; }
+    assert(duplicateRejected);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
