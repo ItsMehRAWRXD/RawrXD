@@ -87,5 +87,21 @@ int main() {
     try { (void)partialUpload.Run(0,0); }
     catch(const std::runtime_error&) { partialRejected=true; }
     assert(partialRejected);
+    int staleReads=0;
+    Bridge reused(
+        [&](const std::string&, uint64_t, void* dst, size_t n) {
+            ++staleReads;
+            for(size_t i=0;i<n;++i) static_cast<uint8_t*>(dst)[i]=0;
+            return true;
+        },
+        [&](const Slice&, const std::vector<uint8_t>&, Binding& out) {
+            out={&fakeGpu,4,1}; return true;
+        },
+        [](const Binding&, uint32_t, uint32_t) { return true; });
+    reused.Register({"test.gguf",0,4,1,1,0});
+    reused.Retain(1,1);
+    assert(reused.Run(1,1));
+    assert(reused.Run(1,1));
+    assert(staleReads==1);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
