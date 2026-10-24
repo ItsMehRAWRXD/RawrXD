@@ -768,48 +768,49 @@ bool MoEWeightsLoader::LoadExpertOwned(int layer, int expert, std::vector<uint8_
 }
 
 bool MoEWeightsLoader::LoadExpertDirect(int layer, int expert, void* buffer, size_t bufferSize) {
-    if (!buffer || bufferSize == 0) return false;
-    
+    if (!buffer || bufferSize == 0 || layer < 0 || expert < 0 ||
+        progress_.cancelled.load() || !IsOpen()) return false;
+
     const ExpertProjectionInfo* gateInfo = nullptr;
     const ExpertProjectionInfo* upInfo = nullptr;
     const ExpertProjectionInfo* downInfo = nullptr;
-    
     for (const auto& info : expertProjections_) {
-        if (info.layerIdx != layer) continue;
-        if (info.expertIdx != -1) continue;
+        if (info.layerIdx != layer || info.expertIdx != -1) continue;
         switch (info.proj) {
             case ExpertProjection::Gate: gateInfo = &info; break;
-            case ExpertProjection::Up:   upInfo = &info;   break;
+            case ExpertProjection::Up: upInfo = &info; break;
             case ExpertProjection::Down: downInfo = &info; break;
         }
     }
-    
     if (!upInfo || !downInfo) return false;
-    
-    size_t gateBytes = gateInfo ? gateInfo->bytesPerExpert : 0;
-    size_t totalBytes = gateBytes + upInfo->bytesPerExpert + downInfo->bytesPerExpert;
-    if (bufferSize < totalBytes) return false;
-    
-    uint64_t upExpertOffset = (uint64_t)expert * upInfo->bytesPerExpert;
-    uint64_t gateExpertOffset = gateInfo ? (uint64_t)expert * gateInfo->bytesPerExpert : 0;
-    uint64_t downExpertOffset = (uint64_t)expert * downInfo->bytesPerExpert;
-    
-    bool ok = true;
+    size_t totalBytes = 0;
+    for (const auto* info : {gateInfo, upInfo, downInfo}) {
+        if (!info) continue;
+        if (static_cast<size_t>(expert) >= info->numExperts ||
+            !info->bytesPerExpert ||
+            info->bytesPerExpert > bufferSize - totalBytes)
+            return false;
+        const uint64_t index = static_cast<uint64_t>(expert);
+        const uint64_t stride = static_cast<uint64_t>(info->bytesPerExpert);
+        if (index > UINT64_MAX / stride) return false;
+        const uint64_t relative = index * stride;
+        if (relative > info->sizeBytes ||
+            stride > info->sizeBytes - relative ||
+            info->fileOffset > UINT64_MAX - relative ||
+            info->fileOffset + relative > UINT64_MAX - stride)
+            return false;
+        totalBytes += info->bytesPerExpert;
+    }
     size_t offset = 0;
-    if (gateInfo && ok) {
-        ok = ReadAt(gateInfo->fileOffset + gateExpertOffset, buffer, gateInfo->bytesPerExpert);
-        offset += gateInfo->bytesPerExpert;
+    for (const auto* info : {gateInfo, upInfo, downInfo}) {
+        if (!info) continue;
+        const uint64_t fileOffset = info->fileOffset +
+            static_cast<uint64_t>(expert) * info->bytesPerExpert;
+        if (!ReadAt(fileOffset, static_cast<uint8_t*>(buffer) + offset,
+                    info->bytesPerExpert)) return false;
+        offset += info->bytesPerExpert;
     }
-    if (ok) {
-        ok = ReadAt(upInfo->fileOffset + upExpertOffset,
-                    (uint8_t*)buffer + offset, upInfo->bytesPerExpert);
-        offset += upInfo->bytesPerExpert;
-    }
-    if (ok) {
-        ok = ReadAt(downInfo->fileOffset + downExpertOffset,
-                    (uint8_t*)buffer + offset, downInfo->bytesPerExpert);
-    }
-    return ok;
+    return true;
 }
 
 bool MoEWeightsLoader::LoadRouterGate(int layer, std::vector<float>& outWeights) {
