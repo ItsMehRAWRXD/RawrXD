@@ -345,6 +345,8 @@ class Win32IDE
     HWND getSidebar() const { return m_hwndSidebar; }
     HWND getEditor() const { return m_hwndEditor; }
     HWND getStatusBar() const { return m_hwndStatusBar; }
+    HWND getPowerShellPanel() const { return m_hwndPowerShellPanel; }
+    HWND getOutputTabs() const { return m_hwndOutputTabs; }
     HWND getActivityBar() const { return m_hwndActivityBar; }
     HWND getLineNumbers() const { return m_hwndLineNumbers; }
     HWND getTabBar() const { return m_hwndTabBar; }

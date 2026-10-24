@@ -21,7 +21,8 @@ bool FrameOnlyMode();
 bool RebuildRestrictActive();  // rebuild && phase 0..4
 void EnsurePolicyInstalled(HWND mainHwnd);
 void ApplyChromeVisibilityPolicy(HWND mainHwnd);
-void RegisterAllowedRoots(HWND activity, HWND sidebar, HWND editor, HWND status);
+void RegisterAllowedRoots(HWND activity, HWND sidebar, HWND editor, HWND status,
+                          HWND terminal = nullptr, HWND output = nullptr);
 bool SetChildVisible(HWND child, bool visible, const char* callsite);
 
 // Register from IDE getters then ApplyChromeVisibilityPolicy.

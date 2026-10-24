@@ -22,6 +22,8 @@ HWND g_allowActivity = nullptr;
 HWND g_allowSidebar = nullptr;
 HWND g_allowEditor = nullptr;
 HWND g_allowStatus = nullptr;
+HWND g_allowTerminal = nullptr;
+HWND g_allowOutput = nullptr;
 
 static void JournalTransition(HWND hwnd, const char* callsite, bool oldVis, bool newVis)
 {
@@ -86,6 +88,13 @@ static bool IsAllowedVisible(HWND hwnd)
         return true;
     if (phase >= 4 && IsDescendantOf(hwnd, g_allowStatus))
         return true;
+    // The lower PowerShell/output surfaces are first-class IDE chrome.  They
+    // must be allow-listed or the rebuild visibility policy hides them after
+    // they are created, leaving only Debug/Find Results visible.
+    if (phase >= 3 && IsDescendantOf(hwnd, g_allowTerminal))
+        return true;
+    if (phase >= 3 && IsDescendantOf(hwnd, g_allowOutput))
+        return true;
     return false;
 }
 
@@ -141,6 +150,10 @@ static void RestoreAllowedChrome()
         ShowTree(g_allowEditor);
     if (phase >= 4)
         ShowTree(g_allowStatus);
+    if (phase >= 3) {
+        ShowTree(g_allowTerminal);
+        ShowTree(g_allowOutput);
+    }
 }
 
 static bool IsUnderMain(HWND hwnd)
@@ -236,12 +249,15 @@ bool RebuildRestrictActive()
     return p >= 0 && p <= 4;
 }
 
-void RegisterAllowedRoots(HWND activity, HWND sidebar, HWND editor, HWND status)
+void RegisterAllowedRoots(HWND activity, HWND sidebar, HWND editor, HWND status,
+                          HWND terminal, HWND output)
 {
     g_allowActivity = activity;
     g_allowSidebar = sidebar;
     g_allowEditor = editor;
     g_allowStatus = status;
+    g_allowTerminal = terminal;
+    g_allowOutput = output;
 }
 
 void ApplyFromIde(Win32IDE* ide)
@@ -254,7 +270,8 @@ void ApplyFromIde(Win32IDE* ide)
     }
     HWND main = ide->getMainWindow();
     RegisterAllowedRoots(ide->getActivityBar(), ide->getSidebar(),
-                         ResolveEditor(ide, main), ide->getStatusBar());
+                         ResolveEditor(ide, main), ide->getStatusBar(),
+                         ide->getPowerShellPanel(), ide->getOutputTabs());
     ApplyChromeVisibilityPolicy(main);
 }
 
@@ -323,7 +340,8 @@ void LayoutIDE(Win32IDE* ide, int clientW, int clientH)
     HWND sidebar = ide->getSidebar();
     HWND editor = ResolveEditor(ide, main);
     HWND status = ide->getStatusBar();
-    RegisterAllowedRoots(activity, sidebar, editor, status);
+    RegisterAllowedRoots(activity, sidebar, editor, status,
+                         ide->getPowerShellPanel(), ide->getOutputTabs());
 
     EnsurePolicyInstalled(main);
     ApplyChromeVisibilityPolicy(main);
