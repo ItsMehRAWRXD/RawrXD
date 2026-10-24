@@ -44,6 +44,8 @@ jobs:
           set -euo pipefail
           g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG -pthread tests/deep2_dual_row_executor_stress.cpp -o /tmp/deep2_dual_row_executor_stress
           timeout 30 /tmp/deep2_dual_row_executor_stress
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG -pthread tests/deep2_q4k_column_cache_smoke.cpp -o /tmp/deep2_q4k_column_cache_smoke
+          timeout 30 /tmp/deep2_q4k_column_cache_smoke
 
   windows-native:
     runs-on: windows-2022
@@ -52,6 +54,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Compile standalone C++20 GPU concurrency and cache regressions (MSVC)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vswhere = Join-Path "${env:ProgramFiles(x86)}" 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (!(Test-Path $vswhere)) { throw 'vswhere missing' }
+          $vsroot = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or !$vsroot) { throw 'MSVC toolchain missing' }
+          $vcvars = Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          New-Item -ItemType Directory -Force build_gpu_smoke | Out-Null
+          foreach ($name in @('deep2_dual_row_executor_stress', 'deep2_q4k_column_cache_smoke')) {
+            $cmdline = 'call "' + $vcvars + '" && cl /nologo /std:c++20 /EHsc /W4 /WX /UNDEBUG /Fe:build_gpu_smoke\' + $name + '.exe tests\' + $name + '.cpp && build_gpu_smoke\' + $name + '.exe'
+            & cmd.exe /d /s /c $cmdline
+            if ($LASTEXITCODE -ne 0) { throw "MSVC C++20 regression failed: $name" }
+          }
 
       - name: Configure native no-Qt build
         shell: pwsh
