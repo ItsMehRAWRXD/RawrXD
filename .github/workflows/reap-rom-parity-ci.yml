@@ -54,7 +54,7 @@ jobs:
       - name: Configure RawrXD native x64 project (no Qt installation)
         shell: pwsh
         run: |
-          cmake -S . -B build_native_ci -G "Visual Studio 17 2022" -A x64 -DRAWRXD_ENABLE_HARDENING=OFF
+          cmake -S . -B build_native_ci -G "Visual Studio 17 2022" -A x64 -DRAWRXD_ENABLE_HARDENING=OFF -DRAWRXD_REQUIRE_QT=OFF -DUSE_ZLIB_FETCHCONTENT=OFF
           if ($LASTEXITCODE -ne 0) { throw "Native CMake configure failed: audit Qt/external dependencies" }
       - name: Build headless agent and snapshot targets
         shell: pwsh
