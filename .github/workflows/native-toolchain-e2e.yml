@@ -102,6 +102,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inspect every tracked source file and literal CMake source declaration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/rawrxd_per_file_source_audit.py --strict-missing
+          python3 tools/rawrxd_cmake_source_admission.py
+
       - name: Verify required root CMake inputs are present
         shell: bash
         run: |
@@ -128,3 +135,13 @@ jobs:
             echo "::error::Source closure failed. Restore real sources, never stub."
             exit 1
           fi
+
+      - name: Preserve full-tree source audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-source-closure-audit
+          path: |
+            evidence/rawrxd_per_file_source_audit.json
+            evidence/rawrxd_cmake_source_admission.json
+          if-no-files-found: warn
