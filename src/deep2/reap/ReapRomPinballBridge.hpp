@@ -62,8 +62,9 @@ public:
     }
     void BindResident(uint32_t layer, uint32_t expert, Binding binding) {
         Key key{layer, expert};
-        if (!retained_.contains(key) || !binding.deviceHandle ||
-            binding.bytes < static_cast<size_t>(slices_.at(key).bytes))
+        auto slice = slices_.find(key);
+        if (slice == slices_.end() || !retained_.contains(key) ||
+            !binding.deviceHandle || binding.bytes < static_cast<size_t>(slice->second.bytes))
             throw std::invalid_argument("invalid resident binding");
         if (resident_.contains(key)) throw std::logic_error("resident binding already exists; synchronize and forget before replacement");
         resident_.emplace(key, binding);
