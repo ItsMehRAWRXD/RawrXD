@@ -89,7 +89,11 @@ public:
         if (!read_(s.path, s.offset, bytes.data(), bytes.size())) return false;
         stats_.diskBytes += s.bytes;
         Binding uploaded;
-        if (!upload_(s, bytes, uploaded)) return false;
+        if (!upload_(s, bytes, uploaded)) {
+            if (uploaded.deviceHandle)
+                throw std::runtime_error("upload failed after allocating GPU binding; caller must retire allocation");
+            return false;
+        }
         if (!uploaded.deviceHandle || uploaded.bytes < bytes.size())
             throw std::runtime_error("upload reported success with invalid GPU binding");
         resident_[key] = uploaded;
