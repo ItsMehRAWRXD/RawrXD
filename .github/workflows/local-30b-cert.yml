@@ -37,6 +37,25 @@ jobs:
           cmake --build build_cert --config Release --target RawrXD-Win32IDE-Native --parallel 2
           if ($LASTEXITCODE -ne 0) { throw "RawrXD-Win32IDE-Native build failed" }
 
+      - name: Check recovered Slingshot and compiler source inventory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @(
+            '~dev/rawrxd/src/core/SpeculativeEngine_GGUFBridge.hpp',
+            '~dev/rawrxd/src/core/GGUFShardRouter_tree.hpp',
+            '~dev/rawrxd/cmake/MASMCompiler.cmake',
+            '~dev/rawrxd/src/reverse_engineering/CMakeLists.txt',
+            'kernels/deflate_nasm.asm'
+          )
+          foreach ($file in $required) {
+            if (!(Test-Path -LiteralPath $file -PathType Leaf)) {
+              throw "Recovered tool source missing: $file"
+            }
+            Write-Host "PRESENT: $file"
+          }
+          Write-Host "Inventory is not a compile or integration certification."
+
       - name: Run registered regression tests
         shell: pwsh
         run: |
