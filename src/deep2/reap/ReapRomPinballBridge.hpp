@@ -80,6 +80,8 @@ public:
         }
         auto binding = resident_.find(key);
         if (binding != resident_.end()) {
+            if (stats_.bindingUses == std::numeric_limits<uint64_t>::max())
+                throw std::overflow_error("REAP binding-use counter overflow");
             ++stats_.bindingUses;
             return execute_(binding->second, layer, expert);
         }
