@@ -14,7 +14,7 @@
 # ============================================================================
 $ErrorActionPreference = "Continue"
 
-$ReapExe = "C:\Users\Garrett\AppData\Local\Temp\kilo\rawr-reap-test.exe"
+$ReapExe = "F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe"
 $Models  = @{
     FitSmall   = "F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf"
     MoeLarge   = "F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf"

@@ -131,6 +131,7 @@ int main(int argc, char** argv) {
               << ",\"logical_expert_bytes\":" << logicalExpertBytes
               << ",\"min_triplet_bytes\":" << minTripletBytes
               << ",\"max_triplet_bytes\":" << maxTripletBytes;
+    int rc = 0;
     if (std::string(argv[1]) == "plan") {
         const bool fits = total <= target;
         const bool pruningCandidate = (!fits && expertBytes > 0);
@@ -138,17 +139,15 @@ int main(int argc, char** argv) {
                   << ",\"pruning_candidate\":" << (pruningCandidate ? "true" : "false");
         if (fits) {
             std::cout << ",\"selection\":\"FITS_UNMODIFIED_NO_PRUNING\",\"writable_output\":false";
-        } else if (expertBytes > 0) {
-            std::cout << ",\"selection\":\"PRUNING_CANDIDATE_REQUIRES_CALIBRATION_MASK\",\"writable_output\":false";
-        } else {
+            rc = 0;
+        } else if (expertBytes == 0) {
             std::cout << ",\"selection\":\"NOT_PRUNABLE_DENSE_EXCEEDS_TARGET\",\"writable_output\":false";
+            rc = 4;
+        } else {
+            std::cout << ",\"selection\":\"PRUNING_CANDIDATE_REQUIRES_CALIBRATION_MASK\",\"writable_output\":false";
+            rc = 4;
         }
     }
     std::cout << "}\n";
-    if (std::string(argv[1]) == "plan") {
-        if (fits) return 0;
-        if (expertBytes == 0) return 4;
-        return 4;
-    }
-    return 0;
+    return rc;
 }
