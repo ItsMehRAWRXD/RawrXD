@@ -65,3 +65,15 @@ The 32- and 128-token requests completed with finite text, nonzero GPU
 forward calls, and no observed fallback markers. These are execution and
 stability passes only; the throughput target and independent CPU/oracle parity
 remain open. Dual-device execution was not exercised in this receipt.
+
+## CPU/GPU deterministic control
+
+Same GGUF, prompt, temperature `0`, top-p `1`, and `max_tokens=32`:
+
+- GPU: 32 committed tokens, 15.48 s, coherent finite text.
+- CPU control: 1 committed token (`I`), 19.44 s, then EOS.
+
+This is an explicit parity failure. It confirms that sustained GPU execution
+does not yet establish numerical equivalence with the host reference. The
+next investigation must compare first-token logits and token IDs at the first
+divergence; certification remains `NOT_CERTIFIED`.
