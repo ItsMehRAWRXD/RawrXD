@@ -103,6 +103,7 @@ jobs:
           python3 tools/rawrxd_cmake_source_admission.py
           python3 -m py_compile tools/rawrxd_cmake_source_admission.py tools/rawrxd_per_file_source_audit.py tools/rawrxd_e2e_source_audit.py tools/rawrxd_no_deps_audit.py
       - name: Upload machine-readable audit
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: rawrxd-e2e-source-audit
