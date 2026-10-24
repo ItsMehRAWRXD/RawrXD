@@ -24,7 +24,7 @@ var State = {
   backend: {
     online: false,
     url: 'http://127.0.0.1:11435',
-    ollamaDirectUrl: 'http://127.0.0.1:11435',  // LOCAL_ONLY_NO_OLLAMA — same as RawrXD Headless
+    ollamaDirectUrl: 'http://127.0.0.1:11434',  // Ollama default port — auto-fallback when RawrXD backend is down
     directMode: false,                           // true = direct to configured local server (not Ollama)
     lastPing: 0,
     serverType: null,         // 'rawrxd-win32ide' or 'RawrXD-serve.py' or 'ollama-direct'
@@ -128,7 +128,7 @@ var State = {
     sessionId: 0,           // monotonic session counter
     waitingForIde: false,   // true when auto-retry polling for IDE
     autoRetryTimer: null,   // setInterval handle for auto-retry
-    scanPorts: [11435, 3000, 5000], // product :11435 first; :8080 ignored (SERVER_REACHABILITY)
+    scanPorts: [19035, 11435, 19036, 3000, 5000], // gateway/native first, then Win32 IDE and Deep2
     lastScanResults: [],    // [{port, status, backend}] from last scan
   },
   // VSIX Extension Manager state
@@ -176,6 +176,14 @@ var State = {
     totalNavigations: 0,
   },
 };
+
+// The browser-facing gateway is also a complete API backend.  Prefer its
+// same-origin URL when the GUI is opened from loopback; use the legacy 11435
+// host only for file:// or an explicitly configured remote IDE.
+if (!_isFileProtocol && /^https?:$/.test(window.location.protocol) &&
+  /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) {
+  State.backend.url = window.location.origin;
+}
 
 // ======================================================================
 // ENGINE REGISTRY â€” All available engines in the RawrXD codebase
@@ -1076,11 +1084,18 @@ function _browserLoadViaProxy(url) {
     var div = document.createElement('div');
     div.className = 'browser-proxy-content';
 
-    // Basic sanitization: remove dangerous tags but keep structure
+    // Basic sanitization: remove active content and presentation attributes.
+    // A remote page's CSS must not be allowed to collapse the reader into a
+    // tiny centered fragment (Google and similar sites ship aggressive reset
+    // styles).  The visible surface is our controlled reader, while the
+    // extracted text/links remain available to the agent separately.
     var sanitized = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<link[^>]*>/gi, '')
       .replace(/<meta[^>]*>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
+      .replace(/\s(?:style|class|id)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
       .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
       .replace(/on\w+\s*=\s*'[^']*'/gi, '');
 
@@ -1107,6 +1122,7 @@ function _browserLoadViaProxy(url) {
       })(links[i]);
     }
 
+    div.style.cssText = 'display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:auto;background:#fff;color:#202124;padding:28px 24px 48px;text-align:left;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;';
     vp.appendChild(div);
 
     // Extract title
@@ -1594,7 +1610,14 @@ async function ghostBeaconScan() {
         var data = await res.json();
         entry.status = 'ok';
         entry.backend = data.backend || data.server || 'unknown';
-        if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+        // The ghost surface can be hosted by the full Win32 IDE or by the
+        // dependency-free RawrXD gateway.  Both expose the same /gui page;
+        // requiring the historical Win32IDE label made the overlay report
+        // "not detected" even while the browser-first gateway was healthy.
+        var isIde = data.backend === 'rawrxd-win32ide' ||
+          data.backend === 'rawrxd-node' || data.backend === 'rawrxd-native' ||
+          (data.server && (data.server.indexOf('Win32IDE') >= 0 || data.server.indexOf('RawrXD') >= 0));
+        if (isIde) {
           entry.status = 'ide';
           if (!foundUrl) { foundUrl = url; foundData = data; }
         }
@@ -1670,17 +1693,22 @@ function _ghostStartAutoRetry() {
     }
     // Quick probe just the primary IDE port
     try {
-      var res = await fetch('http://localhost:11435/status', { signal: AbortSignal.timeout(1500) });
+      var retryPorts = State.ghost.scanPorts;
+      var found = false;
+      for (var rp = 0; rp < retryPorts.length && !found; rp++) {
+        var res = await fetch('http://localhost:' + retryPorts[rp] + '/status', { signal: AbortSignal.timeout(1500) });
       if (res.ok) {
         var data = await res.json();
-        if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+        if (data.backend === 'rawrxd-win32ide' || data.backend === 'rawrxd-node' ||
+            data.backend === 'rawrxd-native' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
           logDebug('\uD83D\uDC7B Auto-retry: IDE found! Connecting...', 'info');
           _ghostStopAutoRetry();
           // Close and re-ghost now that IDE is alive
           ghostCloseIDE();
           ghostIntoIDE();
-          return;
+          found = true;
         }
+      }
       }
     } catch (_) { /* still not up */ }
 
@@ -1742,7 +1770,16 @@ async function ghostIntoIDE() {
     logDebug('\uD83D\uDC7B Beacon confirmed: Win32 IDE alive at ' + scan.foundUrl, 'info');
 
     // Inject iframe pointed at /gui
-    State.ghost.ideUrl = scan.foundUrl + '/gui';
+    // Keep the embedded page on the same loopback origin as the shell.  A
+    // localhost/127.0.0.1 spelling change is enough for Chromium/WebView2 to
+    // treat the iframe as a separate site and refuse the embedded document.
+    var ghostOrigin = scan.foundUrl;
+    try {
+      var ghostUrl = new URL(scan.foundUrl);
+      if (ghostUrl.hostname === 'localhost' && location.hostname) ghostUrl.hostname = location.hostname;
+      ghostOrigin = ghostUrl.origin;
+    } catch (_) { /* retain scanned origin */ }
+    State.ghost.ideUrl = ghostOrigin + '/gui';
     loading.style.display = 'none';
 
     var iframe = document.createElement('iframe');
@@ -3221,8 +3258,8 @@ async function connectBackend() {
     logDebug('Primary backend (' + State.backend.url + ') failed: ' + e.message, 'warn');
   }
 
-  // ---- Try 2: DISABLED — LOCAL_ONLY_NO_OLLAMA (no :11434 Ollama fallback) ----
-  if (false && State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
+  // ---- Try 2: Ollama direct fallback (:11434) ----
+  if (State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
     try {
       logDebug('Trying direct Ollama at ' + State.backend.ollamaDirectUrl + '...', 'info');
       const t0 = performance.now();
@@ -4779,6 +4816,20 @@ async function sendToBackend(query) {
   var t0 = performance.now();
   var activeUrl = getActiveUrl();  // respects directMode fallback
 
+  // Fail fast when the selected provider disappeared instead of leaving the
+  // chat in an indefinite "waiting" state. Ollama uses /, RawrXD uses
+  // /health; both are loopback-only by construction.
+  try {
+    var readinessPath = State.backend.directMode ? '/' : '/health';
+    var ready = await fetch(activeUrl + readinessPath, { signal: AbortSignal.timeout(3000) });
+    if (!ready.ok) throw new Error('HTTP ' + ready.status);
+  } catch (e) {
+    var provider = State.backend.directMode ? 'Ollama' : 'Deep2/RawrXD';
+    addMessage('system', '\u26a0\ufe0f **' + provider + ' unavailable** at ' + activeUrl + '. Start the service or select another provider, then retry.', { skipMemory: true });
+    logDebug('[ProviderReady] ' + provider + ' unavailable: ' + e.message, 'error');
+    return;
+  }
+
   // First-token probe for large models (Safe Decode Profile)
   if (isSafeDecodeActive() && State.gen.safeDecodeProfile.probeFirst) {
     var probeOk = await firstTokenProbe(model, activeUrl);
@@ -4833,6 +4884,7 @@ async function sendNonStreamingOpenAI(query, model, t0) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(120000),
     });
 
     hideTyping();
@@ -12952,11 +13004,34 @@ async function feApiPost(endpoint, body) {
   return null;
 }
 
+async function feApiGet(endpoint) {
+  var urls = [feApiUrl()];
+  if (_ideServerUrl && urls.indexOf(_ideServerUrl) === -1) urls.push(_ideServerUrl);
+  if (urls.indexOf('http://localhost:11435') === -1) urls.push('http://localhost:11435');
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      var res = await fetch(urls[i] + endpoint, {
+        method: 'GET',
+        signal: AbortSignal.timeout(10000)
+      });
+      if (res.ok) return await res.json();
+    } catch (_) { }
+  }
+  return null;
+}
+
 // ---- Tree Browser ----
 async function feRefreshTree() {
   var rootInput = document.getElementById('feTreePath');
   var root = rootInput ? rootInput.value.trim() : '.';
   if (!root) root = '.';
+
+  // A blank/current-directory request opens the complete drive view.  This
+  // keeps the file editor browser-first while still allowing any explicit
+  // directory (including hidden/system directories) to be entered directly.
+  if (root === '.' || root.toLowerCase() === 'drives:' || root === '::drives') {
+    return feLoadRoots();
+  }
 
   feSetStatus('Loading tree...');
   var data = await feApiPost('/api/list-dir', { path: root });
@@ -12979,13 +13054,28 @@ async function feRefreshTree() {
   feSetStatus('Tree loaded: ' + data.entries.length + ' items');
 }
 
+async function feLoadRoots() {
+  feSetStatus('Enumerating drives...');
+  var data = await feApiGet('/api/filesystem/roots');
+  var tc = document.getElementById('feTreeContent');
+  if (!data || !Array.isArray(data.roots)) {
+    feSetStatus('Drive enumeration unavailable');
+    if (tc) tc.innerHTML = '<div style="padding:12px;color:#ff6b6b;font-size:10px;">Could not enumerate local drives. Connect the RawrXD loopback backend.</div>';
+    return;
+  }
+  FE.treeCache['::drives'] = data.roots;
+  FE.treeExpanded['::drives'] = true;
+  feRenderTree('::drives', data.roots);
+  feSetStatus('Drives loaded: ' + data.roots.length + ' (hidden entries included)');
+}
+
 function feRenderTree(root, entries) {
   var tc = document.getElementById('feTreeContent');
   if (!tc) return;
   var html = '';
   for (var i = 0; i < entries.length; i++) {
     var e = entries[i];
-    var fullPath = root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+    var fullPath = (e.path || (root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
     if (e.type === 'dir') {
       var isExpanded = FE.treeExpanded[fullPath];
       html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -13049,7 +13139,7 @@ async function feToggleDir(path, el) {
   var html = '';
   for (var i = 0; i < entries.length; i++) {
     var e = entries[i];
-    var fullPath = path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+    var fullPath = (e.path || (path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
     if (e.type === 'dir') {
       var isExp = FE.treeExpanded[fullPath];
       html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -14306,8 +14396,106 @@ function browserNavigateFromHome() {
   browserNavigate();
 }
 
+function _browserRecordNavigation(url) {
+  var tab = _browserGetActiveTab();
+  if (!tab || !url) return;
+  if (tab.url && tab.url !== url) {
+    tab.history = Array.isArray(tab.history) ? tab.history.slice(0, tab.historyIdx + 1) : [];
+    tab.history.push(tab.url);
+    tab.historyIdx = tab.history.length - 1;
+  }
+  tab.url = url;
+  tab.iframeRef = null;
+  var input = document.getElementById('browserUrlInput');
+  if (input) input.value = url;
+  _browserUpdateLock(url);
+  _browserUpdateNavButtons();
+}
+
+function _browserReaderBlocked(url, reason) {
+  var viewport = document.getElementById('browserViewport');
+  if (!viewport) return;
+  viewport.querySelectorAll('iframe,.browser-reader-card,.browser-blocked-card').forEach(function (node) { node.remove(); });
+  var card = document.createElement('div');
+  card.className = 'browser-home browser-blocked-card';
+  card.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;color:var(--text-muted);text-align:center;';
+  card.innerHTML = '<div style="font-size:28px;">🛡️</div><strong style="color:var(--accent-cyan);">Embedded page unavailable</strong>' +
+    '<div style="max-width:760px;word-break:break-word;line-height:1.5;">' + String(reason || 'The RawrXD reader backend is unavailable.') + '</div>' +
+    '<div style="max-width:760px;word-break:break-all;color:var(--accent-secondary);font-size:11px;">' + String(url || '') + '</div>';
+  viewport.appendChild(card);
+  _browserUpdateStatusBar('Reader unavailable', url || '');
+}
+
+function _browserRenderReader(page) {
+  var viewport = document.getElementById('browserViewport');
+  if (!viewport || !page) return false;
+  _browserRecordNavigation(page.url || '');
+  viewport.querySelectorAll('iframe,.browser-home:not(#browserHomePage),.browser-reader-card,.browser-reader-page').forEach(function (node) { node.remove(); });
+  if (document.getElementById('browserHomePage')) document.getElementById('browserHomePage').style.display = 'none';
+  var card = document.createElement('div');
+  card.className = 'browser-reader-page';
+  card.style.cssText = 'display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:auto;background:#fff;color:#202124;padding:32px 28px 48px;text-align:left;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;';
+  var content = document.createElement('div');
+  content.style.cssText = 'width:min(100%,1100px);margin:0 auto;';
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:28px;font-weight:700;line-height:1.25;color:#202124;margin:0 0 8px;';
+  title.textContent = page.title || page.url || 'Reader';
+  var source = document.createElement('div');
+  source.style.cssText = 'font-size:12px;line-height:1.4;color:#5f6368;word-break:break-all;margin:0 0 20px;padding-bottom:14px;border-bottom:1px solid #dadce0;';
+  source.textContent = 'RawrXD safe reader · ' + (page.url || '');
+  var body = document.createElement('div');
+  body.style.cssText = 'box-sizing:border-box;width:100%;min-height:84px;white-space:pre-wrap;overflow:auto;background:#f8f9fa;border:1px solid #dadce0;border-radius:8px;padding:20px;color:#202124;font-size:16px;line-height:1.65;text-align:left;';
+  body.textContent = page.text || '(empty response)';
+  var label = document.createElement('div');
+  label.style.cssText = 'width:100%;color:#5f6368;font-size:13px;margin:24px 0 8px;font-weight:600;';
+  var links = Array.isArray(page.links) ? page.links : [];
+  label.textContent = 'Links (' + links.length + ')';
+  var linkBox = document.createElement('div');
+  linkBox.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:stretch;gap:6px;';
+  links.forEach(function (link) {
+    var button = document.createElement('button');
+    button.className = 'browser-bookmark-btn';
+    button.type = 'button';
+    button.textContent = link.label || link.url;
+    button.title = link.url;
+    button.style.cssText = 'display:block;width:100%;box-sizing:border-box;text-align:left;padding:9px 12px;border:1px solid #dadce0;border-radius:6px;background:#fff;color:#1a73e8;cursor:pointer;font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;';
+    button.onclick = function () { browserNavigateTo(link.url); };
+    linkBox.appendChild(button);
+  });
+  content.appendChild(title); content.appendChild(source); content.appendChild(body); content.appendChild(label); content.appendChild(linkBox); card.appendChild(content);
+  viewport.appendChild(card);
+  _browserUpdateTabTitle(page.title || 'Reader');
+  _browserUpdateStatusBar('Reader view', page.url || '');
+  return true;
+}
+
+function browserTryProxy(url) {
+  var bases = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+    ? [window.location.origin]
+    : [(typeof getActiveUrl === 'function' ? getActiveUrl() : ''), 'http://127.0.0.1:19035', 'http://127.0.0.1:11435'];
+  bases = bases.filter(function (base, i) { return base && bases.indexOf(base) === i; });
+  function attempt(i) {
+    if (i >= bases.length) return Promise.resolve(false);
+    return fetch(bases[i] + '/api/browse', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, extract: true }), signal: AbortSignal.timeout(20000) })
+      .then(function (res) { if (!res.ok) throw new Error('reader HTTP ' + res.status); return res.json(); })
+      .then(function (page) { if (!page || !page.ok) throw new Error(page && page.error || 'reader failed'); _browserRenderReader(page); return true; })
+      .catch(function () { return attempt(i + 1); });
+  }
+  return attempt(0);
+}
+
 function browserNavigateTo(url) {
   if (!url) return;
+  try { url = new URL(url, window.location.href).href; } catch (_) { _browserReaderBlocked(url, 'Invalid URL'); return; }
+  var external = false;
+  try { external = new URL(url).origin !== window.location.origin; } catch (_) { external = true; }
+  if (external) {
+    _browserRecordNavigation(url);
+    _browserUpdateStatusBar('Fetching reader view...', url);
+    browserTryProxy(url).then(function (ok) { if (!ok) _browserReaderBlocked(url, 'The site could not be fetched by the safe embedded reader.'); });
+    return;
+  }
   var viewport = document.getElementById('browserViewport');
   var homePage = document.getElementById('browserHomePage');
   var urlInput = document.getElementById('browserUrlInput');
