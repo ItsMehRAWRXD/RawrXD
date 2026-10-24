@@ -69,7 +69,9 @@ jobs:
           timeout 30 /tmp/deep2_q4k_column_cache_smoke
           g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG -pthread tests/deep2_q4k_repack_benchmark.cpp -o /tmp/deep2_q4k_repack_benchmark
           timeout 30 /tmp/deep2_q4k_repack_benchmark | tee /tmp/deep2_q4k_repack_benchmark.txt
-          grep -q '^Q4K_REPACK_REUSED_COUNT=1          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/top25_parity_matrix_smoke.cpp -o /tmp/top25_parity_matrix_smoke
+          grep -q '^Q4K_REPACK_REUSED_COUNT=1$' /tmp/deep2_q4k_repack_benchmark.txt
+          grep -q '^Q4K_REPACK_BASELINE_COUNT=40$' /tmp/deep2_q4k_repack_benchmark.txt
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/top25_parity_matrix_smoke.cpp -o /tmp/top25_parity_matrix_smoke
           timeout 30 /tmp/top25_parity_matrix_smoke
           g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/deep2_utf8_streaming_smoke.cpp -o /tmp/deep2_utf8_streaming_smoke
           timeout 30 /tmp/deep2_utf8_streaming_smoke
