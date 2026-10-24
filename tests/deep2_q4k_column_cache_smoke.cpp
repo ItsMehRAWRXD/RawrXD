@@ -93,15 +93,19 @@ int main() {
 
     // Eviction is safe for active readers: their immutable snapshot survives
     // removal of its cache entry, and the host working set stays bounded.
-    Deep2::Q4KColumnSliceCache bounded;
     constexpr size_t largeRows = 4096;
+    Deep2::Q4KColumnSliceCache bounded(largeRows * rowBytes);
     std::vector<uint8_t> largeA(largeRows * rowBytes, 0x2a);
     std::vector<uint8_t> largeB(largeRows * rowBytes, 0x4b);
     auto held = bounded.get(largeA.data(), largeA.size(), largeRows, cols, 32);
     assert(held && bounded.cachedBytes() == largeA.size());
     auto next = bounded.get(largeB.data(), largeB.size(), largeRows, cols, 32);
     assert(next);
-    assert(bounded.cachedBytes() == largeA.size() + largeB.size());
+    assert(bounded.cachedBytes() == largeB.size());
+    // Evicted source is repacked if requested again.
+    auto restored = bounded.get(largeA.data(), largeA.size(), largeRows, cols, 32);
+    assert(restored && bounded.rebuilds() == 3);
+    assert(bounded.cachedBytes() == largeA.size());
     assert(held->w0.front() == 0x2a);
     assert(next->w0.front() == 0x4b);
 
