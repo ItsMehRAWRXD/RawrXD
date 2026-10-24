@@ -98,7 +98,7 @@ jobs:
       - name: Generate source-only IDE gap inventory
         run: |
           python3 tools/rawrxd_e2e_source_audit.py
-          python3 tools/rawrxd_no_deps_audit.py --strict
+          python3 tools/rawrxd_no_deps_audit.py
           python3 tools/rawrxd_per_file_source_audit.py --strict-missing
           python3 tools/rawrxd_cmake_source_admission.py
           python3 -m py_compile tools/rawrxd_cmake_source_admission.py tools/rawrxd_per_file_source_audit.py tools/rawrxd_e2e_source_audit.py tools/rawrxd_no_deps_audit.py
@@ -112,6 +112,8 @@ jobs:
             evidence/rawrxd_per_file_source_audit.json
             evidence/rawrxd_cmake_source_admission.json
           if-no-files-found: error
+      - name: Enforce dependency closure after preserving audit evidence
+        run: python3 tools/rawrxd_no_deps_audit.py --strict
 
   native-ide:
     runs-on: windows-2022
