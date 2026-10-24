@@ -402,7 +402,7 @@ bool Deep2Backend::ChatStream(
 
     m_streaming.store(false);
 
-    if (resp.empty() && !stream_failed) {
+    if (resp.empty() && !stream_failed && !m_cancelRequested.load()) {
         stream_failed = true;
         on_err("Deep2 ChatStream: empty response");
     }
@@ -774,6 +774,7 @@ std::string Deep2Backend::makePostRequestStreaming(
                     char* pszOutBuffer = new char[dwSize + 1];
                     ZeroMemory(pszOutBuffer, dwSize + 1);
                     if (WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded)) {
+                        response.append(pszOutBuffer, dwDownloaded);
                         buffer.append(pszOutBuffer, dwDownloaded);
 
                         // Process SSE lines
@@ -784,7 +785,7 @@ std::string Deep2Backend::makePostRequestStreaming(
                             start = nl + 1;
                             if (line.empty() || line == "\r") continue;
                             if (!onChunk(line)) {
-                                // Cancelled
+                                m_cancelRequested.store(true);
                                 break;
                             }
                         }
@@ -797,6 +798,9 @@ std::string Deep2Backend::makePostRequestStreaming(
                     delete[] pszOutBuffer;
                 }
             } while (dwSize > 0 && !m_cancelRequested.load());
+            if (!m_cancelRequested.load() && !buffer.empty()) {
+                onChunk(buffer);
+            }
         }
     }
 
