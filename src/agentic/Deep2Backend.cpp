@@ -225,17 +225,30 @@ InferenceResult Deep2Backend::ChatSync(
 
         std::string text;
         uint64_t ptok = 0, ctok = 0;
+        std::vector<std::pair<std::string, json>> parsed_tool_calls;
 
         if (j.contains("choices") && !j["choices"].empty()) {
             const auto& choice = j["choices"][0];
-            if (choice.contains("message")) {
+            if (choice.contains("message") && choice["message"].is_object()) {
                 const auto& msg = choice["message"];
                 text = msg.value("content", std::string());
-                // Parse tool_calls
-                if (msg.contains("tool_calls")) {
-                    // Store raw tool_calls for caller to parse
+                if (msg.contains("tool_calls") && msg["tool_calls"].is_array()) {
+                    for (const auto& tc : msg["tool_calls"]) {
+                        if (!tc.is_object() || !tc.contains("function") ||
+                            !tc["function"].is_object()) continue;
+                        const auto& fn = tc["function"];
+                        const std::string name = fn.value("name", std::string());
+                        if (name.empty()) continue;
+                        json args = fn.value("arguments", json::object());
+                        if (args.is_string()) {
+                            try { args = json::parse(args.get<std::string>()); }
+                            catch (const json::exception&) { continue; }
+                        }
+                        if (!args.is_object()) continue;
+                        parsed_tool_calls.emplace_back(name, std::move(args));
+                    }
                 }
-            } else if (choice.contains("text")) {
+            } else if (choice.contains("text") && choice["text"].is_string()) {
                 text = choice["text"].get<std::string>();
             }
         }
@@ -255,6 +268,8 @@ InferenceResult Deep2Backend::ChatSync(
         result.completion_tokens = ctok;
         result.tokens_per_sec = tps;
         result.total_duration_ms = elapsed_ms;
+        result.has_tool_calls = !parsed_tool_calls.empty();
+        result.tool_calls = std::move(parsed_tool_calls);
         return result;
 
     } catch (const json::exception& e) {
