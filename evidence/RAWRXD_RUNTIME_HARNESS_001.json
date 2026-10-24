@@ -1,0 +1,40 @@
+{
+  "schema": "RAWRXD_RUNTIME_HARNESS_001",
+  "started_utc": "2026-10-24T01:57:55.7591665Z",
+  "finished_utc": "2026-10-24T01:58:03.9469256Z",
+  "probes": [
+    {
+      "url": "http://127.0.0.1:11435/health",
+      "status": 0,
+      "reachable": false,
+      "body_bytes": 0,
+      "error": "No connection could be made because the target machine actively refused it. (127.0.0.1:11435)"
+    },
+    {
+      "url": "http://127.0.0.1:11435/v1/models",
+      "status": 0,
+      "reachable": false,
+      "body_bytes": 0,
+      "error": "No connection could be made because the target machine actively refused it. (127.0.0.1:11435)"
+    },
+    {
+      "url": "http://127.0.0.1:11436/health",
+      "status": 0,
+      "reachable": false,
+      "body_bytes": 0,
+      "error": "No connection could be made because the target machine actively refused it. (127.0.0.1:11436)"
+    },
+    {
+      "url": "http://127.0.0.1:11436/v1/models",
+      "status": 0,
+      "reachable": false,
+      "body_bytes": 0,
+      "error": "No connection could be made because the target machine actively refused it. (127.0.0.1:11436)"
+    }
+  ],
+  "executable": null,
+  "inference_execution": "NOT_RUN",
+  "gpu_forward": "NOT_RUN",
+  "certification": "NOT_CERTIFIED",
+  "note": "Health/model probes are reachability evidence only; no certification is inferred."
+}
