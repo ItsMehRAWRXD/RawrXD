@@ -9,6 +9,8 @@ int main(){
     m[0][0].status=Status::Implemented;
     assert(CertifiedCount(m)==0);
     m[0][0].status=Status::Certified;
+    assert(CertifiedCount(m)==0); // no receipt: certification MUST NOT count
+    m[0][0].evidence_ref="evidence/verified-test-receipt.json";
     assert(CertifiedCount(m)==1);
     std::cout<<"TOP25_PARITY_MATRIX_SMOKE_PASS\n";
 }
