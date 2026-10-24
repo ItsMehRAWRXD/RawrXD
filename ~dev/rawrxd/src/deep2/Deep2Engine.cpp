@@ -3158,7 +3158,10 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen)
     // two-stick models; the dual-row lane remains the fallback. Fail-
     // closed: under strict mode a resident failure still refuses CPU.
     const char* residentFirstEnv = std::getenv("DEEP2_RESIDENT_FIRST");
-    const bool residentFirst = residentFirstEnv && residentFirstEnv[0] == '1';
+    // Vulkan must execute the forward pass. Prefer the device-resident graph
+    // instead of host forwardLayer() orchestration on dense models.
+    // DEEP2_RESIDENT_FIRST=0 is an explicit diagnostic opt-out.
+    const bool residentFirst = !residentFirstEnv || residentFirstEnv[0] != '0';
     const bool dualRowDense = !forceLayerSplit && !residentFirst && vulkanEnabled_ && vulkanInitialized_ &&
                               vulkanDevices_.size() >= 2 && !modelWeights.isMoE && !modelWeights.useMLA;
 
