@@ -632,6 +632,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     if (ggufPath.empty())
         return false;
 
+    // Drop packed Q4K columns before any model mapping can be replaced.
+    Deep2InvalidateColumnSlices();
     // Tear down aliases before replacing the mapping.
     modelWeights = {};
     ggufResult = {};
@@ -1496,6 +1498,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize)
         return false;
     std::memcpy(copy, weightData, weightSize);
 
+    Deep2InvalidateColumnSlices();
     delete[] reinterpret_cast<uint8_t*>(weights);
     weights = reinterpret_cast<float*>(copy);
     this->weightSize = weightSize;
@@ -1505,6 +1508,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize)
 void Deep2Engine::unloadModel()
 {
     deallocateBuffers();
+    Deep2InvalidateColumnSlices();
     delete[] reinterpret_cast<uint8_t*>(weights);
     weights = nullptr;
     weightSize = 0;
