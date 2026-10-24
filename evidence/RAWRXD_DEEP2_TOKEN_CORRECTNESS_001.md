@@ -50,3 +50,18 @@ extended to Llama-3 markers (`<|eot_id|>`, `<|end_of_text|>`, and header tags).
 This closes the diagnosed single-device multi-token dispatch blocker. Longer
 8/32/128-token parity, independent oracle comparison, and throughput targets
 remain pending and therefore certification remains `NOT_CERTIFIED`.
+
+## Sustained single-GPU ladder
+
+Using the same Llama 3.2 Q2_K model with temperature `0` and top-p `1`:
+
+| Request | Committed | Wall time | Observed TPS | GPU calls | Host fallback |
+|---:|---:|---:|---:|---:|---|
+| 8 | 3 (EOS) | 4.6 s | 0.47 | 392 | none |
+| 32 | 32 | 15.8 s | 3.07 | 1,456 | none |
+| 128 | 128 | 49.8 s | 2.87 | 4,144 | none |
+
+The 32- and 128-token requests completed with finite text, nonzero GPU
+forward calls, and no observed fallback markers. These are execution and
+stability passes only; the throughput target and independent CPU/oracle parity
+remain open. Dual-device execution was not exercised in this receipt.
