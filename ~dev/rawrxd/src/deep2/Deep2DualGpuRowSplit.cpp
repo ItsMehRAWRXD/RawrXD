@@ -187,11 +187,17 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     const size_t rowBytes=(size_t)blocks*QB;
     const size_t row0=(size_t)b0*QB;
     const size_t row1=(size_t)b1*QB;
-    if(wt.sizeBytes<(size_t)wt.rows*rowBytes) return nullptr;
+    // Check multiplication before forming a potentially overflowing byte count.
+    if ((size_t)wt.rows > SIZE_MAX / rowBytes ||
+        wt.sizeBytes < (size_t)wt.rows * rowBytes) return nullptr;
 
+    // Avoid unbounded retention of packed copies across model reloads.
     std::lock_guard<std::mutex> g(mu);
+    if (cache.size() > 64 && cache.find(wt.data) == cache.end()) cache.clear();
     auto it=cache.find(wt.data);
-    if(it!=cache.end() && it->second.boundaryBlocks==b0)
+    if(it!=cache.end() && it->second.boundaryBlocks==b0 &&
+       it->second.s.w0.size()==(size_t)wt.rows*row0 &&
+       it->second.s.w1.size()==(size_t)wt.rows*row1)
         return &it->second.s;
 
     // Rebuild under drift: free the old slice pair BEFORE constructing the
