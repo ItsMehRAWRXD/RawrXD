@@ -97,7 +97,8 @@ public:
         }
         if (!uploaded.deviceHandle || uploaded.bytes < bytes.size())
             throw std::runtime_error("upload reported success with invalid GPU binding");
-        resident_[key] = uploaded;
+        const auto inserted = resident_.emplace(key, uploaded).second;
+        if (!inserted) throw std::logic_error("REAP resident binding changed during upload");
         ++stats_.bindingUses;
         return execute_(uploaded, layer, expert);
     }
