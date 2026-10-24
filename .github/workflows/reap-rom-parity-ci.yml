@@ -150,5 +150,5 @@ jobs:
         with:
           name: rawrxd-native-ide-build
           path: |
-            build_native_ide_ci/**/Release/RawrXD-Win32IDE-Native.exe
+            build_native_ide_ci/**/RawrXD-Win32IDE-Native.exe
           if-no-files-found: error
