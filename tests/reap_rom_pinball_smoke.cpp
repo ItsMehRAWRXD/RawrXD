@@ -27,5 +27,13 @@ int main() {
     assert(b.Run(2,7));
     assert(reads==1 && uploads==1 && executions==2);
     assert(b.Stats().diskBytes==4 && b.Stats().rejected==1);
+    bool replacementRejected=false;
+    try { b.BindResident(2,7,Binding{&fakeGpu,4,2}); }
+    catch(const std::logic_error&) { replacementRejected=true; }
+    assert(replacementRejected);
+    b.ForgetAfterGpuIdle(2,7); // Test harness has no asynchronous GPU work.
+    b.BindResident(2,7,Binding{&fakeGpu,4,3});
+    assert(b.Run(2,7));
+    assert(reads==1 && uploads==1 && executions==3);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
