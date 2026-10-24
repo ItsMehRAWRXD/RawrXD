@@ -37,6 +37,16 @@ Receipts and raw stderr logs:
 - `deep2_llama_gpu_budget4g.log.err` — multi-token failure at `ffn_gate_up`.
 - `deep2_tinyllama_trace.log.err` — TinyLlama template and token IDs.
 
-The remaining blocker is a real multi-token GPU state/FFN dispatch failure, not
-service connectivity or prompt double-formatting. No certification claim is
-made from the component or one-token result.
+## Follow-up after `DEEP2_GPU_FFN_MULTITOKEN_001`
+
+The first failing trace was identified as an admission-contract mismatch:
+BIND16 required dual-device proof on a single-device run (`g1=0`). BIND16 and
+BATCH2 are now gated on `vulkanDevices_.size() > 1`; single-device runs use the
+ordinary packed GEMV path. The controlled two-token run then completed on GPU
+with `FWD_G0=336` and `GPU_FORWARD_CALLS=364`, with no host fallback or BIND16
+failure. An eight-token run also completed; control-token filtering was then
+extended to Llama-3 markers (`<|eot_id|>`, `<|end_of_text|>`, and header tags).
+
+This closes the diagnosed single-device multi-token dispatch blocker. Longer
+8/32/128-token parity, independent oracle comparison, and throughput targets
+remain pending and therefore certification remains `NOT_CERTIFIED`.

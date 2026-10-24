@@ -310,6 +310,9 @@ static bool isChatBoundary(const std::string& piece) {
     return piece.find("<|user|>") != std::string::npos ||
            piece.find("<|assistant|>") != std::string::npos ||
            piece.find("<|system|>") != std::string::npos ||
+           piece.find("<|eot_id|>") != std::string::npos ||
+           piece.find("<|end_of_text|>") != std::string::npos ||
+           piece.find("<|start_header_id|>") != std::string::npos ||
            piece.find("<|endoftext|>") != std::string::npos ||
            piece.find("</s>") != std::string::npos;
 }

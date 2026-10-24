@@ -214,6 +214,20 @@ bool Deep2Engine::forwardLayerGpuResident(
         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
     const bool fuse = !prefetch;
+    const bool traceFfn = std::getenv("DEEP2_GPU_FFN_TRACE") &&
+                          std::getenv("DEEP2_GPU_FFN_TRACE")[0] == '1';
+    if (traceFfn && layer == 0) {
+        std::fprintf(stderr,
+            "[GPU_FFN_TRACE] token=%llu slot=%u prefetch=%d stream=%d "
+            "gate=%s type=%d rows=%u cols=%u bytes=%zu up=%s type=%d down=%s type=%d hits=%llu submits=%llu\\n",
+            static_cast<unsigned long long>(ssvkBind16_.token.token_ordinal),
+            slot, prefetch ? 1 : 0, vc->WeightStreamActive() ? 1 : 0,
+            lw.wGate.name.c_str(), lw.wGate.type, lw.wGate.rows, lw.wGate.cols,
+            lw.wGate.sizeBytes, lw.wUp.name.c_str(), lw.wUp.type,
+            lw.wDown.name.c_str(), lw.wDown.type,
+            static_cast<unsigned long long>(vc->GemvWeightHits()),
+            static_cast<unsigned long long>(vc->LayerSubmits()));
+    }
     if (fuse && !vc->BeginFusedLayer()) {
         std::fprintf(stderr, "GPU_RESIDENT_BEGIN_FUSE_FAIL layer=%u slot=%u\n",
                      layer, slot);
@@ -260,12 +274,20 @@ bool Deep2Engine::forwardLayerGpuResident(
                 const bool deviceOnly =
                     (dualStickDeviceOnlyMask_.load(std::memory_order_acquire)
                      & (1u << slot)) != 0;
+                // BIND16/BATCH2 are dual-device product contracts.  On a
+                // single admitted GPU their proof necessarily reports g1=0
+                // and rejects the operation on token 1, even though the
+                // ordinary packed GEMV path is valid.  Keep the strict
+                // multi-GPU route, but do not force it on single-device runs.
+                const bool multiGpuProduct = vulkanDevices_.size() > 1;
                 const bool bind16Tok =
+                    multiGpuProduct &&
                     !deviceOnly &&
                     ssvkBind16_.run != nullptr &&
                     ssvkBind16_.token.token_ordinal > 0 &&
                     wt.data && wt.sizeBytes;
                 const bool batch2Tok =
+                    multiGpuProduct &&
                     !deviceOnly && !bind16Tok && ssVkProductBind_.bound() &&
                     ssVkProductBind_.tokenProof().tokenOrdinal > 0 &&
                     wt.data && wt.sizeBytes;
