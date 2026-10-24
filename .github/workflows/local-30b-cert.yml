@@ -8,6 +8,29 @@ on:
   pull_request:
 
 jobs:
+  native-elf64-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build native ELF64 emitter and execute emitted binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/native_elf64_emitter_smoke.cpp -o /tmp/native_elf64_emitter_smoke
+          /tmp/native_elf64_emitter_smoke /tmp/rawrxd_native_elf64
+          chmod +x /tmp/rawrxd_native_elf64
+          set +e
+          /tmp/rawrxd_native_elf64
+          status=$?
+          set -e
+          if [ "$status" -ne 42 ]; then
+            echo "Native ELF64 expected exit 42, got $status"
+            exit 1
+          fi
+          file /tmp/rawrxd_native_elf64
+
   windows-native:
     runs-on: windows-2022
     timeout-minutes: 45
