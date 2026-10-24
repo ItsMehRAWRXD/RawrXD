@@ -1,0 +1,130 @@
+name: Native toolchain E2E and source closure
+
+on:
+  push:
+    branches:
+      - preservation/source-baseline-20261021
+      - audit/native-linker-cert-20261024
+    paths:
+      - 'toolchain/from_scratch/phase2_linker/**'
+      - '.github/workflows/native-toolchain-e2e.yml'
+      - 'src/snapshot/**'
+      - 'CMakeLists.txt'
+  pull_request:
+    branches:
+      - preservation/source-baseline-20261021
+    paths:
+      - 'toolchain/from_scratch/phase2_linker/**'
+      - '.github/workflows/native-toolchain-e2e.yml'
+      - 'src/snapshot/**'
+      - 'CMakeLists.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-toolchain-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  first-party-linker:
+    name: COFF to PE E2E (${{ matrix.os }} / ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            compiler: msvc-x64
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure linker (Windows/MSVC x64)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >
+          cmake -S toolchain/from_scratch/phase2_linker
+          -B linker-cert-build
+          -G "Visual Studio 17 2022"
+          -A x64
+
+      - name: Configure linker (Linux/GCC or Clang)
+        if: runner.os == 'Linux'
+        shell: bash
+        env:
+          CC: ${{ matrix.compiler == 'clang' && 'clang' || 'gcc' }}
+        run: cmake -S toolchain/from_scratch/phase2_linker -B linker-cert-build -G "Unix Makefiles"
+
+      - name: Compile native linker and COFF fixture generator
+        run: cmake --build linker-cert-build --config Release --parallel 2
+
+      - name: Portable PE32+ emission and Windows loader certification
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >
+          python toolchain/from_scratch/phase2_linker/tests/run_portable_cert.py
+          --linker linker-cert-build/Release/rawrxd_link.exe
+          --fixtures linker-cert-build/tests/Release/make_fixtures.exe
+          --workdir linker-cert-output
+          --report linker-cert-output/cert.json
+
+      - name: Portable PE32+ emission certification (no Windows execution)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python3 toolchain/from_scratch/phase2_linker/tests/run_portable_cert.py \
+            --linker linker-cert-build/rawrxd_link \
+            --fixtures linker-cert-build/tests/make_fixtures \
+            --workdir linker-cert-output \
+            --report linker-cert-output/cert.json
+
+      - name: Existing PowerShell Windows-loader regression suite
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ctest --test-dir linker-cert-build -C Release --output-on-failure
+
+      - name: Upload certification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-toolchain-${{ matrix.os }}-${{ matrix.compiler }}
+          path: linker-cert-output/cert.json
+          if-no-files-found: warn
+
+  source-closure:
+    name: Canonical source closure (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required root CMake inputs are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for file in \
+            src/snapshot/SnapshotStorage.cpp \
+            src/snapshot/SnapshotJournal.cpp \
+            src/snapshot/SnapshotEngine.cpp \
+            src/snapshot/SnapshotCLI.cpp \
+            src/snapshot/SnapshotCLIMain.cpp \
+            src/agent/self_patch.cpp \
+            src/agent/headless_main.cpp \
+            src/win32app/Win32IDE.cpp \
+            src/rawrxd_cli_v2.cpp \
+            src/deep2/Deep2Engine.cpp; do
+            if [[ ! -f "$file" ]]; then
+              echo "::error file=$file::Missing mandatory native source"
+              missing=$((missing + 1))
+            fi
+          done
+          echo "MISSING_REQUIRED_SOURCES=$missing" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$missing" -ne 0 ]]; then
+            echo "::error::Source closure failed. Restore real sources, never stub."
+            exit 1
+          fi
