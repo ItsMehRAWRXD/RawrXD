@@ -18,7 +18,8 @@ struct Key {
 };
 struct KeyHash {
     size_t operator()(Key k) const noexcept {
-        return (static_cast<size_t>(k.layer) << 32) ^ k.expert;
+        const uint64_t packed = (static_cast<uint64_t>(k.layer) << 32) | k.expert;
+        return std::hash<uint64_t>{}(packed);
     }
 };
 struct Slice {
