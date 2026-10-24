@@ -8,6 +8,27 @@ on:
   pull_request:
 
 jobs:
+  source-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check tracked files and dependency indicators
+        run: |
+          python3 tools/rawrxd_per_file_source_audit.py --strict-missing
+          python3 tools/rawrxd_no_deps_audit.py
+          python3 tools/rawrxd_e2e_source_audit.py
+          python3 tools/rawrxd_cmake_source_admission.py
+      - name: Preserve audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-audit-results
+          path: evidence/rawrxd_*audit*.json
+          if-no-files-found: warn
+
   native-elf64-smoke:
     runs-on: ubuntu-24.04
     steps:
