@@ -46,5 +46,13 @@ int main() {
     } catch(const std::invalid_argument&) { budgetRejected=true; }
     assert(budgetRejected);
     assert(reads==1 && uploads==1);
+    b.ForgetAfterGpuIdle(2,7);
+    bool undersizedRejected=false;
+    try { b.BindResident(2,7,Binding{&fakeGpu,3,4}); }
+    catch(const std::invalid_argument&) { undersizedRejected=true; }
+    assert(undersizedRejected);
+    b.BindResident(2,7,Binding{&fakeGpu,4,5});
+    assert(b.Run(2,7));
+    assert(reads==1 && uploads==1 && executions==4);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
