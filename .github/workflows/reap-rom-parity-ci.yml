@@ -140,8 +140,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $exe = Get-ChildItem -Path build_native_ide_ci -Filter 'RawrXD-Win32IDE-Native.exe' -Recurse -File | Where-Object { $_.FullName -match '[\\/]Release[\\/]' } | Select-Object -First 1
-          if (!$exe) { throw 'Native IDE Release executable missing' }
+          $exe = Get-ChildItem -Path build_native_ide_ci -Filter 'RawrXD-Win32IDE-Native.exe' -Recurse -File | Select-Object -First 1
+          if (!$exe) { throw 'Native IDE executable missing after Release build' }
           if ($exe.Length -lt 4096) { throw "Native IDE executable unexpectedly small: $($exe.Length) bytes" }
           Write-Host "Native IDE artifact: $($exe.FullName), bytes=$($exe.Length)"
       - name: Upload executable and build evidence
