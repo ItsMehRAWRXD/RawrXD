@@ -141,9 +141,17 @@ std::vector<std::string> Deep2Backend::ListModels() {
 
     try {
         json j = json::parse(resp);
-        if (j.contains("models") && j["models"].is_array()) {
-            for (const auto& m : j["models"]) {
-                models.push_back(m.value("name", m.value("id", std::string())));
+        const json* entries = nullptr;
+        if (j.contains("data") && j["data"].is_array()) {
+            entries = &j["data"]; // OpenAI-compatible /v1/models
+        } else if (j.contains("models") && j["models"].is_array()) {
+            entries = &j["models"]; // Native Deep2 model listing
+        }
+        if (entries) {
+            for (const auto& m : *entries) {
+                if (!m.is_object()) continue;
+                const std::string id = m.value("id", m.value("name", std::string()));
+                if (!id.empty()) models.push_back(id);
             }
         }
     } catch (const json::exception&) {}
