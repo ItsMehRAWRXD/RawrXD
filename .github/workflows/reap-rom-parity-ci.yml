@@ -44,19 +44,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile and execute dependency-free smoke tests (MSVC)
-        shell: cmd
+        shell: pwsh
         run: |
-          for /f "usebackq delims=" %%V in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set "VSROOT=%%V"
-          if not defined VSROOT exit /b 1
-          call "%VSROOT%\VC\Auxiliary\Build\vcvars64.bat"
-          if errorlevel 1 exit /b 1
-          if not exist build_reap mkdir build_reap
-          for %%F in (reap_rom_pinball_smoke reap_ternary_trace_smoke reap_projection_bridge_smoke reap_route_mask_smoke native_lsp_framing_smoke top25_parity_matrix_smoke) do (
-            cl /nologo /std:c++20 /EHsc /W4 /WX /U NDEBUG /Fe:build_reap\%%F.exe tests\%%F.cpp
-            if errorlevel 1 exit /b 1
-            build_reap\%%F.exe
-            if errorlevel 1 exit /b 1
-          )
+          $ErrorActionPreference = 'Stop'
+          $vswhere = Join-Path "${env:ProgramFiles(x86)}" 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (!(Test-Path $vswhere)) { throw 'vswhere.exe missing' }
+          $vsroot = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or !$vsroot) { throw 'MSVC toolchain not found' }
+          $vcvars = Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if (!(Test-Path $vcvars)) { throw 'vcvars64.bat missing' }
+          New-Item -ItemType Directory -Force build_reap | Out-Null
+          $names = @('reap_rom_pinball_smoke', 'reap_ternary_trace_smoke', 'reap_projection_bridge_smoke', 'reap_route_mask_smoke', 'native_lsp_framing_smoke', 'top25_parity_matrix_smoke')
+          foreach ($name in $names) {
+            $cmdline = 'call "' + $vcvars + '" && cl /nologo /std:c++20 /EHsc /W4 /WX /UNDEBUG /Fe:build_reap\\' + $name + '.exe tests\\' + $name + '.cpp && build_reap\\' + $name + '.exe'
+            & cmd.exe /d /s /c $cmdline
+            if ($LASTEXITCODE -ne 0) { throw "MSVC smoke failed: $name (exit $LASTEXITCODE)" }
+          }
 
   native-headless:
     runs-on: windows-2022
