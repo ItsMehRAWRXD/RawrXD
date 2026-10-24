@@ -42,6 +42,8 @@ public:
                         auto value=line.substr(prefix.size());
                         while(!value.empty() && value.front()==' ') value.remove_prefix(1);
                         if(value.empty()) throw std::invalid_argument("missing Content-Length");
+                        if(value.front()==\u0027+\u0027 || value.front()==\u0027-\u0027)
+                            throw std::invalid_argument("signed Content-Length");
                         size_t parsed=0;
                         auto result=std::from_chars(value.data(),value.data()+value.size(),parsed);
                         if(result.ec!=std::errc{} || result.ptr!=value.data()+value.size())
