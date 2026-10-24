@@ -106,6 +106,13 @@ int main() {
     auto restored = bounded.get(largeA.data(), largeA.size(), largeRows, cols, 32);
     assert(restored && bounded.rebuilds() == 3);
     assert(bounded.cachedBytes() == largeA.size());
+    // No retained data if the configured budget is smaller than one tensor.
+    Deep2::Q4KColumnSliceCache uncached(largeA.size() - 1);
+    auto transient = uncached.get(largeA.data(), largeA.size(), largeRows, cols, 32);
+    assert(transient && uncached.cachedBytes() == 0);
+    assert(uncached.rebuilds() == 1);
+    assert(uncached.get(largeA.data(), largeA.size(), largeRows, cols, 32));
+    assert(uncached.rebuilds() == 2);
     assert(held->w0.front() == 0x2a);
     assert(next->w0.front() == 0x4b);
 
