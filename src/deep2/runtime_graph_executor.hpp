@@ -397,6 +397,11 @@ private:
       // an existing kernel, it is the missing primitive.
       float* WeightData(int32_t slot, size_t& floats_out);
 
+      // Reset all per-block recurrent/GDN/KV state. Called from destructor,
+      // Bind(), and on session teardown. Fail-closed: never leaves stale state
+      // behind for a newly bound model.
+      void ResetState();
+
     bool bound_ = false;
     std::string last_error_;
     // Graph operands that resolveIn could not find in the arena. resolveIn is
@@ -439,6 +444,10 @@ private:
       // ((kernel-1) samples per channel) across tokens.
       std::vector<std::vector<float> > ssm_state_;
       std::vector<std::vector<float> > ssm_conv_;
+      // Per-block flag: set when block `i` has an active GDN device state key
+      // registered with GetDeep2VulkanCompute(). Used by ResetState() to tear
+      // down device state before rebinding.
+      std::vector<uint8_t> gdn_gpu_active_;
       // SSM parameters are immutable after Bind. Decode them once per block
       // instead of re-running DequantPrefix for every generated token.
       struct SsmWeightCache {

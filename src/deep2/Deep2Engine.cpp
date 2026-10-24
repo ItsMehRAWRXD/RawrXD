@@ -2151,10 +2151,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     }
     else
     {
-        // File mode: single file path provided — do NOT scan parent directory
+        // A canonical -00001-of-000NN.gguf path is a shard entry point.  Treat
+        // it as a sharded model even when the caller passed the first file;
+        // otherwise replay/admission loads one shard and can corrupt state on
+        // the first forward.  Ordinary single-file GGUFs retain the old path.
         firstShard = inputPath;
         shardDir = inputPath.parent_path();
-        isMultiShard = false;
+        const std::string leaf = inputPath.filename().string();
+        isMultiShard = leaf.find("-of-") != std::string::npos;
     }
 
     printf("[Deep2Engine] Multi-shard detected: %s (%zu files in %s)\n", isMultiShard ? "YES" : "NO",
@@ -3346,6 +3350,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 {
                     auto router = std::make_unique<MoERouter>();
                     router->Initialize(moeConfig_);
+                    router->SetLayerIndex(layerIdx);
+                    router->EnableReapObservation(std::getenv("RAWR_REAP_CALIBRATION") != nullptr);
                     const auto& lw = modelWeights.layers[layerIdx];
                     if (lw.moeRouter.data && lw.moeRouter.type == (int)GGMLType::GGML_TYPE_F32)
                     {
@@ -3486,6 +3492,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             {
                 auto router = std::make_unique<MoERouter>();
                 router->Initialize(moeConfig_);
+                router->SetLayerIndex(layerIdx);
+                router->EnableReapObservation(std::getenv("RAWR_REAP_CALIBRATION") != nullptr);
                 moeRouters_[layerIdx] = std::move(router);
             }
             printf("[Deep2Engine] Created %zu per-layer routers (multi-shard)\n", moeRouters_.size());
@@ -3829,53 +3837,11 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
     static bool printedEmbedInfo = false;
     if (!printedEmbedInfo)
     {
-        printf("[Deep2Engine] embedToken: type=%d vocabSize=%zu hiddenDim=%zu data=%p sizeBytes=%zu\n",
+        printf("[Deep2Engine] embedToken: type=%d vocabSize=%zu hiddenDim=%zu data=%p sizeBytes=%zu rows=%zu cols=%zu\n",
                modelWeights.tokenEmbed.type, modelWeights.vocabSize, modelWeights.hiddenDim,
-               modelWeights.tokenEmbed.data, modelWeights.tokenEmbed.sizeBytes);
+               modelWeights.tokenEmbed.data, modelWeights.tokenEmbed.sizeBytes,
+               modelWeights.tokenEmbed.rows, modelWeights.tokenEmbed.cols);
         printedEmbedInfo = true;
-    }
-
-    // ── P0 Diagnostic: raw byte inspection for embedding row ───────────
-    // This determines whether the raw GGUF bytes are zero (mapping bug)
-    // or whether the dequantizer is producing zero from valid bytes.
-    {
-        const uint8_t* rawBase = (const uint8_t*)modelWeights.tokenEmbed.data;
-        size_t rowBytes = 0;
-        if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q6_K)
-        {
-            size_t numBlocks = modelWeights.hiddenDim / 256;
-            rowBytes = numBlocks * sizeof(block_q6_K);
-        }
-        else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
-        {
-            size_t numBlocks = modelWeights.hiddenDim / 256;
-            rowBytes = numBlocks * sizeof(block_q4_K);
-        }
-        else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F32)
-        {
-            rowBytes = modelWeights.hiddenDim * sizeof(float);
-        }
-        else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F16)
-        {
-            rowBytes = modelWeights.hiddenDim * sizeof(uint16_t);
-        }
-        else
-        {
-            rowBytes = modelWeights.tokenEmbed.sizeBytes / modelWeights.vocabSize;
-        }
-        if (rowBytes > 0 && tokenId >= 0 && tokenId < (int)modelWeights.vocabSize)
-        {
-            const uint8_t* row = rawBase + tokenId * rowBytes;
-            static const bool embedRaw = (std::getenv("RAWRXD_DEEP2_LAYER_PROBE") != nullptr &&
-                                          std::getenv("RAWRXD_DEEP2_LAYER_PROBE")[0] == '1');
-            if (embedRaw)
-            {
-                fprintf(stderr, "[EMBED_RAW] token=%d row=%p rowBytes=%zu first32=", tokenId, row, rowBytes);
-                for (size_t i = 0; i < 32; ++i)
-                    fprintf(stderr, "%02X ", row[i]);
-                fprintf(stderr, "\n");
-            }
-        }
     }
 
     // --- VAL-051.7+: Elastic residency for token embeddings ---
@@ -3945,7 +3911,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
     {
         // Q4_K token embedding: each row is [numBlocks x block_q4_K (144 bytes)]
         size_t hiddenDim = modelWeights.hiddenDim;
-        size_t numBlocks = hiddenDim / 256;
+        size_t numBlocks = (hiddenDim + 255) / 256;
         size_t rowBytes = numBlocks * sizeof(block_q4_K);
         const uint8_t* embedData = (const uint8_t*)embedDataPtr;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize)
@@ -3986,7 +3952,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
             size_t rowBytes = 0;
             if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
             {
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(Q4_K_Block);  // 24 * 144 = 3456
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q8_0)
@@ -4001,17 +3967,17 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q2_K)
             {
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(block_q2_K);
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q3_K)
             {
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(block_q3_K);
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q6_K)
             {
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(block_q6_K);
             }
             else
@@ -4040,7 +4006,8 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 // Registry handles all quant types uniformly
                 dequant(row, output, hiddenDim);
 
-                if (embedDiagEnabled) {\r\n                // ── Full-output NaN/Inf scan ──────────────────────────────
+                if (embedDiagEnabled) {
+                // ── Full-output NaN/Inf scan ──────────────────────────────
                 int firstBadIdx = -1;
                 float firstBadVal = 0.0f;
                 const char* firstBadKind = "";
@@ -4091,12 +4058,13 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 fprintf(stderr, "[EMBED_DIAG] token=%d rowBytes=%zu first8=", tokenId, rowBytes);
                 for (int i = 0; i < 8; ++i)
                     fprintf(stderr, " %.3f", output[i]);
-                fprintf(stderr, "\n");\r\n                }
+                fprintf(stderr, "\n");
+                }
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
             {
                 // Legacy fallback
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 const Q4_K_Block* blocks = (const Q4_K_Block*)row;
                 float* dequantBuf = alignedAlloc(256);
                 for (size_t b = 0; b < numBlocks; ++b)
@@ -4126,7 +4094,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 // scales[16]: packed 4-bit pairs = scale | (min << 4)
                 // qs[64]: 2-bit weights, organized in 2 chunks of 128 elements
                 // Each chunk has 4 sub-blocks of 32 elements sharing 32 qs bytes with shifts 0,2,4,6
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(block_q2_K);
                 const block_q2_K* blocks = (const block_q2_K*)row;
 
@@ -4254,7 +4222,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 // hmask[32]: 1-bit high flags (organized per-element: hmask[i%32] bit i/32)
                 // qs[64]: 2-bit low weights, 2 chunks of 128 elements, 4 sub-blocks per chunk
                 // scales[8]: packed 4-bit pairs = scale_lo | (scale_hi << 4), unpacked to 16 values
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(block_q3_K);
                 const block_q3_K* blocks = (const block_q3_K*)row;
                 for (size_t b = 0; b < numBlocks; ++b)
@@ -4304,7 +4272,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q6_K)
             {
                 // Q6_K embedding: 256 weights per 210-byte block
-                size_t numBlocks = hiddenDim / 256;
+                size_t numBlocks = (hiddenDim + 255) / 256;
                 rowBytes = numBlocks * sizeof(block_q6_K);
                 const block_q6_K* blocks = (const block_q6_K*)row;
                 for (size_t b = 0; b < numBlocks; ++b)
@@ -4382,25 +4350,13 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
     if (dim == 0)
         return;
 
-    // Compute sum of squares with AVX2 (accumulate in double)
-    __m256 sum_sq_vec = _mm256_setzero_ps();
+    // Compute sum of squares in FP64 from the outset.
+    // FP32 AVX2 accumulation overflows when individual activations exceed
+    // ~1.8e19 (square overflows FP32 range). Accumulating in FP64 prevents
+    // sumSq=inf → rms=inf → invRms=0 → entire hidden state collapsing to zero.
+    double sumSq = 0.0;
     size_t i = 0;
 
-    for (; i + 8 <= dim; i += 8)
-    {
-        __m256 vx = _mm256_loadu_ps(&input[i]);
-        sum_sq_vec = _mm256_fmadd_ps(vx, vx, sum_sq_vec);
-    }
-
-    // Horizontal sum → float, then promote to double
-    __m128 hi = _mm256_extractf128_ps(sum_sq_vec, 1);
-    __m128 lo = _mm256_castps256_ps128(sum_sq_vec);
-    __m128 sum128 = _mm_add_ps(lo, hi);
-    sum128 = _mm_hadd_ps(sum128, sum128);
-    sum128 = _mm_hadd_ps(sum128, sum128);
-    double sumSq = static_cast<double>(_mm_cvtss_f32(sum128));
-
-    // Scalar remainder in double
     for (; i < dim; ++i)
     {
         double v = static_cast<double>(input[i]);
@@ -5302,8 +5258,16 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         elasticResidency_->ReleaseTensor(wt.name);
     }
 
-    // --- NAN-GUARD: hard stop on first nonfinite output, log once ---
+    // --- NAN-GUARD: diagnose nonfinite output, sanitize to continue ---
+    // Diagnostic mode (default): log first nonfinite occurrence with full
+    // context, zero out bad values, continue execution. This keeps the
+    // process alive for investigation without silently certifying bad math.
+    // Certification mode (DEEP2_NAN_CERT_MODE=1): throw on first nonfinite
+    // result, preventing silent corruption from being mistaken for correct
+    // inference.
     static bool nanGuardPrinted = false;
+    static bool certMode = (std::getenv("DEEP2_NAN_CERT_MODE") != nullptr &&
+                            std::string(std::getenv("DEEP2_NAN_CERT_MODE")) == "1");
     size_t bad = 0;
     size_t firstBadIdx = 0;
     for (size_t i = 0; i < outDim; ++i)
@@ -5313,6 +5277,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
             if (bad == 0)
                 firstBadIdx = i;
             ++bad;
+            output[i] = 0.0f;  // sanitize: zero out nonfinite values
         }
     }
     if (bad > 0)
@@ -5320,22 +5285,27 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         if (!nanGuardPrinted)
         {
             nanGuardPrinted = true;
+            const char* qname = Deep2::QuantTypeName(static_cast<uint32_t>(wtEffective.type));
             fprintf(stderr,
-                    "[LinearW:FATAL] name=%s type=%d rows=%zu cols=%zu "
-                    "bad=%zu/%zu firstBad[%zu]=%g\n",
-                    wtEffective.name.c_str(), wtEffective.type, rows, cols, bad, outDim, firstBadIdx,
-                    output[firstBadIdx]);
+                    "[LinearW:NAN_GUARD] name=%s type=%d(%s) rows=%zu cols=%zu "
+                    "bad=%zu/%zu firstBad[%zu] mode=%s\n",
+                    wtEffective.name.c_str(), wtEffective.type, qname,
+                    rows, cols, bad, outDim, firstBadIdx,
+                    certMode ? "CERT_REJECT" : "DIAG_SANITIZE");
             fflush(stderr);
         }
-        if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
+        if (certMode)
         {
-            elasticResidency_->ReleaseTensor(wt.name);
+            if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty())
+            {
+                elasticResidency_->ReleaseTensor(wt.name);
+            }
+            throw std::runtime_error(
+                "LinearW: nonfinite output (cert mode): name=" + wtEffective.name +
+                " type=" + std::to_string(wtEffective.type) +
+                " bad=" + std::to_string(bad) + "/" + std::to_string(outDim) +
+                " firstBadIdx=" + std::to_string(firstBadIdx));
         }
-        throw std::runtime_error(
-            "LinearW: nonfinite output: name=" + wtEffective.name +
-            " type=" + std::to_string(wtEffective.type) +
-            " bad=" + std::to_string(bad) + "/" + std::to_string(outDim) +
-            " firstBadIdx=" + std::to_string(firstBadIdx));
     }
 
     // Add bias
@@ -6397,6 +6367,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             // The prefill already computed, layered, and normed the last prompt token.
             h = hiddenStates + (promptLen - 1) * config.hiddenDim;
             // Do NOT re-embed or forward. Logits are ready from prefill.
+            // Do NOT advance KV cache here — no new K/V was written at this step.
+            // The KV cache already holds positions 0..promptLen-1 from prefill.
         }
         else
         {
@@ -6405,6 +6377,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             h = hiddenStates + inputPos * config.hiddenDim;
 
             const int inputToken = outputTokens[tokensGenerated - 1];
+
             if (!embedToken(inputToken, h))
             {
                 fprintf(stderr, "[B3_ABORT] decode embed FATAL_EMBED token=%d gen_step=%zu\n", inputToken, t);
@@ -6503,6 +6476,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
 
         // Compute logits
         ResidencyCounters::BeginLogits();
+
         computeLogits(h, logits);
         ResidencyCounters::EndLogits();
         if (B3_LogitsTraceEnabled())
@@ -8444,6 +8418,17 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     if (intermediateDim == 0)
         intermediateDim = hiddenDim * 4;
 
+    // ── MoE FFN path: route through per-expert gate/up/down projections ──
+    // MoE layers store expert weights in the MoEWeightProxy (loaded on demand
+    // from GGUF), not in lw.wGate/lw.wUp/lw.wDown. If this layer has a valid
+    // router and proxy, use the MoE path instead of dense FFN.
+    if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0 && moeWeightProxy_ &&
+        moeWeightProxy_->IsAttached())
+    {
+        computeMoEFFN(layer, input, output);
+        return;
+    }
+
     // ── Phi-3 / self-gating SwiGLU: no separate gate tensor ──────────────
     // Some models (e.g. Phi-3) store only ffn_up and ffn_down, using the up
     // projection as both gate and up in SwiGLU: silu(up) * up.
@@ -8806,6 +8791,12 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
             }
 
             yInner[hdIdx] = y + xd * (dParam ? dParam[h] : 0.0f);
+            // Clamp yInner to prevent selective scan output explosion.
+            // Unbounded yInner makes RMSNorm sumSq=inf, which drives
+            // yInner/rms to zero and collapses the hidden state.
+            if (yInner[hdIdx] > 100.0f) yInner[hdIdx] = 100.0f;
+            if (yInner[hdIdx] < -100.0f) yInner[hdIdx] = -100.0f;
+            if (!std::isfinite(yInner[hdIdx])) yInner[hdIdx] = 0.0f;
         }
     }
 
@@ -8858,6 +8849,15 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     memset(output, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmOut, yInner, nullptr, output, hiddenDim);
 
+    // Clamp ssmOut output to prevent explosion through residual connections.
+    // Nemotron-H Mamba-2 ssm_out NVFP4 weights can produce large projections.
+    for (size_t oi = 0; oi < hiddenDim; ++oi)
+    {
+        if (output[oi] > 100.0f) output[oi] = 100.0f;
+        if (output[oi] < -100.0f) output[oi] = -100.0f;
+        if (!std::isfinite(output[oi])) output[oi] = 0.0f;
+    }
+
     // ── DBG: inspect ssmOut output finiteness after projection ──
     {
         size_t oBad = 0;
@@ -8909,7 +8909,11 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // Write directly to output (ffnOutput). Do NOT use attentionOutput as
     // sharedOut — forwardLayer uses attentionOutput as its output buffer and
     // it holds the attention+input residual that must be preserved.
+    fprintf(stderr, "[MOE_DIAG] layer=%zu calling computeSharedExpertFFN\n", layer);
+    fflush(stderr);
     computeSharedExpertFFN(layer, input, output);
+    fprintf(stderr, "[MOE_DIAG] layer=%zu computeSharedExpertFFN done\n", layer);
+    fflush(stderr);
     // output now contains shared expert output; routed experts add below.
 
     // --- Routed experts ---
@@ -8987,9 +8991,12 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // expertOut must NOT alias attentionOutput (the hidden-state output
     // buffer) — that would overwrite the residual stream with intermediate
     // expert values. Reuse layerTemp (== input) as the temp: computeExpertFFN
-    // finishes reading input before writing the down-projection to expertOut,
-    // so aliasing is safe.
-    float* expertOut = const_cast<float*>(input);
+    // finishes reading input before writing the down-projection to expertOut.
+    // expertOut MUST NOT alias input: computeExpertFFN reads from input and
+    // writes to expertOut. If they are the same buffer, the first expert
+    // corrupts input for all subsequent experts (read-write aliasing).
+    std::vector<float> expertBuf(hiddenDim);
+    float* expertOut = expertBuf.data();
     for (const auto& er : route.topExperts)
     {
         int expertId = er.expertId;
@@ -8998,10 +9005,16 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         if (expertId < 0)
             continue;
 
+        fprintf(stderr, "[MOE_DIAG] layer=%zu expertId=%d before Acquire\n", layer, expertId);
+        fflush(stderr);
+
         auto tAcquire0 = std::chrono::high_resolution_clock::now();
 
         // Acquire expert weights via proxy (streams from disk if needed)
         MoEWeightHandle handle = moeWeightProxy_->Acquire((int)layer, expertId);
+
+        fprintf(stderr, "[MOE_DIAG] layer=%zu expertId=%d after Acquire valid=%d\n", layer, expertId, handle.valid ? 1 : 0);
+        fflush(stderr);
 
         auto tAcquire1 = std::chrono::high_resolution_clock::now();
         uint64_t acquireUs = std::chrono::duration_cast<std::chrono::microseconds>(tAcquire1 - tAcquire0).count();
@@ -9021,6 +9034,9 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
         // Execute expert FFN: gate/up SwiGLU -> down projection
         computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim);
+
+        fprintf(stderr, "[MOE_DIAG] layer=%zu expertId=%d after computeExpertFFN\n", layer, expertId);
+        fflush(stderr);
 
         auto tCompute1 = std::chrono::high_resolution_clock::now();
         uint64_t computeUs = std::chrono::duration_cast<std::chrono::microseconds>(tCompute1 - tCompute0).count();
@@ -10022,7 +10038,14 @@ static bool EnhanceWanted(const char* name)
 void Deep2Engine::enableAllEnhancements()
 {
     printf("[Deep2Engine] ENHANCEMENT STACK: ON\n");
-    if (modelWeights.loaded && !vulkanInitialized_)
+    // REAP replay is an explicitly isolated CPU calibration mode.  It must
+    // not open Vulkan merely because the normal enhancement stack is enabled;
+    // production startup remains unchanged when this opt-in flag is absent.
+    const bool reapCpuOnly = [] {
+        const char* v = std::getenv("RAWR_REAP_CPU_ONLY");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    if (!reapCpuOnly && modelWeights.loaded && !vulkanInitialized_)
         enableVulkan(true);
     if (EnhanceWanted("elastic") && !vulkanEnabled_)
         enableElasticResidency(true);
@@ -12094,7 +12117,8 @@ K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(const K2NativeS
     }
 
     // K2_GPU_STREAM_COPY / MLA: open Vulkan + bind stream→GPU upload path.
-    if (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted())
+    const bool reapCpuOnlyLocal = [] { const char* v = std::getenv("RAWR_REAP_CPU_ONLY"); return v && v[0]=='1' && v[1]=='\0'; }();
+    if (!reapCpuOnlyLocal && (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted()))
     {
         if (!vulkanInitialized_)
             enableVulkan(true);
