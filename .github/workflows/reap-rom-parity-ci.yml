@@ -10,6 +10,7 @@ on:
       - 'src/win32app/native/**'
       - 'tools/rawrxd_e2e_source_audit.py'
       - 'tools/rawrxd_no_deps_audit.py'
+      - 'tools/rawrxd_per_file_source_audit.py'
       - 'tests/reap_*'
       - 'tests/top25_parity_matrix_smoke.cpp'
       - 'tests/native_lsp_framing_smoke.cpp'
@@ -30,6 +31,7 @@ on:
       - 'src/win32app/native/**'
       - 'tools/rawrxd_e2e_source_audit.py'
       - 'tools/rawrxd_no_deps_audit.py'
+      - 'tools/rawrxd_per_file_source_audit.py'
       - '.github/workflows/reap-rom-parity-ci.yml'
       - 'CMakeLists.txt'
       - 'cmake/**'
@@ -94,6 +96,7 @@ jobs:
         run: |
           python3 tools/rawrxd_e2e_source_audit.py
           python3 tools/rawrxd_no_deps_audit.py
+          python3 tools/rawrxd_per_file_source_audit.py --strict-missing
       - name: Upload machine-readable audit
         uses: actions/upload-artifact@v4
         with:
@@ -101,6 +104,7 @@ jobs:
           path: |
             evidence/rawrxd_e2e_source_audit.json
             evidence/rawrxd_no_deps_audit.json
+            evidence/rawrxd_per_file_source_audit.json
 
   native-ide:
     runs-on: windows-2022
