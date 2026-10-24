@@ -47,13 +47,13 @@ int main() {
     assert(threw);
     Framer splitBody(1024);
     const auto framed=Framer::Encode("hello");
-    const auto boundary=framed.find("\\r\\n\\r\\n")+4;
+    const auto boundary=framed.find("\r\n\r\n")+4;
     assert(splitBody.Feed(framed.substr(0,boundary+2)).empty());
     auto completed=splitBody.Feed(framed.substr(boundary+2));
     assert(completed.size()==1 && completed[0]=="hello");
     Framer emptyHeader(1024);
     threw=false;
-    try { (void)emptyHeader.Feed("X-Test: value\\r\\n\\r\\n"); }
+    try { (void)emptyHeader.Feed("X-Test: value\r\n\r\n"); }
     catch(const std::length_error&) { threw=true; }
     assert(threw);
     std::cout<<"NATIVE_LSP_FRAMING_SMOKE_PASS\n";
