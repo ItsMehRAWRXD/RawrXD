@@ -66,6 +66,29 @@ int main() {
     for (auto& t : callers) t.join();
     assert(good.load() == 800);
 
+    // Cold-start contention for the same source must pack exactly once.
+    Deep2::Q4KColumnSliceCache singleFlight;
+    std::atomic<unsigned> ready{0};
+    std::atomic<bool> release{false};
+    std::vector<std::thread> simultaneous;
+    for (unsigned t = 0; t < 12; ++t) {
+        simultaneous.emplace_back([&] {
+            ready.fetch_add(1, std::memory_order_release);
+            while (!release.load(std::memory_order_acquire))
+                std::this_thread::yield();
+            auto snapshot = singleFlight.get(weights.data(), weights.size(),
+                                             rows, cols, 32);
+            assert(snapshot);
+            check(weights, rows, cols, *snapshot);
+        });
+    }
+    while (ready.load(std::memory_order_acquire) != 12)
+        std::this_thread::yield();
+    release.store(true, std::memory_order_release);
+    for (auto& t : simultaneous) t.join();
+    assert(singleFlight.rebuilds() == 1);
+
+
     // Concurrent invalidation cannot publish a snapshot built for a
     // previous cache generation. Source weights remain alive throughout.
     std::atomic<bool> start{false};
