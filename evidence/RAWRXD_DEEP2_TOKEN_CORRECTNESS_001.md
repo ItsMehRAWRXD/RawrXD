@@ -94,3 +94,15 @@ non-argmax values varied slightly). All values were finite. This localizes the
 first-token difference to the output projection/logit stage rather than the
 hidden-state forward path. It is not yet a numerical parity pass: the logits
 need a defined tolerance and multi-token KV-state comparison before promotion.
+
+## Projection boundary clarification
+
+Source inspection of `Deep2Engine::computeLogits()` confirms that both runs
+use the same host `LinearW(modelWeights.lmHead, hiddenState, ...)` for the
+output projection. The current GPU forward path does not have a distinct GPU
+LM-head implementation. Consequently, the measured logit delta is not evidence
+of two different projection kernels; it is the amplification of the small
+hidden-state difference by the shared quantized LM-head projection. A true
+GPU-output-projection A/B test is not applicable until a GPU LM-head path is
+introduced, and introducing one before teacher-forced parity would obscure the
+current fault.
