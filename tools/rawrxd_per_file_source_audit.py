@@ -16,7 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 EXT = {".c", ".cc", ".cpp", ".cxx", ".h", ".hpp", ".hh", ".hxx", ".inl",
        ".asm", ".s", ".rc", ".cmake", ".py", ".ps1", ".js", ".ts"}
 QT_INCLUDE = re.compile(rb'^\s*#\s*include\s*[<"](?:Qt[A-Za-z0-9_/]*|Q[A-Z][A-Za-z0-9_]*)', re.M)
-QT_CMAKE = re.compile(rb'\b(?:find_package\s*\(\s*Qt[56]|Qt[56]::|QT_WIDGETS_LIBRARIES)\b', re.I)
+QT_CMAKE = re.compile(rb'(?:\bfind_package\s*\(\s*Qt[56]\b|\bQt[56]::|\bQT_WIDGETS_LIBRARIES\b)', re.I)
 EXTERNAL = {
     "nlohmann_json": re.compile(rb'\b(?:nlohmann_json|nlohmann/json\.hpp)\b'),
     "qt": QT_INCLUDE,
@@ -33,8 +33,10 @@ def inspect(rel):
     path = ROOT / rel
     if not path.is_file():
         return {"path": rel, "state": "tracked_missing"}
-    data = path.read_bytes()
     is_source = path.suffix.lower() in EXT or path.name == "CMakeLists.txt"
+    if not is_source:
+        return {"path": rel, "state": "present", "source": False}
+    data = path.read_bytes()
     return {
         "path": rel,
         "state": "present",
