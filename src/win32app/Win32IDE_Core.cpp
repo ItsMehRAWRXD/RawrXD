@@ -46,6 +46,7 @@ void RunUiMenuE2eProbe(Win32IDE* ide);
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+#include "CompilerIntegration_Native.h"
 #include "resource.h"
 #include "../command/CommandEventJournal.h"
 #include "../command/CommandBroker.h"
@@ -988,8 +989,21 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
 
         case WM_COMMAND:
+            // Route compiler/build commands before the generic command table.
+            // The bridge owns only its reserved IDs; all other commands keep
+            // the existing Win32IDE path.
+            if (RawrXD::Win32App::CompilerIntegration_HandleCommand(LOWORD(wParam)))
+                return 0;
             sehCallOnCommand(onCommandCpp, this, hwnd, LOWORD(wParam), (HWND)lParam,
                              HIWORD(wParam));
+            return 0;
+
+        case RAWRXD_WM_COMPILER_DETECTED:
+            // Detection completes off-thread; only menu mutation occurs on the
+            // UI thread.  The existing Build popup is refreshed in place.
+            RawrXD::Win32App::CompilerIntegration_RefreshMenu();
+            DrawMenuBar(hwnd);
+            fileTrace("[Core] compiler_integration_ready");
             return 0;
 
         case WM_DRAWITEM:
@@ -3579,6 +3593,14 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     OutputDebugStringA("[onCreateChildren] all deferred panels created OK\n");
     fileTrace("[onCreateChildren] END");
 
+    // Compiler discovery may invoke vswhere and PATH probes.  Keep it out of
+    // WM_CREATE so the visible editor and message loop are established before
+    // the registry performs its one-time detection pass.
+    RawrXD::Win32App::CompilerIntegration_Init(hwnd);
+    RawrXD::Win32App::CompilerIntegration_BuildMenu(m_hMenu);
+    DrawMenuBar(hwnd);
+    fileTrace("[Core] compiler_integration_ready");
+
     if (m_hwndMain && IsWindow(m_hwndMain))
         PostMessage(m_hwndMain, WM_APP_PS_SESSION_BRINGUP, 0, 0);
 
@@ -4576,6 +4598,11 @@ void Win32IDE::onDestroy()
     if (m_hwndMain)
         RawrXD::MainMenuAuthority::MarkWindowDestroying(m_hwndMain);
     LOG_INFO("Win32IDE::onDestroy - shutting down");
+
+    // Stop only compiler workers owned by this IDE instance before the UI and
+    // menu handles disappear.  The bridge is idempotent and does not touch
+    // unrelated compiler or shell processes.
+    RawrXD::Win32App::CompilerIntegration_Shutdown();
 
 #ifdef RAWRXD_PRODUCT100
     product100Shutdown();

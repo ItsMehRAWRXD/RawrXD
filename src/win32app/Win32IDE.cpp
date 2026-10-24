@@ -37,6 +37,7 @@
 #include "../core/GpuDecodeEfficiency.hpp"
 #endif
 #include "Win32IDE_CommandFlight.hpp"
+#include "CompilerIntegration_Native.h"
 
 // AI Completion System Integration (VAL-063)
 // Forward declarations from ai_completion_real.cpp
@@ -2182,6 +2183,7 @@ void Win32IDE::openFile()
                     inStream.read(&content[0], size);
                 setWindowText(m_hwndEditor, content);
                 m_currentFile = pathUtf8;
+                RawrXD::Win32App::CompilerIntegration_OnFileOpened(m_currentFile.c_str());
                 m_fileModified = false;
                 setCurrentDirectoryFromFile(m_currentFile);
                 updateTitleBarText();
@@ -2229,6 +2231,7 @@ void Win32IDE::openFile(const std::string& filePath)
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
             setWindowText(m_hwndEditor, content);
             m_currentFile = filePath;
+            RawrXD::Win32App::CompilerIntegration_OnFileOpened(m_currentFile.c_str());
             m_fileModified = false;
             setCurrentDirectoryFromFile(m_currentFile);
             updateTitleBarText();
@@ -2289,6 +2292,7 @@ bool Win32IDE::saveFile()
         {
             file << content;
             m_fileModified = false;
+            RawrXD::Win32App::CompilerIntegration_OnFileSaved(m_currentFile.c_str());
             updateTitleBarText();
             SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"File saved");
             appendToOutput("File saved successfully (" + std::to_string(content.size()) + " bytes)\n", "Output",

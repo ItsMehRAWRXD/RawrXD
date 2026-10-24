@@ -237,19 +237,23 @@ bool SaveSettingsSovereign(const SovereignIDEConfig& config)
     fileTrace("[SaveSettingsSovereign] ENTER");
     try
     {
+        fileTrace("[SaveSettingsSovereign] serializing");
         // Serialize to JSON
         nlohmann::json j;
         to_json(j, config);
         std::string json_str = j.dump();
+        fileTrace("[SaveSettingsSovereign] serialized");
 
         // Generate ZMM signature (hardware-rooted)
         __m512i signature = GenerateZMMSignature(config);
+        fileTrace("[SaveSettingsSovereign] signature generated");
 
         // Atomic write (temp + rename)
         std::filesystem::path temp_file = SETTINGS_FILE;
         temp_file += L".tmp";
 
         std::ofstream file(temp_file, std::ios::binary);
+        fileTrace(file ? "[SaveSettingsSovereign] temp opened" : "[SaveSettingsSovereign] temp open failed");
         if (!file)
             return false;
 
@@ -258,9 +262,11 @@ bool SaveSettingsSovereign(const SovereignIDEConfig& config)
         // Write JSON payload
         file.write(json_str.c_str(), json_str.size());
         file.close();
+        fileTrace("[SaveSettingsSovereign] temp written");
 
         // Atomic rename
         std::filesystem::rename(temp_file, SETTINGS_FILE);
+        fileTrace("[SaveSettingsSovereign] renamed");
 
         // Verify by re-reading signature bytes only — do NOT call LoadSettingsSovereign
         // here (that path can re-enter Save on verify failure → recursion → 0xE06D7363).
@@ -269,6 +275,7 @@ bool SaveSettingsSovereign(const SovereignIDEConfig& config)
             return false;
         __m512i written_sig{};
         verify.read(reinterpret_cast<char*>(&written_sig), 64);
+        fileTrace("[SaveSettingsSovereign] verify read");
         if (!verify || verify.gcount() != 64)
             return false;
         const __mmask8 mask = _mm512_cmpeq_epi64_mask(written_sig, signature);

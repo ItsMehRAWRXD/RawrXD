@@ -12,12 +12,16 @@
  *=========================================================================*/
 
 #include "../compiler/CompilerRegistry.hpp"
+#ifndef RAWRXD_WM_COMPILER_DETECTED
+#define RAWRXD_WM_COMPILER_DETECTED (WM_USER + 1001)
+#endif
 #include <windows.h>
 #include <commctrl.h>
 #include <shellapi.h>
 #include <string>
 #include <vector>
 #include <functional>
+#include <thread>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -36,7 +40,7 @@ namespace RawrXD::Win32App {
 
 // Window message for async build completion
 #define WM_BUILD_COMPLETE           (WM_USER + 1000)
-#define WM_COMPILER_DETECTED        (WM_USER + 1001)
+#define WM_COMPILER_DETECTED        RAWRXD_WM_COMPILER_DETECTED
 
 // =========================================================================
 // CompilerIntegration — Manages IDE compiler UI and functionality
@@ -52,6 +56,7 @@ public:
     
     // Menu management
     void BuildCompilerMenu(HMENU menu_bar);
+    void RefreshCompilerMenu();
     void UpdateCompilerMenu();
     void OnCompilerSelected(const std::string& compiler_id);
     
@@ -141,6 +146,7 @@ private:
     // Build thread data
     HANDLE build_thread_ = nullptr;
     HANDLE build_cancel_event_ = nullptr;
+    std::thread detection_thread_;
     std::string pending_build_task_;
     
     // Callbacks
@@ -163,13 +169,7 @@ CompilerIntegration::~CompilerIntegration() {
 
 void CompilerIntegration::Initialize() {
     if (initialized_) return;
-    
-    // Initialize compiler registry
-    Compiler::GetCompilerRegistry().Initialize();
-    
-    // Get detected compilers
-    detected_compilers_ = Compiler::GetCompilerRegistry().GetAvailableCompilers();
-    
+
     // Create cancel event
     build_cancel_event_ = CreateEventA(nullptr, TRUE, FALSE, nullptr);
     
@@ -181,10 +181,19 @@ void CompilerIntegration::Initialize() {
         ShowBuildError(err);
     };
     
+    initialized_ = true;
+
+    // Compiler discovery can invoke vswhere and many PATH probes.  Never run
+    // that work on the GUI thread: the editor must keep pumping messages while
+    // the registry becomes ready.
     Compiler::GetCompilerRegistry().SetProgressCallback(progress_cb_);
     Compiler::GetCompilerRegistry().SetErrorCallback(error_cb_);
-    
-    initialized_ = true;
+    detection_thread_ = std::thread([this]() {
+        Compiler::GetCompilerRegistry().Initialize();
+        detected_compilers_ = Compiler::GetCompilerRegistry().GetAvailableCompilers();
+        if (main_window_ && IsWindow(main_window_))
+            PostMessageA(main_window_, WM_COMPILER_DETECTED, 0, 0);
+    });
 }
 
 void CompilerIntegration::Shutdown() {
@@ -199,6 +208,9 @@ void CompilerIntegration::Shutdown() {
             build_thread_ = nullptr;
         }
     }
+
+    if (detection_thread_.joinable())
+        detection_thread_.join();
     
     if (build_cancel_event_) {
         CloseHandle(build_cancel_event_);
@@ -209,9 +221,35 @@ void CompilerIntegration::Shutdown() {
     initialized_ = false;
 }
 
+void CompilerIntegration::RefreshCompilerMenu() {
+    if (compiler_menu_)
+        UpdateCompilerMenu();
+}
+
 void CompilerIntegration::BuildCompilerMenu(HMENU menu_bar) {
-    // Create Build menu
-    HMENU build_menu = CreatePopupMenu();
+    if (!menu_bar)
+        return;
+
+    // Reuse the shell's existing Build popup when present.  The Win32 IDE
+    // already owns the top-level menu; inserting a second Build menu made the
+    // compiler actions appear disconnected and produced duplicate accelerators.
+    HMENU build_menu = nullptr;
+    const int menu_count = GetMenuItemCount(menu_bar);
+    char label[128] = {};
+    for (int i = 0; i < menu_count; ++i) {
+        label[0] = '\0';
+        if (GetMenuStringA(menu_bar, static_cast<UINT>(i), label,
+                           static_cast<int>(sizeof(label)), MF_BYPOSITION) > 0 &&
+            _strnicmp(label, "&Build", 6) == 0) {
+            build_menu = GetSubMenu(menu_bar, i);
+            break;
+        }
+    }
+    const bool owns_build_menu = (build_menu == nullptr);
+    if (owns_build_menu)
+        build_menu = CreatePopupMenu();
+    if (!build_menu)
+        return;
     
     AppendMenuA(build_menu, MF_STRING, ID_BUILD_COMPILE, "&Compile Current File\tCtrl+F7");
     AppendMenuA(build_menu, MF_STRING, ID_BUILD_BUILD, "&Build Project\tF7");
@@ -236,7 +274,9 @@ void CompilerIntegration::BuildCompilerMenu(HMENU menu_bar) {
     AppendMenuA(build_menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(build_menu, MF_STRING, ID_COMPILER_MENU_START + 99, "&Build Output");
     
-    InsertMenuA(menu_bar, -1, MF_BYPOSITION | MF_POPUP, (UINT_PTR)build_menu, "&Build");
+    if (owns_build_menu)
+        InsertMenuA(menu_bar, -1, MF_BYPOSITION | MF_POPUP,
+                    (UINT_PTR)build_menu, "&Build");
 }
 
 void CompilerIntegration::UpdateCompilerMenu() {
@@ -636,7 +676,10 @@ void CompilerIntegration::ClearOutput() {
 }
 
 void CompilerIntegration::CreateToolbar(HWND parent) {
-    toolbar_ = CreateWindowExA(0, TOOLBARCLASSNAME, nullptr,
+    // This TU uses the ANSI text APIs for the compiler output window.  Use the
+    // explicit ANSI common-control class here so UNICODE project settings do
+    // not select TOOLBARCLASSNAMEW while calling CreateWindowExA.
+    toolbar_ = CreateWindowExA(0, "ToolbarWindow32", nullptr,
         WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
         0, 0, 0, 0, parent, nullptr, GetModuleHandleA(nullptr), nullptr);
     
@@ -703,6 +746,11 @@ __declspec(dllexport) void CompilerIntegration_BuildMenu(HMENU menu_bar) {
     if (g_compiler_integration) {
         g_compiler_integration->BuildCompilerMenu(menu_bar);
     }
+}
+
+__declspec(dllexport) void CompilerIntegration_RefreshMenu() {
+    if (g_compiler_integration)
+        g_compiler_integration->RefreshCompilerMenu();
 }
 
 __declspec(dllexport) BOOL CompilerIntegration_HandleCommand(WORD command_id) {

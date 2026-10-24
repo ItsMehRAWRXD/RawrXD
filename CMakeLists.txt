@@ -5635,6 +5635,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Core Win32IDE implementation units (required for real GUI command/menu behavior)
         src/win32app/Win32IDE.cpp
         src/win32app/Win32IDE_Core.cpp
+        # Native compiler/linker registry and real Win32 menu/build bridge.
+        # These are the single production compiler path; do not add a second
+        # Qt or script-based compiler implementation to this target.
+        src/compiler/CompilerRegistry.cpp
+        src/win32app/CompilerIntegration_Real.cpp
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
         src/win32app/Win32IDE_CommandSurface.cpp
@@ -5847,6 +5852,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
+        src/win32app/Win32IDE_CodexCommands.cpp  # Qt conversion: real Codex command and ghost completion handlers
+        src/codex/CodexCLI.cpp  # Native WinHTTP Codex/Ollama bridge (no third-party runtime)
+        src/codex/HttpClient.cpp  # Native WinHTTP transport
         # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
@@ -17070,4 +17078,39 @@ if(TARGET InferenceEngine)
     set_target_properties(ev512_ide_restore_reload_fault_smoke PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME ev512_ide_restore_reload_fault_smoke)
+endif()
+
+# ============================================================================
+# The native voxel renderer.
+#
+# It draws a procedurally generated gothic voxel world with Direct3D 12 and
+# it hands the frames to the RawrXD browser through the web message bridge.
+#
+# The target is built on its own as well, so that the renderer can be built
+# and run without the rest of the tree:
+#
+#   cmake -S src/voxel -B build/voxel -G "Visual Studio 17 2022" -A x64
+#   cmake --build build/voxel --config Release
+#
+option(RAWRXD_BUILD_SUNSHINE_VOXEL "Build the native voxel renderer" ON)
+if(RAWRXD_BUILD_SUNSHINE_VOXEL)
+    add_subdirectory(src/voxel)
+endif()
+
+# Native IDE completion gates 121-150 (dependency-free evidence ledger)
+option(RAWRXD_BUILD_IDE_GATES "Build native IDE gate receipt tool" ON)
+if(RAWRXD_BUILD_IDE_GATES)
+  add_executable(rawrxd-ide-gates
+    src/ide_gates/src/rawr_ide_gates.cpp
+    src/ide_gates/tools_main.cpp)
+  target_include_directories(rawrxd-ide-gates PRIVATE src/ide_gates/include)
+  target_compile_features(rawrxd-ide-gates PRIVATE cxx_std_20)
+  if(BUILD_TESTING)
+    add_executable(rawrxd-ide-gates-test
+      src/ide_gates/src/rawr_ide_gates.cpp
+      src/ide_gates/tests/test_gates.cpp)
+    target_include_directories(rawrxd-ide-gates-test PRIVATE src/ide_gates/include)
+    target_compile_features(rawrxd-ide-gates-test PRIVATE cxx_std_20)
+    add_test(NAME rawrxd_ide_gates COMMAND rawrxd-ide-gates-test)
+  endif()
 endif()
