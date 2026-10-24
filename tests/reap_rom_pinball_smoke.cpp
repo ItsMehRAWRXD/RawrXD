@@ -54,5 +54,22 @@ int main() {
     b.BindResident(2,7,Binding{&fakeGpu,4,5});
     assert(b.Run(2,7));
     assert(reads==1 && uploads==1 && executions==4);
+    int invalidGpu=0;
+    Bridge badUpload(
+        [](const std::string&, uint64_t, void* dst, size_t n) {
+            for (size_t i=0; i<n; ++i) static_cast<uint8_t*>(dst)[i]=0;
+            return true;
+        },
+        [&](const Slice&, const std::vector<uint8_t>&, Binding& out) {
+            out={&invalidGpu, 1, 1};
+            return true;
+        },
+        [](const Binding&, uint32_t, uint32_t) { return true; });
+    badUpload.Register({"test.gguf",0,4,0,0,0});
+    badUpload.Retain(0,0);
+    bool badUploadRejected=false;
+    try { (void)badUpload.Run(0,0); }
+    catch(const std::runtime_error&) { badUploadRejected=true; }
+    assert(badUploadRejected);
     std::cout << "REAP_ROM_PINBALL_BRIDGE_SMOKE_PASS\n";
 }
