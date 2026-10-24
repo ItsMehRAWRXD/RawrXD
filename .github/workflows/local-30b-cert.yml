@@ -1,0 +1,143 @@
+name: Local 30B backend certification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - local-30b-backend
+  pull_request:
+
+jobs:
+  native-elf64-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build native ELF64 emitter and execute emitted binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/native_elf64_emitter_smoke.cpp -o /tmp/native_elf64_emitter_smoke
+          /tmp/native_elf64_emitter_smoke /tmp/rawrxd_native_elf64
+          chmod +x /tmp/rawrxd_native_elf64
+          set +e
+          /tmp/rawrxd_native_elf64
+          status=$?
+          set -e
+          if [ "$status" -ne 42 ]; then
+            echo "Native ELF64 expected exit 42, got $status"
+            exit 1
+          fi
+          file /tmp/rawrxd_native_elf64
+
+  dual-row-executor-stress:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile and stress permanent dual-GPU worker executor
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG -pthread tests/deep2_dual_row_executor_stress.cpp -o /tmp/deep2_dual_row_executor_stress
+          timeout 30 /tmp/deep2_dual_row_executor_stress
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG -pthread tests/deep2_q4k_column_cache_smoke.cpp -o /tmp/deep2_q4k_column_cache_smoke
+          timeout 30 /tmp/deep2_q4k_column_cache_smoke
+
+  windows-native:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Compile standalone C++20 GPU concurrency and cache regressions (MSVC)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vswhere = Join-Path "${env:ProgramFiles(x86)}" 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (!(Test-Path $vswhere)) { throw 'vswhere missing' }
+          $vsroot = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or !$vsroot) { throw 'MSVC toolchain missing' }
+          $vcvars = Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          New-Item -ItemType Directory -Force build_gpu_smoke | Out-Null
+          foreach ($name in @('deep2_dual_row_executor_stress', 'deep2_q4k_column_cache_smoke')) {
+            $cmdline = 'call "' + $vcvars + '" && cl /nologo /std:c++20 /EHsc /W4 /WX /UNDEBUG /Fe:build_gpu_smoke\' + $name + '.exe tests\' + $name + '.cpp && build_gpu_smoke\' + $name + '.exe'
+            & cmd.exe /d /s /c $cmdline
+            if ($LASTEXITCODE -ne 0) { throw "MSVC C++20 regression failed: $name" }
+          }
+
+      - name: Configure native no-Qt build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake -S . -B build_cert -G "Visual Studio 17 2022" -A x64 -DRAWRXD_REQUIRE_QT=OFF -DUSE_ZLIB_FETCHCONTENT=OFF -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
+          if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
+
+      - name: Build production CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake --build build_cert --config Release --target RawrXD-CLI-V2 --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "RawrXD-CLI-V2 build failed" }
+
+      - name: Build native Win32 IDE
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake --build build_cert --config Release --target RawrXD-Win32IDE-Native --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw "RawrXD-Win32IDE-Native build failed" }
+
+      - name: Check recovered Slingshot and compiler source inventory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $required = @(
+            '~dev/rawrxd/src/core/SpeculativeEngine_GGUFBridge.hpp',
+            '~dev/rawrxd/src/core/GGUFShardRouter_tree.hpp',
+            '~dev/rawrxd/cmake/MASMCompiler.cmake',
+            '~dev/rawrxd/src/reverse_engineering/CMakeLists.txt',
+            'kernels/deflate_nasm.asm'
+          )
+          foreach ($file in $required) {
+            if (!(Test-Path -LiteralPath $file -PathType Leaf)) {
+              throw "Recovered tool source missing: $file"
+            }
+            Write-Host "PRESENT: $file"
+          }
+          Write-Host "Inventory is not a compile or integration certification."
+
+      - name: Run registered regression tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ctest --test-dir build_cert -C Release --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw "CTest regression suite failed" }
+
+      - name: Verify artifacts and SHA256
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rawr = Get-ChildItem build_cert -Recurse -File -Filter rawr.exe | Select-Object -First 1
+          $ide = Get-ChildItem build_cert -Recurse -File -Filter RawrXD-Win32IDE-Native.exe | Select-Object -First 1
+          if (!$rawr) { throw "rawr.exe missing" }
+          if (!$ide) { throw "RawrXD-Win32IDE-Native.exe missing" }
+          if ($rawr.Length -lt 4096) { throw "rawr.exe unexpectedly small" }
+          if ($ide.Length -lt 4096) { throw "Native IDE unexpectedly small" }
+          Get-FileHash $rawr.FullName -Algorithm SHA256
+          Get-FileHash $ide.FullName -Algorithm SHA256
+
+      - name: Upload native certification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-local-30b-native-cert
+          path: |
+            build_cert/**/rawr.exe
+            build_cert/**/RawrXD-Win32IDE-Native.exe
+            build_cert/Testing/**
+          if-no-files-found: warn

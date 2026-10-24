@@ -1080,6 +1080,13 @@ private:
     // SSM / Mamba buffers (Nemotron-H: state=[L,H,D,N]=inner*state_size)
     float* ssmState = nullptr;
     float* ssmConvState = nullptr;
+    // Persistent per-layer recurrent/conv state.  Older builds reused one
+    // scratch state and memset it on every layer/token, which both destroyed
+    // recurrence and added avoidable memory traffic.
+    std::vector<float> ssmLayerState_;
+    std::vector<float> ssmLayerConvState_;
+    size_t ssmLayerStateStride_ = 0;
+    size_t ssmLayerConvStride_ = 0;
     float* ssmX = nullptr;     /* yInner scratch [ssmInner_] */
     float* ssmY = nullptr;
     float* ssmTemp = nullptr;  /* proj scratch [ssmInRows_] */

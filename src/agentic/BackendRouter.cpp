@@ -14,6 +14,7 @@ bool BackendRouter::Initialize(const RouterConfig& config) {
     if (m_initialized.load()) return true;
 
     m_config = config;
+    m_mode.store(config.mode);
 
     // Initialize Deep2 backend (primary)
     BackendConfig deep2_cfg;

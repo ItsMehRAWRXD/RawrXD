@@ -522,6 +522,20 @@ bool Deep2Engine::allocateBuffers()
     std::memset(ssmState, 0, ssmStateAlloc * sizeof(float));
     std::memset(ssmConvState, 0, ssmConvDimAlloc * 3 * sizeof(float));
 
+    const size_t ssmLayerCount = modelWeights.numLayers ? modelWeights.numLayers : config.numLayers;
+    ssmLayerStateStride_ = ssmStateAlloc;
+    ssmLayerConvStride_ = ssmConvDimAlloc * 3;
+    try
+    {
+        ssmLayerState_.assign(ssmLayerCount * ssmLayerStateStride_, 0.0f);
+        ssmLayerConvState_.assign(ssmLayerCount * ssmLayerConvStride_, 0.0f);
+    }
+    catch (const std::bad_alloc&)
+    {
+        deallocateBuffers();
+        return false;
+    }
+
     ssmStateDim = ssmStateAlloc;
     ssmConvKernel = 4;
     ssmInner_ = ssmInnerAlloc;
@@ -571,6 +585,10 @@ void Deep2Engine::deallocateBuffers()
     ssmState = nullptr;
     delete[] ssmConvState;
     ssmConvState = nullptr;
+    ssmLayerState_.clear();
+    ssmLayerConvState_.clear();
+    ssmLayerStateStride_ = 0;
+    ssmLayerConvStride_ = 0;
     ssmStateDim = 0;
     ssmConvKernel = 0;
     ssmInner_ = 0;
@@ -593,6 +611,9 @@ void Deep2Engine::reset()
     if (ffnOutput && config.hiddenDim)
         std::memset(ffnOutput, 0, config.hiddenDim * sizeof(float));
 
+    std::fill(ssmLayerState_.begin(), ssmLayerState_.end(), 0.0f);
+    std::fill(ssmLayerConvState_.begin(), ssmLayerConvState_.end(), 0.0f);
+
     // BATCH10_RESET_MLA_CACHE
     for (auto& gpu : vulkanDevices_)
     {
@@ -611,6 +632,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     if (ggufPath.empty())
         return false;
 
+    // Drop packed Q4K columns before any model mapping can be replaced.
+    Deep2InvalidateColumnSlices();
     // Tear down aliases before replacing the mapping.
     modelWeights = {};
     ggufResult = {};
@@ -1475,6 +1498,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize)
         return false;
     std::memcpy(copy, weightData, weightSize);
 
+    Deep2InvalidateColumnSlices();
     delete[] reinterpret_cast<uint8_t*>(weights);
     weights = reinterpret_cast<float*>(copy);
     this->weightSize = weightSize;
@@ -1484,6 +1508,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize)
 void Deep2Engine::unloadModel()
 {
     deallocateBuffers();
+    Deep2InvalidateColumnSlices();
     delete[] reinterpret_cast<uint8_t*>(weights);
     weights = nullptr;
     weightSize = 0;
@@ -2886,11 +2911,17 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     if (dInner != H * 2)  // 8192 = 2 * 4096
         throw std::runtime_error("computeSSM: unexpected d_inner");
 
-    // Reset SSM recurrent and convolution state for this layer.
-    // Each layer maintains independent state; cross-layer contamination
-    // would cause exponential activation growth.
-    std::memset(ssmState, 0, ssmStateDim * sizeof(float));
-    std::memset(ssmConvState, 0, ssmConvDim_ * ssmConvKernel * sizeof(float));
+    if (ssmLayerStateStride_ < ssmStateDim ||
+        ssmLayerConvStride_ < ssmConvDim_ * (ssmConvKernel - 1) ||
+        (layer + 1) * ssmLayerStateStride_ > ssmLayerState_.size() ||
+        (layer + 1) * ssmLayerConvStride_ > ssmLayerConvState_.size())
+    {
+        throw std::runtime_error("computeSSM: persistent layer state is not allocated");
+    }
+    float* const layerSsmState =
+        ssmLayerState_.data() + layer * ssmLayerStateStride_;
+    float* const layerConvState =
+        ssmLayerConvState_.data() + layer * ssmLayerConvStride_;
 
     // ------------------------------------------------------------------
     // 1. SSM input projection: H (4096) → ssmInOut (18560) via NVFP4 GEMV
@@ -2905,24 +2936,11 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float ssmInScale = 1.0f;
     if (lw.ssmInScale.data && lw.ssmInScale.sizeBytes >= sizeof(float))
         memcpy(&ssmInScale, lw.ssmInScale.data, sizeof(float));
-    for (size_t i = 0; i < ssmInOut; ++i)
-        ssmX[i] *= ssmInScale;
-
-    // Check input activation finite before first GEMV
+    if (ssmInScale != 1.0f)
     {
-        bool layerTempFinite = true;
-        size_t layerTempNaN = 0;
-        for (size_t i = 0; i < H && layerTempFinite; ++i) {
-            if (!std::isfinite(input[i])) {
-                layerTempFinite = false;
-                layerTempNaN = i;
-            }
-        }
+        for (size_t i = 0; i < ssmInOut; ++i)
+            ssmX[i] *= ssmInScale;
     }
-
-    bool ssmInFinite = true;
-    for (size_t i = 0; i < ssmInOut && ssmInFinite; ++i)
-        ssmInFinite = std::isfinite(ssmX[i]);
 
     // ------------------------------------------------------------------
     // 2. Split ssmInOut: x_in [dInner], conv_in [dConv], dt [dDt]
@@ -2939,22 +2957,24 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     for (size_t c = 0; c < dConv; ++c)
     {
+        float* const hist = layerConvState + c * 3;
         float acc = convBias[c];
-        // tap 0: current input
         acc += convWeight[0 * dConv + c] * convIn[c];
-        // taps 1-3: persistent history
-        acc += convWeight[1 * dConv + c] * ssmConvState[c * 3 + 0];
-        acc += convWeight[2 * dConv + c] * ssmConvState[c * 3 + 1];
-        acc += convWeight[3 * dConv + c] * ssmConvState[c * 3 + 2];
-        convIn[c] = acc;  // write conv_out in-place
-    }
+        acc += convWeight[1 * dConv + c] * hist[0];
+        acc += convWeight[2 * dConv + c] * hist[1];
+        acc += convWeight[3 * dConv + c] * hist[2];
 
-    // Update conv history: shift right, insert current conv output at position 0
-    for (size_t c = 0; c < dConv; ++c)
-    {
-        ssmConvState[c * 3 + 2] = ssmConvState[c * 3 + 1];
-        ssmConvState[c * 3 + 1] = ssmConvState[c * 3 + 0];
-        ssmConvState[c * 3 + 0] = convIn[c];
+        // Numerical guard from the Nemotron SSM crash fix.  Keep it on the
+        // hot path without a second validation sweep.
+        if (!std::isfinite(acc))
+            acc = 0.0f;
+        else
+            acc = std::clamp(acc, -50.0f, 50.0f);
+
+        hist[2] = hist[1];
+        hist[1] = hist[0];
+        hist[0] = acc;
+        convIn[c] = acc;
     }
 
     // ------------------------------------------------------------------
@@ -2963,11 +2983,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     for (size_t i = 0; i < dInner; ++i)
         ssmX[i] = xIn[i] + convIn[i];
 
-    {
-        bool convFinite = true;
-        for (size_t i = 0; i < dConv && convFinite; ++i)
-            convFinite = std::isfinite(convIn[i]);
-    }
 
     // ------------------------------------------------------------------
     // 5. dt = softplus(dt_param + dt_bias)
@@ -2977,7 +2992,13 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     for (size_t i = 0; i < dDt; ++i)
     {
         float d = dtParam[i] + dtBias[i];
-        dtLocal[i] = std::log1p(std::exp(d));  // softplus
+        if (!std::isfinite(d))
+            d = 0.0f;
+        // Stable softplus avoids exp overflow and skips log1p/exp in the
+        // saturated positive region.
+        dtLocal[i] = d > 20.0f ? d
+                    : (d < -20.0f ? std::exp(d)
+                                   : std::log1p(std::exp(d)));
     }
 
     // ------------------------------------------------------------------
@@ -3014,7 +3035,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
         // Recurrent state update: h = h * exp(dt * A) + dt * x_reduced
         // Output: y = h + D * x_reduced
-        float* h = ssmState + stateOffset;
+        float* h = layerSsmState + stateOffset;
         for (size_t i = 0; i < dStatePerGroup; ++i)
         {
             float a = -std::exp(ssmA[stateOffset + i]);  // A is stored as log(|A|), negate
@@ -3053,11 +3074,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
             scanOut[g * 1024 + i] *= rms * ssmNormWeight[i * 8 + g];
     }
 
-    {
-        bool normFinite = true;
-        for (size_t i = 0; i < dInner && normFinite; ++i)
-            normFinite = std::isfinite(scanOut[i]);
-    }
 
     // ------------------------------------------------------------------
     // 8. SSM output projection: scanOut [8192] → output [4096] via NVFP4 GEMV
@@ -3066,16 +3082,6 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     if (!gemvOut)
         throw std::runtime_error("computeSSM: no GEMV kernel registered for ssm_out");
 
-    {
-        bool scanFinite = true;
-        size_t firstNaN = 0;
-        for (size_t i = 0; i < lw.ssmOut.cols && scanFinite; ++i) {
-            if (!std::isfinite(scanOut[i])) {
-                scanFinite = false;
-                firstNaN = i;
-            }
-        }
-    }
 
     // Fail-fast: validate input activation before GEMV
     {
@@ -3100,13 +3106,14 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float ssmOutScale = 1.0f;
     if (lw.ssmOutScale.data && lw.ssmOutScale.sizeBytes >= sizeof(float))
         memcpy(&ssmOutScale, lw.ssmOutScale.data, sizeof(float));
-    for (size_t i = 0; i < H; ++i)
-        output[i] = ssmTemp[i] * ssmOutScale;
-
+    if (ssmOutScale == 1.0f)
     {
-        bool outFinite = true;
-        for (size_t i = 0; i < H && outFinite; ++i)
-            outFinite = std::isfinite(output[i]);
+        std::memcpy(output, ssmTemp, H * sizeof(float));
+    }
+    else
+    {
+        for (size_t i = 0; i < H; ++i)
+            output[i] = ssmTemp[i] * ssmOutScale;
     }
 }
 

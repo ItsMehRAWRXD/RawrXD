@@ -1,8 +1,11 @@
 // Deep2DualGpuRowSplit.cpp
 #include "Deep2DualGpuRowSplit.hpp"
+#include "Deep2DualRowExecutor.hpp"
+#include "Deep2Q4KColumnSlices.hpp"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <condition_variable>
 #include <cstring>
@@ -153,147 +156,41 @@ void updateColSpeed(unsigned lane,uint32_t cols,uint64_t ns) noexcept {
             std::memory_order_relaxed);
 }
 
-struct Q4KColumnSlices {
-    uint32_t cols0=0,cols1=0;
-    std::vector<uint8_t> w0,w1;
-};
-
-// One mutable/latest slice set per weight tensor pointer, keyed by wt.data only.
-// Replaced when ratio changes — prevents unbounded growth under varying ratioPermille.
-const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
-    if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
-       !wt.rows||!wt.cols||wt.cols%256u!=0u) return nullptr;
-
-    struct Entry { Q4KColumnSlices s; uint16_t ratioPermille=0; };
-    static std::mutex mu;
-    static std::unordered_map<const void*, Entry> cache;
-
-    long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
-    if(autoColumnSplit()) {
-        const double a0=gColSpeed0.load(std::memory_order_relaxed);
-        const double a1=gColSpeed1.load(std::memory_order_relaxed);
-        if(a0>0.0&&a1>0.0){s0=a0;s1=a1;}
-    }
-    const long double ratio=s0/(s0+s1);
-    const uint16_t pm=(uint16_t)std::max<long double>(
-        1.0L,std::min<long double>(999.0L,ratio*1000.0L+0.5L));
-
-    const uint32_t blocks=(uint32_t)wt.cols/256u;
-    if(blocks<2) return nullptr;
-    uint32_t b0=(uint32_t)(
-        (long double)blocks*s0/(s0+s1)+0.5L);
-    b0=std::max<uint32_t>(1,std::min<uint32_t>(blocks-1,b0));
-    const uint32_t b1=blocks-b0;
-    constexpr size_t QB=144;
-    const size_t rowBytes=(size_t)blocks*QB;
-    const size_t row0=(size_t)b0*QB;
-    const size_t row1=(size_t)b1*QB;
-    if(wt.sizeBytes<(size_t)wt.rows*rowBytes) return nullptr;
-
-    std::lock_guard<std::mutex> g(mu);
-    auto it=cache.find(wt.data);
-    if(it!=cache.end() && it->second.ratioPermille==pm)
-        return &it->second.s;
-
-    // Rebuild under drift: free the old slice pair BEFORE constructing the
-    // replacement. Building-then-swapping would transiently hold both
-    // images (~2x model bytes) during the copy loop below.
-    if(it!=cache.end()) it->second.s={};
-    Q4KColumnSlices s{};
-    s.cols0=b0*256u;s.cols1=b1*256u;
-    s.w0.resize((size_t)wt.rows*row0);
-    s.w1.resize((size_t)wt.rows*row1);
-    const auto* src=(const uint8_t*)wt.data;
-    for(size_t r=0;r<wt.rows;++r) {
-        std::memcpy(s.w0.data()+r*row0,src+r*rowBytes,row0);
-        std::memcpy(s.w1.data()+r*row1,src+r*rowBytes+row0,row1);
-    }
-    // try_emplace keeps position when the key exists (drift case);
-    // overwrite in place instead of inserting a second Entry.
-    auto [it2, inserted] = cache.try_emplace(wt.data);
-    it2->second.s = std::move(s);
-    it2->second.ratioPermille = pm;
-    return &it2->second.s;
+Q4KColumnSliceCache& columnSliceCache() {
+    static Q4KColumnSliceCache cache;
+    return cache;
 }
 
-struct DualRowJob {
-    bool (*fn)(void*) noexcept = nullptr;
-    void* ctx = nullptr;
-};
+void Deep2InvalidateColumnSlices() noexcept {
+    columnSliceCache().clear();
+}
 
-class DualRowExecutor {
-public:
-    DualRowExecutor() {
-        worker_[0] = std::thread([this]{ loop(0); });
-        worker_[1] = std::thread([this]{ loop(1); });
-    }
-    ~DualRowExecutor() {
-        {
-            std::lock_guard<std::mutex> g(mu_);
-            stop_ = true;
-            ++generation_;
-        }
-        cv_.notify_all();
-        for (auto& t : worker_) if (t.joinable()) t.join();
-    }
+Q4KColumnSliceCache::Snapshot q4kColumnSlices(const WeightTensor& wt) {
+    if (wt.type != (int)GGMLType::GGML_TYPE_Q4_K || !wt.data ||
+        !wt.rows || !wt.cols || wt.cols % 256u != 0u) return {};
 
-    bool run(DualRowJob a, DualRowJob b) {
-        std::unique_lock<std::mutex> lk(mu_);
-        done_[0] = done_[1] = false;
-        result_[0] = result_[1] = false;
-        job_[0] = a;
-        job_[1] = b;
-        const uint64_t g = ++generation_;
-        cv_.notify_all();
-        doneCv_.wait(lk, [&] {
-            return stop_ || (done_[0] && done_[1] && completedGeneration_ == g);
-        });
-        return !stop_ && result_[0] && result_[1];
-    }
-
-private:
-    void loop(unsigned lane) {
-        uint64_t seen = 0;
-        for (;;) {
-            DualRowJob j{};
-            uint64_t g = 0;
-            {
-                std::unique_lock<std::mutex> lk(mu_);
-                cv_.wait(lk, [&]{ return stop_ || generation_ != seen; });
-                if (stop_) return;
-                seen = generation_;
-                g = seen;
-                j = job_[lane];
-            }
-            const bool r = j.fn ? j.fn(j.ctx) : false;
-            {
-                std::lock_guard<std::mutex> lk(mu_);
-                result_[lane] = r;
-                done_[lane] = true;
-                if (done_[0] && done_[1]) {
-                    completedGeneration_ = g;
-                    doneCv_.notify_one();
-                }
-            }
+    long double speed0 = envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
+    long double speed1 = envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    if (autoColumnSplit()) {
+        const double measured0 = gColSpeed0.load(std::memory_order_relaxed);
+        const double measured1 = gColSpeed1.load(std::memory_order_relaxed);
+        if (std::isfinite(measured0) && std::isfinite(measured1) &&
+            measured0 > 0.0 && measured1 > 0.0) {
+            speed0 = measured0;
+            speed1 = measured1;
         }
     }
-
-    std::mutex mu_;
-    std::condition_variable cv_;
-    std::condition_variable doneCv_;
-    std::thread worker_[2];
-    DualRowJob job_[2];
-    bool done_[2] = {false,false};
-    bool result_[2] = {false,false};
-    bool stop_ = false;
-    uint64_t generation_ = 0;
-    uint64_t completedGeneration_ = 0;
-};
-
-DualRowExecutor& rowExecutor() {
-    static DualRowExecutor ex;
-    return ex;
+    if (!std::isfinite(speed0) || !std::isfinite(speed1) ||
+        speed0 <= 0.0L || speed1 <= 0.0L) return {};
+    const size_t blocks = (size_t)wt.cols / 256u;
+    if (blocks < 2) return {};
+    const long double fraction = speed0 / (speed0 + speed1);
+    if (!std::isfinite(fraction)) return {};
+    const uint32_t desired = (uint32_t)std::max<long double>(
+        1.0L, std::min<long double>((long double)blocks - 1,
+             (long double)blocks * fraction + 0.5L));
+    return columnSliceCache().get(wt.data, wt.sizeBytes, wt.rows,
+                                  wt.cols, desired);
 }
 
 static std::atomic<uint64_t> gDualRowTimingCalls{0};
@@ -341,7 +238,7 @@ bool Deep2RunDualGpuColumnSplitBatch4(
     uint32_t batch,uint64_t epoch)
 {
     if(!inputBatch||!outputBatch||!batch||batch>4) return false;
-    const Q4KColumnSlices* s=q4kColumnSlices(wt);
+    const auto s=q4kColumnSlices(wt);
     if(!s) return false;
     const uint32_t rows=(uint32_t)wt.rows;
     static thread_local std::vector<float> x0;
@@ -1209,7 +1106,7 @@ bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
     uint32_t batch,uint64_t epoch)
 {
     if(!inputBatch||!primaryOutput||!batch||batch>4) return false;
-    const Q4KColumnSlices* s=q4kColumnSlices(wt);
+    const auto s=q4kColumnSlices(wt);
     if(!s) return false;
     const uint32_t rows=(uint32_t)wt.rows;
     const size_t n=(size_t)batch*rows;
