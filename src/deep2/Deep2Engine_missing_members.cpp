@@ -110,6 +110,14 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
 
         auto layerT0 = std::chrono::high_resolution_clock::now();
         if (!safeForwardLayer(layer, layerInput, layerOutput, seqLen)) {
+            // Always emit the first failing boundary. No changes to model math,
+            // token state, or the layer-buffer swap contract.
+            fprintf(stderr,
+                    "[DEEP2_FORWARD_FAILURE] layer=%zu seqLen=%zu input=%p output=%p hidden=%p layers=%zu\n",
+                    layer, seqLen, static_cast<void*>(layerInput),
+                    static_cast<void*>(layerOutput), static_cast<void*>(hidden),
+                    modelWeights.numLayers);
+            fflush(stderr);
             return false;
         }
         auto layerT1 = std::chrono::high_resolution_clock::now();

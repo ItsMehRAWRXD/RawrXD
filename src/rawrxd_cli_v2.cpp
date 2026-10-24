@@ -1147,6 +1147,14 @@ static AgentLoopOutcome RunAuthorizedAgentLoop(
                     ""});
                 continue;
             }
+            // Never certify an empty inference response as a successful
+            // agent turn. The retry budget above may already be exhausted.
+            if (result.response.find_first_not_of(" \t\r\n") == std::string::npos) {
+                outcome.success = false;
+                outcome.failure = "EMPTY_MODEL_RESPONSE: backend returned no visible answer";
+                outcome.iterations = iteration + 1;
+                return outcome;
+            }
             outcome.success = true;
             outcome.finalText = result.response;
             outcome.iterations = iteration + 1;
@@ -1585,6 +1593,16 @@ static int CmdRun(const std::vector<std::string>& args) {
             flags["prompt"] = it->second;
             it->second = "true";
         }
+    }
+
+    // REAP capability is unavailable until a verified pruned artifact and\n    // model-specific runtime loader are actually integrated.
+    // REAP admission and GGUF expert remapping are not yet wired into CmdRun.
+    // Fail closed until a validated REAP artifact/residency plan can be selected.
+    if (auto sizeIt = flags.find("size"); sizeIt != flags.end()) {
+        std::cerr << "REAP_SIZE_UNAVAILABLE: --size=" << sizeIt->second
+                  << " requires a certified REAP expert-pruning/admission pipeline; "
+                     "no model has been resized or loaded.\n";
+        return 4;
     }
 
     // Explicit device selection is translated to the existing Deep2 device
@@ -4864,6 +4882,13 @@ int main(int argc, char** argv) {
         args.push_back("--ghost-text");
         return CmdRun(args);
     }
+    // Explicit dispatch witness: identifies the CLI v2 executable that handled
+    // this invocation. Disabled by default to preserve scripting output.
+    if (std::getenv("RAWRXD_CLI_DISPATCH_TRACE") != nullptr) {
+        std::cerr << "[RAWRXD_CLI_V2_DISPATCH] command=" << cmd
+                  << " argc=" << argc << "\n";
+    }
+
     if (cmd == "run") {
         return CmdRun(args);
     }
