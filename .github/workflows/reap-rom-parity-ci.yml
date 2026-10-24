@@ -113,6 +113,14 @@ jobs:
         run: |
           cmake --build build_native_ide_ci --config Release --target RawrXD-Win32IDE-Native --parallel 2
           if ($LASTEXITCODE -ne 0) { throw "Native Win32 IDE build failed" }
+      - name: Check built native IDE artifact exists
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = Get-ChildItem -Path build_native_ide_ci -Filter 'RawrXD-Win32IDE-Native.exe' -Recurse -File | Select-Object -First 1
+          if (!$exe) { throw 'Native IDE target returned success without expected executable' }
+          if ($exe.Length -lt 4096) { throw "Native IDE executable unexpectedly small: $($exe.Length) bytes" }
+          Write-Host "Native IDE artifact: $($exe.FullName), bytes=$($exe.Length)"
       - name: Upload executable and build evidence
         if: always()
         uses: actions/upload-artifact@v4
