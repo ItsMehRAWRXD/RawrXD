@@ -14,7 +14,7 @@ int main() {
     const std::vector<uint32_t> denied{0,1};
     assert(!RouteIsRetained(denied,keep));
     bool threw=false;
-    try { auto a=logits; MaskUnretained(a,keep,3); }
+    try { auto a=logits; const auto original=a; try { MaskUnretained(a,keep,3); } catch(...) { assert(a==original); throw; } }
     catch(const std::invalid_argument&){threw=true;}
     assert(threw);
     std::cout<<"REAP_ROUTE_MASK_SMOKE_PASS\n";
