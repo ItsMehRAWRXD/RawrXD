@@ -14,6 +14,12 @@ on:
       - 'tests/top25_parity_matrix_smoke.cpp'
       - 'tests/native_lsp_framing_smoke.cpp'
       - '.github/workflows/reap-rom-parity-ci.yml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'src/win32app/**'
+      - 'src/snapshot/**'
+      - 'src/rawrxd_cli_v2.cpp'
+      - 'src/deep2/Deep2Engine.cpp'
   pull_request:
     paths:
       - 'src/deep2/reap/**'
@@ -25,6 +31,12 @@ on:
       - 'tools/rawrxd_e2e_source_audit.py'
       - 'tools/rawrxd_no_deps_audit.py'
       - '.github/workflows/reap-rom-parity-ci.yml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'src/win32app/**'
+      - 'src/snapshot/**'
+      - 'src/rawrxd_cli_v2.cpp'
+      - 'src/deep2/Deep2Engine.cpp'
 jobs:
   portable:
     runs-on: ubuntu-24.04
@@ -36,7 +48,7 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/rawrxd-reap
           for name in reap_rom_pinball_smoke reap_ternary_trace_smoke reap_projection_bridge_smoke reap_route_mask_smoke native_lsp_framing_smoke top25_parity_matrix_smoke; do
-            g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic "tests/${name}.cpp" -o "/tmp/rawrxd-reap/${name}"
+            g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG "tests/${name}.cpp" -o "/tmp/rawrxd-reap/${name}"
             "/tmp/rawrxd-reap/${name}"
           done
   msvc:
@@ -52,7 +64,7 @@ jobs:
           if errorlevel 1 exit /b 1
           if not exist build_reap mkdir build_reap
           for %%F in (reap_rom_pinball_smoke reap_ternary_trace_smoke reap_projection_bridge_smoke reap_route_mask_smoke native_lsp_framing_smoke top25_parity_matrix_smoke) do (
-            cl /nologo /std:c++20 /EHsc /W4 /WX /Fe:build_reap\%%F.exe tests\%%F.cpp
+            cl /nologo /std:c++20 /EHsc /W4 /WX /U NDEBUG /Fe:build_reap\%%F.exe tests\%%F.cpp
             if errorlevel 1 exit /b 1
             build_reap\%%F.exe
             if errorlevel 1 exit /b 1
