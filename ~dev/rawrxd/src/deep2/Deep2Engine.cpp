@@ -522,6 +522,20 @@ bool Deep2Engine::allocateBuffers()
     std::memset(ssmState, 0, ssmStateAlloc * sizeof(float));
     std::memset(ssmConvState, 0, ssmConvDimAlloc * 3 * sizeof(float));
 
+    const size_t ssmLayerCount = modelWeights.numLayers ? modelWeights.numLayers : config.numLayers;
+    ssmLayerStateStride_ = ssmStateAlloc;
+    ssmLayerConvStride_ = ssmConvDimAlloc * 3;
+    try
+    {
+        ssmLayerState_.assign(ssmLayerCount * ssmLayerStateStride_, 0.0f);
+        ssmLayerConvState_.assign(ssmLayerCount * ssmLayerConvStride_, 0.0f);
+    }
+    catch (const std::bad_alloc&)
+    {
+        deallocateBuffers();
+        return false;
+    }
+
     ssmStateDim = ssmStateAlloc;
     ssmConvKernel = 4;
     ssmInner_ = ssmInnerAlloc;
@@ -571,6 +585,10 @@ void Deep2Engine::deallocateBuffers()
     ssmState = nullptr;
     delete[] ssmConvState;
     ssmConvState = nullptr;
+    ssmLayerState_.clear();
+    ssmLayerConvState_.clear();
+    ssmLayerStateStride_ = 0;
+    ssmLayerConvStride_ = 0;
     ssmStateDim = 0;
     ssmConvKernel = 0;
     ssmInner_ = 0;
@@ -592,6 +610,9 @@ void Deep2Engine::reset()
         std::memset(attentionOutput, 0, config.hiddenDim * sizeof(float));
     if (ffnOutput && config.hiddenDim)
         std::memset(ffnOutput, 0, config.hiddenDim * sizeof(float));
+
+    std::fill(ssmLayerState_.begin(), ssmLayerState_.end(), 0.0f);
+    std::fill(ssmLayerConvState_.begin(), ssmLayerConvState_.end(), 0.0f);
 
     // BATCH10_RESET_MLA_CACHE
     for (auto& gpu : vulkanDevices_)
@@ -2886,11 +2907,17 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     if (dInner != H * 2)  // 8192 = 2 * 4096
         throw std::runtime_error("computeSSM: unexpected d_inner");
 
-    // Reset SSM recurrent and convolution state for this layer.
-    // Each layer maintains independent state; cross-layer contamination
-    // would cause exponential activation growth.
-    std::memset(ssmState, 0, ssmStateDim * sizeof(float));
-    std::memset(ssmConvState, 0, ssmConvDim_ * ssmConvKernel * sizeof(float));
+    if (ssmLayerStateStride_ < ssmStateDim ||
+        ssmLayerConvStride_ < ssmConvDim_ * (ssmConvKernel - 1) ||
+        (layer + 1) * ssmLayerStateStride_ > ssmLayerState_.size() ||
+        (layer + 1) * ssmLayerConvStride_ > ssmLayerConvState_.size())
+    {
+        throw std::runtime_error("computeSSM: persistent layer state is not allocated");
+    }
+    float* const layerSsmState =
+        ssmLayerState_.data() + layer * ssmLayerStateStride_;
+    float* const layerConvState =
+        ssmLayerConvState_.data() + layer * ssmLayerConvStride_;
 
     // ------------------------------------------------------------------
     // 1. SSM input projection: H (4096) → ssmInOut (18560) via NVFP4 GEMV
@@ -2943,18 +2970,18 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         // tap 0: current input
         acc += convWeight[0 * dConv + c] * convIn[c];
         // taps 1-3: persistent history
-        acc += convWeight[1 * dConv + c] * ssmConvState[c * 3 + 0];
-        acc += convWeight[2 * dConv + c] * ssmConvState[c * 3 + 1];
-        acc += convWeight[3 * dConv + c] * ssmConvState[c * 3 + 2];
+        acc += convWeight[1 * dConv + c] * layerConvState[c * 3 + 0];
+        acc += convWeight[2 * dConv + c] * layerConvState[c * 3 + 1];
+        acc += convWeight[3 * dConv + c] * layerConvState[c * 3 + 2];
         convIn[c] = acc;  // write conv_out in-place
     }
 
     // Update conv history: shift right, insert current conv output at position 0
     for (size_t c = 0; c < dConv; ++c)
     {
-        ssmConvState[c * 3 + 2] = ssmConvState[c * 3 + 1];
-        ssmConvState[c * 3 + 1] = ssmConvState[c * 3 + 0];
-        ssmConvState[c * 3 + 0] = convIn[c];
+        layerConvState[c * 3 + 2] = layerConvState[c * 3 + 1];
+        layerConvState[c * 3 + 1] = layerConvState[c * 3 + 0];
+        layerConvState[c * 3 + 0] = convIn[c];
     }
 
     // ------------------------------------------------------------------
@@ -3014,7 +3041,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
         // Recurrent state update: h = h * exp(dt * A) + dt * x_reduced
         // Output: y = h + D * x_reduced
-        float* h = ssmState + stateOffset;
+        float* h = layerSsmState + stateOffset;
         for (size_t i = 0; i < dStatePerGroup; ++i)
         {
             float a = -std::exp(ssmA[stateOffset + i]);  // A is stored as log(|A|), negate
