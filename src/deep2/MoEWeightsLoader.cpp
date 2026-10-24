@@ -716,6 +716,10 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
             _aligned_free(buffer);
             existing->second.lastAccess = std::chrono::steady_clock::now();
             existing->second.accessCount++;
+            {
+                std::lock_guard<std::mutex> statsLock(statsMutex_);
+                stats_.cacheHits++;
+            }
             return existing->second.data;
         }
         while (expertBytes <= maxCacheBytes_ &&
