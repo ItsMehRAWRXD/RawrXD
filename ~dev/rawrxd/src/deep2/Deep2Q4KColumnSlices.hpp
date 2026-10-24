@@ -25,6 +25,8 @@ public:
 
     // Cache only a bounded working set; active GPU callers own snapshots.
     static constexpr size_t kMaxCachedBytes = 256ull * 1024ull * 1024ull;
+    explicit Q4KColumnSliceCache(size_t maxCachedBytes = kMaxCachedBytes) noexcept
+        : maxCachedBytes_(maxCachedBytes) {}
 
     Snapshot get(const void* source, size_t availableBytes, size_t rows,
                  size_t cols, uint32_t requestedBlocks0) {
@@ -111,14 +113,14 @@ public:
                 // never retained in the cache. This prevents a model reload
                 // from accumulating unbounded host-side packed duplicates.
                 const size_t packedBytes = fresh->w0.size() + fresh->w1.size();
-                if (packedBytes <= kMaxCachedBytes) {
+                if (packedBytes <= maxCachedBytes_) {
                     auto existing = cache_.find(source);
                     if (existing != cache_.end()) {
                         cachedBytes_ -= existing->second.snapshot->w0.size()
                                       + existing->second.snapshot->w1.size();
                         cache_.erase(existing);
                     }
-                    while (cachedBytes_ > kMaxCachedBytes - packedBytes &&
+                    while (cachedBytes_ > maxCachedBytes_ - packedBytes &&
                            !cache_.empty()) {
                         auto victim = cache_.begin();
                         cachedBytes_ -= victim->second.snapshot->w0.size()
@@ -166,6 +168,7 @@ private:
     std::condition_variable cv_;
     std::unordered_set<const void*> inflight_;
     std::unordered_map<const void*, Entry> cache_;
+    size_t maxCachedBytes_ = kMaxCachedBytes;
     size_t cachedBytes_ = 0;
     size_t rebuilds_ = 0;
     size_t generation_ = 0;
