@@ -1,6 +1,7 @@
 #include "../src/win32app/native/NativeLspFraming.hpp"
 #include <cassert>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 int main() {
     using rawrxd::lsp::Framer;
@@ -27,5 +28,9 @@ int main() {
         catch(const std::invalid_argument&) { signedRejected=true; }
         assert(signedRejected);
     }
+    threw=false;
+    try { Framer invalidLimit(std::numeric_limits<size_t>::max()); }
+    catch(const std::invalid_argument&) { threw=true; }
+    assert(threw);
     std::cout<<"NATIVE_LSP_FRAMING_SMOKE_PASS\n";
 }
