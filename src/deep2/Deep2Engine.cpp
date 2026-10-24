@@ -8729,6 +8729,18 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
         convOut[i] = sum / (1.0f + expf(-sum));  // silu
     }
 
+    // Clamp conv1d output to prevent selective scan state explosion.
+    // Nemotron Bolt's conv1d weights can produce large activation values,
+    // which make B and C huge and cause the selective scan state and output
+    // to blow up even when s is clamped. Clamping keeps all downstream
+    // values bounded and prevents NaN from propagating.
+    for (size_t i = 0; i < dConvDim; ++i)
+    {
+        if (convOut[i] > 50.0f) convOut[i] = 50.0f;
+        if (convOut[i] < -50.0f) convOut[i] = -50.0f;
+        if (isnan(convOut[i])) convOut[i] = 0.0f;
+    }
+
     // ── Step 3: Split conv output into x, B, C ──
     float* x = convOut;                                          // [d_inner]
     float* B = convOut + dInner;                                 // [groups * groupState]
@@ -8783,7 +8795,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
                 // At position 627+, unclamped state reaches millions, blowing up
                 // the residual norm (observed: 10,999,402 vs input norm 64).
                 if (s > 100.0f) s = 100.0f;
-                if (s < -100.0f) s = -100.0f;
+                else if (s < -100.0f) s = -100.0f;
+                else if (isnan(s)) s = 0.0f;
                 y += s * C[gsBase + n];
             }
 
