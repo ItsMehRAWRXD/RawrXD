@@ -34,4 +34,5 @@ $result=[ordered]@{
 $json=$result | ConvertTo-Json -Depth 6
 if ($Output) { $dir=Split-Path -Parent $Output; if($dir){New-Item -ItemType Directory -Force $dir | Out-Null}; Set-Content -LiteralPath $Output -Value $json -Encoding UTF8 }
 $json
-if (@($probes | Where-Object reachable).Count -eq 0) { exit 4 }
+$required = @($probes | Where-Object { $_.url -match '/(health|v1/models)$' })
+if (@($required | Where-Object { -not $_.reachable -or $_.status -lt 200 -or $_.status -ge 300 }).Count -gt 0) { exit 4 }
