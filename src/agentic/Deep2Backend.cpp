@@ -43,10 +43,11 @@ bool Deep2Backend::Initialize(const BackendConfig& config) {
         m_config = DefaultConfig();
     }
 
+    // Initialization establishes the client transport configuration.
+    // The server may still be loading a large GGUF; health is probed
+    // separately and must never be assumed healthy.
     m_initialized.store(true);
-    if (CheckHealth()) return true;
-    m_initialized.store(false);
-    return false;
+    return CheckHealth();
 }
 
 void Deep2Backend::Shutdown() {
