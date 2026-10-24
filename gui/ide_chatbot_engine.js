@@ -531,8 +531,22 @@ var Conversation = {
       }
     }
 
-    // Add conversation history (all but the last user message)
-    var msgs = this.messages;
+    // Bound restored history before sending. Old persisted sessions can contain
+    // huge tool/code transcripts; forwarding all 40 messages makes small local
+    // models emit garbage and can silently overflow their context window.
+    var msgs = this.messages.slice(-12);
+    var chars = 0;
+    var bounded = [];
+    for (var bi = msgs.length - 1; bi >= 0; bi--) {
+      var mc = String(msgs[bi].content || '');
+      if (chars + mc.length > 24000 && bounded.length > 0) break;
+      bounded.unshift(msgs[bi]);
+      chars += mc.length;
+    }
+    msgs = bounded;
+    if (this.messages.length !== msgs.length) {
+      logDebug('[Conversation] bounded API context to ' + msgs.length + ' messages / ' + chars + ' chars', 'info');
+    }
     var insertIdx = msgs.length; // default: append at end
     // Find the last user message to inject file context right before it
     for (var i = msgs.length - 1; i >= 0; i--) {
