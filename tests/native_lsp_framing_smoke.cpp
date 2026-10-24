@@ -37,12 +37,12 @@ int main() {
     catch(const std::invalid_argument&) { threw=true; }
     assert(threw);
     Framer mixedCase(1024);
-    auto mixedResult=mixedCase.Feed("content-length: 1\\r\\n\\r\\na");
+    auto mixedResult=mixedCase.Feed("content-length: 1\r\n\r\na");
     assert(mixedResult.size()==1 && mixedResult[0]=="a");
     threw=false;
     try {
         Framer mixedDuplicate(1024);
-        (void)mixedDuplicate.Feed("Content-Length: 1\\r\\ncontent-length: 1\\r\\n\\r\\na");
+        (void)mixedDuplicate.Feed("Content-Length: 1\r\ncontent-length: 1\r\n\r\na");
     } catch(const std::invalid_argument&) { threw=true; }
     assert(threw);
     std::cout<<"NATIVE_LSP_FRAMING_SMOKE_PASS\n";
