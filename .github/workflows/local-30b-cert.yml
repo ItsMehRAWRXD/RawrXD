@@ -67,6 +67,8 @@ jobs:
           timeout 30 /tmp/deep2_dual_row_executor_stress
           g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG -pthread tests/deep2_q4k_column_cache_smoke.cpp -o /tmp/deep2_q4k_column_cache_smoke
           timeout 30 /tmp/deep2_q4k_column_cache_smoke
+          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/top25_parity_matrix_smoke.cpp -o /tmp/top25_parity_matrix_smoke
+          timeout 30 /tmp/top25_parity_matrix_smoke
 
   windows-native:
     runs-on: windows-2022
