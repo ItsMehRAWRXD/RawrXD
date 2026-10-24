@@ -23,6 +23,9 @@ class Q4KColumnSliceCache {
 public:
     using Snapshot = std::shared_ptr<const Q4KColumnSlices>;
 
+    // Cache only a bounded working set; active GPU callers own snapshots.
+    static constexpr size_t kMaxCachedBytes = 256ull * 1024ull * 1024ull;
+
     Snapshot get(const void* source, size_t availableBytes, size_t rows,
                  size_t cols, uint32_t requestedBlocks0) {
         constexpr size_t blockColumns = 256, blockBytes = 144;
@@ -104,7 +107,27 @@ public:
             // Keep the reservation until publication succeeds; on allocation
             // failure wake waiters so another caller can retry safely.
             try {
-                cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
+                // An oversized tensor is still returned to this caller, but
+                // never retained in the cache. This prevents a model reload
+                // from accumulating unbounded host-side packed duplicates.
+                const size_t packedBytes = fresh->w0.size() + fresh->w1.size();
+                if (packedBytes <= kMaxCachedBytes) {
+                    auto existing = cache_.find(source);
+                    if (existing != cache_.end()) {
+                        cachedBytes_ -= existing->second.snapshot->w0.size()
+                                      + existing->second.snapshot->w1.size();
+                        cache_.erase(existing);
+                    }
+                    while (cachedBytes_ > kMaxCachedBytes - packedBytes &&
+                           !cache_.empty()) {
+                        auto victim = cache_.begin();
+                        cachedBytes_ -= victim->second.snapshot->w0.size()
+                                      + victim->second.snapshot->w1.size();
+                        cache_.erase(victim);
+                    }
+                    cache_[source] = Entry{rows, cols, availableBytes, requestedBlocks0, fresh};
+                    cachedBytes_ += packedBytes;
+                }
                 ++rebuilds_;
             } catch (...) {
                 inflight_.erase(source);
@@ -121,7 +144,12 @@ public:
         std::lock_guard<std::mutex> guard(mu_);
         ++generation_;
         cache_.clear();
+        cachedBytes_ = 0;
         cv_.notify_all();
+    }
+    size_t cachedBytes() const noexcept {
+        std::lock_guard<std::mutex> guard(mu_);
+        return cachedBytes_;
     }
     size_t rebuilds() const noexcept {
         std::lock_guard<std::mutex> guard(mu_);
@@ -138,6 +166,7 @@ private:
     std::condition_variable cv_;
     std::unordered_set<const void*> inflight_;
     std::unordered_map<const void*, Entry> cache_;
+    size_t cachedBytes_ = 0;
     size_t rebuilds_ = 0;
     size_t generation_ = 0;
 };
