@@ -44,7 +44,9 @@ bool Deep2Backend::Initialize(const BackendConfig& config) {
     }
 
     m_initialized.store(true);
-    return CheckHealth();
+    if (CheckHealth()) return true;
+    m_initialized.store(false);
+    return false;
 }
 
 void Deep2Backend::Shutdown() {
@@ -92,7 +94,7 @@ BackendHealth Deep2Backend::GetHealth() const {
 bool Deep2Backend::CheckHealth() {
     if (!m_initialized.load()) return false;
 
-    std::string resp = makeGetRequest("/api/health");
+    std::string resp = makeGetRequest("/health");
     if (resp.empty()) {
         RecordFailure("Deep2 backend health check failed: " + m_config.endpoint);
         return false;
@@ -109,9 +111,8 @@ bool Deep2Backend::CheckHealth() {
         }
         return ok;
     } catch (const json::exception&) {
-        // Non-JSON response — assume OK if we got *anything* back
-        m_consecutiveErrors = 0;
-        return true;
+        RecordFailure("Deep2 health returned invalid JSON");
+        return false;
     }
 }
 
@@ -134,7 +135,7 @@ bool Deep2Backend::Supports(BackendCapability cap) const {
 }
 
 std::vector<std::string> Deep2Backend::ListModels() {
-    std::string resp = makeGetRequest("/api/models");
+    std::string resp = makeGetRequest("/v1/models");
     std::vector<std::string> models;
     if (resp.empty()) return models;
 
@@ -199,7 +200,7 @@ InferenceResult Deep2Backend::ChatSync(
     if (!tools.is_null()) req["tools"] = tools;
 
     auto t0 = std::chrono::steady_clock::now();
-    std::string resp = makePostRequest("/chat/completions", req.dump());
+    std::string resp = makePostRequest("/v1/chat/completions", req.dump());
 
     auto t1 = std::chrono::steady_clock::now();
     double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
@@ -383,7 +384,7 @@ bool Deep2Backend::ChatStream(
         }
     };
 
-    std::string resp = makePostRequestStreaming("/chat/completions", req.dump(), on_chunk);
+    std::string resp = makePostRequestStreaming("/v1/chat/completions", req.dump(), on_chunk);
 
     m_streaming.store(false);
 
@@ -494,7 +495,7 @@ bool Deep2Backend::FIMStream(
         if (on_error) on_error(err);
     };
 
-    std::string resp = makePostRequestStreaming("/chat/completions", req.dump(), on_chunk);
+    std::string resp = makePostRequestStreaming("/v1/chat/completions", req.dump(), on_chunk);
     m_streaming.store(false);
 
     if (resp.empty() && !stream_failed) {
