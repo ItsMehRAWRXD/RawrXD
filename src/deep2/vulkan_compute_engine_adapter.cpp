@@ -128,37 +128,29 @@ bool VulkanCompute::InitializeSolo(const char* needle) {
 bool VulkanCompute::DispatchGEMV(const float* weights, const float* input,
                                  float* output, uint32_t rows, uint32_t cols,
                                  uint64_t cacheKey) {
-    if (backend_ == nullptr) return false;
-    // A caller that skipped InitializeSolo() can still reach a working device: initialise on
-    // first dispatch rather than forcing every caller through the explicit init path.
-    // If this fails there is genuinely no device, and the engine takes its host path.
-    if (backend_ != nullptr && !initialized_) {
-        if (backend_->initialize()) {
-            initialized_ = true;
-            RefreshDeviceInfo(backend_.get(), device_info_);
-        }
-    }
-    if (weights == nullptr || input == nullptr || output == nullptr) return false;
-    if (rows == 0 || cols == 0) return false;
-
-    // Stage the host activation into the arena input buffer, dispatch, then
-    // stage the result back out.
-    Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
-    Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
-
-    if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
-        out.size < static_cast<size_t>(rows) * sizeof(float)) {
-        // (hidden, intermediate, heads, kvHeads, headDim, maxSeq, layers, kvLayers)
-        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1)) return false;
-    }
-
-    if (!backend_->UploadVector(in, input, cols)) return false;
-    if (!backend_->DispatchGemvDevice(weights, cacheKey, in, out, rows, cols)) {
+    if (!backend_ || !weights || !input || !output || !rows || !cols)
         return false;
+    if (!initialized_) {
+        if (!backend_->initialize()) return false;
+        initialized_ = true;
+        RefreshDeviceInfo(backend_.get(), device_info_);
     }
-    if (!backend_->DownloadVector(out, output, rows)) return false;
 
-    // Read the implementation's counters; they reflect kernels that ran.
+    const uint64_t elements = uint64_t(rows) * uint64_t(cols);
+    if (elements > std::numeric_limits<size_t>::max() / sizeof(float))
+        return false;
+
+    Deep2::GpuWeightView view{};
+    view.data = weights;
+    view.bytes = static_cast<size_t>(elements) * sizeof(float);
+    view.type = 0;
+    view.rows = rows;
+    view.cols = cols;
+    view.key = cacheKey;
+    if (!backend_->RunWeightHostRoundTrip(
+            view, input, output, backend_->WorkEpoch()))
+        return false;
+
     gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
     gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());
     gemv_weight_hits_ = static_cast<uint64_t>(backend_->WeightHitCount());
@@ -169,37 +161,31 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed,
                                       size_t bytes, const float* input,
                                       float* output, uint32_t rows,
                                       uint32_t cols, uint64_t cacheKey) {
-    if (backend_ == nullptr) return false;
-    // A caller that skipped InitializeSolo() can still reach a working device: initialise on
-    // first dispatch rather than forcing every caller through the explicit init path.
-    // If this fails there is genuinely no device, and the engine takes its host path.
-    if (backend_ != nullptr && !initialized_) {
-        if (backend_->initialize()) {
-            initialized_ = true;
-            RefreshDeviceInfo(backend_.get(), device_info_);
-        }
-    }
-    if (packed == nullptr || input == nullptr || output == nullptr) return false;
-    if (rows == 0 || cols == 0) return false;
-    (void)cacheKey;  // the quant path keys by weight pointer, see below
-
-    Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
-    Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
-
-    if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
-        out.size < static_cast<size_t>(rows) * sizeof(float)) {
-        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1)) return false;
-    }
-
-    if (!backend_->UploadVector(in, input, cols)) return false;
-    // The packed-quant dispatch takes the host weight pointer directly and
-    // manages its own pin/residency keyed by it, so the caller's cacheKey is
-    // not forwarded here; it is not dropped silently, it is simply the wrong
-    // key identity for this path.
-    if (!backend_->DispatchGemvQuant(ggmlType, packed, bytes, in, out, rows, cols)) {
+    if (!backend_ || !packed || !input || !output ||
+        !bytes || !rows || !cols)
         return false;
+    if (!initialized_) {
+        if (!backend_->initialize()) return false;
+        initialized_ = true;
+        RefreshDeviceInfo(backend_.get(), device_info_);
     }
-    if (!backend_->DownloadVector(out, output, rows)) return false;
+
+    // Exactly the types handled by DispatchGemvQuant/DispatchWeight.
+    // No guessing or host-side dequantization on an unsupported type.
+    if (ggmlType != 8 && ggmlType != 10 && ggmlType != 12 &&
+        ggmlType != 13 && ggmlType != 14 && ggmlType != 40)
+        return false;
+
+    Deep2::GpuWeightView view{};
+    view.data = packed;
+    view.bytes = bytes;
+    view.type = ggmlType;
+    view.rows = rows;
+    view.cols = cols;
+    view.key = cacheKey;
+    if (!backend_->RunWeightHostRoundTrip(
+            view, input, output, backend_->WorkEpoch()))
+        return false;
 
     gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
     gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());

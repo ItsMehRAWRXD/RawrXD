@@ -4065,11 +4065,12 @@ bool VulkanCompute::RunWeightHostRoundTrip(
         return false;
 
     // PARITY: dual-row lane tag (dispatches inside this round-trip).
+    const uint32_t previousLaneTag = q4kLane_;
     SetQ4kLaneTag(kQ4kLaneDual);
     struct LaneTagRestore {
         VulkanCompute* self; uint32_t prev;
         ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
-    } laneRestore{this, q4kLane_};
+    } laneRestore{this, previousLaneTag};
 
     SetWorkEpoch(epoch);
     if(!EnsureScratch(60,weight.cols)||

@@ -1,0 +1,52 @@
+name: Deep2 fused host GEMV admission (source and Windows build)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/fused-gemv-recovery-20261024
+  pull_request:
+    paths:
+      - src/deep2/vulkan_compute_engine_adapter.cpp
+      - src/deep2/vulkan_compute_adapter_fused.cpp
+      - src/deep2/vulkan_compute.cpp
+      - tests/fused_host_gemv_source_contract.py
+      - .github/workflows/deep2-fused-compat-admission.yml
+permissions:
+  contents: read
+jobs:
+  source-contract:
+    name: Source shape regression (not GPU parity)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reject unfused host GEMV regressions
+        run: python3 tests/fused_host_gemv_source_contract.py
+  native-build:
+    name: Native x64 compile and link (GPU runtime not certified)
+    runs-on: windows-2022
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure native Qt-free project
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake -S . -B build_fused_ci -G "Visual Studio 17 2022" -A x64 -DRAWRXD_REQUIRE_QT=OFF -DUSE_ZLIB_FETCHCONTENT=OFF -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF
+          if ($LASTEXITCODE -ne 0) { throw 'Native CMake configure failed' }
+      - name: Compile Deep2 engine and production CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake --build build_fused_ci --config Release --target deep2_engine_lib RawrXD-CLI-V2 --parallel 2
+          if ($LASTEXITCODE -ne 0) { throw 'Deep2 or CLI build failed' }
+      - name: Save build configuration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deep2-fused-native-config
+          path: build_fused_ci/CMakeCache.txt
+          if-no-files-found: warn
