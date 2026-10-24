@@ -21,6 +21,19 @@ jobs:
             g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG "tests/${name}.cpp" -o "/tmp/rawrxd-reap/${name}"
             "/tmp/rawrxd-reap/${name}"
           done
+  portable-sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile and run REAP bridge with address and undefined-behavior sanitizers
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -std=c++20 -O1 -g -Wall -Wextra -Werror -pedantic -UNDEBUG -fno-omit-frame-pointer -fsanitize=address,undefined tests/reap_rom_pinball_smoke.cpp -o /tmp/rawrxd-reap-sanitized
+          /tmp/rawrxd-reap-sanitized
+
   msvc:
     runs-on: windows-2022
     steps:
