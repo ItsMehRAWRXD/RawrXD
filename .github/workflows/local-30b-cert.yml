@@ -168,14 +168,3 @@ jobs:
             build_cert/**/RawrXD-Win32IDE-Native.exe
             build_cert/Testing/**
           if-no-files-found: warn
- /tmp/deep2_q4k_repack_benchmark.txt
-          grep -q '^Q4K_REPACK_BASELINE_COUNT=40
-          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/top25_parity_matrix_smoke.cpp -o /tmp/top25_parity_matrix_smoke
-          timeout 30 /tmp/top25_parity_matrix_smoke
-          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/deep2_utf8_streaming_smoke.cpp -o /tmp/deep2_utf8_streaming_smoke
-          timeout 30 /tmp/deep2_utf8_streaming_smoke
- /tmp/deep2_q4k_repack_benchmark.txt
-          grep -q '^Q4K_REPACK_BASELINE_COUNT=40          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/top25_parity_matrix_smoke.cpp -o /tmp/top25_parity_matrix_smoke
-          timeout 30 /tmp/top25_parity_matrix_smoke
-          g++ -std=c++20 -O2 -Wall -Wextra -Werror -pedantic -UNDEBUG tests/deep2_utf8_streaming_smoke.cpp -o /tmp/deep2_utf8_streaming_smoke
-          timeout 30 /tmp/deep2_utf8_streaming_smoke
