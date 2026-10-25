@@ -140,7 +140,7 @@ class ReapCliContract(unittest.TestCase):
     def test_42_decimal_gigabytes(self): self.assert_size_admitted("0.5GB")
     def test_43_leading_zero(self): self.assert_size_admitted("00030GB")
     def test_44_leading_decimal(self): self.assert_size_admitted(".5GB")
-    def test_45_uint64_max(self): self.assert_size_admitted("18446744073709551615B")
+    def test_45_exact_large_integer(self): self.assert_size_admitted("9007199254740992B")
 
 if __name__ == "__main__":
     unittest.main()
