@@ -154,6 +154,18 @@ public:
         currentLength_ = committedPrefix;
     }
 
+    // Fail-closed transactional commit: a complete layer set is required.
+    // Existing Write/CommitPosition remain available for sparse-layer callers.
+    void CommitCompletePosition(const std::vector<unsigned char>& writtenLayers)
+    {
+        if (writtenLayers.size() != numLayers_)
+            throw std::invalid_argument("K2KVCache: layer completion mask size");
+        for (unsigned char written : writtenLayers)
+            if (written != 1u)
+                throw std::invalid_argument("K2KVCache: incomplete KV position");
+        CommitPosition();
+    }
+
     void CommitPosition()
     {
         if (!CanAppend())
