@@ -145,6 +145,8 @@ int main() {
     c.Reset(2, 17, 4);
     for (size_t pos = 0; pos < 17; ++pos) c.CommitPosition();
     assert(c.currentLength() == 17);
+    assert(c.allocatedPositions() == 17);
+    assert(c.committedBytes() == c.reservedBytes());
     assert(c.Key(1,16)[0] == 0.f);
     assert(throws([&] { c.CommitPosition(); }));
     c.Truncate(17); // valid no-op at full capacity
