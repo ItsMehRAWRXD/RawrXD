@@ -43,8 +43,24 @@ static int capabilities(const std::string& input) {
     fs::path p(input); std::error_code ec;
     fs::path candidate = p;
     if (fs::is_directory(p, ec)) {
-        for (auto& e : fs::directory_iterator(p, ec)) {
-            if (!ec && e.is_regular_file() && e.path().extension() == ".gguf") { candidate = e.path(); break; }
+        std::vector<fs::path> models;
+        fs::directory_iterator it(p, fs::directory_options::skip_permission_denied, ec);
+        if (ec) {
+            std::cout << "{\"source\":" << json_quote(input)
+                      << ",\"format\":\"unknown\",\"inspectable\":false,\"calibratable\":false,\"transformable\":false,\"reason\":\"directory_read_failed\"}\n";
+            return 4;
+        }
+        for (const auto& entry : it) {
+            std::error_code entryEc;
+            if (entry.is_regular_file(entryEc) && !entryEc && entry.path().extension() == ".gguf")
+                models.push_back(entry.path());
+        }
+        std::sort(models.begin(), models.end());
+        if (models.size() == 1) candidate = models.front();
+        else if (models.size() > 1) {
+            std::cout << "{\"source\":" << json_quote(input)
+                      << ",\"format\":\"unknown\",\"inspectable\":false,\"calibratable\":false,\"transformable\":false,\"reason\":\"ambiguous_model_directory\"}\n";
+            return 4;
         }
     }
     const bool recognized = candidate.extension() == ".gguf";
