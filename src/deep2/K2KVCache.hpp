@@ -139,8 +139,8 @@ private:
                     std::size_t layer,
                     std::size_t position) const
     {
-        if (layer >= numLayers_ || position >= currentLength_)
-            throw std::out_of_range("K2KVCache: uncommitted index");
+        if (layer >= numLayers_ || position >= allocatedSeq_)
+            throw std::out_of_range("K2KVCache: index");
         const std::size_t offset =
             ((layer * allocatedSeq_) + position) * kvDim_;
         return storage.data() + offset;
