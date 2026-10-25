@@ -177,6 +177,14 @@ ReapWriteResult ReapWriter::writeRoundTrip(const std::string& src, const std::st
         result.error = "lossless copy produced no readable output";
         return result;
     }
+    const auto checked = verifyRoundTrip(src, dst);
+    if (!checked.success) {
+        std::error_code ec;
+        std::filesystem::remove(dst, ec);
+        result.error = "round-trip verification failed: " + checked.error;
+        if (ec) result.error += "; cleanup failed: " + ec.message();
+        return result;
+    }
     result.success = true;
     result.outputPath = dst;
     result.bytesWritten = static_cast<uint64_t>(copiedSize);
