@@ -251,7 +251,8 @@ enum vk_device_architecture {
 };
 
 static vk_device_architecture get_device_architecture(const vk::PhysicalDevice& device) {
-    vk::PhysicalDeviceProperties props = device.getProperties();
+    vk::PhysicalDeviceProperties props;
+    device.getProperties(&props);
 
     if (props.vendorID == VK_VENDOR_ID_AMD) {
         const std::vector<vk::ExtensionProperties> ext_props = device.enumerateDeviceExtensionProperties();
@@ -5120,7 +5121,9 @@ static void ggml_vk_instance_init() {
         // If only CPU devices are available, return without devices.
         if (vk_instance.device_indices.empty()) {
             for (size_t i = 0; i < devices.size(); i++) {
-                if (devices[i].getProperties().deviceType != vk::PhysicalDeviceType::eCpu) {
+                vk::PhysicalDeviceProperties devProps;
+                devices[i].getProperties(&devProps);
+                if (devProps.deviceType != vk::PhysicalDeviceType::eCpu) {
                     vk_instance.device_indices.push_back(i);
                     break;
                 }

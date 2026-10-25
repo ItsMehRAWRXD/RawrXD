@@ -417,7 +417,7 @@ ggml_add_backend(METAL)
 ggml_add_backend(MUSA)
 ggml_add_backend(RPC)
 ggml_add_backend(SYCL)
-ggml_add_backend(Vulkan)
+# ggml_add_backend(Vulkan) — DISABLED: Vulkan SDK header incompatibility
 ggml_add_backend(WebGPU)
 ggml_add_backend(zDNN)
 ggml_add_backend(OpenCL)
@@ -425,7 +425,13 @@ ggml_add_backend(Hexagon)
 
 foreach (target ggml-base ggml)
     target_include_directories(${target} PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include> $<INSTALL_INTERFACE:include>)
-    target_compile_features   (${target} PRIVATE c_std_11 cxx_std_17) # don't bump
+    if(NOT MSVC)
+        target_compile_features   (${target} PRIVATE c_std_11 cxx_std_17) # don't bump
+    else()
+        target_compile_options   (${target} PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/std:c++17>
+            $<$<COMPILE_LANGUAGE:C>:/std:c11>)
+    endif()
 endforeach()
 
 target_link_libraries(ggml-base PRIVATE Threads::Threads)
