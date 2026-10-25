@@ -83,25 +83,26 @@ private:
     static uint32_t rotr(uint32_t x, uint32_t n) { return (x >> n) | (x << (32 - n)); }
 
     std::string hex() {
-        // Pad
-        uint8_t pad[128];
-        size_t padLen = 0;
-        pad[padLen++] = 0x80;
-        while (padLen % 64 != 56) pad[padLen++] = 0;
-        for (int i = 7; i >= 0; --i)
-            pad[padLen++] = uint8_t((totalBits >> (i * 8)) & 0xff);
-        for (size_t i = 0; i < padLen; i += 64)
-            update(pad + i, 64);
-        // compress final
-        uint8_t finalBlock[64] = {0};
-        compress(finalBlock);
-
-        char out[65];
-        for (int i = 0; i < 8; ++i)
-            std::snprintf(out + i * 2, 3, "%08x", h[i]);
-        out[64] = 0;
-        return std::string(out);
+        // SHA-256: preserve original bit count before padding.
+        const uint64_t messageBits = totalBits;
+        uint8_t pad[128] = {};
+        pad[0] = 0x80;
+        const size_t padBytes = bufLen < 56 ? 56 - bufLen : 120 - bufLen;
+        update(pad, padBytes);
+        uint8_t length[8];
+        for (unsigned i = 0; i < 8; ++i)
+            length[7 - i] = static_cast<uint8_t>(messageBits >> (i * 8));
+        update(length, 8);
+        // update() has compressed the final block; no extra zero block.
+        static constexpr char digits[] = "0123456789abcdef";
+        std::string out(64, '0');
+        for (size_t i = 0; i < 8; ++i) {
+            for (size_t j = 0; j < 8; ++j)
+                out[i * 8 + j] = digits[(h[i] >> (28 - 4 * j)) & 0xf];
+        }
+        return out;
     }
+
 };
 
 // Read little-endian uint32 from buffer
@@ -139,6 +140,19 @@ ReapWriteResult ReapWriter::writeRoundTrip(const std::string& src, const std::st
     ReapWriteResult result;
 
     // Refuse to overwrite existing output
+    if (!preserveDataBytes) {
+        result.error = "non-lossless transformation not certified";
+        return result;
+    }
+    if (src.empty() || dst.empty()) {
+        result.error = "source and destination paths are required";
+        return result;
+    }
+    std::error_code equivalentEc;
+    if (std::filesystem::equivalent(src, dst, equivalentEc) && !equivalentEc) {
+        result.error = "source and destination refer to the same file";
+        return result;
+    }
     if (std::filesystem::exists(dst)) {
         result.error = "output path already exists: " + dst;
         return result;
@@ -158,6 +172,8 @@ ReapWriteResult ReapWriter::writeRoundTrip(const std::string& src, const std::st
     std::error_code sizeEc;
     const auto copiedSize = std::filesystem::file_size(dst, sizeEc);
     if (sizeEc || copiedSize == 0) {
+        std::error_code cleanupEc;
+        std::filesystem::remove(dst, cleanupEc);
         result.error = "lossless copy produced no readable output";
         return result;
     }
