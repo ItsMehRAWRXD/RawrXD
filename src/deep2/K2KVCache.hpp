@@ -179,7 +179,9 @@ private:
     void EnsureHot(std::size_t pos) {
         if (pos < allocatedSeq_) return;
         const std::size_t remaining = maxSeqLen_ - allocatedSeq_;
-        const std::size_t increment = (std::min)(kPageTok_, remaining);
+        // Geometric growth bounds reallocations to O(log context) while
+        // retaining the eight-token initial footprint for short replays.
+        const std::size_t increment = (std::min)((std::max)(allocatedSeq_, kPageTok_), remaining);
         const std::size_t neu = allocatedSeq_ + increment;
         if (neu <= allocatedSeq_)
             throw std::out_of_range("K2KVCache: sequence length exceeded");
