@@ -177,6 +177,7 @@ public:
 
         EnsureHot(currentLength_); // committed positions must remain addressable
         ++currentLength_;
+        std::fill(written_.begin(), written_.end(), 0);
     }
 
 private:
