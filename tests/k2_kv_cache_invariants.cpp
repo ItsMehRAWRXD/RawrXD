@@ -72,5 +72,18 @@ int main() {
     // 26: strict commit works after reset with a different layer count.
     c.Reset(1,1,2); c.Write(0,k,v); c.CommitCompletePosition();
     assert(c.currentLength()==1);
+    // 27: Clear revokes partial completion even after a write.
+    c.Reset(2,8,2); c.Write(0,k,v); c.Clear();
+    c.Write(1,k,v); assert(fails([&]{c.CommitCompletePosition();}));
+    // 28: failed Reset preserves an existing complete speculative position.
+    c.Write(0,k,v);
+    assert(fails([&]{c.Reset(0,8,2);}));
+    c.CommitCompletePosition(); assert(c.currentLength()==1);
+    // 29: failed overflow Reset preserves committed geometry and content.
+    assert(fails([&]{c.Reset(2,8,(std::numeric_limits<std::size_t>::max)());}));
+    assert(c.numLayers()==2 && c.currentLength()==1 && c.Key(0,0)[0]==7);
+    // 30: successful Reset discards prior completion state.
+    c.Write(0,k,v); c.Reset(2,8,2);
+    c.Write(1,k,v); assert(fails([&]{c.CommitCompletePosition();}));
     return 0;
 }
