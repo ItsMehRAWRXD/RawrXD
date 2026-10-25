@@ -206,18 +206,23 @@ void main() {
     uint rowBytes = 0u;
     if (pc.type == 6u) {
         blocksPerRow = pc.cols / 32u + uint(pc.cols % 32u != 0u);
+        if (blocksPerRow > 0xffffffffu / 22u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 22u;
     } else if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
+        if (blocksPerRow > 0xffffffffu / 34u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 34u;
     } else if (pc.type == 10u) {
         blocksPerRow = pc.cols / 256u + uint(pc.cols % 256u != 0u);
+        if (blocksPerRow > 0xffffffffu / 84u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 84u;
     } else if (pc.type == 12u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
+        if (blocksPerRow > 0xffffffffu / 144u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 144u;
     } else if (pc.type == 14u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
+        if (blocksPerRow > 0xffffffffu / 210u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 210u;
     } else {
         if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
