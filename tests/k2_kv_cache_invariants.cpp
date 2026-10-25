@@ -48,5 +48,29 @@ int main() {
     // 18: clear erases committed history and resets length.
     c.Write(2,k,v); c.CommitPosition(); c.Clear();
     assert(c.currentLength()==0 && c.Key(2,0)[0]==0);
+    // 19: strict commit rejects an unwritten position.
+    c.Reset(2,4,2);
+    assert(fails([&]{c.CommitCompletePosition();}) && c.currentLength()==0);
+    // 20: one written layer is insufficient.
+    c.Write(0,k,v);
+    assert(fails([&]{c.CommitCompletePosition();}) && c.currentLength()==0);
+    // 21: a complete set commits atomically.
+    c.Write(1,k,v); c.CommitCompletePosition();
+    assert(c.currentLength()==1 && c.Key(1,0)[0]==7);
+    // 22: completion flags reset after commit.
+    assert(fails([&]{c.CommitCompletePosition();}));
+    // 23: rollback resets partial completion flags.
+    c.Write(0,k,v); c.RollbackPosition();
+    c.Write(1,k,v);
+    assert(fails([&]{c.CommitCompletePosition();}));
+    // 24: truncation resets speculative completion flags.
+    c.Write(0,k,v); c.Truncate(1);
+    assert(fails([&]{c.CommitCompletePosition();}));
+    // 25: clear resets completion flags and stored data.
+    c.Write(0,k,v); c.Clear();
+    assert(fails([&]{c.CommitCompletePosition();}));
+    // 26: strict commit works after reset with a different layer count.
+    c.Reset(1,1,2); c.Write(0,k,v); c.CommitCompletePosition();
+    assert(c.currentLength()==1);
     return 0;
 }
