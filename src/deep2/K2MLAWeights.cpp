@@ -522,9 +522,17 @@ static bool gemvDispatchT(const RawrXD::TensorView& weightView,
         return true;
     }
     if (qt == RawrXD::QuantType::Q4_K) {
+        fprintf(stderr, "[MLA_GEMV] calling MLA_Gemv(12, rows=%zu cols=%zu byteSize=%zu)\n",
+                rows, cols, weightView.byteSize());
+        fflush(stderr);
         if (MLA_Gemv(12, weightView.data(), weightView.byteSize(), input, output,
-                           (uint32_t)rows, (uint32_t)cols))
+                           (uint32_t)rows, (uint32_t)cols)) {
+            fprintf(stderr, "[MLA_GEMV] MLA_Gemv(12) succeeded\n");
+            fflush(stderr);
             return true;
+        }
+        fprintf(stderr, "[MLA_GEMV] MLA_Gemv(12) failed, falling back to host\n");
+        fflush(stderr);
         gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
         return true;
     }
@@ -1473,6 +1481,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
         }
     }
     StreamPathTiming_Add(MlaStage_AttnUs(), tAttn);
+    fprintf(stderr, "[MLA_EXECUTE] layer=%u attention complete, starting output projection\n",
+            layerIdx);
+    fflush(stderr);
 
     // Step 8: Output projection: attnO^T * attnOut  [hiddenDim]
     // GGUF stores attnO as [numHeads*vHeadDim, hiddenDim]
@@ -1483,6 +1494,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
         if (auto* vc = K2GpuStreamCopy_Vc())
             vc->GemvFuseResidualNext(resid);
     }
+    fprintf(stderr, "[MLA_EXECUTE] layer=%u calling gemvDispatchTransposed(attnO)\n",
+            layerIdx);
+    fflush(stderr);
     if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
                                 oCols, oActualRows, error)) {
         goto cleanup;

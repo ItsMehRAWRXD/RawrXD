@@ -558,32 +558,86 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     auto ptr = [&](size_t i) -> const uint8_t* {
         return borrow[i] ? borrow[i] : payloads[i].data();
     };
+    auto findRef = [&](size_t i) {
+        return index.Find(names[i]);
+    };
+    auto qARef = findRef(0);
+    auto qBRef = findRef(1);
+    auto kvARef = findRef(2);
+    auto kBRef = findRef(3);
+    auto oRef = findRef(5);
+    auto qANormRef = findRef(7);
+    auto kvANormRef = findRef(8);
+    auto vRef = findRef(4);
+    if (!qARef || !qBRef || !kvARef || !kBRef || !oRef ||
+        !qANormRef || !kvANormRef || (!fusedKv && !vRef)) {
+        error = "RunMlaOnPayloads: tensor index entry disappeared after payload load";
+        fprintf(stderr, "[MLA_TRACE] layer=%u missing index entry qA=%u qB=%u kvA=%u kB=%u v=%u o=%u qNorm=%u kvNorm=%u\n",
+                layerIdx, qARef ? 1u : 0u, qBRef ? 1u : 0u,
+                kvARef ? 1u : 0u, kBRef ? 1u : 0u, vRef ? 1u : 0u,
+                oRef ? 1u : 0u, qANormRef ? 1u : 0u, kvANormRef ? 1u : 0u);
+        fflush(stderr);
+        return false;
+    }
+    fprintf(stderr, "[MLA_TRACE] layer=%u views_begin fused=%u bytes=%llu\n", layerIdx, fusedKv ? 1u : 0u, static_cast<unsigned long long>(layerBytes));
+    fflush(stderr);
     Deep2::MLAWeights mla;
     mla.fusedKvB = fusedKv;
-    mla.attnQ_a       = MakeTensorView(ptr(0), index, names[0], QuantFromGgml(index.Find(names[0])->ggmlType));
-    mla.attnQ_b       = MakeTensorView(ptr(1), index, names[1], QuantFromGgml(index.Find(names[1])->ggmlType));
-    mla.attnKV_a_mqa  = MakeTensorView(ptr(2), index, names[2], QuantFromGgml(index.Find(names[2])->ggmlType));
-    mla.attnK_b       = MakeTensorView(ptr(3), index, names[3], QuantFromGgml(index.Find(names[3])->ggmlType));
+    mla.attnQ_a       = MakeTensorView(ptr(0), index, names[0], QuantFromGgml(qARef->ggmlType));
+    mla.attnQ_b       = MakeTensorView(ptr(1), index, names[1], QuantFromGgml(qBRef->ggmlType));
+    mla.attnKV_a_mqa  = MakeTensorView(ptr(2), index, names[2], QuantFromGgml(kvARef->ggmlType));
+    mla.attnK_b       = MakeTensorView(ptr(3), index, names[3], QuantFromGgml(kBRef->ggmlType));
     if (!fusedKv)
-        mla.attnV_b   = MakeTensorView(ptr(4), index, names[4], QuantFromGgml(index.Find(names[4])->ggmlType));
-    mla.attnO         = MakeTensorView(ptr(5), index, names[5], QuantFromGgml(index.Find(names[5])->ggmlType));
+        mla.attnV_b   = MakeTensorView(ptr(4), index, names[4], QuantFromGgml(vRef->ggmlType));
+    auto normRef = findRef(6);
+    if (!normRef) {
+        error = "RunMlaOnPayloads: attention norm index entry disappeared after payload load";
+        return false;
+    }
+    mla.attnO         = MakeTensorView(ptr(5), index, names[5], QuantFromGgml(oRef->ggmlType));
     mla.attnNorm      = MakeTensorView(ptr(6), index, names[6], RawrXD::QuantType::F32);
     mla.attnQ_a_norm  = MakeTensorView(ptr(7), index, names[7], RawrXD::QuantType::F32);
     mla.attnKV_a_norm = MakeTensorView(ptr(8), index, names[8], RawrXD::QuantType::F32);
+    fprintf(stderr, "[MLA_TRACE] layer=%u views_ready qA=%zu,%zu qB=%zu,%zu kvA=%zu,%zu kB=%zu,%zu o=%zu,%zu\n",
+            layerIdx,
+            mla.attnQ_a.dims().size() > 0 ? mla.attnQ_a.dims()[0] : 0,
+            mla.attnQ_a.dims().size() > 1 ? mla.attnQ_a.dims()[1] : 0,
+            mla.attnQ_b.dims().size() > 0 ? mla.attnQ_b.dims()[0] : 0,
+            mla.attnQ_b.dims().size() > 1 ? mla.attnQ_b.dims()[1] : 0,
+            mla.attnKV_a_mqa.dims().size() > 0 ? mla.attnKV_a_mqa.dims()[0] : 0,
+            mla.attnKV_a_mqa.dims().size() > 1 ? mla.attnKV_a_mqa.dims()[1] : 0,
+            mla.attnK_b.dims().size() > 0 ? mla.attnK_b.dims()[0] : 0,
+            mla.attnK_b.dims().size() > 1 ? mla.attnK_b.dims()[1] : 0,
+            mla.attnO.dims().size() > 0 ? mla.attnO.dims()[0] : 0,
+            mla.attnO.dims().size() > 1 ? mla.attnO.dims()[1] : 0);
+    fflush(stderr);
     size_t hiddenDim = k2cfg.hiddenDim;
     const float* normW = mla.attnNorm.asF32();
     if (normW) rmsNorm(hiddenIn, normW, scratch, hiddenDim, 1e-5f);
     else memcpy(scratch, hiddenIn, hiddenDim * sizeof(float));
+    fprintf(stderr, "[MLA_TRACE] layer=%u norm_ready data=%u\n", layerIdx, normW ? 1u : 0u);
+    fflush(stderr);
     memset(mlaOut, 0, hiddenDim * sizeof(float));
     Deep2::MLAForward mlaFwd;
     const uint64_t tMla = Deep2::StreamPathTiming_NowUs();
     const uint64_t rf0 = Deep2::OProj_ResidualFused().load();
     Deep2::OProj_SetResidualBase(hiddenIn);
+    fprintf(stderr, "[MLA_TRACE] layer=%u execute_begin\n", layerIdx);
+    fflush(stderr);
     bool ok = mlaFwd.Execute(scratch, hiddenOut, mla, k2cfg, error,
                              kvCache, layerIdx, position, stats);
+    fprintf(stderr, "[MLA_TRACE] layer=%u execute_end ok=%u err=%s\n",
+            layerIdx, ok ? 1u : 0u, error.empty() ? "(none)" : error.c_str());
+    fflush(stderr);
     Deep2::OProj_SetResidualBase(nullptr);
+    fprintf(stderr, "[MLA_TRACE] layer=%u residual_base_cleared\n", layerIdx);
+    fflush(stderr);
     Deep2::StreamPathTiming_Add(Deep2::SPT_mla(), tMla);
+    fprintf(stderr, "[MLA_TRACE] layer=%u timing_recorded\n", layerIdx);
+    fflush(stderr);
     if (Deep2::OProj_ResidualFused().load() == rf0) {
+        fprintf(stderr, "[MLA_TRACE] layer=%u residual_begin\n", layerIdx);
+        fflush(stderr);
         // No GPU residual fuse â€” hiddenOut holds O_PROJ only; add residual.
         size_t i = 0;
 #if defined(__AVX512F__)
@@ -599,6 +653,8 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
             _mm256_storeu_ps(hiddenOut + i, _mm256_add_ps(a, b));
         }
         for (; i < hiddenDim; ++i) hiddenOut[i] = hiddenIn[i] + hiddenOut[i];
+        fprintf(stderr, "[MLA_TRACE] layer=%u residual_end\n", layerIdx);
+        fflush(stderr);
     }
     for (size_t p = 0; p < 9; ++p) { TrackFree(payloads[p].size()); payloads[p].clear(); }
     return ok;
@@ -638,6 +694,11 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     const Deep2::KimiK2Config& k2cfg, float* hidden, bool enableMlaComplete,
     Deep2::MlaCompleteStats* aggStats, uint32_t position, uint32_t seqNeed,
     std::string& error) {
+    fprintf(stderr, "K2_MLA_ENTER layers=%u position=%u seqNeed=%u\n",
+            testLayers, position, seqNeed);
+    fflush(stderr);
+    fprintf(stderr, "[K2_DIAG] ForwardMLALayers testLayers=%u\n", testLayers);
+    fflush(stderr);
     /* P1 witness: real ForwardMLALayers entry â‰  scoreboard scheduler LIVE. */
     Deep2::scoreboard::MarkRealKernelDispatch();
     if (enableMlaComplete) {
@@ -648,6 +709,8 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     std::vector<float> scratch(hiddenDim);
     std::vector<float> tempHidden(hiddenDim);
     std::vector<float> mlaOut(hiddenDim);
+    fprintf(stderr, "K2_MLA_BUFFERS hidden=%zu\n", hiddenDim);
+    fflush(stderr);
     memcpy(tempHidden.data(), hidden, hiddenDim * sizeof(float));
 
     rawrxd::deep2::K2KVCache* kvPtr = nullptr;
@@ -708,6 +771,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
         kvPtr = &tlsKv;
         TrackAlloc(tlsKv.liveBytes());
+        fprintf(stderr, "K2_MLA_KV_READY layers=%u dim=%zu len=%zu\n",
+                testLayers, kvDim, tlsKv.currentLength());
+        fflush(stderr);
     }
 
     auto releaseKvTrack = [&]() {
@@ -804,9 +870,17 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
     };
     auto joinAll = [&]() {
-        /* P3: joinAll demotion tip; fail-closed. LIVE=0. */
+        /* The scoreboard tip is telemetry only. Error exits must join the
+           actual worker objects before stack-owned LayerSlot storage dies. */
         (void)Deep2::scoreboard::TryJoinAllTip(slots, outPrefetch,
                                                outPrefetchDone);
+        for (auto& slot : slots) {
+            if (slot.worker.joinable())
+                slot.worker.join();
+        }
+        if (outPrefetch.joinable())
+            outPrefetch.join();
+        outPrefetchDone.store(1, std::memory_order_release);
     };
     uint32_t issued = 0;
     auto issueUpTo = [&](uint32_t last) {
@@ -817,14 +891,25 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     };
 
     issueUpTo(0);
+    fprintf(stderr, "K2_MLA_FIRST_SLOT_ISSUED\n");
+    fflush(stderr);
     bool stepRope = false;
     for (uint32_t layer = 0; layer < testLayers; ++layer) {
+        fprintf(stderr, "[MLA_LOOP] layer=%u/%u entering iteration\n",
+                layer, testLayers);
+        fflush(stderr);
         Deep2::hostfc::LayerEdge hostEdge(layer, testLayers);
+        fprintf(stderr, "[MLA_LOOP] layer=%u/%u LayerEdge constructed\n",
+                layer, testLayers);
+        fflush(stderr);
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
         Deep2::MlaCompleteStats layerStats;
         if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerStart(Deep2::LivePath_ActiveCyclone(), layer, 0);
+        fprintf(stderr, "[MLA_LOOP] layer=%u/%u LivePath done\n",
+                layer, testLayers);
+        fflush(stderr);
 
         issueUpTo(layer + 1);
         LayerSlot& s = slots[layer & 3u];
@@ -862,8 +947,13 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             releaseKvTrack();
             return false;
         }
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u MLA_RETURNED\n", layer, testLayers);
+        fflush(stderr);
         /* Host MoE after MLA: router â†’ shared placer â†’ execute ALL selected. */
         if (k2cfg.numExperts > 0) {
+            fprintf(stderr, "[MOE_TRACE] layer=%u before_after_mla numExperts=%u\n",
+                    layer, k2cfg.numExperts);
+            fflush(stderr);
             /* Stream generate path: all tokens count as DECODE for host proof. */
             const bool decodePhase = true;
             Deep2::moe_ltrace::SetToken(position);
@@ -873,10 +963,20 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                 releaseKvTrack();
                 return false;
             }
+            fprintf(stderr, "[MOE_TRACE] layer=%u after_after_mla\n", layer);
+            fflush(stderr);
         }
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u post_moe\n", layer, testLayers);
+        fflush(stderr);
         Deep2::RawrScoreboardNoteExecute();
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u scoreboard_done\n", layer, testLayers);
+        fflush(stderr);
         issueUpTo(layer + 2);
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u issue_next_done\n", layer, testLayers);
+        fflush(stderr);
         if (layer >= 1) retireSlot(slots[(layer - 1u) & 3u]);
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u retire_done\n", layer, testLayers);
+        fflush(stderr);
 
         if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerEnd(Deep2::LivePath_ActiveCyclone(), layer, 0, 0);

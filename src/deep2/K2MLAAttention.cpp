@@ -87,11 +87,19 @@ bool MlaAttentionComplete(
         return false;
     }
 
+    fprintf(stderr, "[MLA_ATTENTION] layer=%u pos=%u heads=%zu qkDim=%zu kvDim=%zu seqLen=%zu\n",
+            layerIdx, position, numHeads, qkDim, kvDim, kvCache->currentLength() + 1);
+    fflush(stderr);
+
     ropeNeoXInplace(k_pe, qkRopeHeadDim, position, ropeTheta, ropeScale);
+    fprintf(stderr, "[MLA_ATTENTION] layer=%u rope done\n", layerIdx);
+    fflush(stderr);
 
     std::vector<float> qFull(numHeads * qkDim);
     std::vector<float> kCur(kvDim, 0.0f);
     std::vector<float> vCur(kvDim, 0.0f);
+    fprintf(stderr, "[MLA_ATTENTION] layer=%u buffers allocated\n", layerIdx);
+    fflush(stderr);
 
     for (size_t h = 0; h < numHeads; ++h) {
         const float* qh = q_b + h * qHeadDim;
@@ -112,6 +120,8 @@ bool MlaAttentionComplete(
         error = std::string("MlaAttentionComplete: KV write: ") + ex.what();
         return false;
     }
+    fprintf(stderr, "[MLA_ATTENTION] layer=%u KV write done\n", layerIdx);
+    fflush(stderr);
 
     const size_t seqLen = kvCache->currentLength() + 1;
     const float scale = 1.0f / sqrtf(static_cast<float>(qkDim));
@@ -127,6 +137,11 @@ bool MlaAttentionComplete(
                 dot += static_cast<double>(qh[d]) * static_cast<double>(kh[d]);
             scores[t] = static_cast<float>(dot) * scale;
         }
+        if (h % 16 == 0) {
+            fprintf(stderr, "[MLA_ATTENTION] layer=%u head %zu done, seqLen=%zu\n",
+                    layerIdx, h, seqLen);
+            fflush(stderr);
+        }
         if (!softmaxInplaceFinite(scores.data(), seqLen)) {
             error = "MlaAttentionComplete: softmax non-finite";
             return false;
@@ -138,6 +153,10 @@ bool MlaAttentionComplete(
             for (size_t d = 0; d < vHeadDim; ++d) oh[d] += a * vh[d];
         }
     }
+
+    fprintf(stderr, "[MLA_ATTENTION] layer=%u all %zu heads done\n",
+            layerIdx, numHeads);
+    fflush(stderr);
 
     if (stats) {
         stats->ropeApplied = true;

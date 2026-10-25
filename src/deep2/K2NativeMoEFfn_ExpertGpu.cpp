@@ -91,6 +91,9 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
     unsigned stick = stickId & 1u;
     size_t H = cfg.hiddenDim;
     size_t I = cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u;
+    /* A missing VC is handled by K2MoEPlaceAndExec's backend-admission
+       branch.  Reaching this device-only function without a VC is therefore
+       an invariant violation, not a place to invent a host result. */
     if (!DualStickVc(stick)) {
         error = "DualStick VC missing for stick worklist";
         return false;
