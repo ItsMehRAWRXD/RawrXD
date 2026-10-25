@@ -240,6 +240,31 @@ inline const char* roleName(HexMagRole r) {
     return "?";
 }
 
+/// FINAL claim classification
+enum class ClaimFinalizeClass : uint8_t {
+    Unverified = 0,
+    Proven,
+    Verified,
+    MissingInput,
+    Contradicted,
+    Unknown,
+};
+
+/// isAllowedFinalClaim — gate on ClaimFinalizeClass
+inline bool isAllowedFinalClaim(ClaimFinalizeClass fc) {
+    switch (fc) {
+        case ClaimFinalizeClass::Proven:
+        case ClaimFinalizeClass::Verified:
+            return true;
+        case ClaimFinalizeClass::Unverified:
+        case ClaimFinalizeClass::MissingInput:
+        case ClaimFinalizeClass::Contradicted:
+        case ClaimFinalizeClass::Unknown:
+            return false;
+    }
+    return false;
+}
+
 } // namespace HexMag
 } // namespace RawrXD
 

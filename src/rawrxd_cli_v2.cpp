@@ -38,6 +38,7 @@
 
 #include "deep2/Deep2CLIBridge.hpp"
 #include "deep2/RawrModelAlias.hpp"
+#include "reap_cli_contract.hpp"
 #include "project_wizard/project_spec.hpp"
 #include "project_wizard/project_state_manager.hpp"
 #include "project_wizard/project_wizard.hpp"
@@ -180,6 +181,70 @@ static bool ParseMemoryBudget(const std::string& text, uint64_t& bytes) {
     if (result > static_cast<long double>(std::numeric_limits<uint64_t>::max())) return false;
     bytes = static_cast<uint64_t>(result);
     return bytes != 0;
+}
+
+// Validate the proposed REAP command contract before any backend/model work.
+// The contract is intentionally fail-closed: a syntactically valid request is
+// still blocked until MLA-CERT-001, model-specific calibration/selection, and
+// parity-certified rewriting are present in the same runtime.
+static int HandleReapContract(const std::string& model,
+                              const std::map<std::string, std::string>& flags) {
+    static const char* const kReapOptions[] = {
+        "target-size", "active-experts", "expert-budget", "quality-floor"
+    };
+    const bool requested = flags.count("reap") != 0 && flags.at("reap") == "true";
+    if (flags.count("reap") != 0 && !requested) {
+        std::cerr << "REAP_FLAG_INVALID: --reap is a switch and cannot carry a value\n";
+        return 2;
+    }
+    bool hasReapOption = false;
+    for (const char* option : kReapOptions) {
+        if (flags.count(option) != 0) { hasReapOption = true; break; }
+    }
+    if (!requested && hasReapOption) {
+        std::cerr << "REAP_OPTIONS_REQUIRE_FLAG: use --reap with --target-size,"
+                     " --active-experts, --expert-budget, and --quality-floor\n";
+        return 2;
+    }
+    if (!requested) return -1;
+
+    if (flags.count("size") != 0) {
+        std::cerr << "REAP_SIZE_OPTION_CONFLICT: use --target-size with --reap;"
+                     " --size is not a REAP admission option\n";
+        return 2;
+    }
+
+    RawrXD::Reap::CliRequest request;
+    request.model = model;
+    request.targetSizeText = flags.count("target-size") ? flags.at("target-size") : "";
+    request.activeExpertsText = flags.count("active-experts") ? flags.at("active-experts") : "";
+    request.expertBudgetText = flags.count("expert-budget") ? flags.at("expert-budget") : "";
+    request.qualityFloorText = flags.count("quality-floor") ? flags.at("quality-floor") : "";
+    request.workspace = g_workspace;
+
+    const auto validation = RawrXD::Reap::Validate(request);
+    if (!validation.ok) {
+        std::cerr << validation.code << ": " << validation.message << "\n";
+        return 2;
+    }
+    // Parse again into the receipt's canonical numeric fields. Validate() has
+    // already checked each conversion; failure here indicates an internal
+    // contract defect and must not be treated as a successful request.
+    if (!RawrXD::Reap::ParseSizeBytes(request.targetSizeText, request.targetSizeBytes) ||
+        !RawrXD::Reap::ParseSizeBytes(request.expertBudgetText, request.expertBudgetBytes) ||
+        !RawrXD::Reap::ParseActiveExperts(request.activeExpertsText, request.activeExperts) ||
+        !RawrXD::Reap::ParseQualityFloor(request.qualityFloorText, request.qualityFloor)) {
+        std::cerr << "REAP_INTERNAL_VALIDATION_FAILURE\n";
+        return 2;
+    }
+
+    const auto admission = RawrXD::Reap::EvaluateAdmission(request);
+    std::cout << RawrXD::Reap::BlockedReceipt(request, admission);
+    std::cerr << admission.reason
+              << ": --reap is parsed and validated, but transformation remains"
+                 " disabled until MLA-CERT-001, calibration, selection, and"
+                 " parity-certified writer gates pass\n";
+    return admission.transformationEnabled ? 0 : 4;
 }
 
 // ---------------------------------------------------------------------------
@@ -564,6 +629,9 @@ static int CmdRun(const std::vector<std::string>& args) {
             mode_str = a;
         }
     }
+
+    const int reapContractResult = HandleReapContract(model, flags);
+    if (reapContractResult >= 0) return reapContractResult;
 
     // REAP expert pruning/residency is not part of this production binary
     // yet. Reject the option explicitly instead of silently running an
@@ -1452,6 +1520,10 @@ int main(int argc, char** argv) {
     std::cout << "RawrXD CLI v2\n\n"
               << "Usage:\n"
               << "  rawr run <model> [mode] [--backend b] [--workspace d]   interactive agent\n"
+              << "  rawr run <model> --reap --target-size <size> --active-experts <n>\n"
+              << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
+              << "  rawr reap <model> --target-size <size> --active-experts <n>\n"
+              << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
               << "  rawr run <model> \"new project\"                          project wizard\n"
               << "  rawr run <model> \"add a GUI\"                            follow-up wizard\n"
               << "  rawr modes                                                  list agent modes\n"
@@ -1478,6 +1550,16 @@ int main(int argc, char** argv) {
 
     if (cmd == "run") {
         return CmdRun(args);
+    }
+    if (cmd == "reap") {
+        if (o.positional.empty()) {
+            std::cerr << "REAP_MODEL_REQUIRED: usage: rawr reap <model>"
+                         " --target-size <size> --active-experts <n>"
+                         " --expert-budget <size> --quality-floor <0..1>\n";
+            return 2;
+        }
+        o.flags["reap"] = "true";
+        return HandleReapContract(o.positional.front(), o.flags);
     }
     if (cmd == "modes")     return CmdModes();
     if (cmd == "doctor")    return CmdDoctor();

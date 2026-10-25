@@ -1312,10 +1312,16 @@ bool VulkanCompute::finalizeInterval(
     if (!query) return true;
 
     uint64_t q[2]{};
-    VkResult vr = vkGetQueryPoolResults(
+    // All production callers invoke finalizeInterval after the associated
+    // submission fence has completed.  Waiting again on a timestamp query is
+    // unnecessary and, on some AMD/Vulkan driver paths, can block forever
+    // even though the work fence is signaled.  Keep this telemetry read
+    // non-blocking: missing timestamps make the interval uncalibrated, never
+    // stall model execution.
+    const VkResult vr = vkGetQueryPoolResults(
         device_, query, 0, 2, sizeof(q), q, sizeof(uint64_t),
-        VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
-    if (vr != VK_SUCCESS) return true;
+        VK_QUERY_RESULT_64_BIT);
+    if (vr != VK_SUCCESS) return false;
 
     uint64_t s = 0, e = 0;
     if (calibrateTick(q[0], s) && calibrateTick(q[1], e) && e >= s) {
@@ -1335,18 +1341,29 @@ void VulkanCompute::recordInterval(const GpuWorkInterval& interval) {
 bool VulkanCompute::endSubmitWait(
     VkCommandBuffer cmd, VkQueryPool query,
     GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
-    GpuWorkInterval* interval)
+    GpuWorkInterval* interval, uint64_t timeoutNs)
 {
     if (!cmd) return false;
     if (query)
         vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query, 1);
-    if (vkEndCommandBuffer(cmd) != VK_SUCCESS) return false;
+    const VkResult endResult = vkEndCommandBuffer(cmd);
+    if (endResult != VK_SUCCESS) {
+        std::fprintf(stderr, "[GPU] endSubmitWait stage=end_command vk=%d\n",
+                     static_cast<int>(endResult));
+        std::fflush(stderr);
+        return false;
+    }
 
     VkFenceCreateInfo fi{};
     fi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     VkFence fence = VK_NULL_HANDLE;
-    if (vkCreateFence(device_, &fi, nullptr, &fence) != VK_SUCCESS)
+    const VkResult fenceResult = vkCreateFence(device_, &fi, nullptr, &fence);
+    if (fenceResult != VK_SUCCESS) {
+        std::fprintf(stderr, "[GPU] endSubmitWait stage=create_fence vk=%d\n",
+                     static_cast<int>(fenceResult));
+        std::fflush(stderr);
         return false;
+    }
 
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1356,6 +1373,9 @@ bool VulkanCompute::endSubmitWait(
     const uint64_t submitNs = nowNs();
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
     if (submit != VK_SUCCESS) {
+        std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
+                     static_cast<int>(submit));
+        std::fflush(stderr);
         vkDestroyFence(device_, fence, nullptr);
         return false;
     }
@@ -1363,7 +1383,7 @@ bool VulkanCompute::endSubmitWait(
     ++queueSubmitCount_;
 
     const uint64_t waitStartedNs = nowNs();
-    VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, UINT64_MAX);
+    VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, timeoutNs);
     const uint64_t completeNs = nowNs();
 
     GpuWorkInterval wi{};
@@ -1373,6 +1393,14 @@ bool VulkanCompute::endSubmitWait(
         wi.fenceWaitWallNs = completeNs - waitStartedNs;
         recordInterval(wi);
         if (interval) *interval = wi;
+    } else {
+        std::fprintf(stderr,
+                     "[GPU] endSubmitWait stage=fence_wait vk=%d timeout_ns=%llu kind=%u bytes=%llu\n",
+                     static_cast<int>(wait),
+                     static_cast<unsigned long long>(timeoutNs),
+                     static_cast<unsigned>(kind),
+                     static_cast<unsigned long long>(bytes));
+        std::fflush(stderr);
     }
 
     vkDestroyFence(device_, fence, nullptr);
@@ -1684,10 +1712,26 @@ bool VulkanCompute::downloadFromBuffer(
 
     VkCommandBuffer cmd{};
     VkQueryPool query{};
-    bool ok = beginCommand(cmd, query, true) &&
-              recordCopy(cmd, src, *staging, bytes) &&
-              endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
-                            bytes, workEpoch_, nullptr);
+    const char* failedStage = nullptr;
+    bool ok = beginCommand(cmd, query, true);
+    if (!ok) {
+        failedStage = "begin_command";
+    } else if (!recordCopy(cmd, src, *staging, bytes)) {
+        ok = false;
+        failedStage = "record_copy";
+    } else {
+        // A download is a bounded diagnostic/forward operation.  Do not let
+        // a lost transfer fence strand the inference worker indefinitely.
+        ok = endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                           bytes, workEpoch_, nullptr, 30000000000ULL);
+        if (!ok) failedStage = "transfer_wait";
+    }
+    if (!ok && failedStage) {
+        std::fprintf(stderr,
+                     "[GPU] downloadFromBuffer failed stage=%s bytes=%zu\n",
+                     failedStage, bytes);
+        std::fflush(stderr);
+    }
     if (ok) std::memcpy(dst, mapped, bytes);
     return ok;
 }
@@ -2354,6 +2398,10 @@ bool VulkanCompute::BeginFusedLayer() {
 }
 
 bool VulkanCompute::EndFusedLayer() {
+    const bool moeTrace = [] {
+        const char* v = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
     if (!fused_) return false;
     VkCommandBuffer cmd = fusedCmd_;
     VkQueryPool q = fusedQuery_;
@@ -2361,10 +2409,30 @@ bool VulkanCompute::EndFusedLayer() {
     fusedCmd_ = VK_NULL_HANDLE;
     fusedQuery_ = VK_NULL_HANDLE;
 
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END command_end_begin\n");
+        std::fflush(stderr);
+    }
     if(q)
         vkCmdWriteTimestamp(cmd,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,q,1);
-    if(vkEndCommandBuffer(cmd)!=VK_SUCCESS) return false;
-    if(vkResetFences(device_,1,&reusableFusedFence_)!=VK_SUCCESS)
+    const VkResult endRes = vkEndCommandBuffer(cmd);
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END command_end_done vk=%d\n",
+                     (int)endRes);
+        std::fflush(stderr);
+    }
+    if(endRes!=VK_SUCCESS) return false;
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END fence_reset_begin\n");
+        std::fflush(stderr);
+    }
+    const VkResult resetRes = vkResetFences(device_,1,&reusableFusedFence_);
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END fence_reset_done vk=%d\n",
+                     (int)resetRes);
+        std::fflush(stderr);
+    }
+    if(resetRes!=VK_SUCCESS)
         return false;
 
     VkSubmitInfo si{};
@@ -2373,12 +2441,31 @@ bool VulkanCompute::EndFusedLayer() {
     si.pCommandBuffers=&cmd;
 
     const uint64_t submitNs=nowNs();
-    if(vkQueueSubmit(queue_,1,&si,reusableFusedFence_)!=VK_SUCCESS)
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END queue_submit_begin\n");
+        std::fflush(stderr);
+    }
+    const VkResult submitRes = vkQueueSubmit(queue_,1,&si,reusableFusedFence_);
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END queue_submit_done vk=%d\n",
+                     (int)submitRes);
+        std::fflush(stderr);
+    }
+    if(submitRes!=VK_SUCCESS)
         return false;
     ++queueSubmitCount_;
     const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END fence_wait_begin timeout_s=30\n");
+        std::fflush(stderr);
+    }
     VkResult waitRes = vkWaitForFences(
             device_,1,&reusableFusedFence_,VK_TRUE,fusedWaitTimeoutNs);
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END fence_wait_done vk=%d\n",
+                     (int)waitRes);
+        std::fflush(stderr);
+    }
     if(waitRes==VK_TIMEOUT){
         std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
         std::fflush(stderr);
@@ -2390,20 +2477,44 @@ bool VulkanCompute::EndFusedLayer() {
     // DEEP2_COLD_ROW_RACE_001 endurance fix: the fused fence is signaled —
     // free every ranged descriptor set recorded into this fused layer
     // (recordQuantRowsResident queued them; never cached, never reused).
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END drain_descriptors_begin\n");
+        std::fflush(stderr);
+    }
     drainPendingDescriptorFrees();
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END drain_descriptors_done\n");
+        std::fflush(stderr);
+    }
 
     GpuWorkInterval wi{};
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END finalize_interval_begin\n");
+        std::fflush(stderr);
+    }
     if(finalizeInterval(
             q,submitNs,completeNs,workEpoch_,0,
             GpuWorkKind::ModelCompute,wi))
         recordInterval(wi);
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END finalize_interval_done\n");
+        std::fflush(stderr);
+    }
     // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: expose the finalized
     // interval to the caller (post-fence; no new synchronization).
     lastFusedInterval_ = wi;
     lastFusedIntervalValid_ = true;
     // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: collect this fused layer's
     // sampled Q4K timestamp pairs now that the fence is signaled.
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END q4k_collect_begin\n");
+        std::fflush(stderr);
+    }
     accumulateQ4kParitySamples();
+    if (moeTrace) {
+        std::fprintf(stderr, "LIVE_K2_GPU_END q4k_collect_done\n");
+        std::fflush(stderr);
+    }
     return true;
 }
 
@@ -2988,11 +3099,6 @@ bool VulkanCompute::ensureWeightF32(
         return true;
     }
     if (!weights || !bytes) return false;
-    if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
-        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
-                static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
-        return false;
-    }
     if (weightBudgetBytes_ && bytes > weightBudgetBytes_) return false;
     if (!evictWeightCacheUntil(bytes)) return false;
     if (!checkLiveHeapAdmission(bytes)) {
@@ -3044,11 +3150,6 @@ bool VulkanCompute::ensureWeightQuant(
     }
     if(!weights||!bytes) {
         fprintf(stderr,"[EWB_Q4K] FAIL1 weights=%p bytes=%zu\n",weights,bytes);
-        return false;
-    }
-    if(weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
-        fprintf(stderr,"[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
-                static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
         return false;
     }
     if(weightBudgetBytes_ && bytes>weightBudgetBytes_) {

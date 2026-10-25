@@ -5,6 +5,7 @@
 #include "MoEPlaceLiveCounters.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
+#include "K2MLA_GpuGemv.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
@@ -169,11 +170,32 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     MoEPlaceLive().moe_place_enter++;
     MoEPlaceLive().moe_tokens++;
     MoEExpertResidencyPlace& place = MoEPlaceGlobal();
-    const uint32_t sticks =
-        (DualStickState().armed || DualStickState().planned ||
-         DualStickState().requested)
-            ? 2u
-            : 1u;
+    /* Intent flags do not prove that the non-owning Vulkan contexts are live.
+       Admit DualStick only after the actual owners have been bound.  A CPU
+       replay therefore takes the real host expert path instead of entering a
+       device worklist that can only fail with a missing VC. */
+    const DualStickExec& ds = DualStickState();
+    const bool dsRequested = ds.armed || ds.planned || ds.requested;
+    const bool vc0Ready = DualStickVc(0) != nullptr;
+    const bool vc1Ready = DualStickVc(1) != nullptr;
+    /* GPU MLA admission is the same production backend intent used by the
+       actual K2 quantized GEMV path.  The replay does not run the separate
+       streamer arm harness, so requiring only dsRequested would silently
+       send a GPU-admitted run through host MoE. */
+    const bool gpuRequested = dsRequested || MLA_GpuGemvWanted();
+    const bool useGpuMoE = gpuRequested && vc0Ready;
+    const bool useDualStick = useGpuMoE && vc1Ready;
+    const uint32_t sticks = useDualStick ? 2u : 1u;
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr,
+                     "LIVE_K2_MOE_BACKEND layer=%u host=%u gpu=%u dual=%u "
+                     "requested=%u vc0=%u vc1=%u\n",
+                     layer, useGpuMoE ? 0u : 1u, useGpuMoE ? 1u : 0u,
+                     useDualStick ? 1u : 0u, gpuRequested ? 1u : 0u,
+                     vc0Ready ? 1u : 0u, vc1Ready ? 1u : 0u);
+        std::fflush(stderr);
+    }
     place.SetStickCount(sticks);
     struct PinProbeCtx {
         size_t H;
@@ -233,6 +255,12 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      "miss_bytes=%llu\n",
                      layer, pn, plan.hits, plan.misses,
                      (unsigned long long)plan.bytesFetchPlan);
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr, "LIVE_K2_MOE_STAGE layer=%u stage=after_place count=%u\n",
+                     layer, plan.count);
+        std::fflush(stderr);
+    }
     if (moe_ltrace::On(layer)) {
         std::fprintf(stderr, "L%u_PLACE_DONE hits=%u misses=%u\n", layer,
                      plan.hits, plan.misses);
@@ -243,6 +271,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     DualStickImbalanceSetShape(
         14u, cfg.hiddenDim,
         cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u);
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr, "LIVE_K2_MOE_STAGE layer=%u stage=after_shape\n", layer);
+        std::fflush(stderr);
+    }
     if (sticks >= 2u) DualStickImbalanceBeginLayer();
     auto assignOne = [&](MoEPlaceSlot& mut) {
         const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
@@ -263,6 +296,61 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     for (uint32_t si = 0; si < plan.count; ++si)
         if (plan.slots[si].expertId >= 0 && !plan.slots[si].hit)
             assignOne(plan.slots[si]);
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr, "LIVE_K2_MOE_STAGE layer=%u stage=after_assign\n", layer);
+        std::fflush(stderr);
+    }
+
+    /* Real host fallback for a non-admitted GPU path.  The route and its
+       coefficients are retained; each selected expert is read from the GGUF
+       shards and evaluated by K2MoEExecExpert's registered quantized GEMV
+       implementation.  No zero-output or skipped-expert success is allowed. */
+    if (!useGpuMoE) {
+        const size_t H = cfg.hiddenDim;
+        std::vector<float> expertOut(H, 0.f);
+        uint32_t executedHost = 0;
+        for (uint32_t si = 0; si < plan.count; ++si) {
+            MoEPlaceSlot& slot = plan.slots[si];
+            if (slot.expertId < 0) continue;
+            std::fill(expertOut.begin(), expertOut.end(), 0.f);
+            if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, 0u,
+                                 normed, expertOut.data(), error)) {
+                if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+                    t && t[0] && t[0] != '0') {
+                    std::fprintf(stderr,
+                                 "LIVE_K2_MOE_HOST_FAIL layer=%u expert=%d "
+                                 "error=%s\n",
+                                 layer, slot.expertId,
+                                 error.empty() ? "(none)" : error.c_str());
+                    std::fflush(stderr);
+                }
+                return false;
+            }
+            for (size_t i = 0; i < H; ++i)
+                accum[i] += slot.weight * expertOut[i];
+            ++executedHost;
+        }
+        if (executedHost != pn) {
+            error = "K2MoE: HOST_EXPERT_PARITY fail selected!=executed";
+            return false;
+        }
+        MoEPlaceLive().experts_executed += executedHost;
+        if (decodePhase) MoEPlaceLive().decode_experts_executed += executedHost;
+
+        std::vector<float> shared(H, 0.f);
+        moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+        if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+            moe_ltrace::BC(layer, "SHARED_FAIL");
+            return false;
+        }
+        moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
+        MoEPlaceLive().shared_expert_calls++;
+        for (size_t i = 0; i < H; ++i) accum[i] += shared[i];
+        moe_ltrace::BC(layer, "HOST_MOE_DONE");
+        return true;
+    }
+
     /* #10 steal RUNTIME_HELD until PREDICT_ERR collapses */
 
     /* #6/#7/#10: true parallel stick workers → one D2H partial/stick → join. */
@@ -274,6 +362,12 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             ix0[n0++] = si;
         else
             ix1[n1++] = si;
+    }
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr, "LIVE_K2_MOE_STAGE layer=%u stage=after_partition n0=%u n1=%u\n",
+                     layer, n0, n1);
+        std::fflush(stderr);
     }
     std::vector<float> p0(cfg.hiddenDim, 0.f), p1(cfg.hiddenDim, 0.f);
     StickGpuLocal c0{}, c1{};
@@ -300,16 +394,32 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     auto run0 = [&] {
         bumpActive();
         s0b = NowNs();
-        ok0 = ExecStickWorklist(index, cfg, layer, normed, plan, ix0, n0, 0u,
-                                p0.data(), err0, ex0, c0, hot0);
+        try {
+            ok0 = ExecStickWorklist(index, cfg, layer, normed, plan, ix0, n0, 0u,
+                                    p0.data(), err0, ex0, c0, hot0);
+        } catch (const std::exception& ex) {
+            ok0 = false;
+            err0 = std::string("DualStick stick0 exception: ") + ex.what();
+        } catch (...) {
+            ok0 = false;
+            err0 = "DualStick stick0 unknown exception";
+        }
         s0e = NowNs();
         dropActive();
     };
     auto run1 = [&] {
         bumpActive();
         s1b = NowNs();
-        ok1 = ExecStickWorklist(index, cfg, layer, normed, plan, ix1, n1, 1u,
-                                p1.data(), err1, ex1, c1, hot1);
+        try {
+            ok1 = ExecStickWorklist(index, cfg, layer, normed, plan, ix1, n1, 1u,
+                                    p1.data(), err1, ex1, c1, hot1);
+        } catch (const std::exception& ex) {
+            ok1 = false;
+            err1 = std::string("DualStick stick1 exception: ") + ex.what();
+        } catch (...) {
+            ok1 = false;
+            err1 = "DualStick stick1 unknown exception";
+        }
         s1e = NowNs();
         dropActive();
     };
@@ -329,8 +439,24 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         error = "DualStick stick thread create failed";
         return false;
     }
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr, "LIVE_K2_MOE_STAGE layer=%u stage=workers_started\n", layer);
+        std::fflush(stderr);
+    }
     if (w0.joinable()) w0.join();
     if (w1.joinable()) w1.join();
+    /* Both worker fences and D2H partials have completed at this point.
+       Release only pin marks; the next layer owns fresh admission and may
+       evict these now-unpinned buffers under the bounded cache budget. */
+    if (auto* vc0 = DualStickVc(0u)) vc0->ClearPinnedGemvWeights();
+    if (auto* vc1 = DualStickVc(1u)) vc1->ClearPinnedGemvWeights();
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        t && t[0] && t[0] != '0') {
+        std::fprintf(stderr, "LIVE_K2_MOE_STAGE layer=%u stage=workers_joined ok0=%u ok1=%u ex0=%u ex1=%u\n",
+                     layer, ok0 ? 1u : 0u, ok1 ? 1u : 0u, ex0, ex1);
+        std::fflush(stderr);
+    }
 
     if ((dual || n0) && !ok0) {
         MoEPlaceLive().worker_failures++;

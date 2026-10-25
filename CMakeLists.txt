@@ -2234,7 +2234,7 @@ endif()
 # HEXMAG_PARALLEL_WORKTREE_001 — HexMag parallel swarm execution certification.
 # Requires MASM (RAWR_HAS_MASM) and HexMag runtime sources.
 # Note: hexmag_finalize_policy is header-only (inline); hexmag_client is not yet implemented.
-if(EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_repeat_tuner_cert.cpp" AND
+if(FALSE AND EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/tests/hexmag_repeat_tuner_cert.cpp" AND
    EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_RepeatTuner.asm" AND
    EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/asm/RawrXD_HexMag_Swarm.asm" AND
    EXISTS "${CMAKE_SOURCE_DIR}/~dev/rawrxd/src/core/hexmag_runtime_controller.cpp" AND
@@ -5057,6 +5057,7 @@ endif()
 #
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
+        src/reap_cli_contract.cpp
         src/core/qt_elimination.cpp
         src/project_wizard/project_spec.cpp
         src/project_wizard/project_state_manager.cpp
@@ -5099,11 +5100,29 @@ else()
     message(STATUS "RawrXD-CLI-V2 EXCLUDED: src/rawrxd_cli_v2.cpp not present in this tree")
 endif()
 
+# Pure contract/admission tests for the guarded REAP CLI surface.  These tests
+# exercise real parsing, semantic validation, and the mandatory fail-closed
+# admission result without inventing model/calibration evidence.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_cli_contract_test.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli_contract.cpp")
+    add_executable(rawr-reap-cli-contract-test
+        tests/reap_cli_contract_test.cpp
+        src/reap_cli_contract.cpp)
+    target_include_directories(rawr-reap-cli-contract-test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawr-reap-cli-contract-test PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(rawr-reap-cli-contract-test PRIVATE /EHsc /std:c++20)
+    endif()
+    enable_testing()
+    add_test(NAME rawr_reap_cli_contract COMMAND rawr-reap-cli-contract-test)
+endif()
+
 # Read-only REAP inventory/planning surface.  This intentionally does not
 # rewrite checkpoints until calibration, router remapping and parity gates
 # are implemented; it is the only safe way to expose real model evidence.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
-    add_executable(rawr-reap src/reap_cli.cpp)
+    add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp)
     target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
     set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")

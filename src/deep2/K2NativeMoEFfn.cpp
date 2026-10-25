@@ -55,8 +55,18 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
         moe_ltrace::BC(layer, "NORM_FAIL");
         return false;
     }
-    const float* nw =
-        reinterpret_cast<const float*>(nSpan.data ? nSpan.data : nBuf.data());
+    const uint8_t* normData = nSpan.data ? nSpan.data : nBuf.data();
+    const size_t normBytes = nSpan.data ? nSpan.bytes : nBuf.size();
+    if (!normData || normBytes < H * sizeof(float)) {
+        error = "K2MoE: ffn_norm weight view is incomplete";
+        moe_ltrace::BC(layer, "NORM_INCOMPLETE");
+        if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
+            t && t[0] && t[0] != '0')
+            std::fprintf(stderr, "LIVE_K2_MOE_NORM_INCOMPLETE layer=%u bytes=%zu required=%zu\n",
+                         layer, normBytes, H * sizeof(float));
+        return false;
+    }
+    const float* nw = reinterpret_cast<const float*>(normData);
     float ss = 0.f;
     for (size_t i = 0; i < H; ++i) ss += hiddenIO[i] * hiddenIO[i];
     float inv = 1.f / std::sqrt(ss / (float)H + cfg.normRmsEps);

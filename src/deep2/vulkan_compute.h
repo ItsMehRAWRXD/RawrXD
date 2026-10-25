@@ -1406,7 +1406,8 @@ private:
     bool beginCommand(VkCommandBuffer& cmd, VkQueryPool& query, bool timestamped);
     bool endSubmitWait(VkCommandBuffer cmd, VkQueryPool query,
                        GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
-                       GpuWorkInterval* interval = nullptr);
+                       GpuWorkInterval* interval = nullptr,
+                       uint64_t timeoutNs = UINT64_MAX);
     bool recordCopy(VkCommandBuffer cmd, const DeviceBuf& src, DeviceBuf& dst,
                     VkDeviceSize bytes, VkDeviceSize srcOffset = 0,
                     VkDeviceSize dstOffset = 0);
@@ -1678,10 +1679,12 @@ private:
 
 } // namespace Deep2
 
-// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: global accessor for the primary
-// Deep2::VulkanCompute instance. Used by the executor for fused LM-head
-// batch dispatch. Mirrors the canonical VulkanCompute::Gpu() pattern.
-Deep2::VulkanCompute& GetDeep2VulkanCompute();
+// RAWRXD_DEEP2_SPEC_FUSED_LMHEAD_001: accessor for the primary
+// Deep2::VulkanCompute instance. Keep the declaration in the same namespace
+// as the definition so consumers cannot accidentally bind a different ABI.
+namespace Deep2 {
+VulkanCompute& GetDeep2VulkanCompute();
+}
 
 // NOTE: there is deliberately NO "namespace CPUInference { using VulkanCompute
 // = Deep2::VulkanCompute; }" alias here.

@@ -664,18 +664,12 @@ private:
 
         size_t blockElems = 0, blockBytes = 0;
         if (!typeGeometry(static_cast<uint32_t>(t.type), blockElems, blockBytes)) {
-            fprintf(stderr,
-                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u typeGeometry returned false\n",
-                t.name.c_str(), static_cast<uint32_t>(t.type));
             return false;
         }
 
         // Validate all shape dimensions are positive
         for (size_t d = 0; d < t.shape.size(); ++d) {
             if (t.shape[d] <= 0) {
-                fprintf(stderr,
-                    "[GGUF_DIAG] tensorByteSize FAIL: name=%s shape[%zu]=%lld <= 0\n",
-                    t.name.c_str(), d, (long long)t.shape[d]);
                 return false;
             }
         }
@@ -686,22 +680,13 @@ private:
             for (size_t d = 0; d < t.shape.size(); ++d) {
                 size_t next = 0;
                 if (mulOverflow(totalElems, static_cast<size_t>(t.shape[d]), next)) {
-                    fprintf(stderr,
-                        "[GGUF_DIAG] tensorByteSize FAIL: name=%s total elements overflow\n",
-                        t.name.c_str());
                     return false;
                 }
                 totalElems = next;
             }
             if (!mulOverflow(totalElems, blockBytes, out)) {
-                fprintf(stderr,
-                    "[GGUF_DIAG] tensorByteSize PASS: name=%s type=%u totalElems=%zu out=%zu\n",
-                    t.name.c_str(), static_cast<uint32_t>(t.type), totalElems, out);
                 return true;
             }
-            fprintf(stderr,
-                "[GGUF_DIAG] tensorByteSize FAIL: name=%s final overflow totalElems=%zu blockBytes=%zu\n",
-                t.name.c_str(), totalElems, blockBytes);
             return false;
         }
 
@@ -713,9 +698,6 @@ private:
         const size_t blocksPerRow = (contiguousDim + blockElems - 1) / blockElems;
         size_t rowBytes = 0;
         if (mulOverflow(blocksPerRow, blockBytes, rowBytes)) {
-            fprintf(stderr,
-                "[GGUF_DIAG] tensorByteSize FAIL: name=%s type=%u blocksPerRow=%zu blockBytes=%zu overflow\n",
-                t.name.c_str(), static_cast<uint32_t>(t.type), blocksPerRow, blockBytes);
             return false;
         }
 
@@ -724,23 +706,14 @@ private:
         for (size_t d = 1; d < t.shape.size(); ++d) {
             size_t next = 0;
             if (mulOverflow(rows, static_cast<size_t>(t.shape[d]), next)) {
-                fprintf(stderr,
-                    "[GGUF_DIAG] tensorByteSize FAIL: name=%s rows overflow at dim %zu\n",
-                    t.name.c_str(), d);
                 return false;
             }
             rows = next;
         }
 
         if (!mulOverflow(rowBytes, rows, out)) {
-            fprintf(stderr,
-                "[GGUF_DIAG] tensorByteSize PASS: name=%s type=%u contiguousDim=%zu blocksPerRow=%zu rows=%zu out=%zu\n",
-                t.name.c_str(), static_cast<uint32_t>(t.type), contiguousDim, blocksPerRow, rows, out);
             return true;
         }
-        fprintf(stderr,
-            "[GGUF_DIAG] tensorByteSize FAIL: name=%s final overflow rowBytes=%zu rows=%zu\n",
-            t.name.c_str(), rowBytes, rows);
         return false;
     }
 

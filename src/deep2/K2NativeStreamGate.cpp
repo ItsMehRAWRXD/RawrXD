@@ -914,12 +914,16 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         /* Host MoE after MLA: router â†’ shared placer â†’ execute ALL selected. */
         if (k2cfg.numExperts > 0) {
             MlaTrace("[MOE_TRACE] layer=%u before_after_mla numExperts=%u\n",
-                     layer, k2cfg.numExperts);
+                    layer, k2cfg.numExperts);
             /* Stream generate path: all tokens count as DECODE for host proof. */
             const bool decodePhase = true;
             Deep2::moe_ltrace::SetToken(position);
             if (!Deep2::K2NativeMoE_AfterMla(index, k2cfg, layer, decodePhase, out,
                                              scratch.data(), error)) {
+                fprintf(stderr,
+                    "[K2_DIAG_LAYER39] layer=%u MoE AFTER_MLA FAILED: %s\n",
+                    layer, error.c_str());
+                fflush(stderr);
                 joinAll();
                 releaseKvTrack();
                 return false;
@@ -961,6 +965,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     if (kvPtr) {
         try { kvPtr->CommitPosition(); }
         catch (const std::exception& ex) {
+            fprintf(stderr,
+                "[K2_DIAG_LAYER39] KV CommitPosition FAILED: %s\n", ex.what());
+            fflush(stderr);
             joinOutPrefetch();
             releaseKvTrack();
             error = std::string("K2KVCache commit: ") + ex.what();

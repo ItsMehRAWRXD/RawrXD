@@ -353,14 +353,26 @@ bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void* packed, size_t bytes,
 }
 
 // ----------------------------------------------------------------------------
-// Host IO and weight streaming -- absent from the implementation
+// Host IO capability
+//
+// The backend does not expose a persistent host-visible activation buffer.
+// UploadVector/DownloadVector allocate and submit their real Vulkan staging
+// transfers internally.  This adapter therefore validates that the forward
+// arena has enough device storage for both directions; it does not claim that
+// a host-visible buffer exists.
 // ----------------------------------------------------------------------------
 bool VulkanCompute::EnsureHostIo(size_t actIn, size_t actOut) {
-    (void)actIn; (void)actOut;
-    // Deep2::VulkanCompute stages its own activations (UploadVector /
-    // DownloadVector over the arena); it exposes no separate host-IO surface to
-    // size.
-    return false;
+    if (backend_ == nullptr || actIn == 0 || actOut == 0)
+        return false;
+    const Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
+    const Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
+    if (in.buffer == VK_NULL_HANDLE || out.buffer == VK_NULL_HANDLE)
+        return false;
+    if (in.size < actIn || out.size < actOut)
+        return false;
+    // The actual host/device synchronization is performed by the backend's
+    // uploadToBuffer/downloadFromBuffer path used by UploadBuf/DownloadBuf.
+    return true;
 }
 
 bool VulkanCompute::StreamWeightToSlot(const void* packed, size_t bytes,

@@ -52,6 +52,7 @@
 #include "ollama_blob_parser.h"
 #include "deep2/HostQ8GemvSafe.hpp"
 #include "deep2/RawrReverseCompletion.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -1825,7 +1826,13 @@ bool Deep2Engine::allocateBuffers()
     size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (2 * hiddenSize + 2 * kvDim);
 
     hiddenStates = alignedAlloc(hiddenSize * maxSeq);
-    size_t attnOutSize = config.useMLA ? (config.numHeads * headDim) : hiddenSize;
+    // The standard GQA path concatenates one head output per Q head before
+    // applying W_o.  That width is not necessarily hiddenSize: Nemotron-H's
+    // loaded Q/K/V geometry is 40*128 Q values feeding a 3136-wide residual
+    // stream.  Allocate the scratch/output buffer at least as wide as the
+    // projection workspace so attention cannot write 5120 values into a
+    // 3136-value allocation before W_o reduces it back to hiddenSize.
+    size_t attnOutSize = (std::max)(hiddenSize, qProjSize);
     attentionOutput = alignedAlloc(attnOutSize);
     ffnOutput = alignedAlloc(ffnDim);
     logits = alignedAlloc(vocabSize);
@@ -3630,6 +3637,30 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
 
+    // A GPU fit plan is an execution contract, not a discovery label.  The
+    // CLI/loadModel path can run without initialize(), so the early
+    // enableAllEnhancements() call may occur before modelWeights is loaded and
+    // intentionally does not open Vulkan.  Open the authoritative selected
+    // device set now that the model and its geometry are bound.  Never let an
+    // admitted GPU plan silently degrade to CPU because Vulkan was never
+    // opened or because the selected device failed to initialize.
+    if (fitPlanValid_ &&
+        fitPlan_.lane != rawrxd::FitExecutionLane::CPU_ONLY &&
+        fitPlan_.lane != rawrxd::FitExecutionLane::REJECTED)
+    {
+        if (!vulkanInitialized_)
+            enableVulkan(true);
+        if (!vulkanInitialized_ || !vulkanEnabled_ || vulkanDevices_.empty())
+        {
+            fitRejectReason_ = "admitted GPU plan could not open Vulkan device";
+            fprintf(stderr,
+                    "[LOAD_FATAL] GPU execution contract unsatisfied: lane=%s devices=%zu\n",
+                    rawrxd::FitLaneName(fitPlan_.lane), vulkanDevices_.size());
+            fflush(stderr);
+            return false;
+        }
+    }
+
     // ── End-to-end completion: probe host Q8_0 GEMV safety for FFN/attn/ssm_in ─
     {
         auto q8Receipts = Deep2::ProbeHostQ8Gemv(modelWeights);
@@ -4806,7 +4837,7 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
 //  Deep2Engine::applyRoPE via ordinary namespace scope lookup.)
 // ============================================================================
 void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads, size_t numKVHeads, size_t pos,
-                            float theta, float scaling)
+                            float theta, float scaling, size_t layerIdx)
 {
     if (scaling <= 0.0f)
         scaling = 1.0f;
@@ -4828,6 +4859,39 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     // Use precomputed tables (amplitudes already unit — do NOT multiply by scaling)
     const float* cosTable = &g_ropeCosTable[pos * headDim];
     const float* sinTable = &g_ropeSinTable[pos * headDim];
+
+    // ── Layer 12 RoPE diagnostic: pre-scan ALL K heads for NaN ──
+    if (layerIdx == 12)
+    {
+        fprintf(stderr,
+                "[L12_ROPE_DIAG] pos=%zu headDim=%zu numHeads=%zu numKVHeads=%zu theta=%.6e scaling=%.6e\n",
+                pos, headDim, numHeads, numKVHeads, theta, scaling);
+        size_t kTotal = numKVHeads * headDim;
+        size_t firstBadK = SIZE_MAX;
+        for (size_t i = 0; i < kTotal; ++i)
+        {
+            if (!std::isfinite(k[i]))
+            {
+                firstBadK = i;
+                break;
+            }
+        }
+        if (firstBadK != SIZE_MAX)
+        {
+            fprintf(stderr,
+                    "[L12_ROPE_DIAG] K ALREADY NaN at element %zu (head=%zu offset=%zu) BEFORE RoPE\n",
+                    firstBadK, firstBadK / headDim, firstBadK % headDim);
+        }
+        else
+        {
+            fprintf(stderr, "[L12_ROPE_DIAG] K all finite BEFORE RoPE (%zu elements)\n", kTotal);
+        }
+        fprintf(stderr, "[L12_ROPE_DIAG] K first 8: ");
+        for (size_t i = 0; i < std::min(kTotal, (size_t)8); ++i)
+            fprintf(stderr, "%.6e ", k[i]);
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
 
     // ── RoPE energy invariant: rotation must preserve pair norm ──
     auto pair_energy = [](float a, float b) -> double { return double(a) * a + double(b) * b; };
@@ -4857,6 +4921,15 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     for (size_t h = 0; h < numKVHeads; ++h)
     {
         float* kh = k + h * headDim;
+
+        // ── Layer 12 RoPE diagnostic: K input values ──
+        if (layerIdx == 12 && h < 2)
+        {
+            fprintf(stderr, "[L12_ROPE_DIAG] K head=%zu: k[0]=%.6e k[1]=%.6e k[2]=%.6e k[3]=%.6e\n",
+                    h, kh[0], kh[1], kh[2], kh[3]);
+            fflush(stderr);
+        }
+
         for (size_t i = 0; i < headDim; i += 2)
         {
             float cosA = cosTable[i];
@@ -4864,8 +4937,26 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             float k0 = kh[i];
             float k1 = kh[i + 1];
             double before = pair_energy(k0, k1);
+
+            // ── Layer 12 RoPE diagnostic: per-pair values ──
+            if (layerIdx == 12 && h == 0 && i < 4)
+            {
+                fprintf(stderr, "[L12_ROPE_DIAG] K pair i=%zu: k0=%.6e k1=%.6e cosA=%.6e sinA=%.6e before=%.6e\n",
+                        i, k0, k1, cosA, sinA, before);
+                fflush(stderr);
+            }
+
             kh[i] = k0 * cosA - k1 * sinA;
             kh[i + 1] = k0 * sinA + k1 * cosA;
+
+            // ── Layer 12 RoPE diagnostic: per-pair output ──
+            if (layerIdx == 12 && h == 0 && i < 4)
+            {
+                fprintf(stderr, "[L12_ROPE_DIAG] K pair i=%zu OUT: kh[i]=%.6e kh[i+1]=%.6e after=%.6e\n",
+                        i, kh[i], kh[i + 1], pair_energy(kh[i], kh[i + 1]));
+                fflush(stderr);
+            }
+
             double after = pair_energy(kh[i], kh[i + 1]);
             double err = std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
             if (err > 1.0e-5)
@@ -4874,6 +4965,39 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
                         h, i / 2, before, after, err);
                 std::abort();
             }
+        }
+    }
+
+    // ── Layer 12 RoPE diagnostic: post-scan ALL K heads for NaN ──
+    if (layerIdx == 12)
+    {
+        size_t kTotal = numKVHeads * headDim;
+        size_t firstBadK = SIZE_MAX;
+        for (size_t i = 0; i < kTotal; ++i)
+        {
+            if (!std::isfinite(k[i]))
+            {
+                firstBadK = i;
+                break;
+            }
+        }
+        if (firstBadK != SIZE_MAX)
+        {
+            fprintf(stderr,
+                    "[L12_ROPE_DIAG] K NaN AFTER RoPE at element %zu (head=%zu offset=%zu)\n",
+                    firstBadK, firstBadK / headDim, firstBadK % headDim);
+            // Print surrounding values
+            size_t start = (firstBadK > 2) ? firstBadK - 2 : 0;
+            size_t end = (firstBadK + 3 < kTotal) ? firstBadK + 3 : kTotal;
+            fprintf(stderr, "[L12_ROPE_DIAG] K around bad: ");
+            for (size_t i = start; i < end; ++i)
+                fprintf(stderr, "%.6e ", k[i]);
+            fprintf(stderr, "\n");
+            fflush(stderr);
+        }
+        else
+        {
+            fprintf(stderr, "[L12_ROPE_DIAG] K all finite AFTER RoPE (%zu elements)\n", kTotal);
         }
     }
 }
@@ -5428,6 +5552,12 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     }
     size_t rows = outDim;
 
+    // Publish the immutable dispatch table before any worker can read it.
+    // LinearW_Range is executed by the persistent pool and must never race
+    // registry construction or mutate its unordered_map tables.
+    auto& registry = Deep2::QuantKernelRegistry::Instance();
+    registry.Initialize();
+
     auto tLinearW0 = std::chrono::high_resolution_clock::now();
 
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
@@ -5921,6 +6051,41 @@ static size_t B3_CountNonFinite(const float* v, size_t n)
 {
     const B3VecStats s = B3_ComputeStats(v, n);
     return s.nanCount + s.infCount;
+}
+
+// Production correctness guard.  Generation must not continue after an
+// invalid intermediate tensor or a residual stream that has numerically
+// exploded.  The previous probe-only gate allowed NaN/Inf values to reach the
+// sampler whenever RAWRXD_DEEP2_LAYER_PROBE was unset.
+static void Deep2ValidateVector(const char* phase, size_t layer,
+                                const float* values, size_t count)
+{
+    if (!values || count == 0)
+        throw std::runtime_error("Deep2 numeric guard received an empty tensor");
+
+    const B3VecStats stats = B3_ComputeStats(values, count);
+    double limit = 1.0e6;
+    if (const char* e = std::getenv("RAWRXD_DEEP2_NUMERIC_L2_LIMIT"))
+    {
+        char* end = nullptr;
+        const double parsed = std::strtod(e, &end);
+        if (end != e && parsed > 0.0 && std::isfinite(parsed))
+            limit = parsed;
+    }
+
+    if (stats.nanCount != 0 || stats.infCount != 0 ||
+        !std::isfinite(stats.l2) || stats.l2 > limit)
+    {
+        std::fprintf(stderr,
+                     "[DEEP2_NUMERIC_ABORT] phase=%s layer=%zu count=%zu "
+                     "l2=%.9e min=%.9e max=%.9e nan=%zu inf=%zu limit=%.9e\n",
+                     phase ? phase : "?", layer, count, stats.l2,
+                     stats.min, stats.max, stats.nanCount, stats.infCount,
+                     limit);
+        std::fflush(stderr);
+        throw std::runtime_error(std::string("nonfinite or exploded tensor at ") +
+                                 (phase ? phase : "?"));
+    }
 }
 
 // One-shot first-bad-layer capture for TinyLlama / Deep2 Q4 diagnosis.
@@ -7519,6 +7684,18 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
+    // Nemotron-H is a hybrid stack: some blocks contain attention, some a
+    // selective-scan mixer, and some a dense MLP.  Do not force every block
+    // through the Llama attention-residual + FFN-residual schedule.  The
+    // tensor topology is the source of truth for the block contract.
+    const bool hasAttention =
+        !lw.hasSSM &&
+        (lw.wq.data || lw.wqkv.data ||
+         (lw.useMLA && lw.attnQ_a.data && lw.attnQ_b.data));
+    const bool hasMoEFFN = lw.moeRouter.data && lw.moeRouter.sizeBytes > 0;
+    const bool hasDenseFFN = lw.wGate.data || lw.wUp.data || lw.wDown.data;
+    const bool hasMixer = lw.hasSSM || hasMoEFFN || hasDenseFFN;
+    const bool hasDedicatedMixerNorm = lw.ffnNorm.data != nullptr;
     fprintf(stderr, "[DBG-FWD] enter layer=%zu seqLen=%zu liveSeq=%zu\n", layer, seqLen, liveSeq);
     fflush(stderr);
 
@@ -7599,7 +7776,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     ResidencyCounters::BeginAttention();
     if (profilingEnabled_ && profiler_)
         profiler_->beginQKVProj();
-    if (!lw.hasSSM && lw.wq.data)
+    if (hasAttention)
     {
         computeAttention(layer, layerTemp, output, seqLen);
         if (!HeapValidate(GetProcessHeap(), 0, NULL))
@@ -7612,28 +7789,34 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
     else
     {
-        // SSM/Mamba layer or MoE-only layer without attention: pass attention norm output through as-is
-        memcpy(output, layerTemp, hiddenDim * sizeof(float));
+        // SSM/MLP-only blocks have one pre-block normalization and one
+        // operator residual.  Keep the destination as the original residual;
+        // the operator is evaluated below from layerTemp.
+        memcpy(output, input, hiddenDim * sizeof(float));
     }
     if (profilingEnabled_ && profiler_)
         profiler_->endAttnOutProj();
     ResidencyCounters::EndAttention();
+    Deep2ValidateVector("ATTN_OUTPUT", layer, output, hiddenDim);
     fprintf(stderr, "[DBG-FWD] layer=%zu attention ok\n", layer);
     fflush(stderr);
 
-    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
+    // ── Layer 12 diagnostic: after attention, before residual ──
+    if (layer == 12)
     {
-        const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
-        char key[64];
-        std::snprintf(key, sizeof(key), "ATTN_OUT_%zu", layer);
-        B3_StageDigest(key, tokPos, output, hiddenDim);  // pre-residual attn (llama attn_out)
+        double outNorm = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+            outNorm += static_cast<double>(output[i]) * output[i];
+        outNorm = std::sqrt(outNorm);
+        fprintf(stderr, "[L12_DIAG] layer=%zu after attention norm=%.6e\n", layer, outNorm);
+        fflush(stderr);
     }
 
     // 3. Residual connection — AVX2 vectorized
-    if (profilingEnabled_ && profiler_)
+    if (profilingEnabled_ && profiler_ && hasAttention)
         profiler_->beginAttnResidual();
 #if defined(__AVX2__) || defined(_MSC_VER)
-    if (hiddenDim >= 8)
+    if (hasAttention && hiddenDim >= 8)
     {
         size_t i = 0;
         for (; i + 7 < hiddenDim; i += 8)
@@ -7647,7 +7830,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             output[i] += input[i];
         }
     }
-    else
+    else if (hasAttention)
 #endif
     {
         for (size_t i = 0; i < hiddenDim; ++i)
@@ -7655,8 +7838,20 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             output[i] += input[i];
         }
     }
-    if (profilingEnabled_ && profiler_)
+    if (profilingEnabled_ && profiler_ && hasAttention)
         profiler_->endAttnResidual();
+
+    // ── Layer 12 diagnostic: after residual ──
+    if (layer == 12)
+    {
+        double outNorm = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+            outNorm += static_cast<double>(output[i]) * output[i];
+        outNorm = std::sqrt(outNorm);
+        fprintf(stderr, "[L12_DIAG] layer=%zu after residual norm=%.6e\n", layer, outNorm);
+        fflush(stderr);
+    }
+
     if (layer == 0)
     {
         const std::uint32_t pos = static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
@@ -7675,12 +7870,43 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         char key[64];
         std::snprintf(key, sizeof(key), "FFN_INP_%zu", layer);
         B3_StageDigest(key, tokPos, output, hiddenDim);  // post-attn residual (llama ffn_inp)
-    }  // 4. FFN / SSM RMSNorm
-    if (profilingEnabled_ && profiler_)
-        profiler_->beginFFNNorm();
-    RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
-    if (profilingEnabled_ && profiler_)
-        profiler_->endFFNNorm();
+    }
+    Deep2ValidateVector("POST_ATTN_RESIDUAL", layer, output, hiddenDim);
+
+    // ── Layer 12 diagnostic: after POST_ATTN_RESIDUAL validation ──
+    if (layer == 12)
+    {
+        double outNorm = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+            outNorm += static_cast<double>(output[i]) * output[i];
+        outNorm = std::sqrt(outNorm);
+        fprintf(stderr, "[L12_DIAG] layer=%zu after POST_ATTN_RESIDUAL norm=%.6e\n", layer, outNorm);
+        fflush(stderr);
+    }
+
+    // 4. Mixer input.  Standard attention+FFN blocks have a second norm
+    // after the attention residual.  Nemotron-H SSM/MLP-only blocks use the
+    // already computed attnNorm result unless a dedicated mixer norm exists.
+    if (hasAttention && hasMixer)
+    {
+        if (!hasDedicatedMixerNorm)
+        {
+            throw std::runtime_error("attention block has mixer weights but no ffnNorm");
+        }
+        if (profilingEnabled_ && profiler_)
+            profiler_->beginFFNNorm();
+        RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
+        if (profilingEnabled_ && profiler_)
+            profiler_->endFFNNorm();
+    }
+    else if (!hasAttention && hasDedicatedMixerNorm)
+    {
+        if (profilingEnabled_ && profiler_)
+            profiler_->beginFFNNorm();
+        RMSNormW(lw.ffnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+        if (profilingEnabled_ && profiler_)
+            profiler_->endFFNNorm();
+    }
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
@@ -7694,7 +7920,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_)
         profiler_->beginFFNGate();
-    if (lw.hasSSM)
+    if (!hasMixer)
+    {
+        // Attention-only block: the attention residual above is the complete
+        // block result.  Do not run a synthetic zero-weight FFN stage.
+        std::fill(ffnOutput, ffnOutput + hiddenDim, 0.0f);
+    }
+    else if (lw.hasSSM)
     {
         // Hybrid layer: use SSM instead of FFN
         if (layer == 86)
@@ -7702,7 +7934,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         computeSSM(layer, layerTemp, ffnOutput);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
     }
-    else if (lw.moeRouter.data && lw.moeRouter.sizeBytes > 0)
+    else if (hasMoEFFN)
     {
         // Per-layer MoE: use MoE FFN
         try
@@ -7719,7 +7951,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
-    else
+    else if (hasDenseFFN)
     {
         try
         {
@@ -7735,7 +7967,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
-    if (profilingEnabled_ && profiler_)
+    if (profilingEnabled_ && profiler_ && hasMixer)
         profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
     if (!HeapValidate(GetProcessHeap(), 0, NULL))
@@ -7754,12 +7986,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         std::snprintf(key, sizeof(key), "FFN_DOWN_%zu", layer);
         B3_StageDigest(key, tokPos, ffnOutput, hiddenDim);
     }
+    Deep2ValidateVector("FFN_OUTPUT", layer, ffnOutput, hiddenDim);
 
     // 6. Residual connection — AVX2 vectorized
-    if (profilingEnabled_ && profiler_)
+    if (profilingEnabled_ && profiler_ && hasMixer)
         profiler_->beginFFNResidual();
 #if defined(__AVX2__) || defined(_MSC_VER)
-    if (hiddenDim >= 8)
+    if (hasMixer && hiddenDim >= 8)
     {
         size_t i = 0;
         for (; i + 7 < hiddenDim; i += 8)
@@ -7773,7 +8006,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             output[i] += ffnOutput[i];
         }
     }
-    else
+    else if (hasMixer)
 #endif
     {
         for (size_t i = 0; i < hiddenDim; ++i)
@@ -7781,7 +8014,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             output[i] += ffnOutput[i];
         }
     }
-    if (profilingEnabled_ && profiler_)
+    if (profilingEnabled_ && profiler_ && hasMixer)
         profiler_->endFFNResidual();
 #if 1
     {
@@ -7797,6 +8030,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         std::snprintf(key, sizeof(key), "POST_FFN_%zu", layer);
         B3_StageDigest(key, tokPos, output, hiddenDim);
     }
+    Deep2ValidateVector("POST_FFN_RESIDUAL", layer, output, hiddenDim);
 
     // Real layer execution mark: this forwardLayer completed on its planned device.
     if (multiGpuLayerPlan_.active)
@@ -7860,6 +8094,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     size_t numKVHeads = modelWeights.numKVHeads;
     size_t headDim = modelWeights.headDim;
     size_t groupSize = (numKVHeads > 0) ? (numHeads / numKVHeads) : 1;
+    // Keep the actual Q projection width available to the common post-RoPE
+    // certification path.  Some GGUFs expose a Q width that is not equal to
+    // hiddenDim (for example Nemotron-H uses 40*128 Q values with a 3136
+    // element residual stream).
+    size_t projectedQDim = (numHeads > 0 && headDim > 0) ? numHeads * headDim : hiddenDim;
 
     // ── MLA (K2) path ──────────────────────────────────────────────────
     // Only take MLA path if MLA weights are actually populated. Nemotron-H
@@ -7912,11 +8151,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // k_pe -> RoPE
         if (config.useRoPE)
         {
-            applyRoPE(nullptr, k_pe, qkRopeHeadDim, 0, 1, pos, modelWeights.ropeTheta, modelWeights.ropeScaling);
+            applyRoPE(nullptr, k_pe, qkRopeHeadDim, 0, 1, pos, modelWeights.ropeTheta, modelWeights.ropeScaling, layer);
             for (size_t h = 0; h < numHeads; ++h)
             {
                 applyRoPE(qProj + h * headDim + qkNopeHeadDim, nullptr, qkRopeHeadDim, 1, 0, pos,
-                          modelWeights.ropeTheta, modelWeights.ropeScaling);
+                          modelWeights.ropeTheta, modelWeights.ropeScaling, layer);
             }
         }
 
@@ -8118,6 +8357,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // Use hiddenDim as kvDim so qkvDim = 3*hiddenDim covers Q+K+V.
         size_t kvDim = lw.wk.rows ? lw.wk.rows : hiddenDim;
         size_t qkvDim = hiddenDim + 2 * kvDim;
+        projectedQDim = hiddenDim;
           // Project fused QKV: [qkvDim] = wqkv^T * input
         LinearW(lw.wqkv, input, nullptr, qProj, qkvDim);
         B3_TraceState("ATTN_QKV", layer, qProj, qkvDim);
@@ -8140,6 +8380,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     {
         // Project input to 8192 via attn_qkv
         size_t qDim = numHeads * headDim;  // 8192 = 32 × 256
+        projectedQDim = qDim;
         LinearW(lw.wqkv, input, nullptr, qProj, qDim);
         B3_TraceState("ATTN_Q_SSM", layer, qProj, qDim);
 
@@ -8181,8 +8422,65 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // Guard: weight matrix rows must not exceed projection buffer sizes
         // (kProj/vProj are sized hiddenDim in allocateBuffers()).  A mismatch
         // between model metadata and engine config would overflow the heap.
-        size_t kvDim = lw.wk.rows;  // Use actual weight matrix rows (handles GQA)
-        size_t vDim = lw.wv.rows;
+        if (!lw.wk.data || !lw.wv.data || lw.wq.rows == 0 || lw.wk.rows == 0 || lw.wv.rows == 0 ||
+            numHeads == 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu incomplete standard attention geometry "
+                    "qRows=%zu kRows=%zu vRows=%zu heads=%zu\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads);
+            fflush(stderr);
+            throw std::runtime_error("incomplete standard attention geometry");
+        }
+
+        // Do not trust stale architecture metadata for RoPE geometry.  The
+        // projection tensor rows are authoritative: applying a metadata KV
+        // head count to a smaller K projection writes past kProj and corrupts
+        // the residual stream.  Nemotron-H is the concrete case: metadata can
+        // report 40 KV heads while the loaded K tensor is 8*128 = 1024 rows.
+        if ((lw.wq.rows % numHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu Q rows=%zu not divisible by heads=%zu\n",
+                    layer, lw.wq.rows, numHeads);
+            fflush(stderr);
+            throw std::runtime_error("Q projection geometry mismatch");
+        }
+        const size_t weightHeadDim = lw.wq.rows / numHeads;
+        if (weightHeadDim == 0 || (lw.wk.rows % weightHeadDim) != 0 || (lw.wv.rows % weightHeadDim) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu incompatible Q/K/V rows q=%zu k=%zu v=%zu "
+                    "heads=%zu headDim=%zu\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim);
+            fflush(stderr);
+            throw std::runtime_error("Q/K/V projection geometry mismatch");
+        }
+        const size_t weightKVHeads = lw.wk.rows / weightHeadDim;
+        const size_t valueKVHeads = lw.wv.rows / weightHeadDim;
+        if (weightKVHeads == 0 || weightKVHeads != valueKVHeads || (numHeads % weightKVHeads) != 0)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu invalid GQA geometry qHeads=%zu kHeads=%zu vHeads=%zu\n",
+                    layer, numHeads, weightKVHeads, valueKVHeads);
+            fflush(stderr);
+            throw std::runtime_error("invalid GQA projection geometry");
+        }
+
+        if (headDim != weightHeadDim || numKVHeads != weightKVHeads)
+        {
+            fprintf(stderr,
+                    "[ATTN_TOPOLOGY] layer=%zu metadata heads=%zu kvHeads=%zu headDim=%zu; "
+                    "weights heads=%zu kvHeads=%zu headDim=%zu; using weight geometry\n",
+                    layer, numHeads, numKVHeads, headDim, numHeads, weightKVHeads, weightHeadDim);
+        }
+        headDim = weightHeadDim;
+        numKVHeads = weightKVHeads;
+        groupSize = numHeads / numKVHeads;
+        projectedQDim = numHeads * headDim;
+
+        const size_t kvDim = lw.wk.rows;
+        const size_t vDim = lw.wv.rows;
         if (kvDim > hiddenDim || vDim > hiddenDim)
         {
             fprintf(stderr,
@@ -8193,24 +8491,58 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             throw std::runtime_error("attention buffer overflow");
         }
 
-        // Q projection: [hiddenDim] -> [hiddenDim]
-        LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
-        B3_TraceState("ATTN_Q", layer, qProj, hiddenDim);
+        // Q projection: input -> the actual tensor row count.  This may be
+        // wider than the residual stream for GQA models.
+        LinearW(lw.wq, input, nullptr, qProj, projectedQDim);
+        B3_TraceState("ATTN_Q", layer, qProj, projectedQDim);
+
+        // ── Layer 12 diagnostic: Q norm ──
+        if (layer == 12)
+        {
+            double qNorm = 0.0;
+            for (size_t i = 0; i < projectedQDim; ++i)
+                qNorm += static_cast<double>(qProj[i]) * qProj[i];
+            qNorm = std::sqrt(qNorm);
+            fprintf(stderr, "[L12_DIAG] layer=%zu Q_proj norm=%.6e\n", layer, qNorm);
+            fflush(stderr);
+        }
 
         // K projection: [hiddenDim] -> [kvDim]
         LinearW(lw.wk, input, nullptr, kProj, kvDim);
         B3_TraceState("ATTN_K", layer, kProj, kvDim);
 
+        // ── Layer 12 diagnostic: K norm ──
+        if (layer == 12)
+        {
+            double kNorm = 0.0;
+            for (size_t i = 0; i < kvDim; ++i)
+                kNorm += static_cast<double>(kProj[i]) * kProj[i];
+            kNorm = std::sqrt(kNorm);
+            fprintf(stderr, "[L12_DIAG] layer=%zu K_proj norm=%.6e\n", layer, kNorm);
+            fflush(stderr);
+        }
+
         // V projection: [hiddenDim] -> [kvDim]
         LinearW(lw.wv, input, nullptr, vProj, vDim);
         B3_TraceState("ATTN_V", layer, vProj, vDim);
+
+        // ── Layer 12 diagnostic: V norm ──
+        if (layer == 12)
+        {
+            double vNorm = 0.0;
+            for (size_t i = 0; i < vDim; ++i)
+                vNorm += static_cast<double>(vProj[i]) * vProj[i];
+            vNorm = std::sqrt(vNorm);
+            fprintf(stderr, "[L12_DIAG] layer=%zu V_proj norm=%.6e\n", layer, vNorm);
+            fflush(stderr);
+        }
 
         if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
         {
             const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
             char key[64];
             std::snprintf(key, sizeof(key), "Q_PRE_ROPE_%zu", layer);
-            B3_StageDigest(key, tokPos, qProj, hiddenDim);
+            B3_StageDigest(key, tokPos, qProj, projectedQDim);
             std::snprintf(key, sizeof(key), "K_PRE_ROPE_%zu", layer);
             B3_StageDigest(key, tokPos, kProj, kvDim);
             std::snprintf(key, sizeof(key), "V_%zu", layer);
@@ -8249,7 +8581,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0));
           const size_t kvDim = lw.wk.rows;  // Use actual weight matrix rows (handles GQA)
-          AttnCert::record(AttnCert::Stage::QProj, 0, pos, qProj, hiddenDim);
+          AttnCert::record(AttnCert::Stage::QProj, 0, pos, qProj, projectedQDim);
           AttnCert::record(AttnCert::Stage::KProj, 0, pos, kProj, kvDim);
         AttnCert::record(AttnCert::Stage::VProj, 0, pos, vProj, kvDim);
     }
@@ -8260,21 +8592,41 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_)
             profiler_->beginRoPE();
         size_t pos = kvCache ? kvCache->currentLength() : seqLen - 1;
-        applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos, modelWeights.ropeTheta, modelWeights.ropeScaling);
+        applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos, modelWeights.ropeTheta, modelWeights.ropeScaling, layer);
         if (profilingEnabled_ && profiler_)
             profiler_->endRoPE();
     }
-    B3_TraceState("ATTN_ROPE", layer, qProj, hiddenDim);
+    B3_TraceState("ATTN_ROPE", layer, qProj, projectedQDim);
+
+    // ── Layer 12 diagnostic: Q/K norm after RoPE ──
+    if (layer == 12)
+    {
+        double qNorm = 0.0, kNorm = 0.0;
+        for (size_t i = 0; i < numHeads * headDim; ++i)
+            qNorm += static_cast<double>(qProj[i]) * qProj[i];
+        for (size_t i = 0; i < numKVHeads * headDim; ++i)
+            kNorm += static_cast<double>(kProj[i]) * kProj[i];
+        qNorm = std::sqrt(qNorm);
+        kNorm = std::sqrt(kNorm);
+        fprintf(stderr, "[L12_DIAG] layer=%zu Q_postRoPE norm=%.6e K_postRoPE norm=%.6e\n", layer, qNorm, kNorm);
+        fflush(stderr);
+    }
+
+    Deep2ValidateVector("ATTN_K_POST_ROPE", layer, kProj,
+                        numKVHeads * headDim);
+    Deep2ValidateVector("ATTN_Q_POST_ROPE", layer, qProj,
+                        numHeads * headDim);
+
     if (layer == 0)
     {
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0));
         const size_t kvDim = numKVHeads * headDim;
-        AttnCert::record(AttnCert::Stage::RopeQ, 0, pos, qProj, hiddenDim);
+        AttnCert::record(AttnCert::Stage::RopeQ, 0, pos, qProj, projectedQDim);
         AttnCert::record(AttnCert::Stage::RopeK, 0, pos, kProj, kvDim);
         if (B3_StageDigestEnabled())
         {
-            B3_StageDigest("Q_POST_ROPE_0", pos, qProj, hiddenDim);
+            B3_StageDigest("Q_POST_ROPE_0", pos, qProj, projectedQDim);
             B3_StageDigest("K_POST_ROPE_0", pos, kProj, kvDim);
         }
     }
@@ -8694,6 +9046,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // }
     // #endif
 
+    // Validate the concatenated head workspace before W_o. The prior guard
+    // only checked the reduced residual-width result, which could hide
+    // corruption already present in the attention vector. Use the actual
+    // Q-head width for standard GQA and keep the same fail-closed budget.
+    const size_t preOCount = numHeads * headDim;
+    Deep2ValidateVector("ATTN_PRE_WO", layer, output, preOCount);
+
     // Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
     // For MLA (DeepSeek-V2), the attention output has numHeads * headDim elements
@@ -8728,6 +9087,20 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             profiler_->endAttnOutProj();
         std::memcpy(output, tempOut, hiddenDim * sizeof(float));
     }
+
+    // ── Layer 12 diagnostic: output norm after wo projection ──
+    if (layer == 12)
+    {
+        double woNorm = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+            woNorm += static_cast<double>(output[i]) * output[i];
+        woNorm = std::sqrt(woNorm);
+        fprintf(stderr, "[L12_DIAG] layer=%zu wo_proj norm=%.6e\n", layer, woNorm);
+        fflush(stderr);
+    }
+
+    Deep2ValidateVector("ATTN_WO_PROJ", layer, output, hiddenDim);
+
     B3_TraceState("ATTN_O", layer, output, hiddenDim);
     if (layer == 0)
     {
@@ -8787,14 +9160,32 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     }
     bool hasDown = (lw.wDown.data != nullptr && lw.wDown.sizeBytes > 0);
 
+    // Nemotron-H stores mixer and MLP blocks as separate GGUF blocks.  An
+    // attention-only block has a valid Q/K/V/O path but intentionally has no
+    // FFN tensors; treating that topology as a missing mandatory dense FFN
+    // both rejected valid models and encouraged the old silent-skip behavior.
+    // The FFN contribution for such a block is exactly zero; the attention
+    // residual has already been produced by forwardLayer().
+    const bool hasAttentionMixer = !lw.hasSSM &&
+                                   (lw.wq.data || lw.wqkv.data || lw.attnQ_a.data ||
+                                    lw.attnQ_b.data || lw.attnO.data || lw.wo.data);
+    const bool hasMoERouter = lw.moeRouter.data != nullptr && lw.moeRouter.sizeBytes > 0;
+    if (!hasUp && !hasDown && !hasGate && !hasMoERouter && hasAttentionMixer)
+    {
+        std::fill(output, output + hiddenDim, 0.0f);
+        fprintf(stderr, "[FORWARD_LAYER_INFO] layer=%zu attention-only block; FFN contribution=zero\n", layer);
+        fflush(stderr);
+        return;
+    }
+
     if (!hasUp || !hasDown)
     {
         fprintf(stderr,
-                "[FORWARD_LAYER_WARN] layer=%zu FFN skipped: wUp.data=%s wDown.data=%s\n",
+                "[FORWARD_LAYER_FATAL] layer=%zu mandatory dense FFN missing: "
+                "wUp.data=%s wDown.data=%s\n",
                 layer, hasUp ? "valid" : "null", hasDown ? "valid" : "null");
         fflush(stderr);
-        std::fill(output, output + hiddenDim, 0.0f);
-        return;
+        throw std::runtime_error("mandatory dense FFN weights unavailable");
     }
 
     // Guard: intermediateDim must not exceed temp buffer (gateBuf/upBuf) size
@@ -8805,12 +9196,11 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     if (intermediateDim > ffnDim)
     {
         fprintf(stderr,
-                "[FORWARD_LAYER_WARN] layer=%zu FFN skipped: intermediateDim=%zu "
+                "[FORWARD_LAYER_FATAL] layer=%zu FFN rejected: intermediateDim=%zu "
                 "exceeds temp buffer ffnDim=%zu\n",
                 layer, intermediateDim, ffnDim);
         fflush(stderr);
-        std::fill(output, output + hiddenDim, 0.0f);
-        return;
+        throw std::runtime_error("dense FFN intermediate dimension exceeds buffer");
     }
 
     if (hasGate)
@@ -8966,9 +9356,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
                 layer, heads, groups);
         throw std::runtime_error("SSM heads not divisible by groups");
     }
-    const size_t headsPerGroup = heads / groups;
     const size_t headDim = dInner / heads;
-    const size_t groupSize = dInner / groups; // d_inner elements per group for RMSNorm/gating
     if (headDim == 0 || headDim * heads != dInner)
     {
         fprintf(stderr,
@@ -9024,13 +9412,13 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     float* proj = ssmMambaProj;
     memset(proj, 0, ssmInRows * sizeof(float));
     LinearW(lw.ssmIn, input, nullptr, proj, ssmInRows);
-    // Clamp projection values to prevent selective scan state explosion.
-    // Nemotron Bolt's ssm_in NVFP4 weights can produce large projections,
-    // which make dt = softplus(dt) enormous and conv1d outputs huge.
-    // Clamping keeps all downstream values bounded.
-    for (size_t pi = 0; pi < ssmInRows; ++pi) {
-        if (proj[pi] > 50.0f) proj[pi] = 50.0f;
-        if (proj[pi] < -50.0f) proj[pi] = -50.0f;
+    for (size_t pi = 0; pi < ssmInRows; ++pi)
+    {
+        if (!std::isfinite(proj[pi]))
+        {
+            fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite input projection index=%zu\n", layer, pi);
+            throw std::runtime_error("SSM input projection is nonfinite");
+        }
     }
     if (layer == 86)
         traceActivation("L86.ssm_in", proj, ssmInRows);
@@ -9055,28 +9443,23 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     // Insert new input at state[0]
     memcpy(convStatePtr, xBC, dConvDim * sizeof(float));
 
-    // Compute conv output per channel: y[i] = silu(bias[i] + sum_k W[k,i] * state[k,i])
+    // GGUF stores this depthwise convolution as [channels, kernel]. The
+    // loader exposes rows=channels and cols=kernel, so the packed data is
+    // channel-major: W[i * dConv + k].
     float* convOut = ssmY;  // [d_conv_dim] — checked <= hiddenDim above
     for (size_t i = 0; i < dConvDim; ++i)
     {
         float sum = convBias ? convBias[i] : 0.0f;
         for (size_t k = 0; k < dConv; ++k)
         {
-            sum += convW[k * dConvDim + i] * convStatePtr[k * dConvDim + i];
+            sum += convW[i * dConv + k] * convStatePtr[k * dConvDim + i];
         }
         convOut[i] = sum / (1.0f + expf(-sum));  // silu
-    }
-
-    // Clamp conv1d output to prevent selective scan state explosion.
-    // Nemotron Bolt's conv1d weights can produce large activation values,
-    // which make B and C huge and cause the selective scan state and output
-    // to blow up even when s is clamped. Clamping keeps all downstream
-    // values bounded and prevents NaN from propagating.
-    for (size_t i = 0; i < dConvDim; ++i)
-    {
-        if (convOut[i] > 50.0f) convOut[i] = 50.0f;
-        if (convOut[i] < -50.0f) convOut[i] = -50.0f;
-        if (isnan(convOut[i])) convOut[i] = 0.0f;
+        if (!std::isfinite(convOut[i]))
+        {
+            fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite conv output channel=%zu\n", layer, i);
+            throw std::runtime_error("SSM convolution output is nonfinite");
+        }
     }
 
     // ── Step 3: Split conv output into x, B, C ──
@@ -9100,18 +9483,17 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     for (size_t h = 0; h < heads; ++h)
     {
-        // Clamp dt to prevent selective scan state explosion.
-        // Nemotron Bolt's ssm_in produces dt values up to ~40000, which makes
-        // softplus(dt) enormous and causes the recurrent state s = s*dA + dth*B*xd
-        // to blow up to trillions. Clamping to [-10, 10] keeps dth in [~0, 10].
-        float dt_h = dt[h];
-        if (dt_h > 10.0f) dt_h = 10.0f;
-        if (dt_h < -10.0f) dt_h = -10.0f;
-        float dth = softplus(dt_h + (dtBias ? dtBias[h] : 0.0f));
-        float a = aParam ? aParam[h] : -1.0f;
-        float e = -dth * fabsf(a);
-        if (e < -80.0f) e = -80.0f;
-        float dA = expf(e);
+        const float dt_h = dt[h];
+        const float dth = softplus(dt_h + (dtBias ? dtBias[h] : 0.0f));
+        const float a = aParam ? aParam[h] : -1.0f;
+        const float e = dth * a;
+        if (!std::isfinite(dth) || !std::isfinite(a) || !std::isfinite(e) || e > 80.0f)
+        {
+            fprintf(stderr, "[SSM_FATAL] layer=%zu invalid state exponent head=%zu dt=%g A=%g e=%g\n",
+                    layer, h, dth, a, e);
+            throw std::runtime_error("SSM state exponent is invalid");
+        }
+        const float dA = e < -80.0f ? 0.0f : expf(e);
 
         const size_t gi = h / (heads / groups);  // group index
         const size_t gsBase = gi * groupState;
@@ -9126,50 +9508,63 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
             {
                 float& s = statePtr[hdIdx * dState + n];
                 s = s * dA + (dth * B[gsBase + n]) * xd;
-                // Clamp state to prevent runaway accumulation.
-                // Nemotron Bolt NVFP4 weights can produce dA ≈ 1 for some heads
-                // (dt very negative → dth ≈ 0 → dA = exp(0) = 1), causing the
-                // recurrent state to grow without bound over long sequences.
-                // At position 627+, unclamped state reaches millions, blowing up
-                // the residual norm (observed: 10,999,402 vs input norm 64).
-                if (s > 100.0f) s = 100.0f;
-                else if (s < -100.0f) s = -100.0f;
-                else if (isnan(s)) s = 0.0f;
+                if (!std::isfinite(s))
+                {
+                    fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite recurrent state head=%zu dim=%zu\n",
+                            layer, h, d);
+                    throw std::runtime_error("SSM recurrent state is nonfinite");
+                }
                 y += s * C[gsBase + n];
             }
 
             yInner[hdIdx] = y + xd * (dParam ? dParam[h] : 0.0f);
-            // Clamp yInner to prevent selective scan output explosion.
-            // Unbounded yInner makes RMSNorm sumSq=inf, which drives
-            // yInner/rms to zero and collapses the hidden state.
-            if (yInner[hdIdx] > 100.0f) yInner[hdIdx] = 100.0f;
-            if (yInner[hdIdx] < -100.0f) yInner[hdIdx] = -100.0f;
-            if (!std::isfinite(yInner[hdIdx])) yInner[hdIdx] = 0.0f;
+            if (!std::isfinite(yInner[hdIdx]))
+            {
+                fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite scan output head=%zu dim=%zu\n",
+                        layer, h, d);
+                throw std::runtime_error("SSM scan output is nonfinite");
+            }
         }
     }
 
-    // ── Step 5: RMSNorm + gating per group ──
-    // Applied per group over d_inner elements (not over groupState B/C elements).
+    // ── Step 5: gated RMSNorm over the complete inner state ──
+    // The Nemotron-H GGUF stores ssm_norm as a flattened [groups, groupSize]
+    // vector, but it is one Mamba-2 gated RMSNorm over d_inner, not eight
+    // independent normalizations.  Apply SiLU(z) exactly once, then compute
+    // one RMS over all inner channels.  This mirrors the production reference
+    // in runtime_graph_executor.cpp and avoids the previous double-gating /
+    // per-group scale error that inflated the residual stream.
     const float* normW = (const float*)lw.ssmNorm.data;
-    for (size_t gi = 0; gi < groups; ++gi)
+    double gatedSumSq = 0.0;
+    for (size_t i = 0; i < dInner; ++i)
     {
-        const size_t gStart = gi * groupSize;
-        float rms = 0.0f;
-        for (size_t i = 0; i < groupSize; ++i)
+        const float gate = z[i] / (1.0f + expf(-z[i]));
+        yInner[i] *= gate;
+        if (!std::isfinite(yInner[i]))
         {
-            float v = yInner[gStart + i];
-            rms += v * v;
+            fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite gated output index=%zu\n",
+                    layer, i);
+            throw std::runtime_error("SSM gated output is nonfinite");
         }
-        rms = sqrtf(rms / (float)groupSize + modelWeights.normEps);
-
-        for (size_t i = 0; i < groupSize; ++i)
+        gatedSumSq += static_cast<double>(yInner[i]) * static_cast<double>(yInner[i]);
+    }
+    const float rms = sqrtf(static_cast<float>(gatedSumSq / static_cast<double>(dInner)) +
+                            modelWeights.normEps);
+    if (!std::isfinite(rms) || rms <= 0.0f)
+    {
+        fprintf(stderr, "[SSM_FATAL] layer=%zu invalid gated RMS=%g\n", layer, rms);
+        throw std::runtime_error("SSM gated RMS is invalid");
+    }
+    for (size_t i = 0; i < dInner; ++i)
+    {
+        float yv = (yInner[i] / rms) * normW[i];
+        if (!std::isfinite(yv))
         {
-            const size_t idx = gStart + i;
-            float gate = z[idx] / (1.0f + expf(-z[idx]));  // silu
-            float yv = yInner[idx] / rms;
-            if (normW) yv *= normW[idx];
-            yInner[idx] = yv * gate;
+            fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite normalized output index=%zu\n",
+                    layer, i);
+            throw std::runtime_error("SSM normalized output is nonfinite");
         }
+        yInner[i] = yv;
     }
     if (layer == 86)
         traceActivation("L86.scan_out", yInner, dInner);
@@ -9197,13 +9592,13 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
     memset(output, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmOut, yInner, nullptr, output, hiddenDim);
 
-    // Clamp ssmOut output to prevent explosion through residual connections.
-    // Nemotron-H Mamba-2 ssm_out NVFP4 weights can produce large projections.
     for (size_t oi = 0; oi < hiddenDim; ++oi)
     {
-        if (output[oi] > 100.0f) output[oi] = 100.0f;
-        if (output[oi] < -100.0f) output[oi] = -100.0f;
-        if (!std::isfinite(output[oi])) output[oi] = 0.0f;
+        if (!std::isfinite(output[oi]))
+        {
+            fprintf(stderr, "[SSM_FATAL] layer=%zu nonfinite output projection index=%zu\n", layer, oi);
+            throw std::runtime_error("SSM output projection is nonfinite");
+        }
     }
 
     // ── DBG: inspect ssmOut output finiteness after projection ──
@@ -9261,9 +9656,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // output now contains shared expert output; routed experts add below.
 
     // --- Routed experts ---
-    if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_)
+    if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_ ||
+        !moeWeightProxy_->IsAttached())
     {
-        return;
+        std::fprintf(stderr,
+                     "[FORWARD_LAYER_FATAL] layer=%zu MoE router/proxy is not ready\n",
+                     layer);
+        std::fflush(stderr);
+        throw std::runtime_error("MoE execution prerequisites unavailable");
     }
 
     // 1. Route the token through the per-layer router
@@ -9341,6 +9741,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // corrupts input for all subsequent experts (read-write aliasing).
     std::vector<float> expertBuf(hiddenDim);
     float* expertOut = expertBuf.data();
+    size_t validExpertCount = 0;
     for (const auto& er : route.topExperts)
     {
         int expertId = er.expertId;
@@ -9358,7 +9759,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         uint64_t acquireUs = std::chrono::duration_cast<std::chrono::microseconds>(tAcquire1 - tAcquire0).count();
 
         if (!handle.valid)
-            continue;
+        {
+            std::fprintf(stderr,
+                         "[FORWARD_LAYER_FATAL] layer=%zu expert=%d weights unavailable\n",
+                         layer, expertId);
+            std::fflush(stderr);
+            throw std::runtime_error("routed MoE expert weights unavailable");
+        }
+        ++validExpertCount;
         recordExpertAccess((int)layer, expertId, weight);
 
         // Telemetry: record invocation and whether prefetch hit
@@ -9407,6 +9815,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             }
         }
     }
+    if (validExpertCount == 0)
+    {
+        std::fprintf(stderr,
+                     "[FORWARD_LAYER_FATAL] layer=%zu router produced no valid experts\n",
+                     layer);
+        std::fflush(stderr);
+        throw std::runtime_error("MoE router produced no executable experts");
+    }
     prefetchNextExperts((int)layer);
 }
 
@@ -9419,8 +9835,7 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
 {
     if (!handle.valid || !handle.gateWeights)
     {
-        memset(output, 0, hiddenDim * sizeof(float));
-        return;
+        throw std::runtime_error("invalid MoE expert handle");
     }
 
     // Temp buffers gateBuf/upBuf are allocated as ffnDim (= hidden*4 when
@@ -9434,8 +9849,7 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
                 "exceeds temp buffer ffnDim=%zu\n",
                 expertDim, hiddenDim, ffnDim);
         fflush(stderr);
-        memset(output, 0, hiddenDim * sizeof(float));
-        return;
+        throw std::runtime_error("MoE expert dimension exceeds buffer");
     }
 
     auto& reg = Deep2::QuantKernelRegistry::Instance();
@@ -9443,10 +9857,12 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle, const float* i
     auto geom = reg.GetGeometry(handle.quantType);
     if (!kernel || geom.blockSize == 0)
     {
-        memset(output, 0, hiddenDim * sizeof(float));
         reg.GetBatch21Counters().registryMisses.fetch_add(1, std::memory_order_relaxed);
-        printf("[computeExpertFFN] ERROR: No registry kernel for quantType=%d\n", handle.quantType);
-        return;
+        std::fprintf(stderr,
+                     "[FORWARD_LAYER_FATAL] no MoE kernel for quantType=%d\n",
+                     handle.quantType);
+        std::fflush(stderr);
+        throw std::runtime_error("no quantization kernel for MoE expert");
     }
     reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
     reg.GetBatch21Counters().kernelInvocations.fetch_add(3, std::memory_order_relaxed);  // gate + up + down
@@ -10637,6 +11053,10 @@ void Deep2Engine::enableVulkan(bool enable)
                                 snap.plan.policy == GpuPolicy::Multi || snap.plan.policy == GpuPolicy::Hybrid ||
                                 snap.plan.policy == GpuPolicy::UserList || wantHybrid);
 
+        // DualStick stores non-owning VulkanCompute pointers. Clear those
+        // bindings before replacing the owning device vector.
+        DualStickBindVc(0, nullptr);
+        DualStickBindVc(1, nullptr);
         vulkanDevices_.clear();
         multiGpuLayerPlan_ = MultiGpuLayerPlan{};
         vulkanUnplannedFallbacks_ = 0;
@@ -10724,6 +11144,13 @@ void Deep2Engine::enableVulkan(bool enable)
         // Keep a non-owning convention: getVulkanCompute returns devices[0].
         vulkanInitialized_ = true;
         vulkanEnabled_ = true;
+        // Bind the actual opened device owners used by the MoE workers.
+        DualStickBindVc(0, getVulkanComputeSlot(0));
+        DualStickBindVc(1, getVulkanComputeSlot(1));
+        fprintf(stdout, "[Deep2Engine] DUALSTICK_BIND vc0=%u vc1=%u devices=%zu\n",
+                getVulkanComputeSlot(0) ? 1u : 0u,
+                getVulkanComputeSlot(1) ? 1u : 0u,
+                vulkanDevices_.size());
         vulkanGemvOk_ = 0;
         vulkanGemvFail_ = 0;
         vulkanGpuWeightBytes_ = 0;
@@ -10752,6 +11179,8 @@ void Deep2Engine::enableVulkan(bool enable)
     }
     else
     {
+        DualStickBindVc(0, nullptr);
+        DualStickBindVc(1, nullptr);
         vulkanEnabled_ = false;
         vulkanStrictNoCpuFallback_ = false;
     }
@@ -10816,6 +11245,32 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
     else
     {
         cacheKey = (uint64_t)(uintptr_t)wt.data ^ ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
+    }
+
+    // Q4_K GPU parity is intentionally diagnosable at the dispatch boundary.
+    // The current shader uses direct dequantized FP32 dots while the CPU
+    // authority uses Q8_K activation quantization plus the integer dot path.
+    // Allow a bounded comparison run to route Q4_K through that authority;
+    // this is not a certification bypass and is ignored unless explicitly set.
+    const char* disableQ4kGpuEnv = std::getenv("RAWRXD_DEEP2_DISABLE_Q4K_GPU");
+    const bool disableQ4kGpu = disableQ4kGpuEnv && disableQ4kGpuEnv[0] == '1';
+    const char* disableQ6kGpuEnv = std::getenv("RAWRXD_DEEP2_DISABLE_Q6K_GPU");
+    const bool disableQ6kGpu = disableQ6kGpuEnv && disableQ6kGpuEnv[0] == '1';
+    const char* disableGpuGemvEnv = std::getenv("RAWRXD_DEEP2_DISABLE_GPU_GEMV");
+    if (disableGpuGemvEnv && disableGpuGemvEnv[0] == '1')
+    {
+        ++vulkanGemvFail_;
+        return false;
+    }
+    if (disableQ4kGpu && wt.type == (int)GGMLType::GGML_TYPE_Q4_K)
+    {
+        ++vulkanGemvFail_;
+        return false;
+    }
+    if (disableQ6kGpu && wt.type == (int)GGMLType::GGML_TYPE_Q6_K)
+    {
+        ++vulkanGemvFail_;
+        return false;
     }
 
     if (wt.data && wt.sizeBytes &&

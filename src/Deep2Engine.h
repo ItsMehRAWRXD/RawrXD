@@ -722,7 +722,8 @@ namespace Deep2
 
         // RoPE: apply rotary position embedding
         void applyRoPE(float *q, float *k, size_t headDim, size_t numHeads,
-                       size_t numKVHeads, size_t pos, float theta, float scaling);
+                       size_t numKVHeads, size_t pos, float theta, float scaling,
+                       size_t layerIdx);
 
         // SwiGLU activation: output = silu(gate) * up
         void SwiGLU(const float *gate, const float *up, float *output, size_t dim);

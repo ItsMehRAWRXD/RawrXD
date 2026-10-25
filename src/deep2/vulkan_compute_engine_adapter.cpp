@@ -44,8 +44,10 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cctype>
 #include <cstring>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -88,6 +90,25 @@ void SetDeviceHint(const std::string& value) {
 #endif
 }
 
+bool ContainsInsensitive(const std::string& haystack,
+                         const std::string& needle) {
+    if (needle.empty()) return true;
+    if (haystack.size() < needle.size()) return false;
+    for (size_t i = 0; i + needle.size() <= haystack.size(); ++i) {
+        bool match = true;
+        for (size_t j = 0; j < needle.size(); ++j) {
+            const unsigned char a = static_cast<unsigned char>(haystack[i + j]);
+            const unsigned char b = static_cast<unsigned char>(needle[j]);
+            if (std::tolower(a) != std::tolower(b)) {
+                match = false;
+                break;
+            }
+        }
+        if (match) return true;
+    }
+    return false;
+}
+
 } // namespace
 
 namespace CPUInference {
@@ -107,11 +128,33 @@ VulkanCompute::~VulkanCompute() {
 bool VulkanCompute::InitializeSolo(const char* needle) {
     if (backend_ == nullptr) return false;
 
+    uint32_t ordinal = 0;
     if (needle != nullptr && needle[0] != '\0') {
         const std::string hint(needle);
         SetDeviceHint(hint);
+
+        // Deep2::VulkanCompute selects by physical ordinal.  The old adapter
+        // only exported the name hint, so every slot silently opened ordinal
+        // zero even when the layer plan requested another GPU.  Resolve the
+        // plan's actual name against the same deduplicated Vulkan inventory
+        // used by the backend, then construct the backend with that ordinal.
+        const std::vector<Deep2::VulkanPhysicalInfo> devices =
+            Deep2::VulkanCompute::EnumeratePhysicalDevices();
+        bool found = false;
+        for (uint32_t i = 0; i < devices.size(); ++i) {
+            if (ContainsInsensitive(devices[i].name, hint)) {
+                ordinal = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            initialized_ = false;
+            return false;
+        }
     }
 
+    backend_.reset(new Deep2::VulkanCompute(ordinal));
     if (!backend_->initialize()) {
         // No matching device (or init failure). Leave the engine's host path in
         // charge -- this is the documented hand-off, and it is why the engine
@@ -149,7 +192,14 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input,
     if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
         out.size < static_cast<size_t>(rows) * sizeof(float)) {
         // (hidden, intermediate, heads, kvHeads, headDim, maxSeq, layers, kvLayers)
-        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1)) return false;
+        // GEMV output width is the matrix row count, not the activation
+        // width.  Large projection tensors (for example Nemotron's
+        // 17504x3136 SSM input) therefore need an arena sized for the
+        // larger of rows and cols.  Growing only to cols makes Vulkan
+        // reject an otherwise valid dispatch before vkCmdDispatch, which
+        // was incorrectly reported as a generic GPU fallback.
+        const uint32_t arenaWidth = rows > cols ? rows : cols;
+        if (!backend_->EnsureForwardArena(arenaWidth, arenaWidth, 1, 1, 1, 1, 1)) return false;
     }
 
     if (!backend_->UploadVector(in, input, cols)) return false;
@@ -188,7 +238,8 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed,
 
     if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
         out.size < static_cast<size_t>(rows) * sizeof(float)) {
-        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1)) return false;
+        const uint32_t arenaWidth = rows > cols ? rows : cols;
+        if (!backend_->EnsureForwardArena(arenaWidth, arenaWidth, 1, 1, 1, 1, 1)) return false;
     }
 
     if (!backend_->UploadVector(in, input, cols)) return false;
@@ -243,6 +294,13 @@ void VulkanCompute::BeginMoePinHold() {
 
 void VulkanCompute::EndMoePinHold() {
     if (backend_ != nullptr) backend_->EndMoePinHold();
+}
+
+void VulkanCompute::ClearPinnedGemvWeights() {
+    if (backend_ != nullptr) backend_->UnpinAllWeights();
+    pinned_packed_.clear();
+    pinned_f32_.clear();
+    resident_bytes_ = 0;
 }
 
 

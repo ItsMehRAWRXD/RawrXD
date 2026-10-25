@@ -350,6 +350,50 @@ rawrxd::ModelFitPlan Deep2Engine::estimateModelFit(const std::string& ggufPath,
     rawrxd::HostHardwareSnapshot hw;
     HostHardwareProbe_MeasureInto(hw, ggufPath);
 
+    // HostHardwareProbe_MeasureInto reports every usable Vulkan device.  The
+    // admission planner must also honor the exact device set that the
+    // executor will use.  Without this step RAWRXD_GPU_POLICY=CPU could be
+    // reported as GPU_MULTI admission even though commitFitPlan() later ran
+    // the model on the CPU, and RAWRXD_GPU_POLICY=SOLO could still admit both
+    // adapters even though the executor was asked to open one.  Filter by the
+    // stable device identity, never by an independently assigned ordinal.
+    Deep2::DeviceManagerSnapshot policySnapshot{};
+    if (Deep2::Deep2Device_Enumerate(policySnapshot)) {
+        Deep2::Deep2Device_ApplyPolicy(policySnapshot);
+        const Deep2::DevicePlan& devicePlan = policySnapshot.plan;
+        if (devicePlan.policy == Deep2::GpuPolicy::CpuOnly ||
+            devicePlan.openCount == 0) {
+            hw.gpus.clear();
+        } else {
+            const size_t measuredCount = hw.gpus.size();
+            std::vector<rawrxd::GpuDeviceInfo> selected;
+            selected.reserve(devicePlan.openCount);
+            for (unsigned open = 0; open < devicePlan.openCount; ++open) {
+                const int slot = devicePlan.openIndexes[open];
+                if (slot < 0 || slot >= static_cast<int>(policySnapshot.deviceCount))
+                    continue;
+                const char* stableId = policySnapshot.devices[slot].stableId;
+                for (const auto& gpu : hw.gpus) {
+                    if (gpu.stableId == stableId) {
+                        selected.push_back(gpu);
+                        break;
+                    }
+                }
+            }
+            // A policy/device-inventory mismatch must never silently widen a
+            // SOLO plan back to all detected GPUs.  Empty selection therefore
+            // fails closed into the CPU estimator; the runtime receipt still
+            // records the authoritative policy and the mismatch is visible.
+            if (selected.empty()) {
+                std::fprintf(stderr,
+                    "MODEL_FIT_GPU_POLICY_MISMATCH policy=%u detected=%zu requested=%u\n",
+                    static_cast<unsigned>(devicePlan.policy), measuredCount,
+                    devicePlan.openCount);
+            }
+            hw.gpus = std::move(selected);
+        }
+    }
+
     GGUFLoader loader;
     if (!loader.load(ggufPath)) {
         plan.rejectReason = "GGUF load failed: " + loader.error();
@@ -619,7 +663,7 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
                                                               : config.ropeScaling;
         for (size_t j = 0; j < B; ++j) {
             applyRoPE(&qAll[j * H], &kAll[j * kvDim], headDim, numHeads,
-                      numKVHeads, chunkBase + j, theta, scaling);
+                      numKVHeads, chunkBase + j, theta, scaling, layer);
             if (!H11TraceBatchVector("rope_q", layer, j, &qAll[j * H], H) ||
                 !H11TraceBatchVector("rope_k", layer, j, &kAll[j * kvDim], kvDim)) return false;
         }

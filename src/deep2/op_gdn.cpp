@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace Deep2::Qwen4Exp {
 
@@ -27,6 +28,17 @@ bool ValidateGDNDescriptor(const GDNDescriptor& descriptor,
         return false;
     }
     return true;
+}
+
+size_t GDNStateElements(const GDNDescriptor& descriptor) {
+    const uint64_t elements =
+        static_cast<uint64_t>(descriptor.groups) *
+        static_cast<uint64_t>(descriptor.state_size) *
+        static_cast<uint64_t>(descriptor.channels);
+    if (elements > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        return 0;
+    }
+    return static_cast<size_t>(elements);
 }
 
 bool GDNReferenceStep(const GDNDescriptor& descriptor,

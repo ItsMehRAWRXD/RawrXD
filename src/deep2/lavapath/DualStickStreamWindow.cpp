@@ -83,6 +83,9 @@ void ArmDualStickNoTruncate(const DualStickWindowPlan& p) {
                       (unsigned long long)(p.stick1Bytes >> 20));
         SetEnv("DEEP2_STICK1_BUDGET_MIB", b1);
     }
+    /* Binding happens before this arm phase; apply the now-known budgets to
+       the already-open Vulkan slots before admitting DualStick execution. */
+    DualStickApplyPinBudgets();
     DualStickState().armed = 1;
     /* Arm path only — does not claim DUALSTICK_RUNTIME_USED. */
     DualStickArmWarmup(0, 0);

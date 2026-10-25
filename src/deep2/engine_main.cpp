@@ -48,6 +48,27 @@ int main(int argc, char** argv) {
         }
         std::printf("[deep2-engine] model loaded\n");
 
+        // Keep the production executable diagnosable without changing the
+        // model or silently changing the default.  A positive bounded value
+        // lets a parity run reproduce a single-worker or fixed-width host
+        // schedule; when unset, the engine keeps its normal auto-detected
+        // pool.  This is intentionally applied after loadModel because the
+        // load-only path creates the pool while admitting the real model
+        // geometry.
+        if (const char* threadEnv = std::getenv("RAWRXD_DEEP2_THREADS")) {
+            char* end = nullptr;
+            const unsigned long requested = std::strtoul(threadEnv, &end, 10);
+            if (end != threadEnv && *end == '\0' && requested >= 1 && requested <= 256) {
+                engine.setNumThreads(static_cast<size_t>(requested));
+                std::printf("[deep2-engine] ThreadPool: %lu threads (environment override)\n",
+                            requested);
+            } else {
+                std::fprintf(stderr,
+                             "[deep2-engine] ignoring invalid RAWRXD_DEEP2_THREADS=%s\n",
+                             threadEnv);
+            }
+        }
+
         if (argc >= 3) {
             const std::string prompt = argv[2];
             const size_t maxTokens = (argc >= 4)

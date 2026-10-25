@@ -24,6 +24,16 @@ layout(push_constant) uniform Push {
 // AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
 shared float subgroupSums[8];
 
+// Q4_K/Q6_K use the same Q8_K activation quantization as the CPU ggml
+// authority.  The previous shader directly multiplied dequantized weights by
+// FP32 activations, which is a different operation and can change logits even
+// when both paths remain finite.  These per-workgroup scratch arrays mirror a
+// single 256-value Q8_K super-block at a time.
+shared float q8Raw[256];
+shared int q8Quant[256];
+shared float q8InvScale;
+shared float q8D;
+
 uint getb(uint byteIndex) {
     uint word = w[byteIndex >> 2u];
     return (word >> ((byteIndex & 3u) * 8u)) & 255u;
@@ -97,6 +107,20 @@ float q4k_weight(uint rowBase, uint col) {
     uint packed = getb(b + 16u + pair * 32u + l);
     uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
     return ds * float(sc) * float(q) - dm * float(mn);
+}
+
+// Q5_0: 32 values per block, 22 bytes per block
+// Layout: d (FP16, 2B) + dmin (FP16, 2B) + 32 nibbles packed (16B)
+float q5_0_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint idx = col % 32u;
+    uint b = rowBase + block * 22u;
+    float ds = geth(b + 0u);
+    float dm = geth(b + 2u);
+    uint byteIdx = 4u + idx / 2u;
+    uint nibble = (getb(byteIdx) >> (4u * (idx % 2u))) & 0xFu;
+    int qs = int(nibble) - 16;
+    return ds * float(qs) - dm;
 }
 
 // Four-column Q4_K dot fragment.
@@ -205,10 +229,94 @@ void main() {
     }
 
     float acc = 0.0;
-    if (pc.type == 12u) {
-        // 256 lanes * 4 contiguous values = 1024 columns per sweep.
-        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
-            acc += q4k_dot4(rb, j);
+    if (pc.type == 12u || pc.type == 14u) {
+        // Match vec_dot_q{4,6}_K_q8_K: quantize each activation super-block
+        // with the selected signed maximum, then perform the integer dot with
+        // the packed q4/q6 values and apply the block scales.
+        const uint blocks = (pc.cols + 255u) / 256u;
+        for (uint block = 0u; block < blocks; ++block) {
+            const uint col = block * 256u + lane;
+            q8Raw[lane] = col < pc.cols ? x[col] : 0.0;
+            barrier();
+
+            if (lane == 0u) {
+                float amax = 0.0;
+                float maxValue = 0.0;
+                for (uint i = 0u; i < 256u; ++i) {
+                    const float value = q8Raw[i];
+                    const float av = abs(value);
+                    if (av > amax) {
+                        amax = av;
+                        maxValue = value;
+                    }
+                }
+                if (amax == 0.0) {
+                    q8InvScale = 0.0;
+                    q8D = 0.0;
+                } else {
+                    q8InvScale = -127.0 / maxValue;
+                    q8D = 1.0 / q8InvScale;
+                }
+            }
+            barrier();
+
+            int q8 = 0;
+            if (q8InvScale != 0.0)
+                q8 = int(floatBitsToInt(q8InvScale * q8Raw[lane] + 12582912.0) & 0x007fffff) - 0x00400000;
+            q8 = clamp(q8, -127, 127);
+            q8Quant[lane] = q8;
+            barrier();
+
+            if (col < pc.cols) {
+                if (pc.type == 12u) {
+                    const uint b = rb + block * 144u;
+                    const uint idx = lane;
+                    const uint sb = idx / 32u;
+                    const uint l = idx % 32u;
+                    uint sc, mn;
+                    q4kScaleMin(b, sb, sc, mn);
+                    const uint pair = sb / 2u;
+                    const uint packed = getb(b + 16u + pair * 32u + l);
+                    const uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
+                    acc += q8D * float(q8) * geth(b) * float(sc) * float(q) -
+                           q8D * float(q8) * geth(b + 2u) * float(mn);
+                } else {
+                    const uint b = rb + block * 210u;
+                    const uint idx = lane;
+                    const uint hi128 = idx / 128u;
+                    const uint within = idx % 128u;
+                    const uint cat = within / 32u;
+                    const uint l = within % 32u;
+                    const uint is = l / 16u;
+                    const uint qlBase = b + hi128 * 64u;
+                    const uint qhBase = b + 128u + hi128 * 32u;
+                    const uint scBase = b + 192u + hi128 * 8u;
+                    uint q = 0u;
+                    uint scIndex = 0u;
+                    if (cat == 0u) {
+                        q = (getb(qlBase + l) & 15u) |
+                            (((getb(qhBase + l) >> 0u) & 3u) << 4u);
+                        scIndex = is + 0u;
+                    } else if (cat == 1u) {
+                        q = (getb(qlBase + l + 32u) & 15u) |
+                            (((getb(qhBase + l) >> 2u) & 3u) << 4u);
+                        scIndex = is + 2u;
+                    } else if (cat == 2u) {
+                        q = (getb(qlBase + l) >> 4u) |
+                            (((getb(qhBase + l) >> 4u) & 3u) << 4u);
+                        scIndex = is + 4u;
+                    } else {
+                        q = (getb(qlBase + l + 32u) >> 4u) |
+                            (((getb(qhBase + l) >> 6u) & 3u) << 4u);
+                        scIndex = is + 6u;
+                    }
+                    const int qs = int(q) - 32;
+                    const int scale = gets8(scBase + scIndex);
+                    acc += q8D * float(q8) * geth(b + 208u) * float(scale) * float(qs);
+                }
+            }
+            barrier();
+        }
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;

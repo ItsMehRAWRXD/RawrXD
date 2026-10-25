@@ -677,7 +677,7 @@ uint64_t GdnStateKey(const Executor* owner, int32_t block) noexcept {
 void Executor::ResetState() {
     for (size_t block = 0; block < gdn_gpu_active_.size(); ++block) {
         if (!gdn_gpu_active_[block]) continue;
-        ::GetDeep2VulkanCompute().ResetGdnState(
+        ::Deep2::GetDeep2VulkanCompute().ResetGdnState(
             GdnStateKey(this, static_cast<int32_t>(block)));
     }
     for (auto& state : ssm_state_) state.clear();
@@ -4997,7 +4997,7 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     if (!force_cpu_) {
         const uint64_t stateKey = GdnStateKey(this, in.block);
         std::vector<float> gpuOutput;
-        auto& gpu = ::GetDeep2VulkanCompute();
+        auto& gpu = ::Deep2::GetDeep2VulkanCompute();
         if (gpu.DispatchGdn(
                 mixed.data(), mixed.size(),
                 beta.data(), beta.size(),
