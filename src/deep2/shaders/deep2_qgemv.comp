@@ -2,7 +2,7 @@
 #extension GL_KHR_shader_subgroup_basic : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 // Batch 9 packed GGUF GEMV.
-// Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+// Supported: Q5_0(6), Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
 //
 // 40TPS_BATCH2:
 //   one workgroup = one output row
@@ -21,7 +21,7 @@ layout(push_constant) uniform Push {
     uint weightBytes;
 } pc;
 
-// AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
+// A 256-lane workgroup can have up to 256 subgroups on a legal implementation.
 shared float subgroupSums[256];
 
 // Q4_K/Q6_K use the same Q8_K activation quantization as the CPU ggml
