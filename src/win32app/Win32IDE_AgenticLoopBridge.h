@@ -29,6 +29,10 @@ public:
     };
 
     struct TaskConfig {
+        // "local" invokes the native GGUF path; "ollama" passes the model
+        // identifier to the local Ollama HTTP-backed agent runtime. Keep this
+        // explicit so the bridge cannot reinterpret a model ID as a file path.
+        std::string provider = "local";
         std::string modelPath;
         std::string workDir;
         std::string targetFile;
@@ -74,6 +78,7 @@ private:
     
     // Worker thread
     void WorkerThread();
+    void CompleteTask(bool success, const std::string& summary, DWORD exitCode = 1);
     
     // Process management
     bool LaunchAgenticLoop();
@@ -91,6 +96,7 @@ private:
     std::atomic<bool> m_running{false};
     std::atomic<bool> m_cancelRequested{false};
     std::atomic<bool> m_processStarted{false};
+    std::atomic<bool> m_completionSent{false};
     
     HANDLE m_process = nullptr;
     HANDLE m_stdoutRead = nullptr;

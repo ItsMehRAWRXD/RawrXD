@@ -39,6 +39,15 @@ bool AgenticLoopBridge::StartTask(const TaskConfig& config, ProgressCallback pro
         return false;
     }
 
+    // A completed std::thread remains joinable. Reusing the bridge without
+    // joining it would call std::terminate when the next task is assigned.
+    if (m_workerThread.joinable()) {
+        m_workerThread.join();
+    }
+    if (m_outputThread.joinable()) {
+        m_outputThread.join();
+    }
+
     m_currentConfig = config;
     m_progressCallback = progress;
     m_toolCallback = toolCb;
@@ -47,6 +56,7 @@ bool AgenticLoopBridge::StartTask(const TaskConfig& config, ProgressCallback pro
     m_cancelRequested.store(false);
     m_running.store(true);
     m_processStarted.store(false);
+    m_completionSent.store(false);
 
     // Publish ESP: task start
     if (m_espBus) {
@@ -88,6 +98,46 @@ void AgenticLoopBridge::Cancel()
     m_queueCv.notify_all();
 }
 
+void AgenticLoopBridge::CompleteTask(bool success, const std::string& summary, DWORD exitCode)
+{
+    if (m_completionSent.exchange(true))
+        return;
+
+    m_cancelRequested.store(!success || m_cancelRequested.load());
+    m_running.store(false);
+    m_processStarted.store(false);
+    m_watchdog.Finish();
+    if (m_snapStarted.exchange(false))
+        m_snapDetector.Stop();
+
+    // Let the reader observe the closed child pipe before disposing the
+    // parent read handle. This prevents a new task from racing a stale
+    // reader and makes repeated agent runs deterministic.
+    if (m_outputThread.joinable() &&
+        m_outputThread.get_id() != std::this_thread::get_id()) {
+        m_outputThread.join();
+    }
+
+    if (m_process)
+    {
+        CloseHandle(m_process);
+        m_process = nullptr;
+    }
+    if (m_stdoutRead) { CloseHandle(m_stdoutRead); m_stdoutRead = nullptr; }
+    if (m_stdoutWrite) { CloseHandle(m_stdoutWrite); m_stdoutWrite = nullptr; }
+    if (m_stdinRead) { CloseHandle(m_stdinRead); m_stdinRead = nullptr; }
+    if (m_stdinWrite) { CloseHandle(m_stdinWrite); m_stdinWrite = nullptr; }
+    m_processId = 0;
+    m_queueCv.notify_all();
+
+    if (m_progressCallback)
+        m_progressCallback(success ? "Task completed successfully" : summary);
+    PublishESPEvent(success ? rawrxd::esp::Kind::Finished : rawrxd::esp::Kind::Error,
+                    success ? "PASS" : "FAIL", static_cast<int>(exitCode));
+    if (m_completeCallback)
+        m_completeCallback(success, summary);
+}
+
 void AgenticLoopBridge::WorkerThread()
 {
     try {
@@ -122,14 +172,15 @@ void AgenticLoopBridge::WorkerThread()
         }
         if (exePath.empty()) {
             LOG_ERROR("Agentic loop executable not found relative to configured workdir or IDE");
-            if (m_progressCallback) {
-                m_progressCallback("Agentic loop executable not found");
-            }
+            CompleteTask(false, "Agentic loop executable not found", ERROR_FILE_NOT_FOUND);
             return;
         }
 
         std::ostringstream cmd;
         cmd << "\"" << exePath << "\" ";
+        if (m_currentConfig.provider == "ollama") {
+            cmd << "--provider ollama ";
+        }
         cmd << "--model \"" << m_currentConfig.modelPath << "\" ";
         cmd << "--workdir \"" << m_currentConfig.workDir << "\" ";
         if (!m_currentConfig.targetFile.empty()) {
@@ -186,10 +237,8 @@ void AgenticLoopBridge::WorkerThread()
             DWORD err = GetLastError();
             std::string errMsg = "CreateProcess failed: " + std::to_string(err);
             LOG_ERROR(errMsg);
-            if (m_progressCallback) m_progressCallback("Error: " + errMsg);
             PublishESPEvent(rawrxd::esp::Kind::Error, errMsg);
-            m_running.store(false);
-            if (m_completeCallback) m_completeCallback(false, errMsg);
+            CompleteTask(false, errMsg, err);
             return;
         }
 
@@ -208,6 +257,9 @@ void AgenticLoopBridge::WorkerThread()
         m_outputThread = std::thread([this] { ReadProcessOutput(); });
 
         // Wait for process to complete with watchdog
+        const auto wallDeadline = std::chrono::steady_clock::now() +
+                                  std::chrono::seconds(
+                                      std::max(1, m_currentConfig.maxWallTimeSec));
         DWORD waitResult = WaitForSingleObject(m_process, 1000);
         while (waitResult == WAIT_TIMEOUT && m_running.load()) {
             // Check watchdog
@@ -215,6 +267,16 @@ void AgenticLoopBridge::WorkerThread()
             if (status.state == rawrxd::watchdog::State::StartupTimedOut ||
                 status.state == rawrxd::watchdog::State::WallTimedOut) {
                 LOG_WARNING("Watchdog timeout: " + std::to_string(static_cast<int>(status.state)));
+                TerminateProcessTree(m_processId);
+                break;
+            }
+            // The task's host-owned wall budget is stricter than the bridge's
+            // long-lived default watchdog.  Enforce it here as well so a
+            // helper that stops emitting progress cannot outlive the task's
+            // configured deadline.
+            if (std::chrono::steady_clock::now() >= wallDeadline) {
+                LOG_WARNING("Task wall timeout: " +
+                            std::to_string(m_currentConfig.maxWallTimeSec) + "s");
                 TerminateProcessTree(m_processId);
                 break;
             }
@@ -226,54 +288,28 @@ void AgenticLoopBridge::WorkerThread()
             DWORD exitCode = 0;
             GetExitCodeProcess(m_process, &exitCode);
             
-            m_processStarted.store(false);
-            m_running.store(false);
-            m_watchdog.Finish();
-
             // Process output queue
             std::string finalOutput = m_accumulatedOutput;
             bool success = (exitCode == 0);
             
             LOG_INFO("Agentic loop exited with code: " + std::to_string(exitCode));
             
-            if (m_progressCallback) {
-                m_progressCallback("Task completed with exit code: " + std::to_string(exitCode));
-            }
-            
-            PublishESPEvent(rawrxd::esp::Kind::Finished, success ? "PASS" : "FAIL", exitCode);
-            
-            if (m_completeCallback) {
-                m_completeCallback(success, finalOutput);
-            }
+            CompleteTask(success, finalOutput.empty()
+                                  ? ("Task completed with exit code: " + std::to_string(exitCode))
+                                  : finalOutput,
+                         exitCode);
         } else {
             // Watchdog terminated process
-            m_processStarted.store(false);
-            m_running.store(false);
-            m_watchdog.Finish();
-            
-            if (m_progressCallback) {
-                m_progressCallback("Task terminated by watchdog");
-            }
-            
-            PublishESPEvent(rawrxd::esp::Kind::Error, "Watchdog timeout");
-            
-            if (m_completeCallback) {
-                m_completeCallback(false, "Watchdog timeout");
-            }
+            CompleteTask(false, "Watchdog timeout", WAIT_TIMEOUT);
         }
     }
     catch (const std::exception& e) {
         LOG_ERROR("Worker thread exception: " + std::string(e.what()));
-        PublishESPEvent(rawrxd::esp::Kind::Error, "Worker exception: " + std::string(e.what()));
-        m_running.store(false);
-        m_watchdog.Finish();
-        if (m_completeCallback) m_completeCallback(false, e.what());
+        CompleteTask(false, std::string("Worker exception: ") + e.what(), ERROR_UNHANDLED_EXCEPTION);
     }
     catch (...) {
         LOG_ERROR("Worker thread unknown exception");
-        m_running.store(false);
-        m_watchdog.Finish();
-        if (m_completeCallback) m_completeCallback(false, "Unknown exception");
+        CompleteTask(false, "Unknown worker exception", ERROR_UNHANDLED_EXCEPTION);
     }
 }
 

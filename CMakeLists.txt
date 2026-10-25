@@ -2633,6 +2633,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
         src/deep2/Deep2Log.cpp
         src/deep2/runtime_graph_executor.cpp
         src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
         src/deep2/op_linear.cpp
         src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
@@ -2699,6 +2702,49 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
     message(STATUS "deep2_agentic_loop enabled (Gate 9 agentic E2E harness)")
+endif()
+
+# AgenticLoopBridge recovery gate: exercises the real Win32 process-launch
+# lifecycle without a model or cloud service.  The executable is emitted to a
+# separate directory so no helper sibling is discoverable; this makes the
+# missing-helper and bridge-reuse outcomes deterministic and non-synthetic.
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/tools/agentic_loop_bridge_recovery_smoke.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/Win32IDE_AgenticLoopBridge.cpp")
+    add_executable(agentic_loop_timeout_helper
+        tools/agentic_loop_timeout_helper.cpp
+    )
+    set_target_properties(agentic_loop_timeout_helper PROPERTIES
+        OUTPUT_NAME "deep2_agentic_loop"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bridge_smoke_timeout"
+    )
+    add_executable(agentic_loop_bridge_recovery_smoke
+        tools/agentic_loop_bridge_recovery_smoke.cpp
+        tools/agentic_loop_bridge_smoke_logger.cpp
+        src/win32app/Win32IDE_AgenticLoopBridge.cpp
+    )
+    target_include_directories(agentic_loop_bridge_recovery_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/src/snap
+        ${CMAKE_SOURCE_DIR}/src/deep2/watchdog
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/tools
+        ${CMAKE_SOURCE_DIR}/tools/snap_process_guard
+        ${CMAKE_SOURCE_DIR}/tools/snap_supervisor
+        ${CMAKE_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp
+    )
+    target_link_libraries(agentic_loop_bridge_recovery_smoke PRIVATE
+        user32
+        advapi32
+        psapi
+    )
+    target_compile_options(agentic_loop_bridge_recovery_smoke PRIVATE /EHsc /std:c++20)
+    add_dependencies(agentic_loop_bridge_recovery_smoke agentic_loop_timeout_helper)
+    set_target_properties(agentic_loop_bridge_recovery_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bridge_smoke"
+    )
+    message(STATUS "agentic_loop_bridge_recovery_smoke enabled")
 endif()
 
 # ============================================================================

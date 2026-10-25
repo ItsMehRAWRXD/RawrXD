@@ -11,7 +11,11 @@
 
 // Initialize the Agentic Bridge
 void Win32IDE::initializeAgenticBridge() {
-    LOG_INFO("Initializing Agentic Bridge");
+    // This bridge remains available for the legacy native chat commands. It
+    // is intentionally isolated from autonomous tasks: those always use the
+    // lifecycle-safe AgenticLoopBridge, which owns process recovery, timeout
+    // handling, and durable transaction cleanup.
+    LOG_INFO("Initializing legacy Agentic Bridge (isolated from autonomous loop)");
     
     if (!m_agenticBridge) {
         m_agenticBridge = std::make_unique<AgenticBridge>(this);
@@ -30,7 +34,7 @@ void Win32IDE::initializeAgenticBridge() {
         
         // Initialize with default framework path
         if (m_agenticBridge->Initialize("", "bigdaddyg-personalized-agentic:latest")) {
-            LOG_INFO("Agentic Bridge initialized successfully");
+            LOG_INFO("Legacy Agentic Bridge initialized successfully; autonomous tasks use AgenticLoopBridge");
             appendToOutput(" Agentic Framework initialized\n", "Output", OutputSeverity::Info);
         } else {
             LOG_ERROR("Failed to initialize Agentic Bridge");
@@ -671,22 +675,29 @@ void Win32IDE::onAgenticLoopRunTask() {
         std::string task(input);
         SetWindowTextA(m_hwndCopilotChatInput, "");
         
-        // Get the selected Deep2 model.  A missing model is an explicit
-        // admission error; do not silently route an agent task to a stale
-        // developer-machine path.
+        // Route the selected model explicitly. Ollama entries contain a
+        // model ID (for example qwen3:8b), while local entries contain a GGUF
+        // path. Never apply filesystem validation to an Ollama ID.
+        const bool useOllama =
+            m_selectedChatModel.source == ChatModelEntry::Source::Ollama;
         std::string modelPath;
-        if (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) {
-            modelPath = m_deep2Bridge->GetCurrentModel();
-        }
-        if (modelPath.empty() && !m_loadedModelPath.empty()) {
-            modelPath = m_loadedModelPath;
-        }
-        if (modelPath.empty()) {
-            if (const char* configuredModel = std::getenv("RAWRXD_DEFAULT_DEEP2_MODEL")) {
-                if (*configuredModel) modelPath = configuredModel;
+        if (useOllama) {
+            modelPath = m_selectedChatModel.identifier;
+        } else {
+            if (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) {
+                modelPath = m_deep2Bridge->GetCurrentModel();
+            }
+            if (modelPath.empty() && !m_loadedModelPath.empty()) {
+                modelPath = m_loadedModelPath;
+            }
+            if (modelPath.empty()) {
+                if (const char* configuredModel = std::getenv("RAWRXD_DEFAULT_DEEP2_MODEL")) {
+                    if (*configuredModel) modelPath = configuredModel;
+                }
             }
         }
-        if (modelPath.empty() || GetFileAttributesA(modelPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
+        if (modelPath.empty() ||
+            (!useOllama && GetFileAttributesA(modelPath.c_str()) == INVALID_FILE_ATTRIBUTES)) {
             appendToOutput("Agent task rejected: select or configure a valid local model first.\n",
                            "Errors", OutputSeverity::Error);
             return;
@@ -699,6 +710,7 @@ void Win32IDE::onAgenticLoopRunTask() {
         
         // Build task config
         AgenticLoopBridge::TaskConfig config;
+        config.provider = useOllama ? "ollama" : "local";
         config.modelPath = modelPath;
         config.workDir = workDirStr;
         config.task = task;
@@ -715,6 +727,7 @@ void Win32IDE::onAgenticLoopRunTask() {
         }
         
         appendToOutput(" Starting agentic task: " + task + "\n", "Output", OutputSeverity::Info);
+        appendToOutput(" Provider: " + config.provider + "\n", "Output", OutputSeverity::Info);
         appendToOutput(" Model: " + modelPath + "\n", "Output", OutputSeverity::Info);
         appendToOutput(" Work dir: " + workDirStr + "\n", "Output", OutputSeverity::Info);
         

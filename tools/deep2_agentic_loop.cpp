@@ -49,6 +49,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <winhttp.h>
 #include <wincrypt.h>
 #include <io.h>
 #include <process.h>
@@ -68,6 +69,7 @@
 #include "../src/agentic/MotdAuthorization.h"
 
 #include "../cloud_api_client.h"
+#include <nlohmann/json.hpp>
 
 using namespace RawrXD::Deep2;
 using RawrXD::Deep2::RuntimeGraph::Executor;
@@ -135,6 +137,9 @@ struct Args
     std::string build_command;
     std::string run_command;
     std::string expected_output = "PASS";
+    // Optional exact post-edit content used by certification fixtures.  When
+    // supplied, the host verifies it independently of the model's report.
+    std::string expected_source;
     // H02/SNAP budgets and diagnostics
     int max_retries = 3;
     int max_total_tokens = 8192;
@@ -144,6 +149,7 @@ struct Args
     bool full_prefill = false;  // baseline: re-feed the whole render each turn
     bool quiet = false;
     bool motd_selftest = false;       // Gate test; does not load a model or initialize GPU inference
+    bool recovery_selftest = false;   // Durable transaction recovery self-test
     bool batched_prefill = true;  // PrefillBatch: P dots per op, one submission
     // FIRST-TOKEN PARITY: render a plain prompt (no tool protocol), prefill it,
     // and report the first generated token's full ranking with the EOS rank
@@ -212,12 +218,14 @@ Args Parse(int argc, char* argv[])
             a.run_command = argv[++i];
         else if (s == "--expected-output" && i + 1 < argc)
             a.expected_output = argv[++i];
+        else if (s == "--expected-source" && i + 1 < argc)
+            a.expected_source = argv[++i];
         // H02/SNAP budgets and diagnostics
         else if (s == "--max-retries" && i + 1 < argc)
             a.max_retries = std::atoi(argv[++i]);
         else if (s == "--max-total-tokens" && i + 1 < argc)
             a.max_total_tokens = std::atoi(argv[++i]);
-        else if (s == "--max-wall-time" && i + 1 < argc)
+        else if ((s == "--max-wall-time" || s == "--max-wall-time-sec") && i + 1 < argc)
             a.max_wall_time_sec = std::atoi(argv[++i]);
         else if (s == "--single-turn")
             a.single_turn = true;
@@ -232,6 +240,8 @@ Args Parse(int argc, char* argv[])
             a.quiet = true;
         else if (s == "--motd-selftest")
             a.motd_selftest = true;
+        else if (s == "--recovery-selftest")
+            a.recovery_selftest = true;
         else if (s == "--batched-prefill" && i + 1 < argc)
             a.batched_prefill = std::atoi(argv[++i]) != 0;
         else if (s == "--temperature" && i + 1 < argc)
@@ -283,6 +293,44 @@ std::string Trim(const std::string& s)
     while (b > a && std::isspace((unsigned char)s[b - 1]))
         --b;
     return s.substr(a, b - a);
+}
+
+// Tool paths are always relative to the caller-provided workspace.  Keep the
+// check here, before any filesystem call, so a model cannot turn TOOL read or
+// TOOL write into an arbitrary-path operation through `..`, a drive prefix, or
+// a UNC path.
+static bool IsSafeRelativeToolPath(const std::string& rel)
+{
+    if (rel.empty() || rel.find('\0') != std::string::npos)
+        return false;
+    std::filesystem::path p(rel);
+    if (p.is_absolute() || p.has_root_name() || p.has_root_directory())
+        return false;
+    for (const auto& part : p)
+    {
+        if (part == "..")
+            return false;
+    }
+    return true;
+}
+
+static std::string SafeWorkPath(const std::string& workdir, const std::string& rel)
+{
+    if (!IsSafeRelativeToolPath(rel))
+        return {};
+    std::error_code ec;
+    const auto root = std::filesystem::weakly_canonical(workdir, ec);
+    if (ec) return {};
+    const auto candidate = std::filesystem::weakly_canonical(root / std::filesystem::path(rel), ec);
+    if (ec) return {};
+    const auto rootText = root.lexically_normal().string();
+    const auto candidateText = candidate.lexically_normal().string();
+    if (candidateText.size() < rootText.size() ||
+        candidateText.compare(0, rootText.size(), rootText) != 0 ||
+        (candidateText.size() > rootText.size() &&
+         candidateText[rootText.size()] != '\\' && candidateText[rootText.size()] != '/'))
+        return {};
+    return candidate.string();
 }
 
 // Make control characters visible in a log line. Token text is the primary
@@ -1213,6 +1261,56 @@ static ChatMarkers ParseChatMarkers(const std::string& t)
     if (t.empty())
         return m;  // plain prompt mode; caller falls back
     m.has_template = true;
+
+    // Llama 3.x templates use quoted header literals and a trimmed
+    // `message['content']`, which is not safely recoverable by the generic
+    // single-quoted role extractor when the template also contains tool
+    // branches.  Recognize the canonical wire format explicitly so the
+    // production prompt cannot silently fall back to `User:`/`Assistant:`.
+    if (t.find("<|start_header_id|>") != std::string::npos &&
+        t.find("<|end_header_id|>") != std::string::npos &&
+        t.find("<|eot_id|>") != std::string::npos)
+    {
+        m.system_pre = "<|start_header_id|>system<|end_header_id|>\n\n";
+        m.user_pre = "<|start_header_id|>user<|end_header_id|>\n\n";
+        m.asst_pre = "<|start_header_id|>assistant<|end_header_id|>\n\n";
+        m.system_suf = "<|eot_id|>";
+        m.user_suf = "<|eot_id|>";
+        m.asst_suf = "<|eot_id|>";
+        m.gen_prompt = m.asst_pre;
+        m.bos_in_template = t.find("bos_token") != std::string::npos;
+        m.system_eos_suffix = false;
+        m.user_eos_suffix = false;
+        m.eos_in_asst_suffix = false;
+        return m;
+    }
+
+    // Qwen3 templates use dedicated full-width role markers and an explicit
+    // end-of-sentence marker.  Falling back to User:/Assistant: changes the
+    // trained prompt wire format and can turn a valid instruct model into an
+    // apparent protocol failure.
+    const std::string qwenUser = "<\xEF\xBD\x9C" "User" "\xEF\xBD\x9C>";
+    const std::string qwenAssistant = "<\xEF\xBD\x9C" "Assistant" "\xEF\xBD\x9C>";
+    const std::string qwenEos = "<\xEF\xBD\x9C" "end" "\xE2\x96\x81" "of"
+                                "\xE2\x96\x81" "sentence" "\xEF\xBD\x9C>";
+    if (t.find(qwenUser) != std::string::npos &&
+        t.find(qwenAssistant) != std::string::npos &&
+        t.find(qwenEos) != std::string::npos)
+    {
+        m.system_pre.clear();
+        m.system_suf.clear();
+        m.user_pre = qwenUser;
+        m.user_suf = qwenEos;
+        m.asst_pre = qwenAssistant;
+        m.asst_suf = qwenEos;
+        m.gen_prompt = m.asst_pre;
+        m.bos_in_template = t.find("{{ bos_token }}") != std::string::npos ||
+                            t.find("{{- bos_token") != std::string::npos;
+        m.system_eos_suffix = false;
+        m.user_eos_suffix = false;
+        m.eos_in_asst_suffix = false;
+        return m;
+    }
     m.bos_in_template = t.find("{{ bos_token }}") != std::string::npos;
     if (!ExtractRoleFormat(t, "system", m.system_pre, m.system_suf, m.system_eos_suffix))
     {
@@ -1422,16 +1520,34 @@ Action ParseAction(const std::string& text)
         a.raw = t;
         return a;
     }
+    if (t == "TOOL build" || t == "TOOL test" || t == "TOOL run")
+    {
+        a.valid = true;
+        a.tool = (t == "TOOL build") ? "build" :
+                 (t == "TOOL run" ? "run" : "test");
+        a.raw = t;
+        return a;
+    }
     if (t.rfind("TOOL write ", 0) == 0)
     {
-        const size_t sp = t.find(' ', 11);
-        if (sp == std::string::npos)
+        // Models commonly emit one or more spaces between the verb, path,
+        // and payload delimiter.  Parse those separators as whitespace
+        // rather than treating the first extra space as an empty path.
+        size_t pathStart = 10; // immediately after "TOOL write"
+        while (pathStart < t.size() && std::isspace((unsigned char)t[pathStart]))
+            ++pathStart;
+        const size_t pathEnd = t.find_first_of(" \t\r\n", pathStart);
+        if (pathStart == t.size() || pathEnd == std::string::npos)
             return a;
-        const std::string path = t.substr(11, sp - 11);
+        const std::string path = t.substr(pathStart, pathEnd - pathStart);
         if (path.empty())
             return a;
         const std::string command = text.substr(lineStart);
-        const size_t a1 = command.find("@@", sp);
+        size_t payloadStart = pathEnd;
+        while (payloadStart < command.size() &&
+               std::isspace((unsigned char)command[payloadStart]))
+            ++payloadStart;
+        const size_t a1 = command.find("@@", payloadStart);
         if (a1 == std::string::npos)
             return a;  // no open delimiter: incomplete
         const size_t a2 = command.find("@@", a1 + 2);
@@ -2556,17 +2672,99 @@ class PatchManager
 {
     std::vector<PatchTransaction> transactions_;
     std::string workdir_;
+    std::filesystem::path recovery_root_;
+    std::filesystem::path active_transaction_;
+    std::filesystem::path active_backup_;
+
+    static bool WriteManifest(const std::filesystem::path& dir,
+                              const std::string& state,
+                              const std::string& target,
+                              const std::filesystem::path& backup)
+    {
+        std::ofstream f(dir / "manifest.txt", std::ios::trunc);
+        if (!f) return false;
+        f << "state=" << state << "\n"
+          << "target=" << target << "\n"
+          << "backup=" << backup.string() << "\n";
+        f.flush();
+        return f.good();
+    }
+
+    void RecoverPending()
+    {
+        std::error_code ec;
+        if (!std::filesystem::is_directory(recovery_root_, ec)) return;
+        for (const auto& entry : std::filesystem::directory_iterator(recovery_root_, ec))
+        {
+            if (ec || !entry.is_directory(ec)) { ec.clear(); continue; }
+            const auto manifest = entry.path() / "manifest.txt";
+            std::ifstream f(manifest);
+            if (!f) continue;
+            std::string line, state, target, backup;
+            while (std::getline(f, line))
+            {
+                const size_t eq = line.find('=');
+                if (eq == std::string::npos) continue;
+                const std::string key = line.substr(0, eq);
+                const std::string value = line.substr(eq + 1);
+                if (key == "state") state = value;
+                else if (key == "target") target = value;
+                else if (key == "backup") backup = value;
+            }
+            if (state != "pending" || target.empty() || backup.empty()) continue;
+            const std::string targetPath = SafeWorkPath(workdir_, target);
+            const std::string before = ReadFile(backup);
+            if (targetPath.empty() || before.empty())
+            {
+                WriteManifest(entry.path(), "recovery_failed", target, backup);
+                Logf_("[recovery] FAILED target=%s transaction=%s\n",
+                      target.c_str(), entry.path().string().c_str());
+                continue;
+            }
+            if (WriteFile(targetPath, before))
+            {
+                WriteManifest(entry.path(), "recovered", target, backup);
+                Logf_("[recovery] RESTORED target=%s transaction=%s\n",
+                      target.c_str(), entry.path().string().c_str());
+            }
+            else
+            {
+                WriteManifest(entry.path(), "recovery_failed", target, backup);
+                Logf_("[recovery] FAILED_WRITE target=%s transaction=%s\n",
+                      target.c_str(), entry.path().string().c_str());
+            }
+        }
+    }
 
 public:
-    explicit PatchManager(const std::string& workdir) : workdir_(workdir) {}
+    explicit PatchManager(const std::string& workdir) : workdir_(workdir)
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(workdir_, ec);
+        recovery_root_ = std::filesystem::path(workdir_) / ".rawrxd" / "agent_transactions";
+        std::filesystem::create_directories(recovery_root_, ec);
+        RecoverPending();
+    }
+
+    ~PatchManager() = default;
 
     bool snapshot(const std::string& rel_path)
     {
-        std::string content = ReadFile(workdir_ + "/" + rel_path);
+        const std::string targetPath = SafeWorkPath(workdir_, rel_path);
+        if (targetPath.empty()) return false;
+        std::string content = ReadFile(targetPath);
         if (content.empty()) return false;
         PatchTransaction tx;
         tx.file_path = rel_path;
         tx.before_content = content;
+        const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+        active_transaction_ = recovery_root_ / ("txn_" + std::to_string(stamp));
+        std::error_code ec;
+        std::filesystem::create_directories(active_transaction_, ec);
+        active_backup_ = active_transaction_ / "before.bin";
+        if (ec || !WriteFile(active_backup_.string(), content) ||
+            !WriteManifest(active_transaction_, "pending", rel_path, active_backup_))
+            return false;
         transactions_.push_back(tx);
         return true;
     }
@@ -2576,7 +2774,8 @@ public:
         if (transactions_.empty()) return false;
         auto& tx = transactions_.back();
         if (tx.file_path != rel_path) return false;
-        if (!WriteFile(workdir_ + "/" + rel_path, new_content)) return false;
+        const std::string targetPath = SafeWorkPath(workdir_, rel_path);
+        if (targetPath.empty() || !WriteFile(targetPath, new_content)) return false;
         tx.after_content = new_content;
         return true;
     }
@@ -2608,6 +2807,8 @@ public:
             return false;
         }
         tx.committed = true;
+        if (!active_transaction_.empty())
+            WriteManifest(active_transaction_, "verified", tx.file_path, active_backup_);
         return true;
     }
 
@@ -2616,15 +2817,22 @@ public:
         if (transactions_.empty()) return false;
         auto& tx = transactions_.back();
         if (tx.file_path != rel_path) return false;
-        const bool ok = WriteFile(workdir_ + "/" + rel_path, tx.before_content);
+        const std::string targetPath = SafeWorkPath(workdir_, rel_path);
+        const bool ok = !targetPath.empty() && WriteFile(targetPath, tx.before_content);
         tx.rolled_back = ok;
+        if (ok && !active_transaction_.empty())
+            WriteManifest(active_transaction_, "rolled_back", tx.file_path, active_backup_);
         return ok;
     }
 
     void commit(const std::string& rel_path)
     {
         if (!transactions_.empty() && transactions_.back().file_path == rel_path)
+        {
             transactions_.back().committed = true;
+            if (!active_transaction_.empty())
+                WriteManifest(active_transaction_, "committed", rel_path, active_backup_);
+        }
     }
 
     const PatchTransaction* last() const
@@ -2632,6 +2840,40 @@ public:
         return transactions_.empty() ? nullptr : &transactions_.back();
     }
 };
+
+static bool DurableRecoverySelfTest()
+{
+    std::error_code ec;
+    const auto root = std::filesystem::temp_directory_path(ec) /
+        ("rawrxd_agent_recovery_" + std::to_string(
+#ifdef _WIN32
+            static_cast<unsigned long long>(GetCurrentProcessId())
+#else
+            static_cast<unsigned long long>(std::chrono::steady_clock::now().time_since_epoch().count())
+#endif
+        ));
+    std::filesystem::create_directories(root, ec);
+    const std::string original = "int main() { return 0; }\n";
+    const std::string modified = "int main() { return 42; }\n";
+    const auto fixture = root / "fixture.cpp";
+    bool ok = !ec && WriteFile(fixture.string(), original);
+    {
+        PatchManager pm(root.string());
+        ok = ok && pm.snapshot("fixture.cpp") && pm.apply("fixture.cpp", modified);
+        // Deliberately let the object die with a pending transaction.  The
+        // next PatchManager instance must recover it from disk, which is the
+        // crash/restart contract used by the production loop.
+    }
+    ok = ok && ReadFile(fixture.string()) == modified;
+    {
+        PatchManager pm(root.string());
+        ok = ok && ReadFile(fixture.string()) == original;
+    }
+    ok = ok && ReadFile(fixture.string()) == original;
+    std::filesystem::remove_all(root, ec);
+    Logf_("DURABLE_RECOVERY_SELFTEST %s\n", ok ? "PASS" : "FAIL");
+    return ok;
+}
 
 // Append-only JSONL ledger of every host/model transition.
 class ExecutionLedger
@@ -2729,6 +2971,302 @@ public:
     }
 };
 
+#ifdef _WIN32
+struct OllamaReply
+{
+    bool ok = false;
+    std::string content;
+    std::string error;
+    long http_status = 0;
+};
+
+static std::wstring Utf8ToWide(const std::string& value)
+{
+    if (value.empty()) return {};
+    const int n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                      value.data(), static_cast<int>(value.size()),
+                                      nullptr, 0);
+    if (n <= 0) return {};
+    std::wstring out(static_cast<size_t>(n), L'\0');
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                            value.data(), static_cast<int>(value.size()),
+                            out.data(), n) != n)
+        return {};
+    return out;
+}
+
+static OllamaReply OllamaChat(const std::string& model,
+                              const std::vector<std::pair<std::string, std::string>>& messages,
+                              int max_tokens, int context_size, float temperature)
+{
+    OllamaReply result;
+    const char* configured = std::getenv("RAWRXD_OLLAMA_ENDPOINT");
+    const std::string endpoint = configured && *configured ? configured : "http://127.0.0.1:11434";
+    const bool secure = endpoint.rfind("https://", 0) == 0;
+    const std::string scheme = secure ? "https://" : "http://";
+    if (endpoint.rfind(scheme, 0) != 0)
+    {
+        result.error = "invalid Ollama endpoint URL";
+        return result;
+    }
+    const size_t authorityStart = scheme.size();
+    const size_t pathStart = endpoint.find('/', authorityStart);
+    const std::string authority = endpoint.substr(authorityStart,
+        pathStart == std::string::npos ? std::string::npos : pathStart - authorityStart);
+    if (authority.empty()) { result.error = "Ollama endpoint has no host"; return result; }
+    std::string hostText = authority;
+    INTERNET_PORT port = secure ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
+    const size_t colon = authority.rfind(':');
+    if (colon != std::string::npos && authority.find(']') == std::string::npos)
+    {
+        hostText = authority.substr(0, colon);
+        const int parsedPort = std::atoi(authority.substr(colon + 1).c_str());
+        if (parsedPort <= 0 || parsedPort > 65535) { result.error = "invalid Ollama endpoint port"; return result; }
+        port = static_cast<INTERNET_PORT>(parsedPort);
+    }
+    const std::wstring host = Utf8ToWide(hostText);
+    if (host.empty()) { result.error = "invalid Ollama endpoint host encoding"; return result; }
+    HINTERNET session = WinHttpOpen(L"RawrXD-Agent/1.0",
+                                     WINHTTP_ACCESS_TYPE_NO_PROXY,
+                                     WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!session) { result.error = "WinHttpOpen failed"; return result; }
+    WinHttpSetTimeouts(session, 5000, 5000, 30000, 120000);
+    HINTERNET connection = WinHttpConnect(session, host.c_str(), port, 0);
+    if (!connection)
+    {
+        result.error = "WinHttpConnect failed";
+        WinHttpCloseHandle(session);
+        return result;
+    }
+    HINTERNET request = WinHttpOpenRequest(connection, L"POST", L"/api/chat",
+                                           nullptr, WINHTTP_NO_REFERER,
+                                           WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                           secure ? WINHTTP_FLAG_SECURE : 0);
+    if (!request)
+    {
+        result.error = "WinHttpOpenRequest failed";
+        WinHttpCloseHandle(connection); WinHttpCloseHandle(session);
+        return result;
+    }
+
+    nlohmann::json body;
+    body["model"] = model;
+    body["stream"] = false;
+    body["think"] = false;
+    body["options"] = {{"temperature", temperature}, {"num_predict", max_tokens},
+                        {"num_ctx", context_size}};
+    body["messages"] = nlohmann::json::array();
+    for (const auto& message : messages)
+        body["messages"].push_back({{"role", message.first}, {"content", message.second}});
+    const std::string payload = body.dump();
+    const std::wstring headers = L"Content-Type: application/json\r\nAccept: application/json\r\n";
+    const BOOL sent = WinHttpSendRequest(request, headers.c_str(), static_cast<DWORD>(-1L),
+                                         const_cast<char*>(payload.data()),
+                                         static_cast<DWORD>(payload.size()),
+                                         static_cast<DWORD>(payload.size()), 0) &&
+                      WinHttpReceiveResponse(request, nullptr);
+    if (!sent)
+    {
+        result.error = "Ollama request failed; Win32=" + std::to_string(GetLastError());
+        WinHttpCloseHandle(request); WinHttpCloseHandle(connection); WinHttpCloseHandle(session);
+        return result;
+    }
+    DWORD status = 0, statusSize = sizeof(status);
+    WinHttpQueryHeaders(request, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                        WINHTTP_HEADER_NAME_BY_INDEX, &status, &statusSize, nullptr);
+    result.http_status = status;
+    std::string response;
+    for (;;)
+    {
+        DWORD available = 0;
+        if (!WinHttpQueryDataAvailable(request, &available) || available == 0) break;
+        std::string chunk(available, '\0');
+        DWORD read = 0;
+        if (!WinHttpReadData(request, chunk.data(), available, &read) || read == 0) break;
+        response.append(chunk.data(), read);
+    }
+    WinHttpCloseHandle(request); WinHttpCloseHandle(connection); WinHttpCloseHandle(session);
+    if (response.empty()) { result.error = "Ollama returned an empty response"; return result; }
+    try
+    {
+        const auto parsed = nlohmann::json::parse(response);
+        if (parsed.contains("error"))
+        {
+            result.error = parsed["error"].is_string() ? parsed["error"].get<std::string>() : parsed.dump();
+            return result;
+        }
+        if (parsed.contains("message") && parsed["message"].is_object())
+            result.content = parsed["message"].value("content", std::string{});
+        if (result.content.empty())
+            result.content = parsed.value("response", std::string{});
+        if (status < 200 || status >= 300)
+        {
+            result.error = "Ollama HTTP " + std::to_string(status) + ": " + response.substr(0, 512);
+            return result;
+        }
+        if (result.content.empty()) { result.error = "Ollama response contained no message content"; return result; }
+        result.ok = true;
+    }
+    catch (const std::exception& ex)
+    {
+        result.error = std::string("invalid Ollama JSON: ") + ex.what();
+    }
+    return result;
+}
+#endif
+
+static int OllamaAgentRun(const Args& args)
+{
+#ifndef _WIN32
+    Logf_("OLLAMA_AGENT_VERDICT FAIL: native WinHTTP route is Windows-only\n");
+    return 1;
+#else
+    if (args.model.empty()) { Logf_("OLLAMA_AGENT_VERDICT FAIL: model ID is required\n"); return 1; }
+    std::error_code ec;
+    std::filesystem::create_directories(args.workdir, ec);
+    const std::string targetPath = SafeWorkPath(args.workdir, args.target_file);
+    if (targetPath.empty() || ReadFile(targetPath).empty())
+    {
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: target file is missing or unsafe: %s\n", args.target_file.c_str());
+        return 1;
+    }
+    const std::string buildCmd = args.build_command;
+    const std::string runCmd = args.run_command;
+    if (buildCmd.empty() || runCmd.empty())
+    {
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: --build-command and --run-command are required\n");
+        return 1;
+    }
+    const MsvcEnv msvc = InitMsvcEnv();
+    if (!msvc.initialized)
+    {
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: MSVC unavailable: %s\n", msvc.detail.c_str());
+        return 1;
+    }
+    PatchManager patch(args.workdir);
+    ExecutionLedger ledger(args.workdir);
+    rawrxd::agentic::MotdAuthorization auth(ResolveMotdWorkspace(args.workdir));
+    const std::string session = "ollama-agent-" + std::to_string(GetCurrentProcessId());
+    if (!auth.BeginTurn(session, 1))
+    {
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: authorization turn init failed\n");
+        return 1;
+    }
+    // The host performs the policy read before handing a model any filesystem
+    // capability.  This is still a real authorization/read operation and
+    // prevents a provider that omits the MOTD command from turning every
+    // subsequent legitimate read/write into a misleading denial.
+    std::string policy, policyHash, policyError;
+    if (!auth.AuthorizeTool("read_motd", session, 1, policyError) ||
+        !auth.ReadMotd(session, 1, policy, policyHash, policyError))
+    {
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: MOTD preflight failed: %s\n", policyError.c_str());
+        return 1;
+    }
+    Logf_("OLLAMA_AGENT_MOTD_SHA256 %s\n", policyHash.c_str());
+    std::vector<std::pair<std::string, std::string>> messages;
+    messages.push_back({"system",
+        "You are the RawrXD autonomous coding agent. Use exactly one tool command per reply, with no prose.\n"
+        "Allowed commands:\n"
+        "TOOL read <relative-path>\n"
+        "TOOL write <relative-path> @@<complete-file-content>@@\n"
+        "TOOL build\nTOOL test\nTOOL finish\n"
+        "All paths are relative to the workspace. Read the target before editing.\n"});
+    messages.push_back({"user", args.task.empty() ? "Inspect the target, make the requested fix, then build and test it." : args.task});
+    const std::string beforeHash = SHA256_Hash(ReadFile(targetPath));
+    bool readSeen = false, committed = false, testSeen = false;
+    for (int step = 1; step <= std::max(1, args.max_steps); ++step)
+    {
+        const OllamaReply reply = OllamaChat(args.model, messages, args.max_new,
+                                             std::max(256, args.context_size), args.temperature);
+        if (!reply.ok)
+        {
+            Logf_("[ollama step %d] request failed HTTP=%ld error=%s\n", step, reply.http_status, reply.error.c_str());
+            break;
+        }
+        Logf_("[ollama step %d] response_bytes=%zu\n", step, reply.content.size());
+        messages.push_back({"assistant", reply.content});
+        Action action = ParseAction(reply.content + "\n");
+        if (!action.valid)
+        {
+            messages.push_back({"user", "Invalid command. Reply with exactly one complete TOOL command."});
+            ledger.log_retry(step, "invalid_tool_format", step < args.max_steps);
+            continue;
+        }
+        std::string result;
+        int exitCode = 0;
+        bool valid = true;
+        std::string authError;
+        if (!auth.AuthorizeTool(action.tool, session, 1, authError))
+        {
+            valid = false; result = "MOTD_REQUIRED: " + authError; exitCode = -1;
+        }
+        else if (action.finish)
+        {
+            result = committed ? "verified completion" : "cannot finish before a verified write";
+            valid = committed;
+        }
+        else if (action.tool == "read")
+        {
+            const std::string path = SafeWorkPath(args.workdir, action.arg1);
+            if (path.empty()) { valid = false; result = "unsafe relative path rejected"; exitCode = -1; }
+            else { result = ReadFile(path); readSeen = !result.empty(); if (result.empty()) result = "file not found"; }
+        }
+        else if (action.tool == "write")
+        {
+            if (!readSeen) { valid = false; result = "read the target before writing"; exitCode = -1; }
+            else if (!patch.snapshot(action.arg1) || !patch.apply(action.arg1, action.arg2))
+            { valid = false; result = "snapshot or write failed"; exitCode = -1; }
+            else
+            {
+                const bool verified = patch.verify(WithMsvcEnv(msvc, buildCmd), runCmd,
+                                                   args.expected_output, args.workdir);
+                if (verified)
+                {
+                    patch.commit(action.arg1); committed = true; testSeen = true;
+                    result = "write committed; build and test verified";
+                }
+                else
+                {
+                    const std::string failure = patch.last() ? patch.last()->last_error : "verification failed";
+                    patch.rollback(action.arg1); result = "write rolled back: " + failure; exitCode = 1;
+                }
+            }
+        }
+        else if (action.tool == "build" || action.tool == "test")
+        {
+            const std::string& cmd = action.tool == "build" ? buildCmd : runCmd;
+            result = RunCmd("cd /d \"" + args.workdir + "\" && " +
+                            (action.tool == "build" ? WithMsvcEnv(msvc, cmd) : cmd) + " 2>&1", &exitCode);
+            testSeen = testSeen || (action.tool == "test" && exitCode == 0);
+        }
+        else
+        {
+            valid = false; result = "unsupported tool"; exitCode = -1;
+        }
+        if (valid && action.tool != "read_motd") auth.NoteExecution(session, 1);
+        ledger.log_tool_call(step, action.tool, action.arg1, result, exitCode, valid);
+        Logf_("[ollama step %d] TOOL=%s exit=%d valid=%d observation=%zu\n",
+              step, action.tool.c_str(), exitCode, valid ? 1 : 0, result.size());
+        Logf_("[ollama step %d] result=%s\n", step, EscapeForLog(result.substr(0, 320)).c_str());
+        if (action.finish && committed) break;
+        messages.push_back({"user", "Tool result:\n" + result + "\nContinue with the next required tool command."});
+    }
+    const std::string after = ReadFile(targetPath);
+    const std::string afterHash = SHA256_Hash(after);
+    const bool changed = beforeHash != afterHash;
+    const bool pass = committed && readSeen && testSeen && changed;
+    ledger.log_verification(pass, "Ollama agent read/edit/build/test with durable transaction");
+    Logf_("OLLAMA_AGENT_MODEL %s\nOLLAMA_AGENT_READ %s\nOLLAMA_AGENT_EDIT %s\n"
+          "OLLAMA_AGENT_BUILD_TEST %s\nOLLAMA_AGENT_BEFORE_SHA256 %s\n"
+          "OLLAMA_AGENT_AFTER_SHA256 %s\nOLLAMA_AGENT_VERDICT %s\n",
+          args.model.c_str(), readSeen ? "PASS" : "FAIL", changed ? "PASS" : "FAIL",
+          (committed && testSeen) ? "PASS" : "FAIL", beforeHash.c_str(), afterHash.c_str(),
+          pass ? "PASS" : "FAIL");
+    return pass ? 0 : 1;
+#endif
+}
+
 // Per-phase latency profile with real token counts.
 struct PerfProfiler
 {
@@ -2783,18 +3321,29 @@ int main(int argc, char* argv[])
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
     const Args args = Parse(argc, argv);
+    if (args.recovery_selftest)
+        return DurableRecoverySelfTest() ? 0 : 1;
     if (args.model.empty() && !args.motd_selftest)
     {
-        std::printf("usage: deep2_agentic_loop.exe --model <gguf> [--task f] [--workdir D] "
-                    "[--max-steps N] [--max-new N] [--cpu] [--toktest]\n");
+        std::printf("usage: deep2_agentic_loop.exe --model <gguf|model-id> [--provider deep2|ollama] "
+                    "[--task text-or-file] [--workdir D] [--target-file f] "
+                    "[--expected-source text] [--max-steps N] [--max-new N] "
+                    "[--max-wall-time-sec N] [--cpu] [--toktest]\n");
         return 1;
     }
     if (args.motd_selftest)
     {
         const Action motdAction = ParseAction("TOOL read_motd\n");
         const Action writeAction = ParseAction("TOOL write target.cpp @@content@@\n");
+        const Action writeSpacingAction = ParseAction(
+            "TOOL write  target.cpp  @@content@@<|eot_id|>\n");
+        const Action runAction = ParseAction("TOOL run\n");
         bool ok = motdAction.valid && motdAction.tool == "read_motd" &&
-                  writeAction.valid && writeAction.tool == "write";
+                  writeAction.valid && writeAction.tool == "write" &&
+                  writeSpacingAction.valid && writeSpacingAction.tool == "write" &&
+                  writeSpacingAction.arg1 == "target.cpp" &&
+                  writeSpacingAction.arg2 == "content" &&
+                  runAction.valid && runAction.tool == "run";
         rawrxd::agentic::MotdAuthorization auth(ResolveMotdWorkspace(args.workdir));
         const std::string session = "deep2-motd-selftest";
         std::string reason, contents, digest, error;
@@ -2820,6 +3369,12 @@ int main(int argc, char* argv[])
     // logits are wrong". Checked before the parity harness needs an ids file.
     if (!args.plain_prompt.empty())
         return PlainPromptRun(args);
+
+    // Ollama is a real local model-ID provider.  It intentionally bypasses
+    // GGUF ingestion while reusing the same host-authorised tools, durable
+    // transaction ledger, build/test verifier, and rollback contract.
+    if (args.provider == "ollama")
+        return OllamaAgentRun(args);
 
     // ============================================================================
     // CLOUD PROVIDER MODE (--provider kilo | openrouter)
@@ -2896,6 +3451,22 @@ int main(int argc, char* argv[])
     }
     Logf_("MOTD_STATUS TURN_START session=%s turn=%llu\n", motdSession.c_str(),
           static_cast<unsigned long long>(motdTurn));
+
+    // The host performs the policy read before handing a native GGUF model
+    // any filesystem capability. This keeps local and Ollama providers under
+    // the same authorization contract; a model must not be able to omit the
+    // required read_motd turn and then receive a misleading tool denial.
+    std::string nativePolicy, nativePolicyHash, nativePolicyError;
+    if (!motdAuthorization.AuthorizeTool("read_motd", motdSession, motdTurn,
+                                        nativePolicyError) ||
+        !motdAuthorization.ReadMotd(motdSession, motdTurn, nativePolicy,
+                                     nativePolicyHash, nativePolicyError))
+    {
+        Logf_("MOTD_STATUS BLOCKED: preflight failed: %s\n",
+              nativePolicyError.c_str());
+        return 3;
+    }
+    Logf_("MOTD_SHA256 %s\n", nativePolicyHash.c_str());
 
     Logf_("[stage] loading model %s\n", args.model.c_str());
     const auto t_load0 = std::chrono::steady_clock::now();
@@ -2988,8 +3559,13 @@ int main(int argc, char* argv[])
               preflight_report.candidates.size(), preflight_report.warnings.size());
         for (const auto& w : preflight_report.warnings)
         {
-            // Convert wstring to string for logging
-            std::string w_str(w.begin(), w.end());
+            // Convert only the diagnostic text to a narrow, loss-bounded
+            // representation.  Do not rely on wchar_t -> char iterator
+            // conversion, which is ill-formed for non-ASCII warnings.
+            std::string w_str;
+            w_str.reserve(w.size());
+            for (wchar_t ch : w)
+                w_str.push_back(ch >= 0 && ch <= 0x7f ? static_cast<char>(ch) : '?');
             Logf_("[snap]   %s\n", w_str.c_str());
         }
 
@@ -3071,9 +3647,23 @@ int main(int argc, char* argv[])
     if (!msvc.initialized)
         Logf_("[env] WARNING: no verified MSVC toolchain; builds will fail with the toolchain's own error\n");
 
-const std::string task = args.task.empty()
-                                 ? "Fix the bug in " + args.target_file + " so its main() prints " + args.expected_output + ", build it and run it."
-                                 : ReadFile(args.task);
+    // Accept either a task-file path (the historical CLI contract) or a
+    // literal task string.  The old code silently replaced a literal
+    // --task with the default prompt when no file existed, so the model never
+    // received the requested edit.
+    std::string task;
+    if (!args.task.empty())
+    {
+        std::error_code task_ec;
+        const std::filesystem::path task_path(args.task);
+        if (std::filesystem::is_regular_file(task_path, task_ec))
+            task = ReadFile(args.task);
+        else
+            task = args.task;
+    }
+    if (task.empty())
+        task = "Fix the bug in " + args.target_file + " so its main() prints " +
+               args.expected_output + ", build it and run it.";
 
     // Build command defaults to MSVC cl.exe for .cpp files
     std::string build_cmd = args.build_command.empty()
@@ -3095,7 +3685,13 @@ const std::string task = args.task.empty()
     PatchManager patch_mgr(args.workdir);
     ExecutionLedger ledger(args.workdir);
     patch_mgr.snapshot(args.target_file);
-    const std::string initial_hash = SHA256_Hash(ReadFile(args.workdir + "/" + args.target_file));
+    const std::string initial_target = SafeWorkPath(args.workdir, args.target_file);
+    if (initial_target.empty())
+    {
+        Logf_("[security] invalid target path rejected: %s\n", args.target_file.c_str());
+        return 3;
+    }
+    const std::string initial_hash = SHA256_Hash(ReadFile(initial_target));
 
     // Agent ESP telemetry with metrics
     rawrxd::esp::Bus esp(16384);
@@ -3160,8 +3756,8 @@ const std::string task = args.task.empty()
         "  TOOL bash <command>\n"
         "  TOOL finish\n"});
     msgs.push_back({"user",
-        "Read the workspace policy first. Then read the C++ file, fix its off-by-one bug, build it, and run it.\n"
-        "File: " + args.target_file + "\n"
+        "Read the workspace policy first. Then follow this task exactly:\n" + task +
+        "\nFile: " + args.target_file + "\n"
         "Reply with: TOOL read_motd"});
 
     bool finished = false, built = false, ran_pass = false;
@@ -3614,6 +4210,13 @@ const std::string task = args.task.empty()
         last_token_time = t_gen;
         deep2::snap::Result snap_res;
         std::vector<uint32_t> turn_token_ids;
+        // Native GGUF runs historically use the compact legacy grammar
+        // (TOOL read <path>, TOOL write <path> @@...@@), while the SNAP
+        // controller uses a length-framed wire grammar. Decide from the
+        // generated header before feeding SNAP so a valid legacy command is
+        // not rejected as an "invalid length" while it is still streaming.
+        bool snap_protocol_decided = false;
+        bool strict_snap_protocol = true;
 
         profiler.start_phase("generation", 0);
         esp_rt.decode_start();
@@ -3644,7 +4247,63 @@ const std::string task = args.task.empty()
 
             const bool is_eos = (next == (uint32_t)GetTokenizer().eos_id);
             const std::string piece = is_eos ? std::string() : enc.Piece(next);
-            snap_res = snap_ctl.on_token(piece, is_eos);
+            const std::string candidate = gen + piece;
+            if (!snap_protocol_decided && candidate.rfind("TOOL ", 0) == 0) {
+                const size_t verbEnd = candidate.find(' ', 5);
+                if (verbEnd != std::string::npos && verbEnd + 1 < candidate.size()) {
+                    const char lengthOrPath = candidate[verbEnd + 1];
+                    strict_snap_protocol = lengthOrPath >= '0' && lengthOrPath <= '9';
+                    snap_protocol_decided = true;
+                    Logf_("[step %d] SNAP protocol=%s\n", step,
+                          strict_snap_protocol ? "framed" : "legacy");
+                }
+            }
+            if (strict_snap_protocol) {
+                snap_res = snap_ctl.on_token(piece, is_eos);
+            } else {
+                // Legacy commands remain bounded by the outer decode limit
+                // and deadline. Parse only a complete command; partial model
+                // output must remain recoverable rather than being dispatched.
+                gen += piece;
+                Action legacyAction;
+                bool completeLegacy = false;
+                if (gen.rfind("TOOL read ", 0) == 0) {
+                    // ParseAction(text + newline) is useful for a finished
+                    // command, but it would also turn the partial token
+                    // "calc" into a false complete read. Require the actual
+                    // requested relative target before dispatching.
+                    const size_t pathStart = gen.find(' ', 10);
+                    const bool targetPresent = pathStart != std::string::npos &&
+                        gen.find(args.target_file, pathStart + 1) != std::string::npos;
+                    if (targetPresent) {
+                        legacyAction = ParseAction(gen + "\n");
+                        completeLegacy = legacyAction.valid &&
+                                         legacyAction.tool == "read" &&
+                                         legacyAction.arg1 == args.target_file;
+                    }
+                } else if (gen.rfind("TOOL write ", 0) == 0) {
+                    // A model may append an end-of-turn marker or begin a
+                    // second suggested command after a complete write. Parse
+                    // exactly through the closing @@ so that trailing model
+                    // chatter cannot hide an otherwise valid transaction.
+                    const size_t open = gen.find("@@");
+                    const size_t close = open == std::string::npos
+                        ? std::string::npos : gen.find("@@", open + 2);
+                    if (close != std::string::npos)
+                        legacyAction = ParseAction(gen.substr(0, close + 2));
+                    completeLegacy = legacyAction.valid && legacyAction.tool == "write";
+                } else {
+                    legacyAction = ParseAction(gen + "\n");
+                    completeLegacy = legacyAction.valid;
+                }
+                if (completeLegacy) {
+                    snap_res = {legacyAction.finish ? deep2::snap::Reason::finish
+                                                     : deep2::snap::Reason::tool_ready,
+                                 {}, static_cast<size_t>(t + 1), {}};
+                } else {
+                    snap_res = {};
+                }
+            }
             profiler.add_tokens(1);  // every token counted exactly once
             if (snap_res.reason != deep2::snap::Reason::none)
             {
@@ -3682,7 +4341,8 @@ const std::string task = args.task.empty()
                 }
                 break;
             }
-            gen += piece;
+            if (strict_snap_protocol)
+                gen += piece;
             turn_token_ids.push_back(next);
             esp_rt.token(next, piece);
             // RAWRXD_DEEP2_GPU_TELEMETRY_001: mirror the engine's real kernel
@@ -3820,19 +4480,43 @@ const std::string task = args.task.empty()
         }
         else if (act.tool == "read")
         {
-            result = ReadFile(args.workdir + "/" + act.arg1);
-            if (result.empty()) result = "(file not found)";
+            const std::string path = SafeWorkPath(args.workdir, act.arg1);
+            if (path.empty())
+            {
+                tool_rejected = true;
+                bash_exit_code = -1;
+                result = "[exit -1]\nERROR: unsafe relative path rejected\n";
+            }
+            else
+            {
+                result = ReadFile(path);
+                if (result.empty()) result = "(file not found)";
+            }
         }
         else if (act.tool == "write")
         {
-            const std::string path = args.workdir + "/" + act.arg1;
-            const bool ok = WriteFile(path, act.arg2);
-            source_patched = true;
-            result = ok ? ("wrote " + act.arg1 + " (" + std::to_string(act.arg2.size()) + " bytes)")
-                        : "write failed";
-            ledger.log_patch(step, act.arg1, initial_hash, SHA256_Hash(act.arg2), false, false);
+            const std::string path = SafeWorkPath(args.workdir, act.arg1);
+            if (path.empty())
+            {
+                tool_rejected = true;
+                bash_exit_code = -1;
+                result = "[exit -1]\nERROR: unsafe relative path rejected\n";
+            }
+            else
+            {
+                // Record the post-image in the durable transaction before any
+                // verification.  Writing directly bypassed PatchManager's
+                // after-image, so every otherwise valid patch was audited as
+                // an empty file and rolled back.
+                const bool ok = patch_mgr.apply(act.arg1, act.arg2);
+                source_patched = ok;
+                if (!ok) tool_rejected = true;
+                result = ok ? ("wrote " + act.arg1 + " (" + std::to_string(act.arg2.size()) + " bytes)")
+                            : "write failed";
+                ledger.log_patch(step, act.arg1, initial_hash, SHA256_Hash(act.arg2), false, false);
+            }
         }
-        else if (act.tool == "build" || act.tool == "test")
+        else if (act.tool == "build" || act.tool == "test" || act.tool == "run")
         {
             // Security boundary: the parser validates syntax, never authorization.
             // These verbs map to PREDETERMINED host commands, never model shell.
@@ -3931,7 +4615,7 @@ const std::string task = args.task.empty()
             {
                 patch_mgr.commit(act.arg1);
                 ledger.log_patch(step, act.arg1, initial_hash,
-                                 SHA256_Hash(ReadFile(args.workdir + "/" + act.arg1)), true, false);
+                                 SHA256_Hash(ReadFile(SafeWorkPath(args.workdir, act.arg1))), true, false);
                 Logf_("[step %d] PATCH COMMITTED and verified by host\n", step);
                 built = true;
                 ran_pass = true;
@@ -3940,7 +4624,7 @@ const std::string task = args.task.empty()
             }
             patch_mgr.rollback(act.arg1);
             ledger.log_patch(step, act.arg1, initial_hash,
-                             SHA256_Hash(ReadFile(args.workdir + "/" + act.arg1)), false, true);
+                             SHA256_Hash(ReadFile(SafeWorkPath(args.workdir, act.arg1))), false, true);
             retry_state.record_failure("patch_verification_failed");
             ledger.log_retry(retry_state.attempt,
                              "patch_verification_failed: " + patch_mgr.last()->last_error,
@@ -4023,7 +4707,9 @@ const std::string task = args.task.empty()
 
     // ---- INDEPENDENT verification (the model's word is not evidence) ----------
     const std::string src = ReadFile(args.workdir + "/" + args.target_file);
-    const bool src_fixed = src.find("a + b") != std::string::npos || src.find("a+b") != std::string::npos;
+    const bool source_verified = !args.expected_source.empty()
+        ? Trim(src) == Trim(args.expected_source)
+        : SHA256_Hash(src) != initial_hash;
     
     // Execute the build command if not already done
     if (!built)
@@ -4052,8 +4738,9 @@ const std::string task = args.task.empty()
 
     Logf_("\n=== verification (harness-run, independent of the model) ===\n");
     Logf_("MODEL_SAID_FINISH      %s\n", finished ? "yes" : "no");
-    Logf_("SOURCE_PATCHED         %s (%s contains %s)\n", src_fixed ? "PASS" : "FAIL", args.target_file.c_str(),
-          src_fixed ? "a + b" : "no fix");
+    Logf_("SOURCE_PATCHED         %s (%s)\n", source_verified ? "PASS" : "FAIL",
+          args.expected_source.empty() ? "content changed from the recorded pre-image"
+                                       : "matches the exact expected source");
     Logf_("BUILD_ARTIFACT         %s (%s)\n", built ? "attempted" : "not observed",
           msvc.initialized ? msvc.detail.c_str() : "NO VERIFIED TOOLCHAIN");
     Logf_("TEST_EXECUTION         %s (%s exit=%d out=%s)\n", exe_ok ? "PASS" : "FAIL", args.target_file.c_str(), exit_now, run_out.c_str());
@@ -4065,10 +4752,10 @@ const std::string task = args.task.empty()
     const bool model_drove_repair = finished && retry_state.tool_calls > 0;
     Logf_("MODEL_REQUESTED_TOOL   %s (tool_calls=%u)\n", model_drove_repair ? "yes" : "NO", retry_state.tool_calls);
     Logf_("FINAL_VERDICT          %s\n",
-          (model_drove_repair && src_fixed && exe_ok && kv_consistent) ? "PASS" : "FAIL");
+          (model_drove_repair && source_verified && exe_ok && kv_consistent) ? "PASS" : "FAIL");
 
     // ESP: Finish with host verification result
-    const bool final_pass = model_drove_repair && src_fixed && exe_ok && kv_consistent;
+    const bool final_pass = model_drove_repair && source_verified && exe_ok && kv_consistent;
     esp_rt.finish(final_pass);
     esp_log.stop();
     
