@@ -17,8 +17,12 @@ if not EXE:
             EXE = candidate
             break
 
-@unittest.skipUnless(EXE and Path(EXE).is_file(), "Set RAWR_REAP_EXE to the built CLI")
 class ReapCliContract(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not EXE or not Path(EXE).is_file():
+            raise RuntimeError("REAP CLI binary missing: set RAWR_REAP_EXE to built executable")
+
     def run_cli(self, *args):
         return subprocess.run([str(Path(EXE).resolve()), *args],
                               capture_output=True, text=True, timeout=30)
