@@ -152,7 +152,7 @@ private:
         if (pos < allocatedSeq_) return;
         const std::size_t remaining = maxSeqLen_ - allocatedSeq_;
         const std::size_t increment = (std::min)(kPageTok_, remaining);
-        const std::size_t neu = allocatedSeq_ + increment;
+        std::size_t neu = allocatedSeq_ + increment;
         if (neu > maxSeqLen_) neu = maxSeqLen_;
         if (neu <= allocatedSeq_)
             throw std::out_of_range("K2KVCache: sequence length exceeded");
