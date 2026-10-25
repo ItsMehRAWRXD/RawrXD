@@ -1,5 +1,8 @@
 #include "deep2/GGUFLoader.hpp"
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <cctype>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -17,9 +20,21 @@ static void usage() {
 }
 
 static std::string json_quote(const std::string& s) {
-    std::string o = "\"";
-    for (unsigned char c : s) { if (c == '\\' || c == '\"') o += '\\'; if (c < 0x20) o += '?'; else o += (char)c; }
-    return o + "\"";
+    static constexpr char hex[] = "0123456789abcdef";
+    std::string out = "\"";
+    for (unsigned char c : s) {
+        if (c == '"' || c == '\\') {
+            out += '\\';
+            out += static_cast<char>(c);
+        } else if (c < 0x20) {
+            out += "\\u00";
+            out += hex[c >> 4];
+            out += hex[c & 15];
+        } else {
+            out += static_cast<char>(c);
+        }
+    }
+    return out + "\"";
 }
 
 static int capabilities(const std::string& input) {
@@ -62,7 +77,7 @@ static bool bytes(const std::string& s, uint64_t& out) {
     if (u == "B") m = 1; else if (u == "MB" || u == "MIB") m = 1ull<<20;
     else if (u == "GB" || u == "GIB") m = 1ull<<30; else if (u == "TB" || u == "TIB") m = 1ull<<40;
     else return false;
-    if (!(v > 0) || v * (long double)m > UINT64_MAX) return false;
+    if (!std::isfinite(v) || !(v > 0) || v * (long double)m > UINT64_MAX) return false;
     out = (uint64_t)(v * m); return out != 0;
 }
 
@@ -124,7 +139,7 @@ int main(int argc, char** argv) {
         for (const auto& e : fs::directory_iterator(dir, ec)) if (!ec && e.path().filename().string().rfind(prefix + "-", 0) == 0 && e.path().extension() == ".gguf") total += fs::file_size(e.path(), ec);
     } else total = fs::file_size(first, ec);
     if (!total) total = loader.mappedBytes();
-    std::cout << "{\"source\":\"" << path << "\",\"shards\":" << loader.shardCount()
+    std::cout << "{\"source\":" << json_quote(path) << ",\"shards\":" << loader.shardCount()
               << ",\"tensors\":" << loader.tensorCount() << ",\"bytes\":" << total
               << ",\"expert_tensors\":" << expertTensors << ",\"expert_bytes\":" << expertBytes
               << ",\"logical_experts\":" << logicalExperts
