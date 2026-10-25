@@ -139,6 +139,7 @@ public:
         // Untouched capacity is already zero-initialized by GrowAllocated.
         const std::size_t clearEnd = (std::min)(allocatedSeq_, currentLength_ + (currentLength_ < allocatedSeq_ ? 1u : 0u));
         const std::size_t clearFloats = (clearEnd - committedPrefix) * kvDim_;
+        if (clearFloats == 0) { currentLength_ = committedPrefix; return; }
         for (std::size_t layer = 0; layer < numLayers_; ++layer) {
             std::fill_n(MutableAt(keys_, layer, committedPrefix), clearFloats, 0.0f);
             std::fill_n(MutableAt(values_, layer, committedPrefix), clearFloats, 0.0f);
