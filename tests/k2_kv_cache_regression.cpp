@@ -48,5 +48,25 @@ int main() {
     c.CommitPosition();
     assert(!c.CanAppend());
     assert(throws([&] { c.Write(0, k.data(), v.data()); }));
+    // Rollback must preserve committed history and clear speculative writes.
+    c.Reset(2, 17, 4);
+    c.Write(0, k.data(), v.data());
+    c.CommitPosition();
+    c.Write(1, k.data(), v.data());
+    c.RollbackPosition();
+    assert(c.currentLength() == 1);
+    assert(c.Key(0,0)[0] == 1);
+    assert(c.Key(1,1)[0] == 0);
+    assert(c.Value(1,1)[3] == 0);
+    c.Write(1, k.data(), v.data());
+    assert(c.Key(1,1)[0] == 1);
+    c.RollbackPosition();
+    assert(c.Key(1,1)[0] == 0);
+    c.CommitPosition();
+    assert(c.currentLength() == 2);
+    c.Clear();
+    assert(c.currentLength() == 0);
+    c.RollbackPosition();
+    assert(c.Key(0,0)[0] == 0);
     return 0;
 }
