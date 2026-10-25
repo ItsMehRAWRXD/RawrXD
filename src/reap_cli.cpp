@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
     if (marker != std::string::npos) {
         const std::string prefix = stem.substr(0, marker);
         const std::string suffix = stem.substr(marker + 10);
-        if (suffix.size() != 9 || suffix.substr(5) != ".gguf") {
+        if (suffix.size() != 10 || suffix.substr(5) != ".gguf") {
             std::cerr << "INVALID_SHARD_NAME\n"; return 4;
         }
         uint64_t expected = 0;
