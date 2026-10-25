@@ -113,5 +113,33 @@ int main() {
     const size_t reclaimed = c.evictColdPages();
     assert(reclaimed > 0);
     assert(c.Key(2,7)[0] == 7.f);
+    // Truncate must clear a speculative write even when no tokens are dropped.
+    c.Reset(2, 64, 4);
+    c.Write(1, k.data(), v.data());
+    c.Truncate(0);
+    assert(c.currentLength() == 0);
+    assert(c.Key(1,0)[0] == 0.f);
+    c.Write(0, k.data(), v.data());
+    c.CommitPosition();
+    c.Write(1, k.data(), v.data());
+    c.Truncate(1);
+    assert(c.Key(0,0)[0] == 1.f);
+    assert(c.Key(1,1)[0] == 0.f);
+    // Repeated growth and contraction must retain all committed layers.
+    for (size_t pos = 1; pos < 40; ++pos) {
+        for (size_t layer = 0; layer < 2; ++layer) {
+            float kk[4] = {float(pos), float(layer), 3.f, 4.f};
+            c.Write(layer, kk, v.data());
+        }
+        c.CommitPosition();
+    }
+    c.Truncate(9);
+    const size_t oldBytes = c.liveBytes();
+    assert(c.evictColdPages() > 0);
+    assert(c.liveBytes() < oldBytes);
+    for (size_t pos = 1; pos < 9; ++pos)
+        for (size_t layer = 0; layer < 2; ++layer)
+            assert(c.Key(layer,pos)[0] == float(pos));
+    assert(c.Key(1,9)[0] == 0.f);
     return 0;
 }
