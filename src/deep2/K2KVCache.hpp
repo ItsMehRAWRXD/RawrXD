@@ -33,12 +33,13 @@ public:
         const std::size_t initial = (std::min)(kPageTok_, maxSeqLen);
         const std::size_t count = CheckedElements(numLayers, initial, kvDim);
         std::vector<float> nk(count, 0.0f), nv(count, 0.0f);
+        std::vector<unsigned char> newWritten(numLayers, 0);
         keys_.swap(nk); values_.swap(nv);
+        written_.swap(newWritten);
         numLayers_ = numLayers;
         maxSeqLen_ = maxSeqLen;
         kvDim_ = kvDim;
         currentLength_ = 0;
-        written_.assign(numLayers_, 0);
         allocatedSeq_ = initial;
     }
 
@@ -59,6 +60,7 @@ public:
         std::fill(keys_.begin(), keys_.end(), 0.0f);
         std::fill(values_.begin(), values_.end(), 0.0f);
         currentLength_ = 0;
+        std::fill(written_.begin(), written_.end(), 0);
     }
 
     std::size_t numLayers() const noexcept
