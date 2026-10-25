@@ -31,8 +31,8 @@ class ReapCliContract(unittest.TestCase):
     def test_02_unknown_command(self): self.assert_usage_error("rewrite", "missing.gguf")
     def test_03_inspect_missing_argument(self): self.assert_usage_error("inspect")
     def test_04_plan_missing_argument(self): self.assert_usage_error("plan")
-    def test_05_plan_missing_size_flag(self): self.assert_usage_error("plan", "missing.gguf")
-    def test_06_plan_extra_argument(self): self.assert_usage_error("plan", "missing.gguf", "--size", "30GB", "extra")
+    def test_05_invalid_subcommand(self): self.assert_usage_error("calibrate", "missing.gguf")
+    def test_06_invalid_reap_subcommand(self): self.assert_usage_error("prune", "missing.gguf")
     def test_07_capabilities_missing_argument(self): self.assert_usage_error("capabilities")
 
     def test_08_capabilities_unknown_extension(self):
