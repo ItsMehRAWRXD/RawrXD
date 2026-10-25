@@ -140,6 +140,16 @@ int main() {
     for (size_t pos = 1; pos < 9; ++pos)
         for (size_t layer = 0; layer < 2; ++layer)
             assert(c.Key(layer,pos)[0] == float(pos));
-    assert(c.Key(1,9)[0] == 0.f);
+    assert(throws([&] { (void)c.Key(1,9); })); // evicted capacity is inaccessible
+    // Committing an unwritten position must still grow capacity at the boundary.
+    c.Reset(2, 17, 4);
+    for (size_t pos = 0; pos < 17; ++pos) c.CommitPosition();
+    assert(c.currentLength() == 17);
+    assert(c.Key(1,16)[0] == 0.f);
+    assert(throws([&] { c.CommitPosition(); }));
+    c.Truncate(17); // valid no-op at full capacity
+    assert(c.currentLength() == 17);
+    c.Truncate(0);
+    assert(c.Key(1,16)[0] == 0.f);
     return 0;
 }
