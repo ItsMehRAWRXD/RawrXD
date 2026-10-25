@@ -32,5 +32,21 @@ int main() {
     assert(throws([&] { c.CommitPosition(); }));                            // 14
     c.Clear();
     assert(c.currentLength() == 0 && c.Key(0,0)[0] == 0);                  // 15
+    assert(throws([&] { c.Write(0, nullptr, v.data()); }));
+    assert(throws([&] { c.Write(0, k.data(), nullptr); }));
+    assert(c.currentLength() == 0);
+    assert(throws([&] { c.Reset(0, 4, 4); }));
+    assert(c.numLayers() == 2);
+    assert(throws([&] { c.Reset(2, 4, (std::numeric_limits<size_t>::max)()); }));
+    assert(c.maxSeqLen() == 17);
+    c.Reset(2, 1, 4);
+    assert(c.maxSeqLen() == 1);
+    assert(c.liveBytes() == 2 * 2 * 1 * 4 * sizeof(float));
+    c.Write(1, k.data(), v.data());
+    assert(c.Key(1,0)[2] == 3);
+    assert(c.Key(0,0)[2] == 0);
+    c.CommitPosition();
+    assert(!c.CanAppend());
+    assert(throws([&] { c.Write(0, k.data(), v.data()); }));
     return 0;
 }
