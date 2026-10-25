@@ -1,0 +1,9 @@
+=== RawrXD doctor ===
+Workspace: F:\rawrxd
+Deep2  (11436): AVAILABLE
+Ollama (11434): AVAILABLE
+  Ollama models: 41
+git: git version 2.55.0.windows.3
+cmake: found
+workspace writable: yes
+free disk: 215 GB

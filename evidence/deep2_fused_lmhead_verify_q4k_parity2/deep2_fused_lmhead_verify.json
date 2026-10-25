@@ -1,0 +1,21 @@
+{
+  "gate": "DEEP2_SPEC_FUSED_RUNTIME_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "lm_head_type": "Q6_K",
+  "lm_head_type_code": 14,
+  "passed": false,
+  "parity_passed": false,
+  "max_logit_diff": 2.74418,
+  "avg_logit_diff": 8.57555e-05,
+  "parity_tolerance": 0.0005,
+  "gpu_forward_layers_delta": 0,
+  "gpu_op_submits_delta": 0,
+  "gpu_layer_submits_delta": 0,
+  "gpu_packed_ops_delta": 0,
+  "gpu_host_forward_calls_delta": 0,
+  "gpu_resident_forward": false,
+  "gpu_real_forward": false,
+  "errors": [
+    "Logit parity failed: max diff = 2.744177 > tolerance 0.000500"
+  ]
+}

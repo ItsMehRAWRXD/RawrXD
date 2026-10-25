@@ -1,0 +1,25 @@
+{
+  "unit": "Unit 1 - Build/CI Hygiene",
+  "source_branch": "origin/preservation/source-baseline-20261021",
+  "merge_base": "8dfeeaf0b729e2d76e0f23437bb52df3c256f0ad",
+  "integration_branch": "integration/cert-reconciliation-20261025",
+  "recovery_branch": "recovery/unit1-build-ci",
+  "date": "2026-10-25",
+  "extracted_files": [
+    "3rdparty/ggml/src/CMakeLists.txt",
+    "3rdparty/ggml/src/ggml-cpu/CMakeLists.txt",
+    "3rdparty/ggml/src/ggml-vulkan/ggml-vulkan.cpp",
+    "scripts/build.ps1",
+    ".gitignore"
+  ],
+  "excluded": [
+    "CMakeLists.txt (different project)",
+    "is_integrated_gpu=false hack (reverted)"
+  ],
+  "msvc_configure": "PASS",
+  "msvc_build": "PASS",
+  "ctest": "NOT_RUN",
+  "blocker": "RESOLVED - VulkanStagingPipeline.cpp added to production_smoke_test target (commit b4b07c2e)",
+  "certification_status": "BUILT_PASS_LINK_RESOLVED",
+  "main_changed": false
+}

@@ -355,9 +355,19 @@ void Win32IDE::initializeDeep2Bridge() {
             }
         });
         
-        // Try to initialize with default model if available
-        std::string defaultModel = "F:\\rawrxd\\models\\deepseek-coder-v2-lite-instruct.Q4_K_M.gguf";
-        if (m_deep2Bridge->Initialize(defaultModel)) {
+        // Prefer an explicitly configured or already selected model.  Never
+        // bind the IDE to a developer-specific checkout path during startup.
+        std::string defaultModel;
+        if (const char* configuredModel = std::getenv("RAWRXD_DEFAULT_DEEP2_MODEL")) {
+            if (*configuredModel) defaultModel = configuredModel;
+        }
+        if (defaultModel.empty() && !m_loadedModelPath.empty()) {
+            defaultModel = m_loadedModelPath;
+        }
+
+        if (!defaultModel.empty() &&
+            GetFileAttributesA(defaultModel.c_str()) != INVALID_FILE_ATTRIBUTES &&
+            m_deep2Bridge->Initialize(defaultModel)) {
             LOG_INFO("Deep2 Bridge initialized successfully with model: " + defaultModel);
             appendToOutput(" Deep2 Engine initialized: " + defaultModel + "\n", "Output", OutputSeverity::Info);
         } else {
@@ -661,10 +671,25 @@ void Win32IDE::onAgenticLoopRunTask() {
         std::string task(input);
         SetWindowTextA(m_hwndCopilotChatInput, "");
         
-        // Get model path (use Deep2 model if loaded, otherwise prompt)
-        std::string modelPath = "F:\\rawrxd\\models\\qwen2.5-coder_1.5b-base.gguf";
+        // Get the selected Deep2 model.  A missing model is an explicit
+        // admission error; do not silently route an agent task to a stale
+        // developer-machine path.
+        std::string modelPath;
         if (m_deep2Bridge && m_deep2Bridge->IsModelLoaded()) {
             modelPath = m_deep2Bridge->GetCurrentModel();
+        }
+        if (modelPath.empty() && !m_loadedModelPath.empty()) {
+            modelPath = m_loadedModelPath;
+        }
+        if (modelPath.empty()) {
+            if (const char* configuredModel = std::getenv("RAWRXD_DEFAULT_DEEP2_MODEL")) {
+                if (*configuredModel) modelPath = configuredModel;
+            }
+        }
+        if (modelPath.empty() || GetFileAttributesA(modelPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
+            appendToOutput("Agent task rejected: select or configure a valid local model first.\n",
+                           "Errors", OutputSeverity::Error);
+            return;
         }
         
         // Get work directory

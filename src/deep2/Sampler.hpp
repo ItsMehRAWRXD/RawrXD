@@ -11,19 +11,27 @@
 namespace rawrxd {
 namespace sampling {
 
-class AdvancedSampler {
+class ISampler {
+public:
+    virtual ~ISampler() = default;
+    [[nodiscard]] virtual int32_t sample(const std::vector<float>& logits) = 0;
+    [[nodiscard]] virtual uint32_t vocabSize() const = 0;
+    [[nodiscard]] virtual bool initialized() const = 0;
+};
+
+class AdvancedSampler : public ISampler {
 public:
     AdvancedSampler();
     ~AdvancedSampler() = default;
 
-    [[nodiscard]] uint32_t vocabSize() const { return vocab_size_; }
+    [[nodiscard]] uint32_t vocabSize() const override { return vocab_size_; }
     void setVocabSize(uint32_t vocabSize) { vocab_size_ = vocabSize; }
 
-    [[nodiscard]] bool initialized() const { return initialized_; }
+    [[nodiscard]] bool initialized() const override { return initialized_; }
     void setInitialized(bool initialized) { initialized_ = initialized; }
 
     // Sample a token from logits
-    [[nodiscard]] int32_t sample(const std::vector<float>& logits);
+    [[nodiscard]] int32_t sample(const std::vector<float>& logits) override;
 
     // Sample with temperature
     [[nodiscard]] int32_t sampleWithTemperature(const std::vector<float>& logits, float temperature);

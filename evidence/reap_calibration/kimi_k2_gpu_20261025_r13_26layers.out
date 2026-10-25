@@ -1,0 +1,2366 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
+[MLA_GEOMETRY] Derived MLA head dims: qkNopeHeadDim=128 (q_b_out_per_head=192 ropeDim=64)
+[MLA_GEOMETRY] Derived MLA ranks from tensor geometry: qLoraRank=1536 kvLoraRank=512 keyLengthMla=576 ropeDim=64
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=163840\n[REAP_TOKENIZER] merges=163328\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=262144 fit=244682 (kv_bytes_per_token=7686)
+[MLA_ALLOC] hidden=7168 heads=64 headDim=192 qProjSize=12288 q_b=12288 kv_a=576 k_b=8192 v_b=8192
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf mode=GPU_MULTI devices=2 kv_per_token=7686 max_ctx_est=244682
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] K2 config: experts=384 topk=8 shared=1 expertDim=2048
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready (13 shards registered)
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=18432 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[Deep2Engine] MLA production stream available; certification deferred to live MlaAttentionComplete
+[Deep2Engine] Context length from metadata: 262144 tokens
+[Deep2Engine] Tokenizer loaded: vocab=163840 bos=163584 eos=163586 (Spm::encode)
+[Deep2Engine] Layer topology: 0 attention, 0 SSM, 61 unknown of 61 total
+[Deep2Engine] KV cache sized for 0 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[Deep2Engine] ResidencyManager: this=0000018CB0B60380  registered=0 tensors  bytes=0  max=536870912
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7829E28D0 dequant=00007FF7829E5A90 GetGEMV(12)=00007FF7829E28D0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=244682 heads=1 dim=192
+[KVCache] HOT_BYTES=749568 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 61 layers x 244682 positions x 1 heads x 192 dim = 21863.67 MB
+[Deep2Engine] Model loaded successfully (1096 tensors)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+[K2_DBG] entry depth=26 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=26
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=26 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1437800000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=2048 owner=DUALSTICK_BIND resident=2147483648
+PIN_BUDGET_FINAL stick=1 mib=2048 owner=DUALSTICK_BIND resident=2147483648
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BC6C
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=EXCLUDED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018BEC
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.000000
+DEEP2_COST_CUT=31
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-30
+DEEP2_COST_SLOT1_LAYERS=31-60
+DEEP2_COST_VRAM_GATE=0
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-30 kind=GPU
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=31-60 kind=GPU
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=1 devices=2
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=61
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:0000000000015B01
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-30
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=4294967295
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:747E:0000000000018BEC
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=31-60
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=4294967295
+DEEP2_LAYER_0_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_21_EXECUTED=0
+DEEP2_LAYER_22_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_22_EXECUTED=0
+DEEP2_LAYER_23_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_23_EXECUTED=0
+DEEP2_LAYER_24_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_24_EXECUTED=0
+DEEP2_LAYER_25_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_25_EXECUTED=0
+DEEP2_LAYER_26_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_26_EXECUTED=0
+DEEP2_LAYER_27_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_27_EXECUTED=0
+DEEP2_LAYER_28_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_28_EXECUTED=0
+DEEP2_LAYER_29_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_29_EXECUTED=0
+DEEP2_LAYER_30_DEVICE=1002:7551:0000000000015B01
+DEEP2_LAYER_30_EXECUTED=0
+DEEP2_LAYER_31_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_31_EXECUTED=0
+DEEP2_LAYER_32_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_32_EXECUTED=0
+DEEP2_LAYER_33_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_33_EXECUTED=0
+DEEP2_LAYER_34_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_34_EXECUTED=0
+DEEP2_LAYER_35_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_35_EXECUTED=0
+DEEP2_LAYER_36_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_36_EXECUTED=0
+DEEP2_LAYER_37_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_37_EXECUTED=0
+DEEP2_LAYER_38_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_38_EXECUTED=0
+DEEP2_LAYER_39_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_39_EXECUTED=0
+DEEP2_LAYER_40_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_40_EXECUTED=0
+DEEP2_LAYER_41_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_41_EXECUTED=0
+DEEP2_LAYER_42_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_42_EXECUTED=0
+DEEP2_LAYER_43_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_43_EXECUTED=0
+DEEP2_LAYER_44_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_44_EXECUTED=0
+DEEP2_LAYER_45_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_45_EXECUTED=0
+DEEP2_LAYER_46_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_46_EXECUTED=0
+DEEP2_LAYER_47_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_47_EXECUTED=0
+DEEP2_LAYER_48_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_48_EXECUTED=0
+DEEP2_LAYER_49_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_49_EXECUTED=0
+DEEP2_LAYER_50_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_50_EXECUTED=0
+DEEP2_LAYER_51_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_51_EXECUTED=0
+DEEP2_LAYER_52_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_52_EXECUTED=0
+DEEP2_LAYER_53_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_53_EXECUTED=0
+DEEP2_LAYER_54_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_54_EXECUTED=0
+DEEP2_LAYER_55_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_55_EXECUTED=0
+DEEP2_LAYER_56_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_56_EXECUTED=0
+DEEP2_LAYER_57_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_57_EXECUTED=0
+DEEP2_LAYER_58_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_58_EXECUTED=0
+DEEP2_LAYER_59_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_59_EXECUTED=0
+DEEP2_LAYER_60_DEVICE=1002:747E:0000000000018BEC
+DEEP2_LAYER_60_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=0
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[Deep2Engine] LIVE_SETUP ok active=1
+STEP_ENTER STEP=0/1
+STREAM_HEARTBEAT STEP=0/1 TEARDOWN_WITNESS=0
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=0 numLayers=26
+[MLA_ATTENTION] layer=0 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=0 rope done
+[MLA_ATTENTION] layer=0 buffers allocated
+[MLA_ATTENTION] layer=0 KV write done
+[MLA_ATTENTION] layer=0 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=0 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=0 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=0 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=0 all 64 heads done
+[MLA_EXECUTE] layer=0 attention complete, starting output projection
+[MLA_EXECUTE] layer=0 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END
+LIVE_K2_MOE_ENTER layer=0 decode=1 ctr=1
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=1 numLayers=26
+[MLA_ATTENTION] layer=1 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=1 rope done
+[MLA_ATTENTION] layer=1 buffers allocated
+[MLA_ATTENTION] layer=1 KV write done
+[MLA_ATTENTION] layer=1 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=1 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=1 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=1 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=1 all 64 heads done
+[MLA_EXECUTE] layer=1 attention complete, starting output projection
+[MLA_EXECUTE] layer=1 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=1 decode=1 ctr=2
+LIVE_K2_MOE_BACKEND layer=1 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=1 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=1 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=1 stage=after_shape
+LIVE_K2_MOE_STAGE layer=1 stage=after_assign
+LIVE_K2_MOE_STAGE layer=1 stage=after_partition n0=2 n1=6
+LIVE_K2_MOE_STAGE layer=1 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP gate_begin layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP gate_end layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP up_begin layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP up_end layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP down_begin layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP down_end layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP add_begin layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP add_end layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP_END layer=1 stick=0 expert=69
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP gate_begin layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP gate_end layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP up_begin layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP up_end layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP down_begin layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP down_end layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP add_begin layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP add_end layer=1 stick=0 expert=217
+LIVE_K2_MOE_OP_END layer=1 stick=0 expert=217
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=0 nEx=2 pin_clock=6 pin_bytes=57114624 buf=0000026041A95170 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=e22604b5582077c3 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[69,217]
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP gate_begin layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP gate_end layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP up_begin layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP up_end layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP down_begin layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP down_end layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP add_begin layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP add_end layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP_END layer=1 stick=1 expert=0
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP gate_begin layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP gate_end layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP up_begin layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP up_end layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP down_begin layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP down_end layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP add_begin layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP add_end layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP_END layer=1 stick=1 expert=62
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP gate_begin layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP gate_end layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP up_begin layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP up_end layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP down_begin layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP down_end layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP add_begin layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP add_end layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP_END layer=1 stick=1 expert=86
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP gate_begin layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP gate_end layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP up_begin layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP up_end layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP down_begin layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP down_end layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP add_begin layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP add_end layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP_END layer=1 stick=1 expert=132
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP gate_begin layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP gate_end layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP up_begin layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP up_end layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP down_begin layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP down_end layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP add_begin layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP add_end layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP_END layer=1 stick=1 expert=146
+LIVE_K2_MOE_OP_BEGIN layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP gate_begin layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP gate_end layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP up_begin layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP up_end layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP swiglu_begin layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP swiglu_end layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP down_begin layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP down_end layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP add_begin layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP add_end layer=1 stick=1 expert=296
+LIVE_K2_MOE_OP_END layer=1 stick=1 expert=296
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=1 stick=1 nEx=6 pin_clock=18 pin_bytes=171343872 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=e22604b5582077c3 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[0,62,86,132,146,296]
+LIVE_K2_MOE_STAGE layer=1 stage=workers_joined ok0=1 ok1=1 ex0=2 ex1=6
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+KVA_TRYGPU TAG=3 TY=8 ALLOW_FUSED=1 WANT_FUSED=1 BRAID_FUSED=1 ROWS=576 COLS=7168
+KVA_Q8_FUSED_FALSE ROWS=576 COLS=7168
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=2 numLayers=26
+[MLA_ATTENTION] layer=2 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=2 rope done
+[MLA_ATTENTION] layer=2 buffers allocated
+[MLA_ATTENTION] layer=2 KV write done
+[MLA_ATTENTION] layer=2 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=2 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=2 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=2 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=2 all 64 heads done
+[MLA_EXECUTE] layer=2 attention complete, starting output projection
+[MLA_EXECUTE] layer=2 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=2 decode=1 ctr=3
+LIVE_K2_MOE_BACKEND layer=2 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=2 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=2 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=2 stage=after_shape
+LIVE_K2_MOE_STAGE layer=2 stage=after_assign
+LIVE_K2_MOE_STAGE layer=2 stage=after_partition n0=5 n1=3
+LIVE_K2_MOE_STAGE layer=2 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP gate_begin layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP gate_end layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP up_begin layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP up_end layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP down_begin layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP down_end layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP add_begin layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP add_end layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP_END layer=2 stick=1 expert=65
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP gate_begin layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP gate_end layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP up_begin layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP up_end layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP down_begin layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP down_end layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP add_begin layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP add_end layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP_END layer=2 stick=1 expert=153
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP gate_begin layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP gate_end layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP up_begin layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP up_end layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP down_begin layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP down_end layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP add_begin layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP add_end layer=2 stick=1 expert=219
+LIVE_K2_MOE_OP_END layer=2 stick=1 expert=219
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=1 nEx=3 pin_clock=27 pin_bytes=85671936 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=270415914b5f1eef post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[65,153,219]
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP gate_begin layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP gate_end layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP up_begin layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP up_end layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP down_begin layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP down_end layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP add_begin layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP add_end layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP_END layer=2 stick=0 expert=26
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP gate_begin layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP gate_end layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP up_begin layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP up_end layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP down_begin layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP down_end layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP add_begin layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP add_end layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP_END layer=2 stick=0 expert=118
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP gate_begin layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP gate_end layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP up_begin layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP up_end layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP down_begin layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP down_end layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP add_begin layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP add_end layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP_END layer=2 stick=0 expert=162
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP gate_begin layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP gate_end layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP up_begin layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP up_end layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP down_begin layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP down_end layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP add_begin layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP add_end layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP_END layer=2 stick=0 expert=180
+LIVE_K2_MOE_OP_BEGIN layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP gate_begin layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP gate_end layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP up_begin layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP up_end layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP swiglu_begin layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP swiglu_end layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP down_begin layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP down_end layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP add_begin layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP add_end layer=2 stick=0 expert=194
+LIVE_K2_MOE_OP_END layer=2 stick=0 expert=194
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=2 stick=0 nEx=5 pin_clock=21 pin_bytes=142786560 buf=000002604E5BCD40 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=270415914b5f1eef post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[26,118,162,180,194]
+LIVE_K2_MOE_STAGE layer=2 stage=workers_joined ok0=1 ok1=1 ex0=5 ex1=3
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=3 numLayers=26
+[MLA_ATTENTION] layer=3 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=3 rope done
+[MLA_ATTENTION] layer=3 buffers allocated
+[MLA_ATTENTION] layer=3 KV write done
+[MLA_ATTENTION] layer=3 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=3 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=3 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=3 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=3 all 64 heads done
+[MLA_EXECUTE] layer=3 attention complete, starting output projection
+[MLA_EXECUTE] layer=3 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=3 decode=1 ctr=4
+LIVE_K2_MOE_BACKEND layer=3 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=3 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=3 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=3 stage=after_shape
+LIVE_K2_MOE_STAGE layer=3 stage=after_assign
+LIVE_K2_MOE_STAGE layer=3 stage=after_partition n0=2 n1=6
+LIVE_K2_MOE_STAGE layer=3 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP gate_begin layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP gate_end layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP up_begin layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP up_end layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP down_begin layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP down_end layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP add_begin layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP add_end layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP_END layer=3 stick=0 expert=257
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP gate_begin layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP gate_end layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP up_begin layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP up_end layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP down_begin layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP down_end layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP add_begin layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP add_end layer=3 stick=0 expert=305
+LIVE_K2_MOE_OP_END layer=3 stick=0 expert=305
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=0 nEx=2 pin_clock=27 pin_bytes=57114624 buf=000002604E5BD0C0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=c0154bb64be87ae9 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[257,305]
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP gate_begin layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP gate_end layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP up_begin layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP up_end layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP down_begin layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP down_end layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP add_begin layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP add_end layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP_END layer=3 stick=1 expert=14
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP gate_begin layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP gate_end layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP up_begin layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP up_end layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP down_begin layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP down_end layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP add_begin layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP add_end layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP_END layer=3 stick=1 expert=34
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP gate_begin layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP gate_end layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP up_begin layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP up_end layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP down_begin layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP down_end layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP add_begin layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP add_end layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP_END layer=3 stick=1 expert=58
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP gate_begin layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP gate_end layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP up_begin layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP up_end layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP down_begin layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP down_end layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP add_begin layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP add_end layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP_END layer=3 stick=1 expert=164
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP gate_begin layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP gate_end layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP up_begin layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP up_end layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP down_begin layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP down_end layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP add_begin layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP add_end layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP_END layer=3 stick=1 expert=282
+LIVE_K2_MOE_OP_BEGIN layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP gate_begin layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP gate_end layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP up_begin layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP up_end layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP swiglu_begin layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP swiglu_end layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP down_begin layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP down_end layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP add_begin layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP add_end layer=3 stick=1 expert=366
+LIVE_K2_MOE_OP_END layer=3 stick=1 expert=366
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=3 stick=1 nEx=6 pin_clock=45 pin_bytes=171343872 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=c0154bb64be87ae9 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[14,34,58,164,282,366]
+LIVE_K2_MOE_STAGE layer=3 stage=workers_joined ok0=1 ok1=1 ex0=2 ex1=6
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=4 numLayers=26
+[MLA_ATTENTION] layer=4 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=4 rope done
+[MLA_ATTENTION] layer=4 buffers allocated
+[MLA_ATTENTION] layer=4 KV write done
+[MLA_ATTENTION] layer=4 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=4 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=4 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=4 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=4 all 64 heads done
+[MLA_EXECUTE] layer=4 attention complete, starting output projection
+[MLA_EXECUTE] layer=4 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=4 decode=1 ctr=5
+LIVE_K2_MOE_BACKEND layer=4 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=4 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=4 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=4 stage=after_shape
+LIVE_K2_MOE_STAGE layer=4 stage=after_assign
+LIVE_K2_MOE_STAGE layer=4 stage=after_partition n0=3 n1=5
+LIVE_K2_MOE_STAGE layer=4 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP gate_begin layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP gate_end layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP up_begin layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP up_end layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP down_begin layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP down_end layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP add_begin layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP add_end layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP_END layer=4 stick=0 expert=98
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP gate_begin layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP gate_end layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP up_begin layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP up_end layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP down_begin layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP down_end layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP add_begin layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP add_end layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP_END layer=4 stick=0 expert=304
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP gate_begin layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP gate_end layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP up_begin layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP up_end layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP down_begin layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP down_end layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP add_begin layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP add_end layer=4 stick=0 expert=382
+LIVE_K2_MOE_OP_END layer=4 stick=0 expert=382
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=0 nEx=3 pin_clock=36 pin_bytes=85671936 buf=000002604E5A3FA0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=3849a653a8c8749a post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[98,304,382]
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP gate_begin layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP gate_end layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP up_begin layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP up_end layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP down_begin layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP down_end layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP add_begin layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP add_end layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP_END layer=4 stick=1 expert=59
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP gate_begin layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP gate_end layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP up_begin layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP up_end layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP down_begin layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP down_end layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP add_begin layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP add_end layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP_END layer=4 stick=1 expert=121
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP gate_begin layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP gate_end layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP up_begin layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP up_end layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP down_begin layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP down_end layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP add_begin layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP add_end layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP_END layer=4 stick=1 expert=233
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP gate_begin layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP gate_end layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP up_begin layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP up_end layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP down_begin layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP down_end layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP add_begin layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP add_end layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP_END layer=4 stick=1 expert=275
+LIVE_K2_MOE_OP_BEGIN layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP gate_begin layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP gate_end layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP up_begin layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP up_end layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP swiglu_begin layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP swiglu_end layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP down_begin layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP down_end layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP add_begin layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP add_end layer=4 stick=1 expert=315
+LIVE_K2_MOE_OP_END layer=4 stick=1 expert=315
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=4 stick=1 nEx=5 pin_clock=60 pin_bytes=142786560 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=3849a653a8c8749a post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[59,121,233,275,315]
+LIVE_K2_MOE_STAGE layer=4 stage=workers_joined ok0=1 ok1=1 ex0=3 ex1=5
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=5 numLayers=26
+[MLA_ATTENTION] layer=5 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=5 rope done
+[MLA_ATTENTION] layer=5 buffers allocated
+[MLA_ATTENTION] layer=5 KV write done
+[MLA_ATTENTION] layer=5 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=5 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=5 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=5 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=5 all 64 heads done
+[MLA_EXECUTE] layer=5 attention complete, starting output projection
+[MLA_EXECUTE] layer=5 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=5 decode=1 ctr=6
+LIVE_K2_MOE_BACKEND layer=5 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=5 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=5 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=5 stage=after_shape
+LIVE_K2_MOE_STAGE layer=5 stage=after_assign
+LIVE_K2_MOE_STAGE layer=5 stage=after_partition n0=8 n1=0
+LIVE_K2_MOE_STAGE layer=5 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=1 nEx=0 pin_clock=60 pin_bytes=0 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=317cd8675faef225 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[]
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=25
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=33
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=95
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=119
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=153
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=197
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=227
+LIVE_K2_MOE_OP_BEGIN layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP gate_begin layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP gate_end layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP up_begin layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP up_end layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP swiglu_begin layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP swiglu_end layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP down_begin layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP down_end layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP add_begin layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP add_end layer=5 stick=0 expert=231
+LIVE_K2_MOE_OP_END layer=5 stick=0 expert=231
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=5 stick=0 nEx=8 pin_clock=60 pin_bytes=228458496 buf=000002604E5A2A20 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=317cd8675faef225 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[25,33,95,119,153,197,227,231]
+LIVE_K2_MOE_STAGE layer=5 stage=workers_joined ok0=1 ok1=1 ex0=8 ex1=0
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=6 numLayers=26
+[MLA_ATTENTION] layer=6 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=6 rope done
+[MLA_ATTENTION] layer=6 buffers allocated
+[MLA_ATTENTION] layer=6 KV write done
+[MLA_ATTENTION] layer=6 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=6 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=6 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=6 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=6 all 64 heads done
+[MLA_EXECUTE] layer=6 attention complete, starting output projection
+[MLA_EXECUTE] layer=6 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=6 decode=1 ctr=7
+LIVE_K2_MOE_BACKEND layer=6 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=6 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=6 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=6 stage=after_shape
+LIVE_K2_MOE_STAGE layer=6 stage=after_assign
+LIVE_K2_MOE_STAGE layer=6 stage=after_partition n0=5 n1=3
+LIVE_K2_MOE_STAGE layer=6 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP gate_begin layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP gate_end layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP up_begin layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP up_end layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP down_begin layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP down_end layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP add_begin layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP add_end layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP_END layer=6 stick=1 expert=85
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP gate_begin layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP gate_end layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP up_begin layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP up_end layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP down_begin layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP down_end layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP add_begin layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP add_end layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP_END layer=6 stick=1 expert=121
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP gate_begin layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP gate_end layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP up_begin layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP up_end layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP down_begin layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP down_end layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP add_begin layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP add_end layer=6 stick=1 expert=369
+LIVE_K2_MOE_OP_END layer=6 stick=1 expert=369
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=1 nEx=3 pin_clock=69 pin_bytes=85671936 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=172277786febb8ca post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[85,121,369]
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP gate_begin layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP gate_end layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP up_begin layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP up_end layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP down_begin layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP down_end layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP add_begin layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP add_end layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP_END layer=6 stick=0 expert=0
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP gate_begin layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP gate_end layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP up_begin layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP up_end layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP down_begin layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP down_end layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP add_begin layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP add_end layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP_END layer=6 stick=0 expert=52
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP gate_begin layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP gate_end layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP up_begin layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP up_end layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP down_begin layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP down_end layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP add_begin layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP add_end layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP_END layer=6 stick=0 expert=136
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP gate_begin layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP gate_end layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP up_begin layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP up_end layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP down_begin layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP down_end layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP add_begin layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP add_end layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP_END layer=6 stick=0 expert=212
+LIVE_K2_MOE_OP_BEGIN layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP gate_begin layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP gate_end layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP up_begin layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP up_end layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP swiglu_begin layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP swiglu_end layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP down_begin layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP down_end layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP add_begin layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP add_end layer=6 stick=0 expert=254
+LIVE_K2_MOE_OP_END layer=6 stick=0 expert=254
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=6 stick=0 nEx=5 pin_clock=75 pin_bytes=142786560 buf=000002604E5A4F20 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=172277786febb8ca post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[0,52,136,212,254]
+LIVE_K2_MOE_STAGE layer=6 stage=workers_joined ok0=1 ok1=1 ex0=5 ex1=3
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=7 numLayers=26
+[MLA_ATTENTION] layer=7 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=7 rope done
+[MLA_ATTENTION] layer=7 buffers allocated
+[MLA_ATTENTION] layer=7 KV write done
+[MLA_ATTENTION] layer=7 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=7 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=7 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=7 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=7 all 64 heads done
+[MLA_EXECUTE] layer=7 attention complete, starting output projection
+[MLA_EXECUTE] layer=7 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=7 decode=1 ctr=8
+LIVE_K2_MOE_BACKEND layer=7 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=7 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=7 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=7 stage=after_shape
+LIVE_K2_MOE_STAGE layer=7 stage=after_assign
+LIVE_K2_MOE_STAGE layer=7 stage=after_partition n0=3 n1=5
+LIVE_K2_MOE_STAGE layer=7 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP gate_begin layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP gate_end layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP up_begin layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP up_end layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP down_begin layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP down_end layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP add_begin layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP add_end layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP_END layer=7 stick=0 expert=87
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP gate_begin layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP gate_end layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP up_begin layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP up_end layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP down_begin layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP down_end layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP add_begin layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP add_end layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP_END layer=7 stick=0 expert=143
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP gate_begin layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP gate_end layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP up_begin layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP up_end layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP down_begin layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP down_end layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP add_begin layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP add_end layer=7 stick=0 expert=291
+LIVE_K2_MOE_OP_END layer=7 stick=0 expert=291
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=0 nEx=3 pin_clock=84 pin_bytes=74317824 buf=000002604E5A5A20 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=2ea42ba94623e609 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[87,143,291]
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP gate_begin layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP gate_end layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP up_begin layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP up_end layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP down_begin layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP down_end layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP add_begin layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP add_end layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP_END layer=7 stick=1 expert=18
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP gate_begin layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP gate_end layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP up_begin layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP up_end layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP down_begin layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP down_end layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP add_begin layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP add_end layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP_END layer=7 stick=1 expert=88
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP gate_begin layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP gate_end layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP up_begin layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP up_end layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP down_begin layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP down_end layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP add_begin layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP add_end layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP_END layer=7 stick=1 expert=98
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP gate_begin layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP gate_end layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP up_begin layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP up_end layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP down_begin layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP down_end layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP add_begin layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP add_end layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP_END layer=7 stick=1 expert=200
+LIVE_K2_MOE_OP_BEGIN layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP gate_begin layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP gate_end layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP up_begin layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP up_end layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP swiglu_begin layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP swiglu_end layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP down_begin layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP down_end layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP add_begin layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP add_end layer=7 stick=1 expert=276
+LIVE_K2_MOE_OP_END layer=7 stick=1 expert=276
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=7 stick=1 nEx=5 pin_clock=84 pin_bytes=123863040 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=2ea42ba94623e609 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[18,88,98,200,276]
+LIVE_K2_MOE_STAGE layer=7 stage=workers_joined ok0=1 ok1=1 ex0=3 ex1=5
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=8 numLayers=26
+[MLA_ATTENTION] layer=8 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=8 rope done
+[MLA_ATTENTION] layer=8 buffers allocated
+[MLA_ATTENTION] layer=8 KV write done
+[MLA_ATTENTION] layer=8 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=8 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=8 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=8 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=8 all 64 heads done
+[MLA_EXECUTE] layer=8 attention complete, starting output projection
+[MLA_EXECUTE] layer=8 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=8 decode=1 ctr=9
+LIVE_K2_MOE_BACKEND layer=8 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=8 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=8 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=8 stage=after_shape
+LIVE_K2_MOE_STAGE layer=8 stage=after_assign
+LIVE_K2_MOE_STAGE layer=8 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=8 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP gate_begin layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP gate_end layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP up_begin layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP up_end layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP down_begin layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP down_end layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP add_begin layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP add_end layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP_END layer=8 stick=1 expert=47
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP gate_begin layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP gate_end layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP up_begin layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP up_end layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP down_begin layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP down_end layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP add_begin layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP add_end layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP_END layer=8 stick=1 expert=65
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP gate_begin layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP gate_end layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP up_begin layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP up_end layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP down_begin layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP down_end layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP add_begin layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP add_end layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP_END layer=8 stick=1 expert=79
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP gate_begin layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP gate_end layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP up_begin layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP up_end layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP down_begin layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP down_end layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP add_begin layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP add_end layer=8 stick=1 expert=85
+LIVE_K2_MOE_OP_END layer=8 stick=1 expert=85
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=1 nEx=4 pin_clock=96 pin_bytes=99090432 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=298d4fc4c61036c5 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[47,65,79,85]
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP gate_begin layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP gate_end layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP up_begin layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP up_end layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP down_begin layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP down_end layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP add_begin layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP add_end layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP_END layer=8 stick=0 expert=98
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP gate_begin layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP gate_end layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP up_begin layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP up_end layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP down_begin layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP down_end layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP add_begin layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP add_end layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP_END layer=8 stick=0 expert=106
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP gate_begin layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP gate_end layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP up_begin layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP up_end layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP down_begin layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP down_end layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP add_begin layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP add_end layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP_END layer=8 stick=0 expert=156
+LIVE_K2_MOE_OP_BEGIN layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP gate_begin layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP gate_end layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP up_begin layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP up_end layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP swiglu_begin layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP swiglu_end layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP down_begin layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP down_end layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP add_begin layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP add_end layer=8 stick=0 expert=366
+LIVE_K2_MOE_OP_END layer=8 stick=0 expert=366
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=8 stick=0 nEx=4 pin_clock=96 pin_bytes=99090432 buf=000002604E5A45A0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=298d4fc4c61036c5 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[98,106,156,366]
+LIVE_K2_MOE_STAGE layer=8 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=9 numLayers=26
+[MLA_ATTENTION] layer=9 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=9 rope done
+[MLA_ATTENTION] layer=9 buffers allocated
+[MLA_ATTENTION] layer=9 KV write done
+[MLA_ATTENTION] layer=9 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=9 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=9 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=9 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=9 all 64 heads done
+[MLA_EXECUTE] layer=9 attention complete, starting output projection
+[MLA_EXECUTE] layer=9 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=9 decode=1 ctr=10
+LIVE_K2_MOE_BACKEND layer=9 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=9 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=9 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=9 stage=after_shape
+LIVE_K2_MOE_STAGE layer=9 stage=after_assign
+LIVE_K2_MOE_STAGE layer=9 stage=after_partition n0=2 n1=6
+LIVE_K2_MOE_STAGE layer=9 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP gate_begin layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP gate_end layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP up_begin layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP up_end layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP down_begin layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP down_end layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP add_begin layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP add_end layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP_END layer=9 stick=0 expert=103
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP gate_begin layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP gate_end layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP up_begin layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP up_end layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP down_begin layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP down_end layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP add_begin layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP add_end layer=9 stick=0 expert=151
+LIVE_K2_MOE_OP_END layer=9 stick=0 expert=151
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=0 nEx=2 pin_clock=102 pin_bytes=57114624 buf=000002604E609850 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=6a9461646ce3c6ef post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[103,151]
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP gate_begin layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP gate_end layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP up_begin layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP up_end layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP down_begin layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP down_end layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP add_begin layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP add_end layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP_END layer=9 stick=1 expert=0
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP gate_begin layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP gate_end layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP up_begin layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP up_end layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP down_begin layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP down_end layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP add_begin layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP add_end layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP_END layer=9 stick=1 expert=48
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP gate_begin layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP gate_end layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP up_begin layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP up_end layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP down_begin layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP down_end layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP add_begin layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP add_end layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP_END layer=9 stick=1 expert=222
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP gate_begin layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP gate_end layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP up_begin layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP up_end layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP down_begin layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP down_end layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP add_begin layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP add_end layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP_END layer=9 stick=1 expert=224
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP gate_begin layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP gate_end layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP up_begin layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP up_end layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP down_begin layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP down_end layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP add_begin layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP add_end layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP_END layer=9 stick=1 expert=254
+LIVE_K2_MOE_OP_BEGIN layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP gate_begin layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP gate_end layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP up_begin layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP up_end layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP swiglu_begin layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP swiglu_end layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP down_begin layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP down_end layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP add_begin layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP add_end layer=9 stick=1 expert=316
+LIVE_K2_MOE_OP_END layer=9 stick=1 expert=316
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=9 stick=1 nEx=6 pin_clock=114 pin_bytes=171343872 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=6a9461646ce3c6ef post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[0,48,222,224,254,316]
+LIVE_K2_MOE_STAGE layer=9 stage=workers_joined ok0=1 ok1=1 ex0=2 ex1=6
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=10 numLayers=26
+[MLA_ATTENTION] layer=10 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=10 rope done
+[MLA_ATTENTION] layer=10 buffers allocated
+[MLA_ATTENTION] layer=10 KV write done
+[MLA_ATTENTION] layer=10 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=10 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=10 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=10 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=10 all 64 heads done
+[MLA_EXECUTE] layer=10 attention complete, starting output projection
+[MLA_EXECUTE] layer=10 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=10 decode=1 ctr=11
+LIVE_K2_MOE_BACKEND layer=10 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=10 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=10 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=10 stage=after_shape
+LIVE_K2_MOE_STAGE layer=10 stage=after_assign
+LIVE_K2_MOE_STAGE layer=10 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=10 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP gate_begin layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP gate_end layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP up_begin layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP up_end layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP down_begin layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP down_end layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP add_begin layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP add_end layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP_END layer=10 stick=1 expert=21
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP gate_begin layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP gate_end layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP up_begin layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP up_end layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP down_begin layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP down_end layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP add_begin layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP add_end layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP_END layer=10 stick=1 expert=53
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP gate_begin layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP gate_end layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP up_begin layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP up_end layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP down_begin layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP down_end layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP add_begin layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP add_end layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP_END layer=10 stick=1 expert=75
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP gate_begin layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP gate_end layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP up_begin layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP up_end layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP down_begin layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP down_end layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP add_begin layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP add_end layer=10 stick=1 expert=285
+LIVE_K2_MOE_OP_END layer=10 stick=1 expert=285
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=1 nEx=4 pin_clock=126 pin_bytes=99090432 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=1310af58afba09e3 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[21,53,75,285]
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP gate_begin layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP gate_end layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP up_begin layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP up_end layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP down_begin layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP down_end layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP add_begin layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP add_end layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP_END layer=10 stick=0 expert=118
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP gate_begin layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP gate_end layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP up_begin layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP up_end layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP down_begin layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP down_end layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP add_begin layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP add_end layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP_END layer=10 stick=0 expert=128
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP gate_begin layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP gate_end layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP up_begin layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP up_end layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP down_begin layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP down_end layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP add_begin layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP add_end layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP_END layer=10 stick=0 expert=200
+LIVE_K2_MOE_OP_BEGIN layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP gate_begin layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP gate_end layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP up_begin layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP up_end layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP swiglu_begin layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP swiglu_end layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP down_begin layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP down_end layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP add_begin layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP add_end layer=10 stick=0 expert=304
+LIVE_K2_MOE_OP_END layer=10 stick=0 expert=304
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=10 stick=0 nEx=4 pin_clock=114 pin_bytes=99090432 buf=000002604E60A150 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=1310af58afba09e3 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[118,128,200,304]
+LIVE_K2_MOE_STAGE layer=10 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=11 numLayers=26
+[MLA_ATTENTION] layer=11 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=11 rope done
+[MLA_ATTENTION] layer=11 buffers allocated
+[MLA_ATTENTION] layer=11 KV write done
+[MLA_ATTENTION] layer=11 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=11 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=11 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=11 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=11 all 64 heads done
+[MLA_EXECUTE] layer=11 attention complete, starting output projection
+[MLA_EXECUTE] layer=11 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=11 decode=1 ctr=12
+LIVE_K2_MOE_BACKEND layer=11 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=11 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=11 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=11 stage=after_shape
+LIVE_K2_MOE_STAGE layer=11 stage=after_assign
+LIVE_K2_MOE_STAGE layer=11 stage=after_partition n0=4 n1=4
+LIVE_K2_MOE_STAGE layer=11 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP gate_begin layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP gate_end layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP up_begin layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP up_end layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP down_begin layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP down_end layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP add_begin layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP add_end layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP_END layer=11 stick=1 expert=46
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP gate_begin layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP gate_end layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP up_begin layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP up_end layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP down_begin layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP down_end layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP add_begin layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP add_end layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP_END layer=11 stick=1 expert=64
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP gate_begin layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP gate_end layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP up_begin layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP up_end layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP down_begin layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP down_end layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP add_begin layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP add_end layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP_END layer=11 stick=1 expert=298
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP gate_begin layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP gate_end layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP up_begin layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP up_end layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP down_begin layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP down_end layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP add_begin layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP add_end layer=11 stick=1 expert=322
+LIVE_K2_MOE_OP_END layer=11 stick=1 expert=322
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP gate_begin layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP gate_end layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP up_begin layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP up_end layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP down_begin layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP down_end layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP add_begin layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP add_end layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP_END layer=11 stick=0 expert=33
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP gate_begin layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP gate_end layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP up_begin layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP up_end layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP down_begin layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP down_end layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP add_begin layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP add_end layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP_END layer=11 stick=0 expert=99
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP gate_begin layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP gate_end layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP up_begin layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP up_end layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP down_begin layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP down_end layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP add_begin layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP add_end layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP_END layer=11 stick=0 expert=103
+LIVE_K2_MOE_OP_BEGIN layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP gate_begin layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP gate_end layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP up_begin layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP up_end layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP swiglu_begin layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP swiglu_end layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP down_begin layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP down_end layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP add_begin layer=11 stick=0 expert=259
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_MOE_OP add_end layer=11 stick=0 expert=259
+LIVE_K2_MOE_OP_END layer=11 stick=0 expert=259
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=1 nEx=4 pin_clock=138 pin_bytes=99090432 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=666c77b2e9357b9b post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[46,64,298,322]
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+LIVE_K2_MOE_D2H_DONE stick=0 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=11 stick=0 nEx=4 pin_clock=126 pin_bytes=99090432 buf=000002604E60C1D0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=666c77b2e9357b9b post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[33,99,103,259]
+LIVE_K2_MOE_STAGE layer=11 stage=workers_joined ok0=1 ok1=1 ex0=4 ex1=4
+[MLA_GEMV] calling MLA_Gemv(12, rows=1536 cols=7168 byteSize=6193152)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_GEMV] calling MLA_Gemv(12, rows=12288 cols=1536 byteSize=10616832)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+[MLA_KV_GEOMETRY] cacheDim=12288 expectedDim=12288 heads=64 nope=128 rope=64 vDim=128 qkDim=192 kPack=12288 vPack=8192 layerIdx=12 numLayers=26
+[MLA_ATTENTION] layer=12 pos=0 heads=64 qkDim=192 kvDim=12288 seqLen=1
+[MLA_ATTENTION] layer=12 rope done
+[MLA_ATTENTION] layer=12 buffers allocated
+[MLA_ATTENTION] layer=12 KV write done
+[MLA_ATTENTION] layer=12 head 0 done, seqLen=1
+[MLA_ATTENTION] layer=12 head 16 done, seqLen=1
+[MLA_ATTENTION] layer=12 head 32 done, seqLen=1
+[MLA_ATTENTION] layer=12 head 48 done, seqLen=1
+[MLA_ATTENTION] layer=12 all 64 heads done
+[MLA_EXECUTE] layer=12 attention complete, starting output projection
+[MLA_EXECUTE] layer=12 calling gemvDispatchTransposed(attnO)
+[MLA_GEMV] calling MLA_Gemv(12, rows=7168 cols=8192 byteSize=33030144)
+[MLA_GEMV] MLA_Gemv(12) succeeded
+LIVE_K2_MOE_ENTER layer=12 decode=1 ctr=13
+LIVE_K2_MOE_BACKEND layer=12 host=0 gpu=1 dual=1 requested=1 vc0=1 vc1=1
+LIVE_K2_MOE_PLACE layer=12 n=8 hits=0 misses=8 miss_bytes=117440512
+LIVE_K2_MOE_STAGE layer=12 stage=after_place count=8
+LIVE_K2_MOE_STAGE layer=12 stage=after_shape
+LIVE_K2_MOE_STAGE layer=12 stage=after_assign
+LIVE_K2_MOE_STAGE layer=12 stage=after_partition n0=3 n1=5
+LIVE_K2_MOE_STAGE layer=12 stage=workers_started
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=1 H=7168 I=2048
+LIVE_K2_MOE_DEVICE_BEGIN_OK stick=0 H=7168 I=2048
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP gate_begin layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP gate_end layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP up_begin layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP up_end layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP down_begin layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP down_end layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP add_begin layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP add_end layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP_END layer=12 stick=0 expert=14
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP gate_begin layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP gate_end layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP up_begin layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP up_end layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP down_begin layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP down_end layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP add_begin layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP add_end layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP_END layer=12 stick=0 expert=176
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP gate_begin layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP gate_end layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP up_begin layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP up_end layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP down_begin layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP down_end layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP add_begin layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP add_end layer=12 stick=0 expert=194
+LIVE_K2_MOE_OP_END layer=12 stick=0 expert=194
+LIVE_K2_MOE_FUSED_END_BEGIN stick=0
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=0
+LIVE_K2_MOE_D2H_BEGIN stick=0 H=7168
+[GPU] downloadFromBuffer failed stage=transfer_wait bytes=28672
+LIVE_K2_MOE_D2H_DONE stick=0 ok=0
+ENDDEVICE_STEP3 tag=END_FAIL STEP=0/1 layer=12 stick=0 nEx=3 pin_clock=135 pin_bytes=85671936 buf=000002604E60C4D0 bytes=28672 fused=1 d2h=0 vk=0 phase=unknown in_hash=21026253880b3b24 post_hash=0000000000000000 CLASS=ENDDEVICE_ABORT_BEFORE_RESULT ex=[14,176,194]
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP gate_begin layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP gate_end layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP up_begin layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP up_end layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP down_begin layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP down_end layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP add_begin layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP add_end layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP_END layer=12 stick=1 expert=1
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP gate_begin layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP gate_end layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP up_begin layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP up_end layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP down_begin layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP down_end layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP add_begin layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP add_end layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP_END layer=12 stick=1 expert=131
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP gate_begin layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP gate_end layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP up_begin layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP up_end layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP down_begin layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP down_end layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP add_begin layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP add_end layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP_END layer=12 stick=1 expert=273
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP gate_begin layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP gate_end layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP up_begin layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP up_end layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP down_begin layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP down_end layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP add_begin layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP add_end layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP_END layer=12 stick=1 expert=319
+LIVE_K2_MOE_OP_BEGIN layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP gate_begin layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP gate_end layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP up_begin layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP up_end layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP swiglu_begin layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP swiglu_end layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP down_begin layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP down_end layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP add_begin layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP add_end layer=12 stick=1 expert=369
+LIVE_K2_MOE_OP_END layer=12 stick=1 expert=369
+LIVE_K2_MOE_FUSED_END_BEGIN stick=1
+LIVE_K2_GPU_END command_end_begin
+LIVE_K2_GPU_END command_end_done vk=0
+LIVE_K2_GPU_END fence_reset_begin
+LIVE_K2_GPU_END fence_reset_done vk=0
+LIVE_K2_GPU_END queue_submit_begin
+LIVE_K2_GPU_END queue_submit_done vk=0
+LIVE_K2_GPU_END fence_wait_begin timeout_s=30
+LIVE_K2_GPU_END fence_wait_done vk=0
+LIVE_K2_GPU_END drain_descriptors_begin
+LIVE_K2_GPU_END drain_descriptors_done
+LIVE_K2_GPU_END finalize_interval_begin
+LIVE_K2_GPU_END finalize_interval_done
+LIVE_K2_GPU_END q4k_collect_begin
+LIVE_K2_GPU_END q4k_collect_done
+LIVE_K2_MOE_FUSED_END_DONE stick=1
+LIVE_K2_MOE_D2H_BEGIN stick=1 H=7168
+LIVE_K2_MOE_D2H_DONE stick=1 ok=1
+ENDDEVICE_STEP3 tag=END_OK STEP=0/1 layer=12 stick=1 nEx=5 pin_clock=153 pin_bytes=142786560 buf=0000026041A951F0 bytes=28672 fused=1 d2h=1 vk=0 phase=unknown in_hash=21026253880b3b24 post_hash=102db3097afc8b25 CLASS=D2H_OK ex=[1,131,273,319,369]
+LIVE_K2_MOE_STAGE layer=12 stage=workers_joined ok0=0 ok1=1 ex0=3 ex1=5
+HIDDEN_PROBE_DISPOSITION STEP=0/1 EMITTED=0 REASON=NOT_REACHED
+STEP_EXIT STEP=0/1
+STREAM_ABORT=1 STEP=0/1 OWNER=MLA_FORWARD ERR=K2MoEStickEndDevice failed TEARDOWN_WITNESS=0
+[Deep2Engine] K2 generateStream: K2MoEStickEndDevice failed
+MLA_GPU_GEMV_OPS=39 MLA_GPU_GEMV_FAIL=13
+[live-path] vacuumArmed=0 trampoline=1/14 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=1 plasmaAbsence=0 enhancements=1
+REPLAY_RESPONSE[0]=
+REPLAY_WINDOWS=1 GENERATED=0 METRICS=96 COMPLETE=0
+REPLAY_INCOMPLETE windows=1 generated=0 metrics=96
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=61
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

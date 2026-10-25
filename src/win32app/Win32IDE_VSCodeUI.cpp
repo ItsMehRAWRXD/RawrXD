@@ -283,13 +283,19 @@ void Win32IDE::toggleSecondarySidebar()
 
 void Win32IDE::updateSecondarySidebarContent()
 {
-    // Update chat display with history
+    // Rebuild the transcript with explicit Windows line endings.  The old
+    // implementation used bare LF and the streaming callback prefixed every
+    // fragment with "AI:", making adjacent messages look duplicated.
     std::string chatText;
+    if (m_chatHistory.empty()) {
+        chatText = "Welcome to RawrXD AI Chat!\r\n\r\n"
+                   "Select a model and type a message to begin.\r\n";
+    }
     for (const auto& msg : m_chatHistory) {
         if (msg.first == "user") {
-            chatText += "You: " + msg.second + "\r\n\r\n";
+            chatText += "> User: " + msg.second + "\r\n\r\n";
         } else {
-            chatText += "Copilot: " + msg.second + "\r\n\r\n";
+            chatText += "AI: " + msg.second + "\r\n\r\n";
         }
     }
     SetWindowTextA(m_hwndCopilotChatOutput, chatText.c_str());
@@ -362,7 +368,15 @@ void Win32IDE::appendCopilotResponse(const std::string& response)
 
 LRESULT CALLBACK Win32IDE::SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetPropA(hwnd, "IDE_PTR"));
+
+    // Child controls are owned by this sidebar, while the command router lives
+    // on the main IDE window. Forward notifications with their original
+    // control HWND so routing remains unambiguous (especially New Chat and
+    // the model selectors).
+    if ((uMsg == WM_COMMAND || uMsg == WM_NOTIFY) && GetParent(hwnd)) {
+        return SendMessageA(GetParent(hwnd), uMsg, wParam, lParam);
+    }
     
     switch (uMsg) {
     case WM_CTLCOLORSTATIC:
@@ -376,7 +390,9 @@ LRESULT CALLBACK Win32IDE::SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wPa
         }
     }
     
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    WNDPROC oldProc = reinterpret_cast<WNDPROC>(GetPropA(hwnd, "OLDPROC"));
+    return oldProc ? CallWindowProcA(oldProc, hwnd, uMsg, wParam, lParam)
+                   : DefWindowProcA(hwnd, uMsg, wParam, lParam);
 }
 
 // ============================================================================

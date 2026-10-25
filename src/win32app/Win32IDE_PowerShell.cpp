@@ -6,6 +6,56 @@
 #include <fstream>
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <cstring>
+#include <vector>
+
+namespace {
+
+std::string base64Encode(const unsigned char* data, size_t size)
+{
+    static constexpr char alphabet[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string encoded;
+    encoded.reserve(((size + 2) / 3) * 4);
+    for (size_t i = 0; i < size; i += 3) {
+        const unsigned int a = data[i];
+        const unsigned int b = (i + 1 < size) ? data[i + 1] : 0;
+        const unsigned int c = (i + 2 < size) ? data[i + 2] : 0;
+        const unsigned int block = (a << 16) | (b << 8) | c;
+        encoded.push_back(alphabet[(block >> 18) & 0x3f]);
+        encoded.push_back(alphabet[(block >> 12) & 0x3f]);
+        encoded.push_back(i + 1 < size ? alphabet[(block >> 6) & 0x3f] : '=');
+        encoded.push_back(i + 2 < size ? alphabet[block & 0x3f] : '=');
+    }
+    return encoded;
+}
+
+std::string encodePowerShellCommand(const std::string& command)
+{
+    int wideCount = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                        command.data(), static_cast<int>(command.size()),
+                                        nullptr, 0);
+    UINT codePage = CP_UTF8;
+    if (wideCount <= 0) {
+        codePage = CP_ACP;
+        wideCount = MultiByteToWideChar(codePage, 0, command.data(),
+                                        static_cast<int>(command.size()), nullptr, 0);
+    }
+    if (wideCount <= 0) return {};
+
+    std::vector<wchar_t> wide(static_cast<size_t>(wideCount));
+    if (MultiByteToWideChar(codePage, 0, command.data(),
+                            static_cast<int>(command.size()), wide.data(), wideCount) <= 0) {
+        return {};
+    }
+
+    // PowerShell -EncodedCommand requires UTF-16LE bytes.
+    return base64Encode(reinterpret_cast<const unsigned char*>(wide.data()),
+                        wide.size() * sizeof(wchar_t));
+}
+
+} // namespace
 
 // ============================================================================
 // POWERSHELL EXECUTION
@@ -39,8 +89,12 @@ std::string Win32IDE::executePowerShellCommand(const std::string& command, bool 
         return "Executed in terminal pane " + std::to_string(activePane->id);
     }
     
-    // Fallback: direct PowerShell execution
-    std::string fullCmd = "powershell.exe -NoProfile -Command \"" + escapePowerShellString(command) + "\"";
+    // Fallback: direct PowerShell execution.  Encode the UTF-16LE command so
+    // variables, quotes, pipes, and user text cannot be rewritten by nested
+    // command-line quoting.
+    const std::string encoded = encodePowerShellCommand(command);
+    if (encoded.empty()) return "ERROR: Failed to encode PowerShell command";
+    std::string fullCmd = "powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand " + encoded;
     
     HANDLE hStdOutRead, hStdOutWrite;
     SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
@@ -899,13 +953,30 @@ void Win32IDE::updatePowerShellModuleCache() {
 }
 
 std::string Win32IDE::getRawrXDPowerShellPath() {
-    // Look for RawrXD.ps1 in common locations
-    std::vector<std::string> searchPaths = {
-        "C:\\Users\\HiH8e\\OneDrive\\Desktop\\Powershield\\RawrXD.ps1",
-        ".\\RawrXD.ps1",
-        "..\\RawrXD.ps1",
-        "..\\..\\RawrXD.ps1"
-    };
+    // Resolve the module from the active checkout/process instead of a
+    // developer-specific absolute path.  An optional environment override is
+    // useful for installations that keep the script outside the checkout.
+    std::vector<std::string> searchPaths;
+    if (const char* configuredRoot = std::getenv("RAWRXD_POWERSHELL_ROOT")) {
+        if (*configuredRoot) {
+            searchPaths.emplace_back(std::string(configuredRoot) + "\\RawrXD.ps1");
+        }
+    }
+
+    if (!m_explorerRootPath.empty()) {
+        searchPaths.push_back(m_explorerRootPath + "\\RawrXD.ps1");
+        searchPaths.push_back(m_explorerRootPath + "\\Powershield\\RawrXD.ps1");
+    }
+
+    char currentDirectory[MAX_PATH] = {};
+    if (GetCurrentDirectoryA(MAX_PATH, currentDirectory) > 0) {
+        searchPaths.emplace_back(std::string(currentDirectory) + "\\RawrXD.ps1");
+        searchPaths.emplace_back(std::string(currentDirectory) + "\\Powershield\\RawrXD.ps1");
+    }
+
+    searchPaths.emplace_back(".\\RawrXD.ps1");
+    searchPaths.emplace_back("..\\RawrXD.ps1");
+    searchPaths.emplace_back("..\\..\\RawrXD.ps1");
     
     for (const auto& path : searchPaths) {
         std::ifstream file(path);

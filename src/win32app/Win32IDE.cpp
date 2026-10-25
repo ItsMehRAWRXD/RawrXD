@@ -311,13 +311,40 @@ std::vector<ChatModelEntry> discoverLocalModels(
 }
 
 std::string generateOllamaModel(const std::string& baseUrl,
-                                const std::string& model,
-                                const std::string& prompt,
-                                int maxTokens)
+                                 const std::string& model,
+                                 const std::string& prompt,
+                                 int maxTokens)
 {
+    // DEBUG: Log to both OutputDebugStringA and a file
+    auto logDebug = [](const char* fmt, ...) {
+        char buf[1024];
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(buf, sizeof(buf), fmt, args);
+        va_end(args);
+        OutputDebugStringA(buf);
+        // Also write to the configured/local log directory without binding
+        // the runtime to a particular checkout drive.
+        const char* configuredLogDir = std::getenv("RAWRXD_LOG_DIR");
+        const std::string logPath = (configuredLogDir && *configuredLogDir)
+            ? std::string(configuredLogDir) + "\\ollama_debug.log"
+            : std::string("ollama_debug.log");
+        FILE* f = fopen(logPath.c_str(), "a");
+        if (f) {
+            fprintf(f, "%s", buf);
+            fclose(f);
+        }
+    };
+    
+    logDebug("[OLLAMA_DEBUG] generateOllamaModel: model='%s' prompt_len=%zu maxTokens=%d\n", 
+             model.c_str(), prompt.length(), maxTokens);
+    
     std::string url = baseUrl.empty() ? "http://127.0.0.1:11434" : baseUrl;
     const size_t scheme = url.find("://");
-    if (scheme == std::string::npos) return {};
+    if (scheme == std::string::npos) { 
+        logDebug("[OLLAMA_DEBUG] Invalid URL scheme\n");
+        return {}; 
+    }
     const bool https = url.compare(0, scheme, "https") == 0;
     const size_t authorityStart = scheme + 3;
     const size_t pathStart = url.find('/', authorityStart);
@@ -328,7 +355,12 @@ std::string generateOllamaModel(const std::string& baseUrl,
     const INTERNET_PORT port = colon == std::string::npos
         ? (https ? INTERNET_DEFAULT_HTTPS_PORT : static_cast<INTERNET_PORT>(11434))
         : static_cast<INTERNET_PORT>(std::atoi(authority.c_str() + colon + 1));
-    if (host.empty() || port == 0) return {};
+    if (host.empty() || port == 0) { 
+        logDebug("[OLLAMA_DEBUG] Invalid host/port\n");
+        return {}; 
+    }
+    
+    logDebug("[OLLAMA_DEBUG] Connecting to %s:%d\n", host.c_str(), (int)port);
 
     const auto bodyJson = nlohmann::json{
         {"model", model}, {"prompt", prompt}, {"stream", false},
@@ -338,14 +370,25 @@ std::string generateOllamaModel(const std::string& baseUrl,
     const std::wstring wideHost(host.begin(), host.end());
     HINTERNET session = WinHttpOpen(L"RawrXD Chat/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY,
         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!session) return {};
+    if (!session) { 
+        logDebug("[OLLAMA_DEBUG] WinHttpOpen failed (GetLastError=%lu)\n", GetLastError());
+        return {}; 
+    }
     WinHttpSetTimeouts(session, 1500, 1500, 30000, 30000);
     HINTERNET connect = WinHttpConnect(session, wideHost.c_str(), port, 0);
-    if (!connect) { WinHttpCloseHandle(session); return {}; }
+    if (!connect) { 
+        logDebug("[OLLAMA_DEBUG] WinHttpConnect failed (GetLastError=%lu)\n", GetLastError());
+        WinHttpCloseHandle(session); 
+        return {}; 
+    }
     const DWORD flags = https ? WINHTTP_FLAG_SECURE : 0;
     HINTERNET request = WinHttpOpenRequest(connect, L"POST", L"/api/generate", nullptr,
         WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
-    if (!request) { WinHttpCloseHandle(connect); WinHttpCloseHandle(session); return {}; }
+    if (!request) { 
+        logDebug("[OLLAMA_DEBUG] WinHttpOpenRequest failed (GetLastError=%lu)\n", GetLastError());
+        WinHttpCloseHandle(connect); WinHttpCloseHandle(session); 
+        return {}; 
+    }
 
     std::string raw;
     const wchar_t headers[] = L"Content-Type: application/json\r\n";
@@ -359,17 +402,31 @@ std::string generateOllamaModel(const std::string& baseUrl,
             if (!WinHttpReadData(request, chunk.data(), available, &read) || !read) break;
             raw.append(chunk.data(), read);
         }
+    } else {
+        logDebug("[OLLAMA_DEBUG] WinHttpSendRequest/ReceiveResponse failed (GetLastError=%lu)\n", GetLastError());
     }
     WinHttpCloseHandle(request);
     WinHttpCloseHandle(connect);
     WinHttpCloseHandle(session);
+    
+    logDebug("[OLLAMA_DEBUG] Raw response length: %zu\n", raw.length());
+    if (!raw.empty() && raw.length() < 500) {
+        logDebug("[OLLAMA_DEBUG] Raw response: %s\n", raw.c_str());
+    }
 
     try {
         const auto response = nlohmann::json::parse(raw);
         if (response.contains("response") && response["response"].is_string()) {
-            return response["response"].get<std::string>();
+            std::string result = response["response"].get<std::string>();
+            logDebug("[OLLAMA_DEBUG] Parsed response successfully, length=%zu\n", result.length());
+            return result;
+        } else {
+            logDebug("[OLLAMA_DEBUG] Response missing 'response' field\n");
         }
+    } catch (const std::exception& e) {
+        logDebug("[OLLAMA_DEBUG] JSON parse error: %s\n", e.what());
     } catch (...) {
+        logDebug("[OLLAMA_DEBUG] Unknown JSON parse error\n");
     }
     return {};
 }
@@ -414,6 +471,14 @@ std::string generateOllamaModel(const std::string& baseUrl,
 #define IDC_COPILOT_CLEAR_BTN 1205
 #define IDC_COPILOT_MODEL_SELECTOR 1206
 #define IDC_COPILOT_TOKEN_SLIDER 1207
+#define IDC_CHAT_SESSIONS 1208
+#define IDC_NEW_CHAT 1209
+#define IDC_COPILOT_STOP_BTN 1210
+#define IDC_GHOST_MODEL_SELECTOR 1211
+#define IDC_GHOST_ALLOW_CLOUD 1212
+#define IDC_COPILOT_CONTEXT_SLIDER 1213
+#define IDC_CLOSE_CHAT 1214
+#define IDC_RESTORE_CHAT 1215
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
 #define IDC_PANEL_CONTAINER 1300
@@ -523,7 +588,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     // Extensions View
     m_hwndExtensionsList(nullptr), m_hwndExtensionSearch(nullptr), m_hwndExtensionDetails(nullptr),
     // File Explorer
-    m_hwndFileExplorer(nullptr), m_hImageList(nullptr), m_currentExplorerPath("D:\\OllamaModels"),
+    m_hwndFileExplorer(nullptr), m_hImageList(nullptr), m_currentExplorerPath(),
     // Model Chat
     m_chatMode(false),
     // PowerShell Panel
@@ -2222,9 +2287,34 @@ void Win32IDE::setCurrentDirectoryFromFile(const std::string& filePath)
     }
 }
 
+void Win32IDE::updateEditorBreadcrumb()
+{
+    if (!m_hwndEditorBreadcrumb) return;
+    std::string path = m_currentFile;
+    if (path.empty()) {
+        SetWindowTextA(m_hwndEditorBreadcrumb, "  Untitled  >  (workspace)");
+        return;
+    }
+
+    // Preserve the entire path while presenting each directory boundary as a
+    // breadcrumb segment. Do not shorten to the leaf name: duplicate filenames
+    // in different workspaces must remain unambiguous.
+    std::string breadcrumb = "  ";
+    breadcrumb.reserve(path.size() + 8);
+    for (char ch : path) {
+        if (ch == '\\' || ch == '/') {
+            breadcrumb += "  >  ";
+        } else {
+            breadcrumb.push_back(ch);
+        }
+    }
+    SetWindowTextA(m_hwndEditorBreadcrumb, breadcrumb.c_str());
+}
+
 void Win32IDE::updateTitleBarText()
 {
     if (!m_hwndMain) return;
+    updateEditorBreadcrumb();
 
     std::string fileName = m_currentFile.empty() ? "Untitled" : extractLeafName(m_currentFile);
     std::string projectFolder;
@@ -2957,21 +3047,42 @@ void Win32IDE::applyTheme()
 
 void Win32IDE::showThemeEditor()
 {
-    const char* themes[] = {"Dark", "Light", "Blue", "Green"};
-    int result = 0; // Simple selection for now
-    
-    std::string message = "Select Theme:\n0 - Dark\n1 - Light\n2 - Blue\n3 - Green";
-    
-    switch (MessageBoxA(m_hwndMain, message.c_str(), "Theme Selection", MB_OKCANCEL)) {
-        case IDOK:
-            // For simplicity, cycle through predefined themes
-            m_currentTheme.backgroundColor = RGB(30, 30, 30);  // Dark
-            m_currentTheme.textColor = RGB(220, 220, 220);
-            m_currentTheme.selectionColor = RGB(51, 153, 255);
-            m_currentTheme.lineNumberColor = RGB(128, 128, 128);
-            applyTheme();
-            break;
+    const int result = MessageBoxA(
+        m_hwndMain,
+        "Yes  = Cyberpunk Neon\n"
+        "No   = Neon Midnight\n"
+        "Cancel = Keep current theme",
+        "RawrXD Theme Gallery", MB_YESNOCANCEL | MB_ICONINFORMATION);
+    if (result == IDCANCEL) return;
+
+    m_currentTheme.darkMode = true;
+    m_currentTheme.fontName = "Cascadia Mono";
+    m_currentTheme.fontSize = 11;
+    if (result == IDYES) {
+        // Cyan glass panels, magenta syntax, and electric-green comments.
+        m_currentTheme.backgroundColor = RGB(7, 10, 22);
+        m_currentTheme.textColor = RGB(224, 252, 255);
+        m_currentTheme.keywordColor = RGB(255, 55, 220);
+        m_currentTheme.commentColor = RGB(73, 255, 180);
+        m_currentTheme.stringColor = RGB(255, 190, 92);
+        m_currentTheme.numberColor = RGB(88, 210, 255);
+        m_currentTheme.operatorColor = RGB(255, 90, 170);
+        m_currentTheme.selectionColor = RGB(18, 104, 150);
+        m_currentTheme.lineNumberColor = RGB(95, 135, 170);
+    } else {
+        // Dark violet variant for lower-glare long sessions.
+        m_currentTheme.backgroundColor = RGB(15, 8, 28);
+        m_currentTheme.textColor = RGB(238, 228, 255);
+        m_currentTheme.keywordColor = RGB(210, 100, 255);
+        m_currentTheme.commentColor = RGB(74, 240, 202);
+        m_currentTheme.stringColor = RGB(255, 205, 120);
+        m_currentTheme.numberColor = RGB(115, 190, 255);
+        m_currentTheme.operatorColor = RGB(245, 95, 190);
+        m_currentTheme.selectionColor = RGB(86, 35, 125);
+        m_currentTheme.lineNumberColor = RGB(130, 105, 165);
     }
+    applyTheme();
+    appendToOutput("Cyberpunk neon theme applied.\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::updateMenuEnableStates() {
@@ -3153,6 +3264,14 @@ void Win32IDE::createOutputTabs()
             m_hwndMain, (HMENU)(INT_PTR)defs[i].id, m_hInstance, nullptr);
         m_outputWindows[defs[i].key] = hEdit;
     }
+    // PowerShell is a peer bottom-surface, not a child layered over Output,
+    // Errors, Debug, or Find Results.  Keeping it in the same tab strip gives
+    // every bottom surface one owner rectangle and makes the active choice
+    // explicit to both keyboard and mouse users.
+    TCITEMA powerShellTab{};
+    powerShellTab.mask = TCIF_TEXT;
+    powerShellTab.pszText = const_cast<char*>("PowerShell");
+    TabCtrl_InsertItem(m_hwndOutputTabs, 4, &powerShellTab);
     m_activeOutputTab = "Output";
 
     // Restore persisted tab selection
@@ -3755,8 +3874,16 @@ void Win32IDE::resetToDefaultTheme()
 {
     m_currentTheme.backgroundColor = RGB(30,30,30);
     m_currentTheme.textColor = RGB(220,220,220);
+    m_currentTheme.keywordColor = RGB(86,156,214);
+    m_currentTheme.commentColor = RGB(106,153,85);
+    m_currentTheme.stringColor = RGB(214,157,133);
+    m_currentTheme.numberColor = RGB(181,206,168);
+    m_currentTheme.operatorColor = RGB(212,212,212);
     m_currentTheme.selectionColor = RGB(60,120,200);
     m_currentTheme.lineNumberColor = RGB(128,128,128);
+    m_currentTheme.fontName = "Consolas";
+    m_currentTheme.fontSize = 10;
+    m_currentTheme.darkMode = true;
     applyTheme();
 }
 
@@ -3883,7 +4010,7 @@ void Win32IDE::showFindDialog()
         
         CreateWindowExA(0, "STATIC", "Find what:", WS_CHILD | WS_VISIBLE,
             10, 15, 80, 20, hwndDlg, nullptr, m_hInstance, nullptr);
-        CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_lastSearchText.c_str(),
+        m_hwndFindInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_lastSearchText.c_str(),
             WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 12, 280, 22, 
             hwndDlg, (HMENU)IDC_FIND_TEXT, m_hInstance, nullptr);
         
@@ -3899,8 +4026,12 @@ void Win32IDE::showFindDialog()
         CreateWindowExA(0, "BUTTON", "Close", WS_CHILD | WS_VISIBLE,
             110, 80, 90, 28, hwndDlg, (HMENU)IDC_BTN_FIND_CLOSE, m_hInstance, nullptr);
     }
+    if (m_hwndFindDialog && !m_hwndFindInput) {
+        m_hwndFindInput = GetDlgItem(m_hwndFindDialog, IDC_FIND_TEXT);
+    }
     
     ShowWindow(m_hwndFindDialog, IsWindowVisible(m_hwndMain) ? SW_SHOW : SW_HIDE);
+    initializeNativeGhostText();
 }
 
 void Win32IDE::showReplaceDialog()
@@ -3918,13 +4049,13 @@ void Win32IDE::showReplaceDialog()
     
     CreateWindowExA(0, "STATIC", "Find what:", WS_CHILD | WS_VISIBLE,
         10, 15, 80, 20, hwndDlg, nullptr, m_hInstance, nullptr);
-    CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_lastSearchText.c_str(),
+    m_hwndFindInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_lastSearchText.c_str(),
         WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 12, 280, 22, 
         hwndDlg, (HMENU)IDC_FIND_TEXT, m_hInstance, nullptr);
     
     CreateWindowExA(0, "STATIC", "Replace with:", WS_CHILD | WS_VISIBLE,
         10, 45, 80, 20, hwndDlg, nullptr, m_hInstance, nullptr);
-    CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_lastReplaceText.c_str(),
+    m_hwndReplaceInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_lastReplaceText.c_str(),
         WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 42, 280, 22, 
         hwndDlg, (HMENU)IDC_REPLACE_TEXT, m_hInstance, nullptr);
     
@@ -3945,6 +4076,7 @@ void Win32IDE::showReplaceDialog()
         310, 110, 70, 28, hwndDlg, (HMENU)IDC_BTN_FIND_CLOSE, m_hInstance, nullptr);
     
     ShowWindow(m_hwndReplaceDialog, IsWindowVisible(m_hwndMain) ? SW_SHOW : SW_HIDE);
+    initializeNativeGhostText();
 }
 
 void Win32IDE::findNext()
@@ -4107,12 +4239,16 @@ INT_PTR CALLBACK Win32IDE::FindDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam
         case IDCANCEL:
             DestroyWindow(hwndDlg);
             pThis->m_hwndFindDialog = nullptr;
+            pThis->m_hwndFindInput = nullptr;
+            pThis->initializeNativeGhostText();
             return TRUE;
         }
         break;
     case WM_CLOSE:
         DestroyWindow(hwndDlg);
         pThis->m_hwndFindDialog = nullptr;
+        pThis->m_hwndFindInput = nullptr;
+        pThis->initializeNativeGhostText();
         return TRUE;
     }
     
@@ -4172,6 +4308,9 @@ INT_PTR CALLBACK Win32IDE::ReplaceDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
             case IDCANCEL:
                 DestroyWindow(hwndDlg);
                 pThis->m_hwndReplaceDialog = nullptr;
+                pThis->m_hwndFindInput = nullptr;
+                pThis->m_hwndReplaceInput = nullptr;
+                pThis->initializeNativeGhostText();
                 return TRUE;
             }
         }
@@ -4179,6 +4318,9 @@ INT_PTR CALLBACK Win32IDE::ReplaceDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
     case WM_CLOSE:
         DestroyWindow(hwndDlg);
         pThis->m_hwndReplaceDialog = nullptr;
+        pThis->m_hwndFindInput = nullptr;
+        pThis->m_hwndReplaceInput = nullptr;
+        pThis->initializeNativeGhostText();
         return TRUE;
     }
     
@@ -4403,26 +4545,28 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
         tvis.hInsertAfter = TVI_LAST;
         tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
 
-        // Add all available drives
-        for (char drive = 'C'; drive <= 'Z'; ++drive) {
-            std::string drivePath = std::string(1, drive) + ":";
-            DWORD drives = GetLogicalDrives();
-            int driveNum = drive - 'A';
+        // Enumerate every mounted logical drive instead of assuming C:..Z:.
+        const DWORD driveChars = GetLogicalDriveStringsA(0, nullptr);
+        if (driveChars > 0) {
+            std::vector<char> driveBuffer(static_cast<size_t>(driveChars) + 1, '\0');
+            if (GetLogicalDriveStringsA(driveChars, driveBuffer.data()) != 0) {
+                for (const char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
+                    const std::string drivePath(drive);
+                    const std::string displayName = drivePath;
+                    tvis.item.pszText = const_cast<char*>(displayName.c_str());
+                    tvis.item.lParam = (LPARAM) new std::string(drivePath);
 
-            if (drives & (1 << driveNum)) {
-                std::string displayName = drivePath + "\\";
-                tvis.item.pszText = (LPSTR)displayName.c_str();
-                tvis.item.lParam = (LPARAM) new std::string(drivePath);
+                    HTREEITEM driveItem = (HTREEITEM)SendMessageA(
+                        m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
+                    m_treeItemPaths[driveItem] = drivePath;
 
-                HTREEITEM driveItem = (HTREEITEM)SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
-                m_treeItemPaths[driveItem] = drivePath;
-
-                // Add a dummy child so expand button appears
-                TVINSERTSTRUCTA dummyVis = {};
-                dummyVis.hParent = driveItem;
-                dummyVis.item.mask = TVIF_TEXT;
-                dummyVis.item.pszText = (LPSTR)"...";
-                SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
+                    // Add a dummy child so expansion remains lazy.
+                    TVINSERTSTRUCTA dummyVis = {};
+                    dummyVis.hParent = driveItem;
+                    dummyVis.item.mask = TVIF_TEXT;
+                    dummyVis.item.pszText = const_cast<char*>("...");
+                    SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
+                }
             }
         }
         return;
@@ -4475,9 +4619,10 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
                 dummyVis.item.pszText = (LPSTR)"...";
                 SendMessageA(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
             }
-            else if (strlen(findData.cFileName) > 5 &&
-                     strcmp(findData.cFileName + strlen(findData.cFileName) - 5, ".gguf") == 0) {
-                // It's a GGUF file
+            else {
+                // The explorer is a file browser, not a model-only picker.
+                // Keep every file visible; model-specific actions are still
+                // selected by isModelFile() on activation/context menus.
                 tvis.item.pszText = findData.cFileName;
                 tvis.item.lParam = (LPARAM) new std::string(fullPath);
 
@@ -4515,7 +4660,11 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
 {
     if (filepath.length() > 5 &&
         filepath.substr(filepath.length() - 5) == ".gguf") {
-        // Load model using streaming loader
+        // All GGUF entry points use the bounded streaming loader.  A model
+        // selected from the explorer or a recent-file route may be multi-GB;
+        // the legacy whole-file loader is not a safe UI default.
+        m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
+        m_useStreamingLoader = true;
         if (loadGGUFModel(filepath)) {
             // Initialize inference system
             initializeInference();
@@ -4536,10 +4685,12 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
 bool Win32IDE::loadGGUFModel(const std::string& filepath)
 {
     if (!m_ggufLoader) {
-        std::string error = "Error: GGUF Loader not initialized";
-        appendToOutput(error, "Errors", OutputSeverity::Error);
-        ErrorReporter::report(error, m_hwndMain);
-        return false;
+        // Keep the safety boundary at the shared loader entry point.  This
+        // covers file dialogs, explorer commands, recent files, and agent
+        // routes that did not explicitly construct a loader first.
+        m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
+        m_useStreamingLoader = true;
+        LOG_INFO("GGUF loader was not initialized; selected StreamingGGUFLoader");
     }
 
     appendToOutput("Loading GGUF model: " + filepath + "\n", "Output", OutputSeverity::Info);
@@ -4770,21 +4921,26 @@ void Win32IDE::populateFileTree()
 
     // Clear existing items
     TreeView_DeleteAllItems(m_hwndFileExplorer);
+    m_treeItemPaths.clear();
 
-    // Put the active workspace first so Explorer opens on the project rather
-    // than showing an empty model-only tree on machines without OllamaModels.
-    std::vector<std::string> modelPaths;
-    auto addRootIfPresent = [&modelPaths](const std::string& path) {
+    // Keep the active workspace convenient, but do not make it the explorer's
+    // universe.  The native explorer must expose every mounted logical drive
+    // (including removable, network, optical and RAM-backed drives), and it
+    // must load each drive lazily so startup does not scan an entire volume.
+    std::vector<std::string> rootPaths;
+    std::vector<std::string> workspacePaths;
+    auto addRootIfPresent = [&rootPaths](const std::string& path) {
         if (path.empty() || GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES) return;
-        for (const auto& existing : modelPaths) {
+        for (const auto& existing : rootPaths) {
             if (_stricmp(existing.c_str(), path.c_str()) == 0) return;
         }
-        modelPaths.push_back(path);
+        rootPaths.push_back(path);
     };
 
     char currentDirectory[MAX_PATH] = {};
     if (GetCurrentDirectoryA(MAX_PATH, currentDirectory) > 0) {
         addRootIfPresent(currentDirectory);
+        workspacePaths.emplace_back(currentDirectory);
     }
 
     // The IDE is commonly launched from build_cmake/bin/Release. Walk upward
@@ -4800,6 +4956,7 @@ void Win32IDE::populateFileTree()
             const std::string gitMarker = candidate + "\\.git";
             if (GetFileAttributesA(gitMarker.c_str()) != INVALID_FILE_ATTRIBUTES) {
                 addRootIfPresent(candidate);
+                workspacePaths.push_back(candidate);
                 break;
             }
             const size_t parentSlash = candidate.find_last_of("\\/");
@@ -4808,30 +4965,69 @@ void Win32IDE::populateFileTree()
         }
     }
 
-    const char* username = std::getenv("USERNAME");
-    if (username && *username) {
-        addRootIfPresent(std::string("C:\\Users\\") + username + "\\OllamaModels");
-    }
-    addRootIfPresent("D:\\OllamaModels");
-    addRootIfPresent("C:\\OllamaModels");
-
-    for (const auto& path : modelPaths) {
-        if (GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        std::string displayName = path;
-            size_t lastSlash = path.find_last_of("\\/");
-            if (lastSlash != std::string::npos) {
-                displayName = path.substr(lastSlash + 1) + " (" + path + ")";
+    // GetLogicalDriveStrings is the authoritative mounted-drive enumeration;
+    // unlike the old C:..Z loop it also handles A:/B: and mapped/network
+    // volumes without assuming a drive type or a fixed letter range.
+    const DWORD driveChars = GetLogicalDriveStringsA(0, nullptr);
+    if (driveChars > 0) {
+        std::vector<char> driveBuffer(static_cast<size_t>(driveChars) + 1, '\0');
+        if (GetLogicalDriveStringsA(driveChars, driveBuffer.data()) != 0) {
+            for (const char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
+                addRootIfPresent(drive);
             }
-            
-            HTREEITEM hRoot = addTreeItem(TVI_ROOT, displayName, path, true);
-            scanDirectory(path, hRoot);
         }
     }
 
-    // Expand the D:\OllamaModels by default if it exists
-    HTREEITEM hFirst = TreeView_GetRoot(m_hwndFileExplorer);
-    if (hFirst) {
-        TreeView_Expand(m_hwndFileExplorer, hFirst, TVE_EXPAND);
+    // Keep mounted drives at the top of the tree.  The workspace can contain
+    // thousands of source entries, and placing it first made the drive roots
+    // effectively invisible in the legacy explorer even though they had been
+    // enumerated correctly.  Drive roots remain lazy; only the active
+    // workspace is expanded on startup.
+    std::stable_partition(rootPaths.begin(), rootPaths.end(),
+        [](const std::string& path) {
+            return path.size() == 3 && path[1] == ':' && path[2] == '\\';
+        });
+
+    for (const auto& path : rootPaths) {
+        std::string displayName = path;
+        const DWORD driveType = GetDriveTypeA(path.c_str());
+        if (path.size() >= 2 && path[1] == ':') {
+            const char* typeName = "Drive";
+            switch (driveType) {
+                case DRIVE_REMOVABLE: typeName = "Removable"; break;
+                case DRIVE_FIXED:     typeName = "Fixed"; break;
+                case DRIVE_REMOTE:    typeName = "Network"; break;
+                case DRIVE_CDROM:     typeName = "Optical"; break;
+                case DRIVE_RAMDISK:   typeName = "RAM"; break;
+                default: break;
+            }
+            displayName = path + " [" + typeName + "]";
+        } else {
+            const size_t lastSlash = path.find_last_of("\\/");
+            if (lastSlash != std::string::npos && lastSlash + 1 < path.size()) {
+                displayName = path.substr(lastSlash + 1) + " (" + path + ")";
+            }
+        }
+
+        HTREEITEM hRoot = addTreeItem(TVI_ROOT, displayName, path, true);
+        if (!hRoot) continue;
+
+        // The workspace remains immediately useful.  All drive roots get a
+        // placeholder and are expanded on demand to avoid blocking the UI on
+        // large volumes or protected system directories.
+        bool isWorkspace = false;
+        for (const auto& workspacePath : workspacePaths) {
+            if (_stricmp(path.c_str(), workspacePath.c_str()) == 0) {
+                isWorkspace = true;
+                break;
+            }
+        }
+        if (isWorkspace) {
+            scanDirectory(path, hRoot);
+            TreeView_Expand(m_hwndFileExplorer, hRoot, TVE_EXPAND);
+        } else {
+            addTreeItem(hRoot, "Loading...", "", false);
+        }
     }
 }
 
@@ -4880,33 +5076,6 @@ void Win32IDE::scanDirectory(const std::string& dirPath, HTREEITEM hParent)
         std::string fullPath = dirPath + "\\" + findData.cFileName;
         bool isDirectory = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
         
-        // Skip hidden and system files
-        if (findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) {
-            continue;
-        }
-        
-        // Show source, project, documentation, and model files in the workspace.
-        if (!isDirectory) {
-            std::string fileName = findData.cFileName;
-            std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-
-            const size_t extensionStart = fileName.find_last_of('.');
-            const std::string extension = extensionStart == std::string::npos
-                ? std::string() : fileName.substr(extensionStart);
-            static const char* visibleExtensions[] = {
-                ".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx",
-                ".inl", ".ixx", ".cs", ".py", ".pyi", ".js", ".jsx", ".ts",
-                ".tsx", ".html", ".css", ".scss", ".json", ".md", ".txt",
-                ".log", ".cmake", ".toml", ".yaml", ".yml", ".xml", ".ini",
-                ".bat", ".cmd", ".ps1", ".sh", ".sln", ".vcxproj"
-            };
-            const bool sourceOrProjectFile = std::find(std::begin(visibleExtensions),
-                std::end(visibleExtensions), extension) != std::end(visibleExtensions);
-            if (!isModelFile(fullPath) && !sourceOrProjectFile) {
-                continue;
-            }
-        }
-
         HTREEITEM hItem = addTreeItem(hParent, findData.cFileName, fullPath, isDirectory);
         
         // For directories, add a dummy child so we can expand later
@@ -5037,20 +5206,31 @@ void Win32IDE::onFileExplorerDoubleClick()
 
 void Win32IDE::loadModelFromExplorer(const std::string& filePath)
 {
-    if (loadGGUFModel(filePath)) {
-        std::string message = " Model loaded from File Explorer:\n" + filePath + "\n\n" + getModelInfo();
-        appendToOutput(message, "Output", OutputSeverity::Info);
-        
-        // Update status bar
-        std::string filename = filePath;
-        size_t lastSlash = filename.find_last_of("\\/");
-        if (lastSlash != std::string::npos) {
-            filename = filename.substr(lastSlash + 1);
+    try {
+        m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
+        m_useStreamingLoader = true;
+        if (loadGGUFModel(filePath)) {
+            std::string message = " Model loaded from File Explorer:\n" + filePath + "\n\n" + getModelInfo();
+            appendToOutput(message, "Output", OutputSeverity::Info);
+
+            // Update status bar
+            std::string filename = filePath;
+            size_t lastSlash = filename.find_last_of("\\/");
+            if (lastSlash != std::string::npos) {
+                filename = filename.substr(lastSlash + 1);
+            }
+
+            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)("Model: " + filename).c_str());
+        } else {
+            appendToOutput(" Failed to load model: " + filePath, "Errors", OutputSeverity::Error);
         }
-        
-        SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)("Model: " + filename).c_str());
-    } else {
-        appendToOutput(" Failed to load model: " + filePath, "Errors", OutputSeverity::Error);
+    } catch (const std::exception& error) {
+        const std::string message = "Explorer model load rejected safely: " + std::string(error.what());
+        LOG_ERROR(message);
+        appendToOutput(message, "Errors", OutputSeverity::Error);
+    } catch (...) {
+        LOG_ERROR("Explorer model load rejected safely: unknown exception");
+        appendToOutput(" Explorer model load rejected safely: unknown exception", "Errors", OutputSeverity::Error);
     }
 }
 
@@ -5569,8 +5749,10 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
     if (filepath.empty() || attributes == INVALID_FILE_ATTRIBUTES ||
         (attributes & FILE_ATTRIBUTE_DIRECTORY) || m_inferenceRunning) return false;
     // The menu must parse and bind the chosen model before reporting readiness.
-    if (m_useStreamingLoader) m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
-    else m_ggufLoader = std::make_unique<RawrXD::GGUFLoader>();
+    // A user-selected GGUF may be many gigabytes; never route this production
+    // UI path through the legacy whole-file loader.
+    m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
+    m_useStreamingLoader = true;
     m_nativeEngineLoaded = false;
     if (!loadGGUFModel(filepath) || !initializeInference()) {
         m_loadedModelPath.clear();
@@ -5608,12 +5790,29 @@ bool Win32IDE::initializeInference()
         {
             m_nativeEngineLoaded = false;
             appendToOutput("Loading model into Native Engine: " + m_loadedModelPath, "Output", OutputSeverity::Info);
-            if (engine->LoadModel(m_loadedModelPath)) {
-                m_nativeEngineLoaded = true;
-                appendToOutput(" Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
-            } else {
-                 appendToOutput(" Native Engine Model Load Failed.", "Errors", OutputSeverity::Error);
-                 return false;
+            try {
+                if (engine->LoadModel(m_loadedModelPath)) {
+                    m_nativeEngineLoaded = true;
+                    appendToOutput(" Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
+                } else {
+                    appendToOutput(" Native Engine Model Load Failed; GGUF metadata remains available.",
+                        "Errors", OutputSeverity::Error);
+                    return false;
+                }
+            } catch (const std::exception& error) {
+                const std::string message =
+                    " Native Engine Model Load Aborted safely: " + std::string(error.what());
+                LOG_ERROR(message);
+                appendToOutput(message + "\nThe model was indexed, but native CPU admission was rejected.",
+                    "Errors", OutputSeverity::Error);
+                return false;
+            } catch (...) {
+                const std::string message =
+                    " Native Engine Model Load Aborted safely: unknown exception";
+                LOG_ERROR(message);
+                appendToOutput(message + "\nThe model was indexed, but native CPU admission was rejected.",
+                    "Errors", OutputSeverity::Error);
+                return false;
             }
         }
     }
@@ -5741,7 +5940,15 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
         // If engine doesn't have a model loaded, try to load current one
         if (!engine->IsModelLoaded() && !m_loadedModelPath.empty()) {
-            engine->LoadModel(m_loadedModelPath);
+            try {
+                engine->LoadModel(m_loadedModelPath);
+            } catch (const std::exception& error) {
+                LOG_ERROR(std::string("Deferred native model admission rejected: ") + error.what());
+                return "[Native Engine Error]\nThe indexed GGUF could not be admitted to the native CPU runtime.";
+            } catch (...) {
+                LOG_ERROR("Deferred native model admission rejected: unknown exception");
+                return "[Native Engine Error]\nThe indexed GGUF could not be admitted to the native CPU runtime.";
+            }
         }
         
         return NativeEngineInfer(engine, prompt);
@@ -5755,7 +5962,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
     if (m_inferenceRunning) {
-        if (callback) callback("Inference already in progress.", true);
+        // Busy state is reported by the UI status bar.  Never turn a
+        // scheduling race into assistant text that looks like model output.
         return;
     }
     if (m_inferenceThread.joinable()) {
@@ -5771,9 +5979,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     // Route from the selected model entry. Local GGUF uses the native agent,
     // Ollama uses its local HTTP API, and Kilo uses the existing cloud client.
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel]() {
-        auto finish = [this, &callback](const std::string& result) {
-            if (callback) callback(result, true);
+        auto finish = [this, callback](const std::string& result) {
             m_inferenceRunning = false;
+            if (callback) callback(result, true);
         };
 
         try {
@@ -5850,7 +6058,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     m_agenticChatLoadedModelPath = selectedModel.identifier;
                 }
                 m_agenticBridge->SetOutputCallback(
-                    [this, &callback](const std::string&, const std::string& chunk) {
+                    [this, callback](const std::string&, const std::string& chunk) {
                         if (!m_inferenceStopRequested && callback) callback(chunk, false);
                     });
                 m_agenticBridge->ExecuteAgentCommand(prompt);
@@ -6081,12 +6289,55 @@ void Win32IDE::createChatPanel() {
 
         return;
     }
+    // STATIC is only a container and does not forward child notifications to
+    // the main window.  Install the sidebar procedure on the actual runtime
+    // surface so Send/Clear/Stop, model changes, and New Chat all reach the
+    // single command dispatcher without creating a second hidden chat host.
+    SetPropA(m_hwndSecondarySidebar, "IDE_PTR", this);
+    WNDPROC oldSidebarProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrA(
+        m_hwndSecondarySidebar, GWLP_WNDPROC,
+        reinterpret_cast<LONG_PTR>(SecondarySidebarProc)));
+    SetPropA(m_hwndSecondarySidebar, "OLDPROC", reinterpret_cast<HANDLE>(oldSidebarProc));
     
+    // Session strip: every tab retains its own model selection and history.
+    // The existing chat controls remain the active session surface, so adding
+    // a session does not replace or reset the current inference route.
+    m_hwndChatSessionTabs = CreateWindowExA(
+        0, WC_TABCONTROLA, "",
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | TCS_TABS,
+        5, 3, 190, 27,
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(IDC_CHAT_SESSIONS),
+        m_hInstance, nullptr);
+    m_hwndNewChatBtn = CreateWindowExA(
+        0, "BUTTON", "New Chat",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        198, 3, 92, 27,
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(IDC_NEW_CHAT),
+        m_hInstance, nullptr);
+    m_hwndCloseChatBtn = CreateWindowExA(
+        0, "BUTTON", "X",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        0, 0, 25, 27,
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(IDC_CLOSE_CHAT),
+        m_hInstance, nullptr);
+    m_hwndRestoreChatBtn = CreateWindowExA(
+        0, "BUTTON", "Restore",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        0, 0, 45, 27,
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(IDC_RESTORE_CHAT),
+        m_hInstance, nullptr);
+    m_hwndRollbackChatBtn = CreateWindowExA(
+        0, "BUTTON", "Rollback",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        0, 0, 64, 27,
+        m_hwndSecondarySidebar, reinterpret_cast<HMENU>(IDC_ROLLBACK_CHAT),
+        m_hInstance, nullptr);
+
     // Create header with title
     m_hwndSecondarySidebarHeader = CreateWindowExA(
-        0, "STATIC", "AI Chat",
+        0, "STATIC", "AI Sessions",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        5, 5, 290, 25,
+        5, 34, 290, 22,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
@@ -6097,54 +6348,111 @@ void Win32IDE::createChatPanel() {
     }
     
     // Model Selection Label
-    CreateWindowExA(0, "STATIC", "Model:",
+    m_hwndModelLabel = CreateWindowExA(0, "STATIC", "Model:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        5, 35, 50, 18,
+        5, 35, 85, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     // Model Selector Combobox
     m_hwndModelSelector = CreateWindowExA(
         0, "COMBOBOX", "",
-        WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL,
-        60, 35, 235, 200,
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST |
+            CBS_HASSTRINGS | CBS_NOINTEGRALHEIGHT | WS_VSCROLL,
+        95, 35, 200, 200,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_MODEL_SELECTOR, m_hInstance, nullptr);
     
     if (m_hwndModelSelector) {
         SendMessage(m_hwndModelSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessageA(m_hwndModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
+        SendMessageA(m_hwndModelSelector, CB_SETMINVISIBLE, 14, 0);
+        installModelSelectorProc(m_hwndModelSelector);
         populateModelSelector();
+    }
+
+    m_hwndGhostTextModelLabel = CreateWindowExA(0, "STATIC", "GhostText model:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        5, 62, 85, 18, m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndGhostModelSelector = CreateWindowExA(
+        0, "COMBOBOX", "",
+        WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST |
+            CBS_HASSTRINGS | CBS_NOINTEGRALHEIGHT | WS_VSCROLL,
+        95, 62, 200, 200,
+        m_hwndSecondarySidebar, (HMENU)IDC_GHOST_MODEL_SELECTOR, m_hInstance, nullptr);
+    if (m_hwndGhostModelSelector) {
+        SendMessage(m_hwndGhostModelSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessageA(m_hwndGhostModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
+        SendMessageA(m_hwndGhostModelSelector, CB_SETMINVISIBLE, 14, 0);
+        installModelSelectorProc(m_hwndGhostModelSelector);
+        const LRESULT off = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Off"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(off), static_cast<LPARAM>(-2));
+        const LRESULT follow = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Follow Chat"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(follow), static_cast<LPARAM>(-3));
+        const LRESULT autoLocal = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Auto Local"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA, static_cast<WPARAM>(autoLocal), static_cast<LPARAM>(-1));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETCURSEL, 2, 0);
+    }
+
+    m_hwndAllowCloudGhostText = CreateWindowExA(
+        0, "BUTTON", "Allow cloud GhostText for this session",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        5, 89, 285, 18, m_hwndSecondarySidebar,
+        (HMENU)IDC_GHOST_ALLOW_CLOUD, m_hInstance, nullptr);
+    if (m_hwndAllowCloudGhostText) {
+        SendMessage(m_hwndAllowCloudGhostText, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(m_hwndAllowCloudGhostText, BM_SETCHECK, BST_UNCHECKED, 0);
     }
     
     // Max Tokens Label
-    CreateWindowExA(0, "STATIC", "Max Tokens:",
+    m_hwndMaxTokensCaption = CreateWindowExA(0, "STATIC", "Max tokens:",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
-        5, 60, 80, 18,
+        5, 110, 85, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     // Max Tokens Label (value display)
-    m_hwndMaxTokensLabel = CreateWindowExA(0, "STATIC", "512",
+    m_hwndMaxTokensLabel = CreateWindowExA(0, "STATIC", "4096",
         WS_CHILD | WS_VISIBLE | SS_RIGHT,
-        245, 60, 50, 18,
+        245, 108, 50, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     
     // Max Tokens Slider
     m_hwndMaxTokensSlider = CreateWindowExA(
         0, "TRACKBAR_CLASS", "",
         WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
-        5, 80, 290, 25,
+        5, 128, 290, 25,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_TOKEN_SLIDER, m_hInstance, nullptr);
     
     if (m_hwndMaxTokensSlider) {
-        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGE, TRUE, MAKELPARAM(32, 2048));
-        SendMessage(m_hwndMaxTokensSlider, TBM_SETPOS, TRUE, 512);
-        SendMessage(m_hwndMaxTokensSlider, TBM_SETTICFREQ, 256, 0);
-        m_currentMaxTokens = 512;
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGEMIN, TRUE, 32);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGEMAX, TRUE, 1048576);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETPOS, TRUE, 4096);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETTICFREQ, 4096, 0);
+        m_currentMaxTokens = 4096;
+    }
+
+    m_hwndContextCaption = CreateWindowExA(0, "STATIC", "Context:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 145, 85, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndContextLabel = CreateWindowExA(0, "STATIC", "64K (pending model admission)",
+        WS_CHILD | WS_VISIBLE | SS_RIGHT, 180, 143, 115, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    m_hwndContextSlider = CreateWindowExA(
+        0, "TRACKBAR_CLASS", "", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
+        5, 163, 290, 25, m_hwndSecondarySidebar,
+        (HMENU)IDC_COPILOT_CONTEXT_SLIDER, m_hInstance, nullptr);
+    if (m_hwndContextSlider) {
+        SendMessage(m_hwndContextSlider, TBM_SETRANGEMIN, TRUE, 8192);
+        SendMessage(m_hwndContextSlider, TBM_SETRANGEMAX, TRUE, 1048576);
+        SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 65536);
     }
     
     // Chat Output Textbox
     m_hwndCopilotChatOutput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL,
-        5, 110, 290, 300,
+        5, 193, 290, 242,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
     
     if (m_hwndCopilotChatOutput) {
@@ -6157,7 +6465,7 @@ void Win32IDE::createChatPanel() {
     m_hwndCopilotChatInput = CreateWindowExA(
         WS_EX_CLIENTEDGE, "EDIT", "",
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL,
-        5, 415, 290, 85,
+        5, 440, 290, 60,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
     
     if (m_hwndCopilotChatInput) {
@@ -6168,7 +6476,7 @@ void Win32IDE::createChatPanel() {
     m_hwndCopilotSendBtn = CreateWindowExA(
         0, "BUTTON", "Send",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        5, 505, 140, 30,
+        5, 503, 92, 30,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
     
     if (m_hwndCopilotSendBtn) {
@@ -6179,16 +6487,233 @@ void Win32IDE::createChatPanel() {
     m_hwndCopilotClearBtn = CreateWindowExA(
         0, "BUTTON", "Clear",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        150, 505, 140, 30,
+        99, 503, 92, 30,
         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
     
     if (m_hwndCopilotClearBtn) {
         SendMessage(m_hwndCopilotClearBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
+
+    m_hwndCopilotStopBtn = CreateWindowExA(
+        0, "BUTTON", "Stop",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        193, 503, 97, 30,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_STOP_BTN, m_hInstance, nullptr);
+    if (m_hwndCopilotStopBtn) {
+        SendMessage(m_hwndCopilotStopBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+        EnableWindow(m_hwndCopilotStopBtn, FALSE);
+    }
     
     m_secondarySidebarVisible = true;
-    m_secondarySidebarWidth = 300;
+    // Give the chat surface enough horizontal room for model breadcrumbs,
+    // session controls, and the restore action without clipping them.
+    m_secondarySidebarWidth = 360;
 
+    createChatSession("Chat 1");
+
+}
+
+ChatSessionState* Win32IDE::activeChatSession()
+{
+    if (m_activeChatSession < 0 ||
+        m_activeChatSession >= static_cast<int>(m_chatSessions.size())) {
+        return nullptr;
+    }
+    return &m_chatSessions[static_cast<size_t>(m_activeChatSession)];
+}
+
+void Win32IDE::updateChatSessionTabs()
+{
+    if (m_hwndChatSessionTabs) {
+        TabCtrl_DeleteAllItems(m_hwndChatSessionTabs);
+        for (size_t i = 0; i < m_chatSessions.size(); ++i) {
+            auto& session = m_chatSessions[i];
+            std::string label = session.title.empty()
+                ? ("Chat " + std::to_string(i + 1)) : session.title;
+            if (session.running) label += " *";
+            TCITEMA item{};
+            item.mask = TCIF_TEXT;
+            item.pszText = const_cast<char*>(label.c_str());
+            TabCtrl_InsertItem(m_hwndChatSessionTabs, static_cast<int>(i), &item);
+        }
+        if (m_activeChatSession >= 0 &&
+            m_activeChatSession < static_cast<int>(m_chatSessions.size())) {
+            TabCtrl_SetCurSel(m_hwndChatSessionTabs, m_activeChatSession);
+        }
+    }
+    if (m_hwndCloseChatBtn) {
+        EnableWindow(m_hwndCloseChatBtn, m_chatSessions.empty() ? FALSE : TRUE);
+    }
+    if (m_hwndRestoreChatBtn) {
+        SetWindowTextA(m_hwndRestoreChatBtn,
+            m_closedChatSessions.empty() ? "Restore" : "Restore");
+        EnableWindow(m_hwndRestoreChatBtn,
+            m_closedChatSessions.empty() ? FALSE : TRUE);
+    }
+    if (m_hwndRollbackChatBtn) {
+        const auto* session = activeChatSession();
+        EnableWindow(m_hwndRollbackChatBtn,
+            session && !session->checkpoints.empty() ? TRUE : FALSE);
+    }
+}
+
+void Win32IDE::createChatSession(const std::string& requestedTitle)
+{
+    ChatSessionState session;
+    session.id = m_nextChatSessionId++;
+    session.title = requestedTitle.empty()
+        ? ("Chat " + std::to_string(session.id)) : requestedTitle;
+    session.model = m_selectedChatModel;
+    m_chatSessions.push_back(std::move(session));
+    updateChatSessionTabs();
+    switchChatSession(static_cast<int>(m_chatSessions.size()) - 1);
+}
+
+void Win32IDE::closeActiveChatSession()
+{
+    if (m_chatSessions.empty()) return;
+    int index = m_activeChatSession;
+    if (index < 0 || index >= static_cast<int>(m_chatSessions.size())) index = 0;
+
+    if (m_chatSessions[static_cast<size_t>(index)].running) HandleCopilotStop();
+    m_closedChatSessions.push_back(std::move(m_chatSessions[static_cast<size_t>(index)]));
+    m_chatSessions.erase(m_chatSessions.begin() + index);
+
+    if (m_chatSessions.empty()) {
+        m_activeChatSession = -1;
+        createChatSession();
+        return;
+    }
+
+    m_activeChatSession = std::min(index, static_cast<int>(m_chatSessions.size()) - 1);
+    updateChatSessionTabs();
+    switchChatSession(m_activeChatSession);
+}
+
+void Win32IDE::restoreClosedChatSession()
+{
+    if (m_closedChatSessions.empty()) return;
+    if (auto* current = activeChatSession()) {
+        current->history = m_chatHistory;
+        current->model = m_selectedChatModel;
+    }
+    m_chatSessions.push_back(std::move(m_closedChatSessions.back()));
+    m_closedChatSessions.pop_back();
+    updateChatSessionTabs();
+    switchChatSession(static_cast<int>(m_chatSessions.size()) - 1);
+}
+
+void Win32IDE::checkpointActiveChat(const std::string& reason)
+{
+    auto* session = activeChatSession();
+    if (!session) return;
+
+    ChatSessionCheckpoint checkpoint;
+    checkpoint.reason = reason;
+    checkpoint.model = m_selectedChatModel;
+    checkpoint.ghostTextModel = m_ghostTextModel;
+    checkpoint.ghostTextMode = m_ghostTextMode;
+    checkpoint.allowCloudGhostText = m_allowCloudGhostText;
+    checkpoint.maxTokens = m_currentMaxTokens;
+    checkpoint.contextTokens = m_currentContextTokens;
+    checkpoint.history = m_chatHistory;
+    checkpoint.responseBuffer = session->responseBuffer;
+    session->checkpoints.push_back(std::move(checkpoint));
+
+    // Keep rollback bounded so a long-running daily-driver session cannot
+    // grow without limit. The newest 32 checkpoints are sufficient for user
+    // recovery while preserving deterministic state copies.
+    constexpr size_t kMaxChatCheckpoints = 32;
+    if (session->checkpoints.size() > kMaxChatCheckpoints) {
+        session->checkpoints.erase(session->checkpoints.begin(),
+                                   session->checkpoints.begin() +
+                                       (session->checkpoints.size() - kMaxChatCheckpoints));
+    }
+    updateChatSessionTabs();
+}
+
+void Win32IDE::rollbackActiveChat()
+{
+    auto* session = activeChatSession();
+    if (!session || session->checkpoints.empty()) return;
+
+    if (session->running) HandleCopilotStop();
+    ChatSessionCheckpoint checkpoint = std::move(session->checkpoints.back());
+    session->checkpoints.pop_back();
+    session->model = checkpoint.model;
+    session->history = std::move(checkpoint.history);
+    session->responseBuffer = std::move(checkpoint.responseBuffer);
+    session->running = false;
+    m_chatHistory = session->history;
+    m_selectedChatModel = checkpoint.model;
+    m_ghostTextModel = checkpoint.ghostTextModel;
+    m_ghostTextMode = checkpoint.ghostTextMode;
+    m_allowCloudGhostText = checkpoint.allowCloudGhostText;
+    m_currentMaxTokens = checkpoint.maxTokens;
+    m_currentContextTokens = checkpoint.contextTokens;
+
+    // Restore only chat controls/state. Workspace snapshots and editor files
+    // are intentionally untouched by this action.
+    if (m_hwndModelSelector) {
+        const LRESULT count = SendMessageA(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        for (LRESULT row = 0; row < count; ++row) {
+            const LRESULT data = SendMessageA(m_hwndModelSelector, CB_GETITEMDATA,
+                                               static_cast<WPARAM>(row), 0);
+            if (data >= 0 && static_cast<size_t>(data) < m_availableModels.size() &&
+                m_availableModels[static_cast<size_t>(data)].identifier ==
+                    m_selectedChatModel.identifier) {
+                SendMessageA(m_hwndModelSelector, CB_SETCURSEL,
+                             static_cast<WPARAM>(row), 0);
+                break;
+            }
+        }
+    }
+    updateContextControls();
+    updateSecondarySidebarContent();
+    updateChatSessionTabs();
+    if (m_hwndStatusBar) {
+        const std::string status = checkpoint.reason.empty()
+            ? "Chat rolled back to the previous checkpoint."
+            : "Chat rolled back: " + checkpoint.reason;
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+                     reinterpret_cast<LPARAM>(status.c_str()));
+    }
+}
+
+void Win32IDE::switchChatSession(int index)
+{
+    if (index < 0 || index >= static_cast<int>(m_chatSessions.size())) return;
+
+    // Persist the outgoing session before changing the active controls.
+    if (auto* previous = activeChatSession()) {
+        previous->history = m_chatHistory;
+        previous->model = m_selectedChatModel;
+    }
+
+    m_activeChatSession = index;
+    auto& session = m_chatSessions[static_cast<size_t>(index)];
+    m_chatHistory = session.history;
+    m_selectedChatModel = session.model;
+
+    if (m_hwndModelSelector) {
+        LRESULT selected = CB_ERR;
+        const LRESULT count = SendMessageA(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        for (LRESULT row = 0; row < count; ++row) {
+            const LRESULT data = SendMessageA(m_hwndModelSelector, CB_GETITEMDATA,
+                static_cast<WPARAM>(row), 0);
+            if (data >= 0 && static_cast<size_t>(data) < m_availableModels.size() &&
+                m_availableModels[static_cast<size_t>(data)].identifier == session.model.identifier) {
+                selected = row;
+                break;
+            }
+        }
+        SendMessageA(m_hwndModelSelector, CB_SETCURSEL,
+            selected == CB_ERR ? static_cast<WPARAM>(-1) : static_cast<WPARAM>(selected), 0);
+    }
+
+    updateChatSessionTabs();
+    updateSecondarySidebarContent();
+    if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, session.running ? TRUE : FALSE);
 }
 
 void Win32IDE::populateModelSelector() {
@@ -6274,6 +6799,42 @@ void Win32IDE::onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered)
         if (!duplicate) m_availableModels.push_back(std::move(entry));
     }
 
+    if (m_hwndGhostModelSelector) {
+        SendMessageA(m_hwndGhostModelSelector, CB_RESETCONTENT, 0, 0);
+        const LRESULT off = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Off"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA,
+            static_cast<WPARAM>(off), static_cast<LPARAM>(-2));
+        const LRESULT follow = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Follow Chat"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA,
+            static_cast<WPARAM>(follow), static_cast<LPARAM>(-3));
+        const LRESULT autoLocal = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+            reinterpret_cast<LPARAM>("GhostText: Auto Local"));
+        SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA,
+            static_cast<WPARAM>(autoLocal), static_cast<LPARAM>(-1));
+        int ghostRow = m_ghostTextMode == GhostTextMode::Disabled ? 0 :
+            (m_ghostTextMode == GhostTextMode::FollowChat ? 1 : 2);
+        for (size_t i = 0; i < m_availableModels.size(); ++i) {
+            const auto& entry = m_availableModels[i];
+            const LRESULT row = SendMessageA(m_hwndGhostModelSelector, CB_ADDSTRING, 0,
+                reinterpret_cast<LPARAM>(entry.breadcrumb.c_str()));
+            if (row == CB_ERR || row == CB_ERRSPACE) continue;
+            SendMessageA(m_hwndGhostModelSelector, CB_SETITEMDATA,
+                static_cast<WPARAM>(row), static_cast<LPARAM>(i));
+            if (m_ghostTextMode == GhostTextMode::Independent &&
+                entry.source == m_ghostTextModel.source &&
+                entry.identifier == m_ghostTextModel.identifier &&
+                !m_ghostTextModel.identifier.empty()) {
+                ghostRow = static_cast<int>(row);
+            }
+        }
+        SendMessageA(m_hwndGhostModelSelector, CB_SETCURSEL,
+            static_cast<WPARAM>(ghostRow), 0);
+        SendMessageA(m_hwndGhostModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
+        SendMessageA(m_hwndGhostModelSelector, CB_SETMINVISIBLE, 18, 0);
+    }
+
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
     if (m_availableModels.size() == 1) {
         const LRESULT row = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
@@ -6286,6 +6847,8 @@ void Win32IDE::onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered)
 
     int selectedRow = -1;
     int preferredRow = -1;
+    int ollamaRow = -1;
+    int localFileRow = -1;
     int kiloRow = -1;
     for (size_t i = 0; i < m_availableModels.size(); ++i) {
         const auto& entry = m_availableModels[i];
@@ -6297,12 +6860,23 @@ void Win32IDE::onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered)
         if (entry.source == previous.source && entry.identifier == previous.identifier) {
             preferredRow = static_cast<int>(row);
         }
+        if (entry.source == ChatModelEntry::Source::Ollama && ollamaRow < 0) {
+            ollamaRow = static_cast<int>(row);
+        }
+        if (entry.source == ChatModelEntry::Source::LocalFile && localFileRow < 0) {
+            localFileRow = static_cast<int>(row);
+        }
         if (entry.source == ChatModelEntry::Source::KiloFree) {
             kiloRow = static_cast<int>(row);
         }
     }
-    selectedRow = preferredRow >= 0 ? preferredRow
-        : kiloRow;
+    // Keep a previously selected real local route, but do not preserve the
+    // optional Kilo placeholder once Ollama or a local GGUF route is ready.
+    const bool previousIsKilo = previous.source == ChatModelEntry::Source::KiloFree;
+    selectedRow = (preferredRow >= 0 && !previousIsKilo) ? preferredRow
+        : (ollamaRow >= 0 ? ollamaRow
+            : (localFileRow >= 0 ? localFileRow
+                : (preferredRow >= 0 ? preferredRow : kiloRow)));
     if (selectedRow >= 0) {
         SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(selectedRow), 0);
@@ -6334,6 +6908,16 @@ void Win32IDE::HandleCopilotSend() {
         LOG_WARNING("Empty message - ignoring");
         return;
     }
+
+    {
+        std::lock_guard<std::mutex> lock(m_inferenceMutex);
+        if (m_inferenceRunning) {
+            const std::string status = "Inference is already running; press Stop before sending another message.";
+            if (m_hwndStatusBar) SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+                reinterpret_cast<LPARAM>(status.c_str()));
+            return;
+        }
+    }
     
     // Get selected model
     onModelSelectionChanged();
@@ -6344,29 +6928,32 @@ void Win32IDE::HandleCopilotSend() {
         return;
     }
 
-    // Display user message
-    std::string displayText = "\n> User: " + userMessage + "\n";
-    
-    // Append to output
-    int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
-    if (len > 0) {
-        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+    checkpointActiveChat("before sending user message");
+
+    const int sessionId = activeChatSession() ? activeChatSession()->id : 0;
+    if (auto* session = activeChatSession()) {
+        session->model = m_selectedChatModel;
+        session->history.push_back({"user", userMessage});
+        session->responseBuffer.clear();
+        session->running = true;
+        m_chatHistory = session->history;
+    } else {
+        m_chatHistory.push_back({"user", userMessage});
     }
-    SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayText.c_str());
+    updateSecondarySidebarContent();
     
     // Clear input
     SetWindowTextA(m_hwndCopilotChatInput, "");
     
-    // Generate response asynchronously
-    auto onResponse = [this](const std::string& response, bool complete) {
-        if (!m_hwndCopilotChatOutput) return;
-        
-        std::string displayResp = "AI: " + response + (complete ? "\n" : "");
-        int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
-        if (len > 0) {
-            SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+    // Marshal all response handling to the UI thread. The worker owns only the
+    // inference operation and an owned message payload.
+    auto onResponse = [this, sessionId](const std::string& response, bool complete) {
+        auto* update = new CopilotChatUiUpdate{sessionId, response, complete};
+        const HWND target = m_hwndMain;
+        if (!target || !PostMessageA(target, kRawrxdCopilotUiUpdate, 0,
+                                     reinterpret_cast<LPARAM>(update))) {
+            delete update;
         }
-        SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayResp.c_str());
     };
     
     // Generate response
@@ -6374,12 +6961,89 @@ void Win32IDE::HandleCopilotSend() {
 
 }
 
+void Win32IDE::handleCopilotUiUpdate(int sessionId,
+                                     const std::string& response,
+                                     bool complete)
+{
+    ChatSessionState* session = nullptr;
+    for (auto& candidate : m_chatSessions) {
+        if (candidate.id == sessionId) { session = &candidate; break; }
+    }
+    if (!session) return;
+
+    const int sessionIndex = static_cast<int>(session - m_chatSessions.data());
+    const bool active = m_activeChatSession == sessionIndex;
+    if (!complete) {
+        if (session->responseBuffer.empty() && active && m_hwndCopilotChatOutput) {
+            const int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
+            SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+            SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+                reinterpret_cast<LPARAM>("\r\nAI: "));
+        }
+        session->responseBuffer += response;
+        if (active && m_hwndCopilotChatOutput && !response.empty()) {
+            const int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
+            SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+            SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+                reinterpret_cast<LPARAM>(response.c_str()));
+        }
+        return;
+    }
+
+    if (!response.empty() && session->responseBuffer.empty()) {
+        session->responseBuffer = response;
+        if (active && m_hwndCopilotChatOutput) {
+            const int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
+            SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+            const std::string line = "\r\nAI: " + response + "\r\n\r\n";
+            SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+                reinterpret_cast<LPARAM>(line.c_str()));
+        }
+    } else if (active && m_hwndCopilotChatOutput && !session->responseBuffer.empty()) {
+        const int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
+        SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+        SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+            reinterpret_cast<LPARAM>("\r\n\r\n"));
+    }
+    if (!session->responseBuffer.empty()) {
+        session->history.push_back({"assistant", session->responseBuffer});
+    }
+    session->responseBuffer.clear();
+    session->running = false;
+    if (active && m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
+    if (active) m_chatHistory = session->history;
+    updateChatSessionTabs();
+}
+
+void Win32IDE::HandleCopilotStop()
+{
+    stopInference();
+    if (auto* session = activeChatSession()) {
+        session->running = false;
+        session->responseBuffer.clear();
+    }
+    if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
+    if (m_hwndStatusBar) {
+        const std::string status = "Chat generation stopped.";
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
+            reinterpret_cast<LPARAM>(status.c_str()));
+    }
+    updateChatSessionTabs();
+}
+
 void Win32IDE::HandleCopilotClear() {
     if (!m_hwndCopilotChatOutput || !m_hwndCopilotChatInput) return;
 
-    SetWindowTextA(m_hwndCopilotChatOutput, "Welcome to RawrXD AI Chat!\n\nSelect a model and type your message to begin.");
+    checkpointActiveChat("before clearing chat");
+
+    SetWindowTextA(m_hwndCopilotChatOutput, "Welcome to RawrXD AI Chat!\r\n\r\nSelect a model and type a message to begin.\r\n");
     SetWindowTextA(m_hwndCopilotChatInput, "");
     m_chatHistory.clear();
+    if (auto* session = activeChatSession()) {
+        session->history.clear();
+        session->responseBuffer.clear();
+        session->running = false;
+    }
 
 }
 
@@ -6414,9 +7078,48 @@ void Win32IDE::onModelSelectionChanged() {
         return;
     }
     m_selectedChatModel = m_availableModels[static_cast<size_t>(itemData)];
+    if (auto* session = activeChatSession()) {
+        session->model = m_selectedChatModel;
+    }
     if (m_selectedChatModel.source == ChatModelEntry::Source::Ollama) {
         m_ollamaModelOverride = m_selectedChatModel.identifier;
     }
+}
+
+void Win32IDE::onGhostTextSelectionChanged() {
+    if (!m_hwndGhostModelSelector) return;
+    const LRESULT row = SendMessageA(m_hwndGhostModelSelector, CB_GETCURSEL, 0, 0);
+    if (row < 0) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::Disabled;
+        return;
+    }
+    const LRESULT data = SendMessageA(m_hwndGhostModelSelector, CB_GETITEMDATA,
+        static_cast<WPARAM>(row), 0);
+    if (data == -2) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::Disabled;
+        logInfo("GhostText route disabled.");
+    } else if (data == -3) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::FollowChat;
+        logInfo("GhostText route follows chat selection.");
+    } else if (data == -1) {
+        m_ghostTextModel = {};
+        m_ghostTextMode = GhostTextMode::AutoLocal;
+        logInfo("GhostText route set to Auto Local.");
+    } else if (data >= 0 && static_cast<size_t>(data) < m_availableModels.size()) {
+        m_ghostTextModel = m_availableModels[static_cast<size_t>(data)];
+        m_ghostTextMode = GhostTextMode::Independent;
+        logInfo("GhostText route selected: " + m_ghostTextModel.identifier);
+    }
+}
+
+void Win32IDE::onGhostTextCloudConsentChanged() {
+    if (!m_hwndAllowCloudGhostText) return;
+    m_allowCloudGhostText = SendMessage(m_hwndAllowCloudGhostText, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    logInfo(std::string("GhostText cloud transmission ") +
+        (m_allowCloudGhostText ? "enabled for this session." : "disabled."));
 }
 
 void Win32IDE::onMaxTokensChanged(int newValue) {
@@ -6428,6 +7131,23 @@ void Win32IDE::onMaxTokensChanged(int newValue) {
         SetWindowTextA(m_hwndMaxTokensLabel, std::to_string(newValue).c_str());
     }
 
+}
+
+void Win32IDE::updateContextControls() {
+    if (m_currentContextTokens < 8192) m_currentContextTokens = 8192;
+    if (m_hwndContextLabel) {
+        const int value = m_currentContextTokens;
+        const std::string text = value >= 1024
+            ? std::to_string(value / 1024) + "K (pending model admission)"
+            : std::to_string(value) + " (pending model admission)";
+        SetWindowTextA(m_hwndContextLabel, text.c_str());
+    }
+}
+
+int Win32IDE::effectiveMaxTokensForPrompt(const std::string& prompt) const {
+    const int estimatedPrompt = std::max(1, static_cast<int>(prompt.size() / 4));
+    return std::max(1, std::min(m_currentMaxTokens,
+        m_currentContextTokens - estimatedPrompt));
 }
 
 Win32IDE::~Win32IDE() {

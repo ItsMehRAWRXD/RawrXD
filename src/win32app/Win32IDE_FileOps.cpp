@@ -44,6 +44,8 @@ void Win32IDE::openFileDialog() {
             // GGUF files can be multi-GB, they use streaming loader
             // Add safety check to prevent crashes on corrupted/invalid files
             try {
+                m_ggufLoader = std::make_unique<StreamingGGUFLoader>();
+                m_useStreamingLoader = true;
                 if (loadGGUFModel(filePath)) {
                     std::string message = " Model loaded: " + filePath + "\n\n" + getModelInfo();
                     appendToOutput(message, "Output", OutputSeverity::Info);

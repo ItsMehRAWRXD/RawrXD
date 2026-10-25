@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-10-24T23:24:14.8764771Z",
+  "sourceRoot": "F:\\rawrxd",
+  "branch": "feature/reap-size-integration",
+  "commit": "44f9be1ceff701fe3fc4f9c0ddc0992c7a04680a",
+  "executable": "F:\\rawrxd\\build_reap_k2\\bin-msvc\\rawr-reap-replay.exe",
+  "executableSha256": "4EB25084C3B2682A18FE55E474E6154031D59188BDB3E694B26F001EDDB4A7C8",
+  "modelDirectory": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M",
+  "modelShard": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+  "modelShardCount": 13,
+  "modelShards": [
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+      "length": 46304135840,
+      "lastWriteTime": "2026-08-06T19:13:20.7792610Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf",
+      "length": 49211448320,
+      "lastWriteTime": "2026-08-06T19:20:47.0533789Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf",
+      "length": 49548961120,
+      "lastWriteTime": "2026-08-06T19:29:56.5994013Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf",
+      "length": 47810262080,
+      "lastWriteTime": "2026-08-06T19:16:56.7194140Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf",
+      "length": 46366024896,
+      "lastWriteTime": "2026-08-06T19:22:40.9735620Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf",
+      "length": 47758122080,
+      "lastWriteTime": "2026-08-06T19:27:02.5953989Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf",
+      "length": 47810262080,
+      "lastWriteTime": "2026-08-06T19:37:19.6905367Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf",
+      "length": 49548961120,
+      "lastWriteTime": "2026-08-06T19:20:19.7833844Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf",
+      "length": 47819351232,
+      "lastWriteTime": "2026-08-06T21:30:36.6106544Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf",
+      "length": 49548961120,
+      "lastWriteTime": "2026-08-06T21:32:02.8426467Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf",
+      "length": 47758122080,
+      "lastWriteTime": "2026-08-06T21:31:56.7866109Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf",
+      "length": 47533978560,
+      "lastWriteTime": "2026-08-06T21:33:05.7098152Z"
+    },
+    {
+      "name": "Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf",
+      "length": 44226634336,
+      "lastWriteTime": "2026-08-06T21:33:04.0478104Z"
+    }
+  ],
+  "corpus": "F:\\rawrxd\\evidence\\reap_calibration\\moe_two.jsonl",
+  "windowLimit": 2,
+  "requireMla": true,
+  "unsafeMlaFlagPresent": false
+}

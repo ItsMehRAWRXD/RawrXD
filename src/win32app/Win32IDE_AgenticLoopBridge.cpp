@@ -94,22 +94,38 @@ void AgenticLoopBridge::WorkerThread()
         // Run startup recovery before launching
         StartupRecovery();
 
-        // Build command line for deep2_agentic_loop.exe
+        // Build command line for deep2_agentic_loop.exe without embedding a
+        // checkout-specific absolute path.  Prefer the configured workdir,
+        // then the canonical IDE output directory and its parents.
         std::string exePath = m_currentConfig.workDir + "\\deep2_agentic_loop.exe";
-        // Try relative to IDE executable first
         char modulePath[MAX_PATH];
         GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
         std::string ideDir = std::string(modulePath);
         size_t pos = ideDir.find_last_of("\\/");
         if (pos != std::string::npos) {
             ideDir = ideDir.substr(0, pos);
-            exePath = ideDir + "\\deep2_agentic_loop.exe";
         }
-        
-        // Check if exists
-        if (GetFileAttributesA(exePath.c_str()) == INVALID_FILE_ATTRIBUTES) {
-            // Try build directory
-            exePath = "F:\\rawrxd\\build_cmake\\bin\\Release\\deep2_agentic_loop.exe";
+
+        std::vector<std::string> loopCandidates = {
+            exePath,
+            ideDir + "\\deep2_agentic_loop.exe",
+            ideDir + "\\..\\deep2_agentic_loop.exe",
+            ideDir + "\\..\\..\\deep2_agentic_loop.exe",
+            ".\\deep2_agentic_loop.exe"
+        };
+        exePath.clear();
+        for (const auto& candidate : loopCandidates) {
+            if (GetFileAttributesA(candidate.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                exePath = candidate;
+                break;
+            }
+        }
+        if (exePath.empty()) {
+            LOG_ERROR("Agentic loop executable not found relative to configured workdir or IDE");
+            if (m_progressCallback) {
+                m_progressCallback("Agentic loop executable not found");
+            }
+            return;
         }
 
         std::ostringstream cmd;

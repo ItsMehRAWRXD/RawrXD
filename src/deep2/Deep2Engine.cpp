@@ -8665,10 +8665,33 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             float* vBase = nullptr;
             size_t kl = kvLayerIdx(layer);
             kvCache->getKVPointers(kl, 0, &kBase, &vBase);
+            
+            // DIAGNOSTIC: Check KV cache write
+            if (layer == 21) {
+                fprintf(stderr, "[KV_DIAG] layer=%zu writePos=%u kvBytes=%zu kBase=%p vBase=%p currentPos=%zu\n",
+                        layer, writePos, kvBytes, (void*)kBase, (void*)vBase, 
+                        kvCache->currentLength());
+                fflush(stderr);
+            }
+            
             if (kBase)
                 memcpy(kBase, kProj, kvBytes);
             if (vBase)
                 memcpy(vBase, vProj, kvBytes);
+            
+            // Verify written data for layer 21
+            if (layer == 21 && vBase) {
+                bool hasNaN = false;
+                size_t vHeadDim = kvCache->headDimSize();
+                for (size_t i = 0; i < kvBytes / sizeof(float); ++i) {
+                    if (!std::isfinite(vBase[i])) { hasNaN = true; break; }
+                }
+                if (hasNaN) {
+                    fprintf(stderr, "[KV_DIAG] layer=%zu: NaN in vBase AFTER memcpy!\n", layer);
+                    fflush(stderr);
+                }
+            }
+            
             if (layer == 0)
             {
                 AttnCert::record(AttnCert::Stage::KvWrite, 0, writePos, kProj, lw.wk.rows,
@@ -9203,16 +9226,16 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
         throw std::runtime_error("dense FFN intermediate dimension exceeds buffer");
     }
 
-    if (hasGate)
-    {
-        // Standard SwiGLU: gate and up are separate projections
-        if (profilingEnabled_ && profiler_)
-            profiler_->beginFFNGate();
-        std::fill(gateBuf, gateBuf + intermediateDim, 0.0f);
-        LinearW(lw.wGate, input, nullptr, gateBuf, intermediateDim);
-        if (profilingEnabled_ && profiler_)
-            profiler_->endFFNGate();
-    }
+if (hasGate)
+        {
+            // Standard SwiGLU: gate and up are separate projections
+            if (profilingEnabled_ && profiler_)
+                profiler_->beginFFNGate();
+            std::fill(gateBuf, gateBuf + intermediateDim, 0.0f);
+            LinearW(lw.wGate, input, nullptr, gateBuf, intermediateDim);
+            if (profilingEnabled_ && profiler_)
+                profiler_->endFFNGate();
+        }
 
     // Up projection: [hiddenDim] -> [intermediateDim]
     if (profilingEnabled_ && profiler_)
@@ -9221,6 +9244,49 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output)
     LinearW(*upWt, input, nullptr, upBuf, intermediateDim);
     if (profilingEnabled_ && profiler_)
         profiler_->endFFNUp();
+
+    // DIAGNOSTIC: Compare Q6_K FFN projections with FP32 reference at layer 21
+    if (layer == 21 && B3_ProbeEnabled())
+    {
+        // Compare gate projection if hasGate
+        if (hasGate)
+        {
+            std::vector<float> gateRef(intermediateDim, 0.0f);
+            auto cpuKernel = QuantKernelRegistry::Instance().GetGEMV(lw.wGate.type);
+            if (cpuKernel)
+            {
+                cpuKernel(static_cast<const uint8_t*>(lw.wGate.data), input,
+                          gateRef.data(), lw.wGate.rows, lw.wGate.cols);
+                
+                double maxDiff = 0.0, sumDiff = 0.0;
+                for (size_t i = 0; i < intermediateDim; ++i) {
+                    double diff = std::abs(static_cast<double>(gateBuf[i]) - gateRef[i]);
+                    maxDiff = std::max(maxDiff, diff);
+                    sumDiff += diff;
+                }
+                fprintf(stderr, "[L21_DIAG] FFN_GATE Q6K vs FP32: maxDiff=%.9e avgDiff=%.9e\n", maxDiff, sumDiff/intermediateDim);
+                fflush(stderr);
+            }
+        }
+        
+        // Compare up projection
+        std::vector<float> upRef(intermediateDim, 0.0f);
+        auto cpuKernel = QuantKernelRegistry::Instance().GetGEMV(upWt->type);
+        if (cpuKernel)
+        {
+            cpuKernel(static_cast<const uint8_t*>(upWt->data), input,
+                      upRef.data(), upWt->rows, upWt->cols);
+            
+            double maxDiff = 0.0, sumDiff = 0.0;
+            for (size_t i = 0; i < intermediateDim; ++i) {
+                double diff = std::abs(static_cast<double>(upBuf[i]) - upRef[i]);
+                maxDiff = std::max(maxDiff, diff);
+                sumDiff += diff;
+            }
+            fprintf(stderr, "[L21_DIAG] FFN_UP Q6K vs FP32: maxDiff=%.9e avgDiff=%.9e\n", maxDiff, sumDiff/intermediateDim);
+            fflush(stderr);
+        }
+    }
 
     // Dump gate (pre-SiLU) before SwiGLU overwrites gateBuf with the product.
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer) && hasGate)

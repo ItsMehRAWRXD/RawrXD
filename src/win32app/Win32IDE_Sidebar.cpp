@@ -605,12 +605,25 @@ void Win32IDE::createExplorerView(HWND hwndParent)
     }
 
     SetWindowLongPtrA(m_hwndExplorerTree, GWLP_USERDATA, (LONG_PTR)this);
-    SetWindowLongPtrA(m_hwndExplorerTree, GWLP_WNDPROC, (LONG_PTR)ExplorerTreeProc);
+    // Preserve the native TreeView procedure.  Replacing it without chaining
+    // back to the original control procedure breaks selection, hit testing,
+    // and arrow expansion even though the window still paints.
+    m_explorerTreeOriginalProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrA(
+        m_hwndExplorerTree, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ExplorerTreeProc)));
 
-    // Set current workspace as root
-    m_explorerRootPath = "C:\\Users\\HiH8e\\OneDrive\\Desktop\\Powershield";
+    // Derive the workspace from the process instead of embedding a developer
+    // machine path.  The tree itself is populated with every mounted logical
+    // drive below, while this path remains the default for workspace actions.
+    char currentDirectory[MAX_PATH] = {};
+    if (GetCurrentDirectoryA(MAX_PATH, currentDirectory) > 0) {
+        m_explorerRootPath = currentDirectory;
+    } else {
+        m_explorerRootPath.clear();
+    }
 
-    appendToOutput("Explorer view created with file tree at: " + m_explorerRootPath + "\n", "Output", OutputSeverity::Info);
+    appendToOutput("Explorer view created; workspace root: " +
+                   (m_explorerRootPath.empty() ? std::string("(unavailable)") : m_explorerRootPath) + "\n",
+                   "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::refreshFileTree()
@@ -622,76 +635,130 @@ void Win32IDE::refreshFileTree()
     }
 
     TreeView_DeleteAllItems(m_hwndExplorerTree);
+    m_treeItemPaths.clear();
 
-    // Add root folder
-    TVINSERTSTRUCTA tvis = {};
-    tvis.hParent = TVI_ROOT;
-    tvis.hInsertAfter = TVI_LAST;
-    tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
-    
-    // Use static buffer for root text
-    static char rootText[] = "Workspace";
-    tvis.item.pszText = rootText;
-    tvis.item.lParam = 0;
+    struct ExplorerRoot { std::string label; std::string path; };
+    std::vector<ExplorerRoot> roots;
+    auto addRoot = [&roots](const std::string& label, const std::string& path) {
+        if (path.empty() || GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+        for (const auto& existing : roots) {
+            if (_stricmp(existing.path.c_str(), path.c_str()) == 0) return;
+        }
+        roots.push_back({label, path});
+    };
 
-    HTREEITEM hRoot = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
-    if (!hRoot) {
-        appendToOutput("Failed to create tree root\n", "Output", OutputSeverity::Error);
-        return;
+    if (!m_explorerRootPath.empty()) {
+        addRoot("Workspace (" + m_explorerRootPath + ")", m_explorerRootPath);
     }
 
-    // Enumerate files and folders with error handling
-    try {
-        if (!fs::exists(m_explorerRootPath)) {
-            appendToOutput("Explorer root path does not exist: " + m_explorerRootPath + "\n", 
-                           "Output", OutputSeverity::Warning);
-            return;
-        }
-        
-        appendToOutput("Enumerating directory: " + m_explorerRootPath + "\n", "Output", OutputSeverity::Debug);
-
-        for (const auto& entry : fs::directory_iterator(m_explorerRootPath)) {
-            try {
-                std::string name = entry.path().filename().string();
-                
-                // Allocate on heap to avoid scope issues
-                char* nameBuffer = new char[name.size() + 1];
-                strcpy_s(nameBuffer, name.size() + 1, name.c_str());
-                
-                tvis.hParent = hRoot;
-                tvis.item.pszText = nameBuffer;
-                tvis.item.lParam = entry.is_directory() ? 1 : 0;
-                
-                HTREEITEM hItem = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
-                
-                // Store path mapping
-                if (hItem) {
-                    m_treeItemPaths[hItem] = entry.path().string();
+    // Enumerate all mounted logical drives.  This intentionally does not
+    // filter by DRIVE_FIXED: removable, network, optical and RAM drives are
+    // valid explorer roots too, including roots hidden from normal project
+    // discovery.
+    const DWORD driveChars = GetLogicalDriveStringsA(0, nullptr);
+    if (driveChars > 0) {
+        std::vector<char> driveBuffer(static_cast<size_t>(driveChars) + 1, '\0');
+        if (GetLogicalDriveStringsA(driveChars, driveBuffer.data()) != 0) {
+            for (const char* drive = driveBuffer.data(); *drive; drive += std::strlen(drive) + 1) {
+                const std::string path(drive);
+                const DWORD type = GetDriveTypeA(path.c_str());
+                const char* typeName = "Drive";
+                switch (type) {
+                    case DRIVE_REMOVABLE: typeName = "Removable"; break;
+                    case DRIVE_FIXED: typeName = "Fixed"; break;
+                    case DRIVE_REMOTE: typeName = "Network"; break;
+                    case DRIVE_CDROM: typeName = "Optical"; break;
+                    case DRIVE_RAMDISK: typeName = "RAM"; break;
+                    default: break;
                 }
-                
-                // Clean up buffer after insertion
-                delete[] nameBuffer;
-            }
-            catch (const std::exception& e) {
-                // Skip problematic entries
-                continue;
+                addRoot(path + " [" + typeName + "]", path);
             }
         }
-        
-        appendToOutput("File tree refreshed successfully\n", "Output", OutputSeverity::Info);
-    }
-    catch (const std::exception& e) {
-        appendToOutput("Error refreshing file tree: " + std::string(e.what()) + "\n", 
-                       "Output", OutputSeverity::Error);
     }
 
-    TreeView_Expand(m_hwndExplorerTree, hRoot, TVE_EXPAND);
+    for (const auto& root : roots) {
+        TVINSERTSTRUCTA tvis = {};
+        tvis.hParent = TVI_ROOT;
+        tvis.hInsertAfter = TVI_LAST;
+        tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+        tvis.item.pszText = const_cast<char*>(root.label.c_str());
+        tvis.item.lParam = 1; // directory/root
+        const HTREEITEM hRoot = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
+        if (!hRoot) continue;
+        m_treeItemPaths[hRoot] = root.path;
+
+        // Lazy expansion keeps the UI responsive on large model volumes.
+        TVINSERTSTRUCTA placeholder = {};
+        placeholder.hParent = hRoot;
+        placeholder.hInsertAfter = TVI_LAST;
+        placeholder.item.mask = TVIF_TEXT | TVIF_PARAM;
+        placeholder.item.pszText = const_cast<char*>("Loading...");
+        placeholder.item.lParam = 0;
+        TreeView_InsertItem(m_hwndExplorerTree, &placeholder);
+    }
+
+    appendToOutput("File tree refreshed with " + std::to_string(roots.size()) +
+                   " mounted drive/workspace roots\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::expandFolder(const std::string& path)
 {
-    // Placeholder - full implementation would recursively load subdirectories
-    appendToOutput("Expanding folder: " + path + "\n", "Output", OutputSeverity::Info);
+    if (!m_hwndExplorerTree || path.empty()) return;
+
+    HTREEITEM parent = TreeView_GetSelection(m_hwndExplorerTree);
+    if (!parent) return;
+
+    // Remove the lazy placeholder once, preserving any already-populated
+    // children when the user toggles the same folder repeatedly.
+    HTREEITEM child = TreeView_GetChild(m_hwndExplorerTree, parent);
+    if (child) {
+        char text[MAX_PATH] = {};
+        TVITEMA item{};
+        item.hItem = child;
+        item.mask = TVIF_TEXT;
+        item.pszText = text;
+        item.cchTextMax = MAX_PATH;
+        if (TreeView_GetItem(m_hwndExplorerTree, &item) && std::strcmp(text, "Loading...") == 0) {
+            TreeView_DeleteItem(m_hwndExplorerTree, child);
+        } else {
+            return;
+        }
+    }
+
+    try {
+        for (const auto& entry : fs::directory_iterator(
+                 path, fs::directory_options::skip_permission_denied)) {
+            try {
+                const std::string name = entry.path().filename().string();
+                TVINSERTSTRUCTA tvis{};
+                tvis.hParent = parent;
+                tvis.hInsertAfter = TVI_LAST;
+                tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+                tvis.item.pszText = const_cast<char*>(name.c_str());
+                tvis.item.lParam = entry.is_directory() ? 1 : 0;
+                const HTREEITEM item = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
+                if (!item) continue;
+                m_treeItemPaths[item] = entry.path().string();
+                if (entry.is_directory()) {
+                    TVINSERTSTRUCTA placeholder{};
+                    placeholder.hParent = item;
+                    placeholder.hInsertAfter = TVI_LAST;
+                    placeholder.item.mask = TVIF_TEXT | TVIF_PARAM;
+                    placeholder.item.pszText = const_cast<char*>("Loading...");
+                    placeholder.item.lParam = 0;
+                    TreeView_InsertItem(m_hwndExplorerTree, &placeholder);
+                }
+            } catch (...) {
+                // A single inaccessible or malformed entry must not abort the
+                // remainder of a drive listing.
+            }
+        }
+    } catch (const std::exception& e) {
+        appendToOutput("Explorer access denied or unavailable: " + std::string(e.what()) + "\n",
+                       "Output", OutputSeverity::Warning);
+    }
+
+    appendToOutput("Expanded folder: " + path + "\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::collapseAllFolders()
@@ -887,6 +954,27 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
     switch (uMsg) {
+    case WM_LBUTTONDOWN: {
+        const LRESULT result = pThis && pThis->m_explorerTreeOriginalProc
+            ? CallWindowProcA(pThis->m_explorerTreeOriginalProc, hwnd, uMsg, wParam, lParam)
+            : DefWindowProcA(hwnd, uMsg, wParam, lParam);
+        if (pThis) {
+            TVHITTESTINFO hit{};
+            hit.pt.x = GET_X_LPARAM(lParam);
+            hit.pt.y = GET_Y_LPARAM(lParam);
+            const HTREEITEM hItem = TreeView_HitTest(hwnd, &hit);
+            if (hItem && (hit.flags & TVHT_ONITEMBUTTON)) {
+                const std::string path = pThis->getTreeItemPath(hItem);
+                if (!path.empty()) {
+                    TreeView_SelectItem(hwnd, hItem);
+                    pThis->expandFolder(path);
+                    TreeView_Expand(hwnd, hItem, TVE_EXPAND);
+                }
+            }
+        }
+        return result;
+    }
+
     case WM_RBUTTONDOWN: {
         if (pThis) {
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -908,12 +996,32 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                 item.hItem = hItem;
                 
                 if (TreeView_GetItem(hwnd, &item)) {
-                    if (item.lParam == 0) { // File, not folder
-                        std::string filePath = pThis->m_explorerRootPath + "\\" + text;
-                        pThis->m_currentFile = filePath;
-                        // Load file content (simplified)
-                        pThis->appendToOutput("Opening file: " + filePath + "\n", 
-                                              "Output", OutputSeverity::Info);
+                    const std::string filePath = pThis->getTreeItemPath(hItem);
+                    if (!filePath.empty()) {
+                        const DWORD attributes = GetFileAttributesA(filePath.c_str());
+                        if (attributes != INVALID_FILE_ATTRIBUTES &&
+                            (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                            pThis->expandFolder(filePath);
+                            TreeView_Expand(hwnd, hItem, TVE_EXPAND);
+                        } else if (attributes != INVALID_FILE_ATTRIBUTES) {
+                            std::ifstream file(filePath, std::ios::binary);
+                            if (file.is_open()) {
+                                file.seekg(0, std::ios::end);
+                                const std::streamoff fileSize = file.tellg();
+                                file.seekg(0, std::ios::beg);
+                                if (fileSize <= 10 * 1024 * 1024) {
+                                    const std::string content(
+                                        (std::istreambuf_iterator<char>(file)),
+                                        std::istreambuf_iterator<char>());
+                                    pThis->setEditorText(content);
+                                    pThis->m_currentFile = filePath;
+                                    pThis->m_fileModified = false;
+                                    pThis->updateTitleBarText();
+                                    pThis->appendToOutput("Opening file: " + filePath + "\n",
+                                                          "Output", OutputSeverity::Info);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -922,7 +1030,9 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
     }
     }
 
-    return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+    return pThis && pThis->m_explorerTreeOriginalProc
+        ? CallWindowProcA(pThis->m_explorerTreeOriginalProc, hwnd, uMsg, wParam, lParam)
+        : DefWindowProcA(hwnd, uMsg, wParam, lParam);
 }
 
 // ============================================================================
@@ -1392,9 +1502,11 @@ void Win32IDE::updateDebugVariables()
     // Placeholder - would query actual debugger variables
     ListView_DeleteAllItems(m_hwndDebugVariables);
 
+    char currentDirectory[MAX_PATH] = {};
+    GetCurrentDirectoryA(MAX_PATH, currentDirectory);
     const struct { const char* name; const char* value; } vars[] = {
         {"$PSVersionTable", "7.4.6"},
-        {"$PWD", "C:\\Users\\HiH8e"},
+        {"$PWD", currentDirectory},
         {"$ErrorCount", "0"}
     };
 
@@ -1507,12 +1619,76 @@ void Win32IDE::loadInstalledExtensions()
 
     ListView_DeleteAllItems(m_hwndExtensionsList);
 
-    // Placeholder - load from extensions directory
-    m_extensions = {
-        {"powershell.vscode", "PowerShell", "2024.2.2", "PowerShell language support", "Microsoft", true, true},
-        {"ms-vscode.cpptools", "C/C++", "1.20.5", "C++ IntelliSense", "Microsoft", true, true},
-        {"github.copilot", "GitHub Copilot", "1.150.0", "AI pair programmer", "GitHub", true, true}
+    // Discover the actual installed VS Code/Cursor extensions.  The previous
+    // implementation inserted a hard-coded list, which made GitHub Copilot
+    // appear installed even when it was absent and hid extensions that really
+    // existed on disk.
+    m_extensions.clear();
+    std::vector<fs::path> roots;
+    if (const char* profile = std::getenv("USERPROFILE")) {
+        const fs::path user(profile);
+        roots.push_back(user / ".vscode" / "extensions");
+        roots.push_back(user / ".vscode-insiders" / "extensions");
+        roots.push_back(user / ".cursor" / "extensions");
+    }
+    if (const char* localAppData = std::getenv("LOCALAPPDATA")) {
+        const fs::path local(localAppData);
+        roots.push_back(local / "Programs" / "Microsoft VS Code" / "resources" / "app" / "extensions");
+        roots.push_back(local / "Programs" / "Microsoft VS Code Insiders" / "resources" / "app" / "extensions");
+    }
+
+    auto jsonString = [](const std::string& text, const char* key) -> std::string {
+        const std::regex pattern(std::string("\\\"") + key +
+            "\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"\\\\])*)\\\"");
+        std::smatch match;
+        if (!std::regex_search(text, match, pattern) || match.size() < 2) return {};
+        std::string value = match[1].str();
+        // Decode the JSON escapes needed for display without depending on a
+        // second JSON runtime in the native Win32 IDE.
+        std::string decoded;
+        decoded.reserve(value.size());
+        bool escaped = false;
+        for (char c : value) {
+            if (escaped) {
+                decoded.push_back(c == 'n' ? '\n' : c == 'r' ? '\r' : c);
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else {
+                decoded.push_back(c);
+            }
+        }
+        return decoded;
     };
+
+    std::unordered_set<std::string> seen;
+    for (const auto& root : roots) {
+        std::error_code ec;
+        if (!fs::is_directory(root, ec)) continue;
+        for (fs::directory_iterator it(root, fs::directory_options::skip_permission_denied, ec);
+             !ec && it != fs::directory_iterator(); it.increment(ec)) {
+            if (ec || !it->is_directory(ec)) continue;
+            const fs::path manifest = it->path() / "package.json";
+            std::ifstream file(manifest, std::ios::binary);
+            if (!file) continue;
+            std::string text((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            if (text.empty()) continue;
+            std::string publisher = jsonString(text, "publisher");
+            std::string name = jsonString(text, "name");
+            std::string displayName = jsonString(text, "displayName");
+            std::string version = jsonString(text, "version");
+            if (name.empty()) name = it->path().filename().string();
+            if (displayName.empty()) displayName = name;
+            const std::string id = publisher.empty() ? name : publisher + "." + name;
+            const std::string key = id + "|" + version;
+            if (!seen.insert(key).second) continue;
+            m_extensions.push_back({id, displayName, version,
+                jsonString(text, "description"), publisher, true, true});
+        }
+    }
+
+    std::sort(m_extensions.begin(), m_extensions.end(),
+        [](const Extension& a, const Extension& b) { return a.name < b.name; });
 
     LVITEMA item = {};
     item.mask = LVIF_TEXT;
@@ -1528,7 +1704,8 @@ void Win32IDE::loadInstalledExtensions()
         ListView_SetItem(m_hwndExtensionsList, &item);
     }
 
-    appendToOutput("Loaded " + std::to_string(m_extensions.size()) + " extensions\n",
+    appendToOutput("Discovered " + std::to_string(m_extensions.size()) +
+                   " installed extensions from local VS Code/Cursor roots\n",
                    "Output", OutputSeverity::Info);
 }
 

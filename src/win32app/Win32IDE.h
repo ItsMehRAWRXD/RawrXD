@@ -15,6 +15,23 @@
 #define DOC_TAB_HEIGHT 26
 #endif
 
+// Chat session tabs are created by Win32IDE.cpp but their TCN_SELCHANGE
+// notification is owned by the lifecycle/window-procedure translation unit.
+// Keep the control ID in the shared header so both translation units use the
+// same routing contract.
+#ifndef IDC_CHAT_SESSIONS
+#define IDC_CHAT_SESSIONS 1208
+#endif
+#ifndef IDC_CLOSE_CHAT
+#define IDC_CLOSE_CHAT 1214
+#endif
+#ifndef IDC_RESTORE_CHAT
+#define IDC_RESTORE_CHAT 1215
+#endif
+#ifndef IDC_ROLLBACK_CHAT
+#define IDC_ROLLBACK_CHAT 1216
+#endif
+
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
 #undef ERROR
@@ -41,6 +58,7 @@
 #include "Win32IDE_Autonomy.h"
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "agent_esp.hpp"
+#include "Win32IDE_GhostText.h"
 
 // Forward declaration for Deep2Bridge
 class Deep2Bridge;
@@ -56,6 +74,56 @@ struct ChatModelEntry {
     std::string breadcrumb;
     std::string identifier;
 };
+
+enum class GhostTextMode { Disabled, AutoLocal, FollowChat, Independent };
+
+struct ChatSessionCheckpoint {
+    std::string reason;
+    ChatModelEntry model;
+    ChatModelEntry ghostTextModel;
+    GhostTextMode ghostTextMode = GhostTextMode::AutoLocal;
+    bool allowCloudGhostText = false;
+    int maxTokens = 4096;
+    int contextTokens = 65536;
+    std::vector<std::pair<std::string, std::string>> history;
+    std::string responseBuffer;
+};
+
+// A chat session owns its route, transcript, and bounded rollback history
+// independently. The workspace/file snapshot system remains separate: chat
+// rollback never writes or restores project files.
+struct ChatSessionState {
+    int id = 0;
+    std::string title;
+    ChatModelEntry model;
+    std::vector<std::pair<std::string, std::string>> history;
+    std::string responseBuffer;
+    bool running = false;
+    std::vector<ChatSessionCheckpoint> checkpoints;
+};
+
+// Inference workers post owned updates to the UI thread instead of touching
+// Win32 controls or chat-session containers directly.
+struct CopilotChatUiUpdate {
+    int sessionId = 0;
+    std::string response;
+    bool complete = false;
+};
+
+inline constexpr UINT kRawrxdCopilotUiUpdate = WM_APP + 107;
+
+// Dedicated PowerShell terminal callbacks originate on reader/monitor threads.
+// Own the payload and marshal it through the main window before touching any
+// RichEdit or status-bar control.
+struct PowerShellUiUpdate {
+    enum class Kind { Output, Error, Finished };
+    Kind kind = Kind::Output;
+    std::string text;
+    COLORREF color = RGB(200, 200, 200);
+    int exitCode = 0;
+};
+
+inline constexpr UINT kRawrxdPowerShellUiUpdate = WM_APP + 108;
 
 // Define LOG_FUNCTION macro if not already defined
 #ifndef LOG_FUNCTION
@@ -191,6 +259,10 @@ public:
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
+    void runNativeCodexPrompt(const std::string& prompt);
+    void requestNativeGhostText(const std::string& prompt,
+                                std::function<void(const std::string&, bool)> callback);
+    void appendNativeDebugOutput(const std::string& text, bool error = false);
 
     // Agentic Framework
     std::unique_ptr<AgenticBridge> m_agenticBridge;
@@ -243,6 +315,11 @@ public:
 private:
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ModelSelectorSubclassProc(HWND hwnd, UINT uMsg,
+                                                       WPARAM wParam, LPARAM lParam,
+                                                       UINT_PTR subclassId,
+                                                       DWORD_PTR refData);
+    void installModelSelectorProc(HWND combo);
 
     // Message handlers
     LRESULT handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -260,6 +337,7 @@ private:
     void createTitleBarControls();
     void layoutTitleBar(int width);
     void updateTitleBarText();
+    void updateEditorBreadcrumb();
     std::string extractLeafName(const std::string& path) const;
     void setCurrentDirectoryFromFile(const std::string& filePath);
     void createEditor(HWND hwnd);
@@ -804,8 +882,8 @@ private:
     
     // AI Inference State
     InferenceConfig m_inferenceConfig;
-    bool m_inferenceRunning = false;
-    bool m_inferenceStopRequested = false;
+    std::atomic_bool m_inferenceRunning{false};
+    std::atomic_bool m_inferenceStopRequested{false};
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;
@@ -819,6 +897,7 @@ private:
     HINSTANCE m_hInstance = nullptr;
     HWND m_hwndMain = nullptr;
     HWND m_hwndEditor = nullptr;
+    HWND m_hwndEditorBreadcrumb = nullptr;
     HWND m_hwndCommandInput = nullptr;
     HWND m_hwndStatusBar = nullptr;
     HWND m_hwndOutputTabs = nullptr;
@@ -949,6 +1028,8 @@ private:
     int m_lastFoundPos;
     HWND m_hwndFindDialog = nullptr;
     HWND m_hwndReplaceDialog = nullptr;
+    HWND m_hwndFindInput = nullptr;
+    HWND m_hwndReplaceInput = nullptr;
     
     // Primary Sidebar state
     HWND m_hwndActivityBar = nullptr;
@@ -963,6 +1044,7 @@ private:
     HWND m_hwndExplorerToolbar = nullptr;
     HIMAGELIST m_hImageListExplorer = nullptr;
     std::string m_explorerRootPath;
+    WNDPROC m_explorerTreeOriginalProc = nullptr;
     
     // Search View
     HWND m_hwndSearchInput = nullptr;
@@ -1051,21 +1133,46 @@ private:
     HWND m_hwndCopilotChatInput = nullptr;
     HWND m_hwndCopilotChatOutput = nullptr;
     HWND m_hwndCopilotSendBtn = nullptr;
+    HWND m_hwndCopilotStopBtn = nullptr;
     HWND m_hwndCopilotClearBtn = nullptr;
+    HWND m_hwndModelLabel = nullptr;
     HWND m_hwndModelSelector = nullptr;
+    HWND m_hwndGhostTextModelLabel = nullptr;
+    HWND m_hwndGhostModelSelector = nullptr;
+    HWND m_hwndAllowCloudGhostText = nullptr;
+    HWND m_hwndMaxTokensCaption = nullptr;
     HWND m_hwndMaxTokensSlider = nullptr;
     HWND m_hwndMaxTokensLabel = nullptr;
+    HWND m_hwndContextCaption = nullptr;
+    HWND m_hwndContextLabel = nullptr;
+    HWND m_hwndContextSlider = nullptr;
+    HWND m_hwndChatSessionTabs = nullptr;
+    HWND m_hwndNewChatBtn = nullptr;
+    HWND m_hwndCloseChatBtn = nullptr;
+    HWND m_hwndRestoreChatBtn = nullptr;
+    HWND m_hwndRollbackChatBtn = nullptr;
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
     int m_currentMaxTokens;
+    int m_currentContextTokens = 65536;
     std::vector<ChatModelEntry> m_availableModels;
     ChatModelEntry m_selectedChatModel;
+    ChatModelEntry m_ghostTextModel;
+    ChatModelEntry m_pendingInferenceModel;
+    GhostTextMode m_ghostTextMode = GhostTextMode::AutoLocal;
+    bool m_allowCloudGhostText = false;
+    std::unique_ptr<NativeGhostTextController> m_ghostText;
+    std::vector<std::unique_ptr<NativeGhostTextController>> m_ghostTextInputs;
     std::string m_agenticChatLoadedModelPath;
     std::thread m_modelDiscoveryThread;
     std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
         std::make_shared<std::atomic_bool>(false);
     std::atomic_bool m_modelDiscoveryRunning{false};
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
+    std::vector<ChatSessionState> m_chatSessions;
+    std::vector<ChatSessionState> m_closedChatSessions;
+    int m_activeChatSession = -1;
+    int m_nextChatSessionId = 1;
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
     // Panel (Bottom) - Terminal, Output, Problems, Debug Console
@@ -1293,12 +1400,30 @@ private:
     
     void createChatPanel();
     void HandleCopilotSend();
+    void HandleCopilotStop();
     void HandleCopilotClear();
+    void handleCopilotUiUpdate(int sessionId, const std::string& response,
+                               bool complete);
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
     void populateModelSelector();
     void onModelSelectionChanged();
+    void onGhostTextSelectionChanged();
+    void onGhostTextCloudConsentChanged();
     void onModelDiscoveryComplete(std::vector<ChatModelEntry>* discovered);
     void onMaxTokensChanged(int newValue);
+    void updateContextControls();
+    int effectiveMaxTokensForPrompt(const std::string& prompt) const;
+    void initializeNativeGhostText();
+    bool handleNativeGhostTextMessage(UINT message, WPARAM wParam, LPARAM lParam);
+    void notifyGhostTextInputChanged(HWND input);
+    void createChatSession(const std::string& title = "");
+    void switchChatSession(int index);
+    void updateChatSessionTabs();
+    void closeActiveChatSession();
+    void restoreClosedChatSession();
+    void checkpointActiveChat(const std::string& reason);
+    void rollbackActiveChat();
+    ChatSessionState* activeChatSession();
     
     // Debugger Execution Control
     void pauseExecution();
