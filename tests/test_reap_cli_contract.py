@@ -73,5 +73,51 @@ class ReapCliContract(unittest.TestCase):
         p = self.run_cli("capabilities", name)
         self.assertEqual(json.loads(p.stdout)["source"], name)
 
+    # Batch 2: 15 additional negative-contract and parser boundary cases.
+    def test_16_capabilities_extra_argument(self):
+        self.assert_usage_error("capabilities", "missing.gguf", "extra")
+
+    def test_17_inspect_extra_argument(self):
+        self.assert_usage_error("inspect", "missing.gguf", "extra")
+
+    def test_18_plan_missing_size(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size")
+
+    def test_19_plan_wrong_flag(self):
+        self.assert_usage_error("plan", "missing.gguf", "--target", "30GB")
+
+    def test_20_plan_extra_argument(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "30GB", "extra")
+
+    def test_21_plan_zero(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "0GB")
+
+    def test_22_plan_negative(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "-1GB")
+
+    def test_23_plan_unknown_unit(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "30XB")
+
+    def test_24_plan_missing_unit(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "30")
+
+    def test_25_plan_multiple_decimal_points(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "1.2.3GB")
+
+    def test_26_plan_tiny_fractional_byte(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "0.1B")
+
+    def test_27_plan_fractional_byte(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "1.5B")
+
+    def test_28_plan_uint64_overflow(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "18446744073709551616B")
+
+    def test_29_plan_extreme_exponent(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "1e99GB")
+
+    def test_30_plan_trailing_whitespace(self):
+        self.assert_usage_error("plan", "missing.gguf", "--size", "30GB ")
+
 if __name__ == "__main__":
     unittest.main()
