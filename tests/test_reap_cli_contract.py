@@ -172,7 +172,12 @@ class ReapCliContract(unittest.TestCase):
     def test_49_single_corrupt_gguf(self):
         with tempfile.TemporaryDirectory() as d:
             (Path(d) / "one.gguf").write_bytes(b"not gguf")
-            self.assert_capability_reason(d, json.loads(self.run_cli("capabilities", str(Path(d) / "one.gguf")).stdout)["reason"])
+            p = self.run_cli("capabilities", d)
+            self.assertEqual(p.returncode, 4)
+            payload = json.loads(p.stdout)
+            self.assertEqual(payload["format"], "gguf")
+            self.assertFalse(payload["inspectable"])
+            self.assertFalse(payload["transformable"])
 
     def test_50_multiple_ggufs_plus_text(self):
         with tempfile.TemporaryDirectory() as d:
