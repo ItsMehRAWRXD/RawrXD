@@ -109,18 +109,17 @@ float q4k_weight(uint rowBase, uint col) {
     return ds * float(sc) * float(q) - dm * float(mn);
 }
 
-// Q5_0: 32 values per block, 22 bytes per block
-// Layout: d (FP16, 2B) + dmin (FP16, 2B) + 32 nibbles packed (16B)
+// GGML Q5_0: FP16 d (2), 32 high bits (4), 16 packed nibbles.
 float q5_0_weight(uint rowBase, uint col) {
-    uint block = col / 32u;
+    uint b = rowBase + (col / 32u) * 22u;
     uint idx = col % 32u;
-    uint b = rowBase + block * 22u;
-    float ds = geth(b + 0u);
-    float dm = geth(b + 2u);
-    uint byteIdx = 4u + idx / 2u;
-    uint nibble = (getb(byteIdx) >> (4u * (idx % 2u))) & 0xFu;
-    int qs = int(nibble) - 16;
-    return ds * float(qs) - dm;
+    float d = geth(b);
+    uint high = getb(b + 2u) | (getb(b + 3u) << 8u) |
+                (getb(b + 4u) << 16u) | (getb(b + 5u) << 24u);
+    uint packed = getb(b + 6u + (idx & 15u));
+    uint q = idx < 16u ? (packed & 15u) : (packed >> 4u);
+    q |= ((high >> idx) & 1u) << 4u;
+    return d * float(int(q) - 16);
 }
 
 // Four-column Q4_K dot fragment.
@@ -205,7 +204,10 @@ void main() {
 
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
-    if (pc.type == 8u) {
+    if (pc.type == 6u) {
+        blocksPerRow = (pc.cols + 31u) / 32u;
+        rowBytes = blocksPerRow * 22u;
+    } else if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
         rowBytes = blocksPerRow * 34u;
     } else if (pc.type == 10u) {
@@ -223,7 +225,8 @@ void main() {
     }
 
     uint rb = row * rowBytes;
-    if (rb + rowBytes > pc.weightBytes) {
+    if (rowBytes == 0u || row > (pc.weightBytes / rowBytes) ||
+        rowBytes > pc.weightBytes || rb > pc.weightBytes - rowBytes) {
         if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
@@ -320,7 +323,8 @@ void main() {
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
-            if (pc.type == 8u) ww = q8_0_weight(rb, j);
+            if (pc.type == 6u) ww = q5_0_weight(rb, j);
+            else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
             else if (pc.type == 14u) ww = q6k_weight(rb, j);
             acc += ww * x[j];
