@@ -112,18 +112,14 @@ int main() {
     uint32_t dims[2] = {64, 64}; // vocab_size=64, embedding_length=64
     f.write((const char*)dims, 8);
     writeU32(f, 0); // type F32
-
-    // Record the offset where tensor data will start (after padding)
-    pad32(f);
-    uint64_t tensorDataOffset = (uint64_t)f.tellp();
-
-    // Go back and write the offset (8 bytes before current position)
-    auto curPos = f.tellp();
-    f.seekp(curPos - std::streamoff(8));
+    // Offset: tensor data starts right after metadata, padded to 32-byte boundary
+    uint64_t metadataEnd = (uint64_t)f.tellp() + 8; // position after this offset field
+    uint64_t tensorDataOffset = (metadataEnd + 31) & ~31ULL;
     writeU64(f, tensorDataOffset);
-    f.seekp(curPos);
-
-    // Tensor data: 64*64*4 = 16384 bytes of F32 weights
+    // Pad metadata section to 32-byte boundary before tensor data
+    pad32(f);
+    // Tensor data at the recorded offset
+    f.seekp(tensorDataOffset);
     std::vector<float> weights(64 * 64, 0.01f);
     f.write((const char*)weights.data(), weights.size() * 4);
 
