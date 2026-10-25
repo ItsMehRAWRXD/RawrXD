@@ -86,5 +86,32 @@ int main() {
     c.CommitPosition();
     assert(c.currentLength() == 6);
     assert(c.Key(0,5)[0] == 1);
+    // Capacity growth must retain all committed layers across 8/16/32/64.
+    c.Reset(3, 65, 4);
+    for (size_t pos = 0; pos < 65; ++pos) {
+        for (size_t layer = 0; layer < 3; ++layer) {
+            float key[4] = {float(pos), float(layer), 3.f, 4.f};
+            float val[4] = {5.f, float(pos), float(layer), 8.f};
+            c.Write(layer, key, val);
+        }
+        c.CommitPosition();
+    }
+    assert(c.currentLength() == 65);
+    assert(!c.CanAppend());
+    for (size_t pos = 0; pos < 65; ++pos)
+        for (size_t layer = 0; layer < 3; ++layer) {
+            assert(c.Key(layer,pos)[0] == float(pos));
+            assert(c.Key(layer,pos)[1] == float(layer));
+            assert(c.Value(layer,pos)[1] == float(pos));
+            assert(c.Value(layer,pos)[2] == float(layer));
+        }
+    assert(c.liveBytes() == 2 * 3 * 65 * 4 * sizeof(float));
+    c.Truncate(8);
+    assert(c.currentLength() == 8);
+    assert(c.Key(2,7)[0] == 7.f);
+    assert(c.Key(2,8)[0] == 0.f);
+    const size_t reclaimed = c.evictColdPages();
+    assert(reclaimed > 0);
+    assert(c.Key(2,7)[0] == 7.f);
     return 0;
 }
