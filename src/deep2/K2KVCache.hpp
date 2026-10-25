@@ -150,8 +150,9 @@ private:
 
     void EnsureHot(std::size_t pos) {
         if (pos < allocatedSeq_) return;
-        std::size_t neu = allocatedSeq_ > maxSeqLen_ - (std::min)(kPageTok_, maxSeqLen_)
-            ? maxSeqLen_ : allocatedSeq_ + kPageTok_;
+        const std::size_t remaining = maxSeqLen_ - allocatedSeq_;
+        const std::size_t increment = (std::min)(kPageTok_, remaining);
+        const std::size_t neu = allocatedSeq_ + increment;
         if (neu > maxSeqLen_) neu = maxSeqLen_;
         if (neu <= allocatedSeq_)
             throw std::out_of_range("K2KVCache: sequence length exceeded");
