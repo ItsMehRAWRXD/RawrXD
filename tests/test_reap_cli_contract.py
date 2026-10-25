@@ -119,5 +119,28 @@ class ReapCliContract(unittest.TestCase):
     def test_30_plan_trailing_whitespace(self):
         self.assert_usage_error("plan", "missing.gguf", "--size", "30GB ")
 
+    # Batch 3: 15 additional parser-admission checks. A valid size reaches
+    # the missing-model load error (exit 1), rather than usage error (exit 2).
+    def assert_size_admitted(self, size):
+        p = self.run_cli("plan", "__nonexistent_reap_size_test__.gguf", "--size", size)
+        self.assertEqual(p.returncode, 1, (size, p.stdout, p.stderr))
+        self.assertIn("GGUF_LOAD_FAILED", p.stderr)
+
+    def test_31_bytes_unit(self): self.assert_size_admitted("1B")
+    def test_32_megabytes(self): self.assert_size_admitted("30MB")
+    def test_33_mebibytes(self): self.assert_size_admitted("30MiB")
+    def test_34_gigabytes(self): self.assert_size_admitted("30GB")
+    def test_35_gibibytes(self): self.assert_size_admitted("30GiB")
+    def test_36_terabytes(self): self.assert_size_admitted("1TB")
+    def test_37_tebibytes(self): self.assert_size_admitted("1TiB")
+    def test_38_lowercase_unit(self): self.assert_size_admitted("30gb")
+    def test_39_mixedcase_unit(self): self.assert_size_admitted("30gB")
+    def test_40_decimal_integral_bytes(self): self.assert_size_admitted("1.0B")
+    def test_41_decimal_megabytes(self): self.assert_size_admitted("1.5MB")
+    def test_42_decimal_gigabytes(self): self.assert_size_admitted("0.5GB")
+    def test_43_leading_zero(self): self.assert_size_admitted("00030GB")
+    def test_44_leading_decimal(self): self.assert_size_admitted(".5GB")
+    def test_45_uint64_max(self): self.assert_size_admitted("18446744073709551615B")
+
 if __name__ == "__main__":
     unittest.main()
