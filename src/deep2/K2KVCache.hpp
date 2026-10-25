@@ -30,13 +30,15 @@ public:
     {
         if (numLayers == 0 || maxSeqLen == 0 || kvDim == 0)
             throw std::invalid_argument("K2KVCache: invalid dimensions");
+        const std::size_t initial = (std::min)(kPageTok_, maxSeqLen);
+        const std::size_t count = CheckedElements(numLayers, initial, kvDim);
+        std::vector<float> nk(count, 0.0f), nv(count, 0.0f);
+        keys_.swap(nk); values_.swap(nv);
         numLayers_ = numLayers;
         maxSeqLen_ = maxSeqLen;
         kvDim_ = kvDim;
         currentLength_ = 0;
-        allocatedSeq_ = (std::min)(kPageTok_, maxSeqLen_);
-        keys_.assign(numLayers_ * allocatedSeq_ * kvDim_, 0.0f);
-        values_.assign(numLayers_ * allocatedSeq_ * kvDim_, 0.0f);
+        allocatedSeq_ = initial;
     }
 
     std::size_t liveBytes() const noexcept {
@@ -154,8 +156,8 @@ private:
     }
 
     void GrowAllocated(std::size_t neu) {
-        std::vector<float> nk(numLayers_ * neu * kvDim_, 0.0f);
-        std::vector<float> nv(numLayers_ * neu * kvDim_, 0.0f);
+        const std::size_t count = CheckedElements(numLayers_, neu, kvDim_);
+        std::vector<float> nk(count, 0.0f), nv(count, 0.0f);
         const std::size_t copyPos = (std::min)(currentLength_, allocatedSeq_);
         for (std::size_t L = 0; L < numLayers_; ++L) {
             for (std::size_t p = 0; p < copyPos && p < neu; ++p) {
@@ -173,7 +175,13 @@ private:
     }
 
 private:
-    static constexpr std::size_t kPageTok_ = 128; // was 8 — cut O(n²) grow thrash on long decode
+    static std::size_t CheckedElements(std::size_t layers, std::size_t seq, std::size_t dim) {
+        const std::size_t max = (std::numeric_limits<std::size_t>::max)() / sizeof(float);
+        if (!layers || !seq || !dim || layers > max / seq || layers * seq > max / dim)
+            throw std::length_error("K2KVCache: dimension overflow");
+        return layers * seq * dim;
+    }
+    static constexpr std::size_t kPageTok_ = 8; // avoid 128-token eager allocation
 
     std::size_t numLayers_ = 0;
     std::size_t maxSeqLen_ = 0;
