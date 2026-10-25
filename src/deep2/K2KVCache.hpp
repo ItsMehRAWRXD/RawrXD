@@ -75,6 +75,13 @@ public:
         return kvDim_;
     }
 
+    // Explicit geometry and allocation introspection for admission receipts.
+    std::size_t allocatedPositions() const noexcept { return allocatedSeq_; }
+    std::size_t committedBytes() const noexcept {
+        return 2 * numLayers_ * currentLength_ * kvDim_ * sizeof(float);
+    }
+    std::size_t reservedBytes() const noexcept { return liveBytes(); }
+
     std::size_t currentLength() const noexcept
     {
         return currentLength_;
