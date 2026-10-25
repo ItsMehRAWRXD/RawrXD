@@ -152,6 +152,7 @@ public:
         if (!CanAppend())
             throw std::out_of_range("K2KVCache: sequence length exceeded");
 
+        EnsureHot(currentLength_); // committed positions must remain addressable
         ++currentLength_;
     }
 
