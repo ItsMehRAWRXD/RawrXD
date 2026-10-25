@@ -42,6 +42,7 @@ add_executable(test_metadata_parity
 
 add_executable(production_smoke_test
     src/tools/production_smoke_test.cpp
+    src/VulkanStagingPipeline.cpp
 )
 
 target_include_directories(Deep2Engine_Benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/core)
