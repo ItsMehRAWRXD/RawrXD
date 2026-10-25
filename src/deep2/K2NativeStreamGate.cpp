@@ -71,6 +71,27 @@ namespace {
 uint64_t g_currentResidency = 0;
 uint64_t g_peakResidency = 0;
 
+// The layer-by-layer fprintf probes are useful while diagnosing MLA failures,
+// but unconditional stderr I/O serializes the decode path and invalidates
+// performance measurements. Keep the probes available behind an explicit
+// opt-in switch; production runs are quiet by default.
+bool MlaTraceEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("RAWRXD_MLA_DIAGNOSTICS");
+        return value && (std::strcmp(value, "1") == 0 ||
+                         std::strcmp(value, "true") == 0 ||
+                         std::strcmp(value, "TRUE") == 0);
+    }();
+    return enabled;
+}
+
+template <typename... Args>
+void MlaTrace(const char* format, Args... args) {
+    if (!MlaTraceEnabled()) return;
+    std::fprintf(stderr, format, args...);
+    std::fflush(stderr);
+}
+
 void TrackAlloc(uint64_t bytes) {
     g_currentResidency += bytes;
     if (g_currentResidency > g_peakResidency) g_peakResidency = g_currentResidency;
@@ -545,8 +566,6 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     float* hiddenIn, float* hiddenOut, float* scratch, float* mlaOut,
     rawrxd::deep2::K2KVCache* kvCache, uint32_t position,
     Deep2::MlaCompleteStats* stats, std::string& error) {
-    fprintf(stderr, "[MLA_TRACE] RunMlaOnPayloads layer=%u starting\n", layerIdx);
-    fflush(stderr);
     // Stream-copy probe is for STREAM_COPY certs only. When GPU MLA pin is on,
     // EnsurePinnedPackedWeight owns residency â€” UploadLargest pollutes u/h and
     // can ReleaseWeightWindow on content-hit (false "no copy" retry).
@@ -572,15 +591,8 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     if (!qARef || !qBRef || !kvARef || !kBRef || !oRef ||
         !qANormRef || !kvANormRef || (!fusedKv && !vRef)) {
         error = "RunMlaOnPayloads: tensor index entry disappeared after payload load";
-        fprintf(stderr, "[MLA_TRACE] layer=%u missing index entry qA=%u qB=%u kvA=%u kB=%u v=%u o=%u qNorm=%u kvNorm=%u\n",
-                layerIdx, qARef ? 1u : 0u, qBRef ? 1u : 0u,
-                kvARef ? 1u : 0u, kBRef ? 1u : 0u, vRef ? 1u : 0u,
-                oRef ? 1u : 0u, qANormRef ? 1u : 0u, kvANormRef ? 1u : 0u);
-        fflush(stderr);
         return false;
     }
-    fprintf(stderr, "[MLA_TRACE] layer=%u views_begin fused=%u bytes=%llu\n", layerIdx, fusedKv ? 1u : 0u, static_cast<unsigned long long>(layerBytes));
-    fflush(stderr);
     Deep2::MLAWeights mla;
     mla.fusedKvB = fusedKv;
     mla.attnQ_a       = MakeTensorView(ptr(0), index, names[0], QuantFromGgml(qARef->ggmlType));
@@ -598,47 +610,21 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     mla.attnNorm      = MakeTensorView(ptr(6), index, names[6], RawrXD::QuantType::F32);
     mla.attnQ_a_norm  = MakeTensorView(ptr(7), index, names[7], RawrXD::QuantType::F32);
     mla.attnKV_a_norm = MakeTensorView(ptr(8), index, names[8], RawrXD::QuantType::F32);
-    fprintf(stderr, "[MLA_TRACE] layer=%u views_ready qA=%zu,%zu qB=%zu,%zu kvA=%zu,%zu kB=%zu,%zu o=%zu,%zu\n",
-            layerIdx,
-            mla.attnQ_a.dims().size() > 0 ? mla.attnQ_a.dims()[0] : 0,
-            mla.attnQ_a.dims().size() > 1 ? mla.attnQ_a.dims()[1] : 0,
-            mla.attnQ_b.dims().size() > 0 ? mla.attnQ_b.dims()[0] : 0,
-            mla.attnQ_b.dims().size() > 1 ? mla.attnQ_b.dims()[1] : 0,
-            mla.attnKV_a_mqa.dims().size() > 0 ? mla.attnKV_a_mqa.dims()[0] : 0,
-            mla.attnKV_a_mqa.dims().size() > 1 ? mla.attnKV_a_mqa.dims()[1] : 0,
-            mla.attnK_b.dims().size() > 0 ? mla.attnK_b.dims()[0] : 0,
-            mla.attnK_b.dims().size() > 1 ? mla.attnK_b.dims()[1] : 0,
-            mla.attnO.dims().size() > 0 ? mla.attnO.dims()[0] : 0,
-            mla.attnO.dims().size() > 1 ? mla.attnO.dims()[1] : 0);
-    fflush(stderr);
     size_t hiddenDim = k2cfg.hiddenDim;
     const float* normW = mla.attnNorm.asF32();
     if (normW) rmsNorm(hiddenIn, normW, scratch, hiddenDim, 1e-5f);
     else memcpy(scratch, hiddenIn, hiddenDim * sizeof(float));
-    fprintf(stderr, "[MLA_TRACE] layer=%u norm_ready data=%u\n", layerIdx, normW ? 1u : 0u);
-    fflush(stderr);
     memset(mlaOut, 0, hiddenDim * sizeof(float));
     Deep2::MLAForward mlaFwd;
     const uint64_t tMla = Deep2::StreamPathTiming_NowUs();
     const uint64_t rf0 = Deep2::OProj_ResidualFused().load();
     Deep2::OProj_SetResidualBase(hiddenIn);
-    fprintf(stderr, "[MLA_TRACE] layer=%u execute_begin\n", layerIdx);
-    fflush(stderr);
     bool ok = mlaFwd.Execute(scratch, hiddenOut, mla, k2cfg, error,
                              kvCache, layerIdx, position, stats);
-    fprintf(stderr, "[MLA_TRACE] layer=%u execute_end ok=%u err=%s\n",
-            layerIdx, ok ? 1u : 0u, error.empty() ? "(none)" : error.c_str());
-    fflush(stderr);
     Deep2::OProj_SetResidualBase(nullptr);
-    fprintf(stderr, "[MLA_TRACE] layer=%u residual_base_cleared\n", layerIdx);
-    fflush(stderr);
     Deep2::StreamPathTiming_Add(Deep2::SPT_mla(), tMla);
-    fprintf(stderr, "[MLA_TRACE] layer=%u timing_recorded\n", layerIdx);
-    fflush(stderr);
     if (Deep2::OProj_ResidualFused().load() == rf0) {
-        fprintf(stderr, "[MLA_TRACE] layer=%u residual_begin\n", layerIdx);
-        fflush(stderr);
-        // No GPU residual fuse â€” hiddenOut holds O_PROJ only; add residual.
+        // No GPU residual fuse — hiddenOut holds O_PROJ only; add residual.
         size_t i = 0;
 #if defined(__AVX512F__)
         for (; i + 16 <= hiddenDim; i += 16) {
@@ -653,8 +639,6 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
             _mm256_storeu_ps(hiddenOut + i, _mm256_add_ps(a, b));
         }
         for (; i < hiddenDim; ++i) hiddenOut[i] = hiddenIn[i] + hiddenOut[i];
-        fprintf(stderr, "[MLA_TRACE] layer=%u residual_end\n", layerIdx);
-        fflush(stderr);
     }
     for (size_t p = 0; p < 9; ++p) { TrackFree(payloads[p].size()); payloads[p].clear(); }
     return ok;
@@ -694,11 +678,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     const Deep2::KimiK2Config& k2cfg, float* hidden, bool enableMlaComplete,
     Deep2::MlaCompleteStats* aggStats, uint32_t position, uint32_t seqNeed,
     std::string& error) {
-    fprintf(stderr, "K2_MLA_ENTER layers=%u position=%u seqNeed=%u\n",
-            testLayers, position, seqNeed);
-    fflush(stderr);
-    fprintf(stderr, "[K2_DIAG] ForwardMLALayers testLayers=%u\n", testLayers);
-    fflush(stderr);
+    MlaTrace("K2_MLA_ENTER layers=%u position=%u seqNeed=%u\n",
+             testLayers, position, seqNeed);
+    MlaTrace("[K2_DIAG] ForwardMLALayers testLayers=%u\n", testLayers);
     /* P1 witness: real ForwardMLALayers entry â‰  scoreboard scheduler LIVE. */
     Deep2::scoreboard::MarkRealKernelDispatch();
     if (enableMlaComplete) {
@@ -709,8 +691,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     std::vector<float> scratch(hiddenDim);
     std::vector<float> tempHidden(hiddenDim);
     std::vector<float> mlaOut(hiddenDim);
-    fprintf(stderr, "K2_MLA_BUFFERS hidden=%zu\n", hiddenDim);
-    fflush(stderr);
+    MlaTrace("K2_MLA_BUFFERS hidden=%zu\n", hiddenDim);
     memcpy(tempHidden.data(), hidden, hiddenDim * sizeof(float));
 
     rawrxd::deep2::K2KVCache* kvPtr = nullptr;
@@ -745,11 +726,6 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             }
         }
         const size_t kvDim = (std::max)(H * (nope + rope), H * vDim);
-        fprintf(stderr,
-            "[MLA_KV_GEOMETRY] ForwardMLALayers: H=%zu nope=%zu rope=%zu vDim=%zu "
-            "kvDim=%zu testLayers=%zu tlsKv.kvDim=%zu tlsKv.numLayers=%zu\n",
-            H, nope, rope, vDim, kvDim, testLayers,
-            tlsKv.kvDim(), tlsKv.numLayers());
         /* Align host KV with PathBAttend seqCap=512 (was 128 OOM guard). */
         size_t need = (size_t)(seqNeed ? seqNeed : 8u);
         if (need < 8u) need = 8u;
@@ -771,9 +747,6 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
         kvPtr = &tlsKv;
         TrackAlloc(tlsKv.liveBytes());
-        fprintf(stderr, "K2_MLA_KV_READY layers=%u dim=%zu len=%zu\n",
-                testLayers, kvDim, tlsKv.currentLength());
-        fflush(stderr);
     }
 
     auto releaseKvTrack = [&]() {
@@ -817,14 +790,12 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     LayerSlot slots[4];
     auto loadSlot = [&](LayerSlot& s, uint32_t layer) {
         ResolveMlaNames(layer, index, s.names, s.fusedKv);
-        fprintf(stderr, "[MLA_TRACE] loadSlot layer=%u starting LoadMlaPayloads\n", layer);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] loadSlot layer=%u starting LoadMlaPayloads\n", layer);
         for (size_t i = 0; i < 9; ++i) s.borrow[i] = nullptr;
         const bool ok = LoadMlaPayloads(index, s.names, s.fusedKv, s.payloads,
                                         s.borrow, layer, s.bytes, s.err);
-        fprintf(stderr, "[MLA_TRACE] loadSlot layer=%u LoadMlaPayloads ok=%u err=%s\n",
-                layer, ok ? 1u : 0u, s.err.empty() ? "(none)" : s.err.c_str());
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] loadSlot layer=%u LoadMlaPayloads ok=%u err=%s\n",
+                 layer, ok ? 1u : 0u, s.err.empty() ? "(none)" : s.err.c_str());
         s.life.consumersRemaining.store(1, std::memory_order_relaxed);
         s.life.lease.bytes = ok ? (const void*)s.payloads[0].data() : nullptr;
         s.gate.failed.store(!ok, std::memory_order_release);
@@ -891,41 +862,35 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     };
 
     issueUpTo(0);
-    fprintf(stderr, "K2_MLA_FIRST_SLOT_ISSUED\n");
-    fflush(stderr);
+    MlaTrace("K2_MLA_FIRST_SLOT_ISSUED\n");
     bool stepRope = false;
     for (uint32_t layer = 0; layer < testLayers; ++layer) {
-        fprintf(stderr, "[MLA_LOOP] layer=%u/%u entering iteration\n",
-                layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_LOOP] layer=%u/%u entering iteration\n",
+                 layer, testLayers);
         Deep2::hostfc::LayerEdge hostEdge(layer, testLayers);
-        fprintf(stderr, "[MLA_LOOP] layer=%u/%u LayerEdge constructed\n",
-                layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_LOOP] layer=%u/%u LayerEdge constructed\n",
+                 layer, testLayers);
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
         Deep2::MlaCompleteStats layerStats;
         if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerStart(Deep2::LivePath_ActiveCyclone(), layer, 0);
-        fprintf(stderr, "[MLA_LOOP] layer=%u/%u LivePath done\n",
-                layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_LOOP] layer=%u/%u LivePath done\n",
+                 layer, testLayers);
 
         issueUpTo(layer + 1);
         LayerSlot& s = slots[layer & 3u];
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u gate_ready=%u failed=%u\n",
-                layer, testLayers, s.gate_ready ? 1u : 0u,
-                s.gate.failed.load(std::memory_order_acquire) ? 1u : 0u);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u gate_ready=%u failed=%u\n",
+                 layer, testLayers, s.gate_ready ? 1u : 0u,
+                 s.gate.failed.load(std::memory_order_acquire) ? 1u : 0u);
         /* P3 tip: ready-check + scoreboard pump; fail-closed join. LIVE=0. */
         if (!Deep2::scoreboard::TryReadyAwaitTip(s.gate))
             awaitSlot(s);
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u after await ready=%u failed=%u err=%s\n",
-                layer, testLayers,
-                s.gate.ready.load(std::memory_order_acquire) ? 1u : 0u,
-                s.gate.failed.load(std::memory_order_acquire) ? 1u : 0u,
-                s.err.empty() ? "(none)" : s.err.c_str());
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u after await ready=%u failed=%u err=%s\n",
+                 layer, testLayers,
+                 s.gate.ready.load(std::memory_order_acquire) ? 1u : 0u,
+                 s.gate.failed.load(std::memory_order_acquire) ? 1u : 0u,
+                 s.err.empty() ? "(none)" : s.err.c_str());
         if (!s.gate.ready.load(std::memory_order_acquire) ||
             s.gate.failed.load(std::memory_order_acquire)) {
             joinAll();
@@ -933,27 +898,23 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             releaseKvTrack();
             return false;
         }
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u calling RunMlaOnPayloads\n",
-                layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u calling RunMlaOnPayloads\n",
+                 layer, testLayers);
         if (!RunMlaOnPayloads(layer, index, k2cfg, s.names, s.fusedKv, s.payloads,
                               s.borrow, s.bytes, in, out, scratch.data(),
                               mlaOut.data(), kvPtr, position,
                               enableMlaComplete ? &layerStats : nullptr, error)) {
-            fprintf(stderr, "[MLA_TRACE] Layer %u/%u RunMlaOnPayloads FAILED: %s\n",
-                    layer, testLayers, error.c_str());
-            fflush(stderr);
+            MlaTrace("[MLA_TRACE] Layer %u/%u RunMlaOnPayloads FAILED: %s\n",
+                     layer, testLayers, error.c_str());
             joinAll();
             releaseKvTrack();
             return false;
         }
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u MLA_RETURNED\n", layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u MLA_RETURNED\n", layer, testLayers);
         /* Host MoE after MLA: router â†’ shared placer â†’ execute ALL selected. */
         if (k2cfg.numExperts > 0) {
-            fprintf(stderr, "[MOE_TRACE] layer=%u before_after_mla numExperts=%u\n",
-                    layer, k2cfg.numExperts);
-            fflush(stderr);
+            MlaTrace("[MOE_TRACE] layer=%u before_after_mla numExperts=%u\n",
+                     layer, k2cfg.numExperts);
             /* Stream generate path: all tokens count as DECODE for host proof. */
             const bool decodePhase = true;
             Deep2::moe_ltrace::SetToken(position);
@@ -963,20 +924,15 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                 releaseKvTrack();
                 return false;
             }
-            fprintf(stderr, "[MOE_TRACE] layer=%u after_after_mla\n", layer);
-            fflush(stderr);
+            MlaTrace("[MOE_TRACE] layer=%u after_after_mla\n", layer);
         }
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u post_moe\n", layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u post_moe\n", layer, testLayers);
         Deep2::RawrScoreboardNoteExecute();
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u scoreboard_done\n", layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u scoreboard_done\n", layer, testLayers);
         issueUpTo(layer + 2);
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u issue_next_done\n", layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u issue_next_done\n", layer, testLayers);
         if (layer >= 1) retireSlot(slots[(layer - 1u) & 3u]);
-        fprintf(stderr, "[MLA_TRACE] Layer %u/%u retire_done\n", layer, testLayers);
-        fflush(stderr);
+        MlaTrace("[MLA_TRACE] Layer %u/%u retire_done\n", layer, testLayers);
 
         if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerEnd(Deep2::LivePath_ActiveCyclone(), layer, 0, 0);
@@ -1498,8 +1454,7 @@ Result Run(const fs::path& shardDir,
             fflush(stderr);
         }
         try {
-        fprintf(stderr, "K2_STEP_BEFORE_EMBED step=%u token=%d\n", step, curToken);
-        fflush(stderr);
+        MlaTrace("K2_STEP_BEFORE_EMBED step=%u token=%d\n", step, curToken);
         if (!LookupRealTokenEmbed(embed, k2cfg, curToken, hidden.data(), stepErr)) {
             result.error = stepErr;
             Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
@@ -1520,11 +1475,9 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
-        fprintf(stderr, "K2_STEP_AFTER_EMBED step=%u\n", step);
-        fflush(stderr);
+        MlaTrace("K2_STEP_AFTER_EMBED step=%u\n", step);
         memcpy(preMla.data(), hidden.data(), hiddenDim * sizeof(float));
-        fprintf(stderr, "K2_STEP_BEFORE_MLA step=%u layers=%u\n", step, layerDepth);
-        fflush(stderr);
+        MlaTrace("K2_STEP_BEFORE_MLA step=%u layers=%u\n", step, layerDepth);
         if (!ForwardMLALayers(layerDepth, index, k2cfg, hidden.data(),
                               cfg.enableMlaComplete, &g12Stats, step,
                               cfg.streamTokens + 8u, stepErr)) {
@@ -1547,8 +1500,7 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
-        fprintf(stderr, "K2_STEP_AFTER_MLA step=%u\n", step);
-        fflush(stderr);
+        MlaTrace("K2_STEP_AFTER_MLA step=%u\n", step);
         Deep2::Ev512::HostEmitForwardComplete(step, (uint64_t)hiddenDim);
         Deep2::Ev512::HostEmitWeightRangeReady(step, (uint64_t)layerDepth);
         Deep2::Ev512::HostEmitKVHotsetReady(step, (uint64_t)(step + 1u));

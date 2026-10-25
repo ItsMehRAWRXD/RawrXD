@@ -3,11 +3,30 @@
 #include "K2KVCache.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 
 namespace Deep2 {
 namespace {
+
+bool MlaDiagEnabled() {
+    static const bool enabled = [] {
+        const char* value = std::getenv("RAWRXD_MLA_DIAGNOSTICS");
+        return value && (std::strcmp(value, "1") == 0 ||
+                         std::strcmp(value, "true") == 0 ||
+                         std::strcmp(value, "TRUE") == 0);
+    }();
+    return enabled;
+}
+
+template <typename... Args>
+void MlaDiag(const char* format, Args... args) {
+    if (!MlaDiagEnabled()) return;
+    std::fprintf(stderr, format, args...);
+    std::fflush(stderr);
+}
 
 void ropeNeoXInplace(float* x, size_t dim, uint32_t pos,
                      float theta, float scale) {
@@ -73,7 +92,7 @@ bool MlaAttentionComplete(
     const size_t kPack = numHeads * qkDim;
     const size_t vPack = numHeads * vHeadDim;
     const size_t kvDim = (std::max)(kPack, vPack);
-    fprintf(stderr,
+    MlaDiag(
         "[MLA_KV_GEOMETRY] cacheDim=%zu expectedDim=%zu heads=%zu nope=%zu rope=%zu vDim=%zu "
         "qkDim=%zu kPack=%zu vPack=%zu layerIdx=%zu numLayers=%zu\n",
         kvCache->kvDim(), kvDim, numHeads, qkNopeHeadDim, qkRopeHeadDim, vHeadDim,
@@ -87,19 +106,16 @@ bool MlaAttentionComplete(
         return false;
     }
 
-    fprintf(stderr, "[MLA_ATTENTION] layer=%u pos=%u heads=%zu qkDim=%zu kvDim=%zu seqLen=%zu\n",
+    MlaDiag("[MLA_ATTENTION] layer=%u pos=%u heads=%zu qkDim=%zu kvDim=%zu seqLen=%zu\n",
             layerIdx, position, numHeads, qkDim, kvDim, kvCache->currentLength() + 1);
-    fflush(stderr);
 
     ropeNeoXInplace(k_pe, qkRopeHeadDim, position, ropeTheta, ropeScale);
-    fprintf(stderr, "[MLA_ATTENTION] layer=%u rope done\n", layerIdx);
-    fflush(stderr);
+    MlaDiag("[MLA_ATTENTION] layer=%u rope done\n", layerIdx);
 
     std::vector<float> qFull(numHeads * qkDim);
     std::vector<float> kCur(kvDim, 0.0f);
     std::vector<float> vCur(kvDim, 0.0f);
-    fprintf(stderr, "[MLA_ATTENTION] layer=%u buffers allocated\n", layerIdx);
-    fflush(stderr);
+    MlaDiag("[MLA_ATTENTION] layer=%u buffers allocated\n", layerIdx);
 
     for (size_t h = 0; h < numHeads; ++h) {
         const float* qh = q_b + h * qHeadDim;
@@ -120,8 +136,7 @@ bool MlaAttentionComplete(
         error = std::string("MlaAttentionComplete: KV write: ") + ex.what();
         return false;
     }
-    fprintf(stderr, "[MLA_ATTENTION] layer=%u KV write done\n", layerIdx);
-    fflush(stderr);
+    MlaDiag("[MLA_ATTENTION] layer=%u KV write done\n", layerIdx);
 
     const size_t seqLen = kvCache->currentLength() + 1;
     const float scale = 1.0f / sqrtf(static_cast<float>(qkDim));
@@ -138,9 +153,8 @@ bool MlaAttentionComplete(
             scores[t] = static_cast<float>(dot) * scale;
         }
         if (h % 16 == 0) {
-            fprintf(stderr, "[MLA_ATTENTION] layer=%u head %zu done, seqLen=%zu\n",
+            MlaDiag("[MLA_ATTENTION] layer=%u head %zu done, seqLen=%zu\n",
                     layerIdx, h, seqLen);
-            fflush(stderr);
         }
         if (!softmaxInplaceFinite(scores.data(), seqLen)) {
             error = "MlaAttentionComplete: softmax non-finite";
@@ -154,9 +168,8 @@ bool MlaAttentionComplete(
         }
     }
 
-    fprintf(stderr, "[MLA_ATTENTION] layer=%u all %zu heads done\n",
+    MlaDiag("[MLA_ATTENTION] layer=%u all %zu heads done\n",
             layerIdx, numHeads);
-    fflush(stderr);
 
     if (stats) {
         stats->ropeApplied = true;
