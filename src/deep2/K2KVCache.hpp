@@ -129,6 +129,21 @@ public:
         }
     }
 
+    // Drop all positions after the specified committed prefix. Used for
+    // decode cancellation and prefill rollback without changing geometry.
+    void Truncate(std::size_t committedPrefix)
+    {
+        if (committedPrefix > currentLength_)
+            throw std::out_of_range("K2KVCache: truncate beyond committed length");
+        for (std::size_t layer = 0; layer < numLayers_; ++layer) {
+            for (std::size_t pos = committedPrefix; pos < allocatedSeq_; ++pos) {
+                std::fill_n(MutableAt(keys_, layer, pos), kvDim_, 0.0f);
+                std::fill_n(MutableAt(values_, layer, pos), kvDim_, 0.0f);
+            }
+        }
+        currentLength_ = committedPrefix;
+    }
+
     void CommitPosition()
     {
         if (!CanAppend())
