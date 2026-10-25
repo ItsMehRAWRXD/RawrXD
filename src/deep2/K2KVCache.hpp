@@ -116,6 +116,19 @@ public:
         std::memcpy(dstV, value, kvDim_ * sizeof(float));
     }
 
+    // Discard any speculative writes at the current decode position.
+    // Does not modify previously committed positions.
+    void RollbackPosition()
+    {
+        if (currentLength_ >= allocatedSeq_) return;
+        for (std::size_t layer = 0; layer < numLayers_; ++layer) {
+            float* k = MutableAt(keys_, layer, currentLength_);
+            float* v = MutableAt(values_, layer, currentLength_);
+            std::fill_n(k, kvDim_, 0.0f);
+            std::fill_n(v, kvDim_, 0.0f);
+        }
+    }
+
     void CommitPosition()
     {
         if (!CanAppend())
