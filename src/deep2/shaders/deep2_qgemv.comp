@@ -205,13 +205,13 @@ void main() {
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
     if (pc.type == 6u) {
-        blocksPerRow = (pc.cols + 31u) / 32u;
+        blocksPerRow = pc.cols / 32u + uint(pc.cols % 32u != 0u);
         rowBytes = blocksPerRow * 22u;
     } else if (pc.type == 8u) {
         blocksPerRow = (pc.cols + 31u) / 32u;
         rowBytes = blocksPerRow * 34u;
     } else if (pc.type == 10u) {
-        blocksPerRow = (pc.cols + 255u) / 256u;
+        blocksPerRow = pc.cols / 256u + uint(pc.cols % 256u != 0u);
         rowBytes = blocksPerRow * 84u;
     } else if (pc.type == 12u) {
         blocksPerRow = (pc.cols + 255u) / 256u;
@@ -220,7 +220,7 @@ void main() {
         blocksPerRow = (pc.cols + 255u) / 256u;
         rowBytes = blocksPerRow * 210u;
     } else {
-        y[row] = uintBitsToFloat(0x7fc00000u);
+        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
 
