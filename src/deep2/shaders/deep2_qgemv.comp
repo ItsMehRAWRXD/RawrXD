@@ -22,7 +22,7 @@ layout(push_constant) uniform Push {
 } pc;
 
 // AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
-shared float subgroupSums[8];
+shared float subgroupSums[256];
 
 // Q4_K/Q6_K use the same Q8_K activation quantization as the CPU ggml
 // authority.  The previous shader directly multiplied dequantized weights by
@@ -342,14 +342,13 @@ void main() {
         subgroupSums[gl_SubgroupID] = wave;
     barrier();
 
-    // The first subgroup reduces one value per subgroup.
-    if (gl_SubgroupID == 0u) {
-        float v = gl_SubgroupInvocationID < gl_NumSubgroups
-            ? subgroupSums[gl_SubgroupInvocationID]
-            : 0.0;
-        float total = subgroupAdd(v);
-        if (subgroupElect())
-            y[row] = total;
+    // A single elected invocation completes the cross-subgroup reduction.
+    // Do not assume 32/64-lane subgroups or a maximum of eight subgroups.
+    if (lane == 0u) {
+        float total = 0.0;
+        for (uint i = 0u; i < gl_NumSubgroups; ++i)
+            total += subgroupSums[i];
+        y[row] = total;
     }
 
 }
