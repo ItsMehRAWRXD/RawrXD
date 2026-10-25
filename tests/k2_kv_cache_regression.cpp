@@ -68,5 +68,23 @@ int main() {
     assert(c.currentLength() == 0);
     c.RollbackPosition();
     assert(c.Key(0,0)[0] == 0);
+    // Truncation preserves prefix, zeroes discarded positions, and permits replay.
+    c.Reset(2, 17, 4);
+    for (size_t i = 0; i < 10; ++i) {
+        c.Write(0, k.data(), v.data());
+        c.CommitPosition();
+    }
+    assert(c.currentLength() == 10);
+    assert(throws([&] { c.Truncate(11); }));
+    assert(c.currentLength() == 10);
+    c.Truncate(5);
+    assert(c.currentLength() == 5);
+    assert(c.Key(0,4)[0] == 1);
+    assert(c.Key(0,5)[0] == 0);
+    assert(c.Value(0,9)[3] == 0);
+    c.Write(0, k.data(), v.data());
+    c.CommitPosition();
+    assert(c.currentLength() == 6);
+    assert(c.Key(0,5)[0] == 1);
     return 0;
 }
