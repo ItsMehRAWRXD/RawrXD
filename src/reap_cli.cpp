@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <cerrno>
+#include <limits>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -69,31 +71,55 @@ static int capabilities(const std::string& input) {
 }
 
 static bool bytes(const std::string& s, uint64_t& out) {
-    size_t n = 0; while (n < s.size() && (std::isdigit((unsigned char)s[n]) || s[n] == '.')) ++n;
-    if (!n || n == s.size()) return false;
-    double v = std::strtod(s.substr(0, n).c_str(), nullptr);
-    std::string u = s.substr(n); std::transform(u.begin(), u.end(), u.begin(), ::toupper);
-    uint64_t m = 1;
-    if (u == "B") m = 1; else if (u == "MB" || u == "MIB") m = 1ull<<20;
-    else if (u == "GB" || u == "GIB") m = 1ull<<30; else if (u == "TB" || u == "TIB") m = 1ull<<40;
+    out = 0;
+    if (s.empty()) return false;
+    size_t n = 0;
+    bool dot = false, digit = false;
+    for (; n < s.size(); ++n) {
+        const unsigned char c = static_cast<unsigned char>(s[n]);
+        if (c >= '0' && c <= '9') { digit = true; continue; }
+        if (c == '.' && !dot) { dot = true; continue; }
+        break;
+    }
+    if (!digit || n == s.size()) return false;
+    const std::string number = s.substr(0, n);
+    char* end = nullptr;
+    errno = 0;
+    const long double v = std::strtold(number.c_str(), &end);
+    if (errno == ERANGE || end != number.c_str() + number.size() ||
+        !std::isfinite(v) || v <= 0) return false;
+    std::string unit = s.substr(n);
+    for (char& c : unit) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    uint64_t multiplier = 0;
+    if (unit == "B") multiplier = 1;
+    else if (unit == "MB" || unit == "MIB") multiplier = 1ull << 20;
+    else if (unit == "GB" || unit == "GIB") multiplier = 1ull << 30;
+    else if (unit == "TB" || unit == "TIB") multiplier = 1ull << 40;
     else return false;
-    if (!std::isfinite(v) || !(v > 0) || v * (long double)m > UINT64_MAX) return false;
-    out = (uint64_t)(v * m); return out != 0;
+    const long double value = v * static_cast<long double>(multiplier);
+    if (!std::isfinite(value) || value < 1 ||
+        value >= std::ldexp(1.0L, 64) || std::floor(value) != value) return false;
+    out = static_cast<uint64_t>(value);
+    return true;
 }
 
 int main(int argc, char** argv) {
-    if (argc >= 3 && std::string(argv[1]) == "capabilities") return capabilities(argv[2]);
+    if (argc >= 2 && std::string(argv[1]) == "capabilities") {
+        if (argc != 3) { usage(); return 2; }
+        return capabilities(argv[2]);
+    }
     if (argc < 3 || (std::string(argv[1]) != "inspect" && std::string(argv[1]) != "plan")) { usage(); return 2; }
+    if (std::string(argv[1]) == "inspect" && argc != 3) { usage(); return 2; }
+    uint64_t target = 0;
+    if (std::string(argv[1]) == "plan" &&
+        (argc != 5 || std::string(argv[3]) != "--size" || !bytes(argv[4], target))) {
+        usage(); return 2;
+    }
     const std::string path = argv[2];
     Deep2::GGUFLoader loader;
     if (!loader.load(path)) { std::cerr << "GGUF_LOAD_FAILED: " << loader.error() << "\n"; return 1; }
-    uint64_t target = 0;
-    if (std::string(argv[1]) == "plan") {
-        if (argc != 5 || std::string(argv[3]) != "--size" || !bytes(argv[4], target)) { usage(); return 2; }
-    }
     uint64_t expertBytes = 0, expertTensors = 0;
     uint64_t logicalExperts = 0, logicalExpertBytes = 0, minTripletBytes = 0, maxTripletBytes = 0;
-    std::unordered_map<std::string, uint64_t> byType;
     for (const auto& name : loader.listTensors()) {
         const auto* t = loader.getTensor(name); if (!t) continue;
         const bool expert = name.find(".experts.") != std::string::npos ||
@@ -102,7 +128,7 @@ int main(int argc, char** argv) {
                             name.find(".ffn_up_exps.") != std::string::npos ||
                             name.find(".ffn_down_exps.") != std::string::npos ||
                             name.find("experts.") == 0;
-        if (expert) { expertBytes += t->sizeBytes; ++expertTensors; byType[std::to_string((int)t->type)] += t->sizeBytes; }
+        if (expert) { expertBytes += t->sizeBytes; ++expertTensors; }
     }
     // DeepSeek R1's stacked expert projections are grouped as complete
     // gate/up/down triplets. Derive the logical count from actual tensor
@@ -132,13 +158,43 @@ int main(int argc, char** argv) {
     uint64_t total = 0;
     std::error_code ec;
     fs::path first(path); fs::path dir = first.parent_path();
-    std::string stem = first.filename().string();
-    auto marker = stem.find("-00001-of-");
+    const std::string stem = first.filename().string();
+    const auto marker = stem.find("-00001-of-");
     if (marker != std::string::npos) {
-        std::string prefix = stem.substr(0, marker); std::string suffix = stem.substr(marker + 11);
-        for (const auto& e : fs::directory_iterator(dir, ec)) if (!ec && e.path().filename().string().rfind(prefix + "-", 0) == 0 && e.path().extension() == ".gguf") total += fs::file_size(e.path(), ec);
-    } else total = fs::file_size(first, ec);
-    if (!total) total = loader.mappedBytes();
+        const std::string prefix = stem.substr(0, marker);
+        const std::string suffix = stem.substr(marker + 10);
+        if (suffix.size() != 9 || suffix.substr(5) != ".gguf") {
+            std::cerr << "INVALID_SHARD_NAME\n"; return 4;
+        }
+        uint64_t expected = 0;
+        for (size_t i = 0; i < 5; ++i) {
+            if (suffix[i] < '0' || suffix[i] > '9') { std::cerr << "INVALID_SHARD_NAME\n"; return 4; }
+            expected = expected * 10 + static_cast<unsigned>(suffix[i] - '0');
+        }
+        if (!expected || expected > 99999) { std::cerr << "INVALID_SHARD_COUNT\n"; return 4; }
+        for (uint64_t i = 1; i <= expected; ++i) {
+            std::string index = std::to_string(i);
+            index.insert(0, 5 - index.size(), '0');
+            std::string count = std::to_string(expected);
+            count.insert(0, 5 - count.size(), '0');
+            const fs::path shard = dir / (prefix + "-" + index + "-of-" + count + ".gguf");
+            ec.clear();
+            if (!fs::is_regular_file(shard, ec) || ec) {
+                std::cerr << "MISSING_SHARD " << shard.string() << "\n"; return 4;
+            }
+            ec.clear();
+            const uint64_t size = fs::file_size(shard, ec);
+            if (ec || size > UINT64_MAX - total) {
+                std::cerr << "SHARD_SIZE_ERROR\n"; return 4;
+            }
+            total += size;
+        }
+    } else {
+        ec.clear();
+        total = fs::file_size(first, ec);
+        if (ec) { std::cerr << "FILE_SIZE_ERROR\n"; return 4; }
+    }
+    if (!total) { std::cerr << "EMPTY_MODEL\n"; return 4; }
     std::cout << "{\"source\":" << json_quote(path) << ",\"shards\":" << loader.shardCount()
               << ",\"tensors\":" << loader.tensorCount() << ",\"bytes\":" << total
               << ",\"expert_tensors\":" << expertTensors << ",\"expert_bytes\":" << expertBytes
