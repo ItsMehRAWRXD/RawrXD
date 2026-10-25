@@ -11,6 +11,7 @@
 #include "lavapath/DualStickImbalance.hpp"
 #include "lavapath/DualStickImbalance_Xfer.hpp"
 #include "lavapath/GreedyDetTrace.hpp"
+#include "ReapRouteTracker.hpp"
 #include "MoELiveAdd.hpp"
 #include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
@@ -99,7 +100,24 @@ bool LoadAndRoute(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         cachedLayer = layer;
     }
     MoEPlaceLive().moe_router_calls++;
-    return router.Route(hidden, route, error);
+    const bool routed = router.Route(hidden, route, error);
+    if (routed && route.IsValid()) {
+        // This is the actual production K2 route: expert IDs and final
+        // coefficients returned by KimiK2Router.  Feed those values into the
+        // installed REAP observer without inventing raw gate probabilities.
+        // The empty probability vector is intentional and distinguishes
+        // selected-route evidence from unobserved gate logits.
+        std::vector<int> ids;
+        std::vector<float> weights;
+        ids.reserve(route.count);
+        weights.reserve(route.count);
+        for (uint32_t i = 0; i < route.count; ++i) {
+            ids.push_back(static_cast<int>(route.expertIds[i]));
+            weights.push_back(route.weights[i]);
+        }
+        ReapRouteTracker::Instance().Observe(layer, {}, ids, weights);
+    }
+    return routed;
 }
 
 bool ExecStickWorklist(const GlobalTensorIndex& index, const KimiK2Config& cfg,

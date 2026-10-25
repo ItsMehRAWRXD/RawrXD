@@ -237,5 +237,13 @@ void VulkanCompute::SetPinResidentBudget(size_t bytes) {
     backend_->ApplyWeightWindowPolicy(bytes, bytes, 0, bytes);
 }
 
+void VulkanCompute::BeginMoePinHold() {
+    if (backend_ != nullptr) backend_->BeginMoePinHold();
+}
+
+void VulkanCompute::EndMoePinHold() {
+    if (backend_ != nullptr) backend_->EndMoePinHold();
+}
+
 
 } // namespace CPUInference

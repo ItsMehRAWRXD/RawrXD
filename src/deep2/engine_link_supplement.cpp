@@ -41,24 +41,6 @@ bool AmdGpuPowerTelemetryAvailable() noexcept { return false; }
 bool GpuPowerValidForPolicy() noexcept { return false; }
 } // namespace rawrxd
 
-#include "K2NativeStreamGate.hpp"
-
-// The production K2 stream gate is not source-compatible with this checkout's
-// current Deep2 ABI. Keep the baseline fail-closed until the complete provider
-// set is integrated as one coherent revision.
-namespace K2NativeStreamGate {
-Result Run(const std::filesystem::path&,
-           const Deep2::GlobalTensorIndex&,
-           const Deep2::KimiK2Config&,
-           const std::vector<std::filesystem::path>&,
-           const Config&) {
-    Result r;
-    r.ok = false;
-    r.error = "K2NativeStreamGate: provider set is not ABI-compatible with this build";
-    return r;
-}
-} // namespace K2NativeStreamGate
-
 namespace Deep2 {
 
 // ----------------------------------------------------------------------------
@@ -122,47 +104,8 @@ void Fused_LawResetDepth() {
 } // namespace Deep2
 
 // ----------------------------------------------------------------------------
-// VwaRangeSet* — real lineage computations over VwaLineageRange arrays.
-// These produce genuine hashes/sums/equalities consumed by K2ValidateLineage.
-// NOT stubs returning zero.
 // ----------------------------------------------------------------------------
 extern "C" {
-
-uint64_t VwaRangeSetSumBytes64(const VwaLineageRange* ranges, uint64_t count) {
-    if (!ranges || count == 0) return 0;
-    uint64_t total = 0;
-    for (uint64_t i = 0; i < count; ++i) {
-        const uint64_t bc = ranges[i].byteCount;
-        if (total > UINT64_MAX - bc) return UINT64_MAX; // overflow sentinel
-        total += bc;
-    }
-    return total;
-}
-
-uint64_t VwaRangeSetHash64(const VwaLineageRange* ranges, uint64_t count) {
-    if (!ranges || count == 0) return 0;
-    // FNV-1a 64-bit over the raw range bytes: genuine content-derived hash.
-    uint64_t h = 0xcbf29ce484222325ULL;
-    for (uint64_t i = 0; i < count; ++i) {
-        const uint8_t* p = reinterpret_cast<const uint8_t*>(&ranges[i]);
-        for (size_t b = 0; b < sizeof(VwaLineageRange); ++b) {
-            h ^= p[b];
-            h *= 0x100000001b3ULL;
-        }
-    }
-    return h;
-}
-
-uint32_t VwaRangeSetEqual64(const VwaLineageRange* a,
-                            const VwaLineageRange* b,
-                            uint64_t count) {
-    if (!a || !b || count == 0) return 0;
-    for (uint64_t i = 0; i < count; ++i) {
-        if (std::memcmp(&a[i], &b[i], sizeof(VwaLineageRange)) != 0)
-            return 0;
-    }
-    return 1;
-}
 
 // ----------------------------------------------------------------------------
 // Thread affinity — real Windows API calls, not stubs.
@@ -286,26 +229,6 @@ extern "C" int Deep2Device_PickBestIndex(const unsigned* scores,
     }
     return bestIdx;
 }
-
-// ----------------------------------------------------------------------------
-// MLA_QPathDevice_Emit — write MLA Q-path telemetry to a file handle.
-// (was in bolt_stubs.cpp as a no-op; real telemetry wiring lives in
-// K2MLA_telemetry.cpp which is intentionally not compiled here.)
-// Honest implementation: writes a minimal telemetry block, does not fabricate
-// measurements.
-// ----------------------------------------------------------------------------
-void MLA_QPathDevice_Emit(FILE* f) {
-    if (!f) return;
-    std::fprintf(f,
-        "[mla-qpath] telemetry: not_wired=1 reason=K2MLA_telemetry_not_compiled\n");
-    std::fflush(f);
-}
-
-namespace Deep2 {
-void MLA_QPathDevice_Emit(FILE* f) {
-    ::MLA_QPathDevice_Emit(f);
-}
-} // namespace Deep2
 
 // ----------------------------------------------------------------------------
 // VwaResolveBlocks — real implementation provided by VwaResolveBlocks.cpp

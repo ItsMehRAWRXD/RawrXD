@@ -13,6 +13,10 @@
 #include <vector>
 
 #include "GGUFLoader.hpp"
+#ifndef GGML_COMMON_DECL_CPP
+#define GGML_COMMON_DECL_CPP
+#endif
+#include "ggml-common.h"
 
 #if defined(_MSC_VER) || defined(__AVX2__)
 #include <immintrin.h>

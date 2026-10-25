@@ -73,6 +73,11 @@ bool MlaAttentionComplete(
     const size_t kPack = numHeads * qkDim;
     const size_t vPack = numHeads * vHeadDim;
     const size_t kvDim = (std::max)(kPack, vPack);
+    fprintf(stderr,
+        "[MLA_KV_GEOMETRY] cacheDim=%zu expectedDim=%zu heads=%zu nope=%zu rope=%zu vDim=%zu "
+        "qkDim=%zu kPack=%zu vPack=%zu layerIdx=%zu numLayers=%zu\n",
+        kvCache->kvDim(), kvDim, numHeads, qkNopeHeadDim, qkRopeHeadDim, vHeadDim,
+        qkDim, kPack, vPack, layerIdx, kvCache->numLayers());
     if (kvCache->kvDim() != kvDim || layerIdx >= kvCache->numLayers()) {
         error = "MlaAttentionComplete: KV cache geometry mismatch";
         return false;

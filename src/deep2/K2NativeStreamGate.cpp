@@ -503,25 +503,27 @@ bool LoadMlaPayloads(const Deep2::GlobalTensorIndex& index, char names[9][64],
     std::string loadErr[9];
     bool loadOk[9];
     for (size_t i = 0; i < 9; ++i) loadOk[i] = (fusedKv && i == 4);
-    {
-        std::vector<std::thread> loaders;
-        loaders.reserve(9);
-        for (size_t i = 0; i < 9; ++i) {
-            if (fusedKv && i == 4) continue;
-            loaders.emplace_back([&, i]() {
-                Deep2::WeightSpan span{};
-                loadOk[i] = Deep2::ResolveWeight(index, names[i], span,
-                                                 payloads[i], loadErr[i]);
-                if (!loadOk[i]) return;
-                if (span.borrowed && span.data && span.bytes) {
-                    borrow[i] = span.data; // retained cache â€” no copy
-                } else {
-                    borrow[i] = nullptr; // owned in payloads[i]
-                    layerBytes += payloads[i].size(); // approx; fixed below
-                }
-            });
+    layerBytes = 0;
+    // Sequential payload loading to eliminate cross-thread file-handle
+    // contention and data races on layerBytes / borrow[] / payloads[].
+    // Layer 0 loading works; layer 1+ hangs because 9 concurrent threads
+    // per layer call ResolveWeight()->K2ShardIo_Read() on shared handles.
+    for (size_t i = 0; i < 9; ++i) {
+        if (fusedKv && i == 4) continue;
+        Deep2::WeightSpan span{};
+        loadOk[i] = Deep2::ResolveWeight(index, names[i], span,
+                                         payloads[i], loadErr[i]);
+        if (!loadOk[i]) {
+            error = loadErr[i].empty() ? std::string("Load failed: ") + names[i]
+                                       : loadErr[i];
+            return false;
         }
-        for (auto& th : loaders) th.join();
+        if (span.borrowed && span.data && span.bytes) {
+            borrow[i] = span.data; // retained cache â€” no copy
+        } else {
+            borrow[i] = nullptr; // owned in payloads[i]
+            layerBytes += payloads[i].size();
+        }
     }
     layerBytes = 0;
     for (size_t i = 0; i < 9; ++i) {
@@ -543,6 +545,8 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     float* hiddenIn, float* hiddenOut, float* scratch, float* mlaOut,
     rawrxd::deep2::K2KVCache* kvCache, uint32_t position,
     Deep2::MlaCompleteStats* stats, std::string& error) {
+    fprintf(stderr, "[MLA_TRACE] RunMlaOnPayloads layer=%u starting\n", layerIdx);
+    fflush(stderr);
     // Stream-copy probe is for STREAM_COPY certs only. When GPU MLA pin is on,
     // EnsurePinnedPackedWeight owns residency â€” UploadLargest pollutes u/h and
     // can ReleaseWeightWindow on content-hit (false "no copy" retry).
@@ -651,13 +655,38 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     static thread_local rawrxd::deep2::K2KVCache tlsKv;
     if (enableMlaComplete) {
         const size_t H = k2cfg.numHeads ? k2cfg.numHeads : 64;
+        // Derive MLA geometry from actual GGUF tensor shapes (same as
+        // MLAForward::Execute). Config defaults are only fallbacks; tensor
+        // shapes are authoritative to avoid silent cache-geometry mismatch.
         size_t nope = k2cfg.qkNopeHeadDim ? k2cfg.qkNopeHeadDim : 128;
         size_t rope = k2cfg.qkRopeHeadDim ? k2cfg.qkRopeHeadDim : 64;
         size_t vDim = k2cfg.vHeadDim ? k2cfg.vHeadDim : 128;
-        if (!k2cfg.qkNopeHeadDim && !k2cfg.qkRopeHeadDim) {
-            nope = 128; rope = 64; vDim = 128;
+
+        // Look up actual attn_k_b / attn_v_b shapes for layer 0
+        char kName[64], vName[64];
+        snprintf(kName, 64, "blk.0.attn_k_b.weight");
+        snprintf(vName, 64, "blk.0.attn_v_b.weight");
+        if (auto kt = index.Find(kName)) {
+            const auto& kd = kt->shape;
+            if (kd.size() == 3) {
+                nope = kd[0];  // qkNopeHeadDim = first dim of 3D attn_k_b
+            }
+        }
+        if (auto vt = index.Find(vName)) {
+            const auto& vd = vt->shape;
+            if (vd.size() == 3) {
+                // vHeadDim = vDims[1] if vDims[0] == kvLoraRank, else vDims[0]
+                vDim = (vd.size() > 1) ? vd[1] : vd[0];
+            } else if (vd.size() >= 2) {
+                vDim = vd[1] / H;
+            }
         }
         const size_t kvDim = (std::max)(H * (nope + rope), H * vDim);
+        fprintf(stderr,
+            "[MLA_KV_GEOMETRY] ForwardMLALayers: H=%zu nope=%zu rope=%zu vDim=%zu "
+            "kvDim=%zu testLayers=%zu tlsKv.kvDim=%zu tlsKv.numLayers=%zu\n",
+            H, nope, rope, vDim, kvDim, testLayers,
+            tlsKv.kvDim(), tlsKv.numLayers());
         /* Align host KV with PathBAttend seqCap=512 (was 128 OOM guard). */
         size_t need = (size_t)(seqNeed ? seqNeed : 8u);
         if (need < 8u) need = 8u;
@@ -722,9 +751,14 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     LayerSlot slots[4];
     auto loadSlot = [&](LayerSlot& s, uint32_t layer) {
         ResolveMlaNames(layer, index, s.names, s.fusedKv);
+        fprintf(stderr, "[MLA_TRACE] loadSlot layer=%u starting LoadMlaPayloads\n", layer);
+        fflush(stderr);
         for (size_t i = 0; i < 9; ++i) s.borrow[i] = nullptr;
         const bool ok = LoadMlaPayloads(index, s.names, s.fusedKv, s.payloads,
                                         s.borrow, layer, s.bytes, s.err);
+        fprintf(stderr, "[MLA_TRACE] loadSlot layer=%u LoadMlaPayloads ok=%u err=%s\n",
+                layer, ok ? 1u : 0u, s.err.empty() ? "(none)" : s.err.c_str());
+        fflush(stderr);
         s.life.consumersRemaining.store(1, std::memory_order_relaxed);
         s.life.lease.bytes = ok ? (const void*)s.payloads[0].data() : nullptr;
         s.gate.failed.store(!ok, std::memory_order_release);
@@ -755,7 +789,11 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         s.owner = layer;
         s.gate_ready = false;
         s.gate.ready.store(false, std::memory_order_relaxed);
-        s.worker = std::thread([&, layer] { loadSlot(s, layer); });
+        // `s` is a local reference alias.  Capturing it by reference lets the
+        // worker retain a reference to issueLayer's stack after issueLayer
+        // returns.  Capture the stable array element instead.
+        LayerSlot* slot = &s;
+        s.worker = std::thread([&, layer, slot] { loadSlot(*slot, layer); });
     };
     auto joinOutPrefetch = [&]() {
         /* P3 fence3: done-poll + pump; fail-closed join. LIVE=0. */
@@ -790,9 +828,19 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
 
         issueUpTo(layer + 1);
         LayerSlot& s = slots[layer & 3u];
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u gate_ready=%u failed=%u\n",
+                layer, testLayers, s.gate_ready ? 1u : 0u,
+                s.gate.failed.load(std::memory_order_acquire) ? 1u : 0u);
+        fflush(stderr);
         /* P3 tip: ready-check + scoreboard pump; fail-closed join. LIVE=0. */
         if (!Deep2::scoreboard::TryReadyAwaitTip(s.gate))
             awaitSlot(s);
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u after await ready=%u failed=%u err=%s\n",
+                layer, testLayers,
+                s.gate.ready.load(std::memory_order_acquire) ? 1u : 0u,
+                s.gate.failed.load(std::memory_order_acquire) ? 1u : 0u,
+                s.err.empty() ? "(none)" : s.err.c_str());
+        fflush(stderr);
         if (!s.gate.ready.load(std::memory_order_acquire) ||
             s.gate.failed.load(std::memory_order_acquire)) {
             joinAll();
@@ -800,10 +848,16 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             releaseKvTrack();
             return false;
         }
+        fprintf(stderr, "[MLA_TRACE] Layer %u/%u calling RunMlaOnPayloads\n",
+                layer, testLayers);
+        fflush(stderr);
         if (!RunMlaOnPayloads(layer, index, k2cfg, s.names, s.fusedKv, s.payloads,
                               s.borrow, s.bytes, in, out, scratch.data(),
                               mlaOut.data(), kvPtr, position,
                               enableMlaComplete ? &layerStats : nullptr, error)) {
+            fprintf(stderr, "[MLA_TRACE] Layer %u/%u RunMlaOnPayloads FAILED: %s\n",
+                    layer, testLayers, error.c_str());
+            fflush(stderr);
             joinAll();
             releaseKvTrack();
             return false;
@@ -1344,6 +1398,8 @@ Result Run(const fs::path& shardDir,
             fflush(stderr);
         }
         try {
+        fprintf(stderr, "K2_STEP_BEFORE_EMBED step=%u token=%d\n", step, curToken);
+        fflush(stderr);
         if (!LookupRealTokenEmbed(embed, k2cfg, curToken, hidden.data(), stepErr)) {
             result.error = stepErr;
             Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
@@ -1364,7 +1420,11 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
+        fprintf(stderr, "K2_STEP_AFTER_EMBED step=%u\n", step);
+        fflush(stderr);
         memcpy(preMla.data(), hidden.data(), hiddenDim * sizeof(float));
+        fprintf(stderr, "K2_STEP_BEFORE_MLA step=%u layers=%u\n", step, layerDepth);
+        fflush(stderr);
         if (!ForwardMLALayers(layerDepth, index, k2cfg, hidden.data(),
                               cfg.enableMlaComplete, &g12Stats, step,
                               cfg.streamTokens + 8u, stepErr)) {
@@ -1387,6 +1447,8 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
+        fprintf(stderr, "K2_STEP_AFTER_MLA step=%u\n", step);
+        fflush(stderr);
         Deep2::Ev512::HostEmitForwardComplete(step, (uint64_t)hiddenDim);
         Deep2::Ev512::HostEmitWeightRangeReady(step, (uint64_t)layerDepth);
         Deep2::Ev512::HostEmitKVHotsetReady(step, (uint64_t)(step + 1u));

@@ -7,6 +7,7 @@
 #include "K2MLA_QPathDevice.hpp"
 #include "K2MLA_KvExpand_Fused.hpp"
 #include "K2GpuStreamCopy.hpp"
+#include "vulkan_compute_cpu_ns.hpp"
 #include "K2BraidExecutionPolicy.hpp"
 #include "lavapath/LiveInGenTune.hpp"
 #include "vulkan_compute.h"

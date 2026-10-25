@@ -111,6 +111,21 @@ ConsumerId Register(uint16_t layer, uint8_t op, uint8_t device,
     return c.consumerId;
 }
 
+FutureConsumer* ConsumerAt(ConsumerId id) {
+    if (id == 0) return nullptr;
+    std::lock_guard<std::mutex> lock(g_mu);
+    for (FutureConsumer& c : g_consumers) {
+        if (c.consumerId == id) return &c;
+    }
+    return nullptr;
+}
+
+Chair* ChairAt(ChairId id) {
+    std::lock_guard<std::mutex> lock(g_mu);
+    if (id == CHAIR_INVALID || id >= g_pages.size()) return nullptr;
+    return &g_pages[id];
+}
+
 bool AdvanceOwnership(uint32_t pageIdx, ConsumerId next) {
     std::lock_guard<std::mutex> lk(g_mu);
     if (!g_init) return false;

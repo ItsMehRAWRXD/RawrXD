@@ -1120,6 +1120,7 @@ namespace Deep2 {
 
 struct TensorInfo {
     std::string name;
+    uint32_t shardId = 0;
     std::vector<uint64_t> dimensions;
     uint32_t type = 0;
     uint64_t offset = 0;
@@ -1264,6 +1265,7 @@ inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
         if (gt) {
             TensorInfo ti;
             ti.name = name;
+            ti.shardId = gt->shardId;
             ti.dimensions.reserve(gt->shape.size());
             for (int64_t d : gt->shape)
                 ti.dimensions.push_back(static_cast<uint64_t>(d));
@@ -1585,6 +1587,7 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
             if (!gt) continue;
             TensorInfo ti;
             ti.name = name;
+            ti.shardId = gt->shardId;
             ti.dimensions.reserve(gt->shape.size());
             for (int64_t d : gt->shape) ti.dimensions.push_back(static_cast<uint64_t>(d));
             ti.type = static_cast<uint32_t>(gt->type);
@@ -1656,6 +1659,7 @@ inline bool load_gguf(const std::string& path, void* out) {
         if (gt) {
             Deep2::TensorInfo ti;
             ti.name = name;
+            ti.shardId = gt->shardId;
             ti.dimensions.reserve(gt->shape.size());
             for (int64_t d : gt->shape) {
                 ti.dimensions.push_back(static_cast<uint64_t>(d));

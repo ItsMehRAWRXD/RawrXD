@@ -247,6 +247,12 @@ public:
     bool EnsurePinnedPackedWeight(const void* packed, size_t bytes,
                                   uint32_t rows, uint32_t cols, VkBuffer& buf,
                                   uint64_t key);
+    // Typed admission used by K2/MLA and MoE. The legacy entry point cannot
+    // safely infer a quantization code from an opaque byte range.
+    bool EnsurePinnedPackedWeightType(int ggmlType, const void* packed,
+                                      size_t bytes, uint32_t rows,
+                                      uint32_t cols, VkBuffer& buf,
+                                      uint64_t key);
     bool EnsurePinnedF32(const float* data, uint32_t n, VkBuffer& buf,
                          uint64_t key);
     bool HasPinnedGemvWeight(uint64_t key, size_t bytes, uint32_t rows,
@@ -260,6 +266,10 @@ public:
     size_t WeightPinBudgetFloor() const;
     void SetPinResidentBudget(size_t bytes);
     void SetPinResidentBudgetAt(size_t bytes, const char* site);
+    // MoE fused-graph ownership barrier. This is a real residency contract:
+    // while held, the backend refuses resident-object eviction.
+    void BeginMoePinHold();
+    void EndMoePinHold();
     const char* PinBudgetOwnerSite() const;
     uint64_t PinBudgetShrinkBlocked() const;
     uint64_t WeightPinCacheCount() const;
@@ -298,7 +308,7 @@ public:
     uint64_t WeightPinEvicts() const;
     uint64_t WeightPinRejects() const;
     uint64_t LastD2hVk() const;
-    uint64_t LastD2hPhase() const;
+    const char* LastD2hPhase() const;
 
     // ---- MLA Q / KV buffers -------------------------------------------------
     bool EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
@@ -353,6 +363,14 @@ private:
     uint64_t pin_rejects_ = 0;
     uint64_t pin_shrink_blocked_ = 0;
     uint64_t content_hits_ = 0;
+    uint64_t pin_clock_ = 0;
+    struct PackedPinRecord {
+        size_t bytes = 0;
+        uint32_t rows = 0;
+        uint32_t cols = 0;
+        int ggml_type = 0;
+    };
+    std::unordered_map<uint64_t, PackedPinRecord> pinned_packed_;
 
     // ---- GEMV accounting (real counters) ------------------------------------
     uint64_t gemv_success_ = 0;
@@ -364,7 +382,7 @@ private:
 
     // ---- Transfer diagnostics -------------------------------------------------
     uint64_t last_d2h_vk_ = 0;
-    uint64_t last_d2h_phase_ = 0;
+    const char* last_d2h_phase_ = "unknown";
     bool     fwd_arena_ready_ = false;
 
     // ---- GEMV staging mirrors (ENGINE_RECOVERY) -------------------------------

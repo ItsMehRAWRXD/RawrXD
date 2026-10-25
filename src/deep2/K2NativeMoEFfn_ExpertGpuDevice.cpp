@@ -38,9 +38,9 @@ bool PinExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     const uint32_t rI = (uint32_t)I, cH = (uint32_t)H, rH = (uint32_t)H,
                    cI = (uint32_t)I;
     VkBuffer w = nullptr;
-    if (!vc->EnsurePinnedPackedWeight(g, gb, rI, cH, w, p1)) return false;
-    if (!vc->EnsurePinnedPackedWeight(u, ub, rI, cH, w, p2)) return false;
-    if (!vc->EnsurePinnedPackedWeight(d, db, rH, cI, w, p3)) return false;
+    if (!vc->EnsurePinnedPackedWeightType(gt, g, gb, rI, cH, w, p1)) return false;
+    if (!vc->EnsurePinnedPackedWeightType(ut, u, ub, rI, cH, w, p2)) return false;
+    if (!vc->EnsurePinnedPackedWeightType(dt, d, db, rH, cI, w, p3)) return false;
     (void)gt;
     (void)ut;
     (void)dt;

@@ -40,10 +40,10 @@ bool MLA_QPathDeviceFused(const float* hidden, float* q_a, float* q_b,
     const uint64_t pkB = ((uint64_t)layerIdx << 8) | 2ull;
     const uint64_t pkN = ((uint64_t)layerIdx << 8) | 0xF1ull;
     VkBuffer wA = nullptr, wB = nullptr, wN = nullptr;
-    if (!vc->EnsurePinnedPackedWeight(wQa.data(), wQa.byteSize(), qLora,
-                                      hiddenDim, wA, pkA) ||
-        !vc->EnsurePinnedPackedWeight(wQb.data(), wQb.byteSize(), qBCols, qLora,
-                                      wB, pkB)) {
+    if (!vc->EnsurePinnedPackedWeightType(12, wQa.data(), wQa.byteSize(), qLora,
+                                          hiddenDim, wA, pkA) ||
+        !vc->EnsurePinnedPackedWeightType(12, wQb.data(), wQb.byteSize(), qBCols,
+                                          qLora, wB, pkB)) {
         MLA_QPathDevice_NoteFail(); return false;
     }
     CPUInference::VulkanCompute::DeviceBuf normBuf{};

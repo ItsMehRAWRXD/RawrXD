@@ -230,6 +230,12 @@ VkBuffer VulkanCompute::GemvHostOutBuffer() {
 bool VulkanCompute::GemvHostWriteIn(const float* src, size_t bytes) {
     if (backend_ == nullptr || src == nullptr) return false;
     if (bytes == 0 || (bytes % sizeof(float)) != 0) return false;
+    if (gemv_reuse_in_next_) {
+        gemv_reuse_in_next_ = false;
+        if (backend_->ArenaNormed().size < bytes) return false;
+        ++gemv_in_reuse_hits_;
+        return true;
+    }
     return backend_->UploadVector(backend_->ArenaNormed(), src, bytes / sizeof(float));
 }
 
@@ -381,18 +387,77 @@ bool VulkanCompute::RecordCopy(VkBuffer src, VkBuffer dst,
 bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
                                              uint32_t rows, uint32_t cols,
                                              VkBuffer& buf, uint64_t key) {
-    (void)packed; (void)bytes; (void)rows; (void)cols; (void)key;
     buf = VK_NULL_HANDLE;
-    // No pinned-packed-weight map exists in the implementation.
+    // The untyped legacy contract cannot safely infer a GGML quantization code
+    // from an opaque byte range.  Keep it fail-closed; typed K2 callers use
+    // EnsurePinnedPackedWeightType below.
+    (void)packed; (void)bytes; (void)rows; (void)cols; (void)key;
     return false;
+}
+
+bool VulkanCompute::EnsurePinnedPackedWeightType(int ggmlType,
+                                                 const void* packed,
+                                                 size_t bytes, uint32_t rows,
+                                                 uint32_t cols, VkBuffer& buf,
+                                                 uint64_t key) {
+    buf = VK_NULL_HANDLE;
+    if (backend_ == nullptr || packed == nullptr || bytes == 0 || rows == 0 ||
+        cols == 0 || key == 0) {
+        return false;
+    }
+    Deep2::GpuWeightView view{};
+    view.data = packed;
+    view.bytes = bytes;
+    view.type = ggmlType;
+    view.rows = rows;
+    view.cols = cols;
+    view.key = key;
+    if (!backend_->PinWeightView(view)) return false;
+    pinned_packed_[key] = PackedPinRecord{bytes, rows, cols, ggmlType};
+    ++pin_clock_;
+    resident_bytes_ = static_cast<size_t>(backend_->PinnedWeightBytes());
+    return true;
 }
 
 bool VulkanCompute::EnsurePinnedF32(const float* data, uint32_t n,
                                     VkBuffer& buf, uint64_t key) {
-    (void)data; (void)n; (void)key;
     buf = VK_NULL_HANDLE;
-    // The implementation pins whole weight views, not caller-owned F32 ranges.
-    return false;
+    if (backend_ == nullptr || data == nullptr || n == 0 || key == 0) {
+        return false;
+    }
+    Deep2::GpuWeightView view{};
+    view.data = data;
+    view.bytes = static_cast<size_t>(n) * sizeof(float);
+    view.type = 0;
+    view.rows = 1;
+    view.cols = n;
+    view.key = key;
+    if (!backend_->PinWeightView(view)) return false;
+    pinned_f32_[key] = std::vector<float>(data, data + n);
+    ++pin_clock_;
+    resident_bytes_ = static_cast<size_t>(backend_->PinnedWeightBytes());
+    return true;
+}
+
+bool VulkanCompute::HasPinnedGemvWeight(uint64_t key, size_t bytes,
+                                        uint32_t rows, uint32_t cols) const {
+    const auto it = pinned_packed_.find(key);
+    if (it != pinned_packed_.end()) {
+        const auto& r = it->second;
+        return r.bytes == bytes && r.rows == rows && r.cols == cols;
+    }
+    const auto f = pinned_f32_.find(key);
+    return f != pinned_f32_.end() &&
+           f->second.size() == rows * (size_t)cols &&
+           f->second.size() * sizeof(float) == bytes;
+}
+
+bool VulkanCompute::TouchPinnedGemvWeight(uint64_t key, size_t bytes,
+                                          uint32_t rows, uint32_t cols) {
+    if (!HasPinnedGemvWeight(key, bytes, rows, cols)) return false;
+    ++content_hits_;
+    ++pin_clock_;
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -802,7 +867,7 @@ VulkanCompute::DeviceBuf& VulkanCompute::MlaAttnOut() {
 // Diagnostics (remaining)
 // ----------------------------------------------------------------------------
 uint64_t VulkanCompute::LastD2hVk() const { return last_d2h_vk_; }
-uint64_t VulkanCompute::LastD2hPhase() const { return last_d2h_phase_; }
+const char* VulkanCompute::LastD2hPhase() const { return last_d2h_phase_; }
 
 // ----------------------------------------------------------------------------
 // Per-lane residency accounting (DualStick quota) - fail closed
@@ -826,6 +891,24 @@ const char* VulkanCompute::PinBudgetOwnerSite() const {
     return pin_site_.empty() ? nullptr : pin_site_.c_str();
 }
 uint64_t VulkanCompute::PinBudgetShrinkBlocked() const { return pin_shrink_blocked_; }
+
+uint64_t VulkanCompute::WeightPinResidentBytes() const {
+    return backend_ != nullptr
+        ? static_cast<uint64_t>(backend_->PinnedWeightBytes())
+        : static_cast<uint64_t>(resident_bytes_);
+}
+
+uint64_t VulkanCompute::WeightPinClock() const { return pin_clock_; }
+
+void VulkanCompute::GemvReuseInputNext() { gemv_reuse_in_next_ = true; }
+
+void VulkanCompute::GemvFuseResidualNext(const float* residual) {
+    gemv_residual_ = residual;
+}
+
+uint64_t VulkanCompute::GemvInputReuseHits() const {
+    return gemv_in_reuse_hits_;
+}
 
 bool VulkanCompute::ApplyWeightWindowPolicy(size_t hotBytes, size_t warmBytes,
                                             uint32_t nLayers, size_t maxResident) {

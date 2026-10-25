@@ -2933,6 +2933,55 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/VulkanWeightStreamerVulkanBackend.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2MLA_GpuGemv.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/K2ShardIo.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MLAAttention.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2TokenEmbedding.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2NativeStreamGate.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2NativeMoEFfn.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2NativeMoEFfn_Place.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2NativeMoEFfn_Expert.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2LogitsClimb.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2LogitsSplit.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2WeightResolve.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2LivePathTensorCache.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2LivePathTensorCache_Prefetch.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2LivePathTensorCache_Emit.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MLA_PathB.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MLA_PathB_Attn.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2QbHostShrinkD2h.cpp
+            ${CMAKE_SOURCE_DIR}/src/runtime/QbHostReadbackWindow.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/HostExchangeDiscover.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MoEWeights.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MLA_QPathDevice_Emit.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Table.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Note.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Evict.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Quota.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Attr.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Pins.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickBundle_Touch.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickExpertBundle.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance_Steal.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance_Cost.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance_CostCov.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance_Ewma.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance_Observe.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickImbalance_Xfer.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch_Nvme.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickStreamWindow_Vc.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/EndDeviceStep3Diag.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/MoEExpertResidencyPlace.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/MoEExpertResidencyPlace_Place.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/MoEPlaceLiveCounters.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MLA_KvExpand_Fused.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/K2MLAWeights.cpp
             # Certification probes (deep2/AttnCertProbe.cpp etc.)
             ${CMAKE_SOURCE_DIR}/src/deep2/AttnCertProbe.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/SsmCertProbe.cpp
@@ -3034,6 +3083,44 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             endif()
 endforeach()
 
+        # Assemble the real x64 MASM modules explicitly with ml64. Keeping
+        # them out of the CXX target's implicit .asm rule avoids CMake applying
+        # cl.exe flags and makes object paths deterministic for the archive.
+        set(_DEEP2_MASM_DIR ${CMAKE_CURRENT_BINARY_DIR}/reap_masm)
+        set(_DEEP2_MASM_OBJECTS)
+        foreach(_masm_name VwaRangeLineageX64 KN_O3KKEN RuntimeEvidence512_Core
+                              RuntimeEvidence512_Emit RuntimeEvidence512_Collect
+                              RuntimeEvidence512_IDEEmit RuntimeEvidence512_IDECollect)
+            if(_masm_name STREQUAL VwaRangeLineageX64 OR _masm_name STREQUAL KN_O3KKEN)
+                set(_masm_src ${CMAKE_SOURCE_DIR}/src/deep2/vwa/${_masm_name}.asm)
+                if(_masm_name STREQUAL KN_O3KKEN)
+                    set(_masm_src ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/${_masm_name}.asm)
+                endif()
+            else()
+                set(_masm_src ${CMAKE_SOURCE_DIR}/src/asm/${_masm_name}.asm)
+            endif()
+            set(_masm_obj ${_DEEP2_MASM_DIR}/${_masm_name}.obj)
+            set(_masm_deps ${_masm_src})
+            if(_masm_name STREQUAL RuntimeEvidence512_Collect)
+                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/asm/RuntimeEvidence512_Collect.inc)
+            endif()
+            if(_masm_name STREQUAL RuntimeEvidence512_IDEEmit)
+                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/asm/RuntimeEvidence512_IDEClaims.inc)
+            endif()
+            if(_masm_name STREQUAL KN_O3KKEN)
+                list(APPEND _masm_deps ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/KN_O3KKEN.inc)
+            endif()
+            add_custom_command(
+                OUTPUT ${_masm_obj}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${_DEEP2_MASM_DIR}
+                COMMAND ${CMAKE_ASM_MASM_COMPILER} /nologo /c /Fo${_masm_obj} ${_masm_src}
+                DEPENDS ${_masm_deps}
+                VERBATIM
+                COMMENT "Assembling ${_masm_name}.asm with ml64"
+            )
+            list(APPEND _DEEP2_MASM_OBJECTS ${_masm_obj})
+        endforeach()
+
         # Create a static library from the engine subsystem sources so other targets
         # (deep2_gpu_decode_roofline, deep2_runtime_dispatch) can link against the
         # same implementation instead of re-listing sources and risking ODR violations.
@@ -3056,6 +3143,7 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2MlaLifecycleAdapter.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MlaCertAuthority.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/engine_subsystems.cpp
+            ${_DEEP2_MASM_OBJECTS}
             ${_DEEP2_ENGINE_SUBSYSTEM_SOURCES}
         )
         target_include_directories(deep2_engine_lib PUBLIC
