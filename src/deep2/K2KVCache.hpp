@@ -38,6 +38,7 @@ public:
         maxSeqLen_ = maxSeqLen;
         kvDim_ = kvDim;
         currentLength_ = 0;
+        written_.assign(numLayers_, 0);
         allocatedSeq_ = initial;
     }
 
@@ -121,12 +122,14 @@ public:
 
         std::memcpy(dstK, key, kvDim_ * sizeof(float));
         std::memcpy(dstV, value, kvDim_ * sizeof(float));
+        written_[layer] = 1;
     }
 
     // Discard any speculative writes at the current decode position.
     // Does not modify previously committed positions.
     void RollbackPosition()
     {
+        std::fill(written_.begin(), written_.end(), 0);
         if (currentLength_ >= allocatedSeq_) return;
         for (std::size_t layer = 0; layer < numLayers_; ++layer) {
             float* k = MutableAt(keys_, layer, currentLength_);
@@ -146,22 +149,23 @@ public:
         // Untouched capacity is already zero-initialized by GrowAllocated.
         const std::size_t clearEnd = (std::min)(allocatedSeq_, currentLength_ + (currentLength_ < allocatedSeq_ ? 1u : 0u));
         const std::size_t clearFloats = (clearEnd - committedPrefix) * kvDim_;
-        if (clearFloats == 0) { currentLength_ = committedPrefix; return; }
+        if (clearFloats == 0) { currentLength_ = committedPrefix; std::fill(written_.begin(), written_.end(), 0); return; }
         for (std::size_t layer = 0; layer < numLayers_; ++layer) {
             std::fill_n(MutableAt(keys_, layer, committedPrefix), clearFloats, 0.0f);
             std::fill_n(MutableAt(values_, layer, committedPrefix), clearFloats, 0.0f);
         }
         currentLength_ = committedPrefix;
+        std::fill(written_.begin(), written_.end(), 0);
     }
 
     // Fail-closed transactional commit: a complete layer set is required.
     // Existing Write/CommitPosition remain available for sparse-layer callers.
-    void CommitCompletePosition(const std::vector<unsigned char>& writtenLayers)
+    void CommitCompletePosition()
     {
-        if (writtenLayers.size() != numLayers_)
-            throw std::invalid_argument("K2KVCache: layer completion mask size");
-        for (unsigned char written : writtenLayers)
-            if (written != 1u)
+        if (written_.size() != numLayers_)
+            throw std::logic_error("K2KVCache: invalid layer completion state");
+        for (unsigned char written : written_)
+            if (!written)
                 throw std::invalid_argument("K2KVCache: incomplete KV position");
         CommitPosition();
     }
@@ -245,6 +249,7 @@ private:
 
     std::vector<float> keys_;
     std::vector<float> values_;
+    std::vector<unsigned char> written_;
 };
 
 } // namespace rawrxd::deep2
