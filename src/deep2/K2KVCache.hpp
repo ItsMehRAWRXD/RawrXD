@@ -104,12 +104,14 @@ public:
 
         if (!CanAppend())
             throw std::out_of_range("K2KVCache: sequence length exceeded");
+        if (key == nullptr || value == nullptr)
+            throw std::invalid_argument("K2KVCache: null KV input");
         EnsureHot(currentLength_);
 
         float* dstK = MutableAt(keys_, layer, currentLength_);
         float* dstV = MutableAt(values_, layer, currentLength_);
 
-        if (!key || !value) throw std::invalid_argument("K2KVCache: null KV input");
+
         std::memcpy(dstK, key, kvDim_ * sizeof(float));
         std::memcpy(dstV, value, kvDim_ * sizeof(float));
     }
