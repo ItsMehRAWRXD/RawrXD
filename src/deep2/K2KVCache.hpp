@@ -162,7 +162,7 @@ private:
     void GrowAllocated(std::size_t neu) {
         const std::size_t count = CheckedElements(numLayers_, neu, kvDim_);
         std::vector<float> nk(count, 0.0f), nv(count, 0.0f);
-        const std::size_t copyPos = (std::min)(currentLength_, allocatedSeq_);
+        const std::size_t copyPos = (std::min)(allocatedSeq_, neu);
         for (std::size_t L = 0; L < numLayers_; ++L) {
             for (std::size_t p = 0; p < copyPos && p < neu; ++p) {
                 std::memcpy(nk.data() + (L * neu + p) * kvDim_,
