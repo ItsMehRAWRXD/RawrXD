@@ -32,6 +32,7 @@
 #include "K2ShardIo.hpp"
 #include "KimiK2Config.hpp"
 #include "MedusaDecoder.hpp"
+#include "MlaCertAuthority.hpp"
 #include "MlaCertProbe.hpp"
 #include "MoERouter.hpp"
 #include "MoEWeightsLoader.hpp"
@@ -1978,6 +1979,10 @@ void Deep2Engine::deallocateBuffers()
 bool Deep2Engine::loadModel(const std::string& ggufPath)
 {
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
+    // Certification witnesses belong to one model-load/generation lifecycle.
+    // Reset before admission so a previous model cannot lend its MLA seal to
+    // the next model in the same process.
+    Deep2::MlaCertAuthority::Reset();
 
     // Fail-closed: refuse load if active ExecutionPolicy is invalid.
     {
@@ -2226,11 +2231,63 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         k2config.numHeads = meta.numHeads;
         k2config.numKVHeads = meta.numKeyValueHeads;
         k2config.vocabSize = meta.vocabSize;
+        k2config.architecture = meta.architecture;
+        k2config.modelType = meta.architecture;
+        k2config.qLoraRank = meta.qLoraRank;
+        k2config.kvLoraRank = meta.kvLoraRank;
+        k2config.qkRopeHeadDim = meta.ropeDimensionCount;
+        k2config.qkNopeHeadDim = meta.qkNopeHeadDim > 0
+                                     ? meta.qkNopeHeadDim
+                                     : (meta.keyLengthMla > meta.ropeDimensionCount
+                                            ? meta.keyLengthMla - meta.ropeDimensionCount
+                                            : 128u);
+        k2config.vHeadDim = meta.valueLengthMla > 0 ? meta.valueLengthMla : meta.valueLength;
         k2config.numExperts = meta.numExperts;
         k2config.expertsPerToken = meta.numExpertsPerToken;
         k2config.sharedExperts = meta.numSharedExperts;
         k2config.moeIntermediateSize = meta.moeIntermediateSize;
+        k2config.maxPosition = meta.maxPositionEmbeddings;
+
+        // LoadMetadata keeps the authoritative raw GGUF key/value map.  Some
+        // DeepSeek2 files expose the MoE keys under the architecture prefix
+        // but the structured compatibility view can omit them when the value
+        // is encoded as an array.  Recover only missing values from that same
+        // parsed map; never invent model geometry.
+        const auto rawU32 = [&](std::initializer_list<const char*> keys,
+                                uint32_t current) {
+            if (current != 0)
+                return current;
+            for (const char* key : keys) {
+                const auto it = ggufResult.rawKv.find(key);
+                if (it == ggufResult.rawKv.end())
+                    continue;
+                char* end = nullptr;
+                const unsigned long long value =
+                    std::strtoull(it->second.c_str(), &end, 10);
+                if (end != it->second.c_str() && *end == '\0' && value <= UINT32_MAX)
+                    return static_cast<uint32_t>(value);
+            }
+            return current;
+        };
+        k2config.numExperts = rawU32({"deepseek2.expert_count", "llama.expert_count",
+                                       "expert_count"}, k2config.numExperts);
+        k2config.expertsPerToken = rawU32({"deepseek2.expert_used_count",
+                                           "llama.expert_used_count",
+                                           "expert_used_count"},
+                                          k2config.expertsPerToken);
+        k2config.sharedExperts = rawU32({"deepseek2.expert_shared_count",
+                                          "llama.expert_shared_count",
+                                          "expert_shared_count"},
+                                         k2config.sharedExperts);
+        k2config.moeIntermediateSize = rawU32({"deepseek2.expert_feed_forward_length",
+                                               "llama.expert_feed_forward_length",
+                                               "expert_feed_forward_length"},
+                                              k2config.moeIntermediateSize);
         k2config.valid = true;
+
+        printf("[Deep2Engine] K2 config: experts=%u topk=%u shared=%u expertDim=%u\n",
+               k2config.numExperts, k2config.expertsPerToken,
+               k2config.sharedExperts, k2config.moeIntermediateSize);
 
         globalIndex_ = std::make_unique<GlobalTensorIndex>();
         std::string idxError;
@@ -2258,6 +2315,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         }
         printf("[Deep2Engine] TensorResidencyCache ready (%u shards registered)\n",
                static_cast<uint32_t>(globalIndex_->TotalShards()));
+
+        // The normal load path owns the same real shard index used by
+        // K2NativeStreamGate.  Publish the complete model geometry here so
+        // generateStream() can enter the production MLA/MoE path without a
+        // second, divergent index-open operation.
+        k2ShardConfig_ = k2config;
+        k2ShardConfig_.numShards = static_cast<uint32_t>(globalIndex_->TotalShards());
+        k2ShardIndexOpen_ = true;
     }
 
     isMultiShard_ = isMultiShard;
@@ -2322,15 +2387,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
 
         MlaCert::record(MlaCert::Stage::Detected, 0, 0, nullptr, 0, static_cast<double>(modelWeights.qLoraRank));
 
-        // P0: MLA attention math is incomplete (setup only). Refuse production load.
-        if (!envFlagEnabled("RAWRXD_DEEP2_ALLOW_UNSAFE_MLA"))
+        // Production MLA admission is deferred until the real K2 stream
+        // executes MlaAttentionComplete and earns ProductSealPass().  A
+        // multi-shard DeepSeek/Kimi model is admitted only when that exact
+        // production stream is available; no unsafe environment bypass is
+        // accepted here.
+        if (!isMultiShard || !k2ShardIndexOpen_ || !globalIndex_)
         {
-            fprintf(stderr, "[Deep2Engine] ERROR: MLA model requires certified MLA attention "
-                            "(MLA-CERT-001). Set RAWRXD_DEEP2_ALLOW_UNSAFE_MLA=1 only for "
-                            "experimental scaffolding — not production.\n");
+            fprintf(stderr,
+                    "[Deep2Engine] ERROR: MLA model has no production K2 shard stream "
+                    "(MLA-CERT-001)\n");
             return false;
         }
-        fprintf(stderr, "[Deep2Engine] WARNING: RAWRXD_DEEP2_ALLOW_UNSAFE_MLA=1 — incomplete MLA path enabled\n");
+        Deep2::MlaCertAuthority::NoteRequired();
+        printf("[Deep2Engine] MLA production stream available; certification deferred to live MlaAttentionComplete\n");
     }
 
     // ── Nemotron-H MoE / Bolt architecture detection ──
@@ -2345,7 +2415,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
         modelWeights.useMLA = false;
     }
-    else
+    else if (!modelWeights.useMLA)
     {
         // Standard MHA / GQA: headDim = hiddenDim / numHeads
         if (modelWeights.numHeads == 0)
@@ -2600,43 +2670,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                         // Quantization-aware diagnostic: don't treat quantized data as float*
                         if (wt.type == (int)GGMLType::GGML_TYPE_F32)
                         {
-                            const float* fp = (const float*)wt.data;
-                            float mn = 1e30f, mx = -1e30f;
-                            size_t nz = 0;
-                            for (size_t i = 0; i < 16 && i < wt.rows * wt.cols; ++i)
-                            {
-                                float v = fp[i];
-                                if (v < mn)
-                                    mn = v;
-                                if (v > mx)
-                                    mx = v;
-                                if (v != 0.0f)
-                                    ++nz;
-                            }
-                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(F32) "
-                                   "first16=[%.6f,%.6f,%.6f,%.6f] min=%.6f max=%.6f nz=%zu\n",
-                                   wt.data, wt.rows, wt.cols, wt.type, fp[0], fp[1], fp[2], fp[3], mn, mx, nz);
                         }
                         else if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K)
                         {
-                            const Q4_K_Block* blk = (const Q4_K_Block*)wt.data;
-                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(Q4_K) block0 d=0x%04X "
-                                   "dmin=0x%04X qs[0]=0x%02X\n",
-                                   wt.data, wt.rows, wt.cols, wt.type, blk[0].d, blk[0].dmin, blk[0].qs[0]);
                         }
                         else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K)
                         {
-                            const block_q6_K* blk = (const block_q6_K*)wt.data;
-                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(Q6_K) block0 d=0x%04X "
-                                   "ql[0]=0x%02X qh[0]=0x%02X sc[0]=%d\n",
-                                   wt.data, wt.rows, wt.cols, wt.type, blk[0].d, blk[0].ql[0], blk[0].qh[0],
-                                   (int)blk[0].scales[0]);
                         }
                         else
                         {
-                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(other) — skipping float "
-                                   "interpretation\n",
-                                   wt.data, wt.rows, wt.cols, wt.type);
                         }
                     }
                 }
@@ -4124,42 +4166,11 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
                 }
                 if (firstBadIdx >= 0)
                 {
-                    fprintf(stderr, "[EMBED_DIAG][FIRST_BAD] token=%d idx=%d value=%.6f kind=%s\n", tokenId,
-                            firstBadIdx, firstBadVal, firstBadKind);
-                    // Inspect the raw block that produced the NaN
-                    int badBlock = firstBadIdx / 256;
-                    size_t blockOffset = badBlock * sizeof(block_q2_K);
-                    if (blockOffset + sizeof(block_q2_K) <= rowBytes)
-                    {
-                        const block_q2_K* blk = (const block_q2_K*)(row + blockOffset);
-                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] block=%d offset=%zu d_raw=0x%04X dmin_raw=0x%04X\n",
-                                badBlock, blockOffset, blk->d, blk->dmin);
-                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] scales=");
-                        for (int k = 0; k < 16; ++k)
-                            fprintf(stderr, "%02X ", blk->scales[k]);
-                        fprintf(stderr, "\n");
-                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] qs[0..15]=");
-                        for (int k = 0; k < 16; ++k)
-                            fprintf(stderr, "%02X ", blk->qs[k]);
-                        fprintf(stderr, "\n");
-                        // Decode d/dmin with fp16ToFloat
-                        float d_decoded = fp16ToFloat(blk->d);
-                        float dmin_decoded = fp16ToFloat(blk->dmin);
-                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] d: raw=0x%04X fp16ToFloat=%.6f finite=%d\n", blk->d,
-                                d_decoded, (int)std::isfinite(d_decoded));
-                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] dmin: raw=0x%04X fp16ToFloat=%.6f finite=%d\n",
-                                blk->dmin, dmin_decoded, (int)std::isfinite(dmin_decoded));
-                    }
                 }
                 else
                 {
-                    fprintf(stderr, "[EMBED_DIAG] token=%d all_finite hiddenDim=%zu\n", tokenId, hiddenDim);
                 }
 
-                fprintf(stderr, "[EMBED_DIAG] token=%d rowBytes=%zu first8=", tokenId, rowBytes);
-                for (int i = 0; i < 8; ++i)
-                    fprintf(stderr, " %.3f", output[i]);
-                fprintf(stderr, "\n");
                 }
             }
             else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K)
@@ -4471,7 +4482,12 @@ bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
     }
     const auto& embedRef = embedOpt.value();
 
-    // Validate shape: [vocabSize, hiddenDim]
+    // GGUF stores linear tensors as [contiguous input dimension, row
+    // dimension].  Kimi's token embedding is therefore [hidden, vocab],
+    // even though the logical lookup is vocab -> hidden.  Derive the
+    // orientation from the admitted model geometry instead of assuming
+    // shape[0] is vocabulary; the old assumption rejected valid Kimi token
+    // IDs above hiddenDim.
     if (embedRef.shape.size() < 2)
     {
         fprintf(stderr, "[MULTISHARD_EMBED] token_embd.weight shape invalid (ndim=%zu)\n", embedRef.shape.size());
@@ -4482,8 +4498,36 @@ bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
         return false;
     }
 
-    size_t vocabSize = embedRef.shape[0];
-    size_t hiddenDim = embedRef.shape[1];
+    const size_t dim0 = static_cast<size_t>(embedRef.shape[0]);
+    const size_t dim1 = static_cast<size_t>(embedRef.shape[1]);
+    size_t vocabSize = 0;
+    size_t hiddenDim = 0;
+    if (dim0 == config.hiddenDim && dim1 == config.vocabSize)
+    {
+        // Actual GGUF layout for Kimi K2: one contiguous hidden row per token.
+        hiddenDim = dim0;
+        vocabSize = dim1;
+    }
+    else if (dim0 == config.vocabSize && dim1 == config.hiddenDim)
+    {
+        // Accept the alternate metadata orientation only when the tensor
+        // contract explicitly matches it.  The serialized row geometry is
+        // still the contiguous dimension (dim0) for this representation.
+        vocabSize = dim0;
+        hiddenDim = dim1;
+    }
+    else
+    {
+        fprintf(stderr,
+                "[MULTISHARD_EMBED] tensor shape does not match model: "
+                "shape=[%zu,%zu] model=[hidden=%zu,vocab=%zu]\n",
+                dim0, dim1, config.hiddenDim, config.vocabSize);
+        if (output && config.hiddenDim > 0)
+        {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return false;
+    }
     if (tokenId >= (int)vocabSize)
     {
         fprintf(stderr, "[MULTISHARD_EMBED] token=%d out of range vocabSize=%zu\n", tokenId, vocabSize);
@@ -4563,19 +4607,9 @@ bool Deep2Engine::embedTokenFromShard(int tokenId, float* output)
     }
 
     // Acquire mapping via TensorResidencyCache (page-aligned region around row)
-    // Diagnostic: verify shard registration before acquire
-    fprintf(stderr, "[MULTISHARD_EMBED_DIAG] shardId=%u shardCount=%u rowOffset=%llu rowBytes=%llu "
-            "tensorFileOffset=%llu tensorByteSize=%llu\n",
-            embedRef.shardId, globalIndex_->TotalShards(),
-            (unsigned long long)rowOffset, (unsigned long long)rowBytes,
-            (unsigned long long)embedRef.fileOffset, (unsigned long long)embedRef.byteSize);
-    fprintf(stderr, "[MULTISHARD_EMBED_DIAG] shardPath=%s\n",
-            globalIndex_->ShardPath(embedRef.shardId).string().c_str());
     auto* mapping = residencyCache_->acquire(embedRef.shardId, rowOffset, rowBytes);
     if (!mapping)
     {
-        fprintf(stderr, "[MULTISHARD_EMBED] residencyCache acquire failed shard=%u offset=%llu bytes=%llu\n",
-                embedRef.shardId, (unsigned long long)rowOffset, (unsigned long long)rowBytes);
         if (output && config.hiddenDim > 0)
         {
             memset(output, 0, config.hiddenDim * sizeof(float));
@@ -4690,8 +4724,6 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input, f
             if (input[j] > inMax)
                 inMax = input[j];
         }
-        printf("[RMS_DIAG] dim=%zu sumSq=%.6e meanSq=%.6e rms=%.6e invRms=%.6e inMin=%.6e inMax=%.6e\n", dim, sumSq,
-               meanSq, rms, invRms, inMin, inMax);
     }
 
     // Apply normalization + weight with AVX2

@@ -87,6 +87,7 @@ struct Instr {
     // projection's declared input width. `k`/`v` are unused by the current
     // graph shapes (the arena carries the q/k/v activations by name).
     int32_t q = -1;
+    int32_t q_norm = -1, k_norm = -1;   // Qwen3.5 gated attention norms
     std::string detail;
 };
 
@@ -379,6 +380,8 @@ private:
     bool OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                       const std::vector<uint32_t>& ids, const std::vector<float>& w,
                       std::vector<float>& y, std::string& err);
+    bool OpGdn(const Instr& in, const std::vector<float>& x,
+               std::vector<float>& y, std::string& err);
       bool OpSsmScan(const Instr& in, const std::vector<float>& x,
                      std::vector<float>& y, std::string& err);
       bool OpMlaDecompress(const Instr& mla, const std::vector<float>& x,

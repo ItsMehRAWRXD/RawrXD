@@ -3570,6 +3570,34 @@ void VulkanCompute::ResetMLACache() {
     mlaCacheMaxSeq_=0;
 }
 
+void VulkanCompute::ResetGdnState(uint64_t stateKey) {
+    // Stub: clear per-block GDN device state keyed by stateKey.
+    // Future hooks for clearing pipeline state caches can be added here.
+    (void)stateKey;
+}
+
+bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
+                                const float* beta, size_t betaSize,
+                                const float* alpha, size_t alphaSize,
+                                const float* aLog, size_t aLogSize,
+                                const float* dtBias, size_t dtBiasSize,
+                                const float* norm, size_t normSize,
+                                const float* z, size_t zSize,
+                                uint32_t keyHeads, uint32_t valueHeads,
+                                uint32_t headDim,
+                                float epsilon, float scale, bool gateSigmoid,
+                                uint64_t stateKey, std::vector<float>& output) {
+    // Stub: GDN Vulkan dispatch not yet implemented. Return false to force
+    // CPU fallback path in the executor.
+    (void)mixed; (void)mixedSize; (void)beta; (void)betaSize;
+    (void)alpha; (void)alphaSize; (void)aLog; (void)aLogSize;
+    (void)dtBias; (void)dtBiasSize; (void)norm; (void)normSize;
+    (void)z; (void)zSize; (void)keyHeads; (void)valueHeads; (void)headDim;
+    (void)epsilon; (void)scale; (void)gateSigmoid; (void)stateKey;
+    output.clear();
+    return false;
+}
+
 bool VulkanCompute::RunMLAAttentionHost(
     const float* q, const float* k, const float* v,
     float* output,
@@ -4530,6 +4558,14 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
     // share the same weightBudgetBytes_ envelope as weightCache_.
     if (weightBudgetBytes_ &&
         incomingBytes > weightBudgetBytes_)
+        return false;
+
+    // A live MoE fused graph owns all published resident views until its
+    // matching EndMoePinHold. Refuse eviction during that interval; callers
+    // then fail closed instead of invalidating a device-visible weight.
+    if (weightBudgetBytes_ && MoePinHoldActive() &&
+        weightCacheBytes_ + residentObjectBytes_ + incomingBytes >
+            weightBudgetBytes_)
         return false;
 
     auto totalResidentBytes = [&]() -> size_t {

@@ -422,6 +422,19 @@ public:
     // ========== Weight pinning ==========
     bool PinWeightView(const GpuWeightView& view);
     void UnpinAllWeights();
+    // MoE graph ownership barrier. While held, resident-object eviction is
+    // refused so a fused expert graph cannot lose a published weight view.
+    void BeginMoePinHold() noexcept { moePinHolds_.fetch_add(1, std::memory_order_acq_rel); }
+    void EndMoePinHold() noexcept {
+        uint32_t held = moePinHolds_.load(std::memory_order_acquire);
+        while (held != 0 &&
+               !moePinHolds_.compare_exchange_weak(
+                   held, held - 1, std::memory_order_acq_rel,
+                   std::memory_order_acquire)) {}
+    }
+    bool MoePinHoldActive() const noexcept {
+        return moePinHolds_.load(std::memory_order_acquire) != 0;
+    }
     uint64_t PinnedWeightBytes() const noexcept { return pinnedWeightBytes_; }
     uint64_t PinnedWeightEntries() const noexcept { return pinnedWeightEntries_; }
 
@@ -473,6 +486,7 @@ public:
     uint64_t weightUseClock_ = 0;
     uint64_t pinnedWeightBytes_ = 0;
     uint64_t pinnedWeightEntries_ = 0;
+    std::atomic<uint32_t> moePinHolds_{0};
     uint32_t currentLayerLease_ = 0;
     uint64_t layerLeaseEpoch_ = 0;
 
@@ -496,6 +510,25 @@ public:
         const GpuWeightView* weights, float* contiguousOutput,
         size_t* outputOffsets, size_t weightCount,
         uint32_t cols, uint32_t batch, uint64_t epoch);
+
+    // GDN state management: reset per-block GDN device state keyed by
+    // GdnStateKey(owner, block). Called from Executor::ResetState() on
+    // Bind()/session teardown to prevent stale GDN recurrent state from
+    // leaking into a newly bound model.
+    void ResetGdnState(uint64_t stateKey);
+
+    // GDN dispatch: Qwen3.5/Qwen4Exp gated delta-net device kernel. Stubbed
+    // to CPU fallback until a matching Vulkan stateful kernel is wired.
+    bool DispatchGdn(const float* mixed, size_t mixedSize,
+                     const float* beta, size_t betaSize,
+                     const float* alpha, size_t alphaSize,
+                     const float* aLog, size_t aLogSize,
+                     const float* dtBias, size_t dtBiasSize,
+                     const float* norm, size_t normSize,
+                     const float* z, size_t zSize,
+                     uint32_t keyHeads, uint32_t valueHeads, uint32_t headDim,
+                     float epsilon, float scale, bool gateSigmoid,
+                     uint64_t stateKey, std::vector<float>& output);
 
     // ========== Download ticket ==========
     struct DownloadTicket {

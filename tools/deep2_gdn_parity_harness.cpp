@@ -22,13 +22,13 @@ int main() {
         key[i] = 0.5f;
         value[i] = 1.0f + static_cast<float>(i) * 0.1f;
     }
-    GDNReferenceStep(descriptor, input, decay, beta, key, value, state, output);
+    GDNReferenceStep(descriptor, input, decay, beta, key, value, state, output, failure);
     if (output.size() != input.size()) {
         std::printf("GDN_REFERENCE=FAIL invalid output\n");
         return 2;
     }
     const std::vector<float> first_state = state;
-    GDNReferenceStep(descriptor, input, decay, beta, key, value, state, output);
+    GDNReferenceStep(descriptor, input, decay, beta, key, value, state, output, failure);
     bool finite = true;
     bool changed = false;
     for (size_t i = 0; i < output.size(); ++i) {

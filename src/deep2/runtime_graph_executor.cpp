@@ -5022,8 +5022,8 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
                 std::vector<float> referenceState = state;
                 std::vector<float> referenceOutput;
                 if (!::Deep2::Qwen4Exp::GDNReferenceStep(
-                        descriptor, mixed, beta, alpha, z, aLog, dtBias,
-                        norm, referenceState, referenceOutput, failure)) {
+                        descriptor, mixed, beta, alpha, z, aLog,
+                        referenceState, referenceOutput, failure)) {
                     err = "GDN: GPU differential reference failed: " + failure;
                     return false;
                 }
@@ -5061,7 +5061,7 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     }
     if (!gpuExecuted) {
         if (!::Deep2::Qwen4Exp::GDNReferenceStep(
-                descriptor, mixed, beta, alpha, z, aLog, dtBias, norm,
+                descriptor, mixed, beta, alpha, z, aLog,
                 state, y, failure)) {
             err = "GDN: " + failure;
             return false;
