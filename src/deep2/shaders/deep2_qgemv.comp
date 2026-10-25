@@ -224,9 +224,14 @@ void main() {
         return;
     }
 
+    // Check multiplication and range before calculating row byte offset.
+    if (rowBytes == 0u || rowBytes > pc.weightBytes ||
+        row >= pc.weightBytes / rowBytes + uint(pc.weightBytes % rowBytes != 0u)) {
+        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
+        return;
+    }
     uint rb = row * rowBytes;
-    if (rowBytes == 0u || row > (pc.weightBytes / rowBytes) ||
-        rowBytes > pc.weightBytes || rb > pc.weightBytes - rowBytes) {
+    if (rb > pc.weightBytes - rowBytes) {
         if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
