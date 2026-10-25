@@ -128,7 +128,13 @@ int main(int argc, char** argv) {
                             name.find(".ffn_up_exps.") != std::string::npos ||
                             name.find(".ffn_down_exps.") != std::string::npos ||
                             name.find("experts.") == 0;
-        if (expert) { expertBytes += t->sizeBytes; ++expertTensors; }
+        if (expert) {
+            if (t->sizeBytes > UINT64_MAX - expertBytes || expertTensors == UINT64_MAX) {
+                std::cerr << "EXPERT_ACCOUNTING_OVERFLOW\n"; return 4;
+            }
+            expertBytes += t->sizeBytes;
+            ++expertTensors;
+        }
     }
     // DeepSeek R1's stacked expert projections are grouped as complete
     // gate/up/down triplets. Derive the logical count from actual tensor
@@ -149,8 +155,19 @@ int main(int argc, char** argv) {
             std::cerr << "INVALID_EXPERT_SLICE_DIVISIBILITY layer=" << layer << "\n";
             return 4;
         }
+        const uint64_t gatePer = gate->sizeBytes / count;
+        const uint64_t upPer = up->sizeBytes / count;
+        const uint64_t downPer = down->sizeBytes / count;
+        if (gatePer > UINT64_MAX - upPer || gatePer + upPer > UINT64_MAX - downPer ||
+            count > UINT64_MAX - logicalExperts) {
+            std::cerr << "EXPERT_GEOMETRY_OVERFLOW\n"; return 4;
+        }
+        const uint64_t tripletBytes = gatePer + upPer + downPer;
+        if (tripletBytes > UINT64_MAX / count ||
+            tripletBytes * count > UINT64_MAX - logicalExpertBytes) {
+            std::cerr << "EXPERT_GEOMETRY_OVERFLOW\n"; return 4;
+        }
         logicalExperts += count;
-        const uint64_t tripletBytes = gate->sizeBytes / count + up->sizeBytes / count + down->sizeBytes / count;
         logicalExpertBytes += tripletBytes * count;
         if (minTripletBytes == 0 || tripletBytes < minTripletBytes) minTripletBytes = tripletBytes;
         if (tripletBytes > maxTripletBytes) maxTripletBytes = tripletBytes;
@@ -195,9 +212,14 @@ int main(int argc, char** argv) {
         if (ec) { std::cerr << "FILE_SIZE_ERROR\n"; return 4; }
     }
     if (!total) { std::cerr << "EMPTY_MODEL\n"; return 4; }
+    if (expertBytes > total || logicalExpertBytes > expertBytes) {
+        std::cerr << "EXPERT_ACCOUNTING_INCONSISTENT\n"; return 4;
+    }
+    const uint64_t denseBytes = total - expertBytes;
     std::cout << "{\"source\":" << json_quote(path) << ",\"shards\":" << loader.shardCount()
               << ",\"tensors\":" << loader.tensorCount() << ",\"bytes\":" << total
               << ",\"expert_tensors\":" << expertTensors << ",\"expert_bytes\":" << expertBytes
+              << ",\"non_expert_bytes\":" << denseBytes
               << ",\"logical_experts\":" << logicalExperts
               << ",\"logical_expert_bytes\":" << logicalExpertBytes
               << ",\"min_triplet_bytes\":" << minTripletBytes
@@ -205,13 +227,14 @@ int main(int argc, char** argv) {
     int rc = 0;
     if (std::string(argv[1]) == "plan") {
         const bool fits = total <= target;
-        const bool pruningCandidate = (!fits && expertBytes > 0);
+        const bool impossibleTarget = !fits && denseBytes > target;
+        const bool pruningCandidate = (!fits && expertBytes > 0 && !impossibleTarget);
         std::cout << ",\"target_bytes\":" << target << ",\"fits_unmodified\":" << (fits ? "true" : "false")
                   << ",\"pruning_candidate\":" << (pruningCandidate ? "true" : "false");
         if (fits) {
             std::cout << ",\"selection\":\"FITS_UNMODIFIED_NO_PRUNING\",\"writable_output\":false";
             rc = 0;
-        } else if (expertBytes == 0) {
+        } else if (expertBytes == 0 || impossibleTarget) {
             std::cout << ",\"selection\":\"NOT_PRUNABLE_DENSE_EXCEEDS_TARGET\",\"writable_output\":false";
             rc = 4;
         } else {
