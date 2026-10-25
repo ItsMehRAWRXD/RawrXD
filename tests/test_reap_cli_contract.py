@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 import unittest
 
 EXE = os.environ.get("RAWR_REAP_EXE")
@@ -145,6 +146,81 @@ class ReapCliContract(unittest.TestCase):
     def test_43_leading_zero(self): self.assert_size_admitted("00030GB")
     def test_44_leading_decimal(self): self.assert_size_admitted(".5GB")
     def test_45_exact_large_integer(self): self.assert_size_admitted("9007199254740992B")
+
+    # Batch 4: 15 filesystem admission and JSON-safety regressions.
+    def assert_capability_reason(self, filename, reason):
+        p = self.run_cli("capabilities", filename)
+        self.assertEqual(p.returncode, 4, (p.stdout, p.stderr))
+        self.assertEqual(json.loads(p.stdout)["reason"], reason)
+
+    def test_46_empty_directory(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assert_capability_reason(d, "unsupported_format_or_missing_metadata")
+
+    def test_47_two_ggufs_ambiguous(self):
+        with tempfile.TemporaryDirectory() as d:
+            for name in ("a.gguf", "b.gguf"):
+                (Path(d) / name).write_bytes(b"GGUF")
+            self.assert_capability_reason(d, "ambiguous_model_directory")
+
+    def test_48_three_ggufs_ambiguous(self):
+        with tempfile.TemporaryDirectory() as d:
+            for name in ("a.gguf", "b.gguf", "c.gguf"):
+                (Path(d) / name).write_bytes(b"GGUF")
+            self.assert_capability_reason(d, "ambiguous_model_directory")
+
+    def test_49_single_corrupt_gguf(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "one.gguf").write_bytes(b"not gguf")
+            self.assert_capability_reason(d, json.loads(self.run_cli("capabilities", str(Path(d) / "one.gguf")).stdout)["reason"])
+
+    def test_50_multiple_ggufs_plus_text(self):
+        with tempfile.TemporaryDirectory() as d:
+            for name in ("a.gguf", "b.gguf", "readme.txt"):
+                (Path(d) / name).write_bytes(b"x")
+            self.assert_capability_reason(d, "ambiguous_model_directory")
+
+    def test_51_only_text_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "readme.txt").write_text("hello")
+            self.assert_capability_reason(d, "unsupported_format_or_missing_metadata")
+
+    def test_52_nested_gguf_not_selected(self):
+        with tempfile.TemporaryDirectory() as d:
+            nested = Path(d) / "nested"
+            nested.mkdir()
+            (nested / "model.gguf").write_bytes(b"x")
+            self.assert_capability_reason(d, "unsupported_format_or_missing_metadata")
+
+    def test_53_gguf_directory_not_selected(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "model.gguf").mkdir()
+            self.assert_capability_reason(d, "unsupported_format_or_missing_metadata")
+
+    def test_54_gguf_extension_case_sensitive(self):
+        self.assert_capability_reason("missing.GGUF", "unsupported_format_or_missing_metadata")
+
+    def test_55_unrelated_extension(self):
+        self.assert_capability_reason("missing.bin", "unsupported_format_or_missing_metadata")
+
+    def test_56_empty_path(self):
+        self.assert_capability_reason("", "unsupported_format_or_missing_metadata")
+
+    def test_57_json_carriage_return(self):
+        name = "missing\rmodel.txt"
+        self.assertEqual(json.loads(self.run_cli("capabilities", name).stdout)["source"], name)
+
+    def test_58_json_backspace(self):
+        name = "missing\bmodel.txt"
+        self.assertEqual(json.loads(self.run_cli("capabilities", name).stdout)["source"], name)
+
+    def test_59_json_form_feed(self):
+        name = "missing\fmodel.txt"
+        self.assertEqual(json.loads(self.run_cli("capabilities", name).stdout)["source"], name)
+
+    def test_60_json_unicode(self):
+        name = "missing-模型.txt"
+        self.assertEqual(json.loads(self.run_cli("capabilities", name).stdout)["source"], name)
 
 if __name__ == "__main__":
     unittest.main()
