@@ -135,11 +135,13 @@ public:
     {
         if (committedPrefix > currentLength_)
             throw std::out_of_range("K2KVCache: truncate beyond committed length");
+        // Only clear discarded committed positions and the speculative slot.
+        // Untouched capacity is already zero-initialized by GrowAllocated.
+        const std::size_t clearEnd = (std::min)(allocatedSeq_, currentLength_ + (currentLength_ < allocatedSeq_ ? 1u : 0u));
+        const std::size_t clearFloats = (clearEnd - committedPrefix) * kvDim_;
         for (std::size_t layer = 0; layer < numLayers_; ++layer) {
-            for (std::size_t pos = committedPrefix; pos < allocatedSeq_; ++pos) {
-                std::fill_n(MutableAt(keys_, layer, pos), kvDim_, 0.0f);
-                std::fill_n(MutableAt(values_, layer, pos), kvDim_, 0.0f);
-            }
+            std::fill_n(MutableAt(keys_, layer, committedPrefix), clearFloats, 0.0f);
+            std::fill_n(MutableAt(values_, layer, committedPrefix), clearFloats, 0.0f);
         }
         currentLength_ = committedPrefix;
     }
@@ -192,15 +194,13 @@ private:
         const std::size_t count = CheckedElements(numLayers_, neu, kvDim_);
         std::vector<float> nk(count, 0.0f), nv(count, 0.0f);
         const std::size_t copyPos = (std::min)(allocatedSeq_, neu);
+        // Each layer owns a contiguous token slab; copy once per layer.
+        const std::size_t copyBytes = copyPos * kvDim_ * sizeof(float);
         for (std::size_t L = 0; L < numLayers_; ++L) {
-            for (std::size_t p = 0; p < copyPos && p < neu; ++p) {
-                std::memcpy(nk.data() + (L * neu + p) * kvDim_,
-                            keys_.data() + (L * allocatedSeq_ + p) * kvDim_,
-                            kvDim_ * sizeof(float));
-                std::memcpy(nv.data() + (L * neu + p) * kvDim_,
-                            values_.data() + (L * allocatedSeq_ + p) * kvDim_,
-                            kvDim_ * sizeof(float));
-            }
+            std::memcpy(nk.data() + L * neu * kvDim_,
+                        keys_.data() + L * allocatedSeq_ * kvDim_, copyBytes);
+            std::memcpy(nv.data() + L * neu * kvDim_,
+                        values_.data() + L * allocatedSeq_ * kvDim_, copyBytes);
         }
         keys_.swap(nk);
         values_.swap(nv);
