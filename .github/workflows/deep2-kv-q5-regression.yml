@@ -28,16 +28,15 @@ jobs:
         test: [k2_kv_cache_regression, q5_0_decoder_reference]
     steps:
       - uses: actions/checkout@v4
+      - name: Configure MSVC toolchain
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
       - name: Compile and execute C++20 regression (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $source = "tests/${{ matrix.test }}.cpp"
-          if ("${{ matrix.test }}" -eq "k2_kv_cache_regression") {
-            cl /nologo /std:c++20 /EHsc /W4 /I src/deep2 /Fe:"${{ matrix.test }}.exe" $source
-          } else {
-            cl /nologo /std:c++20 /EHsc /W4 /Fe:"${{ matrix.test }}.exe" $source
-          }
+          cl /nologo /std:c++20 /EHsc /W4 /I src/deep2 "/Fe:${{ matrix.test }}.exe" $source
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & "./${{ matrix.test }}.exe"
           exit $LASTEXITCODE
