@@ -46,7 +46,7 @@ public:
     }
 
     std::size_t evictColdPages() {
-        const std::size_t keep = (std::max)(kPageTok_, currentLength_);
+        const std::size_t keep = (std::max)((std::min)(kPageTok_, maxSeqLen_), currentLength_);
         if (keep >= allocatedSeq_) return 0;
         const std::size_t before = liveBytes();
         GrowAllocated(keep);
@@ -109,6 +109,7 @@ public:
         float* dstK = MutableAt(keys_, layer, currentLength_);
         float* dstV = MutableAt(values_, layer, currentLength_);
 
+        if (!key || !value) throw std::invalid_argument("K2KVCache: null KV input");
         std::memcpy(dstK, key, kvDim_ * sizeof(float));
         std::memcpy(dstV, value, kvDim_ * sizeof(float));
     }
@@ -138,8 +139,8 @@ private:
                     std::size_t layer,
                     std::size_t position) const
     {
-        if (layer >= numLayers_ || position >= allocatedSeq_)
-            throw std::out_of_range("K2KVCache: index");
+        if (layer >= numLayers_ || position >= currentLength_)
+            throw std::out_of_range("K2KVCache: uncommitted index");
         const std::size_t offset =
             ((layer * allocatedSeq_) + position) * kvDim_;
         return storage.data() + offset;
