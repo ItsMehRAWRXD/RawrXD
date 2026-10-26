@@ -209,6 +209,7 @@ int main(int argc, char** argv) {
         // Create window
         const char* title = studio ? "RawrXD Studio" : "KartGib - Sunshine KartGib";
         Win32Window window(width, height, title, fullscreen);
+        if (studio) inspectorCreate(window.getHandle());
         window.setUserPointer(&worldforge);
         if (product) {
             window.noteMouse(40, -8);

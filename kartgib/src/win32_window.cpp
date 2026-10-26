@@ -1,4 +1,5 @@
 #include "win32_window.hpp"
+void inspectorLayout(int width, int height);
 #include <iostream>
 
 Win32Window::Win32Window(int width, int height, const std::string& title, bool fullscreen)
@@ -120,6 +121,7 @@ LRESULT CALLBACK Win32Window::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                 window->height_ = HIWORD(lParam);
                 window->minimized_ = (window->width_ == 0 || window->height_ == 0);
                 window->resized_ = true;
+                inspectorLayout(window->width_, window->height_);
                 break;
             case WM_KEYDOWN:
                 if (wParam < 256) {

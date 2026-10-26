@@ -4,7 +4,9 @@
 
 void studioPointer(Win32Window& window, const float view[16], const float proj[16],
     int x, int y, bool clicked, bool released) {
-    (void)view; (void)proj; (void)released;
+    (void)view; (void)proj;
+    studioMoveCursor(window.getHandle(), x, y);
     if (!studioBrushOn() || editorPlaying()) return;
-    if (clicked) studioBrush(window, x, y);
+    if (released) studioBrush(window, x, y);
+    (void)clicked;
 }

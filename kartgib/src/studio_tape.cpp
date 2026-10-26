@@ -1,4 +1,5 @@
 #include "editor_api.hpp"
+#include "terrain_studio.hpp"
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -41,6 +42,8 @@ bool studioSculpt(float x, float z, float radius, float dy) {
     if (gAt >= 24) return false;
     Op o{}; o.kind = 2; o.a[0]=x; o.a[1]=z; o.a[2]=radius; o.a[3]=dy;
     if (!gHaveHit) { gHitX = x; gHitZ = z; gHaveHit = 1; }
+    o.a[4] = studioBrush().falloff > 0.0f ? studioBrush().falloff : 2.0f;
+    o.b[1] = static_cast<float>(studioBrush().mode);
     push(o); return true;
 }
 static void restore(const Op& o, bool after) {
@@ -56,7 +59,13 @@ void studioApplyStamps(std::vector<Vertex>& v) {
         for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2) {
             float dx = vert.pos[0] - gOp[i].a[0], dz = vert.pos[2] - gOp[i].a[1];
             float r = gOp[i].a[2], d = std::sqrt(dx * dx + dz * dz);
-            if (r > 1.0f && d < r) { float t = 1.0f - d / r; lift += gOp[i].a[3] * t * t; }
+            if (r > 1.0f && d < r) {
+                float t = 1.0f - d / r, fall = gOp[i].a[4] > 0.0f ? gOp[i].a[4] : 2.0f;
+                float w = std::pow(t, fall); int mode = static_cast<int>(gOp[i].b[1]);
+                if (mode == 2) lift *= (1.0f - w * 0.5f);
+                else if (mode == 3) lift += (gOp[i].a[3] - (vert.pos[1] + lift)) * w;
+                else lift += gOp[i].a[3] * w;
+            }
         }
         vert.pos[1] += lift;
         if (!gHaveHit) continue;
@@ -70,11 +79,16 @@ bool studioSaveStamps(const char* path) {
     int n = 0; for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2) ++n;
     o << n << "\n";
     for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2)
-        o << gOp[i].a[0] << " " << gOp[i].a[1] << " " << gOp[i].a[2] << " " << gOp[i].a[3] << "\n";
+        o << gOp[i].a[0] << " " << gOp[i].a[1] << " " << gOp[i].a[2] << " " << gOp[i].a[3] << " " << gOp[i].a[4] << "\n";
     return true;
 }
 bool studioLoadStamps(const char* path) {
     std::ifstream in(path); int n = 0; if (!(in >> n)) return false;
-    for (int i = 0; i < n; ++i) { float x, z, r, dy; if (!(in >> x >> z >> r >> dy)) return false; studioSculpt(x, z, r, dy); }
+    for (int i = 0; i < n; ++i) {
+        float x = 0, z = 0, r = 0, dy = 0, fall = 2;
+        if (!(in >> x >> z >> r >> dy >> fall)) return false;
+        studioSetBrush(dy < 0.0f ? 1 : 0, r, std::fabs(dy), fall);
+        if (!studioSculpt(x, z, r, dy)) return false;
+    }
     return true;
 }

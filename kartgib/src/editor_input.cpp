@@ -68,10 +68,9 @@ void editorHandleInput(Win32Window& window) {
         else if (vk == 'T') editorSetMode(0);
         else if (vk == 'R') editorSetMode(1);
         else if (vk == 'S') editorSetMode(2);
-        else if (vk == 'B') editorSetMode(3);
+        else if (vk == 'B') { editorSetMode(3); studioBrushEnable(!studioBrushOn()); }
         else if (vk == 'L') editorToggleLocal();
         else if (vk == 'P') editorPlayToggle();
-        else if (vk == 'B') studioBrushEnable(!studioBrushOn());
     }
     if (ctrl && undo) editorUndo();
     if (ctrl && redo) editorRedo();

@@ -1,4 +1,5 @@
 #include "editor_api.hpp"
+#include "terrain_studio.hpp"
 #include "worldforge.hpp"
 #include <cmath>
 
@@ -24,7 +25,14 @@ bool studioBrush(Win32Window& window, int px, int py) {
     for (int i = 1; i < 80; ++i) {
         float t = static_cast<float>(i) * 8.0f;
         float x = -40.0f + dx * t, y = 24.0f + dy * t, z = -55.0f + dz * t;
-        if (y < static_cast<float>(kg::sampleHeight(x, z, settings))) return studioSculpt(x, z, 36.0f, 22.0f);
+        if (y < static_cast<float>(kg::sampleHeight(x, z, settings))) {
+            const StudioBrush& b = studioBrush();
+            float radius = b.radius > 1.0f ? b.radius : 36.0f;
+            float lift = b.strength > 0.0f ? b.strength : 22.0f;
+            if (b.mode == 1) lift = -lift;
+            if (b.mode == 3) lift = y;
+            return studioSculpt(x, z, radius, lift);
+        }
     }
     return false;
 }

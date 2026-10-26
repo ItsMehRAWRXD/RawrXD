@@ -111,6 +111,11 @@ set(SOURCES
     src/studio_brush.cpp
     src/studio_io.cpp
     src/studio_run.cpp
+    src/inspector_wnd.cpp
+    src/inspector_cmd.cpp
+    src/inspector_run.cpp
+    src/inspector_cap.cpp
+    src/terrain_cursor.cpp
     src/terrain_field.cpp
     src/terrain_query.cpp
     src/terrain_io.cpp
