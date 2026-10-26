@@ -140,13 +140,21 @@ std::string modelRouteBreadcrumb(RawrXD::ChatRouteMenu::RouteKind kind,
 bool isSelectableGguf(const char* filename)
 {
     const std::string name = toLowerAscii(filename ? filename : "");
-    if (name.size() < 5 || name.compare(name.size() - 5, 5, ".gguf") != 0 ||
+    const bool isGguf = name.size() >= 5 &&
+        name.compare(name.size() - 5, 5, ".gguf") == 0;
+    const bool isOllamaBlob = name.size() >= 5 &&
+        name.compare(name.size() - 5, 5, ".blob") == 0;
+    if ((!isGguf && !isOllamaBlob) ||
         name.find("mmproj") != std::string::npos) {
         return false;
     }
 
-    // A split GGUF is loaded from its first shard; listing every continuation
+    // A split model is loaded from its first shard; listing every continuation
     // shard would make the picker look like it contains duplicate models.
+    // Keep this filename filter conservative: the caller still validates the
+    // file's GGUF magic, version, and non-empty tensor table below. This lets
+    // Ollama content-addressed blobs participate when they are complete GGUF
+    // containers without surfacing unrelated blob files.
     const size_t shard = name.find("-000");
     if (shard != std::string::npos && shard + 13 <= name.size() &&
         name.compare(shard + 6, 4, "-of-") == 0 &&
