@@ -2335,6 +2335,10 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
             extern int AgentSessionProductProof();
             return AgentSessionProductProof();
         }
+        if (lpCmdLine && strstr(lpCmdLine, "--agent-gui-proof")) {
+            extern int AgentSessionGuiProof();
+            return AgentSessionGuiProof();
+        }
 
         int argc = 0;
         char** argv = nullptr;

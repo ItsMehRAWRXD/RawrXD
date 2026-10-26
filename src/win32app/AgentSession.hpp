@@ -22,6 +22,8 @@ std::string AgentSessionCountersJson();
 std::string AgentSessionReviewFirst();
 void AgentSessionKillTree(void* process);
 int AgentSessionProductProof();
+void AgentSessionAttachBar(void* parentHwnd);
+int AgentSessionGuiProof();
 int AgentSessionAdmit(const std::string& body, std::string* json);
 bool AgentSessionRestore(const std::string& dir, AgentSessionNote* out);
 void AgentSessionAbandonLive();
