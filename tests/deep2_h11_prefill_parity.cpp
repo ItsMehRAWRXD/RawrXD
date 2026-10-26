@@ -49,7 +49,9 @@ struct GateResult {
 };
 
 int main(int argc, char** argv) {
-    if (argc < 2) { usage(argv[0]); return 2; }
+    // CTest registers this as an optional real-model gate. A build without
+    // DEEP2_H11_MODEL must skip it, not report a usage error as a regression.
+    if (argc < 2) { usage(argv[0]); return 77; }
     const std::string modelPath = argv[1];
     std::string promptText =
         (argc >= 3 && argv[2][0] != '-')

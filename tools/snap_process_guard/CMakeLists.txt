@@ -36,7 +36,7 @@ target_link_libraries(snap_process_guard_cli PRIVATE snap_process_guard)
 
 # Enable testing
 enable_testing()
-add_test(NAME snap_process_guard_test COMMAND snap_process_guard_cli --help)
+add_test(NAME snap_process_guard_test COMMAND $<TARGET_FILE:snap_process_guard_cli> --help)
 
 # Install
 install(TARGETS snap_process_guard_cli

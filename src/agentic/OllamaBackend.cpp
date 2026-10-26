@@ -182,18 +182,51 @@ std::string OllamaBackend::ConvertToolsToJson(const json& tools) const {
 void OllamaBackend::ParseToolCallsFromResponse(
     const std::string& response,
     InferenceResult& result) const {
-    try {
-        json j = json::parse(response);
-        if (j.contains("tools")) {
-            result.has_tool_calls = true;
-            for (const auto& tool : j["tools"]) {
-                std::string name = tool.value("name", "");
-                json args = tool.value("arguments", json::object());
-                result.tool_calls.emplace_back(name, args);
+    auto parseArguments = [](const json& value) -> json {
+        if (value.is_object() || value.is_array()) return value;
+        if (value.is_string()) {
+            try {
+                return json::parse(value.get<std::string>());
+            } catch (...) {
             }
         }
+        return json::object();
+    };
+
+    auto addCall = [&](const std::string& name, const json& args) {
+        if (name.empty()) return;
+        result.tool_calls.emplace_back(name, parseArguments(args));
+    };
+
+    try {
+        json j = json::parse(response);
+        if (j.is_object() && j.contains("tool_calls") && j["tool_calls"].is_array()) {
+            for (const auto& tool : j["tool_calls"]) {
+                const json function = tool.value("function", json::object());
+                const std::string name = tool.value("name", function.value("name", ""));
+                const json args = tool.contains("arguments")
+                    ? tool["arguments"]
+                    : function.value("arguments", json::object());
+                addCall(name, args);
+            }
+        } else if (j.is_object() && j.contains("name") && j["name"].is_string()) {
+            // Small local models frequently emit the tool envelope as plain
+            // JSON content instead of using Ollama's native tool_calls field.
+            const json args = j.contains("arguments") ? j["arguments"]
+                : (j.contains("parameters") ? j["parameters"]
+                    : (j.contains("args") ? j["args"] : json::object()));
+            addCall(j["name"].get<std::string>(), args);
+        } else if (j.is_object() && j.contains("tool") && j["tool"].is_string()) {
+            const json args = j.contains("arguments") ? j["arguments"]
+                : (j.contains("parameters") ? j["parameters"] : json::object());
+            addCall(j["tool"].get<std::string>(), args);
+        }
+        if (!result.tool_calls.empty()) {
+            result.has_tool_calls = true;
+        }
     } catch (const json::exception&) {
-        // No tool calls in response text
+        // Plain natural-language responses do not carry a structured tool
+        // envelope; leave them as final assistant text.
     }
 }
 
@@ -269,6 +302,9 @@ InferenceResult OllamaBackend::ChatSync(
             }
             result.tool_calls.emplace_back(name, args);
         }
+    }
+    if (result.tool_calls.empty()) {
+        ParseToolCallsFromResponse(text, result);
     }
 
     uint64_t ptok = resp.prompt_eval_count;

@@ -44,9 +44,28 @@ function Fail([string]$Why) {
 
 Say "=== Gate 2: manifest consistency ($(Get-Date -Format o)) ==="
 
+function Resolve-BuildExecutable([string]$Name) {
+    $candidates = @(
+        (Join-Path $BuildDir ("bin-msvc\" + $Name + ".exe")),
+        (Join-Path $BuildDir ("bin-msvc\Release\" + $Name + ".exe")),
+        (Join-Path $BuildDir ("Release\" + $Name + ".exe"))
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+    $fallback = Get-ChildItem -LiteralPath $BuildDir -Recurse -Filter ($Name + ".exe") -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($fallback) { return $fallback.FullName }
+    return $null
+}
+
 # ---- C1: authoritative registry emitter --------------------------------------
 $registryJson = Join-Path $EvidenceDir "registry.json"
-$regOut = & (Join-Path $BuildDir "bin-msvc\Release\quant_parity_cert.exe") --blocks 8 --seed 12345 --json $registryJson 2>&1
+$registryExe = Resolve-BuildExecutable "quant_parity_cert"
+if (-not $registryExe) { Fail "quant_parity_cert.exe not found under '$BuildDir'" }
+$regOut = & $registryExe --blocks 8 --seed 12345 --json $registryJson 2>&1
 if ($LASTEXITCODE -ne 0) { Fail "quant_parity_cert exited $LASTEXITCODE" }
 Say "C1 quant_parity_cert           PASS (exit 0, RESULT: $(($regOut | Select-String 'RESULT:').Line))"
 
@@ -97,8 +116,8 @@ foreach ($q in $verified) {
         if (-not $evid) { Fail "Q8_K claimed verified but registry has no verified evidence row" }
     }
 }
-$kq = Join-Path $BuildDir "bin-msvc\Release\kquant_dot_parity.exe"
-if (-not (Test-Path $kq)) { $kq = (Get-ChildItem $RepoRoot -Recurse -Filter kquant_dot_parity.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
+$kq = Resolve-BuildExecutable "kquant_dot_parity"
+if (-not $kq) { $kq = (Get-ChildItem $RepoRoot -Recurse -Filter kquant_dot_parity.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
 if (-not $kq) { Fail "kquant_dot_parity.exe not found" }
 & $kq | Out-Null
 if ($LASTEXITCODE -ne 0) { Fail "kquant_dot_parity exited $LASTEXITCODE (Q4_K/Q6_K/Q8_K dot parity)" }

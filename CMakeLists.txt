@@ -3377,7 +3377,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_h11_prefill_parity.cpp" AND TARGET de
     endif()
     enable_testing()
     add_test(NAME deep2_h11_prefill_parity
-             COMMAND deep2_h11_prefill_parity $ENV{DEEP2_H11_MODEL})
+             COMMAND $<TARGET_FILE:deep2_h11_prefill_parity> $ENV{DEEP2_H11_MODEL})
+    set_tests_properties(deep2_h11_prefill_parity PROPERTIES
+        SKIP_RETURN_CODE 77)
 endif()
 
 # Gate 8 — GPU Decode Roofline Profiling (DEEP2_GPU_DECODE_ROOFLINE_001).
@@ -5155,7 +5157,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/Q8KParity.cpp")
              COMMAND ${CMAKE_COMMAND} -E env POWERSHELL_TELEMETRY_OPTOUT=1
              powershell -ExecutionPolicy Bypass -NoProfile -File
              "${CMAKE_SOURCE_DIR}/tools/gate2_manifest_consistency.ps1"
-             -BuildDir "${CMAKE_BINARY_DIR}")
+             -BuildDir "${CMAKE_BINARY_DIR}"
+             -CliExe "${CMAKE_BINARY_DIR}/bin-msvc/rawr.exe"
+             -RepoRoot "${CMAKE_SOURCE_DIR}"
+             -EvidenceDir "${CMAKE_BINARY_DIR}/gate2_manifest_evidence")
     message(STATUS "q8k parity harness: Q8_K byte-level verification targets enabled")
 endif()
 
@@ -5168,6 +5173,10 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
         src/reap_cli_contract.cpp
+        src/reap_pipeline.cpp
+        src/reap_inventory.cpp
+        src/deep2/ReapMoETransformer.cpp
+        src/deep2/QuantParityRegistry.cpp
         src/core/qt_elimination.cpp
         src/project_wizard/project_spec.cpp
         src/project_wizard/project_state_manager.cpp
