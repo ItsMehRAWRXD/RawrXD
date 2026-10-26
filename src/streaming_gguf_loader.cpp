@@ -5,6 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
+#include <limits>
 
 // Compiled at global scope; bring the RawrXD interface vocabulary in explicitly
 // (the header no longer re-declares these at file scope, because it is also
@@ -99,9 +100,21 @@ bool StreamingGGUFLoader::ParseHeader() {
     
     // Read tensor count
     if (!ReadValue(header_.tensor_count)) return false;
+    // Refuse absurd counts before any vector/map allocation.  A corrupted
+    // header must fail closed rather than turning into std::bad_alloc.
+    if (header_.tensor_count > 10'000'000ULL) {
+        std::cerr << "[GGUF] tensor count exceeds safety limit: "
+                  << header_.tensor_count << std::endl;
+        return false;
+    }
     
     // Read metadata KV count
     if (!ReadValue(header_.metadata_kv_count)) return false;
+    if (header_.metadata_kv_count > 1'000'000ULL) {
+        std::cerr << "[GGUF] metadata count exceeds safety limit: "
+                  << header_.metadata_kv_count << std::endl;
+        return false;
+    }
     
     // Calculate metadata offset
     header_.metadata_offset = file_.tellg();
@@ -134,7 +147,9 @@ bool StreamingGGUFLoader::ParseMetadata() {
             return false;
         }
         
-        // Value type 1 = UTF-8 string
+        // GGUF v3 uses the standard metadata enum (STRING == 8).  Parse the
+        // scalar forms we expose and consume every other valid form so the
+        // next key remains aligned.
         if (value_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
             if (!ReadString(value)) {
                 std::cerr << "❌ Failed to read metadata string value for key: " << key << std::endl;
@@ -154,18 +169,51 @@ bool StreamingGGUFLoader::ParseMetadata() {
             } else if (key == GGUFConstants::META_LLAMA_VOCAB_SIZE) {
                 metadata_.vocab_size = std::stoul(value);
             }
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32) {  // uint32
-            uint32_t uint_val;
-            if (!ReadValue(uint_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(uint_val);
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {  // int32
-            int32_t int_val;
-            if (!ReadValue(int_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(int_val);
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {  // float32
-            float float_val;
-            if (!ReadValue(float_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(float_val);
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32) {
+            uint32_t v; if (!ReadValue(v)) return false;
+            metadata_.kv_pairs[key] = std::to_string(v);
+            if (key == "llama.block_count" || key == "qwen3.block_count") metadata_.layer_count = v;
+            if (key == "llama.context_length" || key == "qwen3.context_length") metadata_.context_length = v;
+            if (key == "llama.embedding_length" || key == "qwen3.embedding_length") metadata_.embedding_dim = v;
+            if (key == "llama.vocab_size" || key == "qwen3.vocab_size") metadata_.vocab_size = v;
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {
+            int32_t v; if (!ReadValue(v)) return false;
+            metadata_.kv_pairs[key] = std::to_string(v);
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {
+            float v; if (!ReadValue(v)) return false;
+            metadata_.kv_pairs[key] = std::to_string(v);
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_ARRAY) {
+            // Tokenizer arrays are useful to callers, so retain the two
+            // common forms; all other arrays are consumed safely below.
+            uint32_t elem_type;
+            uint64_t count;
+            if (!ReadValue(elem_type) || !ReadValue(count) || count > 10'000'000ULL) return false;
+            if (key == "tokenizer.ggml.tokens" && elem_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
+                metadata_.tokens.clear();
+                metadata_.tokens.reserve(static_cast<size_t>(count));
+                for (uint64_t j = 0; j < count; ++j) {
+                    std::string token;
+                    if (!ReadString(token)) return false;
+                    metadata_.tokens.push_back(std::move(token));
+                }
+            } else if (key == "tokenizer.ggml.scores" && elem_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {
+                metadata_.token_scores.clear();
+                metadata_.token_scores.reserve(static_cast<size_t>(count));
+                for (uint64_t j = 0; j < count; ++j) {
+                    float score; if (!ReadValue(score)) return false;
+                    metadata_.token_scores.push_back(score);
+                }
+            } else {
+                // Consume each element using the same checked decoder used by
+                // the tensor-index pass.  Arrays may themselves be nested.
+                for (uint64_t j = 0; j < count; ++j) {
+                    if (!SkipMetadataValue(elem_type)) return false;
+                }
+            }
+        } else if (!SkipMetadataValue(value_type)) {
+            std::cerr << "[GGUF] unsupported metadata value type " << value_type
+                      << " for key " << key << std::endl;
+            return false;
         }
     }
     
@@ -192,11 +240,12 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         uint32_t value_type;
         if (!ReadValue(value_type)) return false;
         
-        if (value_type == 1) {
-            if (!ReadString(value)) return false;
-        } else if (value_type == 4 || value_type == 5 || value_type == 6) {
-            uint32_t dummy;
-            if (!ReadValue(dummy)) return false;
+        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_ARRAY) {
+            uint32_t elem_type; uint64_t count;
+            if (!ReadValue(elem_type) || !ReadValue(count) || count > 10'000'000ULL) return false;
+            for (uint64_t j = 0; j < count; ++j) if (!SkipMetadataValue(elem_type)) return false;
+        } else if (!SkipMetadataValue(value_type)) {
+            return false;
         }
     }
     
@@ -211,6 +260,11 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         
         uint32_t n_dims;
         if (!ReadValue(n_dims)) return false;
+        if (n_dims == 0 || n_dims > 16) {
+            std::cerr << "[GGUF] invalid tensor rank " << n_dims
+                      << " for tensor " << ref.name << std::endl;
+            return false;
+        }
         
         ref.shape.resize(n_dims);
         for (uint32_t d = 0; d < n_dims; ++d) {
@@ -339,6 +393,25 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         std::cerr << "❌ File not open for streaming" << std::endl;
         return false;
     }
+
+    // Never reserve an entire multi-gigabyte zone implicitly.  The previous
+    // implementation ignored max_memory_mb and called reserve(total_bytes),
+    // which made selecting a large GGUF from the IDE throw std::bad_alloc.
+    const uint64_t maxBytes =
+        max_memory_mb > (std::numeric_limits<uint64_t>::max() / (1024ULL * 1024ULL))
+            ? std::numeric_limits<uint64_t>::max()
+            : max_memory_mb * 1024ULL * 1024ULL;
+    if (zone.total_bytes > maxBytes) {
+        std::cerr << "[GGUF] zone " << zone_name << " requires "
+                  << (zone.total_bytes / (1024.0 * 1024.0))
+                  << " MiB, above the " << max_memory_mb
+                  << " MiB streaming budget; refusing allocation" << std::endl;
+        return false;
+    }
+    if (zone.total_bytes > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        std::cerr << "[GGUF] zone size exceeds addressable memory" << std::endl;
+        return false;
+    }
     
     // Stream from disk
     zone.data.clear();
@@ -363,7 +436,14 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         
         // Read from disk into zone buffer
         size_t old_size = zone.data.size();
-        zone.data.resize(old_size + ref.size);
+        if (ref.size > static_cast<uint64_t>(std::numeric_limits<size_t>::max()) - old_size ||
+            ref.size > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+            std::cerr << "[GGUF] tensor allocation/read size is not representable: "
+                      << tensor_name << std::endl;
+            zone.data.resize(old_size);
+            return false;
+        }
+        zone.data.resize(old_size + static_cast<size_t>(ref.size));
         
         file_.read(reinterpret_cast<char*>(zone.data.data() + old_size), ref.size);
         
@@ -578,18 +658,80 @@ bool StreamingGGUFLoader::ReadValue(T& value) {
     return file_.good();
 }
 
+bool StreamingGGUFLoader::SkipMetadataValue(uint32_t value_type) {
+    switch (value_type) {
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT8:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT8:
+        case GGUFConstants::GGUF_VALUE_TYPE_BOOL: {
+            uint8_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT16:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT16: {
+            uint16_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT32:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT32:
+        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT32: {
+            uint32_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_UINT64:
+        case GGUFConstants::GGUF_VALUE_TYPE_INT64:
+        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT64: {
+            uint64_t v{}; return ReadValue(v);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_STRING: {
+            std::string ignored; return ReadString(ignored);
+        }
+        case GGUFConstants::GGUF_VALUE_TYPE_ARRAY: {
+            uint32_t elem_type{}; uint64_t count{};
+            if (!ReadValue(elem_type) || !ReadValue(count) || count > 10'000'000ULL) return false;
+            for (uint64_t i = 0; i < count; ++i) {
+                if (!SkipMetadataValue(elem_type)) return false;
+            }
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
 bool StreamingGGUFLoader::ReadString(std::string& value) {
     uint64_t len;
     if (!ReadValue(len)) return false;
-    
-    value.resize(len);
-    file_.read(&value[0], len);
-    return file_.good();
+
+    // GGUF strings are metadata, never tensor payloads.  Bound them before
+    // resize() so a corrupt length cannot request an arbitrary allocation.
+    constexpr uint64_t kMaxMetadataString = 64ULL * 1024ULL * 1024ULL;
+    if (len > kMaxMetadataString ||
+        len > static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+        std::cerr << "[GGUF] metadata string exceeds safety limit: " << len
+                  << " bytes" << std::endl;
+        return false;
+    }
+
+    const std::streampos payload = file_.tellg();
+    if (payload < 0) return false;
+    file_.seekg(0, std::ios::end);
+    const std::streampos end = file_.tellg();
+    file_.seekg(payload, std::ios::beg);
+    if (end < payload || static_cast<uint64_t>(end - payload) < len) {
+        std::cerr << "[GGUF] metadata string extends beyond file" << std::endl;
+        return false;
+    }
+
+    value.resize(static_cast<size_t>(len));
+    if (len != 0) {
+        file_.read(value.data(), static_cast<std::streamsize>(len));
+    }
+    return file_.good() || file_.eof();
 }
 
 uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& shape, GGMLType type) const {
     uint64_t num_elements = 1;
     for (uint64_t dim : shape) {
+        if (dim != 0 && num_elements > std::numeric_limits<uint64_t>::max() / dim) {
+            return 0;
+        }
         num_elements *= dim;
     }
 
@@ -598,6 +740,7 @@ uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& s
     // Block geometries match ggml.h and include/gguf_loader.h (canonical IDs).
     auto block_aligned_size = [num_elements](uint64_t block_elements, uint64_t block_size) -> uint64_t {
         uint64_t num_blocks = (num_elements + block_elements - 1) / block_elements;  // Ceiling division
+        if (num_blocks > std::numeric_limits<uint64_t>::max() / block_size) return 0;
         return num_blocks * block_size;
     };
 

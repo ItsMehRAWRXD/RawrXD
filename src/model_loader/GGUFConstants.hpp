@@ -15,11 +15,22 @@ namespace GGUFConstants
     // Supported GGUF version
     constexpr uint32_t GGUF_VERSION = 3;
 
-    // GGUF metadata value types
-    constexpr uint32_t GGUF_VALUE_TYPE_STRING = 1;
-    constexpr uint32_t GGUF_VALUE_TYPE_UINT32 = 4;
-    constexpr uint32_t GGUF_VALUE_TYPE_INT32 = 5;
+    // GGUF v3 metadata value types (the on-disk enum is part of the format;
+    // STRING is 8, not 1).  Keeping these values centralized prevents a
+    // parser from silently desynchronizing on otherwise valid files.
+    constexpr uint32_t GGUF_VALUE_TYPE_UINT8   = 0;
+    constexpr uint32_t GGUF_VALUE_TYPE_INT8    = 1;
+    constexpr uint32_t GGUF_VALUE_TYPE_UINT16  = 2;
+    constexpr uint32_t GGUF_VALUE_TYPE_INT16   = 3;
+    constexpr uint32_t GGUF_VALUE_TYPE_UINT32  = 4;
+    constexpr uint32_t GGUF_VALUE_TYPE_INT32   = 5;
     constexpr uint32_t GGUF_VALUE_TYPE_FLOAT32 = 6;
+    constexpr uint32_t GGUF_VALUE_TYPE_BOOL    = 7;
+    constexpr uint32_t GGUF_VALUE_TYPE_STRING  = 8;
+    constexpr uint32_t GGUF_VALUE_TYPE_ARRAY   = 9;
+    constexpr uint32_t GGUF_VALUE_TYPE_UINT64  = 10;
+    constexpr uint32_t GGUF_VALUE_TYPE_INT64   = 11;
+    constexpr uint32_t GGUF_VALUE_TYPE_FLOAT64 = 12;
 
     // Default zone memory limit (MB)
     constexpr size_t DEFAULT_ZONE_MEMORY_MB = 512;

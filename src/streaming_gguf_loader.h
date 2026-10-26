@@ -151,5 +151,6 @@ private:
     template<typename T>
     bool ReadValue(T& value);
     bool ReadString(std::string& value);
+    bool SkipMetadataValue(uint32_t value_type);
     uint64_t CalculateTensorSize(const std::vector<uint64_t>& shape, RawrXD::GGMLType type) const;
 };
