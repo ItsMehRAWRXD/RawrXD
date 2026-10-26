@@ -1,0 +1,29 @@
+{
+  "id": "RAWRXD_AGENTIC_PRODUCT_PATH_UNIFICATION_001",
+  "recorded": "2026-10-26",
+  "promote": 0,
+  "status": "SOURCE_CHANGED_PRODUCT_PATH_NOT_RUN",
+  "unit": {
+    "IDE_AUTH_BOUNDARY_UNIT": "PASS_UNIT",
+    "structured_tool_call_parse": "PASS_UNIT",
+    "substring_tool_ignored": "PASS_UNIT",
+    "note": "Standalone parser and auth tests. Not the IDE chat product path."
+  },
+  "gates": {
+    "RAWRXD_SELF_AUDIT_AGENTIC_001": "NOT_RUN",
+    "IDE_AGENT_LOOP_PASS": "NOT_RUN",
+    "IDE_AGENT_TOOLS_PASS": "NOT_RUN",
+    "chat_three_workers_completed": "NOT_RUN"
+  },
+  "product_exe_sha256": "43F3638D71B83812E43349D3B45CB96B7D0D0E2A2A839EB6A450118E80A04DAB",
+  "product_exe_contains_this_source": false,
+  "wired": [
+    "GUI sendToBackend non-direct mode calls POST /api/agent/run",
+    "AgentRunLoop accepts only JSON tool_calls",
+    "GetAvailableTools returns the executable registry",
+    "POST /api/subagent calls SubAgentManager::spawnSubAgent",
+    "worker thread runs AgentRunLoop",
+    "worker timeout state is timed_out",
+    "generation budget defaults to 2048 and honors RAWRXD_AGENT_MAX_TOKENS up to 8192"
+  ]
+}

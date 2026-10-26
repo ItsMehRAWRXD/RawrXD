@@ -1,0 +1,57 @@
+{
+  "id": "IDE_SECURITY_BOUNDARY_001",
+  "recorded": "2026-10-26",
+  "status": "SOURCE_CHANGED_RUNTIME_NOT_RUN",
+  "trees": {
+    "G": {
+      "root": "G:\\~dev\\rawrxd",
+      "git_head": "ab0af78ade5c45a58dabf6d9cbb7bfd16f34f7fa",
+      "branch": "cert/gpu-forward-child-ladder-20260909",
+      "worktree": "DIRTY",
+      "exe": "G:\\~dev\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE.exe",
+      "exe_bytes": 331027968,
+      "exe_mtime": "2026-10-19T13:12:31",
+      "exe_sha256": "43F3638D71B83812E43349D3B45CB96B7D0D0E2A2A839EB6A450118E80A04DAB",
+      "binary_matches_head": "UNVERIFIED"
+    },
+    "F": {
+      "root": "F:\\rawrxd",
+      "git_head": "e303f447553d223764d77d5729ad7e0a101edd40",
+      "exe": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+      "exe_bytes": 1491968,
+      "exe_mtime": "2026-10-26T02:24:18",
+      "exe_sha256": "0AE84A16263ABCD69DCD423BA53BB4A2AA97B5A7D4B1EFD4512FC2BD52F3ABCE",
+      "relationship_to_G": "DIFFERENT_COMMIT_AND_DIFFERENT_BINARY"
+    }
+  },
+  "unit": {
+    "name": "IDE_AUTH_BOUNDARY_UNIT",
+    "result": "PASS_UNIT",
+    "failures": 0,
+    "covers": [
+      "relative path inside workspace",
+      "drive-absolute path outside workspace",
+      "dotdot traversal",
+      "unc path",
+      "directory junction escape",
+      "origin null",
+      "foreign origin",
+      "loopback origin",
+      "debug route without session",
+      "debug route without exec grant",
+      "read tool with session",
+      "evil origin with valid session"
+    ],
+    "does_not_cover": "RawrXD-Win32IDE.exe process, HTTP trace, editor, terminal, compiler, debugger"
+  },
+  "gates": {
+    "IDE_BINARY_PROVENANCE_PASS": "NOT_RUN",
+    "IDE_AUTH_PASS": "NOT_RUN",
+    "IDE_FILESYSTEM_BOUNDARY_PASS": "NOT_RUN",
+    "IDE_EXECUTION_AUTH_PASS": "NOT_RUN",
+    "IDE_NETWORK_BOUNDARY_PASS": "NOT_RUN",
+    "IDE_SUPPLY_CHAIN_PASS": "NOT_RUN",
+    "IDE_EDITOR_PASS": "NOT_RUN",
+    "IDE_RELEASE_CERT_PASS": "NOT_RUN"
+  }
+}

@@ -80,7 +80,7 @@ struct SubAgent {
     std::string result;
 
     enum class State {
-        Pending, Running, Completed, Failed, Cancelled
+        Pending, Running, Completed, Failed, Cancelled, TimedOut
     } state;
 
     float progress;
@@ -95,6 +95,7 @@ struct SubAgent {
             case State::Completed:  return "completed";
             case State::Failed:     return "failed";
             case State::Cancelled:  return "cancelled";
+            case State::TimedOut:   return "timed_out";
         }
         return "unknown";
     }

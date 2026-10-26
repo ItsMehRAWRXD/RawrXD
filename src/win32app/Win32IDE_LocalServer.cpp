@@ -29,6 +29,8 @@
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "ProductGuiRouteAdapters.hpp"
+#include "IdeAuthBoundary.hpp"
+#include "AgentProduct.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -453,9 +455,9 @@ static std::string buildHttpResponse(int status, const std::string& body,
     }
     oss << "Content-Type: " << contentType << "\r\n";
     oss << "Content-Length: " << body.size() << "\r\n";
-    oss << "Access-Control-Allow-Origin: *\r\n";
+    oss << RawrXD::IdeAuth::CorsHeaderLines();
     oss << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
-    oss << "Access-Control-Allow-Headers: Content-Type, Authorization\r\n";
+    oss << "Access-Control-Allow-Headers: Content-Type, Authorization, X-RawrXD-Session\r\n";
     oss << "Connection: close\r\n\r\n";
     oss << body;
     return oss.str();
@@ -492,10 +494,10 @@ static void sendSSEHeaders(LocalServerSocket client)
     std::string headers = "HTTP/1.1 200 OK\r\n"
                           "Content-Type: text/event-stream\r\n"
                           "Cache-Control: no-cache\r\n"
-                          "Connection: keep-alive\r\n"
-                          "Access-Control-Allow-Origin: *\r\n"
+                          "Connection: keep-alive\r\n" +
+                          RawrXD::IdeAuth::CorsHeaderLines() +
                           "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
-                          "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                          "Access-Control-Allow-Headers: Content-Type, Authorization, X-RawrXD-Session\r\n"
                           "\r\n";
     sendAll(client, headers);
 }
@@ -817,6 +819,7 @@ void Win32IDE::startLocalServer()
         if (p > 0 && p < 65536)
             port = p;
     }
+    RawrXD::IdeAuth::SetListenPort(port);
     m_localServerRunning.store(true);
 
     m_localServerThread = std::thread(
@@ -1000,6 +1003,31 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     std::string method, path;
     std::istringstream reqLine(headers.substr(0, headers.find("\r\n")));
     reqLine >> method >> path;
+
+    {
+        char cwd[MAX_PATH] = {};
+        std::string root = !m_projectRoot.empty() ? m_projectRoot : m_currentDirectory;
+        if (root.empty() && GetCurrentDirectoryA(MAX_PATH, cwd))
+            root = cwd;
+        if (!root.empty())
+            RawrXD::IdeAuth::SetWorkspaceRoot(root);
+        const auto decision = RawrXD::IdeAuth::DecideWin32(method, path, headers, body);
+        if (decision != RawrXD::IdeAuth::HttpDecision::Allow) {
+            int code = 401;
+            const char* err = "unauthorized";
+            if (decision == RawrXD::IdeAuth::HttpDecision::ForbiddenOrigin) {
+                code = 403;
+                err = "origin_denied";
+            } else if (decision == RawrXD::IdeAuth::HttpDecision::ExecDenied) {
+                code = 403;
+                err = "execution_not_granted";
+            }
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+                code, std::string("{\"error\":\"") + err + "\"}"));
+            closesocket(client);
+            return;
+        }
+    }
 
     // Route
     std::string response;
@@ -1946,8 +1974,15 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
         closesocket(client);
         return;
     }
+    else if (method == "POST" && path == "/api/agent/run")
+    {
+        handleAgentRun(client, body);
+        closesocket(client);
+        return;
+    }
     // ========== Product subagent spawn (continue-ensure / Multitask) ==========
-    else if (method == "POST" && (path == "/api/subagent" || path == "/api/chain"))
+    else if (method == "POST" && (path == "/api/subagent" || path == "/api/chain" ||
+                                  path == "/api/subagent/status"))
     {
         handleProductSubagentEndpoint(client, path, body);
         closesocket(client);
@@ -2852,17 +2887,21 @@ void Win32IDE::handleServeGui(SOCKET client)
                 ReadFile(hFile, &content[0], fileSize, &bytesRead, NULL);
                 content.resize(bytesRead);
                 CloseHandle(hFile);
+                const std::string token = RawrXD::IdeAuth::SessionToken();
+                const std::string inject =
+                    "<script>window.__RAWRXD_SESSION=\"" + token +
+                    "\";(function(){var t=window.__RAWRXD_SESSION;var o=window.fetch;"
+                    "window.fetch=function(i,n){n=n||{};var u=typeof i===\"string\"?i:"
+                    "(i&&i.url)||\"\";var same=u.charAt(0)===\"/\"||u.indexOf(location.origin)===0;"
+                    "if(same){var h=new Headers(n.headers||{});h.set(\"X-RawrXD-Session\",t);"
+                    "n.headers=h;}return o.call(this,i,n);};})();</script>";
+                content.insert(0, inject);
 
-                // Send as HTML — use LocalServerUtil::sendAll() to guarantee the entire
-                // ~1 MB payload is transmitted.  A single send() may only
-                // push part of it, leaving the browser with truncated HTML
-                // (the closing </script> tag for the 770 KB main script
-                // block never arrives, so every function is undefined).
                 std::ostringstream oss;
                 oss << "HTTP/1.1 200 OK\r\n"
                     << "Content-Type: text/html; charset=utf-8\r\n"
                     << "Content-Length: " << content.size() << "\r\n"
-                    << "Access-Control-Allow-Origin: *\r\n"
+                    << "Cache-Control: no-store\r\n"
                     << "Connection: close\r\n\r\n";
                 std::string headers = oss.str();
 
@@ -4327,21 +4366,20 @@ static ValidatedPath validateFilePath(const std::string& body, const std::string
     }
 
     // Security: reject directory traversal
-    if (vp.path.find("..") != std::string::npos)
-    {
+    if (vp.path.find("..") != std::string::npos) {
         vp.error = "{\"error\":\"forbidden\",\"message\":\"Directory traversal not allowed\"}";
         vp.errorCode = 403;
         return vp;
     }
 
-    // Security: must be an absolute path (drive letter)
-    if (vp.path.size() < 3 || vp.path[1] != ':' || vp.path[2] != '\\')
-    {
-        vp.error = "{\"error\":\"invalid_path\",\"message\":\"Only absolute paths are accepted (e.g., "
-                   "C:\\\\path\\\\to\\\\file)\"}";
+    std::string canonical;
+    std::string why;
+    if (!RawrXD::IdeAuth::CanonicalInsideWorkspace(vp.path, canonical, why)) {
+        vp.error = "{\"error\":\"forbidden\",\"message\":\"" + why + "\"}";
+        vp.errorCode = 403;
         return vp;
     }
-
+    vp.path = canonical;
     vp.ok = true;
     return vp;
 }
@@ -5444,41 +5482,30 @@ void Win32IDE::handleProductSubagentEndpoint(SOCKET client, const std::string& p
             400, "{\"error\":\"missing_task\",\"message\":\"task/prompt required\"}"));
         return;
     }
-    if (task.size() > 256 * 1024) {
+    if (!m_agenticBridge || !m_agenticBridge->GetSubAgentManager()) {
         LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
-            400, "{\"error\":\"task_too_large\"}"));
+            503, "{\"error\":\"worker_unavailable\",\"status\":\"not_started\"}"));
         return;
     }
-    uint64_t seq = g_subagentSeq.fetch_add(1, std::memory_order_relaxed);
-    std::ostringstream idOss;
-    idOss << "sub-" << GetCurrentProcessId() << "-" << seq;
-    std::string agentId = idOss.str();
-    std::string dir = !m_projectRoot.empty() ? m_projectRoot :
-        (!m_currentDirectory.empty() ? m_currentDirectory : std::string());
-    if (dir.empty()) {
-        char cwd[MAX_PATH] = {};
-        if (GetCurrentDirectoryA(MAX_PATH, cwd)) dir = cwd;
+    if (path == "/api/subagent/status") {
+        std::string id;
+        LocalServerUtil::extractJsonString(body, "agentId", id);
+        const SubAgent* agent = m_agenticBridge->GetSubAgentManager()->getSubAgent(id);
+        std::string state = agent ? agent->stateString() : "missing";
+        std::string result = agent ? agent->result : "";
+        if (result.size() > 4000) result.resize(4000);
+        for (char& c : result) if (c == '"' || c == '\n' || c == '\r') c = ' ';
+        LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+            200, "{\"agentId\":\"" + id + "\",\"state\":\"" + state + "\",\"result\":\"" + result + "\"}"));
+        return;
     }
-    std::ostringstream line;
-    line << "{\"agentId\":\"" << LocalServerUtil::escapeJson(agentId)
-         << "\",\"path\":\"" << LocalServerUtil::escapeJson(path)
-         << "\",\"status\":\"spawned\",\"taskChars\":" << task.size() << "}\r\n";
-    std::string jobPath = dir.empty() ? "rawrxd_subagent_jobs.jsonl" : (dir + "\\rawrxd_subagent_jobs.jsonl");
-    HANDLE h = CreateFileA(jobPath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr,
-                           OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (h != INVALID_HANDLE_VALUE) {
-        DWORD w = 0;
-        std::string s = line.str();
-        WriteFile(h, s.data(), static_cast<DWORD>(s.size()), &w, nullptr);
-        CloseHandle(h);
-    }
+    AgentBindManager(m_agenticBridge->GetSubAgentManager());
+    std::string id = m_agenticBridge->GetSubAgentManager()->spawnSubAgent(
+        "http", task.substr(0, 80), task);
     m_historyStats.subAgentSpawned++;
-    std::ostringstream json;
-    json << "{\"success\":true,\"accepted\":true,\"status\":\"spawned\",\"agentId\":\""
-         << LocalServerUtil::escapeJson(agentId) << "\",\"path\":\""
-         << LocalServerUtil::escapeJson(path) << "\"}";
-    LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(202, json.str()));
-    LOG_INFO("product-subagent: spawned " + agentId);
+    LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+        202, "{\"accepted\":true,\"status\":\"pending\",\"worker\":\"thread_started\",\"agentId\":\"" + id + "\"}"));
+    LOG_INFO("product-subagent thread started " + id);
 }
 
 // ============================================================================
@@ -5526,7 +5553,7 @@ void Win32IDE::handleInstructionsContentEndpoint(SOCKET client)
     resp << "HTTP/1.1 200 OK\r\n";
     resp << "Content-Type: text/markdown; charset=utf-8\r\n";
     resp << "Content-Length: " << content.size() << "\r\n";
-    resp << "Access-Control-Allow-Origin: *\r\n";
+    resp << RawrXD::IdeAuth::CorsHeaderLines();
     resp << "X-Instructions-Files: " << provider.getLoadedCount() << "\r\n";
     resp << "Connection: close\r\n";
     resp << "\r\n";

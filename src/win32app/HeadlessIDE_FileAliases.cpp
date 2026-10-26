@@ -1,5 +1,6 @@
 // HeadlessIDE_FileAliases.cpp — R04 thin FS aliases into tool dispatcher
 #include "HeadlessIDE.h"
+#include "IdeAuthBoundary.hpp"
 #include <nlohmann/json.hpp>
 #include <cstdio>
 #include <string>
@@ -37,27 +38,13 @@ bool hasDotDot(const std::string& path) {
 
 bool resolvePath(const std::string& workingDir, const std::string& in, std::string& out,
                  std::string& err) {
-    if (in.empty() || hasDotDot(in)) {
-        err = "{\"error\":\"forbidden\",\"message\":\"invalid path\"}";
+    if (!workingDir.empty())
+        RawrXD::IdeAuth::SetWorkspaceRoot(workingDir);
+    std::string why;
+    if (!RawrXD::IdeAuth::CanonicalInsideWorkspace(in, out, why)) {
+        err = "{\"error\":\"forbidden\",\"message\":\"" + why + "\"}";
         return false;
     }
-    std::string cand = in;
-    for (auto& ch : cand) if (ch == '/') ch = '\\';
-    bool abs = cand.size() >= 3 && cand[1] == ':' && (cand[2] == '\\' || cand[2] == '/');
-    if (!abs) {
-        if (workingDir.empty()) {
-            err = "{\"error\":\"invalid_path\",\"message\":\"relative path needs workingDir\"}";
-            return false;
-        }
-        cand = workingDir + "\\" + cand;
-    }
-    char full[MAX_PATH * 4] = {};
-    DWORD n = GetFullPathNameA(cand.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
-    if (!n || n >= sizeof(full) || hasDotDot(full)) {
-        err = "{\"error\":\"invalid_path\"}";
-        return false;
-    }
-    out.assign(full);
     return true;
 }
 

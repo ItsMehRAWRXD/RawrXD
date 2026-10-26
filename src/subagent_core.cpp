@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "subagent_core.h"
+#include "win32app/AgentProduct.hpp"
 #include "agentic_engine.h"
 #include "agent_history.h"
 #include "agent_policy.h"
@@ -184,14 +185,22 @@ bool SubAgentManager::waitForSubAgent(const std::string& agentId, int timeoutMs)
             auto state = it->second->state;
             if (state == SubAgent::State::Completed ||
                 state == SubAgent::State::Failed ||
-                state == SubAgent::State::Cancelled) {
+                state == SubAgent::State::Cancelled ||
+                state == SubAgent::State::TimedOut) {
                 return state == SubAgent::State::Completed;
             }
         }
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - start).count();
         if (elapsed >= timeoutMs) {
-            cancelSubAgent(agentId);
+            std::lock_guard<std::mutex> lock(m_mutex);
+            auto it = m_agents.find(agentId);
+            if (it != m_agents.end() &&
+                (it->second->state == SubAgent::State::Pending ||
+                 it->second->state == SubAgent::State::Running)) {
+                it->second->state = SubAgent::State::TimedOut;
+                it->second->endTime = std::chrono::steady_clock::now();
+            }
             return false;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -251,8 +260,15 @@ void SubAgentManager::runSubAgentThread(const std::string& agentId) {
             }
 
             try {
-                response = m_engine->chat(prompt);
-                if (!response.empty()) break; // Success
+                AgentRunResult session = AgentRunLoop(
+                    prompt, 8, 2048, m_engine,
+                    [](void* ctx, const std::string& text, int) -> std::string {
+                        return static_cast<AgenticEngine*>(ctx)->chat(text);
+                    });
+                response = session.text;
+                if (!session.toolLog.empty())
+                    response += "\ntool_log:\n" + session.toolLog;
+                if (!response.empty()) break;
             } catch (const std::exception& retryEx) {
                 if (attempt == maxRetries) throw; // Re-throw on final attempt
                 logInfo("SubAgent attempt " + std::to_string(attempt) +
@@ -742,6 +758,7 @@ std::string SubAgentManager::getStatusSummary() const {
             case SubAgent::State::Completed: completed++; break;
             case SubAgent::State::Failed:    failed++;    break;
             case SubAgent::State::Cancelled: cancelled++; break;
+            case SubAgent::State::TimedOut:  cancelled++; break;
         }
     }
     std::ostringstream oss;

@@ -3615,6 +3615,7 @@ class Win32IDE
     void handleCopyFileEndpoint(SOCKET client, const std::string& body);
     void handleMoveFileEndpoint(SOCKET client, const std::string& body);
     void handleToolDispatchEndpoint(SOCKET client, const std::string& body);
+    void handleAgentRun(SOCKET client, const std::string& body);
     void handleProductSubagentEndpoint(SOCKET client, const std::string& path,
                                        const std::string& body);
     void handleCliEndpoint(SOCKET client, const std::string& body);

@@ -6,6 +6,7 @@
 // ============================================================================
 
 #include "HeadlessIDE.h"
+#include "IdeAuthBoundary.hpp"
 
 #include <atomic>
 #include <cctype>
@@ -101,36 +102,11 @@ bool pathHasDotDotComponent(const std::string& path) {
 
 bool resolveToolPath(const std::string& input, const std::string& workingDir,
                      std::string& resolved, std::string& errJson) {
-    if (input.empty() || input.find('\0') != std::string::npos) {
-        errJson = "{\"error\":\"invalid_path\",\"message\":\"empty path\"}";
-        return false;
-    }
-    if (pathHasDotDotComponent(input)) {
-        errJson = "{\"error\":\"forbidden\",\"message\":\"Directory traversal not allowed\"}";
-        return false;
-    }
-    std::string candidate = input;
-    for (auto& ch : candidate) {
-        if (ch == '/') ch = '\\';
-    }
-    bool absolute = candidate.size() >= 3 && candidate[1] == ':' &&
-        (candidate[2] == '\\' || candidate[2] == '/');
-    if (!absolute) {
-        if (workingDir.empty()) {
-            errJson = "{\"error\":\"invalid_path\",\"message\":\"relative path needs workingDir\"}";
-            return false;
-        }
-        candidate = workingDir + "\\" + candidate;
-    }
-    char full[MAX_PATH * 4] = {};
-    DWORD n = GetFullPathNameA(candidate.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
-    if (n == 0 || n >= sizeof(full)) {
-        errJson = "{\"error\":\"invalid_path\",\"message\":\"GetFullPathName failed\"}";
-        return false;
-    }
-    resolved.assign(full);
-    if (pathHasDotDotComponent(resolved)) {
-        errJson = "{\"error\":\"forbidden\",\"message\":\"Directory traversal not allowed\"}";
+    if (!workingDir.empty())
+        RawrXD::IdeAuth::SetWorkspaceRoot(workingDir);
+    std::string why;
+    if (!RawrXD::IdeAuth::CanonicalInsideWorkspace(input, resolved, why)) {
+        errJson = "{\"error\":\"forbidden\",\"message\":\"" + why + "\"}";
         return false;
     }
     return true;
@@ -592,6 +568,10 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
     }
 
     if (toolName == "execute_command" || toolName == "git_status") {
+        if (!RawrXD::IdeAuth::PrivilegedExecGranted()) {
+            outResult = "{\"success\":false,\"error\":\"execution_not_granted\"}";
+            return false;
+        }
         std::string command = (toolName == "git_status")
             ? "git status"
             : jsonGetString(args, "command");

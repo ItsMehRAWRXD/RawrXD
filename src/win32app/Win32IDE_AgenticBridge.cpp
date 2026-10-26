@@ -20,6 +20,7 @@
 #include "../vsix_native_converter.hpp"
 #include "IDEConfig.h"
 #include "IDELogger.h"
+#include "AgentProduct.hpp"
 #include "Win32IDE.h"
 #include "Win32IDE_SubAgent.h"
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
@@ -346,8 +347,13 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         // Tool-capable agent loop may call back; primary tokens from ProductRun.
         std::string prText;
         auto streamed = false;
+        int budget = 2048;
+        if (const char* envBudget = std::getenv("RAWRXD_AGENT_MAX_TOKENS")) {
+            int parsed = std::atoi(envBudget);
+            if (parsed >= 1 && parsed <= 8192) budget = parsed;
+        }
         (void)rawr::ProductDeep2InferStream(
-            refinedPrompt.c_str(), 256,
+            refinedPrompt.c_str(), budget,
             [this, &streamed](const std::string& piece) -> bool {
                 streamed = true;
                 if (m_outputCallback) m_outputCallback("token", piece);
@@ -370,12 +376,12 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     // Check for tool calls in the model's response and dispatch them
     // NOTE: hookToolResult fires inside DispatchModelToolCalls (the funnel)
     //       so every caller — Autonomy, Bridge, etc. — gets failure detection.
+    bool sawTool = false;
     std::string toolResult;
     if (DispatchModelToolCalls(response, toolResult))
     {
+        sawTool = true;
         LOG_INFO("Tool call dispatched from model output");
-
-        // Append tool result and optionally re-prompt the model
         response += "\n\n[Tool Execution Result]\n" + toolResult;
     }
 
@@ -430,7 +436,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     AgentResponse r;
     r.content = response;
-    r.type = AgentResponseType::ANSWER;
+    r.type = sawTool ? AgentResponseType::TOOL_CALL : AgentResponseType::ANSWER;
     closePerf();
     return r;
 }
@@ -613,12 +619,9 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
         }
 
         // Check for tool results appended to the response (ExecuteAgentCommand does this)
-        size_t toolResultPos = response.content.find("[Tool Execution Result]");
-        if (toolResultPos != std::string::npos)
+        if (response.type == AgentResponseType::TOOL_CALL)
         {
-            // Found tool results, feed them back into the model
-            currentPrompt = "Observation from tool execution:\n" + response.content.substr(toolResultPos);
-            // Optionally add a reminder to the agent to continue
+            currentPrompt = "Observation from tool execution:\n" + response.content;
             currentPrompt += "\n\nContinue toward the goal: " + initialPrompt;
         }
         else
@@ -646,10 +649,7 @@ void AgenticBridge::StopAgentLoop()
 
 std::vector<std::string> AgenticBridge::GetAvailableTools()
 {
-    return {"shell",       "powershell",       "run_in_terminal", "read_file",    "write_file",
-            "list_dir",    "list_directory",   "grep_files",      "search_files", "reference_symbol",
-            "load_model",  "model_status",     "web_search",      "git_status",   "task_orchestrator",
-            "runSubagent", "manage_todo_list", "chain",           "hexmag_swarm"};
+    return AgentToolNames();
 }
 
 std::string AgenticBridge::GetAgentStatus()
@@ -1151,82 +1151,19 @@ std::string AgenticBridge::GetSubAgentStatus() const
 
 bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult)
 {
-    auto* mgr = GetSubAgentManager();
-    if (!mgr)
+    std::vector<AgentToolCall> calls;
+    if (!AgentParseToolCalls(modelOutput, calls))
         return false;
-
-    std::string toolName = "unknown";
-    auto toolPos = modelOutput.find("tool:");
-    if (toolPos == std::string::npos)
-        toolPos = modelOutput.find("TOOL:");
-    if (toolPos != std::string::npos)
-    {
-        size_t nameStart = toolPos + 5;
-        while (nameStart < modelOutput.size() && modelOutput[nameStart] == ' ')
-            nameStart++;
-        size_t nameEnd = modelOutput.find_first_of(" \n\r({[", nameStart);
-        if (nameEnd == std::string::npos)
-            nameEnd = modelOutput.size();
-        toolName = modelOutput.substr(nameStart, nameEnd - nameStart);
-        for (auto& c : toolName)
-            c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
+    toolResult.clear();
+    std::vector<std::string> ids;
+    for (const auto& call : calls) {
+        std::string workerId;
+        toolResult += AgentExecTool(call.name, call.arguments, &workerId);
+        toolResult += "\n";
+        if (!workerId.empty()) ids.push_back(workerId);
     }
-
-    using RawrXD::Command::CapDestructive;
-    using RawrXD::Command::CapEdit;
-    using RawrXD::Command::CapExecute;
-    using RawrXD::Command::CapRead;
-    using RawrXD::Command::Capability;
-    using RawrXD::Command::CommandBroker;
-    Capability need = CapRead;
-    if (toolName == "write_file" || toolName == "replace_in_file" ||
-        toolName == "propose_multifile_edits")
-        need = CapEdit;
-    else if (toolName == "delete_file")
-        need = CapDestructive;
-    else if (toolName == "execute_command" || toolName == "run_shell")
-        need = CapExecute;
-
-    if (need == CapEdit || need == CapDestructive || need == CapExecute) {
-        if (!CommandBroker::instance().checkCap(need)) {
-            const auto approval = CommandBroker::instance().requestApproval(
-                toolName, "Agent tool requires capability gate", need);
-            if (approval.needsApproval) {
-                toolResult = approval.text.empty()
-                                 ? ("Approval required for tool: " + toolName)
-                                 : approval.text;
-                return true;
-            }
-            if (!approval.ok) {
-                toolResult = approval.text.empty()
-                                 ? ("Capability denied for tool: " + toolName)
-                                 : approval.text;
-                return true;
-            }
-        }
-    }
-
-    // Build-mode edit staging: prefer propose/diff over direct disk write.
-    if (m_ide && (toolName == "write_file" || toolName == "replace_in_file")) {
-        // Best-effort: if output embeds a path+content protocol, stage it.
-        // Direct dispatch still runs for structured SubAgent tool JSON.
-    }
-
-    bool dispatched = mgr->dispatchToolCall("bridge", modelOutput, toolResult);
-
-    // Phase 4B: Choke Point 2 — hookToolResult at the dispatch funnel
-    if (dispatched && m_ide)
-    {
-        FailureClassification toolFailure = m_ide->hookToolResult(toolName, toolResult);
-        if (toolFailure.reason != AgentFailureType::None)
-        {
-            LOG_WARNING("[Phase4B] Tool '" + toolName +
-                        "' failure at dispatch: " + m_ide->failureTypeString(toolFailure.reason) +
-                        " (confidence=" + std::to_string(toolFailure.confidence) + ")");
-        }
-    }
-
-    return dispatched;
+    if (!ids.empty()) toolResult += AgentJoinWorkers(ids);
+    return true;
 }
 
 // ============================================================================

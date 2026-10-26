@@ -675,17 +675,8 @@ SignatureResult UpdateSignatureVerifier::verifyFile(const wchar_t* filePath,
     const wchar_t* ext = wcsrchr(filePath, L'.');
     if (ext && (_wcsicmp(ext, L".exe") == 0 || _wcsicmp(ext, L".dll") == 0)) {
         SignatureResult authResult = verifyAuthenticode(filePath);
-        if (!authResult.valid) {
-            // Authenticode failure is a warning, not a hard block
-            // (self-built binaries may not be Authenticode-signed)
-            char msg[256];
-            snprintf(msg, sizeof(msg),
-                     "SHA-256 verified but Authenticode check failed: %s",
-                     authResult.detail);
-            SignatureResult r = SignatureResult::ok(msg);
-            r.trusted = false; // Trusted = false means no Authenticode
-            return r;
-        }
+        if (!authResult.valid)
+            return authResult;
     }
 
     return SignatureResult::ok("File verified (SHA-256 + size)");

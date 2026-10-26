@@ -17,6 +17,7 @@
 #include "../agentic_engine.h"
 #include "../../include/chain_of_thought_engine.h"
 #include "HeadlessIDE_ProductLocalOnly.hpp"
+#include "IdeAuthBoundary.hpp"
 #include "../core/instructions_provider.hpp"
 #include "../deep2/Deep2IDEIntegration.hpp"
 #include "../product/gateway/product_deep2_infer_lane.hpp"
@@ -285,8 +286,7 @@ static bool isLoopbackAddress(const std::string& address) {
 
 static bool localOriginAllowed(const std::string& origin, int port) {
     if (origin.empty()) return true;
-    // Chromium/Edge send Origin: null for file:// pages (literal "null").
-    if (origin == "null") return true;
+    if (origin == "null" || origin == "*") return false;
     std::string suffix = ":" + std::to_string(port);
     return origin == "http://127.0.0.1" + suffix ||
         origin == "http://localhost" + suffix ||
@@ -2768,7 +2768,8 @@ bool HeadlessIDE::authorizeHttpRequest(const HostedHttpRequest& request,
         response.body = "{\"error\":\"origin_denied\"}";
         return false;
     }
-    if (isHealthRoute(request.path)) return true;
+    RawrXD::IdeAuth::SetListenPort(m_config.port);
+    RawrXD::IdeAuth::NoteResponseOrigin(request.origin);
     if (!limiter.allow(request.peer)) {
         response.status = 429;
         response.body = "{\"error\":\"rate_limit\"}";
@@ -2787,7 +2788,7 @@ bool HeadlessIDE::authorizeHttpRequest(const HostedHttpRequest& request,
         response.body = "{\"error\":\"invalid_github_signature\"}";
         return false;
     }
-    if (localLoopback) return true;
+    if (RawrXD::IdeAuth::HeaderHasSession(request.headers)) return true;
     bool apiAuthenticated = authenticateRequest(
         request.headers, m_config, routeScope(request.path, request.method));
     if (request.path != "/api/github/webhook" && !apiAuthenticated) {
@@ -3429,13 +3430,9 @@ void HeadlessIDE::sendHttpResponse(SOCKET clientFd, const HostedHttpRequest& req
          << "Cache-Control: no-store\r\n"
          << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
          << "Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key, "
-            "X-RawrXD-Cloud-Consent, X-GitHub-Event, X-GitHub-Delivery, "
-            "X-Hub-Signature-256\r\n";
-    if (!request.origin.empty()) {
-        wire << "Access-Control-Allow-Origin: " << request.origin << "\r\nVary: Origin\r\n";
-    } else {
-        wire << "Access-Control-Allow-Origin: *\r\n";
-    }
+            "X-RawrXD-Session, X-RawrXD-Cloud-Consent, X-GitHub-Event, X-GitHub-Delivery, "
+            "X-Hub-Signature-256\r\n"
+         << RawrXD::IdeAuth::CorsHeaderLines();
     if (response.status == 401) wire << "WWW-Authenticate: Bearer realm=\"RawrXD\"\r\n";
     wire << "Connection: close\r\n\r\n" << response.body;
     std::string message = wire.str();

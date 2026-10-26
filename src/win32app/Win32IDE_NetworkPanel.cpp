@@ -276,10 +276,9 @@ static void portForwardListenThread(PortForwardEntry* entry) {
     hints.ai_family   = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags    = AI_PASSIVE;
 
     std::string portStr = std::to_string(entry->localPort);
-    if (getaddrinfo(nullptr, portStr.c_str(), &hints, &result) != 0 || !result) {
+    if (getaddrinfo("127.0.0.1", portStr.c_str(), &hints, &result) != 0 || !result) {
         entry->running.store(false);
         entry->active = false;
         return;
@@ -682,7 +681,7 @@ void Win32IDE::cmdNetworkTogglePort() {
             } else {
                 startPortForward(e);
                 appendToOutput("[NetworkPanel] Port " + std::to_string(e->localPort) +
-                              " started (TCP relay listening on 0.0.0.0:" +
+                              " started (TCP relay listening on 127.0.0.1:" +
                               std::to_string(e->localPort) + ")\n");
             }
         }

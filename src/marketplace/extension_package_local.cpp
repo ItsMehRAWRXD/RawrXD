@@ -1,6 +1,7 @@
 // extension_package_local.cpp — top-25 IDE package install (no cloud/HTTP).
 #include "extension_package_local.hpp"
 #include "../win32app/VSIXInstaller.hpp"
+#include "../win32app/IdeAuthBoundary.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -236,6 +237,9 @@ std::wstring BuildInstallFileFilter() {
 }
 
 ExtResult InstallPackage(const std::string& packagePath) {
+    std::string trustErr;
+    if (!RawrXD::IdeAuth::ExtensionHashTrusted(packagePath, trustErr))
+        return ExtResult::error(trustErr, 4);
     if (!fs::exists(packagePath))
         return ExtResult::error("Package not found", 2);
 

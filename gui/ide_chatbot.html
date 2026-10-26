@@ -15133,9 +15133,39 @@
     // CHAT — SEND TO BACKEND
     // ======================================================================
 
+    async function sendViaAgentSession(query) {
+      showTyping();
+      try {
+        var res = await fetch(getActiveUrl() + '/api/agent/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: query, max_iterations: 8, max_tokens: 2048 }),
+          signal: AbortSignal.timeout(180000)
+        });
+        var data = await res.json();
+        hideTyping();
+        if (!res.ok) {
+          addMessage('system', 'Agent session failed: ' + (data.error || res.status), { skipMemory: true });
+          return;
+        }
+        var content = (data.choices && data.choices[0] && data.choices[0].message)
+          ? data.choices[0].message.content : '';
+        var log = data.tool_log || '';
+        Conversation.addMessage('assistant', content);
+        addMessage('assistant', content + (log ? '\n\n' + log : ''), { skipMemory: true });
+      } catch (err) {
+        hideTyping();
+        addMessage('system', 'Agent session failed: ' + (err && err.message ? err.message : String(err)), { skipMemory: true });
+      }
+    }
+
     async function sendToBackend(query) {
       var model = State.model.current;
       var t0 = performance.now();
+      if (!State.backend.directMode) {
+        await sendViaAgentSession(query);
+        return;
+      }
       var activeUrl = getActiveUrl();  // respects directMode fallback
 
       // First-token probe for large models (Safe Decode Profile)
