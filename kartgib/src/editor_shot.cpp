@@ -47,6 +47,13 @@ void VulkanRenderer::noteEditorShot(const uint8_t* pixels, bool bgra) {
         gShots[gShotN].hash = hash;
         gShots[gShotN].white = tone(pixels, n, bgra, false);
         gShots[gShotN].red = tone(pixels, n, bgra, true);
+        int gold = 0;
+        for (int i = 0; i < n; ++i) {
+            const uint8_t* s = pixels + i * 4;
+            int b = bgra ? s[0] : s[2], g = s[1], r = bgra ? s[2] : s[0];
+            if (r > 220 && g > 180 && b < 80) ++gold;
+        }
+        gShots[gShotN].gold = gold;
         ++gShotN;
     }
     std::cout << "[EDITOR] shot=" << editorShotName_ << " hash=" << hash << std::endl;

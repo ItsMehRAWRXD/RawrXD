@@ -43,6 +43,7 @@ static void printUsage(const char* prog) {
     std::cout << "  --ocean           Spectral ocean mesh, FFT parity, and framebuffer tour\n";
     std::cout << "  --product         Editor, river, instancing, and two-process tour\n";
     std::cout << "  --studio          RawrXD Studio project, sculpt, and Sunshine edit\n";
+    std::cout << "  --studio-editor2  Hierarchy, gizmos, selection, and docking witness\n";
     std::cout << "  --help            Show this help\n";
 }
 
@@ -70,6 +71,7 @@ int main(int argc, char** argv) {
     bool editorShow = false;
     bool studio = false;
     bool studioShow = false;
+    bool editor2 = false;
     int peerPort = 0;
     uint64_t peerSeed = 20261025;
     
@@ -117,6 +119,15 @@ int main(int argc, char** argv) {
         } else if (arg == "--studio") {
             editor = true;
             studio = true;
+        } else if (arg == "--studio-editor2") {
+            editor = true;
+            studio = true;
+            editor2 = true;
+        } else if (arg == "--studio-editor2-load") {
+            editor = true;
+            studio = true;
+            studioShow = true;
+            editor2 = true;
         } else if (arg == "--studio-load") {
             editor = true;
             studio = true;
@@ -177,6 +188,7 @@ int main(int argc, char** argv) {
             if (studio) {
                 studioOwn(true);
                 studioSetSeed(seed);
+                if (editor2) studioSetEditor2(true);
                 if (studioShow && !studioLoadProject("F:/rawrxd/kartgib/evidence/studio_project")) return 1;
                 if (studioShow) studioSetShow(true);
             } else if (editorShow) {

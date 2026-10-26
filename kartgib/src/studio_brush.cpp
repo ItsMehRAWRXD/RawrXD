@@ -5,9 +5,11 @@
 
 static uint64_t gSeed = 20261025;
 void studioSetSeed(uint64_t seed) { gSeed = seed; }
-static bool gShow = false;
+static bool gShow = false, gEditor2 = false;
 void studioSetShow(bool show) { gShow = show; }
 bool studioShowOnly() { return gShow; }
+void studioSetEditor2(bool on) { gEditor2 = on; }
+bool studioEditor2() { return gEditor2; }
 static float gShift = 0;
 void studioShiftCamera(float meters) { gShift = meters; }
 float studioCameraShift() { return gShift; }

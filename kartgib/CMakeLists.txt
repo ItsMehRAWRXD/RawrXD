@@ -112,6 +112,8 @@ set(SOURCES
     src/studio_io.cpp
     src/studio_run.cpp
     src/inspector_wnd.cpp
+    src/inspector_dock.cpp
+    src/editor2_run.cpp
     src/inspector_cmd.cpp
     src/inspector_run.cpp
     src/inspector_late.cpp

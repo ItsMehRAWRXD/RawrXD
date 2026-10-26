@@ -48,6 +48,7 @@ bool studioSculpt(float x, float z, float radius, float dy) {
 }
 static void restore(const Op& o, bool after) {
     if (o.kind == 1) applyXform(o, after); else if (o.kind == 3) applyName(o, after);
+    else if (o.kind == 4) { EditorEnt* e = editorFind(o.id); if (e) e->parent = static_cast<int>(after ? o.a[0] : o.b[0]); }
 }
 bool studioUndo() { if (gAt <= 0) return false; restore(gOp[--gAt], false); editorRevSlot()++; return true; }
 bool studioRedo() { if (gAt >= gN) return false; restore(gOp[gAt++], true); editorRevSlot()++; return true; }
@@ -74,21 +75,18 @@ void studioApplyStamps(std::vector<Vertex>& v) {
     }
     if (found) { gMeshY = y; if (!gBaseSet) { gBaseY = base; gBaseSet = 1; } }
 }
-bool studioSaveStamps(const char* path) {
-    std::ofstream o(path); if (!o) return false;
-    int n = 0; for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2) ++n;
-    o << n << "\n";
-    for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2)
-        o << gOp[i].a[0] << " " << gOp[i].a[1] << " " << gOp[i].a[2] << " " << gOp[i].a[3] << " " << gOp[i].a[4] << "\n";
-    return true;
-}
-bool studioLoadStamps(const char* path) {
-    std::ifstream in(path); int n = 0; if (!(in >> n)) return false;
-    for (int i = 0; i < n; ++i) {
-        float x = 0, z = 0, r = 0, dy = 0, fall = 2;
-        if (!(in >> x >> z >> r >> dy >> fall)) return false;
-        studioSetBrush(dy < 0.0f ? 1 : 0, r, std::fabs(dy), fall);
-        if (!studioSculpt(x, z, r, dy)) return false;
+int studioStampCount() { int n = 0; for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2) ++n; return n; }
+bool studioStampAt(int nth, float& x, float& z, float& r, float& dy, float& fall) {
+    int n = 0;
+    for (int i = 0; i < gAt; ++i) if (gOp[i].kind == 2 && n++ == nth) {
+        x = gOp[i].a[0]; z = gOp[i].a[1]; r = gOp[i].a[2]; dy = gOp[i].a[3]; fall = gOp[i].a[4]; return true;
     }
-    return true;
+    return false;
+}
+bool studioParent(int child, int parent) {
+    EditorEnt* e = editorFind(child); if (!e || child == parent || gAt >= 24) return false;
+    if (parent && !editorFind(parent)) return false;
+    for (int p = parent, n = 0; p && n < 8; ++n) { if (p == child) return false; EditorEnt* u = editorFind(p); p = u ? u->parent : 0; }
+    Op o{}; o.kind = 4; o.id = child; o.b[0] = static_cast<float>(e->parent); o.a[0] = static_cast<float>(parent);
+    push(o); e->parent = parent; return true;
 }

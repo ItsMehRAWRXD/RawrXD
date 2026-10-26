@@ -5,6 +5,21 @@
 
 bool studioScript(Win32Window& window, VulkanRenderer& renderer) {
     (void)window;
+    if (studioEditor2() && studioShowOnly()) {
+        if (renderer.editorShotBusy()) return true;
+        static int warm = 0;
+        if (warm++ < 3) return true;
+        inspectorApplyEditor2();
+        std::ofstream out("F:/rawrxd/kartgib/evidence/studio_editor2_peak.txt");
+        for (int i = 0; i < editorCount(); ++i) {
+            const EditorEnt* e = editorAt(i);
+            out << e->id << " " << e->parent << " " << e->x << " " << e->y << " " << e->z << " " << e->yaw << " " << e->scale << "\n";
+        }
+        int d = 0, x = 0, y = 0, w = 0, h = 0; inspectorDockInfo(d, x, y, w, h);
+        out << "layout " << d << " " << x << " " << y << " " << w << " " << h << "\n";
+        editorMarkDone();
+        return false;
+    }
     if (!studioShowOnly()) return false;
     if (renderer.editorShotBusy()) return true;
     static int frames = 0;

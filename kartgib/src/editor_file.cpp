@@ -60,6 +60,7 @@ void editorPlayStep() {
     editorRevSlot()++;
 }
 bool editorPlaying() { return gPlay != 0; }
+bool editorParent(int child, int parent) { return studioOwnsUndo() && studioParent(child, parent); }
 bool editorSaveAtomic(const char* path) {
     std::string tmp = std::string(path) + ".tmp";
     std::ofstream out(tmp, std::ios::trunc);

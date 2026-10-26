@@ -47,16 +47,23 @@ void inspectorOnCommand(int id) {
         saveBrushFile();
     } else if (id == 1050) editorUndo();
     else if (id == 1051) editorRedo();
+    else if (id == 1060 || id == 1061) {
+        int sel = editorSelected(), other = 0;
+        for (int i = 0; i < editorCount(); ++i) if (editorAt(i)->id != sel) { other = editorAt(i)->id; break; }
+        editorParent(sel, id == 1061 ? 0 : other);
+    }
 }
 void inspectorRefresh() {
     HWND list = inspectorList();
     if (!list) return;
     int n = editorCount();
-    if (static_cast<int>(SendMessageW(list, LB_GETCOUNT, 0, 0)) != n) {
+    static int seen = -2;
+    if (seen != editorRevision() || static_cast<int>(SendMessageW(list, LB_GETCOUNT, 0, 0)) != n) {
+        seen = editorRevision();
         SendMessageW(list, LB_RESETCONTENT, 0, 0);
         for (int i = 0; i < n; ++i) {
             wchar_t line[64]{};
-            swprintf_s(line, L"%d %S", editorAt(i)->id, editorAt(i)->name);
+            swprintf_s(line, L"%d %d %S", editorAt(i)->id, editorAt(i)->parent, editorAt(i)->name);
             int row = static_cast<int>(SendMessageW(list, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(line)));
             SendMessageW(list, LB_SETITEMDATA, row, editorAt(i)->id);
         }

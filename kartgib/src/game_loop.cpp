@@ -134,6 +134,7 @@ void GameLoop::update(float deltaTime) {
         studioNoteMesh(static_cast<int>(worldforge_.getWorld().terrain.vertices.size()));
         if (studioOwnsUndo()) {
             if (studioShowOnly()) studioScript(window_, renderer_);
+            else if (studioEditor2()) editor2Script(window_, renderer_);
             else inspectorScript(window_, renderer_);
             inspectorRefresh();
         }

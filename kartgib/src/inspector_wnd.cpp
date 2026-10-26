@@ -22,6 +22,7 @@ static LRESULT CALLBACK inspectorProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 HWND inspectorEdit(int index) { return (index >= 0 && index < 8) ? gEdit[index] : nullptr; }
 HWND inspectorList() { return gList; }
 HWND inspectorPanel() { return gPanel; }
+HWND inspectorOwner() { return gOwner; }
 int inspectorWidth() { return gWidth; }
 void inspectorSetWidth(int width) {
     if (width < 220 || width > 520) return;
@@ -65,4 +66,5 @@ void inspectorCreate(HWND parent) {
     gList = CreateWindowExW(0, L"LISTBOX", L"", WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL,
         12, 386, 250, 180, gPanel, reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID_LIST)), wc.hInstance, nullptr);
     inspectorLayout(0, 0);
+    inspectorArmDock();
 }

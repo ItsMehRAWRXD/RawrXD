@@ -46,6 +46,7 @@ void editorAppend(std::vector<Vertex>& v, std::vector<uint32_t>& idx) {
     const EditorEnt* sel = nullptr;
     for (int i = 0; i < editorCount(); ++i) if (editorAt(i)->id == editorSelected()) sel = editorAt(i);
     if (sel && !editorPlaying()) {
+        box(v, idx, sel->x, sel->y, sel->z, sel->yaw, sel->scale + 0.55f, 5.0f);
         int axes = editorGizmoMode() == 0 ? 3 : 8;
         for (int a = 0; a < axes; ++a) {
             float dx, dy, dz; editorAxis(editorGizmoMode() == 0 ? a : 0, dx, dy, dz);
