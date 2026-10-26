@@ -51,7 +51,7 @@ static void ClearCpuOnlyOverrides() {
 // ============================================================================
 struct CommandLineArgs {
     std::string modelPath;
-    std::string phase = "certify";  // single, endurance, saturation, thermal, certify
+    std::string phase = "certify";  // single, endurance, saturation, thermal, certify, warm-start
     std::string prompt = "Write a large C++ project with full documentation and test coverage.";
     uint64_t maxTokens = 8192;
     uint32_t contextSize = 32768;
@@ -60,6 +60,12 @@ struct CommandLineArgs {
     uint64_t saturationTokensPerStream = 2048;
     uint32_t thermalDuration = 1800;
     uint32_t thermalInterval = 5;
+    
+    // Warm-start options
+    uint32_t warmupTokens = 256;
+    uint32_t measureTokens = 256;
+    uint32_t numRuns = 5;
+    
     std::string outputPath = "deep2_benchmark_report.json";
     std::string outputFormat = "json";
     bool verbose = true;
@@ -79,14 +85,20 @@ Required:
 Phases:
   --phase single               Single-stream maximum throughput test
   --phase endurance            Context scaling endurance matrix
-  --phase saturation             Multi-stream saturation test
+  --phase saturation           Multi-stream saturation test
   --phase thermal              Thermal stability soak test
-  --phase split-stream        Split-stream residency bind (MG→WARM→D3D12 HOT)
+  --phase warm-start           Warm-residency steady-state inference (SP-08)
+  --phase split-stream         Split-stream residency bind (MG→WARM→D3D12 HOT)
 
 Single Stream Options:
   --prompt <text>             Test prompt (default: code generation)
   --max-tokens <n>            Maximum tokens to generate (default: 8192)
   --ctx-size <n>              Context window size (default: 32768)
+
+Warm-Start Options (SP-08):
+  --warmup-tokens <n>         Tokens for warmup generation (default: 256)
+  --measure-tokens <n>        Tokens per measured generation (default: 256)
+  --num-runs <n>              Number of measured runs (default: 5)
 
 Endurance Options:
   --ctx-sizes <list>          Comma-separated context sizes (default: 1k,4k,8k,16k,32k)
@@ -110,6 +122,9 @@ Examples:
 
   # Quick single-stream test
   deep2_benchmark.exe --model deep2.gguf --phase single --max-tokens 2048
+
+  # Warm-start residency benchmark (SP-08)
+  deep2_benchmark.exe --model deep2.gguf --phase warm-start --warmup-tokens 256 --measure-tokens 256 --num-runs 5
 
   # Endurance matrix with custom contexts
   deep2_benchmark.exe --model deep2.gguf --phase endurance --ctx-sizes 512,1024,2048,4096
@@ -189,6 +204,15 @@ CommandLineArgs parseArgs(int argc, char** argv) {
         }
         else if (arg == "--sample-interval" && i + 1 < argc) {
             args.thermalInterval = std::stoul(argv[++i]);
+        }
+        else if (arg == "--warmup-tokens" && i + 1 < argc) {
+            args.warmupTokens = std::stoul(argv[++i]);
+        }
+        else if (arg == "--measure-tokens" && i + 1 < argc) {
+            args.measureTokens = std::stoul(argv[++i]);
+        }
+        else if (arg == "--num-runs" && i + 1 < argc) {
+            args.numRuns = std::stoul(argv[++i]);
         }
         else if (arg == "--output" && i + 1 < argc) {
             args.outputPath = argv[++i];
@@ -306,6 +330,53 @@ int main(int argc, char** argv) {
             std::cout << "Stream Stable:      " << (bench.stream_stable ? "YES" : "NO") << "\n";
             if (!bench.used_production_decode_path)
                 std::cout << "FAIL_REASON:        NON_PRODUCTION_DECODE_PATH\n";
+        }
+        return bench.used_production_decode_path && bench.stream_stable ? 0 : 1;
+    }
+    else if (args.phase == "warm-start") {
+        // Warm-start residency benchmark (SP-08)
+        const bool perfProbe = []() {
+            const char* e = std::getenv("DEEP2_PERF_PROBE");
+            return !e || e[0] == '1';
+        }();
+        if (args.verbose) {
+            std::cout << "[WARM-START] Running warm-residency steady-state inference (SP-08)...\n";
+            std::cout << "  Warmup tokens:   " << args.warmupTokens << "\n";
+            std::cout << "  Measure tokens:  " << args.measureTokens << "\n";
+            std::cout << "  Number of runs:  " << args.numRuns << "\n";
+            std::cout << "  Context size:    " << args.contextSize << "\n";
+            std::cout << "  Perf probe:      " << (perfProbe ? "ON" : "OFF") << "\n\n";
+        }
+        
+        auto bench = harness.runWarmStartTest(
+            args.prompt,
+            args.warmupTokens,
+            args.measureTokens,
+            args.numRuns,
+            args.contextSize
+        );
+        
+        if (args.outputFormat == "telemetry") {
+            // Telemetry already emitted
+        } else {
+            std::cout << "\n=== Warm-Start Residency Results (SP-08) ===\n";
+            std::cout << "Probe Mode:              " << (perfProbe ? "ON" : "OFF") << "\n";
+            std::cout << "Prompt Tokens:           " << bench.prompt_tokens << "\n";
+            std::cout << "Generated Tokens:        " << bench.generated_tokens << "\n";
+            std::cout << "Warmup Generations:      " << bench.warmup_generations << "\n";
+            std::cout << "Measured Generations:    " << bench.measured_generations << "\n";
+            std::cout << "RESIDENT_REUSE:          " << bench.resident_reuse << "\n";
+            std::cout << "Weight Cache Hits:       " << bench.weight_cache_hits << "\n";
+            std::cout << "Weight Cache Misses:     " << bench.weight_cache_misses << "\n";
+            std::cout << "Uploaded Bytes/Request:  " << bench.uploaded_bytes_per_request << "\n";
+            std::cout << "Queue Submissions/Req:   " << bench.queue_submissions << "\n";
+            std::cout << "Decode TPS (warm):       " << bench.decode_tps_warm << "\n";
+            std::cout << "E2E TPS (warm):          " << bench.e2e_tps_warm << "\n";
+            std::cout << "Decode TPS Min Window:   " << bench.decode_tps_min_window << "\n";
+            std::cout << "Degradation Ratio:       " << bench.degradation_ratio << "\n";
+            std::cout << "Stream Stable:           " << (bench.stream_stable ? "YES" : "NO") << "\n";
+            if (!bench.used_production_decode_path)
+                std::cout << "FAIL_REASON:             NON_PRODUCTION_DECODE_PATH\n";
         }
         return bench.used_production_decode_path && bench.stream_stable ? 0 : 1;
     }

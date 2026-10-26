@@ -2380,6 +2380,7 @@ class Win32IDE
     // ========================================================================
     // PowerShell Panel Window Handles
     HWND m_hwndPowerShellPanel;
+    HWND m_hwndPowerShellSplitter;
     HWND m_hwndPowerShellOutput;
     HWND m_hwndPowerShellInput;
     HWND m_hwndPowerShellToolbar;
@@ -2449,6 +2450,7 @@ class Win32IDE
     std::string getPowerShellPrompt();
     void scrollPowerShellOutputToBottom();
     static LRESULT CALLBACK PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK PowerShellSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     // ========================================================================
     // GGUF INSPECTOR PANEL - Deep Model Architecture Analysis

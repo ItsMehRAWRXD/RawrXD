@@ -37,6 +37,7 @@ enum class ChatTemplateType : uint8_t {
     UNKNOWN     = 0,
     RAW_BOS,           // No template, just BOS + raw prompt
     PHI3,              // <|system|>...<|end|><|user|>...<|end|><|assistant|>
+    TINYLLAMA,         // TinyLlama chat: role tags with newline-separated turns
     PHI4,              // <|im_start|>system...<|im_end|><|im_start|>user...
     LLAMA2,            // [INST] <<SYS>>...<</SYS>> ... [/INST]
     LLAMA3,            // <|begin_of_text|><|start_header_id|>system...<|end_header_id|>
@@ -129,6 +130,7 @@ private:
 
     // Per-format formatters
     std::string formatPhi3(const std::vector<ChatMessage>& messages) const;
+    std::string formatTinyLlama(const std::vector<ChatMessage>& messages) const;
     std::string formatPhi4(const std::vector<ChatMessage>& messages) const;
     std::string formatLlama2(const std::vector<ChatMessage>& messages) const;
     std::string formatLlama3(const std::vector<ChatMessage>& messages) const;

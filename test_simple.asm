@@ -1,18 +1,11 @@
-; Simple test file
-.386
-.model flat, stdcall
-option casemap:none
+; RAWR_MASM_X64_E2E_001 Test Fixture - Simple version
+extern ExitProcess
+global main
 
-include C:\masm32\include\windows.inc
-include C:\masm32\include\kernel32.inc
-includelib C:\masm32\lib\kernel32.lib
+section .text
 
-.data
-szMsg db "Hello World", 0
+main:
+    mov     eax, 42
+    ret
 
-.code
-main proc
-    invoke ExitProcess, 0
-main endp
-
-end main
+END

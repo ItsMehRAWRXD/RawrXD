@@ -1,0 +1,35 @@
+{
+  "id": "RAWRXD_CANONICAL_BUILD_001",
+  "recorded": "2026-10-26",
+  "SOURCE_COMMIT": "183c313d4c1ec0e1cba69897b97fbca8444da7f3",
+  "CMAKE_CONFIGURE": "FAIL",
+  "BLOCKER": "MISSING_TRACKED_SRC_VOXEL",
+  "voxel": {
+    "required_by_ide_target": false,
+    "tracked_in_183c313d4c": false,
+    "main_tree_status": "untracked",
+    "main_tree_files": 24,
+    "own_build": "cmake -S src/voxel produces sunshine-voxel, not RawrXD-Win32IDE",
+    "sdk": "Direct3D 12 and WebView2 from the Windows SDK",
+    "copied_into_failed_worktree": false
+  },
+  "graph_fix": {
+    "commit": "d719787b14be54c7606e477fcd5edbe90506ebc0",
+    "change": "RAWRXD_BUILD_SUNSHINE_VOXEL defaults to OFF. The add_subdirectory call remains unconditional when the option is ON.",
+    "exists_workaround": false,
+    "voxel_sources_committed": false,
+    "clean_configure_of_fix": "PASS",
+    "clean_tree": "G:\\~dev\\rawrxd-cmake-clean",
+    "clean_tree_voxel": "ABSENT",
+    "cache": "RAWRXD_BUILD_SUNSHINE_VOXEL=OFF RAWRXD_BUILD_WIN32IDE=ON",
+    "generator": "Ninja",
+    "ladder": "A_MSVC_CMAKE_REFERENCE"
+  },
+  "IDE_BUILD": "NOT_RUN",
+  "IDE_LINK": "NOT_RUN",
+  "IDE_RUNTIME": "NOT_RUN",
+  "IDE_SHA256": null,
+  "ladder": "A_MSVC_CMAKE_REFERENCE",
+  "not_ladder_b": true,
+  "PROMOTE": 0
+}

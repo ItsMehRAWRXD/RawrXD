@@ -10520,6 +10520,7 @@
                 style="flex:1;padding:3px 6px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-family:var(--font-mono);font-size:10px;"
                 onkeydown="if(event.key==='Enter')feRefreshTree()">
               <button class="code-btn" onclick="feRefreshTree()" style="padding:2px 6px;font-size:10px;">Go</button>
+              <button class="code-btn" onclick="feLoadRoots()" title="Enumerate all accessible drives, including hidden entries" style="padding:2px 6px;font-size:10px;">Drives</button>
             </div>
             <div id="feTreeContent" style="padding:4px 0;">
               <div style="padding:12px;color:var(--text-muted);font-size:10px;">Click &#x1F504; Refresh to load file
@@ -10837,7 +10838,7 @@
       backend: {
         online: false,
         url: 'http://127.0.0.1:11435',
-        ollamaDirectUrl: 'http://127.0.0.1:11435',  // LOCAL_ONLY_NO_OLLAMA — same as RawrXD Headless
+        ollamaDirectUrl: 'http://127.0.0.1:11434',  // Ollama default port — auto-fallback when RawrXD backend is down
         directMode: false,                           // true = direct to configured local server (not Ollama)
         lastPing: 0,
         serverType: null,         // 'rawrxd-win32ide' or 'RawrXD-serve.py' or 'ollama-direct'
@@ -10954,7 +10955,7 @@
         sessionId: 0,           // monotonic session counter
         waitingForIde: false,   // true when auto-retry polling for IDE
         autoRetryTimer: null,   // setInterval handle for auto-retry
-        scanPorts: [11435, 3000, 5000], // ports to scan for IDE (no Ollama :11434)
+        scanPorts: [19035, 11435, 19036, 3000, 5000], // ports to scan for IDE (no Ollama :11434)
         lastScanResults: [],    // [{port, status, backend}] from last scan
       },
       // VSIX Extension Manager state
@@ -11002,6 +11003,11 @@
         totalNavigations: 0,
       },
     };
+
+    if (!_isFileProtocol && /^https?:$/.test(window.location.protocol) &&
+      /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) {
+      State.backend.url = window.location.origin;
+    }
 
     // ======================================================================
     // ENGINE REGISTRY — All available engines in the RawrXD codebase
@@ -11797,7 +11803,7 @@
             var data = await res.json();
             entry.status = 'ok';
             entry.backend = data.backend || data.server || 'unknown';
-            if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+            if (data.backend === 'rawrxd-win32ide' || data.backend === 'rawrxd-node' || data.backend === 'rawrxd-native' || (data.server && (data.server.indexOf('Win32IDE') >= 0 || data.server.indexOf('RawrXD') >= 0))) {
               entry.status = 'ide';
               if (!foundUrl) { foundUrl = url; foundData = data; }
             }
@@ -11876,7 +11882,7 @@
           var res = await fetch('http://localhost:11435/status', { signal: AbortSignal.timeout(1500) });
           if (res.ok) {
             var data = await res.json();
-            if (data.backend === 'rawrxd-win32ide' || (data.server && data.server.indexOf('Win32IDE') >= 0)) {
+            if (data.backend === 'rawrxd-win32ide' || data.backend === 'rawrxd-node' || data.backend === 'rawrxd-native' || (data.server && (data.server.indexOf('Win32IDE') >= 0 || data.server.indexOf('RawrXD') >= 0))) {
               logDebug('\uD83D\uDC7B Auto-retry: IDE found! Connecting...', 'info');
               _ghostStopAutoRetry();
               // Close and re-ghost now that IDE is alive
@@ -11945,7 +11951,7 @@
         logDebug('\uD83D\uDC7B Beacon confirmed: Win32 IDE alive at ' + scan.foundUrl, 'info');
 
         // Inject iframe pointed at /gui
-        State.ghost.ideUrl = scan.foundUrl + '/gui';
+        var ghostOrigin = scan.foundUrl; try { var ghostUrl = new URL(scan.foundUrl); if (ghostUrl.hostname === 'localhost' && location.hostname) ghostUrl.hostname = location.hostname; ghostOrigin = ghostUrl.origin; } catch (_) {} State.ghost.ideUrl = ghostOrigin + '/gui';
         loading.style.display = 'none';
 
         var iframe = document.createElement('iframe');
@@ -13798,8 +13804,8 @@
       // ---- Try 1.5: DISABLED — do not prefer dead :8080 when configured :11435 is product ----
       // G3_IDE_SERVER_REACHABILITY_11435_001: BACKEND_URL=http://127.0.0.1:11435; 8080_FALLBACK=IGNORE
 
-      // ---- Try 2: DISABLED — LOCAL_ONLY_NO_OLLAMA (no :11434 Ollama fallback) ----
-      if (false && State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
+      // ---- Try 2: Ollama direct fallback (:11434) ----
+      if (State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
         try {
           logDebug('Trying direct Ollama at ' + State.backend.ollamaDirectUrl + '...', 'info');
           const t0 = performance.now();
@@ -15438,6 +15444,17 @@
           answer = data.answer || data.response || '[No response]';
         }
 
+        // A 200 response with zero visible tokens is an explicit runtime
+        // state, never a successful assistant turn.  Keep the stop reason so
+        // timeouts, EOS, cancellation and engine errors remain distinguishable.
+        if (!answer || !answer.trim()) {
+          var emptyReason = (data.choices && data.choices[0] && data.choices[0].finish_reason) ||
+            data.done_reason || data.stop_reason || 'empty_output';
+          addMessage('system', 'Generation produced no visible tokens (stop_reason=' + emptyReason + ').', { skipMemory: true });
+          recordMetric({ latency: latency, tokens: 0, model: model, endpoint: '/v1/chat/completions', success: false, errorMsg: emptyReason });
+          return;
+        }
+
         // Parse embedded tool action blocks from response text
         var parsed = ToolActionRenderer.parseToolActionsFromText(answer);
         if (parsed.actions.length > 0) {
@@ -15731,6 +15748,15 @@
 
         textEl.classList.remove('streaming-cursor');
 
+        if (!fullText.trim() && Object.keys(_toolCallAccum).length === 0) {
+          var emptyStreamReason = stream.finishReason || 'empty_output';
+          msgDiv.remove();
+          State.chat.messageCount--;
+          addMessage('system', 'Streaming ended without visible tokens (stop_reason=' + emptyStreamReason + ').', { skipMemory: true });
+          recordMetric({ latency: Math.round(performance.now() - t0), tokens: 0, model: model, endpoint: '/v1/chat/completions (stream)', success: false, errorMsg: emptyStreamReason });
+          return;
+        }
+
         // Parse tool action blocks from markdown text (```tool-action ... ```)
         var parsed = ToolActionRenderer.parseToolActionsFromText(fullText);
         if (parsed.actions.length > 0) {
@@ -15778,6 +15804,14 @@
         recordMetric({ latency: latency, tokens: tokenCount, model: model, endpoint: '/v1/chat/completions (stream)', success: true });
       } catch (e) {
         textEl.classList.remove('streaming-cursor');
+        if (!fullText.trim()) {
+          var emptyLegacyReason = stream.finishReason || 'empty_output';
+          msgDiv.remove();
+          State.chat.messageCount--;
+          addMessage('system', 'Streaming ended without visible tokens (stop_reason=' + emptyLegacyReason + ').', { skipMemory: true });
+          recordMetric({ latency: Math.round(performance.now() - t0), tokens: 0, model: model, endpoint: '/api/generate (stream)', success: false, errorMsg: emptyLegacyReason });
+          return;
+        }
         if (e.name === 'AbortError') {
           // User cancelled — save partial response
           var partialText = textEl.textContent || '';
@@ -25462,6 +25496,22 @@
       if (tab) tab.title = title || 'New Tab';
     }
 
+    function _browserRecordNavigation(url) {
+      var tab = _browserGetActiveTab();
+      if (!tab || !url) return;
+      if (tab.url && tab.url !== url) {
+        tab.history = Array.isArray(tab.history) ? tab.history.slice(0, tab.historyIdx + 1) : [];
+        tab.history.push(tab.url);
+        tab.historyIdx = tab.history.length - 1;
+      }
+      tab.url = url;
+      tab.iframeRef = null;
+      var urlInput = document.getElementById('browserUrlInput');
+      if (urlInput) urlInput.value = url;
+      _browserUpdateLock(url);
+      _browserUpdateNavButtons();
+    }
+
     function _browserRenderTabs() {
       var bar = document.getElementById('browserTabBar');
       if (!bar) return;
@@ -25506,8 +25556,138 @@
       browserNavigate();
     }
 
-    function browserNavigateTo(url) {
+    function browserOpenExternal(url) {
+      if (!url || !/^https?:\/\//i.test(url)) return false;
+      var opened = null;
+      try {
+        opened = window.open(url, 'RawrXDExternalBrowser', 'noopener,noreferrer');
+      } catch (_) { opened = null; }
+      if (!opened) {
+        _browserShowBlocked(url, 'The host blocked a new browser tab. Allow pop-ups for RawrXD or use the embedded retry.');
+      }
+      _browserUpdateStatusBar(opened ? 'Opened in browser tab' : 'Unable to open external page', url);
+      logDebug((opened ? '🌐 Opened external page: ' : '⚠ External page blocked by host: ') + url, opened ? 'info' : 'error');
+      return !!opened;
+    }
+
+    function _browserEscapeText(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function _browserShowBlocked(url, reason) {
+      var viewport = document.getElementById('browserViewport');
+      if (!viewport) return;
+      viewport.querySelectorAll('iframe').forEach(function (f) { f.remove(); });
+      var card = document.createElement('div');
+      card.className = 'browser-home browser-blocked-card';
+      card.innerHTML = '<div class="browser-logo">🛡️</div>' +
+        '<div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--accent-cyan);">Embedded page blocked</div>' +
+        '<div style="max-width:680px;color:var(--text-muted);font-size:12px;text-align:center;line-height:1.6;">' +
+        _browserEscapeText(reason || 'The site refused to be embedded in an iframe.') + '<br><span style="word-break:break-all;color:var(--accent-secondary);">' + _browserEscapeText(url) + '</span></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;">' +
+        '<button class="code-btn" type="button" data-browser-open>Open in browser tab</button>' +
+        '<button class="code-btn" type="button" data-browser-retry>Try embedded view again</button></div>';
+      var openBtn = card.querySelector('[data-browser-open]');
+      var retryBtn = card.querySelector('[data-browser-retry]');
+      if (openBtn) openBtn.addEventListener('click', function () { browserOpenExternal(url); });
+      if (retryBtn) retryBtn.addEventListener('click', function () { browserNavigateTo(url, { forceEmbed: true }); });
+      viewport.appendChild(card);
+      _browserUpdateStatusBar('Blocked by site embedding policy', url);
+    }
+
+    function _browserIframeLooksBlocked(iframe) {
+      try {
+        var doc = iframe.contentDocument;
+        if (!doc) return false;
+        var text = ((doc.title || '') + ' ' + (doc.body ? (doc.body.innerText || doc.body.textContent || '') : '')).toLowerCase();
+        return /this content is blocked|refused to connect|refused to display|frame-ancestors|err_blocked_by_response|chrome-error/.test(text);
+      } catch (_) { return false; }
+    }
+
+    function _browserRenderReader(page) {
+      var viewport = document.getElementById('browserViewport');
+      if (!viewport || !page) return false;
+      _browserRecordNavigation(page.url || '');
+      viewport.querySelectorAll('iframe, .browser-blocked-card, .browser-reader-card, .browser-reader-page').forEach(function (node) { node.remove(); });
+      var homePage = document.getElementById('browserHomePage');
+      if (homePage) homePage.style.display = 'none';
+      var card = document.createElement('div');
+      card.className = 'browser-reader-page';
+      card.style.cssText = 'display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:auto;background:#fff;color:#202124;padding:32px 28px 48px;text-align:left;font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;';
+      var content = document.createElement('div');
+      content.style.cssText = 'width:min(100%,1100px);margin:0 auto;';
+      var title = document.createElement('div');
+      title.style.cssText = 'font-size:28px;font-weight:700;line-height:1.25;color:#202124;margin:0 0 8px;';
+      title.textContent = page.title || page.url || 'Reader';
+      var source = document.createElement('div');
+      source.style.cssText = 'font-size:12px;line-height:1.4;color:#5f6368;word-break:break-all;margin:0 0 20px;padding-bottom:14px;border-bottom:1px solid #dadce0;';
+      source.textContent = 'RawrXD safe reader · ' + (page.url || '');
+      var body = document.createElement('div');
+      body.style.cssText = 'box-sizing:border-box;width:100%;min-height:84px;white-space:pre-wrap;overflow:auto;background:#f8f9fa;border:1px solid #dadce0;border-radius:8px;padding:20px;color:#202124;font-size:16px;line-height:1.65;text-align:left;';
+      body.textContent = page.text || '(empty response)';
+      var label = document.createElement('div');
+      label.style.cssText = 'width:100%;color:#5f6368;font-size:13px;margin:24px 0 8px;font-weight:600;';
+      var links = Array.isArray(page.links) ? page.links : [];
+      label.textContent = 'Links (' + links.length + ')';
+      var linkBox = document.createElement('div');
+      linkBox.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:stretch;gap:6px;';
+      links.forEach(function (link) {
+        var button = document.createElement('button');
+        button.type = 'button'; button.className = 'browser-bookmark-btn';
+        button.textContent = link.label || link.url; button.title = link.url;
+        button.style.cssText = 'display:block;width:100%;box-sizing:border-box;text-align:left;padding:9px 12px;border:1px solid #dadce0;border-radius:6px;background:#fff;color:#1a73e8;cursor:pointer;font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;';
+        button.addEventListener('click', function () { browserNavigateTo(link.url); });
+        linkBox.appendChild(button);
+      });
+      content.appendChild(title); content.appendChild(source); content.appendChild(body); content.appendChild(label); content.appendChild(linkBox);
+      card.appendChild(content); viewport.appendChild(card);
+      _browserUpdateTabTitle(page.title || 'Reader');
+      _browserUpdateStatusBar('Reader view', page.url || '');
+      return true;
+    }
+
+    function browserTryProxy(url) {
+      var bases = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+        ? [window.location.origin]
+        : [(typeof getActiveUrl === 'function' ? getActiveUrl() : ''),
+          'http://127.0.0.1:19035', 'http://127.0.0.1:11435'];
+      bases = bases.filter(function (base, i) { return base && bases.indexOf(base) === i; });
+      function attempt(i) {
+        if (i >= bases.length) return Promise.resolve(false);
+        return fetch(bases[i] + '/api/browse', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url, extract: true }), signal: AbortSignal.timeout(20000) })
+          .then(function (res) { if (!res.ok) throw new Error('reader HTTP ' + res.status); return res.json(); })
+          .then(function (page) { if (!page || !page.ok) throw new Error(page && page.error || 'reader failed'); _browserRenderReader(page); return true; })
+          .catch(function () { return attempt(i + 1); });
+      }
+      return attempt(0);
+    }
+
+    function browserNavigateTo(url, options) {
+      options = options || {};
       if (!url) return;
+      try {
+        url = new URL(url, window.location.href).href;
+      } catch (_) {
+        _browserShowBlocked(url, 'The address is not a valid HTTP(S) URL.');
+        return;
+      }
+      var protocol = ''; try { protocol = new URL(url).protocol; } catch (_) {}
+      if (protocol !== 'http:' && protocol !== 'https:') {
+        _browserShowBlocked(url, 'Only HTTP and HTTPS pages can be opened by the integrated browser.');
+        return;
+      }
+      var external = false;
+      try { external = new URL(url).origin !== window.location.origin; } catch (_) { external = true; }
+      if (external && !options.forceEmbed) {
+        _browserRecordNavigation(url);
+        _browserUpdateStatusBar('Fetching reader view...', url);
+        browserTryProxy(url).then(function (ok) { if (!ok) _browserShowBlocked(url, 'The site could not be fetched by the safe embedded reader.'); });
+        return;
+      }
       var viewport = document.getElementById('browserViewport');
       var homePage = document.getElementById('browserHomePage');
       var urlInput = document.getElementById('browserUrlInput');
@@ -27092,11 +27272,28 @@
       return null;
     }
 
+    async function feApiGet(endpoint) {
+      var urls = [feApiUrl()];
+      if (_ideServerUrl && urls.indexOf(_ideServerUrl) === -1) urls.push(_ideServerUrl);
+      if (urls.indexOf('http://localhost:11435') === -1) urls.push('http://localhost:11435');
+      for (var i = 0; i < urls.length; i++) {
+        try {
+          var res = await fetch(urls[i] + endpoint, { method: 'GET', signal: AbortSignal.timeout(10000) });
+          if (res.ok) return await res.json();
+        } catch (_) { }
+      }
+      return null;
+    }
+
     // ---- Tree Browser ----
     async function feRefreshTree() {
       var rootInput = document.getElementById('feTreePath');
       var root = rootInput ? rootInput.value.trim() : '.';
       if (!root) root = '.';
+
+      if (root === '.' || root.toLowerCase() === 'drives:' || root === '::drives') {
+        return feLoadRoots();
+      }
 
       feSetStatus('Loading tree...');
       var data = await feApiPost('/api/list-dir', { path: root });
@@ -27119,13 +27316,28 @@
       feSetStatus('Tree loaded: ' + data.entries.length + ' items');
     }
 
+    async function feLoadRoots() {
+      feSetStatus('Enumerating drives...');
+      var data = await feApiGet('/api/filesystem/roots');
+      var tc = document.getElementById('feTreeContent');
+      if (!data || !Array.isArray(data.roots)) {
+        feSetStatus('Drive enumeration unavailable');
+        if (tc) tc.innerHTML = '<div style="padding:12px;color:#ff6b6b;font-size:10px;">Could not enumerate local drives. Connect the RawrXD loopback backend.</div>';
+        return;
+      }
+      FE.treeCache['::drives'] = data.roots;
+      FE.treeExpanded['::drives'] = true;
+      feRenderTree('::drives', data.roots);
+      feSetStatus('Drives loaded: ' + data.roots.length + ' (hidden entries included)');
+    }
+
     function feRenderTree(root, entries) {
       var tc = document.getElementById('feTreeContent');
       if (!tc) return;
       var html = '';
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
-        var fullPath = root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+        var fullPath = (e.path || (root.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
         if (e.type === 'dir') {
           var isExpanded = FE.treeExpanded[fullPath];
           html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -27189,7 +27401,7 @@
       var html = '';
       for (var i = 0; i < entries.length; i++) {
         var e = entries[i];
-        var fullPath = path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name;
+        var fullPath = (e.path || (path.replace(/\\/g, '/').replace(/\/$/, '') + '/' + e.name)).replace(/\\/g, '/');
         if (e.type === 'dir') {
           var isExp = FE.treeExpanded[fullPath];
           html += '<div class="fe-tree-node" data-path="' + escHtml(fullPath) + '">';
@@ -28820,6 +29032,10 @@
 
       function getBackendUrl() {
         try {
+          if (!_isFileProtocol && window.location && /^https?:$/.test(window.location.protocol) &&
+              /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) {
+            return window.location.origin;
+          }
           // Prefer proxy URL (11435) which routes to all backends (GGUF, Ollama, blob, cloud)
           if (window.State && window.State.backend && window.State.backend.url) return window.State.backend.url;
           if (typeof _ideServerUrl !== 'undefined' && _ideServerUrl) return _ideServerUrl;
@@ -29339,6 +29555,7 @@
         // Add user message
         appendChatMsg(id, 'user', text);
         setWindowStatus(id, 'busy', 'Generating...');
+        setPerfText(id, 'waiting…');
 
         // Stream from backend
         streamChat(id, text, ws.model);
@@ -29375,7 +29592,14 @@
         updateKernelStatus();
 
         var msgs = [];
-        if (ws && ws.messages) msgs = ws.messages.slice();
+        if (window.Conversation && window.Conversation.systemPrompt) {
+          msgs.push({ role: 'system', content: window.Conversation.systemPrompt });
+        }
+        if (ws && Array.isArray(ws.messages)) {
+          var history = ws.messages.slice();
+          if (history.length && history[0] && history[0].role === 'system') history.shift();
+          msgs = msgs.concat(history);
+        }
         msgs.push({ role: 'user', content: query });
         if (ws) ws.messages = msgs;
 
@@ -29391,19 +29615,76 @@
             messages: msgs,
             stream: true,
             max_tokens: (window.State && window.State.gen && window.State.gen.maxTokens) || 4096,
-            temperature: (window.State && window.State.gen && window.State.gen.temperature) || 0.7
+            temperature: (window.State && window.State.gen && window.State.gen.temperature) || 0.7,
+            top_p: (window.State && window.State.gen && window.State.gen.top_p) || 0.9,
+            top_k: (window.State && window.State.gen && window.State.gen.top_k) || 40,
+            options: { num_ctx: (window.State && window.State.gen && window.State.gen.context) || 8192 }
           })
         }).then(function (resp) {
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          var contentType = (resp.headers.get('content-type') || '').toLowerCase();
+          if (contentType.indexOf('application/json') !== -1) {
+            return resp.json().then(function (j) {
+              var answer = '';
+              if (j.choices && j.choices[0] && j.choices[0].message) answer = j.choices[0].message.content || '';
+              else answer = j.response || j.output || '';
+              if (!answer) throw new Error('backend returned an empty completion');
+              appendChatMsg(id, 'assistant', answer);
+              if (ws) ws.messages.push({ role: 'assistant', content: answer });
+              tokenCount = Math.max(1, answer.trim().split(/\s+/).length);
+              var elapsed = Math.max(0.001, (performance.now() - startTime) / 1000);
+              setWindowStatus(id, 'idle', 'Done — ' + tokenCount + ' tokens');
+              setPerfText(id, (tokenCount / elapsed).toFixed(1) + ' tok/s');
+              taskCount--;
+              updateKernelStatus();
+            });
+          }
           var reader = resp.body.getReader();
           var decoder = new TextDecoder();
+          var pending = '';
           var assistantMsg = appendChatMsg(id, 'assistant', '');
           var fullText = '';
+
+          function consumePrimary(text, flush) {
+            pending += text;
+            var lines = pending.split(/\r?\n/);
+            pending = flush ? '' : (lines.pop() || '');
+            for (var li = 0; li < lines.length; li++) {
+              var line = lines[li].trim();
+              if (!line || line === 'data: [DONE]') continue;
+              if (line.indexOf('data: ') === 0) line = line.slice(6);
+              try {
+                var j = JSON.parse(line);
+                var delta = '';
+                if (j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content) {
+                  delta = j.choices[0].delta.content;
+                } else if (j.message && j.message.content) {
+                  delta = j.message.content;
+                } else if (j.response) {
+                  delta = j.response;
+                }
+                if (delta) {
+                  fullText += delta;
+                  tokenCount++;
+                  if (assistantMsg) {
+                    if (typeof DOMPurify !== 'undefined') {
+                      assistantMsg.innerHTML = DOMPurify.sanitize(formatMd(fullText));
+                    } else {
+                      assistantMsg.textContent = fullText;
+                    }
+                  }
+                  var c = document.getElementById(id + '-msgs');
+                  if (c) c.scrollTop = c.scrollHeight;
+                }
+              } catch (e) { /* wait for the next chunk if incomplete */ }
+            }
+          }
 
           function pump() {
             return reader.read().then(function (result) {
               if (result.done) {
-                // Finalize
+                consumePrimary(decoder.decode(), true);
+                if (!fullText) throw new Error('backend returned an empty completion');
                 if (ws) ws.messages.push({ role: 'assistant', content: fullText });
                 var elapsed = (performance.now() - startTime) / 1000;
                 var tps = tokenCount > 0 ? (tokenCount / elapsed).toFixed(1) : '0';
@@ -29413,28 +29694,52 @@
                 updateKernelStatus();
                 return;
               }
+              consumePrimary(decoder.decode(result.value, { stream: true }), false);
+              return pump();
+            });
+          }
+          return pump();
+        }).catch(function (err) {
+          // Fallback: preserve role-aware multi-turn context through the
+          // same-origin chat bridge rather than flattening it into a prompt.
+          fetch(url + '/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model,
+              messages: msgs,
+              stream: true,
+              options: {
+                num_ctx: (window.State && window.State.gen && window.State.gen.context) || 8192,
+                num_predict: (window.State && window.State.gen && window.State.gen.maxTokens) || 4096,
+                temperature: (window.State && window.State.gen && window.State.gen.temperature) || 0.7
+              }
+            })
+          }).then(function (resp) {
+            if (!resp.ok) {
+              appendChatMsg(id, 'system', 'Error: Backend not reachable (' + resp.status + ')');
+              setWindowStatus(id, 'error', 'Error');
+              taskCount--;
+              updateKernelStatus();
+              return;
+            }
+            var reader = resp.body.getReader();
+            var decoder = new TextDecoder();
+            var pending2 = '';
+            var assistantMsg = appendChatMsg(id, 'assistant', '');
+            var fullText = '';
 
-              var chunk = decoder.decode(result.value, { stream: true });
-              var lines = chunk.split('\n');
-              for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
+            function consumeFallback(text, flush) {
+              pending2 += text;
+              var lines = pending2.split(/\r?\n/);
+              pending2 = flush ? '' : (lines.pop() || '');
+              for (var li = 0; li < lines.length; li++) {
+                var line = lines[li].trim();
                 if (!line || line === 'data: [DONE]') continue;
-                if (line.startsWith('data: ')) line = line.slice(6);
+                if (line.indexOf('data: ') === 0) line = line.slice(6);
                 try {
                   var j = JSON.parse(line);
-                  var delta = '';
-                  // OpenAI format
-                  if (j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content) {
-                    delta = j.choices[0].delta.content;
-                  }
-                  // Ollama format
-                  else if (j.message && j.message.content) {
-                    delta = j.message.content;
-                  }
-                  // Raw text
-                  else if (j.response) {
-                    delta = j.response;
-                  }
+                  var delta = (j.message && j.message.content) || j.response || '';
                   if (delta) {
                     fullText += delta;
                     tokenCount++;
@@ -29448,38 +29753,15 @@
                     var c = document.getElementById(id + '-msgs');
                     if (c) c.scrollTop = c.scrollHeight;
                   }
-                } catch (e) { /* skip non-JSON lines */ }
+                } catch (e) { /* wait for the next chunk if incomplete */ }
               }
-              return pump();
-            });
-          }
-          return pump();
-        }).catch(function (err) {
-          // Fallback: try Ollama native /api/chat
-          fetch(url + '/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: model,
-              messages: msgs,
-              stream: true
-            })
-          }).then(function (resp) {
-            if (!resp.ok) {
-              appendChatMsg(id, 'system', 'Error: Backend not reachable (' + resp.status + ')');
-              setWindowStatus(id, 'error', 'Error');
-              taskCount--;
-              updateKernelStatus();
-              return;
             }
-            var reader = resp.body.getReader();
-            var decoder = new TextDecoder();
-            var assistantMsg = appendChatMsg(id, 'assistant', '');
-            var fullText = '';
 
             function pump2() {
               return reader.read().then(function (result) {
                 if (result.done) {
+                  consumeFallback(decoder.decode(), true);
+                  if (!fullText) throw new Error('backend returned an empty completion');
                   if (ws) ws.messages.push({ role: 'assistant', content: fullText });
                   var elapsed = (performance.now() - startTime) / 1000;
                   var tps = tokenCount > 0 ? (tokenCount / elapsed).toFixed(1) : '0';
@@ -29489,29 +29771,7 @@
                   updateKernelStatus();
                   return;
                 }
-                var chunk = decoder.decode(result.value, { stream: true });
-                var lines = chunk.split('\n');
-                for (var i = 0; i < lines.length; i++) {
-                  var line = lines[i].trim();
-                  if (!line) continue;
-                  try {
-                    var j = JSON.parse(line);
-                    var delta = (j.message && j.message.content) || j.response || '';
-                    if (delta) {
-                      fullText += delta;
-                      tokenCount++;
-                      if (assistantMsg) {
-                        if (typeof DOMPurify !== 'undefined') {
-                          assistantMsg.innerHTML = DOMPurify.sanitize(formatMd(fullText));
-                        } else {
-                          assistantMsg.textContent = fullText;
-                        }
-                      }
-                      var c = document.getElementById(id + '-msgs');
-                      if (c) c.scrollTop = c.scrollHeight;
-                    }
-                  } catch (e) { }
-                }
+                consumeFallback(decoder.decode(result.value, { stream: true }), false);
                 return pump2();
               });
             }
@@ -30355,11 +30615,24 @@
         var log = document.getElementById(id + '-log');
         if (log) log.textContent += '[Build] Starting ' + type + ' build...\n';
         setWindowStatus(id, 'busy', 'Building...');
-        // Simulate build (in real usage, this would call the backend)
-        setTimeout(function () {
-          if (log) log.textContent += '[Build] ' + type + ' build complete.\n';
-          setWindowStatus(id, 'idle', 'Build OK');
-        }, 1500);
+        var commands = { cmake: '!engine compile cmake', masm: '!engine compile masm',
+          msvc: '!engine compile msvc', clang: '!engine compile clang', clean: '!engine compile clean' };
+        var command = commands[type] || ('!engine compile ' + type);
+        var base = (typeof getActiveUrl === 'function') ? getActiveUrl() : 'http://127.0.0.1:11435';
+        fetch(base + '/api/cli', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: command }), signal: AbortSignal.timeout(120000)
+        }).then(async function (res) {
+          var data = {}; try { data = await res.json(); } catch (_) { data = {}; }
+          if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
+          if (typeof data.output === 'string' && /\(stub\)|not implemented|unavailable/i.test(data.output))
+            throw new Error('native compiler route returned an unimplemented or unavailable result');
+          if (log) log.textContent += '[NativeCompiler] ' + (data.output || '(no output)') + '\n';
+          setWindowStatus(id, 'idle', 'Native build complete');
+        }).catch(function (err) {
+          if (log) log.textContent += '[NativeCompiler] FAILED: ' + err.message + '\n';
+          setWindowStatus(id, 'error', 'Native build failed');
+        });
       }
 
       function reAction(id, type) {
@@ -30516,7 +30789,37 @@
   <!-- Action Item #20: Chat Command Router — exposes /p, /preset, /cot, /fix, /agent etc. -->
   <script src="ide_chat_commands.js"
     onerror="console.warn('[RawrXD] ide_chat_commands.js not found — /commands disabled')"></script>
-  <script src="/gui/rawrxd-nav.js"></script>
+  <!-- Relative path works both from file:// and from the native /gui/ route. -->
+  <script src="rawrxd-nav.js"></script>
+  <!-- Browser-first launch: open the existing embedded browser directly. -->
+  <script>
+    (function () {
+      function launchBrowserFirst() {
+        try {
+          var params = new URLSearchParams(window.location.search || '');
+          var mode = (params.get('mode') || '').toLowerCase();
+          if (params.get('browser') !== '1' && mode !== 'browser') return;
+          var target = params.get('url') || '';
+          if (target) {
+            try { target = decodeURIComponent(target); } catch (_) { /* already decoded */ }
+            if (!/^https?:\/\//i.test(target)) target = '';
+          }
+          showBrowserPanel(target || null);
+          if (typeof logDebug === 'function') {
+            logDebug('\uD83C\uDF10 Browser-first launch active — embedded browser ready.', 'info');
+          }
+        } catch (err) {
+          console.warn('[RawrXD] browser-first launch failed', err);
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', launchBrowserFirst, { once: true });
+      } else {
+        launchBrowserFirst();
+      }
+      window.RawrXDBrowserFirst = launchBrowserFirst;
+    })();
+  </script>
   <!-- RAWRXD_NATIVE_E2E_INJECTED -->
   <script>
 /* screenpilot_native_e2e.js */

@@ -609,6 +609,7 @@ private:
     uint64_t gemv_attempts_ = 0;
     uint64_t gemv_success_ = 0;
     uint64_t gemv_weight_uploads_ = 0;
+    uint64_t gemv_weight_upload_bytes_ = 0;
     uint64_t gemv_weight_hits_ = 0;
     uint64_t gemv_pin_evicts_ = 0;
     uint64_t gemv_resident_bytes_ = 0;
@@ -786,6 +787,7 @@ public:
     uint64_t GemvAttempts() const { return gemv_attempts_; }
     uint64_t GemvSuccess() const { return gemv_success_; }
     uint64_t GemvWeightUploads() const { return gemv_weight_uploads_; }
+    uint64_t GemvWeightUploadBytes() const { return gemv_weight_upload_bytes_; }
     uint64_t GemvWeightHits() const { return gemv_weight_hits_; }
     uint64_t GemvResidentBytes() const {
         return ww_active_ ? ww_peak_bytes_ : gemv_resident_bytes_;

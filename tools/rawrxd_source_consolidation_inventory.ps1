@@ -2,14 +2,18 @@
 param(
     [Parameter(Mandatory=$true)][string]$ProductRoot,
     [Parameter(Mandatory=$true)][string]$DevelopmentRoot,
-    [Parameter(Mandatory=$true)][string]$OutputDirectory
+    [Parameter(Mandatory=$true)][string]$OutputDirectory,
+    [string[]]$RelativeRoots = @()
 )
 $ErrorActionPreference = 'Stop'
 
 function Get-Inventory([string]$root) {
     $excluded = '\\.git(\\|$)|\\build[^\\]*(\\|$)|\\out(\\|$)|\\bin(\\|$)|\\obj(\\|$)|\\node_modules(\\|$)|\\__pycache__(\\|$)'
     $rootFull = [IO.Path]::GetFullPath($root).TrimEnd('\\')
-    Get-ChildItem -LiteralPath $rootFull -Recurse -File -Force |
+    $scanRoots = if ($RelativeRoots.Count) {
+        @($RelativeRoots | ForEach-Object { Join-Path $rootFull $_ } | Where-Object { Test-Path -LiteralPath $_ })
+    } else { @($rootFull) }
+    Get-ChildItem -LiteralPath $scanRoots -Recurse -File -Force |
         Where-Object { $_.FullName -notmatch $excluded -and $_.Extension -in @('.cpp','.c','.h','.hpp','.hh','.inl','.asm','.comp','.cmake','.ps1','.bat','.md','.txt','.json','.yml','.yaml') } |
         ForEach-Object {
             $relative = $_.FullName.Substring($rootFull.Length).TrimStart([char[]]"\\/") -replace '\\','/'

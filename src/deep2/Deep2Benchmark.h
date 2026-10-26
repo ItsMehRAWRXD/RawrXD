@@ -19,7 +19,8 @@ enum class BenchmarkPhase : uint8_t {
     ENDURANCE = 3,      // TPS decay vs context growth
     SATURATION = 4,     // Multi-stream aggregate throughput
     THERMAL = 5,        // Sustained performance under load
-    LATENCY = 6         // First token and per-token latency
+    LATENCY = 6,        // First token and per-token latency
+    WARM_START = 7      // Warm-residency steady-state inference
 };
 
 // Fail reason codes for certification (hard guards)
@@ -136,6 +137,18 @@ struct StreamBenchmark {
     uint32_t    full_window_count;          // complete 512-token windows only
     uint32_t    tail_window_tokens;         // incomplete final window (excluded from min)
     uint32_t    fail_reason_code;
+
+    // Warm-start telemetry (SP-08)
+    bool        warm_resident_mode = false;  // true when warm-start mode active
+    uint32_t    resident_reuse = 0;          // RESIDENT_REUSE=1 when weights reused
+    uint64_t    weight_cache_hits = 0;       // GPU weight cache hits
+    uint64_t    weight_cache_misses = 0;     // GPU weight cache misses
+    uint64_t    uploaded_bytes_per_request = 0; // Bytes uploaded per generation request
+    uint64_t    queue_submissions = 0;       // GPU queue submissions per request
+    double      decode_tps_warm = 0.0;       // Decode TPS in warm mode
+    double      e2e_tps_warm = 0.0;          // End-to-end TPS in warm mode
+    uint32_t    warmup_generations = 0;      // Number of warmup generations completed
+    uint32_t    measured_generations = 0;    // Number of measured generations completed
     
     StreamBenchmark() {
         memset(this, 0, sizeof(*this));
@@ -274,6 +287,15 @@ public:
     StreamBenchmark runSingleStreamTest(
         const std::string& prompt,
         uint64_t maxTokens,
+        uint32_t ctxSize
+    );
+    
+    // Warm-start residency benchmark (SP-08)
+    StreamBenchmark runWarmStartTest(
+        const std::string& prompt,
+        uint32_t warmupTokens,
+        uint32_t measureTokens,
+        uint32_t numRuns,
         uint32_t ctxSize
     );
     

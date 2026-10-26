@@ -1,0 +1,37 @@
+{
+  "id": "RAWRXD_CANONICAL_IDE_BUILD_002",
+  "recorded": "2026-10-26",
+  "SOURCE_COMMIT": "d719787b14be54c7606e477fcd5edbe90506ebc0",
+  "SOURCE_TREE": "G:\\~dev\\rawrxd-cmake-clean",
+  "SOURCE_DIRTY": true,
+  "uncommitted_cmake": "CMakeLists.txt only. Removed InferenceEngine target_link_libraries of source-tree src/deep2/ResidencyTrace.obj and src/deep2/QuantKB.obj. Added src/deep2/ResidencyTrace.asm to INFERENCE_ASM_SOURCES. QuantKB.asm was already in that list. Existing enable_language(ASM_MASM) under if(MSVC) was left in place. Not committed.",
+  "BUILD_DIR": "G:\\~dev\\rawrxd-cmake-clean\\build-canonical-reference",
+  "GENERATOR": "Ninja",
+  "FLAGS": "RAWRXD_BUILD_WIN32IDE=ON RAWRXD_BUILD_SUNSHINE_VOXEL=OFF",
+  "TARGET": "RawrXD-Win32IDE",
+  "TOOLCHAIN": "MSVC 19.44.35228 cl.exe and ml64.exe. Ladder A reference only.",
+  "CMAKE_CONFIGURE": "PASS",
+  "ASM_DEPENDENCY_GRAPH": "PASS",
+  "ninja_edges": [
+    "CMakeFiles/InferenceEngine.dir/src/deep2/QuantKB.asm.obj: ASM_MASM_COMPILER__InferenceEngine_unscanned_Release",
+    "CMakeFiles/InferenceEngine.dir/src/deep2/ResidencyTrace.asm.obj: ASM_MASM_COMPILER__InferenceEngine_unscanned_Release"
+  ],
+  "source_tree_obj_link_inputs": "absent from build.ninja",
+  "RESIDENCYTRACE_ASM": "PASS",
+  "QUANTKB_ASM": "PASS",
+  "assembled_objects": {
+    "QuantKB.asm.obj": 5103,
+    "ResidencyTrace.asm.obj": 529932
+  },
+  "IDE_CPP_COMPILE": "FAIL",
+  "first_compiler_failure": "src/deep2/ChatTemplate.cpp(33): error C2065: 'TINYLLAMA': undeclared identifier (C2838 illegal qualified name). Translation unit CMakeFiles/InferenceEngine.dir/src/deep2/ChatTemplate.cpp.obj. This failure is after the assembly rules ran.",
+  "concurrent_compiler_failure": "src/deep2/Deep2Engine.cpp(11130): error C2039: 'vulkanSlotQueueSubmits': is not a member of 'Deep2::Deep2Engine'. Recorded separately. It does not reopen the assembly-graph gate.",
+  "IDE_LINK": "NOT_RUN",
+  "IDE_RUNTIME": "NOT_RUN",
+  "IDE_SHA256": null,
+  "exe": "ABSENT",
+  "NATIVE_ASSEMBLER": "NOT_CERTIFIED",
+  "NATIVE_LINKER": "NOT_CERTIFIED",
+  "PROMOTE": 0,
+  "prior_receipt": "RAWRXD_CANONICAL_IDE_BUILD_001 left unchanged"
+}

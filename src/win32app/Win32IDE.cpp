@@ -807,7 +807,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       // Model Chat
       m_chatMode(false),
       // PowerShell Panel
-      m_hwndPowerShellPanel(nullptr), m_hwndPowerShellOutput(nullptr), m_hwndPowerShellInput(nullptr),
+      m_hwndPowerShellPanel(nullptr), m_hwndPowerShellSplitter(nullptr), m_hwndPowerShellOutput(nullptr), m_hwndPowerShellInput(nullptr),
       m_hwndPowerShellToolbar(nullptr), m_hwndPowerShellStatusBar(nullptr), m_hwndPSBtnExecute(nullptr),
       m_hwndPSBtnClear(nullptr), m_hwndPSBtnStop(nullptr), m_hwndPSBtnHistory(nullptr), m_hwndPSBtnRestart(nullptr),
       m_hwndPSBtnLoadRawrXD(nullptr), m_hwndPSBtnToggle(nullptr), m_powerShellPanelVisible(true),

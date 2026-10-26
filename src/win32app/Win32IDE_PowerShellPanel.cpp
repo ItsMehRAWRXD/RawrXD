@@ -58,6 +58,7 @@ bool parsePowerShellMetaLine(const std::string& line, std::string& version,
 #define IDC_PS_BTN_RESTART 5014
 #define IDC_PS_BTN_LOAD_RAWRXD 5015
 #define IDC_PS_BTN_TOGGLE 5016
+#define IDC_PS_SPLITTER 5017
 
 // ============================================================================
 // POWERSHELL PANEL CREATION
@@ -89,6 +90,21 @@ void Win32IDE::createPowerShellPanel() {
     
     if (!m_hwndPowerShellPanel) {
         return;
+    }
+
+    // A dedicated child splitter keeps the terminal top edge adjustable and
+    // avoids relying on hidden/global splitter state from older layouts.
+    m_hwndPowerShellSplitter = CreateWindowExW(
+        0, L"STATIC", L"", WS_CHILD | WS_VISIBLE | SS_NOTIFY,
+        0, 0, 0, 0, m_hwndPowerShellPanel, (HMENU)IDC_PS_SPLITTER,
+        m_hInstance, nullptr);
+    if (m_hwndPowerShellSplitter) {
+        SetPropA(m_hwndPowerShellSplitter, "IDE_PTR", this);
+        WNDPROC oldSplitter = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
+            m_hwndPowerShellSplitter, GWLP_WNDPROC,
+            reinterpret_cast<LONG_PTR>(PowerShellSplitterProc)));
+        SetPropA(m_hwndPowerShellSplitter, "OLDPROC",
+                 reinterpret_cast<HANDLE>(oldSplitter));
     }
     
     // Store IDE pointer for callbacks
@@ -436,13 +452,14 @@ void Win32IDE::updatePowerShellPanelLayout(int width, int height) {
     const int innerW = (std::max)(0, width - 2 * xPad);
     const int innerH = (std::max)(0, height - 2 * yPad);
     const int verticalGap = (std::min)(nominalGap, innerH / 4);
+    const int splitterH = (std::min)(dpiScale(6), innerH);
     const int toolbarH = (std::min)(dpiScale(25), innerH);
     const int statusH = (std::min)(dpiScale(20), innerH);
     const int executeW = (std::min)(dpiScale(90), innerW);
     const int horizontalGap =
         (std::min)(nominalGap, (std::max)(0, innerW - executeW));
     const int outputY =
-        (std::min)(height - yPad, yPad + toolbarH + verticalGap);
+        (std::min)(height - yPad, yPad + splitterH + toolbarH + verticalGap);
     const int statusY = (std::max)(yPad, height - yPad - statusH);
     const int inputH = (std::min)(dpiScale(25),
                                   (std::max)(0, statusY - verticalGap - outputY));
@@ -486,9 +503,12 @@ void Win32IDE::updatePowerShellPanelLayout(int width, int height) {
             hwnd, x, y, (std::max)(0, w), (std::max)(0, h)};
     };
 
+    if (m_hwndPowerShellSplitter)
+        addPlacement(m_hwndPowerShellSplitter, 0, 0, width, splitterH);
+
     int toolbarX = xPad;
     for (HWND button : toolbarButtons) {
-        addPlacement(button, toolbarX, yPad, toolbarButtonW, toolbarH);
+        addPlacement(button, toolbarX, yPad + splitterH, toolbarButtonW, toolbarH);
         toolbarX += toolbarButtonW + toolbarGap;
     }
 
@@ -911,6 +931,45 @@ LRESULT CALLBACK Win32IDE::PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wPar
                 return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
             }
             break;
+    }
+    return oldProc ? CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam)
+                   : DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK Win32IDE::PowerShellSplitterProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    auto* ide = reinterpret_cast<Win32IDE*>(GetPropA(hwnd, "IDE_PTR"));
+    auto oldProc = reinterpret_cast<WNDPROC>(GetPropA(hwnd, "OLDPROC"));
+    static bool dragging = false;
+    static int startY = 0;
+    static int startHeight = 0;
+    switch (uMsg) {
+    case WM_SETCURSOR:
+        SetCursor(LoadCursorW(nullptr, IDC_SIZENS));
+        return TRUE;
+    case WM_LBUTTONDOWN:
+        if (ide) {
+            dragging = true; SetCapture(hwnd); startY = GET_Y_LPARAM(lParam);
+            startHeight = ide->m_powerShellPanelHeight;
+        }
+        return 0;
+    case WM_MOUSEMOVE:
+        if (dragging && ide) {
+            POINT p{0, GET_Y_LPARAM(lParam)};
+            ClientToScreen(hwnd, &p); ScreenToClient(ide->m_hwndMain, &p);
+            RECT panel{}; GetWindowRect(ide->m_hwndPowerShellPanel, &panel);
+            POINT top{panel.left, panel.top}; ScreenToClient(ide->m_hwndMain, &top);
+            int delta = top.y - p.y;
+            ide->m_powerShellPanelHeight = (std::max)(ide->dpiScale(120), startHeight + delta);
+            RECT client{}; GetClientRect(ide->m_hwndMain, &client);
+            ide->onSize(client.right - client.left, client.bottom - client.top); return 0;
+        }
+        break;
+    case WM_LBUTTONUP:
+        if (dragging) { dragging = false; ReleaseCapture(); return 0; }
+        break;
+    case WM_NCDESTROY:
+        RemovePropA(hwnd, "IDE_PTR"); RemovePropA(hwnd, "OLDPROC");
+        break;
     }
     return oldProc ? CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam)
                    : DefWindowProcW(hwnd, uMsg, wParam, lParam);

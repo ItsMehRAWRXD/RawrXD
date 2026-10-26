@@ -602,6 +602,8 @@ public:
     uint64_t vulkanSlotGemvSuccess(unsigned slot) const;
     uint64_t vulkanSlotWeightUploads(unsigned slot) const;
     uint64_t vulkanSlotWeightHits(unsigned slot) const;
+    uint64_t vulkanSlotQueueSubmits(unsigned slot) const;
+    uint64_t vulkanSlotUploadBytes(unsigned slot) const;
     // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
     bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
 

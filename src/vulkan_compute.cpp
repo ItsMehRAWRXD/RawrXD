@@ -587,6 +587,7 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
             gemv_weight_cache_[cacheKey] = rw;
             gemv_resident_bytes_ += weightBytes;
             ++gemv_weight_uploads_;
+            gemv_weight_upload_bytes_ += weightBytes;
             weightBuf = rw.buffer;
         }
     }

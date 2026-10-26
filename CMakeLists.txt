@@ -5340,9 +5340,8 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
-# Link precompiled MASM objects (tracer + quantKB)
-target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.obj")
-target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
+# MSVC reference ladder assembles the tracked .asm sources below.
+# Source-tree .obj files are not link inputs.
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -5468,6 +5467,7 @@ endif()
             src/deep2/sovereign_q8_0_gemv.asm
             src/deep2/sovereign_fp16_gemv.asm
             src/deep2/QuantKB.asm
+            src/deep2/ResidencyTrace.asm
             src/asm/Deep2Device_Score.asm
             src/asm/Deep2Device_Pick.asm
             src/asm/Deep2R1_StrEq.asm
@@ -17111,10 +17111,14 @@ endif()
 #   cmake --build build/voxel --config Release
 #
 # Off by default. The IDE target does not link this renderer, and its
-# sources are not part of the tracked tree. Turn the option on only in a
-# tree that contains src/voxel. A missing directory then fails configure.
-option(RAWRXD_BUILD_SUNSHINE_VOXEL "Build the native voxel renderer" OFF)
+# sources are not part of the tracked tree.
+option(RAWRXD_BUILD_SUNSHINE_VOXEL "Build the optional Sunshine voxel renderer" OFF)
 if(RAWRXD_BUILD_SUNSHINE_VOXEL)
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/voxel/CMakeLists.txt")
+        message(FATAL_ERROR
+            "Sunshine voxel renderer was explicitly enabled, "
+            "but src/voxel/CMakeLists.txt is missing.")
+    endif()
     add_subdirectory(src/voxel)
 endif()
 
