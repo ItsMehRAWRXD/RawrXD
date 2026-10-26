@@ -36,8 +36,34 @@ struct Admission {
     bool calibrationComplete = false;
     bool selectionComplete = false;
     bool rewriterCertified = false;
+    bool reducedReloadPass = false;
+    bool qualityFloorPass = false;
     bool transformationEnabled = false;
     std::string reason = "REAP_RUNTIME_UNAVAILABLE";
+};
+
+// Evidence supplied by a model-specific calibration/rewrite campaign.  The
+// evaluator consumes typed facts only; it never treats a path, environment
+// variable, or command-line switch as proof of a certification gate.
+struct AdmissionEvidence {
+    std::string schema;
+    std::string model;
+    std::string modelHash;
+    std::string tokenizerHash;
+    std::string calibrationHash;
+    std::string selectionMaskHash;
+    uint64_t generatedWindows = 0;
+    uint64_t requiredWindows = 256;
+    uint64_t observedLayers = 0;
+    uint64_t requiredLayers = 0;
+    bool mlaCert001 = false;
+    bool calibrationComplete = false;
+    bool routeMetricsComplete = false;
+    bool referenceParity = false;
+    bool selectionComplete = false;
+    bool rewriterCertified = false;
+    bool reducedReloadPass = false;
+    bool qualityFloorPass = false;
 };
 
 bool ParseSizeBytes(const std::string& text, uint64_t& bytes);
@@ -50,6 +76,8 @@ CliValidation Validate(const CliRequest& request);
 // independent evidence gates are supplied by the real runtime.  No environment
 // variable or command-line flag can manufacture those gates.
 Admission EvaluateAdmission(const CliRequest& request);
+Admission EvaluateAdmission(const CliRequest& request,
+                            const AdmissionEvidence& evidence);
 
 // Stable machine-readable receipt for logs and automation.  Values are escaped
 // without depending on the CLI's larger JSON/runtime dependency graph.

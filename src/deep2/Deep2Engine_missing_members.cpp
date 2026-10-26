@@ -62,6 +62,14 @@ bool Deep2Engine::gpuResidentDecodeEnabled() const {
     return gpuFwdCommitted_;
 }
 
+// Keep the public witness tied to the same predicate used by the emitted
+// telemetry.  This must not report GPU residency merely because Vulkan was
+// initialized or a device was discovered.
+bool Deep2Engine::isRealGpuForward() const {
+    return Deep2GpuForward_IsReal(
+        gpuFwd_, gpuFwd_.hostForwardLayerCalls + gpuFwd_.cpuF32Expands);
+}
+
 // ----------------------------------------------------------------------------
 // forwardTokenAllLayers — run one token through every model layer.
 // This is the same control law Deep2Engine.cpp applies inline in its

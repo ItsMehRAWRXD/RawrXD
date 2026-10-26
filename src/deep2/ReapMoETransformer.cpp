@@ -246,6 +246,61 @@ bool isProjection(const std::string& name, const char* part) {
     return name.find(".ffn_" + std::string(part) + "_exps.weight") != std::string::npos;
 }
 
+// GGUF dimension layout for packed MoE tensors:
+//   GGUF/ggml stores dimensions slowest-varying last. For Kimi K2 packed expert
+//   projections the expert dimension is dims.back() (384), and experts are laid
+//   out contiguously: expert k occupies [k*stride, (k+1)*stride) where
+//   stride = total_bytes / dims.back().
+//
+//   This is verified against the real model: all ffn_gate_exps/ffn_up_exps
+//   tensors have dims [7168, 2048, 384] (Q4_K), all ffn_down_exps have dims
+//   [2048, 7168, 384] (Q4_K/Q6_K), routers have dims [7168, 384] (F32), and
+//   biases have dims [384] (F32). In every case dims.back() == 384 equals the
+//   packed expert count and the per-expert byte range is contiguous.
+//
+//   The writer relies on this layout. If a future model stores the expert
+//   dimension elsewhere, validateExpertTensorGeometry() below will reject it
+//   rather than silently producing corrupted output.
+bool validateExpertTensorGeometry(const TensorDesc& tensor, uint32_t layer,
+                                   const Selection& selection, std::string& error) {
+    if (tensor.dims.empty()) {
+        error = "expert tensor has no dimensions: " + tensor.name;
+        return false;
+    }
+    const uint64_t expertDim = tensor.dims.back();
+    if (expertDim == 0) {
+        error = "expert tensor has zero expert dimension: " + tensor.name;
+        return false;
+    }
+    if (tensor.bytes % expertDim != 0) {
+        error = "expert tensor bytes not divisible by expert dimension: " + tensor.name +
+                " bytes=" + std::to_string(tensor.bytes) +
+                " expert_dim=" + std::to_string(expertDim);
+        return false;
+    }
+    const auto it = selection.find(layer);
+    if (it == selection.end() || it->second.empty()) {
+        error = "selection missing layer " + std::to_string(layer) + " for " + tensor.name;
+        return false;
+    }
+    const uint64_t stride = tensor.bytes / expertDim;
+    for (uint32_t expert : it->second) {
+        if (expert >= expertDim) {
+            error = "selected expert " + std::to_string(expert) +
+                    " exceeds expert dimension " + std::to_string(expertDim) +
+                    " at layer " + std::to_string(layer) + " for " + tensor.name;
+            return false;
+        }
+        // Overflow guard: stride * expert must not wrap.
+        if (expert > 0 && stride > std::numeric_limits<uint64_t>::max() / expert) {
+            error = "expert slice offset overflow at layer " + std::to_string(layer) +
+                    " expert " + std::to_string(expert) + " for " + tensor.name;
+            return false;
+        }
+    }
+    return true;
+}
+
 bool layerFromName(const std::string& name, uint32_t& layer) {
     if (name.rfind("blk.", 0) != 0) return false;
     const size_t begin = 4, end = name.find('.', begin);
@@ -419,21 +474,12 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
                 return result;
             }
             if (projection || router) {
-                if (!layerFromName(tensor.name, layer) || tensor.dims.empty() || tensor.dims.back() == 0 || tensor.bytes % tensor.dims.back() != 0) {
-                    result.error = "invalid expert tensor geometry: " + tensor.name;
-                    return result;
-                }
+                if (!layerFromName(tensor.name, layer) ||
+                    !validateExpertTensorGeometry(tensor, layer, selection, result.error)) return result;
                 const auto it = selection.find(layer);
-                if (it == selection.end() || it->second.empty()) {
-                    result.error = "selection missing layer " + std::to_string(layer);
-                    return result;
-                }
-                for (uint32_t expert : it->second) if (expert >= tensor.dims.back()) {
-                    result.error = "selected expert exceeds tensor geometry at layer " + std::to_string(layer);
-                    return result;
-                }
-                out.dims.back() = it->second.size();
-                out.bytes = (tensor.bytes / tensor.dims.back()) * it->second.size();
+                out.dims.back() = static_cast<uint64_t>(it->second.size());
+                const uint64_t stride = tensor.bytes / tensor.dims.back();
+                out.bytes = stride * it->second.size();
                 ++result.transformedTensors;
                 result.selectedExpertSlices += it->second.size();
             }
@@ -495,8 +541,11 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             if ((projection || router) && (!layerFromName(tensor.name, layer) || selection.find(layer) == selection.end())) { result.error = "selection lookup failed"; return result; }
             if (projection || router) {
                 const uint64_t stride = original->bytes / original->dims.back();
-                for (uint32_t expert : selection[layer]) {
-                    if (!copyRange(in, out, dataStart + original->offset + stride * expert, stride)) { result.error = "expert slice copy failed"; return result; }
+                const auto it = selection.find(layer);
+                for (uint32_t expert : it->second) {
+                    // Overflow guard already checked in validateExpertTensorGeometry.
+                    const uint64_t srcOffset = dataStart + original->offset + stride * expert;
+                    if (!copyRange(in, out, srcOffset, stride)) { result.error = "expert slice copy failed"; return result; }
                 }
             } else if (!copyRange(in, out, dataStart + original->offset, original->bytes)) {
                 result.error = "tensor copy failed: " + tensor.name; return result;

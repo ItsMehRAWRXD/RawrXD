@@ -74,6 +74,7 @@ bool StreamingGGUFLoader::Close() {
     zones_.clear();
     active_zones_.clear();
     current_zone_ = "";
+    data_start_ = 0;
     return true;
 }
 
@@ -160,6 +161,7 @@ bool StreamingGGUFLoader::ParseMetadata() {
             // Parse important metadata
             if (key == GGUFConstants::META_GENERAL_ARCHITECTURE) {
                 if (value == "llama") metadata_.architecture_type = 1;
+                else if (value == "qwen3") metadata_.architecture_type = 2;
             } else if (key == GGUFConstants::META_LLAMA_BLOCK_COUNT) {
                 metadata_.layer_count = std::stoul(value);
             } else if (key == GGUFConstants::META_LLAMA_CONTEXT_LENGTH) {
@@ -176,6 +178,9 @@ bool StreamingGGUFLoader::ParseMetadata() {
             if (key == "llama.context_length" || key == "qwen3.context_length") metadata_.context_length = v;
             if (key == "llama.embedding_length" || key == "qwen3.embedding_length") metadata_.embedding_dim = v;
             if (key == "llama.vocab_size" || key == "qwen3.vocab_size") metadata_.vocab_size = v;
+            if (key == "llama.head_count" || key == "qwen3.head_count") metadata_.head_count = v;
+            if (key == "llama.head_count_kv" || key == "qwen3.head_count_kv") metadata_.head_count_kv = v;
+            if (key == "llama.feed_forward_length" || key == "qwen3.feed_forward_length") metadata_.feed_forward_length = v;
         } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {
             int32_t v; if (!ReadValue(v)) return false;
             metadata_.kv_pairs[key] = std::to_string(v);
@@ -228,6 +233,12 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
     if (!file_.is_open()) {
         return false;
     }
+
+    // Rebuilding the index is a supported lifecycle operation.  Clear the
+    // previous absolute offsets first so a retry cannot retain stale entries
+    // or rebase an already-rebased tensor table.
+    tensor_index_.clear();
+    data_start_ = 0;
     
     // Skip metadata to get to tensor info
     file_.seekg(header_.metadata_offset);
@@ -282,6 +293,38 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         
         tensor_index_[ref.name] = ref;
     }
+
+    // GGUF tensor offsets are relative to the aligned tensor-data section.
+    // Rebase them once, after the complete tensor-info table has been read,
+    // and keep all subsequent residency reads file-absolute.
+    uint64_t alignment = 32;
+    const auto align_it = metadata_.kv_pairs.find("general.alignment");
+    if (align_it != metadata_.kv_pairs.end()) {
+        try {
+            const uint64_t parsed = std::stoull(align_it->second);
+            if (parsed != 0 && (parsed & (parsed - 1)) == 0) alignment = parsed;
+        } catch (...) {
+            // Preserve the GGUF default alignment on malformed optional data.
+        }
+    }
+    const std::streampos info_end_pos = file_.tellg();
+    if (info_end_pos < 0) return false;
+    const uint64_t info_end = static_cast<uint64_t>(info_end_pos);
+    if (alignment > 1 && info_end > std::numeric_limits<uint64_t>::max() - (alignment - 1)) {
+        return false;
+    }
+    data_start_ = (info_end + alignment - 1) & ~(alignment - 1);
+    const uint64_t file_size = GetTotalFileSize();
+    if (data_start_ > file_size) return false;
+    for (auto& [name, ref] : tensor_index_) {
+        if (ref.offset > file_size - data_start_ ||
+            ref.size > file_size - data_start_ - ref.offset) {
+            std::cerr << "[GGUF] tensor exceeds file after data-section rebase: "
+                      << name << std::endl;
+            return false;
+        }
+        ref.offset += data_start_;
+    }
     
     return true;
 }
@@ -297,6 +340,8 @@ std::vector<TensorRef> StreamingGGUFLoader::GetTensorIndex() const {
 void StreamingGGUFLoader::AssignTensorsToZones() {
     // Zone assignment strategy (like a game engine):
     // Group tensors into zones (8 layers per zone)
+    
+    std::cerr << "[ZONE_ASSIGN_START] tensor_index_size=" << tensor_index_.size() << '\n';
     
     for (auto& [tensor_name, tensor_ref] : tensor_index_) {
         std::string zone;
@@ -316,6 +361,13 @@ void StreamingGGUFLoader::AssignTensorsToZones() {
             int layer = ExtractLayerNumber(tensor_name);
             int zone_num = layer / 8;  // 8 layers per zone
             zone = "layers_" + std::to_string(zone_num);
+            
+            // Diagnostic for attn_norm tensors
+            if (tensor_name.find("attn_norm") != std::string::npos) {
+                std::cerr << "[ZONE_ASSIGN] name=" << tensor_name 
+                          << " layer=" << layer 
+                          << " zone=" << zone << '\n';
+            }
         }
         else {
             zone = "misc";
@@ -329,6 +381,11 @@ void StreamingGGUFLoader::AssignTensorsToZones() {
         zones_[zone].total_bytes += tensor_ref.size;
         
         tensor_ref.zone_name = zone;
+        
+        // Diagnostic for blk.0.attn_norm.weight specifically
+        if (tensor_name == "blk.0.attn_norm.weight") {
+            std::cerr << "[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: '" << tensor_ref.zone_name << "'\n";
+        }
     }
     
     // Print zone info
@@ -357,10 +414,25 @@ int32_t StreamingGGUFLoader::ExtractLayerNumber(const std::string& tensor_name) 
 }
 
 std::string StreamingGGUFLoader::GetZoneForTensor(const std::string& tensor_name) const {
+    // Diagnostic: log lookup attempt
+    std::cerr << "[ZONE_LOOKUP] name=" << tensor_name 
+              << " len=" << tensor_name.size() 
+              << " index_size=" << tensor_index_.size() << '\n';
+    
     auto it = tensor_index_.find(tensor_name);
     if (it != tensor_index_.end()) {
+        std::cerr << "[ZONE_LOOKUP_OK] zone=" << it->second.zone_name << '\n';
         return it->second.zone_name;
     }
+    
+    // Dump candidate keys matching "attn_norm.weight"
+    for (const auto& [key, ref] : tensor_index_) {
+        if (key.find("attn_norm.weight") != std::string::npos) {
+            std::cerr << "[INDEX_CANDIDATE] name=" << key << " zone=" << ref.zone_name << '\n';
+        }
+    }
+    
+    std::cerr << "[ZONE_LOOKUP_FAIL] name=" << tensor_name << " index_size=" << tensor_index_.size() << '\n';
     return "";
 }
 
@@ -645,16 +717,53 @@ std::vector<TensorInfo> StreamingGGUFLoader::GetTensorInfo() const {
 
 const TensorInfo* StreamingGGUFLoader::GetTensorInfo(const std::string& name) const {
     auto it = tensor_index_.find(name);
-    if (it == tensor_index_.end()) return nullptr;
-    static thread_local TensorInfo cache;
-    cache = TensorInfo{};
-    cache.name = it->second.name;
-    cache.shape = it->second.shape;
-    cache.type = it->second.type;
-    cache.offset = it->second.offset;
-    cache.size = it->second.size;
-    cache.size_bytes = it->second.size;
-    return &cache;
+    if (it != tensor_index_.end()) {
+        static thread_local TensorInfo cache;
+        cache = TensorInfo{};
+        cache.name = it->second.name;
+        cache.shape = it->second.shape;
+        cache.type = it->second.type;
+        cache.offset = it->second.offset;
+        cache.size = it->second.size;
+        cache.size_bytes = it->second.size;
+        return &cache;
+    }
+    
+    // Diagnostic: log failed lookup details
+    std::cerr << "[TENSOR_LOOKUP_FAIL]"
+              << " name=" << name
+              << " len=" << name.size()
+              << " index_size=" << tensor_index_.size()
+              << " loader=" << static_cast<const void*>(this)
+              << '\n';
+    
+    // Dump candidate keys matching "attn_norm.weight"
+    for (const auto& [key, ref] : tensor_index_) {
+        if (key.find("attn_norm.weight") != std::string::npos) {
+            std::cerr << "[INDEX_CANDIDATE]"
+                      << " name=" << key
+                      << " len=" << key.size()
+                      << '\n';
+        }
+    }
+    
+    // Fallback: linear scan (handles any map lookup anomaly)
+    for (const auto& [key, ref] : tensor_index_) {
+        if (key == name) {
+            static thread_local TensorInfo cache;
+            cache = TensorInfo{};
+            cache.name = ref.name;
+            cache.shape = ref.shape;
+            cache.type = ref.type;
+            cache.offset = ref.offset;
+            cache.size = ref.size;
+            cache.size_bytes = ref.size;
+            return &cache;
+        }
+    }
+    
+    std::cerr << "[GGUF] GetTensorInfo not found: " << name << " (index size=" << tensor_index_.size() << ")\n";
+    return nullptr;
 }
 
 const std::vector<std::string>& StreamingGGUFLoader::GetVocabulary() const {

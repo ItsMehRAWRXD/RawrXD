@@ -88,7 +88,7 @@ public:
 
     // Access tensor data (loads zone if needed) - implements base class LoadTensorZone
     bool LoadTensorZone(const std::string& tensor_name, std::vector<uint8_t>& data) override;
-    bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data); // Non-virtual alias
+    bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data) override;
 
     // Get zone info (what's loaded, what's not)
     TensorZoneInfo GetZoneInfo(const std::string& zone_name) const;
@@ -124,6 +124,11 @@ private:
     // ---- Tensor Index (always in RAM, ~40 MB) ----
     // Maps tensor_name -> {offset, size, type, shape}
     std::map<std::string, TensorRef> tensor_index_;
+
+    // GGUF tensor offsets are relative to the aligned tensor-data section,
+    // not to the beginning of the file.  Keep the computed absolute base so
+    // all streaming reads use one unambiguous coordinate system.
+    uint64_t data_start_ = 0;
 
     // ---- Zone Information ----
     // Maps zone_name -> {tensors, total_bytes, is_loaded, data}

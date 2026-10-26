@@ -2897,10 +2897,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_prefill_parity.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_prefill_parity PRIVATE
@@ -5282,8 +5287,103 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_replay_cli.cpp" AND TARGET deep2_engine_
   set_target_properties(rawr-reap-replay PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 endif()
 
+# REAP structural floor auditor — standalone C++20, no third-party dependencies.
+# Reads a TSV tensor inventory (exported from existing GGUFLoader) and computes
+# structural size bounds. Fail-closed: never authorizes a rewrite.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_floor.cpp")
+    add_executable(reap-floor-audit src/reap/reap_floor.cpp)
+    target_compile_features(reap-floor-audit PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(reap-floor-audit PRIVATE /W4 /EHsc /std:c++20)
+    else()
+        target_compile_options(reap-floor-audit PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(reap-floor-audit PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+    enable_testing()
+    add_test(NAME reap-floor-audit-smoke COMMAND reap-floor-audit "${CMAKE_SOURCE_DIR}/tests/reap_floor_synthetic.tsv" 30 8)
+endif()
+
+# REAP independent reference extractor — standalone C++20, no GGUFLoader dependency.
+# Parses GGUF v3 shard manually and extracts packed expert slices using an
+# independently implemented stride calculation. Used to certify the production
+# writer byte-for-byte.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_ref_extract.cpp")
+    add_executable(reap-ref-extract src/reap/reap_ref_extract.cpp)
+    target_compile_features(reap-ref-extract PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(reap-ref-extract PRIVATE /W4 /EHsc /std:c++20)
+    else()
+        target_compile_options(reap-ref-extract PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(reap-ref-extract PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+
+# REAP tensor name enumerator — uses existing GGUFLoader to list tensor names
+# and geometry from a shard. Metadata-only: no tensor payloads read.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_tensor_enum.cpp")
+    add_executable(reap-tensor-enum src/reap/reap_tensor_enum.cpp)
+    target_link_libraries(reap-tensor-enum PRIVATE deep2_engine_lib)
+    target_include_directories(reap-tensor-enum PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_compile_features(reap-tensor-enum PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(reap-tensor-enum PRIVATE /W4 /EHsc /std:c++20)
+    else()
+        target_compile_options(reap-tensor-enum PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(reap-tensor-enum PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+
+# REAP writer/reference byte-parity certification test.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_cert_parity.cpp")
+    add_executable(reap-cert-parity src/reap/reap_cert_parity.cpp)
+    target_link_libraries(reap-cert-parity PRIVATE deep2_engine_lib)
+    target_include_directories(reap-cert-parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_compile_features(reap-cert-parity PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(reap-cert-parity PRIVATE /W4 /EHsc /std:c++20)
+    else()
+        target_compile_options(reap-cert-parity PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(reap-cert-parity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+
+# REAP tokenizer metadata inspector — uses existing GGUFLoader to read
+# tokenizer metadata keys from a GGUF shard.
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_tok_inspect.cpp")
+    add_executable(reap-tok-inspect src/reap/reap_tok_inspect.cpp)
+    target_link_libraries(reap-tok-inspect PRIVATE deep2_engine_lib)
+    target_include_directories(reap-tok-inspect PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_compile_features(reap-tok-inspect PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(reap-tok-inspect PRIVATE /W4 /EHsc /std:c++20)
+    else()
+        target_compile_options(reap-tok-inspect PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(reap-tok-inspect PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+
+# CPU engine E2E test — links against all required GGML components via deep2_engine_lib
+if(EXISTS "${CMAKE_SOURCE_DIR}/build_ide/cpu_engine_e2e.cpp")
+    add_executable(cpu_engine_e2e build_ide/cpu_engine_e2e.cpp)
+    target_link_libraries(cpu_engine_e2e PRIVATE deep2_engine_lib ggml-base ggml-cpu advapi32)
+    target_include_directories(cpu_engine_e2e PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include)
+    target_compile_features(cpu_engine_e2e PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(cpu_engine_e2e PRIVATE /W4 /EHsc /std:c++20)
+    else()
+        target_compile_options(cpu_engine_e2e PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(cpu_engine_e2e PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
+endif()
+
 # ============================================================================
 # Final Project Summary
+# ============================================================================
 # ============================================================================
 message(STATUS "========================================")
 message(STATUS "RawrXD Project Configuration Summary")

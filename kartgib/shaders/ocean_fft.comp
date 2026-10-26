@@ -1,0 +1,21 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(std430, set = 0, binding = 0) readonly buffer Src { vec2 src[]; };
+layout(std430, set = 0, binding = 1) writeonly buffer Dst { vec2 dst[]; };
+layout(push_constant) uniform Push { int n; int vertical; } pc;
+void main() {
+    int x = int(gl_GlobalInvocationID.x);
+    int y = int(gl_GlobalInvocationID.y);
+    if (x >= pc.n || y >= pc.n) return;
+    vec2 sum = vec2(0.0);
+    for (int t = 0; t < pc.n; ++t) {
+        vec2 v = pc.vertical == 0 ? src[y * pc.n + t] : src[t * pc.n + x];
+        int bin = pc.vertical == 0 ? x : y;
+        float ang = 6.28318530718 * float(bin * t) / float(pc.n);
+        float c = cos(ang);
+        float s = sin(ang);
+        sum.x += v.x * c - v.y * s;
+        sum.y += v.x * s + v.y * c;
+    }
+    dst[y * pc.n + x] = sum / float(pc.n);
+}

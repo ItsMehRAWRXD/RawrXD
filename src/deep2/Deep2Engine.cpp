@@ -7354,10 +7354,31 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
 {
     configureGeneration(options);
 
+    // The native K2 stream gate is architecture-specific.  A multi-shard
+    // model being indexable (or carrying q/kv-rank metadata) is not enough to
+    // admit it to the Kimi/DeepSeek MLA implementation.  In particular,
+    // MiniMax-M2 uses a different block contract; routing it through K2 causes
+    // an invalid layer-0 execution path and can corrupt the heap.  Fail closed
+    // before any forward buffers are touched.
+    std::string shardArchitecture = k2ShardConfig_.architecture;
+    std::transform(shardArchitecture.begin(), shardArchitecture.end(), shardArchitecture.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    const bool k2MlaArchitecture =
+        shardArchitecture.find("kimi") != std::string::npos ||
+        shardArchitecture.find("deepseek") != std::string::npos;
+    if (k2ShardIndexOpen_ && globalIndex_ && !k2MlaArchitecture) {
+        m_generationStop = GenerationStopReason::CONFIG_MISMATCH;
+        std::fprintf(stderr,
+                     "[Deep2Engine] GENERATION_REJECTED_UNSUPPORTED_MULTISHARD_ARCH architecture=%s\n",
+                     shardArchitecture.empty() ? "(unknown)" : shardArchitecture.c_str());
+        std::fflush(stderr);
+        return GenerationResult{};
+    }
+
     // Ownership seam: real K2 generate consumes MLA_Gemv via native stream
     // (same control law as forwardTokenAllLayers K2 branch). Do not fall into
     // TinyLlama GPU-forward / incomplete host MLA.
-    if (k2ShardIndexOpen_ && globalIndex_ && config.useMLA)
+    if (k2ShardIndexOpen_ && globalIndex_ && config.useMLA && k2MlaArchitecture)
     {
         const char* real = std::getenv("DEEP2_REAL_K2_GENERATE");
         const bool force = !real || !real[0] || real[0] == '1';
@@ -7385,14 +7406,37 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
             printf("LIVE_MLA_DISPATCH=MLA_Gemv\n");
             printf("LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial\n");
             fflush(stdout);
+            const std::vector<int> k2PromptTokens = tokenize(prompt);
             auto r = runK2NativeStreamPartial(kc);
             GenerationResult out;
-            out.promptTokens = 1;
-            out.generatedTokens = r.ok ? kc.streamTokens : 0;
-            out.completed = r.ok && !r.generatedText.empty();
+            out.promptTokens = static_cast<uint32_t>(k2PromptTokens.size());
+            out.generatedTokens = r.ok ? (r.generatedTokenIds.empty()
+                                               ? static_cast<uint32_t>(kc.streamTokens)
+                                               : static_cast<uint32_t>(r.generatedTokenIds.size()))
+                                       : 0;
+            out.completed = r.ok && !r.generatedTokenIds.empty() && !r.generatedText.empty();
             if (r.ok && callback)
             {
-                (void)callback(r.generatedTokenId, r.generatedText);
+                if (!r.generatedTokenIds.empty())
+                {
+                    for (const int32_t tokenId : r.generatedTokenIds)
+                    {
+                        const std::string piece = tokenizer
+                            ? tokenizer->Decode(tokenId)
+                            : detokenize(std::vector<int>{tokenId});
+                        if (!callback(tokenId, piece))
+                        {
+                            out.cancelled = true;
+                            out.completed = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // A terminal id is not a continuous token sequence.
+                    out.completed = false;
+                }
             }
             if (!r.ok)
             {

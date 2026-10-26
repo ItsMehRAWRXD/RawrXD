@@ -1,13 +1,17 @@
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/ReapMoETransformer.hpp"
 #include "reap_cli_contract.hpp"
+#include "deep2/deep2_sha256.hpp"
 #include <nlohmann/json.hpp>
 #include <algorithm>
+#include <array>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -25,11 +29,170 @@ static void usage() {
                  "rawr-reap plan <first-shard.gguf> --size <B|MB|GB|TB>\n"
                  "rawr-reap topology <first-shard.gguf> [--output <topology.json>]\n"
                  "rawr-reap capabilities <model-file-or-directory>\n"
+                 "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
                  "rawr-reap reap <first-shard.gguf> --target-size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
                  "[--selection-output <selection.json>] [--output-model <dir>] "
                  "[--authorize-rewrite] [--output <plan.json>]\n";
+}
+
+static std::string json_quote(const std::string& s);
+
+struct ShardVerification {
+    std::string path;
+    uint64_t bytes = 0;
+    std::string sha256;
+    bool ggufMagic = false;
+    bool readable = false;
+};
+
+static bool readU32LE(const std::string& path, uint32_t& value) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in) return false;
+    unsigned char b[4]{};
+    in.read(reinterpret_cast<char*>(b), sizeof(b));
+    if (in.gcount() != static_cast<std::streamsize>(sizeof(b))) return false;
+    value = static_cast<uint32_t>(b[0]) |
+            (static_cast<uint32_t>(b[1]) << 8) |
+            (static_cast<uint32_t>(b[2]) << 16) |
+            (static_cast<uint32_t>(b[3]) << 24);
+    return true;
+}
+
+static bool enumerateShards(const std::string& firstPath,
+                            std::vector<fs::path>& shards,
+                            std::string& error) {
+    const fs::path first(firstPath);
+    std::error_code ec;
+    if (!fs::is_regular_file(first, ec)) {
+        error = "FIRST_SHARD_NOT_REGULAR";
+        return false;
+    }
+    const std::string filename = first.filename().string();
+    const size_t marker = filename.find("-00001-of-");
+    if (marker == std::string::npos) {
+        shards.push_back(first);
+        return true;
+    }
+    const std::string prefix = filename.substr(0, marker);
+    const size_t numberStart = marker + 1;
+    const size_t numberEnd = filename.find("-of-", numberStart);
+    if (numberEnd == std::string::npos) {
+        error = "INVALID_SHARD_NAME";
+        return false;
+    }
+    const size_t suffixStart = numberEnd + 4;
+    const size_t extStart = filename.rfind(".gguf");
+    if (extStart == std::string::npos || extStart <= suffixStart) {
+        error = "INVALID_SHARD_NAME";
+        return false;
+    }
+    uint64_t shardCount = 0;
+    try {
+        shardCount = std::stoull(filename.substr(suffixStart, extStart - suffixStart));
+    } catch (...) {
+        error = "INVALID_SHARD_COUNT";
+        return false;
+    }
+    if (shardCount == 0 || shardCount > 4096) {
+        error = "INVALID_SHARD_COUNT";
+        return false;
+    }
+    shards.reserve(static_cast<size_t>(shardCount));
+    for (uint64_t i = 1; i <= shardCount; ++i) {
+        std::ostringstream name;
+        name << prefix << '-' << std::setw(5) << std::setfill('0') << i
+             << "-of-" << std::setw(5) << std::setfill('0') << shardCount << ".gguf";
+        fs::path candidate = first.parent_path() / name.str();
+        if (!fs::is_regular_file(candidate, ec)) {
+            error = "MISSING_SHARD:" + candidate.string();
+            return false;
+        }
+        shards.push_back(std::move(candidate));
+    }
+    return true;
+}
+
+static int verifyModelShards(const std::string& firstPath,
+                             const std::string& receiptPath,
+                             bool structuralOnly) {
+    Deep2::GGUFLoader loader;
+    if (!loader.load(firstPath)) {
+        std::cerr << "GGUF_LOAD_FAILED: " << loader.error() << "\n";
+        return 1;
+    }
+    std::vector<fs::path> shards;
+    std::string error;
+    if (!enumerateShards(firstPath, shards, error)) {
+        std::cerr << "SHARD_ENUMERATION_FAILED: " << error << "\n";
+        return 4;
+    }
+    std::vector<ShardVerification> records;
+    records.reserve(shards.size());
+    uint64_t totalBytes = 0;
+    bool allValid = true;
+    for (const auto& shard : shards) {
+        ShardVerification record;
+        record.path = shard.string();
+        std::error_code ec;
+        record.bytes = fs::file_size(shard, ec);
+        uint32_t magic = 0;
+        record.readable = !ec && record.bytes >= 8 && readU32LE(record.path, magic);
+        record.ggufMagic = record.readable && magic == 0x46554747u; // "GGUF"
+        if (!structuralOnly) {
+            std::array<uint8_t, 32> digest{};
+            if (record.readable && deep2::sha256_file(record.path, digest, nullptr)) {
+                record.sha256 = deep2::hex32(digest);
+            } else {
+                record.readable = false;
+            }
+        }
+        allValid = allValid && record.readable && record.ggufMagic &&
+                   (structuralOnly || !record.sha256.empty());
+        totalBytes += record.bytes;
+        records.push_back(std::move(record));
+    }
+    const bool loaderCountMatches = loader.shardCount() == records.size();
+    allValid = allValid && loaderCountMatches && !records.empty();
+
+    std::ostringstream out;
+    out << "{\"schema\":\"reap.model_shard_verification_001\","
+        << "\"model_first_shard\":" << json_quote(firstPath) << ','
+        << "\"shards\":" << records.size() << ','
+        << "\"loader_shards\":" << loader.shardCount() << ','
+        << "\"loader_tensors\":" << loader.tensorCount() << ','
+        << "\"total_bytes\":" << totalBytes << ','
+        << "\"hash_scope\":\"" << (structuralOnly ? "none_structural_only" : "all_shards_sha256") << "\","
+        << "\"all_shards_present\":" << (allValid ? "true" : "false") << ','
+        << "\"originals_unchanged\":true,\"records\":[";
+    for (size_t i = 0; i < records.size(); ++i) {
+        if (i) out << ',';
+        const auto& r = records[i];
+        out << "{\"index\":" << (i + 1)
+            << ",\"path\":" << json_quote(r.path)
+            << ",\"bytes\":" << r.bytes
+            << ",\"gguf_magic\":" << (r.ggufMagic ? "true" : "false")
+            << ",\"readable\":" << (r.readable ? "true" : "false")
+            << ",\"sha256\":" << json_quote(r.sha256) << '}';
+    }
+    out << "]}\n";
+    const std::string result = out.str();
+    std::cout << result;
+    if (!receiptPath.empty()) {
+        const fs::path target(receiptPath);
+        const fs::path temp = target.string() + ".tmp";
+        std::ofstream file(temp, std::ios::binary | std::ios::trunc);
+        if (!file || !(file << result) || !file.good()) return 5;
+        file.close();
+        std::error_code ec;
+        fs::rename(temp, target, ec);
+        if (ec) {
+            fs::remove(temp, ec);
+            return 5;
+        }
+    }
+    return allValid ? 0 : 4;
 }
 
 static std::string json_quote(const std::string& s) {
@@ -61,12 +224,26 @@ static int capabilities(const std::string& input) {
     }
     const bool tokenizer = !l.getMetaString("tokenizer.ggml.model", "").empty() ||
                            !l.getMetaString("tokenizer.ggml.pre", "").empty();
+    std::string architecture = l.getMetaString("general.architecture", "");
+    std::transform(architecture.begin(), architecture.end(), architecture.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    // The replay backend currently has a certified native stream path only
+    // for the Kimi/DeepSeek MLA families.  Inventory remains valid for every
+    // GGUF, but a tokenizer alone is not enough to advertise calibratability.
+    const bool replayArchitecture = architecture.find("kimi") != std::string::npos ||
+                                    architecture.find("deepseek") != std::string::npos;
+    const bool calibratable = tokenizer && replayArchitecture;
+    std::string reason;
+    if (!tokenizer) reason = "tokenizer_metadata_missing";
+    else if (!replayArchitecture) reason = "architecture_runtime_not_supported:" + architecture;
+    else reason = "transform_writer_and_parity_gate_required";
     std::cout << "{\"source\":" << json_quote(input) << ",\"format\":\"gguf\",\"inspectable\":true"
-              << ",\"calibratable\":" << (tokenizer ? "true" : "false")
+              << ",\"architecture\":" << json_quote(architecture)
+              << ",\"calibratable\":" << (calibratable ? "true" : "false")
               << ",\"transformable\":false,\"shards\":" << l.shardCount()
               << ",\"tensors\":" << l.tensorCount()
-              << ",\"reason\":\"transform_writer_and_parity_gate_required\"}\n";
-    return tokenizer ? 0 : 4;
+              << ",\"reason\":" << json_quote(reason) << "}\n";
+    return calibratable ? 0 : 4;
 }
 
 static bool bytes(const std::string& s, uint64_t& out) {
@@ -502,6 +679,7 @@ static int reapPlan(int argc, char** argv) {
 
     RawrXD::Reap::CliRequest request;
     request.model = argv[2];
+    request.workspace = fs::current_path().string();
     std::string calibrationPath;
     std::string selectionOutputPath;
     std::string outputModelPath;
@@ -591,9 +769,7 @@ static int reapPlan(int argc, char** argv) {
     }
 
     Deep2::ReapMoETransformResult transform;
-    bool transformAttempted = false;
     if (!outputModelPath.empty()) {
-        transformAttempted = true;
         if (!selectionWritten || !authorizeRewrite || !calibration.calibrationComplete ||
             !calibration.referenceParity) {
             transform.error = "REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY";
@@ -635,18 +811,20 @@ static int reapPlan(int argc, char** argv) {
             << ",\"internal_prefill_parity\":" << (calibration.internalPrefillParity ? "true" : "false")
             << ",\"selection_manifest\":" << json_quote(selectionOutputPath)
             << ",\"selection_manifest_written\":" << (selectionWritten ? "true" : "false")
-            << ",\"transformation_enabled\":" << (transformAttempted ? "true" : "false")
+            << ",\"transformation_enabled\":"
+            << ((admission.transformationEnabled && transform.success) ? "true" : "false")
             << ",\"write_allowed\":" << (transform.success ? "true" : "false")
             << ",\"gguf_rewrite_complete\":" << (transform.success ? "true" : "false")
             << ",\"reduced_model_reload_pass\":" << (transform.success ? "true" : "false")
             << ",\"output_model\":" << json_quote(transform.outputFirstShard)
             << ",\"output_bytes\":" << transform.outputBytes
             << ",\"transformed_tensors\":" << transform.transformedTensors
-            << ",\"gates\":{\"mla_cert_001\":" << (calibration.mlaSeal ? "true" : "false")
+            << ",\"gates\":{\"mla_cert_001\":" << (admission.mlaCert001 ? "true" : "false")
             << ",\"continuous_decode\":" << (calibration.continuous && calibration.continuousCompleted ? "true" : "false")
-            << ",\"calibration_complete\":" << (calibration.calibrationComplete ? "true" : "false")
-            << ",\"selection_complete\":" << (selectionWritten && calibration.calibrationComplete && calibration.referenceParity ? "true" : "false")
-            << ",\"rewriter_certified\":" << (transform.success ? "true" : "false") << "}}\n";
+            << ",\"calibration_complete\":" << (admission.calibrationComplete ? "true" : "false")
+            << ",\"selection_complete\":" << (admission.selectionComplete ? "true" : "false")
+            << ",\"rewriter_certified\":" << (admission.rewriterCertified ? "true" : "false")
+            << ",\"reduced_reload_pass\":" << (transform.success ? "true" : "false") << "}}\n";
     const std::string result = receipt.str();
     std::cout << result;
     if (!writePlan(outputPath, result)) return 5;
@@ -654,6 +832,22 @@ static int reapPlan(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+    if (argc >= 3 && std::string(argv[1]) == "verify") {
+        std::string receiptPath;
+        bool structuralOnly = false;
+        for (int i = 3; i < argc; ++i) {
+            if (std::string(argv[i]) == "--structural-only") {
+                structuralOnly = true;
+                continue;
+            }
+            if (std::string(argv[i]) != "--receipt" || i + 1 >= argc) {
+                usage();
+                return 2;
+            }
+            receiptPath = argv[++i];
+        }
+        return verifyModelShards(argv[2], receiptPath, structuralOnly);
+    }
     if (argc >= 3 && std::string(argv[1]) == "topology") {
         std::string outputPath;
         for (int i = 3; i < argc; ++i) {

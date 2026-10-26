@@ -1738,6 +1738,7 @@ Result Run(const fs::path& shardDir,
     result.peakResidencyBytes = g_peakResidency;
     result.finalResidencyBytes = g_currentResidency;
     result.streamingCallbackFired = callbackFired;
+    result.generatedTokenIds = ghostTok;
     result.generatedTokenId = curToken;
     result.outputNonempty = !result.generatedText.empty();
     {
