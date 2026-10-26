@@ -16,6 +16,12 @@ struct CliRequest {
     std::string qualityFloorText;
     std::string activeExpertsText;
     std::string workspace;
+    // Optional, candidate-only rewrite inputs.  These are deliberately kept
+    // separate from the source model path so a guarded request can never
+    // overwrite the input shards.
+    std::string selectionManifestPath;
+    std::string outputDirectory;
+    bool authorizeRewrite = false;
 
     uint64_t targetSizeBytes = 0;
     uint64_t expertBudgetBytes = 0;

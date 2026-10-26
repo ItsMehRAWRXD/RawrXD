@@ -55,15 +55,35 @@ PipelineResult RunPipeline(const CliRequest& request, const std::string& prompt)
         return Fail(request, denied, "selection");
     }
 
-    Deep2::ReapMoETransformRequest writer;
-    writer.sourceFirstShard = request.model;
-    writer.activeExperts = request.activeExperts;
-    const Deep2::ReapMoETransformResult published = Deep2::transformMoEGGUF(writer);
-    const std::string candidate = published.success ? published.outputFirstShard : std::string();
-
     const Admission admission = EvaluateAdmission(request);
     if (!admission.transformationEnabled)
         return Fail(request, admission, "admission");
+
+    // Admission is checked before any writer call.  This ordering is a safety
+    // boundary: a missing or stale receipt must not even create a candidate
+    // directory.  The unified CLI also requires an explicit rewrite opt-in
+    // and separate output paths so the original shard set remains immutable.
+    if (!request.authorizeRewrite) {
+        Admission held = admission;
+        held.transformationEnabled = false;
+        held.reason = "REAP_REWRITE_NOT_AUTHORIZED_BY_FLAG";
+        return Fail(request, held, "rewrite_authorization");
+    }
+    if (request.selectionManifestPath.empty() || request.outputDirectory.empty()) {
+        Admission held = admission;
+        held.transformationEnabled = false;
+        held.reason = "REAP_OUTPUT_CONFIGURATION_REQUIRED";
+        return Fail(request, held, "rewrite_configuration");
+    }
+
+    Deep2::ReapMoETransformRequest writer;
+    writer.sourceFirstShard = request.model;
+    writer.outputDirectory = request.outputDirectory;
+    writer.selectionManifest = request.selectionManifestPath;
+    writer.activeExperts = request.activeExperts;
+    writer.replaceExisting = false;
+    const Deep2::ReapMoETransformResult published = Deep2::transformMoEGGUF(writer);
+    const std::string candidate = published.success ? published.outputFirstShard : std::string();
     if (candidate.empty() || prompt.empty()) {
         Admission held = admission;
         held.transformationEnabled = false;
@@ -88,9 +108,12 @@ PipelineResult RunPipeline(const CliRequest& request, const std::string& prompt)
         held.reason = "REAP_DEEP2_NO_TOKENS";
         return Fail(request, held, "deep2_generate");
     }
+    Admission passed = admission;
+    passed.reducedReloadPass = true;
+    passed.reason = "REAP_E2E_PASS";
     PipelineResult out;
     out.exitCode = 0;
-    out.receipt = WithStage(BlockedReceipt(request, admission), "deep2_generate");
+    out.receipt = WithStage(BlockedReceipt(request, passed), "deep2_generate");
     return out;
 }
 

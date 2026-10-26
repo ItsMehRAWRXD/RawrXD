@@ -229,6 +229,10 @@ static int HandleReapContract(const std::string& model,
     request.expertBudgetText = flags.count("expert-budget") ? flags.at("expert-budget") : "";
     request.qualityFloorText = flags.count("quality-floor") ? flags.at("quality-floor") : "";
     request.workspace = g_workspace;
+    request.selectionManifestPath = flags.count("selection-output") ? flags.at("selection-output") : "";
+    request.outputDirectory = flags.count("output-model") ? flags.at("output-model") : "";
+    request.authorizeRewrite = flags.count("authorize-rewrite") != 0 &&
+                               flags.at("authorize-rewrite") == "true";
 
     const auto validation = RawrXD::Reap::Validate(request);
     if (!validation.ok) {
@@ -1899,6 +1903,8 @@ int main(int argc, char** argv) {
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
               << "  rawr reap <model> --target-size <size> --active-experts <n>\n"
               << "             --expert-budget <size> --quality-floor <0..1>       guarded REAP request\n"
+              << "             [--selection-output <json> --output-model <dir>\n"
+              << "              --authorize-rewrite --prompt <text>]              candidate-only rewrite\n"
               << "  rawr run <model> \"new project\"                          project wizard\n"
               << "  rawr run <model> \"add a GUI\"                            follow-up wizard\n"
               << "  rawr modes                                                  list agent modes\n"
@@ -1927,6 +1933,15 @@ int main(int argc, char** argv) {
         return CmdRun(args);
     }
     if (cmd == "reap") {
+        if (o.flags.count("help") != 0 || o.flags.count("h") != 0) {
+            std::cout << "Usage: rawr reap <model> --target-size <size> --active-experts <n>\n"
+                      << "             --expert-budget <size> --quality-floor <0..1>\n"
+                      << "             [--selection-output <json> --output-model <dir>\n"
+                      << "              --authorize-rewrite --prompt <text> --workspace <dir>]\n"
+                      << "The source GGUF is never overwritten; rewrite requires all\n"
+                      << "independent REAP evidence gates plus explicit authorization.\n";
+            return 0;
+        }
         if (o.positional.empty()) {
             std::cerr << "REAP_MODEL_REQUIRED: usage: rawr reap <model>"
                          " --target-size <size> --active-experts <n>"
