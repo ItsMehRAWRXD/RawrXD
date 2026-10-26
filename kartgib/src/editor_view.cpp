@@ -3,7 +3,8 @@
 #include <algorithm>
 
 void editorCamera(float view[16], float proj[16], int width, int height) {
-    float ex = -40, ey = 24, ez = -55, tx = 20, ty = 12, tz = 35, ux = 0, uy = 1, uz = 0;
+    float shift = studioCameraShift();
+    float ex = -40 + shift, ey = 24, ez = -55, tx = 20 + shift, ty = 12, tz = 35, ux = 0, uy = 1, uz = 0;
     float fx = tx - ex, fy = ty - ey, fz = tz - ez;
     float fl = std::sqrt(fx * fx + fy * fy + fz * fz);
     fx /= fl; fy /= fl; fz /= fl;

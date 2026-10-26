@@ -10,22 +10,6 @@
 #include <windows.h>
 static const char* kDir = "F:/rawrxd/kartgib/evidence/studio_project";
 static void click(int id) { SendMessageW(GetParent(inspectorEdit(0)), WM_COMMAND, id, 0); }
-static int reloadChild(float mesh, float x, float radius, int width, float yaw, float scale) {
-    wchar_t exe[32768]{}; GetModuleFileNameW(nullptr, exe, 32768);
-    std::wstring cmd = L"\"" + std::wstring(exe) + L"\" --studio-load";
-    std::vector<wchar_t> buf(cmd.begin(), cmd.end()); buf.push_back(0);
-    STARTUPINFOW si{}; si.cb = sizeof(si); PROCESS_INFORMATION pi{};
-    if (!CreateProcessW(nullptr, buf.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) return 0;
-    WaitForSingleObject(pi.hProcess, 30000);
-    DWORD code = 1; GetExitCodeProcess(pi.hProcess, &code);
-    CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
-    std::ifstream in("F:/rawrxd/kartgib/evidence/studio_peak.txt");
-    float my = 0, mx = 0, mr = 0, myaw = 0, mscale = 0; int mw = 0;
-    in >> my >> mx >> mr >> mw >> myaw >> mscale;
-    return code == 0 && std::fabs(my - mesh) < 0.05f && std::fabs(mx - x) < 0.05f
-        && std::fabs(mr - radius) < 0.05f && mw == width
-        && std::fabs(myaw - yaw) < 0.05f && std::fabs(mscale - scale) < 0.05f;
-}
 bool inspectorScript(Win32Window& window, VulkanRenderer& renderer) {
     if (renderer.editorShotBusy()) return true;
     static int frames = 0;
@@ -77,25 +61,9 @@ bool inspectorScript(Win32Window& window, VulkanRenderer& renderer) {
         renderer.requestEditorShot("gui_sculpt");
         break;
     }
-    case 3:
-        std::cout << "[INSPECTOR] height " << studioBaseY() << " -> " << studioMeshY() << std::endl;
-        sunshineScene("transform 1 9 18 24 0 1");
-        inspectorRefresh();
-        { wchar_t text[32]{}; GetWindowTextW(xEdit, text, 32); std::wcout << L"[INSPECTOR] sunshine=" << text << std::endl; }
-        click(1050); inspectorRefresh();
-        { wchar_t text[32]{}, yaw[32]{}; GetWindowTextW(xEdit, text, 32); GetWindowTextW(inspectorEdit(3), yaw, 32);
-          std::wcout << L"[INSPECTOR] undo=" << text << L" yaw=" << yaw << std::endl; }
-        click(1051); inspectorRefresh();
-        std::cout << "[INSPECTOR] redo x=" << editorAt(0)->x << std::endl;
+    default:
+        if (!inspectorLate(window, renderer, phase - 1)) return false;
         break;
-    default: {
-        bool saved = studioSaveProject(kDir);
-        int child = reloadChild(studioMeshY(), editorAt(0)->x, studioBrush().radius, inspectorWidth(),
-            editorAt(0)->yaw, editorAt(0)->scale);
-        std::cout << "[INSPECTOR] save=" << saved << " reload=" << child << " width=" << inspectorWidth() << std::endl;
-        editorMarkDone();
-        return false;
-    }
     }
     return true;
 }

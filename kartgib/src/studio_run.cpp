@@ -9,6 +9,8 @@ bool studioScript(Win32Window& window, VulkanRenderer& renderer) {
     if (renderer.editorShotBusy()) return true;
     static int frames = 0;
     if (frames++ < 3) return true;
+    static int shot = 0;
+    if (!shot) { renderer.requestEditorShot("gui_reload"); shot = 1; return true; }
     std::ifstream brush("F:/rawrxd/kartgib/evidence/studio_project/brush.txt");
     int mode = 0; float radius = 0, strength = 0, fall = 0;
     if (brush >> mode >> radius >> strength >> fall) studioSetBrush(mode, radius, strength, fall);

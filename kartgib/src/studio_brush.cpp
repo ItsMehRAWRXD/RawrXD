@@ -8,6 +8,9 @@ void studioSetSeed(uint64_t seed) { gSeed = seed; }
 static bool gShow = false;
 void studioSetShow(bool show) { gShow = show; }
 bool studioShowOnly() { return gShow; }
+static float gShift = 0;
+void studioShiftCamera(float meters) { gShift = meters; }
+float studioCameraShift() { return gShift; }
 
 bool studioBrush(Win32Window& window, int px, int py) {
     float view[16], proj[16];
@@ -24,7 +27,7 @@ bool studioBrush(Win32Window& window, int px, int py) {
     kg::Settings settings; settings.seed = gSeed; settings.biome = kg::Biome::Tropical;
     for (int i = 1; i < 80; ++i) {
         float t = static_cast<float>(i) * 8.0f;
-        float x = -40.0f + dx * t, y = 24.0f + dy * t, z = -55.0f + dz * t;
+        float x = -40.0f + gShift + dx * t, y = 24.0f + dy * t, z = -55.0f + dz * t;
         if (y < static_cast<float>(kg::sampleHeight(x, z, settings))) {
             const StudioBrush& b = studioBrush();
             float radius = b.radius > 1.0f ? b.radius : 36.0f;

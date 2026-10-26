@@ -114,6 +114,7 @@ set(SOURCES
     src/inspector_wnd.cpp
     src/inspector_cmd.cpp
     src/inspector_run.cpp
+    src/inspector_late.cpp
     src/inspector_cap.cpp
     src/terrain_cursor.cpp
     src/terrain_field.cpp
