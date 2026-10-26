@@ -1,0 +1,42 @@
+{
+  "id": "RAWRXD_CANONICAL_IDE_BUILD_003",
+  "recorded": "2026-10-26",
+  "SOURCE_COMMIT": "fd27fd184e39c73da5a1f49cdb9bb32a5d7a44f6",
+  "PARENT_COMMIT": "d719787b14be54c7606e477fcd5edbe90506ebc0",
+  "SOURCE_DIRTY": false,
+  "SOURCE_TREE": "G:\\~dev\\rawrxd-cmake-clean",
+  "PATCH_RANGE": "d719787b14be54c7606e477fcd5edbe90506ebc0..fd27fd184e39c73da5a1f49cdb9bb32a5d7a44f6",
+  "PATCH_GIT_BLOB": "eb02c3fa5a25f35dc1ba5df603b21bc7dafe1151",
+  "provenance_note": "Build 002 compiled d719787 plus an uncommitted CMake edit and stopped on TINYLLAMA and vulkanSlotQueueSubmits. This build used fd27fd, which adds those declarations and the assembly-source rules. The proof tree was clean at that commit. The feature-branch worktree was not mixed into this link.",
+  "BUILD_DIR": "G:\\~dev\\rawrxd-cmake-clean\\build-canonical-reference",
+  "GENERATOR": "Ninja",
+  "FLAGS": "RAWRXD_BUILD_WIN32IDE=ON RAWRXD_BUILD_SUNSHINE_VOXEL=OFF",
+  "TARGET": "RawrXD-Win32IDE",
+  "TOOLCHAIN": "MSVC 19.44.35228 cl.exe and ml64.exe. Ladder A reference only.",
+  "CMAKE_CONFIGURE": "PASS",
+  "ASM_DEPENDENCY_GRAPH": "PASS",
+  "RESIDENCYTRACE_ASM": "PASS",
+  "QUANTKB_ASM": "PASS",
+  "assembled_objects": {
+    "QuantKB.asm.obj": 5103,
+    "ResidencyTrace.asm.obj": 529932
+  },
+  "CHATTEMPLATE_TINYLLAMA": "PASS",
+  "DEEP2_VULKAN_TELEMETRY": "PASS",
+  "repair": "ChatTemplateType::TINYLLAMA and formatTinyLlama are declared in ChatTemplate.hpp. vulkanSlotQueueSubmits reads VulkanCompute::LayerSubmits. vulkanSlotUploadBytes reads GemvWeightUploadBytes. No compatibility macro and no static dummy counter.",
+  "compiled_objects": {
+    "ChatTemplate.cpp.obj": 446492,
+    "Deep2Engine.cpp.obj": 7511515
+  },
+  "IDE_CPP_COMPILE": "PASS",
+  "IDE_LINK": "PASS",
+  "IDE_RUNTIME": "NOT_RUN",
+  "IDE_SHA256": "AAECBD82F04DB3B28E003E9F307C12662E633FFA7306EE502AB467818BCD4474",
+  "exe": "G:\\~dev\\rawrxd-cmake-clean\\build-canonical-reference\\bin\\RawrXD-Win32IDE.exe",
+  "exe_bytes": 330308096,
+  "NATIVE_ASSEMBLER": "NOT_CERTIFIED",
+  "NATIVE_LINKER": "NOT_CERTIFIED",
+  "AGENT_UI": "NOT_RUN",
+  "PROMOTE": 0,
+  "prior_receipt": "RAWRXD_CANONICAL_IDE_BUILD_002 left unchanged"
+}
