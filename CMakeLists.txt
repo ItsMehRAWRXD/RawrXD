@@ -17110,7 +17110,10 @@ endif()
 #   cmake -S src/voxel -B build/voxel -G "Visual Studio 17 2022" -A x64
 #   cmake --build build/voxel --config Release
 #
-option(RAWRXD_BUILD_SUNSHINE_VOXEL "Build the native voxel renderer" ON)
+# Off by default. The IDE target does not link this renderer, and its
+# sources are not part of the tracked tree. Turn the option on only in a
+# tree that contains src/voxel. A missing directory then fails configure.
+option(RAWRXD_BUILD_SUNSHINE_VOXEL "Build the native voxel renderer" OFF)
 if(RAWRXD_BUILD_SUNSHINE_VOXEL)
     add_subdirectory(src/voxel)
 endif()
