@@ -1,4 +1,5 @@
 #include "AgentProduct.hpp"
+#include "AgentSession.hpp"
 #include "IdeAuthBoundary.hpp"
 #include <windows.h>
 #include <fstream>
@@ -82,8 +83,12 @@ std::string AgentExecTool(const std::string& name, const std::string& arguments,
         return "{\"path\":\"" + Esc(full) + "\",\"content\":\"" + Esc(ss.str()) + "\"}";
     }
     if (name == "write_file") {
+        std::ifstream prior(full, std::ios::binary);
+        std::ostringstream prev; prev << prior.rdbuf();
+        std::string content = Arg(arguments, "content");
         std::ofstream out(full, std::ios::binary);
-        out << Arg(arguments, "content");
+        out << content;
+        if (out) AgentSessionNoteWrite(full, prev.str(), content);
         return out ? "{\"wrote\":\"" + Esc(full) + "\"}" : "{\"error\":\"write_failed\"}";
     }
     return "{\"error\":\"unknown_tool\",\"name\":\"" + name + "\"}";

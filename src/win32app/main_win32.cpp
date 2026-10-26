@@ -2331,6 +2331,10 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
             printHeadlessQuickHelp();
             return 0;
         }
+        if (lpCmdLine && strstr(lpCmdLine, "--agent-session-proof")) {
+            extern int AgentSessionProductProof();
+            return AgentSessionProductProof();
+        }
 
         int argc = 0;
         char** argv = nullptr;

@@ -1,5 +1,6 @@
 #include "Win32IDE.h"
 #include "AgentProduct.hpp"
+#include "AgentSession.hpp"
 #include "../product/gateway/product_deep2_infer.hpp"
 #include "../subagent_core.h"
 #include <sstream>
@@ -72,6 +73,8 @@ static void Bind(SubAgentManager* mgr) {
 void AgentBindManager(void* manager) { Bind(static_cast<SubAgentManager*>(manager)); }
 
 void Win32IDE::handleAgentRun(SOCKET client, const std::string& body) {
+    std::string sj; int sc = AgentSessionAdmit(body, &sj);
+    if (sc) { SendJson(client, sc, sj); return; }
     std::string prompt = Field(body, "prompt");
     if (prompt.empty()) prompt = Field(body, "content");
     if (prompt.empty()) {
@@ -86,7 +89,8 @@ void Win32IDE::handleAgentRun(SOCKET client, const std::string& body) {
     int maxTokens = 2048, maxIter = 8;
     AgentRunResult run = AgentRunLoop(prompt, maxIter, maxTokens, this, ProductInfer);
     std::ostringstream json;
-    json << "{\"agent_session\":true,\"iterations\":" << run.iterations
+    json << "{\"agent_session\":true," << AgentSessionCountersJson()
+         << ",\"iterations\":" << run.iterations
          << ",\"tool_calls\":" << run.toolCalls
          << ",\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\""
          << Esc(run.text) << "\"}}],\"tool_log\":\"" << Esc(run.toolLog) << "\"}";

@@ -1,4 +1,5 @@
 #include "AgentProduct.hpp"
+#include "AgentSession.hpp"
 
 AgentRunResult AgentRunLoop(const std::string& prompt, int maxIter, int maxTokens,
                             void* ctx, std::string (*infer)(void*, const std::string&, int)) {
@@ -10,6 +11,7 @@ AgentRunResult AgentRunLoop(const std::string& prompt, int maxIter, int maxToken
     std::string current = prompt;
     if (!infer) { run.text = "infer_unavailable"; return run; }
     for (int i = 0; i < maxIter; ++i) {
+        if (AgentSessionCancelled()) { run.text += "\ncancelled"; break; }
         ++run.iterations;
         run.text = infer(ctx, current, maxTokens);
         std::vector<AgentToolCall> calls;

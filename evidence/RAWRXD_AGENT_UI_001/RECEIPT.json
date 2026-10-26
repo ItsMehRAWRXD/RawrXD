@@ -1,0 +1,33 @@
+{
+  "id": "RAWRXD_AGENT_UI_001",
+  "recorded": "2026-10-26",
+  "PROMOTE": 0,
+  "baseline_exe": "G:\\~dev\\rawrxd-cmake-clean\\build-canonical-reference\\bin\\RawrXD-Win32IDE.exe",
+  "IDE_SHA256": "AAECBD82F04DB3B28E003E9F307C12662E633FFA7306EE502AB467818BCD4474",
+  "help_launch": "PASS",
+  "help_command": "RawrXD-Win32IDE.exe --headless --help",
+  "help_exit": 0,
+  "model_selection": "NOT_RUN",
+  "chat": "NOT_RUN",
+  "gui_launch": "NOT_RUN",
+  "crash_handling": "NOT_RUN",
+  "session_unit": "PASS_UNIT",
+  "session_unit_failures": 0,
+  "product_exe_contains_session_journal": false,
+  "gates": {
+    "1_launch_and_exit": "PARTIAL",
+    "2_task_events": "NOT_RUN",
+    "3_files_changed": "NOT_RUN",
+    "4_review": "NOT_RUN",
+    "5_background_terminals": "NOT_RUN",
+    "6_native_stop": "NOT_RUN",
+    "7_restart_restore": "NOT_RUN",
+    "8_modes": "NOT_RUN",
+    "9_model_discovery": "NOT_RUN",
+    "10_two_model": "NOT_RUN",
+    "11_limits": "NOT_RUN",
+    "12_product_receipts": "NOT_RUN"
+  },
+  "source": "AgentSession journal records file hashes and live terminal counts. write_file and execute_command call it. Restore reloads the JSONL. The unit proved two edits, a revert to zero, terminal close, and a stable reload. That unit is not the IDE executable.",
+  "prior_receipts": "RAWRXD_CANONICAL_IDE_BUILD_002 and RAWRXD_CANONICAL_IDE_BUILD_003 left unchanged"
+}

@@ -1,4 +1,5 @@
 #include "AgentProduct.hpp"
+#include "AgentSession.hpp"
 #include "IdeAuthBoundary.hpp"
 #include <windows.h>
 #include <string>
@@ -77,10 +78,18 @@ std::string AgentRunCommand(const std::string& name, const std::string& argument
                              nullptr, root.c_str(), &si, &pi);
     CloseHandle(wr);
     if (!ok) { CloseHandle(rd); return "{\"error\":\"CreateProcess_failed\"}"; }
-    std::string output; char tmp[1024]; DWORD n = 0;
-    while (ReadFile(rd, tmp, sizeof(tmp), &n, nullptr) && n) output.append(tmp, n);
+    AgentSessionNoteTerminal(pi.dwProcessId, 1);
+    std::string output; char tmp[1024]; DWORD n = 0; DWORD waited = 0;
+    for (;;) {
+        DWORD avail = 0;
+        if (PeekNamedPipe(rd, nullptr, 0, nullptr, &avail, nullptr) && avail &&
+            ReadFile(rd, tmp, sizeof(tmp), &n, nullptr) && n) output.append(tmp, n);
+        if (AgentSessionCancelled()) { AgentSessionKillTree(pi.hProcess); break; }
+        if (WaitForSingleObject(pi.hProcess, 50) == WAIT_OBJECT_0) break;
+        if ((waited += 50) >= 15000) { AgentSessionKillTree(pi.hProcess); break; }
+    }
     CloseHandle(rd);
-    if (WaitForSingleObject(pi.hProcess, 15000) == WAIT_TIMEOUT) TerminateProcess(pi.hProcess, 1);
+    AgentSessionNoteTerminal(pi.dwProcessId, 0);
     DWORD code = 1; GetExitCodeProcess(pi.hProcess, &code);
     CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
     if (output.size() > 4000) output.resize(4000);

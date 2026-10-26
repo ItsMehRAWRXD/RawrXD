@@ -264,6 +264,10 @@ if(RAWRXD_BUILD_CLI)
         src/win32app/AgentToolShell.cpp
         src/win32app/AgentRunLoop.cpp
         src/win32app/AgentHttp.cpp
+        src/win32app/AgentSession.cpp
+        src/win32app/AgentSessionRestore.cpp
+        src/win32app/AgentSessionKill.cpp
+        src/win32app/AgentSessionProof.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
@@ -5587,6 +5591,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/AgentToolShell.cpp
         src/win32app/AgentRunLoop.cpp
         src/win32app/AgentHttp.cpp
+        src/win32app/AgentSession.cpp
+        src/win32app/AgentSessionRestore.cpp
+        src/win32app/AgentSessionKill.cpp
+        src/win32app/AgentSessionProof.cpp
         src/agent/quantum_agent_orchestrator.cpp
         src/agent/quantum_autonomous_todo_system.cpp
         src/agent/quantum_multi_model_agent_cycling.cpp
