@@ -83,12 +83,16 @@ std::string AgentExecTool(const std::string& name, const std::string& arguments,
         return "{\"path\":\"" + Esc(full) + "\",\"content\":\"" + Esc(ss.str()) + "\"}";
     }
     if (name == "write_file") {
-        std::ifstream prior(full, std::ios::binary);
-        std::ostringstream prev; prev << prior.rdbuf();
+        std::string previous;
+        {
+            std::ifstream prior(full, std::ios::binary);
+            std::ostringstream prev; prev << prior.rdbuf();
+            previous = prev.str();
+        }
         std::string content = Arg(arguments, "content");
         std::ofstream out(full, std::ios::binary);
         out << content;
-        if (out) AgentSessionNoteWrite(full, prev.str(), content);
+        if (out) AgentSessionNoteWrite(full, previous, content);
         return out ? "{\"wrote\":\"" + Esc(full) + "\"}" : "{\"error\":\"write_failed\"}";
     }
     return "{\"error\":\"unknown_tool\",\"name\":\"" + name + "\"}";

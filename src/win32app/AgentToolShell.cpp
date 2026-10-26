@@ -88,6 +88,8 @@ std::string AgentRunCommand(const std::string& name, const std::string& argument
         if (WaitForSingleObject(pi.hProcess, 50) == WAIT_OBJECT_0) break;
         if ((waited += 50) >= 15000) { AgentSessionKillTree(pi.hProcess); break; }
     }
+    while (PeekNamedPipe(rd, nullptr, 0, nullptr, &n, nullptr) && n &&
+           ReadFile(rd, tmp, sizeof(tmp), &n, nullptr) && n) output.append(tmp, n);
     CloseHandle(rd);
     AgentSessionNoteTerminal(pi.dwProcessId, 0);
     DWORD code = 1; GetExitCodeProcess(pi.hProcess, &code);
