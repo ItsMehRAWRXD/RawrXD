@@ -1,5 +1,7 @@
 #include "deep2/GGUFLoader.hpp"
+#include "deep2/ReapMoETransformer.hpp"
 #include "reap_cli_contract.hpp"
+#include <nlohmann/json.hpp>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -8,12 +10,15 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <sstream>
 #include <string>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
 namespace fs = std::filesystem;
+using json = nlohmann::json;
 
 static void usage() {
     std::cerr << "rawr-reap inspect <first-shard.gguf>\n"
@@ -22,7 +27,8 @@ static void usage() {
                  "rawr-reap reap <first-shard.gguf> --target-size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
-                 "[--output <plan.json>]\n";
+                 "[--selection-output <selection.json>] [--output-model <dir>] "
+                 "[--authorize-rewrite] [--output <plan.json>]\n";
 }
 
 static std::string json_quote(const std::string& s) {
@@ -81,6 +87,8 @@ struct ReapInventory {
     uint64_t expertTensors = 0;
     uint64_t logicalExperts = 0;
     uint64_t maxExpertsPerLayer = 0;
+    uint64_t layerCount = 0;
+    std::set<uint32_t> moeLayers;
 };
 
 static bool collectReapInventory(const std::string& path,
@@ -90,6 +98,11 @@ static bool collectReapInventory(const std::string& path,
     if (!loader.load(path)) {
         error = loader.error();
         return false;
+    }
+    const char* archKeys[] = {"deepseek2.block_count", "deepseek.block_count", "llama.block_count"};
+    for (const char* key : archKeys) {
+        const int64_t count = loader.getMetaInt(key, 0);
+        if (count > 0) { out.layerCount = static_cast<uint64_t>(count); break; }
     }
     for (const auto& name : loader.listTensors()) {
         const auto* tensor = loader.getTensor(name);
@@ -111,12 +124,14 @@ static bool collectReapInventory(const std::string& path,
         const auto* up = loader.getTensor(prefix + "ffn_up_exps.weight");
         const auto* down = loader.getTensor(prefix + "ffn_down_exps.weight");
         if (!gate && !up && !down) continue;
+        out.layerCount = (std::max)(out.layerCount, static_cast<uint64_t>(layer + 1));
         if (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
             down->shape.empty() || gate->shape.back() != up->shape.back() ||
             gate->shape.back() != down->shape.back()) {
             error = "invalid expert projection triplet at layer " + std::to_string(layer);
             return false;
         }
+        out.moeLayers.insert(layer);
         const uint64_t count = static_cast<uint64_t>(gate->shape.back());
         if (count == 0 || gate->sizeBytes % count || up->sizeBytes % count ||
             down->sizeBytes % count) {
@@ -168,15 +183,179 @@ static bool writePlan(const std::string& path, const std::string& json) {
     return output.good();
 }
 
+struct CalibrationMetric {
+    uint32_t layer = 0;
+    uint32_t expert = 0;
+    uint64_t routeCount = 0;
+    double score = 0.0;
+};
+
+struct CalibrationEvidence {
+    bool parsed = false;
+    bool complete = false;
+    bool continuous = false;
+    bool continuousCompleted = false;
+    bool routeMetrics = false;
+    bool mlaSeal = false;
+    bool calibrationComplete = false;
+    bool internalPrefillParity = false;
+    bool referenceParity = false;
+    uint64_t generated = 0;
+    std::vector<CalibrationMetric> metrics;
+    std::string reason;
+};
+
+static bool loadCalibrationEvidence(const std::string& path,
+                                    const std::string& model,
+                                    CalibrationEvidence& out) {
+    std::string text;
+    if (!readText(path, text)) {
+        out.reason = "calibration receipt could not be read";
+        return false;
+    }
+    try {
+        const json doc = json::parse(text);
+        if (doc.value("schema", std::string{}) != "RAWRXD_REAP_CALIBRATION_001") {
+            out.reason = "unsupported calibration receipt schema";
+            return false;
+        }
+        if (doc.value("model", std::string{}) != model) {
+            out.reason = "calibration receipt model does not match request";
+            return false;
+        }
+        out.complete = doc.value("complete", false);
+        out.continuous = doc.value("continuous_prefill_decode", false);
+        out.continuousCompleted = doc.value("continuous_completed", false);
+        out.routeMetrics = doc.value("route_metrics_available", false);
+        out.mlaSeal = doc.value("mla_product_seal", false);
+        out.calibrationComplete = doc.value("calibration_complete", false);
+        out.internalPrefillParity = doc.value("prefill_parity_pass", false);
+        out.referenceParity = doc.value("reference_parity_pass", false);
+        out.generated = doc.value("generated", uint64_t{0});
+        const auto it = doc.find("metrics");
+        if (it != doc.end() && it->is_array()) {
+            for (const auto& item : *it) {
+                if (!item.is_object()) continue;
+                CalibrationMetric metric;
+                metric.layer = item.value("layer", 0u);
+                metric.expert = item.value("expert", 0u);
+                metric.routeCount = item.value("route_count", uint64_t{0});
+                const double activation = item.value("activation_sum", 0.0);
+                const double weight = item.value("weight_sum", 0.0);
+                metric.score = std::isfinite(activation) && std::isfinite(weight)
+                    ? std::max(0.0, activation) + std::max(0.0, weight)
+                    : 0.0;
+                out.metrics.push_back(metric);
+            }
+        }
+        out.parsed = true;
+        return true;
+    } catch (const std::exception& ex) {
+        out.reason = std::string("calibration receipt JSON parse failed: ") + ex.what();
+        return false;
+    }
+}
+
+struct SelectionLayer {
+    uint32_t layer = 0;
+    std::vector<std::pair<uint32_t, double>> experts;
+};
+
+static bool writeSelectionManifest(const std::string& path,
+                                   const std::string& model,
+                                   const std::string& calibration,
+                                   const CalibrationEvidence& evidence,
+                                   const ReapInventory& inventory,
+                                   uint64_t activeExperts,
+                                   uint64_t expertBudget,
+                                   uint64_t targetSize,
+                                   bool authorizeRewrite,
+                                   std::string& error) {
+    if (path.empty()) return true;
+    if (evidence.metrics.empty()) {
+        error = "no route metrics available for expert selection";
+        return false;
+    }
+    std::map<uint32_t, std::unordered_map<uint32_t, double>> byLayer;
+    for (const auto& metric : evidence.metrics)
+        byLayer[metric.layer][metric.expert] += metric.score;
+
+    json layers = json::array();
+    uint64_t selected = 0;
+    for (auto& layer : byLayer) {
+        std::vector<std::pair<uint32_t, double>> ranked(layer.second.begin(), layer.second.end());
+        std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
+            if (a.second != b.second) return a.second > b.second;
+            return a.first < b.first;
+        });
+        if (ranked.size() > activeExperts) ranked.resize(static_cast<size_t>(activeExperts));
+        selected += ranked.size();
+        json experts = json::array();
+        for (const auto& item : ranked)
+            experts.push_back({{"expert", item.first}, {"score", item.second}});
+        layers.push_back({{"layer", layer.first}, {"selected", experts}});
+    }
+    if (inventory.moeLayers.empty()) {
+        error = "model contains no complete MoE expert projection layers";
+        return false;
+    }
+    for (const uint32_t layer : inventory.moeLayers) {
+        if (byLayer.find(layer) == byLayer.end()) {
+            error = "route metrics missing MoE layer " + std::to_string(layer);
+            return false;
+        }
+    }
+    const uint64_t logical = inventory.logicalExperts ? inventory.logicalExperts : 1;
+    const uint64_t estimatedExpertBytes = inventory.expertBytes * selected / logical;
+    const uint64_t estimatedOutputBytes = inventory.totalBytes >= inventory.expertBytes
+        ? inventory.totalBytes - inventory.expertBytes + estimatedExpertBytes
+        : inventory.totalBytes;
+    json manifest = {
+        {"schema", "RAWRXD_REAP_EXPERT_SELECTION_001"},
+        {"status", evidence.calibrationComplete ? "CANDIDATE" : "BLOCKED"},
+        {"model", model},
+        {"calibration", calibration},
+        {"active_experts", activeExperts},
+        {"selected_expert_slices", selected},
+        {"estimated_expert_bytes", estimatedExpertBytes},
+        {"estimated_output_bytes", estimatedOutputBytes},
+        {"target_size", targetSize},
+        {"expert_budget", expertBudget},
+        {"deterministic_tie_break", "expert_id_ascending"},
+        {"source_metrics", evidence.metrics.size()},
+        {"layers", layers},
+        {"reference_parity_pass", evidence.referenceParity},
+        {"quality_floor_pass", false},
+        {"rewrite_authorized", authorizeRewrite && evidence.calibrationComplete && evidence.referenceParity},
+        {"reason", evidence.calibrationComplete
+            ? (authorizeRewrite && evidence.referenceParity
+                ? "selection derived from complete calibrated evidence"
+                : "selection derived from route metrics; explicit parity authorization is still required")
+            : "continuous calibration and parity gates are incomplete"}
+    };
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    if (!output) { error = "selection manifest could not be opened"; return false; }
+    output << manifest.dump(2) << '\n';
+    if (!output.good()) { error = "selection manifest write failed"; return false; }
+    return true;
+}
+
 static int reapPlan(int argc, char** argv) {
     if (argc < 3) { usage(); return 2; }
 
     RawrXD::Reap::CliRequest request;
     request.model = argv[2];
     std::string calibrationPath;
+    std::string selectionOutputPath;
+    std::string outputModelPath;
     std::string outputPath;
+    bool authorizeRewrite = false;
     for (int i = 3; i < argc; ++i) {
         const std::string option = argv[i];
+        if (option == "--authorize-rewrite") {
+            authorizeRewrite = true;
+            continue;
+        }
         if (i + 1 >= argc) { usage(); return 2; }
         const std::string value = argv[++i];
         if (option == "--target-size") request.targetSizeText = value;
@@ -184,6 +363,8 @@ static int reapPlan(int argc, char** argv) {
         else if (option == "--expert-budget") request.expertBudgetText = value;
         else if (option == "--quality-floor") request.qualityFloorText = value;
         else if (option == "--calibration") calibrationPath = value;
+        else if (option == "--selection-output") selectionOutputPath = value;
+        else if (option == "--output-model") outputModelPath = value;
         else if (option == "--output") outputPath = value;
         else { std::cerr << "REAP_UNKNOWN_OPTION: " << option << "\n"; return 2; }
     }
@@ -226,22 +407,52 @@ static int reapPlan(int argc, char** argv) {
         resultCode = 0;
     }
 
+    CalibrationEvidence calibration;
     bool calibrationReadable = false;
     if (!calibrationPath.empty()) {
-        std::string text;
-        if (readText(calibrationPath, text)) {
-            const bool complete = text.find("\"complete\":1") != std::string::npos ||
-                                  text.find("\"complete\":true") != std::string::npos;
-            const bool generated = text.find("\"generated\":1") != std::string::npos ||
-                                   text.find("\"generated\":true") != std::string::npos;
-            const bool seal = text.find("mla_product_seal") != std::string::npos &&
-                              (text.find("\"mla_product_seal\":true") != std::string::npos ||
-                               text.find("\"mla_product_seal\":1") != std::string::npos);
-            calibrationReadable = complete && generated && seal;
-        }
+        calibrationReadable = loadCalibrationEvidence(calibrationPath, request.model, calibration) &&
+            calibration.complete && calibration.continuous && calibration.continuousCompleted &&
+            calibration.generated > 0 && calibration.routeMetrics && calibration.mlaSeal &&
+            calibration.referenceParity;
+        if (calibrationReadable && !calibration.calibrationComplete)
+            reason = "REAP_REFERENCE_PARITY_REQUIRED";
     }
     if (status == "BLOCKED" && !calibrationPath.empty() && !calibrationReadable) {
         reason = "REAP_CALIBRATION_RECEIPT_NOT_CERTIFIED";
+    }
+
+    std::string selectionError;
+    const bool selectionWritten = !selectionOutputPath.empty() &&
+        writeSelectionManifest(selectionOutputPath, request.model, calibrationPath,
+                               calibration, inventory, request.activeExperts,
+                               request.expertBudgetBytes, request.targetSizeBytes,
+                               authorizeRewrite,
+                               selectionError);
+    if (!selectionOutputPath.empty() && !selectionWritten && status == "BLOCKED" &&
+        !selectionError.empty()) {
+        reason = selectionError;
+    }
+
+    Deep2::ReapMoETransformResult transform;
+    bool transformAttempted = false;
+    if (!outputModelPath.empty()) {
+        transformAttempted = true;
+        if (!selectionWritten || !authorizeRewrite || !calibration.calibrationComplete ||
+            !calibration.referenceParity) {
+            transform.error = "REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY";
+        } else {
+            Deep2::ReapMoETransformRequest transformRequest;
+            transformRequest.sourceFirstShard = request.model;
+            transformRequest.outputDirectory = outputModelPath;
+            transformRequest.selectionManifest = selectionOutputPath;
+            transformRequest.activeExperts = static_cast<uint32_t>(request.activeExperts);
+            transform = Deep2::transformMoEGGUF(transformRequest);
+        }
+        if (!transform.success) {
+            status = "BLOCKED";
+            reason = transform.error.empty() ? "REAP_GGUF_REWRITE_FAILED" : transform.error;
+            resultCode = 4;
+        }
     }
 
     std::ostringstream receipt;
@@ -255,15 +466,30 @@ static int reapPlan(int argc, char** argv) {
             << ",\"expert_bytes\":" << inventory.expertBytes
             << ",\"logical_experts\":" << inventory.logicalExperts
             << ",\"max_experts_per_layer\":" << inventory.maxExpertsPerLayer
+            << ",\"layer_count\":" << inventory.layerCount
+            << ",\"moe_layer_count\":" << inventory.moeLayers.size()
             << ",\"target_size\":" << request.targetSizeBytes
             << ",\"active_experts\":" << request.activeExperts
             << ",\"expert_budget\":" << request.expertBudgetBytes
             << ",\"quality_floor\":" << request.qualityFloor
             << ",\"calibration_receipt\":" << json_quote(calibrationPath)
             << ",\"calibration_receipt_certified\":" << (calibrationReadable ? "true" : "false")
-            << ",\"transformation_enabled\":false"
-            << ",\"write_allowed\":false"
-            << ",\"gates\":{\"mla_cert_001\":false,\"calibration_complete\":false,\"selection_complete\":false,\"rewriter_certified\":false}}\n";
+            << ",\"calibration_complete\":" << (calibration.calibrationComplete ? "true" : "false")
+            << ",\"internal_prefill_parity\":" << (calibration.internalPrefillParity ? "true" : "false")
+            << ",\"selection_manifest\":" << json_quote(selectionOutputPath)
+            << ",\"selection_manifest_written\":" << (selectionWritten ? "true" : "false")
+            << ",\"transformation_enabled\":" << (transformAttempted ? "true" : "false")
+            << ",\"write_allowed\":" << (transform.success ? "true" : "false")
+            << ",\"gguf_rewrite_complete\":" << (transform.success ? "true" : "false")
+            << ",\"reduced_model_reload_pass\":" << (transform.success ? "true" : "false")
+            << ",\"output_model\":" << json_quote(transform.outputFirstShard)
+            << ",\"output_bytes\":" << transform.outputBytes
+            << ",\"transformed_tensors\":" << transform.transformedTensors
+            << ",\"gates\":{\"mla_cert_001\":" << (calibration.mlaSeal ? "true" : "false")
+            << ",\"continuous_decode\":" << (calibration.continuous && calibration.continuousCompleted ? "true" : "false")
+            << ",\"calibration_complete\":" << (calibration.calibrationComplete ? "true" : "false")
+            << ",\"selection_complete\":" << (selectionWritten && calibration.calibrationComplete && calibration.referenceParity ? "true" : "false")
+            << ",\"rewriter_certified\":" << (transform.success ? "true" : "false") << "}}\n";
     const std::string result = receipt.str();
     std::cout << result;
     if (!writePlan(outputPath, result)) return 5;

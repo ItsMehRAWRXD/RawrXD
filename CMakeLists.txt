@@ -5201,7 +5201,8 @@ endif()
 # rewrite checkpoints until calibration, router remapping and parity gates
 # are implemented; it is the only safe way to expose real model evidence.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
-    add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp)
+    add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp
+        src/deep2/ReapMoETransformer.cpp)
     target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
     set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
