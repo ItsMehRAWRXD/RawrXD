@@ -1,7 +1,7 @@
 # RawrXD Unified Execution Plan
 
-Date: 2026-10-26  
-Canonical source root: `F:\rawrxd`  
+Date: 2026-10-26
+Canonical source root: `F:\rawrxd`
 Active branch: `fix/deep2-multimodel-safety-20261025`
 
 ## Purpose
