@@ -4737,8 +4737,22 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         // Pre-load embedding zone for inference preparation
         appendToOutput("[5/5] Pre-loading embedding zone...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->LoadZone("embedding")) {
-            std::string warning = "  Warning: Could not pre-load embedding zone (non-critical)";
-            appendToOutput(warning, "Output", OutputSeverity::Warning);
+            // Large single-file models may exceed the zone budget while still
+            // supporting bounded token-row access. Probe that path explicitly
+            // so the UI does not report a false load failure or imply that a
+            // multi-hundred-MiB allocation was attempted.
+            const auto* embedding = m_ggufLoader->GetTensorInfo("token_embd.weight");
+            std::vector<uint8_t> probe;
+            const uint64_t probeBytes = embedding ? std::min<uint64_t>(4096, embedding->size) : 0;
+            const bool rowResident = embedding && probeBytes != 0 &&
+                m_ggufLoader->LoadTensorSlice("token_embd.weight", 0, probeBytes, probe);
+            if (rowResident && probe.size() == probeBytes) {
+                appendToOutput("  Embedding zone exceeds the 512 MiB residency budget; bounded row residency enabled.\n",
+                               "Output", OutputSeverity::Info);
+            } else {
+                appendToOutput("  Warning: Could not pre-load embedding zone or establish bounded row residency\n",
+                               "Output", OutputSeverity::Warning);
+            }
         }
     }
     catch (const std::exception& e) {

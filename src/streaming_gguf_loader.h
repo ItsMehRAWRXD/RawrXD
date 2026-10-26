@@ -106,6 +106,10 @@ public:
     // ---- Random-access lookup (RawrXD::IGGUFLoader) -------------------------
     const RawrXD::TensorInfo* GetTensorInfo(const std::string& name) const override;
     const std::vector<std::string>& GetVocabulary() const override;
+    bool LoadTensorSlice(const std::string& name,
+                         uint64_t byte_offset,
+                         uint64_t byte_count,
+                         std::vector<uint8_t>& data) override;
 
 private:
     // ---- File Handle (kept open for streaming) ----

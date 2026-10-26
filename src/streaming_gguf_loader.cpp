@@ -491,8 +491,17 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
         return false;
     }
     
-    // Load zone if not already loaded
+    // Large zones are intentionally not materialized. Read a single tensor
+    // directly when it fits the same bounded budget; callers that need only a
+    // row should use LoadTensorSlice instead.
     if (!zones_[zone_name].is_loaded) {
+        const auto& zone = zones_[zone_name];
+        const uint64_t budgetBytes = max_zone_memory_mb_ * 1024ULL * 1024ULL;
+        auto tensor_it = tensor_index_.find(tensor_name);
+        if (tensor_it != tensor_index_.end() && zone.total_bytes > budgetBytes &&
+            tensor_it->second.size <= budgetBytes) {
+            return LoadTensorSlice(tensor_name, 0, tensor_it->second.size, data);
+        }
         if (!LoadZone(zone_name)) {
             return false;
         }
@@ -522,6 +531,46 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
     std::memcpy(data.data(), zone.data.data() + offset_in_zone, ref.size);
     
     return true;
+}
+
+bool StreamingGGUFLoader::LoadTensorSlice(const std::string& tensor_name,
+                                           uint64_t byte_offset,
+                                           uint64_t byte_count,
+                                           std::vector<uint8_t>& data) {
+    auto it = tensor_index_.find(tensor_name);
+    if (it == tensor_index_.end() || !is_open_ || !file_.is_open()) return false;
+    const TensorRef& ref = it->second;
+    if (byte_offset > ref.size || byte_count > ref.size - byte_offset) {
+        std::cerr << "[GGUF] tensor slice outside bounds: " << tensor_name << std::endl;
+        return false;
+    }
+    const uint64_t budgetBytes = max_zone_memory_mb_ * 1024ULL * 1024ULL;
+    if (byte_count > budgetBytes ||
+        byte_count > static_cast<uint64_t>(std::numeric_limits<size_t>::max()) ||
+        byte_count > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+        std::cerr << "[GGUF] tensor slice exceeds bounded residency budget: " << tensor_name << std::endl;
+        return false;
+    }
+    if (ref.offset > std::numeric_limits<uint64_t>::max() - byte_offset ||
+        ref.offset + byte_offset > std::numeric_limits<uint64_t>::max() - byte_count) {
+        return false;
+    }
+    const uint64_t absolute = ref.offset + byte_offset;
+    const uint64_t fileSize = GetTotalFileSize();
+    if (absolute > fileSize || byte_count > fileSize - absolute) {
+        std::cerr << "[GGUF] tensor slice extends beyond file: " << tensor_name << std::endl;
+        return false;
+    }
+
+    data.resize(static_cast<size_t>(byte_count));
+    file_.clear();
+    file_.seekg(static_cast<std::streamoff>(absolute), std::ios::beg);
+    if (!file_.good()) { data.clear(); return false; }
+    if (byte_count != 0) {
+        file_.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(byte_count));
+    }
+    if (!file_.good() && !file_.eof()) { data.clear(); return false; }
+    return byte_count == 0 || file_.gcount() == static_cast<std::streamsize>(byte_count);
 }
 
 TensorZoneInfo StreamingGGUFLoader::GetZoneInfo(const std::string& zone_name) const {
