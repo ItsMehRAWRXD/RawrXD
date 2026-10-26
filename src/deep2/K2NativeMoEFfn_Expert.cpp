@@ -217,4 +217,50 @@ bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                       true, error);
 }
 
+bool K2MoEExecDense(const GlobalTensorIndex& index, const KimiK2Config& cfg,
+                    uint32_t layer, const float* hidden, float* output,
+                    std::string& error) {
+    if (!hidden || !output || !cfg.hiddenDim) {
+        error = "dense FFN: invalid arguments";
+        return false;
+    }
+
+    char gateN[64], upN[64], downN[64];
+    std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate.weight", layer);
+    std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up.weight", layer);
+    std::snprintf(downN, sizeof(downN), "blk.%u.ffn_down.weight", layer);
+
+    WeightSpan gs{}, us{}, ds{};
+    std::vector<uint8_t> gBuf, uBuf, dBuf;
+    if (!ResolveWeight(index, gateN, gs, gBuf, error) ||
+        !ResolveWeight(index, upN, us, uBuf, error) ||
+        !ResolveWeight(index, downN, ds, dBuf, error)) {
+        return false;
+    }
+    const auto gRef = index.Find(gateN);
+    const auto uRef = index.Find(upN);
+    const auto dRef = index.Find(downN);
+    if (!gRef || !uRef || !dRef || gRef->shape.size() < 2 ||
+        uRef->shape.size() < 2 || dRef->shape.size() < 2) {
+        error = "dense FFN: projection geometry missing";
+        return false;
+    }
+
+    const size_t H = static_cast<size_t>(gRef->shape[0]);
+    const size_t I = static_cast<size_t>(gRef->shape[1]);
+    if (H != cfg.hiddenDim || I == 0 || dRef->shape[0] != I ||
+        dRef->shape[1] != H) {
+        error = "dense FFN: projection geometry mismatch";
+        return false;
+    }
+
+    const uint8_t* gp = gs.data ? gs.data : gBuf.data();
+    const uint8_t* up = us.data ? us.data : uBuf.data();
+    const uint8_t* dp = ds.data ? ds.data : dBuf.data();
+    return SwiGLUHost(gp, static_cast<int>(gRef->ggmlType),
+                      up, static_cast<int>(uRef->ggmlType),
+                      dp, static_cast<int>(dRef->ggmlType),
+                      hidden, output, H, I, layer, -1, false, error);
+}
+
 } // namespace Deep2
