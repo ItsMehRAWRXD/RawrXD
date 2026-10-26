@@ -23,6 +23,7 @@ using json = nlohmann::json;
 static void usage() {
     std::cerr << "rawr-reap inspect <first-shard.gguf>\n"
                  "rawr-reap plan <first-shard.gguf> --size <B|MB|GB|TB>\n"
+                 "rawr-reap topology <first-shard.gguf> [--output <topology.json>]\n"
                  "rawr-reap capabilities <model-file-or-directory>\n"
                  "rawr-reap reap <first-shard.gguf> --target-size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
@@ -181,6 +182,162 @@ static bool writePlan(const std::string& path, const std::string& json) {
     if (!output) return false;
     output.write(json.data(), static_cast<std::streamsize>(json.size()));
     return output.good();
+}
+
+static int topology(const std::string& path, const std::string& outputPath) {
+    Deep2::GGUFLoader loader;
+    if (!loader.load(path)) {
+        std::cerr << "GGUF_LOAD_FAILED: " << loader.error() << "\n";
+        return 1;
+    }
+
+    uint64_t totalBytes = 0;
+    std::error_code ec;
+    const fs::path first(path);
+    const fs::path directory = first.parent_path();
+    const std::string filename = first.filename().string();
+    const size_t marker = filename.find("-00001-of-");
+    if (marker != std::string::npos) {
+        const std::string prefix = filename.substr(0, marker);
+        for (const auto& entry : fs::directory_iterator(directory, ec)) {
+            if (!ec && entry.is_regular_file() &&
+                entry.path().filename().string().rfind(prefix + "-", 0) == 0 &&
+                entry.path().extension() == ".gguf") {
+                totalBytes += fs::file_size(entry.path(), ec);
+            }
+        }
+    } else {
+        totalBytes = fs::file_size(first, ec);
+    }
+    if (!totalBytes) totalBytes = loader.mappedBytes();
+    if (!totalBytes) {
+        std::cerr << "MODEL_SIZE_UNAVAILABLE\n";
+        return 4;
+    }
+
+    const auto tensorBytes = [&](const std::string& name) -> uint64_t {
+        const auto* tensor = loader.getTensor(name);
+        return tensor ? tensor->sizeBytes : 0;
+    };
+    const auto tensorCount = [&](const std::string& name) -> uint64_t {
+        const auto* tensor = loader.getTensor(name);
+        if (!tensor || tensor->shape.empty()) return 0;
+        return static_cast<uint64_t>(tensor->shape.back());
+    };
+
+    uint64_t routedProjectionBytes = 0;
+    uint64_t routedProjectionMinimumBytes = 0;
+    uint64_t routerBytes = 0;
+    uint64_t sharedExpertBytes = 0;
+    uint64_t unsupportedExpertBytes = 0;
+    std::set<uint32_t> moeLayers;
+    json layerReports = json::array();
+    for (uint32_t layer = 0; layer < 256; ++layer) {
+        const std::string prefix = "blk." + std::to_string(layer) + ".";
+        const std::string gateName = prefix + "ffn_gate_exps.weight";
+        const std::string upName = prefix + "ffn_up_exps.weight";
+        const std::string downName = prefix + "ffn_down_exps.weight";
+        const auto* gate = loader.getTensor(gateName);
+        const auto* up = loader.getTensor(upName);
+        const auto* down = loader.getTensor(downName);
+        if (!gate && !up && !down) continue;
+        if (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
+            down->shape.empty() || gate->shape.back() != up->shape.back() ||
+            gate->shape.back() != down->shape.back()) {
+            std::cerr << "INVALID_EXPERT_PROJECTION_TRIPLET layer=" << layer << "\n";
+            return 4;
+        }
+        const uint64_t expertCount = static_cast<uint64_t>(gate->shape.back());
+        const uint64_t gateSlice = gate->sizeBytes / expertCount;
+        const uint64_t upSlice = up->sizeBytes / expertCount;
+        const uint64_t downSlice = down->sizeBytes / expertCount;
+        if (!expertCount || gate->sizeBytes % expertCount || up->sizeBytes % expertCount ||
+            down->sizeBytes % expertCount) {
+            std::cerr << "INVALID_EXPERT_PROJECTION_DIVISIBILITY layer=" << layer << "\n";
+            return 4;
+        }
+        const uint64_t projectionBytes = gate->sizeBytes + up->sizeBytes + down->sizeBytes;
+        const uint64_t minimumProjectionBytes = gateSlice + upSlice + downSlice;
+        routedProjectionBytes += projectionBytes;
+        routedProjectionMinimumBytes += minimumProjectionBytes;
+        moeLayers.insert(layer);
+
+        const std::string routerName = prefix + "ffn_gate_inp.weight";
+        const std::string biasName = prefix + "exp_probs_b.bias";
+        const uint64_t layerRouterBytes = tensorBytes(routerName) + tensorBytes(biasName);
+        routerBytes += layerRouterBytes;
+        json shared = json::array();
+        for (const auto& name : loader.listTensors()) {
+            if (name.rfind(prefix, 0) != 0) continue;
+            if (name.find("shexp") == std::string::npos &&
+                name.find("shared_expert") == std::string::npos) continue;
+            const uint64_t bytesForTensor = tensorBytes(name);
+            sharedExpertBytes += bytesForTensor;
+            shared.push_back({{"name", name}, {"bytes", bytesForTensor}});
+        }
+        layerReports.push_back({
+            {"layer", layer},
+            {"packed_expert_count", expertCount},
+            {"gate_bytes", gate->sizeBytes},
+            {"up_bytes", up->sizeBytes},
+            {"down_bytes", down->sizeBytes},
+            {"gate_slice_bytes", gateSlice},
+            {"up_slice_bytes", upSlice},
+            {"down_slice_bytes", downSlice},
+            {"router_bytes", layerRouterBytes},
+            {"shared_expert_tensors", shared}
+        });
+    }
+
+    uint64_t expertBytes = 0;
+    uint64_t expertTensorCount = 0;
+    for (const auto& name : loader.listTensors()) {
+        const auto* tensor = loader.getTensor(name);
+        if (!tensor) continue;
+        const bool expert = name.find(".experts.") != std::string::npos ||
+                            name.find(".expert.") != std::string::npos ||
+                            name.find(".ffn_gate_exps.") != std::string::npos ||
+                            name.find(".ffn_up_exps.") != std::string::npos ||
+                            name.find(".ffn_down_exps.") != std::string::npos ||
+                            name.find("experts.") == 0;
+        if (!expert) continue;
+        expertBytes += tensor->sizeBytes;
+        ++expertTensorCount;
+    }
+    if (expertBytes >= routedProjectionBytes) unsupportedExpertBytes = expertBytes - routedProjectionBytes;
+    const uint64_t nonExpertBytes = totalBytes >= expertBytes ? totalBytes - expertBytes : 0;
+    const bool minimumBoundKnown = unsupportedExpertBytes == 0;
+    const uint64_t minimumOutputBytes = minimumBoundKnown
+        ? nonExpertBytes + routedProjectionMinimumBytes : 0;
+    const int64_t blockCount = loader.getMetaInt("deepseek2.block_count", 0);
+    const uint64_t reportedLayerCount = blockCount > 0 ? static_cast<uint64_t>(blockCount) : 0;
+
+    std::ostringstream receipt;
+    receipt << "{\"schema\":\"RAWRXD_REAP_TOPOLOGY_001\""
+            << ",\"source\":" << json_quote(path)
+            << ",\"shards\":" << loader.shardCount()
+            << ",\"tensors\":" << loader.tensorCount()
+            << ",\"total_bytes\":" << totalBytes
+            << ",\"expert_tensor_count\":" << expertTensorCount
+            << ",\"expert_bytes\":" << expertBytes
+            << ",\"non_expert_bytes\":" << nonExpertBytes
+            << ",\"routed_projection_bytes\":" << routedProjectionBytes
+            << ",\"routed_projection_minimum_one_expert_bytes\":" << routedProjectionMinimumBytes
+            << ",\"unsupported_expert_bytes\":" << unsupportedExpertBytes
+            << ",\"router_bytes\":" << routerBytes
+            << ",\"shared_expert_bytes\":" << sharedExpertBytes
+            << ",\"reported_block_count\":" << reportedLayerCount
+            << ",\"moe_layer_count\":" << moeLayers.size()
+            << ",\"minimum_bound_known\":" << (minimumBoundKnown ? "true" : "false")
+            << ",\"minimum_output_bytes_one_expert_per_moe_layer\":" << minimumOutputBytes
+            << ",\"layers\":" << layerReports.dump() << "}\n";
+    const std::string result = receipt.str();
+    std::cout << result;
+    if (!writePlan(outputPath, result)) {
+        std::cerr << "TOPOLOGY_RECEIPT_WRITE_FAILED\n";
+        return 5;
+    }
+    return minimumBoundKnown && !moeLayers.empty() ? 0 : 4;
 }
 
 struct CalibrationMetric {
@@ -497,6 +654,17 @@ static int reapPlan(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+    if (argc >= 3 && std::string(argv[1]) == "topology") {
+        std::string outputPath;
+        for (int i = 3; i < argc; ++i) {
+            if (std::string(argv[i]) != "--output" || i + 1 >= argc) {
+                usage();
+                return 2;
+            }
+            outputPath = argv[++i];
+        }
+        return topology(argv[2], outputPath);
+    }
     if (argc >= 3 && std::string(argv[1]) == "capabilities") return capabilities(argv[2]);
     if (argc >= 3 && (std::string(argv[1]) == "reap" || std::string(argv[1]) == "--reap")) return reapPlan(argc, argv);
     if (argc < 3 || (std::string(argv[1]) != "inspect" && std::string(argv[1]) != "plan")) { usage(); return 2; }
