@@ -2133,10 +2133,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_d1_prefill_parity.cpp" AND EXISTS "${
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_d1_prefill_parity PRIVATE
@@ -2188,7 +2193,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
         src/deep2/deep2_speculative.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
@@ -2221,6 +2230,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_spec_bench.cpp" AND EXISTS "${CMAKE_S
     endif()
     target_compile_definitions(deep2_spec_bench PRIVATE
         NOMINMAX _CRT_SECURE_NO_WARNINGS
+        RAWRXD_TOOL_OWNS_FP16_GEMV=1
         DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
     )
     set_target_properties(deep2_spec_bench PROPERTIES
@@ -2349,10 +2359,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CM
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_context_scaling PRIVATE
@@ -2380,6 +2395,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_context_scaling.cpp" AND EXISTS "${CM
     endif()
     target_compile_definitions(deep2_context_scaling PRIVATE
         NOMINMAX _CRT_SECURE_NO_WARNINGS
+        RAWRXD_TOOL_OWNS_FP16_GEMV=1
         DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
     )
     set_target_properties(deep2_context_scaling PROPERTIES
@@ -2402,10 +2418,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gguf_lifecycle.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_gguf_lifecycle PRIVATE
@@ -2760,10 +2781,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_repair.cpp" AND EXISTS "${CMA
         src/deep2/op_linear.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/asm_stubs.cpp
+        src/deep2/vulkan_compute.cpp
+        src/deep2/op_gdn.cpp
         src/vulkan_compute.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
+        src/utils/input_sanitizer.cpp
         src/utils/Diagnostics.cpp
     )
     target_include_directories(deep2_agentic_repair PRIVATE
