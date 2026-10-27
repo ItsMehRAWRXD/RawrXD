@@ -320,3 +320,45 @@ REAL_MODEL_REPEATS=NOT_RUN
 GPU_PER_EXPERT_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
+
+## Increment 9: independent full scalar expert reference
+
+New `tools/k2_q4k_scalar_oracle.py` implements independently decoded
+GGML Q4_K blocks (256 values per 144-byte block) with packed 6-bit scale
+and minimum extraction, and scalar GEMV. The reference layout follows
+the public ggml `get_scale_min_k4` and Q4_K decoder; see
+https://github.com/ggml-org/ggml/blob/master/src/ggml-quants.c
+
+New `tools/k2_scalar_expert_oracle.py` composes Q4_K gate and up
+projections, stable scalar SwiGLU activation, and the existing scalar
+Q6_K down projection. All outputs and input packed byte hashes are
+recorded in a `certified=false` diagnostic receipt. The code is not a
+GPU oracle run: it still needs actual same-expert packed gate/up/down
+weights and a normalized hidden vector captured from one production
+Kimi execution, plus a separately witnessed GPU post-SwiGLU value.
+
+Offline synthetic tests are source-added for Q4_K block unpacking,
+scale/min groups, full scalar pipeline, invalid inputs and CLI receipts.
+The GitHub workflow explicitly runs both new test scripts; their CI
+results and the actual Windows Vulkan numerical comparison have not
+been verified here.
+
+Run the new tests:
+
+    python tools/test_k2_q4k_scalar_oracle.py
+    python tools/test_k2_scalar_expert_oracle.py
+
+The full pipeline models independent mathematical operations in Python
+using high-precision summation; differences from production FP32 and
+GPU accumulation need independently justified tolerances, not an
+assumed exact match. Neither model routing, expert weighting, shared
+expert addition, nor final logits parity are certified by these tools.
+
+Q4K_SCALAR_GATE_UP=SOURCE_ADDED
+Q6K_SCALAR_DOWN=SOURCE_ADDED
+FULL_SCALAR_EXPERT=SOURCE_ADDED
+REAL_EXPERT_CAPTURE=NOT_RUN
+CI_TESTS=NOT_VERIFIED
+GPU0_NUMERICAL_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
