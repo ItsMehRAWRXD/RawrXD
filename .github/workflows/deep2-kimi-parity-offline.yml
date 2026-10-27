@@ -6,6 +6,7 @@ on:
       - 'tools/k2_*'
       - 'tools/test_k2_*'
       - 'src/deep2/K2MoEParityCapture.hpp'
+      - 'src/deep2/K2NativeMoEFfn_ExpertGpu.cpp'
       - '.github/workflows/deep2-kimi-parity-offline.yml'
   workflow_dispatch:
 
