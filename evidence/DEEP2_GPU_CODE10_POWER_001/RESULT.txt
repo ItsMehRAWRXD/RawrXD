@@ -1,0 +1,16 @@
+GATE=DEEP2_GPU_CODE10_POWER_001
+SECONDARY_GPU=AMD Radeon RX 7800 XT
+STATUS=Error Problem=CM_PROB_FAILED_START (Code 10)
+PRIMARY_OK=AMD Radeon AI PRO R9700
+IGPU_OK=AMD Radeon(TM) Graphics
+PNP_BOUNCE=FAIL_NEED_ELEVATION (Disable-PnpDevice Generic failure — non-admin shell)
+NEED_COLD_BOOT=LIKELY_YES until elevated bounce or full power drain clears latch
+FICTIONAL_POWER_GATE_PATCH=REJECTED
+  reason=ForwardLayerAsynchronous / DEEP2_RING_BUFFER_SLOTS / ApplyHardwarePowerGate not in Deep2Engine.cpp
+  reason=unconditional sleep+vkQueueWaitIdle antithetical to async path; keep opt-in only if ever needed
+CODE10_MAPPED_IN=GpuDeviceLostReset.hpp (kWinCode10=10 phase code_10) both trees
+RESET_OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (unchanged)
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+DISPOSITION=OPEN_HARDWARE_LATCH (software map landed; device still Error)
