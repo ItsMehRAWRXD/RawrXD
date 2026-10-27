@@ -624,7 +624,15 @@ bool VulkanCompute::UploadBuf(DeviceBuf& b, const float* host, uint32_t n) {
 bool VulkanCompute::DownloadBuf(DeviceBuf& b, float* host, uint32_t n) {
     if (backend_ == nullptr || host == nullptr || n == 0) return false;
     Deep2::VulkanCompute::DeviceBuf bi = ToBackend(b);
-    if (!backend_->DownloadVector(bi, host, n)) return false;
+    if (!backend_->DownloadVector(bi, host, n)) {
+        last_d2h_vk_ = static_cast<uint64_t>(backend_->LastLostVk());
+        last_d2h_phase_ = backend_->LastLostPhase();
+        if (backend_->DeviceIsLost())
+            (void)backend_->RecoverDeviceIfOptIn();
+        return false;
+    }
+    last_d2h_vk_ = 0;
+    last_d2h_phase_ = "ok";
     b = FromBackend(bi);
     return true;
 }
@@ -727,14 +735,14 @@ bool VulkanCompute::DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& ou
 
 bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
                                        DeviceBuf& out, uint32_t seqLen, uint32_t headDim,
-                                       uint32_t nHeads, uint32_t kvDim, float scale,
+                                       uint32_t nHeads, uint32_t kvHeads, float scale,
                                        uint32_t layer) {
     if (backend_ == nullptr) return false;
     Deep2::VulkanCompute::DeviceBuf bq = ToBackend(q);
     Deep2::VulkanCompute::DeviceBuf bk = ToBackend(kCache);
     Deep2::VulkanCompute::DeviceBuf bv = ToBackend(vCache);
     Deep2::VulkanCompute::DeviceBuf bo = ToBackend(out);
-    if (!backend_->DispatchAttnDecode(bq, bk, bv, bo, headDim, nHeads, kvDim, seqLen, scale, layer)) return false;
+    if (!backend_->DispatchAttnDecode(bq, bk, bv, bo, headDim, nHeads, kvHeads, seqLen, scale, layer)) return false;
     q = FromBackend(bq);
     kCache = FromBackend(bk);
     vCache = FromBackend(bv);

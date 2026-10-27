@@ -1376,6 +1376,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
                      static_cast<int>(submit));
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(submit), "submit");
         vkDestroyFence(device_, fence, nullptr);
         return false;
     }
@@ -1393,6 +1394,7 @@ bool VulkanCompute::endSubmitWait(
         wi.fenceWaitWallNs = completeNs - waitStartedNs;
         recordInterval(wi);
         if (interval) *interval = wi;
+        (void)NoteVkResult(static_cast<int>(VK_SUCCESS), "ok");
     } else {
         std::fprintf(stderr,
                      "[GPU] endSubmitWait stage=fence_wait vk=%d timeout_ns=%llu kind=%u bytes=%llu\n",
@@ -1401,6 +1403,9 @@ bool VulkanCompute::endSubmitWait(
                      static_cast<unsigned>(kind),
                      static_cast<unsigned long long>(bytes));
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(wait),
+                           (wait == VK_ERROR_DEVICE_LOST) ? "device_lost"
+                                                         : "fence");
     }
 
     vkDestroyFence(device_, fence, nullptr);
@@ -1807,6 +1812,11 @@ bool VulkanCompute::dispatchQuant(
 {
     if (!qPipeline_ || !weights || !input || !output) return false;
 
+    QPush dispatchPush = push;
+    const char* strictEnv = std::getenv("RAWRXD_DEEP2_GEMV_STRICT_ORDER");
+    dispatchPush.strictOrder =
+        (strictEnv && strictEnv[0] == '1' && strictEnv[1] == '\0') ? 1u : 0u;
+
     VkCommandBuffer cmd = fusedCmd_;
     VkQueryPool query = fusedQuery_;
     const bool own = !fused_;
@@ -1822,7 +1832,7 @@ bool VulkanCompute::dispatchQuant(
         const uint32_t lane = q4kLane_;
         if (lane < 3) {
             ++q4kDispatchCount_[lane];
-            q4kRows_[lane] += push.rows;
+            q4kRows_[lane] += dispatchPush.rows;
             q4kPipelineSeen_[lane] = qPipeline_;
         }
     }
@@ -1850,9 +1860,9 @@ bool VulkanCompute::dispatchQuant(
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
                             qPipelineLayout_, 0, 1, &set, 0, nullptr);
     vkCmdPushConstants(cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
-                       0, sizeof(push), &push);
+                       0, sizeof(dispatchPush), &dispatchPush);
     // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
-    vkCmdDispatch(cmd, push.rows, 1, 1);
+    vkCmdDispatch(cmd, dispatchPush.rows, 1, 1);
     recordComputeBarrier(cmd);
 
     if (sample) {
@@ -1863,14 +1873,14 @@ bool VulkanCompute::dispatchQuant(
         vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                             q4kParityQuery_, slot * 3u + 2u);
         q4kParityMeta_.push_back(
-            Q4kParitySample{push.rows, push.cols, q4kLane_, prevPipelineType_});
+            Q4kParitySample{dispatchPush.rows, dispatchPush.cols, q4kLane_, prevPipelineType_});
         ++q4kParityNext_;
     }
     prevPipelineType_ = currPipeline;
 
     if (!own) return true;
     return endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
-                         push.weightBytes, workEpoch_, nullptr);
+                         dispatchPush.weightBytes, workEpoch_, nullptr);
 }
 
 bool VulkanCompute::dispatchQuantNvfp4(
@@ -2451,8 +2461,10 @@ bool VulkanCompute::EndFusedLayer() {
                      (int)submitRes);
         std::fflush(stderr);
     }
-    if(submitRes!=VK_SUCCESS)
+    if(submitRes!=VK_SUCCESS) {
+        (void)NoteVkResult(static_cast<int>(submitRes), "submit");
         return false;
+    }
     ++queueSubmitCount_;
     const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
     if (moeTrace) {
@@ -2469,9 +2481,15 @@ bool VulkanCompute::EndFusedLayer() {
     if(waitRes==VK_TIMEOUT){
         std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(waitRes), "fence");
         return false;
     }
-    if(waitRes!=VK_SUCCESS) return false;
+    if(waitRes!=VK_SUCCESS) {
+        (void)NoteVkResult(static_cast<int>(waitRes),
+                           (waitRes == VK_ERROR_DEVICE_LOST) ? "device_lost"
+                                                            : "fence");
+        return false;
+    }
     const uint64_t completeNs=nowNs();
 
     // DEEP2_COLD_ROW_RACE_001 endurance fix: the fused fence is signaled —
@@ -3128,7 +3146,8 @@ bool VulkanCompute::ensureWeightF32(
 }
 
 bool VulkanCompute::ensureWeightQuant(
-    int type, const void* weights, size_t bytes, DeviceBuf*& out)
+    int type, const void* weights, size_t bytes, DeviceBuf*& out,
+    uint64_t cacheKey)
 {
     // DEEP2_DIRECT_RESIDENT_DISPATCH_001: certification counter — see
     // ensureWeightF32.
@@ -3140,7 +3159,12 @@ bool VulkanCompute::ensureWeightQuant(
             residentDispatchDepth_, type);
 #endif
     }
-    const uint64_t key=quantWeightKey(weights,bytes,type);
+    // Streaming shard mappings may recycle the same virtual address for a
+    // different tensor.  When the caller has a stable tensor identity, use it
+    // for cache ownership; raw pointer identity is only a compatibility path.
+    const uint64_t key = cacheKey != 0
+        ? quantWeightKey(reinterpret_cast<const void*>(static_cast<uintptr_t>(cacheKey)), bytes, type)
+        : quantWeightKey(weights, bytes, type);
     auto it=weightCache_.find(key);
     if(it!=weightCache_.end()){
         ++weightHits_;
@@ -3241,7 +3265,8 @@ bool VulkanCompute::DispatchGemvDevice(
 
 bool VulkanCompute::DispatchGemvQuant(
     int type,const void* weights,size_t weightBytes,
-    DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols)
+    DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
+    uint64_t cacheKey)
 {
     if(type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
     if(!weights||!weightBytes||!rows||!cols||
@@ -3249,7 +3274,7 @@ bool VulkanCompute::DispatchGemvQuant(
         return false;
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(type,weights,weightBytes,w)) return false;
+    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) return false;
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
@@ -4167,6 +4192,9 @@ bool VulkanCompute::recordQuantRowsResident(
     push.rows = rowCount;
     push.cols = meta.cols;
     push.weightBytes = static_cast<uint32_t>(rowCount*rowBytes);
+    const char* strictEnv = std::getenv("RAWRXD_DEEP2_GEMV_STRICT_ORDER");
+    push.strictOrder =
+        (strictEnv && strictEnv[0] == '1' && strictEnv[1] == '\0') ? 1u : 0u;
     vkCmdPushConstants(
         cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
         0, sizeof(push), &push);
@@ -5578,6 +5606,9 @@ bool VulkanCompute::DispatchWeightResidentLane(
     push.rows = meta.rows;
     push.cols = meta.cols;
     push.weightBytes = static_cast<uint32_t>(meta.bytes);
+    const char* strictEnv = std::getenv("RAWRXD_DEEP2_GEMV_STRICT_ORDER");
+    push.strictOrder =
+        (strictEnv && strictEnv[0] == '1' && strictEnv[1] == '\0') ? 1u : 0u;
     vkCmdPushConstants(
         lane.cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
         0, sizeof(push), &push);
