@@ -2002,6 +2002,25 @@ if(GLSLC_EXECUTABLE)
     add_custom_target(deep2_resident_qgemv_shader
         DEPENDS "${_deep2_resident_qgemv_output}")
 
+    # The fused MoE accumulator uses the checked-in spec-ops shader for its
+    # scaled-add operation.  Keep this binary tied to the GLSL source just as
+    # the resident GEMV shader is, otherwise a host-side fix can run against a
+    # stale spec_ops.spv and silently lose the device contribution.
+    set(_deep2_spec_ops_source
+        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_spec_ops.comp")
+    set(_deep2_spec_ops_output
+        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_spec_ops.spv")
+    add_custom_command(
+        OUTPUT "${_deep2_spec_ops_output}"
+        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.3
+            "${_deep2_spec_ops_source}"
+            -o "${_deep2_spec_ops_output}"
+        DEPENDS "${_deep2_spec_ops_source}"
+        VERBATIM
+        COMMENT "Compiling Deep2 fused spec-ops shader")
+    add_custom_target(deep2_spec_ops_shader
+        DEPENDS "${_deep2_spec_ops_output}")
+
     # Every consumer that can bind the resident QGEMV pipeline must depend on
     # the generated SPIR-V.  Without this edge, a shader-only correction can
     # rebuild the host executable while leaving a stale checked-in artifact
@@ -3407,6 +3426,7 @@ endforeach()
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
         )
         add_dependencies(deep2_engine_lib deep2_resident_qgemv_shader)
+        add_dependencies(deep2_engine_lib deep2_spec_ops_shader)
         set_target_properties(deep2_engine_lib PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
         )

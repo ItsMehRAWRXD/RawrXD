@@ -29,6 +29,7 @@
 #include "vulkan_compute_cpu_ns.hpp"
 #include "vulkan_compute.h"
 
+#include <cstdint>
 #include <cstring>
 
 namespace {
@@ -46,6 +47,12 @@ Deep2::VulkanCompute::DeviceBuf ToBackend(const CPUInference::VulkanCompute::Dev
     o.buffer = b.buffer;
     o.memory = b.memory;
     o.size = static_cast<VkDeviceSize>(b.bytes);
+    /* The engine-facing contract predates Deep2's descriptor-cache IDs.  A
+       zero ID for every adapted buffer aliases unrelated descriptor sets and
+       can bind a fused op to stale storage.  The Vulkan buffer handle is a
+       stable identity for the lifetime of the allocation, so use it whenever
+       crossing this adapter boundary. */
+    o.id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(b.buffer));
     return o;
 }
 
@@ -704,7 +711,11 @@ bool VulkanCompute::DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float sc
     if (backend_ == nullptr || n == 0) return false;
     Deep2::VulkanCompute::DeviceBuf ba = ToBackend(accum);
     Deep2::VulkanCompute::DeviceBuf bs = ToBackend(src);
-    if (!backend_->dispatchSpecOps(ba, bs, bs, bs, {0, n, 1, 0, scale})) return false;
+    /* op=3 is the dedicated scaled-add branch.  The previous implementation
+       accidentally selected op=0 (RMSNorm) and wrote into the source buffer,
+       leaving the MoE accumulator at zero while still reporting a successful
+       dispatch. */
+    if (!backend_->dispatchSpecOps(ba, bs, ba, bs, {3, n, 1, 0, scale})) return false;
     accum = FromBackend(ba);
     src = FromBackend(bs);
     return true;
