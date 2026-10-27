@@ -101,3 +101,15 @@ does establish the first actionable optimization boundary: down-projection
 GEMV accounts for 26.37 s of the measured 48.13 s expert total, while every
 expert is reacquired on the host path. A bounded resident-slice experiment is
 the next change; no model or routing policy is changed by this recorder.
+
+## Final quiet-binary smoke run
+
+After the accounting snapshot was moved off the stack, the rebuilt executable
+was run again with accounting disabled to avoid receipt-I/O distortion. The
+binary SHA-256 was `4CFC78A7EF6A6C889F16D4EC6A815938CC2AF2CD6E5E60E9C249CE60636389AA`.
+The one-token Kimi run exited `0`, reached `T0_L39_EXIT`, and reported
+`WALL_NS=50696723000` (50.697 s), `MOE_SHARD_IO_NS=13671149000`,
+`STREAM_CACHE_HITS=2`, `STREAM_CACHE_MISSES=915`,
+`GPU_GEMV_KERNEL_NS=0`, and `H2D_TRANSFER_BYTES=0`. This confirms the
+instrumentation did not prevent the real host MoE path from completing; it is
+not a performance certification and still does not prove GPU1 execution.
