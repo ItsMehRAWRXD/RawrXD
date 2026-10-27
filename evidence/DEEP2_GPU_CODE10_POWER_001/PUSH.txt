@@ -30,3 +30,33 @@ OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (unchanged; default off)
 PUSH_TXT_COMMIT=860fd444c11746443c85dff7fe055d22611bad84
 PUSH_TXT_origin=https://github.com/ItsMehRAWRXD/RawrXD/commit/860fd444c11746443c85dff7fe055d22611bad84
 PUSH_TXT_everything=https://github.com/ItsMehRAWRXD/everything/commit/860fd444c11746443c85dff7fe055d22611bad84
+
+==== PUSH DEEP2_GPU_CODE10_POWER_001 2026-10-27T00:59:01-04:00 ====
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+PNP_RECOVERY=NOT_CLAIMED
+7800XT=Error CM_PROB_FAILED_START (Code 10) NEED_COLD_BOOT; bounce NOT_RUN
+DISPOSITION=OPEN_HARDWARE_LATCH
+RESULT=OPEN
+PHASE=power_failure (alias code_10)
+
+F:\rawrxd
+  branch=fix/deep2-multimodel-safety-20261025
+  sha=449404b843c79c68553a94be60a8c37dec64d467
+  origin=https://github.com/ItsMehRAWRXD/RawrXD.git
+  origin_url=https://github.com/ItsMehRAWRXD/RawrXD/commit/449404b843c79c68553a94be60a8c37dec64d467
+  everything=https://github.com/ItsMehRAWRXD/everything.git
+  everything_url=https://github.com/ItsMehRAWRXD/everything/commit/449404b843c79c68553a94be60a8c37dec64d467
+
+F:\rawrxd-native-agent-001
+  branch=native-agent-single-authority
+  sha=43df19aa0e05e93972bdbc644f2d81e74fb13195
+  origin=https://github.com/ItsMehRAWRXD/RawrXD.git
+  origin_url=https://github.com/ItsMehRAWRXD/RawrXD/commit/43df19aa0e05e93972bdbc644f2d81e74fb13195
+  everything=https://github.com/ItsMehRAWRXD/everything.git
+  everything_url=https://github.com/ItsMehRAWRXD/everything/commit/43df19aa0e05e93972bdbc644f2d81e74fb13195
+
+CODE10_MAP=kWinCode10=10 PhaseFor=power_failure (alias code_10) both trees
+SMOKE=PASS code10_mapped=1 (software only; hardware latch OPEN)
+OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (unchanged; default off)
