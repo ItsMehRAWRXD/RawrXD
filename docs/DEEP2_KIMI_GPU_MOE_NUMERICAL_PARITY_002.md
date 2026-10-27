@@ -35,3 +35,47 @@ NUMERICAL_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Independent Q6_K scalar down-GEMV reference (increment 2)
+
+The repository now includes `tools/k2_q6k_scalar_oracle.py`, which independently
+unpacks GGML Q6_K blocks (256 elements / 210 packed bytes), including
+signed group scales, 6-bit signed quantized values, and the F16 block scale.
+It evaluates matrix-vector products with a scalar Python implementation,
+not `QuantKernelRegistry::GetGEMV()` or a Vulkan compute shader.
+
+```powershell
+python tools/test_k2_q6k_scalar_oracle.py
+python tools/k2_q6k_scalar_oracle.py --weights down_expert_q6k.bin --input post_swiglu.txt --rows 7168 --columns 2048 --output down_oracle.txt --receipt down_oracle_receipt.json
+```
+
+The dimensions above are **examples**, not an assertion about the running
+model: use the validated physical expert-slice geometry and post-SwiGLU
+activation length from the same real execution. The script rejects a
+mismatched packed byte count, nonfinite inputs, and invalid dimensions.
+
+Local synthetic suite: **9/9 PASS** on the author's test runner. No Kimi
+model bytes, Vulkan device, or native Windows binary were exercised by this
+suite. The GPU/CPU/oracle comparison remains blocked on *actual* same-expert
+vector capture and independent cross-validation of the packed Q6_K layout
+against authoritative GGML fixtures. Q4_K gate/up are **not yet** modeled by
+this oracle; that requires a separate extension.
+
+For a real MoE down-projection parity experiment, capture the **post-SwiGLU
+vector passed into Q6_K down-GEMV**, the exact packed expert's down weights,
+and the CPU/GPU down output vectors. Raw normalized hidden states are not a
+valid substitute for the down-projection input. Keep all captures bounded
+and explicitly opt-in. The scalar oracle uses high-precision summation, so
+an F32 GPU kernel can differ slightly without being incorrect; freeze
+tolerances only after reference and accumulation-order analysis.
+
+```ini
+Q6K_SCALAR_SOURCE=ADDED
+Q6K_SYNTHETIC_TESTS=9/9_LOCAL_PASS
+Q6K_LAYOUT_CROSS_REFERENCE=REQUIRES_INDEPENDENT_FIXTURE
+Q4K_GATE_UP_ORACLE=NOT_IMPLEMENTED
+LIVE_KIMI_VECTOR_CAPTURE=NOT_IMPLEMENTED
+REAL_KIMI_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
