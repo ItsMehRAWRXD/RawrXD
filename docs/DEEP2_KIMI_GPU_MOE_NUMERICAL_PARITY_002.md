@@ -178,3 +178,39 @@ FULL_KIMI_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## GPU submission-order certification blocker (increment 5 audit)
+
+Source review of `K2NativeMoEFfn_ExpertGpu.cpp` shows that
+`emitParity(r)` is invoked inside the expert loop, after
+`K2MoEStickExpertDevice(...)` but before the outer
+`K2MoEStickEndFused(...)`. Thus the diagnostic may ask
+`DownloadBuf(ArenaDown())` for an expert result before a fused
+submission/completion boundary. A successful transfer API call
+**by itself does not prove that the corresponding expert result
+was finished and owned by that same expert**. The GPU vector
+capture must be treated as suspect until the Vulkan command
+lifetime is inspected and a per-expert, completion-ordered GPU
+witness is implemented. This matters especially if the same
+arena slot is reused between experts.
+
+The standalone manifest and scalar oracle compare the bytes
+they receive; they cannot repair an incorrect capture boundary.
+An analyst must check command recording, submission, completion
+and per-expert buffer identity before certifying parity.
+
+The new `.github/workflows/deep2-kimi-parity-offline.yml`
+runs all three Python test files explicitly (so zero discovered
+tests cannot be mistaken for a pass), plus standalone C++
+capture checks with Linux GCC and Windows MSVC. No Vulkan
+device is required for these offline tests. Workflow commit
+is **not** a green CI receipt; inspect actual job conclusion.
+
+```ini
+GPU_CAPTURE_SUBMISSION_ORDER=AUDIT_BLOCKER
+OFFLINE_CI_WORKFLOW=SOURCE_ADDED
+OFFLINE_CI_RESULT=PENDING
+REAL_GPU_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
