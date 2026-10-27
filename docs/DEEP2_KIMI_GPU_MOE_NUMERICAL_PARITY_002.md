@@ -292,3 +292,31 @@ KIMI_GPU_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 8: repeatability of completed aggregate GPU partials
+
+Added tools/k2_stick_partial_repeatability.py to compare two captures from
+separate runs. The checker fails closed if the layer, stick, dimensions,
+ordered expert IDs or routing coefficients differ. It validates finite
+vectors, computes maximum, mean and RMS absolute error, and records SHA-256
+hashes. It rejects using the same manifest twice.
+
+Example (with separately captured run directories):
+
+    python tools/test_k2_stick_partial_repeatability.py
+    python tools/k2_stick_partial_repeatability.py --first RUN_A/k2_l1_s0_aggregate.manifest.txt --second RUN_B/k2_l1_s0_aggregate.manifest.txt --max-abs 0 --max-rms 0 --receipt repeat.json
+
+A zero tolerance compares text-serialized float values, not raw binary GPU
+FP32 bits. The diagnostic does not prove the GPU post-SwiGLU input, individual
+expert correctness, weight identity, or a correct independent reference.
+
+The first implementation's nine synthetic test cases passed in an isolated
+local Python runner. No Windows GPU execution or GitHub Actions success has
+been verified for this increment.
+
+AGGREGATE_REPEATABILITY_AUDITOR=SOURCE_ADDED
+OFFLINE_SYNTHETIC_TESTS=9/9_PASS_LOCAL
+REAL_MODEL_REPEATS=NOT_RUN
+GPU_PER_EXPERT_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
