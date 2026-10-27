@@ -1,0 +1,48 @@
+SCHEMA=GATE2_TIMING_BREAKDOWN_RE_001
+SOURCE_RUN=k2_oracle_single_turn (ABORTED)
+EXECUTABLE=F:\llama.cpp-ref\build-vulkan\bin\llama.exe  (EXTERNAL llama.cpp; NOT Deep2 rawr-reap-replay)
+BACKEND=Vulkan (Vulkan0 R9700 + Vulkan1 iGPU listed); layers offloaded 62/62; --cpu-moe ON; --load-mode mmap
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+=== VERIFIED WALL ATTRIBUTION (from llama SSE timings only) ===
+PROMPT_TOKENS=87
+GENERATED_IDS=86
+PREFILL_MS=448802.14          (28.1% of prefill+decode sum)
+DECODE_MS=1146641.913         (71.9% of prefill+decode sum)
+ENGINE_SUM_MS=1595444.053
+PREFILL_MS_PER_TOK=5158.65    (~0.194 prompt tok/s)
+DECODE_MS_PER_TOK_MEAN=13489.9 (~0.074 decode tok/s)
+INTER_TOKEN_MS_N=85
+INTER_TOKEN_MS_MIN=6730
+INTER_TOKEN_MS_MED=13224
+INTER_TOKEN_MS_MAX=21396
+INTER_TOKEN_MS_MEAN=13490
+LOAD_FIT_MMAP_MS=UNATTRIBUTED (no stage counter before first prompt_ms)
+
+=== NOT ATTRIBUTABLE FROM THIS LOG ===
+weightAcquireMs, dequantMs, cpuGemmMs, gpuGemmMs, gpuWaitMs,
+routingMs, attentionMs, samplingMs, expertCacheHits/Misses,
+hardPageFaults, hostToDeviceBytes
+REASON=llama.cpp verbose SSE exposes only prompt_ms / predicted_ms aggregates
+
+=== DEEP2 HISTORICAL EVIDENCE (SEPARATE BINARY — DO NOT SUBSTITUTE %) ===
+QUEUE_BALANCE_3C: fence_wait_gpu0~408ms vs gpu1~57ms (accumulated event time; overlapping)
+D03: WAIT_NS mis-normalized vs WALL_TPS (do not treat wait as exclusive wall)
+KIMI_REPLAY_DEEP2: SwiGLUHost CPU MoE fallback observed on Deep2 path
+NEMOTRON_FFN~92%: different workload; GPU counters inactive there
+
+=== CROSS-LINK STATUS ===
+CURRENT_LLAMA_TO_DEEP2_PERFPROBE=NOT_CONNECTED
+Deep2PerfProbe / endSubmitWait / TensorResidencyCache timings apply to Deep2 Vulkan path,
+not automatically to F:\llama.cpp-ref\build-vulkan\bin\llama.exe
+
+=== STRONGEST VERIFIED CLUE FOR THIS RUN ===
+CMD includes --cpu-moe: MoE expert weights forced CPU/mmap while layers report 62/62 GPU offload.
+This makes expert FFN data-movement / CPU expert compute a PRIMARY investigation target
+for the ~13.5s/token mean — still unquantified without stage counters.
+
+=== NEXT ARTIFACT (no new profiler invention) ===
+1) Short n=8 probe on SAME llama.exe with same flags; scrape existing llama timing lines
+2) Parallel: Deep2 rawr-reap-replay K2 path with existing QB / Deep2PerfProbe receipts
+3) Compare backends before applying Deep2 fence-fusion fixes to the llama workload

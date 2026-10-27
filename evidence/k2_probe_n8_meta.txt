@@ -1,0 +1,3 @@
+START=Mon 10/26/2026 23:35:44.10
+ENGINE=llama-completion exclusive cmd
+EXIT=1 END=Mon 10/26/2026 23:39:39.67

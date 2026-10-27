@@ -1,0 +1,9 @@
+=== oracle non-interactive probe Mon 10/26/2026 20:50:26.16 
+EXE=F:\llama.cpp-ref\build\bin\llama-cli.exe
+MODEL=F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+CORPUS=F:\rawrxd-native-agent-001\corpus.jsonl
+N=256 TEMP=0 TOP_K=1 SEED=0 SINGLE_TURN=1 FLAG_SUB=--no-conversation-to--single-turn
+START=20:50:26.18
+END=20:50:35.31
+OUT_BYTES=1603
+ERR_BYTES=544623

@@ -1,0 +1,8 @@
+TOKEN_ID_COUNT=256
+FIRST20=429,2985,340,4286,317,245,339,3953,2043,344,9131,254,2030,1770,63,1157,13,429,2030,1770
+LAST10=543,3640,440,30827,1,285,254,2030,1770,63
+SOURCE=F:\rawrxd-native-agent-001\evidence\oracle_single_turn.err
+NOTE=generated_from_verbose_next_token_lines (decode_lines=255 + terminal_next=63)
+PROMPT_N=100
+PRED_N=256
+PARSER_NOTE=PROMPT_TOKENS=/GENERATED_TOKEN_IDS= markers absent in llama-cli b1-961c376 verbose

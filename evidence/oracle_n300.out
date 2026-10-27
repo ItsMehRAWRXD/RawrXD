@@ -1,0 +1,62 @@
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-961c376
+model      : F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+ftype      : Q4_K - Medium
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> #include <cstdio>
+int add(int a, int b) {
+    return a + -b;
+}
+int main() {
+    if (add(2, 3) == 5) {
+        printf("PASS
+");
+    } else {
+        printf("FAIL add(2,3)=%d
+", add(2, 3));
+    }
+    return 0;
+}
+ The code you provided is a C++ program that tests the `add` function. The `add` function is supposed to add two integers, but it subtracts the second integer from the first one. This is likely a mistake.
+
+The `main` function tests the `add` function by passing the values 2 and 3 to it and then comparing the result to 5. If the result is 5, it prints "PASS". Otherwise, it prints the result of the `add` function with the values 2 and 3.
+
+However, as written, the `add` function will return -1 (2 - 3) instead of 5. Therefore, the `main` function will print "FAIL add(2,3)=5" instead of "PASS".
+
+To fix this, you should correct the `add` function so that it adds the two integers instead of subtracting the second one from the first one. Here's the corrected version of the `add` function:
+
+```cpp
+int add(int a, int b) {
+    return a + b;
+}
+```
+
+With this correction, the `main` function will print "PASS" and the `add` function will return the correct value.
+
+Please note that this code will not compile as it is because the `add` function is not declared in the scope of the `main` function. You need to define the
+
+[ Prompt: 75.8 t/s | Generation: 21.8 t/s ]
+
+
+Exiting...

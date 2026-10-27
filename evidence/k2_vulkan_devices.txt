@@ -1,0 +1,3 @@
+Available devices:
+  Vulkan0: AMD Radeon AI PRO R9700 (32624 MiB, 31704 MiB free)
+  Vulkan1: AMD Radeon(TM) Graphics (48470 MiB, 46047 MiB free)

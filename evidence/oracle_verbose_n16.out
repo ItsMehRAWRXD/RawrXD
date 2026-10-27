@@ -1,0 +1,47 @@
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-961c376
+model      : F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+ftype      : Q4_K - Medium
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+>  #include <cstdio>
+int add(int a, int b) {
+    return a + -b;
+}
+int main() {
+    if (add(2, 3) == 5) {
+        printf("PASS
+");
+    } else {
+        printf("FAIL add(2,3)=%d
+", add(2, 3));
+    }
+    return 0;
+}
+ The code you provided is a C++ program that defines a function `add`
+
+[ Prompt: 66.5 t/s | Generation: 22.8 t/s ]
+
+> 
+
+Exiting...

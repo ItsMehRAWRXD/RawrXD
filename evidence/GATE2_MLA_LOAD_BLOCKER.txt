@@ -1,0 +1,28 @@
+GATE2=FAIL_MODEL_LOAD
+REPLAY_EXIT=4
+REFERENCE_PARITY=NOT_RUN
+CALIBRATION_COMPLETE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+RECEIPT_CHECK=PASS
+RECEIPT=F:\rawrxd-native-agent-001\evidence\independent_reference_receipt.json
+RECEIPT_MODEL=F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+RECEIPT_ENGINE=F:\llama.cpp-ref\build\bin\llama-completion.exe
+RECEIPT_PROMPT_TOKENS=94
+RECEIPT_TOKEN_IDS_LEN=256
+RECEIPT_CORPUS_SHA256=28ae4d7073d981ee93c8fb092f1b647e88baf90127b1cac716d8de785b01e103
+
+REPLAY_BIN=F:\rawrxd-native-agent-001\build_reap\bin-msvc\rawr-reap-replay.exe
+LOAD_ERROR=MLA model has no production K2 shard stream (MLA-CERT-001)
+LOAD_LAW=Deep2Engine requires isMultiShard && k2ShardIndexOpen_ && globalIndex_ for MLA; single-GGUF DeepSeek-V2-Lite cannot admit
+UNSAFE_BYPASS=FORBIDDEN
+
+K2_MULTI_SHARD_AVAILABLE=1
+K2_FIRST_SHARD=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+K2_SHARDS=13
+K2_VERIFY=F:\rawrxd\evidence\reap_shard_verification_kimi-k2_20261026.json
+
+BLOCKER=Oracle receipt is valid for DeepSeek-V2-Lite-Chat.Q4_K_M.gguf, but Deep2 continuous replay cannot load that single GGUF under MLA-CERT-001.
+NEXT=Retarget Gate2 to Kimi K2 multi-shard: (1) re-capture llama-completion against K2 first-shard/dir with same corpus + greedy flags; (2) seal new independent_reference_receipt bound to K2 model hash; (3) rawr-reap-replay --continuous --parity --require-mla on K2 path. Do not weaken MLA-CERT-001. Do not invent PASS on DeepSeek single-file.

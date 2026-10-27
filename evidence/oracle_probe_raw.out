@@ -1,0 +1,46 @@
+
+
+Loading model... 
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b1-961c376
+model      : F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+ftype      : Q4_K - Medium
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read <file>        add a text file
+  /glob <pattern>     add text files using globbing pattern
+
+
+
+> {"id":"src_000001","text":" #include <cstdio>
+int add(int a, int b) {
+    return a + -b;
+}
+int main() {
+    if (add(2, 3) == 5) {
+        printf("PASS\n");
+    } else {
+        printf("FAIL add(2,3)=%d\n", add(2, 3));
+    }
+    return 0;
+}","domain":"cpp","source":"agentic_repair_ws\calc.cpp","source_sha256":"d4c2ab10294c41d21ddb98f7b0be43ed19fab56d75335106a4a223ed3f6f4046","sha256":"143ea443bef93c60121ab2b72fbeef257849731473f1a03878372efab503247f"}
+{"id":"src_000002","text":" param(
+  [int]$Bat ... (truncated)
+Error: request (242520 tokens) exceeds the available context size (2048 tokens), try increasing it
+
+[ Prompt: 0.0 t/s | Generation: 0.0 t/s ]
+
+
+Exiting...

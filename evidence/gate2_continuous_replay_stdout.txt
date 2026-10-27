@@ -1,0 +1,15 @@
+[Deep2Engine] Loading model from: F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf mode=GPU_SINGLE devices=1 kv_per_token=62208 max_ctx_est=74830
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=2048 layers=27 heads=16 kvHeads=16 inter=10944 vocab=102400
+[Deep2Engine] MLA detected: qLoraRank=0 kvLoraRank=0 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.

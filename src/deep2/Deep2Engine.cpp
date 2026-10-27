@@ -7143,8 +7143,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             printf("[B3_LOGITS] BEFORE sampleToken\n");
             fflush(stdout);
         }
-        // CONTROL diverge@69 tip dump (oracle=338 vs replay=421) + top-5.
-        if (tokensGenerated == 69)
+        // CONTROL tip dumps: step 69 near-tie + first free/oracle mismatch.
+        const bool tip69 = (tokensGenerated == 69);
+        if (tip69)
         {
             DumpTipNearTie(teacherForce ? "TEACHER_FORCED" : "FREE_RUN",
                            position, tokensGenerated, logits, config.vocabSize);
@@ -7154,18 +7155,32 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         if (teacherForce && tokensGenerated < teacherForceIds.size())
         {
             nextToken = teacherForceIds[tokensGenerated];
-            if (tokensGenerated <= 69)
+            const int match = (freeArgmax == nextToken) ? 1 : 0;
+            if (tokensGenerated <= 69 || match == 0)
             {
                 fprintf(stderr,
                         "[TEACHER_FORCE] step=%zu free_argmax=%d force=%d match=%d\n",
-                        tokensGenerated, freeArgmax, nextToken,
-                        freeArgmax == nextToken ? 1 : 0);
+                        tokensGenerated, freeArgmax, nextToken, match);
+                fflush(stderr);
+            }
+            if (match == 0)
+            {
+                // Isolate first free-run flip under teacher-forced KV prefix.
+                DumpTipNearTie("TEACHER_FORCED_FIRST_FLIP", position, tokensGenerated,
+                               logits, config.vocabSize);
+                auto Lf = [&](int id) -> float {
+                    return (id >= 0 && static_cast<size_t>(id) < config.vocabSize) ? logits[id] : 0.f;
+                };
+                fprintf(stderr,
+                        "[TIP_FLIP] step=%zu L_force(%d)=%.9f L_free(%d)=%.9f delta_force_minus_free=%.9f\n",
+                        tokensGenerated, nextToken, Lf(nextToken), freeArgmax, Lf(freeArgmax),
+                        Lf(nextToken) - Lf(freeArgmax));
                 fflush(stderr);
             }
         }
         std::printf("[DBG] sampled token=%d eosId=%d\n", nextToken, tokenizer ? tokenizer->GetSpecialTokens().eosId : -1);
         std::fflush(stdout);
-        if (tokensGenerated == 69)
+        if (tip69)
         {
             const char* stopEnv = std::getenv("RAWRXD_STOP_AFTER_TIP69");
             if (stopEnv && stopEnv[0] == '1')

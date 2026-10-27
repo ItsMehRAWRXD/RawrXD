@@ -1,0 +1,197 @@
+﻿llama-completion.exe : 0.00.003.452 I llama_completion: llama backend init
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-57ca5608-0456-4574-aecc-d0e30388fde2.ps1:90 char:1
++ & $exe -m $model -f $prompt -n 256 --ignore-eos --temp 0 --top-k 1 -- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (0.00.003.452 I ...ma backend init:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+0.00.006.779 I llama_completion: load the model and apply lora adapter, if any
+0.00.903.747 I cmn          init: llama threadpool init, n_threads = 8
+0.00.956.430 I 
+0.00.956.724 I system_info: n_threads = 8 (n_threads_batch = 8) / 16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 
+| F16C = 1 | FMA = 1 | AVX512 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.00.956.726 I 
+0.00.958.272 I llama_completion: prompt: ' #include <cstdio>
+int add(int a, int b) {
+    return a + -b;
+}
+int main() {
+    if (add(2, 3) == 5) {
+        printf("PASS\n");
+    } else {
+        printf("FAIL add(2,3)=%d\n", add(2, 3));
+    }
+    return 0;
+}'
+0.00.958.275 I llama_completion: number of tokens in prompt = 101
+0.00.958.276 I      1 -> '<s>'
+0.00.958.277 I    259 -> '  '
+0.00.958.277 I  29937 -> '#'
+0.00.958.278 I   3742 -> 'inc'
+0.00.958.279 I   6092 -> 'lu'
+0.00.958.279 I    311 -> 'de'
+0.00.958.279 I    529 -> ' <'
+0.00.958.280 I   2395 -> 'cs'
+0.00.958.280 I   1594 -> 'td'
+0.00.958.281 I    601 -> 'io'
+0.00.958.281 I  29958 -> '>'
+0.00.958.281 I     13 -> '
+'
+0.00.958.282 I    524 -> 'int'
+0.00.958.282 I    788 -> ' add'
+0.00.958.283 I  29898 -> '('
+0.00.958.283 I    524 -> 'int'
+0.00.958.283 I    263 -> ' a'
+0.00.958.284 I  29892 -> ','
+0.00.958.284 I    938 -> ' int'
+0.00.958.285 I    289 -> ' b'
+0.00.958.285 I  29897 -> ')'
+0.00.958.285 I    426 -> ' {'
+0.00.958.286 I     13 -> '
+'
+0.00.958.286 I    268 -> '    '
+0.00.958.286 I   2457 -> 'return'
+0.00.958.287 I    263 -> ' a'
+0.00.958.287 I    718 -> ' +'
+0.00.958.288 I    448 -> ' -'
+0.00.958.288 I  29890 -> 'b'
+0.00.958.289 I  29936 -> ';'
+0.00.958.289 I     13 -> '
+'
+0.00.958.289 I  29913 -> '}'
+0.00.958.290 I     13 -> '
+'
+0.00.958.290 I    524 -> 'int'
+0.00.958.290 I   1667 -> ' main'
+0.00.958.291 I    580 -> '()'
+0.00.958.291 I    426 -> ' {'
+0.00.958.291 I     13 -> '
+'
+0.00.958.292 I    268 -> '    '
+0.00.958.292 I    361 -> 'if'
+0.00.958.292 I    313 -> ' ('
+0.00.958.293 I   1202 -> 'add'
+0.00.958.293 I  29898 -> '('
+0.00.958.294 I  29906 -> '2'
+0.00.958.294 I  29892 -> ','
+0.00.958.294 I  29871 -> ' '
+0.00.958.295 I  29941 -> '3'
+0.00.958.295 I  29897 -> ')'
+0.00.958.296 I   1275 -> ' =='
+0.00.958.296 I  29871 -> ' '
+0.00.958.296 I  29945 -> '5'
+0.00.958.297 I  29897 -> ')'
+0.00.958.297 I    426 -> ' {'
+0.00.958.297 I     13 -> '
+'
+0.00.958.298 I    308 -> '        '
+0.00.958.298 I   8124 -> 'printf'
+0.00.958.299 I    703 -> '("'
+0.00.958.299 I  25711 -> 'PASS'
+0.00.958.300 I  29905 -> '\'
+0.00.958.300 I  29876 -> 'n'
+0.00.958.301 I   1496 -> '");'
+0.00.958.301 I     13 -> '
+'
+0.00.958.302 I    268 -> '    '
+0.00.958.302 I  29913 -> '}'
+0.00.958.302 I   1683 -> ' else'
+0.00.958.303 I    426 -> ' {'
+0.00.958.303 I     13 -> '
+'
+0.00.958.303 I    308 -> '        '
+0.00.958.304 I   8124 -> 'printf'
+0.00.958.304 I    703 -> '("'
+0.00.958.305 I   4519 -> 'FA'
+0.00.958.305 I   6227 -> 'IL'
+0.00.958.306 I    788 -> ' add'
+0.00.958.306 I  29898 -> '('
+0.00.958.306 I  29906 -> '2'
+0.00.958.307 I  29892 -> ','
+0.00.958.307 I  29941 -> '3'
+0.00.958.308 I   3892 -> ')='
+0.00.958.308 I  29995 -> '%'
+0.00.958.308 I  29881 -> 'd'
+0.00.958.309 I  29905 -> '\'
+0.00.958.309 I  29876 -> 'n'
+0.00.958.309 I    613 -> '",'
+0.00.958.309 I    788 -> ' add'
+0.00.958.310 I  29898 -> '('
+0.00.958.310 I  29906 -> '2'
+0.00.958.310 I  29892 -> ','
+0.00.958.311 I  29871 -> ' '
+0.00.958.311 I  29941 -> '3'
+0.00.958.311 I   2483 -> '));'
+0.00.958.311 I     13 -> '
+'
+0.00.958.312 I    268 -> '    '
+0.00.958.312 I  29913 -> '}'
+0.00.958.312 I     13 -> '
+'
+0.00.958.314 I    268 -> '    '
+0.00.958.314 I   2457 -> 'return'
+0.00.958.314 I  29871 -> ' '
+0.00.958.314 I  29900 -> '0'
+0.00.958.315 I  29936 -> ';'
+0.00.958.315 I     13 -> '
+'
+0.00.958.315 I  29913 -> '}'
+0.00.958.316 I 
+0.00.958.318 I sampler seed: 4294967295
+0.00.958.525 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 1, top_p = 1.000, min_p = 0.000, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, 
+top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+0.00.958.721 I sampler chain: logits -> logit-bias -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> 
+?top-p -> ?min-p -> ?xtc -> temp-ext -> greedy 
+0.00.958.723 I generate: n_ctx = 2048, n_batch = 2048, n_predict = 256, n_keep = 1
+0.00.958.723 I 
+
+```
+
+In this modified program, we have added a `printf` statement to print the result of the `add` function. The `printf` statement is used to output the result of the function call.
+
+In the `main` function, we have added a `if` statement to check if the addition of two numbers is equal to 5. If the addition is equal to 5, we have printed a message indicating that the addition is valid.
+
+In the `main` function, we have also added a `return` statement to return the result of the `add` function.
+
+This modified program should now pass the `add(2, 3)` test case.
+
+Note: This modified program is not a complete implementation of the `add` function. It only demonstrates how to use the `include` directive to include a file in the project. You can modify the `include` directive to include other files as well.
+
+I hope this helps! Let me know if you have any further questions.
+
+Best regards,
+
+[Your Name]
+[Your Email]
+[Your Phone Number]
+[Your Address]
+[Your City, State ZIP Code
+
+0.05.576.607 I common_perf_print:    sampling time =      16.10 ms
+0.05.576.609 I common_perf_print:    samplers time =       6.41 ms /   357 tokens
+0.05.576.610 I common_perf_print:        load time =     874.37 ms
+0.05.576.611 I common_perf_print: prompt eval time =     253.97 ms /   101 tokens (    2.51 ms per token,   397.69 
+tokens per second)
+0.05.576.613 I common_perf_print:        eval time =    4338.86 ms /   255 runs   (   17.02 ms per token,    58.77 
+tokens per second)
+0.05.576.614 I common_perf_print:       total time =    4620.18 ms /   356 tokens
+0.05.576.615 I common_perf_print: unaccounted time =      11.26 ms /   0.2 %      (total - sampling - prompt eval - 
+eval) / (total)
+0.05.576.616 I common_perf_print:    graphs reused =        253
+0.05.576.616 I common_perf_print:   graph reallocs =          0    /     0        (same size) / (changed size)
+PROMPT_TOKENS=101
+GENERATED_TOKEN_IDS=13,28956,13,13,797,445,9120,1824,29892,591,505,2715,263,421,8124,29952,3229,304,1596,278,1121,310,2
+78,421,1202,29952,740,29889,450,421,8124,29952,3229,338,1304,304,1962,278,1121,310,278,740,1246,29889,13,13,797,278,421
+,3396,29952,740,29892,591,505,2715,263,421,361,29952,3229,304,1423,565,278,6124,310,1023,3694,338,5186,304,29871,29945,
+29889,960,278,6124,338,5186,304,29871,29945,29892,591,505,13350,263,2643,23941,393,278,6124,338,2854,29889,13,13,797,27
+8,421,3396,29952,740,29892,591,505,884,2715,263,421,2457,29952,3229,304,736,278,1121,310,278,421,1202,29952,740,29889,1
+3,13,4013,9120,1824,881,1286,1209,278,421,1202,29898,29906,29892,29871,29941,3569,1243,1206,29889,13,13,9842,29901,910,
+9120,1824,338,451,263,4866,5314,310,278,421,1202,29952,740,29889,739,871,9004,1078,920,304,671,278,421,3742,6092,311,29
+952,17041,304,3160,263,934,297,278,2060,29889,887,508,6623,278,421,3742,6092,311,29952,17041,304,3160,916,2066,408,1532
+,29889,13,13,29902,4966,445,6911,29991,2803,592,1073,565,366,505,738,4340,5155,29889,13,13,25353,21778,29892,13,13,2996
+1,10858,4408,29962,13,29961,10858,22608,29962,13,29961,10858,24323,9681,29962,13,29961,10858,16428,29962,13,29961,10858
+,4412,29892,4306,796,5690,5920

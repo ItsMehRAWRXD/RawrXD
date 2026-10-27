@@ -1,0 +1,9 @@
+=== oracle single-turn Mon 10/26/2026 20:59:06.67 
+EXE=F:\llama.cpp-ref\build\bin\llama-cli.exe
+MODEL=F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+PROMPT=evidence\first_corpus_prompt.txt
+FLAGS=-c 2048 -n 256 --temp 0 --top-k 1 --seed 0 --single-turn --no-jinja --verbose
+START=20:59:06.70
+END=20:59:37.70
+OUT_BYTES=2136
+ERR_BYTES=1039412

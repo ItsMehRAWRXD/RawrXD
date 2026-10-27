@@ -1,0 +1,7 @@
+{
+  "schema": "reap.writer_extraction_cert_001.v1",
+  "certification_result": {
+    "overall_status": "NOT_CERTIFIED",
+    "note": "Structural placeholder. Independent writer extraction certification has not been earned."
+  }
+}

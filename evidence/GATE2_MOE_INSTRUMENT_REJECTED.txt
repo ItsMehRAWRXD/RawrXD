@@ -1,0 +1,8 @@
+NEW_GGML_MOE_STAGE_COUNTERS=REJECTED
+REASON=no-new-hooks lock; fictional wrappers; ggml.c is not the exclusive MoE GEMV site (backends own mul_mat_id)
+DENOM=DECODE_MS/86=13333.05 ms/tok; SSE_per_token_ms_field=13489.90 — keep both raw
+PATH_SPLIT=llama.cpp-ref timings != Deep2PerfProbe/ResidencyCounters
+LITE_NEXT=Deep2_ReportLinearWStats (already fopen d:\__linearw_report.txt else stderr) + ResidencyCounters dump + MoEWeightsLoader stats
+K2_LLAMA_NEXT=A/B cpu-moe vs selective GPU expert path WITHOUT new profiler OR migrate Gate2 to Deep2
+PROMOTE=0
+TIP_CLIMB=HOLD

@@ -1,0 +1,11 @@
+VIRTUAL_MULTISHARD_PATCH=REJECTED
+REASON=forges isMultiShard/k2ShardIndexOpen_/globalIndex_ (0xDEADBEEF); UNSAFE_BYPASS=FORBIDDEN
+MLA_CERT_001=STANDS
+GPU_LLAMA_CLI_SEARCH=NO_VULKAN_ROCM_DEVICE_FOUND
+CANDIDATES_PROBED=llama.cpp-ref;OllamaModels\llama.cpp;Powershield;tmp_llama-clone;tmp_llama-cpp-cpu
+DEVICE_RESULT=CPU_OR_NONE_ONLY
+K2_ORACLE_CAPTURE=HOLD
+DEEPSEEK_LITE_GATE2_REPLAY=STILL_FAIL_CLOSED (MLA-CERT-001 single-file)
+NEXT=build_or_obtain_GPU_capable_external_oracle OR admit_alternate_GPU_oracle_engine
+PROMOTE=0
+TIP_CLIMB=HOLD

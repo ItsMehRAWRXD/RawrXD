@@ -1,0 +1,19 @@
+{
+  "schema": "reap.model_inventory_matrix_001",
+  "models": [
+    {
+      "first_shard": "F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+      "status": "PASS",
+      "shards": 1,
+      "tensors": 377,
+      "logical_experts": 1664,
+      "moe_layers": 26,
+      "total_bytes": 10364416768,
+      "model_first_shard_sha256": "5d33e5f045c7a03351c319aafc8afdad94b69d07bb68f36dc9bb5af340b343a4",
+      "verify_receipt": "evidence/deepseek_v2_lite_verify_full.json",
+      "topology_receipt": "evidence/deepseek_v2_lite_topology.json",
+      "hash_scope": "all_shards_sha256",
+      "originals_unchanged": true
+    }
+  ]
+}

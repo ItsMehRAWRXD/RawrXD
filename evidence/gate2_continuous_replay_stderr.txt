@@ -1,0 +1,52 @@
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[MOE_KEYS_DIAG] Scanning 42 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 64
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 1408
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 6
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 1
+[MLA_GEOMETRY] WARNING: Could not locate MLA projection tensors (attn_q_a.weight / attn_kv_a_mqa.weight). MLA metadata remains unresolved.
+[MOE_KEYS_DIAG] Scanning 42 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 64
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 1408
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 6
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 1
+[MLA_GEOMETRY] WARNING: Could not locate MLA projection tensors (attn_q_a.weight / attn_kv_a_mqa.weight). MLA metadata remains unresolved.
+[Deep2Engine] ERROR: MLA model has no production K2 shard stream (MLA-CERT-001)
+MODEL_LOAD_FAILED
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (377 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown

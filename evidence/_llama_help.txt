@@ -1,0 +1,12 @@
+﻿Usage: F:\llama.cpp-ref\build-vulkan\bin\llama.exe <command> [options]
+
+Available commands:
+  serve           HTTP API server
+  cli             Command-line interactive interface
+  download        Download a model
+  version         Show version
+  licenses        Show third-party licenses
+  help            Show available commands
+
+Run 'F:\llama.cpp-ref\build-vulkan\bin\llama.exe help all' to show additional commands.
+Run 'F:\llama.cpp-ref\build-vulkan\bin\llama.exe <command> --help' for command-specific usage.

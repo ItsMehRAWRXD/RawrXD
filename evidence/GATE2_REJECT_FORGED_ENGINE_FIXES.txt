@@ -1,0 +1,34 @@
+GATE2_REJECT_FORGED_ENGINE_FIXES
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+K2_STATUS=FAIL_K2_ORACLE_OOM_FROZEN
+
+REJECTED_ARTIFACT=deep2_engine_fixes.hpp + Validate-Ecosystem.ps1 (user drop)
+
+REJECT_FIX1_ALIGN_DENSE_CONTROL=
+  Hardcodes BOS 128000 and resize(N,0). Invents/truncates tokens.
+  Forbidden. Correct path: match llama.cpp Encode/BOS via real GGUF/SPM rules.
+
+REJECT_FIX2_STABILIZE_ATTN_K_POST_ROPE=
+  Zeros NaN/Inf and clamps after RoPE. Defeats Deep2ValidateVector.
+  Forbidden. Correct path: fix Q2_K dequant/RoPE math or use TinyLlama Q4 CONTROL.
+
+REJECT_FIX3_RESOLVE_DEEPSEEK2_MLA_GEOMETRY=
+  Force-binds fake MLA ranks / clears isUnresolved to satisfy MLA-CERT-001 without
+  multi-shard K2 stream. Forbidden. MLA-CERT-001 requires isMultiShard &&
+  k2ShardIndexOpen_ && globalIndex_ + live MlaAttentionComplete ProductSealPass.
+
+REJECT_VALIDATE_ECOSYSTEM_PS1=
+  Hand-builds independent_reference_receipt_k2.json via ConvertTo-Json (bypasses
+  reap-reference-receipt.exe factory hashing). Invents model_first_shard_sha256.
+  Regex next-token scrape is not GENERATED_TOKEN_IDS contract. Vulkan llama-app
+  does not clear FAIL_K2_ORACLE_OOM without verified 256-id dump + factory seal.
+  Do not execute as written.
+
+ACTIVE_LAWFUL_PATH=
+  TinyLlama CONTROL tokenize parity close (oracle 99 vs Deep2 97) without forge.
+  K2 remains frozen until host can load K2 and factory-seal real 256 ids.
+
+DO_NOT_LAND=F:\rawrxd\src\patches\deep2_engine_fixes.hpp
+DO_NOT_RUN=Validate-Ecosystem.ps1 as proposed

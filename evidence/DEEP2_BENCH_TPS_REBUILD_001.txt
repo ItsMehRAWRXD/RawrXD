@@ -1,0 +1,30 @@
+﻿DEEP2_BENCH_TPS_REBUILD_001
+UTC=2026-10-26T23:28:33.6062245-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+TPS_PASS=NOT_CLAIMED
+
+1) CMAKE_TARGET=deep2_bench_tps
+   CMAKE_DEFINED_IN=F:\rawrxd\CMakeLists.txt (add_executable deep2_bench_tps ~L1797)
+   NOTE=F:\rawrxd-native-agent-001\CMakeLists.txt does NOT define this target
+
+2) BUILD_TREE=F:\rawrxd\build_reap
+   GENERATOR=Ninja
+   CMAKE_HOME_DIRECTORY=F:/rawrxd
+   COMMAND=ninja -C F:\rawrxd\build_reap deep2_bench_tps
+   BUILD_RESULT=OK
+   BUILD_EXIT=0
+   BUILD_ELAPSED_SEC~=35.2
+   SOURCE_SYNC=F:\rawrxd-native-agent-001\tools\deep2_bench_tps.cpp -> F:\rawrxd\tools\deep2_bench_tps.cpp
+   SOURCE_SHA256=02B1D2BAEB269A9F18B0FD3C263DC5177E814E0261EBE0758BBD17ED1E4E430A
+   NOTES=Rebuilt ONLY deep2_bench_tps; no new deps; MSVC cl + Ninja
+
+3) BINARY_PATH=F:\rawrxd\build_reap\bin\deep2_bench_tps.exe
+   BINARY_SIZE=33987072
+   BINARY_MTIME=2026-10-26T23:27:11.8841119-04:00
+   BINARY_SHA256=B7CEAEEF675EB86023FF15EA1DB045B5C58634543EB7DD86A1F3E6680D4B0750
+
+4) OPTIONAL_DECODE8=NOT_RUN (Qwen3 model path not known from prior witness / not found on disk)
+   Defaults in tools/deep2_bench_tps.cpp: GPU PrefillBatch + DEEP2_WIDE_DOT_BATCH
+   Flags: --serial-prefill, --no-wide-batch, --no-batch

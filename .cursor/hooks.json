@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"g:\\~dev\\.cursor\\hooks\\motd-session-start.ps1\""
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"g:\\~dev\\.cursor\\hooks\\motd-before-submit.ps1\"",
+        "matcher": "UserPromptSubmit"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"g:\\~dev\\.cursor\\hooks\\motd-pre-tool.ps1\"",
+        "failClosed": true
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"g:\\~dev\\.cursor\\hooks\\motd-post-tool.ps1\"",
+        "matcher": "Read|read_file|read_motd"
+      }
+    ]
+  }
+}
