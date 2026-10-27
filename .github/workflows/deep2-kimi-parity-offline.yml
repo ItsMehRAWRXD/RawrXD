@@ -27,6 +27,8 @@ jobs:
         run: python tools/test_k2_gpu_moe_vector_parity.py
       - name: Validate scalar Q6_K oracle
         run: python tools/test_k2_q6k_scalar_oracle.py
+      - name: Validate scalar Q4_K gate/up oracle
+        run: python tools/test_k2_q4k_scalar_oracle.py
       - name: Validate manifest audit
         run: python tools/test_k2_moe_capture_audit.py
       - name: Validate repeated completed aggregate captures
