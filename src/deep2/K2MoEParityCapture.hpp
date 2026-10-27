@@ -2,6 +2,7 @@
 // Never called without explicit DEEP2_MOE_PARITY_CAPTURE_DIR and diagnostic parity enabled.
 // Evidence only; no changes to inference outputs, device state, or admission.
 #pragma once
+#include <cstdint>
 #include <cerrno>
 #include <cmath>
 #include <cstdio>
