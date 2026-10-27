@@ -14,6 +14,7 @@ $tests = @(
     'test_k2_q6k_scalar_oracle.py',
     'test_k2_q4k_scalar_oracle.py',
     'test_k2_scalar_expert_oracle.py',
+    'test_k2_scalar_input_audit.py',
     'test_k2_moe_capture_audit.py',
     'test_k2_stick_partial_repeatability.py',
     'test_k2_fused_parity_safety.py'
