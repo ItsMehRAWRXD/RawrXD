@@ -42,7 +42,7 @@ class Q4KScalarTests(unittest.TestCase):
         s[0] = 0b10000000
         s[4] = 0b11000000
         s[8] = 0x32
-        self.assertEqual(scale_min(s, 4), (0x02 | (2 << 4), 0x03 | (0 << 4)))
+        self.assertEqual(scale_min(s, 4), (0x02 | (2 << 4), 0x03 | (3 << 4)))
         self.assertEqual(scale_min(s, 0), (0, 0))
 
     def test_two_rows(self):
