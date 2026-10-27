@@ -255,3 +255,40 @@ GPU_NUMERICAL_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 7: completed aggregate GPU partial witness (not expert parity)
+
+The diagnostic path now permits a **post-`K2MoEStickEndDevice`**
+capture of the complete fused **stick aggregate** partial vector,
+rather than downloading `ArenaDown()` inside the expert-recording
+loop. The normal fused execution path remains unchanged.
+When `DEEP2_MOE_PARITY_CAPTURE_DIR` points to a private existing
+directory, a successful diagnostic writes:
+
+- `k2_l<L>_s<S>_aggregate.gpu_partial.txt`: finite aggregate vector.
+- `k2_l<L>_s<S>_aggregate.manifest.txt`: dimensions, layer, stick,
+  ordered expert IDs and routing weights; `certified=0`.
+
+It emits `GPU_STICK_PARTIAL_CAPTURE ... status=WRITTEN
+scope=AGGREGATE_ONLY` on success. A missing/skipped capture is not
+a PASS. Existing files are refused, not overwritten.
+
+**These files are deliberately incompatible with the per-expert Q6_K
+oracle manifest.** They describe the final sum of routed contributions,
+not one expert's unweighted down-GEMV. The previous
+`GPU_EXPERT_PARITY status=BLOCKED` is still emitted. Do not infer
+per-expert output, activation identity, or scalar Q6_K parity from this
+aggregate.
+
+A source regression test checks that the aggregate capture occurs after
+the fused completion and device partial boundary, stays uncertified,
+and does not re-enable the in-loop `ArenaDown` read.
+
+```ini
+POST_DEVICE_STICK_PARTIAL_CAPTURE=SOURCE_WIRED
+PER_EXPERT_GPU_WITNESS=BLOCKED
+MSVC_BUILD_AND_RUNTIME=NOT_RUN
+KIMI_GPU_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
