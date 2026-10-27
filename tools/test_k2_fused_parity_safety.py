@@ -42,6 +42,12 @@ class FusedParitySafetyTests(unittest.TestCase):
         self.assertIn("scope=CPU_INPUTS_ONLY", self.source)
         self.assertIn("GPU_EXPERT_PARITY status=BLOCKED", self.source)
 
+    def test_capture_helper_uses_exclusive_create(self):
+        header = (ROOT / "src" / "deep2" / "K2MoEParityCapture.hpp").read_text(
+            encoding="utf-8")
+        self.assertEqual(header.count('std::fopen(path.string().c_str(), "wbx")'), 2)
+        self.assertNotIn('std::fopen(path.string().c_str(), "wb")', header)
+
     def test_gpu_worklist_not_disabled(self):
         self.assertIn("K2MoEStickBeginFused(stick)", self.source)
         self.assertIn("K2MoEStickExpertDevice(stick", self.source)
