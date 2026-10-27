@@ -29,6 +29,8 @@ jobs:
         run: python tools/test_k2_q6k_scalar_oracle.py
       - name: Validate scalar Q4_K gate/up oracle
         run: python tools/test_k2_q4k_scalar_oracle.py
+      - name: Validate full Q4K-SwiGLU-Q6K scalar expert oracle
+        run: python tools/test_k2_scalar_expert_oracle.py
       - name: Validate manifest audit
         run: python tools/test_k2_moe_capture_audit.py
       - name: Validate repeated completed aggregate captures
