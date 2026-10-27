@@ -401,3 +401,22 @@ REAL_KIMI_SCALAR_INPUT_CAPTURE=NOT_RUN
 REAL_GPU_EXPERT_WITNESS=BLOCKED
 PROMOTE=0
 TIP_CLIMB=HOLD
+
+## Increment 11: reproducible Windows offline test receipt and evidence hardening
+
+GitHub Actions run 40600352371 for the preceding parity commit returned failure in all three jobs (Python, Linux capture, MSVC capture). GitHub's returned job step lists were empty and logs were unavailable; the failure source has not been established. **Do not report CI PASS.** Other workflows for that same commit also failed with empty steps, so investigate runner/account prerequisites in addition to source tests.
+
+Added `tools/run_kimi_parity_offline.ps1` for execution from a Visual Studio 2022 x64 Developer PowerShell. Supply a new `-EvidenceDir`; it executes seven exact Python test scripts, compiles and runs the standalone C++ capture smoke with MSVC `/W4 /WX`, hashes test files and the output executable, and writes `KIMI_OFFLINE_RECEIPT.json` with per-step exits, stdout/stderr, commit reference, and `certified=false`. A successful offline receipt remains only `PASS_OFFLINE_ONLY` and cannot certify GPU inference. Missing Python or MSVC, failed tests, or existing receipt paths fail closed.
+
+Evidence file writing now uses exclusive create mode (`wbx`), preventing accidental truncation of existing artifacts even if a prior existence check races. The regression test asserts exclusive creation in both byte and vector helper paths. The Windows/MSVC compatibility and actual system behavior remain subject to build/test validation.
+
+To execute locally:
+
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools\run_kimi_parity_offline.ps1 -EvidenceDir F:\rawrxd\evidence\KIMI_OFFLINE_001
+
+CI_STATUS=FAIL_REPORTED_NO_JOB_STEPS
+OFFLINE_RUNNER=SOURCE_ADDED_NOT_EXECUTED
+EXCLUSIVE_EVIDENCE_CREATE=SOURCE_WIRED
+MSVC_AND_GPU_CERTIFICATION=NOT_VERIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
