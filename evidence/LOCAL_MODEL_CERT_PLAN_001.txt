@@ -1,0 +1,26 @@
+SCHEMA=LOCAL_MODEL_CERT_PLAN_001
+AUTH=E2E_FULL
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+KNOWN_LOCAL_TARGETS=
+  1) DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+     path=F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+     runner=rawr-reap-replay continuous Gate2
+     prior=generation complete; REFERENCE_PARITY_NOT_CERTIFIED; UTF8=0
+     next=rebuild with LinearW stderr + MoEProxyStats; re-run 256; disposition parity/UTF8
+  2) Kimi-K2-Instruct-0905 Q4_K_M (13 shards)
+     path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\
+     runner=llama.exe cli (build-vulkan) --cpu-moe mmap
+     prior=ABORTED ~86 gen; OOM on non-mmap oracle paths
+     next=n8 MoE stage receipt then 256 independent reference
+  3) Qwen3 (evidence reap_runtime_current_20261026_qwen3_*)
+     status=prior GPU/CPU parity artifacts exist; re-cert under this auth without inventing PASS
+  4) TinyLlama (evidence reap_calibration\tinyllama_reference_001.json)
+     status=reference artifact present; verify load+smoke only unless Gate2 demands more
+
+CERT_MATRIX_PER_MODEL=
+  load_ok | infer_n_tokens | utf8_ok | parity_vs_reference | decode_tps | memory_ok | PROMOTE
+  NOT_RUN until each cell independently verified
+
+ORDER=Lite rebuild concurrent | K2 n8 then 256 | Qwen3 re-verify | TinyLlama smoke | RawrXD IDE/CLI

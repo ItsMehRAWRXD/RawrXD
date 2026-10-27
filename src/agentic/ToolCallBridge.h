@@ -175,17 +175,25 @@ inline json ToolCallBridge::GetToolSchemasForLLM() const {
         std::vector<std::string> required;
     };
 
+    // Canonical + Cursor-parity aliases (must match register_workspace_tools).
     std::vector<ToolInfo> tools = {
-        {"readFile",       "Read bounded workspace file", {"path"}},
-        {"listDirectory",  "List workspace directory", {"path"}},
-        {"fileSearch",     "Find paths by filename substring", {"pattern"}},
-        {"textSearch",     "Search bounded text files", {"needle"}},
+        {"readFile",        "Read bounded workspace file", {"path"}},
+        {"Read",            "Cursor-parity alias for readFile", {"path"}},
+        {"listDirectory",   "List workspace directory", {"path"}},
+        {"fileSearch",      "Find paths by filename substring", {"pattern"}},
+        {"Glob",            "Cursor-parity alias for fileSearch", {"pattern"}},
+        {"textSearch",      "Search bounded text files", {"needle"}},
+        {"Grep",            "Cursor-parity alias for textSearch", {"needle"}},
         {"createDirectory", "Create directory inside workspace", {"path"}},
         {"createFile",      "Create a new file without overwriting", {"path", "content"}},
+        {"writeFile",       "Write/overwrite a workspace file", {"path", "content"}},
+        {"Write",           "Cursor-parity alias for writeFile", {"path", "content"}},
         {"editFiles",       "Replace exact unique text in a file", {"path", "old", "new"}},
-#ifdef _WIN32
-        {"runInTerminal",   "Execute explicitly approved command in workspace", {"command"}},
-#endif
+        {"StrReplace",      "Cursor-parity alias for editFiles", {"path", "old", "new"}},
+        {"deleteFile",      "Delete a workspace file", {"path"}},
+        {"Delete",          "Cursor-parity alias for deleteFile", {"path"}},
+        {"runInTerminal",   "Execute approved command in workspace cwd", {"command"}},
+        {"Shell",           "Cursor-parity alias for runInTerminal", {"command"}},
     };
 
     for (const auto& t : tools) {
@@ -223,14 +231,34 @@ inline json ToolCallBridge::GetToolSchemasForLLM() const {
 
 inline rawrxd::tools::Request ToolCallBridge::ConvertArgs(const ToolCall& call) const {
     rawrxd::tools::Request req;
+    // Prefer Cursor-native names when registered; else canonicalize to RawrXD.
     req.name = call.name;
+    if (m_registry) {
+        rawrxd::tools::Tool probe;
+        if (!m_registry->find(call.name, probe)) {
+            if (const char* canon = rawrxd::tools::canonicalize_tool_name(call.name)) {
+                req.name = canon;
+            }
+        }
+    } else if (const char* canon = rawrxd::tools::canonicalize_tool_name(call.name)) {
+        req.name = canon;
+    }
 
+    // Cursor Grep uses "pattern"; textSearch requires "needle".
+    // Cursor StrReplace uses old_string/new_string; editFiles uses old/new.
+    // Cursor Write/Shell use path/contents or command — already aligned.
     for (auto it = call.arguments.begin(); it != call.arguments.end(); ++it) {
+        std::string key = it.key();
+        if (key == "pattern" && (req.name == "textSearch" || req.name == "Grep"))
+            key = "needle";
+        if (key == "old_string") key = "old";
+        if (key == "new_string") key = "new";
+        if (key == "contents") key = "content";
+        if (key == "file_path") key = "path";
         if (it->is_string()) {
-            req.args[it.key()] = it->get<std::string>();
+            req.args[key] = it->get<std::string>();
         } else {
-            // Non-string arguments: serialize to JSON string
-            req.args[it.key()] = it->dump();
+            req.args[key] = it->dump();
         }
     }
 
