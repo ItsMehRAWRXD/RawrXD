@@ -456,3 +456,31 @@ GPU0_NUMERICAL_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 13: Q4_K/Q6_K packed layout cross-reference
+
+Inspected ggml-org/ggml `src/ggml-quants.c` at the public repository
+reference (`dequantize_row_q4_K` and `dequantize_row_q6_K`).
+Added `tools/test_k2_ggml_quant_layout.py` containing independent
+reference loop translations and deterministic directed plus seeded-random
+packed blocks. The comparisons exercise all Q4_K scale/min packing groups,
+the two Q6_K 128-element tiles, signed Q6_K scales and zero/negative
+block scales.
+
+The test is registered in GitHub Actions and
+`tools/run_kimi_parity_offline.ps1`. This compares Python scalar
+decoding against an independently written GGML-layout translation;
+**it is not an execution of the compiled ggml C decoder** and is not
+an authoritative GGUF tensor or real Kimi GPU parity receipt.
+
+Reference upstream source:
+https://github.com/ggml-org/ggml/blob/master/src/ggml-quants.c
+
+```ini
+Q4K_Q6K_LAYOUT_CROSS_REFERENCE=SOURCE_ADDED
+CROSS_REFERENCE_CI=NOT_VERIFIED
+COMPILED_GGML_ORACLE_PARITY=NOT_RUN
+LIVE_KIMI_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
