@@ -420,3 +420,39 @@ EXCLUSIVE_EVIDENCE_CREATE=SOURCE_WIRED
 MSVC_AND_GPU_CERTIFICATION=NOT_VERIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
+
+## Increment 12: captured scalar-input manifest -> complete expert oracle
+
+New `tools/k2_scalar_input_audit.py` validates a real
+`k2_l<L>_e<E>_s<S>_scalar_inputs.manifest.txt` produced by the
+opt-in CPU witness. It checks schema, layer/expert/stick identity,
+quant types 12/12/14, geometry, packed byte counts, finite hidden-state
+values, and the exact capture filename before calculating the scalar
+Q4_K gate, Q4_K up, SwiGLU and Q6_K down vectors. It refuses existing
+outputs and receipts, and its receipt includes hashes of all four
+inputs plus the source manifest.
+
+Example for a captured scalar input bundle:
+
+```powershell
+New-Item -ItemType Directory -Path F:\rawrxd\evidence\SCALAR_ORACLE_001
+python tools/k2_scalar_input_audit.py --manifest "F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001\k2_l1_e0_s0_scalar_inputs.manifest.txt" --output-dir "F:\rawrxd\evidence\SCALAR_ORACLE_001" --receipt "F:\rawrxd\evidence\SCALAR_ORACLE_001.json"
+```
+
+The filename shown is illustrative: select an actual emitted manifest.
+Six positive/negative synthetic fixtures accompany the validator.
+Both CI and the Windows offline runner invoke them; no runtime pass is
+claimed until receipts are inspected. The success receipt deliberately
+records `gpu_output_witness=ABSENT` and `certified=false`. It certifies
+neither GPU expert output nor model logits. Model tensor capture data
+must be kept private and out of GitHub.
+
+```ini
+SCALAR_INPUT_MANIFEST_BRIDGE=SOURCE_ADDED
+OFFLINE_REGRESSION=SOURCE_ADDED
+REAL_KIMI_INPUT_BUNDLE=NOT_VERIFIED
+GPU_PER_EXPERT_OUTPUT_WITNESS=ABSENT
+GPU0_NUMERICAL_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
