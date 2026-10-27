@@ -38,6 +38,7 @@
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "K2MlaOProjTiming.hpp"
+#include "GenerationWallAccounting.hpp"
 #include "VirtualTensorDesc.hpp"
 #include "VirtualTensorRange.hpp"
 #include "vulkan_compute.h"
@@ -1770,6 +1771,7 @@ Result Run(const fs::path& shardDir,
         const uint64_t wallNs =
             (rs && now > rs) ? (now - rs) * 1000ull : 0ull;
         const uint64_t tokN = (uint64_t)ghostTok.size();
+        Deep2::GenerationWallAccounting_Emit(stdout, wallNs, tokN);
         Deep2::OProj_EmitWallBudget(stdout, wallNs,
                                     (uint32_t)tokN);
         Deep2::Ev512::HostEmitWallNs(wallNs, tokN);
