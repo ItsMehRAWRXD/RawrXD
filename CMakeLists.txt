@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
+# DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_gpu_code31_reset_smoke.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/lavapath/GpuDeviceLostReset.cpp")
+    add_executable(deep2_gpu_code31_reset_smoke
+        tools/deep2_gpu_code31_reset_smoke.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp)
+    target_include_directories(deep2_gpu_code31_reset_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(deep2_gpu_code31_reset_smoke PRIVATE cxx_std_20)
+endif()
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_rom_roundtrip.cpp")
     add_executable(deep2_rom_roundtrip tools/deep2_rom_roundtrip.cpp)
     target_include_directories(deep2_rom_roundtrip PRIVATE "${CMAKE_SOURCE_DIR}/src/deep2")
@@ -3195,6 +3206,8 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/DualStickStreamWindow_Vc.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/EndDeviceStep3Diag.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/GpuDeviceLostReset.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEExpertResidencyPlace.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEExpertResidencyPlace_Place.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEPlaceLiveCounters.cpp

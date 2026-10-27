@@ -1376,6 +1376,7 @@ bool VulkanCompute::endSubmitWait(
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
                      static_cast<int>(submit));
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(submit), "submit");
         vkDestroyFence(device_, fence, nullptr);
         return false;
     }
@@ -1393,6 +1394,7 @@ bool VulkanCompute::endSubmitWait(
         wi.fenceWaitWallNs = completeNs - waitStartedNs;
         recordInterval(wi);
         if (interval) *interval = wi;
+        (void)NoteVkResult(static_cast<int>(VK_SUCCESS), "ok");
     } else {
         std::fprintf(stderr,
                      "[GPU] endSubmitWait stage=fence_wait vk=%d timeout_ns=%llu kind=%u bytes=%llu\n",
@@ -1401,6 +1403,9 @@ bool VulkanCompute::endSubmitWait(
                      static_cast<unsigned>(kind),
                      static_cast<unsigned long long>(bytes));
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(wait),
+                           (wait == VK_ERROR_DEVICE_LOST) ? "device_lost"
+                                                         : "fence");
     }
 
     vkDestroyFence(device_, fence, nullptr);
@@ -2456,8 +2461,10 @@ bool VulkanCompute::EndFusedLayer() {
                      (int)submitRes);
         std::fflush(stderr);
     }
-    if(submitRes!=VK_SUCCESS)
+    if(submitRes!=VK_SUCCESS) {
+        (void)NoteVkResult(static_cast<int>(submitRes), "submit");
         return false;
+    }
     ++queueSubmitCount_;
     const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
     if (moeTrace) {
@@ -2474,9 +2481,15 @@ bool VulkanCompute::EndFusedLayer() {
     if(waitRes==VK_TIMEOUT){
         std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
         std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(waitRes), "fence");
         return false;
     }
-    if(waitRes!=VK_SUCCESS) return false;
+    if(waitRes!=VK_SUCCESS) {
+        (void)NoteVkResult(static_cast<int>(waitRes),
+                           (waitRes == VK_ERROR_DEVICE_LOST) ? "device_lost"
+                                                            : "fence");
+        return false;
+    }
     const uint64_t completeNs=nowNs();
 
     // DEEP2_COLD_ROW_RACE_001 endurance fix: the fused fence is signaled —

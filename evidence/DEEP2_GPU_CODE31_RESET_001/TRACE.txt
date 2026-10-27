@@ -1,0 +1,42 @@
+GATE=DEEP2_GPU_CODE31_RESET_001
+TREES=F:\rawrxd + F:\rawrxd-native-agent-001 (synced)
+
+## Pre-fix state
+- vulkan_fwd_resident.cpp SubmitOne: mapped VK_ERROR_DEVICE_LOST → phase "device_lost" only
+- Deep2::VulkanCompute::endSubmitWait / EndFusedLayer: logged VkResult, no mark/reset
+- DownloadBuf adapter: did NOT propagate last_d2h_* from backend on failure
+- EndDeviceStep3Diag: classified "device_lost" as DEVICE/SYNC_FAILURE; no "code_31"
+- Win32 code 31 / ERROR_GEN_FAILURE: NOT recognized
+- device_lost metric fields: vocabulary only; counters often hard-zero
+- No GpuDeviceReset / RecoverDeviceIfOptIn path
+
+## Symbol:line map (post-fix, F:\rawrxd)
+GpuLost::IsLostCode          GpuDeviceLostReset.hpp:11
+GpuLost::PhaseFor            GpuDeviceLostReset.hpp:15  (device_lost | code_31)
+GpuLost::Mark                GpuDeviceLostReset.cpp:15
+GpuLost::RunReset            GpuDeviceLostReset.cpp:27
+GpuLost::RunResetRetry       GpuDeviceLostReset.cpp:57
+VulkanCompute::NoteVkResult  GpuDeviceLostReset_Vk.cpp:24
+VulkanCompute::RecoverDeviceIfOptIn  GpuDeviceLostReset_Vk.cpp:56
+VulkanCompute::InjectDeviceLostForTest GpuDeviceLostReset_Vk.cpp:52
+endSubmitWait NoteVk         vulkan_compute.cpp:1379,1406-1408
+EndFusedLayer NoteVk         vulkan_compute.cpp:2465,2484,2488-2489
+DownloadBuf sync+recover     vulkan_compute_adapter_fused.cpp:624-631
+EndDeviceStep3Diag code_31   EndDeviceStep3Diag.cpp:65-67
+SubmitOne code 31 map        vulkan_fwd_resident.cpp:166-186
+
+## Code 31 recognition
+EXPLICIT=1 via GpuLost::kWinCode31=31 and IsLostCode()
+ALSO=VK_ERROR_DEVICE_LOST (-4) → phase device_lost
+
+## Reset sequence
+detect(NoteVkResult/IsLostCode) → Mark → (opt-in DEEP2_GPU_DEVICE_RESET=1)
+  → cleanup() teardown → initialize() recreate → optional retry
+fail_closed if teardown/recreate/retry returns false
+
+## Verification
+SMOKE=tools/deep2_gpu_code31_reset_smoke.cpp
+RUN=evidence/DEEP2_GPU_CODE31_RESET_001/deep2_gpu_code31_reset_smoke.exe
+RESULT_LINE=RESULT=PASS code31_mapped=1 vk_lost_mapped=1 reset_seq=1 fail_closed=1
+VK_WIRE_OBJ=compiled GpuDeviceLostReset_Vk.obj with Vulkan SDK includes
+LIVE_TDR_E2E=NOT_RUN (inject path demonstrated; no forced GPU TDR this turn)

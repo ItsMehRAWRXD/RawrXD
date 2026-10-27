@@ -14,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "lavapath/GpuDeviceLostReset.hpp"
 
 namespace Deep2 {
 
@@ -143,6 +144,16 @@ public:
     bool initialize();
     bool Initialize() { return initialize(); }
     void cleanup();
+
+    /* Device-lost / Win32 code-31: detect→mark; opt-in reset via
+     * DEEP2_GPU_DEVICE_RESET=1 (teardown→recreate). Fail closed otherwise. */
+    bool NoteVkResult(int vk, const char* stage);
+    bool DeviceIsLost() const noexcept;
+    uint64_t DeviceLostCount() const noexcept;
+    int LastLostVk() const noexcept;
+    const char* LastLostPhase() const noexcept;
+    void InjectDeviceLostForTest(int code);
+    bool RecoverDeviceIfOptIn();
 
     bool initialized() const noexcept { return initialized_; }
     bool computeReady() const noexcept { return opsPipeline_ != VK_NULL_HANDLE; }
@@ -1446,6 +1457,10 @@ private:
     uint32_t requestedOrdinal_ = 0;
     VulkanPhysicalInfo info_{};
     bool initialized_ = false;
+    int lastLostVk_ = 0;
+    const char* lastLostPhase_ = "none";
+    uint64_t deviceLostCount_ = 0;
+    GpuLost::Seq lostSeq_{};
     uint64_t nextBufferId_ = 1;
     uint64_t workEpoch_ = 0;
 

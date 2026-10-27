@@ -624,7 +624,15 @@ bool VulkanCompute::UploadBuf(DeviceBuf& b, const float* host, uint32_t n) {
 bool VulkanCompute::DownloadBuf(DeviceBuf& b, float* host, uint32_t n) {
     if (backend_ == nullptr || host == nullptr || n == 0) return false;
     Deep2::VulkanCompute::DeviceBuf bi = ToBackend(b);
-    if (!backend_->DownloadVector(bi, host, n)) return false;
+    if (!backend_->DownloadVector(bi, host, n)) {
+        last_d2h_vk_ = static_cast<uint64_t>(backend_->LastLostVk());
+        last_d2h_phase_ = backend_->LastLostPhase();
+        if (backend_->DeviceIsLost())
+            (void)backend_->RecoverDeviceIfOptIn();
+        return false;
+    }
+    last_d2h_vk_ = 0;
+    last_d2h_phase_ = "ok";
     b = FromBackend(bi);
     return true;
 }

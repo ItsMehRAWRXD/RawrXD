@@ -1912,6 +1912,7 @@ int main(int argc, char** argv) {
               << "  rawr models                                                 list models\n"
               << "  rawr backend [auto|deep2|ollama]                            backend status/switch\n"
               << "  rawr doctor                                                 environment health\n"
+              << "  env DEEP2_GPU_DEVICE_RESET=1                              opt-in GPU device-lost reset (default off)\n"
               << "  rawr self-audit                                             run the audit checklist\n"
               << "  rawr build [--config Release] [--target t]                  build project\n"
               << "  rawr test [--filter f]                                      run tests\n";

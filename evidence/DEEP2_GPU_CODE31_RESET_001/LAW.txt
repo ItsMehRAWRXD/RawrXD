@@ -1,0 +1,16 @@
+GATE=DEEP2_GPU_CODE31_RESET_001
+WIN32_CODE_31=ERROR_GEN_FAILURE (0x1F) / CM_PROB_FAILED_ADD — GPU/TDR-class
+VULKAN_EQUIV=VK_ERROR_DEVICE_LOST (-4)
+REQUIRE=
+  1) Explicit map of both VK_ERROR_DEVICE_LOST and Win32 code 31
+  2) detect → mark lost → teardown → recreate → retry (opt-in)
+  3) Fail closed if recreate/retry fails
+  4) Demonstrated reset sequence (inject OK; live TDR optional)
+OPT_IN=DEEP2_GPU_DEVICE_RESET=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+NOT_RUN_NEQ_PASS=1
+SOURCE_WIRED_NEQ_RUNTIME_REACHED=1
+STATUS=CLOSED_SMOKE_PASS
+LIVE_TDR_E2E=NOT_RUN
