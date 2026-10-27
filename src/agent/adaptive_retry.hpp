@@ -73,7 +73,17 @@ struct RetryPolicy {
         p.backoffMultiplier = 2.0;
         p.jitterFactor = 0.2;
         p.retryableErrorPatterns = {"timeout", "connection", "503", "504", "rate limit", "temporary"};
-        p.nonRetryableErrorPatterns = {"401", "403", "invalid", "unauthorized", "quota exceeded"};
+        // A backend-reported GPU kernel/image incompatibility is deterministic
+        // for the current runtime/device pair. Retrying the same request only
+        // repeats the failure and can leave the user waiting through several
+        // identical HTTP 500 responses. Surface it immediately so the caller
+        // can preserve its checkpoint and offer a compatible model/backend.
+        p.nonRetryableErrorPatterns = {
+            "401", "403", "invalid", "unauthorized", "quota exceeded",
+            "tensilelibrary", "rocblaslt", "no kernel image",
+            "kernel image is not available", "rocm error", "hip error",
+            "unsupported gpu architecture", "device architecture"
+        };
         return p;
     }
     
