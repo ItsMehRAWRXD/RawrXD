@@ -1,0 +1,6 @@
+[2026-10-27T01:02:44] Not elevated ??? relaunching with RunAs
+[2026-10-27T01:02:49] Scanning for PCI\VEN_1002&DEV_747E
+[2026-10-27T01:02:50] Device Status=Error Problem=CM_PROB_FAILED_START CM=10 Id=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[2026-10-27T01:02:51] Recoverable state CM=10 ??? Disable/Enable
+[2026-10-27T01:02:58] AFTER Status=Error Problem=CM_PROB_FAILED_START
+[2026-10-27T01:02:58] FAIL still Error ??? cold boot may be required
