@@ -44,6 +44,9 @@ GPU_SUBMITS=1
 GPU_WAITS=1
 H2D_BYTES=228458496
 D2H_BYTES=28672
+MOE_GPU_WORK_NS=286183800
+GPU_GENERATION_WALL_NS=2458631000
+GPU_WALL_EXCESS_OWNER=O_PROJ
 DEVICE_DOWN_VECTORS=8
 D2H_PARTIAL_VECTORS=1
 HOST_EXPERT_DOWN_VECTORS=0
@@ -75,6 +78,11 @@ The aggregate layer-1 native-versus-CPU witness reported
 run both returned token `13464`. This isolates the earlier full-GPU token
 difference (`81147`) to the other GPU MLA path; it is not evidence that the
 MoE down-GEMV output was skipped.
+
+The isolated GPU run measured `MOE_GPU_WORK_NS=286183800` and a total wall of
+`2458631000` ns. The CPU baseline's `MOE_DOWN_GEMV_NS=541984000` was recorded
+under a different full-process configuration, so these counters are retained
+as diagnostic measurements rather than a certified throughput comparison.
 
 ## Disposition
 
