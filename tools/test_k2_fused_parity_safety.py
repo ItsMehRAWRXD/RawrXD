@@ -25,6 +25,16 @@ class FusedParitySafetyTests(unittest.TestCase):
     def test_no_capture_called_during_fused_recording(self):
         self.assertNotIn("k2_parity_capture::Capture(", self.source)
 
+    def test_aggregate_capture_after_completed_device_partial(self):
+        end = self.source.index("if (!K2MoEStickEndDevice(stick, partial, H, ctr))")
+        capture = self.source.index("GPU_STICK_PARTIAL_CAPTURE")
+        fused = self.source.index("if (!K2MoEStickEndFused(stick, ctr))")
+        self.assertLess(fused, end)
+        self.assertLess(end, capture)
+        self.assertIn("scope=AGGREGATE_STICK_PARTIAL_NOT_INDIVIDUAL_EXPERT", self.source)
+        self.assertIn("certified=0", self.source)
+        self.assertIn("vectorWritten", self.source)
+
     def test_gpu_worklist_not_disabled(self):
         self.assertIn("K2MoEStickBeginFused(stick)", self.source)
         self.assertIn("K2MoEStickExpertDevice(stick", self.source)
