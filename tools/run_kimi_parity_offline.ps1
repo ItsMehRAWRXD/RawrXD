@@ -17,6 +17,7 @@ function Get-Sha256([string] $Path) {
 }
 $tests = @(
     'test_k2_gpu_moe_vector_parity.py',
+    'test_audit_rawrxd_25_gates.py',
     'test_k2_q6k_scalar_oracle.py',
     'test_k2_ggml_quant_layout.py',
     'test_k2_q4k_scalar_oracle.py',
