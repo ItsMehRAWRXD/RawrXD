@@ -1,0 +1,2 @@
+STATUS=202
+{"success":true,"accepted":true,"status":"spawned","agentId":"hsub-44540-1","nativeHexMag":false}

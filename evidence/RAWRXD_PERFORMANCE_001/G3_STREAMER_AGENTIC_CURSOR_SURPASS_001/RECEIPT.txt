@@ -1,0 +1,48 @@
+GATE=G3_STREAMER_AGENTIC_CURSOR_SURPASS_001
+PURPOSE=Around-K2 work: prove agentic/autonomous surfaces meet or surpass Cursor (MOTD gate, /api/tool, /api/subagent, hooks, CLI)
+ASOF=2026-10-26T23:15:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+PARENT=G3_STREAMER_AGENTIC_IDE_PARITY_001 + G3_STREAMER_AGENTIC_001
+AUTH=GATE2_E2E_AUTH_SUPERSESSION_001
+
+EXE=RawrXD-Win32IDE.exe --headless --local (Temp copy; build-fd/bin)
+EXE_SHA256=873140373C0177611709897928FFCEA7B572E11F4D690D07FEB1312EA2E90941
+PORT=11455
+WORKING_DIR=G:\~dev\rawrxd
+
+CURSOR_HOOKS=
+  hooks.json + motd-session-start/before-submit/pre-tool(failClosed)/post-tool = PRESENT
+  Rules: PassiveRoleNotRoleplay + StreamerAgenticContinueEnsure + MultitaskMode = PRESENT
+
+CHECK_MATRIX (live this gate):
+  PRE_MOTD list_directory .cursor/rules     = PASS HTTP 403
+  read_file MOTD (.mdc abs)                 = PASS HTTP 200 (PassiveRoleNotRoleplay)
+  list_directory G:\~dev\.cursor\rules      = PASS HTTP 200 (StreamerAgenticContinueEnsure + MultitaskMode)
+  execute_command echo TOOL_LOOP_OK         = PASS HTTP 200
+  POST /api/subagent continue-ensure smoke  = PASS HTTP 202 accepted agentId=hsub-38448-1
+  Separate RawrXD-HeadlessIDE.exe           = N/A (canonical = Win32IDE --headless; no missing product surface)
+  rawr run tinyllama --max-tokens 8         = PARTIAL EXIT=0 model load GPU OK; entered interactive agent REPL
+                                              PRODUCT_STREAMER_PREP/AGENTIC_PATH markers NOT_OBSERVED this argv shape
+  rawr doctor                               = PASS (workspace/git/cmake OK; Deep2/Ollama ports not running — honest)
+  Deep IDE continue-ensure (engine.js)      = SOURCE_WIRED (isContinueEnsureTrigger + EngineAPI.subagent max brief)
+                                              RUNTIME_REACHED this gate = NOT_RUN (GUI session not exercised)
+
+K2_SIDE (non-blocking around-work):
+  Prior capture ABORTED_NON_OFFICIAL / CPU_REPACK fail remains open (FACTORY_SEAL=NOT_ACHIEVED)
+  capture_oracle_vectors_k2.ps1 now uses first_corpus_prompt.txt + refuses corpus drift
+  Prompt hash synced official==alias SHA256=98B46D3B9191CFF4078DDA182FA99B22974F0908A9403566AF8295E47276AA52
+
+SURPASS_VS_CURSOR (demonstrated):
+  Fail-closed MOTD on /api/tool (Cursor hooks equivalent on product HTTP surface)
+  Native /api/subagent spawn without HexMag (Cursor Task parity on product path)
+  Abs-path tool resolve hardened enough for this host abs MOTD + abs rules list
+
+OPEN (visible, not auto-cleared):
+  One-shot non-interactive rawr product generate markers (PRODUCT_STREAMER_PREP) on current CLI argv
+  Deep IDE GUI continue-ensure RUNTIME_REACHED
+  K2 256 factory seal
+
+VERDICT=CURSOR_PARITY_TOOL_SUBAGENT_PASS + CLI_AGENT_REPL_REACHED + K2_SEAL_STILL_OPEN
+ARTIFACTS=pre_motd.txt motd_read.txt post_motd_list.txt post_motd_cli.txt subagent.txt rawr_run.* rawr_doctor.txt

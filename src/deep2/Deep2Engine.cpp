@@ -3943,11 +3943,12 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t size) {
 // Tokenization
 // ============================================================================
 std::vector<int> Deep2Engine::tokenize(const std::string& text) {
+    // GGUF add_bos_token / add_eos_token (default add_bos=true when meta absent).
+    if (CanonicalTokenizer::Instance().IsLoaded()) {
+        return CanonicalTokenizer::Instance().EncodeWithPolicy(text);
+    }
     if (tokenizer) {
         return tokenizer->Encode(text);
-    }
-    if (CanonicalTokenizer::Instance().IsLoaded()) {
-        return CanonicalTokenizer::Instance().Encode(text);
     }
     fprintf(stderr, "[Deep2Engine] ERROR: tokenize() called with no tokenizer loaded\n");
     return {};
