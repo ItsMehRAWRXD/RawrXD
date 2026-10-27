@@ -1,8 +1,11 @@
-/* GpuDeviceLostReset.cpp — env opt-in + mark/reset fail-closed. ≤99. */
+/* GpuDeviceLostReset.cpp — env opt-in + mark/reset + PnP bounce. ≤99. */
 #include "GpuDeviceLostReset.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#ifdef _WIN32
+#  include <windows.h>
+#endif
 
 namespace Deep2 {
 namespace GpuLost {
@@ -10,6 +13,39 @@ namespace GpuLost {
 bool OptInEnabled() noexcept {
     const char* e = std::getenv("DEEP2_GPU_DEVICE_RESET");
     return e && e[0] == '1' && e[1] == '\0';
+}
+
+bool PnpBounceOptIn() noexcept {
+    const char* e = std::getenv("DEEP2_GPU_PNP_BOUNCE");
+    return e && e[0] == '1' && e[1] == '\0';
+}
+
+bool TryPnpBounce(int code) noexcept {
+    if (!PnpBounceOptIn()) return false;
+    if (code != kWinCode10 && code != kWinCode31) return false;
+#ifdef _WIN32
+    const char* root = std::getenv("RAWRXD_ROOT");
+    char cmd[1024];
+    if (root && root[0]) {
+        std::snprintf(cmd, sizeof(cmd),
+            "powershell.exe -NoProfile -ExecutionPolicy Bypass -File "
+            "\"%s\\scripts\\Reset-GpuDevicePnp.ps1\"",
+            root);
+    } else {
+        std::snprintf(cmd, sizeof(cmd),
+            "powershell.exe -NoProfile -ExecutionPolicy Bypass -File "
+            "\"F:\\rawrxd-native-agent-001\\scripts\\Reset-GpuDevicePnp.ps1\"");
+    }
+    std::fprintf(stderr, "DEEP2_GPU_PNP_BOUNCE spawn code=%d\n", code);
+    std::fflush(stderr);
+    const int rc = std::system(cmd);
+    std::fprintf(stderr, "DEEP2_GPU_PNP_BOUNCE exit=%d\n", rc);
+    std::fflush(stderr);
+    return rc == 0;
+#else
+    (void)code;
+    return false;
+#endif
 }
 
 void Mark(Seq& s, int code) noexcept {
@@ -22,6 +58,7 @@ void Mark(Seq& s, int code) noexcept {
                  "DEEP2_GPU_DEVICE_LOST mark=%u code=%d phase=%s\n",
                  s.mark, code, s.last_phase);
     std::fflush(stderr);
+    if (code == kWinCode10 || code == kWinCode31) (void)TryPnpBounce(code);
 }
 
 bool RunReset(Seq& s, bool (*teardown)(void*), bool (*recreate)(void*),
