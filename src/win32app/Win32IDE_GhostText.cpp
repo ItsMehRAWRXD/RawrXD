@@ -57,18 +57,8 @@ void NativeGhostTextController::onEditorChanged() {
     ++m_generation;
     m_snapshot = editorText();
     dismiss();
-    if (m_editor && m_timer) {
-        KillTimer(m_editor, m_timer);
-        m_timer = 0;
-    }
-}
-
-void NativeGhostTextController::triggerCompletion() {
-    ++m_generation;
-    m_snapshot = editorText();
-    dismiss();
     if (!m_editor || m_snapshot.empty()) return;
-    requestCompletion();
+    if (!m_timer) m_timer = SetTimer(m_editor, kGhostTimer, 250, nullptr);
 }
 
 void NativeGhostTextController::requestCompletion() {
@@ -134,10 +124,6 @@ LRESULT CALLBACK NativeGhostTextController::editorProc(HWND hwnd, UINT message, 
         if (message == WM_KEYDOWN) {
             if (wParam == VK_TAB && self->accept()) return 0;
             if (wParam == VK_ESCAPE && self->active()) { self->dismiss(); return 0; }
-            if (wParam == VK_SPACE && (GetKeyState(VK_CONTROL) & 0x8000)) {
-                self->triggerCompletion();
-                return 0;
-            }
         }
         if (message == WM_SIZE) self->positionHint();
         if (message == WM_NCDESTROY) self->detach();

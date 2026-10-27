@@ -260,10 +260,6 @@ void AgenticLoopBridge::WorkerThread()
         const auto wallDeadline = std::chrono::steady_clock::now() +
                                   std::chrono::seconds(
                                       std::max(1, m_currentConfig.maxWallTimeSec));
-        // Preserve the reason for termination.  TerminateProcessTree() can
-        // make the child signaled before the next wait, which must not turn a
-        // watchdog timeout into an ordinary exit-code failure.
-        bool timedOut = false;
         DWORD waitResult = WaitForSingleObject(m_process, 1000);
         while (waitResult == WAIT_TIMEOUT && m_running.load()) {
             // Check watchdog
@@ -271,7 +267,6 @@ void AgenticLoopBridge::WorkerThread()
             if (status.state == rawrxd::watchdog::State::StartupTimedOut ||
                 status.state == rawrxd::watchdog::State::WallTimedOut) {
                 LOG_WARNING("Watchdog timeout: " + std::to_string(static_cast<int>(status.state)));
-                timedOut = true;
                 TerminateProcessTree(m_processId);
                 break;
             }
@@ -282,16 +277,13 @@ void AgenticLoopBridge::WorkerThread()
             if (std::chrono::steady_clock::now() >= wallDeadline) {
                 LOG_WARNING("Task wall timeout: " +
                             std::to_string(m_currentConfig.maxWallTimeSec) + "s");
-                timedOut = true;
                 TerminateProcessTree(m_processId);
                 break;
             }
             waitResult = WaitForSingleObject(m_process, 1000);
         }
         
-        if (timedOut) {
-            CompleteTask(false, "Watchdog timeout", WAIT_TIMEOUT);
-        } else if (waitResult != WAIT_TIMEOUT) {
+        if (waitResult != WAIT_TIMEOUT) {
             // Process exited naturally
             DWORD exitCode = 0;
             GetExitCodeProcess(m_process, &exitCode);

@@ -16,24 +16,23 @@ void Win32IDE::initializeNativeGhostText() {
             } else if (m_ghostTextMode == GhostTextMode::FollowChat) {
                 route = m_selectedChatModel;
             } else {
-                // Auto Local must use the stable, independently validated
-                // local service before attempting an experimental native
-                // GGUF route.  The native route remains available through
-                // an explicit GhostText model selection, but it must not be
-                // selected implicitly while an editor change is in flight.
-                // Cloud Kilo is never selected by Auto Local.
+                // Prefer a validated native GGUF/blob route, then use the
+                // local Ollama service. Both remain local; cloud Kilo is
+                // never selected by Auto Local.
                 for (const auto& candidate : m_availableModels) {
-                    if (candidate.source == ChatModelEntry::Source::Ollama) {
+                    if (candidate.source == ChatModelEntry::Source::LocalFile) {
                         route = candidate;
                         break;
                     }
                 }
-                // Do not silently fall back to a native GGUF route.  The
-                // native agent has a separate lifecycle and may be loading a
-                // large model or running a tool transaction; using it from a
-                // 250 ms GhostText timer can corrupt that lifecycle.  When
-                // Ollama is unavailable, GhostText is intentionally inert
-                // until the user explicitly selects a certified route.
+                if (route.identifier.empty()) {
+                    for (const auto& candidate : m_availableModels) {
+                        if (candidate.source == ChatModelEntry::Source::Ollama) {
+                            route = candidate;
+                            break;
+                        }
+                    }
+                }
             }
             if (route.identifier.empty()) {
                 logWarning("GhostText", "No eligible GhostText model route is available.");

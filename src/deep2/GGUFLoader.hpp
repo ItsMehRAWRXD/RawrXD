@@ -640,7 +640,6 @@ private:
             case 6:  blockElems = 32;  blockBytes = 22;  return true; // Q5_0
             case 7:  blockElems = 32;  blockBytes = 24;  return true; // Q5_1
             case 8:  blockElems = 32;  blockBytes = 34;  return true; // Q8_0
-            case 9:  blockElems = 32;  blockBytes = 36;  return true; // Q8_1
             case 10: blockElems = 256; blockBytes = 84;  return true; // Q2_K
             case 11: blockElems = 256; blockBytes = 110; return true; // Q3_K
             case 12: blockElems = 256; blockBytes = 144; return true; // Q4_K
@@ -648,26 +647,13 @@ private:
             case 14: blockElems = 256; blockBytes = 210; return true; // Q6_K
             case 15: blockElems = 256; blockBytes = 292; return true; // Q8_K
             case 16: blockElems = 256; blockBytes = 66;  return true; // IQ2_XXS
-            case 17: blockElems = 256; blockBytes = 74;  return true; // IQ2_XS
-            case 18: blockElems = 256; blockBytes = 98;  return true; // IQ3_XXS
-            case 19: blockElems = 256; blockBytes = 50;  return true; // IQ1_S
-            case 20: blockElems = 32;  blockBytes = 18;  return true; // IQ4_NL
-            case 21: blockElems = 256; blockBytes = 110; return true; // IQ3_S
-            case 22: blockElems = 256; blockBytes = 82;  return true; // IQ2_S
-            case 23: blockElems = 256; blockBytes = 136; return true; // IQ4_XS
             case 24: blockElems = 1;   blockBytes = 1;   return true; // I8
             case 25: blockElems = 1;   blockBytes = 2;   return true; // I16
             case 26: blockElems = 1;   blockBytes = 4;   return true; // I32
             case 27: blockElems = 1;   blockBytes = 8;   return true; // I64
             case 28: blockElems = 1;   blockBytes = 8;   return true; // F64
-            case 29: blockElems = 256; blockBytes = 56;  return true; // IQ1_M
             case 30: blockElems = 1;   blockBytes = 2;   return true; // BF16
-            case 34: blockElems = 256; blockBytes = 54;  return true; // TQ1_0
-            case 35: blockElems = 256; blockBytes = 66;  return true; // TQ2_0
-            case 39: blockElems = 32;  blockBytes = 17;  return true; // MXFP4
             case 40: blockElems = 64;  blockBytes = 36;  return true; // NVFP4
-            case 41: blockElems = 128; blockBytes = 18;  return true; // Q1_0
-            case 42: blockElems = 32;  blockBytes = 17;  return true; // Q2_0
             default: blockElems = blockBytes = 0; return false;
         }
     }
@@ -1429,13 +1415,8 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
         keyWithFallback("expert_feed_forward_length"), 0));
     meta.sharedExpertIntermediateSize = static_cast<uint32_t>(readInt(
         keyWithFallback("expert_shared_feed_forward_length"), 0));
-    // DeepSeek2 GGUF uses leading_dense_block_count (not expert_leading_dense_count).
     meta.leadingDenseBlockCount = static_cast<uint32_t>(readInt(
-        keyWithFallback("leading_dense_block_count"), 0));
-    if (meta.leadingDenseBlockCount == 0) {
-        meta.leadingDenseBlockCount = static_cast<uint32_t>(readInt(
-            keyWithFallback("expert_leading_dense_count"), 0));
-    }
+        keyWithFallback("expert_leading_dense_count"), 0));
     if (meta.leadingDenseBlockCount == 0) {
         meta.leadingDenseBlockCount = static_cast<uint32_t>(readInt(
             keyWithFallback("moe_leading_dense_block_count"), 0));
@@ -1446,32 +1427,14 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
     }
 
     // ---- MLA / LoRA, present on DeepSeek-style models and absent elsewhere ----
-    // GGUF keys are architecture-prefixed under attention.* (e.g.
-    // deepseek2.attention.kv_lora_rank). Bare deepseek2.kv_lora_rank is wrong.
     meta.keyLengthMla = static_cast<uint32_t>(readInt(
-        keyWithFallback("attention.key_length_mla"), 0));
-    if (meta.keyLengthMla == 0) {
-        meta.keyLengthMla = static_cast<uint32_t>(readInt(
-            keyWithFallback("key_length_mla"), 0));
-    }
+        keyWithFallback("key_length_mla"), 0));
     meta.valueLengthMla = static_cast<uint32_t>(readInt(
-        keyWithFallback("attention.value_length_mla"), 0));
-    if (meta.valueLengthMla == 0) {
-        meta.valueLengthMla = static_cast<uint32_t>(readInt(
-            keyWithFallback("value_length_mla"), 0));
-    }
+        keyWithFallback("value_length_mla"), 0));
     meta.qLoraRank = static_cast<uint32_t>(readInt(
-        keyWithFallback("attention.q_lora_rank"), 0));
-    if (meta.qLoraRank == 0) {
-        meta.qLoraRank = static_cast<uint32_t>(readInt(
-            keyWithFallback("q_lora_rank"), 0));
-    }
+        keyWithFallback("q_lora_rank"), 0));
     meta.kvLoraRank = static_cast<uint32_t>(readInt(
-        keyWithFallback("attention.kv_lora_rank"), 0));
-    if (meta.kvLoraRank == 0) {
-        meta.kvLoraRank = static_cast<uint32_t>(readInt(
-            keyWithFallback("kv_lora_rank"), 0));
-    }
+        keyWithFallback("kv_lora_rank"), 0));
 
     // ---- MLA geometry derivation (fallback when metadata keys are absent) ----
     // Some DeepSeek GGUF checkpoints omit q_lora_rank/kv_lora_rank/key_length_mla
@@ -1479,17 +1442,12 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
     // which would risk contaminating downstream pruning evidence with incorrect
     // inference. The derivation is cross-checked against normalization tensors and
     // rejected if any contradiction is found.
-    //
-    // DeepSeek-V2-Lite authentic layout: no q_lora_rank / no attn_q_a — full Q via
-    // attn_q.weight; KV still latent via attn_kv_a_mqa (+ fused attn_kv_b). Leaving
-    // qLoraRank=0 is correct for Lite; do not invent a nonzero q_lora.
     if ((meta.qLoraRank == 0 || meta.kvLoraRank == 0) && meta.architecture == "deepseek2")
     {
         const auto* q_a = ld.getTensor("blk.0.attn_q_a.weight");
         const auto* q_a_norm = ld.getTensor("blk.0.attn_q_a_norm.weight");
         const auto* kv_a_mqa = ld.getTensor("blk.0.attn_kv_a_mqa.weight");
         const auto* kv_a_norm = ld.getTensor("blk.0.attn_kv_a_norm.weight");
-        const auto* attn_q = ld.getTensor("blk.0.attn_q.weight");
 
         if (q_a && kv_a_mqa && q_a->shape.size() >= 2 && kv_a_mqa->shape.size() >= 2)
         {
@@ -1557,50 +1515,12 @@ inline GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptio
                         meta.ropeDimensionCount, q_norm_ok ? 1 : 0, kv_norm_ok ? 1 : 0);
             }
         }
-        else if (!q_a && kv_a_mqa && kv_a_mqa->shape.size() >= 2 && attn_q)
-        {
-            // Lite uncompressed-Q MLA: bind kv ranks from meta/tensor; leave qLoraRank=0.
-            const uint32_t derived_keyLengthMla = static_cast<uint32_t>(kv_a_mqa->shape[1]);
-            uint32_t derived_kvLoraRank = 0;
-            if (kv_a_norm && !kv_a_norm->shape.empty()) {
-                derived_kvLoraRank = static_cast<uint32_t>(kv_a_norm->shape[0]);
-            } else if (derived_keyLengthMla > meta.ropeDimensionCount) {
-                derived_kvLoraRank = derived_keyLengthMla - meta.ropeDimensionCount;
-            }
-            const bool kv_split_ok =
-                derived_kvLoraRank > 0 &&
-                derived_keyLengthMla == derived_kvLoraRank + meta.ropeDimensionCount;
-            if (kv_split_ok) {
-                if (meta.kvLoraRank == 0) meta.kvLoraRank = derived_kvLoraRank;
-                if (meta.keyLengthMla == 0) meta.keyLengthMla = derived_keyLengthMla;
-                // qLoraRank stays 0 — authentic Lite (attn_q.weight present).
-                if (meta.qkNopeHeadDim == 0 && meta.keyLength > meta.ropeDimensionCount) {
-                    meta.qkNopeHeadDim = meta.keyLength - meta.ropeDimensionCount;
-                }
-                if (meta.valueLengthMla == 0 && meta.valueLength > 0) {
-                    meta.valueLengthMla = meta.valueLength;
-                }
-                fprintf(stderr,
-                        "[MLA_GEOMETRY] Lite uncompressed-Q MLA bound from tensors: "
-                        "qLoraRank=0 kvLoraRank=%u keyLengthMla=%u qkNope=%u "
-                        "valueLengthMla=%u ropeDim=%u\n",
-                        meta.kvLoraRank, meta.keyLengthMla, meta.qkNopeHeadDim,
-                        meta.valueLengthMla, meta.ropeDimensionCount);
-            } else {
-                fprintf(stderr,
-                        "[MLA_GEOMETRY] WARNING: Lite KV geometry cross-check failed "
-                        "(kvLoraRank=%u keyLengthMla=%u ropeDim=%u). "
-                        "MLA metadata remains unresolved.\n",
-                        derived_kvLoraRank, derived_keyLengthMla,
-                        meta.ropeDimensionCount);
-            }
-        }
         else
         {
             fprintf(stderr,
                     "[MLA_GEOMETRY] WARNING: Could not locate MLA projection tensors "
-                    "(attn_q_a.weight / attn_kv_a_mqa.weight, or Lite attn_q + "
-                    "attn_kv_a_mqa). MLA metadata remains unresolved.\n");
+                    "(attn_q_a.weight / attn_kv_a_mqa.weight). MLA metadata remains "
+                    "unresolved.\n");
         }
     }
 

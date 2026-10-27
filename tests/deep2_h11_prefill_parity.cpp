@@ -65,18 +65,6 @@ int main(int argc, char** argv) {
     std::printf("=== H11 PREFILL PARITY GATE ===\n");
     std::printf("model=%s\n", modelPath.c_str());
 
-    // H11 is the serial-vs-batched implementation parity authority.  It is
-    // intentionally a CPU-reference gate: the serial leg and the batched leg
-    // must exercise the same host implementation before a separate GPU-vs-CPU
-    // witness is allowed to make any hardware claim.  Set this before model
-    // admission because loadModel() selects the execution lane.
-#if defined(_WIN32)
-    _putenv_s("RAWR_REAP_CPU_ONLY", "1");
-#else
-    setenv("RAWR_REAP_CPU_ONLY", "1", 1);
-#endif
-    std::printf("H11_EXECUTION_MODE=CPU_REFERENCE\n");
-
     // ---- engine setup ----
     Deep2Engine engine;
     EngineConfig cfg{};

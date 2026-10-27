@@ -533,20 +533,6 @@ add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
     # Deep2 Flight Recorder: self-logging inference debugger for performance diagnosis.
     add_subdirectory(tools/deep2_debugger EXCLUDE_FROM_ALL)
 
-    # These subprojects are intentionally EXCLUDE_FROM_ALL so they do not add
-    # optional utilities to every product build.  They are also registered in
-    # the top-level CTest suite, however, so the certification build must make
-    # their exact test executables available before CTest is invoked.
-    add_custom_target(rawrxd_certification_harnesses ALL)
-    foreach(_cert_target
-            deep2_snap_test
-            snap_process_guard_cli
-            flight_recorder_smoke)
-        if(TARGET ${_cert_target})
-            add_dependencies(rawrxd_certification_harnesses ${_cert_target})
-        endif()
-    endforeach()
-
     # RawrXD parity finalization runner: dependency-free C++20 autonomous
     # execution loop (rawr run <model> <task>) with guarded file editing,
     # bounded retries, process timeouts, tool-name integrity (rejects gash/
@@ -1789,68 +1775,6 @@ else()
                    "Gate 4 GPU audit will be SKIPPED_UNSUPPORTED, never PASS")
 endif()
 
-# Production timing witness.  Keep this on the same source/link graph as the
-# dispatch-parity auditor: the executor references both the Deep2 GDN Vulkan
-# implementation and the legacy quant-dot Vulkan implementation, whose source
-# files intentionally share the basename `vulkan_compute.cpp`.  CMake keeps
-# those object paths distinct; a hand-written cl command does not.
-if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
-   EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/generic_vulkan_matmul.cpp" AND
-   Vulkan_FOUND AND _rawrxd_vk_sdk_inc)
-    add_executable(deep2_bench_tps
-        tools/deep2_bench_tps.cpp
-        src/deep2/runtime_graph_executor.cpp
-        src/deep2/generic_vulkan_matmul.cpp
-        src/deep2/vulkan_compute.cpp
-        src/deep2/QuantKernelRegistry.cpp
-        src/deep2/asm_stubs.cpp
-        src/deep2/op_linear.cpp
-        src/deep2/op_gdn.cpp
-        src/deep2/modelgenie/universal_gguf.cpp
-        src/deep2/quant_dot_dispatch.cpp
-        src/vulkan_compute.cpp
-        src/streaming_gguf_loader.cpp
-        src/gguf_loader.cpp
-        src/gguf_vocab_resolver.cpp
-        src/utils/Diagnostics.cpp
-        src/utils/input_sanitizer.cpp
-    )
-    target_include_directories(deep2_bench_tps PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/tools
-        ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/src/deep2/modelgenie
-        ${_rawrxd_vk_sdk_inc}
-    )
-    if(TARGET ggml_interface)
-        target_link_libraries(deep2_bench_tps PRIVATE ggml_interface)
-    endif()
-    if(TARGET Vulkan::Vulkan)
-        target_link_libraries(deep2_bench_tps PRIVATE Vulkan::Vulkan)
-    endif()
-    if(TARGET ggml-vulkan)
-        target_link_libraries(deep2_bench_tps PRIVATE ggml-vulkan)
-    endif()
-    if(MSVC)
-        target_compile_options(deep2_bench_tps PRIVATE /EHsc /std:c++20 /bigobj
-            $<$<CONFIG:Release>:/O2>)
-    else()
-        target_compile_options(deep2_bench_tps PRIVATE -std=c++20 -fexceptions
-            $<$<CONFIG:Release>:-O2>)
-    endif()
-    target_compile_definitions(deep2_bench_tps PRIVATE
-        NOMINMAX _CRT_SECURE_NO_WARNINGS
-        DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
-    )
-    set_target_properties(deep2_bench_tps PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-    message(STATUS "deep2_bench_tps enabled (production timing witness)")
-else()
-    message(STATUS "deep2_bench_tps EXCLUDED: benchmark source or Vulkan SDK unavailable")
-endif()
-
 # Full-model certification runner.  This is intentionally a separate target
 # from the metadata probes: it binds the complete runtime graph, executes the
 # supplied token sequence, and compares the full vocabulary logits on the GPU
@@ -1969,32 +1893,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GL
 endif()
 
 if(GLSLC_EXECUTABLE)
-    # The resident Deep2 GEMV pipeline loads this checked-in SPIR-V at runtime.
-    # Keep the artifact tied to its source so a correctness fix cannot silently
-    # rebuild the host executable while continuing to run stale shader code.
-    set(_deep2_resident_qgemv_source
-        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.comp")
-    set(_deep2_resident_qgemv_output
-        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qgemv.spv")
-    add_custom_command(
-        OUTPUT "${_deep2_resident_qgemv_output}"
-        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.2
-            "${_deep2_resident_qgemv_source}"
-            -o "${_deep2_resident_qgemv_output}"
-        DEPENDS "${_deep2_resident_qgemv_source}"
-        VERBATIM
-        COMMENT "Compiling resident Deep2 Q4/Q6 GEMV shader")
-    add_custom_target(deep2_resident_qgemv_shader
-        DEPENDS "${_deep2_resident_qgemv_output}")
-
-    # Every consumer that can bind the resident QGEMV pipeline must depend on
-    # the generated SPIR-V.  Without this edge, a shader-only correction can
-    # rebuild the host executable while leaving a stale checked-in artifact
-    # in place for parity or GPU smoke tests.
-    if(TARGET deep2_parity_trace)
-        add_dependencies(deep2_parity_trace deep2_resident_qgemv_shader)
-    endif()
-
     # Quant GEMV is intentionally specialized by format.  Keeping one
     # runtime type-switch shader forces the register allocator and control
     # flow to pay for the worst Q6 path on every invocation.  This target
@@ -3065,15 +2963,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
-        # streaming_gguf_loader uses the shared Diagnostics facade.  Keep the
-        # implementation in this library so every consumer gets one owner for
-        # the symbols instead of relying on a particular executable to supply
-        # them accidentally.
-        src/utils/Diagnostics.cpp
     )
-    if(TARGET deep2_resident_qgemv_shader)
-        add_dependencies(rawrxd_gpu_compute deep2_resident_qgemv_shader)
-    endif()
     target_include_directories(rawrxd_gpu_compute PUBLIC
         ${CMAKE_SOURCE_DIR}/src
         # Must precede include/ so "vulkan_compute.h" resolves to the
@@ -3239,10 +3129,6 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/ollama_blob_parser_impl.cpp
             # Deep2Engine's own out-of-class members
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_missing_members.cpp
-            # Canonical resident Vulkan forward path.  This is intentionally
-            # separate from the historical ~dev implementation because the
-            # active engine uses CPUInference::VulkanCompute's adapter ABI.
-            ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine_GpuForward.cpp
             # Sampling helpers used by the engine
             ${CMAKE_SOURCE_DIR}/src/sampling/advanced_sampler.cpp
             # ENGINE_RECOVERY batch-05: out-of-class definitions referenced by
@@ -3386,7 +3272,6 @@ endforeach()
             NOMINMAX _CRT_SECURE_NO_WARNINGS
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
         )
-        add_dependencies(deep2_engine_lib deep2_resident_qgemv_shader)
         set_target_properties(deep2_engine_lib PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Release"
         )
@@ -5352,18 +5237,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_cli_contract_test.cpp" AND
     add_test(NAME rawr_reap_cli_contract COMMAND rawr-reap-cli-contract-test)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_expert_layout_test.cpp" AND
-   EXISTS "${CMAKE_SOURCE_DIR}/src/reap_expert_layout.hpp")
-    add_executable(rawr-reap-expert-layout-test tests/reap_expert_layout_test.cpp)
-    target_include_directories(rawr-reap-expert-layout-test PRIVATE ${CMAKE_SOURCE_DIR}/src)
-    target_compile_features(rawr-reap-expert-layout-test PRIVATE cxx_std_20)
-    if(MSVC)
-        target_compile_options(rawr-reap-expert-layout-test PRIVATE /EHsc /std:c++20)
-    endif()
-    enable_testing()
-    add_test(NAME rawr_reap_expert_layout COMMAND rawr-reap-expert-layout-test)
-endif()
-
 # Read-only REAP inventory/planning surface.  This intentionally does not
 # rewrite checkpoints until calibration, router remapping and parity gates
 # are implemented; it is the only safe way to expose real model evidence.
@@ -5439,34 +5312,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_floor.cpp")
     add_test(NAME reap-floor-audit-smoke COMMAND reap-floor-audit "${CMAKE_SOURCE_DIR}/tests/reap_floor_synthetic.tsv" 30 8)
 endif()
 
-# Fail-closed admission publisher: only writes EvaluateAdmission schema files
-# when source calibration/selection receipts already carry true gates.
-if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_publish_admission.cpp")
-    add_executable(reap-publish-admission src/reap/reap_publish_admission.cpp)
-    target_compile_features(reap-publish-admission PRIVATE cxx_std_20)
-    target_include_directories(reap-publish-admission PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/reap ${CMAKE_SOURCE_DIR}/include)
-    if(TARGET nlohmann_json)
-        target_link_libraries(reap-publish-admission PRIVATE nlohmann_json)
-    endif()
-    if(MSVC)
-        target_compile_options(reap-publish-admission PRIVATE /W4 /EHsc /std:c++20)
-    endif()
-    set_target_properties(reap-publish-admission PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
-endif()
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap/reap_reference_receipt.cpp")
-    add_executable(reap-reference-receipt src/reap/reap_reference_receipt.cpp)
-    target_compile_features(reap-reference-receipt PRIVATE cxx_std_20)
-    target_link_libraries(reap-reference-receipt PRIVATE bcrypt)
-    if(MSVC)
-        target_compile_options(reap-reference-receipt PRIVATE /W4 /EHsc /std:c++20)
-    endif()
-    set_target_properties(reap-reference-receipt PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-msvc")
-endif()
-
 # REAP independent reference extractor — standalone C++20, no GGUFLoader dependency.
 # Parses GGUF v3 shard manually and extracts packed expert slices using an
 # independently implemented stride calculation. Used to certify the production
@@ -5531,13 +5376,7 @@ endif()
 
 # CPU engine E2E test — links against all required GGML components via deep2_engine_lib
 if(EXISTS "${CMAKE_SOURCE_DIR}/build_ide/cpu_engine_e2e.cpp")
-    add_executable(cpu_engine_e2e
-        build_ide/cpu_engine_e2e.cpp
-        # The test constructs the concrete engine directly.  Keep its
-        # implementation in this target instead of relying on the abstract
-        # interface being pulled in by deep2_engine_lib.
-        src/cpu_inference_engine_impl.cpp
-    )
+    add_executable(cpu_engine_e2e build_ide/cpu_engine_e2e.cpp)
     target_link_libraries(cpu_engine_e2e PRIVATE deep2_engine_lib ggml-base ggml-cpu advapi32)
     target_include_directories(cpu_engine_e2e PRIVATE
         ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2

@@ -1797,13 +1797,13 @@ int main(int argc, char* argv[])
     }
 
     // ---- backend instrumentation (RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY)
-    // Keep legacy GPU_KERNEL_MS for consumers, but label its actual meaning:
-    // it aliases the host fence-wait span. GPU_DEVICE_MS is the Vulkan
-    // timestamp interval and is the value to use for shader-time optimization.
+    // Splits queue-side kernel time from host submit/wait overhead and makes
+    // resource churn (allocations vs reuses, upload/download bytes, device
+    // residency) measurable rather than anecdotal.
     {
         const QuantDot::BackendStats& be = QuantDot::BackendCounters();
-        std::printf("  GPU_KERNEL_MS=%.3f GPU_DEVICE_MS=%.3f GPU_SUBMIT_MS=%.3f GPU_WAIT_MS=%.3f\n",
-                    be.kernel_ms, be.gpu_ms, be.submit_ms, be.wait_ms);
+        std::printf("  GPU_KERNEL_MS=%.3f GPU_SUBMIT_MS=%.3f GPU_WAIT_MS=%.3f\n", be.kernel_ms, be.submit_ms,
+                    be.wait_ms);
         std::printf("  GPU_UPLOAD_BYTES=%llu GPU_DOWNLOAD_BYTES=%llu\n", (unsigned long long)be.upload_bytes,
                     (unsigned long long)be.download_bytes);
         std::printf("  DESCRIPTOR_ALLOCATIONS=%llu DESCRIPTOR_REUSES=%llu\n",

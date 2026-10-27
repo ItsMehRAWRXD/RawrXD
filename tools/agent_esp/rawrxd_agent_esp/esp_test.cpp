@@ -24,15 +24,6 @@ int main(){
  m.end_prefill(t+36100ms);m.finish(true,t+36100ms);
  s=m.snapshot(t+46100ms);assert(!s.stalled && s.phase==M::Phase::Done);
  assert(s.prefill_tokens==150);
- // A cancelled planned batch must report committed work, not the requested
- // batch size. This protects agent receipts from overstating deadline-limited
- // prefill and throughput.
- M partial(43,8,5000ms,30000ms);
- partial.task_start(t);partial.begin_prefill(216,t);
- partial.end_prefill(3,t+10300ms);
- s=partial.snapshot(t+10300ms);
- assert(s.prefill_tokens==3);
- assert(s.prefill_tps>0.0 && s.prefill_tps<1.0);
  assert(rawrxd::esp::snapshot_json(s).find("\"decode_tps\"")!=std::string::npos);
  rawrxd::esp::Bus bus(8);rawrxd::esp::RuntimeESP r(bus,2);
  r.model_load("model.gguf");r.tokenizer(true);r.prefill_start(2,3);r.prefill_end();r.decode_start();r.token(42,"x");r.tick();r.finish(true);

@@ -338,20 +338,15 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         MoEPlaceLive().experts_executed += executedHost;
         if (decodePhase) MoEPlaceLive().decode_experts_executed += executedHost;
 
-        // MiniMax-M2 has no shared expert tensor. A zero shared-expert count
-        // is a real topology contract; do not call the Kimi shared-expert
-        // path with missing tensors.
-        if (cfg.sharedExperts > 0) {
-            std::vector<float> shared(H, 0.f);
-            moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
-            if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
-                moe_ltrace::BC(layer, "SHARED_FAIL");
-                return false;
-            }
-            moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
-            MoEPlaceLive().shared_expert_calls++;
-            for (size_t i = 0; i < H; ++i) accum[i] += shared[i];
+        std::vector<float> shared(H, 0.f);
+        moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+        if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+            moe_ltrace::BC(layer, "SHARED_FAIL");
+            return false;
         }
+        moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
+        MoEPlaceLive().shared_expert_calls++;
+        for (size_t i = 0; i < H; ++i) accum[i] += shared[i];
         moe_ltrace::BC(layer, "HOST_MOE_DONE");
         return true;
     }
@@ -541,17 +536,15 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         return false;
     }
 
-    if (cfg.sharedExperts > 0) {
-        std::vector<float> shared(cfg.hiddenDim, 0.f);
-        moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
-        if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
-            moe_ltrace::BC(layer, "SHARED_FAIL");
-            return false;
-        }
-        moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
-        MoEPlaceLive().shared_expert_calls++;
-        for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
+    std::vector<float> shared(cfg.hiddenDim, 0.f);
+    moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+    if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+        moe_ltrace::BC(layer, "SHARED_FAIL");
+        return false;
     }
+    moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
+    MoEPlaceLive().shared_expert_calls++;
+    for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
     return true;
 }
 

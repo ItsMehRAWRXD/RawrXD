@@ -2,7 +2,6 @@
 // tokenizer metadata keys from a GGUF shard.
 #include "deep2/GGUFLoader.hpp"
 #include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -35,14 +34,10 @@ int main(int argc, char** argv) {
     for (const char* key : keys) {
         if (loader.hasMeta(key)) {
             std::string val = loader.getMetaString(key, "(no string)");
-            std::vector<std::string> arr;
-            const bool hasArray = loader.getMetaStringArray(key, arr);
+            std::vector<std::string> arr = loader.getMetaStringArray(key, std::vector<std::string>());
             std::cout << key << ":\n";
             std::cout << "  hasMeta=true\n";
             std::cout << "  getMetaString=\"" << val << "\"\n";
-            if (!hasArray) {
-                std::cout << "  getMetaStringArray unavailable\n";
-            }
             std::cout << "  getMetaStringArray count=" << arr.size() << "\n";
             if (!arr.empty() && arr.size() <= 5) {
                 for (size_t i = 0; i < arr.size(); ++i) {
@@ -59,27 +54,6 @@ int main(int argc, char** argv) {
             std::cout << "\n";
         } else {
             std::cout << key << ": hasMeta=false\n";
-        }
-    }
-
-    if (argc > 2) {
-        char* end = nullptr;
-        const long requested = std::strtol(argv[2], &end, 10);
-        std::vector<std::string> tokens;
-        if (end && *end == '\0' && requested >= 0 &&
-            loader.getMetaStringArray("tokenizer.ggml.tokens", tokens) &&
-            static_cast<size_t>(requested) < tokens.size()) {
-            const std::string& raw = tokens[static_cast<size_t>(requested)];
-            std::cout << "token[" << requested << "]_bytes=" << raw.size() << "\n";
-            std::cout << "token[" << requested << "]_value=" << raw << "\n";
-            std::cout << "token[" << requested << "]_hex=";
-            static constexpr char hex[] = "0123456789abcdef";
-            for (unsigned char c : raw)
-                std::cout << hex[(c >> 4) & 0x0f] << hex[c & 0x0f];
-            std::cout << "\n";
-        } else {
-            std::cerr << "TOKEN_LOOKUP_FAILED\n";
-            return 3;
         }
     }
 

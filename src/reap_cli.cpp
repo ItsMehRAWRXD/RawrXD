@@ -1,8 +1,6 @@
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/ReapMoETransformer.hpp"
 #include "reap_cli_contract.hpp"
-#include "reap_expert_layout.hpp"
-#include "reap_inventory.hpp"
 #include "deep2/deep2_sha256.hpp"
 #include <nlohmann/json.hpp>
 #include <algorithm>
@@ -271,13 +269,6 @@ struct ReapInventory {
     std::set<uint32_t> moeLayers;
 };
 
-static bool supportsPairUpDownExperts(const std::string& architecture) {
-    // Nemotron-H MoE stores a router plus packed expert up/down projections.
-    // It has no per-expert gate projection; treating that absence as a
-    // malformed DeepSeek triplet would reject a structurally valid model.
-    return architecture == "nemotron_h_moe";
-}
-
 static bool collectReapInventory(const std::string& path,
                                  Deep2::GGUFLoader& loader,
                                  ReapInventory& out,
@@ -311,35 +302,16 @@ static bool collectReapInventory(const std::string& path,
         const auto* up = loader.getTensor(prefix + "ffn_up_exps.weight");
         const auto* down = loader.getTensor(prefix + "ffn_down_exps.weight");
         if (!gate && !up && !down) continue;
-        const std::string architecture = loader.getMetaString("general.architecture", "");
-        const auto decision = RawrXD::Reap::ClassifyExpertProjections(
-            gate != nullptr, up != nullptr, down != nullptr,
-            gate && !gate->shape.empty(), up && !up->shape.empty(), down && !down->shape.empty(),
-            gate && !gate->shape.empty() ? gate->shape.back() : 0,
-            up && !up->shape.empty() ? up->shape.back() : 0,
-            down && !down->shape.empty() ? down->shape.back() : 0);
-        const bool pairLayout = decision.kind == RawrXD::Reap::ExpertLayoutKind::PairUpDown &&
-                                supportsPairUpDownExperts(architecture);
-        if (pairLayout) {
-            if (!up || !down || up->shape.empty() || down->shape.empty() ||
-                up->shape.back() != down->shape.back()) {
-                error = "invalid Nemotron-H expert up/down pair at layer " + std::to_string(layer);
-                return false;
-            }
-        } else if (decision.kind != RawrXD::Reap::ExpertLayoutKind::DeepseekTriplet) {
-            error = RawrXD::Reap::LayoutRejection(decision, layer, architecture);
-            return false;
-        }
         out.layerCount = (std::max)(out.layerCount, static_cast<uint64_t>(layer + 1));
-        if ((!pairLayout && (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
+        if (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
             down->shape.empty() || gate->shape.back() != up->shape.back() ||
-            gate->shape.back() != down->shape.back()))) {
+            gate->shape.back() != down->shape.back()) {
             error = "invalid expert projection triplet at layer " + std::to_string(layer);
             return false;
         }
         out.moeLayers.insert(layer);
-        const uint64_t count = static_cast<uint64_t>((pairLayout ? up : gate)->shape.back());
-        if (count == 0 || (pairLayout ? 0 : gate->sizeBytes) % count || up->sizeBytes % count ||
+        const uint64_t count = static_cast<uint64_t>(gate->shape.back());
+        if (count == 0 || gate->sizeBytes % count || up->sizeBytes % count ||
             down->sizeBytes % count) {
             error = "expert projection slices are not divisible at layer " + std::to_string(layer);
             return false;
@@ -437,7 +409,6 @@ static int topology(const std::string& path, const std::string& outputPath) {
     uint64_t unsupportedExpertBytes = 0;
     std::set<uint32_t> moeLayers;
     json layerReports = json::array();
-    const std::string architecture = loader.getMetaString("general.architecture", "");
     for (uint32_t layer = 0; layer < 256; ++layer) {
         const std::string prefix = "blk." + std::to_string(layer) + ".";
         const std::string gateName = prefix + "ffn_gate_exps.weight";
@@ -447,37 +418,22 @@ static int topology(const std::string& path, const std::string& outputPath) {
         const auto* up = loader.getTensor(upName);
         const auto* down = loader.getTensor(downName);
         if (!gate && !up && !down) continue;
-        const auto decision = RawrXD::Reap::ClassifyExpertProjections(
-            gate != nullptr, up != nullptr, down != nullptr,
-            gate && !gate->shape.empty(), up && !up->shape.empty(), down && !down->shape.empty(),
-            gate && !gate->shape.empty() ? gate->shape.back() : 0,
-            up && !up->shape.empty() ? up->shape.back() : 0,
-            down && !down->shape.empty() ? down->shape.back() : 0);
-        const bool pairLayout = decision.kind == RawrXD::Reap::ExpertLayoutKind::PairUpDown &&
-                                supportsPairUpDownExperts(architecture);
-        if (!pairLayout && decision.kind != RawrXD::Reap::ExpertLayoutKind::DeepseekTriplet) {
-            std::cerr << RawrXD::Reap::LayoutRejection(decision, layer, architecture) << "\n";
-            return 4;
-        }
-        if ((pairLayout && (!up || !down || up->shape.empty() || down->shape.empty() ||
-                            up->shape.back() != down->shape.back())) ||
-            (!pairLayout && (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
+        if (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
             down->shape.empty() || gate->shape.back() != up->shape.back() ||
-            gate->shape.back() != down->shape.back()))) {
+            gate->shape.back() != down->shape.back()) {
             std::cerr << "INVALID_EXPERT_PROJECTION_TRIPLET layer=" << layer << "\n";
             return 4;
         }
-        const uint64_t expertCount = static_cast<uint64_t>((pairLayout ? up : gate)->shape.back());
-        const uint64_t gateBytes = pairLayout ? 0 : gate->sizeBytes;
-        const uint64_t gateSlice = pairLayout ? 0 : gateBytes / expertCount;
+        const uint64_t expertCount = static_cast<uint64_t>(gate->shape.back());
+        const uint64_t gateSlice = gate->sizeBytes / expertCount;
         const uint64_t upSlice = up->sizeBytes / expertCount;
         const uint64_t downSlice = down->sizeBytes / expertCount;
-        if (!expertCount || gateBytes % expertCount || up->sizeBytes % expertCount ||
+        if (!expertCount || gate->sizeBytes % expertCount || up->sizeBytes % expertCount ||
             down->sizeBytes % expertCount) {
             std::cerr << "INVALID_EXPERT_PROJECTION_DIVISIBILITY layer=" << layer << "\n";
             return 4;
         }
-        const uint64_t projectionBytes = gateBytes + up->sizeBytes + down->sizeBytes;
+        const uint64_t projectionBytes = gate->sizeBytes + up->sizeBytes + down->sizeBytes;
         const uint64_t minimumProjectionBytes = gateSlice + upSlice + downSlice;
         routedProjectionBytes += projectionBytes;
         routedProjectionMinimumBytes += minimumProjectionBytes;
@@ -498,9 +454,8 @@ static int topology(const std::string& path, const std::string& outputPath) {
         }
         layerReports.push_back({
             {"layer", layer},
-            {"layout", pairLayout ? "pair_up_down" : "deepseek_triplet"},
             {"packed_expert_count", expertCount},
-            {"gate_bytes", gateBytes},
+            {"gate_bytes", gate->sizeBytes},
             {"up_bytes", up->sizeBytes},
             {"down_bytes", down->sizeBytes},
             {"gate_slice_bytes", gateSlice},
@@ -917,7 +872,6 @@ int main(int argc, char** argv) {
     uint64_t expertBytes = 0, expertTensors = 0;
     uint64_t logicalExperts = 0, logicalExpertBytes = 0, minTripletBytes = 0, maxTripletBytes = 0;
     std::unordered_map<std::string, uint64_t> byType;
-    const std::string architecture = loader.getMetaString("general.architecture", "");
     for (const auto& name : loader.listTensors()) {
         const auto* t = loader.getTensor(name); if (!t) continue;
         const bool expert = name.find(".experts.") != std::string::npos ||
@@ -937,68 +891,18 @@ int main(int argc, char** argv) {
         const auto* up = loader.getTensor(prefix + "ffn_up_exps.weight");
         const auto* down = loader.getTensor(prefix + "ffn_down_exps.weight");
         if (!gate && !up && !down) continue;
-        const auto decision = RawrXD::Reap::ClassifyExpertProjections(
-            gate != nullptr, up != nullptr, down != nullptr,
-            gate && !gate->shape.empty(), up && !up->shape.empty(), down && !down->shape.empty(),
-            gate && !gate->shape.empty() ? gate->shape.back() : 0,
-            up && !up->shape.empty() ? up->shape.back() : 0,
-            down && !down->shape.empty() ? down->shape.back() : 0);
-        const bool pairLayout = decision.kind == RawrXD::Reap::ExpertLayoutKind::PairUpDown &&
-                                supportsPairUpDownExperts(architecture);
-        if (!pairLayout && decision.kind != RawrXD::Reap::ExpertLayoutKind::DeepseekTriplet) {
-            auto dumpOne = [](const char* role, const Deep2::GGUFTensor* t) {
-                std::cerr << role << "=";
-                if (!t) { std::cerr << "ABSENT\n"; return; }
-                std::cerr << "type=" << static_cast<int>(t->type)
-                          << " bytes=" << t->sizeBytes << " shape=";
-                for (size_t i = 0; i < t->shape.size(); ++i) {
-                    if (i) std::cerr << "x";
-                    std::cerr << t->shape[i];
-                }
-                std::cerr << "\n";
-            };
-            std::cerr << RawrXD::Reap::LayoutRejection(
-                             decision, layer, loader.getMetaString("general.architecture", ""))
-                      << "\n";
-            dumpOne("gate", gate);
-            dumpOne("up", up);
-            dumpOne("down", down);
-            for (const auto& name : loader.listTensors()) {
-                if (name.rfind(prefix, 0) != 0) continue;
-                if (name.find("ffn") == std::string::npos &&
-                    name.find("expert") == std::string::npos &&
-                    name.find("exps") == std::string::npos &&
-                    name.find("moe") == std::string::npos) continue;
-                const auto* tensor = loader.getTensor(name);
-                std::cerr << "LAYER_TENSOR " << name;
-                if (tensor) {
-                    std::cerr << " type=" << static_cast<int>(tensor->type)
-                              << " bytes=" << tensor->sizeBytes << " shape=";
-                    for (size_t i = 0; i < tensor->shape.size(); ++i) {
-                        if (i) std::cerr << "x";
-                        std::cerr << tensor->shape[i];
-                    }
-                }
-                std::cerr << "\n";
-            }
+        if (!gate || !up || !down || gate->shape.empty() || up->shape.empty() || down->shape.empty() ||
+            gate->shape.back() != up->shape.back() || gate->shape.back() != down->shape.back()) {
+            std::cerr << "INVALID_EXPERT_TRIPLET layer=" << layer << "\n";
             return 4;
         }
-        if ((pairLayout && (!up || !down || up->shape.empty() || down->shape.empty() ||
-                            up->shape.back() != down->shape.back())) ||
-            (!pairLayout && (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
-                             down->shape.empty() || gate->shape.back() != up->shape.back() ||
-                             gate->shape.back() != down->shape.back()))) {
-            std::cerr << "INVALID_EXPERT_PROJECTION_SHAPES layer=" << layer << "\n";
-            return 4;
-        }
-        const uint64_t count = static_cast<uint64_t>((pairLayout ? up : gate)->shape.back());
-        const uint64_t gateBytes = pairLayout ? 0 : gate->sizeBytes;
-        if (count == 0 || gateBytes % count || up->sizeBytes % count || down->sizeBytes % count) {
+        const uint64_t count = static_cast<uint64_t>(gate->shape.back());
+        if (count == 0 || gate->sizeBytes % count || up->sizeBytes % count || down->sizeBytes % count) {
             std::cerr << "INVALID_EXPERT_SLICE_DIVISIBILITY layer=" << layer << "\n";
             return 4;
         }
         logicalExperts += count;
-        const uint64_t tripletBytes = gateBytes / count + up->sizeBytes / count + down->sizeBytes / count;
+        const uint64_t tripletBytes = gate->sizeBytes / count + up->sizeBytes / count + down->sizeBytes / count;
         logicalExpertBytes += tripletBytes * count;
         if (minTripletBytes == 0 || tripletBytes < minTripletBytes) minTripletBytes = tripletBytes;
         if (tripletBytes > maxTripletBytes) maxTripletBytes = tripletBytes;
