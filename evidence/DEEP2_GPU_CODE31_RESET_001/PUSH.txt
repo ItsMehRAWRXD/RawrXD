@@ -24,3 +24,7 @@ F:\rawrxd-native-agent-001
   everything_url=https://github.com/ItsMehRAWRXD/everything/commit/76445be85534dc0081be4b0905bc0cc4f0c7f2aa
 
 OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (default off; Win32IDE logs state; CLI help documents)
+
+PUSH_TXT_COMMIT=9eb0e2679bfb57e97940b7997654cf6c9679f723
+PUSH_TXT_origin=https://github.com/ItsMehRAWRXD/RawrXD/commit/9eb0e2679bfb57e97940b7997654cf6c9679f723
+PUSH_TXT_everything=https://github.com/ItsMehRAWRXD/everything/commit/9eb0e2679bfb57e97940b7997654cf6c9679f723
