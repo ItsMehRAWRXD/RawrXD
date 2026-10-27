@@ -362,3 +362,42 @@ CI_TESTS=NOT_VERIFIED
 GPU0_NUMERICAL_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
+
+## Increment 10: packed CPU input witness for full scalar expert oracle
+
+The Kimi GPU expert worklist now exposes one opt-in, CPU-side input
+witness **before** fused command recording, without reading GPU memory.
+The `CaptureScalarInputs` helper requires packed GGML types 12/12/14
+(Q4_K gate, Q4_K up, Q6_K down), complete row geometry, dimensions
+within 16384 and divisible by 256, a cold host-visible expert, and a
+preexisting private `DEEP2_MOE_PARITY_CAPTURE_DIR`. It writes the exact
+packed gate/up/down slices, normalized hidden input, and a manifest for
+at most one eligible expert per stick worklist. Existing files are
+refused and not overwritten. The receipt states `certified=0`.
+
+The new file stem is:
+
+    k2_l<L>_e<E>_s<S>_scalar_inputs.{gate_q4k.bin,up_q4k.bin,down_q6k.bin,hidden.txt,manifest.txt}
+
+After a successful GPU run, the operator can pass these exact packed
+inputs to `tools/k2_scalar_expert_oracle.py` using the shape from the
+manifest. The scalar expert will independently reproduce gate, up,
+post-SwiGLU, and down outputs. It still cannot compare any of those
+to a GPU *per-expert* result; that witness remains blocked due the
+fused output completion and arena-ownership problem.
+
+This capture contains raw model tensor bytes. The evidence directory
+must remain private and must not be uploaded to a public repository.
+
+The standalone C++ capture smoke has extra checks for these inputs,
+no-overwrite, incorrect GGML type and packed geometry. A static guard
+checks that input capture happens before fusion while the unsafe GPU
+output diagnostic remains blocked. Windows MSVC and Vulkan execution
+have not been verified for this increment.
+
+SCALAR_INPUT_CAPTURE=SOURCE_WIRED
+SCALAR_INPUT_SMOKE=SOURCE_UPDATED_NOT_RUN
+REAL_KIMI_SCALAR_INPUT_CAPTURE=NOT_RUN
+REAL_GPU_EXPERT_WITNESS=BLOCKED
+PROMOTE=0
+TIP_CLIMB=HOLD
