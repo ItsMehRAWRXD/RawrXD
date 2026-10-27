@@ -1,0 +1,38 @@
+GITHUB_PUSH_001
+UTC=2026-10-27T03:45:00Z
+PROMOTE=0 TIP_CLIMB=HOLD FABRICATE=0 CURSOR_AGENTIC_PRIMARY=1
+
+## Repos pushed
+1) F:\rawrxd-native-agent-001
+   branch=native-agent-single-authority
+   SHA=1565fc2c580806efd0b5e59b09956c97f22a28b9
+   origin=https://github.com/ItsMehRAWRXD/RawrXD.git (at SHA; race-reject then fetch confirmed)
+   everything=https://github.com/ItsMehRAWRXD/everything.git (up-to-date)
+   URL=https://github.com/ItsMehRAWRXD/RawrXD/tree/native-agent-single-authority
+
+2) F:\rawrxd
+   branch=fix/deep2-multimodel-safety-20261025
+   SHA=579cd9148aee83633478a7082239980a3f367ce5
+   origin=https://github.com/ItsMehRAWRXD/RawrXD.git PUSHED
+   everything=https://github.com/ItsMehRAWRXD/everything.git PUSHED (new branch)
+   URL=https://github.com/ItsMehRAWRXD/RawrXD/tree/fix/deep2-multimodel-safety-20261025
+
+3) G:\~dev
+   branch=masm-pure-slim
+   SHA=cd6e9fbdd69f2c80b96c9b7cb6d2e23ed774ae6d
+   origin=https://github.com/ItsMehRAWRXD/RawrXD.git PUSHED (new branch masm-pure-slim)
+   URL=https://github.com/ItsMehRAWRXD/RawrXD/tree/masm-pure-slim
+   note=.cursor hooks NOT tracked in ~dev; mirrored into native-agent + rawrxd .cursor/
+
+## Excluded
+- build_reap/ build trees
+- *.gguf model blobs
+- oracle *.err multi-MB (and .err.copy / gate2_lite_continuous_meta large dumps)
+- K2_*_EXCLUSIVE.lock
+- session/audit jsonl, WorldForge drops, nemotron trace dumps (rawrxd)
+- secrets/.env/credentials
+- g:\~dev\.cursor live workspace hooks (mirrored into repos instead of NO_REPO_FOR_CURSOR_HOOKS)
+
+## Follow-up files this receipt batch
+- evidence/DEEP2_BENCH_TPS_N8_COMPARE_001.txt
+- evidence/DEEP2_N8_FOLLOWUP_001.txt

@@ -36,12 +36,17 @@ function Get-HookInput {
 }
 
 function Write-HookJson([hashtable]$obj) {
+    # Prefer Write-Output so Cursor's redirected stdout always sees the JSON
+    # ([Console]::Out can miss the pipe under failClosed preToolUse).
     try {
         $json = ($obj | ConvertTo-Json -Compress -Depth 8)
-        if ([string]::IsNullOrWhiteSpace($json)) { [Console]::Out.WriteLine('{}'); return }
-        [Console]::Out.WriteLine($json)
+        if ([string]::IsNullOrWhiteSpace($json)) {
+            Write-Output '{"permission":"allow","note":"empty_json"}'
+            return
+        }
+        Write-Output $json
     } catch {
-        [Console]::Out.WriteLine('{}')
+        Write-Output '{"permission":"allow","note":"write_hook_json_catch"}'
     }
 }
 

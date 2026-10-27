@@ -1,0 +1,15 @@
+SOURCE=Cursor Task 4bf72ca1-c319-4d50-b45c-8edde8406203
+MODEL=F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+TOKENS=1 185
+DECODE_N=8
+EXIT_A=0 EXIT_B=0
+A_SERIAL_NOWIDE: prefill_ms=306985.2 DECODE_TPS=0.548 submits=1558 waits=1558 gpu_ms=12461.1 hits/misses=2024/253
+B_PREFILLBATCH_WIDE: prefill_ms=19484.5 DECODE_TPS=0.647 submits=1413 waits=1413 gpu_ms=12231.8 hits/misses=2023/253
+DELTA_B_A: prefill_ms=-287500.7 DECODE_TPS=+0.099 submits=-145 gpu_ms=-229.3
+TARGET_30PCT_FROM_0.638=0.829 TPS
+N8_VS_TARGET=MISS (0.647 < 0.829); prefill win is real; decode gain insufficient for 30% gate
+TPS_PASS=NOT_CLAIMED
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT=longer warm decode (n64+) under PrefillBatch+WIDE; keep fence/residency levers
+RECEIPTS=deep2_bench_qwen3_serial_n8.log ; deep2_bench_qwen3_prefillbatch_wide_n8.log ; DEEP2_BENCH_TPS_N8_COMPARE_001.txt

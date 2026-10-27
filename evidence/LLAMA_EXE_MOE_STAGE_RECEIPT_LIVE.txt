@@ -1,8 +1,8 @@
 TRACK=llama.cpp-ref_CPU_MUL_MAT_ID
-ExpertActivations=5376
-PagesTouched=11782344
-MmapPageAcquire_ms=71525.734
-GEMVMathCompute_ms=10592.111
-BookkeepingRouting_ms=1.860
-TotalTracked_ms=82119.706
+ExpertActivations=26112
+PagesTouched=56043036
+MmapPageAcquire_ms=639344.811
+GEMVMathCompute_ms=89665.856
+BookkeepingRouting_ms=6.232
+TotalTracked_ms=729016.900
 PROMOTE=0
