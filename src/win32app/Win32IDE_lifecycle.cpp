@@ -448,17 +448,22 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
     if (hwndCtl) {
-        if (codeNotify == EN_CHANGE) {
-            notifyGhostTextInputChanged(hwndCtl);
-        }
+        // Bulk editor updates (opening/reloading a file, restoring a tab, or
+        // creating a new buffer) intentionally suppress dirty tracking.  They
+        // must not be forwarded to GhostText: doing so starts an asynchronous
+        // completion against a transient buffer before the file identity and
+        // tab state are committed.  User edits continue through the normal
+        // notification path below.
         if (hwndCtl == m_hwndEditor) {
-            if (codeNotify == EN_CHANGE) {
-                if (!m_suppressEditorDirty) {
-                    m_fileModified = true;
-                    updateTitleBarText();
-                }
+            if (codeNotify == EN_CHANGE && !m_suppressEditorDirty) {
+                m_fileModified = true;
+                updateTitleBarText();
+                notifyGhostTextInputChanged(hwndCtl);
             }
             return;
+        }
+        if (codeNotify == EN_CHANGE) {
+            notifyGhostTextInputChanged(hwndCtl);
         }
         if (codeNotify != BN_CLICKED) return;
         switch (id) {

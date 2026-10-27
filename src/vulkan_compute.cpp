@@ -285,9 +285,9 @@ bool VulkanCompute::ExecuteSingleTimeCommands(std::function<void(VkCommandBuffer
     const auto wait_end = std::chrono::steady_clock::now();
     ++gpu_counters_.waits;
     gpu_counters_.wait_ms += std::chrono::duration<double, std::milli>(wait_end - wait_begin).count();
-    // The queue-side execution of this submission is the interval between the
-    // submit and the fence signalling; the wait duration is its host-visible
-    // component.
+    // Preserve the legacy kernel_ms counter for existing receipts. It is the
+    // host-visible fence-wait span, not an independent device-time measure;
+    // gpu_ms below is populated from Vulkan timestamp queries when supported.
     gpu_counters_.kernel_ms += std::chrono::duration<double, std::milli>(wait_end - wait_begin).count();
 
     // Cleanup
@@ -1782,7 +1782,8 @@ bool VulkanCompute::ExecuteQuantDot(const void* packed, size_t packed_bytes,
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
     gpu_counters_.wait_ms += waited_ms;
     // The fence signals only after the whole submission (upload, dispatch,
-    // copy) drains, so this is the measured queue-side cost of the call.
+    // copy) drains. Record this host-visible wait in the legacy kernel_ms
+    // field; gpu_ms below is the device-timeline measurement.
     gpu_counters_.kernel_ms += waited_ms;
     // RAWRXD_GATE7_TPS_001: the same span read off the DEVICE timeline. This is
     // the only measure of actual GPU work; kernel_ms above is host time.
@@ -2223,6 +2224,7 @@ bool VulkanCompute::EndQuantDotBatch() {
     ++gpu_counters_.waits;
     gpu_counters_.wait_ms +=
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
+    // Legacy alias: this is the host fence wait, not device shader time.
     gpu_counters_.kernel_ms +=
         std::chrono::duration<double, std::milli>(wait_end - submit_end).count();
     if (ts) {

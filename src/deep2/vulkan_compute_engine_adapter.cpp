@@ -231,7 +231,6 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed,
     }
     if (packed == nullptr || input == nullptr || output == nullptr) return false;
     if (rows == 0 || cols == 0) return false;
-    (void)cacheKey;  // the quant path keys by weight pointer, see below
 
     Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
     Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
@@ -243,11 +242,10 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed,
     }
 
     if (!backend_->UploadVector(in, input, cols)) return false;
-    // The packed-quant dispatch takes the host weight pointer directly and
-    // manages its own pin/residency keyed by it, so the caller's cacheKey is
-    // not forwarded here; it is not dropped silently, it is simply the wrong
-    // key identity for this path.
-    if (!backend_->DispatchGemvQuant(ggmlType, packed, bytes, in, out, rows, cols)) {
+    // Preserve the engine's stable tensor identity through the backend.  A
+    // shard-residency pointer may be recycled after eviction; caching by that
+    // pointer alone can reuse a different tensor's packed weights.
+    if (!backend_->DispatchGemvQuant(ggmlType, packed, bytes, in, out, rows, cols, cacheKey)) {
         return false;
     }
     if (!backend_->DownloadVector(out, output, rows)) return false;

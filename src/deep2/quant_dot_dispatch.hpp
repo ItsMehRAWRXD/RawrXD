@@ -127,9 +127,11 @@ struct Receipt {
 const Receipt& LastReceipt();
 
 // Backend instrumentation mirror (RAWRXD_DEEP2_TPS_AND_CERTIFICATION_RECOVERY).
-// Kernel time is queue-side execution; submit time is host recording
-// overhead; wait time is the host blocked on the fence. Transfer bytes and
-// allocation/reuse counts make resource churn measurable instead of guessed.
+// `kernel_ms` is retained for compatibility but is a legacy alias of the host
+// fence-wait span in the current implementation. `gpu_ms` is the Vulkan
+// timestamp interval for actual device execution. `submit_ms` is host command
+// recording/submission time and `wait_ms` is host time blocked on the fence.
+// Transfer bytes and allocation/reuse counts make resource churn measurable.
 struct BackendStats {
     uint64_t buffer_allocations = 0;
     uint64_t descriptor_allocations = 0;

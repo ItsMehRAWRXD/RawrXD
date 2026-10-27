@@ -1,4 +1,5 @@
 #include "reap_inventory.hpp"
+#include "reap_expert_layout.hpp"
 
 #include "deep2/GGUFLoader.hpp"
 
@@ -44,10 +45,14 @@ bool CollectInventory(const std::string& path, Deep2::GGUFLoader& loader,
         const auto* down = loader.getTensor(prefix + "ffn_down_exps.weight");
         if (!gate && !up && !down) continue;
         out.layerCount = (std::max)(out.layerCount, static_cast<uint64_t>(layer + 1));
-        if (!gate || !up || !down || gate->shape.empty() || up->shape.empty() ||
-            down->shape.empty() || gate->shape.back() != up->shape.back() ||
-            gate->shape.back() != down->shape.back()) {
-            error = "invalid expert projection triplet at layer " + std::to_string(layer);
+        const auto decision = ClassifyExpertProjections(
+            gate != nullptr, up != nullptr, down != nullptr,
+            gate && !gate->shape.empty(), up && !up->shape.empty(), down && !down->shape.empty(),
+            gate && !gate->shape.empty() ? gate->shape.back() : 0,
+            up && !up->shape.empty() ? up->shape.back() : 0,
+            down && !down->shape.empty() ? down->shape.back() : 0);
+        if (decision.kind != ExpertLayoutKind::DeepseekTriplet) {
+            error = LayoutRejection(decision, layer, loader.getMetaString("general.architecture", ""));
             return false;
         }
         const uint64_t count = static_cast<uint64_t>(gate->shape.back());

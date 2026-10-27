@@ -19,16 +19,15 @@ layout(push_constant) uniform Push {
     uint rows;
     uint cols;
     uint weightBytes;
+    uint strictOrder;
 } pc;
 
 // A 256-lane workgroup can have up to 256 subgroups on a legal implementation.
 shared float subgroupSums[256];
 
 // Q4_K/Q6_K use the same Q8_K activation quantization as the CPU ggml
-// authority.  The previous shader directly multiplied dequantized weights by
-// FP32 activations, which is a different operation and can change logits even
-// when both paths remain finite.  These per-workgroup scratch arrays mirror a
-// single 256-value Q8_K super-block at a time.
+// authority. These per-workgroup scratch arrays mirror one 256-value Q8_K
+// super-block at a time, so GPU and CPU use the same quantized dot contract.
 shared float q8Raw[256];
 shared int q8Quant[256];
 shared float q8InvScale;
@@ -336,7 +335,6 @@ void main() {
             if (pc.type == 6u) ww = q5_0_weight(rb, j);
             else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
-            else if (pc.type == 14u) ww = q6k_weight(rb, j);
             acc += ww * x[j];
         }
     }
