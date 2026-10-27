@@ -1,0 +1,22 @@
+REAP_PERF_RECOVERY_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+
+AUTHORITY=
+  mmap_solves_ALLOC != inference_performance_PASS
+  PERFORMANCE_PASS requires instrumented per-token stage receipt after sealed 256-id reference
+  Do not optimize Vulkan/mmap blindly before stage accounting of wall time
+
+GATE_ORDER=
+  1) Seal factory RAWRXD_REAP_REFERENCE_001 with 256 generated token_ids (K2 product path) OR keep CONTROL TinyLlama decode parity closed first
+  2) Confirm backend (nonzero GPU MoE GEMV vs CPU/SwiGLUHost fallback)
+  3) Separate-build ReapTokenPerf only — do NOT instrument a preserved live process
+  4) Fix dominant stage; identical prompt/seed/budget re-run
+  5) PROMOTE=0 until Gate2 reference_parity AND real profiling receipt
+
+PERF_INSTRUMENT=HELD_UNTIL_SEAL_OR_BACKEND_CONFIRMED
+K2_RECEIPT_SEALED=0
+K2_STATUS=FAIL_K2_ORACLE_OOM_FROZEN_OR_MMAP_UNSEALED
+NOTE=mmap may eliminate 571GiB alloc (see GATE2_K2_MMAP_DIAG_LIVE) but TOKEN_IDS_LEN=0 / RECEIPT=NOT_SEALED until factory reap-reference-receipt.exe seals GENERATED_TOKEN_IDS=256

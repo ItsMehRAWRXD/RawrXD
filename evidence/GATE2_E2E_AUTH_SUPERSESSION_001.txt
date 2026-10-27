@@ -1,0 +1,19 @@
+GATE=GATE2_E2E_AUTH_SUPERSESSION_001
+UTC=2026-10-27T02:55:00Z
+AUTH_SCOPE=RawrXD + Deep2 + REAP + all local models
+AUTH_INCLUDES=source_mods,builds,debug,inference,perf_opt,integration,regression,certification
+PRIOR_K2_DEV_HOLD=SUPERSEDED_FOR_ENGINEERING
+FAILED_CERT_GATES=NOT_AUTO_CLEARED
+K2_ORACLE_TIMING_BASELINE_MS_PER_TOKEN=13333.05
+K2_ORACLE_BASELINE_NUMBERS=LOCKED_PRESERVED
+FACTORY_SEAL=NOT_ACHIEVED
+REFERENCE_RECEIPT=AWAITING
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+NO_FABRICATED_PASS=1
+PRIORITY_1=K2_256_independent_reference_via_reap-reference-receipt.exe
+CAPTURE_HARNESS=F:\rawrxd-native-agent-001\capture_oracle_vectors_k2.ps1
+ENGINE_PATH=F:\llama.cpp-ref\build-vulkan\bin\llama-completion.exe
+LOAD=mmap + cpu-moe + no-repack + fit + ngl99 + Vulkan0,Vulkan1
+NEXT=Run capture to GENERATED_TOKEN_IDS=256 then factory seal independent_reference_receipt_k2.json

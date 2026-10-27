@@ -51,6 +51,9 @@ struct TokenizerBundle {
     std::vector<std::string> merges;     // tokenizer.ggml.merges
     std::string model;                   // tokenizer.ggml.model
     SpecialTokens special;               // bos/eos/unk from metadata
+    // llama.cpp defaults add_bos=true for llama SPM when meta absent.
+    bool addBos = true;
+    bool addEos = false;
     size_t vocabSizeFromMeta = 0;
     std::string error;
 };
@@ -84,17 +87,11 @@ inline TokenizerBundle LoadTokenizerFromGGUF(const char* path) {
     (void)loader.getMetaStringArray("tokenizer.ggml.merges", b.merges);
     std::fprintf(stderr,"[REAP_TOKENIZER] merges=%zu\\n",b.merges.size());
 
-    // Scores are floats in GGUF. Some models ship them all zero (the header
-    // note in Tokenizer.hpp records this), so absence is not an error - the
-    // BPE tokenizer treats an empty score array as "unweighted" and still runs.
-    // Reparse them from the raw metadata array of strings only if present.
-    std::vector<std::string> scoreStrings;
-    if (loader.getMetaStringArray("tokenizer.ggml.scores", scoreStrings) &&
-        scoreStrings.size() == b.vocab.size()) {
-        b.scores.reserve(scoreStrings.size());
-        for (const auto& s : scoreStrings) {
-            try { b.scores.push_back(std::stof(s)); } catch (...) { b.scores.push_back(0.0f); }
-        }
+    // Scores are FLOAT32 arrays in GGUF (not strings). TinyLlama ships all-zero
+    // scores; absence is non-fatal. Never invent scores from merges for llama SPM.
+    if (!loader.getMetaFloatArray("tokenizer.ggml.scores", b.scores) ||
+        b.scores.size() != b.vocab.size()) {
+        b.scores.clear();
     }
 
     // Special tokens. Only trusted when present; defaults otherwise.
@@ -104,9 +101,15 @@ inline TokenizerBundle LoadTokenizerFromGGUF(const char* path) {
         b.special.eosId = static_cast<int>(loader.getMetaInt("tokenizer.ggml.eos_token_id", b.special.eosId));
     if (loader.hasMeta("tokenizer.ggml.unknown_token_id"))
         b.special.unkId = static_cast<int>(loader.getMetaInt("tokenizer.ggml.unknown_token_id", b.special.unkId));
+    // BOOL metas land in metaInt_ as 0/1. Absent → keep llama.cpp SPM defaults.
+    if (loader.hasMeta("tokenizer.ggml.add_bos_token"))
+        b.addBos = loader.getMetaInt("tokenizer.ggml.add_bos_token", 1) != 0;
+    if (loader.hasMeta("tokenizer.ggml.add_eos_token"))
+        b.addEos = loader.getMetaInt("tokenizer.ggml.add_eos_token", 0) != 0;
 
     b.vocabSizeFromMeta = b.vocab.size();
-    std::fprintf(stderr,"[REAP_TOKENIZER] bundle_ready\\n");
+    std::fprintf(stderr,"[REAP_TOKENIZER] bundle_ready add_bos=%d add_eos=%d\\n",
+                 (int)b.addBos, (int)b.addEos);
     b.ok = true;
     return b;
 }
@@ -120,16 +123,18 @@ inline bool ApplyTokenizerBundle(BPETokenizer& tok, const TokenizerBundle& b) {
     if (!tok.LoadVocab(b.vocab)) return false;
     ReapTokenizerTrace("apply.vocab.ok");
     std::fprintf(stderr,"[REAP_TOKENIZER] apply_vocab_ok\\n");
-    if (!b.scores.empty() && b.scores.size() == tok.VocabSize()) {
-        (void)tok.LoadScores(b.scores);
-    }
-    if (!b.merges.empty()) {
+    // Model family before score source: merges-as-scores is GPT-2 only.
+    // Applying merge ranks onto llama SPM (TinyLlama) scrambles zero-score
+    // BPE order and breaks llama.cpp parity (99/98 vs 97).
+    if (!b.model.empty()) tok.SetTokenizerModel(b.model);
+    else tok.InferTokenizerFamily();
+    if (tok.IsGpt2() && !b.merges.empty()) {
         std::fprintf(stderr,"[REAP_TOKENIZER] apply_merges_begin\\n");
         (void)tok.LoadMergesAsScores(b.merges);
+        std::fprintf(stderr,"[REAP_TOKENIZER] apply_merges_ok\\n");
+    } else if (!b.scores.empty() && b.scores.size() == tok.VocabSize()) {
+        (void)tok.LoadScores(b.scores);
     }
-    std::fprintf(stderr,"[REAP_TOKENIZER] apply_merges_ok\\n");
-    if (!b.model.empty()) tok.SetTokenizerModel(b.model);
-    else tok.InferTokenizerFamily();     // detects gpt2 vs llama from the vocab
     tok.SetSpecialTokens(b.special);
     return true;
 }
@@ -167,6 +172,8 @@ public:
         ReapTokenizerTrace("canonical.apply.ok");
         std::lock_guard<std::mutex> lock(mutex_);
         impl_ = std::move(tok);
+        addBos_ = b.addBos;
+        addEos_ = b.addEos;
         error_.clear();
         loaded_ = true;
         ReapTokenizerTrace("canonical.done");
@@ -176,8 +183,10 @@ public:
     bool IsLoaded() const { return loaded_.load(); }
     const std::string& LastError() const { return error_; }
     size_t VocabSize() const { return impl_ ? impl_->VocabSize() : 0; }
+    bool AddBos() const { return addBos_; }
+    bool AddEos() const { return addEos_; }
 
-    // Real SentencePiece / GPT-2 encode with special-token handling.
+    // Ordinary encode (no BOS/EOS) — body only.
     std::vector<int> Encode(const std::string& text) const {
         ReapTokenizerTrace("encode.begin");
         std::lock_guard<std::mutex> lock(mutex_);
@@ -185,6 +194,22 @@ public:
         auto out = impl_->Encode(text);
         ReapTokenizerTrace("encode.done");
         return out;
+    }
+
+    // Encode with GGUF add_bos_token / add_eos_token (llama SPM default BOS).
+    std::vector<int> EncodeWithPolicy(const std::string& text) const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!impl_) return {};
+        std::vector<int> ids;
+        if (addBos_) {
+            ids.push_back(impl_->GetSpecialTokens().bosId);
+        }
+        auto body = impl_->Encode(text);
+        ids.insert(ids.end(), body.begin(), body.end());
+        if (addEos_) {
+            ids.push_back(impl_->GetSpecialTokens().eosId);
+        }
+        return ids;
     }
 
     // Real decode, including byte-fallback and SentencePiece metaspace.
@@ -221,6 +246,8 @@ private:
     std::unique_ptr<BPETokenizer> impl_;
     std::string error_;
     std::atomic<bool> loaded_{false};
+    bool addBos_ = true;
+    bool addEos_ = false;
 };
 
 } // namespace Deep2

@@ -1,0 +1,45 @@
+GATE2_TINYLLAMA_CONTROL_RESULT
+LABEL=CONTROL (not K2 product)
+PROMOTE=0
+TIP_CLIMB=HOLD
+K2_STATUS=FAIL_K2_ORACLE_OOM_FROZEN
+K2_LEDGER=F:\rawrxd\evidence\reap_shard_verification_kimi-k2_20261026.json
+K2_LEDGER_ACTION=FROZEN_NOT_OVERWRITTEN
+K2_GATE2_PASS=0
+CONTROL_SUCCESS_NEQ_K2_PRODUCT_PASS=1
+NOT_RUN!=PASS
+
+CONTROL_MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+RECEIPT=F:\rawrxd-native-agent-001\evidence\independent_reference_receipt_tinyllama_control.json
+REPLAY_BIN=F:\rawrxd-native-agent-001\build_reap\bin-msvc\rawr-reap-replay.exe
+REPLAY_MTIME=2026-10-26T23:26:51-04:00
+
+TOKENIZE_CLOSE=PROMPT_COUNT_PARITY_PASS (101=101)
+DECODE_EARLY_STOP=CLOSED (ignoreEos=1 GENERATED=256)
+
+PRIOR_GPU_PATH=
+  DECODE_FIRST_DIVERGE_IDX=69 replay=421 oracle=338
+  DIVERGE69_PROBE L338=12.763426781 L421=12.778827667 delta=-0.015400887
+  ROOT_HYPOTHESIS=Vulkan quant GEMV tips near-tie vs llama CPU mul_mat
+
+CPU_GEMV_RERUN=2026-10-26T23:27:30-04:00
+  ENV=RAWRXD_RAW_PROMPT=1; RAWRXD_DEEP2_DISABLE_GPU_GEMV=1 via --reference-receipt (_putenv_s)
+  DEEP2_GPU_Q4K_PACKED_OPS=0 DEEP2_GPU_Q6K_PACKED_OPS=0 gpu_real_forward=false (GPU GEMV disabled CONFIRMED)
+  REPLAY_EXIT=6 REFERENCE_PARITY=FAIL
+  GENERATED=256 ids=256 oracle=256
+  DECODE_FIRST_DIVERGE_IDX=48 replay=9120 oracle=421 (WORSE vs GPU-path idx=69)
+  DIVERGE69_PROBE_AFTER_DRIFT pos=170 L338=3.456930876 L421=12.530718803 delta=-9.073787689
+  LOG=gate2_tinyllama_parity_cpugemv.log ERR=gate2_tinyllama_parity_cpugemv.err.log
+  CAL=reap_calibration_tinyllama_control.json
+
+VERDICT=
+  DISABLE_GPU_GEMV under --reference-receipt is SOURCE_WIRED+RUNTIME_REACHED but does NOT close parity.
+  CPU registry path currently diverges earlier than Vulkan path — not yet llama-mul_mat equivalent.
+  TOKEN_IDS_MATCH=0 REFERENCE_PARITY=FAIL CALIBRATION_COMPLETE=0
+  Model is Q4_K_M; Q6_K scalar path is secondary for this CONTROL.
+
+NEXT=
+  1) Teacher-force oracle ids through idx=47; dump tip logits vs llama.cpp-ref at diverge@48 on CPU path
+  2) Diff CPU Q4_K×Q8_K GEMV / attn vs F:\llama.cpp-ref until PREFIX_MATCH advances past 69 then 256
+  3) Do not treat GPU-disable alone as PASS; do not forge tokens; K2 ledger untouched
+  PROMOTE=0 TIP_CLIMB=HOLD

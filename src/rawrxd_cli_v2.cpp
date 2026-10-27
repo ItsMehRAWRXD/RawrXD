@@ -39,6 +39,7 @@
 #include "deep2/Deep2CLIBridge.hpp"
 #include "deep2/RawrModelAlias.hpp"
 #include "reap_cli_contract.hpp"
+#include "reap_inventory.hpp"
 #include "project_wizard/project_spec.hpp"
 #include "project_wizard/project_state_manager.hpp"
 #include "project_wizard/project_wizard.hpp"
@@ -238,13 +239,31 @@ static int HandleReapContract(const std::string& model,
         return 2;
     }
 
+    Deep2::GGUFLoader loader;
+    RawrXD::Reap::ReapInventory inventory;
+    std::string inventoryError;
+    if (!RawrXD::Reap::collectReapInventory(request.model, loader, inventory, inventoryError)) {
+        std::cerr << "REAP_INVENTORY_FAILED: " << inventoryError << "\n";
+        const auto admission = RawrXD::Reap::EvaluateAdmission(request);
+        std::cout << RawrXD::Reap::BlockedReceipt(request, admission);
+        return 4;
+    }
+    std::cerr << "REAP_INVENTORY logical_experts=" << inventory.logicalExperts
+              << " expert_tensors=" << inventory.expertTensors
+              << " moe_layers=" << inventory.moeLayers.size()
+              << " total_bytes=" << inventory.totalBytes << "\n";
+
     const auto admission = RawrXD::Reap::EvaluateAdmission(request);
     std::cout << RawrXD::Reap::BlockedReceipt(request, admission);
-    std::cerr << admission.reason
-              << ": --reap is parsed and validated, but transformation remains"
-                 " disabled until MLA-CERT-001, calibration, selection, and"
-                 " parity-certified writer gates pass\n";
-    return admission.transformationEnabled ? 0 : 4;
+    if (!admission.transformationEnabled) {
+        std::cerr << admission.reason
+                  << ": inventory collected; calibration, selection, writer, and"
+                     " Deep2 remain closed\n";
+        return 4;
+    }
+    std::cerr << "REAP_PIPELINE_INCOMPLETE: admission granted, writer and Deep2"
+                 " are not invoked without a certified selection manifest\n";
+    return 4;
 }
 
 // ---------------------------------------------------------------------------

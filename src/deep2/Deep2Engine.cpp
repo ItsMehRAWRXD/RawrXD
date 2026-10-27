@@ -788,12 +788,14 @@ static void q4kGEMV(const void* weights, const float* input, float* output, size
             }
         }
 
-        __m128 hi128 = _mm256_extractf128_ps(acc, 1);
-        __m128 lo128 = _mm256_castps256_ps128(acc);
-        __m128 sum128 = _mm_add_ps(lo128, hi128);
-        sum128 = _mm_hadd_ps(sum128, sum128);
-        sum128 = _mm_hadd_ps(sum128, sum128);
-        output[r] = _mm_cvtss_f32(sum128);
+        // Double horizontal reduce — float32 lane sum drifts enough over
+        // 2k-dim Q4_K rows to flip greedy near-ties (CONTROL diverge@69).
+        alignas(32) float lane[8];
+        _mm256_store_ps(lane, acc);
+        double sum = 0.0;
+        for (int i = 0; i < 8; ++i)
+            sum += static_cast<double>(lane[i]);
+        output[r] = static_cast<float>(sum);
     }
 }
 
@@ -2575,9 +2577,13 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             if (ApplyTokenizerBundle(*bpe, bundle))
             {
                 tokenizer = std::move(bpe);
-                printf("[Deep2Engine] Tokenizer loaded: vocab=%zu bos=%d eos=%d (Spm::encode)\n",
+                tokenizeAddBos_ = bundle.addBos;
+                tokenizeAddEos_ = bundle.addEos;
+                printf("[Deep2Engine] Tokenizer loaded: vocab=%zu bos=%d eos=%d "
+                       "add_bos=%d add_eos=%d (Spm::encode)\n",
                        tokenizer->VocabSize(), tokenizer->GetSpecialTokens().bosId,
-                       tokenizer->GetSpecialTokens().eosId);
+                       tokenizer->GetSpecialTokens().eosId,
+                       (int)tokenizeAddBos_, (int)tokenizeAddEos_);
             }
         }
         if (!tokenizer && !CanonicalTokenizer::Instance().IsLoaded())
@@ -3941,13 +3947,28 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize)
 // ============================================================================
 std::vector<int> Deep2Engine::tokenize(const std::string& text)
 {
-    if (tokenizer)
-    {
-        return tokenizer->Encode(text);
-    }
+    // GGUF add_bos_token / add_eos_token policy (default add_bos=true when
+    // meta absent — matches llama.cpp llama SPM vocab defaults).
     if (CanonicalTokenizer::Instance().IsLoaded())
     {
-        return CanonicalTokenizer::Instance().Encode(text);
+        return CanonicalTokenizer::Instance().EncodeWithPolicy(text);
+    }
+    if (tokenizer)
+    {
+        std::vector<int> ids;
+        if (tokenizeAddBos_)
+        {
+            const int bos = tokenizer->GetSpecialTokens().bosId;
+            if (bos >= 0) ids.push_back(bos);
+        }
+        auto body = tokenizer->Encode(text);
+        ids.insert(ids.end(), body.begin(), body.end());
+        if (tokenizeAddEos_)
+        {
+            const int eos = tokenizer->GetSpecialTokens().eosId;
+            if (eos >= 0) ids.push_back(eos);
+        }
+        return ids;
     }
     fprintf(stderr, "[Deep2Engine] ERROR: tokenize() called with no tokenizer loaded\n");
     return {};
@@ -6434,6 +6455,67 @@ const char* Deep2Engine::GenerationStopReasonName(GenerationStopReason r)
     return "UNKNOWN";
 }
 
+// CONTROL tip@69: optional teacher-force oracle IDs (space/comma separated file).
+// Isolates accum KV drift vs last-step math without forging free-run tokens.
+static std::vector<int> LoadTeacherForceIds()
+{
+    std::vector<int> ids;
+    const char* path = std::getenv("RAWRXD_TEACHER_FORCE_FILE");
+    if (!path || !path[0])
+        return ids;
+    std::ifstream in(path);
+    if (!in)
+    {
+        fprintf(stderr, "[TEACHER_FORCE] OPEN_FAIL path=%s\n", path);
+        return ids;
+    }
+    std::string tok;
+    while (in >> tok)
+    {
+        for (char& c : tok)
+            if (c == ',')
+                c = ' ';
+        std::stringstream ss(tok);
+        std::string part;
+        while (ss >> part)
+        {
+            char* end = nullptr;
+            long v = std::strtol(part.c_str(), &end, 10);
+            if (end != part.c_str())
+                ids.push_back(static_cast<int>(v));
+        }
+    }
+    fprintf(stderr, "[TEACHER_FORCE] loaded=%zu path=%s\n", ids.size(), path);
+    fflush(stderr);
+    return ids;
+}
+
+static void DumpTipNearTie(const char* mode, size_t position, size_t step,
+                           const float* logits, size_t vocab)
+{
+    auto L = [&](int id) -> float {
+        return (id >= 0 && static_cast<size_t>(id) < vocab) ? logits[id] : 0.f;
+    };
+    fprintf(stderr,
+            "[DIVERGE69_PROBE] mode=%s step=%zu pos=%zu L338=%.9f L421=%.9f delta_338_minus_421=%.9f\n",
+            mode, step, position, L(338), L(421), L(338) - L(421));
+    std::vector<std::pair<float, int>> scored;
+    scored.reserve(vocab);
+    for (size_t i = 0; i < vocab; ++i)
+    {
+        if (std::isfinite(logits[i]))
+            scored.push_back({logits[i], static_cast<int>(i)});
+    }
+    const int k = (std::min)(5, static_cast<int>(scored.size()));
+    std::partial_sort(scored.begin(), scored.begin() + k, scored.end(),
+                      [](const auto& a, const auto& b) { return a.first > b.first; });
+    fprintf(stderr, "[DIVERGE69_PROBE] top5:");
+    for (int i = 0; i < k; ++i)
+        fprintf(stderr, " %d:%.9f", scored[i].second, scored[i].first);
+    fprintf(stderr, "\n");
+    fflush(stderr);
+}
+
 size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* outputTokens, size_t maxOutputLen,
                              InferenceStats* stats, std::function<bool(int)> onToken)
 {
@@ -6475,6 +6557,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
 
     // ── Reset KV cache and sampler state for fresh generation ──────
     reset();
+    const std::vector<int> teacherForceIds = LoadTeacherForceIds();
+    const bool teacherForce = !teacherForceIds.empty();
 
     const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
     if (remainingContext == 0)
@@ -7059,9 +7143,40 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             printf("[B3_LOGITS] BEFORE sampleToken\n");
             fflush(stdout);
         }
+        // CONTROL diverge@69 tip dump (oracle=338 vs replay=421) + top-5.
+        if (tokensGenerated == 69)
+        {
+            DumpTipNearTie(teacherForce ? "TEACHER_FORCED" : "FREE_RUN",
+                           position, tokensGenerated, logits, config.vocabSize);
+        }
         int nextToken = sampleToken(logits);
+        const int freeArgmax = nextToken;
+        if (teacherForce && tokensGenerated < teacherForceIds.size())
+        {
+            nextToken = teacherForceIds[tokensGenerated];
+            if (tokensGenerated <= 69)
+            {
+                fprintf(stderr,
+                        "[TEACHER_FORCE] step=%zu free_argmax=%d force=%d match=%d\n",
+                        tokensGenerated, freeArgmax, nextToken,
+                        freeArgmax == nextToken ? 1 : 0);
+                fflush(stderr);
+            }
+        }
         std::printf("[DBG] sampled token=%d eosId=%d\n", nextToken, tokenizer ? tokenizer->GetSpecialTokens().eosId : -1);
         std::fflush(stdout);
+        if (tokensGenerated == 69)
+        {
+            const char* stopEnv = std::getenv("RAWRXD_STOP_AFTER_TIP69");
+            if (stopEnv && stopEnv[0] == '1')
+            {
+                outputTokens[tokensGenerated] = nextToken;
+                tokensGenerated++;
+                fprintf(stderr, "[DIVERGE69_PROBE] STOP_AFTER_TIP69 generated=%zu\n", tokensGenerated);
+                fflush(stderr);
+                break;
+            }
+        }
         if (B3_LogitsTraceEnabled())
         {
             printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
@@ -7137,8 +7252,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             printf("[B3_LOGITS] Checking EOS\n");
             fflush(stdout);
         }
-        // Check for EOS
-        if (tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId)
+        // Check for EOS (unless ignoreEos — match llama.cpp --ignore-eos)
+        if (!ignoreEos_ && tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId)
         {
             if (B3_LogitsTraceEnabled())
             {
@@ -7295,11 +7410,13 @@ std::string Deep2Engine::generateText(const std::string& prompt, size_t maxToken
 void Deep2Engine::configureGeneration(const GenerationOptions& options)
 {
     // One authoritative generation configuration for generate() / generateStream().
+    ignoreEos_ = options.ignoreEos;
     if (options.temperature <= 0.0f || options.topK <= 1)
     {
         deterministicGreedy_ = true;
         sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
-        printf("[GREEDY] enabled=1 temperature=%.4f topK=%u\n", options.temperature, options.topK);
+        printf("[GREEDY] enabled=1 temperature=%.4f topK=%u ignoreEos=%d\n",
+               options.temperature, options.topK, ignoreEos_ ? 1 : 0);
     }
     else
     {
@@ -7313,7 +7430,8 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
             sampler =
                 std::make_unique<rawrxd::sampling::TopKSampler>(static_cast<int>(options.topK), options.temperature);
         }
-        printf("[GREEDY] enabled=0 temperature=%.4f topK=%u\n", options.temperature, options.topK);
+        printf("[GREEDY] enabled=0 temperature=%.4f topK=%u ignoreEos=%d\n",
+               options.temperature, options.topK, ignoreEos_ ? 1 : 0);
     }
     if (sampler)
     {
@@ -7513,8 +7631,11 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
         opts.temperature = 0.7f;
         opts.topK = 40;
         opts.topP = 0.95f;
-        configureGeneration(opts);
     }
+    // Always apply GenerationOptions (greedy / ignoreEos / penalties). Previously
+    // configureGeneration ran only under agentFirstToken, so continuous --parity
+    // ignored options.ignoreEos and stopped early on eosId (CONTROL gen~205).
+    configureGeneration(opts);
 
     const size_t maxTokens = static_cast<size_t>(std::max(0, static_cast<int>(opts.maxTokens)));
     std::vector<int> outputTokens(maxTokens);
@@ -7555,7 +7676,8 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
     size_t generated = generate(promptTokens.data(), promptTokens.size(), outputTokens.data(), maxTokens, nullptr,
                                 [&](int tokenId) -> bool
                                 {
-                                    if (tokenizer && tokenId == tokenizer->GetSpecialTokens().eosId)
+                                    if (!ignoreEos_ && tokenizer &&
+                                        tokenId == tokenizer->GetSpecialTokens().eosId)
                                     {
                                         return false;  // EOS terminates generation
                                     }

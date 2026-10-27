@@ -250,6 +250,25 @@ int main(int argc,char**argv){
         if(nul){ std::fflush(stdout); std::fflush(stderr); _dup2(_fileno(nul),_fileno(stdout)); _dup2(_fileno(nul),_fileno(stderr)); }
 #endif
     }
+    // Reference receipts are sealed by llama.cpp CPU mul_mat. Vulkan quant
+    // GEMV tips greedy near-ties (CONTROL diverge@69, Δlogit≈0.015). Force
+    // CPU Q4_K/Q6_K×Q8_K registry path for independent reference parity.
+    // NOTE: CPU path currently first-diverges earlier (~48) until Q4_K/Q6_K
+    // host GEMV matches llama; DISABLE alone is not REFERENCE_PARITY PASS.
+    if (!referenceReceiptPath.empty()) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_DEEP2_DISABLE_GPU_GEMV", "1");
+        _putenv_s("RAWRXD_DEEP2_DISABLE_Q4K_GPU", "1");
+        _putenv_s("RAWRXD_DEEP2_DISABLE_Q6K_GPU", "1");
+#else
+        setenv("RAWRXD_DEEP2_DISABLE_GPU_GEMV", "1", 1);
+        setenv("RAWRXD_DEEP2_DISABLE_Q4K_GPU", "1", 1);
+        setenv("RAWRXD_DEEP2_DISABLE_Q6K_GPU", "1", 1);
+#endif
+        std::fprintf(stderr,
+                     "[REAP_REPLAY] DISABLE_GPU_GEMV=1 (reference-receipt CPU authority)\n");
+        std::fflush(stderr);
+    }
     const auto started=std::chrono::steady_clock::now();
     Deep2::ReapActivationAccumulator acc; acc.Reset();
     Deep2::ReapRouteTracker::Instance().Install([&](size_t l,const auto& p,const auto& ids,const auto& w){acc.Observe(l,p,ids,w);});
@@ -292,6 +311,9 @@ int main(int argc,char**argv){
         options.repeatPenalty = 1.0f;
         options.minP = 0.0f;
         options.seed = 0;
+        // Continuous greedy must match llama-completion --ignore-eos -n N
+        // (sealed reference receipts). Do not stop early on eosId=2.
+        options.ignoreEos = true;
         continuousResult = engine.generateStream(
             prompts.front(), options,
             [&](int32_t tokenId, const std::string& token) {

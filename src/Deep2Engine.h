@@ -310,6 +310,9 @@ namespace Deep2
         float minP = 0.0f;
 
         uint64_t seed = 0;
+
+        // Match llama.cpp --ignore-eos: do not stop when EOS is argmax.
+        bool ignoreEos = false;
     };
 
     struct GenerationResult
@@ -735,6 +738,7 @@ namespace Deep2
         // temperature <= 0 or topK <= 1 enables deterministic greedy (hard argmax).
         void configureGeneration(const GenerationOptions &options);
         bool isDeterministicGreedy() const { return deterministicGreedy_; }
+        bool ignoreEos() const { return ignoreEos_; }
 
         // Thin setters used by HexMag RepeatSession sampling adapters.
         void setTemperature(float temperature);
@@ -812,6 +816,7 @@ namespace Deep2
         }
         std::unique_ptr<rawrxd::sampling::ISampler> sampler;
         bool deterministicGreedy_ = false;
+        bool ignoreEos_ = false;
         std::atomic<bool> cancelRequested_{false};
 
         // Real model weights
@@ -906,6 +911,9 @@ namespace Deep2
 
         // Tokenizer
         std::unique_ptr<ITokenizer> tokenizer;
+        // GGUF tokenizer.ggml.add_bos_token / add_eos_token (default BOS=true).
+        bool tokenizeAddBos_ = true;
+        bool tokenizeAddEos_ = false;
 
         // Production profiler (Batch 1: 1-token decode instrumentation)
         std::unique_ptr<ProductionProfiler> profiler_;

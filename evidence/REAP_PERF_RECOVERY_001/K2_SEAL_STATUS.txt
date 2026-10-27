@@ -1,0 +1,16 @@
+REAP_PERF_RECOVERY_001 / K2 seal status
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+mmap_solves_ALLOC != PERFORMANCE_PASS
+
+K2_RECEIPT_SEALED=0
+independent_reference_receipt_k2.json=ABSENT
+FACTORY_TOOL=PRESENT F:\rawrxd\build_ide\bin-msvc\reap-reference-receipt.exe
+PRIOR_NOTE_CORRECTED=earlier NOT_FOUND_ON_DISK was wrong; tool exists, payload/seal still missing
+GATE2_K2_CAPTURE=ABORTED_OR_FAILED (TOKEN_IDS_LEN!=256)
+HAND_JSON=FORBIDDEN
+
+PERF_INSTRUMENT=HELD_UNTIL_SEAL_OR_BACKEND_CONFIRMED
+CONTROL_NEXT=diverge@69 near-tie (L338 vs L421 Δ≈−0.015) — numeric close in flight
+ReapTokenPerf=PLAN_ONLY_AFTER_SEALED_256_ID_K2_OR_BACKEND_CONFIRMED

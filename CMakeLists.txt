@@ -5168,6 +5168,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
         src/reap_cli_contract.cpp
+        src/reap_inventory.cpp
         src/core/qt_elimination.cpp
         src/project_wizard/project_spec.cpp
         src/project_wizard/project_state_manager.cpp
@@ -5233,6 +5234,7 @@ endif()
 # are implemented; it is the only safe way to expose real model evidence.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
     add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp
+        src/reap_inventory.cpp
         src/deep2/ReapMoETransformer.cpp)
     target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
