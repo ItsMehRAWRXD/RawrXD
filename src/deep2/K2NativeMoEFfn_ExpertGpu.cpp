@@ -202,6 +202,32 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         std::fflush(stderr);
     }
 
+    /* Preserve CPU-side packed inputs for an independently reproducible
+       scalar expert evaluation. This does not read any GPU staging/arena
+       buffer, and must not be interpreted as GPU numerical parity.
+       At most one cold expert capture per stick worklist. */
+    if (captureRequested) {
+        bool written = false;
+        int captureExpert = -1;
+        for (const auto& candidate : work) {
+            if (!candidate.g || !candidate.u || !candidate.d) continue;
+            captureExpert = candidate.expertId;
+            written = k2_parity_capture::CaptureScalarInputs(
+                stick, layer, candidate.expertId,
+                candidate.gt, candidate.g, candidate.gb,
+                candidate.ut, candidate.u, candidate.ub,
+                candidate.dt, candidate.d, candidate.db,
+                normed, H, I);
+            break;
+        }
+        std::fprintf(stderr,
+                     "GPU_SCALAR_INPUT_CAPTURE layer=%u stick=%u expert=%d "
+                     "status=%s scope=CPU_INPUTS_ONLY\n",
+                     layer, stick, captureExpert,
+                     written ? "WRITTEN" : "SKIPPED");
+        std::fflush(stderr);
+    }
+
     /* Hold MoE pins for this stick worklist — peer eviction ⇒ DEVICE_LOST. */
     if (vcHold) vcHold->BeginMoePinHold();
     /* HARD_GATE: pin all weights before fuse (no mid-graph Upload submit). */
