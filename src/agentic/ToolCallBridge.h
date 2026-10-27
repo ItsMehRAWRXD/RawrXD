@@ -21,6 +21,8 @@
 #include "InferenceBackend.h"
 #include "tool_core.hpp"
 #include "MotdAuthorization.h"
+#include "AgentEventJournal.hpp"
+#include <memory>
 #include <string>
 #include <vector>
 #include <functional>
@@ -128,6 +130,15 @@ public:
 
     void SetApprovalCallback(ApprovalCallback cb) { m_approval = cb; }
 
+    void SetEventJournal(std::shared_ptr<AgentEventJournal> journal) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        m_journal = std::move(journal);
+    }
+    void SetJournalTaskId(std::string taskId) {
+        std::lock_guard<std::mutex> lock(m_turnMutex);
+        m_journalTaskId = std::move(taskId);
+    }
+
     // ---- Tool schema generation for LLM ----
     // Returns OpenAI-format tool definitions for all registered tools
     json GetToolSchemasForLLM() const;
@@ -152,6 +163,8 @@ private:
     uint64_t m_authorizationTurn = 0;
     bool m_turnOpen = false;
     std::mutex m_turnMutex;
+    std::shared_ptr<AgentEventJournal> m_journal;
+    std::string m_journalTaskId;
 
     // Convert LLM tool arguments (json) to rawrxd::tools::Request args (string map)
     rawrxd::tools::Request ConvertArgs(const ToolCall& call) const;
@@ -321,10 +334,22 @@ inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
         };
     }
 
+    if (m_journal) {
+        m_journal->ToolStart("main", req.name, call.arguments.dump(), m_journalTaskId);
+    }
+
     rawrxd::tools::Result tool_result = m_registry->call(req, approve);
     m_motdAuthorization.NoteExecution(m_authorizationSession, m_authorizationTurn);
     result_msg.content = tool_result.ok ? tool_result.output : tool_result.error;
     result_msg.success = tool_result.ok;
+
+    if (m_journal) {
+        const std::string detail = tool_result.ok
+            ? (tool_result.output.size() > 512 ? tool_result.output.substr(0, 512) + "..."
+                                               : tool_result.output)
+            : tool_result.error;
+        m_journal->ToolFinish("main", req.name, tool_result.ok ? 0 : 1, detail, m_journalTaskId);
+    }
 
     return result_msg;
 }
