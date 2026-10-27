@@ -8,6 +8,15 @@
 
 namespace
 {
+std::filesystem::path TestBinaryDirectory()
+{
+    char modulePath[MAX_PATH] = {};
+    const DWORD length = GetModuleFileNameA(nullptr, modulePath, MAX_PATH);
+    if (length != 0 && length < MAX_PATH)
+        return std::filesystem::path(modulePath).parent_path();
+    return std::filesystem::current_path();
+}
+
 bool RunMissingHelperCase(AgenticLoopBridge& bridge, const std::string& workdir,
                           int ordinal)
 {
@@ -50,7 +59,10 @@ bool RunTimeoutCase(AgenticLoopBridge& bridge)
     AgenticLoopBridge::TaskConfig cfg;
     cfg.provider = "local";
     cfg.modelPath = "timeout-test-model.gguf";
-    cfg.workDir = (std::filesystem::current_path().parent_path() /
+    // Resolve the deliberately slow helper beside this test binary, not from
+    // the caller's current directory.  CTest, the IDE, and a developer shell
+    // legitimately launch the test with different working directories.
+    cfg.workDir = (TestBinaryDirectory().parent_path() /
                    "bridge_smoke_timeout").string();
     cfg.targetFile = "fixture.cpp";
     cfg.task = "The helper intentionally exceeds the host wall budget.";

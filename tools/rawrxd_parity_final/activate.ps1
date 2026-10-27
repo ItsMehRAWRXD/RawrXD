@@ -185,9 +185,10 @@ function global:Reset-RawrGpuDevices {
     # --- 3. Active inference detection (Deep2 + rawr runners + CLI workloads) ---
     $inferenceRunning = $false
     try {
-        $inferenceNames = @('deep2_strata_bench', 'deep2_bench_tps', 'deep2_parity_trace',
+        $inferenceNames = @('deep2_agentic_loop', 'rawr-reap-replay', 'rawr-reap', 'deep2_strata_bench', 'deep2_bench_tps', 'deep2_parity_trace',
                             'deep2_spec_bench', 'deep2_runtime_dispatch', 'deep2_engine',
-                            'deep2_cert', 'deep2_smoke', 'rawr_run', 'rawr', 'python')
+                            'deep2_cert', 'deep2_smoke', 'rawrxd_agentic_backend',
+                            'rawrxd_agentic_ide', 'rawr_run', 'rawr', 'python')
         foreach ($name in $inferenceNames) {
             $procs = Get-CimInstance Win32_Process -Filter "Name = '$name.exe'" -ErrorAction SilentlyContinue
             if ($procs) { $inferenceRunning = $true; break }

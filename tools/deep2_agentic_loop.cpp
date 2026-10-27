@@ -1877,29 +1877,16 @@ static int PlainPromptRun(const Args& args)
                 }
             }
 
-            // Token integrity diagnostic
-            if (t < 5 || t % 10 == 0)
-            {
-                float maxLogit = lg[next];
-                float minLogit = lg[next];
-                bool finite = true;
-                for (float v : lg)
-                {
-                    if (v > maxLogit) maxLogit = v;
-                    if (v < minLogit) minLogit = v;
-                    if (!std::isfinite(v)) finite = false;
-                }
-                Logf_("[TOKEN_DIAG] t=%d selected=%d argmax=%d vocab=%zu finite=%d "
-                      "sel_logit=%.9g max=%.9g min=%.9g\n",
-                      t, next, next, lg.size(), finite ? 1 : 0,
-                      lg[next], maxLogit, minLogit);
-            }
-
-        // Token integrity diagnostic
+        // Token integrity diagnostic.  Report the sampled token and the true
+        // greedy argmax separately; conflating them made stochastic sampling
+        // look like a GPU logit error in the native-agent receipts.
         if (t < 5 || t % 10 == 0)
         {
-            float maxLogit = lg[next];
-            float minLogit = lg[next];
+            uint32_t argmax = 0;
+            for (uint32_t i = 1; i < lg.size(); ++i)
+                if (lg[i] > lg[argmax]) argmax = i;
+            float maxLogit = lg[argmax];
+            float minLogit = lg[argmax];
             bool finite = true;
             for (float v : lg)
             {
@@ -1909,7 +1896,7 @@ static int PlainPromptRun(const Args& args)
             }
             Logf_("[TOKEN_DIAG] t=%d selected=%d argmax=%d vocab=%zu finite=%d "
                   "sel_logit=%.9g max=%.9g min=%.9g\n",
-                  t, next, next, lg.size(), finite ? 1 : 0,
+                  t, next, argmax, lg.size(), finite ? 1 : 0,
                   lg[next], maxLogit, minLogit);
         }
 
@@ -4347,11 +4334,13 @@ int main(int argc, char* argv[])
         std::vector<uint32_t> turn_token_ids;
         // Native GGUF runs historically use the compact legacy grammar
         // (TOOL read <path>, TOOL write <path> @@...@@), while the SNAP
-        // controller uses a length-framed wire grammar. Decide from the
-        // generated header before feeding SNAP so a valid legacy command is
-        // not rejected as an "invalid length" while it is still streaming.
-        bool snap_protocol_decided = false;
-        bool strict_snap_protocol = true;
+        // controller uses a length-framed wire grammar. Do not feed partial
+        // output to SNAP before the header is known: a legacy command such as
+        // "TOOL read" must not be rejected as an invalid length while it is
+        // still streaming. This is also fail-closed: output that is neither
+        // a valid protocol prefix nor a complete protocol header is rejected.
+        enum class SnapProtocol { undecided, framed, legacy };
+        SnapProtocol snap_protocol = SnapProtocol::undecided;
 
         profiler.start_phase("generation", 0);
         esp_rt.decode_start();
@@ -4391,23 +4380,57 @@ int main(int argc, char* argv[])
             const bool is_eos = (next == (uint32_t)GetTokenizer().eos_id);
             const std::string piece = is_eos ? std::string() : enc.Piece(next);
             const std::string candidate = gen + piece;
-            if (!snap_protocol_decided && candidate.rfind("TOOL ", 0) == 0) {
-                const size_t verbEnd = candidate.find(' ', 5);
-                if (verbEnd != std::string::npos && verbEnd + 1 < candidate.size()) {
-                    const char lengthOrPath = candidate[verbEnd + 1];
-                    strict_snap_protocol = lengthOrPath >= '0' && lengthOrPath <= '9';
-                    snap_protocol_decided = true;
+            bool parse_legacy = false;
+
+            if (snap_protocol == SnapProtocol::undecided) {
+                constexpr std::string_view tool_prefix = "TOOL ";
+                const bool prefix_only = !is_eos &&
+                    candidate.size() <= tool_prefix.size() &&
+                    tool_prefix.compare(0, candidate.size(), candidate) == 0;
+
+                if (prefix_only) {
+                    // Hold the prefix locally. SNAP has no notion of a
+                    // partial legacy header and must not see it yet.
+                    gen = candidate;
+                    snap_res = {};
+                } else if (!is_eos && candidate.rfind("TOOL ", 0) == 0 &&
+                           candidate.size() > tool_prefix.size()) {
+                    const char framing = candidate[tool_prefix.size()];
+                    const bool framed = framing >= '0' && framing <= '9';
+                    snap_protocol = framed ? SnapProtocol::framed
+                                           : SnapProtocol::legacy;
                     Logf_("[step %d] SNAP protocol=%s\n", step,
-                          strict_snap_protocol ? "framed" : "legacy");
+                          framed ? "framed" : "legacy");
+
+                    // The current decoded token completes the protocol
+                    // decision. For framed output, pass the buffered header in
+                    // one piece so the parser sees exactly what the model has
+                    // emitted so far. For legacy output, parse below.
+                    gen = candidate;
+                    parse_legacy = !framed;
+                    snap_res = framed
+                        ? snap_ctl.on_token(candidate, false)
+                        : deep2::snap::Result{};
+                } else {
+                    snap_res = {deep2::snap::Reason::invalid, {},
+                                static_cast<size_t>(t + 1),
+                                is_eos ? "incomplete TOOL protocol prefix"
+                                       : "expected TOOL protocol prefix"};
                 }
-            }
-            if (strict_snap_protocol) {
+            } else if (snap_protocol == SnapProtocol::framed) {
                 snap_res = snap_ctl.on_token(piece, is_eos);
+                if (snap_res.reason == deep2::snap::Reason::none) {
+                    gen += piece;
+                }
             } else {
+                gen += piece;
+                parse_legacy = true;
+            }
+
+            if (parse_legacy && snap_res.reason == deep2::snap::Reason::none) {
                 // Legacy commands remain bounded by the outer decode limit
                 // and deadline. Parse only a complete command; partial model
                 // output must remain recoverable rather than being dispatched.
-                gen += piece;
                 Action legacyAction;
                 bool completeLegacy = false;
                 if (gen.rfind("TOOL read ", 0) == 0) {
@@ -4443,8 +4466,10 @@ int main(int argc, char* argv[])
                     snap_res = {legacyAction.finish ? deep2::snap::Reason::finish
                                                      : deep2::snap::Reason::tool_ready,
                                  {}, static_cast<size_t>(t + 1), {}};
-                } else {
-                    snap_res = {};
+                } else if (is_eos) {
+                    snap_res = {deep2::snap::Reason::invalid, {},
+                                static_cast<size_t>(t + 1),
+                                "legacy TOOL command ended before completion"};
                 }
             }
             profiler.add_tokens(1);  // every token counted exactly once
@@ -4484,8 +4509,6 @@ int main(int argc, char* argv[])
                 }
                 break;
             }
-            if (strict_snap_protocol)
-                gen += piece;
             turn_token_ids.push_back(next);
             esp_rt.token(next, piece);
             // RAWRXD_DEEP2_GPU_TELEMETRY_001: mirror the engine's real kernel
