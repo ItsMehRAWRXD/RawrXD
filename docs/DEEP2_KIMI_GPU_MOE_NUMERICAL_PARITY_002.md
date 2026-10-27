@@ -143,3 +143,38 @@ REAL_KIMI_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Manifest-driven audit (increment 4)
+
+A new `tools/k2_moe_capture_audit.py` consumes an existing
+`k2_l<layer>_e<expert>_s<stick>.manifest.txt` and derives all
+dimensions from that manifest. It checks manifest identity, Q6_K block
+geometry, byte counts, input/output lengths, finiteness, and hashes
+before applying the independent scalar Q6_K down-GEMV oracle. It emits
+CPU/oracle, GPU/oracle, and GPU/CPU numerical comparisons and remains
+`certified=false` even if thresholds pass.
+
+```powershell
+python tools/test_k2_moe_capture_audit.py
+python tools/k2_moe_capture_audit.py --manifest "F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001\k2_l1_e0_s0.manifest.txt" --max-abs 0.01 --max-rms 0.003 --min-cosine 0.999 --receipt parity_audit.json
+```
+
+The tolerance values above are illustrative, not an acceptance contract.
+**Do not classify a GPU-versus-oracle mismatch as solely down-GEMV
+error:** the existing CPU post-SwiGLU vector is NOT proof that the GPU
+used the same post-SwiGLU input. Exact GPU activation identity must be
+captured and checked separately. The output also requires an
+authoritative, externally validated Q6_K layout fixture.
+
+Seven synthetic audit test cases are supplied. The new tests and the
+C++ capture integration are **not yet executed on the Windows/Vulkan
+machine**. GitHub source commit alone cannot certify them.
+
+```ini
+MANIFEST_AUDIT=SOURCE_ADDED
+MANIFEST_AUDIT_TESTS=NOT_RUN
+GPU_POST_SWIGLU_IDENTITY=NOT_PROVEN
+FULL_KIMI_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
