@@ -5201,6 +5201,33 @@ else()
 endif()
     message(STATUS "rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled")
 
+# Cursor-parity registry smoke test.  This is intentionally dependency-light:
+# it exercises the same native workspace registry and mode authority used by
+# the IDE/agent, without pulling in Qt, Deep2, or a network backend.  Keeping
+# it as a first-class target prevents the parity aliases from becoming
+# source-only claims.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/cursor_parity_registry_smoke.cpp" AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/agentic/AgentMode.cpp")
+    add_executable(cursor_parity_registry_smoke
+        tests/agentic/cursor_parity_registry_smoke.cpp
+        src/agentic/AgentMode.cpp)
+    target_include_directories(cursor_parity_registry_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(cursor_parity_registry_smoke PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(cursor_parity_registry_smoke PRIVATE /EHsc /W4)
+        target_compile_definitions(cursor_parity_registry_smoke PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(cursor_parity_registry_smoke PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(cursor_parity_registry_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    enable_testing()
+    add_test(NAME cursor_parity_registry_smoke COMMAND cursor_parity_registry_smoke)
+endif()
+
 # ============================================================================
 # Q8_K activation parity harness
 # ============================================================================
