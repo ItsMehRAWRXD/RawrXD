@@ -235,7 +235,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                 gateOut.data(), I, cpuOut.data(), gpuOut.data(), H);
             std::fprintf(stderr,
                          "GPU_EXPERT_VECTOR_CAPTURE layer=%u expert=%d stick=%u "
-                         "status=%s\\n", layer, r.expertId, stick,
+                         "status=%s\n", layer, r.expertId, stick,
                          saved ? "WRITTEN" : "SKIPPED");
             std::fflush(stderr);
         }
