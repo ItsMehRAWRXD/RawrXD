@@ -274,8 +274,10 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                 if (std::filesystem::exists(path, ec) || ec) saved = false;
             }
         }
+        bool vectorWritten = false;
         if (saved) {
             saved = k2_parity_capture::WriteVector(vecPath, partial, H);
+            vectorWritten = saved;
         }
         if (saved) {
             std::string metadata =
@@ -294,13 +296,10 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
             saved = k2_parity_capture::WriteNew(
                 metadataPath, metadata.data(), metadata.size());
         }
-        if (!saved) {
-            // Do not retain an orphan partial vector as a complete witness.
-            // Only remove our candidate path when the manifest did not
-            // preexist (the capture directory must be private per run).
+        if (!saved && vectorWritten) {
+            // Only remove the vector written by this invocation.
             std::error_code ignored;
-            if (!std::filesystem::exists(metadataPath, ignored))
-                std::filesystem::remove(vecPath, ignored);
+            std::filesystem::remove(vecPath, ignored);
         }
         std::fprintf(stderr,
                      "GPU_STICK_PARTIAL_CAPTURE layer=%u stick=%u status=%s "
