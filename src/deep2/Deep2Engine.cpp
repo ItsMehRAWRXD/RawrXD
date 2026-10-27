@@ -10564,7 +10564,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             {
                 gk(static_cast<const uint8_t*>(lw.moeSharedGate.data), input, gateRef.data(), sharedDim, hiddenDim);
                 uk(static_cast<const uint8_t*>(lw.moeSharedUp.data), input, upRef.data(), sharedDim, hiddenDim);
-                Deep2::SwiGLU(gateRef.data(), upRef.data(), gateRef.data(), sharedDim);
+                SwiGLU(gateRef.data(), upRef.data(), gateRef.data(), sharedDim);
                 dk(static_cast<const uint8_t*>(lw.moeSharedDown.data), gateRef.data(), sharedRef.data(), hiddenDim, sharedDim);
             }
         }
@@ -10727,7 +10727,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                 {
                     gk(static_cast<const uint8_t*>(handle.gateWeights), input, gateRef.data(), expertDim, hiddenDim);
                     uk(static_cast<const uint8_t*>(handle.upWeights), input, upRef.data(), expertDim, hiddenDim);
-                    Deep2::SwiGLU(gateRef.data(), upRef.data(), gateRef.data(), expertDim);
+                    SwiGLU(gateRef.data(), upRef.data(), gateRef.data(), expertDim);
                     dk(static_cast<const uint8_t*>(handle.downWeights), gateRef.data(), expertRef.data(), hiddenDim, expertDim);
                 }
             }
