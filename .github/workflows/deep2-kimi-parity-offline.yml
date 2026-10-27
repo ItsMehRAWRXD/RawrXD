@@ -5,6 +5,9 @@ on:
     paths:
       - 'tools/k2_*'
       - 'tools/test_k2_*'
+      - 'tools/audit_rawrxd_25_gates.py'
+      - 'tools/test_audit_rawrxd_25_gates.py'
+      - 'docs/RAWRXD_25_GATE_ACCEPTANCE.json'
       - 'src/deep2/K2MoEParityCapture.hpp'
       - 'src/deep2/K2NativeMoEFfn_ExpertGpu.cpp'
       - '.github/workflows/deep2-kimi-parity-offline.yml'
@@ -25,6 +28,8 @@ jobs:
           python-version: '3.12'
       - name: Validate vector comparison
         run: python tools/test_k2_gpu_moe_vector_parity.py
+      - name: Validate all 25 fail-closed acceptance gates
+        run: python tools/test_audit_rawrxd_25_gates.py
       - name: Validate scalar Q6_K oracle
         run: python tools/test_k2_q6k_scalar_oracle.py
       - name: Cross-reference Q4_K/Q6_K GGML packed layouts
