@@ -214,3 +214,44 @@ REAL_GPU_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Increment 6: fail closed on unsynchronized fused output capture
+
+This section **supersedes the earlier live-capture instructions above**.
+The prior call to `emitParity(r)` was inside the fused recording
+loop, before `K2MoEStickEndFused`. At that point neither GPU
+completion nor per-expert `ArenaDown` ownership had been
+established. This could produce a misleading numerical witness.
+
+The unsafe in-loop `DownloadBuf(ArenaDown())` and its
+`k2_parity_capture::Capture(...)` call have been removed.
+When either diagnostic parity or a capture directory is
+requested, runtime now emits:
+
+```text
+GPU_EXPERT_PARITY status=BLOCKED reason=FUSED_OUTPUT_NOT_SYNCHRONIZED
+```
+
+The normal fused GPU worklist remains enabled. Standalone
+capture helpers and offline scalar oracle code remain available
+but **are not wired to a reliable live GPU expert witness**.
+Existing capture datasets produced by the earlier implementation
+must be treated as **untrusted diagnostic data** until the
+ordering and provenance can be independently established.
+
+`tools/test_k2_fused_parity_safety.py` guards against reintroducing
+the unsafe in-loop read. The GitHub offline workflow includes this
+test. Future restoration requires a per-expert, completion-ordered
+GPU output buffer and a separately witnessed GPU post-SwiGLU
+activation, with fresh evidence from actual hardware. No old
+`GPU_EXPERT_PARITY status=OK` line alone satisfies the gate.
+
+```ini
+UNSAFE_FUSED_READ=REMOVED
+LIVE_PARITY_CAPTURE=BLOCKED_FAIL_CLOSED
+OFFLINE_REGRESSION_TEST=SOURCE_ADDED
+MSVC_RUNTIME_BUILD=NOT_VERIFIED
+GPU_NUMERICAL_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
