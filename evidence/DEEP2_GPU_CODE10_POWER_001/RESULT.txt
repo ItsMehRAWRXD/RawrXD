@@ -1,0 +1,36 @@
+GATE=DEEP2_GPU_CODE10_POWER_001
+RESULT=OPEN
+DISPOSITION=OPEN_HARDWARE_LATCH
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+
+SYMBOL_REALITY=
+  ForwardLayerAsynchronous=ABSENT
+  DEEP2_RING_BUFFER_SLOTS=ABSENT
+  g_CommandRingBuffer=ABSENT
+  ApplyHardwarePowerGate=ABSENT
+
+PNP=
+  PRIMARY=AMD Radeon AI PRO R9700 Status=OK
+  IGPU=AMD Radeon(TM) Graphics Status=OK
+  SECONDARY=AMD Radeon RX 7800 XT Status=Error Problem=CM_PROB_FAILED_START (Code 10)
+  PNP_BOUNCE=NOT_RUN
+  DISABLE_ENABLE_PNPDEVICE=NOT_RUN
+  SECONDARY_HEALTHY_AFTER_RESCAN=NO
+  COLD_BOOT_REQUIRED=YES
+
+SOFTWARE=
+  CODE10_RECOGNIZED=1
+  PHASE=power_failure (alias code_10)
+  CODE31_RECOGNIZED=1
+  VK_ERROR_DEVICE_LOST_RECOGNIZED=1
+  RESET_OPT_IN=DEEP2_GPU_DEVICE_RESET=1
+  SMOKE=PASS (code10_mapped=1 code31_mapped=1 vk_lost_mapped=1 reset_seq=1 fail_closed=1)
+  ApplyHardwarePowerGate_sleep_WaitIdle=REJECTED
+  DEEP2_GPU_POWER_KEEPALIVE=NOT_WIRED
+
+ANSWER_EXPLICIT=
+  Did PnP rescan bring secondary GPU healthy? NO — still Error/Code10.
+  Was bounce run? NOT_RUN (non-elevated; no user-authorized elevated bounce).
+  Cold boot required? YES until secondary leaves CM_PROB_FAILED_START.

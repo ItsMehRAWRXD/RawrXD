@@ -1,0 +1,25 @@
+GATE=DEEP2_GPU_CODE10_POWER_001
+
+IMPLEMENTED=
+  GpuDeviceLostReset.hpp (both F:\rawrxd and F:\rawrxd-native-agent-001)
+    kWinCode10=10 already in IsLostCode
+    PhaseFor(10) → "power_failure" (alias documented as code_10)
+    IsCode10OrPowerFailurePhase("power_failure"|"code_10")
+  tools/deep2_gpu_code31_reset_smoke.cpp asserts code10 + power_failure
+  Reset path unchanged: opt-in DEEP2_GPU_DEVICE_RESET=1
+
+NOT_IMPLEMENTED_REJECTED=
+  ApplyHardwarePowerGate
+  sleep(150us)+vkQueueWaitIdle splice into ForwardLayerAsynchronous
+  DEEP2_RING_BUFFER_SLOTS / g_CommandRingBuffer (ABSENT — not invented)
+
+SMOKE=
+  mark code=-4 phase=device_lost
+  mark code=10 phase=power_failure
+  mark code=31 phase=code_31
+  reset seq + fail_closed PASS (see smoke_run.txt)
+
+PNP=
+  RX 7800 XT Error CM_PROB_FAILED_START
+  R9700 OK; iGPU OK
+  bounce NOT_RUN; cold boot required for secondary health

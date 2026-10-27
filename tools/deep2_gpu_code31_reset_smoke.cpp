@@ -1,4 +1,4 @@
-/* deep2_gpu_code31_reset_smoke — inject lost/code31; assert reset seq. */
+/* deep2_gpu_code31_reset_smoke — inject lost/code10/31; assert reset. */
 #include "deep2/lavapath/GpuDeviceLostReset.hpp"
 #include <cstdio>
 #include <cstring>
@@ -32,6 +32,7 @@ bool Rt(void* ud) {
 } // namespace
 
 int main() {
+    using Deep2::GpuLost::IsCode10OrPowerFailurePhase;
     using Deep2::GpuLost::IsLostCode;
     using Deep2::GpuLost::Mark;
     using Deep2::GpuLost::PhaseFor;
@@ -39,23 +40,20 @@ int main() {
     using Deep2::GpuLost::RunResetRetry;
     using Deep2::GpuLost::Seq;
     using Deep2::GpuLost::kVkDeviceLost;
+    using Deep2::GpuLost::kWinCode10;
     using Deep2::GpuLost::kWinCode31;
 
     int fails = 0;
-    if (!IsLostCode(kVkDeviceLost)) {
-        std::fprintf(stderr, "FAIL: VK lost not recognized\n");
-        ++fails;
-    }
-    if (!IsLostCode(kWinCode31)) {
-        std::fprintf(stderr, "FAIL: code 31 not recognized\n");
-        ++fails;
-    }
-    if (IsLostCode(0) || IsLostCode(-1)) {
-        std::fprintf(stderr, "FAIL: false-positive lost code\n");
+    if (!IsLostCode(kVkDeviceLost) || !IsLostCode(kWinCode31) ||
+        !IsLostCode(kWinCode10) || IsLostCode(0) || IsLostCode(-1)) {
+        std::fprintf(stderr, "FAIL: lost-code classify\n");
         ++fails;
     }
     if (std::strcmp(PhaseFor(kVkDeviceLost), "device_lost") != 0 ||
-        std::strcmp(PhaseFor(kWinCode31), "code_31") != 0) {
+        std::strcmp(PhaseFor(kWinCode31), "code_31") != 0 ||
+        std::strcmp(PhaseFor(kWinCode10), "power_failure") != 0 ||
+        !IsCode10OrPowerFailurePhase("power_failure") ||
+        !IsCode10OrPowerFailurePhase("code_10")) {
         std::fprintf(stderr, "FAIL: phase map\n");
         ++fails;
     }
@@ -66,8 +64,13 @@ int main() {
         std::fprintf(stderr, "FAIL: mark VK lost\n");
         ++fails;
     }
+    Mark(s, kWinCode10);
+    if (s.mark != 2 || std::strcmp(s.last_phase, "power_failure") != 0) {
+        std::fprintf(stderr, "FAIL: mark code 10 / power_failure\n");
+        ++fails;
+    }
     Mark(s, kWinCode31);
-    if (s.mark != 2 || std::strcmp(s.last_phase, "code_31") != 0) {
+    if (s.mark != 3 || std::strcmp(s.last_phase, "code_31") != 0) {
         std::fprintf(stderr, "FAIL: mark code 31\n");
         ++fails;
     }
@@ -93,7 +96,7 @@ int main() {
         std::fprintf(stderr, "RESULT=FAIL fails=%d\n", fails);
         return 1;
     }
-    std::fprintf(stderr, "RESULT=PASS code31_mapped=1 vk_lost_mapped=1 "
-                         "reset_seq=1 fail_closed=1\n");
+    std::fprintf(stderr, "RESULT=PASS code10_mapped=1 code31_mapped=1 "
+                         "vk_lost_mapped=1 reset_seq=1 fail_closed=1\n");
     return 0;
 }
