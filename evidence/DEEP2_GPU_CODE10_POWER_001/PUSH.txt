@@ -26,3 +26,7 @@ F:\rawrxd-native-agent-001
 
 CODE10_MAP=kWinCode10=10 (native phase code_10; F:\rawrxd PhaseFor power_failure alias code_10)
 OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (unchanged; default off)
+
+PUSH_TXT_COMMIT=860fd444c11746443c85dff7fe055d22611bad84
+PUSH_TXT_origin=https://github.com/ItsMehRAWRXD/RawrXD/commit/860fd444c11746443c85dff7fe055d22611bad84
+PUSH_TXT_everything=https://github.com/ItsMehRAWRXD/everything/commit/860fd444c11746443c85dff7fe055d22611bad84
