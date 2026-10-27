@@ -4,6 +4,8 @@
 #include "K2ShardIo.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
+#include "K2MoEExpertAccounting.hpp"
+#include "QuantKernelRegistry.hpp"
 #include "StickGpuLocal.hpp"
 #include "StreamPathTiming.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
@@ -12,7 +14,9 @@
 #include "lavapath/EndDeviceStep3Diag.hpp"
 #include "vulkan_compute.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 
@@ -123,6 +127,11 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
     for (uint32_t k = 0; k < n; ++k) {
         MoEPlaceSlot& mut = plan.slots[idx[k]];
         if (mut.expertId < 0) continue;
+        /* The stick worklist is the production GPU route and bypasses
+           K2MoEExecExpert().  Record selection here so the opt-in matrix
+           remains complete for both CPU and GPU backends. */
+        K2MoEExpertAccounting::Instance().Selected(
+            layer, mut.expertId);
         ctr.bundle_lookups++;
         Resolved r{};
         r.expertId = mut.expertId;
@@ -172,6 +181,71 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                   return a.expertId < b.expertId;
               });
 
+    /* Optional isolated expert parity.  This is deliberately diagnostic-only:
+       it downloads the just-computed down vector for one (or a bounded number
+       of) experts and compares it with the same packed slices through the
+       reference CPU kernels.  It never alters the routed result or admission
+       policy. */
+    const char* parityEnv = std::getenv("DEEP2_MOE_GPU_PARITY");
+    const bool parityEnabled = parityEnv && parityEnv[0] == '1' && parityEnv[1] == '\0';
+    uint32_t parityLimit = 1u;
+    if (const char* lim = std::getenv("DEEP2_MOE_GPU_PARITY_LIMIT")) {
+        char* end = nullptr;
+        const unsigned long parsed = std::strtoul(lim, &end, 10);
+        if (end != lim && *end == '\0' && parsed > 0 && parsed <= 64u)
+            parityLimit = static_cast<uint32_t>(parsed);
+    }
+    uint32_t parityOrdinal = 0;
+    auto emitParity = [&](const Resolved& r) {
+        if (!parityEnabled || parityOrdinal++ >= parityLimit || !r.g || !r.u ||
+            !r.d || !r.gb || !r.ub || !r.db)
+            return;
+        auto* vc = DualStickVc(stick);
+        std::vector<float> gpuOut(H, 0.0f);
+        if (!vc || !vc->DownloadBuf(vc->ArenaDown(), gpuOut.data(), (uint32_t)H)) {
+            std::fprintf(stderr,
+                         "GPU_EXPERT_PARITY layer=%u expert=%d status=DOWNLOAD_FAIL\n",
+                         layer, r.expertId);
+            return;
+        }
+        auto gate = QuantKernelRegistry::Instance().GetGEMV(r.gt);
+        auto up = QuantKernelRegistry::Instance().GetGEMV(r.ut);
+        auto down = QuantKernelRegistry::Instance().GetGEMV(r.dt);
+        if (!gate || !up || !down) {
+            std::fprintf(stderr,
+                         "GPU_EXPERT_PARITY layer=%u expert=%d status=CPU_KERNEL_MISSING\n",
+                         layer, r.expertId);
+            return;
+        }
+        std::vector<float> gateOut(I, 0.0f), upOut(I, 0.0f), cpuOut(H, 0.0f);
+        gate(r.g, normed, gateOut.data(), I, H);
+        up(r.u, normed, upOut.data(), I, H);
+        for (size_t i = 0; i < I; ++i) {
+            const float x = gateOut[i];
+            gateOut[i] = (x / (1.0f + std::exp(-x))) * upOut[i];
+        }
+        down(r.d, gateOut.data(), cpuOut.data(), H, I);
+        double maxAbs = 0.0, sumAbs = 0.0, maxRel = 0.0;
+        size_t nonFinite = 0;
+        for (size_t i = 0; i < H; ++i) {
+            if (!std::isfinite(gpuOut[i]) || !std::isfinite(cpuOut[i])) {
+                ++nonFinite;
+                continue;
+            }
+            const double d = std::abs((double)gpuOut[i] - (double)cpuOut[i]);
+            if (d > maxAbs) maxAbs = d;
+            const double denom = std::max(1.0e-12, std::abs((double)cpuOut[i]));
+            if (d / denom > maxRel) maxRel = d / denom;
+            sumAbs += d;
+        }
+        std::fprintf(stderr,
+                     "GPU_EXPERT_PARITY layer=%u expert=%d stick=%u status=OK "
+                     "max_abs=%.9e mean_abs=%.9e max_rel=%.9e nonfinite=%zu\n",
+                     layer, r.expertId, stick, maxAbs,
+                     H ? sumAbs / (double)H : 0.0, maxRel, nonFinite);
+        std::fflush(stderr);
+    };
+
     /* Hold MoE pins for this stick worklist — peer eviction ⇒ DEVICE_LOST. */
     if (vcHold) vcHold->BeginMoePinHold();
     /* HARD_GATE: pin all weights before fuse (no mid-graph Upload submit). */
@@ -190,6 +264,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         return false;
     }
     for (auto& r : work) {
+        const uint64_t expertStartNs = K2MoEExpertAccounting::NowNs();
         if (!K2MoEStickExpertDevice(stick, r.gt, r.g, r.gb, r.ut, r.u, r.ub,
                                     r.dt, r.d, r.db, r.weight, H, I, layer,
                                     r.expertId, r.acquireMiss, ctr)) {
@@ -198,6 +273,14 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
             error = "K2MoEStickExpertDevice failed";
             return false;
         }
+        K2MoEExpertTiming gpuTiming{};
+        gpuTiming.acquireNs = 0;
+        gpuTiming.readBytes = static_cast<uint64_t>(r.gb) + r.ub + r.db;
+        gpuTiming.totalNs = K2MoEExpertAccounting::NowNs() - expertStartNs;
+        gpuTiming.computeNs = gpuTiming.totalNs;
+        K2MoEExpertAccounting::Instance().Executed(
+            layer, r.expertId, true, r.acquireMiss == 0, gpuTiming);
+        emitParity(r);
         hotExperts.push_back(r.expertId);
     }
     if (!K2MoEStickEndFused(stick, ctr)) {

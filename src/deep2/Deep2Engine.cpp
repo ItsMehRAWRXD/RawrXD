@@ -13923,7 +13923,12 @@ K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(const K2NativeS
 
     // K2_GPU_STREAM_COPY / MLA: open Vulkan + bind stream→GPU upload path.
     const bool reapCpuOnlyLocal = [] { const char* v = std::getenv("RAWR_REAP_CPU_ONLY"); return v && v[0]=='1' && v[1]=='\0'; }();
-    if (!reapCpuOnlyLocal && (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted()))
+    const bool moeGpuOnlyLocal = [] {
+        const char* v = std::getenv("DEEP2_MOE_GPU_ONLY");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    if (!reapCpuOnlyLocal &&
+        (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted() || moeGpuOnlyLocal))
     {
         if (!vulkanInitialized_)
             enableVulkan(true);

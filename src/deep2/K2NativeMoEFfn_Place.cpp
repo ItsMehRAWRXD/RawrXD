@@ -182,7 +182,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
        actual K2 quantized GEMV path.  The replay does not run the separate
        streamer arm harness, so requiring only dsRequested would silently
        send a GPU-admitted run through host MoE. */
-    const bool gpuRequested = dsRequested || MLA_GpuGemvWanted();
+    const bool moeGpuOnly = [] {
+        const char* v = std::getenv("DEEP2_MOE_GPU_ONLY");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    const bool gpuRequested = dsRequested || MLA_GpuGemvWanted() || moeGpuOnly;
     const bool useGpuMoE = gpuRequested && vc0Ready;
     const bool useDualStick = useGpuMoE && vc1Ready;
     const uint32_t sticks = useDualStick ? 2u : 1u;
