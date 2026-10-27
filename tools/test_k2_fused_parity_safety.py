@@ -35,6 +35,13 @@ class FusedParitySafetyTests(unittest.TestCase):
         self.assertIn("certified=0", self.source)
         self.assertIn("vectorWritten", self.source)
 
+    def test_scalar_input_witness_is_before_fusion(self):
+        call = self.source.index("k2_parity_capture::CaptureScalarInputs(")
+        fused = self.source.index("if (!K2MoEStickBeginFused(stick))")
+        self.assertLess(call, fused)
+        self.assertIn("scope=CPU_INPUTS_ONLY", self.source)
+        self.assertIn("GPU_EXPERT_PARITY status=BLOCKED", self.source)
+
     def test_gpu_worklist_not_disabled(self):
         self.assertIn("K2MoEStickBeginFused(stick)", self.source)
         self.assertIn("K2MoEStickExpertDevice(stick", self.source)
