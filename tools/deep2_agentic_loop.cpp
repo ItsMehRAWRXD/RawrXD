@@ -45,6 +45,7 @@
 #include <iomanip>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #ifdef _WIN32
@@ -128,6 +129,7 @@ std::string ResolveMotdWorkspace(const std::string& requested)
 
 struct Args
 {
+    bool help = false;
     std::string model, task, workdir = "agentic_ws";
     int max_steps = 12, max_new = 200;
     bool cpu = false, toktest = false, parity = false;
@@ -179,7 +181,9 @@ Args Parse(int argc, char* argv[])
     for (int i = 1; i < argc; ++i)
     {
         std::string s = argv[i];
-        if (s == "--model" && i + 1 < argc)
+        if (s == "--help" || s == "-h")
+            a.help = true;
+        else if (s == "--model" && i + 1 < argc)
             a.model = argv[++i];
         else if (s == "--task" && i + 1 < argc)
             a.task = argv[++i];
@@ -331,6 +335,23 @@ static std::string SafeWorkPath(const std::string& workdir, const std::string& r
          candidateText[rootText.size()] != '\\' && candidateText[rootText.size()] != '/'))
         return {};
     return candidate.string();
+}
+
+// Tool paths are workspace-relative and Windows is case-insensitive.  Use a
+// canonical, case-folded key for policy bookkeeping so harmless spellings
+// such as `./calc.cpp`, `calc.cpp`, and `CALC.CPP` refer to the same file.
+// The actual filesystem operation still goes through SafeWorkPath, so this
+// helper cannot broaden the sandbox or authorize an unsafe path.
+static std::string WorkspacePathKey(const std::string& workdir, const std::string& rel)
+{
+    std::string path = SafeWorkPath(workdir, rel);
+    if (path.empty()) return {};
+    for (char& c : path)
+    {
+        if (c == '/') c = '\\';
+        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+    }
+    return path;
 }
 
 // Make control characters visible in a log line. Token text is the primary
@@ -1542,8 +1563,15 @@ Action ParseAction(const std::string& text)
         const std::string path = t.substr(pathStart, pathEnd - pathStart);
         if (path.empty())
             return a;
-        const std::string command = text.substr(lineStart);
-        size_t payloadStart = pathEnd;
+        // Use one coordinate system for the full multiline command.  The
+        // previous code took pathEnd from the trimmed first line and applied
+        // it to the indented full response, dropping bytes from the payload
+        // (often the first include) before compilation.
+        const std::string command = Trim(text.substr(lineStart));
+        const size_t commandPathEnd = command.find_first_of(" \t\r\n", 10);
+        if (commandPathEnd == std::string::npos)
+            return a;
+        size_t payloadStart = commandPathEnd;
         while (payloadStart < command.size() &&
                std::isspace((unsigned char)command[payloadStart]))
             ++payloadStart;
@@ -2539,9 +2567,14 @@ struct RetryState
         if (attempt >= max_attempts) return false;
         if (tokens_used >= max_tokens) return false;
         if (stalled) return false;
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now() - start_time).count();
-        return elapsed < max_wall_time_sec;
+        return !deadline_exceeded();
+    }
+
+    bool deadline_exceeded() const
+    {
+        if (max_wall_time_sec <= 0) return true;
+        return std::chrono::steady_clock::now() >=
+               start_time + std::chrono::seconds(max_wall_time_sec);
     }
 
     void record_failure(const std::string& signature)
@@ -3175,8 +3208,17 @@ static int OllamaAgentRun(const Args& args)
     messages.push_back({"user", args.task.empty() ? "Inspect the target, make the requested fix, then build and test it." : args.task});
     const std::string beforeHash = SHA256_Hash(ReadFile(targetPath));
     bool readSeen = false, committed = false, testSeen = false;
+    std::unordered_set<std::string> readFiles;
+    const std::string targetKey = WorkspacePathKey(args.workdir, args.target_file);
+    const auto wallDeadline = std::chrono::steady_clock::now() +
+                              std::chrono::seconds(std::max(1, args.max_wall_time_sec));
     for (int step = 1; step <= std::max(1, args.max_steps); ++step)
     {
+        if (std::chrono::steady_clock::now() >= wallDeadline)
+        {
+            Logf_("[ollama] host wall deadline exceeded before step %d\n", step);
+            break;
+        }
         const OllamaReply reply = OllamaChat(args.model, messages, args.max_new,
                                              std::max(256, args.context_size), args.temperature);
         if (!reply.ok)
@@ -3210,11 +3252,28 @@ static int OllamaAgentRun(const Args& args)
         {
             const std::string path = SafeWorkPath(args.workdir, action.arg1);
             if (path.empty()) { valid = false; result = "unsafe relative path rejected"; exitCode = -1; }
-            else { result = ReadFile(path); readSeen = !result.empty(); if (result.empty()) result = "file not found"; }
+            else
+            {
+                result = ReadFile(path);
+                if (!result.empty())
+                {
+                    const std::string readKey = WorkspacePathKey(args.workdir, action.arg1);
+                    if (!readKey.empty()) readFiles.insert(readKey);
+                    readSeen = !targetKey.empty() && readFiles.find(targetKey) != readFiles.end();
+                }
+                if (result.empty()) result = "file not found";
+            }
         }
         else if (action.tool == "write")
         {
-            if (!readSeen) { valid = false; result = "read the target before writing"; exitCode = -1; }
+            const std::string writeKey = WorkspacePathKey(args.workdir, action.arg1);
+            if (writeKey.empty() || readFiles.find(writeKey) == readFiles.end())
+            {
+                valid = false;
+                result = "read the exact target before writing. Your next reply MUST be exactly TOOL read " +
+                         args.target_file + "; do not use build, test, or finish yet";
+                exitCode = -1;
+            }
             else if (!patch.snapshot(action.arg1) || !patch.apply(action.arg1, action.arg2))
             { valid = false; result = "snapshot or write failed"; exitCode = -1; }
             else
@@ -3323,13 +3382,13 @@ int main(int argc, char* argv[])
     const Args args = Parse(argc, argv);
     if (args.recovery_selftest)
         return DurableRecoverySelfTest() ? 0 : 1;
-    if (args.model.empty() && !args.motd_selftest)
+    if (args.help || (args.model.empty() && !args.motd_selftest))
     {
         std::printf("usage: deep2_agentic_loop.exe --model <gguf|model-id> [--provider deep2|ollama] "
                     "[--task text-or-file] [--workdir D] [--target-file f] "
                     "[--expected-source text] [--max-steps N] [--max-new N] "
                     "[--max-wall-time-sec N] [--cpu] [--toktest]\n");
-        return 1;
+        return args.help ? 0 : 1;
     }
     if (args.motd_selftest)
     {
@@ -3801,7 +3860,10 @@ int main(int argc, char* argv[])
             if ((i % 8) == 0) esp_rt.tick();
         }
         profiler.end_phase();
-        esp_rt.prefill_end();
+        // Commit only the tokens that actually reached ExecuteToken.  The
+        // prefill request is a planned batch and may be cut short by the
+        // host deadline or cancellation.
+        esp_rt.prefill_end(fed.size() - start);
         esp_rt.set_context(fed.size());
         esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
         esp_rt.tick();
@@ -4115,7 +4177,8 @@ int main(int argc, char* argv[])
 
         {
             profiler.start_phase("prefill", pending_count);
-            esp_rt.prefill_start(pending_count, fed.size());
+            const size_t prefill_start_context = fed.size();
+            esp_rt.prefill_start(pending_count, prefill_start_context);
             const auto t_step = std::chrono::steady_clock::now();
             bool pref_cancelled = false;
 
@@ -4173,6 +4236,14 @@ int main(int argc, char* argv[])
                         pref_cancelled = true;
                         break;
                     }
+                    if (retry_state.deadline_exceeded())
+                    {
+                        Logf_("\n[step %d] WALL_TIMEOUT during prefill at %zu/%zu\n",
+                              step, i, rendered.size());
+                        final_stop_reason = deep2::agent::StopReason::Cancelled;
+                        pref_cancelled = true;
+                        break;
+                    }
                     if (!ex.ExecuteToken(rendered[i], fed.size()))
                     {
                         Logf_("EXEC_FAIL prefill pos=%zu err=%s\n", fed.size(), ex.LastError().c_str());
@@ -4190,9 +4261,13 @@ int main(int argc, char* argv[])
                 }
             }
             profiler.end_phase();
-            esp_rt.prefill_end();
+            // Do not report the requested batch as completed when the
+            // deadline/cancellation gate stopped the serial fallback early.
+            const size_t completed_prefill = fed.size() - prefill_start_context;
+            esp_rt.prefill_end(completed_prefill);
             esp_rt.set_context(fed.size());
-            Logf_("[step %d] prefill +%zu tokens (ctx=%zu tokens) in %.0f ms (%s)\n", step, pending_count,
+            Logf_("[step %d] prefill +%zu/%zu tokens (ctx=%zu tokens) in %.0f ms (%s)\n", step,
+                  completed_prefill, pending_count,
                   fed.size(),
                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_step).count(),
                   prefill_ok ? "batched" : "serial");
@@ -4224,6 +4299,14 @@ int main(int argc, char* argv[])
         {
             if (g_cancel_flag.load(std::memory_order_relaxed))
                 snap_ctl.cancel();  // propagate Ctrl+C into SNAP
+            if (retry_state.deadline_exceeded())
+            {
+                snap_res = {deep2::snap::Reason::deadline, {},
+                            static_cast<size_t>(t), "host wall deadline exceeded"};
+                Logf_("[step %d] WALL_TIMEOUT during generation at token %d/%d\n",
+                      step, t, args.max_new);
+                break;
+            }
             auto pre = snap_ctl.before_decode();
             if (pre.reason != deep2::snap::Reason::none)
             {
