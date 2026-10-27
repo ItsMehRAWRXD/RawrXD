@@ -10530,12 +10530,54 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // Zero output accumulator
     memset(output, 0, hiddenDim * sizeof(float));
 
+    // --- Layer-1 FFN diagnostic: capture shared expert output vs CPU reference ---
+    if (layer == 1 && std::getenv("DEEP2_L1_DIAG"))
+    {
+        std::fprintf(stderr, "[L1_DIAG] shared_expert_begin\n");
+        std::fflush(stderr);
+    }
+
     // --- Shared expert (always executed) ---
     // Write directly to output (ffnOutput). Do NOT use attentionOutput as
     // sharedOut — forwardLayer uses attentionOutput as its output buffer and
     // it holds the attention+input residual that must be preserved.
     computeSharedExpertFFN(layer, input, output);
     // output now contains shared expert output; routed experts add below.
+
+    // --- Layer-1 FFN diagnostic: shared expert vs CPU reference ---
+    if (layer == 1 && std::getenv("DEEP2_L1_DIAG"))
+    {
+        std::vector<float> sharedRef(hiddenDim, 0.0f);
+        const auto& lw = modelWeights.layers[layer];
+        if (lw.moeSharedGate.data && lw.moeSharedUp.data && lw.moeSharedDown.data)
+        {
+            size_t sharedDim = lw.moeSharedGate.rows > 0 ? lw.moeSharedGate.rows
+                                                        : moeConfig_.sharedExpertDim;
+            if (sharedDim == 0) sharedDim = moeConfig_.expertDim;
+            std::vector<float> gateRef(sharedDim, 0.0f);
+            std::vector<float> upRef(sharedDim, 0.0f);
+            auto& reg = Deep2::QuantKernelRegistry::Instance();
+            auto gk = reg.GetGEMV((int)lw.moeSharedGate.type);
+            auto uk = reg.GetGEMV((int)lw.moeSharedUp.type);
+            auto dk = reg.GetGEMV((int)lw.moeSharedDown.type);
+            if (gk && uk && dk)
+            {
+                gk(static_cast<const uint8_t*>(lw.moeSharedGate.data), input, gateRef.data(), sharedDim, hiddenDim);
+                uk(static_cast<const uint8_t*>(lw.moeSharedUp.data), input, upRef.data(), sharedDim, hiddenDim);
+                Deep2::SwiGLU(gateRef.data(), upRef.data(), gateRef.data(), sharedDim);
+                dk(static_cast<const uint8_t*>(lw.moeSharedDown.data), gateRef.data(), sharedRef.data(), hiddenDim, sharedDim);
+            }
+        }
+        double maxDiff = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+        {
+            double diff = std::abs(static_cast<double>(output[i]) - sharedRef[i]);
+            maxDiff = std::max(maxDiff, diff);
+        }
+        std::fprintf(stderr,
+            "[L1_DIAG] shared_expert native_vs_cpu maxDiff=%.9e\n", maxDiff);
+        std::fflush(stderr);
+    }
 
     // --- Routed experts ---
     if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_ ||
@@ -10624,6 +10666,8 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     std::vector<float> expertBuf(hiddenDim);
     float* expertOut = expertBuf.data();
     size_t validExpertCount = 0;
+    // --- Layer-1 FFN diagnostic: CPU reference accumulator for all experts ---
+    std::vector<float> l1ExpertRefAccum(hiddenDim, 0.0f);
     for (const auto& er : route.topExperts)
     {
         int expertId = er.expertId;
@@ -10663,6 +10707,45 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         // Execute expert FFN: gate/up SwiGLU -> down projection
         computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim);
 
+        // --- Layer-1 FFN diagnostic: per-expert output vs CPU reference ---
+        if (layer == 1 && std::getenv("DEEP2_L1_DIAG"))
+        {
+            std::vector<float> expertRef(hiddenDim, 0.0f);
+            if (handle.valid && handle.gateWeights && handle.upWeights && handle.downWeights)
+            {
+                size_t expertDim = moeConfig_.expertDim;
+                std::vector<float> gateRef(expertDim, 0.0f);
+                std::vector<float> upRef(expertDim, 0.0f);
+                auto& reg = Deep2::QuantKernelRegistry::Instance();
+                int gateQt = handle.gateQuantType > 0 ? handle.gateQuantType : handle.quantType;
+                int upQt   = handle.upQuantType   > 0 ? handle.upQuantType   : gateQt;
+                int downQt = handle.downQuantType > 0 ? handle.downQuantType : gateQt;
+                auto gk = reg.GetGEMV(gateQt);
+                auto uk = reg.GetGEMV(upQt);
+                auto dk = reg.GetGEMV(downQt);
+                if (gk && uk && dk)
+                {
+                    gk(static_cast<const uint8_t*>(handle.gateWeights), input, gateRef.data(), expertDim, hiddenDim);
+                    uk(static_cast<const uint8_t*>(handle.upWeights), input, upRef.data(), expertDim, hiddenDim);
+                    Deep2::SwiGLU(gateRef.data(), upRef.data(), gateRef.data(), expertDim);
+                    dk(static_cast<const uint8_t*>(handle.downWeights), gateRef.data(), expertRef.data(), hiddenDim, expertDim);
+                }
+            }
+            double maxDiff = 0.0;
+            for (size_t i = 0; i < hiddenDim; ++i)
+            {
+                double diff = std::abs(static_cast<double>(expertOut[i]) - expertRef[i]);
+                maxDiff = std::max(maxDiff, diff);
+            }
+            std::fprintf(stderr,
+                "[L1_DIAG] expert=%d weight=%.6f native_vs_cpu maxDiff=%.9e\n",
+                expertId, weight, maxDiff);
+            std::fflush(stderr);
+            // Accumulate CPU reference for final comparison
+            for (size_t i = 0; i < hiddenDim; ++i)
+                l1ExpertRefAccum[i] += weight * expertRef[i];
+        }
+
         auto tCompute1 = std::chrono::high_resolution_clock::now();
         uint64_t computeUs = std::chrono::duration_cast<std::chrono::microseconds>(tCompute1 - tCompute0).count();
 
@@ -10696,6 +10779,20 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                 output[i] += weight * expertOut[i];
             }
         }
+    }
+    // --- Layer-1 FFN diagnostic: final output vs shared + accumulated CPU reference ---
+    if (layer == 1 && std::getenv("DEEP2_L1_DIAG"))
+    {
+        // output already contains shared expert + accumulated routed experts
+        double maxDiff = 0.0;
+        for (size_t i = 0; i < hiddenDim; ++i)
+        {
+            double diff = std::abs(static_cast<double>(output[i]) - l1ExpertRefAccum[i]);
+            maxDiff = std::max(maxDiff, diff);
+        }
+        std::fprintf(stderr,
+            "[L1_DIAG] final_output native_vs_cpu maxDiff=%.9e\n", maxDiff);
+        std::fflush(stderr);
     }
     if (validExpertCount == 0)
     {
