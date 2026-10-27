@@ -26,7 +26,7 @@ std::string generateUuid() {
     for (int i = 0; i < 4; ++i) ss << dist(gen);
     ss << "-";
     ss << "4"; // version 4
-    for (int i = 0; i < 3; ++i) ss << dist(gen) & 0x0fff;
+    for (int i = 0; i < 3; ++i) ss << (dist(gen) & 0x0fff);
     ss << "-";
     ss << (dist(gen) & 0x3fff | 0x8000); // variant 1
     for (int i = 0; i < 3; ++i) ss << dist(gen);
