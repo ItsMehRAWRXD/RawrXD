@@ -47,6 +47,38 @@ int main() {
         if (!std::filesystem::exists(prefix.string() + ".manifest.txt") ||
             std::filesystem::file_size(prefix.string() + ".down_q6k.bin") != 210)
             code = 5;
+        // Dedicated Q4_K gate/up + Q6_K down input-witness smoke.
+        std::vector<unsigned char> gate(256 * 144, 0);
+        std::vector<unsigned char> up(256 * 144, 0);
+        std::vector<unsigned char> down(256 * 210, 0);
+        using Deep2::k2_parity_capture::CaptureScalarInputs;
+        if (!CaptureScalarInputs(0, 2, 8, 12, gate.data(), gate.size(),
+                                 12, up.data(), up.size(), 14,
+                                 down.data(), down.size(),
+                                 activation.data(), 256, 256))
+            code = 7;
+        const auto inputStem = dir / "k2_l2_e8_s0_scalar_inputs";
+        if (!std::filesystem::exists(inputStem.string() + ".manifest.txt") ||
+            std::filesystem::file_size(inputStem.string() + ".gate_q4k.bin") != gate.size() ||
+            std::filesystem::file_size(inputStem.string() + ".up_q4k.bin") != up.size() ||
+            std::filesystem::file_size(inputStem.string() + ".down_q6k.bin") != down.size())
+            code = 8;
+        if (CaptureScalarInputs(0, 2, 8, 12, gate.data(), gate.size(),
+                                 12, up.data(), up.size(), 14,
+                                 down.data(), down.size(),
+                                 activation.data(), 256, 256))
+            code = 9; // refuse overwrite
+        if (CaptureScalarInputs(0, 2, 9, 12, gate.data(), gate.size() - 1,
+                                 12, up.data(), up.size(), 14,
+                                 down.data(), down.size(),
+                                 activation.data(), 256, 256))
+            code = 10; // refuse wrong packed geometry
+        if (CaptureScalarInputs(0, 2, 10, 12, gate.data(), gate.size(),
+                                 12, up.data(), up.size(), 12,
+                                 down.data(), down.size(),
+                                 activation.data(), 256, 256))
+            code = 11; // refuse wrong quantization
+
         SetCaptureDir("");
     } catch (const std::exception& e) {
         std::cerr << e.what() << "\n";
