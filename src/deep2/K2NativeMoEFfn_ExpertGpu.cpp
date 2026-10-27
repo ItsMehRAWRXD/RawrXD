@@ -189,15 +189,15 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
        The independent scalar/oracle tools remain available for captures
        obtained via a separately synchronized, per-expert diagnostic. */
     const char* parityEnv = std::getenv("DEEP2_MOE_GPU_PARITY");
-    const bool parityEnabled = parityEnv && parityEnv[0] == '1' && parityEnv[1] == '\\0';
+    const bool parityEnabled = parityEnv && parityEnv[0] == '1' && parityEnv[1] == '\0';
     const bool captureRequested = [] {
         const char* value = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
-        return value && value[0] != '\\0';
+        return value && value[0] != '\0';
     }();
     if (parityEnabled || captureRequested) {
         std::fprintf(stderr,
                      "GPU_EXPERT_PARITY status=BLOCKED reason=FUSED_OUTPUT_NOT_SYNCHRONIZED "
-                     "layer=%u stick=%u experts=%zu\\n",
+                     "layer=%u stick=%u experts=%zu\n",
                      layer, stick, work.size());
         std::fflush(stderr);
     }
