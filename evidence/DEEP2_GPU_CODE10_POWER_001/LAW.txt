@@ -1,0 +1,24 @@
+GATE=DEEP2_GPU_CODE10_POWER_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+
+WIN_CM_CODE_10=CM_PROB_FAILED_START (power / failed start)
+PHASE_MAP=code_10 synonym → power_failure via GpuLost::PhaseFor(kWinCode10)
+ALSO_MAPPED=code_31, VK_ERROR_DEVICE_LOST (-4)
+RESET_OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (default off; mark-only otherwise)
+
+REJECT_DEFAULT_POWER_GATE=
+  ApplyHardwarePowerGate + sleep(150us) + vkQueueWaitIdle every slot0
+  REJECTED because:
+    1) ForwardLayerAsynchronous / DEEP2_RING_BUFFER_SLOTS / g_CommandRingBuffer ABSENT
+    2) Unconditional WaitIdle destroys async / contradicts engine law
+    3) No measurement proved necessity
+
+DEEP2_GPU_POWER_KEEPALIVE=1:
+  Reserved name only. NOT_WIRED. If a future measured need exists, opt-in
+  minimal barrier only — never unconditional WaitIdle as production default.
+
+PNP_BOUNCE_POLICY=
+  Do not Disable/Enable-PnpDevice without elevated user-authorized path.
+  This run: PNP_BOUNCE=NOT_RUN. Device still Error → cold boot required.

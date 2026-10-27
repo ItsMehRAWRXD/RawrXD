@@ -1,0 +1,13 @@
+DEEP2_GPU_DEVICE_LOST mark=1 code=-4 phase=device_lost
+DEEP2_GPU_DEVICE_LOST mark=2 code=10 phase=power_failure
+DEEP2_GPU_DEVICE_LOST mark=3 code=31 phase=code_31
+DEEP2_GPU_DEVICE_RESET teardown_begin
+DEEP2_GPU_DEVICE_RESET recreate_begin
+DEEP2_GPU_DEVICE_RESET recreate_OK
+DEEP2_GPU_DEVICE_RESET retry_OK
+DEEP2_GPU_DEVICE_LOST mark=1 code=-4 phase=device_lost
+DEEP2_GPU_DEVICE_RESET teardown_begin
+DEEP2_GPU_DEVICE_RESET recreate_begin
+DEEP2_GPU_DEVICE_RESET recreate_FAIL
+RESULT=PASS code10_mapped=1 code31_mapped=1 vk_lost_mapped=1 reset_seq=1 fail_closed=1
+RUN_EXIT=0 

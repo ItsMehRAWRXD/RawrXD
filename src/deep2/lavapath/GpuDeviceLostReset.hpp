@@ -1,6 +1,7 @@
 /* GpuDeviceLostReset — classify code-10/31 / VK lost + reset seq. ≤99. */
 #pragma once
 #include <cstdint>
+#include <cstring>
 
 namespace Deep2 {
 namespace GpuLost {
@@ -23,14 +24,7 @@ inline const char* PhaseFor(int code) noexcept {
 }
 
 inline bool IsCode10OrPowerFailurePhase(const char* p) noexcept {
-    if (!p || !p[0]) return false;
-    /* Exact: power_failure (PhaseFor) or legacy code_10 label. */
-    if (p[0] == 'p' && p[1] == 'o' && p[2] == 'w')
-        return p[3] == 'e' && p[4] == 'r' && p[5] == '_' &&
-               p[6] == 'f' && p[7] == 'a' && p[8] == 'i' && p[9] == 'l' &&
-               p[10] == 'u' && p[11] == 'r' && p[12] == 'e' && p[13] == '\0';
-    return p[0] == 'c' && p[1] == 'o' && p[2] == 'd' && p[3] == 'e' &&
-           p[4] == '_' && p[5] == '1' && p[6] == '0' && p[7] == '\0';
+    return p && (!std::strcmp(p, "power_failure") || !std::strcmp(p, "code_10"));
 }
 
 struct Seq {
