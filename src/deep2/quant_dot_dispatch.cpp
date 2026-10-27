@@ -255,6 +255,35 @@ bool EndBatch()
     return EndBatchImpl();
 }
 
+bool BeginFusedLayer()
+{
+    return Gpu().BeginFusedLayer();
+}
+bool EndFusedLayer()
+{
+    return Gpu().EndFusedLayer();
+}
+bool ForceHostSync()
+{
+    return Gpu().ForceHostSync();
+}
+bool FusedRecording()
+{
+    return Gpu().FusedRecording();
+}
+
+bool AttnDecodeGqa(const float* q, size_t q_floats,
+                   const float* k_cache, size_t k_floats,
+                   const float* v_cache, size_t v_floats,
+                   float* out, size_t out_floats,
+                   uint32_t head_dim, uint32_t heads, uint32_t kv_heads,
+                   uint32_t seq_len, float scale)
+{
+    return Gpu().ExecuteAttnDecodeGqa(
+        q, q_floats, k_cache, k_floats, v_cache, v_floats,
+        out, out_floats, head_dim, heads, kv_heads, seq_len, scale);
+}
+
 void SetForceCpu(bool force) { g_force_cpu = force; }
 bool ForceCpu() { return g_force_cpu; }
 
@@ -513,6 +542,15 @@ bool DotBlocked(int kind,
     // untouched zero-filled output and report a false GPU divergence before
     // EndBatch has a chance to submit the work.
     const bool differential_check = std::getenv("RR_GPU_CHECK") != nullptr;
+    if (std::getenv("DEEP2_SUBMIT_TRACE") &&
+        !(g_batch_active && !differential_check && g_active_device < 0 &&
+          !force_cpu && !g_force_cpu)) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=DotBlocked mode=SYNC n_out=%zu "
+            "dependency=HOST_READBACK necessary=1\n",
+            n_out);
+        std::fflush(stderr);
+    }
     if (g_batch_active && !differential_check && g_active_device < 0 &&
         !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {

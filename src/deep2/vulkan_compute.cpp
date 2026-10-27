@@ -1371,6 +1371,15 @@ bool VulkanCompute::endSubmitWait(
     si.pCommandBuffers = &cmd;
 
     const uint64_t submitNs = nowNs();
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=endSubmitWait dependency=FENCE_WAIT necessary=1 "
+            "work_kind=%u bytes=%llu fused=%d\n",
+            static_cast<unsigned>(kind),
+            static_cast<unsigned long long>(bytes),
+            fused_ ? 1 : 0);
+        std::fflush(stderr);
+    }
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
     if (submit != VK_SUCCESS) {
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",

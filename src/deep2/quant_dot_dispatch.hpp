@@ -114,6 +114,18 @@ bool DotF16On(int32_t device,
 //     keeps the compared path deterministic.
 bool BeginBatch();
 bool EndBatch();
+// DEEP2_VULKAN_SUBMIT_OPT_001: RuntimeGraph <-> QuantDot fused CB lifecycle
+bool BeginFusedLayer();
+bool EndFusedLayer();
+bool ForceHostSync();
+bool FusedRecording();
+// DEEP2_VULKAN_SUBMIT_OPT_001: GQA AttnDecode on QuantDot Vulkan device.
+bool AttnDecodeGqa(const float* q, size_t q_floats,
+                   const float* k_cache, size_t k_floats,
+                   const float* v_cache, size_t v_floats,
+                   float* out, size_t out_floats,
+                   uint32_t head_dim, uint32_t heads, uint32_t kv_heads,
+                   uint32_t seq_len, float scale);
 
 // Diagnostic receipt describing the last DotBlocked call.
 struct Receipt {

@@ -1989,6 +1989,48 @@ bool VulkanCompute::QueueQuantDot(const void* packed, size_t packed_bytes,
     return true;
 }
 
+bool VulkanCompute::BeginFusedLayer() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (quant_fuse_active_) return false;
+    quant_fuse_active_ = true;
+    quant_fuse_submits_ = 0;
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr, "SUBMIT_TRACE kind=BeginFusedLayer\n");
+        std::fflush(stderr);
+    }
+    return true;
+}
+
+bool VulkanCompute::ForceHostSync() {
+    // Stack-A batches already host-sync inside EndQuantDotBatch. This marks the
+    // RuntimeGraph barrier where host data is truly required (e.g. OpAttention).
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=ForceHostSync dependency=HOST_DATA necessary=1 fuse=%d\n",
+            quant_fuse_active_ ? 1 : 0);
+        std::fflush(stderr);
+    }
+    return true;
+}
+
+bool VulkanCompute::EndFusedLayer() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!quant_fuse_active_) return false;
+    if (quant_batch_active_) {
+        quant_fuse_active_ = false;
+        return false;
+    }
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=EndFusedLayer submits_in_window=%u\n",
+            quant_fuse_submits_);
+        std::fflush(stderr);
+    }
+    quant_fuse_active_ = false;
+    quant_fuse_submits_ = 0;
+    return true;
+}
+
 bool VulkanCompute::EndQuantDotBatch() {
     // RAWRXD_G04: holding quant_mu_ across record+submit+wait is what makes the
     // deferred-destruction epoch discipline sound: nothing else can retire a
@@ -2209,6 +2251,15 @@ bool VulkanCompute::EndQuantDotBatch() {
     QDTRACE("end-batch submitted entries=" << quant_batch_entries_.size());
     ++quant_epoch_;   // RAWRXD_G04: new dispatch generation
     ++gpu_counters_.submits;
+    if (quant_fuse_active_) ++quant_fuse_submits_;
+    // DEEP2_VULKAN_SUBMIT_OPT_001: classify fence wait (host needs readback).
+    if (std::getenv("DEEP2_SUBMIT_TRACE")) {
+        std::fprintf(stderr,
+            "SUBMIT_TRACE kind=EndQuantDotBatch entries=%zu dependency=HOST_READBACK "
+            "necessary=1 fuse=%d\n",
+            quant_batch_entries_.size(), quant_fuse_active_ ? 1 : 0);
+        std::fflush(stderr);
+    }
     const auto submit_end = std::chrono::steady_clock::now();
     gpu_counters_.submit_ms +=
         std::chrono::duration<double, std::milli>(submit_end - submit_begin).count();

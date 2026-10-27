@@ -989,6 +989,7 @@ if(MSVC)
         # CPU inference engine library (replaces GPU dependencies)
         add_library(cpu_inference_engine STATIC 
             src/cpu_inference_engine.cpp
+            src/cpu_inference_engine_impl.cpp
         )
         target_include_directories(cpu_inference_engine PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
         if(MSVC)
@@ -1819,7 +1820,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_bench_tps.cpp" AND
         src/deep2/op_gdn.cpp
         src/deep2/modelgenie/universal_gguf.cpp
         src/deep2/quant_dot_dispatch.cpp
+        src/deep2/lavapath/GpuDeviceLostReset.cpp
+        src/deep2/lavapath/GpuDeviceLostReset_Vk.cpp
         src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp
         src/streaming_gguf_loader.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
@@ -5862,3 +5866,68 @@ if(RAWRXD_ENABLE_PACKAGING)
     include(CPack)
     message(STATUS "CPack packaging enabled: ${CPACK_GENERATOR}")
 endif()
+
+# ============================================================================
+# RawrXD Sovereign Toolchain - Cross-platform binary emitters and Phase 2 linker
+# ============================================================================
+
+# ---- sovereign_emit_formats: PE64 / ELF64 / Mach-O 64 minimal image composers ----
+add_library(sovereign_emit_formats STATIC
+  src/sovereign/sovereign_emit_formats.cpp
+)
+target_include_directories(sovereign_emit_formats PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/rawrxd
+)
+target_compile_features(sovereign_emit_formats PRIVATE cxx_std_20)
+
+# ---- sovereign_lab_blob_io: COFF/ELF64 section extraction ----
+add_library(sovereign_lab_blob_io STATIC
+  src/sovereign/sovereign_lab_blob_io.cpp
+)
+target_include_directories(sovereign_lab_blob_io PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/rawrxd
+)
+target_compile_features(sovereign_lab_blob_io PRIVATE cxx_std_20)
+
+# ---- rawrxd_link: Phase 2 PE/COFF linker (from scratch) ----
+add_executable(rawrxd_link
+  src/toolchain/linker/main.c
+  src/toolchain/linker/coff_reader.c
+  src/toolchain/linker/section_merge.c
+  src/toolchain/linker/reloc_resolver.c
+  src/toolchain/linker/pe_writer.c
+  src/toolchain/linker/entry_stub.c
+)
+target_include_directories(rawrxd_link PRIVATE
+  ${CMAKE_SOURCE_DIR}/src/toolchain/linker
+)
+if(WIN32)
+  target_link_libraries(rawrxd_link PRIVATE kernel32)
+endif()
+
+# ---- rawrxd_check: COFF/PE diagnostic utility ----
+add_executable(rawrxd_check
+  src/toolchain/linker/rawrxd_check.c
+  src/toolchain/linker/coff_reader.c
+)
+target_include_directories(rawrxd_check PRIVATE
+  ${CMAKE_SOURCE_DIR}/src/toolchain/linker
+)
+if(WIN32)
+  target_link_libraries(rawrxd_check PRIVATE kernel32)
+endif()
+
+# ---- test_sovereign_compose_lab: tri-format compose validation ----
+add_executable(test_sovereign_compose_lab
+  tests/sovereign_compose/test_sovereign_compose_lab.cpp
+)
+target_include_directories(test_sovereign_compose_lab PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/rawrxd
+)
+target_compile_features(test_sovereign_compose_lab PRIVATE cxx_std_20)
+target_link_libraries(test_sovereign_compose_lab PRIVATE sovereign_emit_formats)
+
+# ============================================================================

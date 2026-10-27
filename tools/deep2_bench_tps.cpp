@@ -99,6 +99,7 @@ int main(int argc, char* argv[]) {
 
     std::string model, tokensArg = "1 185 278 20606 23808 7936 14336 28416";
     std::string dumpLogitsDir;   // optional: full-vocab logits per position
+    std::string forceGenArg;     // optional: force first N gen tokens (shared-prefix A/B)
     size_t decode_n = 128;
     size_t runs = 1;
     bool gpu = true;
@@ -114,6 +115,7 @@ int main(int argc, char* argv[]) {
         else if (a == "--cpu") gpu = false;
         else if (a == "--device" && i + 1 < argc) device_index = (int)std::strtol(argv[++i], nullptr, 10);
         else if (a == "--dump-logits" && i + 1 < argc) dumpLogitsDir = argv[++i];
+        else if (a == "--force-gen" && i + 1 < argc) forceGenArg = argv[++i];
         else if (a == "--serial-prefill") serial_prefill = true;
         else if (a == "--no-wide-batch") wide_batch = false;
         else if (a == "--wide-batch") wide_batch = true;
@@ -129,9 +131,14 @@ int main(int argc, char* argv[]) {
                     "[--serial-prefill] [--wide-batch|--no-wide-batch] [--no-batch]\n");
         return 1;
     }
-    if (!dumpLogitsDir.empty()) serial_prefill = true;
+    // Keep PrefillBatch when dumping decode logits (shared-prefix A/B). Opt into
+    // serial via --serial-prefill if a caller needs per-pos prefill dumps that way.
     if (gpu && wide_batch && !std::getenv("DEEP2_NO_DOT_BATCH")) {
         SetEnv1("DEEP2_WIDE_DOT_BATCH", "1");
+    }
+    // DEEP2_VULKAN_SUBMIT_OPT_001: RuntimeGraph <-> QuantDot BeginFusedLayer.
+    if (gpu && !std::getenv("DEEP2_RUNTIME_FUSE") && !std::getenv("DEEP2_NO_RUNTIME_FUSE")) {
+        SetEnv1("DEEP2_RUNTIME_FUSE", "1");
     }
 
     // STRATA_S05 device pin (multi-GPU): apply BEFORE the first QuantDot::Gpu()
@@ -162,6 +169,22 @@ int main(int argc, char* argv[]) {
     std::printf("prompt tokens: %zu:", tokens.size());
     for (uint32_t t : tokens) std::printf(" %u", t);
     std::printf("\n");
+
+    std::vector<uint32_t> force_gen;
+    if (!forceGenArg.empty()) {
+        const char* p = forceGenArg.c_str();
+        char* end = nullptr;
+        for (long v = std::strtol(p, &end, 10); end != p; v = std::strtol(p, &end, 10)) {
+            if (v < 0) break;
+            force_gen.push_back((uint32_t)v);
+            p = end;
+            while (*p == ' ' || *p == ',') ++p;
+            if (!*p) break;
+        }
+        std::printf("force-gen tokens: %zu:", force_gen.size());
+        for (uint32_t t : force_gen) std::printf(" %u", t);
+        std::printf("\n");
+    }
 
     for (size_t run = 1; run <= runs; ++run) {
         // ---- ingest + bind (reported, excluded from the TPS windows) -------
@@ -228,11 +251,15 @@ int main(int argc, char* argv[]) {
         // the wall interval it is divided by - no overlapping timers.
         const QuantDot::BackendStats bs1 = QuantDot::BackendCounters();
 
-        // ---- decode (greedy, persistent KV) ---------------------------------
+        // ---- decode (greedy, persistent KV; optional --force-gen prefix) ----
         std::vector<uint32_t> gen;
         std::vector<double> gen_ms;
-        uint32_t tok = ArgmaxOf(ex.Logits());
-        gen.push_back(tok);  // the argmax of the last prefill logits is gen[0]
+        // gen[0] comes from last-prefill logits; force overrides argmax when set.
+        uint32_t tok = (!force_gen.empty()) ? force_gen[0] : ArgmaxOf(ex.Logits());
+        gen.push_back(tok);
+        if (!dumpLogitsDir.empty())
+            DumpLogits(dumpLogitsDir, tokens.size() > 0 ? tokens.size() - 1 : 0,
+                       ex.Logits());
         const auto t_dc0 = std::chrono::steady_clock::now();
         for (size_t i = 1; i < decode_n; ++i) {
             const size_t pos = tokens.size() + i - 1;
@@ -242,7 +269,9 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
             gen_ms.push_back(MsSince(tt));
-            gen.push_back(ArgmaxOf(ex.Logits()));
+            const uint32_t next = (i < force_gen.size()) ? force_gen[i]
+                                                        : ArgmaxOf(ex.Logits());
+            gen.push_back(next);
             DumpLogits(dumpLogitsDir, tokens.size() + i - 1, ex.Logits());
         }
         const double decode_ms = MsSince(t_dc0);

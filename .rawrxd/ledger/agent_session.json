@@ -2,7 +2,7 @@
   "acceptance": {
     "agent_turns": 1,
     "build_passed": false,
-    "crash_free_exit": false,
+    "crash_free_exit": true,
     "final_ledger_present": true,
     "source_edit_performed": false,
     "tests_passed": false,
@@ -16,32 +16,37 @@
   "commits": [],
   "conversation": [
     {
-      "content": "Reply",
+      "content": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf\\ --reap --target-size 100GB --active-experts 8 --expert-budget 100GB --quality-floor 0.95 \\reap",
       "role": "user",
-      "timestamp": 1792851168
+      "timestamp": 1793056449
+    },
+    {
+      "content": "invalid model name",
+      "role": "assistant",
+      "timestamp": 1793056451
     }
   ],
-  "driver_exit_code": -1,
-  "failure_reasons": [
-    "inference failed: Ollama returned no chat content"
-  ],
+  "driver_exit_code": 0,
+  "failure_reasons": [],
   "files_modified": [],
   "final_answer": {
     "changes_made": [],
-    "evidence": [],
+    "evidence": [
+      "agent tool ledger persisted"
+    ],
     "remaining_work": "",
-    "summary": "",
-    "valid": false,
+    "summary": "invalid model name",
+    "valid": true,
     "validation_error": ""
   },
-  "final_verdict": "",
-  "git_branch": "local-30b-backend",
-  "git_revision": "4cdbf7f963cc0f4f3f032aa7d3819ecdfef4957d",
-  "model_identity": "ollama/llama3.2:3b",
+  "final_verdict": "one-shot task completed",
+  "git_branch": "fix/deep2-multimodel-safety-20261025",
+  "git_revision": "9fa781fe811d391359f999f121bfdebe8eaf3aa0",
+  "model_identity": "auto/deep2-native",
   "schema": "RAWRXD_AGENT_LEDGER/1.0",
-  "session_start": 1792851168,
+  "session_start": 1793056449,
   "task_id": "",
-  "termination_reason": "running",
+  "termination_reason": "model_completed",
   "tests_executed": [],
   "tool_calls": [],
   "workspace_root": "F:\\rawrxd"
