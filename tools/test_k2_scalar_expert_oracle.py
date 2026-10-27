@@ -19,7 +19,7 @@ def q6(q=0x11, high=0xAA):
 
 class ScalarExpertTests(unittest.TestCase):
     def test_full_scalar_path(self):
-        result = expert(q4(), q4(), q6(), [1.] * 256, 256, 256)
+        result = expert(q4() * 256, q4() * 256, q6() * 256, [1.] * 256, 256, 256)
         self.assertEqual(result["gate"], [256.] * 256)
         self.assertEqual(result["up"], [256.] * 256)
         expected = 256 * 256 * 256
@@ -27,11 +27,11 @@ class ScalarExpertTests(unittest.TestCase):
             self.assertAlmostEqual(value, expected, delta=.001)
 
     def test_zero_gate(self):
-        result = expert(q4(q=0x00), q4(), q6(), [1.] * 256, 256, 256)
+        result = expert(q4(q=0x00) * 256, q4() * 256, q6() * 256, [1.] * 256, 256, 256)
         self.assertEqual(result["down"], [0.] * 256)
 
     def test_zero_down(self):
-        result = expert(q4(), q4(), q6(q=0x00, high=0xAA),
+        result = expert(q4() * 256, q4() * 256, q6(q=0x00, high=0xAA) * 256,
                         [1.] * 256, 256, 256)
         self.assertEqual(result["down"], [0.] * 256)
 
@@ -40,7 +40,7 @@ class ScalarExpertTests(unittest.TestCase):
 
     def test_shape_rejection(self):
         with self.assertRaises(ValueError):
-            expert(q4(), q4(), q6(), [1.] * 255, 255, 256)
+            expert(q4() * 256, q4() * 256, q6() * 256, [1.] * 255, 255, 256)
 
     def test_nonfinite_intermediate_rejection(self):
         with self.assertRaises(ValueError):
