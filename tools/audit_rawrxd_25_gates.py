@@ -113,9 +113,10 @@ def main(argv=None):
     p.add_argument("--evidence-dir", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     args = p.parse_args(argv)
+    if args.output.exists():
+        print("ERROR: refusing to overwrite prior audit")
+        return 3
     try:
-        if args.output.exists():
-            raise ValueError("refusing to overwrite prior audit")
         result = audit(args.manifest, args.evidence_dir)
         rc = 0 if result["structurally_complete_count"] == 25 else 2
     except (OSError, ValueError, UnicodeError) as error:
