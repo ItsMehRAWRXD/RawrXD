@@ -79,3 +79,67 @@ REAL_KIMI_PARITY=NOT_CERTIFIED
 PROMOTE=0
 TIP_CLIMB=HOLD
 ```
+
+## Same-expert capture wiring (increment 3)
+
+The opt-in diagnostic code at `K2NativeMoEFfn_ExpertGpu.cpp` now
+calls `K2MoEParityCapture.hpp` after the *existing* CPU/GPU parity
+vectors are available. It does not change any inference output or the
+GPU/CPU backend selector. Capture is intentionally scoped to the
+existing `DEEP2_MOE_GPU_PARITY=1` path, and requires a **preexisting,
+private, empty directory** in `DEEP2_MOE_PARITY_CAPTURE_DIR`. Never
+use a shared evidence directory; file writes are non-atomic and do not
+support concurrent runs. A diagnostic returns `WRITTEN` or
+`SKIPPED`, and a skipped capture does not constitute evidence.
+
+The capture contains `k2_l<layer>_e<expert>_s<stick>` files:
+
+- `.down_q6k.bin`: exact packed expert down matrix from the cold
+  slice (`ggmlType=14`), not a transformed dequant tensor
+- `.post_swiglu.txt`: actual activation sent to the down projection
+- `.cpu_down.txt`: full output from the existing native CPU kernel
+- `.gpu_down.txt`: full output downloaded by existing parity probe
+- `.manifest.txt`: layer, expert, stick, rows, columns, byte count,
+  and `certified=0`
+
+Capture skips cached experts without a host-accessible packed weight
+pointer. To obtain a complete reference bundle, run one cold expert in
+an isolated test. No tensor values are printed into logs by default.
+
+```powershell
+# Run in an already configured Windows MSVC environment:
+cl /std:c++17 /EHsc /I src\deep2 tools\test_k2_moe_parity_capture.cpp
+.\test_k2_moe_parity_capture.exe
+
+# Create a fresh private folder before a bounded real Kimi replay:
+New-Item -ItemType Directory -Path F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001
+$env:DEEP2_MOE_GPU_PARITY='1'
+$env:DEEP2_MOE_GPU_PARITY_LIMIT='1'
+$env:DEEP2_MOE_PARITY_CAPTURE_DIR='F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001'
+# Run the established, single-layer, GPU0 Kimi replay from the GPU0 receipt.
+# Inspect status=WRITTEN; do NOT infer successful capture from exit=0.
+
+python tools/k2_q6k_scalar_oracle.py --weights F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001\k2_l1_e0_s0.down_q6k.bin --input F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001\k2_l1_e0_s0.post_swiglu.txt --rows 7168 --columns 2048 --output F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001\oracle.txt --receipt F:\rawrxd\evidence\KIMI_PARITY_CAPTURE_001\oracle_receipt.json
+```
+
+The example layer/expert/dimensions are **placeholders**; use the values
+recorded by the actual manifest, not an assumed shape. Run
+`tools/k2_gpu_moe_vector_parity.py` with the capture's CPU/GPU
+down vector files and the generated oracle file, and with frozen,
+independently justified tolerances.
+
+This captures only the **down-GEMV** numerical comparison, not the
+independent Q4_K gate/up/SwiGLU pipeline, weighted multi-expert
+accumulation, or full-model logits. It is not a certification PASS.
+Standalone C++ capture smoke source is present, but an MSVC compile
+and live GPU run have not been executed in this environment.
+
+```ini
+CAPTURE_HELPER=SOURCE_WIRED
+CAPTURE_DEFAULT=OFF
+CAPTURE_CPP_SMOKE=NOT_RUN
+REAL_KIMI_CAPTURE=NOT_RUN
+REAL_KIMI_PARITY=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+```
