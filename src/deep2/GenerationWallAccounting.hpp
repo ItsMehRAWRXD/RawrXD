@@ -8,6 +8,7 @@
 #pragma once
 
 #include "MoEPlaceLiveCounters.hpp"
+#include "K2MoEExpertAccounting.hpp"
 #include "K2MlaOProjTiming.hpp"
 #include "K2MlaStageTiming.hpp"
 #include "StreamPathTiming.hpp"
@@ -89,6 +90,7 @@ inline void GenerationWallAccounting_Emit(FILE* f, uint64_t wallNs,
                                       MlaStage_KvExpandUs().load(std::memory_order_relaxed) +
                                       MlaStage_AttnUs().load(std::memory_order_relaxed) +
                                       MlaStage_OProjUs().load(std::memory_order_relaxed)) * 1000ull));
+    K2MoEExpertAccounting::Instance().Emit(f);
     std::fprintf(f, "NOTES=Inclusive counters are not a critical-path partition; missing CPU/H2D/KV spans remain explicit.\n");
     std::fflush(f);
 }

@@ -60,3 +60,44 @@ The next performance change must add real CPU dequant/GEMV, H2D, KV-update,
 and synchronization spans or prove that those paths are not active. Only then
 can an optimization be evaluated against the Ollama baseline without double
 counting or treating projected TPS as measured throughput.
+
+## Opt-in per-expert attribution follow-up
+
+The `DEEP2_MOE_ACCOUNTING=1` build was exercised against the same Kimi input
+with one generated token. The first implementation attempted to snapshot the
+64x512 matrix on the worker stack and correctly failed with Windows
+`0xC00000FD`; that diagnostic defect was repaired by moving the snapshot to
+heap storage before relying on the receipt.
+
+The corrected run used executable SHA-256
+`4D2E4AD64C946778FED15B36B7E6784578981FC025387CCF5707EB48A90E4331` and
+exited `0`. It observed 480 selected and 480 executed experts across the 60
+MoE layers, all on the CPU path (`MOE_GPU_EXECUTED=0`), with 480 acquisition
+misses and no hits. Aggregate measured spans were:
+
+```ini
+MOE_EXPERT_ROWS=480
+MOE_SELECTED=480
+MOE_EXECUTED=480
+MOE_CPU_EXECUTED=480
+MOE_GPU_EXECUTED=0
+MOE_ACQUIRE_HITS=0
+MOE_ACQUIRE_MISSES=480
+MOE_READ_BYTES=12768903168
+MOE_GATE_GEMV_NS=3094576500
+MOE_UP_GEMV_NS=2947374800
+MOE_SILU_NS=4047500
+MOE_DOWN_GEMV_NS=26369516200
+MOE_TOTAL_NS=48132579000
+MOE_ACCOUNTING_COMPLETE=1
+```
+
+The corresponding runtime receipt reported `WALL_NS=64835238000`,
+`SHARD_READ_BYTES=7670261696`, `SHARD_READ_OPS=915`, `GPU_UPLOAD_BYTES=0`,
+and `H2D_TRANSFER_BYTES=0`. The accounting run emits 480 per-expert rows and
+is therefore diagnostic-only; its wall time must not be compared directly to
+the quiet one-token run because receipt emission itself adds I/O. The result
+does establish the first actionable optimization boundary: down-projection
+GEMV accounts for 26.37 s of the measured 48.13 s expert total, while every
+expert is reacquired on the host path. A bounded resident-slice experiment is
+the next change; no model or routing policy is changed by this recorder.

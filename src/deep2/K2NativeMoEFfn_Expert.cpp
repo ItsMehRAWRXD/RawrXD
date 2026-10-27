@@ -10,6 +10,7 @@
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
 #include "MoELiveAdd.hpp"
+#include "K2MoEExpertAccounting.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -96,15 +97,23 @@ bool MoEDimsFromGate(const GlobalTensorIndex& index, uint32_t layer, size_t& H,
 bool SwiGLUHost(const uint8_t* g, int gt, const uint8_t* u, int ut,
                 const uint8_t* d, int dt, const float* hidden, float* out,
                 size_t H, size_t I, uint32_t layer, int expertId, bool shared,
-                std::string& error) {
+                std::string& error, K2MoEExpertTiming* timing = nullptr) {
     std::vector<float> gate(I), up(I);
     if (shared) moe_ltrace::BC(layer, "SHARED_GATE_ACQUIRE");
     else moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", expertId);
+    uint64_t t0 = K2MoEExpertAccounting::NowNs();
     if (!HostGemv(gt, g, hidden, gate.data(), I, H, "gate", error))
         return false;
+    if (timing) timing->gateGemvNs += K2MoEExpertAccounting::NowNs() - t0;
+    t0 = K2MoEExpertAccounting::NowNs();
     if (!HostGemv(ut, u, hidden, up.data(), I, H, "up", error)) return false;
+    if (timing) timing->upGemvNs += K2MoEExpertAccounting::NowNs() - t0;
+    t0 = K2MoEExpertAccounting::NowNs();
     SiluMul(gate.data(), up.data(), I);
+    if (timing) timing->siluNs += K2MoEExpertAccounting::NowNs() - t0;
+    t0 = K2MoEExpertAccounting::NowNs();
     if (!HostGemv(dt, d, gate.data(), out, H, I, "down", error)) return false;
+    if (timing) timing->downGemvNs += K2MoEExpertAccounting::NowNs() - t0;
     if (shared) moe_ltrace::BC(layer, "SHARED_DOWN_DONE");
     else moe_ltrace::BCExpert(layer, "DOWN_DONE", expertId);
     return true;
@@ -115,6 +124,12 @@ bool SwiGLUHost(const uint8_t* g, int gt, const uint8_t* u, int ut,
 bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      uint32_t layer, int expertId, unsigned stick,
                      const float* hidden, float* expertOut, std::string& error) {
+    K2MoEExpertTiming timing{};
+    const uint64_t totalStart = K2MoEExpertAccounting::NowNs();
+    // This function is called only after the production router/place path has
+    // selected the expert.  Recording here keeps the diagnostic independent
+    // of the placement implementation and still reflects actual execution.
+    K2MoEExpertAccounting::Instance().Selected(layer, expertId);
     size_t H = cfg.hiddenDim, I = cfg.moeIntermediateSize
                                        ? cfg.moeIntermediateSize
                                        : 2048u;
@@ -134,8 +149,12 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             MoELiveAdd(MoEPlaceLive().host_bytes_for_hit, 0);
             if (K2MoEExecExpertGpu(stick, 0, nullptr, 0, 0, nullptr, 0, 0,
                                    nullptr, 0, hidden, expertOut, H, I, layer,
-                                   expertId))
+                                   expertId)) {
+                timing.totalNs = K2MoEExpertAccounting::NowNs() - totalStart;
+                K2MoEExpertAccounting::Instance().Executed(
+                    layer, expertId, true, false, timing);
                 return true;
+            }
         }
         char gateN[64], upN[64], downN[64];
         std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_exps.weight",
@@ -155,10 +174,16 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                              error))
             return false;
         MoELiveAdd(MoEPlaceLive().host_bytes_for_miss, (uint64_t)gb + ub + db);
+        timing.readBytes = (uint64_t)gb + ub + db;
+        timing.acquireNs = K2MoEExpertAccounting::NowNs() - totalStart;
         if (K2MoEExecExpertGpu(stick, gt, gateB.data(), gb, ut, upB.data(), ub,
                                dt, downB.data(), db, hidden, expertOut, H, I,
-                               layer, expertId))
+                               layer, expertId)) {
+            timing.totalNs = K2MoEExpertAccounting::NowNs() - totalStart;
+            K2MoEExpertAccounting::Instance().Executed(
+                layer, expertId, true, false, timing);
             return true;
+        }
         /* Enterprise bind: never host-buffer DispatchGEMVQuant / host GEMV. */
         error = "DualStick device SubmitExpert failed (no host fallback)";
         return false;
@@ -177,10 +202,20 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         return false;
     if (!ReadExpertSlice(index, downN, (uint32_t)expertId, downB, dt, db, error))
         return false;
+    timing.readBytes = (uint64_t)gb + ub + db;
+    timing.acquireNs = K2MoEExpertAccounting::NowNs() - totalStart;
     MoELiveAdd(MoEPlaceLive().host_bytes_for_miss, (uint64_t)gb + ub + db);
     MoELiveAdd(MoEPlaceLive().host_gemv_expert, 1);
-    return SwiGLUHost(gateB.data(), gt, upB.data(), ut, downB.data(), dt, hidden,
-                      expertOut, H, I, layer, expertId, false, error);
+    const bool ok = SwiGLUHost(gateB.data(), gt, upB.data(), ut, downB.data(), dt,
+                               hidden, expertOut, H, I, layer, expertId, false,
+                               error, &timing);
+    timing.computeNs = timing.gateGemvNs + timing.upGemvNs + timing.siluNs +
+                       timing.downGemvNs;
+    timing.totalNs = K2MoEExpertAccounting::NowNs() - totalStart;
+    if (ok)
+        K2MoEExpertAccounting::Instance().Executed(
+            layer, expertId, false, false, timing);
+    return ok;
 }
 
 bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,

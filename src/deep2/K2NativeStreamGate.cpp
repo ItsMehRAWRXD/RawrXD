@@ -39,6 +39,7 @@
 #include "K2GpuStreamCopy.hpp"
 #include "K2MlaOProjTiming.hpp"
 #include "GenerationWallAccounting.hpp"
+#include "K2MoEExpertAccounting.hpp"
 #include "VirtualTensorDesc.hpp"
 #include "VirtualTensorRange.hpp"
 #include "vulkan_compute.h"
@@ -1316,6 +1317,7 @@ Result Run(const fs::path& shardDir,
     Deep2::LogitsClimb_Reset();
     Deep2::MlaStage_Reset();
     Deep2::MoEPlaceLiveReset();
+    Deep2::K2MoEExpertAccounting::Instance().Reset();
     Deep2::MoEPlaceGlobal().Reset();
     Deep2::DualStickExpertResidencyReset();
     Deep2::DualStickSyncQuotaLiveCounters();
