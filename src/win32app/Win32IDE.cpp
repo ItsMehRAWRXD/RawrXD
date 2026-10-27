@@ -32,6 +32,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <iterator>
+#include <utility>
 #include <deque>
 #include <unordered_set>
 #include <cctype>
@@ -5991,7 +5992,15 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     if (m_inferenceThread.joinable()) {
         m_inferenceThread.join();
     }
-    const ChatModelEntry selectedModel = m_selectedChatModel;
+    // GhostText resolves its own route immediately before entering this
+    // function.  Consume that one-shot route here instead of accidentally
+    // reusing the chat model (which may be a native GGUF route from an older
+    // session).  This is especially important because GhostText requests are
+    // asynchronous and must never cross-wire into the agent bridge.
+    const ChatModelEntry selectedModel =
+        m_pendingInferenceModel.identifier.empty()
+            ? m_selectedChatModel
+            : std::exchange(m_pendingInferenceModel, ChatModelEntry{});
     
     m_inferenceRunning = true;
     m_inferenceStopRequested = false;

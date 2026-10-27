@@ -16,6 +16,10 @@ public:
                 std::string promptPrefix = {});
     void detach();
     void onEditorChanged();
+    // Start a completion explicitly from the editor (Ctrl+Space).  Normal
+    // typing only refreshes the snapshot and dismisses an old hint; it must
+    // never launch an asynchronous model request from an EN_CHANGE callback.
+    void triggerCompletion();
     bool handleMessage(UINT message, WPARAM wParam, LPARAM lParam);
     bool accept();
     void dismiss();

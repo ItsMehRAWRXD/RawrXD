@@ -727,14 +727,14 @@ bool VulkanCompute::DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& ou
 
 bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
                                        DeviceBuf& out, uint32_t seqLen, uint32_t headDim,
-                                       uint32_t nHeads, uint32_t kvDim, float scale,
+                                       uint32_t nHeads, uint32_t kvHeads, float scale,
                                        uint32_t layer) {
     if (backend_ == nullptr) return false;
     Deep2::VulkanCompute::DeviceBuf bq = ToBackend(q);
     Deep2::VulkanCompute::DeviceBuf bk = ToBackend(kCache);
     Deep2::VulkanCompute::DeviceBuf bv = ToBackend(vCache);
     Deep2::VulkanCompute::DeviceBuf bo = ToBackend(out);
-    if (!backend_->DispatchAttnDecode(bq, bk, bv, bo, headDim, nHeads, kvDim, seqLen, scale, layer)) return false;
+    if (!backend_->DispatchAttnDecode(bq, bk, bv, bo, headDim, nHeads, kvHeads, seqLen, scale, layer)) return false;
     q = FromBackend(bq);
     kCache = FromBackend(bk);
     vCache = FromBackend(bv);

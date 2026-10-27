@@ -21,8 +21,15 @@ if not exist "%GGML_BUILD%\src\Release\ggml.lib" (
     if errorlevel 1 ( echo GGML_BUILD_FAILED & exit /b 1 )
 )
 
-cl /nologo /std:c++20 /EHsc /O2 /W3 /permissive- /bigobj /openmp /DNOMINMAX /D_CRT_SECURE_NO_WARNINGS /I %VK_INC% /I %GGML_SRC%\include /I %SRC% /I %SRC%\deep2 /I %SRC%\deep2\modelgenie /I F:\rawrxd\include /I F:\rawrxd %T%\deep2_bench_tps.cpp %SRC%\deep2\runtime_graph_executor.cpp %SRC%\deep2\modelgenie\universal_gguf.cpp %SRC%\deep2\quant_dot_dispatch.cpp %SRC%\vulkan_compute.cpp /Fe%OUT% /link /LIBPATH:%VK_INC%\..\Lib vulkan-1.lib psapi.lib /LIBPATH:%GGML_BUILD%\src\Release ggml.lib ggml-cpu.lib ggml-base.lib /LIBPATH:%GGML_BUILD%\bin\Release 2>&1
+REM The benchmark uses two different source files named vulkan_compute.cpp.
+REM Build through CMake so their object paths remain distinct and match the
+REM canonical parity target instead of relying on a basename-colliding cl line.
+cmake -S F:\rawrxd -B F:\rawrxd\build_reap -G Ninja >nul
+if errorlevel 1 ( echo CMAKE_CONFIGURE_FAILED & exit /b 1 )
+cmake --build F:\rawrxd\build_reap --config Release --target deep2_bench_tps --parallel 8
 if errorlevel 1 ( echo BUILD_FAILED & exit /b 1 )
-echo Built: %OUT%
+copy /Y F:\rawrxd\build_reap\bin\deep2_bench_tps.exe %OUT% >nul
+if errorlevel 1 ( echo COPY_FAILED & exit /b 1 )
+echo Built: %OUT% (CMake target deep2_bench_tps)
 echo.
 echo Usage: deep2_bench_tps.exe --model ^<gguf^> --tokens "1 185" [--decode N] [--runs N] [--cpu]

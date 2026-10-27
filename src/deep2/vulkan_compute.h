@@ -215,7 +215,8 @@ public:
                             uint32_t rows, uint32_t cols);
     bool DispatchGemvQuant(int type, const void* weights, size_t weightBytes,
                            DeviceBuf& input, DeviceBuf& output,
-                           uint32_t rows, uint32_t cols);
+                           uint32_t rows, uint32_t cols,
+                           uint64_t cacheKey = 0);
 
     bool PrefetchWeight(const void* weights, size_t bytes, uint32_t& slot);
     bool SubmitGemvPrefetch(uint32_t slot, DeviceBuf& input, DeviceBuf& output,
@@ -1382,6 +1383,7 @@ private:
         uint32_t rows = 0;
         uint32_t cols = 0;
         uint32_t weightBytes = 0;
+        uint32_t strictOrder = 0;
     };
 
     bool createInstance();
@@ -1424,7 +1426,7 @@ private:
     bool ensureWeightF32(const float* weights, uint64_t key,
                          size_t bytes, DeviceBuf*& out);
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
-                           DeviceBuf*& out);
+                           DeviceBuf*& out, uint64_t cacheKey = 0);
     void clearWeightCache();
 
     // B5.2 probe state

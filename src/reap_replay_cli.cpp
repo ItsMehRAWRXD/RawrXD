@@ -26,9 +26,12 @@ static std::string jsonText(const std::string& line) {
     for(;p<line.size();++p){ char c=line[p]; if(esc){ if(c=='n')out+='\n'; else if(c=='r')out+='\r'; else if(c=='t')out+='\t'; else out+=c; esc=false; continue;} if(c=='\\'){esc=true;continue;} if(c=='\"')break; out+=c; } return out;
 }
 
+static bool isValidUtf8(const std::string& value);
+
 static std::string jsonEscape(const std::string& value) {
     std::string out;
     out.reserve(value.size() + 16);
+    const bool validUtf8 = isValidUtf8(value);
     for (unsigned char c : value) {
         switch (c) {
         case '\\': out += "\\\\"; break;
@@ -40,6 +43,11 @@ static std::string jsonEscape(const std::string& value) {
         case '\t': out += "\\t"; break;
         default:
             if (c < 0x20) {
+                static constexpr char hex[] = "0123456789abcdef";
+                out += "\\u00";
+                out += hex[(c >> 4) & 0x0f];
+                out += hex[c & 0x0f];
+            } else if (!validUtf8 && c >= 0x80u) {
                 static constexpr char hex[] = "0123456789abcdef";
                 out += "\\u00";
                 out += hex[(c >> 4) & 0x0f];
@@ -57,6 +65,97 @@ struct ReplayResponse {
     std::string prompt;
     std::string response;
 };
+
+// Generated token pieces are byte strings.  A model can legally emit a
+// partial UTF-8 sequence at an individual token boundary, but the complete
+// accumulated response must be valid before it can be used as calibration or
+// quality evidence.  Keep this check local to the receipt writer so malformed
+// output is never silently promoted by a successful process exit.
+static bool isValidUtf8(const std::string& value) {
+    const auto continuation = [](unsigned char c) {
+        return c >= 0x80u && c <= 0xBFu;
+    };
+
+    for (size_t i = 0; i < value.size();) {
+        const unsigned char c0 = static_cast<unsigned char>(value[i]);
+        if (c0 <= 0x7Fu) {
+            ++i;
+            continue;
+        }
+        if (c0 >= 0xC2u && c0 <= 0xDFu) {
+            if (i + 1 >= value.size() ||
+                !continuation(static_cast<unsigned char>(value[i + 1])))
+                return false;
+            i += 2;
+            continue;
+        }
+        if (c0 == 0xE0u) {
+            if (i + 2 >= value.size() ||
+                !(static_cast<unsigned char>(value[i + 1]) >= 0xA0u &&
+                  static_cast<unsigned char>(value[i + 1]) <= 0xBFu) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])))
+                return false;
+            i += 3;
+            continue;
+        }
+        if (c0 >= 0xE1u && c0 <= 0xECu) {
+            if (i + 2 >= value.size() ||
+                !continuation(static_cast<unsigned char>(value[i + 1])) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])))
+                return false;
+            i += 3;
+            continue;
+        }
+        if (c0 == 0xEDu) {
+            if (i + 2 >= value.size() ||
+                !(static_cast<unsigned char>(value[i + 1]) >= 0x80u &&
+                  static_cast<unsigned char>(value[i + 1]) <= 0x9Fu) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])))
+                return false;
+            i += 3;
+            continue;
+        }
+        if (c0 >= 0xEEu && c0 <= 0xEFu) {
+            if (i + 2 >= value.size() ||
+                !continuation(static_cast<unsigned char>(value[i + 1])) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])))
+                return false;
+            i += 3;
+            continue;
+        }
+        if (c0 == 0xF0u) {
+            if (i + 3 >= value.size() ||
+                !(static_cast<unsigned char>(value[i + 1]) >= 0x90u &&
+                  static_cast<unsigned char>(value[i + 1]) <= 0xBFu) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])) ||
+                !continuation(static_cast<unsigned char>(value[i + 3])))
+                return false;
+            i += 4;
+            continue;
+        }
+        if (c0 >= 0xF1u && c0 <= 0xF3u) {
+            if (i + 3 >= value.size() ||
+                !continuation(static_cast<unsigned char>(value[i + 1])) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])) ||
+                !continuation(static_cast<unsigned char>(value[i + 3])))
+                return false;
+            i += 4;
+            continue;
+        }
+        if (c0 == 0xF4u) {
+            if (i + 3 >= value.size() ||
+                !(static_cast<unsigned char>(value[i + 1]) >= 0x80u &&
+                  static_cast<unsigned char>(value[i + 1]) <= 0x8Fu) ||
+                !continuation(static_cast<unsigned char>(value[i + 2])) ||
+                !continuation(static_cast<unsigned char>(value[i + 3])))
+                return false;
+            i += 4;
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
 
 template <typename MetricsMap>
 static void writeMetrics(std::ostream& out, const MetricsMap& metrics) {
@@ -82,7 +181,9 @@ static void writeResponses(std::ostream& out, const std::vector<ReplayResponse>&
         first = false;
         out << "{\"prompt\":\"" << jsonEscape(item.prompt)
             << "\",\"response\":\"" << jsonEscape(item.response)
-            << "\",\"response_bytes\":" << item.response.size() << '}';
+            << "\",\"response_bytes\":" << item.response.size()
+            << ",\"response_utf8_valid\":"
+            << (isValidUtf8(item.response) ? "true" : "false") << '}';
     }
     out << ']';
 }
@@ -332,6 +433,9 @@ int main(int argc,char**argv){
     const bool complete = continuous
         ? (generated > 0 && generated <= limit && continuousResult.completed)
         : (n==limit && generated==n);
+    bool outputUtf8Valid = !responses.empty();
+    for (const auto& response : responses)
+        outputUtf8Valid = outputUtf8Valid && isValidUtf8(response.response);
     // A replay receipt is deliberately not promoted to full REAP certification
     // here.  Continuous decoding and the internal MLA seal are necessary, but
     // they do not establish reference parity, expert selection, GGUF rewrite,
@@ -365,15 +469,20 @@ int main(int argc,char**argv){
        <<",\"model_first_shard_sha256\":\""<<jsonEscape(referenceEvidence.modelFirstShardSha256)<<"\""
        <<",\"corpus_sha256\":\""<<jsonEscape(referenceEvidence.corpusSha256)<<"\""
        <<",\"gpu_dispatch_observed\":"<<(gpuDispatched?"true":"false")
+       <<",\"gpu_execution_observed\":"<<(gpuReal?"true":"false")
        <<",\"gpu_real_forward\":"<<(gpuReal?"true":"false")
        <<",\"gpu_forward_layers\":"<<gpu.forwardLayers
        <<",\"gpu_layer_submits\":"<<gpu.layerSubmits
        <<",\"gpu_op_submits\":"<<gpu.opSubmits
        <<",\"gpu_host_forward_layer_calls\":"<<gpu.hostForwardLayerCalls
        <<",\"continuous_decode_pass\":"<<(continuousPass?"true":"false")
+       <<",\"output_utf8_valid\":"<<(outputUtf8Valid?"true":"false")
        <<",\"internal_prefill_parity_pass\":"<<(parityGatePass?"true":"false")
-       <<",\"gpu_certified\":"<<(gpuReal?"true":"false")
-       <<",\"calibration_complete\":"<<((continuousPass && referenceParityPass && !m.empty())?"true":"false")
+       // Real GPU execution is evidence of dispatch, not numerical
+       // certification.  Keep this false until the same run has an
+       // independent reference-parity witness.
+       <<",\"gpu_certified\":"<<((gpuReal && referenceParityPass)?"true":"false")
+       <<",\"calibration_complete\":"<<((continuousPass && outputUtf8Valid && referenceParityPass && !m.empty())?"true":"false")
        <<",\"expert_selection_complete\":false"
        <<",\"moe_pruning_complete\":false"
        <<",\"gguf_rewrite_complete\":false"
@@ -397,7 +506,8 @@ int main(int argc,char**argv){
     out << ",\"metrics\":";
     writeMetrics(out, m);
     out << "}\n";
-    std::cout<<"REPLAY_WINDOWS="<<n<<" GENERATED="<<generated<<" METRICS="<<m.size()<<" COMPLETE="<<(complete?1:0)<<"\n";
+    std::cout<<"REPLAY_WINDOWS="<<n<<" GENERATED="<<generated<<" METRICS="<<m.size()<<" COMPLETE="<<(complete?1:0)
+             <<" UTF8="<<(outputUtf8Valid?1:0)<<"\n";
     if(!complete){std::cerr<<"REPLAY_INCOMPLETE windows="<<n<<" generated="<<generated<<" metrics="<<m.size()<<"\n";return 4;}
     if (referenceEvidence.provided && !referenceEvidence.pass) {
         std::cerr << "REFERENCE_PARITY_NOT_CERTIFIED reason=" << referenceEvidence.reason << "\n";

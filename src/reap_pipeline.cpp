@@ -10,17 +10,32 @@
 namespace RawrXD::Reap {
 namespace {
 
-std::string WithStage(std::string receipt, const char* stage) {
-    if (receipt.size() >= 2 && receipt[receipt.size() - 2] == '}')
-        receipt.insert(receipt.size() - 2, std::string(",\"pipeline_stage\":\"") + stage + "\"");
+std::string LayerField(const std::string& detail) {
+    const auto mark = detail.find("layer=");
+    if (mark == std::string::npos) return {};
+    std::string digits;
+    for (size_t i = mark + 6; i < detail.size() && detail[i] >= '0' && detail[i] <= '9'; ++i)
+        digits.push_back(detail[i]);
+    if (digits.empty()) return {};
+    return ",\"layer\":" + digits;
+}
+
+std::string WithStage(std::string receipt, const char* stage,
+                      const std::string& detail = {}, int exitCode = 4) {
+    if (receipt.size() >= 2 && receipt[receipt.size() - 2] == '}') {
+        std::string extra = std::string(",\"pipeline_stage\":\"") + stage +
+                            "\",\"exit_code\":" + std::to_string(exitCode);
+        if (!detail.empty()) extra += ",\"detail\":\"" + detail + "\"" + LayerField(detail);
+        receipt.insert(receipt.size() - 2, extra);
+    }
     return receipt;
 }
 
 PipelineResult Fail(const CliRequest& request, Admission admission,
-                    const char* stage) {
+                    const char* stage, const std::string& detail = {}) {
     PipelineResult out;
     out.exitCode = 4;
-    out.receipt = WithStage(BlockedReceipt(request, admission), stage);
+    out.receipt = WithStage(BlockedReceipt(request, admission), stage, detail);
     return out;
 }
 
@@ -41,8 +56,7 @@ PipelineResult RunPipeline(const CliRequest& request, const std::string& prompt)
     if (!CollectInventory(request.model, loader, inventory, error)) {
         Admission denied;
         denied.reason = "REAP_INVENTORY_FAILED";
-        (void)error;
-        return Fail(request, denied, "inventory");
+        return Fail(request, denied, "inventory", error);
     }
     if (inventory.logicalExperts == 0 || inventory.moeLayers.empty()) {
         Admission denied;
@@ -113,7 +127,7 @@ PipelineResult RunPipeline(const CliRequest& request, const std::string& prompt)
     passed.reason = "REAP_E2E_PASS";
     PipelineResult out;
     out.exitCode = 0;
-    out.receipt = WithStage(BlockedReceipt(request, passed), "deep2_generate");
+    out.receipt = WithStage(BlockedReceipt(request, passed), "deep2_generate", {}, 0);
     return out;
 }
 
