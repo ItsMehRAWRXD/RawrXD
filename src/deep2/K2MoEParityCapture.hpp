@@ -23,10 +23,10 @@ inline bool WriteNew(const std::filesystem::path& path, const void* ptr,
     if (!ptr || !bytes || std::filesystem::exists(path)) return false;
     FILE* f = std::fopen(path.string().c_str(), "wb");
     if (!f) return false;
-    const bool ok = std::fwrite(ptr, 1, bytes, f) == bytes &&
-                    std::fflush(f) == 0 && std::fclose(f) == 0;
+    bool ok = std::fwrite(ptr, 1, bytes, f) == bytes;
+    if (std::fflush(f) != 0) ok = false;
+    if (std::fclose(f) != 0) ok = false;
     if (!ok) {
-        // fclose may be skipped when fwrite or fflush fails.
         // Always remove a partial output, never count it as evidence.
         std::error_code ec;
         std::filesystem::remove(path, ec);
