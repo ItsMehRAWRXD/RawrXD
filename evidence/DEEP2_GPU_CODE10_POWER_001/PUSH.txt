@@ -60,3 +60,10 @@ F:\rawrxd-native-agent-001
 CODE10_MAP=kWinCode10=10 PhaseFor=power_failure (alias code_10) both trees
 SMOKE=PASS code10_mapped=1 (software only; hardware latch OPEN)
 OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (unchanged; default off)
+
+PUSH_TXT_COMMIT_native=408aacc522ed4826c6834762c17897929cfe43d5
+PUSH_TXT_origin_native=https://github.com/ItsMehRAWRXD/RawrXD/commit/408aacc522ed4826c6834762c17897929cfe43d5
+PUSH_TXT_everything_native=https://github.com/ItsMehRAWRXD/everything/commit/408aacc522ed4826c6834762c17897929cfe43d5
+PUSH_TXT_COMMIT_rawrxd=e500f1ef6534309cc0b5dfc8469153a9828d02c9
+PUSH_TXT_origin_rawrxd=https://github.com/ItsMehRAWRXD/RawrXD/commit/e500f1ef6534309cc0b5dfc8469153a9828d02c9
+PUSH_TXT_everything_rawrxd=https://github.com/ItsMehRAWRXD/everything/commit/e500f1ef6534309cc0b5dfc8469153a9828d02c9
