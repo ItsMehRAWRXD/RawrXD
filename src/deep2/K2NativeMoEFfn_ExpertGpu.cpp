@@ -5,6 +5,7 @@
 #include "MoEExpertResidencyPlace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "K2MoEExpertAccounting.hpp"
+#include "K2MoEParityCapture.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "StickGpuLocal.hpp"
 #include "StreamPathTiming.hpp"
@@ -225,6 +226,19 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
             gateOut[i] = (x / (1.0f + std::exp(-x))) * upOut[i];
         }
         down(r.d, gateOut.data(), cpuOut.data(), H, I);
+        // Evidence-only capture of the exact *same* cold expert's post-SwiGLU
+        // down-GEMV input, raw packed down weights, and full CPU/GPU outputs.
+        // Missing capture is never treated as numerical certification.
+        if (std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR")) {
+            const bool saved = k2_parity_capture::Capture(
+                stick, layer, r.expertId, r.dt, r.d, r.db,
+                gateOut.data(), I, cpuOut.data(), gpuOut.data(), H);
+            std::fprintf(stderr,
+                         "GPU_EXPERT_VECTOR_CAPTURE layer=%u expert=%d stick=%u "
+                         "status=%s\\n", layer, r.expertId, stick,
+                         saved ? "WRITTEN" : "SKIPPED");
+            std::fflush(stderr);
+        }
         double maxAbs = 0.0, sumAbs = 0.0, maxRel = 0.0;
         size_t nonFinite = 0;
         for (size_t i = 0; i < H; ++i) {
