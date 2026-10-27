@@ -39,6 +39,9 @@ struct Seq {
 };
 
 bool OptInEnabled() noexcept;
+/* DEEP2_GPU_PNP_BOUNCE=1 → elevated scripts/Reset-GpuDevicePnp.ps1 on 10/31. */
+bool PnpBounceOptIn() noexcept;
+bool TryPnpBounce(int code) noexcept;
 void Mark(Seq& s, int code) noexcept;
 /* teardown/recreate must succeed; else fail_closed++ and false. */
 bool RunReset(Seq& s, bool (*teardown)(void*), bool (*recreate)(void*),

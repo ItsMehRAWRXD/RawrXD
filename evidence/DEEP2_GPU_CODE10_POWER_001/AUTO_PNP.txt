@@ -1,0 +1,8 @@
+AUTO_PNP=LANDED
+SCRIPT=scripts/Reset-GpuDevicePnp.ps1 (auto-elevate RunAs on Code 10/31)
+WATCHDOG=scripts/Register-GpuPnpWatchdog.ps1 (Task Scheduler)
+ENGINE=DEEP2_GPU_PNP_BOUNCE=1 -> TryPnpBounce from GpuLost::Mark
+PREFLIGHT=evidence/DEEP2_GPU_CODE10_POWER_001/preflight_pnp.ps1
+DDU=NOT_AUTOMATED
+CHOICE=TaskScheduler YES; DDU NO
+PROMOTE=0
