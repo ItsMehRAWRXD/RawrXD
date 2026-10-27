@@ -253,6 +253,61 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         error = "K2MoEStickEndDevice failed";
         return false;
     }
+
+    /* After the fused command boundary and completed device partial D2H,
+       an opt-in diagnostic may capture the *aggregate stick partial*.
+       This is NOT a per-expert down vector or an independent GPU activation
+       witness; do not route it into the per-expert Q6_K oracle. */
+    if (captureRequested) {
+        const char* dirEnv = std::getenv("DEEP2_MOE_PARITY_CAPTURE_DIR");
+        std::filesystem::path dir(dirEnv);
+        std::error_code ec;
+        bool saved = std::filesystem::is_directory(dir, ec) && !ec &&
+                     !work.empty() && H > 0 && H <= 1048576u;
+        const std::string stem = "k2_l" + std::to_string(layer) +
+                                 "_s" + std::to_string(stick) +
+                                 "_aggregate";
+        const auto vecPath = dir / (stem + ".gpu_partial.txt");
+        const auto metadataPath = dir / (stem + ".manifest.txt");
+        if (saved) {
+            for (const auto& path : {vecPath, metadataPath}) {
+                if (std::filesystem::exists(path, ec) || ec) saved = false;
+            }
+        }
+        if (saved) {
+            saved = k2_parity_capture::WriteVector(vecPath, partial, H);
+        }
+        if (saved) {
+            std::string metadata =
+                "schema=DEEP2_KIMI_STICK_PARTIAL_001\n"
+                "layer=" + std::to_string(layer) +
+                "\nstick=" + std::to_string(stick) +
+                "\nrows=" + std::to_string(H) +
+                "\nexperts=" + std::to_string(work.size()) +
+                "\nsource=K2MoEStickEndDevice\n"
+                "scope=AGGREGATE_STICK_PARTIAL_NOT_INDIVIDUAL_EXPERT\n"
+                "certified=0\n";
+            for (const auto& expert : work) {
+                metadata += "expert=" + std::to_string(expert.expertId) +
+                            " weight=" + std::to_string(expert.weight) + "\n";
+            }
+            saved = k2_parity_capture::WriteNew(
+                metadataPath, metadata.data(), metadata.size());
+        }
+        if (!saved) {
+            // Do not retain an orphan partial vector as a complete witness.
+            // Only remove our candidate path when the manifest did not
+            // preexist (the capture directory must be private per run).
+            std::error_code ignored;
+            if (!std::filesystem::exists(metadataPath, ignored))
+                std::filesystem::remove(vecPath, ignored);
+        }
+        std::fprintf(stderr,
+                     "GPU_STICK_PARTIAL_CAPTURE layer=%u stick=%u status=%s "
+                     "scope=AGGREGATE_ONLY\n",
+                     layer, stick, saved ? "WRITTEN" : "SKIPPED");
+        std::fflush(stderr);
+    }
     return true;
 }
 
