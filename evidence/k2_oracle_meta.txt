@@ -1,2 +1,7 @@
-START=Mon 10/26/2026 23:39:52.40
+﻿START=Mon 10/26/2026 23:39:52.40
 EXE=F:\llama.cpp-ref\build-vulkan\bin\llama.exe cli
+STATUS=LIVE
+PID=47056
+PARENT_CMD_PID=24188
+NOTE=23:55 secondary bat wrote false EXIT=0 in 2s; primary 23:39 run still active (mmap load). PROMOTE=0
+RELAUNCH_SPURIOUS_META=k2_oracle_meta.txt.relaunch3_spurious_exit0

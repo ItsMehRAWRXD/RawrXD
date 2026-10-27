@@ -5,16 +5,16 @@ PROMOTE=0 TIP_CLIMB=HOLD FABRICATE=0 CURSOR_AGENTIC_PRIMARY=1
 ## Repos pushed
 1) F:\rawrxd-native-agent-001
    branch=native-agent-single-authority
-   SHA=1565fc2c580806efd0b5e59b09956c97f22a28b9
-   origin=https://github.com/ItsMehRAWRXD/RawrXD.git (at SHA; race-reject then fetch confirmed)
-   everything=https://github.com/ItsMehRAWRXD/everything.git (up-to-date)
+   SHA=b8680701bb217ae2199cc9d5c3f5e7b756583289 (prior land 1565fc2c58)
+   origin=https://github.com/ItsMehRAWRXD/RawrXD.git PUSHED
+   everything=https://github.com/ItsMehRAWRXD/everything.git PUSHED
    URL=https://github.com/ItsMehRAWRXD/RawrXD/tree/native-agent-single-authority
 
 2) F:\rawrxd
    branch=fix/deep2-multimodel-safety-20261025
-   SHA=579cd9148aee83633478a7082239980a3f367ce5
+   SHA=22d7bea16086dba13fb39ae28f8d5474f8cd1435 (prior land 579cd9148a)
    origin=https://github.com/ItsMehRAWRXD/RawrXD.git PUSHED
-   everything=https://github.com/ItsMehRAWRXD/everything.git PUSHED (new branch)
+   everything=https://github.com/ItsMehRAWRXD/everything.git PUSHED
    URL=https://github.com/ItsMehRAWRXD/RawrXD/tree/fix/deep2-multimodel-safety-20261025
 
 3) G:\~dev
