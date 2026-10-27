@@ -1,0 +1,53 @@
+name: Deep2 Kimi GPU0 numerical parity offline checks
+
+on:
+  pull_request:
+    paths:
+      - 'tools/k2_*'
+      - 'tools/test_k2_*'
+      - 'src/deep2/K2MoEParityCapture.hpp'
+      - '.github/workflows/deep2-kimi-parity-offline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-parity:
+    name: Python scalar reference and fail-closed audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate vector comparison
+        run: python tools/test_k2_gpu_moe_vector_parity.py
+      - name: Validate scalar Q6_K oracle
+        run: python tools/test_k2_q6k_scalar_oracle.py
+      - name: Validate manifest audit
+        run: python tools/test_k2_moe_capture_audit.py
+  cpp-capture-linux:
+    name: Standalone parity capture helper / Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile standalone capture smoke
+        run: c++ -std=c++17 -Wall -Wextra -Werror -I src/deep2 tools/test_k2_moe_parity_capture.cpp -o /tmp/test_k2_moe_parity_capture
+      - name: Run standalone capture smoke
+        run: /tmp/test_k2_moe_parity_capture
+  cpp-capture-windows:
+    name: Standalone parity capture helper / MSVC x64
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compile standalone capture smoke
+        shell: cmd
+        run: cl /nologo /std:c++17 /EHsc /W4 /WX /I src\deep2 tools\test_k2_moe_parity_capture.cpp /Fe:parity_capture_smoke.exe
+      - name: Run standalone capture smoke
+        shell: cmd
+        run: parity_capture_smoke.exe
