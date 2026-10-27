@@ -1,0 +1,26 @@
+﻿GATE=DEEP2_GPU_CODE31_RESET_001
+RECEIPT=PUSH
+==== PUSH DEEP2_GPU_CODE31_RESET_001 2026-10-27T00:42:04-04:00 ====
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE=0
+LIVE_TDR_E2E=NOT_RUN
+SMOKE=PASS
+
+F:\rawrxd
+  branch=fix/deep2-multimodel-safety-20261025
+  sha=611d1a43b94e64b619484b6cd21566e2ba0049bf
+  origin=https://github.com/ItsMehRAWRXD/RawrXD.git
+  origin_url=https://github.com/ItsMehRAWRXD/RawrXD/commit/611d1a43b94e64b619484b6cd21566e2ba0049bf
+  everything=https://github.com/ItsMehRAWRXD/everything.git
+  everything_url=https://github.com/ItsMehRAWRXD/everything/commit/611d1a43b94e64b619484b6cd21566e2ba0049bf
+
+F:\rawrxd-native-agent-001
+  branch=native-agent-single-authority
+  sha=76445be85534dc0081be4b0905bc0cc4f0c7f2aa
+  origin=https://github.com/ItsMehRAWRXD/RawrXD.git
+  origin_url=https://github.com/ItsMehRAWRXD/RawrXD/commit/76445be85534dc0081be4b0905bc0cc4f0c7f2aa
+  everything=https://github.com/ItsMehRAWRXD/everything.git
+  everything_url=https://github.com/ItsMehRAWRXD/everything/commit/76445be85534dc0081be4b0905bc0cc4f0c7f2aa
+
+OPT_IN=DEEP2_GPU_DEVICE_RESET=1 (default off; Win32IDE logs state; CLI help documents)
