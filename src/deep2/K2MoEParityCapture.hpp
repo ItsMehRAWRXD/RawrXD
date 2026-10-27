@@ -18,11 +18,10 @@ namespace k2_parity_capture {
 
 inline bool WriteNew(const std::filesystem::path& path, const void* ptr,
                      size_t bytes) {
-    // Refuse overwriting a previous proof. A failed attempt leaves no
-    // partial file. std::filesystem::exists is not an atomic reservation;
-    // evidence directories must remain private to one local diagnostic run.
+    // Exclusive-create mode closes the exists()/fopen() race; never truncate
+    // prior evidence. The evidence directory must also be private to this run.
     if (!ptr || !bytes || std::filesystem::exists(path)) return false;
-    FILE* f = std::fopen(path.string().c_str(), "wb");
+    FILE* f = std::fopen(path.string().c_str(), "wbx");
     if (!f) return false;
     bool ok = std::fwrite(ptr, 1, bytes, f) == bytes;
     if (std::fflush(f) != 0) ok = false;
@@ -40,7 +39,7 @@ inline bool WriteVector(const std::filesystem::path& path, const float* data,
     if (!data || !count || std::filesystem::exists(path)) return false;
     for (size_t i = 0; i < count; ++i)
         if (!std::isfinite(data[i])) return false;
-    FILE* f = std::fopen(path.string().c_str(), "wb");
+    FILE* f = std::fopen(path.string().c_str(), "wbx");
     if (!f) return false;
     bool ok = true;
     for (size_t i = 0; i < count; ++i) {
