@@ -153,6 +153,7 @@ struct Args
     bool motd_selftest = false;       // Gate test; does not load a model or initialize GPU inference
     bool recovery_selftest = false;   // Durable transaction recovery self-test
     bool batched_prefill = true;  // PrefillBatch: P dots per op, one submission
+    size_t prefill_chunk = 8;     // Bound each synchronous batch for progress/cancel
     // FIRST-TOKEN PARITY: render a plain prompt (no tool protocol), prefill it,
     // and report the first generated token's full ranking with the EOS rank
     // called out explicitly, then continue greedily. Run with and without --cpu
@@ -248,6 +249,8 @@ Args Parse(int argc, char* argv[])
             a.recovery_selftest = true;
         else if (s == "--batched-prefill" && i + 1 < argc)
             a.batched_prefill = std::atoi(argv[++i]) != 0;
+        else if (s == "--prefill-chunk" && i + 1 < argc)
+            a.prefill_chunk = std::max<size_t>(1, static_cast<size_t>(std::atoi(argv[++i])));
         else if (s == "--temperature" && i + 1 < argc)
             a.temperature = static_cast<float>(std::atof(argv[++i]));
         else if (s == "--context-size" && i + 1 < argc)
@@ -3387,7 +3390,8 @@ int main(int argc, char* argv[])
         std::printf("usage: deep2_agentic_loop.exe --model <gguf|model-id> [--provider deep2|ollama] "
                     "[--task text-or-file] [--workdir D] [--target-file f] "
                     "[--expected-source text] [--max-steps N] [--max-new N] "
-                    "[--max-wall-time-sec N] [--cpu] [--toktest]\n");
+                    "[--max-wall-time-sec N] [--batched-prefill 0|1] [--prefill-chunk N] "
+                    "[--cpu] [--toktest]\n");
         return args.help ? 0 : 1;
     }
     if (args.motd_selftest)
@@ -3845,6 +3849,18 @@ int main(int argc, char* argv[])
         
         for (size_t i = start; i < prompt_tokens.size(); ++i)
         {
+            if (g_cancel_flag.load(std::memory_order_relaxed))
+            {
+                final_stop_reason = deep2::agent::StopReason::Cancelled;
+                Logf_("[diag] CANCELLED during prefill at %zu/%zu\n", i, prompt_tokens.size());
+                break;
+            }
+            if (retry_state.deadline_exceeded())
+            {
+                final_stop_reason = deep2::agent::StopReason::Cancelled;
+                Logf_("[diag] WALL_TIMEOUT during prefill at %zu/%zu\n", i, prompt_tokens.size());
+                break;
+            }
             if (!ex.ExecuteToken(prompt_tokens[i], fed.size()))
             {
                 Logf_("[diag] EXEC_FAIL prefill pos=%zu err=%s\n", fed.size(), ex.LastError().c_str());
@@ -4134,7 +4150,6 @@ int main(int argc, char* argv[])
     // ESP: Start tracking the full agentic task
     esp_rt.model_load(args.model);
     esp_rt.tokenizer(rt_ok);
-    esp_rt.prefill_start(0, 0); // Will update with actual counts per step
 
     for (int step = 1; step <= args.max_steps && !finished; ++step)
     {
@@ -4180,7 +4195,6 @@ int main(int argc, char* argv[])
             const size_t prefill_start_context = fed.size();
             esp_rt.prefill_start(pending_count, prefill_start_context);
             const auto t_step = std::chrono::steady_clock::now();
-            bool pref_cancelled = false;
 
             // RAWRXD_DEEP2_BATCHED_PREFILL_001: use the verified batched path.
             //
@@ -4197,35 +4211,78 @@ int main(int argc, char* argv[])
             // change, and the serial path stays the reference behind
             // --batched-prefill 0.
             bool prefill_ok = false;
-            if (args.batched_prefill && pending_count > 1)
+            bool pref_cancelled = false;
+            bool batch_path_selected = args.batched_prefill && pending_count > 1;
+
+            if (batch_path_selected)
             {
-                std::vector<uint32_t> batch(rendered.begin() + fed.size(), rendered.end());
-                prefill_ok = ex.PrefillBatch(batch, fed.size());
-                if (!prefill_ok)
+                // A single large PrefillBatch is synchronous: it cannot observe
+                // the host deadline until its fence returns. Keep each batch
+                // bounded so cancellation and progress remain observable, while
+                // preserving the exact KV ordering across chunk boundaries.
+                const size_t chunk = std::max<size_t>(1, args.prefill_chunk);
+                bool all_batches_succeeded = true;
+                while (fed.size() < rendered.size())
                 {
-                    Logf_("[step %d] PrefillBatch refused (%s); falling back to serial\n",
-                          step, ex.LastError().c_str());
+                    if (g_cancel_flag.load(std::memory_order_relaxed) ||
+                        retry_state.deadline_exceeded())
+                    {
+                        Logf_("\n[step %d] WALL_TIMEOUT before prefill batch at %zu/%zu\n",
+                              step, fed.size(), rendered.size());
+                        final_stop_reason = g_cancel_flag.load(std::memory_order_relaxed)
+                            ? deep2::agent::StopReason::Cancelled
+                            : deep2::agent::StopReason::Cancelled;
+                        pref_cancelled = true;
+                        break;
+                    }
+
+                    const size_t batch_start = fed.size();
+                    const size_t batch_end = std::min(rendered.size(), batch_start + chunk);
+                    std::vector<uint32_t> batch(rendered.begin() + batch_start,
+                                                rendered.begin() + batch_end);
+                    const size_t kv_before = ex.CommittedKvTokens();
+                    const auto batch_started = std::chrono::steady_clock::now();
+                    Logf_("[step %d] PREFILL_BATCH_BEGIN pos=%zu count=%zu/%zu\n",
+                          step, batch_start, batch.size(), rendered.size());
+                    const bool batch_ok = ex.PrefillBatch(batch, batch_start);
+                    const double batch_ms = std::chrono::duration<double, std::milli>(
+                        std::chrono::steady_clock::now() - batch_started).count();
+                    Logf_("[step %d] PREFILL_BATCH_END pos=%zu count=%zu ok=%s ms=%.0f\n",
+                          step, batch_start, batch.size(), batch_ok ? "true" : "false", batch_ms);
+
+                    if (!batch_ok)
+                    {
+                        // A failed batch must not be followed by a serial replay
+                        // if it already advanced KV. That would execute the same
+                        // positions twice and corrupt attention state.
+                        if (ex.CommittedKvTokens() != kv_before)
+                        {
+                            Logf_("[step %d] PREFILL_BATCH_PARTIAL_KV before=%zu after=%zu; failing closed\n",
+                                  step, kv_before, ex.CommittedKvTokens());
+                            final_stop_reason = deep2::agent::StopReason::Invalid;
+                            pref_cancelled = true;
+                            break;
+                        }
+                        Logf_("[step %d] PrefillBatch refused (%s); falling back to serial\n",
+                              step, ex.LastError().c_str());
+                        all_batches_succeeded = false;
+                        break;
+                    }
+
+                    for (size_t i = batch_start; i < batch_end; ++i)
+                        incremental_stream.push_back(rendered[i]);
+                    fed.resize(batch_end);
+                    esp_rt.set_context(fed.size());
+                    esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
+                    esp_rt.tick();
                 }
-            }
-            else if (args.batched_prefill)
-            {
-                // Single new token: the batched path needs P>1 to be worth it,
-                // and Executor refuses P==1 with an error, so use ExecuteToken.
-                prefill_ok = false;
+                prefill_ok = all_batches_succeeded && !pref_cancelled &&
+                             fed.size() == rendered.size();
             }
 
-            if (prefill_ok)
-            {
-                // Positions [fed.size(), rendered.size()) are now in the KV
-                // cache; adopt them so the next render's prefix is unchanged.
-                for (size_t i = fed.size(); i < rendered.size(); ++i)
-                    incremental_stream.push_back(rendered[i]);
-                fed.resize(rendered.size());
-                esp_rt.set_context(fed.size());
-                esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
-                esp_rt.tick();
-            }
-            else
+            // Serial reference/fallback path. If one or more bounded batches
+            // already completed, resume exactly at the first uncommitted token.
+            if (!prefill_ok && !pref_cancelled)
             {
                 for (size_t i = fed.size(); i < rendered.size(); ++i)
                 {
@@ -4266,11 +4323,14 @@ int main(int argc, char* argv[])
             const size_t completed_prefill = fed.size() - prefill_start_context;
             esp_rt.prefill_end(completed_prefill);
             esp_rt.set_context(fed.size());
+            const char* prefill_mode = prefill_ok
+                ? "batched"
+                : (batch_path_selected ? "batched-partial" : "serial");
             Logf_("[step %d] prefill +%zu/%zu tokens (ctx=%zu tokens) in %.0f ms (%s)\n", step,
                   completed_prefill, pending_count,
                   fed.size(),
                   std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_step).count(),
-                  prefill_ok ? "batched" : "serial");
+                  prefill_mode);
             esp_rt.sync_kernel_counters(ex.Stats().gpu_calls, ex.Stats().cpu_calls);
             esp_rt.tick();
             if (pref_cancelled)
