@@ -2,9 +2,15 @@
 #include <cmath>
 #include <algorithm>
 
+static float gEx = -30, gEy = 72, gEz = -95, gTx = 16, gTy = 8, gTz = 24, gShift = 0;
+void editorPose(float& ex, float& ey, float& ez, float& tx, float& ty, float& tz) {
+    float shift = studioCameraShift(), delta = shift - gShift;
+    gEx += delta; gTx += delta; gShift = shift;
+    ex = gEx; ey = gEy; ez = gEz; tx = gTx; ty = gTy; tz = gTz;
+}
 void editorCamera(float view[16], float proj[16], int width, int height) {
-    float shift = studioCameraShift();
-    float ex = -40 + shift, ey = 24, ez = -55, tx = 20 + shift, ty = 12, tz = 35, ux = 0, uy = 1, uz = 0;
+    float ex, ey, ez, tx, ty, tz, ux = 0, uy = 1, uz = 0;
+    editorPose(ex, ey, ez, tx, ty, tz);
     float fx = tx - ex, fy = ty - ey, fz = tz - ez;
     float fl = std::sqrt(fx * fx + fy * fy + fz * fz);
     fx /= fl; fy /= fl; fz /= fl;

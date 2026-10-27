@@ -1,5 +1,7 @@
 #include "editor_api.hpp"
 #include "forensics_png.hpp"
+#include "render_metrics.hpp"
+#include "render_report.hpp"
 #include <cstring>
 #include <filesystem>
 #include <iostream>
@@ -41,6 +43,8 @@ void VulkanRenderer::noteEditorShot(const uint8_t* pixels, bool bgra) {
     auto evidence = std::filesystem::path(modulePath).parent_path().parent_path().parent_path().parent_path() / "evidence";
     std::filesystem::create_directories(evidence);
     writeStoredPng(evidence / (std::string("kartgib_editor_") + editorShotName_ + ".png"), pixels, g04Width_, g04Height_, bgra);
+    FrameFacts facts = measureColor(pixels, static_cast<int>(g04Width_), static_cast<int>(g04Height_), bgra);
+    writeFrameReport((evidence / (std::string("render_frame_") + editorShotName_ + ".json")).string(), facts, editorShotName_, -1);
     if (gShotN < 8) {
         std::memset(gShots[gShotN].name, 0, 16);
         std::memcpy(gShots[gShotN].name, editorShotName_, 15);
@@ -56,7 +60,9 @@ void VulkanRenderer::noteEditorShot(const uint8_t* pixels, bool bgra) {
         gShots[gShotN].gold = gold;
         ++gShotN;
     }
-    std::cout << "[EDITOR] shot=" << editorShotName_ << " hash=" << hash << std::endl;
+    std::cout << "[EDITOR] shot=" << editorShotName_ << " hash=" << hash;
+    if (gShotN > 0) std::cout << " white=" << gShots[gShotN - 1].white << " gold=" << gShots[gShotN - 1].gold;
+    std::cout << std::endl;
     editorShot_ = false;
 }
 int editorShotCount() { return gShotN; }

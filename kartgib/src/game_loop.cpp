@@ -148,9 +148,8 @@ void GameLoop::update(float deltaTime) {
             if (editorMeshRev_ >= 0) createRenderBuffers();
             editorMeshRev_ = editorRevision();
         }
-        float shift = studioCameraShift();
-        cameraState_.eyeX = -40.0f + shift; cameraState_.eyeY = 24.0f; cameraState_.eyeZ = -55.0f;
-        cameraState_.targetX = 20.0f + shift; cameraState_.targetY = 12.0f; cameraState_.targetZ = 35.0f;
+        editorPose(cameraState_.eyeX, cameraState_.eyeY, cameraState_.eyeZ,
+            cameraState_.targetX, cameraState_.targetY, cameraState_.targetZ);
         cameraState_.upX = 0.0f; cameraState_.upY = 1.0f; cameraState_.upZ = 0.0f;
         static int pathNoted = 0;
         if (!pathNoted && !studioOwnsUndo() && editorShotCount() >= 1) {

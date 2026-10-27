@@ -33,10 +33,12 @@ void inspectorSetWidth(int width) {
 }
 void inspectorLayout(int width, int height) {
     (void)width; (void)height;
-    if (!gPanel || !gOwner) return;
+    if (!gPanel || !gOwner || GetParent(gPanel) == gOwner) return;
     RECT rc{}; GetWindowRect(gOwner, &rc);
-    int h = rc.bottom - rc.top; if (h < 420) h = 420;
-    SetWindowPos(gPanel, HWND_TOP, rc.right + 8, rc.top, gWidth, h, SWP_SHOWWINDOW);
+    int h = rc.bottom - rc.top; if (h < 200) return;
+    RECT cur{}; GetWindowRect(gPanel, &cur);
+    if (cur.left == rc.right + 8 && cur.top == rc.top && cur.right - cur.left == gWidth && cur.bottom - cur.top == h) return;
+    SetWindowPos(gPanel, HWND_TOP, rc.right + 8, rc.top, gWidth, h, SWP_NOACTIVATE | SWP_SHOWWINDOW);
 }
 void inspectorCreate(HWND parent) {
     if (gPanel) return;

@@ -1,0 +1,24 @@
+RAWRXD_NATIVE_AGENT_COMPAT_001
+PROMOTE=0
+QT=0
+CANONICAL_TARGET=RawrXD-Win32IDE-Native
+DONOR=G:\~dev\rawrxd 530399a834abc9794b2ef0f8a733319594204385
+PATCH_APPLIED=0
+BUILD=NOT_RUN
+E2E=NOT_RUN
+
+AUTHORITY
+Run loop: G AgentRunLoop. F StartAgentLoop and StartTask become callers, not second loops.
+Cancel: G AgentSessionCancel. F StopAgentLoop and AgenticLoopBridge::Cancel must set that flag.
+Infer: F Deep2Bridge::GenerateStream as the function pointer. Do not link ProductDeep2Infer.
+Session ledger already on F: class AgentSession in src/agentic/AgentSession.h. Keep it. G free functions do not replace that class.
+UI: existing native panels. Do not link AgentSessionBar proof commands (4103 writes a.txt).
+HTTP: do not add Win32IDE::handleAgentRun yet. It calls GetSubAgentManager, which F AgenticBridge does not have, and it links product_deep2_infer.
+
+SOURCE LIST WHEN PATCHED
+src/win32app/AgentSession.cpp
+src/win32app/AgentSession.hpp
+src/win32app/AgentRunLoop.cpp
+src/win32app/AgentProduct.cpp
+src/win32app/AgentProduct.hpp
+Exclude: AgentHttp.cpp, AgentSessionBar.cpp, AgentSessionGuiProof.cpp

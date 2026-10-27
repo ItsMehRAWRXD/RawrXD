@@ -37,6 +37,7 @@ class Win32Window;
 class VulkanRenderer;
 bool editorScript(Win32Window& window, VulkanRenderer& renderer, int frame);
 void editorCamera(float view[16], float proj[16], int width, int height);
+void editorPose(float& ex, float& ey, float& ez, float& tx, float& ty, float& tz);
 bool editorProject(const float view[16], const float proj[16], float x, float y, float z, int width, int height, int& px, int& py, float& depth);
 void editorHandleInput(Win32Window& window);
 bool editorProjectId(Win32Window& window, int id, int axis, int& px, int& py);

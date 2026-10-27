@@ -27,9 +27,10 @@ bool studioBrush(Win32Window& window, int px, int py) {
     float len = std::sqrt(dx * dx + dy * dy + dz * dz);
     dx /= len; dy /= len; dz /= len;
     kg::Settings settings; settings.seed = gSeed; settings.biome = kg::Biome::Tropical;
+    float ex, ey, ez, tx, ty, tz; editorPose(ex, ey, ez, tx, ty, tz);
     for (int i = 1; i < 80; ++i) {
         float t = static_cast<float>(i) * 8.0f;
-        float x = -40.0f + gShift + dx * t, y = 24.0f + dy * t, z = -55.0f + dz * t;
+        float x = ex + dx * t, y = ey + dy * t, z = ez + dz * t;
         if (y < static_cast<float>(kg::sampleHeight(x, z, settings))) {
             const StudioBrush& b = studioBrush();
             float radius = b.radius > 1.0f ? b.radius : 36.0f;

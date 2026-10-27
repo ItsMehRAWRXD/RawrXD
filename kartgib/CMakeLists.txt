@@ -124,6 +124,14 @@ set(SOURCES
     src/terrain_io.cpp
     src/terrain_pick.cpp
     src/terrain_input.cpp
+    src/render_metrics.cpp
+    src/render_report.cpp
+)
+
+add_executable(RenderIntroCert
+    src/render_intro_cert.cpp
+    src/render_metrics.cpp
+    src/render_report.cpp
 )
 
 add_executable(TerrainStudioCert

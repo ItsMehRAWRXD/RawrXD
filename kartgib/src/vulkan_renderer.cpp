@@ -812,7 +812,7 @@ VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkS
 
 VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
     for (const auto& availablePresentMode : availablePresentModes) {
-        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+        if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR) {
             return availablePresentMode;
         }
     }
@@ -1222,8 +1222,6 @@ void VulkanRenderer::drawFrame(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint
         throw std::runtime_error("Failed to acquire swapchain image: " + std::to_string(result));
     }
     
-    std::cout << "[G04] Acquired image index=" << imageIndex << " frame=" << currentFrame_ << std::endl;
-    
     vkResetFences(device_, 1, &inFlightFences_[currentFrame_]);
     
     UniformBuffer ubo = createUniformBuffer(sizeof(uboData));
@@ -1332,7 +1330,8 @@ void VulkanRenderer::drawFrame(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint
     graph.execute();
     
     vkCmdEndRenderPass(commandBuffers_[currentFrame_]);
-    if (readbackThisFrame_) {
+    bool captureFrame = readbackThisFrame_;
+    if (captureFrame) {
         recordG04Readback(commandBuffers_[currentFrame_], imageIndex);
         readbackThisFrame_ = false;
     }
@@ -1365,14 +1364,12 @@ void VulkanRenderer::drawFrame(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint
         throw std::runtime_error("Failed to submit draw command buffer: " + std::to_string(submitResult));
     }
     
-    VkResult fenceResult = vkWaitForFences(device_, 1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
-    if (fenceResult == VK_SUCCESS) {
+    if (captureFrame) {
+        VkResult fenceResult = vkWaitForFences(device_, 1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
+        if (fenceResult != VK_SUCCESS) throw std::runtime_error("Failed to wait for fence: " + std::to_string(fenceResult));
         collectGpuTime();
         collectProductTime();
         publishG04Readback();
-    }
-    if (fenceResult != VK_SUCCESS) {
-        throw std::runtime_error("Failed to wait for fence: " + std::to_string(fenceResult));
     }
     
     VkPresentInfoKHR presentInfo{};
@@ -1393,9 +1390,6 @@ void VulkanRenderer::drawFrame(VkBuffer vertexBuffer, VkBuffer indexBuffer, uint
     } else {
         presentFail_++;
     }
-    std::cout << "[G04] vkQueuePresentKHR result=" << static_cast<int>(result) << " frame=" << currentFrame_ 
-              << " mode=" << (debugTriangleMode_ ? "DEBUG_TRIANGLE" : "TERRAIN") << std::endl;
-    
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized_) {
         framebufferResized_ = false;
         recreateSwapchain();
