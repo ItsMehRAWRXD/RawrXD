@@ -5,9 +5,9 @@ void Win32IDE::initializeNativeGhostText() {
     if (!m_hwndMain || !m_hwndEditor) return;
     const NativeGhostTextController::Request request =
         [this](const std::string& prompt,
-               std::function<void(const std::string&, bool)> callback) {
+               std::function<void(const std::string&, bool, bool)> callback) {
             if (m_ghostTextMode == GhostTextMode::Disabled) {
-                callback("", true);
+                callback("", true, false);
                 return;
             }
             ChatModelEntry route;
@@ -37,12 +37,12 @@ void Win32IDE::initializeNativeGhostText() {
             }
             if (route.identifier.empty()) {
                 logWarning("GhostText", "No eligible GhostText model route is available.");
-                callback("", true);
+                callback("", true, false);
                 return;
             }
             if (route.source == ChatModelEntry::Source::KiloFree && !m_allowCloudGhostText) {
                 logWarning("GhostText", "Cloud route selected but session cloud consent is disabled.");
-                callback("", true);
+                callback("", true, false);
                 return;
             }
             m_pendingInferenceModel = route;
@@ -99,11 +99,27 @@ void Win32IDE::initializeNativeGhostText() {
 }
 
 bool Win32IDE::handleNativeGhostTextMessage(UINT message, WPARAM wParam, LPARAM lParam) {
-    bool handled = m_ghostText && m_ghostText->handleMessage(message, wParam, lParam);
-    for (auto& controller : m_ghostTextInputs) {
-        if (controller) handled = controller->handleMessage(message, wParam, lParam) || handled;
+    if (m_ghostText && m_ghostText->ownsMessage(message, lParam)) {
+        return m_ghostText->handleMessage(message, wParam, lParam);
     }
-    return handled;
+    for (auto& controller : m_ghostTextInputs) {
+        if (controller && controller->ownsMessage(message, lParam)) {
+            return controller->handleMessage(message, wParam, lParam);
+        }
+    }
+    if (message == WM_APP + 73) {
+        NativeGhostTextController::discardMessage(message, lParam);
+        return true;
+    }
+    return false;
+}
+
+void Win32IDE::invalidateNativeGhostText() {
+    m_pendingInferenceModel = {};
+    if (m_ghostText) m_ghostText->dismiss();
+    for (auto& controller : m_ghostTextInputs) {
+        if (controller) controller->dismiss();
+    }
 }
 
 void Win32IDE::notifyGhostTextInputChanged(HWND input) {
@@ -125,7 +141,7 @@ void Win32IDE::runNativeCodexPrompt(const std::string& prompt) {
         appendNativeDebugOutput("[Codex] select or enter code first.\n");
         return;
     }
-    generateResponseAsync(prompt, [this](const std::string& result, bool done) {
+    generateResponseAsync(prompt, [this](const std::string& result, bool done, bool) {
         if (!done) return;
         appendNativeDebugOutput("[Codex]\n" + result + "\n");
     });
@@ -133,7 +149,7 @@ void Win32IDE::runNativeCodexPrompt(const std::string& prompt) {
 
 void Win32IDE::requestNativeGhostText(
     const std::string& prompt,
-    std::function<void(const std::string&, bool)> callback)
+    std::function<void(const std::string&, bool, bool)> callback)
 {
     generateResponseAsync(prompt, std::move(callback));
 }

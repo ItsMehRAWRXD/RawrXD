@@ -8,7 +8,8 @@
 
 class NativeGhostTextController {
 public:
-    using Request = std::function<void(const std::string&, std::function<void(const std::string&, bool)>)>;
+    using Request = std::function<void(const std::string&,
+        std::function<void(const std::string&, bool, bool)>)>;
 
     NativeGhostTextController() = default;
     ~NativeGhostTextController();
@@ -18,10 +19,12 @@ public:
     void detach();
     void onEditorChanged();
     // Start a completion explicitly from the editor (Ctrl+Space).  Normal
-    // typing only refreshes the snapshot and dismisses an old hint; it must
-    // never launch an asynchronous model request from an EN_CHANGE callback.
+    // typing refreshes the snapshot, dismisses an old hint, and arms the
+    // debounce timer for an asynchronous inline request.
     void triggerCompletion();
     bool handleMessage(UINT message, WPARAM wParam, LPARAM lParam);
+    bool ownsMessage(UINT message, LPARAM lParam) const;
+    static void discardMessage(UINT message, LPARAM lParam);
     bool accept();
     void dismiss();
     bool active() const { return !m_completion.empty(); }
@@ -44,9 +47,10 @@ private:
     std::string m_snapshot;
     uint64_t m_generation = 0;
     UINT_PTR m_timer = 0;
+    bool m_requestPending = false;
     // A per-attachment identity fences callbacks that outlive a controller
-    // detach/rebind.  The provider request API is intentionally unchanged;
-    // stale completions are discarded without dereferencing the old object.
+    // detach/rebind. Stale completions are discarded without dereferencing
+    // the old object.
     std::shared_ptr<void> m_requestIdentity;
 };
 

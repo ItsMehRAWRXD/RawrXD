@@ -328,7 +328,7 @@ public:
     HWND getMainWindow() const { return m_hwndMain; }
     void runNativeCodexPrompt(const std::string& prompt);
     void requestNativeGhostText(const std::string& prompt,
-                                std::function<void(const std::string&, bool)> callback);
+                                std::function<void(const std::string&, bool, bool)> callback);
     void appendNativeDebugOutput(const std::string& text, bool error = false);
 
     // Agentic Framework
@@ -456,7 +456,8 @@ private:
     void shutdownInference();
     bool isModelLoaded() const;
     std::string generateResponse(const std::string& prompt);
-    void generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback);
+    void generateResponseAsync(const std::string& prompt,
+                               std::function<void(const std::string&, bool, bool)> callback);
     void stopInference();
     void setInferenceConfig(const InferenceConfig& config);
     InferenceConfig getInferenceConfig() const;
@@ -962,7 +963,7 @@ private:
     std::string m_currentInferenceResponse;
     std::thread m_inferenceThread;
     std::mutex m_inferenceMutex;
-    std::function<void(const std::string&, bool)> m_inferenceCallback;
+    std::function<void(const std::string&, bool, bool)> m_inferenceCallback;
 
     // File Explorer Sidebar - tree view items
     HWND m_hwndFileTree = nullptr;
@@ -1506,6 +1507,7 @@ private:
     int effectiveMaxTokensForPrompt(const std::string& prompt) const;
     void initializeNativeGhostText();
     bool handleNativeGhostTextMessage(UINT message, WPARAM wParam, LPARAM lParam);
+    void invalidateNativeGhostText();
     void notifyGhostTextInputChanged(HWND input);
     void createChatSession(const std::string& title = "");
     void switchChatSession(int index);

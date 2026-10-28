@@ -6631,13 +6631,17 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     return std::string("[Native Engine Error]\nModel: ") + modelName + "\nPrompt: " + prompt + "\n(Ollama unavailable and Native Engine not ready)";
 }
 
-void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
+void Win32IDE::generateResponseAsync(
+    const std::string& prompt,
+    std::function<void(const std::string&, bool, bool)> callback)
 {
     std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
     if (m_inferenceRunning) {
         // Busy state is reported by the UI status bar.  Never turn a
         // scheduling race into assistant text that looks like model output.
+        m_pendingInferenceModel = {};
+        if (callback) callback("", true, false);
         return;
     }
     if (m_inferenceThread.joinable()) {
@@ -6667,14 +6671,14 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     m_inferenceThread = std::thread([this, prompt, callback, selectedModel,
                                      requestMaxTokens, requestContextTokens, reasoningMode,
                                      webBrowsingEnabled]() {
-        auto finish = [this, callback](const std::string& result) {
+        auto finish = [this, callback](const std::string& result, bool success) {
             m_inferenceRunning = false;
-            if (callback) callback(result, true);
+            if (callback) callback(result, true, success);
         };
 
         try {
             if (selectedModel.identifier.empty()) {
-                finish("Select a model route first.");
+                finish("Select a model route first.", false);
                 return;
             }
 
@@ -6683,7 +6687,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 selectedModel.source == ChatModelEntry::Source::Ollama) {
                 const std::string webContext = fetchWebSearchContext(prompt);
                 if (webContext.empty()) {
-                    finish("Web browsing was enabled, but the native WinHTTP search request returned no results.");
+                    finish("Web browsing was enabled, but the native WinHTTP search request returned no results.", false);
                     return;
                 }
                 routedPrompt =
@@ -6699,11 +6703,11 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 const char* apiKey = route && route->authEnv[0]
                     ? std::getenv(route->authEnv) : nullptr;
                 if (!apiKey || !*apiKey) {
-                    finish("Kilo free cloud route is selected, but RawrXD cannot find its Kilo credential. Set KILO_API_KEY and restart RawrXD.");
+                    finish("Kilo free cloud route is selected, but RawrXD cannot find its Kilo credential. Set KILO_API_KEY and restart RawrXD.", false);
                     return;
                 }
                 if (!route || std::strcmp(route->runtime, "cloud-api") != 0) {
-                    finish("The generated Kilo route is missing its cloud-api runtime mapping.");
+                    finish("The generated Kilo route is missing its cloud-api runtime mapping.", false);
                     return;
                 }
                 ModelConfig config{};
@@ -6715,14 +6719,14 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 const std::string response = client.generate(routedPrompt, config);
                 finish(response.empty()
                     ? "Kilo did not return a response. Check the Kilo credential and network connection."
-                    : response);
+                    : response, !response.empty());
                 return;
             }
             case ChatModelEntry::Source::Ollama: {
                 const auto* route = RawrXD::ChatRouteMenu::find(
                     RawrXD::ChatRouteMenu::RouteKind::Ollama);
                 if (!route || std::strcmp(route->runtime, "ollama-http") != 0) {
-                    finish("The generated Ollama route is missing its local HTTP runtime mapping.");
+                    finish("The generated Ollama route is missing its local HTTP runtime mapping.", false);
                     return;
                 }
                 const std::string response = generateOllamaModel(
@@ -6730,23 +6734,23 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     requestMaxTokens, requestContextTokens, reasoningMode);
                 finish(response.empty()
                     ? "The selected Ollama model did not respond. Check that Ollama is running locally."
-                    : response);
+                    : response, !response.empty());
                 return;
             }
             case ChatModelEntry::Source::LocalFile: {
                 const auto* route = RawrXD::ChatRouteMenu::find(
                     RawrXD::ChatRouteMenu::RouteKind::LocalFile);
                 if (!route || std::strcmp(route->runtime, "native-agent") != 0) {
-                    finish("The generated local model route is missing its native-agent runtime mapping.");
+                    finish("The generated local model route is missing its native-agent runtime mapping.", false);
                     return;
                 }
                 if (!m_agenticBridge || !m_agenticBridge->IsInitialized()) {
-                    finish("The native agent bridge is not initialized.");
+                    finish("The native agent bridge is not initialized.", false);
                     return;
                 }
                 if (!hasGgufModelTensors(selectedModel.identifier)) {
                     finish("The selected GGUF is not an inference model (it may contain vocabulary metadata only): " +
-                        selectedModel.identifier);
+                        selectedModel.identifier, false);
                     return;
                 }
                 if (m_agenticChatLoadedModelPath != selectedModel.identifier) {
@@ -6755,25 +6759,31 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     if (load.type == AgentResponseType::AGENT_ERROR) {
                         finish(load.content.empty()
                             ? "The selected local model could not be loaded."
-                            : load.content);
+                            : load.content, false);
                         return;
                     }
                     m_agenticChatLoadedModelPath = selectedModel.identifier;
                 }
                 m_agenticBridge->SetOutputCallback(
                     [this, callback](const std::string&, const std::string& chunk) {
-                        if (!m_inferenceStopRequested && callback) callback(chunk, false);
+                        if (!m_inferenceStopRequested && callback) callback(chunk, false, true);
                     });
-                m_agenticBridge->ExecuteAgentCommand(prompt);
-                finish("");
+                const AgentResponse generated = m_agenticBridge->ExecuteAgentCommand(prompt);
+                if (generated.type == AgentResponseType::AGENT_ERROR) {
+                    finish(generated.content.empty()
+                        ? "The selected local model failed to generate a completion."
+                        : generated.content, false);
+                } else {
+                    finish("", true);
+                }
                 return;
             }
             }
-            finish("The selected chat route is unsupported.");
+            finish("The selected chat route is unsupported.", false);
         } catch (const std::exception& error) {
-            finish(std::string("Chat route failed: ") + error.what());
+            finish(std::string("Chat route failed: ") + error.what(), false);
         } catch (...) {
-            finish("Chat route failed with an unknown error.");
+            finish("Chat route failed with an unknown error.", false);
         }
     });
 }
@@ -6817,7 +6827,7 @@ void Win32IDE::onInferenceToken(const std::string& token)
     
     // Update UI with partial response if streaming is enabled
     if (m_inferenceConfig.streamOutput && m_inferenceCallback) {
-        m_inferenceCallback(token, false);
+        m_inferenceCallback(token, false, true);
     }
 }
 
@@ -6827,7 +6837,7 @@ void Win32IDE::onInferenceComplete(const std::string& fullResponse)
     m_currentInferenceResponse = fullResponse;
     
     if (m_inferenceCallback) {
-        m_inferenceCallback(fullResponse, true);
+        m_inferenceCallback(fullResponse, true, true);
     }
 }
 
@@ -7448,6 +7458,7 @@ void Win32IDE::rollbackActiveChat()
     m_selectedChatModel = checkpoint.model;
     m_ghostTextModel = checkpoint.ghostTextModel;
     m_ghostTextMode = checkpoint.ghostTextMode;
+    invalidateNativeGhostText();
     m_reasoningMode = checkpoint.reasoningMode;
     m_allowCloudGhostText = checkpoint.allowCloudGhostText;
     m_webBrowsingEnabled = checkpoint.webBrowsingEnabled;
@@ -7507,6 +7518,7 @@ void Win32IDE::switchChatSession(int index)
     auto& session = m_chatSessions[static_cast<size_t>(index)];
     m_chatHistory = session.history;
     m_selectedChatModel = session.model;
+    invalidateNativeGhostText();
     m_reasoningMode = session.reasoningMode;
     m_webBrowsingEnabled = session.webBrowsingEnabled;
 
@@ -7651,6 +7663,11 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
             std::to_string(m_currentModelGenID) + ")");
         return;
     }
+
+    // Publishing a new catalog can replace or remove the route backing an
+    // in-flight GhostText request. Fence that request before rebuilding the
+    // selector rows.
+    invalidateNativeGhostText();
 
     const auto comboDropped = [](HWND combo) {
         return combo && SendMessageA(combo, CB_GETDROPPEDSTATE, 0, 0) != FALSE;
@@ -7881,7 +7898,7 @@ void Win32IDE::HandleCopilotSend() {
     
     // Marshal all response handling to the UI thread. The worker owns only the
     // inference operation and an owned message payload.
-    auto onResponse = [this, sessionId](const std::string& response, bool complete) {
+    auto onResponse = [this, sessionId](const std::string& response, bool complete, bool) {
         auto* update = new CopilotChatUiUpdate{sessionId, response, complete};
         const HWND target = m_hwndMain;
         if (!target || !PostMessageA(target, kRawrxdCopilotUiUpdate, 0,
@@ -8012,6 +8029,7 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length) {
 }
 
 void Win32IDE::onModelSelectionChanged() {
+    invalidateNativeGhostText();
     int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     if (idx < 0) {
         m_selectedChatModel = {};
@@ -8113,6 +8131,7 @@ void Win32IDE::onWebBrowsingChanged()
 
 void Win32IDE::onGhostTextSelectionChanged() {
     if (!m_hwndGhostModelSelector) return;
+    invalidateNativeGhostText();
     const LRESULT row = SendMessageA(m_hwndGhostModelSelector, CB_GETCURSEL, 0, 0);
     if (row < 0) {
         m_ghostTextModel = {};
@@ -8143,6 +8162,7 @@ void Win32IDE::onGhostTextSelectionChanged() {
 void Win32IDE::onGhostTextCloudConsentChanged() {
     if (!m_hwndAllowCloudGhostText) return;
     m_allowCloudGhostText = SendMessage(m_hwndAllowCloudGhostText, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    invalidateNativeGhostText();
     logInfo(std::string("GhostText cloud transmission ") +
         (m_allowCloudGhostText ? "enabled for this session." : "disabled."));
 }

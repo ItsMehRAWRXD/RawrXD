@@ -87,6 +87,24 @@ Win32TerminalManager::~Win32TerminalManager()
 
 bool Win32TerminalManager::start(ShellType shell)
 {
+    if (m_running.load()) {
+        PsTrace("[PS_TRACE] start() rejected: terminal process is already running\n");
+        return false;
+    }
+
+    const auto currentThread = std::this_thread::get_id();
+    if ((m_outputThread.joinable() && m_outputThread.get_id() == currentThread) ||
+        (m_errorThread.joinable() && m_errorThread.get_id() == currentThread) ||
+        (m_monitorThread.joinable() && m_monitorThread.get_id() == currentThread)) {
+        PsTrace("[PS_TRACE] start() rejected from a terminal worker thread\n");
+        return false;
+    }
+
+    // A process can exit asynchronously and leave its handles/reader threads
+    // pending cleanup while m_running is already false.  Reap that state before
+    // creating a new set of handles; otherwise assigning a new std::thread to
+    // a still-joinable reader would terminate the process.
+    stop();
     m_shellType = shell;
 
     // Create pipes for stdin, stdout, stderr
@@ -97,20 +115,17 @@ bool Win32TerminalManager::start(ShellType shell)
 
     if (!CreatePipe(&m_hStdOutRead, &m_hStdOutWrite, &sa, 0)) {
         std::cerr << "Failed to create stdout pipe" << std::endl;
+        stop();
         return false;
     }
     if (!CreatePipe(&m_hStdErrRead, &m_hStdErrWrite, &sa, 0)) {
-        CloseHandle(m_hStdOutRead); m_hStdOutRead = nullptr;
-        CloseHandle(m_hStdOutWrite); m_hStdOutWrite = nullptr;
         std::cerr << "Failed to create stderr pipe" << std::endl;
+        stop();
         return false;
     }
     if (!CreatePipe(&m_hStdInRead, &m_hStdInWrite, &sa, 0)) {
-        CloseHandle(m_hStdOutRead); m_hStdOutRead = nullptr;
-        CloseHandle(m_hStdOutWrite); m_hStdOutWrite = nullptr;
-        CloseHandle(m_hStdErrRead); m_hStdErrRead = nullptr;
-        CloseHandle(m_hStdErrWrite); m_hStdErrWrite = nullptr;
         std::cerr << "Failed to create stdin pipe" << std::endl;
+        stop();
         return false;
     }
 
@@ -152,6 +167,7 @@ bool Win32TerminalManager::start(ShellType shell)
         const std::string encoded = encodeUtf8AsPowerShellCommand(pumpScript);
         if (encoded.empty()) {
             std::cerr << "Failed to encode PowerShell command pump" << std::endl;
+            stop();
             return false;
         }
         PsTrace("[PS_TRACE] start() encoded command length=%zu\n", encoded.length());
@@ -165,6 +181,7 @@ bool Win32TerminalManager::start(ShellType shell)
     if (!CreateProcessA(nullptr, const_cast<char*>(cmd.c_str()), nullptr, nullptr,
                        TRUE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
         PsTrace("[PS_TRACE] CreateProcessA FAILED GetLastError=%lu\n", GetLastError());
+        stop();
         return false;
     }
     PsTrace("[PS_TRACE] CreateProcessA SUCCESS pid=%lu\n", pi.dwProcessId);
@@ -176,9 +193,9 @@ bool Win32TerminalManager::start(ShellType shell)
     PsTrace("[PS_TRACE] Process started, starting output threads\n");
 
     // Close unnecessary handles
-    CloseHandle(m_hStdOutWrite);
-    CloseHandle(m_hStdErrWrite);
-    CloseHandle(m_hStdInRead);
+    CloseHandle(m_hStdOutWrite); m_hStdOutWrite = nullptr;
+    CloseHandle(m_hStdErrWrite); m_hStdErrWrite = nullptr;
+    CloseHandle(m_hStdInRead); m_hStdInRead = nullptr;
 
     // Start threads to read output
     m_outputThread = std::thread(&Win32TerminalManager::readOutputThread, this);
@@ -214,8 +231,11 @@ void Win32TerminalManager::stop()
     if (m_hProcess) CloseHandle(m_hProcess); m_hProcess = nullptr;
     if (m_hThread) CloseHandle(m_hThread); m_hThread = nullptr;
     if (m_hStdInWrite) { CloseHandle(m_hStdInWrite); m_hStdInWrite = nullptr; }
+    if (m_hStdInRead) { CloseHandle(m_hStdInRead); m_hStdInRead = nullptr; }
     if (m_hStdOutRead) { CloseHandle(m_hStdOutRead); m_hStdOutRead = nullptr; }
+    if (m_hStdOutWrite) { CloseHandle(m_hStdOutWrite); m_hStdOutWrite = nullptr; }
     if (m_hStdErrRead) { CloseHandle(m_hStdErrRead); m_hStdErrRead = nullptr; }
+    if (m_hStdErrWrite) { CloseHandle(m_hStdErrWrite); m_hStdErrWrite = nullptr; }
 
     m_hProcess = nullptr;
     m_hThread = nullptr;

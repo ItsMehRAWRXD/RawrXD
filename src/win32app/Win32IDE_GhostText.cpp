@@ -13,6 +13,7 @@ struct Result {
     std::shared_ptr<void> requestIdentity;
     uint64_t generation;
     std::string text;
+    bool success;
 };
 }
 
@@ -49,6 +50,7 @@ void NativeGhostTextController::detach() {
     m_hint = nullptr; m_editor = nullptr; m_host = nullptr; m_originalProc = nullptr;
     m_timer = 0; m_completion.clear(); m_snapshot.clear(); m_promptPrefix.clear();
     m_requestIdentity.reset();
+    m_requestPending = false;
     ++m_generation;
 }
 
@@ -62,17 +64,14 @@ std::string NativeGhostTextController::editorText() const {
 }
 
 void NativeGhostTextController::onEditorChanged() {
-    ++m_generation;
     m_snapshot = editorText();
     dismiss();
-    if (m_editor && m_timer) {
-        KillTimer(m_editor, m_timer);
-        m_timer = 0;
+    if (m_editor && !m_snapshot.empty()) {
+        m_timer = SetTimer(m_editor, kGhostTimer, 250, nullptr);
     }
 }
 
 void NativeGhostTextController::triggerCompletion() {
-    ++m_generation;
     m_snapshot = editorText();
     dismiss();
     if (!m_editor || m_snapshot.empty()) return;
@@ -89,17 +88,19 @@ void NativeGhostTextController::requestCompletion() {
         ? "Complete the following code. Return only the completion text, no markdown:\n"
         : m_promptPrefix + "\n") + m_snapshot;
     auto accumulated = std::make_shared<std::string>();
+    m_requestPending = true;
     m_request(prompt, [owner, host, requestIdentity, generation, accumulated](
-        const std::string& response, bool done) {
-        if (!response.empty()) *accumulated += response;
-        if (!done || accumulated->empty() || !host) return;
+        const std::string& response, bool done, bool success) {
+        if (success && !response.empty()) *accumulated += response;
+        if (!done || !host) return;
         // Do not touch the controller here: the provider may finish after a
         // model switch, editor detach, or IDE teardown.  Locking the identity
         // proves the attachment still exists; handleMessage performs the
         // second identity check on the UI thread before rendering.
         auto identity = requestIdentity.lock();
         if (!identity) return;
-        auto* result = new Result{owner, std::move(identity), generation, *accumulated};
+        auto* result = new Result{owner, std::move(identity), generation,
+                                  *accumulated, success};
         if (!PostMessageA(host, kGhostResult, 0, reinterpret_cast<LPARAM>(result))) delete result;
     });
 }
@@ -143,6 +144,12 @@ void NativeGhostTextController::positionHint() {
 }
 
 void NativeGhostTextController::dismiss() {
+    ++m_generation;
+    m_requestPending = false;
+    if (m_editor && m_timer) {
+        KillTimer(m_editor, m_timer);
+        m_timer = 0;
+    }
     m_completion.clear();
     if (m_hint) ShowWindow(m_hint, SW_HIDE);
 }
@@ -157,15 +164,24 @@ bool NativeGhostTextController::accept() {
 }
 
 bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
-    if (message == kGhostResult) {
-        std::unique_ptr<Result> result(reinterpret_cast<Result*>(lParam));
-        if (result && result->owner == this &&
-            result->requestIdentity && result->requestIdentity == m_requestIdentity) {
-            showCompletion(result->text, result->generation);
-        }
-        return true;
+    if (message != kGhostResult || !lParam ||
+        reinterpret_cast<Result*>(lParam)->owner != this) return false;
+    std::unique_ptr<Result> result(reinterpret_cast<Result*>(lParam));
+    m_requestPending = false;
+    if (result->success && result->requestIdentity &&
+        result->requestIdentity == m_requestIdentity) {
+        showCompletion(result->text, result->generation);
     }
-    return false;
+    return true;
+}
+
+bool NativeGhostTextController::ownsMessage(UINT message, LPARAM lParam) const {
+    return message == kGhostResult && lParam &&
+        reinterpret_cast<Result*>(lParam)->owner == this;
+}
+
+void NativeGhostTextController::discardMessage(UINT message, LPARAM lParam) {
+    if (message == kGhostResult) delete reinterpret_cast<Result*>(lParam);
 }
 
 LRESULT CALLBACK NativeGhostTextController::editorProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -176,7 +192,11 @@ LRESULT CALLBACK NativeGhostTextController::editorProc(HWND hwnd, UINT message, 
         }
         if (message == WM_KEYDOWN) {
             if (wParam == VK_TAB && self->accept()) return 0;
-            if (wParam == VK_ESCAPE && self->active()) { self->dismiss(); return 0; }
+            if (wParam == VK_ESCAPE &&
+                (self->active() || self->m_timer || self->m_requestPending)) {
+                self->dismiss();
+                return 0;
+            }
             if (wParam == VK_SPACE && (GetKeyState(VK_CONTROL) & 0x8000)) {
                 self->triggerCompletion();
                 return 0;
