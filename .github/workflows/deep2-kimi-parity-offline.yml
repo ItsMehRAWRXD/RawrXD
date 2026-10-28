@@ -48,6 +48,8 @@ jobs:
         run: python tools/test_k2_aggregate_vector_audit.py
       - name: Compare single-expert routed aggregate against independent scalar oracle
         run: python tools/test_k2_single_expert_aggregate_oracle.py
+      - name: Audit provisional GPU stage against independent scalar oracle
+        run: python tools/test_k2_provisional_stage_oracle_audit.py
       - name: Require selected aggregate numerical coverage
         run: python tools/test_k2_aggregate_batch_audit.py
       - name: Guard against unsafe fused GPU output capture
