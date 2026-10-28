@@ -1,14 +1,15 @@
 GITHUB_PUSH_CONFIRM_001 / RECEIPT
 =================================
-ASOF_UTC=2026-10-28T18:45:00Z
+ASOF_UTC=2026-10-28T18:46:00Z
 BRANCH=feature/ide-agentic-product-path-20261026
 REMOTE=origin
-LOCAL_SHA=fe74d0fe2b4a7b4e4f457dd573b4c154f7662873
-REMOTE_SHA=fe74d0fe2b4a7b4e4f457dd573b4c154f7662873
+LOCAL_SHA=f5dd8cae3b21cee8f21b393212aacf29f8c217cc
+REMOTE_SHA=f5dd8cae3b21cee8f21b393212aacf29f8c217cc
 MATCH=1
 PUSH_CONFIRMED=1
 LS_REMOTE_CMD=git ls-remote origin refs/heads/feature/ide-agentic-product-path-20261026
-URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/fe74d0fe2b4a7b4e4f457dd573b4c154f7662873
+URL=https://github.com/ItsMehRAWRXD/RawrXD/commit/f5dd8cae3b21cee8f21b393212aacf29f8c217cc
+CONFIRM_SHA=f5dd8cae3b21cee8f21b393212aacf29f8c217cc
 SEAL_REFRESH_SHA=45edb98564f0312709a1f99ca6a541c965e162e7
 SEAL_REFRESH_MSG=refresh candidate AgentRunLoop seals after hung-shell push retry
 PRIOR_SEAL_SHA=880123aad4113f2b61569a6a78dbefdf56eea698
@@ -31,6 +32,7 @@ evidence/TIP_CANDIDATE_AGENT_RUN_005/prove/SEAL.txt
 evidence/TIP_CANDIDATE_AGENT_RUN_005/prove/*.txt (agent_run/swarm prove bodies)
 evidence/AGENT_RUN_LOOP_CANDIDATE_8DC1406A_001/SEAL.txt + RECEIPT.md + harness + logs (no *.exe, no api_key)
 evidence/AGENT_RUN_LOOP_CANDIDATE_005/logs/* (small text only; no huge ninja dumps)
+evidence/GITHUB_PUSH_CONFIRM_001/RECEIPT.txt
 
 NOTE
 ----
