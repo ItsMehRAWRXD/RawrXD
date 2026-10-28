@@ -1,0 +1,55 @@
+SWARM_16_RUNTIME_003 / ENGINE_BIND
+==================================
+ASOF_UTC=2026-10-28T17:30:00Z
+GATE=SWARM_16_RUNTIME_003
+TIP_SHA=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+NO_INVENT_PASS=1
+REBUILD=0
+GHOSTTEXT_ABSORB=NOT_AUTHORIZED
+ABSORB_GHOSTTEXT=NOT_AUTHORIZED
+
+DISPOSITION
+-----------
+ENGINE_BIND=FAIL_CLOSED
+BLOCKER=RELINK_REQUIRED
+TIP_CAN_ENABLE_VIA_SETTINGS_OR_FLAGS=0
+REPROVE_ON_TIP=0
+RUNTIME_PASS=0
+TOKEN_SURVIVED=0
+E2E_INFERENCE_PASS=0
+
+ROOT_CAUSE
+----------
+Path A POST /api/swarm/orch (HeadlessIDE_SwarmOrch.cpp) constructs a static
+AgenticEngine, calls initialize() (no-op), then SubAgentManager(&engine).
+Never calls setInferenceEngine or setChatProvider on that engine.
+
+Worker path: SubAgentManager::runSubAgentThread → AgentRunLoop →
+AgenticEngine::chat → early return "[Error: No Inference Engine]" when
+m_inferenceEngine==nullptr && m_chatProvider empty
+(src/agentic_engine.cpp).
+
+NOT config/env alone: tip 748B binary lacks the bind call site wiring.
+Ollama /api/tags inventory works (models routed) but LOCAL_ONLY_001 forbids
+Ollama/HTTP chat client for agent inference (Win32IDE_AgentOllamaClient.cpp
+stubs). Swarm workers need CPUInferenceEngine (or ProductDeep2) bound on the
+orch AgenticEngine — absent in freeze 748B.
+
+SOURCE_WIRE (tree only; tip EXE not clobbered)
+---------------------------------------------
+FILE=src/win32app/HeadlessIDE_SwarmOrch.cpp
+FIX=after engine.initialize(): setInferenceEngine(CPUInferenceEngine::GetSharedInstance().get())
+TIP_EXE_OVERWRITE=0
+TIP_FREEZE_001\bin AUTHORITY PRESERVED
+RELINK_REQUIRED=1 (new freeze only — do not clobber 748B)
+
+NOTE
+----
+Binding CPU pointer clears the null-engine string only after RELINK.
+Loaded GGUF/ProductOpen still required for TOKEN_SURVIVED; null-engine was
+the first fail-closed gate observed on tip Path A orch.
+NOT_RUN != PASS · PRODUCT_JSON_RUNTIME_PASS != E2E_INFERENCE_PASS

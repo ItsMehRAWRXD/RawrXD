@@ -9,6 +9,7 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "../subagent_core.h"
 #include "../agentic_engine.h"
+#include "../cpu_inference_engine.h"
 
 #include <nlohmann/json.hpp>
 #include <atomic>
@@ -166,10 +167,21 @@ void HeadlessIDE::routeSwarmOrchRequest(const HostedHttpRequest& request,
     }
 
     // Prefer engine-backed manager when possible (honest FAIL if chat unavailable).
+    // Tip 748B freeze shipped this path WITHOUT setInferenceEngine — workers then
+    // return "[Error: No Inference Engine]" from AgenticEngine::chat. SOURCE_WIRE
+    // binds process-shared CPUInferenceEngine (LOCAL_ONLY; Ollama HTTP chat forbidden).
+    // Tip EXE unchanged; RELINK_REQUIRED for new freeze to exercise this bind.
     static AgenticEngine engine;
     static bool engineInit = false;
     if (!engineInit) {
         engine.initialize();
+        auto cpu = RawrXD::CPUInferenceEngine::GetSharedInstance();
+        if (cpu) {
+            engine.setInferenceEngine(cpu.get());
+            OutputDebugStringA("[SWARM_ORCH] setInferenceEngine(CPU shared)\r\n");
+        } else {
+            OutputDebugStringA("[SWARM_ORCH] CPUInferenceEngine shared NULL\r\n");
+        }
         engineInit = true;
     }
     SubAgentManager orchMgr(&engine);
