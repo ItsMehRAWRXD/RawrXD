@@ -251,3 +251,51 @@ CERTIFIED_GATES=0
 PROMOTE=0
 TIP_CLIMB=HOLD
 \`\`\`
+
+## Increment 8: full provisional GPU-stage vector evidence
+
+Previously \`DEEP2_MOE_GPU_STAGE_PARITY\` printed only summary differences
+for the last expert's GPU scratch \`ArenaFFNAct\` and \`ArenaDown\`.
+With **exactly one** selected expert, after \`K2MoEStickEndDevice\`,
+successful stage downloads, and complete finite checks, the diagnostic
+can now persist all four vectors:
+
+- \`k2_l<L>_e<E>_s<S>_provisional_stage.gpu_act.txt\`
+- \`k2_l<L>_e<E>_s<S>_provisional_stage.cpu_act.txt\`
+- \`k2_l<L>_e<E>_s<S>_provisional_stage.gpu_down.txt\`
+- \`k2_l<L>_e<E>_s<S>_provisional_stage.cpu_down.txt\`
+- \`k2_l<L>_e<E>_s<S>_provisional_stage.manifest.txt\`
+
+Requires a pre-existing exclusive evidence directory, valid
+\`DEEP2_MOE_PARITY_RUN_ID\`, \`DEEP2_MOE_GPU_PARITY=1\`,
+and \`DEEP2_MOE_GPU_STAGE_PARITY=1\`. The manifest records the run ID,
+layer, stick, expert ID, dimensions,
+\`source=POST_END_DEVICE_SCRATCH_DOWNLOAD\`,
+\`gpu_buffer_identity=UNPROVEN\`,
+\`scope=DIAGNOSTIC_NOT_PER_EXPERT_GPU_PARITY\` and \`certified=0\`.
+It refuses nonfinite data and existing outputs and cleans up partial
+new writes. The snapshot does not affect production inference output.
+
+**These are GPU scratch downloads, not a retained-buffer authority
+proof.** \`K2MoEStickEndDevice\` may overwrite or repurpose scratch;
+until the kernel and command submission ownership are independently
+verified, values must be treated as \`PROVISIONAL\` and cannot certify
+G05/G06. The next step is checking full vectors against the CPU and
+independent scalar stage references with a same-run receipt, then
+implementing a dedicated retained GPU copy if current scratch lifetime
+cannot be established.
+
+Standalone C++ smoke cases now exercise successful four-vector capture,
+overwrite refusal and nonfinite GPU activation rejection. Source safety
+regression coverage was extended. New MSVC and Vulkan execution receipts
+remain required.
+
+\`\`\`ini
+PROVISIONAL_STAGE_VECTOR_CAPTURE=SOURCE_WIRED
+MSVC_SMOKE_THIS_INCREMENT=NOT_RUN
+REAL_KIMI_PROVISIONAL_VECTORS=NOT_CAPTURED
+GPU_BUFFER_IDENTITY=UNPROVEN
+G05_G06=NOT_CERTIFIED
+PROMOTE=0
+TIP_CLIMB=HOLD
+\`\`\`
