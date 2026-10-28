@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <limits>
 #include <cstdlib>
 #ifdef _WIN32
 #include <process.h>
@@ -26,6 +27,14 @@ static void SetCaptureDir(const std::string& v) {
 #endif
 }
 
+static void SetCaptureRunId(const std::string& value) {
+#ifdef _WIN32
+    _putenv_s("DEEP2_MOE_PARITY_RUN_ID", value.c_str());
+#else
+    setenv("DEEP2_MOE_PARITY_RUN_ID", value.c_str(), 1);
+#endif
+}
+
 int main() {
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto dir = std::filesystem::temp_directory_path() /
@@ -38,6 +47,7 @@ int main() {
         float cpu[1] = {2.f};
         float gpu[1] = {2.f};
         SetCaptureDir(dir.string());
+        SetCaptureRunId("capture20261027receipt001");
         using Deep2::k2_parity_capture::Capture;
         if (!Capture(0, 1, 44, 14, weights.data(), weights.size(),
                      activation.data(), activation.size(), cpu, gpu, 1))
@@ -84,6 +94,76 @@ int main() {
                                  activation.data(), 256, 256))
             code = 11; // refuse wrong quantization
 
+        // Post-device aggregate witness: paired finite outputs and explicit routes.
+        std::vector<float> aggregateGpu(256, 1.25f);
+        std::vector<float> aggregateCpu(256, 1.5f);
+        int routedExperts[] = {8, 12};
+        float routingWeights[] = {0.6f, 0.4f};
+        using Deep2::k2_parity_capture::CaptureAggregateComparison;
+        if (!CaptureAggregateComparison(0, 3, aggregateGpu.data(),
+                                        aggregateCpu.data(), 256,
+                                        routedExperts, routingWeights, 2))
+            code = 12;
+        const auto pairStem = dir / "k2_l3_s0_aggregate_comparison";
+        if (!std::filesystem::exists(pairStem.string() + ".manifest.txt") ||
+            !std::filesystem::exists(pairStem.string() + ".gpu.txt") ||
+            !std::filesystem::exists(pairStem.string() + ".cpu.txt"))
+            code = 13;
+        if (CaptureAggregateComparison(0, 3, aggregateGpu.data(),
+                                       aggregateCpu.data(), 256,
+                                       routedExperts, routingWeights, 2))
+            code = 14; // refuse overwrite of an existing receipt
+        aggregateGpu[0] = std::numeric_limits<float>::quiet_NaN();
+        if (CaptureAggregateComparison(0, 4, aggregateGpu.data(),
+                                       aggregateCpu.data(), 256,
+                                       routedExperts, routingWeights, 2))
+            code = 15; // refuse nonfinite vectors
+        aggregateGpu[0] = 1.25f;
+        int duplicateExperts[] = {8, 8};
+        if (CaptureAggregateComparison(0, 4, aggregateGpu.data(),
+                                       aggregateCpu.data(), 256,
+                                       duplicateExperts, routingWeights, 2))
+            code = 16; // refuse duplicate expert identities
+
+        // Both scalar inputs and the completed aggregate must carry
+        // the same run identity for an independently joined audit.
+        const auto scalarReceipt = dir / "k2_l2_e8_s0_scalar_inputs.manifest.txt";
+        const auto aggregateReceipt = dir / "k2_l3_s0_aggregate_comparison.manifest.txt";
+        auto containsRunId = [](const std::filesystem::path& file) {
+            std::ifstream in(file);
+            const std::string content((std::istreambuf_iterator<char>(in)),
+                                      std::istreambuf_iterator<char>());
+            return content.find("run_id=capture20261027receipt001\n") !=
+                   std::string::npos;
+        };
+        if (!containsRunId(scalarReceipt) || !containsRunId(aggregateReceipt))
+            code = 17;
+        // Provisional GPU-stage scratch capture: diagnostic-only, run-stamped.
+        using Deep2::k2_parity_capture::CaptureProvisionalStage;
+        std::vector<float> stageGpuAct(256, 2.0f), stageCpuAct(256, 2.0f);
+        std::vector<float> stageGpuDown(256, 3.0f), stageCpuDown(256, 3.0f);
+        if (!CaptureProvisionalStage(0, 6, 8,
+                                     stageGpuAct.data(), stageCpuAct.data(), 256,
+                                     stageGpuDown.data(), stageCpuDown.data(), 256))
+            code = 18;
+        const auto stageStem = dir / "k2_l6_e8_s0_provisional_stage";
+        if (!std::filesystem::exists(stageStem.string() + ".manifest.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".gpu_act.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".cpu_act.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".gpu_down.txt") ||
+            !std::filesystem::exists(stageStem.string() + ".cpu_down.txt"))
+            code = 19;
+        if (CaptureProvisionalStage(0, 6, 8,
+                                    stageGpuAct.data(), stageCpuAct.data(), 256,
+                                    stageGpuDown.data(), stageCpuDown.data(), 256))
+            code = 20; // no overwrite
+        stageGpuAct[0] = std::numeric_limits<float>::quiet_NaN();
+        if (CaptureProvisionalStage(0, 7, 8,
+                                    stageGpuAct.data(), stageCpuAct.data(), 256,
+                                    stageGpuDown.data(), stageCpuDown.data(), 256))
+            code = 21; // reject nonfinite GPU activation
+        stageGpuAct[0] = 2.0f;
+        SetCaptureRunId("");
         SetCaptureDir("");
     } catch (const std::exception& e) {
         std::cerr << e.what() << "\n";

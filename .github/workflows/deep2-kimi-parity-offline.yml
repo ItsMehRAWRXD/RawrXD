@@ -44,8 +44,18 @@ jobs:
         run: python tools/test_k2_moe_capture_audit.py
       - name: Validate repeated completed aggregate captures
         run: python tools/test_k2_stick_partial_repeatability.py
+      - name: Audit completed paired CPU/GPU aggregate vectors
+        run: python tools/test_k2_aggregate_vector_audit.py
+      - name: Compare single-expert routed aggregate against independent scalar oracle
+        run: python tools/test_k2_single_expert_aggregate_oracle.py
+      - name: Audit provisional GPU stage against independent scalar oracle
+        run: python tools/test_k2_provisional_stage_oracle_audit.py
+      - name: Require selected aggregate numerical coverage
+        run: python tools/test_k2_aggregate_batch_audit.py
       - name: Guard against unsafe fused GPU output capture
         run: python tools/test_k2_fused_parity_safety.py
+      - name: Guard canonical post-fence parity against false success
+        run: python tools/test_k2_postfence_parity_safety.py
   cpp-capture-linux:
     name: Standalone parity capture helper / Linux
     runs-on: ubuntu-latest
