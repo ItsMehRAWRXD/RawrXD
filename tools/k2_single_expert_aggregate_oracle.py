@@ -20,6 +20,13 @@ def audit(aggregate_manifest, scalar_manifest, max_abs, max_rms):
     if len(aggregate["experts"]) != 1:
         raise ValueError("MULTI_EXPERT_AGGREGATE_UNATTRIBUTABLE")
     meta, hashes, scalar = evaluate(Path(scalar_manifest))
+    run_id = aggregate.get("run_id")
+    other_run_id = meta.get("run_id")
+    if (not isinstance(run_id, str) or len(run_id) < 16 or
+            len(run_id) > 128 or
+            any(not (ch.isascii() and (ch.isalnum() or ch in "-_")) for ch in run_id) or
+            run_id != other_run_id):
+        raise ValueError("RUN_ID_MISSING_INVALID_OR_MISMATCHED")
     expert_id, route = aggregate["experts"][0]
     if ((aggregate["layer"], aggregate["stick"], expert_id) !=
             (meta["layer"], meta["stick"], meta["expert"])):
@@ -47,6 +54,7 @@ def audit(aggregate_manifest, scalar_manifest, max_abs, max_rms):
         "gpu_unweighted_down_witness": "ABSENT",
         "scope": "SINGLE_EXPERT_ROUTED_AGGREGATE_VS_INDEPENDENT_SCALAR",
         "identity": {
+            "run_id": run_id,
             "layer": meta["layer"], "stick": meta["stick"],
             "expert": expert_id, "router_weight": route,
             "hidden_dim": meta["hidden_dim"],
